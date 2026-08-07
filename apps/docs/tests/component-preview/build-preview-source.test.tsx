@@ -11,7 +11,9 @@ import { describe, expect, it } from 'vitest';
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import PathInspectorDemo from '../../src/modules/docs/contents/kernel/components/draw/path/path-inspector.demo';
+import PathInspectorDemo, {
+  previewSource as pathInspectorPreviewSource,
+} from '../../src/modules/docs/contents/kernel/components/draw/path/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
 } from '../../src/modules/docs/contents/standard/composite/frame/frame-playground.demo';
@@ -85,6 +87,7 @@ const ManualTableDemo: FC = () => (
 
 const staticIR = buildPreviewIR(StaticDemo).ir;
 const alternateIR = buildPreviewIR(AlternateDemo).ir;
+const PathInspectorCanonical: FC = () => pathInspectorPreviewSource.canonicalRender();
 
 const createInput = (overrides: Record<string, unknown> = {}) => ({
   Component: StaticDemo,
@@ -98,13 +101,16 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('buildPreviewSource', () => {
-  it('为 Path Inspector 保留等价 Vanilla sidecar 与真实辅助 SVG', () => {
-    const preview = buildPreviewIR(PathInspectorDemo);
+  it('让 Path Inspector 保持可见，同时不写入 canonical IR 与 Vanilla', () => {
+    const preview = buildPreviewIR(PathInspectorCanonical);
     const vanilla = buildVanillaPreview(preview);
+    const html = renderToStaticMarkup(<PathInspectorDemo />);
 
-    expect(vanilla.code).toContain('inspect: { controlPoints: true, labels: true }');
-    expect(vanilla.svg).toContain('pointer-events="none"');
-    expect(vanilla.svg).toContain('C1.1');
+    expect(preview).not.toHaveProperty('inspectionRoots');
+    expect(vanilla.code).not.toMatch(/\binspect\b/);
+    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
+    expect(html).toContain('data-retikz-readonly-layer');
+    expect(html).toContain('C1.1');
   });
 
   it('默认从静态 demo 派生 React、IR 与 Vanilla 源码', () => {

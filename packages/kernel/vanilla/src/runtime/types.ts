@@ -1,10 +1,11 @@
-import type { CompileArtifact, CompileOptions, InspectOptions, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 
 import type { AnyVanillaTier2Adapter, VanillaFigureSpec, VanillaRuntimeMeta } from '../spec';
+import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla plain spec */
@@ -106,15 +107,19 @@ export type VanillaRuntimeOptions = VanillaRetainedRuntimeOptions | VanillaStati
 /**
  * render 与 mount 入口共享的选项
  * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / plain spec 时传给
- *   `compileToScene`；`animation` 控制 SVG / Canvas runtime 动画；`adapters` 只参与 plain spec normalization
+ *   Core 编译；`compileDriver` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
+ *   `adapters` 只参与 plain spec normalization
  */
 export type CommonOptions = {
   /** 输出资源与显示尺寸选项 */
   output?: VanillaOutputOptions;
   /** core compile 选项；输入已是 Scene 时忽略 */
-  compile?: Omit<CompileOptions, 'inspection'>;
-  /** Layout Inspector 根策略；Scene 输入会 fail-loud */
-  inspect?: InspectOptions;
+  compile?: CompileOptions;
+  /**
+   * 领域中立编译驱动
+   * @default defaultVanillaCompileDriver
+   */
+  compileDriver?: VanillaCompileDriver;
   /** runtime 动画选项 */
   animation?: VanillaAnimationOptions;
   /** 可嵌入 Tier2 adapter 列表，仅 plain spec normalization 使用 */

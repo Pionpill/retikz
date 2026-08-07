@@ -1,4 +1,4 @@
-import type { RuntimeDiagnostic } from '../diagnostic';
+import type { RuntimeDiagnostic, RuntimeDiagnosticPhaseValue } from '../diagnostic';
 import type { RuntimeOwnerLifecycleDiagnostic } from '../error';
 import type {
   RuntimeOwnerDefinition,
@@ -37,6 +37,7 @@ import type {
 } from '../transaction';
 import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
+import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
 import { RuntimeError, RuntimeOwnerError } from '../error';
 import { createRuntimeOwnerExecutor } from '../owner';
 import {
@@ -83,7 +84,7 @@ type NormalizedUpdateResult =
   | Readonly<{ kind: typeof RuntimeProgramKind.Incremental; artifact: unknown }>
   | Readonly<{
       kind: typeof RuntimeProgramKind.Fallback;
-      diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: string; message: string }>>;
+      diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>>;
     }>;
 
 type RuntimeSessionState =
@@ -95,6 +96,11 @@ type RuntimeSessionState =
   | 'disposing'
   | 'dispose-pending'
   | 'disposed';
+
+const runtimeDiagnosticPhases = new Set<RuntimeDiagnosticPhaseValue>(Object.values(RuntimeDiagnosticPhase));
+
+const isRuntimeDiagnosticPhase = (value: unknown): value is RuntimeDiagnosticPhaseValue =>
+  typeof value === 'string' && runtimeDiagnosticPhases.has(value as RuntimeDiagnosticPhaseValue);
 
 /** 创建 session contract 错误 */
 const sessionError = (
@@ -189,7 +195,7 @@ const normalizePreparedCommit = (value: unknown, participant: RuntimeCommitParti
 /** 把 observer throw 转成不影响 publish 的结构化诊断 */
 const observerDiagnostic = (definition: RuntimeProgramToken, cause: unknown): RuntimeDiagnostic =>
   Object.freeze({
-    code: 'RUNTIME_PROGRAM_OBSERVER_FAILED',
+    code: RuntimeDiagnosticCode.ProgramObserverFailed,
     phase: 'observe',
     severity: 'error',
     message: cause instanceof Error ? cause.message : String(cause),
@@ -199,16 +205,16 @@ const observerDiagnostic = (definition: RuntimeProgramToken, cause: unknown): Ru
   });
 
 const traceDiagnosticCodes = {
-  'invalid-record': 'RUNTIME_TRACE_INVALID_RECORD',
-  'sink-threw': 'RUNTIME_TRACE_SINK_FAILED',
-  'reentrant-report': 'RUNTIME_TRACE_REENTRANT',
+  'invalid-record': RuntimeDiagnosticCode.TraceInvalidRecord,
+  'sink-threw': RuntimeDiagnosticCode.TraceSinkFailed,
+  'reentrant-report': RuntimeDiagnosticCode.TraceReentrant,
 } as const;
 
 /** 失败 transaction 可从 Runtime 内部保留的 execution diagnostic 闭集 */
 const executionDiagnosticCodes = new Set<string>([
   ...Object.values(traceDiagnosticCodes),
-  'RUNTIME_ARTIFACT_DISPOSE_FAILED',
-  'RUNTIME_OWNER_DISPOSE_FAILED',
+  RuntimeDiagnosticCode.ArtifactDisposeFailed,
+  RuntimeDiagnosticCode.OwnerDisposeFailed,
 ]);
 
 /** 把 reporter-local diagnostic 映射到固定 Program context */
@@ -265,7 +271,7 @@ const createParticipantInvocation = (
       if (diagnosing) {
         diagnostics.push(
           Object.freeze({
-            code: 'RUNTIME_PARTICIPANT_DIAGNOSTIC_REENTRANT',
+            code: RuntimeDiagnosticCode.ParticipantDiagnosticReentrant,
             phase: 'diagnose',
             severity: 'error',
             message: 'Runtime participant diagnose reentry was rejected',
@@ -281,14 +287,14 @@ const createParticipantInvocation = (
         const code = Reflect.get(candidate, 'code');
         const phase = Reflect.get(candidate, 'phase');
         const message = Reflect.get(candidate, 'message');
-        if (typeof code !== 'string' || typeof phase !== 'string' || typeof message !== 'string') {
+        if (typeof code !== 'string' || !isRuntimeDiagnosticPhase(phase) || typeof message !== 'string') {
           throw new Error('invalid diagnostic input');
         }
         diagnostics.push(Object.freeze({ code, phase, message, severity: 'warning' as const, owner: participant.key }));
       } catch (cause) {
         diagnostics.push(
           Object.freeze({
-            code: 'RUNTIME_PARTICIPANT_DIAGNOSTIC_INVALID',
+            code: RuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
             phase: 'diagnose',
             severity: 'error',
             message: 'Runtime participant diagnostic input is invalid',
@@ -405,7 +411,7 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
     }
     if (fallbackDiagnostics === undefined) return Object.freeze({ kind });
     if (Array.isArray(fallbackDiagnostics)) {
-      const diagnostics: Array<Readonly<{ code: string; phase: string; message: string }>> = [];
+      const diagnostics: Array<Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>> = [];
       let invalidDiagnostic = false;
       try {
         for (const diagnostic of fallbackDiagnostics) {
@@ -416,7 +422,7 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
           const code = Reflect.get(diagnostic, 'code');
           const diagnosticPhase = Reflect.get(diagnostic, 'phase');
           const message = Reflect.get(diagnostic, 'message');
-          if (typeof code !== 'string' || typeof diagnosticPhase !== 'string' || typeof message !== 'string') {
+          if (typeof code !== 'string' || !isRuntimeDiagnosticPhase(diagnosticPhase) || typeof message !== 'string') {
             invalidDiagnostic = true;
             break;
           }
@@ -621,7 +627,7 @@ const runProgram = (
     Object.freeze({
       execution,
       trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
-      diagnose: (diagnostic: Readonly<{ code: string; phase: string; message: string }>) => {
+      diagnose: (diagnostic: Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>) => {
         drainTraceDiagnostics();
         const candidate: unknown = diagnostic;
         if (typeof candidate !== 'object' || candidate === null) {
@@ -630,7 +636,7 @@ const runProgram = (
         const code = Reflect.get(candidate, 'code');
         const diagnosticPhase = Reflect.get(candidate, 'phase');
         const message = Reflect.get(candidate, 'message');
-        if (typeof code !== 'string' || typeof diagnosticPhase !== 'string' || typeof message !== 'string') {
+        if (typeof code !== 'string' || !isRuntimeDiagnosticPhase(diagnosticPhase) || typeof message !== 'string') {
           throw new Error('runtime Program diagnostic input is invalid');
         }
         diagnostics.push(
@@ -1103,7 +1109,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
                 invalidChangeOwners.add(owner);
                 candidateDiagnostics.push(
                   Object.freeze({
-                    code: 'RUNTIME_CHANGESET_FALLBACK',
+                    code: RuntimeDiagnosticCode.ChangeSetFallback,
                     phase: 'validate-change-set',
                     severity: 'warning',
                     message: `Runtime change hint for owner "${owner.key}" could not be validated`,

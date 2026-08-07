@@ -26,7 +26,26 @@ describe('compile source structure', () => {
       'formatCompileWarning',
       'isNodeLayoutCompileArtifact',
       'lowerIRToKernel',
+      'observeCompileToScene',
     ]);
+  });
+
+  it('does not retain the removed inspection public files or exports', () => {
+    expect(source('src/contract/index.ts')).not.toContain("export * from './inspection';");
+    expect(source('src/compile/index.ts')).not.toContain('inspection');
+    expect(source('src/compile/orchestration/index.ts')).not.toContain('inspection');
+
+    for (const path of [
+      'src/contract/inspection/index.ts',
+      'src/contract/inspection/types.ts',
+      'src/contract/inspection/define.ts',
+      'src/compile/orchestration/inspection.ts',
+      'src/compile/orchestration/inspection-error.ts',
+      'src/compile/orchestration/inspection-output.ts',
+      'src/providers/path-kind/stroke-inspector.ts',
+    ]) {
+      expect(() => source(path)).toThrow();
+    }
   });
 
   it('Runtime public contract 与 incremental implementation 分属稳定 owner', () => {

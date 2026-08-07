@@ -59,18 +59,19 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 
 ## Artifact 契约
 
-| 字段                 | 作用                                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `output.result`      | 与同一 IR/options 下 fresh `compileToScene()` 等价的 Scene、typed artifacts 与 inspection plane |
-| `output.diagnostics` | canonical 顺序的 Core compile warnings；只在成功 commit 后派发给 `onWarn`                       |
-| `snapshot`           | 当前 Session revision 的 deeply immutable Scene、document root identity 与 topology             |
-| `patch`              | 相对 base revision 的原子 Scene Patch；initial full run 不提供                                  |
+| 字段                     | 作用                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `output.result`          | 与同一 IR/options 下 fresh `compileToScene()` 等价的 Scene 与 typed artifacts       |
+| `output.diagnostics`     | canonical 顺序的 Core compile warnings；只在成功 commit 后派发给 `onWarn`           |
+| `output.observerOutputs` | 与主结果属于同一 candidate revision 的显式观测输出                                  |
+| `snapshot`               | 当前 Session revision 的 deeply immutable Scene、document root identity 与 topology |
+| `patch`                  | 相对 base revision 的原子 Scene Patch；initial full run 不提供                      |
 
-`CompileOptions.inspection` 是仅在运行时存在的 authored sidecar。Core 先用 locator 的 `target` 精确绑定 Composite 或 Path occurrence，再从对应 `CompositeDefinition` / `PathKindDefinition` 读取 Inspector；Inspector 仍依附原 Definition，不建立第二张注册表。生成的 `CompileResult.inspection` 与主 Scene 隔离，不进入 Snapshot identity、主资源、layout bounds 或 Patch diff。Program full fallback 时仍在同一 revision 重新生成主 Scene、artifacts 与 inspection plane。
+普通 `compileToScene()` 只返回主 Scene 与 artifacts，不创建观测会话。需要读取最终 occurrence 时，调用 `observeCompileToScene(ir, options, observers)`，或在 `createCoreProgram()` 的 `runtimeOptions.observers` 中固定 observer definitions。每个 observer 都为一次 compile 创建独占 session，并依次执行 `select`、`observe` 与 `complete`。
 
-Core 先稳定排序最终请求，再从 `0` 连续分配 `colorScope`，并通过 `InspectionAppearance` 把推荐的常规色与警告色传给 Inspector。被丢弃的 probe 不占号；已执行但返回空数组的请求占号但不形成 entry，因此后续 occurrence 的颜色不受前一项输出数量影响。
+Core 只提供领域中立的观测能力。Composite 通过现有 `artifactSchema` 发布最终产物；Path kind 可声明 `ownerOutput.schema`，并在 `context.ownerOutput.requested` 为真时调用 `publish()`。只有最终提交的 occurrence 会触发 `observe()`，失败或被丢弃的 probe 不可见；事件携带最终 occurrence、probe/replay 来源以及从所属者局部坐标到主 Scene 坐标的变换。
 
-`InspectorDefinition.inspect()` 返回一个普通 `IRChild` 或稠密 `ReadonlyArray<IRChild>`，没有 `outputSchema`。Core 为每个 entry 在隔离环境中复用正常 child 编译流程、当前 Theme / Scope 样式和 provider definitions，再把结果封装为 occurrence-local 的静态 `scene`；seal 后不保留公共 `id`、`meta` 或动画，entry 内资源仍可正常引用。自定义 Composite 与 Path kind 因而可以使用 Node、Path、Coordinate、Scope 或已注册 Composite 表达辅助内容，Render 无需理解 Inspector 专用图元。
+observer 可用 `context.compileFragment()` 在当前 occurrence 环境中编译普通 `IRChild`。返回的片段包含隔离的静态 Scene、artifacts 与 diagnostics，不写回主编译结果，也不能引用主图或其它片段的公共身份。observer 的最终输出由 `complete()` 决定并递归冻结，Core 不限定其领域结构。Inspector 的注册、选择、配色与只读图层组装位于可选的 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
@@ -159,42 +160,45 @@ session.update({
 
 ## 公开 API
 
-| 导出                                                                                        | 作用                                                          |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                                        | Core document owner 与 compile Program 的固定 identity        |
-| `CoreOwnerDefinition`                                                                       | 完整 IR Snapshot 的 capture/read/equality Definition          |
-| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                                  | 闭合 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口     |
-| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                                         | 稀疏持久化覆盖、完整冻结环境与 shared color view              |
-| `ThemeTokenDefinition` / `ThemeTokenContribution`                                           | owner namespace 的 schema Definition 与纯 JSON contribution   |
-| `defineThemeTokenNamespace` / `defineThemeTokenContribution` / `composeThemeTokenOverrides` | 注册、冻结并组合 Theme token authoring 输入                   |
-| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens`               | Core `core` namespace 与 shared color overrides               |
-| `resolveThemeTokenRegistry`                                                                 | 合并 Core 与传入 owner Definition；冲突立即失败               |
-| `createCoreProgram(options, runtimeOptions?)`                                               | 创建保留 composite artifact 泛型的 Runtime Program Definition |
-| `CoreChange`                                                                                | `add` / `update` / `remove` / `move` change hint union        |
-| `CoreProgramOptions<TComposites>`                                                           | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |
-| `CoreProgramRuntimeOptions`                                                                 | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners       |
-| `CoreProgramOutput<TComposites>`                                                            | 完整 compile result 与 warnings                               |
-| `CoreProgramPublicRead<TComposites>`                                                        | public `output` / `snapshot` / optional `patch`               |
-| `CoreProgramDefinition<TComposites>`                                                        | 保留 artifact input、owned artifact、private/public read 泛型 |
-| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                                      | deeply readonly Scene 与原子 Patch DTO                        |
-| `InspectOptions` / `CompileInspectionOptions`                                               | Layout / Scope 级联策略与 compile authored sidecar            |
-| `InspectionPlane` / `InspectionPlaneEntry`                                                  | 与主 Scene 隔离、每项携带普通静态 `scene` 的辅助平面          |
-| `InspectorDefinition` / `defineInspector`                                                   | owner-neutral 的 Inspector 契约与定义 helper                  |
-| `InspectorOutput` / `InspectorContext`                                                      | 普通 Core 子元素输出与 canonical options / appearance 上下文  |
-| `InspectionAppearance` / `InspectionOwner`                                                  | Core 解析的 occurrence 外观与 Definition owner 身份           |
-| `PathInspectionAuthoring` / `PathInspectOptions`                                            | React / Vanilla Path 的 occurrence-local 运行时开启参数       |
+| 导出                                                                                         | 作用                                                          |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                                         | Core document owner 与 compile Program 的固定 identity        |
+| `CoreOwnerDefinition`                                                                        | 完整 IR Snapshot 的 capture/read/equality Definition          |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                                   | 闭合 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口     |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                                          | 稀疏持久化覆盖、完整冻结环境与 shared color view              |
+| `ThemeTokenDefinition` / `ThemeTokenContribution`                                            | owner namespace 的 schema Definition 与纯 JSON contribution   |
+| `defineThemeTokenNamespace` / `defineThemeTokenContribution` / `composeThemeTokenOverrides`  | 注册、冻结并组合 Theme token authoring 输入                   |
+| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens`                | Core `core` namespace 与 shared color overrides               |
+| `resolveThemeTokenRegistry`                                                                  | 合并 Core 与传入 owner Definition；冲突立即失败               |
+| `createCoreProgram(options, runtimeOptions?)`                                                | 创建保留 composite artifact 泛型的 Runtime Program Definition |
+| `CoreChange`                                                                                 | `add` / `update` / `remove` / `move` change hint union        |
+| `CoreProgramOptions<TComposites>`                                                            | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |
+| `CoreProgramRuntimeOptions`                                                                  | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners       |
+| `CoreProgramOutput<TComposites>`                                                             | 完整 compile result 与 warnings                               |
+| `CoreProgramPublicRead<TComposites>`                                                         | public `output` / `snapshot` / optional `patch`               |
+| `CoreProgramDefinition<TComposites>`                                                         | 保留 artifact input、owned artifact、private/public read 泛型 |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                                       | deeply readonly Scene 与原子 Patch DTO                        |
+| `observeCompileToScene()`                                                                    | 显式执行带 observer sessions 的完整编译                       |
+| `defineCompileObserver()` / `CompileObserverDefinition`                                      | 定义一次编译期观测会话及其稳定 key                            |
+| `CompileObservation` / `CompileObservationContext`                                           | 最终所属者产物、occurrence、变换与隔离片段编译入口            |
+| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher`                                | Path kind 的按需最终产物声明与发布                            |
+| `ObservedCompileResult` / `CompileObserverOutput`                                             | 主编译结果与按 definition 顺序返回的领域自定义输出            |
 
 ## 源码
 
 <SourceLinks
   sources={[
     {
-      label: 'Inspector 定义与 authored sidecar 契约',
-      path: 'packages/kernel/core/src/contract/inspection/types.ts',
+      label: '领域中立 observer 与所属者产物契约',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
     },
     {
-      label: '普通子元素到隔离辅助 Scene 的编译',
-      path: 'packages/kernel/core/src/compile/orchestration/inspection.ts',
+      label: '最终 occurrence 观测提交',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    {
+      label: '普通子元素的隔离片段编译',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-fragment.ts',
     },
     {
       label: 'Core owner identity 与 change hint',

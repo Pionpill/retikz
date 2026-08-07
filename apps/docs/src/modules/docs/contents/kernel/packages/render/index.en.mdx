@@ -14,7 +14,7 @@ This group covers how retikz actually paints a figure to the screen. Your figure
 | SVG              | Scene → vector DOM, or an SSR / build-time string                                            | The default: you want crisp vectors, CSS hit-testing, accessibility |
 | Canvas           | Scene → raster bitmap, immediate-mode drawing + hit-testing                                  | Hundreds of primitives, frequent repaints, performance first        |
 | Retained Runtime | Prepare and commit Scene Patches inside a Runtime transaction                                | Stable host identity and incremental updates                        |
-| Inspection       | Materialize an independent development overlay after the primary figure                      | Reading layout bounds, overflow, and alignment guides               |
+| Readonly layers  | Materialize domain-neutral ordinary Scene layers after the primary figure                    | Inspection, editor aids, or other readonly auxiliary content        |
 | Hydration        | Bind event handlers back to primitives by id after a static render (shared by both backends) | Adding click / hover interaction to a figure                        |
 
 ## Retained Runtime
@@ -27,23 +27,23 @@ Final disposal performs reverse best-effort cleanup across hydration, animation,
 
 Import these retained APIs from `@retikz/render/runtime`; they are not exported from the `@retikz/render` package root. A third-party backend uses `RetainedRendererFactory` to create a nominal SVG or Canvas renderer and declares `none`, `group`, or `entity` capability. The Render participant validates Snapshot / Patch lineage. When a backend cannot interpret a Patch, it consistently falls back to a complete Scene replacement and publishes a diagnostic.
 
-### Primary and inspection planes
+### Primary figure and readonly layers
 
-Static APIs use `StaticRenderFrame { primary: Scene, inspection }`. Retained renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, inspection }`. Both materialize the primary figure and complete inspection overlay as one frame, so a failed retained transaction cannot publish a new figure with an old overlay.
+Static APIs use `StaticRenderFrame { primary: Scene, layers }`. Retained renderers use `RenderFrameSnapshot { primary: SceneRuntimeSnapshot, layers }`. Both materialize the primary figure and ordered readonly layers as one frame, so a failed retained transaction cannot publish a new figure with old layers.
 
-Every `InspectionPlaneEntry` contains an ordinary occurrence-local static `scene` plus its transform into primary Scene coordinates. SVG appends a `pointer-events="none"` inspection group, executes every entry through the ordinary Scene-fragment path, and gives its resources an isolated prefix without hydration ids. Canvas applies the entry transform and calls the ordinary Scene drawing path; `hitTest` still reads only the primary Scene. The overlay never determines viewBox, primary resources, animation, or primary identity. A third-party retained renderer must declare `inspectionCapability: 'supported' | 'unsupported'`; receiving a non-null overlay while unsupported fails loudly instead of silently dropping it.
+Every `RenderReadonlyLayer` contains a frame-unique `key`, an ordinary static `scene`, and its transform into primary Scene coordinates. SVG appends a `pointer-events="none"` group after the primary figure, executes each layer through the ordinary Scene-fragment path, and gives its resources an isolated prefix without hydration ids. Canvas applies the layer transform and calls the ordinary Scene drawing path; `hitTest` still reads only the primary Scene. A readonly layer never determines the viewBox, primary resources, animation, or primary identity, and cannot contain public `id`, `meta`, or animation fields.
 
-Render no longer owns an Inspector palette, tone model, rect / line / label switch, or hatch generator. Core assigns recommended colors through `InspectionAppearance`, and each owner writes them into ordinary IR. Hatched regions use regular pattern paints, while nodes, paths, gradients, images, clips, and custom Composites all follow normal Scene semantics. New auxiliary content therefore needs only Core compilation and the backend's corresponding ordinary Scene capability, not a renderer-specific DTO extension.
+A third-party retained renderer declares `readonlyLayerCapability: 'supported' | 'unsupported'`; receiving non-empty layers while unsupported fails loudly instead of silently dropping them. Render knows nothing about Inspectors, palettes, or specific auxiliary primitives. `@retikz/inspect` is only one external producer of readonly layers, and editors or other tools can reuse the same capability.
 
 ### Static frame APIs
 
 Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materialization function from its SVG or Canvas backend subpath.
 
-| API                                            | Import path             | Result                                                          |
-| ---------------------------------------------- | ----------------------- | --------------------------------------------------------------- |
-| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | An `SvgNode` containing the primary figure and inspection group |
-| `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | A complete SVG string for SSR                                   |
-| `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | Atomically paints the target Canvas and returns nothing         |
+| API                                            | Import path             | Result                                                         |
+| ---------------------------------------------- | ----------------------- | -------------------------------------------------------------- |
+| `buildSvgFrameDocument(frame, options)`        | `@retikz/render/svg`    | An `SvgNode` containing the primary figure and readonly layers |
+| `renderFrameToSvgString(frame, options)`       | `@retikz/render/svg`    | A complete SVG string for SSR                                  |
+| `renderFrameToCanvas(canvas, frame, options?)` | `@retikz/render/canvas` | Atomically paints the target Canvas and returns nothing        |
 
 <SourceLinks
   sources={[
@@ -176,6 +176,10 @@ Import `StaticRenderFrame` from `@retikz/render/runtime`; import each materializ
     {
       label: 'Static and retained frame contracts',
       path: 'packages/kernel/render/src/runtime/frame.ts',
+    },
+    {
+      label: 'Readonly-layer validation and freezing',
+      path: 'packages/kernel/render/src/runtime/readonly-layer.ts',
     },
     {
       label: 'Retained renderer definition and factory contract',

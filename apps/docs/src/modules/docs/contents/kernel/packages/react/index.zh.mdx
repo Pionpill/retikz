@@ -108,7 +108,7 @@ return (
 
 频繁更新的大图可在组件外或 `useMemo` 中持有稳定 IR 与 Core options，再通过 `ir` prop 跳过 builder，并让 seed compile 的 memo 命中。
 
-在 retained 模式下，客户端 commit 后 `Layout` 会创建 Runtime Session，把完整 IR Snapshot 与 renderer config 作为一次 transaction 更新。Core Program 能证明安全的变更会发布局部 Scene Patch；其它合法变更用 `replaceScene` fallback 保持 full oracle 等价。SVG / Canvas retained participant 在 prepare 阶段隔离候选状态，只有 transaction 成功后才把 DOM / bitmap、事件、动画句柄、artifacts 与 inspection plane 一起发布。
+在 retained 模式下，客户端 commit 后 `Layout` 会创建 Runtime Session，把完整 IR Snapshot 与 renderer config 作为一次 transaction 更新。Core Program 能证明安全的变更会发布局部 Scene Patch；其它合法变更用 `replaceScene` fallback 保持 full oracle 等价。SVG / Canvas retained participant 在 prepare 阶段隔离候选状态，只有 transaction 成功后才把 DOM / bitmap、事件、动画句柄、artifacts 与可选只读图层一起发布。
 
 卸载时 Session 会反向 best-effort 清理，并在逻辑资源 retire 后同次重试失败的 renderer cleanup；已成功项不会重复执行。持续失败只进入 Runtime diagnostics，不会阻断 React 完成 unmount。
 
@@ -186,19 +186,19 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| 阶段                       | 所有者          | 做什么                                                              |
-| -------------------------- | --------------- | ------------------------------------------------------------------- |
-| Kernel / Sugar JSX         | `@retikz/react` | 收集 props 与 children；Sugar 先展开为 Kernel                       |
-| `buildIRWithContributions` | `@retikz/react` | 遍历组件树，生成 `IRScene`，同时收集可嵌入 Tier 2 的贡献            |
-| `IRScene`                  | `@retikz/core`  | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM          |
-| `compileToScene`           | `@retikz/core`  | 处理 composite，解析 registry、引用、几何、布局、资源与动画         |
-| `CompileResult`            | `@retikz/core`  | 同次返回后端中立 `scene`、typed `artifacts` 与独立 inspection plane |
+| 阶段                       | 所有者          | 做什么                                                      |
+| -------------------------- | --------------- | ----------------------------------------------------------- |
+| Kernel / Sugar JSX         | `@retikz/react` | 收集 props 与 children；Sugar 先展开为 Kernel               |
+| `buildIRWithContributions` | `@retikz/react` | 遍历组件树，生成 `IRScene`，同时收集可嵌入 Tier 2 的贡献    |
+| `IRScene`                  | `@retikz/core`  | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM  |
+| `compileToScene`           | `@retikz/core`  | 处理 composite，解析 registry、引用、几何、布局、资源与动画 |
+| `CompileResult`            | `@retikz/core`  | 同次返回后端中立 `scene` 与 typed `artifacts`               |
 
 `Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
-`<Layout inspect>` 提供整图布局策略，`<Scope inspect>` 提供 authored 子树策略；带 Inspector 的 Tier 2 组件和 `<Path inspect>` 可以只开启当前 occurrence。Builder 为每个目标生成带 `target: 'composite' | 'path'` 与 `policy.self` 的 authored sidecar，`inspect` 不进入 `IRScene`、`IRScope` 或 `IRPath`。`enabled: false` 对两类目标都是后代不可越过的硬屏障。
+基础包只提供领域中立的 `LayoutCompileDriver` 与不解释的 `authoring` site。默认驱动执行普通 Core 编译，observer 与只读图层都为空。可选的 `@retikz/inspect/react` 通过 `InspectLayout`、`InspectScope` 和 `InspectPath` 解释运行时选择，并把检查 observer 接入同一 static 或 retained 宿主；这些选择不进入 `IRScene`、`IRScope` 或 `IRPath`。
 
-Static host 直接物化主图与辅助层；retained host 在同一 revision 原子提交两者。SVG SSR seed 也包含辅助层，首次 hydration 采用同一 frame，后续策略变化通过新 session 原子接管。Inspector 需要 authored occurrence、对应 Definition 与 settled subject；只剩预编译 Scene 的 Render 入口不能事后恢复这些信息。
+`LayoutCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。Static host 直接物化完整 frame；retained host 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 <SourceLinks
   sources={[

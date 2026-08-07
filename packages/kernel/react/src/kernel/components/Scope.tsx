@@ -1,4 +1,4 @@
-import type { InspectOptions, IRScope, IRTransformInput } from '@retikz/core';
+import type { IRScope, IRTransformInput } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
@@ -46,8 +46,8 @@ export type ScopeProps = ScopeStyleProps &
     meta?: IRScope['meta'];
     /** scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素 */
     animations?: IRScope['animations'];
-    /** 只作用于当前 authored 子树的 Layout Inspector 策略，不进入 IR */
-    inspect?: InspectOptions;
+    /** 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR */
+    authoring?: unknown;
     /** scope 子节点：嵌套 Node / Path / Coordinate / Scope */
     children?: ReactNode;
   };

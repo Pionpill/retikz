@@ -33,6 +33,7 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 | ----------- | ------------------------------------------------------------------------------------------ |
 | React       | `FlexLayout`、`LayoutItem`（`@retikz/standard-react`）                                     |
 | Vanilla     | `flexLayout`、`FlexLayoutVanillaAdapter`（`@retikz/standard-vanilla`）                     |
+| 可选检查    | `InspectFlexLayout`（`@retikz/standard-react/inspect`）、`inspectFlexLayout`（Vanilla）    |
 | IR / 持久化 | `FlexLayoutSchema`、`createFlexLayout`、`IRFlexLayout`、`FlexLayoutDefinition`（Standard） |
 
 ## 例子
@@ -91,13 +92,13 @@ FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，
 
 React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把 JSON 的 `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
 
-### React 检查选项
+### 可选 React 检查组件
 
-| 属性       | 类型                                    | 默认值 | 描述                                                                                    |
-| ---------- | --------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
-| `inspect?` | `boolean` \| `FlexLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
+| 属性       | 类型                                            | 默认值 | 描述                                                                   |
+| ---------- | ----------------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `inspect?` | `false` \| `true` \| `FlexLayoutInspectOptions` | `true` | `InspectFlexLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例 |
 
-对象形式在通用边界、盒模型间距、溢出和对齐参考线之外，还可分别控制 `lines`、固定 `gaps` 与 `distributedSpace`。Flex 行与边界输出普通 Core Path，固定 gap 使用普通 pattern paint，自由空间只保留虚线周界。完整字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+基础 `FlexLayout` 没有 `inspect` 属性。安装可选包后，从 `@retikz/standard-react/inspect` 导入 `InspectFlexLayout`；对象形式在通用边界、盒模型间距、溢出和对齐参考线之外，还可分别控制 `lines`、固定 `gaps` 与 `distributedSpace`。完整字段和宿主 / Scope 规则见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `FlexLayoutInput`
 

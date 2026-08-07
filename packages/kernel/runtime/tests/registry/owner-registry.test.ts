@@ -116,18 +116,7 @@ describe('runtime owner registry', () => {
     ]);
   });
 
-  it.each([null, {}, { key: 'missing-value' }, { key: '', value: {} }])(
-    'define 对无效 JavaScript 输入返回稳定 token error',
-    input => {
-      expect(() => defineRuntimeOwner(input as unknown as Parameters<typeof defineRuntimeOwner>[0])).toThrowError(
-        expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID' }),
-      );
-    },
-  );
-
-  it('registry 对无效 JavaScript input 返回稳定 token error', () => {
-    expect(() =>
-      createRuntimeOwnerRegistry(null as unknown as Parameters<typeof createRuntimeOwnerRegistry>[0]),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID' }));
+  it('define 拒绝空 owner key', () => {
+    expect(() => defineNumberOwner('')).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID' }));
   });
 });

@@ -1,4 +1,4 @@
-import type { AnyPathKindDefinition, InspectionAuthoringRoot, InspectOptions, IRScene } from '@retikz/core';
+import type { AnyPathKindDefinition, IRScene } from '@retikz/core';
 import type { EmbeddableContributionRecord } from '@retikz/react';
 import type { FC, ReactElement, ReactNode } from 'react';
 
@@ -10,7 +10,6 @@ const COMPONENT_EXPANSION_LIMIT = 16;
 type PreviewRootProps = {
   children?: ReactNode;
   ir?: IRScene;
-  inspect?: InspectOptions;
   viewBox?: IRScene['viewBox'];
 };
 
@@ -37,7 +36,8 @@ const LAYOUT_OWN_PROPS = new Set([
   'width',
   'height',
   'viewBox',
-  'inspect',
+  'authoring',
+  'compileDriver',
   'className',
   'style',
   'nodeDistance',
@@ -57,10 +57,6 @@ const LAYOUT_OWN_PROPS = new Set([
 export type PreviewIR = {
   ir: IRScene;
   contributions: Array<EmbeddableContributionRecord>;
-  /** React authoring 收集的组件 occurrence 检查旁路数据 */
-  inspectionRoots: Array<InspectionAuthoringRoot>;
-  /** `<Layout inspect>` 声明的整图检查策略 */
-  inspect?: InspectOptions;
   width?: number | string;
   height?: number | string;
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
@@ -86,7 +82,6 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
       : {
           ir: props.ir,
           contributions: [] as Array<EmbeddableContributionRecord>,
-          inspectionRoots: [] as Array<InspectionAuthoringRoot>,
         };
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
@@ -98,12 +93,9 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const width = ownsOutputSize ? (props.width as number | string | undefined) : undefined;
   const height = ownsOutputSize ? (props.height as number | string | undefined) : undefined;
   const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
-  const inspect = isLayout ? props.inspect : undefined;
   return {
     ir,
     contributions: built.contributions,
-    inspectionRoots: built.inspectionRoots,
-    inspect,
     width,
     height,
     pathKinds,

@@ -36,7 +36,7 @@ const view = mount(document.querySelector('#diagram')!, spec);
 
 `renderToSvgString` does not depend on the DOM, so it works for SSR, build-time generation, or saving SVG. `mount` targets browser hosts, creates SVG by default, and can switch to Canvas with `renderer: 'canvas'`. The returned view owns later updates, interaction hydration, animation controls, and disposal.
 
-`figure({ theme: { style, mode, tokens } })` writes a sparse root `IRScene.theme`, and `scope({ theme }, children)` uses the same local inheritance contract. `tokens` is a sparse owner-namespaced bag; use `defineCoreThemeTokens` and `composeThemeTokenOverrides` from `@retikz/core` to build contributions. `normalizeFigureSpec` aggregates `themeTokenDefinitions` from embedded adapters, then passes Core and owner Definitions to the registry for validation. Helpers and normalization copy Theme objects rather than mutating caller input, so React and Vanilla can feed the same Theme IR into the same Core compile pipeline.
+`figure({ theme: { style, mode } })` writes a sparse root `IRScene.theme`, and `scope({ theme }, children)` uses the same local inheritance contract. Helpers and normalization copy Theme objects rather than mutating caller input, so React and Vanilla can feed the same Theme IR into the same Core compile pipeline.
 
 ## Why @retikz/vanilla Exists
 
@@ -89,7 +89,7 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Cor
       label: 'Normalize a plain spec into Core IR and metadata',
       path: 'packages/kernel/vanilla/src/spec/normalize.ts',
       startLine: 314,
-      endLine: 386,
+      endLine: 334,
     },
     {
       label: 'One-shot Scene entry for SSR and static mounts',
@@ -122,7 +122,7 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Cor
 | `mountCanvas`       | Mount a Canvas explicitly                 | `CanvasView`                 |
 | `hydrate`           | Bind handlers to SSR / existing SVG roots | `HydrationHandle`            |
 
-`mountSvg` / `mountCanvas` return a view discriminated by `mode` or `VanillaViewMode`. With default options, IR and plain specs create a `VanillaViewMode.Retained` view: `update(next, options?)` places the complete input and mutable renderer config in one transaction. Core publishes a Scene Patch or full fallback, and the Render participant atomically replaces DOM / bitmap, artifacts, the inspection plane, runtime metadata, events, and animation handles only after success. A failed transaction publishes no new revision. The old view remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and must be disposed and remounted.
+`mountSvg` / `mountCanvas` return a view discriminated by `mode` or `VanillaViewMode`. With default options, IR and plain specs create a `VanillaViewMode.Retained` view: `update(next, options?)` places the complete input and mutable renderer config in one transaction. Core publishes a Scene Patch or full fallback, and the Render participant atomically replaces DOM / bitmap, artifacts, optional readonly layers, runtime metadata, events, and animation handles only after success. A failed transaction publishes no new revision. The old view remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and must be disposed and remounted.
 
 Retained `view.dispose()` removes the host and performs one reverse best-effort cleanup, retrying failed entries in the same call after logical resources retire. If cleanup remains pending, repeated `view.dispose()` calls retry only failed entries; successful work and host removal remain idempotent.
 
@@ -136,7 +136,7 @@ IR and plain specs can also explicitly select static full redraws. The three val
 
 A raw static view accepts `IRScene | VanillaFigureSpec` in `update(next)` instead of locking to the initial input subtype. It updates runtime metadata, artifacts, hydration, and animation on the same root. Compilation or normalization failures before host writes preserve the old picture and public getters. Failures after materialization, animation, or hydration switching begins throw synchronously without a rollback guarantee; dispose and remount the view.
 
-A precompiled `Scene` still creates a naturally `VanillaViewMode.Static` view. `update(nextScene)` preserves root identity but fully redraws the backend; there is no Core Program, Patch, Runtime diagnostics, compile artifacts, or runnable inspector. This entry rejects the entire `runtime` field, and `inspect` fails loudly because the adapter does not infer layout artifacts from a compiled Scene. Pass IR or a plain spec when artifacts or overlays are required.
+A precompiled `Scene` still creates a naturally `VanillaViewMode.Static` view. `update(nextScene)` preserves root identity but fully redraws the backend; there is no Core Program, Patch, Runtime diagnostics, compile artifacts, or runnable compile driver. This entry rejects the entire `runtime` field, and `compileDriver` fails loudly because the adapter cannot reconstruct authored sites or owner outputs from a compiled Scene. Pass IR or a plain spec when observation or auxiliary layers are required.
 
 Both `mode` and `updateStrategy` are fixed at mount time. Dispose and remount to change the strategy, DPR, or compile topology; do not try to switch them through `update()`.
 
@@ -181,7 +181,7 @@ Render options are grouped by the stage that consumes them:
 renderToSvgString(spec, {
   output: { width: 640, height: 360, idPrefix: 'flow' },
   compile: { composites, measureText },
-  inspect: { layout: true },
+  compileDriver,
   animation: { enabled: true },
 });
 
@@ -197,9 +197,9 @@ mount(svgRoot, spec, {
 });
 ```
 
-`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `inspect` is the runtime-only whole-figure Layout Inspector policy, `animation` controls playback or snapshots, and `canvas` applies only to Canvas mounts. The public `compile` type explicitly omits `inspection`, preventing callers from supplying a second conflicting policy beside top-level `inspect`. `runtime.mode` defaults to `retained`, while `runtime.updateStrategy` defaults to `auto`; `rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. Static mode remains mutually exclusive with `updateStrategy` and `rendererFactory`, and invalid modes, primitives, or accessors throw `RETAINED_RUNTIME_INPUT_INVALID` before DOM creation.
+`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `compileDriver` supplies domain-neutral observer, readonly-layer, and extension-diagnostic wiring, `animation` controls playback or snapshots, and `canvas` applies only to Canvas mounts. The default driver runs ordinary Core compilation and produces no readonly layers. `runtime.mode` defaults to `retained`, while `runtime.updateStrategy` defaults to `auto`; `rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. Static mode remains mutually exclusive with `updateStrategy` and `rendererFactory`, and invalid modes, primitives, or accessors throw `RETAINED_RUNTIME_INPUT_INVALID` before DOM creation.
 
-A plain spec also supports authored-subtree policy through `VanillaScopeSpec.inspect`, Composite-local policy through `VanillaEmbedSpec.inspect`, and Path-local policy through `VanillaPathSpec.inspect`. `path({ way: [...], inspect: true })` strips that field during normalization and creates a `target:'path' + policy.self` sidecar. Object form keeps open fields for third-party Path kinds and lets the owner schema validate them. The third argument of Standard `flexLayout()`, `gridLayout()`, and `overlayLayout()` remains precisely family-typed. Normalization never writes these fields into final Core IR. When a retained update changes the sidecar, Vanilla creates a complete candidate Session, swaps it atomically after success, and retires the previous Session; failure preserves the old frame.
+A plain spec figure, Scope, Path, or embed may carry an opaque `authoring` payload. The base normalizer only reports a stable source path and site kind; it neither interprets the payload nor writes it into final Core IR. Optional `@retikz/inspect/vanilla` provides `createInspectionVanillaAuthoring()` and an inspection driver. Standard layout adds family helpers, a barrier, and a preconfigured driver from `@retikz/standard-vanilla/inspect`. When a retained update changes authoring sites, the candidate transaction creates a new driver session; failure preserves the old frame.
 
 `RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` are the existing static options for SSR or precompiled Scenes and continue to reject the whole `runtime` field. Raw-input static mounts instead use `RawStaticMountOptions` / `RawStaticMountCanvasOptions` and require `runtime: { mode: 'static' }`.
 
@@ -246,7 +246,7 @@ A plain-spec retained update may replace the callback behind the same composite 
       label: 'Fixed composite topology and callback transaction',
       path: 'packages/kernel/vanilla/src/runtime/retained-composites.ts',
       startLine: 98,
-      endLine: 150,
+      endLine: 145,
     },
     {
       label: 'Connect the composite candidate to the Session update',
@@ -270,37 +270,38 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 
 ## API Summary
 
-| API                                           | Kind           | Description                                                                                   |
-| --------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------- |
-| `figure`                                      | authoring      | Builds a plain spec root with an optional root Theme                                          |
-| `layer`                                       | authoring      | Builds a layer with ordering and metadata                                                     |
-| `node`                                        | authoring      | Builds a named or anonymous node                                                              |
-| `coordinate`                                  | authoring      | Builds a named coordinate with a required id                                                  |
-| `path`                                        | authoring      | Builds a path; `way` reuses Draw way DSL                                                      |
-| `scope`                                       | authoring      | Builds a Theme, style, and namespace scope                                                    |
-| `embed`                                       | authoring      | Builds a Tier 2 embed node                                                                    |
-| `VanillaLayerCache`                           | authoring      | Provides a metadata hint for future layer invalidation optimization                           |
-| `VanillaViewMode`                             | runtime        | Public const object for retained / static view modes                                          |
-| `VanillaRuntimeOptions`                       | type           | Discriminated retained / static config for raw inputs                                         |
-| `VanillaRetainedRuntimeOptions`               | type           | Retained mode, update strategy, and renderer factory                                          |
-| `VanillaStaticRuntimeOptions`                 | type           | Closed config that only permits `mode: "static"`                                              |
-| `CommonOptions`                               | type           | Output, compile, root inspect, animation, and adapter options                                 |
+| API                             | Kind          | Description                                                         |
+| ------------------------------- | ------------- | ------------------------------------------------------------------- |
+| `figure`                        | authoring     | Builds a plain spec root with an optional root Theme                |
+| `layer`                         | authoring     | Builds a layer with ordering and metadata                           |
+| `node`                          | authoring     | Builds a named or anonymous node                                    |
+| `coordinate`                    | authoring     | Builds a named coordinate with a required id                        |
+| `path`                          | authoring     | Builds a path; `way` reuses Draw way DSL                            |
+| `scope`                         | authoring     | Builds a Theme, style, and namespace scope                          |
+| `embed`                         | authoring     | Builds a Tier 2 embed node                                          |
+| `VanillaLayerCache`             | authoring     | Provides a metadata hint for future layer invalidation optimization |
+| `VanillaViewMode`               | runtime       | Public const object for retained / static view modes                |
+| `VanillaRuntimeOptions`         | type          | Discriminated retained / static config for raw inputs               |
+| `VanillaRetainedRuntimeOptions` | type          | Retained mode, update strategy, and renderer factory                |
+| `VanillaStaticRuntimeOptions`   | type          | Closed config that only permits `mode: "static"`                    |
+| `CommonOptions`                 | type          | Output, compile, compile-driver, animation, and adapter options     |
 | `CommonOptions.compile.themeTokenDefinitions` | compile option | Supplies frozen owner Theme token Definitions, aggregated with embedded adapter contributions |
-| `VanillaFigureSpec`                           | type           | Version 1 plain spec with an optional root `theme`                                            |
-| `VanillaScopeSpec`                            | type           | Scope spec with local Theme and authored inspection                                           |
-| `VanillaPathSpec`                             | type           | Core Path spec with occurrence-local `inspect`                                                |
-| `VanillaEmbedSpec`                            | type           | Tier 2 spec with optional occurrence-local inspect options                                    |
-| `isVanillaFigureSpec`                         | normalization  | Checks for a version 1 plain spec                                                             |
-| `normalizeFigureSpec`                         | normalization  | Produces Core IR, composites, and runtime metadata                                            |
-| `VanillaTier2Adapter`                         | type           | Defines lowering for `embed()`                                                                |
-| `RetainedVanillaView`                         | runtime        | Transactional retained view for IR / plain specs                                              |
-| `StaticVanillaView`                           | runtime        | Full-redraw view for a precompiled Scene or raw input                                         |
-| `StaticRawSvgView`                            | runtime        | SVG static view for IR / plain specs                                                          |
-| `StaticRawCanvasView`                         | runtime        | Canvas static view for IR / plain specs                                                       |
-| `RawStaticMountOptions`                       | type           | SVG static-mount options for IR / plain specs                                                 |
-| `RawStaticMountCanvasOptions`                 | type           | Canvas static-mount options for IR / plain specs                                              |
-| `StaticMountOptions`                          | type           | SVG static-mount options for a precompiled Scene                                              |
-| `StaticMountCanvasOptions`                    | type           | Canvas static-mount options for a precompiled Scene                                           |
-| `StaticMountUnifiedOptions`                   | type           | Unified static-mount options for a precompiled Scene                                          |
-| `RetainedSvgUpdateOptions`                    | type           | Animation config for SVG retained updates                                                     |
-| `RetainedCanvasUpdateOptions`                 | type           | Animation and property config for Canvas retained updates                                     |
+| `VanillaFigureSpec`             | type          | Version 1 plain spec with an optional root `theme`                  |
+| `VanillaScopeSpec`              | type          | Scope spec with local Theme and opaque authoring                    |
+| `VanillaPathSpec`               | type          | Core Path spec with opaque authoring                                |
+| `VanillaEmbedSpec`              | type          | Tier 2 spec with opaque authoring                                   |
+| `VanillaCompileDriver`          | type          | Injects observers and resolves same-revision readonly layers        |
+| `isVanillaFigureSpec`           | normalization | Checks for a version 1 plain spec                                   |
+| `normalizeFigureSpec`           | normalization | Produces Core IR, composites, and runtime metadata                  |
+| `VanillaTier2Adapter`           | type          | Defines lowering for `embed()`                                      |
+| `RetainedVanillaView`           | runtime       | Transactional retained view for IR / plain specs                    |
+| `StaticVanillaView`             | runtime       | Full-redraw view for a precompiled Scene or raw input               |
+| `StaticRawSvgView`              | runtime       | SVG static view for IR / plain specs                                |
+| `StaticRawCanvasView`           | runtime       | Canvas static view for IR / plain specs                             |
+| `RawStaticMountOptions`         | type          | SVG static-mount options for IR / plain specs                       |
+| `RawStaticMountCanvasOptions`   | type          | Canvas static-mount options for IR / plain specs                    |
+| `StaticMountOptions`            | type          | SVG static-mount options for a precompiled Scene                    |
+| `StaticMountCanvasOptions`      | type          | Canvas static-mount options for a precompiled Scene                 |
+| `StaticMountUnifiedOptions`     | type          | Unified static-mount options for a precompiled Scene                |
+| `RetainedSvgUpdateOptions`      | type          | Animation config for SVG retained updates                           |
+| `RetainedCanvasUpdateOptions`   | type          | Animation and property config for Canvas retained updates           |

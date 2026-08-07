@@ -69,13 +69,18 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 ### 布局检查策略
 
-`inspect` 是运行时 sidecar，不进入 IR。给 `<Layout>` 传入 `{ layout: true }` 会为当前图中所有已注册且提供 inspector 的布局 occurrence 打开辅助层；边界、溢出阴影和对齐参考线与主图分开提交，不扩大 viewBox，也不参与命中测试。
+基础 `<Layout>` 不内置检查逻辑。安装可选的 `@retikz/inspect` 后，由检查宿主提供注册表、运行时选择与编译驱动；Standard 已在独立入口中封装三种布局检查器。辅助层不进入 IR，不扩大 viewBox，也不参与命中测试。
 
 ```tsx
-<Layout inspect={{ layout: true }}>{/* layout-aware composites */}</Layout>
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/standard/inspect';
+import { StandardInspectLayout } from '@retikz/standard-react/inspect';
+
+<StandardInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}>
+  {/* FlexLayout */}
+</StandardInspectLayout>;
 ```
 
-需要只检查一段 authored 子树时在 [`<Scope>`](/kernel/components/layout/scope) 上声明同一策略；只检查一个 Standard 容器时使用其组件 `inspect`。字段、默认值与级联规则见 [Standard 布局检查器](/standard/layout/reference/runtime#布局检查器)。
+需要只检查一段 authored 子树时使用 `StandardInspectScope`；只检查一个 Standard 容器时使用 `InspectFlexLayout`、`InspectGridLayout` 或 `InspectOverlayLayout`。通用机制见 [`@retikz/inspect`](/kernel/packages/inspect)，布局选项与选择规则见 [Standard 布局检查器](/standard/layout/reference/runtime#布局检查器)。
 
 ### 输出边界
 
@@ -263,7 +268,6 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
 | `fontSize`     | `number`                                                     | `16`   | 默认字号，也是 preset 与 `rem` 的根字号                                 |
 | `artifacts`    | `CompileArtifactOptions`                                     | `{}`   | 请求 opt-in 产物；`nodeLayouts:true` 返回 `CompiledNodeLayout` 布局快照 |
 | `onArtifacts`  | `(artifacts:`<br />`ReadonlyArray<CompileArtifact>) => void` | —      | React commit 后通知同次 compile 的 immutable artifacts                  |
-| `inspect`      | `InspectOptions`                                             | —      | 为已注册布局检查器提供整张图的 runtime-only 策略                        |
 
 ### 图元与资源注入
 

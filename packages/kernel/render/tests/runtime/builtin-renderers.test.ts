@@ -1,13 +1,6 @@
 ﻿// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
-import type {
-  InspectionPlane,
-  IRScene,
-  RuntimeScenePrimitive,
-  Scene,
-  ScenePatch,
-  SceneRuntimeSnapshot,
-} from '@retikz/core';
+import type { IRScene, RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
 import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
 
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
@@ -24,7 +17,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
-import type { RenderFrameSnapshot, RenderRuntimeConfigInput } from '../../src/runtime';
+import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput } from '../../src/runtime';
 
 import { bindWaapiDescriptors } from '../../src/animation';
 import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/retained';
@@ -38,53 +31,46 @@ import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
-const frameOf = (primary: SceneRuntimeSnapshot): RenderFrameSnapshot => Object.freeze({ primary, inspection: null });
+const frameOf = (primary: SceneRuntimeSnapshot): RenderFrameSnapshot =>
+  Object.freeze({ primary, layers: Object.freeze([]) });
 
-const inspectionAt = (x: number): InspectionPlane => ({
-  entries: [
-    {
-      owner: { kind: 'composite', namespace: 'test', type: 'inspection' },
-      occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
-      colorScope: 0,
-      transform: [1, 0, 0, 1, 0, 0],
-      scene: {
-        layout: { x, y: 0, width: 20, height: 10 },
-        primitives: [{ type: 'rect', x, y: 0, width: 20, height: 10, stroke: '#2563eb' }],
-      },
+const readonlyLayersAt = (x: number): ReadonlyArray<RenderReadonlyLayer> => [
+  {
+    key: 'guide',
+    transform: [1, 0, 0, 1, 0, 0],
+    scene: {
+      layout: { x, y: 0, width: 20, height: 10 },
+      primitives: [{ type: 'rect', x, y: 0, width: 20, height: 10, stroke: '#2563eb' }],
     },
-  ],
-});
+  },
+];
 
-const imageInspection = (href: string): InspectionPlane => ({
-  entries: [
-    {
-      owner: { kind: 'pathKind', name: 'stroke' },
-      occurrence: { sourcePath: '$.children[0]', expansionPath: [] },
-      colorScope: 0,
-      transform: [1, 0, 0, 1, 0, 0],
-      scene: {
-        layout: { x: 0, y: 0, width: 20, height: 10 },
-        resources: [
-          {
-            kind: 'paint',
-            id: 'inspection-image',
-            spec: { kind: 'image', href },
-          },
-        ],
-        primitives: [
-          {
-            type: 'rect',
-            x: 0,
-            y: 0,
-            width: 20,
-            height: 10,
-            fill: { kind: 'resourceRef', id: 'inspection-image' },
-          },
-        ],
-      },
+const imageReadonlyLayers = (href: string): ReadonlyArray<RenderReadonlyLayer> => [
+  {
+    key: 'image',
+    transform: [1, 0, 0, 1, 0, 0],
+    scene: {
+      layout: { x: 0, y: 0, width: 20, height: 10 },
+      resources: [
+        {
+          kind: 'paint',
+          id: 'layer-image',
+          spec: { kind: 'image', href },
+        },
+      ],
+      primitives: [
+        {
+          type: 'rect',
+          x: 0,
+          y: 0,
+          width: 20,
+          height: 10,
+          fill: { kind: 'resourceRef', id: 'layer-image' },
+        },
+      ],
     },
-  ],
-});
+  },
+];
 
 const scene = (fill: string, reversed = false): IRScene => {
   const children: IRScene['children'] = [
@@ -230,62 +216,59 @@ const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('builtin retained renderers', () => {
-  it('SVG retained renderer 原子替换独立 inspection group，rollback 恢复旧辅助层', () => {
+  it('SVG retained renderer 原子替换有序 readonly layers，rollback 恢复旧整帧', () => {
     const pair = createCorePair(scene('#ef4444'), scene('#22c55e'));
     const host = document.createElementNS(SVG_NAMESPACE, 'svg');
     const renderer = builtinRetainedRendererFactory({
       backend: 'svg',
       host,
-      immutableOptions: { backend: 'svg', idPrefix: 'inspection-frame' },
+      immutableOptions: { backend: 'svg', idPrefix: 'readonly-frame' },
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin SVG renderer executor');
-    const initialFrame = Object.freeze({ primary: pair.current, inspection: inspectionAt(4) });
-    const nextFrame = Object.freeze({ primary: pair.next, inspection: inspectionAt(14) });
+    const initialFrame = Object.freeze({ primary: pair.current, layers: readonlyLayersAt(4) });
+    const nextFrame = Object.freeze({ primary: pair.next, layers: readonlyLayersAt(14) });
     const mount = executor.prepareMount(initialFrame, {}, 'create');
 
     mount.commit();
     mount.dispose();
-    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
-    expect(host.querySelector('[data-retikz-inspection="layout"]')?.getAttribute('pointer-events')).toBe('none');
-    expect(host.querySelector('[data-retikz-inspection="layout"]')?.getAttribute('aria-hidden')).toBe('true');
+    const committedFrame = executor.read().frame;
+    expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('4');
+    expect(host.querySelector('[data-retikz-readonly-layer="guide"]')?.getAttribute('pointer-events')).toBe('none');
+    expect(host.querySelector('[data-retikz-readonly-layer="guide"]')?.getAttribute('aria-hidden')).toBe('true');
 
     const invalidPrimitive = Object.defineProperty({}, 'type', {
       get: () => {
         throw new Error('invalid auxiliary Scene');
       },
     });
-    const invalidInspection = {
-      entries: [
-        ...inspectionAt(14).entries,
-        {
-          owner: { kind: 'pathKind', name: 'stroke' },
-          occurrence: { sourcePath: '$.children[1]', expansionPath: [] },
-          colorScope: 1,
-          transform: [1, 0, 0, 1, 0, 0],
-          scene: {
-            layout: { x: 0, y: 0, width: 1, height: 1 },
-            primitives: [invalidPrimitive],
-          },
+    const invalidLayers = [
+      ...readonlyLayersAt(14),
+      {
+        key: 'invalid',
+        transform: [1, 0, 0, 1, 0, 0],
+        scene: {
+          layout: { x: 0, y: 0, width: 1, height: 1 },
+          primitives: [invalidPrimitive],
         },
-      ],
-    } as unknown as InspectionPlane;
+      },
+    ] as unknown as ReadonlyArray<RenderReadonlyLayer>;
     expect(() =>
-      executor.prepare(pair.patch, Object.freeze({ primary: pair.next, inspection: invalidInspection }), {}),
+      executor.prepare(pair.patch, Object.freeze({ primary: pair.next, layers: invalidLayers }), {}),
     ).toThrow('invalid auxiliary Scene');
-    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
-    expect(executor.read().frame.inspection).toBe(initialFrame.inspection);
+    expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('4');
+    expect(executor.read().frame.layers).toBe(committedFrame.layers);
 
     const prepared = executor.prepare(pair.patch, nextFrame, {});
     prepared.commit();
-    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('14');
+    expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('14');
     prepared.rollback();
-    expect(host.querySelector('[data-retikz-inspection="layout"] rect')?.getAttribute('x')).toBe('4');
+    expect(host.querySelector('[data-retikz-readonly-layer="guide"] rect')?.getAttribute('x')).toBe('4');
     prepared.dispose();
     executor.dispose();
   });
 
-  it('Canvas retained renderer 后绘 inspection，但 hit-test 仍只命中 primary topology', () => {
+  it('Canvas retained renderer 后绘 readonly layers，但 hit-test 仍只命中 primary topology', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (this: HTMLCanvasElement) {
       return new Proxy({ canvas: this, globalAlpha: 1 } as unknown as CanvasRenderingContext2D, {
         get: (target, key) => {
@@ -321,12 +304,12 @@ describe('builtin retained renderers', () => {
     const renderer = builtinRetainedRendererFactory({
       backend: 'canvas',
       host,
-      immutableOptions: { backend: 'canvas', idPrefix: 'inspection-hit-test', devicePixelRatio: 1 },
+      immutableOptions: { backend: 'canvas', idPrefix: 'readonly-hit-test', devicePixelRatio: 1 },
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
     const mount = executor.prepareMount(
-      Object.freeze({ primary, inspection: inspectionAt(0) }),
+      Object.freeze({ primary, layers: readonlyLayersAt(0) }),
       {
         handlerContributions: [{ registration: 1, handlers: { 'node-a': { click }, 'node-b': { click } } }],
       },
@@ -374,18 +357,18 @@ describe('builtin retained renderers', () => {
     const renderer = builtinRetainedRendererFactory({
       backend: 'canvas',
       host,
-      immutableOptions: { backend: 'canvas', idPrefix: 'inspection-image', devicePixelRatio: 1 },
+      immutableOptions: { backend: 'canvas', idPrefix: 'readonly-image', devicePixelRatio: 1 },
     });
     const executor = getRetainedRendererExecutor(renderer);
     if (executor === undefined) throw new Error('expected builtin Canvas renderer executor');
     const mount = executor.prepareMount(
-      Object.freeze({ primary, inspection: imageInspection('inspection.png') }),
+      Object.freeze({ primary, layers: imageReadonlyLayers('layer.png') }),
       {},
       'create',
     );
     const image = TestImage.latest;
 
-    expect(image?.src).toBe('inspection.png');
+    expect(image?.src).toBe('layer.png');
     mount.commit();
     mount.dispose();
     image?.onload?.(new Event('load'));

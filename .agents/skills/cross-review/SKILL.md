@@ -110,6 +110,7 @@ subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent �
 - 无 `as any` / `@ts-ignore` / `@ts-expect-error` / 非必要 `!` 绕过；让 zod / IR / 第三方真实类型穿透到调用点
 - TS 类型用 `z.infer` 派生不手写（单一真源，避免与 schema 漂移）；由 IR schema object 推导出的公开数据类型命名为 `IRXxx`，由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`
 - IR 100% JSON 可序列化：schema 里不出现 `z.any()` / `z.unknown()` / 函数 / `ReactNode`
+- 按 TypeScript 信任边界审查核心逻辑：对已声明明确类型的内部输入，重点提防与业务无关的 `unknown`、`typeof`、`Array.isArray`、对象结构探测和重复 `throw`；JSON / 持久化等外部数据只应在 parser / schema / adapter 入口校验一次。保留真正的入口校验、业务不变量和查找失败诊断，不把必要的契约错误误判为冗余
 
 **分层与架构**
 
@@ -129,6 +130,7 @@ subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent �
 - DRY：是否重复实现了本可复用的现有工具；是否有死代码 / 未使用的导出
 - 单一职责：函数过长 / 文件过大 / 一个单元干太多事、边界不清
 - 魔法数字、散落常量；命名是否表意
+- 是否对纯内部对象无意义地使用 `Object.freeze`；只有对象会暴露给外部或通过公开 API 返回时才需要冻结
 - 注释只解释「为什么」不复述代码；**不引用 ADR / 历史阶段**（编号会随重排 rot，且会进 LLM definition 成噪声）
 
 **性能**

@@ -1,6 +1,6 @@
 import type { RuntimeChangeSet, RuntimeIdentity } from '@retikz/runtime';
 
-import { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { CoreChange } from '../../contract';
 import type { IRChild, IRScene, IRScope } from '../../schemas';
@@ -36,24 +36,24 @@ export type CoreSnapshotIndexRead = Readonly<{
 const createScopeValue = (scope: Readonly<IRScope>): CoreSnapshotScopeValue => {
   const { children, ...value } = scope;
   void children;
-  return Object.freeze(value);
+  return value;
 };
 
 /** 从完整 Snapshot 建立保守的 stable identity tree */
 export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshotIndexRead => {
   const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
-  const rootValue: CoreSnapshotRootValue = Object.freeze({
+  const rootValue: CoreSnapshotRootValue = {
     type: source.type,
     version: source.version,
     ...(source.theme === undefined ? {} : { theme: source.theme }),
     ...(source.viewBox === undefined ? {} : { viewBox: source.viewBox }),
     ...(source.animations === undefined ? {} : { animations: source.animations }),
-  });
+  };
   const entries: Array<CoreSnapshotIndexEntry> = [
-    Object.freeze({
+    {
       identity: rootIdentity,
       value: rootValue,
-    }),
+    },
   ];
   let complete = true;
 
@@ -66,19 +66,17 @@ export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshot
       }
       seenIds.add(child.id);
       const identity = createRuntimeIdentity(CORE_OWNER_KEY, [...parent.path, child.type, child.id]);
-      entries.push(
-        Object.freeze({
-          identity,
-          parent,
-          value: child.type === 'scope' ? createScopeValue(child) : child,
-        }),
-      );
+      entries.push({
+        identity,
+        parent,
+        value: child.type === 'scope' ? createScopeValue(child) : child,
+      });
       if (child.type === 'scope') indexChildren(child.children, identity);
     }
   };
 
   indexChildren(source.children, rootIdentity);
-  return Object.freeze({ complete, entries: Object.freeze(entries) });
+  return { complete, entries };
 };
 
 type CoreSnapshotEntryLookup = Readonly<{
@@ -111,7 +109,7 @@ const createSnapshotEntryLookup = (index: CoreSnapshotIndexRead): CoreSnapshotEn
   const childrenByParentPath = new Map<string, ReadonlyArray<CoreSnapshotIndexEntry>>();
   const siblingIndexByPath = new Map<string, number>();
   for (const [parentKey, children] of mutableChildrenByParentPath) {
-    childrenByParentPath.set(parentKey, Object.freeze(children));
+    childrenByParentPath.set(parentKey, children);
     children.forEach((entry, siblingIndex) => siblingIndexByPath.set(identityPathKey(entry.identity), siblingIndex));
   }
   return { root, entriesByPath, childrenByParentPath, siblingIndexByPath };
@@ -190,11 +188,11 @@ export const coreChangeSetMatchesSnapshots = (
 
     const previousEntities = previous.entries.slice(1);
     const nextEntities = next.entries.slice(1);
-    const previousIdentities = createRuntimeIdentityIndex(
+    const previousIdentities = createRuntimeIdentityLookup(
       CORE_OWNER_KEY,
       previous.entries.map(entry => entry.identity),
     );
-    const nextIdentities = createRuntimeIdentityIndex(
+    const nextIdentities = createRuntimeIdentityLookup(
       CORE_OWNER_KEY,
       next.entries.map(entry => entry.identity),
     );

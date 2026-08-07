@@ -58,19 +58,10 @@ export const snapshotCompositeLayoutChild = (owner: string, value: unknown, inde
 export const validateExpandCompositeOutput = (owner: string, produced: unknown): ReadonlyArray<IRChild> =>
   withProviderOutputValidationBoundary(owner, () => {
     const values = Array.isArray(produced) ? Array.from(produced.entries(), ([, value]) => value) : [produced];
-    return Object.freeze(values.map((value, index) => snapshotCompositeOutputChild(owner, value, index)));
+    return values.map((value, index) => snapshotCompositeOutputChild(owner, value, index));
   });
 
-/** 递归冻结 builder 已 detached 的 plain data */
-const deepFreeze = <T>(value: T): T => {
-  const input: unknown = value;
-  if (input === null || typeof input !== 'object' || Object.isFrozen(input)) return value;
-  for (const child of Object.values(input)) deepFreeze(child);
-  Object.freeze(input);
-  return value;
-};
-
-/** 以普通 Scope props schema 校验、脱离并冻结完整 authored Scope props */
+/** 以普通 Scope props schema 校验并脱离完整 authored Scope props */
 const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): CompositeCompileScopeProps => {
   if (props === null || typeof props !== 'object' || Array.isArray(props)) {
     throw new CompositeContractError(`${owner.label} received invalid runtime Scope props.`);
@@ -88,10 +79,10 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
       { cause: error },
     );
   }
-  return deepFreeze(parsed);
+  return parsed;
 };
 
-/** 校验 replay wrapper 的已 lowering Scene transform 并复制为 detached frozen value */
+/** 校验 replay wrapper 的已 lowering Scene transform 并复制为 detached value */
 const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, index: number): Transform => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     throw new CompositeContractError(`${owner.label} received an invalid replay wrapper transform at index ${index}.`);
@@ -112,14 +103,14 @@ const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, inde
       if (keys.some(key => !['kind', 'x', 'y'].includes(key))) fail();
       assertFinite(x);
       assertFinite(y);
-      return Object.freeze({ kind: 'translate', x, y });
+      return { kind: 'translate', x, y };
     }
     case 'scale': {
       const { x, y } = input;
       if (keys.some(key => !['kind', 'x', 'y'].includes(key))) fail();
       assertFinite(x);
       if (y !== undefined) assertFinite(y);
-      return Object.freeze({ kind: 'scale', x, ...(y === undefined ? {} : { y }) });
+      return { kind: 'scale', x, ...(y === undefined ? {} : { y }) };
     }
     case 'rotate': {
       const { degrees, cx, cy } = input;
@@ -127,19 +118,19 @@ const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, inde
       assertFinite(degrees);
       if (cx !== undefined) assertFinite(cx);
       if (cy !== undefined) assertFinite(cy);
-      return Object.freeze({
+      return {
         kind: 'rotate',
         degrees,
         ...(cx === undefined ? {} : { cx }),
         ...(cy === undefined ? {} : { cy }),
-      });
+      };
     }
     default:
       return fail();
   }
 };
 
-/** 校验并冻结 replay 专用的 transform / clip 外壳 */
+/** 校验并脱离 replay 专用的 transform / clip 外壳 */
 const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): CompositeReplayWrapper | undefined => {
   if (wrapper === undefined) return undefined;
   if (wrapper === null || typeof wrapper !== 'object' || Array.isArray(wrapper)) {
@@ -167,10 +158,10 @@ const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): Com
     rawTransforms === undefined
       ? undefined
       : Array.from(rawTransforms, (transform, index) => cloneReplayTransform(transform, owner, index));
-  return deepFreeze({
+  return {
     ...(transforms === undefined ? {} : { transforms }),
     ...(parsed.clip === undefined ? {} : { clip: parsed.clip }),
-  });
+  };
 };
 
 /** 创建 callback-local replay output child */
@@ -194,11 +185,11 @@ export const createCompositeReplayChild = (
       );
     }
     const clonedWrapper = cloneReplayWrapper(wrapper, owner);
-    const child: CompositeRuntimeOutputChild = Object.freeze({
+    const child: CompositeRuntimeOutputChild = {
       kind: 'replay',
       replay: layoutResult.replay,
       ...(clonedWrapper === undefined ? {} : { wrapper: clonedWrapper }),
-    });
+    };
     const handle = Object.freeze({}) as CompositeCompileChild;
     session.outputChildren.set(handle, { owner, child, used: false });
     return handle;
@@ -229,11 +220,11 @@ export const createCompositeScopeChild = (
       }
       return snapshotCompositeOutputChild(owner.label, child, index);
     });
-    const child: CompositeRuntimeOutputChild = Object.freeze({
+    const child: CompositeRuntimeOutputChild = {
       kind: 'scope',
       props: cloneScopeProps(props, owner),
-      children: Object.freeze(clonedChildren),
-    });
+      children: clonedChildren,
+    };
     const handle = Object.freeze({}) as CompositeCompileChild;
     session.outputChildren.set(handle, { owner, child, used: false });
     return handle;

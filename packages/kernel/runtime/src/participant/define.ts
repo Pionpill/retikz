@@ -22,43 +22,39 @@ export const defineRuntimeCommitParticipant = <TRead>(
 ): RuntimeCommitParticipant<TRead> => {
   const candidate: unknown = input;
   if (typeof candidate !== 'object' || candidate === null) throw invalidParticipant(input);
-  const key: unknown = Reflect.get(candidate, 'key');
+  const keyCandidate: unknown = Reflect.get(candidate, 'key');
   const owners: unknown = Reflect.get(candidate, 'owners');
   const programs: unknown = Reflect.get(candidate, 'programs');
   const revisionPolicy: unknown = Reflect.get(candidate, 'revisionPolicy');
-  const tracePhases: unknown = Reflect.get(candidate, 'tracePhases');
+  const tracePhasesCandidate: unknown = Reflect.get(candidate, 'tracePhases');
   const prepare: unknown = Reflect.get(candidate, 'prepare');
   const read: unknown = Reflect.get(candidate, 'read');
   const dispose: unknown = Reflect.get(candidate, 'dispose');
   if (
-    typeof key !== 'string' ||
-    key.length === 0 ||
+    typeof keyCandidate !== 'string' ||
+    keyCandidate.length === 0 ||
     !Array.isArray(owners) ||
     !Array.isArray(programs) ||
     (revisionPolicy !== 'affected' && revisionPolicy !== 'continuous') ||
-    !Array.isArray(tracePhases) ||
+    !Array.isArray(tracePhasesCandidate) ||
     typeof prepare !== 'function' ||
     typeof read !== 'function' ||
     typeof dispose !== 'function'
   ) {
     throw invalidParticipant(input);
   }
-  const copiedTracePhases = Object.freeze(
-    tracePhases.map(definition => {
-      if (typeof definition !== 'object' || definition === null) return definition;
-      const outcomes = Reflect.get(definition, 'outcomes');
-      return Object.freeze({
-        phase: Reflect.get(definition, 'phase'),
-        unit: Reflect.get(definition, 'unit'),
-        outcomes: Array.isArray(outcomes) ? Object.freeze([...outcomes]) : outcomes,
-      });
-    }),
-  );
+  const key = input.key;
+  const tracePhases = input.tracePhases;
   try {
-    createRuntimeTraceReporter({ owner: key, phases: copiedTracePhases, sink: () => undefined });
+    createRuntimeTraceReporter({ owner: key, phases: tracePhases, sink: () => undefined });
   } catch (cause) {
     throw new RuntimeError({ code: 'RUNTIME_TRACE_DEFINITION_INVALID', phase: 'participant-definition', cause });
   }
+  const copiedTracePhases = Object.freeze(
+    tracePhases.map(({ phase, unit, outcomes }) =>
+      Object.freeze({ phase, unit, outcomes: Object.freeze([...outcomes]) }),
+    ),
+  );
   const token = Object.freeze({
     key,
     owners: Object.freeze([...owners]),

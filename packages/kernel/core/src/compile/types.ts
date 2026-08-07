@@ -8,9 +8,8 @@ import type {
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
-  CompileInspectionOptions,
+  CompileObserverOutput,
   CompileOccurrenceLocator,
-  InspectionPlane,
   PathGeneratorDefinition,
   PatternDefinition,
   RibbonWidthProfileDefinition,
@@ -105,8 +104,14 @@ export type CompileArtifactOptions = Readonly<{
 export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
   scene: Scene;
   artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
-  /** 与 primary Scene 隔离的开发期 inspection plane */
-  inspection: InspectionPlane | null;
+}>;
+
+/** 显式 observed compile 的主结果与 observer outputs */
+export type ObservedCompileResult<TOutput = unknown> = Readonly<{
+  /** 与普通 compile 等价的 primary result */
+  primary: CompileResult;
+  /** 按 observer definitions 输入顺序排列的输出 */
+  observerOutputs: ReadonlyArray<CompileObserverOutput<TOutput>>;
 }>;
 
 /** 从精确 composite definition 推导 artifact envelope */
@@ -269,8 +274,6 @@ export type CompileOptions<
   CompileCompositeOptions<TComposites> & {
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
-    /** runtime-only Layout Inspector authoring sidecar */
-    inspection?: CompileInspectionOptions;
     /** Theme token owner definitions；Core built-in definition 始终自动注册 */
     themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
     /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */

@@ -43,7 +43,6 @@ Core routes composites only by the top-level `namespace + type`; it does not int
 | `expand`         | Emit Tier 1 or nested Tier 2 from the effective Theme  | Exclusive with `compile`; must reach Tier 1       |
 | `compile`        | Measure, constrain, and place children in full compile | Exclusive with `expand`                           |
 | `artifactSchema` | Validate a domain artifact returned by `compile`       | Required when the definition has an artifact type |
-| `inspector`      | Convert a validated artifact into auxiliary children   | Compile branch with `artifactSchema` only         |
 
 The compiler looks up `${namespace}.${type}`, validates the node, and calls the selected branch. Nested composites continue until final output contains only Tier 1 and committed replay results. An unregistered node warns and is skipped; cycles or excess depth throw. See [Compile](/kernel/reference/runtime/compile) for complete fields, diagnostics, and standalone lowering behavior.
 
@@ -144,7 +143,7 @@ A replay wrapper first places the child with `transforms`, then applies `clip` i
 
 A layout-aware definition can declare `artifactSchema` and return a JSON-safe `artifact` from `compile`. Core wraps it in `CompileResult.artifacts` with `namespace`, `type`, and an occurrence locator. The locator combines the original `sourcePath` with structured expansion / output / replay segments, without a global Map, callback capture, or second traversal. Hosts therefore receive the Scene and domain artifacts from one canonical compile.
 
-The same artifact can be the stable subject for development-only auxiliary content. This minimal addition assumes existing `CardSchema` and `compileCard` values; `compileCard` must return an `artifact` accepted by `CardArtifactSchema`.
+The same artifact can be a stable owner output for an external observer. This Card Inspector is defined independently in `@retikz/inspect`; `compileCard` still only returns an artifact accepted by `CardArtifactSchema`.
 
 ```ts
 const CardArtifactSchema = z.strictObject({
@@ -159,7 +158,10 @@ const CardArtifactSchema = z.strictObject({
 type CardArtifact = z.infer<typeof CardArtifactSchema>;
 
 const CardInspector = defineInspector({
-  kind: 'composite',
+  namespace: 'demo',
+  name: 'card-bounds',
+  owner: { kind: 'composite', namespace: 'demo', type: 'card' },
+  subjectSchema: CardArtifactSchema,
   optionsInputSchema: z.strictObject({}),
   optionsSchema: z.strictObject({}),
   inspect: (artifact: CardArtifact, context) => ({
@@ -182,11 +184,12 @@ export const CardDefinition = defineComposite({
   schema: CardSchema,
   compile: compileCard,
   artifactSchema: CardArtifactSchema,
-  inspector: CardInspector,
 });
+
+const inspectorRegistry = createInspectorRegistry([CardInspector]);
 ```
 
-`inspect()` returns an ordinary `IRChild` or dense readonly array and declares no `outputSchema`. Core compiles every output in an isolated environment with Inspectors forcibly disabled, so a returned Path or Composite cannot recursively inspect itself. The subject comes from the validated same-compile artifact rather than being reconstructed from the final Scene.
+`inspect()` returns an ordinary `IRChild` or dense readonly array and declares no `outputSchema`. Core publishes only the validated artifact for a final occurrence; `@retikz/inspect` validates `subjectSchema` again and compiles auxiliary output in an isolated environment that does not recursively notify observers. Selection and registration do not enter the Composite Definition. See [`@retikz/inspect`](/kernel/packages/inspect).
 
 `lowerIRToKernel()` only supports independently executable `expand` branches. It fails explicitly on a layout-aware composite because the correct result depends on the full compile environment.
 
@@ -216,7 +219,7 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       label: 'Validate the definition key against schema literals',
       path: 'packages/kernel/core/src/contract/composite/define.ts',
       startLine: 30,
-      endLine: 90,
+      endLine: 89,
     },
     {
       label: 'Public proposal, probe, guide, and callback contracts',
@@ -234,7 +237,7 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 239,
+      endLine: 240,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',

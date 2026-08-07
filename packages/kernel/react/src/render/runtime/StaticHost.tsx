@@ -23,7 +23,7 @@ import { svgToReact } from '../svg';
 export type StaticHostProps = Readonly<{
   /** 要完整物化的 renderer 后端 */
   backend: 'svg' | 'canvas';
-  /** 当前 render 已完整编译的主图与检查辅助层 */
+  /** 当前 render 已完整编译的主图与只读辅助层 */
   frame: StaticRenderFrame;
   /** 当前完整编译产生的 artifacts */
   artifacts: ReadonlyArray<CompileArtifact>;
@@ -51,6 +51,8 @@ export type StaticHostProps = Readonly<{
   idPrefix: string;
   /** 完整编译 commit 后的 artifacts 通知出口 */
   onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  /** 当前完整 frame 成功提交后的领域中立 driver 通知 */
+  onCompileCommit?: () => void;
 }>;
 
 /** 写入 callback ref 或 RefObject */
@@ -115,6 +117,7 @@ export const StaticHost: FC<StaticHostProps> = props => {
     animationRef,
     idPrefix,
     onArtifacts,
+    onCompileCommit,
   } = props;
   const scene = frame.primary;
   const document = useMemo(
@@ -143,6 +146,13 @@ export const StaticHost: FC<StaticHostProps> = props => {
   useEffect(() => {
     onArtifactsRef.current?.(artifacts);
   }, [artifacts]);
+  useEffect(() => {
+    try {
+      onCompileCommit?.();
+    } catch (cause) {
+      if (process.env.NODE_ENV !== 'production') console.warn('[retikz] <Layout> compile driver commit failed', cause);
+    }
+  }, [onCompileCommit]);
 
   if (backend === 'canvas') {
     return (

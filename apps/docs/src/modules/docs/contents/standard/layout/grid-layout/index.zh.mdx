@@ -37,6 +37,7 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
 | ----------- | ------------------------------------------------------------------------------------------ |
 | React       | `GridLayout`、`LayoutItem`（`@retikz/standard-react`）                                     |
 | Vanilla     | `gridLayout`、`GridLayoutVanillaAdapter`（`@retikz/standard-vanilla`）                     |
+| 可选检查    | `InspectGridLayout`（`@retikz/standard-react/inspect`）、`inspectGridLayout`（Vanilla）    |
 | IR / 持久化 | `GridLayoutSchema`、`createGridLayout`、`IRGridLayout`、`GridLayoutDefinition`（Standard） |
 
 ## 例子
@@ -85,13 +86,13 @@ GridLayout 使用固定的物理 x→y 求解顺序：
 
 ## API 参考
 
-### React 检查选项
+### 可选 React 检查组件
 
-| 属性       | 类型                                    | 默认值 | 描述                                                                                    |
-| ---------- | --------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
-| `inspect?` | `boolean` \| `GridLayoutInspectOptions` | 继承   | 省略时继承 Layout / 最近 Scope；`false` 只关闭当前 occurrence，且不会关闭或开启嵌套布局 |
+| 属性       | 类型                                            | 默认值 | 描述                                                                   |
+| ---------- | ----------------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `inspect?` | `false` \| `true` \| `GridLayoutInspectOptions` | `true` | `InspectGridLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例 |
 
-对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。轨道、单元格与跨轨标记输出普通 Core Path，固定 gap 使用普通 pattern paint，自由空间只保留虚线周界。完整通用字段和全图 / Scope 策略见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
+基础 `GridLayout` 没有 `inspect` 属性。可选的 `InspectGridLayout` 对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。完整通用字段和宿主 / Scope 规则见[运行时参考](/standard/layout/reference/runtime#布局检查器)。
 
 ### `GridLayoutInput`
 

@@ -1,19 +1,6 @@
-import type {
-  AnyCompositeDefinition,
-  AnyThemeTokenDefinition,
-  InspectionAuthoringRoot,
-  InspectionAuthoringTree,
-  InspectionChildForest,
-  InspectOptions,
-  IRChild,
-  IRScene,
-  IRScope,
-  SceneInspectionAuthoringPathSegment,
-  ScopeInspectionAuthoringPathSegment,
-} from '@retikz/core';
+import type { AnyCompositeDefinition, AnyThemeTokenDefinition, IRChild, IRScene, IRScope } from '@retikz/core';
 
-import { mergeInspectOptions } from '@retikz/core';
-
+import type { VanillaAuthoringSite } from './authoring-site';
 import type {
   AnyVanillaEmbedSpec,
   VanillaChildSpec,
@@ -27,6 +14,7 @@ import type {
   VanillaTier2Contribution,
 } from './types';
 
+import { createVanillaAuthoringSite } from './authoring-site';
 import { DEFAULT_LAYER_ID, VanillaLayerCache } from './constants';
 import { createRuntimeMetaSnapshot } from './runtime-meta';
 import { cloneThemeInput } from './theme-input';
@@ -59,12 +47,10 @@ type NormalizeContext = {
   identityIndex: Map<string, Array<string>>;
   /** 全图父子身份关系索引，用于后续失效边界推导 */
   parentIndex: Map<string, string>;
-  /** 当前 child 在最终 Scene authored tree 中的 locator */
-  inspectionPath: Array<SceneInspectionAuthoringPathSegment | ScopeInspectionAuthoringPathSegment>;
-  /** 最近 Scope 累积的 sparse inspection 策略 */
-  inheritedInspection?: InspectOptions;
-  /** 全图 runtime-only inspection roots */
-  inspectionRoots: Array<InspectionAuthoringRoot>;
+  /** 当前父容器在最终 Scene authored tree 中的来源路径 */
+  sourcePath: string;
+  /** 全图按 authored 顺序收集的领域中立 sites */
+  authoringSites: Array<VanillaAuthoringSite>;
 };
 
 /** 校验 adapter 输出身份标识时额外需要的上下文 */
@@ -123,6 +109,10 @@ const isIRScope = (child: IRChild): child is IRScope =>
 
 const readIdentity = (child: object): string | undefined =>
   'id' in child && typeof child.id === 'string' ? child.id : undefined;
+
+/** 读取当前父容器中一个 IR child 的 authored source path */
+const childSourcePath = (context: NormalizeContext, index: number): string =>
+  context.sourcePath.length === 0 ? `children[${index}]` : `${context.sourcePath}.children[${index}]`;
 
 /** 按命名空间合并 Tier2 数据集，再生成 core composite definitions */
 const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): Array<AnyCompositeDefinition> => {
@@ -191,93 +181,6 @@ const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputConte
   for (const scopeChild of child.children) validateAdapterOutputIdentities(scopeChild, childCtx);
 };
 
-/** 把 ancestor Scope policy 合入一个 Vanilla authored root tree */
-const inheritInspectionTree = (
-  tree: InspectionAuthoringTree,
-  inherited: InspectOptions | undefined,
-): InspectionAuthoringTree => {
-  const merged = mergeInspectOptions(inherited, tree.policy?.inherited);
-  if (merged === undefined) return tree;
-  return Object.freeze({
-    ...tree,
-    policy: Object.freeze({ ...tree.policy, inherited: merged }),
-  });
-};
-
-/** 把 embed 的 self policy 写入其唯一相对根 occurrence */
-const applyEmbedInspection = (
-  forest: InspectionChildForest,
-  inspect: AnyVanillaEmbedSpec['inspect'],
-): InspectionChildForest => {
-  if (inspect === undefined) return forest;
-  const rootIndexes = forest
-    .map((root, index) => (root.locator.path.length === 0 ? index : -1))
-    .filter(index => index >= 0);
-  if (rootIndexes.length !== 1) {
-    throw new Error('vanilla embed inspection requires exactly one contribution root at the embedded node');
-  }
-  return Object.freeze(
-    forest.map((root, index) =>
-      index === rootIndexes[0]
-        ? Object.freeze({
-            ...root,
-            tree: Object.freeze({
-              ...root.tree,
-              policy: Object.freeze({ ...root.tree.policy, self: inspect }),
-            }),
-          })
-        : root,
-    ),
-  );
-};
-
-/** 把相对 contribution.node 的 forest 提升为最终 Scene roots */
-const collectContributionInspectionRoots = (context: NormalizeContext, forest: InspectionChildForest): void => {
-  const sceneSegment = context.inspectionPath[0];
-  const scopePath = context.inspectionPath.slice(1);
-  if (
-    sceneSegment.kind !== 'sceneChild' ||
-    !scopePath.every((segment): segment is ScopeInspectionAuthoringPathSegment => segment.kind === 'scopeChild')
-  ) {
-    throw new Error('internal: Vanilla inspection path must start at a Scene child');
-  }
-  forest.forEach(root => {
-    const path: InspectionAuthoringRoot['locator']['path'] = [sceneSegment, ...scopePath, ...root.locator.path];
-    context.inspectionRoots.push(
-      Object.freeze({
-        locator: Object.freeze({ target: root.locator.target, path }),
-        tree: inheritInspectionTree(root.tree, context.inheritedInspection),
-      }),
-    );
-  });
-};
-
-/** 为当前 authored Path 收集 occurrence-local Inspector sidecar */
-const collectPathInspectionRoot = (
-  context: NormalizeContext,
-  inspect: NonNullable<VanillaPathSpec['inspect']>,
-): void => {
-  const [sceneSegment, ...scopePath] = context.inspectionPath;
-  if (
-    sceneSegment.kind !== 'sceneChild' ||
-    !scopePath.every((segment): segment is ScopeInspectionAuthoringPathSegment => segment.kind === 'scopeChild')
-  ) {
-    throw new Error('internal: Vanilla Path inspection path must start at a Scene child');
-  }
-  const path: InspectionAuthoringRoot['locator']['path'] = [sceneSegment, ...scopePath];
-  context.inspectionRoots.push(
-    Object.freeze({
-      locator: Object.freeze({ target: 'path', path }),
-      tree: Object.freeze({
-        policy: Object.freeze({
-          ...(context.inheritedInspection === undefined ? {} : { inherited: context.inheritedInspection }),
-          self: inspect,
-        }),
-      }),
-    }),
-  );
-};
-
 /** 把 embed 节点交给匹配的 Tier2 adapter 静态下沉为 core IR 子节点 */
 const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild => {
   const adapter = ctx.adapters?.find(entry => entry.kind === embed.kind);
@@ -305,18 +208,6 @@ const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild 
     parentId: embed.id,
     path: [...ctx.path, embed.id],
   });
-  let inspectionRoots = contribution.inspectionRoots;
-  if (inspectionRoots === undefined && embed.inspect !== undefined) {
-    if (!('namespace' in contribution.node)) {
-      throw new Error('vanilla embed inspection requires an adapter contribution root');
-    }
-    inspectionRoots = Object.freeze([
-      Object.freeze({ locator: Object.freeze({ target: 'composite', path: [] }), tree: Object.freeze({}) }),
-    ]);
-  }
-  if (inspectionRoots !== undefined) {
-    collectContributionInspectionRoots(ctx, applyEmbedInspection(inspectionRoots, embed.inspect));
-  }
   return contribution.node;
 };
 
@@ -324,40 +215,60 @@ const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild 
 const normalizeChild = (child: VanillaChildSpec, ctx: NormalizeContext): IRChild => {
   if (isEmbed(child)) {
     registerIdentity(child.id, ctx.parentId, [...ctx.path, child.id], ctx);
-    return lowerEmbed(child, ctx);
+    const node = lowerEmbed(child, ctx);
+    ctx.authoringSites.push(
+      createVanillaAuthoringSite({
+        kind: 'embeddable',
+        sourcePath: ctx.sourcePath,
+        type: child.kind,
+        authoring: child.authoring,
+      }),
+    );
+    return node;
   }
 
   const identity = readIdentity(child);
   registerIdentity(identity, ctx.parentId, identity === undefined ? ctx.path : [...ctx.path, identity], ctx);
   if (isPath(child)) {
-    const { inspect, ...path } = child;
-    if (inspect !== undefined) collectPathInspectionRoot(ctx, inspect);
+    const { authoring, ...path } = child;
+    ctx.authoringSites.push(
+      createVanillaAuthoringSite({
+        kind: 'path',
+        sourcePath: `${ctx.sourcePath}.path`,
+        type: 'path',
+        authoring,
+      }),
+    );
     return path;
   }
-  if (!isScope(child)) {
-    if ('namespace' in child && ctx.inheritedInspection !== undefined) {
-      collectContributionInspectionRoots(ctx, [{ locator: { target: 'composite', path: [] }, tree: {} }]);
-    }
-    return child;
-  }
+  if (!isScope(child)) return child;
 
   // scope 的匿名子节点继续归属最近具名祖先；具名 scope 则成为新的父身份标识。
   const scopeId = identity ?? ctx.parentId;
   const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
+  const scopeSourcePath = `${ctx.sourcePath}.scope`;
+  ctx.authoringSites.push(
+    createVanillaAuthoringSite({
+      kind: 'scope',
+      sourcePath: scopeSourcePath,
+      type: 'scope',
+      authoring: child.authoring,
+    }),
+  );
   const scopeCtx: NormalizeContext = {
     ...ctx,
     parentId: scopeId,
     path: scopePath,
-    inheritedInspection: mergeInspectOptions(ctx.inheritedInspection, child.inspect),
+    sourcePath: scopeSourcePath,
   };
   const children = child.children.map((scopeChild, index) =>
     normalizeChild(scopeChild, {
       ...scopeCtx,
-      inspectionPath: [...ctx.inspectionPath, { kind: 'scopeChild', index }],
+      sourcePath: childSourcePath(scopeCtx, index),
     }),
   );
-  const { inspect: _inspect, theme, ...scope } = child;
-  void _inspect;
+  const { authoring: _authoring, theme, ...scope } = child;
+  void _authoring;
   return { ...scope, ...(theme === undefined ? {} : { theme: cloneThemeInput(theme) }), children };
 };
 
@@ -375,7 +286,14 @@ export const normalizeFigureSpec = (
   const parentIndex = new Map<string, string>();
   const layerMetas: Array<VanillaLayerMeta> = [];
   const children: Array<IRChild> = [];
-  const inspectionRoots: Array<InspectionAuthoringRoot> = [];
+  const authoringSites = [
+    createVanillaAuthoringSite({
+      kind: 'scene',
+      sourcePath: '',
+      type: 'figure',
+      authoring: figure.authoring,
+    }),
+  ];
 
   for (const [order, layer] of layers.entries()) {
     // layer 本身也是公开身份标识；后续 layer 级 patch / cache 都依赖它唯一。
@@ -393,14 +311,14 @@ export const normalizeFigureSpec = (
       contributions,
       identityIndex,
       parentIndex,
-      inspectionPath: [],
-      inspectionRoots,
+      sourcePath: '',
+      authoringSites,
     };
     const sceneOffset = children.length;
     const layerChildren = layer.children.map((child, index) =>
       normalizeChild(child, {
         ...ctx,
-        inspectionPath: [{ kind: 'sceneChild', index: sceneOffset + index }],
+        sourcePath: childSourcePath(ctx, sceneOffset + index),
       }),
     );
     children.push(...layerChildren);
@@ -433,6 +351,6 @@ export const normalizeFigureSpec = (
     composites: [...aggregateComposites(contributions), ...(options.composites ?? [])],
     themeTokenDefinitions: aggregateThemeTokenDefinitions(contributions),
     runtimeMeta,
-    inspectionRoots,
+    authoringSites: Object.freeze(authoringSites),
   };
 };

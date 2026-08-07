@@ -26,7 +26,7 @@ import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { applyArrowShrinks } from './shrink';
 import { splitSubPathsForEndpointArrows } from './split';
-import { bboxCenter, buildPathInspectionTransforms } from './transform';
+import { bboxCenter, buildPathOwnerOutputTransforms } from './transform';
 
 /** 普通 path emit 所需的编译上下文 */
 export type EmitPathPrimitiveContext = {
@@ -314,22 +314,22 @@ export const emitPathPrimitive = (
   const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
   applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
 
-  if (pathEmitOptions.captureInspectionSubject !== undefined) {
-    pathEmitOptions.captureInspectionSubject(
+  if (pathEmitOptions.captureOwnerOutput !== undefined) {
+    pathEmitOptions.captureOwnerOutput(
       cloneAndFreezeJson(
         {
           commands,
           transforms:
             boundsPoints.length === 0
               ? []
-              : buildPathInspectionTransforms({
+              : buildPathOwnerOutputTransforms({
                   rotate: path.rotate,
                   scale: path.scale,
                   center: bboxCenter(boundsPoints),
                   round,
                 }),
         },
-        'Stroke Path inspection subject',
+        'Stroke Path owner output',
       ),
     );
   }

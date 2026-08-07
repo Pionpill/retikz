@@ -1,3 +1,4 @@
+export * from './compile-driver';
 export type { VanillaViewModeValue } from './constants';
 export { VanillaViewMode } from './constants';
 export * from './hydrate';

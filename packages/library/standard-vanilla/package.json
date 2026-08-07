@@ -37,6 +37,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./inspect": {
+      "types": "./src/inspect/index.ts",
+      "default": "./src/inspect/index.ts"
     }
   },
   "publishConfig": {
@@ -48,6 +52,11 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./inspect": {
+        "types": "./dist/types/inspect/index.d.ts",
+        "import": "./dist/inspect/index.js",
+        "default": "./dist/inspect/index.js"
       }
     }
   },
@@ -67,7 +76,16 @@
     "@retikz/standard": "workspace:*",
     "@retikz/vanilla": "workspace:^"
   },
+  "peerDependencies": {
+    "@retikz/inspect": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@retikz/inspect": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@retikz/inspect": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

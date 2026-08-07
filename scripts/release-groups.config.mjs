@@ -11,6 +11,7 @@ export const releaseGroups = {
       '@retikz/math',
       '@retikz/runtime',
       '@retikz/core',
+      '@retikz/inspect',
       '@retikz/render',
       '@retikz/react',
       '@retikz/vanilla',

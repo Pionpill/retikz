@@ -18,15 +18,15 @@ export const RetainedRendererCapability = {
 export type RetainedRendererCapabilityValue =
   (typeof RetainedRendererCapability)[keyof typeof RetainedRendererCapability];
 
-/** Retained renderer 对 inspection plane 的支持等级 */
-export const RetainedRendererInspectionCapability = {
+/** Retained renderer 对只读 Scene 图层的支持等级 */
+export const RetainedRendererReadonlyLayerCapability = {
   Supported: 'supported',
   Unsupported: 'unsupported',
 } as const;
 
-/** Retained renderer inspection 支持等级取值 */
-export type RetainedRendererInspectionCapabilityValue =
-  (typeof RetainedRendererInspectionCapability)[keyof typeof RetainedRendererInspectionCapability];
+/** Retained renderer 只读 Scene 图层支持等级取值 */
+export type RetainedRendererReadonlyLayerCapabilityValue =
+  (typeof RetainedRendererReadonlyLayerCapability)[keyof typeof RetainedRendererReadonlyLayerCapability];
 
 /** Retained renderer 支持的宿主元素 */
 export type RetainedRendererHost = SVGSVGElement | HTMLCanvasElement;
@@ -56,7 +56,7 @@ export type RetainedRendererImmutableOptions =
 
 /** 与一次 committed renderer state 对应的 immutable public read */
 export type RetainedRendererRead = Readonly<{
-  /** renderer 当前原子物化的主图与检查辅助层 */
+  /** renderer 当前原子物化的主图与只读图层 */
   frame: RenderFrameSnapshot;
   /** 与同一 revision 对应的动画控制器 */
   animation?: AnimationControls;
@@ -66,8 +66,8 @@ export type RetainedRendererRead = Readonly<{
 export type RetainedRendererDefinitionBase = Readonly<{
   /** renderer 支持的最大增量粒度 */
   capability: RetainedRendererCapabilityValue;
-  /** renderer 是否能物化 inspection plane */
-  inspectionCapability: RetainedRendererInspectionCapabilityValue;
+  /** renderer 是否能物化只读 Scene 图层 */
+  readonlyLayerCapability: RetainedRendererReadonlyLayerCapabilityValue;
   /** staging 首次 materialization */
   prepareMount: (
     frame: RenderFrameSnapshot,
@@ -101,8 +101,8 @@ declare const RetainedRendererBrand: unique symbol;
 export type RetainedRendererTokenBase = Readonly<{
   /** renderer 增量能力 */
   capability: RetainedRendererCapabilityValue;
-  /** renderer inspection 支持等级 */
-  inspectionCapability: RetainedRendererInspectionCapabilityValue;
+  /** renderer 只读 Scene 图层支持等级 */
+  readonlyLayerCapability: RetainedRendererReadonlyLayerCapabilityValue;
   /** nominal brand */
   [RetainedRendererBrand]: true;
 }>;
@@ -189,7 +189,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   const backend = Reflect.get(candidate, 'backend');
   const host = Reflect.get(candidate, 'host');
   const capability = Reflect.get(candidate, 'capability');
-  const inspectionCapability = Reflect.get(candidate, 'inspectionCapability');
+  const readonlyLayerCapability = Reflect.get(candidate, 'readonlyLayerCapability');
   const prepareMount = Reflect.get(candidate, 'prepareMount');
   const prepare = Reflect.get(candidate, 'prepare');
   const read = Reflect.get(candidate, 'read');
@@ -198,13 +198,13 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   const validCapability = Object.values(RetainedRendererCapability).includes(
     capability as RetainedRendererCapabilityValue,
   );
-  const validInspectionCapability = Object.values(RetainedRendererInspectionCapability).includes(
-    inspectionCapability as RetainedRendererInspectionCapabilityValue,
+  const validReadonlyLayerCapability = Object.values(RetainedRendererReadonlyLayerCapability).includes(
+    readonlyLayerCapability as RetainedRendererReadonlyLayerCapabilityValue,
   );
   if (
     !validHost ||
     !validCapability ||
-    !validInspectionCapability ||
+    !validReadonlyLayerCapability ||
     typeof prepareMount !== 'function' ||
     typeof prepare !== 'function' ||
     typeof read !== 'function' ||
@@ -216,7 +216,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     backend,
     host,
     capability,
-    inspectionCapability,
+    readonlyLayerCapability,
   }) as RetainedRenderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
   const assertLive = (): void => {

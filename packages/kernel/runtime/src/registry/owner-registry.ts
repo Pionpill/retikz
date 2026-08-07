@@ -2,18 +2,13 @@ import type { RuntimeOwnerDefinition, RuntimeOwnerErasedExecutor, RuntimeOwnerTo
 import type { RuntimeOwnerRegistry, RuntimeOwnerRegistryInput } from './types';
 
 import { RuntimeOwnerRegistryError } from '../error';
-import { getRuntimeOwnerDefinitionExecutor, isRuntimeOwnerDefinition } from '../owner';
+import { getRuntimeOwnerDefinitionExecutor, hasRuntimeOwnerToken } from '../owner';
 
 const runtimeOwnerRegistryExecutors = new WeakMap<
   RuntimeOwnerRegistry,
   ReadonlyMap<RuntimeOwnerToken, RuntimeOwnerErasedExecutor>
 >();
 const runtimeOwnerRegistries = new WeakSet<object>();
-
-const readOwnerKey = (value: unknown): string => {
-  if (typeof value !== 'object' || value === null || !('key' in value)) return '';
-  return typeof value.key === 'string' ? value.key : '';
-};
 
 const compareCodeUnits = (left: RuntimeOwnerToken, right: RuntimeOwnerToken): number => {
   if (left.key < right.key) return -1;
@@ -27,20 +22,13 @@ export const isRuntimeOwnerRegistry = (value: unknown): value is RuntimeOwnerReg
 
 /** 合并 builtin/custom Definition 并拒绝无效 token 与重复 key */
 export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): RuntimeOwnerRegistry => {
-  const registryInputCandidate: unknown = input;
-  if (typeof registryInputCandidate !== 'object' || registryInputCandidate === null) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', '', registryInputCandidate);
-  }
   const builtins = input.builtins ?? [];
   const custom = input.custom ?? [];
-  if (!Array.isArray(builtins) || !Array.isArray(custom)) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', '', input);
-  }
   const definitions = new Map<string, RuntimeOwnerToken>();
   const executors = new Map<RuntimeOwnerToken, RuntimeOwnerErasedExecutor>();
   for (const candidate of [...builtins, ...custom]) {
-    if (!isRuntimeOwnerDefinition(candidate)) {
-      throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', readOwnerKey(candidate), candidate);
+    if (!hasRuntimeOwnerToken(candidate)) {
+      throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', candidate.key, candidate);
     }
     if (definitions.has(candidate.key)) {
       throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_DUPLICATE', candidate.key, candidate);
@@ -53,8 +41,8 @@ export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): Ru
     resolve: <TInput, TValue, TRead, TChange>(
       definition: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
     ): RuntimeOwnerDefinition<TInput, TValue, TRead, TChange> => {
-      if (!isRuntimeOwnerDefinition(definition)) {
-        throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', readOwnerKey(definition), definition);
+      if (!hasRuntimeOwnerToken(definition)) {
+        throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', definition.key, definition);
       }
       if (definitions.get(definition.key) !== definition) {
         throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_UNKNOWN', definition.key, definition);
@@ -74,9 +62,6 @@ export const getRuntimeOwnerRegistryExecutor = (
   registry: RuntimeOwnerRegistry,
   definition: RuntimeOwnerToken,
 ): RuntimeOwnerErasedExecutor => {
-  if (!isRuntimeOwnerDefinition(definition)) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', readOwnerKey(definition), definition);
-  }
   if (registry.find(definition.key) !== definition) {
     throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_UNKNOWN', definition.key, definition);
   }

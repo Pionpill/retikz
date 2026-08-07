@@ -81,6 +81,7 @@
     "effectsAnimation": "Animation",
     "effectsCustomAnimation": "Custom Animation",
     "pkgCore": "@retikz/core",
+    "pkgInspect": "@retikz/inspect",
     "pkgRuntime": "@retikz/runtime",
     "pkgRuntimeSession": "Programs & Synchronous Sessions",
     "pkgReact": "@retikz/react",

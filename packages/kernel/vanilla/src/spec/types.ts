@@ -2,29 +2,25 @@ import type {
   AnyCompositeDefinition,
   AnyThemeTokenDefinition,
   CompileOptions,
-  InspectionAuthoringRoot,
-  InspectionChildForest,
-  InspectionOptionsInputObject,
-  InspectOptions,
   IRChild,
   IRPath,
   IRScene,
   IRScope,
   IRViewBox,
-  PathInspectionAuthoring,
   ValueOf,
 } from '@retikz/core';
 
+import type { VanillaAuthoringSite } from './authoring-site';
 import type { VanillaLayerCache } from './constants';
 
 /** Vanilla 分层缓存提示取值 */
 export type VanillaLayerCacheValue = ValueOf<typeof VanillaLayerCache>;
 
-/** Vanilla 路径 authoring；inspect 只进入 normalization sidecar */
+/** Vanilla 路径 authoring */
 export type VanillaPathSpec = IRPath &
   Readonly<{
-    /** 只开启当前路径 occurrence 的运行时 Inspector，不进入 Core IR */
-    inspect?: PathInspectionAuthoring;
+    /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+    authoring?: unknown;
   }>;
 
 /** Vanilla 普通规格中可直接写入分层或作用域的子节点 */
@@ -34,10 +30,11 @@ export type VanillaChildSpec =
   | VanillaScopeSpec
   | AnyVanillaEmbedSpec;
 
-/** Vanilla Scope authoring；inspect 只进入 normalization sidecar */
+/** Vanilla Scope authoring */
 export type VanillaScopeSpec = Omit<IRScope, 'children'> &
   Readonly<{
-    inspect?: InspectOptions;
+    /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+    authoring?: unknown;
     children: Array<VanillaChildSpec>;
   }>;
 
@@ -55,6 +52,8 @@ export type VanillaFigureSpec = {
   viewBox?: IRViewBox;
   /** 场景根时间轴动画轨道 */
   animations?: IRScene['animations'];
+  /** 可选编译驱动自行解释的运行时 scene 载荷，不进入 Core IR */
+  authoring?: unknown;
 } & ({ children: Array<VanillaChildSpec>; layers?: never } | { layers: Array<VanillaLayerSpec>; children?: never });
 
 /** Vanilla 分层作者边界 */
@@ -72,10 +71,7 @@ export type VanillaLayerSpec = {
 };
 
 /** Vanilla Tier2 嵌入节点 */
-export type VanillaEmbedSpec<
-  TProps = Record<string, unknown>,
-  TInspect extends InspectionOptionsInputObject = InspectionOptionsInputObject,
-> = {
+export type VanillaEmbedSpec<TProps = Record<string, unknown>> = {
   /** 嵌入节点判别字段 */
   type: 'embed';
   /** 适配器匹配键 */
@@ -84,12 +80,12 @@ export type VanillaEmbedSpec<
   id: string;
   /** 传给适配器的领域属性；不直接进入核心 IR */
   props: TProps;
-  /** 只作用于当前 embed occurrence 的 family-local inspection 策略 */
-  inspect?: boolean | TInspect;
+  /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
+  authoring?: unknown;
 };
 
-/** 擦除 family-local inspection 泛型后的 Vanilla embed */
-export type AnyVanillaEmbedSpec = VanillaEmbedSpec<unknown, InspectionOptionsInputObject>;
+/** 擦除属性泛型后的 Vanilla embed */
+export type AnyVanillaEmbedSpec = VanillaEmbedSpec<unknown>;
 
 /** Vanilla Tier2 适配器的下沉上下文 */
 export type VanillaEmbedContext = {
@@ -113,8 +109,6 @@ export type VanillaTier2Contribution = {
   datasets: Record<string, unknown>;
   /** 该 owner 复用的冻结 Theme token definition singleton 列表 */
   themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
-  /** 相对 contribution.node 的 runtime-only inspection roots */
-  inspectionRoots?: InspectionChildForest;
   /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
@@ -170,8 +164,8 @@ export type VanillaNormalizedFigure = {
   themeTokenDefinitions: Array<AnyThemeTokenDefinition>;
   /** 运行时元数据，不进入核心 IR */
   runtimeMeta: VanillaRuntimeMeta;
-  /** 可交给 Core compile 的 Scene authored inspection roots */
-  inspectionRoots: Array<InspectionAuthoringRoot>;
+  /** 按 authored 顺序收集的领域中立运行时 sites */
+  authoringSites: ReadonlyArray<VanillaAuthoringSite>;
 };
 
 /** Vanilla 规格规范化选项 */

@@ -1,34 +1,33 @@
 import type { EmbeddableTier2Adapter } from '@retikz/react';
-import type { GridLayoutInput, GridLayoutInspectOptions } from '@retikz/standard';
+import type { GridLayoutInput } from '@retikz/standard';
 import type { FC, ReactNode } from 'react';
 
-import { createGridLayout, GridLayoutInspectOptionsInputSchema, LayoutItemKind } from '@retikz/standard';
+import { createGridLayout, LayoutItemKind } from '@retikz/standard';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
-import {
-  createReactLayoutInspectionRoots,
-  makeReactStandardLayoutComposites,
-  resolveReactLayoutItems,
-  StandardLayoutReactNamespace,
-} from '../shared';
+import { makeReactStandardLayoutComposites, resolveReactLayoutItems, StandardLayoutReactNamespace } from '../shared';
 
-/** React GridLayout 接受的容器字段与语义 item children */
+/** Grid 布局的 React 属性 */
 export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
-  Readonly<{ inspect?: boolean | GridLayoutInspectOptions; children?: ReactNode }>;
+  Readonly<{
+    /** 交给可选编译驱动解释的不透明声明数据 */
+    authoring?: unknown;
+    /** 必须由 Grid 类型布局项目组成的子元素 */
+    children?: ReactNode;
+  }>;
 
 const gridLayoutEmbeddableAdapter: EmbeddableTier2Adapter<GridLayoutProps> = {
   displayName: 'GridLayout',
   namespace: StandardLayoutReactNamespace,
   contribute: props => {
-    const { children, inspect: inspectInput, ...input } = props;
-    const inspect =
-      typeof inspectInput === 'object' ? GridLayoutInspectOptionsInputSchema.parse(inspectInput) : inspectInput;
+    const { authoring, children, ...input } = props;
+    void authoring;
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Grid);
     return {
       node: createGridLayout({ ...input, children: resolved.items }),
       datasets: {},
-      inspectionRoots: createReactLayoutInspectionRoots(inspect, resolved.inspectionChildren),
+      authoringSites: resolved.authoringSites,
       makeComposites: makeReactStandardLayoutComposites,
     };
   },
@@ -36,7 +35,7 @@ const gridLayoutEmbeddableAdapter: EmbeddableTier2Adapter<GridLayoutProps> = {
 
 const GridLayoutComponent: FC<GridLayoutProps> = () => null;
 
-/** Standard GridLayout 的 React Tier 2 authoring 组件 */
+/** Standard Grid 布局的 React 声明组件 */
 export const GridLayout = GridLayoutComponent as StandardEmbeddableComponent<GridLayoutProps>;
 
 GridLayout.displayName = 'GridLayout';

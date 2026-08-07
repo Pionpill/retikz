@@ -1,34 +1,33 @@
 import type { EmbeddableTier2Adapter } from '@retikz/react';
-import type { OverlayLayoutInput, OverlayLayoutInspectOptions } from '@retikz/standard';
+import type { OverlayLayoutInput } from '@retikz/standard';
 import type { FC, ReactNode } from 'react';
 
-import { createOverlayLayout, LayoutItemKind, OverlayLayoutInspectOptionsInputSchema } from '@retikz/standard';
+import { createOverlayLayout, LayoutItemKind } from '@retikz/standard';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
-import {
-  createReactLayoutInspectionRoots,
-  makeReactStandardLayoutComposites,
-  resolveReactLayoutItems,
-  StandardLayoutReactNamespace,
-} from '../shared';
+import { makeReactStandardLayoutComposites, resolveReactLayoutItems, StandardLayoutReactNamespace } from '../shared';
 
-/** React OverlayLayout 接受的容器字段与语义 item children */
+/** Overlay 布局的 React 属性 */
 export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
-  Readonly<{ inspect?: boolean | OverlayLayoutInspectOptions; children?: ReactNode }>;
+  Readonly<{
+    /** 交给可选编译驱动解释的不透明声明数据 */
+    authoring?: unknown;
+    /** 必须由 Overlay 类型布局项目组成的子元素 */
+    children?: ReactNode;
+  }>;
 
 const overlayLayoutEmbeddableAdapter: EmbeddableTier2Adapter<OverlayLayoutProps> = {
   displayName: 'OverlayLayout',
   namespace: StandardLayoutReactNamespace,
   contribute: props => {
-    const { children, inspect: inspectInput, ...input } = props;
-    const inspect =
-      typeof inspectInput === 'object' ? OverlayLayoutInspectOptionsInputSchema.parse(inspectInput) : inspectInput;
+    const { authoring, children, ...input } = props;
+    void authoring;
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Overlay);
     return {
       node: createOverlayLayout({ ...input, children: resolved.items }),
       datasets: {},
-      inspectionRoots: createReactLayoutInspectionRoots(inspect, resolved.inspectionChildren),
+      authoringSites: resolved.authoringSites,
       makeComposites: makeReactStandardLayoutComposites,
     };
   },
@@ -36,7 +35,7 @@ const overlayLayoutEmbeddableAdapter: EmbeddableTier2Adapter<OverlayLayoutProps>
 
 const OverlayLayoutComponent: FC<OverlayLayoutProps> = () => null;
 
-/** Standard OverlayLayout 的 React Tier 2 authoring 组件 */
+/** Standard Overlay 布局的 React 声明组件 */
 export const OverlayLayout = OverlayLayoutComponent as StandardEmbeddableComponent<OverlayLayoutProps>;
 
 OverlayLayout.displayName = 'OverlayLayout';

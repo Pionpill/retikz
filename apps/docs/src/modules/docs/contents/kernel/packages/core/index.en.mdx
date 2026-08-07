@@ -59,18 +59,19 @@ The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PR
 
 ## Artifact Contract
 
-| Field                | Role                                                                                                        |
-| -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `output.result`      | Scene, typed artifacts, and inspection plane equivalent to fresh `compileToScene()` for the same IR/options |
-| `output.diagnostics` | Core compile warnings in canonical order; dispatched to `onWarn` only after a successful commit             |
-| `snapshot`           | Deeply immutable Scene, document root identity, and topology for the current Session revision               |
-| `patch`              | Atomic Scene Patch relative to the base revision; absent on the initial full run                            |
+| Field                    | Role                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `output.result`          | Scene and typed artifacts equivalent to fresh `compileToScene()` for the same IR/options        |
+| `output.diagnostics`     | Core compile warnings in canonical order; dispatched to `onWarn` only after a successful commit |
+| `output.observerOutputs` | Explicit observer outputs from the same candidate revision as the primary result                |
+| `snapshot`               | Deeply immutable Scene, document root identity, and topology for the current Session revision   |
+| `patch`                  | Atomic Scene Patch relative to the base revision; absent on the initial full run                |
 
-`CompileOptions.inspection` is a runtime-only authored sidecar. Core first binds a Composite or Path occurrence through the locator's exact `target`, then reads its Inspector from the matching `CompositeDefinition` or `PathKindDefinition`. Inspectors remain attached to their owner Definitions; there is no second registry. The resulting `CompileResult.inspection` stays outside Snapshot identity, primary resources, layout bounds, and Patch diff. A Program full fallback regenerates the primary Scene, artifacts, and inspection plane in the same revision.
+Ordinary `compileToScene()` returns only the primary Scene and artifacts and creates no observation session. To read final occurrences, call `observeCompileToScene(ir, options, observers)`, or fix observer definitions in `createCoreProgram()` through `runtimeOptions.observers`. Every observer creates an exclusive session for one compile and runs `select`, `observe`, then `complete`.
 
-Core stably sorts final requests before assigning continuous `colorScope` values from `0`, then supplies the recommended regular and warning colors through `InspectionAppearance`. Discarded probes consume no value. An executed request that returns an empty array consumes its value but creates no entry, so later occurrence colors do not depend on how many children an earlier Inspector emits.
+Core provides only domain-neutral observation. A Composite publishes its final output through the existing `artifactSchema`. A Path kind may declare `ownerOutput.schema` and call `publish()` when `context.ownerOutput.requested` is true. Only final committed occurrences trigger `observe()`; failed or discarded probes remain invisible. Each event includes the final occurrence, probe/replay provenance, and the transform from owner-local coordinates to the primary Scene.
 
-`InspectorDefinition.inspect()` returns one ordinary `IRChild` or a dense `ReadonlyArray<IRChild>`; there is no `outputSchema`. Core compiles every entry through the normal child pipeline in an isolated environment with the current Theme, Scope style, and provider Definitions, then stores the result as an occurrence-local static `scene`. Sealing removes public `id`, `meta`, and animation state while preserving entry-local resource references. Custom Composite and Path-kind Inspectors can therefore use Node, Path, Coordinate, Scope, or registered Composite content without any Inspector-specific renderer primitive.
+An observer can call `context.compileFragment()` to compile ordinary `IRChild` content in the current occurrence environment. The result contains an isolated static Scene, artifacts, and diagnostics; it never writes into the primary result and cannot reference public identities from the primary figure or another fragment. `complete()` chooses the observer's final output, which Core recursively freezes without prescribing a domain shape. Inspector registration, selection, colors, and readonly-layer assembly belong to the optional [`@retikz/inspect`](/kernel/packages/inspect) package.
 
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
@@ -159,42 +160,45 @@ session.update({
 
 ## Public API
 
-| Export                                                                                      | Role                                                                            |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                                        | Fixed identities for the Core document owner and compile Program                |
-| `CoreOwnerDefinition`                                                                       | Capture/read/equality Definition for complete IR Snapshots                      |
-| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                                  | Closed Theme vocabulary, strict IR schema, and Scene / Scope inheritance        |
-| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                                         | Sparse persisted override, complete frozen environment, and shared color view   |
-| `ThemeTokenDefinition` / `ThemeTokenContribution`                                           | Owner namespace schema Definition and pure JSON contribution                    |
-| `defineThemeTokenNamespace` / `defineThemeTokenContribution` / `composeThemeTokenOverrides` | Register, freeze, and compose Theme token authoring inputs                      |
-| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens`               | Core `core` namespace and shared-color overrides                                |
-| `resolveThemeTokenRegistry`                                                                 | Merge Core and supplied owner Definitions; conflicting entries fail immediately |
-| `createCoreProgram(options, runtimeOptions?)`                                               | Create a Runtime Program Definition while preserving composite artifacts        |
-| `CoreChange`                                                                                | `add` / `update` / `remove` / `move` change-hint union                          |
-| `CoreProgramOptions<TComposites>`                                                           | Program-lifetime `CompileOptions` without `trace`                               |
-| `CoreProgramRuntimeOptions`                                                                 | Extra Runtime owners that invalidate Core without entering IR or Scene          |
-| `CoreProgramOutput<TComposites>`                                                            | Complete compile result and warnings                                            |
-| `CoreProgramPublicRead<TComposites>`                                                        | Public `output`, `snapshot`, and optional `patch`                               |
-| `CoreProgramDefinition<TComposites>`                                                        | Artifact-input, owned-artifact, and private/public read generic relationship    |
-| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                                      | Deeply readonly Scene and atomic Patch DTOs                                     |
-| `InspectOptions` / `CompileInspectionOptions`                                               | Layout or Scope cascade policy and compile authored sidecar                     |
-| `InspectionPlane` / `InspectionPlaneEntry`                                                  | Isolated auxiliary plane whose entries contain ordinary static Scenes           |
-| `InspectorDefinition` / `defineInspector`                                                   | Owner-neutral Inspector contract and definition helper                          |
-| `InspectorOutput` / `InspectorContext`                                                      | Ordinary Core-child output and canonical options / appearance context           |
-| `InspectionAppearance` / `InspectionOwner`                                                  | Core-resolved occurrence appearance and Definition-owner identity               |
-| `PathInspectionAuthoring` / `PathInspectOptions`                                            | Occurrence-local runtime authoring for React and Vanilla Paths                  |
+| Export                                                                                       | Role                                                                         |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                                         | Fixed identities for the Core document owner and compile Program             |
+| `CoreOwnerDefinition`                                                                        | Capture/read/equality Definition for complete IR Snapshots                   |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                                   | Closed Theme vocabulary, strict IR schema, and Scene / Scope inheritance     |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                                          | Sparse persisted override, complete frozen environment, and shared color view |
+| `ThemeTokenDefinition` / `ThemeTokenContribution`                                            | Owner namespace schema Definition and pure JSON contribution                 |
+| `defineThemeTokenNamespace` / `defineThemeTokenContribution` / `composeThemeTokenOverrides` | Register, freeze, and compose Theme token authoring inputs                   |
+| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens`                | Core `core` namespace and shared-color overrides                             |
+| `resolveThemeTokenRegistry`                                                                  | Merge Core and supplied owner Definitions; conflicting entries fail immediately |
+| `createCoreProgram(options, runtimeOptions?)`                                                | Create a Runtime Program Definition while preserving composite artifacts     |
+| `CoreChange`                                                                                 | `add` / `update` / `remove` / `move` change-hint union                       |
+| `CoreProgramOptions<TComposites>`                                                            | Program-lifetime `CompileOptions` without `trace`                            |
+| `CoreProgramRuntimeOptions`                                                                  | Extra Runtime owners that invalidate Core without entering IR or Scene       |
+| `CoreProgramOutput<TComposites>`                                                             | Complete compile result and warnings                                         |
+| `CoreProgramPublicRead<TComposites>`                                                         | Public `output`, `snapshot`, and optional `patch`                            |
+| `CoreProgramDefinition<TComposites>`                                                         | Artifact-input, owned-artifact, and private/public read generic relationship |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                                       | Deeply readonly Scene and atomic Patch DTOs                                  |
+| `observeCompileToScene()`                                                                    | Run an explicit full compile with observer sessions                          |
+| `defineCompileObserver()` / `CompileObserverDefinition`                                      | Define a compile observation session and its stable key                      |
+| `CompileObservation` / `CompileObservationContext`                                           | Final owner output, occurrence, transform, and isolated fragment compiler    |
+| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher`                                | Declare and publish optional final Path-kind output                          |
+| `ObservedCompileResult` / `CompileObserverOutput`                                             | Primary compile result and domain-defined outputs in definition order        |
 
 ## Source
 
 <SourceLinks
   sources={[
     {
-      label: 'Inspector definitions and authored sidecar contracts',
-      path: 'packages/kernel/core/src/contract/inspection/types.ts',
+      label: 'Domain-neutral observer and owner-output contracts',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
     },
     {
-      label: 'Ordinary child compilation into isolated auxiliary Scenes',
-      path: 'packages/kernel/core/src/compile/orchestration/inspection.ts',
+      label: 'Final-occurrence observation dispatch',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    {
+      label: 'Isolated compilation of ordinary child fragments',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-fragment.ts',
     },
     {
       label: 'Core owner identity and change hints',

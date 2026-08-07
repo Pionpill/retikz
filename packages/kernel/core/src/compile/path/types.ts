@@ -1,5 +1,6 @@
 ﻿import type { PathGeneratorDefinition, Transform } from '../../contract';
-import type { ScenePrimitive, StrokePathInspectionSubject } from '../../contract';
+import type { ScenePrimitive } from '../../contract';
+import type { StrokePathOwnerOutput } from '../../contract';
 import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
@@ -42,5 +43,5 @@ export type PathEmitOptions = {
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
   /** 仅在 owner 明确请求时接收最终 settled command snapshot */
-  captureInspectionSubject?: (subject: StrokePathInspectionSubject) => void;
+  captureOwnerOutput?: (subject: StrokePathOwnerOutput) => void;
 };

@@ -4,6 +4,7 @@ import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
+import * as StandardInspectIR from '@retikz/standard/inspect';
 import * as TableIR from '@retikz/table';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
@@ -426,37 +427,32 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   LayoutInspectBoundsOptionsInputSchema: {
-    schema: IR.LayoutInspectBoundsOptionsInputSchema,
+    schema: StandardInspectIR.LayoutInspectBoundsOptionsInputSchema,
     label: 'LayoutInspectBoundsOptionsInput',
     url: '/standard/layout/reference/runtime#layoutinspectboundsoptionsinputschema',
   },
   LayoutInspectSpacingOptionsInputSchema: {
-    schema: IR.LayoutInspectSpacingOptionsInputSchema,
+    schema: StandardInspectIR.LayoutInspectSpacingOptionsInputSchema,
     label: 'LayoutInspectSpacingOptionsInput',
-    url: '/kernel/reference/runtime/compile#layoutinspectspacingoptionsinputschema',
+    url: '/standard/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
   },
   BaseLayoutInspectOptionsInputSchema: {
-    schema: IR.BaseLayoutInspectOptionsInputSchema,
+    schema: StandardInspectIR.BaseLayoutInspectOptionsInputSchema,
     label: 'BaseLayoutInspectOptionsInput',
     url: '/standard/layout/reference/runtime#baselayoutinspectoptionsinputschema',
   },
-  InspectOptionsInputSchema: {
-    schema: IR.InspectOptionsInputSchema,
-    label: 'InspectOptionsInput',
-    url: '/standard/layout/reference/runtime#inspectoptionsinputschema',
-  },
   FlexLayoutInspectOptionsInputSchema: {
-    schema: StandardIR.FlexLayoutInspectOptionsInputSchema,
+    schema: StandardInspectIR.FlexLayoutInspectOptionsInputSchema,
     label: 'FlexLayoutInspectOptionsInput',
     url: '/standard/layout/reference/runtime#flexlayoutinspectoptionsinputschema',
   },
   GridLayoutInspectOptionsInputSchema: {
-    schema: StandardIR.GridLayoutInspectOptionsInputSchema,
+    schema: StandardInspectIR.GridLayoutInspectOptionsInputSchema,
     label: 'GridLayoutInspectOptionsInput',
     url: '/standard/layout/reference/runtime#gridlayoutinspectoptionsinputschema',
   },
   OverlayLayoutInspectOptionsInputSchema: {
-    schema: StandardIR.OverlayLayoutInspectOptionsInputSchema,
+    schema: StandardInspectIR.OverlayLayoutInspectOptionsInputSchema,
     label: 'OverlayLayoutInspectOptionsInput',
     url: '/standard/layout/reference/runtime#overlaylayoutinspectoptionsinputschema',
   },

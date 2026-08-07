@@ -1,31 +1,88 @@
-import type { CompileArtifact, CompileOptions, InspectionPlane, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, IRScene, Scene } from '@retikz/core';
+import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
-import { compileToScene } from '@retikz/core';
+import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
-import type { VanillaRuntimeMeta } from '../spec';
+import type { VanillaAuthoringSite, VanillaRuntimeMeta } from '../spec';
 import type { CommonOptions, RenderInput } from './types';
 
 import { isVanillaFigureSpec, normalizeFigureSpec } from '../spec';
 import { createEmptyRuntimeMetaSnapshot } from '../spec/internal';
+import {
+  commitVanillaCompileOutput,
+  compileVanillaWithDriver,
+  createVanillaCompileDriverSession,
+  defaultVanillaCompileDriver,
+} from './compile-driver';
 
 /** 为非 plain spec 输入创建独立的空 runtime metadata */
 export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => createEmptyRuntimeMetaSnapshot();
 
-/** 从 vanilla runtime options 中取出 core compile options */
-const toCompileOptions = (options: CommonOptions): CompileOptions => ({
-  ...(options.compile ?? {}),
-  ...(options.inspect === undefined ? {} : { inspection: { root: options.inspect } }),
-});
+/** 一份未编译输入归一后的领域中立编译材料 */
+export type PreparedVanillaCompileInput = Readonly<{
+  /** 可交给 Core 编译的 IR */
+  source: IRScene;
+  /** 本次编译使用的 Core options */
+  coreOptions: CompileOptions;
+  /** plain spec normalizer 报告的 authored sites */
+  authoringSites: ReadonlyArray<VanillaAuthoringSite>;
+  /** plain spec 运行时元数据 */
+  runtimeMeta: VanillaRuntimeMeta;
+}>;
 
 /** Render input 归一结果 */
 export type SceneResult = {
+  /** 主 Scene */
   scene: Scene;
+  /** 主编译产出的 artifacts */
   artifacts: ReadonlyArray<CompileArtifact>;
-  inspection: InspectionPlane | null;
+  /** 与主 Scene 同 revision 的后置只读图层 */
+  layers: ReadonlyArray<RenderReadonlyLayer>;
+  /** 可选编译驱动产出的诊断 */
+  diagnostics: ReadonlyArray<unknown>;
+  /** plain spec 运行时元数据 */
   runtimeMeta: VanillaRuntimeMeta;
 };
 
 const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+const EMPTY_AUTHORING_SITES: ReadonlyArray<VanillaAuthoringSite> = Object.freeze([]);
+const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
+
+/** 把 IR 或 plain spec 归一成通用编译驱动输入 */
+export const prepareVanillaCompileInput = (
+  input: Exclude<RenderInput, Scene>,
+  options: CommonOptions,
+): PreparedVanillaCompileInput => {
+  if (isVanillaFigureSpec(input)) {
+    const normalized = normalizeFigureSpec(input, {
+      adapters: options.adapters,
+      composites: options.compile?.composites,
+    });
+    return Object.freeze({
+      source: normalized.ir,
+      coreOptions: Object.freeze({
+        ...options.compile,
+        composites: normalized.composites,
+        ...(normalized.themeTokenDefinitions.length === 0
+          ? {}
+          : {
+              themeTokenDefinitions: [
+                ...normalized.themeTokenDefinitions,
+                ...(options.compile?.themeTokenDefinitions ?? []),
+              ],
+            }),
+      }),
+      authoringSites: normalized.authoringSites,
+      runtimeMeta: normalized.runtimeMeta,
+    });
+  }
+  return Object.freeze({
+    source: input,
+    coreOptions: Object.freeze({ ...(options.compile ?? {}) }),
+    authoringSites: EMPTY_AUTHORING_SITES,
+    runtimeMeta: createEmptyRuntimeMeta(),
+  });
+};
 
 /**
  * 入参归一成 `Scene`
@@ -35,39 +92,34 @@ const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
   if ('primitives' in input) {
-    if (options.inspect !== undefined) {
-      throw new Error('Vanilla Layout Inspector cannot run from a precompiled Scene.');
+    if (options.compileDriver !== undefined) {
+      throw new Error('Vanilla compile drivers require authored IR or a plain figure spec');
     }
-    return { scene: input, artifacts: EMPTY_ARTIFACTS, inspection: null, runtimeMeta: createEmptyRuntimeMeta() };
-  }
-  if (isVanillaFigureSpec(input)) {
-    const normalized = normalizeFigureSpec(input, {
-      adapters: options.adapters,
-      composites: options.compile?.composites,
-    });
-    const baseOptions = toCompileOptions(options);
-    const compileOptions = {
-      ...baseOptions,
-      composites: normalized.composites,
-      ...(normalized.themeTokenDefinitions.length === 0
-        ? {}
-        : {
-            themeTokenDefinitions: [...normalized.themeTokenDefinitions, ...(baseOptions.themeTokenDefinitions ?? [])],
-          }),
-      ...(options.inspect === undefined && normalized.inspectionRoots.length === 0
-        ? {}
-        : {
-            inspection: {
-              ...(options.inspect === undefined ? {} : { root: options.inspect }),
-              ...(normalized.inspectionRoots.length === 0 ? {} : { roots: normalized.inspectionRoots }),
-            },
-          }),
+    return {
+      scene: input,
+      artifacts: EMPTY_ARTIFACTS,
+      layers: EMPTY_READONLY_LAYERS,
+      diagnostics: EMPTY_DIAGNOSTICS,
+      runtimeMeta: createEmptyRuntimeMeta(),
     };
-    const result = compileToScene(normalized.ir, compileOptions);
-    return { ...result, runtimeMeta: normalized.runtimeMeta };
   }
-  const result = compileToScene(input, toCompileOptions(options));
-  return { ...result, runtimeMeta: createEmptyRuntimeMeta() };
+  const prepared = prepareVanillaCompileInput(input, options);
+  const driverInput = Object.freeze({
+    instance: Object.freeze({}),
+    source: prepared.source,
+    authoringSites: prepared.authoringSites,
+    coreOptions: prepared.coreOptions,
+  });
+  const session = createVanillaCompileDriverSession(options.compileDriver ?? defaultVanillaCompileDriver, driverInput);
+  const output = compileVanillaWithDriver(driverInput, session);
+  commitVanillaCompileOutput(session, output);
+  return {
+    scene: output.primary.scene,
+    artifacts: output.primary.artifacts,
+    layers: output.layers,
+    diagnostics: output.diagnostics,
+    runtimeMeta: prepared.runtimeMeta,
+  };
 };
 
 export const toScene = (input: RenderInput, options: CommonOptions): Scene => toSceneResult(input, options).scene;

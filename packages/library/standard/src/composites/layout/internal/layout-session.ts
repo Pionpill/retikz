@@ -15,7 +15,7 @@ import { LayoutOverflow } from '../shared';
 import { createLayoutArtifactItem } from './artifact';
 import { layoutClipOf } from './geometry';
 
-/** 绑定一个待布局 child 与稳定的 inspection occurrence */
+/** 绑定一个待布局 child 与稳定的 authored occurrence */
 export type LayoutChildHandle = Readonly<{
   child: IRChild;
   occurrence: number;
@@ -56,7 +56,7 @@ export const requiredLayoutProbe = (
   handle: LayoutChildHandle,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(handle.child, proposal, context.inspection.child(handle.occurrence));
+  const probe = context.layoutChild(handle.child, proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
