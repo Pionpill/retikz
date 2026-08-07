@@ -26,45 +26,30 @@ export type RuntimeOwnerErasedExecutor = Readonly<{
   ) => 'valid' | 'fallback';
 }>;
 
-/** 校验 owner key 并复制 Definition 作者输入，隔离后续对象修改 */
-const copyDefinitionInput = <TInput, TValue, TRead, TChange>(
-  input: RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>,
-): RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange> => {
-  if (input.key.length === 0) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', input.key, input);
-  }
-  const { capture, read, equals, dispose } = input.value;
-  return Object.freeze({
-    key: input.key,
-    value: Object.freeze({ capture, read, equals, dispose }),
-    collectIdentities: input.collectIdentities,
-    validateChangeSet: input.validateChangeSet,
-  });
-};
-
 /** 创建不暴露 author callbacks 的 typed owner token */
 export const defineRuntimeOwner = <TInput, TValue, TRead, TChange>(
   input: RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>,
 ): RuntimeOwnerDefinition<TInput, TValue, TRead, TChange> => {
-  const copied = copyDefinitionInput(input);
-  const token = Object.freeze({ key: copied.key }) as RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>;
-  const typedExecutor = Object.freeze({
-    capture: (source: TInput): TValue => copied.value.capture(source),
-    read: (value: TValue): TRead => copied.value.read(value),
-    equals: (left: TValue, right: TValue): boolean => copied.value.equals(left, right),
-    dispose: copied.value.dispose,
-    collectIdentities: copied.collectIdentities,
-    validateChangeSet: copied.validateChangeSet,
-  });
-  const erasedExecutor = typedExecutor as unknown as RuntimeOwnerErasedExecutor;
+  if (input.key.length === 0) {
+    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', input.key, input);
+  }
+  const { capture, read, equals, dispose } = input.value;
+  const token = Object.freeze({ key: input.key }) as RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>;
+  const erasedExecutor = Object.freeze({
+    capture: (source: TInput): TValue => capture(source),
+    read: (value: TValue): TRead => read(value),
+    equals: (left: TValue, right: TValue): boolean => equals(left, right),
+    dispose,
+    collectIdentities: input.collectIdentities,
+    validateChangeSet: input.validateChangeSet,
+  }) as RuntimeOwnerErasedExecutor;
   runtimeOwnerTokens.add(token);
   runtimeOwnerExecutors.set(token, erasedExecutor);
   return token;
 };
 
-/** 判断一个动态值是否由当前 Runtime 实例的 define helper 创建 */
-export const isRuntimeOwnerDefinition = (value: unknown): value is RuntimeOwnerToken =>
-  typeof value === 'object' && value !== null && runtimeOwnerTokens.has(value);
+/** 判断对象是否由当前 Runtime 实例的 define helper 创建 */
+export const hasRuntimeOwnerToken = (value: object): boolean => runtimeOwnerTokens.has(value);
 
 /** 读取 define 时创建的 callback 擦除视图，仅供 registry 建立 token/executor 配对 */
 export const getRuntimeOwnerDefinitionExecutor = (definition: RuntimeOwnerToken): RuntimeOwnerErasedExecutor => {

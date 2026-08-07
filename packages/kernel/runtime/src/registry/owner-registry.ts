@@ -2,7 +2,7 @@ import type { RuntimeOwnerDefinition, RuntimeOwnerErasedExecutor, RuntimeOwnerTo
 import type { RuntimeOwnerRegistry, RuntimeOwnerRegistryInput } from './types';
 
 import { RuntimeOwnerRegistryError } from '../error';
-import { getRuntimeOwnerDefinitionExecutor, isRuntimeOwnerDefinition } from '../owner';
+import { getRuntimeOwnerDefinitionExecutor, hasRuntimeOwnerToken } from '../owner';
 
 const runtimeOwnerRegistryExecutors = new WeakMap<
   RuntimeOwnerRegistry,
@@ -14,6 +14,10 @@ const readOwnerKey = (value: unknown): string => {
   if (typeof value !== 'object' || value === null || !('key' in value)) return '';
   return typeof value.key === 'string' ? value.key : '';
 };
+
+/** 判断动态值是否是当前 Runtime 实例创建的 owner token */
+const isRuntimeOwnerDefinition = (value: unknown): value is RuntimeOwnerToken =>
+  typeof value === 'object' && value !== null && hasRuntimeOwnerToken(value);
 
 const compareCodeUnits = (left: RuntimeOwnerToken, right: RuntimeOwnerToken): number => {
   if (left.key < right.key) return -1;
@@ -74,9 +78,6 @@ export const getRuntimeOwnerRegistryExecutor = (
   registry: RuntimeOwnerRegistry,
   definition: RuntimeOwnerToken,
 ): RuntimeOwnerErasedExecutor => {
-  if (!isRuntimeOwnerDefinition(definition)) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', readOwnerKey(definition), definition);
-  }
   if (registry.find(definition.key) !== definition) {
     throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_UNKNOWN', definition.key, definition);
   }
