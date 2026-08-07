@@ -1,6 +1,6 @@
 # Table 表格语法与 lowering 总设计
 
-> **状态：长期模型已确认，alpha.2 布局基线与 alpha.3 ADR-01～05 呈现基线已实现。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前公开契约以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、Accepted ADR、公开类型和用户文档为准。
+> **状态：长期模型已确认，alpha.2 布局基线与 alpha.3 现有呈现代码已落地；alpha.3 ADR-01～05 仍为 Proposed，ADR-05 正在重塑主题契约。** 本文维护 Grammar of Tables、Table Algebra、Constraint Grid Layout 与跨包边界，不冻结具体字段。当前实现事实以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、公开类型与代码为准，长期方向以 Accepted / Proposed ADR 为准。
 >
 > 关联：[`Table 表格可视化完备设计`](./table-visualization-complete.md) · [`Table 竞品与能力差距分析`](../analysis/table-compare-analysis.md) · [`table v0.1 roadmap`](../decisions/table/v0/v0.1/roadmap.md)
 
@@ -24,7 +24,7 @@ Table 的指导思想是：
 
 ## 2. 包定位
 
-`@retikz/table` 消费 `@retikz/data`、`@retikz/standard` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局和 lowering。它与 Plot 平行，不依赖 Plot；领域无关的外围 Box Layout 直接复用 Standard。
+`@retikz/table` 消费 `@retikz/data`、`@retikz/standard` 与 `@retikz/core`，负责 Table IR、语义模型、表格 body 布局、Theme token resolver 和 lowering。它与 Plot 平行，不依赖 Plot；领域无关的外围 Box Layout 直接复用 Standard。Core 负责 namespaced Theme 传递、ThemeTokenDefinition registry、owner schema validation、shared colors 与 `InspectionAppearance`，Table 负责自己的 vocabulary、preset、mapping 与消费。
 
 `@retikz/table-react` 与 `@retikz/table-vanilla` 只负责 authoring 和宿主接入，不拥有表格结构、规则、布局或 lowering 算法。
 
@@ -72,7 +72,7 @@ TableSpec
 
 ### 4.2 PresentedTableModel
 
-在语义结构上解析 formatter、presentation、rules、style tokens 和最终 Cell 内容，但还没有绝对几何。
+在语义结构上解析 formatter、presentation、rules、`tableThemeTokens`、shared categorical projection 和最终 Cell 内容，但还没有绝对几何。
 
 ### 4.3 TableLayout
 
@@ -125,7 +125,9 @@ Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell
 
 内置与自定义能力经过相同的注册、解析和消费链路。
 
-Style 不属于行为 Definition。Table 维护闭合、扁平、命名空间化的公开 token vocabulary；内置 preset 与用户 token overlay 经过同一 strict schema、leaf resolver 和消费链路。`TableSpec.styleTokens` 只接收当前 `themeMode` 下的 partial overlay；外部主题包可以导出已知 token 的完整 light / dark map，由宿主选择一份作为 overlay 输入，但不能注册未知 token 或 token 消费器。
+Style token 不属于 Table 行为 Definition，但 Table theme schema 必须通过 Core 的 `ThemeTokenDefinition<'table', ...>` registry 绑定 owner validation。Table 维护闭合、扁平、命名空间化的公开 token vocabulary；内置 preset 与用户 `tableThemeTokens` overlay 经过同一 strict schema、resolver 和消费链路。`theme.tokens.table` 由 Core Scope 继承，Table 不保存重复 `style` / `themeMode`，也不允许外部包注册未知 token 或 token consumer。
+
+Core 只提供一套当前生效的非空 active `palette.categorical`。Table 将其 detached 投影为 `data.categorical` baseline；Table token、encoding range、rule 和 Cell configuration 由 Table resolver 按正式优先级覆盖。Standard 只消费 Table 已解析的 Legend / layout input 与 Core `InspectionAppearance`，不读取 Table token bag 或重建颜色分配。
 
 地址、span 合法性、布局不变量、border conflict 和 lowering 正确性属于 Table 核心合同，不应为了扩展性暴露任意执行钩子。
 
@@ -152,13 +154,13 @@ Lowering 最终只输出 Core IR，renderer 不感知 Table。Table 同时保留
 
 ## 9. 已实现基线与后续未决
 
-alpha.1 / alpha.2 与 alpha.3 ADR-01～05 当前已冻结并实现：
+alpha.1 / alpha.2 与 alpha.3 现有代码已建立以下基线；alpha.3 ADR-01～05 仍为 Proposed，ADR-05 的新主题命名、继承和共享颜色投影尚未实现：
 
 - Table IR 与外部数据绑定，manual / detail / custom 三种精确 spec 变体与 framework-neutral authoring helpers
 - `SemanticTableModel` 纵向写入链路，以及 formatter / presentation 等统一 Definition / registry 消费方式
 - fixed / auto / fraction / minmax 轨道、矩形 span、真实 `IRChild` intrinsic / constrained measurement、fit / overflow / clip 与 Border Graph
 - layout-aware composite 同次 compile、typed manifest / occurrence，以及 React / Vanilla 共享 runtime contribution 与 artifact contract
-- formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 style tokens，以及同源 Legend descriptor / manifest seed
+- formatter / presentation、selector / rule、条件视觉 encoding、旧 `style` / `themeMode` / `styleTokens` 主题链与四种 preset 已有代码基线；`tableThemeTokens`、Core inherited namespace 与 shared categorical projection 由 Proposed ADR-05 重塑，尚未实现
 
 后续 ADR 只处理尚未闭环的能力：
 

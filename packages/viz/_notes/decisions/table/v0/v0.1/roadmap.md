@@ -11,15 +11,15 @@ v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格
 
 ## Milestones
 
-| Milestone                       | 主题                           | 主要产出                                                                                                | Gating                                                                                                | 状态   |
-| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------ |
-| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**               | TableSpec、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                              | Core composite 与 DataReference 已就绪                                                                | 已完成 |
-| [alpha.2](./alpha.2/roadmap.md) | **二维布局与持久化 authoring** | auto/fraction/minmax、span、border、bounds-aware alignment、fit/overflow、manual row-major persistence  | 通用 `IRChild` constrained layout                                                                     | 已完成 |
-| [alpha.3](./alpha.3/roadmap.md) | **呈现语法**                   | formatter、presentation、selector/rule、条件视觉 scale、theme、Legend descriptor / Standard Legend 消费 | alpha.2 canonical model；Standard ADR-09；Core gradient-stop semantics / replayed-child artifact link | 设计中 |
-| alpha.4                         | **分组与汇总**                 | group、hierarchy、subtotal、grand total                                                                 | Data aggregate / lineage                                                                              | 计划中 |
-| alpha.5                         | **交叉表**                     | pivot、matrix、多层 header、spanner/stub/corner/row group                                               | Data 分组与聚合能力                                                                                   | 计划中 |
-| alpha.6                         | **分片与追溯收口**             | fragmentation、重复 header、完整 manifest/lineage/locator/diagnostics                                   | Core / host artifact 协作边界                                                                         | 计划中 |
-| beta.1                          | **稳定化**                     | API 收口、adversarial tests、双语 docs、发布检查                                                        | alpha completeness 全部闭环                                                                           | 计划中 |
+| Milestone                       | 主题                           | 主要产出                                                                                                                                                           | Gating                                                                                                             | 状态   |
+| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------ |
+| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**               | TableSpec、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                                                                                         | Core composite 与 DataReference 已就绪                                                                             | 已完成 |
+| [alpha.2](./alpha.2/roadmap.md) | **二维布局与持久化 authoring** | auto/fraction/minmax、span、border、bounds-aware alignment、fit/overflow、manual row-major persistence                                                             | 通用 `IRChild` constrained layout                                                                                  | 已完成 |
+| [alpha.3](./alpha.3/roadmap.md) | **呈现语法**                   | formatter、presentation、selector/rule、条件视觉 scale、Core inherited `tableThemeTokens`、shared categorical projection、Legend descriptor / Standard Legend 消费 | alpha.2 canonical model；Core ADR-13；Standard ADR-09；Core gradient-stop semantics / replayed-child artifact link | 设计中 |
+| alpha.4                         | **分组与汇总**                 | group、hierarchy、subtotal、grand total                                                                                                                            | Data aggregate / lineage                                                                                           | 计划中 |
+| alpha.5                         | **交叉表**                     | pivot、matrix、多层 header、spanner/stub/corner/row group                                                                                                          | Data 分组与聚合能力                                                                                                | 计划中 |
+| alpha.6                         | **分片与追溯收口**             | fragmentation、重复 header、完整 manifest/lineage/locator/diagnostics                                                                                              | Core / host artifact 协作边界                                                                                      | 计划中 |
+| beta.1                          | **稳定化**                     | API 收口、adversarial tests、双语 docs、发布检查                                                                                                                   | alpha completeness 全部闭环                                                                                        | 计划中 |
 
 ## 贯穿原则
 
@@ -29,7 +29,7 @@ v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格
 - 内置与自定义结构 / 呈现经过同一 Definition / registry 链路
 - manual / detail / pivot / matrix 是基础 structure；group / hierarchy / summary / transpose 是可组合 operation
 - Table 不复制通用 Data transform，也不建立平行 Core IR、测量或 renderer
-- Table 拥有 visual encoding 到 Legend descriptor / Standard Legend 输入的领域解析、theme mapping 与 lineage；通用 Legend 视觉结构、内部布局和 layout-aware compile 由 Standard 拥有，跨 Table / Legend artifact 的 occurrence 关联等待 Core 通用 replayed-child link
+- Table 拥有 visual encoding 到 Legend descriptor / Standard Legend 输入的领域解析、`tableThemeTokens` mapping 与 lineage；Core 拥有 inherited namespace、shared colors 与 `InspectionAppearance`；通用 Legend 视觉结构、内部布局和 layout-aware compile 由 Standard 拥有，跨 Table / Legend artifact 的 occurrence 关联等待 Core 通用 replayed-child link
 - 每个 alpha 都形成 `table`、`table-react`、`table-vanilla` 可验证的纵向薄片
 - manifest、lineage 与 locator 可以分阶段丰富，但稳定 identity 与来源不能事后补造
 

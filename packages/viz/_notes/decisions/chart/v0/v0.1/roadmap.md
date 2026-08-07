@@ -15,7 +15,7 @@ chart v0.1 基于 plot v0.1 已完成的 GoG 基座，建立第一套可发布�
 3. 以 Scatter & Points、Line & Area、Bar & Column 三个传统 family 建立首批类型目录
 4. 分别以 Point、Path、Interval 为主要 Mark 骨架，但不把 family 降级为互斥的 primitive 白名单
 5. 用 Chart Pattern 承接方向、堆叠、曲线、紧凑呈现等常用市场名称，避免扩大 public `type` union
-6. 在 alpha.1 建立所有 family 共用的主题消费边界：Core effective Theme 选择 style / mode，Chart 只解析 canvas / presentation / recipe token，并把 Plot token、颜色与原生 theme 交给 Plot owner
+6. 在 alpha.1 建立所有 family 共用的主题消费边界：Core effective Theme 选择 style / mode 并传播 namespaced token，Chart 只解析 canvas / presentation / recipe token，并把 `plotThemeTokens`、颜色与 `plotTheme` 交给 Plot owner
 7. 在 alpha.1 把 Chart-level label / presentation 与 Plot 本体交给 Standard 统一布局，形成单一可组合结果
 8. 保持 React、Vanilla 与手写 JSON 等价，并允许在 type 核心配方上追加正式 Plot members
 9. 保持 Chart 外层与 Plot 内部空间、诊断和来源透明
@@ -122,8 +122,8 @@ Lollipop Chart 虽然在 Flint 中归 Bar & Column，但主要配方是 Point + 
 - 用户在不破坏 type 核心配方的前提下调整隐式主成员
 - 用户追加 JSON-safe 的正式 Plot members
 - 宿主注入的 Plot definitions 沿既有 registry 被追加内容消费
-- Chart 为自己的 canvas、presentation 与 recipe defaults 提供公开 JSON-safe `styleTokens`；`chart.axis.enabled`、`chart.axis.grid.enabled`、`chart.legend.enabled` 只控制默认 guide topology
-- Plot surface、axis / legend 视觉样式、label 与 palette 通过 Plot-owned `plotStyleTokens`、preset、resolver 和 inspection 消费；Chart 只转发 `plotStyleTokens`、`colors` 与 Plot `theme`
+- Chart 为自己的 canvas、presentation 与 recipe defaults 提供公开 JSON-safe `chartThemeTokens`；`chart.axis.enabled`、`chart.axis.grid.enabled`、`chart.legend.enabled` 只控制默认 guide topology
+- Plot surface、axis / legend 视觉样式、label 与 palette 通过 Plot-owned `plotThemeTokens`、preset、resolver 和 inspection 消费；Chart 只转发 `plotThemeTokens`、`colors` 与 Plot `plotTheme`
 - 用户提供的颜色数组沿 Plot 的 color / scale / theme 语义消费；Plot native theme 与显式 scale 继续获得更高优先级
 - light / dark 只改变 paint、palette 与 opacity，不改变 guide topology、tick glyph、尺寸、间距或 typography hierarchy
 - Chart-level label / presentation 通过 Standard 与 Plot 本体组成单一 renderer-neutral 结果
@@ -175,7 +175,7 @@ chart 使用自己的发布家族：`@retikz/chart` / `@retikz/chart-react` / `@
 4. 核心配方删除、替换、关闭或失效时 fail-loud；显式追加内容不能静默覆盖隐式成员
 5. ChartSpec 保持单一根 data、100% JSON-safe，并可确定性解析为可检查的完整 PlotSpec
 6. React children、Vanilla builder 与手写 JSON 具有等价表达，不存在 framework-only Chart 能力
-7. Core effective Theme 在 ChartSpec 外统一选择 style / mode；Chart-owned `styleTokens` 与 Plot-owned `plotStyleTokens` 严格分离，`colors` / Plot `theme` 原样转发，不形成 Chart 版 Plot token、preset、resolver 或 renderer 样式系统
+7. Core effective Theme 在 ChartSpec 外统一选择 style / mode；Chart-owned `chartThemeTokens` 与 Plot-owned `plotThemeTokens` 严格分离，`colors` / Plot `plotTheme` 原样转发，不形成 Chart 版 Plot token、preset、resolver 或 renderer 样式系统；Chart 默认 series color 只来自 Plot resolver 最终 palette
 8. Chart-level label / presentation 复用 Standard 与 Plot 布局为单一结果，Chart 封装不丢失 Plot 内部空间 identity、provenance、locator 或 lineage
 9. 三个 family 的文档导航、Canonical Type 契约页、Pattern gallery、跨库名称参考和当前不支持范围齐全
 

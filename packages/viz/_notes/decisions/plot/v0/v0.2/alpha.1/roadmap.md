@@ -17,20 +17,21 @@
 
 Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映射缺口，可追加到本 milestone 的候选 ADR；Chart type、recipe、presentation 和默认值不进入 Plot。
 
-在进入 Spatial Mapping 设计前，Plot theme token ownership 已由 ADR-01 先行接受：Plot 消费 Core effective Theme 并拥有领域 token、preset、cascade 与 inspection，Chart 只组合或传递 Plot 公开契约。该先行决策与本 milestone 的映射契约共用同一条 Plot / Core lowering 主链。
+在进入 Spatial Mapping 设计前，Plot theme token ownership 已由 Accepted ADR-01 冻结，Proposed ADR-02 正在补充 `theme.tokens` 中继承的 Plot namespace、owner contribution 与 shared color projection；Chart 仍只组合或传递 Plot 公开契约。两条主题决策与本 milestone 的映射契约共用同一条 Plot / Core lowering 主链。
 
 ## ADR 清单
 
-完整 milestone 的 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary。Spatial Mapping 候选从 ADR-02 顺延编号，避免与已接受决策冲突。
+完整 milestone 的 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary，ADR-02 冻结 inherited Theme token scope 与 Plot owner contribution。Spatial Mapping 候选从 ADR-03 顺延编号，避免与本次主题 scope 决策冲突。
 
-| ADR | 主题                                                                                                                                  | Level | 依赖                                      | 状态     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | -------- |
-| 01  | **Plot 主题 token 所有权与 Chart 消费边界**：Plot 拥有领域 token / preset / resolver，Chart 只组合或转发 Plot 公开 contract           | red   | Core effective Theme、plot v0.1 theme     | Accepted |
-| 02  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系 | red   | plot v0.1 coordinate / transform registry | 待起草   |
-| 03  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性           | red   | ADR-02、data view / lineage               | 待起草   |
-| 04  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界      | red   | ADR-02、plot v0.1 coordinate registry     | 待起草   |
+| ADR | 主题                                                                                                                                                            | Level | 依赖                                      | 状态     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | -------- |
+| 01  | **Plot 主题 token 所有权与 Chart 消费边界**：Plot 拥有领域 token / preset / resolver，Chart 只组合或转发 Plot 公开 contract                                     | red   | Core effective Theme、plot v0.1 theme     | Accepted |
+| 02  | **继承 Theme Token Scope 与 Plot owner contribution**：消费 Core namespace context，冻结 Plot 局部输入、shared categorical projection 与 Plot-owned scheme 边界 | red   | Core ADR-13、ADR-01                       | Proposed |
+| 03  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系                           | red   | plot v0.1 coordinate / transform registry | 待起草   |
+| 04  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性                                     | red   | ADR-03、data view / lineage               | 待起草   |
+| 05  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界                                | red   | ADR-03、plot v0.1 coordinate registry     | 待起草   |
 
-ADR-01 已冻结 Plot 的主题所有权；旧版由 Chart 拥有 Plot token 的方向已被否决，Chart type / recipe / presentation 继续由 chart v0.1 路线维护。
+ADR-01 已冻结 Plot 的主题所有权；ADR-02 以 Proposed 状态补充 inherited scope 与 owner contribution。旧版由 Chart 拥有 Plot token 的方向已被否决，Chart type / recipe / presentation 继续由 chart v0.1 路线维护。
 
 ## 前置
 
@@ -65,6 +66,7 @@ ADR-01 已冻结 Plot 的主题所有权；旧版由 Chart 拥有 Plot token 的
 ## 退出条件
 
 - Plot 直接使用与 Chart 内部使用都从 Core effective Theme 解析同一 Plot preset / token / native theme 主链；Chart 不复制 Plot token、preset、resolver 或 merge。
+- `plotThemeTokens` 与 `plotTheme` 作为 Plot 局部输入，继承的 Plot namespace 通过 `theme.tokens` 进入同一 resolver；shared categorical projection 与 Plot-owned sequential / diverging scheme 保持清晰分界。
 - Plot 可以用统一的 Spatial Mapping 语言描述 coordinate mapping 与 structured mapping 的关系，同时保留两类专门契约。
 - `nodes`、`links` 等命名内容可以作为结构化输入，不再被 rows-only transform 模型限制。
 - 映射可以改变数量、顺序或拓扑时，identity、provenance、失败语义和确定性边界仍然清楚。
