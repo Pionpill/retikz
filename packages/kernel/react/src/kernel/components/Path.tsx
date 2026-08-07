@@ -1,4 +1,4 @@
-import type { IRArrowDetail, IRPath, PathInspectionAuthoring, PathThicknessValue } from '@retikz/core';
+import type { IRArrowDetail, IRPath, PathThicknessValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../protocol';
@@ -8,8 +8,8 @@ import { TIKZ_PATH } from '../protocol';
 export type PathArrowDirectionValue = 'none' | '->' | '<-' | '<->';
 
 export type PathProps = HydrationEventProps & {
-  /** 只开启当前路径 occurrence 的运行时 Inspector，不进入 Core IR */
-  inspect?: PathInspectionAuthoring;
+  /** 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR */
+  authoring?: unknown;
   kind?: IRPath['kind'];
   kindOptions?: IRPath['kindOptions'];
   ribbon?: IRPath['ribbon'];

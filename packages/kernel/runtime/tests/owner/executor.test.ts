@@ -32,7 +32,7 @@ const createExecutor = (...definitions: Array<RuntimeOwnerToken>) =>
   createRuntimeOwnerExecutor(createRuntimeOwnerRegistry({ custom: definitions }));
 
 describe('runtime owner executor', () => {
-  it('prepare 隔离 mutable input/read alias 并建立 identity index', () => {
+  it('prepare 隔离 mutable input/read alias 并建立 identity lookup', () => {
     const input = { values: [1, 2] };
     const definition = defineFixtureOwner({
       collectIdentities: value => value.values.map(item => createRuntimeIdentity('fixture', [item.toString()])),
@@ -46,7 +46,7 @@ describe('runtime owner executor', () => {
     expect(prepared.identities?.values().map(identity => identity.path)).toEqual([['1'], ['2']]);
   });
 
-  it('没有 collector 时不自动建立 identity index', () => {
+  it('没有 collector 时不自动建立 identity lookup', () => {
     const definition = defineFixtureOwner();
     const prepared = createExecutor(definition).prepare(definition, { values: [] }).value;
     expect(prepared.identities).toBeUndefined();

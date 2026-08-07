@@ -1,4 +1,10 @@
-import type { CompileArtifact, CoreProgramOptions, IRScene } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  CompileArtifact,
+  CoreProgramOptions,
+  CoreProgramOutput,
+  IRScene,
+} from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type {
@@ -27,6 +33,10 @@ import {
 } from '@retikz/runtime';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import type { LayoutCompileDriverSession } from '../../kernel/protocol';
+
+import { LayoutCompileDriverError, resolveLayoutCompileOutput } from '../../kernel/protocol';
+
 /** React retained host 的公开输入 */
 export type RetainedHostProps = Readonly<{
   /** 要接管的 renderer 后端 */
@@ -37,6 +47,8 @@ export type RetainedHostProps = Readonly<{
   initialFrame: StaticRenderFrame;
   /** Core Program 的 session-lifetime 编译配置 */
   coreOptions: CoreProgramOptions;
+  /** 当前 source/authoring 配置独占的领域中立 compile driver session */
+  compileSession: LayoutCompileDriverSession;
   /** 当前 revision 的 hydration handler 注册表 */
   handlers: HydrationHandlers;
   /** SVG CSS 宽度或 Canvas CSS user-space 宽度 */
@@ -85,6 +97,8 @@ type ActiveRuntime = {
   config: RenderRuntimeConfigInput;
   /** 最近通知给调用方的 artifacts */
   artifacts: ReadonlyArray<CompileArtifact>;
+  /** 最近成功提交并通知 driver 的 Core output */
+  coreOutput?: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>;
 };
 
 /** 写入 callback ref 或 RefObject */
@@ -152,6 +166,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
     source,
     initialFrame,
     coreOptions,
+    compileSession,
     handlers,
     width,
     height,
@@ -224,34 +239,47 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
     onArtifactsRef.current = onArtifacts;
   }, [source, config, animationRef, onDiagnostic, onArtifacts]);
 
-  const publishCommitted = useCallback((active: ActiveRuntime, forceArtifacts: boolean): void => {
-    const read = active.participant.read(active.session);
-    const nextAnimationRef = animationRefTarget.current;
-    if (previousAnimationRef.current !== nextAnimationRef) {
-      assignRefSafely('animationRef', previousAnimationRef.current, null);
-      previousAnimationRef.current = nextAnimationRef;
-    }
-    assignRefSafely('animationRef', nextAnimationRef, read.animation ?? null);
-    const nextArtifacts = active.session.artifact(active.coreProgram).value.output.result.artifacts;
-    if (forceArtifacts || nextArtifacts !== active.artifacts) {
-      active.artifacts = nextArtifacts;
-      const callback = onArtifactsRef.current;
-      if (callback !== undefined) {
-        try {
-          callback(nextArtifacts);
-        } catch (cause) {
-          warnCallbackFailure('onArtifacts', cause);
+  const publishCommitted = useCallback(
+    (active: ActiveRuntime, forceArtifacts: boolean): void => {
+      const read = active.participant.read(active.session);
+      const nextAnimationRef = animationRefTarget.current;
+      if (previousAnimationRef.current !== nextAnimationRef) {
+        assignRefSafely('animationRef', previousAnimationRef.current, null);
+        previousAnimationRef.current = nextAnimationRef;
+      }
+      assignRefSafely('animationRef', nextAnimationRef, read.animation ?? null);
+      const coreOutput = active.session.artifact(active.coreProgram).value.output;
+      const compileOutput = resolveLayoutCompileOutput(compileSession, coreOutput);
+      const nextArtifacts = compileOutput.primary.artifacts;
+      if (forceArtifacts || nextArtifacts !== active.artifacts) {
+        active.artifacts = nextArtifacts;
+        const callback = onArtifactsRef.current;
+        if (callback !== undefined) {
+          try {
+            callback(nextArtifacts);
+          } catch (cause) {
+            warnCallbackFailure('onArtifacts', cause);
+          }
         }
       }
-    }
-    deliverDiagnostics(active.session.diagnostics(), onDiagnosticRef.current);
-  }, []);
+      if (active.coreOutput !== coreOutput) {
+        active.coreOutput = coreOutput;
+        try {
+          compileSession.commit?.(compileOutput);
+        } catch (cause) {
+          warnCallbackFailure('compile driver commit', cause);
+        }
+      }
+      deliverDiagnostics(active.session.diagnostics(), onDiagnosticRef.current);
+    },
+    [compileSession],
+  );
 
   useHostLayoutEffect(() => {
     const host = hostRef.current;
     if (host === null) return undefined;
     const shouldAdoptInitialFrame = backend === 'svg' && !adoptedInitialFrameRef.current;
-    const coreProgram = createCoreProgram(coreOptions);
+    const coreProgram = createCoreProgram(coreOptions, { observers: compileSession.observers });
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
     const factory = rendererFactory ?? builtinRetainedRendererFactory;
@@ -263,6 +291,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
             rendererFactory: factory,
             immutableOptions: { backend: 'svg', idPrefix },
             coreProgram,
+            resolveReadonlyLayers: output => resolveLayoutCompileOutput(compileSession, output).layers,
             mountMode: shouldAdoptInitialFrame ? 'adopt' : 'create',
             ...(shouldAdoptInitialFrame ? { expectedInitialFrame: seed.frame } : {}),
           })
@@ -272,6 +301,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
             rendererFactory: factory,
             immutableOptions: { backend: 'canvas', idPrefix, devicePixelRatio },
             coreProgram,
+            resolveReadonlyLayers: output => resolveLayoutCompileOutput(compileSession, output).layers,
           });
     let session: RuntimeSession;
     try {
@@ -309,7 +339,16 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
         previousAnimationRef.current = undefined;
       }
     };
-  }, [backend, coreOptions, rendererFactory, updateStrategy, idPrefix, devicePixelRatio, publishCommitted]);
+  }, [
+    backend,
+    coreOptions,
+    compileSession,
+    rendererFactory,
+    updateStrategy,
+    idPrefix,
+    devicePixelRatio,
+    publishCommitted,
+  ]);
 
   useHostLayoutEffect(() => {
     const active = runtimeRef.current;
@@ -324,6 +363,25 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
       });
     } catch (cause) {
       deliverDiagnostics(active.session.diagnostics(), onDiagnosticRef.current);
+      if (cause instanceof RuntimeError && cause.cause instanceof LayoutCompileDriverError) {
+        deliverDiagnostics(
+          [
+            Object.freeze({
+              code: cause.code,
+              phase: cause.phase,
+              severity: 'error' as const,
+              message: cause.message,
+              ...(cause.owner === undefined ? {} : { owner: cause.owner }),
+              cause: cause.cause,
+            }),
+          ],
+          onDiagnosticRef.current,
+        );
+        if (onDiagnosticRef.current === undefined && process.env.NODE_ENV !== 'production') {
+          console.error('[retikz] <Layout> retained compile driver update rolled back', cause);
+        }
+        return;
+      }
       throw cause;
     }
     active.source = source;

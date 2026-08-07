@@ -1,18 +1,22 @@
 import { z } from 'zod';
 
 import type { AnyPathKindDefinition } from '../../contract';
+import type { StrokePathOwnerOutput } from '../../contract';
+import type { IRJsonObject } from '../../schemas';
 
-import { definePathKind } from '../../contract';
-import { StrokePathInspectionSubjectSchema } from '../../contract';
+import { definePathKind, StrokePathOwnerOutputSchema } from '../../contract';
 import { PathKind } from '../../schemas';
-import { strokePathInspector } from './stroke-inspector';
 
 /** 标准描边 path kind：复用 core 的 stroke emission */
-const strokePathKind = definePathKind({
+const strokePathKind = definePathKind<IRJsonObject, StrokePathOwnerOutput>({
   schema: z.object({ kind: z.literal(PathKind.Stroke) }),
-  inspectionSubjectSchema: StrokePathInspectionSubjectSchema,
-  inspector: strokePathInspector,
-  compile: context => context.emitStroke(context.path, { includeInspectionSubject: true }),
+  ownerOutput: { schema: StrokePathOwnerOutputSchema },
+  compile: context =>
+    context.ownerOutput.requested
+      ? context.emitStroke(context.path, {
+          captureOwnerOutput: value => context.ownerOutput.publish(value),
+        })
+      : context.emitStroke(context.path),
 });
 
 /** 标准 ribbon path kind：复用 core 的 ribbon emission */

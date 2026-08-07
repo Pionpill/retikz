@@ -1,19 +1,12 @@
 import type { IRJsonObject, JsonValue } from '../../schemas';
 import type { AnyPathKindDefinition, PathKindDefinition } from './types';
 
-import { defineInspector } from '../inspection';
-
-/** 保留普通与带 Inspector Path kind 两个互斥分支的定义入口 */
+/** 保留普通与带 owner output Path kind 两个互斥分支的定义入口 */
 type DefinePathKind = {
   <TOptions = IRJsonObject>(definition: PathKindDefinition<TOptions, never>): PathKindDefinition<TOptions, never>;
-  <
-    TOptions,
-    TInspectionSubject extends JsonValue,
-    TInspectionOptionsInput extends IRJsonObject,
-    TResolvedInspectionOptions extends IRJsonObject,
-  >(
-    definition: PathKindDefinition<TOptions, TInspectionSubject, TInspectionOptionsInput, TResolvedInspectionOptions>,
-  ): PathKindDefinition<TOptions, TInspectionSubject, TInspectionOptionsInput, TResolvedInspectionOptions>;
+  <TOptions, TOwnerOutput extends JsonValue>(
+    definition: PathKindDefinition<TOptions, TOwnerOutput>,
+  ): PathKindDefinition<TOptions, TOwnerOutput>;
 };
 
 /**
@@ -28,15 +21,15 @@ const definePathKindImplementation = (input: unknown): unknown => {
     throw new Error('definePathKind: schema.shape.kind must be a non-empty z.literal string.');
   }
   const record = definition as unknown as Readonly<Record<string, unknown>>;
-  const hasSubjectSchema = record.inspectionSubjectSchema !== undefined;
-  const hasInspector = record.inspector !== undefined;
-  if (hasSubjectSchema !== hasInspector) {
-    throw new Error('definePathKind: inspectionSubjectSchema and inspector must be provided together.');
-  }
-  if (hasInspector) {
-    const inspector = record.inspector as Parameters<typeof defineInspector>[0];
-    if (inspector.kind !== 'path') throw new Error('definePathKind: inspector.kind must be "path".');
-    defineInspector(inspector);
+  const ownerOutput = record.ownerOutput;
+  if (ownerOutput !== undefined) {
+    if (
+      ownerOutput === null ||
+      typeof ownerOutput !== 'object' ||
+      typeof Reflect.get(ownerOutput, 'schema') !== 'object'
+    ) {
+      throw new Error('definePathKind: ownerOutput.schema must be a Zod schema.');
+    }
   }
   return definition;
 };

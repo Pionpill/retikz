@@ -16,7 +16,7 @@ Standard 布局容器把“如何排布子图形”从手写坐标中提取出�
   caption="辅助层由布局检查器单独绘制，不属于实际图形，不扩大布局边界，也不参与命中测试。"
 />
 
-这个示例通过 `<Layout inspect={{ layout: true }}>` 打开整张图的布局辅助层。单个容器也可以用自己的 `inspect` prop 局部开启；需要只控制一段 authored 子树时，在 `<Scope inspect={{ layout: true }}>` 上声明策略。
+这个示例使用 `@retikz/standard-react/inspect` 的 `StandardInspectLayout` 装配布局检查器，再用 `InspectFlexLayout`、`InspectGridLayout` 与 `InspectOverlayLayout` 选择具体实例。需要阻止某段 authored 子树继承检查请求时，用 `StandardInspectScope request={false}` 建立硬屏障。基础 Standard 入口不依赖检查包。
 
 ## 职责一览
 

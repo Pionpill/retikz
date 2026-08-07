@@ -1,25 +1,28 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeProgramId } from '../identity';
+import type { RuntimeOwnerErrorCode } from './constants';
 import type {
-  RuntimeErrorCode,
-  RuntimeOwnerErrorCode,
+  RuntimeErrorCodeValue,
+  RuntimeOwnerErrorCodeValue,
   RuntimeOwnerLifecycleDiagnostic,
-  RuntimeOwnerPhase,
+  RuntimeOwnerPhaseValue,
 } from './types';
 
+import { RuntimeErrorCode } from './constants';
+
 type RuntimeOwnerLifecycleErrorCode = Extract<
-  RuntimeOwnerErrorCode,
-  | 'RUNTIME_OWNER_CAPTURE_FAILED'
-  | 'RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED'
-  | 'RUNTIME_OWNER_READ_FAILED'
-  | 'RUNTIME_OWNER_COMPARE_FAILED'
-  | 'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED'
+  RuntimeOwnerErrorCodeValue,
+  | typeof RuntimeOwnerErrorCode.CaptureFailed
+  | typeof RuntimeOwnerErrorCode.CollectIdentitiesFailed
+  | typeof RuntimeOwnerErrorCode.ReadFailed
+  | typeof RuntimeOwnerErrorCode.CompareFailed
+  | typeof RuntimeOwnerErrorCode.ChangeSetValidationFailed
 >;
 
 /** Runtime 公共契约或 transaction 失败的结构化错误 */
 export class RuntimeError extends Error {
   /** 稳定错误分类 */
-  readonly code: RuntimeErrorCode;
+  readonly code: RuntimeErrorCodeValue;
   /** 发生失败的 Runtime 阶段 */
   readonly phase: string;
   /** 原始错误或无效输入 */
@@ -33,7 +36,7 @@ export class RuntimeError extends Error {
 
   /** 创建保留稳定 code、context 与 secondary diagnostics 的 Runtime 错误 */
   constructor(input: {
-    code: RuntimeErrorCode;
+    code: RuntimeErrorCodeValue;
     phase: string;
     cause?: unknown;
     owner?: string;
@@ -58,7 +61,7 @@ export class RuntimeOwnerError extends Error {
   /** 发生失败的 owner */
   readonly owner: string;
   /** 发生失败的 lifecycle 阶段 */
-  readonly phase: RuntimeOwnerPhase;
+  readonly phase: RuntimeOwnerPhaseValue;
   /** 原始错误 */
   override readonly cause: unknown;
   /** 清理过程中隔离的 secondary diagnostics */
@@ -68,7 +71,7 @@ export class RuntimeOwnerError extends Error {
   constructor(input: {
     code: RuntimeOwnerLifecycleErrorCode;
     owner: string;
-    phase: RuntimeOwnerPhase;
+    phase: RuntimeOwnerPhaseValue;
     cause: unknown;
     diagnostics?: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic>;
   }) {
@@ -86,8 +89,10 @@ export class RuntimeOwnerError extends Error {
 export class RuntimeOwnerRegistryError extends Error {
   /** 稳定错误分类 */
   readonly code: Extract<
-    RuntimeOwnerErrorCode,
-    'RUNTIME_OWNER_DUPLICATE' | 'RUNTIME_OWNER_UNKNOWN' | 'RUNTIME_OWNER_TOKEN_INVALID'
+    RuntimeOwnerErrorCodeValue,
+    | typeof RuntimeOwnerErrorCode.Duplicate
+    | typeof RuntimeOwnerErrorCode.Unknown
+    | typeof RuntimeOwnerErrorCode.TokenInvalid
   >;
   /** 关联的 owner key */
   readonly owner: string;
@@ -107,7 +112,7 @@ export class RuntimeOwnerRegistryError extends Error {
 /** Runtime identity 结构或 owner 约束无效时的稳定错误 */
 export class RuntimeIdentityError extends Error {
   /** identity 的稳定错误分类 */
-  readonly code = 'RUNTIME_IDENTITY_INVALID' as const;
+  readonly code = RuntimeErrorCode.IdentityInvalid;
   /** 关联的 owner 值 */
   readonly owner: string;
   /** 原始错误或无效输入 */
@@ -115,7 +120,7 @@ export class RuntimeIdentityError extends Error {
 
   /** 创建 identity contract 错误 */
   constructor(owner: string, cause?: unknown) {
-    super(`RUNTIME_IDENTITY_INVALID: invalid runtime identity for owner "${owner}"`, { cause });
+    super(`${RuntimeErrorCode.IdentityInvalid}: invalid runtime identity for owner "${owner}"`, { cause });
     this.name = 'RuntimeIdentityError';
     this.owner = owner;
     this.cause = cause;

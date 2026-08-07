@@ -353,6 +353,9 @@ importers:
       '@retikz/data':
         specifier: workspace:*
         version: link:../../packages/viz/data
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../packages/kernel/inspect
       '@retikz/math':
         specifier: workspace:*
         version: link:../../packages/kernel/math
@@ -579,6 +582,52 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
+  packages/kernel/inspect:
+    dependencies:
+      '@retikz/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@retikz/react':
+        specifier: workspace:*
+        version: link:../react
+      '@retikz/render':
+        specifier: workspace:*
+        version: link:../render
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../vanilla
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.2.25
+      react:
+        specifier: 'catalog:'
+        version: 18.2.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.2.0(react@18.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+
   packages/kernel/math:
     devDependencies:
       '@types/node':
@@ -778,6 +827,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -803,6 +855,9 @@ importers:
         specifier: workspace:*
         version: link:../standard
     devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -843,6 +898,9 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0

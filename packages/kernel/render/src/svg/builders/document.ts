@@ -8,6 +8,7 @@ import type { StaticRenderFrame } from '../../runtime/frame';
 import type { SvgNode } from '../types';
 import type { BuildContext } from './prim';
 
+import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
 import { createSvgAnimationCollector } from '../animation/keyframes';
 import { toSafeSvgToken } from '../safe-token';
@@ -15,9 +16,9 @@ import { formatViewBox } from '../view-box';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
 import { buildArrowMarker } from './arrow-markers';
 import { buildClipDef } from './clip-defs';
-import { buildSvgInspectionGroup } from './inspection';
 import { buildPaintDef } from './paint-defs';
 import { buildPrim } from './prim';
+import { buildSvgReadonlyLayer } from './readonly-layer';
 import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';
 
 /** `buildSvgDocument` / `buildSvgFragment` 选项 */
@@ -159,23 +160,23 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
  */
 export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDocumentOptions): SvgNode => {
   const scene = frame.primary;
+  const layers = validateReadonlyLayers(frame.layers);
   const document: SvgNode = {
     tag: 'svg',
     attrs: { viewBox: formatViewBox(scene.layout) },
     children: [
       ...buildSvgFragment(scene, options),
-      ...(frame.inspection === null
-        ? []
-        : [
-            buildSvgInspectionGroup(frame.inspection, (entryScene, entryIndex) =>
-              buildSvgFragment(entryScene, {
-                ...options,
-                idPrefix: `${options.idPrefix}-inspection-${entryIndex}`,
-                animate: false,
-                trace: undefined,
-              }),
-            ),
-          ]),
+      ...layers.map(layer =>
+        buildSvgReadonlyLayer(
+          layer,
+          buildSvgFragment(layer.scene, {
+            ...options,
+            idPrefix: `${options.idPrefix}-layer-${layer.key}`,
+            animate: false,
+            trace: undefined,
+          }),
+        ),
+      ),
     ],
   };
   if (options.trace !== undefined) {
@@ -192,6 +193,6 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
   return document;
 };
 
-/** Scene → 整棵 `<svg>` 描述树，等价于不带 inspection 的静态 frame */
+/** Scene → 整棵 `<svg>` 描述树，等价于使用空只读图层的静态 frame */
 export const buildSvgDocument = (scene: Scene, options: BuildDocumentOptions): SvgNode =>
-  buildSvgFrameDocument({ primary: scene, inspection: null }, options);
+  buildSvgFrameDocument({ primary: scene, layers: EMPTY_READONLY_LAYERS }, options);

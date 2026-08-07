@@ -9,7 +9,8 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 
 | API                           | Signature                                                              | Purpose                                                                                      |
 | ----------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main entry; returns `scene`, immutable `artifacts`, and `inspection` together                |
+| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main entry; returns `scene` and immutable `artifacts` together                               |
+| `observeCompileToScene`       | `(ir, options, observers) => ObservedCompileResult`                    | Creates explicit observation sessions and returns primary plus definition-ordered outputs    |
 | `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
 | `computeLayout`               | `(points, padding, round) => Layout`                                   | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
 | `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | Normalizes a uniform or side-specific value into complete four-side spacing                  |
@@ -42,15 +43,14 @@ Callers validate `value` with their owning schema first. `fallback` must be fini
 
 ### Layout And Output
 
-| Option          | Type                       | Default | Notes                                                                                                                                         |
-| --------------- | -------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `padding`       | `number`                   | `10`    | Extra layout padding in user units                                                                                                            |
-| `precision`     | `number`                   | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
-| `nodeDistance`  | `number`                   | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
-| `labelDistance` | `number`                   | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
-| `fontSize`      | `number`                   | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
-| `artifacts`     | `CompileArtifactOptions`   | `{}`    | Opt-in generic outputs; `{ nodeLayouts: true }` includes real Node `CompiledNodeLayout` snapshots                                             |
-| `inspection`    | `CompileInspectionOptions` | —       | Runtime-only sidecar; `root` is the whole-figure policy and `roots` bind authored occurrences                                                 |
+| Option          | Type                     | Default | Notes                                                                                                                                         |
+| --------------- | ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `padding`       | `number`                 | `10`    | Extra layout padding in user units                                                                                                            |
+| `precision`     | `number`                 | `2`     | Decimal precision for Scene coordinates, structured path commands, and layout values; internal geometry is double precision                   |
+| `nodeDistance`  | `number`                 | `24`    | Default distance for `AtPosition` when `distance` is omitted                                                                                  |
+| `labelDistance` | `number`                 | `12`    | Default net gap from the node boundary to the rotated label visual box when `Node.label.distance` is omitted; must be finite and non-negative |
+| `fontSize`      | `number`                 | `16`    | Default font size; also the root size for presets and `rem`; explicit numeric font sizes are unchanged                                        |
+| `artifacts`     | `CompileArtifactOptions` | `{}`    | Opt-in generic outputs; `{ nodeLayouts: true }` includes real Node `CompiledNodeLayout` snapshots                                             |
 
 ### Provider Registries
 
@@ -81,56 +81,7 @@ The two `CompositeDefinition` branches are mutually exclusive:
 
 Both branches read the complete, frozen `ResolvedTheme` at their position from `context.theme`. Resolution is fixed as `neutral + light` → Scene → outer Scope → inner Scope, with each layer overriding only explicit fields. `lowerIRToKernel()` uses the same resolver for `expand`, while a layout-aware definition still fails before its callback. Theme only lets a composite materialize domain-owned defaults; the final Scene and renderers neither carry nor interpret it.
 
-A layout-aware definition with `artifactSchema` may also declare `inspector`. The Inspector stays on the same `CompositeDefinition` and registry key; Core does not maintain a second Inspector registry. For a selected occurrence, the callback receives the validated artifact from that compile and reads canonical options, occurrence, and recommended appearance from `InspectorContext`. An `expand` branch, a compile branch without `artifactSchema`, or a selected occurrence that omits its artifact fails loudly.
-
-`defineInspector()` requires a strict `optionsInputSchema` that accepts `{}`, plus an `optionsSchema` that resolves empty input into a complete JSON-safe object. `inspect()` directly returns one ordinary `IRChild` or a dense array; there is no `outputSchema` and no Inspector-specific primitive. Core detaches and freezes the output, then compiles each entry in an isolated environment with the current compile's provider Definitions, Theme, and Scope style.
-
-The minimal Composite migration replaces old overlay DTOs with ordinary Path or Node content and writes the recommended appearance into that IR:
-
-```ts
-const CardInspectInputSchema = z.strictObject({ bounds: z.boolean().optional() });
-const CardInspectOptionsSchema = CardInspectInputSchema.transform(value => ({
-  bounds: value.bounds ?? true,
-}));
-
-const cardInspector = defineInspector({
-  kind: 'composite',
-  optionsInputSchema: CardInspectInputSchema,
-  optionsSchema: CardInspectOptionsSchema,
-  inspect: (artifact: CardArtifact, context) =>
-    context.options.bounds
-      ? {
-          type: 'path',
-          stroke: context.appearance.scopeColor,
-          dashPattern: [6, 4],
-          children: rectSteps(artifact.bounds),
-        }
-      : [],
-});
-
-export const CardDefinition = defineComposite({
-  namespace: 'acme',
-  type: 'card',
-  schema: CardSchema,
-  compile: compileCard,
-  artifactSchema: CardArtifactSchema,
-  inspector: cardInspector,
-});
-```
-
-`CompileInspectionOptions.root` carries a sparse whole-figure policy. `roots` is an authored-occurrence sidecar built by adapters such as React or Vanilla. Every locator declares the expected owner through `target: 'composite' | 'path'`, and the current occurrence uses `policy.self`; a target mismatch, duplicate, or out-of-range locator fails before any provider callback. The sidecar never enters IR and does not require callers to predict dynamic probe or replay paths. With `inspection` omitted, Core does not read subjects, call Inspectors, or run auxiliary compilation, so the primary Scene and artifacts retain their original behavior.
-
-`BaseLayoutInspectOptions` separates box boundaries from spacing layers through independent `bounds` and `spacing` branches. The canonical Core profile enables both `spacing.padding` and `spacing.margin`. `spacing: false | true` disables or restores both defaults as a group, while an object overrides only the members it provides. Adjacent object values merge sparsely by field; switching between a boolean and an object replaces the whole group with the latter value before canonical defaults fill omitted members. Changing `bounds` never changes `spacing` implicitly, or vice versa.
-
-### LayoutInspectSpacingOptionsInputSchema
-
-Use this sparse schema when `spacing` is an object: specify only the layers to override, while omitted members continue from the adjacent policy or canonical profile.
-
-<ZodSchema name="LayoutInspectSpacingOptionsInputSchema" />
-
-Adapters map `<Layout>`, `<Scope>`, and component-local settings to the whole-figure root, an authored subtree's inherited policy, and its `self` policy. Core merges them in fixed Layout → Scope → self order, and each level overrides only the values it provides. `enabled: false` is a hard barrier for both Composite and Path descendants. The inherited Layout policy selects only layout Composites and never enables Paths implicitly. The docs Recommended preset explicitly sets padding and margin to `false` without changing Core's full-diagnostic defaults.
-
-Every `InspectionPlaneEntry` records its owner, final occurrence, `colorScope`, occurrence-local-to-primary `transform`, and a sealed ordinary static `scene`. Core sorts and assigns color after discarded probes are removed; an empty output consumes a color scope without creating an entry. Auxiliary Scene resources, namespaces, artifacts, diagnostics, and public identities remain isolated from the primary Scene and every other entry.
+A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact` from the same `compile` call. The schema governs both public `CompileResult.artifacts` and final Composite owner outputs consumed by explicit observers; the Composite itself contains no Inspector definition.
 
 `LayoutProposal` contains exactly `x` and `y`; each axis is a `LayoutAxisProposal`:
 
@@ -187,6 +138,20 @@ An occurrence's `probe[index]` segment records candidate `layoutChild()` dispatc
 
 A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact` from the same `compile` call. `compileToScene` wraps it as `{ kind:'composite', namespace, type, occurrence, value }`. The occurrence uses an original `sourcePath` plus a structured `expansionPath`; it does not depend on a global Map or captured callback. A precise definition tuple lets `CompileResult` infer the corresponding artifact union.
 
+## Explicit Compile Observation
+
+`observeCompileToScene()` reuses the same full compile pipeline but creates an exclusive session for every `CompileObserverDefinition`. Ordinary `compileToScene()` creates no session and captures no extra owner output.
+
+| Phase    | Callback                        | Role                                                                                                        |
+| -------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Select   | `select(site)`                  | Decide before owner compilation whether to request output, using `owner` and authored `sourcePath`          |
+| Observe  | `observe(observation, context)` | Consume a final occurrence, validated output, owner-local-to-primary transform, and probe/replay provenance |
+| Complete | `complete()`                    | Return a domain-defined result after all events; Core recursively freezes it                                |
+
+A Composite reuses its `artifactSchema` and `artifact` compile result. A Path kind explicitly declares `ownerOutput: { schema }` and calls `publish(value)` only when `context.ownerOutput.requested` is true. A selected owner that omits output, publishes twice, or fails schema validation throws. Failed and discarded probes never trigger `observe()`, and final events are stably ordered by occurrence and owner.
+
+`context.compileFragment(children)` compiles ordinary Core children in the current occurrence's Theme, Scope style, and provider environment. The fragment returns an isolated `scene`, artifacts, and diagnostics without writing into the primary result. Public identity references into the primary figure or another fragment fail. Core does not prescribe the shape returned by `complete()`, so statistics, analysis, and [`@retikz/inspect`](/kernel/packages/inspect) can all reuse this capability.
+
 ## Text Measuring
 
 `TextMeasurer` is the only compile-layer hook that needs help from the host environment:
@@ -208,12 +173,12 @@ Node labels normalize the `width` / `height` / `ascent` / `descent` produced dur
 
 `CompileWarning` is a synchronous, machine-readable warning:
 
-| Field     | Type                         | Notes                                                  |
-| --------- | ---------------------------- | ------------------------------------------------------ |
-| `code`    | string                       | Warning code                                           |
-| `message` | string                       | Human-readable English message                         |
-| `path`    | string                       | IR locator, such as `children[3].path.children[1].to`  |
-| `origin`  | `InspectionDiagnosticOrigin` | Primary or Inspector resolve / inspect / output origin |
+| Field     | Type                   | Notes                                                   |
+| --------- | ---------------------- | ------------------------------------------------------- |
+| `code`    | string                 | Warning code                                            |
+| `message` | string                 | Human-readable English message                          |
+| `path`    | string                 | IR locator, such as `children[3].path.children[1].to`   |
+| `origin`  | `CompileWarningOrigin` | Primary or owner / isolated-fragment observation origin |
 
 Current built-in codes (the machine-readable `CompileWarningCode` constant is publicly exported, so you can reference these as enum members instead of hardcoding strings):
 
@@ -239,7 +204,7 @@ Current built-in codes (the machine-readable `CompileWarningCode` constant is pu
 
 Most warnings do not stop compilation. But when a coordinate's / node's own position cannot be resolved, compile **throws directly without emitting a warning** (deliberately: warning then throwing would leave the collector with a dead warning for a Scene that never gets produced), because it is a "position-defining" entity that breaks the contract for later references.
 
-Every public warning has an `origin`. Ordinary compilation uses `{ kind: 'primary' }`. An Inspector admission failure preserves the authored locator; bound resolve, inspect, and output origins include the owner and occurrence, while output adds `outputIndex`. Auxiliary output that reaches into primary or another entry's identity is promoted to a fatal error so a partially misleading overlay cannot commit.
+Every public warning has an `origin`. Ordinary compilation uses `{ kind: 'primary' }`. Warnings from an observed owner or isolated fragment use `{ kind: 'observation', owner, occurrence, stage }`. A fragment that reaches into the primary figure's or another fragment's public identity is promoted to a fatal error so a partially misleading result cannot publish.
 
 For an auto-contrast warning, `path` is the current Node locator and `message` includes the unresolved fill, reason, and fixed fallback. A Node emits at most one warning even when many body runs, formulas, labels, or pins consume its color. No resolution or warning occurs when no consumer inherits the Node text color.
 
@@ -247,13 +212,12 @@ For an auto-contrast warning, `path` is the current Node locator and `message` i
 
 `compileToScene` returns a `CompileResult`:
 
-| Field        | Type                             | Notes                                                                |
-| ------------ | -------------------------------- | -------------------------------------------------------------------- |
-| `scene`      | `Scene`                          | The laid-out scene consumed by renderers                             |
-| `artifacts`  | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene` |
-| `inspection` | `InspectionPlane \| null`        | Inspection overlay isolated from the primary Scene; `null` when off  |
+| Field       | Type                             | Notes                                                                |
+| ----------- | -------------------------------- | -------------------------------------------------------------------- |
+| `scene`     | `Scene`                          | The laid-out scene consumed by renderers                             |
+| `artifacts` | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene` |
 
-`inspection` is not part of `scene`: it cannot expand `scene.layout`, add primary resources or identities, or change hit testing. Each entry's `scene` is an ordinary executable static Scene with isolated resources and identity. Render static and retained frames materialize the primary Scene and inspection plane as two planes from the same revision.
+`observeCompileToScene()` returns `{ primary, observerOutputs }`. `primary` is equivalent to ordinary `compileToScene()` for the same IR and options. `observerOutputs` follows the input definition order, and each item carries the stable `key` plus that session's completed value.
 
 Its `scene` contains:
 
@@ -281,6 +245,14 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       endLine: 128,
     },
     {
+      label: 'Observer, owner-output, and isolated-fragment contracts',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
+    },
+    {
+      label: 'Final-occurrence observation dispatch',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    {
       label: 'Public layout proposal, probe, guide, and context contracts',
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
@@ -302,7 +274,7 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 277,
+      endLine: 240,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',

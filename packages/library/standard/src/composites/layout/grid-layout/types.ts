@@ -4,8 +4,6 @@ import type { z } from 'zod';
 import type { GridAutoFlow, GridOverlap, LayoutTrackSourceKind } from './constants';
 import type {
   GridLayoutArtifactSchema,
-  GridLayoutInspectOptionsInputSchema,
-  GridLayoutInspectOptionsSchema,
   GridLayoutItemSchema,
   GridLayoutSchema,
   GridPlacementSchema,
@@ -58,9 +56,3 @@ export type LayoutTrackSourceKindValue = ValueOf<typeof LayoutTrackSourceKind>;
 
 /** GridLayout 的 resolved track artifact */
 export type LayoutTrackArtifact = z.infer<typeof LayoutTrackArtifactSchema>;
-
-/** GridLayout inspector 的作者输入 */
-export type GridLayoutInspectOptions = z.input<typeof GridLayoutInspectOptionsInputSchema>;
-
-/** GridLayout Inspector 的完整 canonical 选项 */
-export type ResolvedGridLayoutInspectOptions = z.output<typeof GridLayoutInspectOptionsSchema>;

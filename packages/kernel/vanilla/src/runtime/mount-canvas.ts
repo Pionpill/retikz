@@ -1,7 +1,8 @@
-import type { CompileArtifact, InspectionPlane, Scene } from '@retikz/core';
+import type { CompileArtifact, Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import type { HydrationController } from '@retikz/render/hydration';
+import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import {
   createClock,
@@ -82,7 +83,7 @@ const mountStaticCanvas = (
   let visibleTeardown: (() => void) | undefined;
 
   let currentScene: Scene;
-  let currentInspection: InspectionPlane | null = null;
+  let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
 
@@ -103,7 +104,7 @@ const mountStaticCanvas = (
     const time = clock?.time ?? 0;
     renderFrameToCanvas(
       canvas,
-      { primary: currentScene, inspection: currentInspection },
+      { primary: currentScene, layers: currentLayers },
       {
         devicePixelRatio: ratio,
         time,
@@ -164,9 +165,9 @@ const mountStaticCanvas = (
   };
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, artifacts, inspection, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, layers, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
-    currentInspection = inspection;
+    currentLayers = layers;
     currentArtifacts = artifacts;
     currentRuntimeMeta = runtimeMeta;
     const hasNominalSize =
@@ -186,7 +187,7 @@ const mountStaticCanvas = (
     if (animation.snapshotAt !== undefined) {
       renderFrameToCanvas(
         canvas,
-        { primary: scene, inspection },
+        { primary: scene, layers },
         {
           devicePixelRatio: ratio,
           time: animation.snapshotAt,
@@ -197,7 +198,7 @@ const mountStaticCanvas = (
       return;
     }
     // base 静态先画一帧；含动画且未降级时起 rAF 时钟逐帧重绘（共享时钟，per-track delay 在 evaluateTrack 内偏移）
-    renderFrameToCanvas(canvas, { primary: scene, inspection }, { devicePixelRatio: ratio });
+    renderFrameToCanvas(canvas, { primary: scene, layers }, { devicePixelRatio: ratio });
     clock?.dispose();
     clock = undefined;
     if (animate && sceneHasAnimations(scene)) {
@@ -206,7 +207,7 @@ const mountStaticCanvas = (
         onFrame: time =>
           renderFrameToCanvas(
             canvas,
-            { primary: currentScene, inspection: currentInspection },
+            { primary: currentScene, layers: currentLayers },
             {
               devicePixelRatio: ratio,
               time,

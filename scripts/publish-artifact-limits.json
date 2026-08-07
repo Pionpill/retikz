@@ -3,6 +3,10 @@
     "maxFiles": 1020,
     "maxPackedBytes": 450560
   },
+  "@retikz/inspect": {
+    "maxFiles": 80,
+    "maxPackedBytes": 51200
+  },
   "@retikz/data": {
     "maxFiles": 160,
     "maxPackedBytes": 71680

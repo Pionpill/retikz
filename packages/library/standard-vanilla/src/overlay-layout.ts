@@ -1,15 +1,15 @@
-import type { OverlayLayoutInput, OverlayLayoutInspectOptions } from '@retikz/standard';
+import type { OverlayLayoutInput } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createOverlayLayout, OverlayLayoutInspectOptionsInputSchema } from '@retikz/standard';
+import { createOverlayLayout } from '@retikz/standard';
 
 import { StandardLayoutVanillaNamespace } from './constants';
 import { makeVanillaStandardLayoutComposites } from './layout-family';
 
-/** Vanilla OverlayLayout embed 的稳定 kind */
+/** Vanilla Overlay 布局嵌入项的稳定类别 */
 const OverlayLayoutEmbedKind = 'standard.overlayLayout';
 
-/** Standard OverlayLayout 的 Vanilla Tier 2 adapter */
+/** Standard Overlay 布局的 Vanilla 适配器 */
 export const OverlayLayoutVanillaAdapter: VanillaTier2Adapter<OverlayLayoutInput> = {
   kind: OverlayLayoutEmbedKind,
   namespace: StandardLayoutVanillaNamespace,
@@ -20,17 +20,15 @@ export const OverlayLayoutVanillaAdapter: VanillaTier2Adapter<OverlayLayoutInput
   }),
 };
 
-/** 创建由 OverlayLayoutVanillaAdapter 下沉的 Standard OverlayLayout embed */
+/** 创建由 Standard 适配器下沉的 Overlay 布局嵌入项 */
 export const overlayLayout = (
   id: string,
   input: OverlayLayoutInput,
-  inspect?: boolean | OverlayLayoutInspectOptions,
-): VanillaEmbedSpec<OverlayLayoutInput, OverlayLayoutInspectOptions> => ({
+  authoring?: unknown,
+): VanillaEmbedSpec<OverlayLayoutInput> => ({
   type: 'embed',
   kind: OverlayLayoutEmbedKind,
   id,
   props: input,
-  ...(inspect === undefined
-    ? {}
-    : { inspect: typeof inspect === 'object' ? OverlayLayoutInspectOptionsInputSchema.parse(inspect) : inspect }),
+  ...(authoring === undefined ? {} : { authoring }),
 });

@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.2 Roadmap：通用布局、Legend 与 Presentation lower reuse
 
-> 状态：进行中；ADR-01～07 已 Accepted，ADR-08 已由 Kernel ADR-12 取代，ADR-09～10 Proposed，alpha.2 为 Layout Inspector 可编译辅助内容迁移、通用 Legend 与 Presentation lower reuse 收口重新打开
+> 状态：进行中；ADR-01～07 已 Accepted，ADR-08 已由 Kernel ADR-12 取代，ADR-09～10 Proposed，alpha.2 为 Layout Inspector 可选子入口迁移、通用 Legend 与 Presentation lower reuse 收口重新打开
 >
 > 主题：由 Standard 提供 renderer-agnostic 的高层 Box/Flex/Overlay Layout 容器与已解析 Legend 呈现，让调用方复用确定性布局、视觉解释结构与 artifact
 >
@@ -124,18 +124,18 @@ ADR-01 不重新设计或私有补齐 Core contract；在可消费的 Kernel 版
 
 ## ADR 顺序
 
-| ADR                                             | 主题                                     | 主要决策                                                                                                                                           | 依赖                                                                                                                     | 最终状态   |
-| ----------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| 01                                              | Layout Profile 与 Core Gate              | 冻结 alpha.2 能力矩阵、坐标、proposal / contribution / solve / placement 边界，以行为测试确认 Core 前置能力                                        | alpha.1 direct Definition loading；Core ADR-08 可消费版本                                                                | Accepted   |
-| 02                                              | Box、LayoutItem 与共享词汇               | 冻结尺寸、spacing、alignment、distribution、overflow、key/path、artifact 公共结构与 diagnostics                                                    | ADR-01 PASS                                                                                                              | Accepted   |
-| 03                                              | FlexLayout                               | 冻结 schema、line formation、wrap、grow/shrink、free-space distribution、cross-axis feedback 与 nested Flex                                        | ADR-01～02                                                                                                               | Accepted   |
-| 04                                              | GridLayout                               | 冻结 tracks、span、implicit tracks、稳定 auto-placement、track sizing、双轴 feedback 与 nested Grid                                                | ADR-01～03                                                                                                               | Accepted   |
-| 05                                              | OverlayLayout                            | 冻结 aligned/positioned placement、anchor、offset、size participation、paint order、clip 与 nested Overlay                                         | ADR-01～04                                                                                                               | Accepted   |
-| 06                                              | Artifact、Definition、adapter 与文档收口 | 冻结 artifact schema，接入 direct Definition、React/Vanilla，完成 docs 与跨入口等价性                                                              | ADR-02～05                                                                                                               | Accepted   |
-| 07                                              | Layout Inspector                         | 冻结组件局部、Scope 子树与 Layout 全图策略，以独立 inspection plane 可视化真实 artifact 且不污染主 Scene                                           | ADR-02～06；Kernel inspection Gate                                                                                       | Accepted   |
-| [08](./08-layout-inspector-visual-semantics.md) | Layout Inspector 视觉语义                | 保留 occurrence 颜色、spacing 纹理、统一 dashed 边界、真实 gap / distributed space 与选项拆分目标；专用图元与 Render palette 由 Kernel ADR-12 取代 | ADR-07；[Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) | Superseded |
-| [09](./09-generic-legend.md)                    | 通用 Legend 已解析呈现                   | 冻结 items / ramp、任意 IRChild sample、Core 引用语义、约束布局、typed artifact、Definition 冲突诊断与跨 adapter 等价                              | ADR-02～06；Core ADR-11；Plot/Table 真实 descriptor                                                                      | Proposed   |
-| [10](./10-presentation-composite-reuse.md)      | Presentation lower reuse                 | 冻结 Axes / Grid / Frame / Legend 的 root Scope、Core lower target mapping、identity、clip、style 与 adapter parity                                | Core ADR-10～11；ADR-09                                                                                                  | Proposed   |
+| ADR                                             | 主题                                     | 主要决策                                                                                                                        | 依赖                                                                                                                     | 最终状态   |
+| ----------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| 01                                              | Layout Profile 与 Core Gate              | 冻结 alpha.2 能力矩阵、坐标、proposal / contribution / solve / placement 边界，以行为测试确认 Core 前置能力                     | alpha.1 direct Definition loading；Core ADR-08 可消费版本                                                                | Accepted   |
+| 02                                              | Box、LayoutItem 与共享词汇               | 冻结尺寸、spacing、alignment、distribution、overflow、key/path、artifact 公共结构与 diagnostics                                 | ADR-01 PASS                                                                                                              | Accepted   |
+| 03                                              | FlexLayout                               | 冻结 schema、line formation、wrap、grow/shrink、free-space distribution、cross-axis feedback 与 nested Flex                     | ADR-01～02                                                                                                               | Accepted   |
+| 04                                              | GridLayout                               | 冻结 tracks、span、implicit tracks、稳定 auto-placement、track sizing、双轴 feedback 与 nested Grid                             | ADR-01～03                                                                                                               | Accepted   |
+| 05                                              | OverlayLayout                            | 冻结 aligned/positioned placement、anchor、offset、size participation、paint order、clip 与 nested Overlay                      | ADR-01～04                                                                                                               | Accepted   |
+| 06                                              | Artifact、Definition、adapter 与文档收口 | 冻结 artifact schema，接入 direct Definition、React/Vanilla，完成 docs 与跨入口等价性                                           | ADR-02～05                                                                                                               | Accepted   |
+| 07                                              | Layout Inspector                         | 冻结组件局部、Scope 子树与 Layout 全图策略，以独立 inspection plane 可视化真实 artifact 且不污染主 Scene                        | ADR-02～06；Kernel inspection Gate                                                                                       | Accepted   |
+| [08](./08-layout-inspector-visual-semantics.md) | Layout Inspector 视觉语义                | 保留 occurrence 颜色、spacing 纹理、统一 dashed 边界、真实 gap / distributed space 与选项拆分目标；实现迁入 Standard `/inspect` | ADR-07；[Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) | Superseded |
+| [09](./09-generic-legend.md)                    | 通用 Legend 已解析呈现                   | 冻结 items / ramp、任意 IRChild sample、Core 引用语义、约束布局、typed artifact、Definition 冲突诊断与跨 adapter 等价           | ADR-02～06；Core ADR-11；Plot/Table 真实 descriptor                                                                      | Proposed   |
+| [10](./10-presentation-composite-reuse.md)      | Presentation lower reuse                 | 冻结 Axes / Grid / Frame / Legend 的 root Scope、Core lower target mapping、identity、clip、style 与 adapter parity             | Core ADR-10～11；ADR-09                                                                                                  | Proposed   |
 
 每份 ADR 均从 `Proposed` 完成 test-contract、Architecture Gate 与人工确认后进入实现，并在收尾时压缩为长期 `Accepted` 记录。
 
@@ -166,8 +166,8 @@ Core ADR-08 实现 / 出口审计 / 可消费版本
 07 Layout Inspector + Kernel inspection Gate
             ┌───────┴────────┐
             ▼                ▼
-Kernel ADR-12 migration    09 generic Legend
- + retained visual goals   + resolved samples
+Kernel ADR-12 package split    09 generic Legend
+ + Standard /inspect          + resolved samples
 ```
 
 - ADR-02 只抽取 Flex、Grid 与 Overlay 确认共享的公开词汇和不变量，不建立未被本 milestone 消费的通用 framework
@@ -179,7 +179,7 @@ Kernel ADR-12 migration    09 generic Legend
 - Frame 默认继续使用现有纯 `expand` 主链；没有独立 ADR 证明时不迁入 layout-aware compile
 - ADR-09 依赖 Core ADR-11 的完整 authored Scope output；Legend 的流式部分复用共享 Flex engine，ramp 复用 Overlay positioned 语义，不等待独立 alpha.3
 - ADR-10 依赖 Core ADR-11 与 ADR-09 的共同契约；Axes / Grid / Frame 的 expand root 和 Legend 的 authored root 在同一批次完成审计，不迁移其它 Tier 2
-- ADR-08 的 spacing artifact、正交 inspection authoring option 与视觉目标继续保留；专用辅助图元、tone、Render palette 与 hatch 路径由 Kernel ADR-12 取代，Standard 迁移为普通 Core IR
+- ADR-08 的 spacing artifact、正交 Layout Inspect 选项与视觉目标继续保留；Inspector Definition、选择策略和辅助 IR 迁入 `@retikz/standard/inspect`，Standard 根入口只保留布局与 artifact，不静态导入 `@retikz/inspect`
 - ADR-09 与 ADR-08 在 ADR-06 之后没有产品依赖，可以独立完成 Gate；Legend 复用已发布前的 Box Layout 底座，不等待独立 alpha.3
 - ADR-09 只发布 Standard 可消费组件与跨包契约；Plot/Table/逻辑组件的实际迁移仍由各自 milestone 负责
 
@@ -194,6 +194,7 @@ Gate 至少证明：
 - slot、allocation bounds、visual bounds、alignment guide 与 clip 的坐标空间一致
 - Flex 与 Grid solver 具有终止性、确定性、顺序与数值有限性证据，且不修改输入
 - 内置与自定义能力进入同一 Core Composite registry，直接 definitions 的结果等价
+- Standard、Standard React、Standard Vanilla 根入口不导出或静态加载 Inspector；三个 `/inspect` 是 root-only exports 规则的受控例外，通过可选 `@retikz/inspect` peer 使用独立 Inspector registry，缺少可选依赖时不影响普通 Layout
 - React 与 Vanilla 只负责 authoring / adapter 接线，相同 Standard 输入与 compile environment 产生等价结果
 - 空 children、单 child、零尺寸、非法数值、空间不足、重复 key 与超深 nested layout 均有明确结果或 fail-loud diagnostics
 - Legend 的 items / ramp form、任意 IRChild sample、Core 引用语义、normalized tick、空内容与 typed artifact 具有确定契约
@@ -227,19 +228,19 @@ Gate 至少证明：
 
 - [x] Core ADR-08 已 Accepted，并有 Standard 可消费的 Kernel 版本
 - [x] ADR-01～07 均完成 test contract、Architecture Gate、人工设计确认并进入 Accepted
-- [ ] Kernel ADR-12 完成 Standard Layout Inspector 普通 IR 迁移、自测、双语文档与视觉验证；ADR-08 保持 Superseded
+- [x] Kernel ADR-12 完成 `@retikz/inspect` 与 Core 观测底座；Standard Layout Inspector 迁入 `/inspect` 子入口并完成自测、双语文档与视觉验证；ADR-08 保持 Superseded
 - [ ] ADR-09 完成 test contract、Architecture Gate、实现、自测、双语文档与真实直接 authoring 消费并进入 Accepted
 - [x] FlexLayout、GridLayout、OverlayLayout、LayoutItem 与 layout artifact 的 schema、solver、layout-aware compile、diagnostics 与公共 exports 形成闭环
 - [x] 全部能力接入 direct Definition、React 与 Vanilla，不引入隐式注册或 adapter 私有语义
 - [x] 任意 `IRChild`、nested layout、文本双轴 proposal、baseline、non-zero bounds、overflow / clip 和失败路径均有自动化证据
-- [x] Flex/Grid/Overlay Inspector 支持单组件、Scope 子树与 Layout 全图开关，SVG/Canvas、static/retained 等价且不污染主 Scene
-- [ ] Layout Inspector 用颜色区分 final occurrence；margin/padding/gap 只绘制无底色的 12-unit 斜线和单份 dashed boundary，distributed 仅绘制 dashed perimeter、内部保持透明；box 与内部结构统一 dashed 且共线不重画；bounds 与 spacing 可独立配置，推荐态显示 content outline、内部结构线与固定 gap，且 Flex/Grid 不再从相邻空白误判 gap
+- [x] Flex/Grid/Overlay Inspector 在可选 `/inspect` 入口支持单组件、Scope 子树与 Layout 全图开关，SVG/Canvas、static/retained 等价且不污染主 Scene；Standard 根入口不加载 Inspect
+- [x] Layout Inspector 用颜色区分 final occurrence；margin/padding/gap 只绘制无底色的 12-unit 斜线和单份 dashed boundary，distributed 仅绘制 dashed perimeter、内部保持透明；box 与内部结构统一 dashed 且共线不重画；bounds 与 spacing 可独立配置，推荐态显示 content outline、内部结构线与固定 gap，且 Flex/Grid 不再从相邻空白误判 gap
 - [ ] Core ADR-11、Standard ADR-10 与 ADR-09 完成 Architecture Gate、实现、自测、双语文档与人工确认；Legend 以 items / ramp 结构接收任意 IRChild sample，直接 IR、React、Vanilla 具有等价 Scene / artifact，且 nested Definition 依赖保持显式
 - [ ] Axes、Grid、Frame、Legend 的 root Scope surface 和所有已开放 lower-facing 字段均沿 Core / Standard canonical pipeline 消费，无静默丢字段、局部重写 lower 算法或 adapter 私有语义
 - [x] 现有 `Grid` 与新 `GridLayout` 无概念、schema、definition key 或文档歧义
-- [ ] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
-- [ ] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
-- [ ] adversarial testing 无未处理 BLOCKING，milestone 经人工确认可以收口
+- [x] Standard 中英文文档和真实示例完整，不修改其它 Tier 2 的领域文档或公开契约
+- [x] Standard 三包与 docs 完成受影响范围的格式、lint、类型、测试、构建和 package exports 验证
+- [x] adversarial testing 无未处理 BLOCKING，milestone 经人工确认可以收口
 
 ## 不在 alpha.2 范围
 

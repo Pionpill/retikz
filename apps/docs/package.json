@@ -16,6 +16,7 @@
     "@mdx-js/mdx": "catalog:",
     "@retikz/core": "workspace:*",
     "@retikz/data": "workspace:*",
+    "@retikz/inspect": "workspace:*",
     "@retikz/math": "workspace:*",
     "@retikz/plot": "workspace:*",
     "@retikz/plot-react": "workspace:*",

@@ -1,26 +1,7 @@
 import { z } from 'zod';
 
-import type { IRJsonObject, JsonValue } from '../../schemas';
+import type { JsonValue } from '../../schemas';
 import type { CompositeDefinition } from './types';
-
-import { defineInspector } from '../inspection';
-
-/** 校验 inspector local schemas 可从空输入形成 strict、JSON-safe canonical profile */
-const validateInspector = (definition: Readonly<Record<string, unknown>>): void => {
-  const inspector = definition.inspector;
-  if (inspector === undefined) return;
-  if (
-    typeof definition.compile !== 'function' ||
-    definition.artifactSchema === undefined ||
-    inspector === null ||
-    typeof inspector !== 'object'
-  ) {
-    throw new Error('defineComposite: inspector requires the compile branch and artifactSchema.');
-  }
-  const record = inspector as Readonly<Record<string, unknown>>;
-  if (record.kind !== 'composite') throw new Error('defineComposite: inspector.kind must be "composite".');
-  defineInspector(record as Parameters<typeof defineInspector>[0]);
-};
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
 const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
@@ -76,30 +57,24 @@ export const defineComposite = <
   const TType extends string,
   TNode,
   TArtifact extends JsonValue = never,
-  TLocalShape extends z.ZodRawShape = z.ZodRawShape,
-  TResolvedLocalOptions extends IRJsonObject = IRJsonObject,
-  const TDefinition extends CompositeDefinition<
+  const TDefinition extends CompositeDefinition<TNode, TNamespace, TType, TArtifact> = CompositeDefinition<
     TNode,
     TNamespace,
     TType,
-    TArtifact,
-    TLocalShape,
-    TResolvedLocalOptions
-  > = CompositeDefinition<TNode, TNamespace, TType, TArtifact, TLocalShape, TResolvedLocalOptions>,
+    TArtifact
+  >,
 >(
-  definition: CompositeDefinition<TNode, TNamespace, TType, TArtifact, TLocalShape, TResolvedLocalOptions> &
-    TDefinition,
+  definition: CompositeDefinition<TNode, TNamespace, TType, TArtifact> & TDefinition,
 ): TDefinition => {
   const hasExpand = typeof definition.expand === 'function';
   const hasCompile = typeof definition.compile === 'function';
   if (hasExpand === hasCompile) {
     throw new Error('defineComposite: exactly one of expand or compile must be provided.');
   }
-  const runtimeArtifactSchema = (definition as { artifactSchema?: unknown }).artifactSchema;
+  const runtimeArtifactSchema = definition.artifactSchema;
   if (hasExpand && runtimeArtifactSchema !== undefined) {
     throw new Error('defineComposite: artifactSchema is only valid for the compile branch.');
   }
-  validateInspector(definition);
   const namespace = literalValueOf(definition.schema, 'namespace');
   const type = literalValueOf(definition.schema, 'type');
   if (definition.namespace !== namespace) {

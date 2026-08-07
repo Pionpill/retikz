@@ -41,7 +41,7 @@ const highlight = definePathKind({
 
 ### 可选 Inspector
 
-需要为当前 Path kind 提供开发辅助内容时，把 settled subject schema 与 Inspector 一起放进同一个 Definition。下面复用标准描边编译，并把最终 commands 作为 subject；Inspector 返回普通 Node，而不是后端专用 DTO。
+需要为当前 Path kind 提供开发辅助内容时，Path kind 只声明带 schema 的 `ownerOutput`，Inspector 则在 `@retikz/inspect` 中独立定义和注册。下面复用标准描边编译，按需发布最终 commands，并让外部 Inspector 返回普通 Node。
 
 ```tsx
 const InspectInputSchema = z.strictObject({ summary: z.boolean().optional() });
@@ -50,10 +50,13 @@ const InspectOptionsSchema = InspectInputSchema.transform(value => ({
 }));
 
 const highlightInspector = defineInspector({
-  kind: 'path',
+  namespace: 'demo',
+  name: 'highlight-summary',
+  owner: { kind: 'pathKind', name: 'highlight' },
+  subjectSchema: StrokePathOwnerOutputSchema,
   optionsInputSchema: InspectInputSchema,
   optionsSchema: InspectOptionsSchema,
-  inspect: (subject: StrokePathInspectionSubject, context) =>
+  inspect: (subject: StrokePathOwnerOutput, context) =>
     context.options.summary
       ? {
           type: 'node',
@@ -66,13 +69,17 @@ const highlightInspector = defineInspector({
 
 const highlight = definePathKind({
   schema: z.strictObject({ kind: z.literal('highlight') }),
-  inspectionSubjectSchema: StrokePathInspectionSubjectSchema,
-  inspector: highlightInspector,
-  compile: context => context.emitStroke(context.path, { includeInspectionSubject: true }),
+  ownerOutput: { schema: StrokePathOwnerOutputSchema },
+  compile: context =>
+    context.ownerOutput.requested
+      ? context.emitStroke(context.path, { captureOwnerOutput: context.ownerOutput.publish })
+      : context.emitStroke(context.path),
 });
+
+const registry = createInspectorRegistry([highlightInspector]);
 ```
 
-`inspectionSubjectSchema`、`inspector` 与非空 compile result 的 `inspectionSubject` 是同一条件分支，必须同时存在。Inspector 的 `optionsInputSchema` 接收 runtime sidecar 的稀疏输入，`optionsSchema` 负责生成完整 canonical options；`inspect()` 返回 `IRChild | ReadonlyArray<IRChild>`，没有 `outputSchema`。如果 compile 返回 `null`，Core 不读取 subject，也不调用 Inspector。
+只有观察者选择当前 owner 时，`ownerOutput.requested` 才为 `true`。非空结果必须恰好发布一次符合 schema 的值；返回 `null` 时不得发布。Inspector 的 `subjectSchema` 再校验一次外部约定，`inspect()` 返回 `IRChild | ReadonlyArray<IRChild>`，没有 `outputSchema`。完整注册、选择与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 ## 注入宿主
 
@@ -118,17 +125,17 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ## 错误与限制
 
-| 情况                                 | 结果                                            |
-| ------------------------------------ | ----------------------------------------------- |
-| `kind` literal 为空或不是字符串      | `definePathKind` 立即拒绝                       |
-| 与 `stroke`、`ribbon` 或自定义项重名 | registry 合并时报重复注册                       |
-| Path 引用未注册 kind                 | 编译列出可用名称与 `options.pathKinds` 注入提示 |
-| `kindOptions` 不符合 schema          | 错误包含 kind 名和对应 IR 路径                  |
-| provider 返回 `null`                 | 该 Path 不产生图元                              |
-| subject schema 与 Inspector 只给一个 | `definePathKind` 立即拒绝                       |
-| 已选非空结果缺少 subject             | Inspector resolve 阶段 fail-loud                |
-| Inspector 返回非法 Core child        | 错误携 owner、occurrence 与 output index        |
-| `boundsPoints` 不覆盖真实输出边界    | 自动布局与 Path 级 rotate / scale 依据会失真    |
+| 情况                                            | 结果                                            |
+| ----------------------------------------------- | ----------------------------------------------- |
+| `kind` literal 为空或不是字符串                 | `definePathKind` 立即拒绝                       |
+| 与 `stroke`、`ribbon` 或自定义项重名            | registry 合并时报重复注册                       |
+| Path 引用未注册 kind                            | 编译列出可用名称与 `options.pathKinds` 注入提示 |
+| `kindOptions` 不符合 schema                     | 错误包含 kind 名和对应 IR 路径                  |
+| provider 返回 `null`                            | 该 Path 不产生图元                              |
+| 已请求的非空结果未发布 owner output             | Core 观测契约 fail-loud                         |
+| owner output 或 Inspector subject 不符合 schema | 对应校验阶段 fail-loud                          |
+| Inspector 返回非法 Core child                   | 错误携 owner、occurrence 与 output index        |
+| `boundsPoints` 不覆盖真实输出边界               | 自动布局与 Path 级 rotate / scale 依据会失真    |
 
 自定义 kind 返回的是后端中立 Scene primitive，不能把 SVG element、Canvas 实例、ReactNode 或函数塞进结果，也不能要求 renderer 识别自定义 `kind`。
 
@@ -136,39 +143,41 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ### PathKindDefinition
 
-| 字段                      | 类型                               | 默认值                   | 描述                                  |
-| ------------------------- | ---------------------------------- | ------------------------ | ------------------------------------- |
-| `schema`                  | `PathKindDefinition['schema']`     | —                        | 声明 Path 形态并提供 registry key     |
-| `optionsSchema`           | `ZodType<IRJsonObject>`            | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
-| `compile`                 | `PathKindDefinition['compile']`    | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
-| `inspectionSubjectSchema` | `ZodType<JsonValue>`               | —                        | 与 Inspector 共同校验最终 subject     |
-| `inspector`               | `InspectorDefinition<'path', ...>` | —                        | 把已校验 subject 转为普通 Core 子元素 |
+| 字段            | 类型                            | 默认值                   | 描述                                  |
+| --------------- | ------------------------------- | ------------------------ | ------------------------------------- |
+| `schema`        | `PathKindDefinition['schema']`  | —                        | 声明 Path 形态并提供 registry key     |
+| `optionsSchema` | `ZodType<IRJsonObject>`         | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
+| `compile`       | `PathKindDefinition['compile']` | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
+| `ownerOutput`   | `CompileOwnerOutputDefinition`  | —                        | 声明可按需发布的最终所属者产物 schema |
 
 ### InspectorDefinition
 
 | 字段                 | 类型                             | 默认值 | 描述                                          |
 | -------------------- | -------------------------------- | ------ | --------------------------------------------- |
-| `kind`               | `'path'`                         | —      | 声明当前 owner family                         |
+| `namespace`          | `string`                         | —      | 与 `name` 组成独立注册键                      |
+| `name`               | `string`                         | —      | 与 `namespace` 组成独立注册键                 |
+| `owner`              | `CompileObservationOwner`        | —      | 指向被观察的 Path kind                        |
+| `subjectSchema`      | `ZodType<JsonValue>`             | —      | 校验 owner output 与 Inspector 的外部约定     |
 | `optionsInputSchema` | strict `ZodObject`               | —      | 校验可为空的 runtime 稀疏输入                 |
 | `optionsSchema`      | `ZodType<IRJsonObject>`          | —      | 把稀疏输入解析为完整 JSON-safe options        |
 | `inspect`            | `InspectorDefinition['inspect']` | —      | 返回一个普通 Core child 或稠密只读 child 数组 |
 
 ### compile 上下文
 
-| 字段         | 类型                                   | 默认值    | 描述                                                |
-| ------------ | -------------------------------------- | --------- | --------------------------------------------------- |
-| `path`       | `IRPathBase`                           | —         | 当前 Path 的完整 IR                                 |
-| `options`    | `TOptions`                             | —         | `kindOptions ?? {}` 经 `optionsSchema` 解析后的结果 |
-| `emitStroke` | `PathKindCompileContext['emitStroke']` | 当前 Path | 复用标准描边编译                                    |
-| `emitRibbon` | `PathKindCompileContext['emitRibbon']` | 当前 Path | 复用标准流带编译                                    |
+| 字段          | 类型                                   | 默认值    | 描述                                                |
+| ------------- | -------------------------------------- | --------- | --------------------------------------------------- |
+| `path`        | `IRPathBase`                           | —         | 当前 Path 的完整 IR                                 |
+| `options`     | `TOptions`                             | —         | `kindOptions ?? {}` 经 `optionsSchema` 解析后的结果 |
+| `ownerOutput` | `CompileOwnerOutputPublisher`          | —         | 按需发布带 schema 的最终所属者产物                  |
+| `emitStroke`  | `PathKindCompileContext['emitStroke']` | 当前 Path | 复用标准描边编译                                    |
+| `emitRibbon`  | `PathKindCompileContext['emitRibbon']` | 当前 Path | 复用标准流带编译                                    |
 
 ### PathKindCompileResult
 
-| 字段                | 类型                    | 默认值 | 描述                                               |
-| ------------------- | ----------------------- | ------ | -------------------------------------------------- |
-| `primitives`        | `Array<ScenePrimitive>` | —      | 当前 Path 局部坐标中的实际输出                     |
-| `boundsPoints`      | `Array<Position>`       | —      | 自动布局与 Path 级变换使用的关键边界点             |
-| `inspectionSubject` | `TInspectionSubject`    | —      | Definition 声明 Inspector 时必填的 settled subject |
+| 字段           | 类型                    | 默认值 | 描述                                   |
+| -------------- | ----------------------- | ------ | -------------------------------------- |
+| `primitives`   | `Array<ScenePrimitive>` | —      | 当前 Path 局部坐标中的实际输出         |
+| `boundsPoints` | `Array<Position>`       | —      | 自动布局与 Path 级变换使用的关键边界点 |
 
 ## 相关
 

@@ -67,13 +67,18 @@ It is not IR, a Scene primitive, or a live DOM measurement object, and it expose
 
 ### Layout inspection policy
 
-`inspect` is a runtime sidecar and never enters IR. Passing `{ layout: true }` to `<Layout>` enables overlays for every registered layout occurrence that provides an inspector. Bounds, overflow shading, and alignment guides commit separately from the primary figure, do not expand the viewBox, and do not participate in hit testing.
+The base `<Layout>` includes no inspection logic. After installing the optional `@retikz/inspect` package, an inspection host supplies the registry, runtime selection, and compile driver. Standard packages its three layout Inspectors behind separate entry points. Readonly layers never enter IR, expand the viewBox, or participate in hit testing.
 
 ```tsx
-<Layout inspect={{ layout: true }}>{/* layout-aware composites */}</Layout>
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/standard/inspect';
+import { StandardInspectLayout } from '@retikz/standard-react/inspect';
+
+<StandardInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}>
+  {/* FlexLayout */}
+</StandardInspectLayout>;
 ```
 
-Declare the same policy on [`<Scope>`](/kernel/components/layout/scope) for one authored subtree, or use a Standard container's own `inspect` prop for one occurrence. See [Standard Layout Inspector](/standard/layout/reference/runtime#layout-inspector) for fields, defaults, and cascade rules.
+Use `StandardInspectScope` for one authored subtree, or `InspectFlexLayout`, `InspectGridLayout`, or `InspectOverlayLayout` for one Standard occurrence. See [`@retikz/inspect`](/kernel/packages/inspect) for the general mechanism and [Standard Layout Inspector](/standard/layout/reference/runtime#layout-inspector) for layout options and selection rules.
 
 ### Output Boundary
 
@@ -265,7 +270,6 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | `fontSize`     | `number`                                                     | `16`    | Default font size and root size for presets and `rem`                               |
 | `artifacts`    | `CompileArtifactOptions`                                     | `{}`    | Requests opt-in outputs; `nodeLayouts:true` includes `CompiledNodeLayout` snapshots |
 | `onArtifacts`  | `(artifacts:`<br />`ReadonlyArray<CompileArtifact>) => void` | —       | Reports same-compile immutable artifacts after React commit                         |
-| `inspect`      | `InspectOptions`                                             | —       | Runtime-only whole-figure policy for registered layout inspectors                   |
 
 ### Primitive and Resource Injection
 

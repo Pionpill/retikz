@@ -41,7 +41,7 @@ const highlight = definePathKind({
 
 ### Optional Inspector
 
-When this Path kind needs development-only auxiliary content, place its settled-subject schema and Inspector on the same Definition. This example reuses standard stroke compilation and exposes final commands as the subject; the Inspector returns an ordinary Node instead of a backend-specific DTO.
+When this Path kind needs development-only auxiliary content, the Path-kind Definition declares only a schema-backed `ownerOutput`; an Inspector is defined and registered independently in `@retikz/inspect`. This example reuses standard stroke compilation, publishes final commands on demand, and returns an ordinary Node from the external Inspector.
 
 ```tsx
 const InspectInputSchema = z.strictObject({ summary: z.boolean().optional() });
@@ -50,10 +50,13 @@ const InspectOptionsSchema = InspectInputSchema.transform(value => ({
 }));
 
 const highlightInspector = defineInspector({
-  kind: 'path',
+  namespace: 'demo',
+  name: 'highlight-summary',
+  owner: { kind: 'pathKind', name: 'highlight' },
+  subjectSchema: StrokePathOwnerOutputSchema,
   optionsInputSchema: InspectInputSchema,
   optionsSchema: InspectOptionsSchema,
-  inspect: (subject: StrokePathInspectionSubject, context) =>
+  inspect: (subject: StrokePathOwnerOutput, context) =>
     context.options.summary
       ? {
           type: 'node',
@@ -66,13 +69,17 @@ const highlightInspector = defineInspector({
 
 const highlight = definePathKind({
   schema: z.strictObject({ kind: z.literal('highlight') }),
-  inspectionSubjectSchema: StrokePathInspectionSubjectSchema,
-  inspector: highlightInspector,
-  compile: context => context.emitStroke(context.path, { includeInspectionSubject: true }),
+  ownerOutput: { schema: StrokePathOwnerOutputSchema },
+  compile: context =>
+    context.ownerOutput.requested
+      ? context.emitStroke(context.path, { captureOwnerOutput: context.ownerOutput.publish })
+      : context.emitStroke(context.path),
 });
+
+const registry = createInspectorRegistry([highlightInspector]);
 ```
 
-`inspectionSubjectSchema`, `inspector`, and the non-null compile result's `inspectionSubject` form one conditional branch and must exist together. The Inspector's `optionsInputSchema` accepts sparse runtime-sidecar input, while `optionsSchema` produces complete canonical options. `inspect()` returns `IRChild | ReadonlyArray<IRChild>` and has no `outputSchema`. When compile returns `null`, Core neither reads the subject nor calls the Inspector.
+`ownerOutput.requested` is true only when an observer selected this owner. A non-null result must publish exactly one schema-valid value, while a null result must publish none. The Inspector's `subjectSchema` validates the external agreement again, and `inspect()` returns `IRChild | ReadonlyArray<IRChild>` without an `outputSchema`. See [`@retikz/inspect`](/kernel/packages/inspect) for registry, selection, and host wiring.
 
 ## Inject into the host
 
@@ -118,17 +125,17 @@ A provider may create new Scene primitives directly, or call `emitStroke` / `emi
 
 ## Errors and limits
 
-| Case                                        | Result                                                    |
-| ------------------------------------------- | --------------------------------------------------------- |
-| Empty or non-string `kind` literal          | `definePathKind` rejects it immediately                   |
-| Duplicate `stroke`, `ribbon`, or custom key | Registry merge reports a duplicate registration           |
-| Path references an unknown kind             | Compile lists available names and `options.pathKinds`     |
-| `kindOptions` fails its schema              | Error includes kind name and the relevant IR path         |
-| Provider returns `null`                     | The Path produces no primitives                           |
-| Subject schema or Inspector appears alone   | `definePathKind` rejects the Definition immediately       |
-| Selected non-null result omits its subject  | Inspector resolution fails loudly                         |
-| Inspector returns an invalid Core child     | Error includes owner, occurrence, and output index        |
-| `boundsPoints` misses actual output bounds  | Auto layout and Path-level rotate/scale become inaccurate |
+| Case                                           | Result                                                    |
+| ---------------------------------------------- | --------------------------------------------------------- |
+| Empty or non-string `kind` literal             | `definePathKind` rejects it immediately                   |
+| Duplicate `stroke`, `ribbon`, or custom key    | Registry merge reports a duplicate registration           |
+| Path references an unknown kind                | Compile lists available names and `options.pathKinds`     |
+| `kindOptions` fails its schema                 | Error includes kind name and the relevant IR path         |
+| Provider returns `null`                        | The Path produces no primitives                           |
+| Selected non-null result omits owner output    | Core observation fails loudly                             |
+| Owner output or Inspector subject fails schema | The corresponding validation stage fails loudly           |
+| Inspector returns an invalid Core child        | Error includes owner, occurrence, and output index        |
+| `boundsPoints` misses actual output bounds     | Auto layout and Path-level rotate/scale become inaccurate |
 
 A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
 
@@ -136,39 +143,41 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### PathKindDefinition
 
-| Field                     | Type                               | Default                 | Description                                                |
-| ------------------------- | ---------------------------------- | ----------------------- | ---------------------------------------------------------- |
-| `schema`                  | `PathKindDefinition['schema']`     | —                       | Declares Path shape and provides registry key              |
-| `optionsSchema`           | `ZodType<IRJsonObject>`            | Raw `kindOptions ?? {}` | Validates custom instance options                          |
-| `compile`                 | `PathKindDefinition['compile']`    | —                       | Emits whole-Path Scene primitives and bounds               |
-| `inspectionSubjectSchema` | `ZodType<JsonValue>`               | —                       | Validates the final subject together with the Inspector    |
-| `inspector`               | `InspectorDefinition<'path', ...>` | —                       | Converts the validated subject into ordinary Core children |
+| Field           | Type                            | Default                 | Description                                     |
+| --------------- | ------------------------------- | ----------------------- | ----------------------------------------------- |
+| `schema`        | `PathKindDefinition['schema']`  | —                       | Declares Path shape and provides registry key   |
+| `optionsSchema` | `ZodType<IRJsonObject>`         | Raw `kindOptions ?? {}` | Validates custom instance options               |
+| `compile`       | `PathKindDefinition['compile']` | —                       | Emits whole-Path Scene primitives and bounds    |
+| `ownerOutput`   | `CompileOwnerOutputDefinition`  | —                       | Declares an on-demand final owner-output schema |
 
 ### InspectorDefinition
 
 | Field                | Type                             | Default | Description                                               |
 | -------------------- | -------------------------------- | ------- | --------------------------------------------------------- |
-| `kind`               | `'path'`                         | —       | Declares the current owner family                         |
+| `namespace`          | `string`                         | —       | Forms an independent registry key with `name`             |
+| `name`               | `string`                         | —       | Forms an independent registry key with `namespace`        |
+| `owner`              | `CompileObservationOwner`        | —       | Targets the observed Path kind                            |
+| `subjectSchema`      | `ZodType<JsonValue>`             | —       | Validates the owner-output agreement                      |
 | `optionsInputSchema` | strict `ZodObject`               | —       | Validates sparse runtime input and must accept `{}`       |
 | `optionsSchema`      | `ZodType<IRJsonObject>`          | —       | Resolves sparse input into complete JSON-safe options     |
 | `inspect`            | `InspectorDefinition['inspect']` | —       | Returns one ordinary Core child or a dense readonly array |
 
 ### Compile context
 
-| Field        | Type                                   | Default      | Description                                   |
-| ------------ | -------------------------------------- | ------------ | --------------------------------------------- |
-| `path`       | `IRPathBase`                           | —            | Complete IR for the current Path              |
-| `options`    | `TOptions`                             | —            | `kindOptions ?? {}` parsed by `optionsSchema` |
-| `emitStroke` | `PathKindCompileContext['emitStroke']` | Current Path | Reuses standard stroke compilation            |
-| `emitRibbon` | `PathKindCompileContext['emitRibbon']` | Current Path | Reuses standard ribbon compilation            |
+| Field         | Type                                   | Default      | Description                                            |
+| ------------- | -------------------------------------- | ------------ | ------------------------------------------------------ |
+| `path`        | `IRPathBase`                           | —            | Complete IR for the current Path                       |
+| `options`     | `TOptions`                             | —            | `kindOptions ?? {}` parsed by `optionsSchema`          |
+| `ownerOutput` | `CompileOwnerOutputPublisher`          | —            | Publishes a schema-backed final owner output on demand |
+| `emitStroke`  | `PathKindCompileContext['emitStroke']` | Current Path | Reuses standard stroke compilation                     |
+| `emitRibbon`  | `PathKindCompileContext['emitRibbon']` | Current Path | Reuses standard ribbon compilation                     |
 
 ### PathKindCompileResult
 
-| Field               | Type                    | Default | Description                                                   |
-| ------------------- | ----------------------- | ------- | ------------------------------------------------------------- |
-| `primitives`        | `Array<ScenePrimitive>` | —       | Actual output in current Path-local coordinates               |
-| `boundsPoints`      | `Array<Position>`       | —       | Key points for auto layout and Path transforms                |
-| `inspectionSubject` | `TInspectionSubject`    | —       | Settled subject required when the Definition has an Inspector |
+| Field          | Type                    | Default | Description                                     |
+| -------------- | ----------------------- | ------- | ----------------------------------------------- |
+| `primitives`   | `Array<ScenePrimitive>` | —       | Actual output in current Path-local coordinates |
+| `boundsPoints` | `Array<Position>`       | —       | Key points for auto layout and Path transforms  |
 
 ## Related
 

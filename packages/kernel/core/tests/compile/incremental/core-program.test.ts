@@ -16,16 +16,25 @@ import {
   RuntimeProgramPhase,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
-import type { CompileWarning, IRScene, RuntimeScenePrimitive, ShapeDefinition } from '../../../src';
+import type {
+  CompileObserverDefinition,
+  CompileWarning,
+  IRScene,
+  RuntimeScenePrimitive,
+  ShapeDefinition,
+} from '../../../src';
 
 import {
   BUILTIN_SHAPES,
   compileToScene,
+  CompositeBaseSchema,
   CORE_OWNER_KEY,
   CORE_PROGRAM_ID,
   CoreOwnerDefinition,
   createCoreProgram,
+  defineComposite,
   defineShape,
 } from '../../../src';
 
@@ -481,6 +490,136 @@ describe('Core Runtime Program initial full run', () => {
         changed: 2,
       },
     ]);
+  });
+});
+
+describe('Core Runtime Program observed output', () => {
+  const observedComposite = defineComposite({
+    namespace: 'test',
+    type: 'program-observed',
+    schema: CompositeBaseSchema.extend({
+      namespace: z.literal('test'),
+      type: z.literal('program-observed'),
+      label: z.string(),
+    }),
+    artifactSchema: z.strictObject({ label: z.string() }),
+    compile: node => ({
+      artifact: { label: node.label },
+      children: [{ type: 'node', position: [0, 0], text: node.label }],
+    }),
+  });
+
+  const sourceWithLabel = (label: string): IRScene => ({
+    version: 1,
+    type: 'scene',
+    children: [{ namespace: 'test', type: 'program-observed', label }],
+  });
+
+  const observer: CompileObserverDefinition = {
+    key: 'program-observer',
+    createSession: () => {
+      const labels: Array<string> = [];
+      return {
+        select: site => site.owner.kind === 'composite',
+        observe: observation => {
+          const value = observation.value as { label: string };
+          labels.push(value.label);
+        },
+        complete: () => labels,
+      };
+    },
+  };
+
+  it('commits primary and observer outputs from one full candidate revision', () => {
+    const program = createCoreProgram({ composites: [observedComposite], onWarn: () => {} }, { observers: [observer] });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, sourceWithLabel('A'))],
+    });
+    const before = session.artifact(program).value;
+    const baseRevision = session.revision();
+
+    const update = session.update({
+      baseRevision,
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sourceWithLabel('B'))],
+    });
+    const after = session.artifact(program).value;
+
+    expect(update.outcome).toBe(RuntimeProgramKind.Fallback);
+    expect(after.output.observerOutputs).toEqual([{ key: 'program-observer', value: ['B'] }]);
+    expect(after.output.result.scene).toEqual(
+      compileToScene(sourceWithLabel('B'), { composites: [observedComposite], onWarn: () => {} }).scene,
+    );
+    expect(after.snapshot.revision).toBe(session.revision());
+    expect(after.patch?.nextRevision).toBe(after.snapshot.revision);
+    expect(after.output.result).not.toBe(before.output.result);
+  });
+
+  it('rolls back the whole candidate when observer completion fails', () => {
+    let shouldFail = false;
+    const failingObserver: CompileObserverDefinition = {
+      key: 'failing-program-observer',
+      createSession: () => ({
+        select: () => false,
+        observe: () => undefined,
+        complete: () => {
+          if (shouldFail) throw new Error('observer completion failed');
+          return null;
+        },
+      }),
+    };
+    const program = createCoreProgram(
+      { composites: [observedComposite], onWarn: () => {} },
+      { observers: [failingObserver] },
+    );
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, sourceWithLabel('A'))],
+    });
+    const before = session.artifact(program).value;
+    const baseRevision = session.revision();
+    shouldFail = true;
+
+    expect(() =>
+      session.update({
+        baseRevision,
+        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sourceWithLabel('B'))],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_PROGRAM_RUN_FAILED',
+        cause: expect.objectContaining({ message: 'observer completion failed' }),
+      }),
+    );
+    expect(session.revision()).toBe(baseRevision);
+    expect(session.artifact(program).value).toBe(before);
+  });
+
+  it('keeps the existing incremental path when observers are empty', () => {
+    const program = createCoreProgram({ onWarn: () => {} }, { observers: [] });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const initial = sceneWithText('A');
+    const next: IRScene = { ...initial, children: [{ ...initial.children[0], fill: '#22c55e' }] };
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+
+    const result = session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+
+    expect(result.outcome).toBe(RuntimeProgramKind.Incremental);
+    expect(session.artifact(program).value.output.observerOutputs).toEqual([]);
   });
 });
 

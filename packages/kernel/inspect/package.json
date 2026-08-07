@@ -1,0 +1,133 @@
+{
+  "name": "@retikz/inspect",
+  "version": "0.5.0-alpha.2",
+  "retikz": {
+    "domain": "kernel",
+    "releaseGroup": "kernel",
+    "layer": "extension",
+    "publishable": true
+  },
+  "description": "Optional Inspector definitions, selection, compile orchestration, and renderer adapters for retikz.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "diagram",
+    "inspection",
+    "visualization"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/kernel/inspect"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./render": {
+      "types": "./src/render/index.ts",
+      "default": "./src/render/index.ts"
+    },
+    "./react": {
+      "types": "./src/react/index.ts",
+      "default": "./src/react/index.ts"
+    },
+    "./vanilla": {
+      "types": "./src/vanilla/index.ts",
+      "default": "./src/vanilla/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/types/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./render": {
+        "types": "./dist/types/render/index.d.ts",
+        "import": "./dist/render/index.js",
+        "default": "./dist/render/index.js"
+      },
+      "./react": {
+        "types": "./dist/types/react/index.d.ts",
+        "import": "./dist/react/index.js",
+        "default": "./dist/react/index.js"
+      },
+      "./vanilla": {
+        "types": "./dist/types/vanilla/index.d.ts",
+        "import": "./dist/vanilla/index.js",
+        "default": "./dist/vanilla/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
+  },
+  "dependencies": {
+    "@retikz/core": "workspace:*",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "@retikz/react": "workspace:*",
+    "@retikz/render": "workspace:*",
+    "@retikz/vanilla": "workspace:*",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@retikz/render": {
+      "optional": true
+    },
+    "@retikz/react": {
+      "optional": true
+    },
+    "@retikz/vanilla": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@retikz/render": "workspace:*",
+    "@retikz/react": "workspace:*",
+    "@retikz/vanilla": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
+}
