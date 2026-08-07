@@ -1,6 +1,6 @@
 # ADR-13：Theme Token Namespace Context 与共享颜色
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-07
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-09：可继承 Theme IR 与 Composite 编译上下文](./09-inherited-theme-context.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 - Supersedes：本 ADR 明确取代 ADR-09 中“Theme 只由 `style` / `mode` 构成、领域 token 只能留在领域 spec”的边界；ADR-09 关于 Scene / Scope 继承、Composite context、probe / replay 与其它历史契约继续有效
@@ -143,6 +143,12 @@ type ResolvedThemeColors = Readonly<{
 - 下游执行 / adapter 等价性：同一 context 在 Core Composite、Standard Inspector、Plot / Chart / Table consumer、React、Vanilla、headless 与 SVG / Canvas 上保持语义一致；renderer 不承担主题解析
 - 不支持边界与诊断：未知 namespace、重复注册、非法 token 和无 consumer token 均在 owner / Core 边界 fail-loud，不回退为隐式默认
 - 本轮结论：扩展 Drawing Complete 当前能力域，建立 Core 通用 Theme token context 与 shared color value contract；领域主题解析继续留在各自 Visualization / Tabular owner
+
+## 最终实现与验证摘要
+
+最终实现已闭合 namespaced Theme bag、Definition registry、Scene / Scope sparse inheritance、shared semantic / categorical colors 与 Inspector appearance；Core 保持只传播、校验和派生通用颜色视图，不解释 Tier 2 token。React、Vanilla 与 plain JSON authoring 共享同一 Theme IR 和 definition 聚合边界，fresh / retained compile 也保持可观察等价。
+
+验证覆盖 strict JSON 与 owner schema 失败语义、嵌套继承、detached / frozen context、Inspector shared color 消费、Core-only 稳定性以及跨 adapter / renderer 的最终 Scene 等价；对抗验证与双语文档、浏览器验收均无遗留阻塞。
 
 ## 被否决方案
 

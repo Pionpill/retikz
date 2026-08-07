@@ -1,6 +1,6 @@
 # ADR-02：继承 Theme Token Scope 与 Plot owner contribution
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-07
 - 关联：[alpha.1 roadmap](./roadmap.md) · [plot v0.2 roadmap](../roadmap.md) · [ADR-01：Plot 主题 token 所有权与 Chart 消费边界](./01-chart-layering.md) · [Core ADR-13：Theme Token Namespace Context 与共享颜色](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/13-theme-token-namespace-context.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md)
 - Supersedes：本 ADR 取代 ADR-01 中关于 inherited token scope、局部 token 输入名称与 Core namespace context 的冲突边界；ADR-01 其余 Plot / Chart 主题所有权与消费边界继续有效
@@ -108,6 +108,12 @@ Plot 不拥有 Core namespace 继承协议、Chart presentation、Table token、
 - 闭环为 Core effective Theme → Plot definition validation → Plot preset / projection / token resolution → Plot mapping → Standard / Core formal input → Scene / manifest / inspection
 - shared categorical 的非空约束、detached projection 与 stable index consumption 属于跨包 value contract；sequential / diverging 仍由 Plot resolver 完整闭环
 - 本轮结论：扩展 Visualization Complete 的 Plot Theme / Palette 能力并接入 Core namespace context；不下沉 Plot 语义，不改变 Plot → Core lowering 方向
+
+## 最终实现与验证摘要
+
+最终实现已闭合 Plot owner definition、preset、resolver、mapping、inspection 与 shared categorical projection，并让 standalone Plot、embedded Plot 与 Chart bundle 复用同一 Plot namespace 和 cascade。React、Vanilla、headless 与根 Theme authoring 共享正式 definition 聚合及失败语义，Plot native input 与局部 token 也已完成破坏性命名迁移。
+
+验证覆盖 inherited / local token precedence、Plot native theme 与显式配置优先级、owner/source inspection、Chart handoff、SSR 与 SVG / Canvas 最终语义；fresh / retained compile 环境的完整验证、对抗验证以及双语文档和浏览器验收均无遗留阻塞。
 
 ## 被否决方案
 

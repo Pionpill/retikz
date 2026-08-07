@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Scope reuse 与 Inspector 基建
 
-- 状态：ADR-01～10 已完成实现、测试、双语文档与 Accepted 收口；ADR-11～13 Proposed，alpha.2 为 authored Scope output、Inspector 内容抽象与 Theme token namespace context 重新打开
+- 状态：ADR-01～10、ADR-13 已完成实现、验证、双语文档与 Accepted 收口；ADR-11～12 仍为 Proposed，alpha.2 继续为 authored Scope output 与 Inspector 内容抽象保持打开
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
@@ -32,7 +32,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-10](./10-core-atomic-contracts.md)              | Accepted | Core 原子契约与 Tier 2 / Tier 3 组合     | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                  |
 | [ADR-11](./11-layout-aware-scope-output.md)          | Proposed | Layout-aware Composite 完整 Scope 输出   | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排   |
 | [ADR-12](./12-extensible-inspector-content.md)       | Proposed | 可扩展 Inspector 内容                    | 冻结 owner-attached Inspector、可编译辅助 IR、隔离 Scene 与 Path 控制点闭环                           |
-| [ADR-13](./13-theme-token-namespace-context.md)      | Proposed | Theme Token Namespace Context 与共享颜色 | 冻结 namespaced bag、继承 / registry / runtime validation、Core shared colors 与 Inspector appearance |
+| [ADR-13](./13-theme-token-namespace-context.md)      | Accepted | Theme Token Namespace Context 与共享颜色 | 冻结 namespaced bag、继承 / registry / runtime validation、Core shared colors 与 Inspector appearance |
 
 ## 当前进度
 
@@ -46,7 +46,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
 - ADR-11 已完成 Proposed 设计并完成 Core 实现、Standard consumers、测试与双语文档，尚未获得人工 Accepted 收口。
 - ADR-12 已完成 Proposed 设计并获得人工方向确认与实现授权；普通 IR child、既有 Definition registry、Path kind 非 Composite 挂载、测试与双语文档已落地，正在进行完整改动评审，尚未获得人工 Accepted 收口。
-- ADR-13 已完成 Proposed 设计，冻结 Core 通用 namespaced token context、owner schema runtime validation、shared colors 与 Inspector appearance；尚未获得人工 Accepted 收口，未授权产品实现。
+- ADR-13 已完成 namespaced Theme bag、Definition registry、sparse inheritance、shared colors、Inspector appearance 与 React / Vanilla / plain JSON、fresh / retained 等价闭环，并通过对抗验证及双语文档、浏览器验收，现已 Accepted。
 
 ## 执行批次
 

@@ -29,11 +29,11 @@ v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat /
 
 ## Milestones
 
-| Milestone                            | 主题                                       | 模块 / 产出                                                                                                                                                                              | 状态               |
-| ------------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| [v0.2-alpha.1](./alpha.1/roadmap.md) | **Plot 主题所有权 + Spatial Mapping 重构** | 先冻结 Plot token scope / owner contribution / shared color projection 与 Chart 转发边界，再建立 Coordinate Mapping / Structured Mapping、任意内容端口、通用局部坐标与自定义坐标扩展边界 | 草拟中             |
-| [v0.2-alpha.2](./alpha.2/roadmap.md) | **性能优化**                               | 消费 Kernel 增量运行时，建立 Plot 领域依赖、失效、增量 lowering、fallback 与性能观测闭环                                                                                                 | 待 Kernel 前置能力 |
-| [v0.2-alpha.3](./alpha.3/roadmap.md) | **交互优化**                               | 消费 Kernel headless interaction，建立 Plot datum / series / view / panel 的交互目标、意图与 presentation 协作边界                                                                       | 待 Kernel 前置能力 |
+| Milestone                            | 主题                                       | 模块 / 产出                                                                                                                                                                              | 状态                                             |
+| ------------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [v0.2-alpha.1](./alpha.1/roadmap.md) | **Plot 主题所有权 + Spatial Mapping 重构** | 先冻结 Plot token scope / owner contribution / shared color projection 与 Chart 转发边界，再建立 Coordinate Mapping / Structured Mapping、任意内容端口、通用局部坐标与自定义坐标扩展边界 | 主题 ADR-01～02 Accepted；Spatial Mapping 草拟中 |
+| [v0.2-alpha.2](./alpha.2/roadmap.md) | **性能优化**                               | 消费 Kernel 增量运行时，建立 Plot 领域依赖、失效、增量 lowering、fallback 与性能观测闭环                                                                                                 | 待 Kernel 前置能力                               |
+| [v0.2-alpha.3](./alpha.3/roadmap.md) | **交互优化**                               | 消费 Kernel headless interaction，建立 Plot datum / series / view / panel 的交互目标、意图与 presentation 协作边界                                                                       | 待 Kernel 前置能力                               |
 
 具体结构化算法与 Chart type 不预先批量排入 Plot。只有 Chart 或其它下游提出通用缺口时，才在上述 alpha 中增加候选 ADR，并先确认能力归属。
 

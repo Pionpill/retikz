@@ -1,6 +1,6 @@
 # ADR-05：Table style preset 与 inherited token resolution
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-07
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-02 presentation](./02-presentation-context-and-cell-appearance.md) · [ADR-03 rules](./03-cell-selector-and-rule-cascade.md) · [ADR-04 visual encoding](./04-conditional-visual-encoding-and-scale.md) · [Core ADR-13：Theme Token Namespace Context 与共享颜色](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/13-theme-token-namespace-context.md) · [Table 表格可视化完备设计](../../../../../architecture/table-visualization-complete.md)
 
@@ -86,6 +86,12 @@ Table 不拥有 Core Theme 传播协议、Plot / Chart vocabulary、Plot categor
 - 闭环为 effective Theme → Table definition validation → Table preset / shared projection / local token resolution → appearance / Border Graph / encoding / Legend descriptor → Standard / Core lowering → Scene / manifest / inspection
 - Standard 只消费 Core `InspectionAppearance` 和 Table 已解析的正式输入，不读取 `theme.tokens.table` 或重建 categorical allocation；Table 不读取 Plot / Chart token
 - 本轮结论：扩展 Tabular Visualization Complete 的 Theme / Palette 消费边界，删除 Table duplicate environment，不新增 Table 平行 IR 或 renderer path
+
+## 最终实现与验证摘要
+
+最终实现已闭合 Table owner definition、preset、resolver 与 shared categorical projection，并把有效 token 正式消费到 Cell / header appearance、Border Graph、visual encoding、Legend descriptor、manifest 与 inspection。TableSpec 只保留 `tableThemeTokens` 局部覆盖，Core Theme 继续作为 style / mode 与 inherited namespace 的唯一环境真源。
+
+验证覆盖 React、Vanilla、SSR、standalone、embedded 与 plain JSON 的 authoring / compile 等价，foreign namespace 隔离、旧字段和非法 token 的 fail-loud 语义，以及 appearance、border、encoding、manifest 与 Legend 的最终消费闭环；对抗验证与双语文档、浏览器验收均无遗留阻塞。
 
 ## 被否决方案
 

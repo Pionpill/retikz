@@ -114,6 +114,17 @@ Chart 不拥有 Plot token、Plot preset / resolver、Plot native theme merge、
 - Chart 默认 series color 的唯一入口是 Plot resolver 最终 palette；Core shared categorical 只经 Plot projection 进入 Plot palette，Standard Inspector 只消费 Core `InspectionAppearance`
 - 本轮结论：扩展 Chart Encapsulation 的主题编排边界，组合 Core / Plot / Standard 现有能力，不把 Plot 视觉语义吸回 Chart
 
+## 当前实现边界与进入 Accepted 的剩余门槛
+
+`@retikz/chart` 已具备 owner-local schema、definition、preset、resolver 与 Plot handoff bundle，但这只证明 Chart owner 内部解析链成立，不等于公开 Chart 能力完成。`@retikz/chart-react` 与 `@retikz/chart-vanilla` 仍是空壳 package，完整 Chart canvas surface 与跨 Chart → Plot 的空间透明性也尚未闭环，因此本 ADR 保持 Proposed。
+
+进入 Accepted 前必须同时满足：
+
+- `chart-react` / `chart-vanilla` 提供实际 authoring、Chart + Plot definition 聚合与 standalone / embedded 根 Theme parity，且与 plain JSON / headless 输入同义
+- Standard 提供 renderer-neutral canvas surface，完整覆盖 Plot 与 presentation；light / dark 只改变 paint、palette 与 opacity，不改变布局
+- Chart 外层 identity 能穿透到 Plot body 与内部 view / track / facet / plotArea / axis / series / datum，locator、payload 与 provenance 经 Standard probe / replay 后保持连续
+- 最终 SVG / Canvas 执行与公开双语文档形成同一用户闭环，不把 owner-local contract、空壳 adapter 或单一 Plot surface 当作完整交付
+
 ## 被否决方案
 
 - Chart 继续维护 Plot token catalog：会使直接 Plot 与 Chart 内 Plot 分叉
