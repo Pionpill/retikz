@@ -9,7 +9,9 @@ description: The top-level IR root — a JSON-serializable description of one re
 
 ## Theme
 
-`ThemeSchema` is the sparse environment shared by Scene and Scope. `style` and `mode` inherit independently, starting from `neutral + light`. Only Tier 2 composites receive the resolved value; plain Core primitives and the final Scene do not branch on Theme.
+`ThemeSchema` is the sparse environment shared by Scene and Scope. Its fields are `style`, `mode`, and `tokens`; `tokens` stores sparse token keys under owner namespaces. Each layer overrides only the namespace/keys it provides. Core registers the built-in `core` namespace, while Plot, Chart, Table, and other owners register their schemas through `themeTokenDefinitions`. Unknown namespaces, keys, values, or conflicting Definitions fail loudly.
+
+Compilation gives each Composite a complete frozen `ResolvedTheme`: inherited `style`, `mode`, and `tokens`, plus a detached/frozen `colors.semantic` view and non-empty `colors.categorical` palette. These colors are a Core shared view; plain Core primitives, the final Scene, and renderers do not automatically read Theme or replace their own colors.
 
 <ZodSchema name="ThemeSchema" />
 

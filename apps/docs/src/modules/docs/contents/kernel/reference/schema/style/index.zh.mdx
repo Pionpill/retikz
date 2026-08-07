@@ -70,6 +70,14 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
   }}
 />
 
+<span id="strokewidth"></span>
+
+### 描边宽度值
+
+`StrokeWidthSchema` 是描边聚合与上层领域样式共同复用的非负用户单位值，不携带字段默认、继承或 token 语义。
+
+<ZodSchema name="StrokeWidthSchema" description="非负的用户单位描边宽度。" />
+
 <span id="graphicstyle"></span>
 
 ## 图形样式

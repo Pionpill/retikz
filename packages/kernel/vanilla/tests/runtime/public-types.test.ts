@@ -3,6 +3,7 @@ import type { Scene } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
+  CommonOptions,
   MountCanvasOptions,
   MountOptions,
   MountUnifiedOptions,
@@ -18,13 +19,18 @@ import type {
   StaticMountUnifiedOptions,
   StaticRawCanvasView,
   StaticRawSvgView,
+  VanillaEmbedSpec,
+  VanillaFigureSpec,
+  VanillaPathSpec,
   VanillaRuntimeOptions,
+  VanillaScopeSpec,
   VanillaViewModeValue,
 } from '../../src';
 
 import { mount, mountCanvas, mountSvg, VanillaViewMode } from '../../src';
 
 type IsAssignable<TValue, TTarget> = TValue extends TTarget ? true : false;
+type HasKey<TValue, TKey extends PropertyKey> = TKey extends keyof TValue ? true : false;
 
 const assertStaticMountRejectsRetainedRuntime = (): void => {
   const container = {} as Element;
@@ -42,6 +48,14 @@ const assertStaticMountRejectsRetainedRuntime = (): void => {
 void assertStaticMountRejectsRetainedRuntime;
 
 describe('Vanilla retained 公开类型', () => {
+  it('基础 authoring 与 runtime 不再暴露 inspection 字段', () => {
+    expectTypeOf<HasKey<CommonOptions, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<VanillaFigureSpec, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<VanillaScopeSpec, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<VanillaPathSpec, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<VanillaEmbedSpec, 'inspect'>>().toEqualTypeOf<false>();
+  });
+
   it('SSR options 不接受 retained renderer factory，mount options 才拥有 runtime 配置', () => {
     expectTypeOf<RenderToStringOptions>().toHaveProperty('runtime').toEqualTypeOf<undefined>();
     expectTypeOf<IsAssignable<MountOptions, RenderToStringOptions>>().toEqualTypeOf<false>();

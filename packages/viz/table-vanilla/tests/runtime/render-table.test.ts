@@ -59,7 +59,7 @@ describe('renderTable', () => {
     expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
   });
 
-  it('keeps style fields, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
+  it('keeps Core Theme, Table tokens, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
     const visualScale = defineCellVisualScale({
       name: 'vanilla-palette',
       optionsSchema: z.strictObject({}),
@@ -73,9 +73,7 @@ describe('renderTable', () => {
     const spec = manualTable({
       id: 'table',
       rows: [[1]],
-      style: 'clean',
-      themeMode: 'dark',
-      styleTokens: { 'data.categorical': ['#123456'] },
+      tableThemeTokens: { 'data.categorical': ['#123456'] },
       encodings: [
         {
           id: 'palette',
@@ -88,6 +86,7 @@ describe('renderTable', () => {
     });
     const result = renderTable(spec, {
       artifacts: true,
+      theme: { style: 'clean', mode: 'dark' },
       lowerOptions: { visualScaleDefinitions: [visualScale] },
     });
 
@@ -112,7 +111,10 @@ describe('renderTable', () => {
 
   it('keeps the neutral light default distinct from explicit clean in SSR', () => {
     const neutral = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
-    const clean = renderTable(manualTable({ rows: [['Ada']], style: 'clean' }), { artifacts: true });
+    const clean = renderTable(manualTable({ rows: [['Ada']] }), {
+      artifacts: true,
+      theme: { style: 'clean', mode: 'light' },
+    });
 
     expect(neutral.manifest).toMatchObject({
       style: { style: 'neutral', themeMode: 'light' },

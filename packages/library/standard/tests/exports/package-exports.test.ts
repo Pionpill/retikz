@@ -19,10 +19,10 @@ const manifests = [
 ];
 
 describe('Standard package exports', () => {
-  it('keeps development and published exports root-only across the package family', () => {
+  it('keeps root and the controlled optional inspect subpath across the package family', () => {
     for (const manifest of manifests) {
-      expect(Object.keys(manifest.exports)).toEqual(['.']);
-      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
+      expect(Object.keys(manifest.exports)).toEqual(['.', './inspect']);
+      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './inspect']);
     }
   });
 });

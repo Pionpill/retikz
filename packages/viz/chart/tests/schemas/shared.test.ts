@@ -1,8 +1,10 @@
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { ChartInspectionSchema } from '../../src/inspection';
 import { ChartSharedSchema } from '../../src/schemas/common';
-import { ChartStyleToken, getChartStylePreset } from '../../src/style';
+import { ChartThemeToken, getChartThemePreset } from '../../src/style';
 
 describe('Chart shared schemas', () => {
   it('复用 Data 与 Plot 字段契约', () => {
@@ -15,7 +17,7 @@ describe('Chart shared schemas', () => {
         coordinate: { type: 'cartesian2D', x: 'x' },
         guides: [{ type: 'axis', dimension: 'x' }],
         marks: [{ type: 'point', encoding: { x: { field: 'amount', scale: 'x' } } }],
-        theme: { background: '#ffffff' },
+        plotTheme: { background: '#ffffff' },
         layout: { autoPadding: true },
         width: 480,
         height: 300,
@@ -29,7 +31,7 @@ describe('Chart shared schemas', () => {
       coordinate: { type: 'cartesian2D', x: 'x' },
       guides: [{ type: 'axis', dimension: 'x' }],
       marks: [{ type: 'point', encoding: { x: { field: 'amount', scale: 'x' } } }],
-      theme: { background: '#ffffff' },
+      plotTheme: { background: '#ffffff' },
       layout: { autoPadding: true },
       width: 480,
       height: 300,
@@ -96,17 +98,19 @@ describe('Chart shared schemas', () => {
   });
 
   it('校验 inspection 的公开 JSON 结构', () => {
-    const tokens = getChartStylePreset('neutral', 'light');
+    const tokens = getChartThemePreset('neutral', 'light');
     const style = {
-      preset: 'neutral',
-      mode: 'light',
-      tokens,
-      tokenSources: Object.values(ChartStyleToken).map(token => ({
-        token,
-        kind: 'preset',
-        path: `$preset/neutral/light/${token}`,
-      })),
-      authoredOverrides: [],
+      chart: {
+        style: 'neutral',
+        mode: 'light',
+        tokens,
+        tokenSources: Object.values(ChartThemeToken).map(token => ({
+          token,
+          kind: 'preset',
+          path: `$preset/neutral/light/${token}`,
+        })),
+      },
+      plot: resolvePlotTheme({ style: ThemeStyle.Neutral, mode: ThemeMode.Light }),
     } as const;
     expect(
       ChartInspectionSchema.parse({
@@ -154,7 +158,7 @@ describe('Chart shared schemas', () => {
         style: {
           ...style,
           authoredOverrides: [
-            { kind: 'theme', path: '$spec/theme' },
+            { kind: 'plot-theme', path: '$spec/plotTheme' },
             { kind: 'colors', path: '$spec/colors' },
           ],
         },

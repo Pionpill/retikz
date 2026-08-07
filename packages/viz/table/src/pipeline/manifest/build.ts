@@ -1,26 +1,27 @@
+import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+
 import type {
   PresentedTableModel,
   SemanticTableModel,
   TableLayoutManifest,
   TableLegendDescriptor,
 } from '../../contract';
-import type { ResolvedTableStyleTokens } from '../../providers/style';
-import type { TableStyleValue, TableThemeModeValue } from '../../schemas';
+import type { ResolvedTableThemeTokens } from '../../providers/style';
 import type { TableBorderEdge, TableLayout } from '../layout';
 import type { ResolvedTableCellPlan, ResolvedTableEncoding } from '../rule';
 
 import { TableLayoutManifestSchema } from '../../contract';
-import { TableStyleTokenKeySchema } from '../../schemas';
+import { TableThemeTokenKeySchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
 
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
 export type BuildTableManifestContext = Readonly<{
-  /** 已解析的 preset */
-  style: TableStyleValue;
-  /** 已解析的 token mode */
-  themeMode: TableThemeModeValue;
+  /** 当前有效 Core Theme 的 style */
+  style: ThemeStyleValue;
+  /** 当前有效 Core Theme 的 mode */
+  themeMode: ThemeModeValue;
   /** 同次 resolved tokens */
-  styleTokens: ResolvedTableStyleTokens;
+  tableThemeTokens: ResolvedTableThemeTokens;
   /** 同次 presented model */
   presented: PresentedTableModel;
   /** 可选同次 resolved Cell plans */
@@ -103,10 +104,11 @@ export const buildTableLayoutManifest = (
       style: {
         style: manifestContext.style,
         themeMode: manifestContext.themeMode,
-        tokens: manifestContext.styleTokens.tokens,
-        sources: TableStyleTokenKeySchema.options.map(key => ({
+        tokens: manifestContext.tableThemeTokens.tokens,
+        sources: TableThemeTokenKeySchema.options.map(key => ({
           key,
-          source: manifestContext.styleTokens.sources[key],
+          source: manifestContext.tableThemeTokens.sources[key].kind,
+          path: manifestContext.tableThemeTokens.sources[key].path,
         })),
       },
       encodings: [...(manifestContext.encodings ?? [])],

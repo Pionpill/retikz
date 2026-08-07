@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { ConvertIRToReactNodeOptions } from '../src';
+import type { ConvertIRToReactNodeOptions, LayoutProps, PathProps, ScopeProps } from '../src';
 
 import * as react from '../src';
 
@@ -20,6 +20,7 @@ const PUBLIC_RUNTIME_EXPORTS = [
   'convertIRToReactNode',
   'RendererModeProvider',
   'AnimationModeProvider',
+  'defaultLayoutCompileDriver',
 ];
 
 const INTERNAL_RENDER_EXPORTS = [
@@ -49,5 +50,13 @@ describe('@retikz/react public API', () => {
     for (const name of INTERNAL_RENDER_EXPORTS) {
       expect(react).not.toHaveProperty(name);
     }
+  });
+
+  it('基础组件与公共入口不再暴露 inspection-specific API', () => {
+    expectTypeOf<LayoutProps>().not.toHaveProperty('inspect');
+    expectTypeOf<ScopeProps>().not.toHaveProperty('inspect');
+    expectTypeOf<PathProps>().not.toHaveProperty('inspect');
+    expect(react).not.toHaveProperty('defineInspector');
+    expect(react).not.toHaveProperty('inspectionRoots');
   });
 });

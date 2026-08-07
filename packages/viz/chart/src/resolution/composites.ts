@@ -3,7 +3,10 @@ import { createConnectedScatterChartDefinition } from '../families/scatter-point
 import { createScatterChartDefinition } from '../families/scatter-points/scatter';
 import { resolveChartSpec } from './resolve';
 
-const expandChart = (node: Parameters<typeof resolveChartSpec>[0]) => resolveChartSpec(node).node;
+const expandChart = (
+  node: Parameters<typeof resolveChartSpec>[0],
+  context?: Parameters<Parameters<typeof createScatterChartDefinition>[0]>[1],
+) => resolveChartSpec(node, context?.theme).node;
 
 /** Scatter canonical type 的逐类型 composite definition */
 export const ScatterChartDefinition = createScatterChartDefinition(expandChart);

@@ -9,11 +9,10 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'academic',
-        style: 'academic',
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
-      { compile: { padding: 0 } },
+      { theme: { style: 'academic', mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(result.manifest.borders).toHaveLength(2);
@@ -38,12 +37,11 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'explicit',
-        style: 'academic',
         structure: { kind: 'manual', rows: [['x'], ['y']] },
         layout: { borders: { outer: { kind: 'none' }, horizontal: { kind: 'line', stroke: 'red', width: 2 } } },
       },
       {},
-      { compile: { padding: 0 } },
+      { theme: { style: 'academic', mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(result.manifest.borders).toHaveLength(1);
@@ -61,12 +59,11 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'vibrant',
-        style: 'vibrant',
         data: { reference: 'rows' },
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
-      { compile: { padding: 0 } },
+      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
     );
     const headerBoundary = result.manifest.borders.find(border =>
       border.atoms.some(
@@ -81,7 +78,7 @@ describe('style token Border Graph integration', () => {
       source: { kind: 'cell', side: 'bottom' },
       priority: -100,
       specificity: 1,
-      styleToken: { key: 'columnHeader.border.bottom', source: 'preset' },
+      styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'preset' }),
     });
   });
 
@@ -91,7 +88,6 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'spanning-header',
-        style: 'neutral',
         structure: {
           kind: 'manual',
           rows: [[{ id: 'heading', value: 'Heading', span: { columns: 2 } }, null]],
@@ -108,11 +104,11 @@ describe('style token Border Graph integration', () => {
     expect(result.manifest.borders[0].atoms.map(atom => atom.winner)).toEqual([
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        styleToken: { key: 'columnHeader.border.bottom', source: 'preset' },
+        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'preset' }),
       }),
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        styleToken: { key: 'columnHeader.border.bottom', source: 'preset' },
+        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'preset' }),
       }),
     ]);
   });
@@ -123,7 +119,6 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'border-precedence',
-        style: 'vibrant',
         structure: {
           kind: 'manual',
           rows: [
@@ -145,7 +140,7 @@ describe('style token Border Graph integration', () => {
         ],
       },
       {},
-      { compile: { padding: 0 } },
+      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
     );
     const boundary = result.manifest.borders.find(border =>
       border.atoms.some(atom => atom.winner.source.kind === 'cell' && atom.winner.source.cellId === 'target'),
@@ -161,7 +156,10 @@ describe('style token Border Graph integration', () => {
     expect(atom?.winner).not.toHaveProperty('styleToken');
     expect(atom?.contributors).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ priority: -100, styleToken: { key: 'table.border.horizontal', source: 'preset' } }),
+        expect.objectContaining({
+          priority: -100,
+          styleToken: expect.objectContaining({ key: 'table.border.horizontal', source: 'preset' }),
+        }),
         expect.objectContaining({ priority: 0, source: expect.objectContaining({ cellId: 'target' }) }),
       ]),
     );

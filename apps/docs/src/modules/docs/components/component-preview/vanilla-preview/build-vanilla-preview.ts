@@ -1,9 +1,4 @@
-import type {
-  InspectionAuthoringTree,
-  InspectionOptionsInputObject,
-  IRChild,
-  PathInspectionAuthoring,
-} from '@retikz/core';
+import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { IRTableSpec } from '@retikz/table';
@@ -76,62 +71,25 @@ const outputSize = (preview: PreviewIR): { width?: number; height?: number } => 
 
 const diagnostic = (message: string): VanillaPreviewArtifact => ({ code: `// ${message}` });
 
-type InspectionPathSegment = Readonly<{ kind: 'sceneChild' | 'scopeChild'; index: number }>;
-
-const inspectionPathKey = (path: ReadonlyArray<InspectionPathSegment>): string =>
-  path.map(segment => `${segment.kind}:${segment.index}`).join('/');
-
-/** 把 Path authored sidecar 解析为等价 Vanilla 局部开关 */
-const resolvePathInspection = (tree: InspectionAuthoringTree): PathInspectionAuthoring | undefined => {
-  const self = tree.policy?.self;
-  if (self === undefined) return undefined;
-  if (tree.policy?.inherited?.enabled === false) return false;
-  return self;
-};
-
-/** 按 Scene / Scope locator 建立 Path 局部检查索引 */
-const indexPathInspections = (preview: PreviewIR): ReadonlyMap<string, PathInspectionAuthoring> => {
-  const inspections = new Map<string, PathInspectionAuthoring>();
-  preview.inspectionRoots.forEach(root => {
-    if (root.locator.target !== 'path') return;
-    const inspect = resolvePathInspection(root.tree);
-    if (inspect !== undefined) inspections.set(inspectionPathKey(root.locator.path), inspect);
-  });
-  return inspections;
-};
-
-/** 把剥离的 Path inspect sidecar 重新放回 Vanilla plain spec */
-const convertCoreChild = (
-  child: IRChild,
-  path: ReadonlyArray<InspectionPathSegment>,
-  pathInspections: ReadonlyMap<string, PathInspectionAuthoring>,
-): VanillaChildSpec => {
+/** 把纯 Core IR child 转为不含运行时 authoring 的 Vanilla spec */
+const convertCoreChild = (child: IRChild): VanillaChildSpec => {
   if ('namespace' in child) throw new Error(`Unexpected Tier 2 composite "${child.namespace}.${child.type}".`);
-  if (child.type === 'path') {
-    const inspect = pathInspections.get(inspectionPathKey(path));
-    return inspect === undefined ? child : { ...child, inspect };
-  }
   if (child.type !== 'scope') return child;
   return {
     ...child,
-    children: child.children.map((nested, index) =>
-      convertCoreChild(nested, [...path, { kind: 'scopeChild', index }], pathInspections),
-    ),
+    children: child.children.map(convertCoreChild),
   };
 };
 
 const buildCorePreview = (preview: PreviewIR): VanillaPreviewArtifact => {
-  const pathInspections = indexPathInspections(preview);
   const input = figure({
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
-    children: preview.ir.children.map((child, index) =>
-      convertCoreChild(child, [{ kind: 'sceneChild', index }], pathInspections),
-    ),
+    children: preview.ir.children.map(convertCoreChild),
   });
   return {
-    code: irToVanillaCode(preview.ir, { inspect: preview.inspect, pathInspections }),
-    svg: renderToSvgString(input, { output: outputSize(preview), inspect: preview.inspect }),
+    code: irToVanillaCode(preview.ir),
+    svg: renderToSvgString(input, { output: outputSize(preview) }),
   };
 };
 
@@ -140,56 +98,6 @@ type StandardKind = 'grid' | 'axes' | 'frame' | 'flexLayout' | 'gridLayout' | 'o
 type StandardConversionState = {
   counts: Record<StandardKind, number>;
   adapters: Set<StandardKind>;
-  componentInspections: ReadonlyMap<string, boolean | InspectionOptionsInputObject>;
-};
-
-/** 合并继承与组件级稀疏检查对象，同时保留 bounds 的逐字段覆盖语义 */
-const mergeInspectionObjects = (
-  inherited: InspectionOptionsInputObject,
-  component: InspectionOptionsInputObject,
-): InspectionOptionsInputObject => {
-  const inheritedBounds = inherited.bounds;
-  const componentBounds = component.bounds;
-  return Object.freeze({
-    ...inherited,
-    ...component,
-    ...(typeof inheritedBounds === 'object' &&
-    inheritedBounds !== null &&
-    !Array.isArray(inheritedBounds) &&
-    typeof componentBounds === 'object' &&
-    componentBounds !== null &&
-    !Array.isArray(componentBounds)
-      ? { bounds: { ...inheritedBounds, ...componentBounds } }
-      : {}),
-  });
-};
-
-/** 把 Scope 继承策略折叠为当前 Vanilla embed 的等价局部开关 */
-const resolveComponentInspection = (
-  tree: InspectionAuthoringTree,
-): boolean | InspectionOptionsInputObject | undefined => {
-  const inherited = tree.policy?.inherited;
-  const component = tree.policy?.self;
-  if (inherited?.enabled === false || component === false) return false;
-  const inheritedLayout = inherited?.layout;
-  if (component === undefined) {
-    if (inheritedLayout === false) return false;
-    if (inheritedLayout === true) return true;
-    return typeof inheritedLayout === 'object' ? inheritedLayout : undefined;
-  }
-  if (component === true) return typeof inheritedLayout === 'object' ? inheritedLayout : true;
-  return typeof inheritedLayout === 'object' ? mergeInspectionObjects(inheritedLayout, component) : component;
-};
-
-/** 按 Scene / Scope authored locator 建立组件局部检查索引 */
-const indexComponentInspections = (preview: PreviewIR): ReadonlyMap<string, boolean | InspectionOptionsInputObject> => {
-  const inspections = new Map<string, boolean | InspectionOptionsInputObject>();
-  preview.inspectionRoots.forEach(root => {
-    if (root.locator.target !== 'composite') return;
-    const inspect = resolveComponentInspection(root.tree);
-    if (inspect !== undefined) inspections.set(inspectionPathKey(root.locator.path), inspect);
-  });
-  return inspections;
 };
 
 const nextStandardId = (kind: StandardKind, state: StandardConversionState): string => {
@@ -198,13 +106,8 @@ const nextStandardId = (kind: StandardKind, state: StandardConversionState): str
   return `preview-${kind}-${state.counts[kind]}`;
 };
 
-const convertStandardChild = (
-  child: IRChild,
-  state: StandardConversionState,
-  path: ReadonlyArray<InspectionPathSegment>,
-): VanillaChildSpec => {
+const convertStandardChild = (child: IRChild, state: StandardConversionState): VanillaChildSpec => {
   if (isComposite(child)) {
-    const inspect = state.componentInspections.get(inspectionPathKey(path));
     switch (child.type) {
       case 'grid': {
         const { namespace: _namespace, type: _type, ...input } = GridSchema.parse(child);
@@ -229,22 +132,19 @@ const convertStandardChild = (
         const { namespace: _namespace, type: _type, ...input } = FlexLayoutSchema.parse(child);
         void _namespace;
         void _type;
-        const id = nextStandardId('flexLayout', state);
-        return inspect === undefined ? flexLayout(id, input) : flexLayout(id, input, inspect);
+        return flexLayout(nextStandardId('flexLayout', state), input);
       }
       case 'gridLayout': {
         const { namespace: _namespace, type: _type, ...input } = GridLayoutSchema.parse(child);
         void _namespace;
         void _type;
-        const id = nextStandardId('gridLayout', state);
-        return inspect === undefined ? gridLayout(id, input) : gridLayout(id, input, inspect);
+        return gridLayout(nextStandardId('gridLayout', state), input);
       }
       case 'overlayLayout': {
         const { namespace: _namespace, type: _type, ...input } = OverlayLayoutSchema.parse(child);
         void _namespace;
         void _type;
-        const id = nextStandardId('overlayLayout', state);
-        return inspect === undefined ? overlayLayout(id, input) : overlayLayout(id, input, inspect);
+        return overlayLayout(nextStandardId('overlayLayout', state), input);
       }
       case 'legend': {
         const { namespace: _namespace, type: _type, ...input } = LegendSchema.parse(child);
@@ -261,7 +161,7 @@ const convertStandardChild = (
   void _type;
   return scope(
     config,
-    children.map((nested, index) => convertStandardChild(nested, state, [...path, { kind: 'scopeChild', index }])),
+    children.map(nested => convertStandardChild(nested, state)),
   );
 };
 
@@ -286,28 +186,23 @@ const definitionByName = {
 } as const;
 
 const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
-  const componentInspections = indexComponentInspections(preview);
   const state: StandardConversionState = {
     counts: { grid: 0, axes: 0, frame: 0, flexLayout: 0, gridLayout: 0, overlayLayout: 0, legend: 0 },
     adapters: new Set(),
-    componentInspections,
   };
   const input = figure({
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
-    children: preview.ir.children.map((child, index) =>
-      convertStandardChild(child, state, [{ kind: 'sceneChild', index }]),
-    ),
+    children: preview.ir.children.map(child => convertStandardChild(child, state)),
   });
   const definitionNames = collectStandardPreviewDefinitions(preview.ir.children, new Set(state.adapters));
   const definitions = definitionNames.map(name => definitionByName[name]);
   const compile = definitions.length === 0 ? undefined : { composites: definitions };
   return {
-    code: irToVanillaCode(preview.ir, { inspect: preview.inspect, componentInspections }),
+    code: irToVanillaCode(preview.ir),
     svg: renderToSvgString(input, {
       adapters: standardAdapters(state),
       output: outputSize(preview),
-      inspect: preview.inspect,
       ...(compile === undefined ? {} : { compile }),
     }),
   };

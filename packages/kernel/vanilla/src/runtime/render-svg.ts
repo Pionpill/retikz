@@ -20,7 +20,7 @@ const captureRenderToStringOptions = (input: unknown): RenderToStringOptions => 
   if (typeof input !== 'object' || input === null || Array.isArray(input)) return invalidRenderOptions(input);
   const prototype = Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) return invalidRenderOptions(input);
-  const allowedKeys = new Set(['output', 'compile', 'inspect', 'animation', 'adapters']);
+  const allowedKeys = new Set(['output', 'compile', 'compileDriver', 'animation', 'adapters']);
   const captured: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const key of Reflect.ownKeys(input)) {
     const descriptor = Object.getOwnPropertyDescriptor(input, key);
@@ -51,7 +51,7 @@ export const renderToSvgString = (input: RenderInput, options: RenderToStringOpt
   const animate = resolveAnimationEnabled(animation.enabled, prefersReducedMotion());
   const result = toSceneResult(input, capturedOptions);
   return buildSvgString(
-    { primary: result.scene, inspection: result.inspection },
+    { primary: result.scene, layers: result.layers },
     {
       idPrefix: output.idPrefix ?? DEFAULT_ID_PREFIX,
       animate,

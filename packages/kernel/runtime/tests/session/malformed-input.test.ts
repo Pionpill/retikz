@@ -382,7 +382,7 @@ describe('runtime session malformed JavaScript input', () => {
             phase: { value: 'run', enumerable: true },
             message: { value: 'warning', enumerable: true },
           },
-        ) as Readonly<{ code: string; phase: string; message: string }>;
+        ) as Readonly<{ code: string; phase: 'run'; message: string }>;
         context.diagnose(diagnostic);
         return { kind: RuntimeProgramKind.Full, artifact: view.snapshot(owner).value };
       },

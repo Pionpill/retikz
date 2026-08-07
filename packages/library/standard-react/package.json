@@ -37,6 +37,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./inspect": {
+      "types": "./src/inspect/index.ts",
+      "default": "./src/inspect/index.ts"
     }
   },
   "publishConfig": {
@@ -48,6 +52,11 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./inspect": {
+        "types": "./dist/types/inspect/index.d.ts",
+        "import": "./dist/inspect/index.js",
+        "default": "./dist/inspect/index.js"
       }
     }
   },
@@ -64,14 +73,21 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "peerDependencies": {
+    "@retikz/inspect": "workspace:*",
     "react": ">=18",
     "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@retikz/inspect": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@retikz/react": "workspace:^",
     "@retikz/standard": "workspace:*"
   },
   "devDependencies": {
+    "@retikz/inspect": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

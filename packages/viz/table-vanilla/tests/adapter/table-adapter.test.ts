@@ -55,9 +55,7 @@ describe('Table Vanilla adapter', () => {
           legend: false,
         },
       ],
-      style: 'academic',
-      themeMode: 'dark',
-      styleTokens: { 'cell.content.color': '#fafafa' },
+      tableThemeTokens: { 'cell.content.color': '#fafafa' },
     });
 
     const lowered = TableSpecSchema.parse(adapter.lower({ spec }, contextOf('panel')).node);
@@ -65,9 +63,7 @@ describe('Table Vanilla adapter', () => {
     expect(lowered).toEqual({ ...spec, id: 'panel/scores' });
     expect(lowered.rules).toEqual(spec.rules);
     expect(lowered.encodings).toEqual(spec.encodings);
-    expect(lowered.style).toBe(spec.style);
-    expect(lowered.themeMode).toBe(spec.themeMode);
-    expect(lowered.styleTokens).toEqual(spec.styleTokens);
+    expect(lowered.tableThemeTokens).toEqual(spec.tableThemeTokens);
   });
 
   it('returns the shared stable composite maker for every lower call', () => {

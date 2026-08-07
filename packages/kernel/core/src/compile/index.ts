@@ -1,5 +1,5 @@
 export { formatCompileOccurrence, isNodeLayoutCompileArtifact } from './artifact';
-export { compileToScene } from './compile';
+export { compileToScene, observeCompileToScene } from './compile';
 export { CompileWarningCode } from './constants';
 export * from './incremental';
 export * from './lower';
@@ -31,6 +31,7 @@ export type {
   LoweredIRScope,
   LowerIRToKernelOptions,
   NodeLayoutCompileArtifact,
+  ObservedCompileResult,
 } from './types';
 export type { CompileWarning, CompileWarningCodeValue } from './warning';
 export { formatCompileWarning } from './warning';

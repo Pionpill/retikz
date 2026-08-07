@@ -1,4 +1,4 @@
-import type { RuntimeIdentity, RuntimeIdentityIndex } from './types';
+import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
 
 import { RuntimeIdentityError } from '../error';
 
@@ -12,32 +12,25 @@ type MutableIdentityTrieNode = {
   children: Map<string, MutableIdentityTrieNode>;
 };
 
-const assertNonEmptyString: (value: unknown, owner: string) => asserts value is string = (value, owner) => {
-  if (typeof value !== 'string' || value.length === 0) throw new RuntimeIdentityError(owner, value);
+const assertNonEmptyString = (value: string, owner: string): void => {
+  if (value.length === 0) throw new RuntimeIdentityError(owner, value);
 };
 
-/** 校验动态 identity 并复制冻结为唯一内部表示 */
-const copyIdentity = (candidate: unknown, expectedOwner?: string): RuntimeIdentity => {
-  if (typeof candidate !== 'object' || candidate === null || !('owner' in candidate) || !('path' in candidate)) {
-    throw new RuntimeIdentityError(expectedOwner ?? '', candidate);
+const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void => {
+  assertNonEmptyString(owner, owner);
+  if (path.length === 0) {
+    throw new RuntimeIdentityError(owner, path);
   }
-  const { owner, path: candidatePath } = candidate;
-  assertNonEmptyString(owner, expectedOwner ?? '');
-  if (expectedOwner !== undefined && owner !== expectedOwner) {
-    throw new RuntimeIdentityError(expectedOwner, candidate);
-  }
-  if (!Array.isArray(candidatePath) || candidatePath.length === 0) {
-    throw new RuntimeIdentityError(owner, candidatePath);
-  }
-  const path: Array<string> = [];
-  for (let index = 0; index < candidatePath.length; index += 1) {
-    if (!(index in candidatePath)) throw new RuntimeIdentityError(owner, candidatePath);
-    const segment = candidatePath[index];
+  for (let index = 0; index < path.length; index += 1) {
+    if (!(index in path)) throw new RuntimeIdentityError(owner, path);
+    const segment = path[index];
     assertNonEmptyString(segment, owner);
-    path.push(segment);
   }
-  return Object.freeze({ owner, path: Object.freeze(path) });
 };
+
+/** 复制并冻结一个已满足 Runtime identity 契约的值 */
+const copyIdentity = (identity: RuntimeIdentity): RuntimeIdentity =>
+  Object.freeze({ owner: identity.owner, path: Object.freeze([...identity.path]) });
 
 const comparePaths = (left: RuntimeIdentity, right: RuntimeIdentity): number => {
   const length = Math.min(left.path.length, right.path.length);
@@ -59,33 +52,29 @@ const findTrieNode = (root: IdentityTrieNode, path: ReadonlyArray<string>): Iden
   return current;
 };
 
-/** 创建并冻结一个 validated Runtime identity */
-export const createRuntimeIdentity = (owner: string, path: ReadonlyArray<string>): RuntimeIdentity =>
-  copyIdentity({ owner, path });
-
-/** 按 owner、path 长度与 segment exact equality 比较 identity */
-export const runtimeIdentityEquals = (left: RuntimeIdentity, right: RuntimeIdentity): boolean => {
-  const validatedLeft = copyIdentity(left);
-  const validatedRight = copyIdentity(right);
-  return (
-    validatedLeft.owner === validatedRight.owner &&
-    validatedLeft.path.length === validatedRight.path.length &&
-    validatedLeft.path.every((segment, index) => segment === validatedRight.path[index])
-  );
+/** 创建并冻结一个 Runtime identity */
+export const createRuntimeIdentity = (owner: string, path: ReadonlyArray<string>): RuntimeIdentity => {
+  assertValidIdentity(owner, path);
+  return copyIdentity({ owner, path });
 };
 
-/** 创建复制输入、验证 owner/唯一性并稳定排序的 identity index */
-export const createRuntimeIdentityIndex = (
+/** 按 owner、path 长度与 segment exact equality 比较 identity */
+export const runtimeIdentityEquals = (left: RuntimeIdentity, right: RuntimeIdentity): boolean =>
+  left.owner === right.owner &&
+  left.path.length === right.path.length &&
+  left.path.every((segment, index) => segment === right.path[index]);
+
+/** 创建复制输入、验证 owner/唯一性并稳定排序的 identity lookup */
+export const createRuntimeIdentityLookup = (
   owner: string,
   identities: ReadonlyArray<RuntimeIdentity>,
-): RuntimeIdentityIndex => {
+): RuntimeIdentityLookup => {
   assertNonEmptyString(owner, owner);
-  if (!Array.isArray(identities)) throw new RuntimeIdentityError(owner, identities);
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
   const copied: Array<RuntimeIdentity> = [];
-  for (let index = 0; index < identities.length; index += 1) {
-    if (!(index in identities)) throw new RuntimeIdentityError(owner, identities);
-    const identity = copyIdentity(identities[index] as RuntimeIdentity, owner);
+  for (const oriIdentity of identities) {
+    if (oriIdentity.owner !== owner) throw new RuntimeIdentityError(owner, oriIdentity);
+    const identity = copyIdentity(oriIdentity);
     let current = root;
     for (const segment of identity.path) {
       const existing = current.children.get(segment);
@@ -107,8 +96,8 @@ export const createRuntimeIdentityIndex = (
     owner,
     size: values.length,
     has: identity => {
-      const validated = copyIdentity(identity, owner);
-      return findTrieNode(immutableRoot, validated.path)?.terminal === true;
+      if (identity.owner !== owner) throw new RuntimeIdentityError(owner, identity);
+      return findTrieNode(immutableRoot, identity.path)?.terminal === true;
     },
     values: () => Object.freeze([...values]),
   });

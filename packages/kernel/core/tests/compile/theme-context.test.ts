@@ -14,6 +14,7 @@ import {
   compileToScene,
   CompositeBaseSchema,
   defineComposite,
+  defineThemeTokenNamespace,
   LayoutChildProbeKind,
   lowerIRToKernel,
   NaturalLayoutProposal,
@@ -27,6 +28,26 @@ const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene =>
   ...(theme === undefined ? {} : { theme }),
   children,
 });
+
+const themeTokenDefinition = defineThemeTokenNamespace({
+  namespace: 'theme-test',
+  schema: z.strictObject({
+    'shared.value': z.string().optional(),
+    'scene.only': z.string().optional(),
+    'scope.only': z.string().optional(),
+    'inner.only': z.string().optional(),
+    bad: z.unknown().optional(),
+  }),
+});
+
+const accessorTokenObject = (): Record<string, unknown> => {
+  const tokens: Record<string, unknown> = {};
+  Object.defineProperty(tokens, 'bad', {
+    enumerable: true,
+    get: () => '#123456',
+  });
+  return tokens;
+};
 
 const createExpandProbe = (observed: Array<ResolvedTheme>) =>
   defineComposite({
@@ -63,6 +84,113 @@ const createLayoutProbe = (observed: Array<ResolvedTheme>) =>
   });
 
 describe('Theme compile context', () => {
+  it('按 namespace 与 token key 合并 Scene / Scope，并为 occurrence 派生 detached shared colors', () => {
+    const observed: Array<ResolvedTheme> = [];
+    const sceneTheme = {
+      tokens: {
+        core: { 'semantic.warning': '#f59e0b' },
+        'theme-test': { 'shared.value': 'scene', 'scene.only': 'yes' },
+      },
+    } as const;
+    const scopeTheme = {
+      tokens: {
+        'theme-test': { 'shared.value': 'outer', 'scope.only': 'yes' },
+      },
+    } as const;
+    const innerTheme = {
+      tokens: {
+        'theme-test': { 'shared.value': 'inner', 'inner.only': 'yes' },
+      },
+    } as const;
+
+    compileToScene(
+      sceneOf(
+        [
+          {
+            type: 'scope',
+            theme: scopeTheme,
+            children: [
+              {
+                type: 'scope',
+                theme: innerTheme,
+                children: [{ namespace: 'theme-test', type: 'expand' }],
+              },
+            ],
+          },
+        ],
+        sceneTheme,
+      ),
+      {
+        composites: [createExpandProbe(observed)],
+        themeTokenDefinitions: [themeTokenDefinition],
+      },
+    );
+
+    expect(observed).toHaveLength(1);
+    expect(observed[0]).toMatchObject({
+      tokens: {
+        core: { 'semantic.warning': '#f59e0b' },
+        'theme-test': {
+          'shared.value': 'inner',
+          'scene.only': 'yes',
+          'scope.only': 'yes',
+          'inner.only': 'yes',
+        },
+      },
+      colors: { semantic: { warning: '#f59e0b' } },
+    });
+    expect(Object.isFrozen(observed[0])).toBe(true);
+    expect(Object.isFrozen(observed[0]?.tokens)).toBe(true);
+    expect(Object.isFrozen(observed[0]?.tokens['theme-test'])).toBe(true);
+    expect(Object.isFrozen(observed[0]?.colors)).toBe(true);
+    expect(observed[0]?.tokens).not.toBe(sceneTheme.tokens);
+  });
+
+  it('在声明层拒绝未知 namespace 与 registered owner 的非法 sparse key', () => {
+    expect(() => compileToScene(sceneOf([], { tokens: { unknown: { value: 'ignored' } } }))).toThrow(
+      /scene\.theme\.tokens\.unknown/i,
+    );
+
+    expect(() =>
+      compileToScene(sceneOf([], { tokens: { 'theme-test': { unknown: 'rejected' } } }), {
+        themeTokenDefinitions: [themeTokenDefinition],
+      }),
+    ).toThrow(/scene\.theme\.tokens\.theme-test.*unknown/i);
+  });
+
+  it.each([
+    ['function', { bad: () => '#123456' }],
+    ['class instance', { bad: new (class ThemeTokenValue {})() }],
+    ['accessor', accessorTokenObject()],
+  ])('非 JSON %s token 的诊断包含声明层与结构路径', (_label, tokens) => {
+    const theme = { tokens: { 'theme-test': tokens } } as unknown as IRScene['theme'];
+
+    expect(() => compileToScene(sceneOf([], theme), { themeTokenDefinitions: [themeTokenDefinition] })).toThrow(
+      /scene\.theme\.tokens\.theme-test\.bad/i,
+    );
+  });
+
+  it('lowering-only 与 full compile 接受同一 theme token definition registry', () => {
+    const fullThemes: Array<ResolvedTheme> = [];
+    const lowerThemes: Array<ResolvedTheme> = [];
+    const input = sceneOf([{ namespace: 'theme-test', type: 'expand' }], {
+      tokens: { 'theme-test': { 'shared.value': 'lowerable' } },
+    });
+    const definitions = [themeTokenDefinition];
+
+    compileToScene(input, {
+      composites: [createExpandProbe(fullThemes)],
+      themeTokenDefinitions: definitions,
+    });
+    const lowered = lowerIRToKernel(input, {
+      composites: [createExpandProbe(lowerThemes)],
+      themeTokenDefinitions: definitions,
+    });
+
+    expect(lowerThemes).toEqual(fullThemes);
+    expect(lowered.theme).toEqual(input.theme);
+  });
+
   it('默认向 expand 与 layout-aware Composite 提供冻结的 neutral + light', () => {
     const expandThemes: Array<ResolvedTheme> = [];
     const layoutThemes: Array<ResolvedTheme> = [];
@@ -76,8 +204,8 @@ describe('Theme compile context', () => {
       { composites: definitions },
     );
 
-    expect(expandThemes).toEqual([{ style: 'neutral', mode: 'light' }]);
-    expect(layoutThemes).toEqual([{ style: 'neutral', mode: 'light' }]);
+    expect(expandThemes[0]).toMatchObject({ style: 'neutral', mode: 'light', tokens: {} });
+    expect(layoutThemes[0]).toMatchObject({ style: 'neutral', mode: 'light', tokens: {} });
     expect(Object.isFrozen(expandThemes[0])).toBe(true);
     expect(Object.isFrozen(layoutThemes[0])).toBe(true);
   });
@@ -109,7 +237,7 @@ describe('Theme compile context', () => {
       { composites: [createExpandProbe(expandThemes), createLayoutProbe(layoutThemes)] },
     );
 
-    expect(expandThemes).toEqual([{ style: 'vibrant', mode: 'light' }]);
+    expect(expandThemes[0]).toMatchObject({ style: 'vibrant', mode: 'light', tokens: {} });
     expect(layoutThemes).toEqual(expandThemes);
     expect(Object.isFrozen(layoutThemes[0])).toBe(true);
   });
@@ -168,9 +296,9 @@ describe('Theme compile context', () => {
     );
 
     expect(observed).toEqual([
-      { style: 'academic', mode: 'dark' },
-      { style: 'academic', mode: 'light' },
-      { style: 'vibrant', mode: 'light' },
+      expect.objectContaining({ style: 'academic', mode: 'dark', tokens: {} }),
+      expect.objectContaining({ style: 'academic', mode: 'light', tokens: {} }),
+      expect.objectContaining({ style: 'vibrant', mode: 'light', tokens: {} }),
     ]);
   });
 
@@ -192,7 +320,7 @@ describe('Theme compile context', () => {
     const lowered = lowerIRToKernel(input, { composites: [createExpandProbe(lowerThemes)] });
     const loweredCompiled = compileToScene(lowered, { padding: 0 });
 
-    expect(fullThemes).toEqual([{ style: 'clean', mode: 'dark' }]);
+    expect(fullThemes[0]).toMatchObject({ style: 'clean', mode: 'dark', tokens: {} });
     expect(lowerThemes).toEqual(fullThemes);
     expect(loweredCompiled.scene).toEqual(full.scene);
   });
@@ -239,8 +367,8 @@ describe('Theme compile context', () => {
     );
 
     expect(observed).toEqual([
-      { style: 'academic', mode: 'dark' },
-      { style: 'vibrant', mode: 'light' },
+      expect.objectContaining({ style: 'academic', mode: 'dark', tokens: {} }),
+      expect.objectContaining({ style: 'vibrant', mode: 'light', tokens: {} }),
     ]);
   });
 
@@ -274,7 +402,7 @@ describe('Theme compile context', () => {
       composites: [owner, leaf],
     });
 
-    expect(observed).toEqual([{ style: 'neutral', mode: 'dark' }]);
+    expect(observed[0]).toMatchObject({ style: 'neutral', mode: 'dark', tokens: {} });
   });
 
   it('runtime Scope Theme 在 replay child 上沿 Core probe/replay channel 生效', () => {

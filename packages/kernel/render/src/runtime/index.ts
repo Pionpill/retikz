@@ -3,6 +3,7 @@ export * from './config';
 export * from './error';
 export * from './frame';
 export * from './participant';
+export * from './readonly-layer';
 export type {
   DefineRetainedRenderer,
   RetainedCanvasRenderer,
@@ -16,8 +17,8 @@ export type {
   RetainedRendererFactoryInput,
   RetainedRendererHost,
   RetainedRendererImmutableOptions,
-  RetainedRendererInspectionCapabilityValue,
   RetainedRendererRead,
+  RetainedRendererReadonlyLayerCapabilityValue,
   RetainedRendererTokenBase,
   RetainedSvgRenderer,
   RetainedSvgRendererDefinitionInput,
@@ -27,5 +28,5 @@ export {
   defineRetainedRenderer,
   isRetainedRenderer,
   RetainedRendererCapability,
-  RetainedRendererInspectionCapability,
+  RetainedRendererReadonlyLayerCapability,
 } from './renderer';

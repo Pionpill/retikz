@@ -11,6 +11,8 @@ description: Scope grouping, local namespaces, style defaults, transforms, clipp
 
 <ZodSchema name="ScopeSchema" />
 
+`Scope.theme` is a sparse overlay for descendant composites. `style`, `mode`, and token keys inherit independently; `tokens` overlays only the namespaces and keys supplied by the Scope, and the Core registry validates the namespace-specific schema. Theme is an environment handoff, not automatic coloring for Core primitives.
+
 <span id="scopeposition"></span>
 
 ## Scope placement

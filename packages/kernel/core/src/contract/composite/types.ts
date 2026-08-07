@@ -1,14 +1,8 @@
 import type { BoundsRect } from '@retikz/math';
-import type { z, ZodType } from 'zod';
+import type { ZodType } from 'zod';
 
-import type { IRChild, IRClipSpec, IRJsonObject, IRScopeProps, JsonValue } from '../../schemas';
+import type { IRChild, IRClipSpec, IRScopeProps, JsonValue } from '../../schemas';
 import type { ResolvedTheme, ValueOf } from '../../shared';
-import type {
-  AnyInspectorDefinition,
-  CompositeInspectionChild,
-  InspectorDefinition,
-  LayoutCompositeInspectionContext,
-} from '../inspection';
 import type { Transform } from '../scene';
 import type {
   LayoutAlignmentGuideDimension,
@@ -160,9 +154,7 @@ export type LayoutCompositeCompileContext = Readonly<{
   /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
   proposal: LayoutProposal;
   /** 在完整 compile 环境中 probe 任意 child */
-  layoutChild: (child: IRChild, proposal: LayoutProposal, inspection?: CompositeInspectionChild) => LayoutChildProbe;
-  /** 当前 Composite authored children 的 inspection sidecar */
-  inspection: LayoutCompositeInspectionContext;
+  layoutChild: (child: IRChild, proposal: LayoutProposal) => LayoutChildProbe;
   /**
    * 把当前 callback 的一次布局结果转为 one-use output child
    * @param result 当前 callback 的 resolved probe result
@@ -203,30 +195,16 @@ export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = 
 }> &
   ([TArtifact] extends [never] ? { artifact?: never } : { artifact?: TArtifact });
 
-type ErasedCompositeInspector = AnyInspectorDefinition & Readonly<{ kind: 'composite' }>;
-
-type LayoutCompositeBranch<
-  TNode,
-  TArtifact extends JsonValue,
-  TLocalShape extends z.ZodRawShape,
-  TResolvedLocalOptions extends IRJsonObject,
-> = [TArtifact] extends [never]
+type LayoutCompositeBranch<TNode, TArtifact extends JsonValue> = [TArtifact] extends [never]
   ? {
       expand?: never;
       compile: (node: TNode, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<never>;
       artifactSchema?: never;
-      inspector?: never;
     }
   : {
       expand?: never;
       compile: (node: TNode, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<TArtifact>;
       artifactSchema: ZodType<TArtifact>;
-      inspector?: InspectorDefinition<
-        'composite',
-        TArtifact,
-        z.input<z.ZodObject<TLocalShape>> & IRJsonObject,
-        TResolvedLocalOptions
-      >;
     };
 
 /**
@@ -238,8 +216,6 @@ export type CompositeDefinition<
   TNamespace extends string = string,
   TType extends string = string,
   TArtifact extends JsonValue = never,
-  TLocalShape extends z.ZodRawShape = z.ZodRawShape,
-  TResolvedLocalOptions extends IRJsonObject = IRJsonObject,
 > = {
   /** composite IR 节点引用的 provider namespace */
   namespace: TNamespace;
@@ -253,9 +229,8 @@ export type CompositeDefinition<
       expand: (node: TNode, context: CompositeExpandContext) => IRChild | Array<IRChild>;
       compile?: never;
       artifactSchema?: never;
-      inspector?: never;
     }
-  | LayoutCompositeBranch<TNode, TArtifact, TLocalShape, TResolvedLocalOptions>
+  | LayoutCompositeBranch<TNode, TArtifact>
 );
 
 /** 精确描述单个轻量 expand composite definition */
@@ -271,12 +246,7 @@ export type LayoutCompositeDefinition<
   TNamespace extends string = string,
   TType extends string = string,
   TArtifact extends JsonValue = never,
-  TLocalShape extends z.ZodRawShape = z.ZodRawShape,
-  TResolvedLocalOptions extends IRJsonObject = IRJsonObject,
-> = Extract<
-  CompositeDefinition<TNode, TNamespace, TType, TArtifact, TLocalShape, TResolvedLocalOptions>,
-  { compile: unknown }
->;
+> = Extract<CompositeDefinition<TNode, TNamespace, TType, TArtifact>, { compile: unknown }>;
 
 /** 异构 registry 中擦除后的轻量 expand composite */
 export type AnyExpandCompositeDefinition = {
@@ -286,7 +256,6 @@ export type AnyExpandCompositeDefinition = {
   expand: (node: never, context: CompositeExpandContext) => IRChild | Array<IRChild>;
   compile?: never;
   artifactSchema?: never;
-  inspector?: never;
 };
 
 /** 异构 registry 中擦除后的 layout-aware composite */
@@ -298,7 +267,6 @@ export type AnyLayoutCompositeDefinition =
       expand?: never;
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<never>;
       artifactSchema?: never;
-      inspector?: never;
     }
   | {
       namespace: string;
@@ -307,7 +275,6 @@ export type AnyLayoutCompositeDefinition =
       expand?: never;
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
       artifactSchema: ZodType<JsonValue>;
-      inspector?: ErasedCompositeInspector;
     };
 
 /** registry、adapter 与 provider resolver 使用的安全异构 composite 容器 */

@@ -98,20 +98,20 @@ Owner key 与 identity path segment 都是非空字符串，按 JavaScript code-
 const createRuntimeIdentity = (owner: string, path: ReadonlyArray<string>): RuntimeIdentity;
 const runtimeIdentityEquals = (left: RuntimeIdentity, right: RuntimeIdentity): boolean;
 
-type RuntimeIdentityIndex = Readonly<{
+type RuntimeIdentityLookup = Readonly<{
   owner: string;
   size: number;
   has: (identity: RuntimeIdentity) => boolean;
   values: () => ReadonlyArray<RuntimeIdentity>;
 }>;
 
-const createRuntimeIdentityIndex = (
+const createRuntimeIdentityLookup = (
   owner: string,
   identities: ReadonlyArray<RuntimeIdentity>,
-): RuntimeIdentityIndex;
+): RuntimeIdentityLookup;
 ```
 
-`createRuntimeIdentity()`是公共构造/校验入口；`createRuntimeIdentityIndex()`是 Core/Render/owner executor共用的唯一 validated index factory，复制输入、再次校验全部 identity属于指定 owner且按 segment exact equality唯一，并按 path code-unit lexicographic顺序返回 values。没有 collector的 owner executor不会自动产生 index，其 owner-level snapshot/read仍可用；领域 Program仍可从自身 canonical traversal调用公共 factory建立 validated runtime-only index，Runtime不解析其领域 value。
+`createRuntimeIdentity()`是公共构造/校验入口；`createRuntimeIdentityLookup()`是 Core/Render/owner executor共用的唯一 validated lookup factory，复制输入、再次校验全部 identity属于指定 owner且按 segment exact equality唯一，并按 path code-unit lexicographic顺序返回 values。没有 collector的 owner executor不会自动产生 lookup，其 owner-level snapshot/read仍可用；领域 Program仍可从自身 canonical traversal调用公共 factory建立 validated runtime-only lookup，Runtime不解析其领域 value。
 
 Registry 自身不执行 lifecycle。Runtime 包内唯一的 owner executor 负责 `capture → collect/validate identity → read candidate view → compare → publish/retire`；session、Program 与 adapter 都不能直接调用 author callbacks。capture 成功后 collector、identity validation或首次 read 失败，executor 立即 dispose该 candidate；dispose secondary只追加 diagnostic，不覆盖 primary。未发布 candidate与被替换 committed value都只允许 executor反向 exactly-once retire；重复 retire是内部 invariant error，session dispose重复调用仍由 ADR-03定义为 no-op。
 

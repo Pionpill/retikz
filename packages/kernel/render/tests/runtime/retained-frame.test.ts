@@ -1,23 +1,22 @@
-import type { IRScene } from '@retikz/core';
+import type { CoreProgramOutput, IRScene, Scene } from '@retikz/core';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import {
-  CompositeBaseSchema,
-  CoreOwnerDefinition,
-  createCoreProgram,
-  defineComposite,
-  defineInspector,
-} from '@retikz/core';
+import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
 } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
 
-import type { RenderFrameSnapshot, RetainedRendererFactory, StaticRenderFrame } from '../../src/runtime';
+import type {
+  RenderFrameSnapshot,
+  RenderReadonlyLayer,
+  RetainedRendererFactory,
+  StaticRenderFrame,
+} from '../../src/runtime';
 
 import {
   createRetainedRenderParticipant,
@@ -28,46 +27,49 @@ import {
 
 const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org/2000/svg' }) as SVGSVGElement;
 
-const layoutDefinition = defineComposite({
-  namespace: 'test',
-  type: 'layout',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('layout') }),
-  artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
-  inspector: defineInspector({
-    kind: 'composite',
-    optionsInputSchema: z.strictObject({}),
-    optionsSchema: z.strictObject({}),
-    inspect: (artifact: { width: number; height: number }) => ({
-      type: 'path',
-      stroke: '#2563eb',
-      dashPattern: [6, 4],
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [artifact.width, 0] },
-        { type: 'step', kind: 'line', to: [artifact.width, artifact.height] },
-        { type: 'step', kind: 'line', to: [0, artifact.height] },
-        { type: 'step', kind: 'line', to: [0, 0] },
-      ],
-    }),
-  }),
-  compile: () => ({
-    children: [{ type: 'node', position: [0, 0], text: 'content' }],
-    artifact: { width: 40, height: 20 },
-  }),
-});
-
-const source: IRScene = {
+const source = (text: string): IRScene => ({
   version: 1,
   type: 'scene',
-  children: [{ namespace: 'test', type: 'layout' }],
-};
+  children: [{ type: 'node', id: 'node', position: [0, 0], text }],
+});
 
-const noopToken = (): RuntimePreparedCommit =>
-  Object.freeze({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined });
+const layerScene = (width: number): Scene => ({
+  layout: { x: 0, y: 0, width, height: 10 },
+  primitives: [{ type: 'rect', x: 0, y: 0, width, height: 10, stroke: '#2563eb' }],
+});
 
-const createSession = (inspectionCapability: 'supported' | 'unsupported', expectedInitialFrame?: StaticRenderFrame) => {
+const layersFrom = (output: CoreProgramOutput<readonly []>): ReadonlyArray<RenderReadonlyLayer> =>
+  Object.freeze([
+    Object.freeze({
+      key: 'guide',
+      scene: layerScene(output.result.scene.layout.width),
+      transform: Object.freeze([1, 0, 0, 1, 2, 3] as const),
+    }),
+  ]);
+
+const createHarness = (
+  readonlyLayerCapability: 'supported' | 'unsupported',
+  options: Readonly<{
+    expectedInitialFrame?: StaticRenderFrame;
+    onPrepareMount?: (frame: RenderFrameSnapshot) => void;
+    resolveReadonlyLayers?: (output: CoreProgramOutput<readonly []>) => ReadonlyArray<RenderReadonlyLayer>;
+  }> = {},
+) => {
   let current: RenderFrameSnapshot | undefined;
   const prepareMount = vi.fn((frame: RenderFrameSnapshot) => {
+    options.onPrepareMount?.(frame);
+    const previous = current;
+    return Object.freeze({
+      commit: () => {
+        current = frame;
+      },
+      rollback: () => {
+        current = previous;
+      },
+      dispose: () => undefined,
+    });
+  });
+  const prepare = vi.fn((_patch: unknown, frame: RenderFrameSnapshot) => {
     const previous = current;
     return Object.freeze({
       commit: () => {
@@ -83,55 +85,48 @@ const createSession = (inspectionCapability: 'supported' | 'unsupported', expect
     backend: 'svg',
     host: svgHost,
     capability: 'entity',
-    inspectionCapability,
+    readonlyLayerCapability,
     prepareMount,
-    prepare: (_patch, frame) => {
-      current = frame;
-      return noopToken();
-    },
+    prepare,
     read: () => {
       if (current === undefined) throw new Error('renderer is not committed');
       return Object.freeze({ frame: current });
     },
     dispose: () => undefined,
   });
-  const coreProgram = createCoreProgram({
-    composites: [layoutDefinition],
-    inspection: { root: { layout: true } },
-    onWarn: () => undefined,
-  });
+  const coreProgram = createCoreProgram({ onWarn: () => undefined });
   const handle = createRetainedRenderParticipant({
     backend: 'svg',
     host: svgHost,
     immutableOptions: { backend: 'svg', idPrefix: 'retained-frame' },
     rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
     coreProgram,
-    ...(expectedInitialFrame === undefined ? {} : { expectedInitialFrame }),
+    ...(options.expectedInitialFrame === undefined ? {} : { expectedInitialFrame: options.expectedInitialFrame }),
+    ...(options.resolveReadonlyLayers === undefined ? {} : { resolveReadonlyLayers: options.resolveReadonlyLayers }),
   });
   const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
   const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const mount = () =>
-    createRuntimeSession({
-      owners,
-      programs,
-      participants: [handle.participant],
-      initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, source),
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
-      ],
-    });
-  return { handle, mount, prepareMount, renderer };
+  const session = createRuntimeSession({
+    owners,
+    programs,
+    participants: [handle.participant],
+    initialSnapshots: [
+      createRuntimeOwnerInput(CoreOwnerDefinition, source('initial')),
+      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+    ],
+  });
+  return { coreProgram, handle, prepare, prepareMount, renderer, session };
 };
 
 describe('retained render frame contract', () => {
-  it('renderer definition 必须声明 inspectionCapability，并将其暴露在 nominal token', () => {
+  it('requires readonlyLayerCapability and exposes it on the nominal token', () => {
     expect(() =>
       defineRetainedRenderer({
         backend: 'svg',
         host: svgHost,
         capability: 'entity',
-        prepareMount: noopToken,
-        prepare: noopToken,
+        prepareMount: () => undefined as unknown as RuntimePreparedCommit,
+        prepare: () => undefined as unknown as RuntimePreparedCommit,
         read: () => {
           throw new Error('unused');
         },
@@ -139,45 +134,106 @@ describe('retained render frame contract', () => {
       } as never),
     ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererInvalid }));
 
-    const { renderer } = createSession('supported');
-    expect(renderer.inspectionCapability).toBe('supported');
+    const harness = createHarness('supported');
+    expect(harness.renderer.readonlyLayerCapability).toBe('supported');
+    harness.session.dispose();
   });
 
-  it('unsupported renderer 在调用 prepareMount 前拒绝 non-null inspection', () => {
-    const harness = createSession('unsupported');
-
-    expect(harness.mount).toThrowError(
-      expect.objectContaining({
-        cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererInspectionUnsupported }),
-      }),
-    );
-    expect(harness.prepareMount).not.toHaveBeenCalled();
-  });
-
-  it('supported renderer 原子接收并读取同一 revision 的完整 frame', () => {
-    const harness = createSession('supported');
-    const session = harness.mount();
+  it('uses one frozen empty layer array when no resolver is provided', () => {
+    const harness = createHarness('unsupported');
     const frame = harness.prepareMount.mock.calls[0][0];
 
-    expect(frame.primary.scene.primitives).not.toHaveLength(0);
-    expect(frame.inspection).not.toBeNull();
-    if (frame.inspection === null) throw new Error('expected inspection plane');
-    expect(frame.inspection.entries).toHaveLength(1);
-    expect(harness.handle.read(session).frame).toBe(frame);
-    session.dispose();
+    expect(frame.layers).toEqual([]);
+    expect(Object.isFrozen(frame.layers)).toBe(true);
+    expect(harness.handle.read(harness.session).frame).toBe(frame);
+    harness.session.dispose();
   });
 
-  it('在调用 SVG renderer 前拒绝与首个 runtime frame 不一致的 seed', () => {
-    const harness = createSession('supported', {
-      primary: { layout: { x: 0, y: 0, width: 1, height: 1 }, primitives: [] },
-      inspection: null,
-    });
+  it('rejects non-empty layers on unsupported renderers before prepareMount', () => {
+    const onPrepareMount = vi.fn();
+    expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
+      expect.objectContaining({
+        cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported }),
+      }),
+    );
+    expect(onPrepareMount).not.toHaveBeenCalled();
+  });
 
-    expect(harness.mount).toThrowError(
+  it('resolves initial, Core update, and config-only candidates from the available Core output', () => {
+    const outputs: Array<CoreProgramOutput<readonly []>> = [];
+    const harness = createHarness('supported', {
+      resolveReadonlyLayers: output => {
+        outputs.push(output);
+        return layersFrom(output);
+      },
+    });
+    const initialOutput = harness.session.artifact(harness.coreProgram).value.output;
+    const initialFrame = harness.handle.read(harness.session).frame;
+
+    expect(outputs).toEqual([initialOutput]);
+    expect(initialFrame.layers[0]?.scene.layout.width).toBe(initialOutput.result.scene.layout.width);
+
+    harness.session.update({
+      baseRevision: harness.session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source('updated content'))],
+    });
+    const updatedOutput = harness.session.artifact(harness.coreProgram).value.output;
+    const updatedFrame = harness.handle.read(harness.session).frame;
+    expect(outputs.at(-1)).toBe(updatedOutput);
+    expect(updatedFrame.primary.revision).toBe(harness.session.revision());
+
+    harness.session.update({
+      baseRevision: harness.session.revision(),
+      owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { animation: { enabled: false } })],
+    });
+    const configFrame = harness.handle.read(harness.session).frame;
+    expect(outputs.at(-1)).toBe(updatedOutput);
+    expect(configFrame.primary.revision).toBe(harness.session.revision());
+    expect(configFrame.layers).not.toBe(updatedFrame.layers);
+    harness.session.dispose();
+  });
+
+  it('keeps the previous committed whole frame when layer resolution fails', () => {
+    let reject = false;
+    const harness = createHarness('supported', {
+      resolveReadonlyLayers: output => {
+        if (reject) throw new Error('layer resolver failed');
+        return layersFrom(output);
+      },
+    });
+    const previous = harness.handle.read(harness.session).frame;
+    const prepareCalls = harness.prepare.mock.calls.length;
+    reject = true;
+
+    expect(() =>
+      harness.session.update({
+        baseRevision: harness.session.revision(),
+        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source('rejected'))],
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED',
+        cause: expect.objectContaining({ message: 'layer resolver failed' }),
+      }),
+    );
+    expect(harness.prepare).toHaveBeenCalledTimes(prepareCalls);
+    expect(harness.handle.read(harness.session).frame).toBe(previous);
+    harness.session.dispose();
+  });
+
+  it('rejects an SSR seed whose primary or layers differ from the initial frame', () => {
+    expect(() =>
+      createHarness('supported', {
+        expectedInitialFrame: {
+          primary: { layout: { x: 0, y: 0, width: 1, height: 1 }, primitives: [] },
+          layers: Object.freeze([]),
+        },
+        resolveReadonlyLayers: layersFrom,
+      }),
+    ).toThrowError(
       expect.objectContaining({
         cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererInitialFrameMismatch }),
       }),
     );
-    expect(harness.prepareMount).not.toHaveBeenCalled();
   });
 });

@@ -1,12 +1,16 @@
-import { describe, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
   RuntimeCandidateView,
   RuntimeChangeSet,
   RuntimeCommitEvent,
   RuntimeDiagnostic,
-  RuntimeErrorCode,
+  RuntimeDiagnosticCodeValue,
+  RuntimeDiagnosticPhaseValue,
+  RuntimeErrorCodeValue,
+  RuntimeOwnerErrorCodeValue,
   RuntimeOwnerInput,
+  RuntimeOwnerPhaseValue,
   RuntimeOwnerUpdate,
   RuntimeProgramArtifactDefinitionInput,
   RuntimeProgramContext,
@@ -28,8 +32,8 @@ import type {
   RuntimeSessionUpdate,
   RuntimeSnapshot,
   RuntimeUpdateResult,
-  RuntimeWarningDiagnostic,
 } from '../../src';
+import type { RuntimeDiagnosticPhaseValue as RuntimeDiagnosticPhaseTypeValue } from '../../src/diagnostic/types';
 
 import {
   createRuntimeChangeSet,
@@ -38,7 +42,12 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   defineRuntimeProgram,
+  RuntimeDiagnosticCode,
+  RuntimeDiagnosticPhase,
   RuntimeError,
+  RuntimeErrorCode,
+  RuntimeOwnerErrorCode,
+  RuntimeOwnerPhase,
   RuntimeProgramExecution,
   RuntimeProgramKind,
   RuntimeProgramPhase,
@@ -64,7 +73,22 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeChangeSet<unknown>>().toBeObject();
     expectTypeOf<RuntimeCommitEvent<unknown>>().toBeObject();
     expectTypeOf<RuntimeDiagnostic>().toBeObject();
-    expectTypeOf<RuntimeErrorCode>().toBeString();
+    expectTypeOf(RuntimeDiagnosticCode).toBeObject();
+    expectTypeOf<RuntimeDiagnosticCodeValue>().toBeString();
+    expectTypeOf(RuntimeDiagnosticPhase).toBeObject();
+    expectTypeOf<RuntimeDiagnostic['phase']>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
+    expectTypeOf<RuntimeDiagnosticPhaseTypeValue>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
+    expect(RuntimeDiagnosticPhase.Run).toBe('run');
+    expect(RuntimeDiagnosticCode.TraceSinkFailed).toBe('RUNTIME_TRACE_SINK_FAILED');
+    expectTypeOf<RuntimeErrorCodeValue>().toBeString();
+    expectTypeOf<RuntimeOwnerErrorCodeValue>().toBeString();
+    expectTypeOf<RuntimeOwnerPhaseValue>().toBeString();
+    expectTypeOf(RuntimeErrorCode).toBeObject();
+    expectTypeOf(RuntimeOwnerErrorCode).toBeObject();
+    expectTypeOf(RuntimeOwnerPhase).toBeObject();
+    expect(RuntimeErrorCode.ProgramRunFailed).toBe('RUNTIME_PROGRAM_RUN_FAILED');
+    expect(RuntimeOwnerErrorCode.CaptureFailed).toBe('RUNTIME_OWNER_CAPTURE_FAILED');
+    expect(RuntimeOwnerPhase.Capture).toBe('capture');
     expectTypeOf<RuntimeOwnerInput>().toBeObject();
     expectTypeOf<RuntimeOwnerUpdate>().toBeObject();
     expectTypeOf<RuntimeProgramArtifactDefinitionInput<unknown, unknown, unknown, unknown>>().toBeObject();
@@ -87,6 +111,5 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeSessionUpdate>().toBeObject();
     expectTypeOf<RuntimeSnapshot<unknown>>().toBeObject();
     expectTypeOf<RuntimeUpdateResult<unknown>>().toBeObject();
-    expectTypeOf<RuntimeWarningDiagnostic>().toBeObject();
   });
 });

@@ -1,6 +1,20 @@
 import { z } from 'zod';
 
-import { TableCellAppearanceTracePath, TableCellPlanSourceKind } from './constants';
+import { TableCellAppearanceTracePath, TableCellPlanSourceKind, TableThemeTokenSourceKind } from './constants';
+
+const TableThemeTokenKeySchema = z.enum([
+  'cell.background.fill',
+  'cell.background.fillOpacity',
+  'cell.content.color',
+  'cell.content.font.family',
+  'cell.content.font.weight',
+  'columnHeader.background.fill',
+  'columnHeader.background.fillOpacity',
+  'columnHeader.content.color',
+  'columnHeader.content.font.family',
+  'columnHeader.content.font.weight',
+  'columnHeader.border.bottom',
+]);
 
 export const TableCellPlanSourceSchema = z
   .discriminatedUnion('kind', [
@@ -13,23 +27,12 @@ export const TableCellPlanSourceSchema = z
         .describe('Discriminator for a structure-authored Cell winner.'),
     }),
     z.strictObject({
-      kind: z.literal(TableCellPlanSourceKind.StyleToken).describe('Discriminator for a resolved style token winner.'),
-      tokenKey: z
-        .enum([
-          'cell.background.fill',
-          'cell.background.fillOpacity',
-          'cell.content.color',
-          'cell.content.font.family',
-          'cell.content.font.weight',
-          'columnHeader.background.fill',
-          'columnHeader.background.fillOpacity',
-          'columnHeader.content.color',
-          'columnHeader.content.font.family',
-          'columnHeader.content.font.weight',
-          'columnHeader.border.bottom',
-        ])
-        .describe('Appearance style token that supplied the winning leaf.'),
-      tokenSource: z.enum(['preset', 'user']).describe('Preset or user overlay winner for this token.'),
+      kind: z.literal(TableCellPlanSourceKind.StyleToken).describe('Discriminator for a resolved Table token winner.'),
+      tokenKey: TableThemeTokenKeySchema.describe('Appearance Table token that supplied the winning leaf.'),
+      tokenSource: z
+        .enum(Object.values(TableThemeTokenSourceKind) as [string, ...Array<string>])
+        .describe('Cascade layer that supplied the winning Table token.'),
+      tokenPath: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
     }),
     z.strictObject({
       kind: z

@@ -1,4 +1,5 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
+import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
 import type { RuntimeProgramId } from '../identity';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken, RuntimeRevision } from '../owner';
 import type { RuntimeTracePhaseDefinition, RuntimeTraceReporter } from '../trace';
@@ -43,7 +44,7 @@ export type RuntimeProgramWarningInput = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
-  phase: string;
+  phase: RuntimeDiagnosticPhaseValue;
   /** 面向开发者的 warning 信息 */
   message: string;
 }>;

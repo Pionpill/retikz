@@ -145,15 +145,15 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与可扩展 Inspector 内容。',
-            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, inherited Theme, and extensible Inspector content.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
+            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
           },
           items: [
             {
-              label: { zh: 'BREAKING：可扩展 Inspector 内容', en: 'BREAKING: Extensible Inspector content' },
+              label: { zh: 'BREAKING：领域中立编译观测', en: 'BREAKING: Domain-neutral compile observation' },
               content: {
-                zh: 'Inspector 现在依附 Composite / PathKind Definition，通过 `defineInspector()` 把 settled artifact / subject 转为普通 Core `IRChild`，再隔离编译为每个 entry 的静态 `scene`；不提供 `outputSchema`。BREAKING：移除 `InspectionPrimitive`、`InspectionTone` 与 `CompositeInspectorDefinition`；entry 的 `primitives` 改为 `scene`，locator 必填 `target`，policy 的 `component` 改为 `self`，公开 `CompileWarning.origin` 改为必填。旧 API 不保留别名或兼容桥。',
-                en: 'Inspectors now attach to Composite or PathKind Definitions and use `defineInspector()` to convert settled artifacts or subjects into ordinary Core `IRChild` values, isolated into one static `scene` per entry with no `outputSchema`. BREAKING: removes `InspectionPrimitive`, `InspectionTone`, and `CompositeInspectorDefinition`; replaces entry `primitives` with `scene`; requires locator `target`; renames policy `component` to `self`; and makes public `CompileWarning.origin` required. No aliases or compatibility bridge remain.',
+                zh: 'Core 新增 `observeCompileToScene()`、带 schema 的 owner output、最终 occurrence provenance 与隔离片段编译，只提供不含 Inspector 词汇的观测底座。BREAKING：删除 Core inspection contract、`CompileOptions.inspection`、`CompileResult.inspection`、Definition 上的 Inspector 字段和内置 Path Inspector；调用方改用可选 `@retikz/inspect`。',
+                en: 'Core adds `observeCompileToScene()`, schema-bound owner outputs, final-occurrence provenance, and isolated fragment compilation as a domain-neutral observation foundation. BREAKING: removes the Core inspection contract, `CompileOptions.inspection`, `CompileResult.inspection`, Inspector fields on Definitions, and the built-in Path Inspector; consumers migrate to optional `@retikz/inspect`.',
               },
             },
             {
@@ -161,6 +161,16 @@ export const kernelV05: Release = {
               content: {
                 zh: '`ThemeStyle` / `ThemeMode`、严格 `ThemeSchema` 与 `ResolvedTheme` 成为 Core 公共契约；Theme 变化进入 retained compile input，无法证明更窄依赖时保守 full fallback，并保持与 fresh compile 等价。',
                 en: '`ThemeStyle`, `ThemeMode`, strict `ThemeSchema`, and `ResolvedTheme` become public Core contracts. Theme changes enter retained compile input and conservatively full-fallback when a narrower dependency cannot be proven, preserving fresh-compile equivalence.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：namespaced Theme tokens 与 shared colors',
+                en: 'BREAKING: Namespaced Theme tokens and shared colors',
+              },
+              content: {
+                zh: '`Theme` 现在是稀疏 `style / mode / tokens`；Core 内置 `core` namespace，`ResolvedTheme` 额外提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineCoreThemeTokens`、`composeThemeTokenOverrides` 与 `themeTokenDefinitions` 支持 Core、Plot、Chart、Table 及自定义 owner 通过同一 registry 校验和聚合；未知 namespace/key/value 与冲突 Definition fail-loud。React `Layout` 与 Vanilla normalization 都会聚合嵌入 owner Definition，standalone 与 embedded compile 使用同一语义。',
+                en: '`Theme` is now sparse `style / mode / tokens`; Core registers the built-in `core` namespace, and `ResolvedTheme` adds a detached, frozen `colors.semantic` view plus a non-empty `colors.categorical` palette. `defineCoreThemeTokens`, `composeThemeTokenOverrides`, and `themeTokenDefinitions` let Core, Plot, Chart, Table, and custom owners validate and aggregate through one registry; unknown namespaces, keys, values, and conflicting Definitions fail loudly. React `Layout` and Vanilla normalization aggregate embedded owner Definitions, so standalone and embedded compile paths share the same semantics.',
               },
             },
             {
@@ -180,6 +190,49 @@ export const kernelV05: Release = {
             en: 'Delivers ADR-01 through ADR-07 across Node/Scope layout, paths, text, TeX, and composites.',
           },
           items: [],
+        },
+      ],
+    },
+    {
+      pkg: '@retikz/inspect',
+      version: 'v0.5',
+      description: {
+        zh: '可选安装的开发期检查扩展：观察 Core 最终编译产物，以普通 Core IR 生成不影响主图的辅助内容。',
+        en: 'An optional development-time inspection extension that observes final Core compile outputs and generates auxiliary content as ordinary Core IR without affecting the primary figure.',
+      },
+      highlights: [
+        {
+          label: { zh: '独立 Inspector 注册表', en: 'Independent Inspector registry' },
+          content: {
+            zh: '`defineInspector()`、显式注册表、运行时 selection、选项合并、诊断与辅助平面全部位于可选包；内置 stroke Path Inspector 与第三方定义使用同一条注册和编译路径。',
+            en: '`defineInspector()`, explicit registries, runtime selection, option merging, diagnostics, and inspection planes all live in the optional package. The built-in stroke Path Inspector and third-party definitions share the same registration and compile path.',
+          },
+        },
+        {
+          label: { zh: '按宿主选择入口', en: 'Host-specific optional entries' },
+          content: {
+            zh: '根入口保持宿主无关；`/render`、`/react` 与 `/vanilla` 分别接入只读图层和通用编译驱动。未导入这些入口时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
+            en: 'The root entry remains host-independent, while `/render`, `/react`, and `/vanilla` integrate readonly layers and generic compile drivers. Core, Render, React, and Vanilla run no Inspector logic unless these optional entries are imported.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-08-07',
+          summary: {
+            zh: '新增独立 Inspector 定义、注册、选择、诊断、辅助编译、内置 stroke Path 检查与三类宿主入口。',
+            en: 'Introduces independent Inspector definitions, registries, selection, diagnostics, auxiliary compilation, the built-in stroke Path Inspector, and three host integration entries.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：从 Core 迁移', en: 'BREAKING: Migration from Core' },
+              content: {
+                zh: '安装 `@retikz/inspect` 后，从根入口创建注册表与 selection；React 从 `/react` 使用 `InspectLayout`、`InspectScope`、`InspectPath`，Vanilla 从 `/vanilla` 使用 authoring 标记和驱动。旧 Core 内置 API、基础组件 prop 与 plain-spec 字段不保留兼容桥。',
+                en: 'Install `@retikz/inspect`, then create registries and selection from its root entry. React uses `InspectLayout`, `InspectScope`, and `InspectPath` from `/react`; Vanilla uses authoring markers and drivers from `/vanilla`. No compatibility bridge remains for the old Core APIs, base-component props, or plain-spec fields.',
+              },
+            },
+          ],
         },
       ],
     },
@@ -216,10 +269,10 @@ export const kernelV05: Release = {
           },
           items: [
             {
-              label: { zh: 'Inspection 普通 Scene 执行', en: 'Ordinary Scene inspection execution' },
+              label: { zh: '普通只读 Scene 图层', en: 'Ordinary readonly Scene layers' },
               content: {
-                zh: 'SVG 与 Canvas 删除 Inspector 专用 primitive、palette 与 hatch consumer，改为在 occurrence transform 下执行普通静态 Scene。每个 entry 的资源命名空间独立；辅助内容不进入 hydration、hit-test、动画或 retained identity，prepare / commit / rollback 仍与主 Scene 原子切换。',
-                en: 'SVG and Canvas remove Inspector-specific primitives, palettes, and hatch consumers and execute ordinary static Scenes under occurrence transforms instead. Every entry has an isolated resource namespace; auxiliary content stays out of hydration, hit testing, animation, and retained identity while prepare, commit, and rollback remain atomic with the primary Scene.',
+                zh: 'Render 删除 Inspector 专用 frame、capability 与绘制分支，统一通过 `RenderReadonlyLayer` 执行普通静态 Scene。每层拥有独立资源命名空间，不进入主图 viewport、hydration、hit-test、动画或 retained identity，并与主 Scene 原子提交或回滚。',
+                en: 'Render removes Inspector-specific frames, capabilities, and drawing branches in favor of ordinary static Scenes carried by `RenderReadonlyLayer`. Each layer has an isolated resource namespace, stays outside the primary viewport, hydration, hit testing, animation, and retained identity, and commits or rolls back atomically with the primary Scene.',
               },
             },
           ],
@@ -275,10 +328,10 @@ export const kernelV05: Release = {
           },
           items: [
             {
-              label: { zh: 'Path Inspector authoring', en: 'Path Inspector authoring' },
+              label: { zh: 'BREAKING：通用编译驱动', en: 'BREAKING: Generic compile drivers' },
               content: {
-                zh: '`<Path inspect>` 为当前 Path occurrence 生成 runtime-only `target:path + self` sidecar；boolean 与开放对象形式都不会进入 Core IR，第三方 Path kind 的额外字段由其 Inspector schema 统一校验。Scope `enabled:false` 同时阻断 Composite 与 Path 后代。',
-                en: '`<Path inspect>` creates a runtime-only `target:path + self` sidecar for the current Path occurrence. Boolean and open-object forms never enter Core IR, and a third-party Path kind validates extra keys through its Inspector schema. Scope `enabled:false` blocks both Composite and Path descendants.',
+                zh: 'React 基础包只提供领域中立 `LayoutCompileDriver` 与 authoring site。BREAKING：删除 `Layout`、`Scope`、`Path` 的 `inspect` prop；Path 检查改从 `@retikz/inspect/react` 导入 `InspectLayout`、`InspectScope` 与 `InspectPath`。',
+                en: 'The React base package now provides only the domain-neutral `LayoutCompileDriver` and authoring sites. BREAKING: removes the `inspect` prop from `Layout`, `Scope`, and `Path`; migrate Path inspection to `InspectLayout`, `InspectScope`, and `InspectPath` from `@retikz/inspect/react`.',
               },
             },
           ],
@@ -327,10 +380,10 @@ export const kernelV05: Release = {
           },
           items: [
             {
-              label: { zh: 'Path Inspector authoring', en: 'Path Inspector authoring' },
+              label: { zh: 'BREAKING：通用编译驱动', en: 'BREAKING: Generic compile drivers' },
               content: {
-                zh: '`VanillaPathSpec.inspect` 在 normalization 时从 Path IR 剥离，并生成与 React 同构的 `target:path + self` sidecar。内置与第三方 Path kind 的开放选项保持原样到达 owner schema；raw static 与 retained IR / plain-spec 路径共享该行为。',
-                en: '`VanillaPathSpec.inspect` is stripped from Path IR during normalization and creates the same `target:path + self` sidecar as React. Open options for built-in and third-party Path kinds reach the owner schema unchanged across raw-static and retained IR or plain-spec paths.',
+                zh: 'Vanilla 基础包只提供领域中立 `VanillaCompileDriver` 与 authoring site。BREAKING：删除 plain spec 的 inspection sidecar 与 `VanillaPathSpec.inspect`；改用 `@retikz/inspect/vanilla` 的 authoring 标记和编译驱动。',
+                en: 'The Vanilla base package now provides only the domain-neutral `VanillaCompileDriver` and authoring sites. BREAKING: removes plain-spec inspection sidecars and `VanillaPathSpec.inspect`; migrate to the authoring markers and compile driver from `@retikz/inspect/vanilla`.',
               },
             },
           ],

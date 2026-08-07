@@ -1,32 +1,21 @@
+import type { RuntimeDiagnosticCode } from '../diagnostic';
+import type { ValueOf } from '../shared';
+import type { RuntimeErrorCode, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from './constants';
+
 /** Runtime owner 执行阶段 */
-export type RuntimeOwnerPhase =
-  | 'capture'
-  | 'collect-identities'
-  | 'read'
-  | 'compare'
-  | 'validate-change-set'
-  | 'retire';
+export type RuntimeOwnerPhaseValue = ValueOf<typeof RuntimeOwnerPhase>;
 
 /** Runtime owner 的稳定错误分类 */
-export type RuntimeOwnerErrorCode =
-  | 'RUNTIME_OWNER_DUPLICATE'
-  | 'RUNTIME_OWNER_UNKNOWN'
-  | 'RUNTIME_OWNER_TOKEN_INVALID'
-  | 'RUNTIME_IDENTITY_INVALID'
-  | 'RUNTIME_OWNER_CAPTURE_FAILED'
-  | 'RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED'
-  | 'RUNTIME_OWNER_READ_FAILED'
-  | 'RUNTIME_OWNER_COMPARE_FAILED'
-  | 'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED';
+export type RuntimeOwnerErrorCodeValue = ValueOf<typeof RuntimeOwnerErrorCode>;
 
 /** Runtime owner value 释放失败的非致命诊断 */
 export type RuntimeOwnerLifecycleDiagnostic = Readonly<{
   /** 诊断分类 */
-  code: 'RUNTIME_OWNER_DISPOSE_FAILED';
+  code: typeof RuntimeDiagnosticCode.OwnerDisposeFailed;
   /** 发生失败的 owner */
   owner: string;
   /** 释放阶段 */
-  phase: 'retire';
+  phase: typeof RuntimeOwnerPhase.Retire;
   /** 可读错误信息 */
   message: string;
   /** 原始错误 */
@@ -42,41 +31,4 @@ export type RuntimeOwnerExecutionResult<T> = Readonly<{
 }>;
 
 /** Runtime transaction、Program 与 registry 的稳定错误分类 */
-export type RuntimeErrorCode =
-  | RuntimeOwnerErrorCode
-  | 'RUNTIME_PROGRAM_ID_INVALID'
-  | 'RUNTIME_PROGRAM_DUPLICATE'
-  | 'RUNTIME_PROGRAM_UNKNOWN'
-  | 'RUNTIME_PROGRAM_TOKEN_INVALID'
-  | 'RUNTIME_PROGRAM_CYCLE'
-  | 'RUNTIME_TRACE_DEFINITION_INVALID'
-  | 'RUNTIME_REGISTRY_MISMATCH'
-  | 'RUNTIME_UPDATE_STRATEGY_INVALID'
-  | 'RUNTIME_INITIAL_OWNER_MISMATCH'
-  | 'RUNTIME_REVISION_STALE'
-  | 'RUNTIME_REVISION_EXHAUSTED'
-  | 'RUNTIME_CHANGESET_REVISION_MISMATCH'
-  | 'RUNTIME_UNDECLARED_DEPENDENCY'
-  | 'RUNTIME_PROGRAM_RUN_FAILED'
-  | 'RUNTIME_PROGRAM_UPDATE_FAILED'
-  | 'RUNTIME_ARTIFACT_CAPTURE_FAILED'
-  | 'RUNTIME_ARTIFACT_PROGRAM_READ_FAILED'
-  | 'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED'
-  | 'RUNTIME_OWNER_OWNERSHIP_ALIAS'
-  | 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS'
-  | 'RUNTIME_SESSION_REENTRANT'
-  | 'RUNTIME_SESSION_DISPOSED'
-  | 'RUNTIME_REVISION_INVALID'
-  | 'RUNTIME_CHANGESET_INVALID'
-  | 'RUNTIME_OWNER_COMMAND_INVALID'
-  | 'RUNTIME_PARTICIPANT_TOKEN_INVALID'
-  | 'RUNTIME_PARTICIPANT_DUPLICATE'
-  | 'RUNTIME_PARTICIPANT_DEPENDENCY_INVALID'
-  | 'RUNTIME_PARTICIPANT_UNKNOWN'
-  | 'RUNTIME_PARTICIPANT_ALREADY_OWNED'
-  | 'RUNTIME_PARTICIPANT_PREPARE_FAILED'
-  | 'RUNTIME_PARTICIPANT_COMMIT_FAILED'
-  | 'RUNTIME_PARTICIPANT_READ_FAILED'
-  | 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED'
-  | 'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED'
-  | 'RUNTIME_PARTICIPANT_DISPOSE_FAILED';
+export type RuntimeErrorCodeValue = ValueOf<typeof RuntimeErrorCode>;

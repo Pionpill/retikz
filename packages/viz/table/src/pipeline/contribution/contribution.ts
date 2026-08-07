@@ -10,6 +10,7 @@ import type {
 import type { LowerTablesOptions } from '../types';
 import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
 
+import { TableThemeTokenDefinition } from '../../contract';
 import { extractTableStructureKind } from '../../providers';
 import { lowerTables } from '../resolve';
 
@@ -18,6 +19,7 @@ const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
 const FORMATTER_DEFINITIONS_KEY = 'formatterDefinitions';
 const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
 const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
+const TABLE_THEME_TOKEN_DEFINITIONS = Object.freeze([TableThemeTokenDefinition]);
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
 const encodeRuntimeReference = (reference: string): string =>
@@ -175,6 +177,7 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
   });
   return {
     datasets: Object.fromEntries([...Object.entries(data), [runtimeReference, envelope]]),
+    themeTokenDefinitions: TABLE_THEME_TOKEN_DEFINITIONS,
     makeComposites: makeTableRuntimeComposites,
   };
 };

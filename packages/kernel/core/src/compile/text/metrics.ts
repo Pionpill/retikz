@@ -110,12 +110,12 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
       descent = normalizedHeight / 2;
     }
 
-    return Object.freeze({
+    return {
       width: normalizedWidth,
       height: ascent + descent,
       ascent,
       descent,
-    });
+    };
   });
 
 /** 文字度量函数接口 */

@@ -1,7 +1,7 @@
 import type { IRScene } from '../schemas';
 import type { LoweredIRScene, LowerIRToKernelOptions } from './types';
 
-import { resolveCompositeRegistry } from '../providers';
+import { resolveCompositeRegistry, resolveThemeTokenRegistry } from '../providers';
 import { lowerComposites } from './orchestration';
 
 /**
@@ -12,6 +12,7 @@ import { lowerComposites } from './orchestration';
 export const lowerIRToKernel = (ir: IRScene, options: LowerIRToKernelOptions = {}): LoweredIRScene =>
   lowerComposites(ir, resolveCompositeRegistry(options.composites), {
     maxDepth: options.maxCompositeDepth,
+    themeTokenDefinitions: resolveThemeTokenRegistry(options.themeTokenDefinitions),
     onWarn: () => undefined,
     onUnregistered: (key, path) => {
       throw new Error(`lowerIRToKernel: composite '${key}' is not registered at ${path}.`);

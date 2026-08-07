@@ -42,13 +42,13 @@ pnpm add @retikz/runtime
 An identity consists of an owner and a non-empty segment path. Segments are preserved without normalizing `/`, `.`, `:`, or Unicode, so `['a', 'b/c']` never collides with `['a/b', 'c']`.
 
 ```ts
-import { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 const title = createRuntimeIdentity('@retikz/core', ['layer/main', 'title']);
 const body = createRuntimeIdentity('@retikz/core', ['layer/main', 'body']);
-const index = createRuntimeIdentityIndex('@retikz/core', [body, title]);
+const lookup = createRuntimeIdentityLookup('@retikz/core', [body, title]);
 
-index.has(createRuntimeIdentity('@retikz/core', ['layer/main', 'title'])); // true
+lookup.has(createRuntimeIdentity('@retikz/core', ['layer/main', 'title'])); // true
 runtimeIdentityEquals(title, body); // false
 ```
 
@@ -189,8 +189,8 @@ Definition authors primarily use the following three object contracts. Their gen
 | `RuntimeIdentity`                  | Structured `{ owner, path }` identity             |
 | `createRuntimeIdentity`            | Validate, copy, and freeze an identity            |
 | `runtimeIdentityEquals`            | Compare owner and segments exactly                |
-| `RuntimeIdentityIndex`             | Validated identity index for one owner            |
-| `createRuntimeIdentityIndex`       | Validate uniqueness and build a sorted index      |
+| `RuntimeIdentityLookup`            | Validated identity lookup for one owner           |
+| `createRuntimeIdentityLookup`      | Validate uniqueness and build a sorted lookup     |
 | `RuntimeOwnedValueDefinitionInput` | Captured-value lifecycle field contract           |
 | `RuntimeOwnerDefinitionInput`      | Owner key, lifecycle, collector, and validator    |
 | `RuntimeOwnerToken`                | Opaque `{ key }` token returned by dynamic lookup |

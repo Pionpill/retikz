@@ -7,7 +7,7 @@ import pkg from './package.json' with { type: 'json' };
 export default defineRetikzLibraryConfig({
   packageRoot: __dirname,
   manifest: pkg,
-  entry: 'src/index.ts',
+  entry: ['src/index.ts', 'src/inspect/index.ts'],
   plugins: [react()],
   test: {
     environment: 'node',

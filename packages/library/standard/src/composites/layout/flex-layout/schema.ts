@@ -1,9 +1,4 @@
-import {
-  BaseLayoutInspectOptionsInputSchema,
-  CompositeBaseSchema,
-  LayoutAlignmentGuideDimension,
-  resolveBaseLayoutInspectOptions,
-} from '@retikz/core';
+import { CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -14,6 +9,7 @@ import {
   LayoutContainerBoxSchema,
   LayoutDistribution,
   LayoutDistributionSchema,
+  LayoutGapSchema,
   LayoutItemBaseSchema,
   LayoutItemKind,
   LayoutSpacingArtifactSchema,
@@ -24,11 +20,11 @@ const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
 
 const FlexLayoutGapSchema = z
   .union([
-    z.number().nonnegative().describe('Uniform physical gap applied to both columns and rows.'),
+    LayoutGapSchema.describe('Uniform physical gap applied to both columns and rows.'),
     z
       .strictObject({
-        column: z.number().nonnegative().describe('Physical horizontal gap between items or lines.'),
-        row: z.number().nonnegative().describe('Physical vertical gap between items or lines.'),
+        column: LayoutGapSchema.describe('Physical horizontal gap between items or lines.'),
+        row: LayoutGapSchema.describe('Physical vertical gap between items or lines.'),
       })
       .describe('Independent physical column and row gaps.'),
   ])
@@ -211,32 +207,3 @@ const refineFlexLayoutArtifact = (artifact: z.infer<typeof FlexLayoutArtifactBas
 export const FlexLayoutArtifactSchema = FlexLayoutArtifactBaseSchema.superRefine(refineFlexLayoutArtifact).describe(
   'Canonical JSON-safe FlexLayout compile artifact payload.',
 );
-
-/** FlexLayout family-local inspector sparse schema */
-const FlexLayoutInspectFamilyOptionsInputSchema = z
-  .strictObject({
-    lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
-    gaps: z.boolean().optional().describe('Whether to shade authored FlexLayout row and column gaps.'),
-    distributedSpace: z
-      .boolean()
-      .optional()
-      .describe(
-        'Whether to draw only the dashed perimeter of positive free space introduced by FlexLayout content distribution, leaving its interior transparent.',
-      ),
-  })
-  .describe('Sparse FlexLayout-specific inspection options.');
-
-/** FlexLayout inspector 完整 authoring schema */
-export const FlexLayoutInspectOptionsInputSchema = BaseLayoutInspectOptionsInputSchema.safeExtend(
-  FlexLayoutInspectFamilyOptionsInputSchema.shape,
-).describe('Sparse shared and FlexLayout-specific inspection options.');
-
-/** FlexLayout Inspector 的完整 canonical schema */
-export const FlexLayoutInspectOptionsSchema = FlexLayoutInspectOptionsInputSchema.transform(value =>
-  Object.freeze({
-    ...resolveBaseLayoutInspectOptions(value),
-    lines: value.lines ?? true,
-    gaps: value.gaps ?? true,
-    distributedSpace: value.distributedSpace ?? true,
-  }),
-).describe('Canonical shared and FlexLayout-specific inspection options.');

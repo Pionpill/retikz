@@ -1,3 +1,4 @@
+import { PaintValueSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import {
@@ -8,6 +9,8 @@ import {
   GuideTextStyleSchema,
   LegendGuideStyleSchema,
 } from '../guide';
+import { ColorSchemeNameSchema } from '../scale';
+import { PlotColorPaletteSchema } from './style';
 
 const ThemeAxisTicksSchema = z
   .strictObject({
@@ -55,17 +58,17 @@ export const PlotAxisThemeSchema = z
 
 export const PlotPaletteThemeSchema = z
   .strictObject({
-    categorical: z.array(z.string().min(1)).min(1).optional().describe('Default categorical color palette'),
-    series: z.array(z.string().min(1)).min(1).optional().describe('Default mark-series color palette'),
-    sector: z.array(z.string().min(1)).min(1).optional().describe('Default sector color palette'),
-    sequential: z.string().min(1).optional().describe('Default sequential color scheme name'),
-    diverging: z.string().min(1).optional().describe('Default diverging color scheme name'),
+    categorical: PlotColorPaletteSchema.optional().describe('Default categorical color palette'),
+    series: PlotColorPaletteSchema.optional().describe('Default mark-series color palette'),
+    sector: PlotColorPaletteSchema.optional().describe('Default sector color palette'),
+    sequential: ColorSchemeNameSchema.optional().describe('Default sequential color scheme name'),
+    diverging: ColorSchemeNameSchema.optional().describe('Default diverging color scheme name'),
   })
   .describe('Plot palette defaults. Explicit scale range or scheme still has higher priority');
 
 export const PlotThemeSchema = z
   .strictObject({
-    background: z.string().min(1).optional().describe('Plot panel background fill. Omit to keep the panel transparent'),
+    background: PaintValueSchema.optional().describe('Plot panel background fill. Omit to keep the panel transparent'),
     typography: GuideTextStyleSchema.optional().describe('Global guide text defaults'),
     labelText: GuideTextStyleSchema.optional().describe('Default text style for static plot labels'),
     axis: PlotAxisThemeSchema.optional().describe('Axis visual defaults'),

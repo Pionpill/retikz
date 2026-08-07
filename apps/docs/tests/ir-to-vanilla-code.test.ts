@@ -366,12 +366,12 @@ describe('irToVanillaCode fallback', () => {
           },
         },
       ]),
-      { inspect: { enabled: false } },
     );
 
     expect(code).toContain("legend('preview-legend-1'");
     expect(code).toContain('LegendVanillaAdapter');
     expect(code).toContain('const standardCompile = { composites: [FlexLayoutDefinition, GridDefinition] };');
     expect(code).not.toContain('LegendDefinition');
+    expect(code).not.toMatch(/\binspect\b/);
   });
 });

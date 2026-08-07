@@ -33,7 +33,7 @@ export const Diagram = () => (
 
 `<Layout>` emits SVG by default; pass `renderer="canvas"` when you need a raster bitmap. Start with [Getting Started](/kernel/get-start), then see [Layout](/kernel/components/layout/overview) for the complete host options.
 
-`<Layout theme>` writes the root `IRScene.theme`, while `<Scope theme>` writes a local `IRScope.theme`. Both author only sparse `style / mode` values; composites choose concrete domain tokens during compile. When `ir` and an explicit `theme` are both present, the prop overrides `ir.theme` per field without mutating either input. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
+`<Layout theme>` writes the root `IRScene.theme`, while `<Scope theme>` writes a local `IRScope.theme`. Theme is a sparse `style / mode / tokens` override; `tokens` stores JSON-safe token keys under owner namespaces, with Core's built-in `core` namespace and each domain Composite reading its own namespace during compile. `themeTokenDefinitions` is a Layout compile option: the React adapter de-duplicates Definitions contributed by embedded Composites and explicit options before passing them to the Core registry. When `ir` and an explicit `theme` are both present, the prop overrides `ir.theme` per field without mutating either input. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
 
 ## Why @retikz/react exists
 
@@ -108,7 +108,7 @@ Marker components avoid intermediate DOM and duplicated drawing semantics, but J
 
 Frequently updated large figures can keep stable IR and Core options outside the component or in `useMemo`, then pass the IR prop to skip the builder and let the seed-compile memo hit.
 
-In retained mode, `Layout` creates a Runtime Session after the client commit and updates the complete IR Snapshot plus renderer configuration in one transaction. When Core can prove an update locally safe it publishes a local Scene Patch; other valid changes use a `replaceScene` fallback while preserving full-oracle equivalence. The SVG / Canvas retained participant isolates candidate state during prepare, then publishes DOM / bitmap, events, animation handles, artifacts, and the inspection plane together only after the transaction succeeds.
+In retained mode, `Layout` creates a Runtime Session after the client commit and updates the complete IR Snapshot plus renderer configuration in one transaction. When Core can prove an update locally safe it publishes a local Scene Patch; other valid changes use a `replaceScene` fallback while preserving full-oracle equivalence. The SVG / Canvas retained participant isolates candidate state during prepare, then publishes DOM / bitmap, events, animation handles, artifacts, and optional readonly layers together only after the transaction succeeds.
 
 On unmount, the Session cleans up in reverse order on a best-effort basis, then retries failed renderer cleanup once after logical resources retire. Successful entries never rerun. Persistent failure only enters Runtime diagnostics and does not block React from completing the unmount.
 
@@ -192,13 +192,13 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 | `buildIRWithContributions` | `@retikz/react` | Walk the component tree, produce `IRScene`, collect embeddable Tier 2 input                    |
 | `IRScene`                  | `@retikz/core`  | JSON-serializable drawing contract with no React element, hook, or DOM                         |
 | `compileToScene`           | `@retikz/core`  | Process composites; resolve registries, references, geometry, layout, resources, and animation |
-| `CompileResult`            | `@retikz/core`  | Return a backend-neutral `scene`, typed `artifacts`, and isolated inspection plane together    |
+| `CompileResult`            | `@retikz/core`  | Return a backend-neutral `scene` and typed `artifacts` from the same compile                   |
 
 `Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
-`<Layout inspect>` supplies the whole-figure layout policy, while `<Scope inspect>` supplies an authored-subtree policy. An inspectable Tier 2 component or `<Path inspect>` can select only its own occurrence. The builder emits an authored sidecar with `target: 'composite' | 'path'` and `policy.self`; `inspect` never enters `IRScene`, `IRScope`, or `IRPath`. `enabled: false` is an unbreakable descendant barrier for both targets.
+The base package provides only a domain-neutral `LayoutCompileDriver` and opaque authoring sites. The default driver runs an ordinary Core compile with no observers or readonly layers. Optional `@retikz/inspect/react` wrappers—`InspectLayout`, `InspectScope`, and `InspectPath`—interpret runtime selection and connect inspection observers to the same static or retained host. Selection never enters `IRScene`, `IRScope`, or `IRPath`.
 
-A static host materializes the primary figure and overlay directly, while a retained host commits both in one revision. An SVG SSR seed includes the same overlay for first hydration, and later policy changes are adopted atomically through a new session. Inspectors require an authored occurrence, its Definition, and a settled subject; a Render entry that receives only a precompiled Scene cannot reconstruct them afterward.
+A `LayoutCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. A static host materializes the complete frame directly, while a retained host commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect) for the complete setup.
 
 <SourceLinks
   sources={[

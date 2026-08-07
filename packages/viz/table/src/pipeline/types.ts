@@ -4,6 +4,7 @@ import type {
   CompileResult,
   CompositeArtifactOf,
   CompositeCompileArtifact,
+  IRScene,
 } from '@retikz/core';
 import type { z } from 'zod';
 
@@ -38,6 +39,8 @@ export type TableCompileArtifact = CompositeCompileArtifact<
 
 /** 直接编译单个 Table 的分层选项 */
 export type CompileTableOptions<TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []> = Readonly<{
+  /** 可选的有效 Core 根 Theme，与独立 Scope 的语义相同 */
+  theme?: IRScene['theme'];
   /** Table structure 与 presentation definitions */
   lower?: LowerTablesOptions;
   /** 其余 Core compile options 与额外 composite definitions */

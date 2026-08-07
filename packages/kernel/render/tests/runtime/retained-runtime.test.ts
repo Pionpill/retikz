@@ -89,7 +89,7 @@ const createRendererHarness = (capability: 'none' | 'group' | 'entity' = 'entity
     backend: 'svg',
     host: svgHost,
     capability,
-    inspectionCapability: 'supported',
+    readonlyLayerCapability: 'supported',
     prepareMount,
     prepare,
     read,
@@ -154,7 +154,7 @@ describe('@retikz/render/runtime public contract', () => {
       backend: 'svg',
       host: svgHost,
       capability: RetainedRendererCapability.Entity,
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
       read: () => {
@@ -170,7 +170,7 @@ describe('@retikz/render/runtime public contract', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
     });
     expect('read' in svgRenderer).toBe(false);
     expect('prepare' in svgRenderer).toBe(false);
@@ -185,7 +185,7 @@ describe('@retikz/render/runtime public contract', () => {
         backend: 'webgl',
         host: canvasHost,
         capability: 'entity',
-        inspectionCapability: 'supported',
+        readonlyLayerCapability: 'supported',
         prepareMount: noopToken,
         prepare: noopToken,
         read: () => {
@@ -573,7 +573,7 @@ describe('createRetainedRenderParticipant', () => {
       Object.freeze({
         snapshot: current,
         output: Object.freeze({
-          result: Object.freeze({ scene: current.scene, artifacts: Object.freeze([]), inspection: null }),
+          result: Object.freeze({ scene: current.scene, artifacts: Object.freeze([]) }),
           diagnostics: Object.freeze([]),
         }),
         ...(patch === undefined ? {} : { patch }),
@@ -645,7 +645,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: frame => {
         stale = frame;
         return noopToken();
@@ -695,7 +695,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: frame => {
         committed = frame;
         return noopToken();
@@ -744,7 +744,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'canvas',
       host: canvasHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
       read: () => {
@@ -799,7 +799,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: prepare,
       prepare: (_patch, frame) => prepare(frame),
       read: () => {
@@ -902,7 +902,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: () => {
         throw new Error('renderer failed');
       },
@@ -952,7 +952,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: () => {
         throw expected;
       },
@@ -1000,7 +1000,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: noopToken,
       prepare: noopToken,
       read: () =>
@@ -1052,7 +1052,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: frame => {
         committed = frame;
         return noopToken();
@@ -1109,7 +1109,7 @@ describe('createRetainedRenderParticipant', () => {
       backend: 'svg',
       host: svgHost,
       capability: 'entity',
-      inspectionCapability: 'supported',
+      readonlyLayerCapability: 'supported',
       prepareMount: frame => {
         committed = frame;
         return noopToken();

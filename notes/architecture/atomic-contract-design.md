@@ -120,11 +120,11 @@ Contract 层描述第三方作者与内置 provider 共同实现的能力协议�
 
 Theme 设计必须区分以下三类对象：
 
-1. **Theme environment**：Core 统一表达的 `ThemeStyle` 与 `ThemeMode`，负责选择视觉人格和明暗环境，并沿 Scene / Scope 继承
+1. **Theme environment**：Core 统一表达的 `ThemeStyle`、`ThemeMode` 与通用 `theme.tokens` namespace bag，负责选择视觉人格、明暗环境和可继承的 token context
 2. **Value atom**：可复用的 paint、opacity、font、spacing、alignment、stroke、palette element 等值契约
 3. **Domain token**：由语义 owner 定义的稳定 token key，例如 Plot 的 axis / legend、Chart 的 presentation、Table 的 Cell / border
 
-`ThemeStyle` / `ThemeMode` 是共享环境，不是完整的全仓 token map。领域 preset 是 domain token 的组合数据，也不是 Core 的 capability bundle。
+`ThemeStyle` / `ThemeMode` 与 `theme.tokens` 是共享环境协议，不是包含所有领域语义的全仓 token map。Core 只验证 namespace、owner schema 和 shared value contract；领域 preset 是 domain token 的组合数据，也不是 Core 的 capability bundle。
 
 ### 5.2 Token 复用规则
 
@@ -133,7 +133,7 @@ Theme token 必须遵循与 Core 原子绘图契约相同的规则：
 - 每个共享 value atom 只有一个权威 schema / type，领域 token 复用它的约束和派生类型
 - 每个 domain token key 只有一个语义 owner；其它包只能消费、映射或组合
 - sparse override、完整 resolved map 和 built-in preset 使用同一 canonical field shape，不为每种形态复制一套 token schema
-- 领域 resolver 负责 preset 默认、领域禁用字段、token cascade、mapping 和诊断；Core 不承载领域 token vocabulary 或 preset 具体值
+- 领域 resolver 负责 preset 默认、领域禁用字段、token cascade、mapping 和诊断；Core 只承载 namespace bag、`ThemeTokenDefinition` registry、owner schema runtime validation 和 shared colors value contract，不承载 Tier 2 token vocabulary 或 preset 具体值
 - token schema 通过后的值必须进入正式 Standard / Core input 或领域 manifest；不能只进入 inspection 或只停留在 adapter
 - renderer 和 adapter 不根据 preset 名称选择默认，也不复制 token merge
 - 共享的是稳定语义契约，不是因为两个 token 恰好都是 string、color 或 number 就强行合并
@@ -153,6 +153,8 @@ axis.tick.mark          -> Plot token owner -> Plot guide contract
 ```text
 Core default theme environment
   -> Scene / Scope effective Theme
+  -> inherited namespace bag
+  -> Core shared colors view
   -> domain preset token map
   -> sparse user token override
   -> domain shorthand / explicit component config
@@ -162,6 +164,14 @@ Core default theme environment
 ```
 
 每个阶段只能覆盖自己拥有的表现性语义，不能撤销领域结构不变量。最终的 Core primitive 不再次读取 `ThemeStyle`；它接收由主题 consumer 已经物化的显式样式值。
+
+### 5.4 Theme token namespace context
+
+`IRTheme.tokens` 是按 namespace 寻址的 JSON-safe sparse bag。Layout / Scope 只提供通用 bag；Plot、Chart、Table 等 Tier 2 owner 通过 typed contribution helper 贡献自己的 namespace，并在本地分别使用 `plotThemeTokens`、`chartThemeTokens`、`tableThemeTokens`。Core 不静态知道这些 namespace 的 token 类型或业务语义。
+
+namespace registry 只绑定唯一 owner schema 并执行运行时校验。同一 definition identity 的重复聚合确定性去重，同 namespace 的不同 definition、同次 contribution 组合中的 duplicate namespace、unknown namespace、unknown key 和非法 value 都 fail-loud；不同 Scene / Scope 层级中同一 namespace 的继承覆盖是合法的。plain JSON、React 与 Vanilla 必须拥有同义的 bag、sparse merge、detached context 与诊断语义。
+
+Core 第一版 shared colors 只包含 `semantic.error`、`semantic.success`、`semantic.warning` 和一套非空 active `palette.categorical`。Core Inspector 为每个 occurrence 按 `colorScope % palette.categorical.length` 产生 scope color，warning 使用 warning role；Standard 只消费 `InspectionAppearance`，不读取 token bag 或重建取余。Plot 将 shared categorical 投影为 categorical / series / sector baseline，Table 将其投影为 `data.categorical` baseline，Chart 的默认 series color 只读取 Plot resolver 最终 palette；任何 owner 都不能复制 active categorical array。
 
 ## 6. 新能力的设计流程
 

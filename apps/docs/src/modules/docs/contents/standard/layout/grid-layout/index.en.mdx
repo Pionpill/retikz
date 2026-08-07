@@ -37,6 +37,7 @@ Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout
 | ---------------- | ----------------------------------------------------------------------------------------- |
 | React            | `GridLayout`, `LayoutItem` (`@retikz/standard-react`)                                     |
 | Vanilla          | `gridLayout`, `GridLayoutVanillaAdapter` (`@retikz/standard-vanilla`)                     |
+| Optional inspect | `InspectGridLayout` (`@retikz/standard-react/inspect`), `inspectGridLayout` (Vanilla)     |
 | IR / persistence | `GridLayoutSchema`, `createGridLayout`, `IRGridLayout`, `GridLayoutDefinition` (Standard) |
 
 ## Examples
@@ -88,13 +89,13 @@ This physical x-to-y order lets text determine height after column width is know
 
 ## API Reference
 
-### React inspection
+### Optional React inspection component
 
-| Prop       | Type                                    | Default   | Description                                                                                                              |
-| ---------- | --------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `inspect?` | `boolean` \| `GridLayoutInspectOptions` | Inherited | Omission inherits Layout or the nearest Scope; `false` disables only this occurrence and leaves nested layouts unchanged |
+| Prop       | Type                                            | Default | Description                                                                             |
+| ---------- | ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `inspect?` | `false` \| `true` \| `GridLayoutInspectOptions` | `true`  | `InspectGridLayout` requests this occurrence; `false` only cancels the current instance |
 
-The object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. Tracks, cells, and span marks emit ordinary Core Paths, fixed gaps use ordinary pattern paints, and distributed space keeps only a dashed perimeter. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and root or Scope policies.
+Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Runtime Reference](/standard/layout/reference/runtime#layout-inspector) for shared fields and host or Scope rules.
 
 ### `GridLayoutInput`
 

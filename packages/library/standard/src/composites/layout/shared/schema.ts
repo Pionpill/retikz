@@ -10,6 +10,9 @@ import {
   LayoutSpacingKind,
 } from './constants';
 
+/** 布局中相邻内容之间的非负物理间距 */
+export const LayoutGapSchema = z.number().nonnegative().describe('Non-negative physical gap in user units.');
+
 const LayoutContentAxisSizeSchema = z.strictObject({
   kind: z.literal(LayoutAxisSizeKind.Content).describe('Discriminator for intrinsic content sizing.'),
   min: z.number().nonnegative().optional().describe('Optional authored minimum allocation size.'),

@@ -1,6 +1,6 @@
 ---
 title: 契约 - 表格
-description: 查询 TableSpec 根、Cell formatter、rule/encoding、style token 与 canonical payload 的 JSON schema。
+description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme token 与 canonical payload 的 JSON schema。
 ---
 
 基础表格契约定义所有表型共享的顶层身份与 Cell 内容，并提供 manual / custom 精确根变体。detail 专有的数据引用与列结构见[明细表契约](/viz/table/reference/contract-detail)；Cell box、轨道和 border 配置见[布局契约](/viz/table/reference/contract-layout)。
@@ -9,20 +9,18 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、style token
 
 `IRTableSpec` 是 `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
 
-| 字段           | 类型                                | 默认值      | 描述                                     |
-| -------------- | ----------------------------------- | ----------- | ---------------------------------------- |
-| `namespace`    | `'table'`                           | —           | Tier 2 composite 命名空间                |
-| `type`         | <ApiValues name="TableComposite" /> | —           | 顶层 Table node type                     |
-| `id?`          | `string`                            | —           | 可选稳定 id                              |
-| `layout?`      | `IRTableLayout`                     | 轨道默认值  | 轨道、稀疏覆盖、gap 与 border            |
-| `meta?`        | `IRJsonObject`                      | —           | lowering 原样保留的 JSON-safe 元数据     |
-| `rules?`       | `Array<IRTableCellRule>`            | `[]`        | 按声明顺序应用的 Cell 覆盖               |
-| `encodings?`   | `Array<IRTableCellVisualEncoding>`  | `[]`        | 按顺序把原始值映射到颜色通道             |
-| `style?`       | `TableStyleValue`                   | `'neutral'` | 内置视觉 preset                          |
-| `themeMode?`   | `TableThemeModeValue`               | `'light'`   | preset 的 light/dark token mode          |
-| `styleTokens?` | `IRTableStyleTokens`                | `{}`        | 当前 mode 下的严格 partial token overlay |
-| `data?`        | `IRDataReference`                   | —           | detail 必需、manual 禁止、custom 可选    |
-| `structure`    | `IRTableStructureOperation`         | —           | detail、manual 或 custom Structure       |
+| 字段                | 类型                                | 默认值     | 描述                                   |
+| ------------------- | ----------------------------------- | ---------- | -------------------------------------- |
+| `namespace`         | `'table'`                           | —          | Tier 2 composite 命名空间              |
+| `type`              | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                   |
+| `id?`               | `string`                            | —          | 可选稳定 id                            |
+| `layout?`           | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border          |
+| `meta?`             | `IRJsonObject`                      | —          | lowering 原样保留的 JSON-safe 元数据   |
+| `rules?`            | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖             |
+| `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道           |
+| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`       | 当前 TableSpec 的稀疏 Table token 覆盖 |
+| `data?`             | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选  |
+| `structure`         | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure     |
 
 ### TableSpecSchema
 
@@ -45,9 +43,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、style token
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    style: '内置 Table style preset；省略时运行时使用 neutral。',
-    themeMode: '显式 style token mode；省略时运行时使用 light。',
-    styleTokens: '当前 mode 下按叶覆盖的严格 partial token map。',
+    tableThemeTokens: '当前 TableSpec 的严格稀疏 Table token 覆盖；继承的 Theme tokens 优先级更低。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: 'manual Table 不接受外部数据引用。',
     structure: 'manual Table 的矩形行优先 Cell 结构。',
@@ -69,9 +65,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、style token
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    style: '内置 Table style preset；省略时运行时使用 neutral。',
-    themeMode: '显式 style token mode；省略时运行时使用 light。',
-    styleTokens: '当前 mode 下按叶覆盖的严格 partial token map。',
+    tableThemeTokens: '当前 TableSpec 的严格稀疏 Table token 覆盖；继承的 Theme tokens 优先级更低。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '可选外部数据引用，运行时会把对应 dataset 暴露给自定义 Structure definition。',
     structure: '由 registry 解析的自定义 Table Structure operation。',
@@ -217,21 +211,15 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、style token
   }}
 />
 
-## Style preset 与 token overlay
+## Table Theme token
 
-### TableStyleSchema
+Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供，并选择 Table 的 preset。`theme.tokens.table` 是继承到当前位置的 sparse namespace；`tableThemeTokens` 是 TableSpec 的局部 sparse overlay。Core 的 shared `colors.categorical` 会投影到 `data.categorical`，所以 Table 不再维护另一份 shared palette 输入。
 
-<ZodSchema name="TableStyleSchema" description="内置 Table style preset 的闭合集合。" />
-
-### TableThemeModeSchema
-
-<ZodSchema name="TableThemeModeSchema" description="选择内置 preset token map 的显式 light/dark mode。" />
-
-### TableStyleTokensSchema
+### TableThemeTokenOverridesSchema
 
 <ZodSchema
-  name="TableStyleTokensSchema"
-  description="当前 themeMode 下对闭合 Table style token vocabulary 的 partial overlay。"
+  name="TableThemeTokenOverridesSchema"
+  description="用户可提供的严格、稀疏 Table canonical token 覆盖。"
   descriptions={{
     'cell.background.fill': '普通 Cell box 的默认背景 paint；null 表示不填充。',
     'cell.background.fillOpacity': '普通 Cell 背景透明度；null 表示不设置。',
@@ -250,12 +238,69 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、style token
     'table.border.horizontal': 'Table 内部水平共享边默认线；null 表示无候选。',
     'table.border.vertical': 'Table 内部垂直共享边默认线；null 表示无候选。',
     'columnHeader.border.bottom': '列头行底边默认线；null 表示无候选。',
-    'data.categorical': '分类 visual scale 使用的非空唯一颜色列表。',
+    'data.categorical':
+      '非空分类色列表；默认由 Core shared categorical palette 投影，随后可被继承或本地 Table data.categorical 覆盖。',
     'data.sequential': '连续 visual scale 使用的起止颜色元组。',
   }}
 />
 
-`neutral` 是默认 preset；`academic` 偏 LaTeX/booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个 preset 都提供完整 light/dark token map；用户 `styleTokens` 只按叶级覆盖当前 mode，未知 key 会报告具体 token 并 fail-loud。
+### TableThemeTokenMapSchema
+
+<ZodSchema
+  name="TableThemeTokenMapSchema"
+  description="解析完成后包含全部 Table token key 的完整 map。"
+  descriptions={{
+    'cell.background.fill': '普通 Cell box 的默认背景 paint；null 表示不填充。',
+    'cell.background.fillOpacity': '普通 Cell 背景透明度；null 表示不设置。',
+    'cell.content.color': '普通 Cell 内容的默认主颜色；null 表示不设置。',
+    'cell.content.font.family': '普通 Cell 内容的默认字体族；null 表示不设置。',
+    'cell.content.font.weight': '普通 Cell 内容的默认字重；null 表示不设置。',
+    'columnHeader.background.fill': '列头 Cell box 的默认背景 paint；null 表示不填充。',
+    'columnHeader.background.fillOpacity': '列头 Cell 背景透明度；null 表示不设置。',
+    'columnHeader.content.color': '列头 Cell 内容的默认主颜色；null 表示不设置。',
+    'columnHeader.content.font.family': '列头 Cell 内容的默认字体族；null 表示不设置。',
+    'columnHeader.content.font.weight': '列头 Cell 内容的默认字重；null 表示不设置。',
+    'table.border.top': 'Table 顶边默认线；null 表示无候选。',
+    'table.border.right': 'Table 右边默认线；null 表示无候选。',
+    'table.border.bottom': 'Table 底边默认线；null 表示无候选。',
+    'table.border.left': 'Table 左边默认线；null 表示无候选。',
+    'table.border.horizontal': 'Table 内部水平共享边默认线；null 表示无候选。',
+    'table.border.vertical': 'Table 内部垂直共享边默认线；null 表示无候选。',
+    'columnHeader.border.bottom': '列头行底边默认线；null 表示无候选。',
+    'data.categorical':
+      '非空分类色列表；默认由 Core shared categorical palette 投影，随后可被继承或本地 Table data.categorical 覆盖。',
+    'data.sequential': '连续 visual scale 使用的起止颜色元组。',
+  }}
+/>
+
+### TableThemeTokenPresetMapSchema
+
+<ZodSchema
+  name="TableThemeTokenPresetMapSchema"
+  description="不包含 shared categorical projection 的完整内置 Table preset map。"
+  descriptions={{
+    'cell.background.fill': '普通 Cell box 的默认背景 paint；null 表示不填充。',
+    'cell.background.fillOpacity': '普通 Cell 背景透明度；null 表示不设置。',
+    'cell.content.color': '普通 Cell 内容的默认主颜色；null 表示不设置。',
+    'cell.content.font.family': '普通 Cell 内容的默认字体族；null 表示不设置。',
+    'cell.content.font.weight': '普通 Cell 内容的默认字重；null 表示不设置。',
+    'columnHeader.background.fill': '列头 Cell box 的默认背景 paint；null 表示不填充。',
+    'columnHeader.background.fillOpacity': '列头 Cell 背景透明度；null 表示不设置。',
+    'columnHeader.content.color': '列头 Cell 内容的默认主颜色；null 表示不设置。',
+    'columnHeader.content.font.family': '列头 Cell 内容的默认字体族；null 表示不设置。',
+    'columnHeader.content.font.weight': '列头 Cell 内容的默认字重；null 表示不设置。',
+    'table.border.top': 'Table 顶边默认线；null 表示无候选。',
+    'table.border.right': 'Table 右边默认线；null 表示无候选。',
+    'table.border.bottom': 'Table 底边默认线；null 表示无候选。',
+    'table.border.left': 'Table 左边默认线；null 表示无候选。',
+    'table.border.horizontal': 'Table 内部水平共享边默认线；null 表示无候选。',
+    'table.border.vertical': 'Table 内部垂直共享边默认线；null 表示无候选。',
+    'columnHeader.border.bottom': '列头行底边默认线；null 表示无候选。',
+    'data.sequential': '连续 visual scale 使用的起止颜色元组。',
+  }}
+/>
+
+`neutral` 是默认 Core `style`；`academic` 偏 LaTeX/booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个 preset 都提供完整 light/dark token map；Table resolver 按 preset → shared categorical → inherited `theme.tokens.table` → local `tableThemeTokens` 级联，未知 key 或非法值会报告具体路径并 fail-loud。解析后的 manifest 会保留 effective `style`、`themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 TableSpec 输入字段。
 
 ## 相关
 

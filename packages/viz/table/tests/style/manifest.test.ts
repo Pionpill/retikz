@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileTable, TableLayoutManifestSchema, TableStyleTokenKeySchema } from '../../src';
+import { compileTable, TableLayoutManifestSchema, TableThemeTokenKeySchema } from '../../src';
 
 describe('Table style and encoding manifest seed', () => {
   it('publishes resolved style winners and Cell appearance lineage in canonical order', () => {
@@ -9,7 +9,7 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'styled',
-        styleTokens: { 'cell.content.color': '#123456' },
+        tableThemeTokens: { 'cell.content.color': '#123456' },
         structure: { kind: 'manual', rows: [[1]] },
         encodings: [
           {
@@ -30,8 +30,10 @@ describe('Table style and encoding manifest seed', () => {
       themeMode: 'light',
       tokens: { 'cell.content.color': '#123456' },
     });
-    expect(result.manifest.style.sources.map(entry => entry.key)).toEqual(TableStyleTokenKeySchema.options);
-    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe('user');
+    expect(result.manifest.style.sources.map(entry => entry.key)).toEqual(TableThemeTokenKeySchema.options);
+    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe(
+      'local-theme-token',
+    );
     expect(result.manifest.encodings).toEqual([
       { id: 'value-fill', channel: 'backgroundFill', scaleName: 'ordinal-color', cellIds: ['cell.r0.c0'] },
     ]);
@@ -64,11 +66,10 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'provenance',
-        style: 'academic',
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
-      { compile: { padding: 0 } },
+      { theme: { style: 'academic', mode: 'dark' }, compile: { padding: 0 } },
     );
     const repeatedSources = structuredClone(result.manifest);
     Object.assign(repeatedSources.style, {
@@ -97,11 +98,10 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'grid-provenance',
-        style: 'vibrant',
         structure: { kind: 'manual', rows: [[1], [2]] },
       },
       {},
-      { compile: { padding: 0 } },
+      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongGridToken = structuredClone(gridResult.manifest);
     const gridWinner = wrongGridToken.borders
@@ -119,12 +119,11 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'header-provenance',
-        style: 'vibrant',
         data: { reference: 'rows' },
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
-      { compile: { padding: 0 } },
+      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongHeaderCell = structuredClone(headerResult.manifest);
     const headerWinner = wrongHeaderCell.borders
@@ -160,7 +159,6 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'fake-provenance',
-        style: 'neutral',
         structure: { kind: 'manual', rows: [['x']] },
         layout: { borders: { outer: { kind: 'line', stroke: 'red', width: 2, priority: -100 } } },
       },
@@ -178,7 +176,7 @@ describe('Table style and encoding manifest seed', () => {
     if (sourceWinner.kind !== 'line' || sourceWinner.origin !== 'styleToken') {
       throw new Error('expected style token line winner');
     }
-    Object.assign(sourceWinner.styleToken, { source: 'user' });
+    Object.assign(sourceWinner.styleToken, { source: 'shared-categorical' });
     expect(() => TableLayoutManifestSchema.parse(wrongTokenSource)).toThrow(/source/i);
   });
 

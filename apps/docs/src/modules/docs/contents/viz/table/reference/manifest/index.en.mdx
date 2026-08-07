@@ -1,6 +1,6 @@
 ---
 title: Contract - Artifact
-description: Look up the track, Cell, border, source, and locator DTO schemas emitted by Table compile.
+description: Look up the track, Cell, visual-encoding, Legend-descriptor, border, and source DTO schemas emitted by Table compile.
 ---
 
 `TableLayoutManifest` is the JSON-safe, detached, recursively frozen typed-artifact payload produced by the same Table compile. See [Runtime](/viz/table/reference/runtime#table-compile-api) for exact-root selection; this page lists only output shapes and nested DTOs.
@@ -10,6 +10,22 @@ description: Look up the track, Cell, border, source, and locator DTO schemas em
 ### TableLayoutManifestSchema
 
 <ZodSchema name="TableLayoutManifestSchema" />
+
+The manifest `style` region also records effective Core `style`, `themeMode`, the complete resolved Table `tokens` map, and one `sources` entry per token. Here `themeMode` is output metadata from the same compile, identifying the selected preset; TableSpec inputs remain the host `theme` and local `tableThemeTokens`, which belong to a different layer.
+
+## Visual encoding and Legend descriptor seeds
+
+`encodings` records the Cells actually colored by each visual encoding. `legendDescriptors` contains only explicitly opted-in Table-domain descriptors. Both come from the same visual-scale resolution and agree through `encodingId`, `channel`, and `scaleName`.
+
+| Descriptor field                       | Content                                          |
+| -------------------------------------- | ------------------------------------------------ |
+| `encodingId` / `channel` / `scaleName` | References an encoding seed in the same manifest |
+| `title?`                               | Optional author-provided title                   |
+| `form`                                 | `ramp` or `swatch`                               |
+| `domain` / `range`                     | Detached resolved domain and nonempty colors     |
+| `edges?`                               | Strictly increasing threshold boundaries         |
+
+A descriptor is not Standard Legend IR and contains no placement, bounds, or final Legend occurrence. The alpha.3 manifest intentionally stops at descriptor seeds; Table-body composition with Standard Legend / Flex and the final artifact join are planned for Table alpha.6.
 
 ## Tracks and Cells
 

@@ -226,7 +226,7 @@ Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM �
 
 ## 字体
 
-`FontSchema` 复用于节点文本、节点标签和行级文本覆盖；所有字段均可选。`size` 可写正数、Web 风格 preset（如 `sm` / `lg`）或 `em` / `rem` 字符串；TikZ 风格字号由上层 sugar 处理，不进入 core IR。
+`FontSchema` 复用于节点文本、节点标签和行级文本覆盖；所有字段均可选。family、size、weight 与 style 分别复用 Core 的命名 value schema；`size` 可写正数、Web 风格 preset（如 `sm` / `lg`）或 `em` / `rem` 字符串。TikZ 风格字号由上层 sugar 处理，不进入 core IR。
 
 <ZodSchema
   name="FontSchema"
@@ -234,7 +234,37 @@ Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM �
   descriptions={{
     family: 'CSS font-family 字符串，如 "serif" / "monospace" / "Inter, sans-serif"',
     size: '字号：正数、Web preset（2xs..9xl）或 em/rem；未填走 CompileOptions.fontSize',
-    weight: 'CSS font-weight：keyword `normal`/`bold` 或数字 100..900',
+    weight: 'CSS font-weight：keyword `normal`/`bold` 或数值',
     style: 'CSS font-style：`normal` / `italic` / `oblique`',
   }}
 />
+
+<span id="fontfamily"></span>
+
+### 字体族值
+
+<ZodSchema name="FontFamilySchema" description="CSS font-family 字符串。" />
+
+<span id="fontweight"></span>
+
+### 字重值
+
+<ZodSchema name="FontWeightSchema" description="CSS font-weight 关键字或数值。" />
+
+<span id="fontstyle"></span>
+
+### 字体样式值
+
+<ZodSchema name="FontStyleSchema" description="CSS font-style 关键字。" />
+
+<span id="textalign"></span>
+
+### 文字对齐值
+
+<ZodSchema name="TextAlignSchema" description="多行文本块内的文字对齐方式。" />
+
+<span id="lineheight"></span>
+
+### 行高值
+
+<ZodSchema name="LineHeightSchema" description="以用户单位表示的正数文字行高。" />

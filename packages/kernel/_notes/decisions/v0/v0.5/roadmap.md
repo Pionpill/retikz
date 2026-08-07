@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 与 `v0.5.0-alpha.2` 已完成实现、测试、双语文档与 Accepted 收尾；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
+> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-01～10 与 ADR-13 已 Accepted，ADR-11～12 仍为 Proposed；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 
@@ -12,19 +12,19 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 
 ## 里程碑索引
 
-| 方向                      | 解决的问题                                                               | 当前归属                                                                 |
-| ------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Node 锚点对齐定位         | 基于真实 Node 布局把自身 anchor 对齐已完成实体 anchor                    | [ADR-01 Accepted](./alpha.1/01-node-anchor-position.md)                  |
-| Scope 自身锚点与变换基点  | 放置、旋转或缩放子图时不再泄漏内部坐标                                   | [ADR-02 Accepted](./alpha.1/02-scope-anchor-and-transform-pivot.md)      |
-| 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段                         | [ADR-03 Accepted](./alpha.1/03-single-axis-path-connection.md)           |
-| Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性                           | [ADR-04 Accepted](./alpha.1/04-node-text-auto-contrast.md)               |
-| Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠                     | [ADR-05 Accepted](./alpha.1/05-node-label-box-spacing.md)                |
-| TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义                     | [ADR-06 Accepted](./alpha.1/06-tex-math-syntax-compatibility.md)         |
-| 布局感知 Composite        | 让 Tier 2 在同次 compile 内测量、约束、replay 并返回 artifact            | [ADR-07 Accepted](./alpha.1/07-layout-aware-composite.md)                |
-| Box Layout Composite 合同 | 让任意 child 接受双轴 slot、反馈真实占用并带外层 transform / clip replay | [alpha.2 ADR-06 Accepted](./alpha.2/06-box-layout-composite-contract.md) |
-| 增量性能闭环              | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本              | [alpha.2 Accepted](./alpha.2/roadmap.md)                                 |
-| Concurrent 与渐进生成     | 可让出、取消地准备候选结果，并支持渐进物化与 generation                  | [alpha.3 Proposed](./alpha.3/roadmap.md)                                 |
-| Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership             | [alpha.4 候选](./alpha.4/roadmap.md)                                     |
+| 方向                      | 解决的问题                                                               | 当前归属                                                                      |
+| ------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Node 锚点对齐定位         | 基于真实 Node 布局把自身 anchor 对齐已完成实体 anchor                    | [ADR-01 Accepted](./alpha.1/01-node-anchor-position.md)                       |
+| Scope 自身锚点与变换基点  | 放置、旋转或缩放子图时不再泄漏内部坐标                                   | [ADR-02 Accepted](./alpha.1/02-scope-anchor-and-transform-pivot.md)           |
+| 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段                         | [ADR-03 Accepted](./alpha.1/03-single-axis-path-connection.md)                |
+| Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性                           | [ADR-04 Accepted](./alpha.1/04-node-text-auto-contrast.md)                    |
+| Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠                     | [ADR-05 Accepted](./alpha.1/05-node-label-box-spacing.md)                     |
+| TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义                     | [ADR-06 Accepted](./alpha.1/06-tex-math-syntax-compatibility.md)              |
+| 布局感知 Composite        | 让 Tier 2 在同次 compile 内测量、约束、replay 并返回 artifact            | [ADR-07 Accepted](./alpha.1/07-layout-aware-composite.md)                     |
+| Box Layout Composite 合同 | 让任意 child 接受双轴 slot、反馈真实占用并带外层 transform / clip replay | [alpha.2 ADR-06 Accepted](./alpha.2/06-box-layout-composite-contract.md)      |
+| 增量性能闭环              | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本              | [alpha.2：ADR-01～10、13 Accepted；ADR-11～12 Proposed](./alpha.2/roadmap.md) |
+| Concurrent 与渐进生成     | 可让出、取消地准备候选结果，并支持渐进物化与 generation                  | [alpha.3 Proposed](./alpha.3/roadmap.md)                                      |
+| Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership             | [alpha.4 候选](./alpha.4/roadmap.md)                                          |
 
 ## alpha.1 执行批次
 

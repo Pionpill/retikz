@@ -38,7 +38,15 @@ describe('core public compile exports', () => {
     const loweredScope: LoweredIRScope | undefined = undefined;
     const loweredScene: LoweredIRScene | undefined = undefined;
     const theme: IRTheme = { style: 'clean' };
-    const resolvedTheme: ResolvedTheme = { style: 'clean', mode: 'dark' };
+    const resolvedTheme: ResolvedTheme = {
+      style: 'clean',
+      mode: 'dark',
+      tokens: {},
+      colors: {
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        categorical: ['#2563eb'],
+      },
+    };
     const style: ThemeStyleValue = 'clean';
     const mode: ThemeModeValue = 'dark';
 
@@ -51,7 +59,15 @@ describe('core public compile exports', () => {
     expect(loweredScope).toBeUndefined();
     expect(loweredScene).toBeUndefined();
     expect(theme).toEqual({ style: 'clean' });
-    expect(resolvedTheme).toEqual({ style, mode });
+    expect(resolvedTheme).toEqual({
+      style,
+      mode,
+      tokens: {},
+      colors: {
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        categorical: ['#2563eb'],
+      },
+    });
   });
 
   it('不暴露递归 schema 注册内部能力', () => {

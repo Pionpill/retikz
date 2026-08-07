@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { IRScene, ScenePatch } from '@retikz/core';
+import type { AnyThemeTokenDefinition, IRScene, ScenePatch } from '@retikz/core';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
@@ -7,13 +7,16 @@ import type {
   RetainedRendererFactoryInput,
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
+import type { FC, ReactNode } from 'react';
 
-import { CompositeBaseSchema, defineComposite, defineInspector } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeTokenNamespace } from '@retikz/core';
 import { defineRetainedRenderer } from '@retikz/render/runtime';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+
+import type { EmbeddableTier2Adapter } from '../../../src';
 
 import { Layout, Node } from '../../../src';
 import { createGeometryContext } from '../../helpers/geometry-context';
@@ -43,38 +46,74 @@ const compositeSource: IRScene = {
   children: [{ namespace: 'fixture', type: 'stable' }],
 };
 
-const inspectionComposite = defineComposite({
-  namespace: 'fixture',
-  type: 'inspection',
+type ThemeTokenFixture = FC<{ id: string }> & {
+  isTier2Embeddable?: boolean;
+  embeddableAdapter?: EmbeddableTier2Adapter;
+};
+
+const retainedThemeComposite = defineComposite({
+  namespace: 'retained-theme-token',
+  type: 'box',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('fixture'),
-    type: z.literal('inspection'),
+    namespace: z.literal('retained-theme-token'),
+    type: z.literal('box'),
+    id: z.string(),
   }),
-  artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
-  inspector: defineInspector({
-    kind: 'composite',
-    optionsInputSchema: z.strictObject({}),
-    optionsSchema: z.strictObject({}),
-    inspect: (artifact: { width: number; height: number }) => ({
-      type: 'path',
-      stroke: '#2563eb',
-      dashPattern: [4, 2],
-      children: [
-        { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'line', to: [artifact.width, artifact.height] },
-      ],
-    }),
-  }),
-  compile: () => ({
-    children: [{ type: 'node', id: 'inspection-node', position: [0, 0], shape: 'rectangle' }],
-    artifact: { width: 20, height: 20 },
-  }),
+  expand: (node, context) => {
+    const tokens = Object.hasOwn(context.theme.tokens, 'retained-theme-token')
+      ? context.theme.tokens['retained-theme-token']
+      : undefined;
+    const fill = tokens?.fill;
+    return {
+      type: 'node',
+      id: node.id,
+      position: [0, 0],
+      fill: typeof fill === 'string' ? fill : '#eeeeee',
+    };
+  },
 });
 
-const inspectionSource: IRScene = {
-  version: 1,
-  type: 'scene',
-  children: [{ namespace: 'fixture', type: 'inspection' }],
+const makeRetainedThemeComposites = () => [retainedThemeComposite];
+
+const createThemeTokenFixture = (displayName: string, definition: AnyThemeTokenDefinition): ThemeTokenFixture => {
+  const adapter: EmbeddableTier2Adapter<{ id: string }> = {
+    displayName,
+    namespace: 'retained-theme-token',
+    contribute: props => ({
+      node: { namespace: 'retained-theme-token', type: 'box', id: props.id },
+      datasets: {},
+      makeComposites: makeRetainedThemeComposites,
+      themeTokenDefinitions: [definition],
+    }),
+  };
+  const Fixture: ThemeTokenFixture = () => null;
+  Fixture.displayName = displayName;
+  Fixture.isTier2Embeddable = true;
+  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+  return Fixture;
+};
+
+/** 捕获 React client render fail-loud，并在返回前恢复全局错误处理 */
+const captureClientRenderError = async (root: ReturnType<typeof createRoot>, element: ReactNode): Promise<Error> => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  let reportedError: Error | undefined;
+  const preventReportedError = (event: ErrorEvent): void => {
+    event.preventDefault();
+    if (reportedError === undefined && event.error instanceof Error) reportedError = event.error;
+  };
+  window.addEventListener('error', preventReportedError);
+  let thrown: unknown;
+  try {
+    await act(() => root.render(element));
+  } catch (cause) {
+    thrown = cause;
+  } finally {
+    window.removeEventListener('error', preventReportedError);
+    consoleError.mockRestore();
+  }
+  const error = thrown instanceof Error ? thrown : reportedError;
+  if (error === undefined) throw new Error('expected React client render to fail');
+  return error;
 };
 
 /** 构造只保留 committed snapshot 的第三方 renderer */
@@ -101,7 +140,7 @@ const createMemoryRendererFactory = (
     };
     const definition = {
       capability,
-      inspectionCapability: 'supported' as const,
+      readonlyLayerCapability: 'supported' as const,
       prepareMount: (frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => prepare(frame, config),
       prepare: (patch: ScenePatch, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
         onPatch?.(patch);
@@ -130,29 +169,6 @@ afterEach(() => {
 });
 
 describe('React Layout retained Runtime', () => {
-  it('recreates a retained session when inspect changes without comparing the new frame to the stale SSR seed', async () => {
-    const container = document.createElement('div');
-    const root = createRoot(container);
-    const rendererFactory = vi.fn(createMemoryRendererFactory('entity')) as unknown as RetainedRendererFactory;
-
-    await act(() =>
-      root.render(<Layout ir={inspectionSource} composites={[inspectionComposite]} runtime={{ rendererFactory }} />),
-    );
-    await act(() =>
-      root.render(
-        <Layout
-          ir={inspectionSource}
-          composites={[inspectionComposite]}
-          inspect={{ layout: true }}
-          runtime={{ rendererFactory }}
-        />,
-      ),
-    );
-
-    expect(rendererFactory).toHaveBeenCalledTimes(2);
-    await act(() => root.unmount());
-  });
-
   it('Definition 数组容器重建但元素 identity 不变时复用 retained session', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
