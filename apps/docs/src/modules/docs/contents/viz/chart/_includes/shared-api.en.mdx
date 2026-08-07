@@ -104,20 +104,18 @@ Use `linear`, `time`, `log`, `sqrt`, `symlog`, or `radial`.
 
 ## Theme and Layout
 
-Theme values are defaults only; explicit Axis, Legend, Label, Scale, and mark values win. Light and dark themes can provide separate `PlotProps['theme']` values without changing chart structure.
+Chart owns presentation defaults through `chartThemeTokens`; Core `style` and `mode` come from the hosting Scene or Scope. Chart does not shadow the host Theme with another style/mode field. It forwards the current Plot inputs without renaming their owner: `plotThemeTokens`, `colors`, and `plotTheme` remain Plot-owned.
 
-| Prop                                  | Type                                                           | Default       | Description                                                          |
-| ------------------------------------- | -------------------------------------------------------------- | ------------- | -------------------------------------------------------------------- |
-| `Plot.colors`                         | `PlotProps['colors']`                                          | Built in      | Color sequence for categorical scales and unencoded marks            |
-| `Plot.theme.background`               | `NonNullable<PlotProps['theme']>['background']`                | Transparent   | Panel background fill                                                |
-| `Plot.theme.typography` / `labelText` | `NonNullable<PlotProps['theme']>['typography' \| 'labelText']` | Built in      | Text tokens for guides and static labels                             |
-| `Plot.theme.axis`                     | `NonNullable<PlotProps['theme']>['axis']`                      | Built in      | Defaults for `line`, `ticks.mark`, `tickLabels`, `title`, and `grid` |
-| `Plot.theme.legend`                   | `NonNullable<PlotProps['theme']>['legend']`                    | Built in      | Defaults for legend container, entries, ramps, and text              |
-| `Plot.theme.palette`                  | `NonNullable<PlotProps['theme']>['palette']`                   | Built in      | Categorical, series, sector, sequential, and diverging palettes      |
-| `Plot.layout.mode`                    | `NonNullable<PlotProps['layout']>['mode']`                     | `'auto'`      | Reserve decoration space automatically or use explicit padding only  |
-| `Plot.layout.autoPadding`             | `NonNullable<PlotProps['layout']>['autoPadding']`              | `true`        | Whether labels may expand outer padding                              |
-| `Plot.layout.padding`                 | `NonNullable<PlotProps['layout']>['padding']`                  | `0`           | Outer padding before automatic layout                                |
-| `Plot.width` / `height`               | `PlotProps['width' \| 'height']`                               | `480` / `300` | Logical Plot size; this showcase fixes it at `800 × 400`             |
+The Chart cascade is `Core effective Theme → Chart preset → inherited tokens.chart → local chartThemeTokens`. The Plot handoff then resolves `Core effective Theme → Plot preset → shared categorical → inherited tokens.plot → forwarded plotThemeTokens → forwarded colors → forwarded plotTheme → explicit Plot configuration`. `ChartThemeToken`, `ChartThemeTokenOverridesSchema`, and `ChartResolvedThemeTokensSchema` are public exports from `@retikz/chart`; Plot token schemas remain public exports from `@retikz/plot`.
+
+| Field              | Type                                 | Default | Description                                                                                        |
+| ------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------------------------- |
+| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`    | Sparse Chart-owned presentation and recipe token overrides                                         |
+| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`    | Sparse Plot-owned token overrides forwarded unchanged to the resolved Plot                         |
+| `colors`           | `IRChartShared['colors']`            | Theme   | Plot palette shorthand forwarded unchanged; explicit Plot palette and scale values may override it |
+| `plotTheme`        | `IRChartShared['plotTheme']`         | Theme   | Plot native theme forwarded unchanged                                                              |
+| `layout`           | `IRChartShared['layout']`            | Plot    | Plot label and guide reservation strategy                                                          |
+| `width` / `height` | `IRChartShared['width' \| 'height']` | —       | Resolved Plot intrinsic size                                                                       |
 
 ## Additional Marks
 

@@ -103,7 +103,7 @@ const Demo: FC = () => (
           >
             <Text font={{ size: 14, weight: 'bold' }}>Table runtime</Text>
             <Text fill="gray" font={{ size: 12 }}>
-              spec · data · Definitions
+              spec · theme · data · Definitions
             </Text>
           </Node>
           <Node
@@ -217,7 +217,7 @@ const Demo: FC = () => (
             id: 'mobile-runtime-input',
             position: [0, -40],
             title: 'Table runtime',
-            detail: 'spec · data · Definitions',
+            detail: 'spec · theme · data · Definitions',
             width: 220,
             color: 'darkorange',
           })}

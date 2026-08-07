@@ -1,9 +1,119 @@
 ---
 title: 契约 - 主题
-description: 查询 Plot 背景、文字、坐标轴、图例和调色板默认值 schema。
+description: 查询 Plot canonical token、preset 级联、原生主题与 inspection 契约。
 ---
 
-主题只定义视觉默认值，不改变数据、坐标或辅助语义。具体 mark / guide 配置始终优先于主题。
+Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择四种 style × light / dark 的完整领域 preset。`PlotSpec` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、guide 是否存在或 mark 结构。
+
+<ComponentPreview files="theme-tokens" size="lg" />
+
+示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；根 Core Theme 的 `tokens.plot` 则作为 inherited namespace 进入同一 resolver。
+
+## 级联与原子替换
+
+```text
+Core effective Theme
+  → Plot preset
+  → shared categorical
+  → inherited Theme tokens.plot
+  → PlotSpec.plotThemeTokens
+  → PlotSpec.colors
+  → PlotSpec.plotTheme
+  → local guide / mark / scale config
+```
+
+- `plotThemeTokens` 是严格、稀疏的 canonical token map；未知 key、显式 `undefined` 和非法值会失败
+- `colors` 只覆盖 categorical、series 与 sector palette，不影响 sequential / diverging scheme
+- 原生 `plotTheme` 更接近 Plot 正式结构，可以设置 token 没有表达的合法字段
+- 数组、scalar、`false` 与 discriminator 改变的对象整体替换；同一结构的闭合对象才按合法字段合并
+- 显式 scale `range` / `scheme` 与局部 axis、legend、mark 配置始终优先
+
+## Canonical token
+
+`PlotThemeToken` 公开 40 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
+
+| 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Surface         | `plot.surface.fill`                                                                                                                                                                                                                                                                                                                      |
+| Typography      | `plot.typography.foreground`、`plot.typography.font.family`、`plot.typography.font.size`                                                                                                                                                                                                                                                 |
+| Label           | `plot.label.foreground`、`plot.label.font.size`                                                                                                                                                                                                                                                                                          |
+| Axis line       | `axis.line.enabled`、`axis.line.stroke`、`axis.line.strokeWidth`、`axis.line.drawOpacity`                                                                                                                                                                                                                                                |
+| Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
+| Axis tick label | `axis.tickLabel.enabled`、`axis.tickLabel.foreground`、`axis.tickLabel.font.size`、`axis.tickLabel.gap`                                                                                                                                                                                                                                  |
+| Axis title      | `axis.title.foreground`、`axis.title.font.size`、`axis.title.font.weight`                                                                                                                                                                                                                                                                |
+| Axis grid       | `axis.grid.stroke`、`axis.grid.strokeWidth`、`axis.grid.drawOpacity`                                                                                                                                                                                                                                                                     |
+| Legend          | `legend.title.foreground`、`legend.title.font.size`、`legend.title.font.weight`、`legend.label.foreground`、`legend.label.font.size`、`legend.swatch.size`、`legend.swatch.gap`、`legend.entry.gap`、`legend.title.gap`、`legend.ramp.length`、`legend.ramp.thickness`、`legend.symbol.size`、`legend.symbol.scale`、`legend.symbol.fit` |
+| Palette         | `plot.palette.categorical`、`plot.palette.series`、`plot.palette.sector`、`plot.palette.sequential`、`plot.palette.diverging`                                                                                                                                                                                                            |
+
+`axis.line.enabled` 只决定已有 Axis 的 baseline 默认；grid 和 legend 是否创建属于 Chart recipe 或显式 guide 语义，不是 Plot token。旧 `data.palette.*`、裸 `axis.enabled`、`axis.grid.enabled` 与 `legend.enabled` 都不是 Plot canonical key。
+
+## PlotThemeTokenOverridesSchema
+
+<ZodSchema
+  name="PlotThemeTokenOverridesSchema"
+  description="用户可提供的严格、稀疏 Plot canonical token 覆盖。"
+  descriptions={{
+    'plot.surface.fill': 'Plot panel 的 surface 填充 paint。',
+    'plot.typography.foreground': '所有 Plot guide 的全局前景色。',
+    'plot.typography.font.family': '所有 Plot guide 的全局字体族。',
+    'plot.typography.font.size': '所有 Plot guide 的全局字号。',
+    'plot.label.foreground': 'Plot 静态标签的前景色。',
+    'plot.label.font.size': 'Plot 静态标签的字号。',
+    'axis.line.enabled': '已有坐标轴是否默认显示 baseline。',
+    'axis.line.stroke': '坐标轴 baseline 的描边 paint。',
+    'axis.line.strokeWidth': '坐标轴 baseline 的描边宽度。',
+    'axis.line.drawOpacity': '坐标轴 baseline 的绘制不透明度。',
+    'axis.tick.mark': '坐标轴 tick mark 的完整 glyph 与样式。',
+    'axis.tickLabel.enabled': '坐标轴 tick label 是否默认可见。',
+    'axis.tickLabel.foreground': '坐标轴 tick label 前景色。',
+    'axis.tickLabel.font.size': '坐标轴 tick label 字号。',
+    'axis.tickLabel.gap': 'tick 末端到 label 的间距。',
+    'axis.title.foreground': '坐标轴标题前景色。',
+    'axis.title.font.size': '坐标轴标题字号。',
+    'axis.title.font.weight': '坐标轴标题字重。',
+    'axis.grid.stroke': '坐标网格线描边 paint。',
+    'axis.grid.strokeWidth': '坐标网格线宽度。',
+    'axis.grid.drawOpacity': '坐标网格线绘制不透明度。',
+    'legend.title.foreground': '图例标题前景色。',
+    'legend.title.font.size': '图例标题字号。',
+    'legend.title.font.weight': '图例标题字重。',
+    'legend.label.foreground': '图例条目标签前景色。',
+    'legend.label.font.size': '图例条目标签字号。',
+    'legend.swatch.size': '图例色块尺寸。',
+    'legend.swatch.gap': '图例色块到标签的间距。',
+    'legend.entry.gap': '相邻图例条目的间距。',
+    'legend.title.gap': '图例标题到内容的间距。',
+    'legend.ramp.length': '连续色带长度。',
+    'legend.ramp.thickness': '连续色带厚度。',
+    'legend.symbol.size': '图例 symbol box 尺寸。',
+    'legend.symbol.scale': '图例 symbol 相对原 mark 的缩放。',
+    'legend.symbol.fit': '图例 symbol 在 box 内的适配方式。',
+    'plot.palette.categorical': '分类比例尺使用的非空有序调色板。',
+    'plot.palette.series': 'mark 与 series 使用的非空有序调色板。',
+    'plot.palette.sector': 'sector mark 使用的非空有序调色板。',
+    'plot.palette.sequential': '顺序连续色方案名。',
+    'plot.palette.diverging': '发散连续色方案名。',
+  }}
+/>
+
+## PlotResolvedThemeTokensSchema
+
+`PlotResolvedThemeTokensSchema` 使用完全相同的 40 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
+
+## Inspection
+
+`resolvePlotTheme(effectiveTheme, input)` 是公开纯 resolver，返回 `IRPlotThemeResolution`，其 schema 是 `PlotThemeResolutionSchema`：
+
+| 字段                | 含义                                              |
+| ------------------- | ------------------------------------------------- |
+| `style` / `mode`    | 选择 preset 的 effective Core Theme 环境          |
+| `tokens`            | 级联后的完整 token map                            |
+| `tokenSources`      | 每个 canonical token 的唯一胜出来源与稳定 path    |
+| `authoredOverrides` | 按顺序记录 `colors` 与原生 `plotTheme` 入口       |
+| `plotTheme`         | 已映射并校验的完整原生 Plot theme                 |
+| `palette`           | scale、mark 与 legend 共享的最终 palette / scheme |
+
+Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette，但不会把完整 resolved theme 写回 `PlotSpec`，也不会把 Plot token 标记为 Chart-owned。
 
 ## PlotThemeSchema
 
@@ -57,4 +167,4 @@ description: 查询 Plot 背景、文字、坐标轴、图例和调色板默认�
   }}
 />
 
-显式 scale `range` / `scheme` 的优先级高于主题调色板。
+`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title padding 等 canonical token 之外的合法字段；这些字段保留在最终 `plotTheme` 中，不会伪造不存在的 token source。

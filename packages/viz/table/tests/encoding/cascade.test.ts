@@ -1,15 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { defineCellVisualScale } from '../../src';
+import { defineCellVisualScale, resolveTableThemeTokens } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
-import { resolveTableStyleTokens } from '../../src/providers/style';
 
-const styleTokens = resolveTableStyleTokens('neutral', 'light');
+const tableThemeTokens = resolveTableThemeTokens();
 const scaleContext = {
-  categoricalColors: styleTokens.tokens['data.categorical'],
-  sequentialColors: [styleTokens.tokens['data.sequential'][0], styleTokens.tokens['data.sequential'][1]] as const,
+  categoricalColors: tableThemeTokens.tokens['data.categorical'],
+  sequentialColors: [
+    tableThemeTokens.tokens['data.sequential'][0],
+    tableThemeTokens.tokens['data.sequential'][1],
+  ] as const,
 };
 
 describe('Table visual encoding cascade', () => {
@@ -38,7 +40,7 @@ describe('Table visual encoding cascade', () => {
       },
     });
     const result = resolveTableCellPlans(model, {
-      styleTokens,
+      tableThemeTokens,
       scaleContext,
       visualScaleDefinitions: [custom],
       encodings: [
@@ -73,7 +75,7 @@ describe('Table visual encoding cascade', () => {
   it('applies style, ordered owned channels, then ordered root rules', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[1]] });
     const result = resolveTableCellPlans(model, {
-      styleTokens,
+      tableThemeTokens,
       scaleContext,
       encodings: [
         {
@@ -112,7 +114,7 @@ describe('Table visual encoding cascade', () => {
   it('treats undefined resolution as no patch, trace, descriptor, or evaluator call', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
     const result = resolveTableCellPlans(model, {
-      styleTokens,
+      tableThemeTokens,
       scaleContext,
       encodings: [
         {

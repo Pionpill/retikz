@@ -31,6 +31,8 @@ description: 查询 Table compile 产出的轨道、Cell、border、来源与 lo
   }}
 />
 
+Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `tokens` 与逐 key `sources`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 preset；TableSpec 的输入字段仍是 host `theme` 与 `tableThemeTokens`，二者不是同一个层级。
+
 ## 轨道与 Cell
 
 ### TableTrackManifestEntrySchema

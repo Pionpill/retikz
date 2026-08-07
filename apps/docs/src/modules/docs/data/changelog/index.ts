@@ -8,6 +8,7 @@ import { kernelV04 } from './kernel-0-4';
 import { kernelV05 } from './kernel-0-5';
 import { standardV01 } from './standard-0-1';
 import { vizV01 } from './viz-0-1';
+import { vizV02 } from './viz-0-2';
 
 /** changelog 概览页副标题(替代原 mdx frontmatter description) */
 export const changelogPageDescription: Localized = {
@@ -15,7 +16,16 @@ export const changelogPageDescription: Localized = {
   en: 'Release history for this documentation group by minor version, newest first; click a version for detailed per-package changes.',
 };
 
-export const changelog: Array<Release> = [standardV01, kernelV05, kernelV04, kernelV03, vizV01, kernelV02, kernelV01];
+export const changelog: Array<Release> = [
+  vizV02,
+  standardV01,
+  kernelV05,
+  kernelV04,
+  kernelV03,
+  vizV01,
+  kernelV02,
+  kernelV01,
+];
 
 /** 文档模块 id → changelog 包组 */
 const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'viz' | 'other'>([

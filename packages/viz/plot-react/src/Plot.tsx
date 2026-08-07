@@ -10,7 +10,7 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE, PlotThemeTokenDefinition } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useRef } from 'react';
 
@@ -20,7 +20,7 @@ import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-
 import { resolvePlotRuntime } from './plot-runtime';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
-export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
+export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip' | 'theme'> & {
   /** 面板左上角 x（user units）；会转成外层 Scope translate，适合 Layout 内多 plot 绝对摆位 */
   x?: number;
   /** 面板左上角 y（user units）；会转成外层 Scope translate，适合 Layout 内多 plot 绝对摆位 */
@@ -48,10 +48,12 @@ export type PlotLineageProps = {
 };
 
 export type PlotColorProps = {
+  /** Plot-owned canonical theme token 稀疏覆盖 */
+  plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
   /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
   colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
-  theme?: IRPlotSpec['theme'];
+  plotTheme?: IRPlotSpec['plotTheme'];
   /** 整图 label 空间布局策略 */
   layout?: IRPlotSpec['layout'];
 };
@@ -103,17 +105,18 @@ export type PlotDslProps = PlotCommonProps &
 export type PlotProps = PlotSpecProps | PlotDslProps;
 
 const wrapPanelScope = (node: IRPlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
-  const { x, y, transforms, zIndex, clip } = props;
+  const { x, y, transforms, zIndex, clip, theme } = props;
   const panelTransforms =
     x !== undefined || y !== undefined
       ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<ScopeProps['transforms']>)
       : transforms;
-  if (panelTransforms === undefined && zIndex === undefined && clip === undefined) return node;
+  if (panelTransforms === undefined && zIndex === undefined && clip === undefined && theme === undefined) return node;
   const scope = {
     type: 'scope',
     ...(panelTransforms !== undefined ? { transforms: panelTransforms } : {}),
     ...(zIndex !== undefined ? { zIndex } : {}),
     ...(clip !== undefined ? { clip } : {}),
+    ...(theme !== undefined ? { theme } : {}),
     children: [node],
   };
   return scope as EmbeddableContribution['node'];
@@ -127,6 +130,7 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     return {
       node: wrapPanelScope(spec, props),
       datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
+      themeTokenDefinitions: [PlotThemeTokenDefinition],
       makeComposites: makeEmbeddedPlotComposites,
     };
   },
@@ -167,6 +171,7 @@ export const Plot: EmbeddablePlotComponent = props => {
     <Layout
       ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
       composites={lowerPlots(datasets, lowerOptions)}
+      themeTokenDefinitions={[PlotThemeTokenDefinition]}
       width={width}
       height={height}
       className={className}

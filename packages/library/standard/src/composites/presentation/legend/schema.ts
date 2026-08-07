@@ -7,17 +7,18 @@ import {
   LayoutArtifactItemBaseSchema,
   LayoutArtifactRectSchema,
   LayoutContainerBoxSchema,
+  LayoutGapSchema,
 } from '../../layout/shared';
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 
 const LegendGapSchema = z
   .union([
-    z.number().nonnegative().describe('Uniform physical gap applied to both rows and columns.'),
+    LayoutGapSchema.describe('Uniform physical gap applied to both rows and columns.'),
     z
       .strictObject({
-        row: z.number().nonnegative().describe('Physical vertical gap between adjacent rows.'),
-        column: z.number().nonnegative().describe('Physical horizontal gap between adjacent columns.'),
+        row: LayoutGapSchema.describe('Physical vertical gap between adjacent rows.'),
+        column: LayoutGapSchema.describe('Physical horizontal gap between adjacent columns.'),
       })
       .describe('Independent physical row and column gaps.'),
   ])
@@ -45,7 +46,7 @@ export const LegendItemsContentSchema = z
       .default(LegendWrap.NoWrap)
       .describe('Whether constrained items form additional rows or columns.'),
     gap: LegendGapSchema,
-    sampleGap: z.number().nonnegative().default(8).describe('Horizontal gap between an item sample and its label.'),
+    sampleGap: LayoutGapSchema.default(8).describe('Horizontal gap between an item sample and its label.'),
     sampleAlign: z
       .enum(LegendSampleAlignment)
       .default(LegendSampleAlignment.Center)
@@ -70,11 +71,7 @@ export const LegendRampContentSchema = z
       .default(LegendDirection.Vertical)
       .describe('Physical axis along which normalized tick offsets are resolved.'),
     sample: ChildSchema.describe('JSON-safe Core child that displays the continuous visual sample.'),
-    sampleGap: z
-      .number()
-      .nonnegative()
-      .default(8)
-      .describe('Physical gap from the sample to the optional tick-label region.'),
+    sampleGap: LayoutGapSchema.default(8).describe('Physical gap from the sample to the optional tick-label region.'),
     ticks: z.array(LegendTickSchema).describe('Normalized ticks in stable non-decreasing authored order.'),
   })
   .describe('Canonical continuous-ramp content for a Standard Legend.');
@@ -88,11 +85,9 @@ const LegendBaseSchema = CompositeBaseSchema.extend({
   type: z.literal('legend').describe('Composite type for an already-resolved visual legend.'),
   ...ScopePropsSchema.shape,
   title: ChildSchema.optional().describe('Optional JSON-safe Core child displayed above the legend body.'),
-  titleGap: z
-    .number()
-    .nonnegative()
-    .default(8)
-    .describe('Vertical gap used only when both the title and a non-empty body are present.'),
+  titleGap: LayoutGapSchema.default(8).describe(
+    'Vertical gap used only when both the title and a non-empty body are present.',
+  ),
   contentAlign: z
     .enum([LayoutAlignment.Start, LayoutAlignment.Center, LayoutAlignment.End])
     .default(LayoutAlignment.Start)

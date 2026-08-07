@@ -97,9 +97,17 @@ const withPlotColors = (spec: IRPlotSpec, colors: Array<string> | undefined): IR
   ...(colors !== undefined ? { colors } : {}),
 });
 
-const withPlotTheme = (spec: IRPlotSpec, theme: IRPlotSpec['theme'] | undefined): IRPlotSpec => ({
+const withPlotThemeTokens = (
+  spec: IRPlotSpec,
+  plotThemeTokens: IRPlotSpec['plotThemeTokens'] | undefined,
+): IRPlotSpec => ({
   ...spec,
-  ...(theme !== undefined ? { theme } : {}),
+  ...(plotThemeTokens !== undefined ? { plotThemeTokens } : {}),
+});
+
+const withPlotTheme = (spec: IRPlotSpec, plotTheme: IRPlotSpec['plotTheme'] | undefined): IRPlotSpec => ({
+  ...spec,
+  ...(plotTheme !== undefined ? { plotTheme } : {}),
 });
 
 const withPlotLayout = (spec: IRPlotSpec, layout: IRPlotSpec['layout'] | undefined): IRPlotSpec => ({
@@ -138,7 +146,13 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
-    spec = withPlotLayout(withPlotTheme(withPlotColors(props.spec, props.colors), props.theme), props.layout);
+    spec = withPlotLayout(
+      withPlotTheme(
+        withPlotColors(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.colors),
+        props.plotTheme,
+      ),
+      props.layout,
+    );
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
@@ -151,8 +165,9 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
       composition: props.composition,
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
+      plotThemeTokens: props.plotThemeTokens,
       colors: props.colors,
-      theme: props.theme,
+      plotTheme: props.plotTheme,
       layout: props.layout,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,

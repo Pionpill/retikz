@@ -4,28 +4,28 @@
 >
 > 关联：[`table v0.1 roadmap`](../roadmap.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`table completeness`](../../../../../architecture/table-visualization-complete.md)
 
-- 状态：设计与实施中
+- 状态：进行中；ADR-05 已 Accepted，其余 ADR 状态不变
 - 启动日期：2026-07-31
 
 ## 目标
 
 - 在现有 canonical Cell 与 value→`IRChild` 主链上增加 formatter、appearance、selector/rule 与 conditional color encoding
-- 用闭合、扁平、命名空间化的 style token vocabulary 支持 neutral、academic、vibrant、clean 四种 preset 及用户 overlay
+- 用 Core `theme.tokens.table` 承载闭合、扁平、命名空间化的 `tableThemeTokens` vocabulary，支持 neutral、academic、vibrant、clean 四种 Table preset 及用户 overlay
 - 用 declarative mapping 同时驱动 Cell appearance 与 Legend descriptor，并保留 opaque evaluator 的仅实绘扩展路径
 - 通过 Standard Legend 与 Box Layout 完成通用 Legend 呈现和外围 composition，不在 Table 复制通用布局
 - 让 framework-neutral、React、Vanilla、SSR、manifest 与 zh/en docs 表达同一契约
 
 ## ADR 与依赖
 
-| ADR                                                        | 主题                                                   | 依赖                                                      | 状态     |
-| ---------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------- | -------- |
-| [01](./01-cell-formatter-and-formatted-value.md)           | Formatter Definition 与 formatted value                | alpha.2 canonical model                                   | Proposed |
-| [02](./02-presentation-context-and-cell-appearance.md)     | Presentation context 与 Cell appearance                | ADR-01、Core Scope style                                  | Proposed |
-| [03](./03-cell-selector-and-rule-cascade.md)               | Cell selector、predicate 与 ordered rule cascade       | ADR-01～02                                                | Proposed |
-| [04](./04-conditional-visual-encoding-and-scale.md)        | Conditional color scale、encoding 与 Legend descriptor | ADR-02～03；Core gradient-stop gate；与 ADR-05 原子实施   | Proposed |
-| [05](./05-style-preset-and-token-resolution.md)            | Style preset、公开 tokens 与 precedence                | ADR-02～03；与 ADR-04 原子实施                            | Proposed |
-| [06](./06-standard-legend-consumption-and-traceability.md) | Standard Legend、外围 Box Layout 与 artifact lineage   | ADR-04～05；Standard ADR-09；Core artifact-link hard gate | Proposed |
-| [07](./07-react-vanilla-authoring-and-documentation.md)    | React/Vanilla/SSR 与文档闭环                           | ADR-01～06                                                | Proposed |
+| ADR                                                        | 主题                                                                                | 依赖                                                              | 状态     |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------- |
+| [01](./01-cell-formatter-and-formatted-value.md)           | Formatter Definition 与 formatted value                                             | alpha.2 canonical model                                           | Proposed |
+| [02](./02-presentation-context-and-cell-appearance.md)     | Presentation context 与 Cell appearance                                             | ADR-01、Core Scope style                                          | Proposed |
+| [03](./03-cell-selector-and-rule-cascade.md)               | Cell selector、predicate 与 ordered rule cascade                                    | ADR-01～02                                                        | Proposed |
+| [04](./04-conditional-visual-encoding-and-scale.md)        | Conditional color scale、encoding 与 Legend descriptor                              | ADR-02～03；Core gradient-stop gate；与 ADR-05 的主题消费同批验证 | Proposed |
+| [05](./05-style-preset-and-token-resolution.md)            | Table style preset、`tableThemeTokens`、shared categorical projection 与 precedence | Core ADR-13、ADR-02～04；与 ADR-04 的主题消费同批验证             | Accepted |
+| [06](./06-standard-legend-consumption-and-traceability.md) | Standard Legend、外围 Box Layout 与 artifact lineage                                | ADR-04～05；Standard ADR-09；Core artifact-link hard gate         | Proposed |
+| [07](./07-react-vanilla-authoring-and-documentation.md)    | React/Vanilla/SSR 与文档闭环                                                        | ADR-01～06                                                        | Proposed |
 
 依赖主链：
 
@@ -41,9 +41,14 @@
                        → 07 adapters + SSR + docs
 ```
 
-ADR-04/05 必须作为同一产品单元实施、验证与交付，避免临时 palette、无 consumer token、双映射真源或 only-explicit-range 中间态。
+ADR-04/05 的共享主题消费部分必须作为同一产品单元实施、验证与交付，避免临时 palette、无 consumer token、双映射真源或 only-explicit-range 中间态；两篇 ADR 仍按各自完整契约独立收口。
 
-ADR-04 的 ordinal/threshold mapping 属于 Table；continuous mapping 必须消费 Core 冻结的 context-free canonical RGBA 与 gradient-stop 求值语义。ADR-06 只有在当前分支能从 Standard package root 消费 Accepted Legend/Flex schema、Definition、artifact 与 direct Definition contract，Table body 已能通过 lowering-only composite boundary 表达为 JSON-safe `IRChild`，且 Core/Standard 能把 Flex authored item key 穿过 nested replay 关联到最终 child occurrence 后才能实现。Gate 未满足时不建立 Table-local Legend、外围 solver、placeholder API，也不预测 child occurrence path。
+## 当前进度
+
+- ADR-05 已完成 Table owner definition、preset、resolver、shared categorical projection、正式 appearance / border / encoding / manifest / Legend descriptor 消费，以及跨入口和旧字段失败语义闭环，现已 Accepted。
+- 本次收口不改变 ADR-01～04、06～07 的 Proposed 状态，也不代表 alpha.3 milestone 已完成；其余能力仍按各自 gate 独立收口。
+
+ADR-04 的 ordinal/threshold mapping 属于 Table；continuous mapping 必须消费 Core 冻结的 context-free canonical RGBA 与 gradient-stop 求值语义。ADR-05 还依赖 Core ADR-13 的 inherited namespace、owner validation 与 shared categorical projection；ADR-06 只有在当前分支能从 Standard package root 消费 Accepted Legend/Flex schema、Definition、artifact 与 direct Definition contract，Table body 已能通过 lowering-only composite boundary 表达为 JSON-safe `IRChild`，且 Core/Standard 能把 Flex authored item key 穿过 nested replay 关联到最终 child occurrence 后才能实现。Gate 未满足时不建立 Table-local Legend、外围 solver、placeholder API，也不预测 child occurrence path。
 
 ## Milestone 边界
 

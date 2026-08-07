@@ -4,3 +4,4 @@ export * from './formatter';
 export * from './presentation';
 export * from './structure';
 export * from './style/presets';
+export * from './style/resolve';

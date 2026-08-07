@@ -9,7 +9,7 @@ TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile opt
 
 ## 入口如何汇合
 
-React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、formatter/style cascade、presentation 或 layout 算法。
+React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、Theme token cascade、presentation 或 layout 算法。
 
 <div className="hidden sm:block">
   <ComponentPreview files="table-runtime-entry" hideCode size="sm" previewClassName="p-3" />
@@ -20,7 +20,7 @@ React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 
 
 Standalone 入口构造 canonical `children[0]` 根 Scene，把 Table definitions 与额外 composites 一起交给 Core compile；React 由 `<Layout>` 管理渲染，Vanilla 的 `renderTable()` 再把同一 Scene 输出为 SVG 字符串。
 
-Embedded Table 不启动局部 compile。它把 spec、datasets、Formatter / Structure / Presentation / Visual Scale definitions 与额外 composites 贡献给外层 `<Layout>` 或 Vanilla adapter，由宿主统一编译并通过宿主 artifacts 观察结果。
+Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 compile，也不创建自己的根 Theme，而是把 spec、datasets、Formatter / Structure / Presentation / Visual Scale definitions 与额外 composites 贡献给外层 `<Layout>` 或 Vanilla adapter，由宿主统一编译并通过宿主 artifacts 观察结果。
 
 ## 一次 Table transaction
 
@@ -33,7 +33,7 @@ Embedded Table 不启动局部 compile。它把 spec、datasets、Formatter / St
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 preset/token、Cell 配置、encoding 与有序 rules 解析最终计划；value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
+1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 Core Theme `style` / `mode` 选择的 preset、shared categorical、inherited `theme.tokens.table`、local `tableThemeTokens`、Cell 配置、encoding 与有序 rules 解析最终计划；value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
 2. **Natural proposal probes**：每个 Cell 先用 `NaturalLayoutProposal` 执行 `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
 3. **列求解与 wrap**：natural 宽度、span、gap、track 配置，以及父级 x 轴 `exact.value` 或有限 `range.max` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再发起 `x: range(0, contentWidth)` probe。
 4. **行求解与放置**：最终 probe 的高度进入行求解，随后计算 Cell box、padding 后的 content box、fit / align / overflow placement，并建立 border conflict graph。
@@ -132,6 +132,15 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 
 四类 definitions 与 composites 进入 runtime contribution 时按稳定 key 和对象 identity 合并。runtime 保存复制后冻结的 arrays、`lowerOptions` 与 envelope，调用方后续 `push` 不会改变已创建 contribution；definition/composite 对象本身仍由调用方拥有，不会被 clone 或 freeze。
 
+### Theme 输入
+
+| 输入                | 类型                              | 默认值 | 作用                                                                     |
+| ------------------- | --------------------------------- | ------ | ------------------------------------------------------------------------ |
+| `theme?`            | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供        |
+| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 inherited `theme.tokens.table` |
+
+`theme.style` / `theme.mode` 只决定当前 Core 环境与 Table preset；`theme.tokens.table` 经过 `TableThemeTokenDefinition` 校验后按 namespace 继承。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。
+
 ### Embedded
 
 Table 作为父级 `<Layout>` child 时必须有非空稳定 id。datasets、Table definitions 与 `composites` 会贡献给外层宿主；局部 `onManifest` 和任一 standalone host prop 都会 fail-loud，并在同一错误中提示把字段移动到外层 `<Layout>`。宿主需要 artifact 时使用外层 `onArtifacts`。
@@ -142,6 +151,7 @@ Table 作为父级 `<Layout>` child 时必须有非空稳定 id。datasets、Tab
 
 ```ts
 const result = renderTable(spec, {
+  theme: { style: 'academic', mode: 'light' },
   data: { scores: rows },
   lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {
@@ -159,6 +169,7 @@ result.manifest;
 
 | `renderTable` 选项 | 类型                                 | 默认值  | 描述                                                            |
 | ------------------ | ------------------------------------ | ------- | --------------------------------------------------------------- |
+| `theme?`           | `IRScene['theme']`                   | —       | 写入 standalone 根 Scene 的 Core Theme                          |
 | `data?`            | `ExternalDatasets`                   | `{}`    | Table 数据集                                                    |
 | `lowerOptions?`    | `LowerTablesOptions`                 | `{}`    | Formatter / Structure / Presentation / Visual Scale definitions |
 | `compile?`         | `RenderToStringOptions['compile']`   | `{}`    | Core compile options；额外 composites 写在这里                  |
@@ -184,17 +195,15 @@ layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-loc
 
 manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[产物契约](/viz/table/reference/manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 
-## 运行时迁移
+## 运行时入口边界
 
 | 旧写法                             | 当前写法                                        |
 | ---------------------------------- | ----------------------------------------------- |
 | `lowerTableWithArtifacts()`        | `compileTable()`                                |
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
-| React 宿主 CSS `style={{ ... }}`   | `containerStyle={{ ... }}`                      |
-| 旧版默认极简视觉                   | 显式 `style="clean"`                            |
 
-Table preset 继续使用 spec/root 的字符串 `style`，不要与宿主 CSS 混用。省略 preset 时运行时按 `neutral` + `light` 解析；`styleTokens` 是当前 mode 下的 strict partial overlay。
+Table 的 Core preset 来自 host `theme.style` / `theme.mode`；inherited `theme.tokens.table` 与 local `tableThemeTokens` 按 namespace 和 spec 层级解析。宿主 CSS 继续使用 `containerStyle`，不进入 TableSpec。省略 Theme 时从 `neutral + light` 基线开始；resolved manifest 另行记录 effective `style`、`themeMode`、完整 token map 与来源。
 
 ## 相关
 

@@ -430,7 +430,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
     const themed = PlotSpecSchema.parse({
       ...sizeLegendSpec({ style: { symbolSize: 10 } }),
-      theme: { legend: { symbolSize: 18 } },
+      plotTheme: { legend: { symbolSize: 18 } },
     });
     const outer = expandOf(themed, { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);

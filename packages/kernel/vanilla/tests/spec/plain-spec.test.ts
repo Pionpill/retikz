@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
+import {
+  CompositeBaseSchema,
+  defineComposite,
+  defineThemeTokenNamespace,
+  NodeTextColor,
+  ThemeMode,
+  ThemeStyle,
+} from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -62,6 +69,37 @@ describe('@retikz/vanilla plain spec', () => {
   class ThemeInstance {
     style = ThemeStyle.Academic;
   }
+
+  it('embed adapter 贡献 owner Theme definition singleton 到 normalization 产物', () => {
+    const definition = defineThemeTokenNamespace({
+      namespace: 'vanilla-theme',
+      schema: z.strictObject({ 'surface.fill': z.string().optional() }),
+    });
+    const makeComposites = () => [];
+    const adapter: VanillaTier2Adapter<{ label: string }> = {
+      kind: 'vanilla-theme',
+      namespace: 'vanilla-theme',
+      lower: props => ({
+        node: { namespace: 'vanilla-theme', type: 'box', label: props.label },
+        datasets: {},
+        makeComposites,
+        themeTokenDefinitions: [definition],
+      }),
+    };
+
+    const normalized = normalizeFigureSpec(figure([embed('vanilla-theme', 'box', { label: 'A' })]), {
+      adapters: [adapter],
+    });
+
+    expect(normalized.themeTokenDefinitions).toEqual([definition]);
+
+    const repeated = normalizeFigureSpec(
+      figure([embed('vanilla-theme', 'a', { label: 'A' }), embed('vanilla-theme', 'b', { label: 'B' })]),
+      { adapters: [adapter] },
+    );
+    expect(repeated.themeTokenDefinitions).toEqual([definition]);
+    expect(normalizeFigureSpec(figure([]), { adapters: [adapter] }).themeTokenDefinitions).toEqual([]);
+  });
 
   it('figure helper 与 Scope 原样写入同一 Core Theme IR', () => {
     const rootTheme = { style: ThemeStyle.Academic, mode: ThemeMode.Dark };

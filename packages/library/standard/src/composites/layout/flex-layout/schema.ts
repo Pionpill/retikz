@@ -9,6 +9,7 @@ import {
   LayoutContainerBoxSchema,
   LayoutDistribution,
   LayoutDistributionSchema,
+  LayoutGapSchema,
   LayoutItemBaseSchema,
   LayoutItemKind,
   LayoutSpacingArtifactSchema,
@@ -19,11 +20,11 @@ const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
 
 const FlexLayoutGapSchema = z
   .union([
-    z.number().nonnegative().describe('Uniform physical gap applied to both columns and rows.'),
+    LayoutGapSchema.describe('Uniform physical gap applied to both columns and rows.'),
     z
       .strictObject({
-        column: z.number().nonnegative().describe('Physical horizontal gap between items or lines.'),
-        row: z.number().nonnegative().describe('Physical vertical gap between items or lines.'),
+        column: LayoutGapSchema.describe('Physical horizontal gap between items or lines.'),
+        row: LayoutGapSchema.describe('Physical vertical gap between items or lines.'),
       })
       .describe('Independent physical column and row gaps.'),
   ])

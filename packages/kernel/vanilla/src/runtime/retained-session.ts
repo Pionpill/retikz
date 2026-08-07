@@ -1,5 +1,6 @@
 import type {
   AnyCompositeDefinition,
+  AnyThemeTokenDefinition,
   CompileArtifact,
   CoreProgramOptions,
   CoreProgramOutput,
@@ -100,6 +101,7 @@ const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): Retai
     Object.freeze({ kind: adapter.kind, namespace: adapter.namespace, lower: adapter.lower }),
   );
   const composites = options.compile?.composites?.map(captureCompositeDefinition);
+  const themeTokenDefinitions = options.compile?.themeTokenDefinitions;
   return Object.freeze({
     ...options,
     ...(adapters === undefined ? {} : { adapters: Object.freeze(adapters) }),
@@ -109,9 +111,25 @@ const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): Retai
           compile: Object.freeze({
             ...options.compile,
             ...(composites === undefined ? {} : { composites: Object.freeze(composites) }),
+            ...(themeTokenDefinitions === undefined
+              ? {}
+              : { themeTokenDefinitions: Object.freeze([...themeTokenDefinitions]) }),
           }),
         }),
   });
+};
+
+/** 判断两组 Theme definition 是否保持相同的声明顺序与 runtime identity */
+const sameThemeTokenDefinitionIdentity = (
+  left: ReadonlyArray<AnyThemeTokenDefinition> | undefined,
+  right: ReadonlyArray<AnyThemeTokenDefinition> | undefined,
+): boolean => {
+  const leftDefinitions = left ?? [];
+  const rightDefinitions = right ?? [];
+  return (
+    leftDefinitions.length === rightDefinitions.length &&
+    leftDefinitions.every((definition, index) => definition === rightDefinitions[index])
+  );
 };
 
 /** Retained session 创建所需的规范化输入 */
@@ -158,6 +176,14 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
       coreOptions: {
         ...coreOptions,
         composites: normalized.composites,
+        ...(normalized.themeTokenDefinitions.length === 0
+          ? {}
+          : {
+              themeTokenDefinitions: [
+                ...normalized.themeTokenDefinitions,
+                ...(coreOptions.themeTokenDefinitions ?? []),
+              ],
+            }),
       },
     });
   }
@@ -305,6 +331,7 @@ const createVanillaRetainedSessionImplementation = (
   /** 一组使用固定 Core Program options 的 Vanilla retained 执行资源 */
   type ActiveRetainedSession = {
     compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
+    themeTokenDefinitions: ReadonlyArray<AnyThemeTokenDefinition>;
     coreProgram: ReturnType<typeof createCoreProgram>;
     participant: ReturnType<typeof createRetainedRenderParticipant>;
     session: RuntimeSession;
@@ -385,6 +412,7 @@ const createVanillaRetainedSessionImplementation = (
     commitVanillaCompileOutput(compileSession, resolveVanillaCompileOutput(compileSession, coreOutput));
     return {
       compositeDefinitions,
+      themeTokenDefinitions: Object.freeze([...(prepared.coreOptions.themeTokenDefinitions ?? [])]),
       coreProgram,
       participant,
       session,
@@ -396,8 +424,13 @@ const createVanillaRetainedSessionImplementation = (
     };
   };
 
-  const active = createActiveSession(initial, initialConfig);
+  let active = createActiveSession(initial, initialConfig);
   let sessionDisposalStarted = false;
+
+  /** 释放因 Theme token definition 变化而替换的旧 session */
+  const retireSession = (session: RuntimeSession): void => {
+    session.dispose();
+  };
 
   const commitConfig = (
     nextState: RetainedSessionState,
@@ -426,6 +459,21 @@ const createVanillaRetainedSessionImplementation = (
         authoringSites: prepared.authoringSites,
         coreOptions: prepared.coreOptions,
       });
+      const themeTokenDefinitionsChanged = !sameThemeTokenDefinitionIdentity(
+        active.themeTokenDefinitions,
+        prepared.coreOptions.themeTokenDefinitions,
+      );
+      if (themeTokenDefinitionsChanged) {
+        const candidate = createActiveSession(
+          prepared,
+          createRenderConfig(nextState, handlerContributions, canvasSize),
+        );
+        const previous = active;
+        active = candidate;
+        state = nextState;
+        retireSession(previous.session);
+        return;
+      }
       const preparedDefinitions = active.compositeDefinitions.prepare(prepared.coreOptions.composites);
       const previousDriverInput = active.driverInput;
       /** 恢复失败 transaction 前的 driver runtime input，再重新抛出原始失败 */

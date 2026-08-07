@@ -5,8 +5,8 @@
 ## 包职责契约
 
 - **解决的问题**：把封闭的 Chart 类型配方确定性解析为完整 PlotSpec，并把可选 presentation 映射为 Standard Flex 输入，同时提供可诊断的 resolution inspection
-- **拥有的契约**：Chart shared / presentation schema fragments、封闭 recipe 协议、Chart 到 Plot 的 merge / validation、presentation 到 Standard 输入的映射、inspection 和逐类型 composite definition
-- **不拥有的能力**：Data 算法、Plot schema / lowering / registry、Standard layout、Core compile、renderer、框架 authoring、跨 adapter definition 聚合
+- **拥有的契约**：Chart shared / presentation schema fragments、封闭 recipe 协议、Chart canvas / presentation / recipe-default token 与 preset / resolver / mapping、Plot 输入转发、Chart 到 Plot 的 merge / validation、inspection 和逐类型 composite definition
+- **不拥有的能力**：Plot surface / guide / label / palette token、Plot preset / resolver / `plotTheme` merge、Data 算法、Plot lowering / registry、Standard layout、Core compile、renderer、框架 authoring、跨 adapter definition 聚合
 - **输入与输出**：接收 JSON-safe Chart variant 输入，输出完整 PlotSpec、裸 Plot 或 Standard Flex content、Chart identity node 与 inspection；不直接输出 Core primitives、Scene、DOM、SVG 或 Canvas
 - **缺口流向**：数据能力下沉 `@retikz/data`；可视化 operation 与 lowering 进入 `@retikz/plot`；通用布局进入 `@retikz/standard`；composite / adapter 聚合与 identity 进入 Kernel owner；React / Vanilla authoring 进入对应 adapter
 
@@ -19,7 +19,7 @@ shared/       Chart-wide 基础词汇、JSON helper 与无状态 ID 工具
 schemas/      Chart-wide ChartSpec contract、公共 schema fragments 与封闭 union
 families/     正式 Chart family 与 family/type-specific schema、recipe、invariant、definition factory
 presentation/ Chart-level presentation schema、Standard Flex 投影与 presentation inspection
-style/        preset、mode、token、palette 与 Plot theme 投影
+style/        Chart canvas / presentation / recipe token、preset、resolver 与 inspection；不定义 Plot token
 inspection/   中立 contribution/member records 到公开 inspection 的投影
 resolution/   closed catalog、dispatch、通用 merge/validation、错误归一化与 owner 接线
 internal/     仅供测试路径使用的 private fixture，不属于正式 family 或 public surface
@@ -40,5 +40,9 @@ families + schemas + presentation + style + inspection -> resolution
 - type owner 拥有自己的 schema、recipe、invariant 与 definition factory，不得导入 resolution；definition factory 通过中立 `ChartExpand` callback 接入
 - `resolution` 只聚合 recipe、dispatch、通用 merge/validation、错误归一化与 composite 接线，不复制 type recipe、Plot lowering 或 inspection provenance
 - `inspection` 只消费中立的 final member/contribution 输入，不依赖 `MergedChartMember` 等 resolver 私有类型，也不通过 Plot 数组下标猜来源
-- `presentation` 消费 resolved style token 并投影到 Standard；Standard 继续拥有 Flex schema、布局语义与求解
-- 包根只导出明确允许公开的 shared / presentation / inspection / style data symbols；ChartSpec union、recipe、catalog、resolver、definition 与 fixture 不得泄漏
+- `style` 只解析 Core effective Theme 下的 Chart-owned token；`chartThemeTokens` 只接受 Chart key，`plotThemeTokens` / `colors` / native `plotTheme` 原样转发到 PlotSpec；Core style / mode 只来自宿主 Theme
+- `ChartThemeTokenDefinition` 固定注册 `chart` namespace；`defineChartThemeTokens` 生成经 schema 校验的 contribution，和 Plot Definition 通过 Core `themeTokenDefinitions` 聚合
+- recipe toggle 使用 `chart.axis.enabled`、`chart.axis.grid.enabled`、`chart.legend.enabled`；无 Chart namespace 的旧 key 与 `data.palette.*` 不保留 alias 或双读
+- recipe 需要 palette 等 Plot 结果时只能调用 Plot 公开纯 resolver，不复制 Plot preset / merge，也不把 resolved Plot theme 物化回 PlotSpec
+- `presentation` 消费 resolved Chart token 并投影到 Standard；Standard 继续拥有 Flex schema、布局语义与求解
+- 包根只导出明确允许公开的 shared / presentation / inspection / Chart style data symbols；Plot token 直接从 Plot owner 导入，ChartSpec union、recipe、catalog、resolver、definition 与 fixture 不得泄漏

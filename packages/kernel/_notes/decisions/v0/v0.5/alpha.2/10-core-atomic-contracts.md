@@ -28,6 +28,14 @@ Core 在不改变现有完整 Path 语义的前提下，提供可独立复用的
 - `GraphicEffectsSchema`：`shadow`、`blendMode`
 - `StrokeStyleSchema`：`strokeWidth`、`dashPattern`、`dashOffset`
 
+跨聚合复用的稳定 value leaf 由 Core 提供命名 schema：
+
+- `FontFamilySchema`、`FontSizeSchema`、`FontWeightSchema` 与 `FontStyleSchema`：字体族、字号、字重与字体样式
+- `TextAlignSchema` 与 `LineHeightSchema`：多行文字对齐与用户单位行高
+- `StrokeWidthSchema`：非负的用户单位描边宽度
+
+`FontSchema`、Node 文字字段与 `StrokeStyleSchema` 必须组合这些 leaf，而不是让上层从聚合 schema 的偶然字段结构提取约束。value leaf 只冻结既有值边界，不拥有宿主字段的 optional、默认、继承或领域 token 语义
+
 路径按以下稳定语义组织：
 
 - `PathStrokeSchema`：复用 `StrokeStyleSchema`，并增加 `lineCap`、`lineJoin`
@@ -40,7 +48,7 @@ Core 在不改变现有完整 Path 语义的前提下，提供可独立复用的
 
 现有 `GraphicStyleSchema`、`CascadingGraphicStyleSchema`、`DrawableStyleSchema`、`PathBaseSchema`、`PathSchema`、`PathDefaultSchema` 及其派生类型继续作为兼容聚合契约。它们改由上述原子组合，但首轮不删除名称、不扩大或收窄接受字段：`GraphicStyleSchema` 继续接受当前的 `strokeWidth`，`CascadingGraphicStyleSchema` 继续保留当前可继承字段，完整 Path 继续保持当前字段集合与 refinement。聚合与原子出现同名字段时必须复用同一个叶子 schema 实例，不复制约束或描述
 
-通用的 `DrawableInstanceSchema`、字体与其它基础词汇继续由 Core 各自拥有。共享原子与上述 Path fragment 组合为完整的 Path authoring / IR 契约；完整契约继续负责跨 fragment 的 kind、结构和字段关系校验。fragment 自身只负责 strict unknown-field 与稳定局部不变量，不因独立复用而成为另一个 Path 编译入口
+通用的 `DrawableInstanceSchema` 与其它基础词汇继续由 Core 各自拥有。共享原子与上述 Path fragment 组合为完整的 Path authoring / IR 契约；完整契约继续负责跨 fragment 的 kind、结构和字段关系校验。fragment 自身只负责 strict unknown-field 与稳定局部不变量，不因独立复用而成为另一个 Path 编译入口
 
 Core 的原子契约遵循以下原则：
 
@@ -185,13 +193,13 @@ Tier 2 / Tier 3 在表达与 Core 同义的绘图字段时必须消费 Core 原�
 
 ## 最终实现与验证
 
-Core 已公开九个严格原子 schema 及其 schema-derived 类型，并以同一叶子 schema 实例重组既有 style、Path 与 Scope 默认聚合。Standard 与 Plot 的直接完整 Path 投影已迁移为按 owner 语义组合原子 fragment；Chart、Table、compile、Scene、renderer 与 adapter 保持原有边界和行为
+Core 已公开严格的 style / Path fragment 与字体、文字、描边 value leaf，并以同一叶子 schema 实例重组既有 Font、Node、Stroke、style、Path 与 Scope 默认聚合。Standard 与 Plot 的直接完整 Path 投影已迁移为按 owner 语义组合原子 fragment；Chart、Table、compile、Scene、renderer 与 adapter 保持原有边界和行为
 
 验证覆盖原子字段集合、strict 失败、数值边界、JSON 往返、公开类型推导、兼容聚合与完整 Path refinement、`PathDefaultSchema` 的 stroke / ribbon 分流、Scene 输出、Standard / Plot 消费，以及中英文 schema reference。未发现遗留的能力或兼容性风险；其它上层 owner 只有在直接重复同义 Core 词汇时才按独立里程碑迁移
 
 ## 测试策略摘要
 
-需要锁定以下证据层：原子 fragment 的 JSON-safe、strict unknown-field、局部不变量和 `z.infer` 类型；既有聚合 schema 的合法 / 非法输入集合等价；完整 Path 组合后的跨字段 refinement 与 parse 等价；`Scope.pathDefault` 对 stroke path / ribbon 的 kind-specific 继承子集等价；Core compile、Scene / manifest 和 renderer 输出无变化；Standard 与 Plot 的直接消费迁移后 schema、lowering 和 patch 结果等价；Chart、Table 与 React / Vanilla 通过现有 owner 链路保持行为等价；公共 export、schema registry 与中英文 API 文档同步。还需证明除兼容聚合已明示的 kind-specific 不适用字段外，合法输入不会在 schema 通过后于 lowering、merge、inspection 或 manifest 阶段被静默丢弃
+需要锁定以下证据层：原子 fragment 与 value leaf 的 JSON-safe、strict unknown-field 或数值 / 枚举边界，以及公开类型关系；既有聚合 schema 的合法 / 非法输入集合等价，并复用同一 leaf schema 实例；完整 Path 组合后的跨字段 refinement 与 parse 等价；`Scope.pathDefault` 对 stroke path / ribbon 的 kind-specific 继承子集等价；Core compile、Scene / manifest 和 renderer 输出无变化；Standard 与 Plot 的直接消费迁移后 schema、lowering 和 patch 结果等价；Chart、Table 与 React / Vanilla 通过现有 owner 链路保持行为等价；公共 export、schema registry 与中英文 API 文档同步。还需证明除兼容聚合已明示的 kind-specific 不适用字段外，合法输入不会在 schema 通过后于 lowering、merge、inspection 或 manifest 阶段被静默丢弃
 
 ## 不在本 ADR 范围
 

@@ -13,6 +13,8 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` wraps a spec in Scene IR and injects `lowerPlots` into `<Layout>`. `embedPlot()` and `createPlotAdapter()` connect the same spec to Kernel Vanilla figures and layers. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
+`<Plot theme>` is the local Core Scope Theme around the Plot panel: standalone and embedded paths both wrap the Plot node in that Scope, so it only overrides that Plot's `style`, `mode`, and namespaced `tokens`. It is distinct from the Plot-spec fields `plotThemeTokens` and `plotTheme`, which are Plot-owned visual inputs. Vanilla `renderPlot(spec, data, { theme })` instead writes `theme` to the root `IRScene.theme`, making it the Core Theme for the entire compiled Scene; it does not rewrite `spec.plotThemeTokens` or `spec.plotTheme`.
+
 All three entries delegate data, scale, coordinate, mark, and guide semantics to `@retikz/plot`, then return Core IR to the shared compilation path. SVG, Canvas, and SVG strings are output forms; SSR is a host scenario supported by Vanilla, not a separate Plot semantics path.
 
 ## Authoring and Runtime Boundary
@@ -42,14 +44,14 @@ Lineage and location are independent recomputation paths over shared inputs, not
 
 ## Entries and Results
 
-| Scenario            | Entry                                              | Primary result                       |
-| ------------------- | -------------------------------------------------- | ------------------------------------ |
-| React standalone    | `<Plot>`                                           | SVG / Canvas managed by `<Layout>`   |
-| React embedded      | `<Layout><Plot /></Layout>`                        | Scene compiled with other Tier 2 IR  |
-| Vanilla embedded    | `embedPlot()` plus `createPlotAdapter()`           | Scene inside a Kernel figure / layer |
-| Vanilla / SSR       | `renderPlot(spec, datasets, options)`              | SVG string or `{ svg, lineage }`     |
-| Custom host         | `lowerPlots(datasets, options)` plus Core compile  | Core IR → Scene                      |
-| Audit / interaction | `lowerPlotWithLineage()` and `createPlotLocator()` | Runtime-only lineage / anchor        |
+| Scenario            | Entry                                               | Primary result                                        |
+| ------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| React standalone    | `<Plot>`                                            | SVG / Canvas managed by `<Layout>`                    |
+| React embedded      | `<Layout><Plot /></Layout>`                         | Scene compiled with other Tier 2 IR                   |
+| Vanilla embedded    | `embedPlot()` plus `createPlotAdapter()`            | Scene inside a Kernel figure / layer                  |
+| Vanilla / SSR       | `renderPlot(spec, datasets, { theme, ...options })` | SVG string or `{ svg, lineage }` under the root Theme |
+| Custom host         | `lowerPlots(datasets, options)` plus Core compile   | Core IR → Scene                                       |
+| Audit / interaction | `lowerPlotWithLineage()` and `createPlotLocator()`  | Runtime-only lineage / anchor                         |
 
 <SourceLinks
   sources={[

@@ -49,13 +49,15 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 ### 可继承 Theme
 
-`theme` 是传给 Tier 2 Composite 的可持久化环境，不是 Core 图元的隐式样式。根 `<Layout theme>` 建立全图选择，内层 `<Scope theme>` 只覆盖自己声明的 `style` 或 `mode`；默认值是 `neutral + light`。
+`theme` 是传给 Tier 2 Composite 的可持久化环境，不是 Core 图元的隐式样式。它由稀疏的 `style`、`mode` 与 `tokens` 组成：`tokens` 是按 owner 分组的 namespace bag，当前内置 `core` namespace 提供 shared colors；Plot、Chart、Table 等 owner 通过自己的 Definition 注册各自 namespace。
 
-下面的第三方 `ThemeCard` 自己拥有完整的 token / color mapping。Core 只把当前位置解析后的 `style / mode` 交给它；最终颜色在 Composite 展开时物化，因此 SVG / Canvas renderer 都不需要认识 Theme。
+根 `<Layout theme>` 建立全图选择，内层 `<Scope theme>` 只覆盖自己声明的字段或 namespace/token key；未声明的 `style`、`mode` 与 token key 继续从外层继承，默认值是 `neutral + light`。Core 会校验 owner registry、namespace、token key 与值，并把冻结的 `ResolvedTheme.tokens` 和 detached `ResolvedTheme.colors` 交给 Composite；Core 图元、最终 Scene 与 SVG / Canvas renderer 都不解释这些领域 token。
 
 <ComponentPreview files="theme-inheritance" size="sm" />
 
-当 `ir` 已包含根 Theme 时，显式 `theme` prop 会逐字段覆盖它，未声明字段继续采用持久化值；两份输入对象都不会被修改。Theme 不会自动改变普通 Node / Path 的 fill、stroke 或 font。
+示例 Composite 直接消费 resolved `context.theme.colors`：`semantic.error` 用作文字色，`semantic.warning` 用作卡片描边，`style / mode` 只选择卡片填充 preset；每张卡片下方的 swatch 来自 `context.theme.colors.categorical`。右侧 Scope 的 sparse `palette.categorical` 与 `semantic.warning` 覆盖会分别改变 swatch 和描边，Composite 不读取或自行解释 `context.theme.tokens.core`。
+
+当 `ir` 已包含根 Theme 时，显式 `theme` prop 会逐字段覆盖它，`tokens` 也按 namespace/token key 做 sparse overlay，未声明字段继续采用持久化值；两份输入对象都不会被修改。Theme 不会自动改变普通 Node / Path 的 fill、stroke 或 font。
 
 ### 读取编译产物
 
@@ -279,14 +281,15 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
 
 ### 高级能力与宿主接入
 
-| 属性                  | 类型                                                  | 默认值 | 描述                                                                                   |
-| --------------------- | ----------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
-| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)                 |
-| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)                    |
-| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)                  |
-| `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/concepts/design/composite) |
-| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                                  |
-| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —      | 显式注入 Tier 2 adapter；主路径使用组件静态标记                                        |
+| 属性                    | 类型                                                  | 默认值      | 描述                                                                                      |
+| ----------------------- | ----------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `pathGenerators`        | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —           | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)                    |
+| `pathKinds`             | `ReadonlyArray`<br />`<PathKindDefinition>`           | —           | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)                       |
+| `ribbonWidthProfiles`   | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —           | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)                     |
+| `composites`            | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —           | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/concepts/design/composite)    |
+| `themeTokenDefinitions` | `ReadonlyArray`<br />`<AnyThemeTokenDefinition>`      | Core `core` | 注册 Plot、Chart、Table 或自定义 owner 的 Theme token schema；同 namespace 冲突会立即失败 |
+| `lowerTex`              | `LowerTex`                                            | —           | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                                     |
+| `embeddables`           | `Array`<br />`<EmbeddableTier2Adapter>`               | —           | 显式注入 Tier 2 adapter；主路径使用组件静态标记                                           |
 
 ### 全图默认值
 

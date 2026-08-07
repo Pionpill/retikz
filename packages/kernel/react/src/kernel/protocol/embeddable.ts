@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompileObservationOwner, IRChild } from '@retikz/core';
+import type { AnyCompositeDefinition, AnyThemeTokenDefinition, CompileObservationOwner, IRChild } from '@retikz/core';
 
 /** 嵌入组件可附带的外部数据集表：引用键到任意载荷 */
 export type EmbeddableDatasets = Record<string, unknown>;
@@ -24,7 +24,9 @@ export type EmbeddableContribution = {
   datasets: EmbeddableDatasets;
   /** 贡献节点内部按声明顺序收集的领域中立位置 */
   authoringSites?: ReadonlyArray<EmbeddableAuthoringSite>;
-  /** 使用同一命名空间的贡献必须稳定复用同一个函数引用 */
+  /** 该 owner 复用的冻结 Theme token definition singleton 列表 */
+  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
+  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };
 
@@ -39,7 +41,9 @@ export type EmbeddableTier2Adapter<TProps = Record<string, unknown>> = {
 export type EmbeddableContributionRecord = {
   namespace: string;
   datasets: EmbeddableDatasets;
-  /** 使用同一命名空间的贡献必须稳定复用同一个函数引用 */
+  /** 由嵌入 owner 注入、供 Layout 聚合到 Core compile options 的 definition singleton 列表 */
+  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
+  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };
 

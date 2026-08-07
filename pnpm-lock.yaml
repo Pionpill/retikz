@@ -1052,6 +1052,9 @@ importers:
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
       '@types/d3-scale':
         specifier: 'catalog:'
         version: 4.0.9

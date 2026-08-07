@@ -1,9 +1,12 @@
+import type { IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
 /** renderTable 共享选项 */
 export type RenderTableCommonOptions = Pick<RenderToStringOptions, 'output' | 'compile' | 'animation'> & {
+  /** renderTable 根级 Core Theme，与 React Layout 的 theme 语义相同 */
+  theme?: IRScene['theme'];
   /** Table lowering 消费的外部 datasets */
   data?: ExternalDatasets;
   /** Table definitions 与其它 lowering 选项 */

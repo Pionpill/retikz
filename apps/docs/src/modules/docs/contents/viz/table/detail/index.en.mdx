@@ -37,7 +37,7 @@ For JSX-local column declarations, use `DetailColumn` children:
 
 Choose either `columns` or `DetailColumn` children. Both forms produce the same detail-table spec, and every `DetailTable` root prop other than `columns` is available in both forms.
 
-Table first resolves the final plan for each Cell. `style`, `themeMode`, and `styleTokens` establish the visual baseline; column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. All are JSON-safe TableSpec fields and are not executed by React authoring.
+Table first resolves the final plan for each Cell. Core Theme `style` / `mode` selects the Table preset, shared `colors.categorical` supplies the common categorical palette, and inherited `theme.tokens.table` followed by spec-local `tableThemeTokens` override Table tokens. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. Only `tableThemeTokens` enters the JSON-safe TableSpec; the host `theme` propagates through the Core Scene / Scope.
 
 ## Examples
 
@@ -47,13 +47,13 @@ Header strings become value Cells automatically. The three external records belo
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-The example writes `style="neutral"` explicitly and uses `containerStyle` for standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
+The example selects the Core `academic/light` environment through a standalone root `theme` or an outer `<Layout theme>` in embedded mode, uses `theme.tokens.table` for inherited tokens, and applies a spec-local `tableThemeTokens` override. `containerStyle` remains standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
 
 <ComponentAlert
   type="tip"
-  title="Migrating older visuals and host styles"
+  title="Keep Theme and host CSS separate"
   description={
-    'An omitted style now resolves as neutral/light. Choose style="clean" explicitly to retain the earlier minimal, undecorated look. React host CSS moved from style to containerStyle; style now accepts only a Table preset.'
+    'Core Theme style/mode selects the Table preset, theme.tokens.table and tableThemeTokens provide Table token overlays, and React standalone host CSS continues to use containerStyle.'
   }
 />
 
@@ -233,9 +233,8 @@ result.manifest;
 | `layout?`                        | `DetailTableProps['layout']`                                              | track defaults | Default/indexed track sizes, gaps, and Table borders                     |
 | `rules?`                         | `DetailTableProps['rules']`                                               | `[]`           | Declaration-ordered formatter, presentation, or appearance overrides     |
 | `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`           | Maps selected value-Cell raw values to background or content colors      |
-| `style?`                         | `DetailTableProps['style']`                                               | `'neutral'`    | Table preset: neutral, academic, vibrant, or clean                       |
-| `themeMode?`                     | `DetailTableProps['themeMode']`                                           | `'light'`      | Selects the preset's light or dark token map                             |
-| `styleTokens?`                   | `DetailTableProps['styleTokens']`                                         | `{}`           | Strict flat partial token overlay for the selected mode                  |
+| `theme?`                         | `DetailTableProps['theme']`                                               | —              | Standalone root Core Theme; embedded mode uses the outer `<Layout>`      |
+| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse TableSpec token overlay, above inherited namespace tokens         |
 | `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in TableSpec                                        |
 | `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`           | Custom Cell formatter definitions                                        |
 | `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                             |

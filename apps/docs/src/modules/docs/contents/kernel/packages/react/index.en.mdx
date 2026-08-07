@@ -33,7 +33,7 @@ export const Diagram = () => (
 
 `<Layout>` emits SVG by default; pass `renderer="canvas"` when you need a raster bitmap. Start with [Getting Started](/kernel/get-start), then see [Layout](/kernel/components/layout/overview) for the complete host options.
 
-`<Layout theme>` writes the root `IRScene.theme`, while `<Scope theme>` writes a local `IRScope.theme`. Both author only sparse `style / mode` values; composites choose concrete domain tokens during compile. When `ir` and an explicit `theme` are both present, the prop overrides `ir.theme` per field without mutating either input. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
+`<Layout theme>` writes the root `IRScene.theme`, while `<Scope theme>` writes a local `IRScope.theme`. Theme is a sparse `style / mode / tokens` override; `tokens` stores JSON-safe token keys under owner namespaces, with Core's built-in `core` namespace and each domain Composite reading its own namespace during compile. `themeTokenDefinitions` is a Layout compile option: the React adapter de-duplicates Definitions contributed by embedded Composites and explicit options before passing them to the Core registry. When `ir` and an explicit `theme` are both present, the prop overrides `ir.theme` per field without mutating either input. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
 
 ## Why @retikz/react exists
 

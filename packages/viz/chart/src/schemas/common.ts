@@ -6,14 +6,13 @@ import {
   GuideSchema,
   MarkOperationSchema,
   PlotLayoutSchema,
-  PlotThemeSchema,
   ScaleOperationSchema,
   TransformSchema,
 } from '@retikz/plot';
 import { z } from 'zod';
 
 import { ChartPresentationSchema } from '../presentation';
-import { ChartStyleSurfaceSchema } from '../style';
+import { ChartThemeSurfaceSchema } from '../style';
 
 /** Chart variant 共享字段的未 refined shape */
 export const ChartSharedBaseSchema = z
@@ -21,7 +20,7 @@ export const ChartSharedBaseSchema = z
     id: z.string().min(1).optional().describe('Optional stable Chart identity and outer scope id'),
     data: DataReferenceSchema.describe('Single Plot data reference owned by this Chart'),
     presentation: ChartPresentationSchema.optional().describe('Optional authored-order Chart presentation'),
-    ...ChartStyleSurfaceSchema.shape,
+    ...ChartThemeSurfaceSchema.shape,
     transform: z
       .array(TransformSchema)
       .optional()
@@ -34,7 +33,6 @@ export const ChartSharedBaseSchema = z
       .array(MarkOperationSchema)
       .optional()
       .describe('Explicit Plot mark extensions appended after recipe marks'),
-    theme: PlotThemeSchema.optional().describe('Plot theme forwarded to the resolved Plot'),
     layout: PlotLayoutSchema.optional().describe('Plot label layout forwarded to the resolved Plot'),
     width: z.number().positive().optional().describe('Resolved Plot intrinsic width in user units'),
     height: z.number().positive().optional().describe('Resolved Plot intrinsic height in user units'),

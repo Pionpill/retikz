@@ -368,7 +368,8 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
           [
             Object.freeze({
               code: cause.code,
-              phase: cause.phase,
+              // RuntimeError 的 phase 是开放字符串，映射到诊断协议的编译执行阶段
+              phase: 'run',
               severity: 'error' as const,
               message: cause.message,
               ...(cause.owner === undefined ? {} : { owner: cause.owner }),

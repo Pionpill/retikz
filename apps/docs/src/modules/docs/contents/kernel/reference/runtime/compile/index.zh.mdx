@@ -67,6 +67,14 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 传入的 definitions 会追加到对应 `BUILTIN_*` 集合；空 key 或与内置 / 同批自定义项重名都会立即抛错，不会覆盖已有 provider。
 
+### Theme token owner registry
+
+| Option                  | Type                                     | Default     | 说明                                                                                                              |
+| ----------------------- | ---------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| `themeTokenDefinitions` | `ReadonlyArray<AnyThemeTokenDefinition>` | Core `core` | 追加 Plot、Chart、Table 或自定义 owner 的冻结 Definition；Core 内置 namespace 始终注册，同 namespace 冲突立即抛错 |
+
+每个 Definition 绑定一个非空 namespace 与 strict Zod schema。Core 在 Scene / Scope 解析时校验 `theme.tokens` 的 namespace、token key 与值：未注册 namespace、未知 key、非法值和不同 Definition 占用同一 namespace 都 fail-loud。Core 不读取或解释 owner token 的领域含义。
+
 ### Composite
 
 | Option              | Type                                    | Default | 说明                                                                                  |
@@ -79,7 +87,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 - `expand(node, context)` 在当前 Theme 上下文中做结构展开；
 - `compile(node, context)` 通过 `context.proposal` 与 `layoutChild(child, proposal)` 在完整 compile 环境中求值真实子内容。
 
-两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为 `neutral + light` → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式字段。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
+两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为 `neutral + light` → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式 `style`、`mode` 或 namespace/token key。`ResolvedTheme` 还提供递归冻结的 `tokens` 与 detached/frozen 的 `colors` shared view；`colors.semantic` 固定提供 error/success/warning，`colors.categorical` 始终非空，重复值按稳定 index 取余消费。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
 
 带 `artifactSchema` 的 layout-aware definition 可以在同一次 `compile` 返回 JSON-safe `artifact`。该 schema 既约束公开 `CompileResult.artifacts`，也是显式 observer 读取最终 Composite 所属者产物的契约；Composite 本身不包含 Inspector 定义。
 

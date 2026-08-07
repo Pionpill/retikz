@@ -77,7 +77,7 @@ describe('plot', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      theme: {
+      plotTheme: {
         background: '#ffffff',
         palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
         legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -100,7 +100,7 @@ describe('plot', () => {
       ],
     });
 
-    expect(spec.theme).toMatchObject({
+    expect(spec.plotTheme).toMatchObject({
       background: '#ffffff',
       palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
       legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -113,6 +113,17 @@ describe('plot', () => {
       style: { swatchSize: 10, title: { font: { weight: 600 } } },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
+  it('透传 Plot plotThemeTokens', () => {
+    const spec = plot({
+      data: { reference: 'sales' },
+      scales: [],
+      coordinate: { type: 'cartesian2D' },
+      plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    });
+    expect(spec.plotThemeTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
   });
 
   it('透传 layout 与 labels', () => {

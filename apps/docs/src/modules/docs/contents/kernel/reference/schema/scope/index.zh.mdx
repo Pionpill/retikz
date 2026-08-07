@@ -14,7 +14,8 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
   description="作用域容器：组织子树，并提供局部变换、样式默认值与裁剪。"
   descriptions={{
     type: '判别字段，标记此子节点为 scope',
-    theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite',
+    theme:
+      '当前子树的稀疏 Theme 覆盖；style、mode 与 owner namespace token key 分别继承，只传给后代 Composite；Core 图元不会自动着色',
     color: '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
     fill: '作用域级默认填充；CSS color 字符串或 PaintSpec',
     fillOpacity: '作用域级默认填充不透明度 0..1',
@@ -39,6 +40,8 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
     children: '可递归包含 node、path、coordinate、scope 或 Tier 2 composite',
   }}
 />
+
+`Scope.theme` 是传给后代 Composite 的稀疏覆盖。`style`、`mode` 与 token key 分别继承；`tokens` 只覆盖 Scope 声明的 namespace/key，并由 Core registry 按 owner schema 校验。Theme 是环境交接，不会自动给 Core 图元着色。
 
 <span id="scopeposition"></span>
 

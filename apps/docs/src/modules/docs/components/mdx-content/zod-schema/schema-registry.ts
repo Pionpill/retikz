@@ -35,10 +35,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/scene#theme',
     localizations: {
       zh: {
-        description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖',
+        description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖；tokens 按 owner namespace 由 registry 校验',
         descriptions: {
           style: '视觉人格：neutral、academic、vibrant 或 clean；省略时继承外层值',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
+          tokens:
+            '按 owner namespace 保存的 sparse token overrides；Core 内置 core，其他 namespace 由 themeTokenDefinitions 注册并校验',
         },
       },
     },
@@ -124,6 +126,31 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/entity#coordinate',
   },
   FontSchema: { schema: IR.FontSchema, label: 'Font', url: '/kernel/reference/schema/entity#font' },
+  FontFamilySchema: {
+    schema: IR.FontFamilySchema,
+    label: 'FontFamily',
+    url: '/kernel/reference/schema/entity#fontfamily',
+  },
+  FontWeightSchema: {
+    schema: IR.FontWeightSchema,
+    label: 'FontWeight',
+    url: '/kernel/reference/schema/entity#fontweight',
+  },
+  FontStyleSchema: {
+    schema: IR.FontStyleSchema,
+    label: 'FontStyle',
+    url: '/kernel/reference/schema/entity#fontstyle',
+  },
+  TextAlignSchema: {
+    schema: IR.TextAlignSchema,
+    label: 'TextAlign',
+    url: '/kernel/reference/schema/entity#textalign',
+  },
+  LineHeightSchema: {
+    schema: IR.LineHeightSchema,
+    label: 'LineHeight',
+    url: '/kernel/reference/schema/entity#lineheight',
+  },
   TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock', url: '/kernel/reference/schema/entity#textblock' },
   LineSpecSchema: { schema: IR.LineSpecSchema, label: 'LineSpec', url: '/kernel/reference/schema/entity#linespec' },
   StyledLineSchema: {
@@ -256,6 +283,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.StrokeStyleSchema,
     label: 'StrokeStyle',
     url: '/kernel/reference/schema/style#strokestyle',
+  },
+  StrokeWidthSchema: {
+    schema: IR.StrokeWidthSchema,
+    label: 'StrokeWidth',
+    url: '/kernel/reference/schema/style#strokewidth',
   },
   PaintValueSchema: {
     schema: IR.PaintValueSchema,
@@ -548,20 +580,20 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellVisualEncoding',
     url: '/viz/table/reference/contract-table#tablecellvisualencodingschema',
   },
-  TableStyleSchema: {
-    schema: TableIR.TableStyleSchema,
-    label: 'TableStyle',
-    url: '/viz/table/reference/contract-table#tablestyleschema',
+  TableThemeTokenOverridesSchema: {
+    schema: TableIR.TableThemeTokenOverridesSchema,
+    label: 'TableThemeTokenOverrides',
+    url: '/viz/table/reference/contract-table#tablethemetokenoverridesschema',
   },
-  TableThemeModeSchema: {
-    schema: TableIR.TableThemeModeSchema,
-    label: 'TableThemeMode',
-    url: '/viz/table/reference/contract-table#tablethememodeschema',
+  TableThemeTokenMapSchema: {
+    schema: TableIR.TableThemeTokenMapSchema,
+    label: 'TableThemeTokenMap',
+    url: '/viz/table/reference/contract-table#tablethemetokenmapschema',
   },
-  TableStyleTokensSchema: {
-    schema: TableIR.TableStyleTokensSchema,
-    label: 'TableStyleTokens',
-    url: '/viz/table/reference/contract-table#tablestyletokensschema',
+  TableThemeTokenPresetMapSchema: {
+    schema: TableIR.TableThemeTokenPresetMapSchema,
+    label: 'TableThemeTokenPresetMap',
+    url: '/viz/table/reference/contract-table#tablethemetokenpresetmapschema',
   },
   TableCellSpanSchema: {
     schema: TableIR.TableCellSpanSchema,
@@ -1329,6 +1361,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: PlotIR.PlotLayerSchema,
     label: 'PlotLayer',
     url: '/viz/plot/reference/layer#plotlayerschema',
+  },
+  PlotThemeTokenOverridesSchema: {
+    schema: PlotIR.PlotThemeTokenOverridesSchema,
+    label: 'PlotThemeTokenOverrides',
+    url: '/viz/plot/reference/theme#plotthemetokenoverridesschema',
+  },
+  PlotResolvedThemeTokensSchema: {
+    schema: PlotIR.PlotResolvedThemeTokensSchema,
+    label: 'PlotResolvedThemeTokens',
+    url: '/viz/plot/reference/theme#plotresolvedthemetokensschema',
+  },
+  PlotThemeResolutionSchema: {
+    schema: PlotIR.PlotThemeResolutionSchema,
+    label: 'PlotThemeResolution',
+    url: '/viz/plot/reference/theme#inspection',
   },
   PlotAxisThemeSchema: {
     schema: PlotIR.PlotAxisThemeSchema,

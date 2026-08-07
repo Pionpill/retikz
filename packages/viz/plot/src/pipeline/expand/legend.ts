@@ -4,7 +4,7 @@ import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow } from '@retikz/
 import { DataFieldType } from '@retikz/data';
 
 import type { AnyChannelDefinition, AnyMarkDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
-import type { resolvePlotTheme, ScaleDescriptor } from '../../providers';
+import type { ResolvedPlotGuideTheme, ResolvedPlotPalette, ScaleDescriptor } from '../../providers';
 import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlotSpec, LegendChannelValue } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
 import type { LegendEntry, LegendInput } from '../guide';
@@ -36,7 +36,7 @@ export const collectChannelDescriptors = (
     fieldTypeEvidence?: ReadonlySet<string>;
     scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
     resolveColorScheme: (name: string) => (t: number) => string;
-    palette: ReturnType<typeof resolvePlotTheme>['palette'];
+    palette: ResolvedPlotPalette;
   },
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
@@ -376,7 +376,7 @@ export const buildLegendLayers = (
   bands: Array<Rect>,
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolvedTheme: ReturnType<typeof resolvePlotTheme>,
+  resolvedTheme: ResolvedPlotGuideTheme,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
