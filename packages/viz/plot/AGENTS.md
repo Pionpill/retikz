@@ -18,7 +18,7 @@
 shared/       无依赖共享词汇、纯函数、映射和工具类型
 schemas/      Zod schema 与 Plot IR 类型真源
 contract/     coordinate / scale / mark / channel / guide / locator 等可视化扩展契约与公开类型
-providers/    内置 definition、plot-specific transform、BUILTIN_*、registry resolver、dispatch / apply / resolve，以及 Plot preset / token / native theme 解析
+providers/    内置 definition、plot-specific transform、BUILTIN_*、registry resolver、dispatch / apply / resolve，以及 Plot preset / token / `plotTheme` 解析
 pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；guide / locator 等运行时编排也归这里
 ```
 
@@ -26,7 +26,8 @@ pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；g
 - `contract` 不依赖 `providers` / `pipeline`；providers 依赖 contract；pipeline 负责编排。providers 里的既有 provenance helper 依赖是历史例外，新增代码不要扩大例外。
 - `schemas` 可被所有层依赖，但 schema 不读取实现层。
 - `pipeline/guide` 负责 axis / legend 下沉为 Kernel IR；`contract/guide` 只放 coordinate provider 与 pipeline 共用的 guide context 类型。
-- Plot Composite 从 Core context 消费 effective Theme；PlotSpec 不重复 style / mode。`styleTokens`、`colors`、native `theme` 与 local guide / mark / scale config 按公开 cascade 解析。
+- Plot Composite 从 Core context 消费 effective Theme；PlotSpec 不重复 Core style / mode。`plotThemeTokens`、`colors`、native `plotTheme` 与 local guide / mark / scale config 按公开 cascade 解析；inherited `theme.tokens.plot` 与 Core shared categorical 位于 preset 之后。
+- `PlotThemeTokenDefinition` 固定注册 `plot` namespace；`definePlotThemeTokens` 生成经 schema 校验的 contribution。React / Vanilla adapter 必须把同一 Definition 注入 Core `themeTokenDefinitions`，standalone、embedded 与 plain lowering 共用这条 registry 语义
 - Plot canonical palette 使用 `plot.palette.*`；`data.palette.*` 不属于 Data 或 Plot 的公开 token namespace，不保留 alias 或双读。
 - Chart 与其它上层只能传递 Plot 公开 token contract 或调用 Plot 公开纯 resolver，不得复制 Plot key、schema、preset、merge 或 resolved theme。
 - `pipeline/locator` 负责通过 lowering 流程解析 datum / series 锚点；`contract/locator` 只放公开 locator 类型。

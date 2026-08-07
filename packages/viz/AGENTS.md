@@ -23,8 +23,8 @@
 
 - viz 组是领域 Tier 2 能力层，不向 core / library 组反向注入实现；通用机制或几何缺口优先补 `@retikz/core` / `@retikz/math`，移除领域词汇后仍成立且被多个官方 Tier 2 包复用的绘图 composite 进入 `@retikz/standard`。
 - `@retikz/data` 是数据模型、字段与值语义、transform 和通用数据处理契约真源；plot / chart / table 不复制数据处理算法。
-- `@retikz/plot` 是 plot 语义、layout transform、guide 领域解析、Plot surface / typography / label / Axis / Legend 视觉 token、palette、preset / resolver / mapping / inspection 和 lowering 真源；Chart 只转发 Plot 公开 `plotStyleTokens` / `colors` / native `theme`，adapter 不复制 data、scale、coordinate、mark、guide、theme 或 lowering 算法。通用 Legend 视觉结构、内部布局与 lowering 由 Standard 拥有，Plot 只把 channel / scale / formatter 与主题结果解析为 Standard 输入。
-- `@retikz/chart` 只拥有 Chart canvas、presentation 与 recipe-default token；Core effective Theme 是 style / mode 真源。ChartSpec 不重复 `style` / `themeMode`，也不接受 `data.palette.*` 或无 Chart namespace 的 recipe toggle。
+- `@retikz/plot` 是 plot 语义、layout transform、guide 领域解析、Plot surface / typography / label / Axis / Legend 视觉 token、palette、preset / resolver / mapping / inspection 和 lowering 真源；Chart 只转发 Plot 公开 `plotThemeTokens` / `colors` / `plotTheme`，adapter 不复制 data、scale、coordinate、mark、guide、Theme 或 lowering 算法。通用 Legend 视觉结构、内部布局与 lowering 由 Standard 拥有，Plot 只把 channel / scale / formatter 与主题结果解析为 Standard 输入。
+- `@retikz/chart` 只拥有 `chartThemeTokens` 对应的 Chart canvas、presentation 与 recipe-default token；Core effective Theme 是 style / mode 真源，Plot 输入仍由 Plot owner 解析。Chart 与 Plot 各自通过 Theme token Definition 接入 Core registry，不共享或复制 token schema。
 - `@retikz/table` 是表格结构、Cell 呈现、visual encoding / Legend 领域解析、约束布局和 lowering 真源；通用 Legend 呈现消费 Standard，显式 Plot 等 Tier 2 Cell 只通过 Core `IRChild` / composite 进入，Table 不依赖或特判 Plot。
 - plot-specific transform 可以在 plot 实现，但必须复用 data 的 definition、registry 与 apply contract；宿主无关的 rows / fields / statistics 算法归 data。
 - viz 内共用几何类型和工具优先来自 `@retikz/math` / `@retikz/core`。例如二维坐标用 `Position`，有限 / 无穷数值判断用既有 helper，不在 plot 内重复定义。

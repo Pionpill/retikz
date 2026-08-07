@@ -3,32 +3,34 @@ title: 契约 - 主题
 description: 查询 Plot canonical token、preset 级联、原生主题与 inspection 契约。
 ---
 
-Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择四种 style × light / dark 的完整领域 preset。`PlotSpec` 不重复声明 `style` 或 `themeMode`；主题只控制视觉默认，不改变数据、坐标、guide 是否存在或 mark 结构。
+Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择四种 style × light / dark 的完整领域 preset。`PlotSpec` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、guide 是否存在或 mark 结构。
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-示例通过 `PlotStyleToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `styleTokens` 原样交给 Plot resolver，adapter 不补自己的 preset。
+示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；根 Core Theme 的 `tokens.plot` 则作为 inherited namespace 进入同一 resolver。
 
 ## 级联与原子替换
 
 ```text
 Core effective Theme
   → Plot preset
-  → PlotSpec.styleTokens
+  → shared categorical
+  → inherited Theme tokens.plot
+  → PlotSpec.plotThemeTokens
   → PlotSpec.colors
-  → PlotSpec.theme
+  → PlotSpec.plotTheme
   → local guide / mark / scale config
 ```
 
-- `styleTokens` 是严格、稀疏的 canonical token map；未知 key、显式 `undefined` 和非法值会失败
+- `plotThemeTokens` 是严格、稀疏的 canonical token map；未知 key、显式 `undefined` 和非法值会失败
 - `colors` 只覆盖 categorical、series 与 sector palette，不影响 sequential / diverging scheme
-- 原生 `theme` 更接近 Plot 正式结构，可以设置 token 没有表达的合法字段
+- 原生 `plotTheme` 更接近 Plot 正式结构，可以设置 token 没有表达的合法字段
 - 数组、scalar、`false` 与 discriminator 改变的对象整体替换；同一结构的闭合对象才按合法字段合并
 - 显式 scale `range` / `scheme` 与局部 axis、legend、mark 配置始终优先
 
 ## Canonical token
 
-`PlotStyleToken` 公开 40 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
+`PlotThemeToken` 公开 40 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
 
 | 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -45,10 +47,10 @@ Core effective Theme
 
 `axis.line.enabled` 只决定已有 Axis 的 baseline 默认；grid 和 legend 是否创建属于 Chart recipe 或显式 guide 语义，不是 Plot token。旧 `data.palette.*`、裸 `axis.enabled`、`axis.grid.enabled` 与 `legend.enabled` 都不是 Plot canonical key。
 
-## PlotStyleTokenOverridesSchema
+## PlotThemeTokenOverridesSchema
 
 <ZodSchema
-  name="PlotStyleTokenOverridesSchema"
+  name="PlotThemeTokenOverridesSchema"
   description="用户可提供的严格、稀疏 Plot canonical token 覆盖。"
   descriptions={{
     'plot.surface.fill': 'Plot panel 的 surface 填充 paint。',
@@ -94,9 +96,9 @@ Core effective Theme
   }}
 />
 
-## PlotResolvedStyleTokensSchema
+## PlotResolvedThemeTokensSchema
 
-`PlotResolvedStyleTokensSchema` 使用完全相同的 40 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
+`PlotResolvedThemeTokensSchema` 使用完全相同的 40 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
 
 ## Inspection
 
@@ -107,8 +109,8 @@ Core effective Theme
 | `style` / `mode`    | 选择 preset 的 effective Core Theme 环境          |
 | `tokens`            | 级联后的完整 token map                            |
 | `tokenSources`      | 每个 canonical token 的唯一胜出来源与稳定 path    |
-| `authoredOverrides` | 按顺序记录 `colors` 与原生 `theme` 入口           |
-| `theme`             | 已映射并校验的完整原生 Plot theme                 |
+| `authoredOverrides` | 按顺序记录 `colors` 与原生 `plotTheme` 入口       |
+| `plotTheme`         | 已映射并校验的完整原生 Plot theme                 |
 | `palette`           | scale、mark 与 legend 共享的最终 palette / scheme |
 
 Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette，但不会把完整 resolved theme 写回 `PlotSpec`，也不会把 Plot token 标记为 Chart-owned。
@@ -165,4 +167,4 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
   }}
 />
 
-`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title padding 等 canonical token 之外的合法字段；这些字段保留在最终 `theme` 中，不会伪造不存在的 token source。
+`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title padding 等 canonical token 之外的合法字段；这些字段保留在最终 `plotTheme` 中，不会伪造不存在的 token source。

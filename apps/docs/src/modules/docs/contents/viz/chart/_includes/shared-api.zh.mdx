@@ -104,21 +104,18 @@ datum 标签由各位置 mark 共用 `DatumLabelProps`；整图标题和说明�
 
 ## Theme 与 Layout
 
-Plot 先从 Core effective Theme 选择领域 preset，再依次应用 `styleTokens`、`colors` 与原生 `theme`；Axis、Legend、Label、Scale 与 mark 上的显式值优先。切换 style / mode 不需要改变 Plot 结构。
+Chart 通过 `chartThemeTokens` 拥有 presentation 默认值；Core `style` 与 `mode` 来自宿主 Scene 或 Scope。Chart 不用另一个 style/mode 字段遮蔽宿主 Theme，也没有 Chart spec-local Theme。它按 owner 原名转发当前 Plot 输入：`plotThemeTokens`、`colors` 与 `plotTheme` 仍属于 Plot。
 
-| 属性                                  | 类型                                                           | 默认值        | 描述                                                           |
-| ------------------------------------- | -------------------------------------------------------------- | ------------- | -------------------------------------------------------------- |
-| `Plot.colors`                         | `PlotProps['colors']`                                          | 内置 palette  | 分类颜色 scale 与未编码 mark 的颜色序列                        |
-| `Plot.styleTokens`                    | `PlotProps['styleTokens']`                                     | `{}`          | Plot canonical token 的严格稀疏覆盖；数组与对象 token 整体替换 |
-| `Plot.theme.background`               | `NonNullable<PlotProps['theme']>['background']`                | 透明          | 面板背景色                                                     |
-| `Plot.theme.typography` / `labelText` | `NonNullable<PlotProps['theme']>['typography' \| 'labelText']` | 内置          | guide 与静态标签的文字 token                                   |
-| `Plot.theme.axis`                     | `NonNullable<PlotProps['theme']>['axis']`                      | 内置          | `line`、`ticks.mark`、`tickLabels`、`title`、`grid` 默认样式   |
-| `Plot.theme.legend`                   | `NonNullable<PlotProps['theme']>['legend']`                    | 内置          | 图例容器、条目、ramp 与文字默认样式                            |
-| `Plot.theme.palette`                  | `NonNullable<PlotProps['theme']>['palette']`                   | 内置          | categorical、series、sector、sequential、diverging palette     |
-| `Plot.layout.mode`                    | `NonNullable<PlotProps['layout']>['mode']`                     | `'auto'`      | 自动预留装饰空间或只使用显式 padding                           |
-| `Plot.layout.autoPadding`             | `NonNullable<PlotProps['layout']>['autoPadding']`              | `true`        | 标签是否可以扩展外边距                                         |
-| `Plot.layout.padding`                 | `NonNullable<PlotProps['layout']>['padding']`                  | `0`           | 自动布局前的外边距                                             |
-| `Plot.width` / `height`               | `PlotProps['width' \| 'height']`                               | `480` / `300` | Plot 逻辑尺寸；本页 showcase 固定为 `800 × 400`                |
+Chart 级联为 `Core effective Theme → Chart preset → inherited tokens.chart → local chartThemeTokens`。随后交给 Plot 的链路为 `Core effective Theme → Plot preset → shared categorical → inherited tokens.plot → forwarded plotThemeTokens → forwarded colors → forwarded plotTheme → 显式 Plot 配置`。`ChartThemeToken`、`ChartThemeTokenOverridesSchema` 与 `ChartResolvedThemeTokensSchema` 都是 `@retikz/chart` 的公开导出；Plot token schema 仍从 `@retikz/plot` 导出。
+
+| 字段               | 类型                                 | 默认值 | 描述                                                                |
+| ------------------ | ------------------------------------ | ------ | ------------------------------------------------------------------- |
+| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`   | Chart owner 的稀疏 presentation 与 recipe token 覆盖                |
+| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`   | 原样转发给 resolved Plot 的 Plot owner 稀疏 token 覆盖              |
+| `colors`           | `IRChartShared['colors']`            | 主题   | 原样转发的 Plot palette 简写；显式 Plot palette 与 scale 值可以覆盖 |
+| `plotTheme`        | `IRChartShared['plotTheme']`         | 主题   | 原样转发的 Plot 原生 theme                                          |
+| `layout`           | `IRChartShared['layout']`            | Plot   | Plot label 与 guide 预留空间策略                                    |
+| `width` / `height` | `IRChartShared['width' \| 'height']` | —      | resolved Plot intrinsic 尺寸                                        |
 
 ## Additional Marks
 

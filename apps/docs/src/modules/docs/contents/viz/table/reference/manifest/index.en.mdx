@@ -11,6 +11,8 @@ description: Look up the track, Cell, border, source, and locator DTO schemas em
 
 <ZodSchema name="TableLayoutManifestSchema" />
 
+The manifest `style` region also records effective Core `style`, `themeMode`, the complete resolved Table `tokens` map, and one `sources` entry per token. Here `themeMode` is output metadata from the same compile, identifying the selected preset; TableSpec inputs remain the host `theme` and local `tableThemeTokens`, which belong to a different layer.
+
 ## Tracks and Cells
 
 ### TableTrackManifestEntrySchema

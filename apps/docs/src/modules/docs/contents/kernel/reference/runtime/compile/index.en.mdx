@@ -67,6 +67,14 @@ Callers validate `value` with their owning schema first. `fallback` must be fini
 
 Definitions passed here are appended to the corresponding `BUILTIN_*` collection. An empty key or a name that duplicates a built-in or another custom item throws immediately; providers are never overwritten.
 
+### Theme token owner registry
+
+| Option                  | Type                                     | Default     | Notes                                                                                                                                                |
+| ----------------------- | ---------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `themeTokenDefinitions` | `ReadonlyArray<AnyThemeTokenDefinition>` | Core `core` | Appends frozen Definitions for Plot, Chart, Table, or custom owners; Core's built-in namespace is always registered, and conflicts throw immediately |
+
+Each Definition binds a non-empty namespace to a strict Zod schema. While resolving Scene / Scope Themes, Core validates every `theme.tokens` namespace, token key, and value: an unregistered namespace, unknown key, invalid value, or different Definition claiming the same namespace fails loudly. Core does not read or interpret the domain meaning of an owner's tokens.
+
 ### Composites
 
 | Option              | Type                                    | Default | Notes                                                                                                      |
@@ -79,7 +87,7 @@ The two `CompositeDefinition` branches are mutually exclusive:
 - `expand(node, context)` performs structural expansion in the current Theme context;
 - `compile(node, context)` evaluates real child content through `context.proposal` and `layoutChild(child, proposal)` in the complete compile environment.
 
-Both branches read the complete, frozen `ResolvedTheme` at their position from `context.theme`. Resolution is fixed as `neutral + light` → Scene → outer Scope → inner Scope, with each layer overriding only explicit fields. `lowerIRToKernel()` uses the same resolver for `expand`, while a layout-aware definition still fails before its callback. Theme only lets a composite materialize domain-owned defaults; the final Scene and renderers neither carry nor interpret it.
+Both branches read the complete, frozen `ResolvedTheme` at their position from `context.theme`. Resolution is fixed as `neutral + light` → Scene → outer Scope → inner Scope, with each layer overriding only explicit `style`, `mode`, or namespace/token keys. `ResolvedTheme` also carries recursively frozen `tokens` and a detached/frozen shared `colors` view; `colors.semantic` always exposes error/success/warning, while `colors.categorical` is non-empty, may repeat values, and is consumed with a stable modulo index. `lowerIRToKernel()` uses the same resolver for `expand`, while a layout-aware definition still fails before its callback. Theme only lets a composite materialize domain-owned defaults; the final Scene and renderers neither carry nor interpret it.
 
 A layout-aware definition with `artifactSchema` may also declare `inspector`. The Inspector stays on the same `CompositeDefinition` and registry key; Core does not maintain a second Inspector registry. For a selected occurrence, the callback receives the validated artifact from that compile and reads canonical options, occurrence, and recommended appearance from `InspectorContext`. An `expand` branch, a compile branch without `artifactSchema`, or a selected occurrence that omits its artifact fails loudly.
 
@@ -302,7 +310,7 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 277,
+      endLine: 239,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',

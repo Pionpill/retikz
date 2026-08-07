@@ -10,6 +10,8 @@ Chart 是 Plot 之上的封闭类型封装。它需要为 Chart canvas、title /
 
 早期 Chart style contract 同时承载 Chart presentation 和 Plot surface、guide、label、palette，造成 Chart 与 Plot 的重复 token vocabulary。Core ADR-13 和 Plot v0.2-alpha.1 ADR-02 已冻结 namespace context 与 Plot contribution；本 ADR 将 Chart 的输入、definition 聚合和 owner 边界对齐到这条主链。
 
+本 ADR 对 Chart 基础设施 ADR-01 中“全部 variant 共享 forwarded `theme`”的字段表述作出替代：Plot-compatible 视觉轴仍由全部 variant 共享，但公开字段改为 `plotThemeTokens`、`colors` 与 `plotTheme`；旧 `theme` 不再属于 ChartSpec contract。
+
 ## 决策：Chart 拥有 presentation，Plot 拥有 Plot theme
 
 Chart 只拥有 Chart canvas、presentation 和 recipe-default token。Plot surface、typography、label、Axis / Legend visual token、palette 与 native theme 全部由 Plot owner 解析。Chart 不复制 Plot schema、preset、resolver、merge 或 resolved map。

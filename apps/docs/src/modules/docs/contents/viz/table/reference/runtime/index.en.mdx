@@ -9,7 +9,7 @@ TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile o
 
 ## How entries converge
 
-React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, formatter/style cascade, presentation, or layout algorithms.
+React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, Theme-token cascade, presentation, or layout algorithms.
 
 <div className="hidden sm:block">
   <ComponentPreview files="table-runtime-entry" hideCode size="sm" previewClassName="p-3" />
@@ -20,7 +20,7 @@ React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use 
 
 Standalone entries build a canonical `children[0]` root Scene and pass Table definitions plus extra composites into Core compile. React delegates rendering to `<Layout>`; Vanilla `renderTable()` renders the same Scene to an SVG string.
 
-An embedded Table does not start a local compile. It contributes its spec, datasets, Formatter / Structure / Presentation / Visual Scale definitions, and extra composites to the outer `<Layout>` or Vanilla adapter. The host performs the shared compile and exposes results through host artifacts.
+Standalone `theme` writes the root Core Scene Theme. An embedded Table does not start a local compile or create a local root Theme; it contributes its spec, datasets, Formatter / Structure / Presentation / Visual Scale definitions, and extra composites to the outer `<Layout>` or Vanilla adapter. The host performs the shared compile and exposes results through host artifacts.
 
 ## One Table transaction
 
@@ -33,7 +33,7 @@ An embedded Table does not start a local compile. It contributes its spec, datas
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell first resolves its final plan from preset/tokens, Cell configuration, encodings, and ordered rules. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
+1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell first resolves its final plan from the Core Theme `style` / `mode` preset, shared categorical colors, inherited `theme.tokens.table`, local `tableThemeTokens`, Cell configuration, encodings, and ordered rules. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
 2. **Natural proposal probes**: every Cell calls `layoutChild` with `NaturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
 3. **Columns and wrap**: natural width, spans, gaps, track configuration, and the parent x-axis `exact.value` or finite `range.max` feed the column solver. Only wrapping Cells issue another `x: range(0, contentWidth)` probe.
 4. **Rows and placement**: final probe heights feed the row solver. The transaction then computes Cell boxes, padding-reduced content boxes, fit / align / overflow placement, and the border conflict graph.
@@ -132,6 +132,15 @@ The standalone runtime builds a canonical `children[0]` Scene. From `Layout.onAr
 
 The four definition categories and composites merge by stable key and object identity when entering a runtime contribution. Runtime stores copied frozen arrays, `lowerOptions`, and envelope, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects remain caller-owned and are neither cloned nor frozen.
 
+### Theme inputs
+
+| Input               | Type                              | Default | Purpose                                                                   |
+| ------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `theme?`            | `IRScene['theme']`                | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>` |
+| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`    | Local TableSpec token overlay above inherited `theme.tokens.table`        |
+
+`theme.style` / `theme.mode` select the Core environment and Table preset. Inherited `theme.tokens.table` is validated through `TableThemeTokenDefinition`; Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade.
+
 ### Embedded
 
 A Table used as a parent `<Layout>` child requires a non-empty stable id. Datasets, Table definitions, and `composites` contribute to the outer host. Local `onManifest` and every standalone host prop fail loudly in one diagnostic that asks callers to move them to the outer `<Layout>`. Use the host's `onArtifacts` when embedded artifacts are needed.
@@ -142,6 +151,7 @@ A Table used as a parent `<Layout>` child requires a non-empty stable id. Datase
 
 ```ts
 const result = renderTable(spec, {
+  theme: { style: 'academic', mode: 'light' },
   data: { scores: rows },
   lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {
@@ -159,6 +169,7 @@ result.manifest;
 
 | `renderTable` option | Type                                 | Default | Description                                                     |
 | -------------------- | ------------------------------------ | ------- | --------------------------------------------------------------- |
+| `theme?`             | `IRScene['theme']`                   | —       | Core Theme written to the standalone root Scene                 |
 | `data?`              | `ExternalDatasets`                   | `{}`    | Table datasets                                                  |
 | `lowerOptions?`      | `LowerTablesOptions`                 | `{}`    | Formatter / Structure / Presentation / Visual Scale definitions |
 | `compile?`           | `RenderToStringOptions['compile']`   | `{}`    | Core compile options; extra composites live here                |
@@ -184,17 +195,15 @@ A layout-aware Table cannot persist its compile-local replay tree through pure T
 
 The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See [Artifact contracts](/viz/table/reference/manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 
-## Runtime migration
+## Runtime entry boundaries
 
 | Previous form                      | Current form                                    |
 | ---------------------------------- | ----------------------------------------------- |
 | `lowerTableWithArtifacts()`        | `compileTable()`                                |
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
-| React host CSS `style={{ ... }}`   | `containerStyle={{ ... }}`                      |
-| Earlier default minimal visuals    | Explicit `style="clean"`                        |
 
-The Table preset continues to use string `style` on a spec/root; do not mix it with host CSS. An omitted preset resolves to `neutral` + `light`, and `styleTokens` is a strict partial overlay for the selected mode.
+The Table preset comes from host Core `theme.style` / `theme.mode`; inherited `theme.tokens.table` and local `tableThemeTokens` resolve by namespace and spec level. Host CSS remains `containerStyle` and does not enter TableSpec. An omitted Theme starts from the `neutral + light` baseline; the resolved manifest separately records effective `style`, `themeMode`, the complete token map, and token sources.
 
 ## Related
 

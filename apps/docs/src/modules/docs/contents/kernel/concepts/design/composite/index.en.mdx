@@ -49,9 +49,9 @@ The compiler looks up `${namespace}.${type}`, validates the node, and calls the 
 
 ## Theme context
 
-Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style, mode }` value. Core starts at `neutral + light`, then merges Scene → outer Scope → inner Scope per field.
+Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style, mode, tokens, colors }` value. Core starts at `neutral + light`, then merges Scene → outer Scope → inner Scope per field, applying sparse namespace/key overlays to `tokens`. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
 
-The composite maps those shared choices into its own domain tokens, palette, or other defaults and emits already-materialized IR. Core owns no concrete colors, and neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed.
+The composite maps the shared `colors` and its own namespace tokens into domain tokens, palettes, or other defaults and emits already-materialized IR. Core does not interpret Tier 2 keys or own Plot, Chart, or Table tokens; neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed. Definitions enter Core through `themeTokenDefinitions`; an unknown namespace/key/value or conflicting Definition fails before the Composite callback runs.
 
 ## Layout-aware compile
 
@@ -234,7 +234,7 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 277,
+      endLine: 239,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',

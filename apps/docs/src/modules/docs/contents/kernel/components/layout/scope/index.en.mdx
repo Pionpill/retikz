@@ -106,7 +106,7 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 ### Local Theme
 
-`<Scope theme>` writes a sparse value to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
+`<Scope theme>` writes a sparse value to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. `theme.tokens` is an owner-namespaced token bag; a Scope overrides only the namespaces and token keys it provides, while omitted namespaces and keys continue from the outer Theme. Core validates each namespace, token key, and value through the owner registry, and unknown definitions fail immediately. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
 
 Theme and style defaults are independent channels. `resetStyle` does not reset Theme, and Theme does not fill Node or Path colors. To return to the baseline, set `{ style: ThemeStyle.Neutral, mode: ThemeMode.Light }` explicitly.
 

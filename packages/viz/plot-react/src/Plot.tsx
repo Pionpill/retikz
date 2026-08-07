@@ -20,7 +20,7 @@ import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-
 import { resolvePlotRuntime } from './plot-runtime';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
-export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip'> & {
+export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip' | 'theme'> & {
   /** 面板左上角 x（user units）；会转成外层 Scope translate，适合 Layout 内多 plot 绝对摆位 */
   x?: number;
   /** 面板左上角 y（user units）；会转成外层 Scope translate，适合 Layout 内多 plot 绝对摆位 */
@@ -105,17 +105,18 @@ export type PlotDslProps = PlotCommonProps &
 export type PlotProps = PlotSpecProps | PlotDslProps;
 
 const wrapPanelScope = (node: IRPlotSpec, props: PlotPanelProps): EmbeddableContribution['node'] => {
-  const { x, y, transforms, zIndex, clip } = props;
+  const { x, y, transforms, zIndex, clip, theme } = props;
   const panelTransforms =
     x !== undefined || y !== undefined
       ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<ScopeProps['transforms']>)
       : transforms;
-  if (panelTransforms === undefined && zIndex === undefined && clip === undefined) return node;
+  if (panelTransforms === undefined && zIndex === undefined && clip === undefined && theme === undefined) return node;
   const scope = {
     type: 'scope',
     ...(panelTransforms !== undefined ? { transforms: panelTransforms } : {}),
     ...(zIndex !== undefined ? { zIndex } : {}),
     ...(clip !== undefined ? { clip } : {}),
+    ...(theme !== undefined ? { theme } : {}),
     children: [node],
   };
   return scope as EmbeddableContribution['node'];

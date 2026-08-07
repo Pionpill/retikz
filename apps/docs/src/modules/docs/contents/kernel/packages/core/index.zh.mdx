@@ -7,9 +7,11 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 ## Theme 环境
 
-Core 公开 `ThemeStyle`、`ThemeMode`、`ThemeSchema` 与 `ResolvedTheme`。`IRScene.theme` 和 `IRScope.theme` 是稀疏、JSON-safe 的覆盖；compile 从 `neutral + light` 开始按 Scene → Scope 逐字段继承，并把完整只读值传给 `CompositeDefinition.expand` 与布局感知 `compile`。
+Core 公开 `ThemeStyle`、`ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColors`。`IRScene.theme` 和 `IRScope.theme` 是由 `style`、`mode`、`tokens` 组成的稀疏、JSON-safe 覆盖；compile 从 `neutral + light` 开始按 Scene → Scope 继承，并把完整、冻结的 `ResolvedTheme` 传给 `CompositeDefinition.expand` 与布局感知 `compile`。
 
-Theme 只是一条 Composite 环境通道。领域包和第三方 Composite 拥有自己的 token / palette 映射；Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
+`theme.tokens` 是 owner namespace bag。Core 内置 `core` namespace，并通过 `CoreThemeTokenDefinition` 校验 `semantic.error`、`semantic.success`、`semantic.warning` 与非空 `palette.categorical`；Plot、Chart、Table 和第三方 Composite 通过自己的 Definition 注册 namespace。`composeThemeTokenOverrides(defineCoreThemeTokens(...), ...)` 可把各 owner 的 contribution 组合成根或局部 Theme 输入；未知 namespace、key、值和冲突 Definition 都会 fail-loud。
+
+Core 只负责传播、校验、逐 namespace/key 继承并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors 与当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
 
 ## 完整 Snapshot 与 Core Program
 
@@ -157,26 +159,30 @@ session.update({
 
 ## 公开 API
 
-| 导出                                                   | 作用                                                          |
-| ------------------------------------------------------ | ------------------------------------------------------------- |
-| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                   | Core document owner 与 compile Program 的固定 identity        |
-| `CoreOwnerDefinition`                                  | 完整 IR Snapshot 的 capture/read/equality Definition          |
-| `ThemeStyle` / `ThemeMode` / `ThemeSchema`             | 闭合 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口     |
-| `IRTheme` / `ResolvedTheme`                            | 稀疏持久化覆盖与 Composite 收到的完整只读环境                 |
-| `createCoreProgram(options, runtimeOptions?)`          | 创建保留 composite artifact 泛型的 Runtime Program Definition |
-| `CoreChange`                                           | `add` / `update` / `remove` / `move` change hint union        |
-| `CoreProgramOptions<TComposites>`                      | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |
-| `CoreProgramRuntimeOptions`                            | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners       |
-| `CoreProgramOutput<TComposites>`                       | 完整 compile result 与 warnings                               |
-| `CoreProgramPublicRead<TComposites>`                   | public `output` / `snapshot` / optional `patch`               |
-| `CoreProgramDefinition<TComposites>`                   | 保留 artifact input、owned artifact、private/public read 泛型 |
-| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch` | deeply readonly Scene 与原子 Patch DTO                        |
-| `InspectOptions` / `CompileInspectionOptions`          | Layout / Scope 级联策略与 compile authored sidecar            |
-| `InspectionPlane` / `InspectionPlaneEntry`             | 与主 Scene 隔离、每项携带普通静态 `scene` 的辅助平面          |
-| `InspectorDefinition` / `defineInspector`              | owner-neutral 的 Inspector 契约与定义 helper                  |
-| `InspectorOutput` / `InspectorContext`                 | 普通 Core 子元素输出与 canonical options / appearance 上下文  |
-| `InspectionAppearance` / `InspectionOwner`             | Core 解析的 occurrence 外观与 Definition owner 身份           |
-| `PathInspectionAuthoring` / `PathInspectOptions`       | React / Vanilla Path 的 occurrence-local 运行时开启参数       |
+| 导出                                                                                        | 作用                                                          |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                                        | Core document owner 与 compile Program 的固定 identity        |
+| `CoreOwnerDefinition`                                                                       | 完整 IR Snapshot 的 capture/read/equality Definition          |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                                  | 闭合 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口     |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                                         | 稀疏持久化覆盖、完整冻结环境与 shared color view              |
+| `ThemeTokenDefinition` / `ThemeTokenContribution`                                           | owner namespace 的 schema Definition 与纯 JSON contribution   |
+| `defineThemeTokenNamespace` / `defineThemeTokenContribution` / `composeThemeTokenOverrides` | 注册、冻结并组合 Theme token authoring 输入                   |
+| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens`               | Core `core` namespace 与 shared color overrides               |
+| `resolveThemeTokenRegistry`                                                                 | 合并 Core 与传入 owner Definition；冲突立即失败               |
+| `createCoreProgram(options, runtimeOptions?)`                                               | 创建保留 composite artifact 泛型的 Runtime Program Definition |
+| `CoreChange`                                                                                | `add` / `update` / `remove` / `move` change hint union        |
+| `CoreProgramOptions<TComposites>`                                                           | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |
+| `CoreProgramRuntimeOptions`                                                                 | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners       |
+| `CoreProgramOutput<TComposites>`                                                            | 完整 compile result 与 warnings                               |
+| `CoreProgramPublicRead<TComposites>`                                                        | public `output` / `snapshot` / optional `patch`               |
+| `CoreProgramDefinition<TComposites>`                                                        | 保留 artifact input、owned artifact、private/public read 泛型 |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                                      | deeply readonly Scene 与原子 Patch DTO                        |
+| `InspectOptions` / `CompileInspectionOptions`                                               | Layout / Scope 级联策略与 compile authored sidecar            |
+| `InspectionPlane` / `InspectionPlaneEntry`                                                  | 与主 Scene 隔离、每项携带普通静态 `scene` 的辅助平面          |
+| `InspectorDefinition` / `defineInspector`                                                   | owner-neutral 的 Inspector 契约与定义 helper                  |
+| `InspectorOutput` / `InspectorContext`                                                      | 普通 Core 子元素输出与 canonical options / appearance 上下文  |
+| `InspectionAppearance` / `InspectionOwner`                                                  | Core 解析的 occurrence 外观与 Definition owner 身份           |
+| `PathInspectionAuthoring` / `PathInspectOptions`                                            | React / Vanilla Path 的 occurrence-local 运行时开启参数       |
 
 ## 源码
 

@@ -65,7 +65,7 @@ import { Legend, Plot, PointMark } from '@retikz/plot-react';
   description="日常使用只需保证 mark 上存在数据驱动的通道绑定；这一节说明 Legend 如何复用通道和 scale 已生成的描述信息。"
 />
 
-Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色形态来自 scale，其它通道形态来自同一 registry 中的 `ChannelDefinition.legend`，因此自定义通道不需要单独的 Legend 分支。样式由 `Plot.theme.legend` 提供默认值，单个图例可以用 `style` 局部覆盖。
+Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色形态来自 scale，其它通道形态来自同一 registry 中的 `ChannelDefinition.legend`，因此自定义通道不需要单独的 Legend 分支。样式由 `Plot.plotTheme.legend` 提供默认值，单个图例可以用 `style` 局部覆盖。
 
 <ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
 
