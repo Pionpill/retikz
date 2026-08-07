@@ -4,8 +4,8 @@ export type { RuntimeErrorCodeValue, RuntimeOwnerExecutionResult, RuntimeOwnerLi
 export type { RuntimeOwnerErrorCodeValue, RuntimeOwnerPhaseValue } from './error';
 export { RuntimeErrorCode, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from './error';
 export { RuntimeError, RuntimeIdentityError, RuntimeOwnerError, RuntimeOwnerRegistryError } from './error';
-export type { RuntimeIdentity, RuntimeIdentityIndex, RuntimeProgramId } from './identity';
-export { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from './identity';
+export type { RuntimeIdentity, RuntimeIdentityLookup, RuntimeProgramId } from './identity';
+export { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from './identity';
 export type {
   RuntimeChangeSet,
   RuntimeOwnedValueDefinitionInput,

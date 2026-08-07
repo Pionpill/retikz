@@ -1,4 +1,4 @@
-import type { RuntimeIdentity, RuntimeIdentityIndex } from './types';
+import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
 
 import { RuntimeIdentityError } from '../error';
 
@@ -74,11 +74,11 @@ export const runtimeIdentityEquals = (left: RuntimeIdentity, right: RuntimeIdent
   );
 };
 
-/** 创建复制输入、验证 owner/唯一性并稳定排序的 identity index */
-export const createRuntimeIdentityIndex = (
+/** 创建复制输入、验证 owner/唯一性并稳定排序的 identity lookup */
+export const createRuntimeIdentityLookup = (
   owner: string,
   identities: ReadonlyArray<RuntimeIdentity>,
-): RuntimeIdentityIndex => {
+): RuntimeIdentityLookup => {
   assertNonEmptyString(owner, owner);
   if (!Array.isArray(identities)) throw new RuntimeIdentityError(owner, identities);
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };

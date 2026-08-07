@@ -4,14 +4,14 @@ import type {
   RuntimeOwnerLifecycleDiagnostic,
   RuntimeOwnerPhaseValue,
 } from '../error';
-import type { RuntimeIdentityIndex } from '../identity';
+import type { RuntimeIdentityLookup } from '../identity';
 import type { RuntimeOwnerRegistry } from '../registry';
 import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
 import { RuntimeError, RuntimeOwnerError, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from '../error';
-import { createRuntimeIdentityIndex } from '../identity';
+import { createRuntimeIdentityLookup } from '../identity';
 import { getRuntimeOwnerRegistryExecutor } from '../registry';
 
 /** executor 准备完成但尚未发布的 owner value */
@@ -20,8 +20,8 @@ export type RuntimePreparedOwnerValue<TValue, TRead> = Readonly<{
   value: TValue;
   /** 可安全共享的 immutable read view */
   read: TRead;
-  /** Definition 显式收集时建立的 validated identity index */
-  identities?: RuntimeIdentityIndex;
+  /** Definition 显式收集时建立的 validated identity lookup */
+  identities?: RuntimeIdentityLookup;
 }>;
 
 /** Runtime 包内唯一消费 owner author callbacks 的 lifecycle executor */
@@ -151,11 +151,11 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         });
       }
 
-      let identities: RuntimeIdentityIndex | undefined;
+      let identities: RuntimeIdentityLookup | undefined;
       if (executor.collectIdentities !== undefined) {
         try {
           const collected = executor.collectIdentities(value);
-          identities = createRuntimeIdentityIndex(definition.key, collected);
+          identities = createRuntimeIdentityLookup(definition.key, collected);
         } catch (cause) {
           const diagnostics = disposeValue(definition, executor, value);
           throw createLifecycleError(

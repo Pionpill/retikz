@@ -14,9 +14,9 @@ export type RuntimeProgramId = Readonly<{
   key: string;
 }>;
 
-/** 单个 owner 的 validated identity index */
-export type RuntimeIdentityIndex = Readonly<{
-  /** index 绑定的 owner */
+/** 单个 owner 的 validated identity lookup */
+export type RuntimeIdentityLookup = Readonly<{
+  /** lookup 绑定的 owner */
   owner: string;
   /** identity 数量 */
   size: number;

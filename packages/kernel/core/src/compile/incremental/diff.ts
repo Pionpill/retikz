@@ -1,6 +1,6 @@
 import type { RuntimeChangeSet, RuntimeIdentity } from '@retikz/runtime';
 
-import { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { CoreChange } from '../../contract';
 import type { IRChild, IRScene, IRScope } from '../../schemas';
@@ -190,11 +190,11 @@ export const coreChangeSetMatchesSnapshots = (
 
     const previousEntities = previous.entries.slice(1);
     const nextEntities = next.entries.slice(1);
-    const previousIdentities = createRuntimeIdentityIndex(
+    const previousIdentities = createRuntimeIdentityLookup(
       CORE_OWNER_KEY,
       previous.entries.map(entry => entry.identity),
     );
-    const nextIdentities = createRuntimeIdentityIndex(
+    const nextIdentities = createRuntimeIdentityLookup(
       CORE_OWNER_KEY,
       next.entries.map(entry => entry.identity),
     );

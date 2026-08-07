@@ -42,13 +42,13 @@ pnpm add @retikz/runtime
 Identity 由 owner 和非空 segment path 组成。segment 保持原值，不对 `/`、`.`、`:` 或 Unicode 做规范化，因此 `['a', 'b/c']` 与 `['a/b', 'c']` 不会碰撞。
 
 ```ts
-import { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from '@retikz/runtime';
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 const title = createRuntimeIdentity('@retikz/core', ['layer/main', 'title']);
 const body = createRuntimeIdentity('@retikz/core', ['layer/main', 'body']);
-const index = createRuntimeIdentityIndex('@retikz/core', [body, title]);
+const lookup = createRuntimeIdentityLookup('@retikz/core', [body, title]);
 
-index.has(createRuntimeIdentity('@retikz/core', ['layer/main', 'title'])); // true
+lookup.has(createRuntimeIdentity('@retikz/core', ['layer/main', 'title'])); // true
 runtimeIdentityEquals(title, body); // false
 ```
 
@@ -189,8 +189,8 @@ Definition 作者最常用的三个对象契约如下。函数签名里的泛型
 | `RuntimeIdentity`                  | `{ owner, path }` 的结构化 identity                |
 | `createRuntimeIdentity`            | 校验、复制并冻结 identity                          |
 | `runtimeIdentityEquals`            | 按 owner 与 segment exact equality 比较            |
-| `RuntimeIdentityIndex`             | 单 owner validated identity index                  |
-| `createRuntimeIdentityIndex`       | 验证唯一性并建立稳定排序索引                       |
+| `RuntimeIdentityLookup`            | 单 owner validated identity lookup                 |
+| `createRuntimeIdentityLookup`      | 验证唯一性并建立稳定排序 lookup                    |
 | `RuntimeOwnedValueDefinitionInput` | captured value lifecycle 字段契约                  |
 | `RuntimeOwnerDefinitionInput`      | owner key、value lifecycle、collector 与 validator |
 | `RuntimeOwnerToken`                | dynamic lookup 返回的 opaque `{ key }` token       |
