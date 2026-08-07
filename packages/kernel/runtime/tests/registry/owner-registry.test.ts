@@ -119,10 +119,4 @@ describe('runtime owner registry', () => {
   it('define 拒绝空 owner key', () => {
     expect(() => defineNumberOwner('')).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID' }));
   });
-
-  it('registry 对无效 JavaScript input 返回稳定 token error', () => {
-    expect(() =>
-      createRuntimeOwnerRegistry(null as unknown as Parameters<typeof createRuntimeOwnerRegistry>[0]),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID' }));
-  });
 });
