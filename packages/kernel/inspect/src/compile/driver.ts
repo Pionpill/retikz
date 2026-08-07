@@ -94,7 +94,7 @@ const completeInspection = (
     } catch (cause) {
       throw wrapInspectionError(originFor('subject', request), cause);
     }
-    return Object.freeze({ request, definition, capture, subject });
+    return { request, definition, capture, subject };
   });
 
   const entries: Array<InspectionPlaneEntry> = [];
@@ -178,7 +178,7 @@ export const createInspectionObserver = (
         select: (site: Readonly<{ owner: CompileObservation['owner']; sourcePath: string }>) =>
           selectionMayRequestSite(admitted, registry, site.owner, site.sourcePath),
         observe: (observation: CompileObservation, context: CompileObservationContext) => {
-          captured.push(Object.freeze({ observation, context }));
+          captured.push({ observation, context });
         },
         complete: () => completeInspection(ir, registry, capturedSelection, captured),
       });

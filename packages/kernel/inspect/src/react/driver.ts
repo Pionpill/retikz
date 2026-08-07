@@ -13,7 +13,7 @@ import { createInspectionObserver, resolveInspectionObserverOutput } from '../co
 import { inspectionPlaneToReadonlyLayers } from '../render';
 import { inspectionRulesFromReactSite } from './authoring';
 
-const EMPTY_SELECTION: InspectionSelection = Object.freeze({ rules: Object.freeze([]) });
+const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
 /** 判断两个领域中立观测所属者是否相同 */
 const observationOwnerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
@@ -119,16 +119,16 @@ const resolveReactSelection = (
         throw new Error('Inspect React self request owner does not match authored site owner');
       }
       if (occurrenceIndex === undefined) return rule;
-      return Object.freeze({
+      return {
         ...rule,
-        target: Object.freeze({
+        target: {
           kind: 'self' as const,
-          locator: Object.freeze({ ...rule.target.locator, occurrenceIndex }),
-        }),
-      });
+          locator: { ...rule.target.locator, occurrenceIndex },
+        },
+      };
     });
   });
-  return Object.freeze({ rules: Object.freeze([...selection.rules, ...authoredRules]) });
+  return { rules: [...selection.rules, ...authoredRules] };
 };
 
 /** 创建绑定检查器注册表、选择结果与提交回调的 React 编译驱动 */
@@ -165,15 +165,12 @@ export const createInspectionLayoutDriver = (options: CreateInspectionLayoutDriv
         },
         commit: (output: LayoutCompileOutput) => deliverCommit(options, output),
       });
-      sessions.set(
-        input.instance,
-        Object.freeze({
-          updateInput: (nextInput: LayoutCompileDriverInput) => {
-            currentInput = nextInput;
-          },
-          session,
-        }),
-      );
+      sessions.set(input.instance, {
+        updateInput: (nextInput: LayoutCompileDriverInput) => {
+          currentInput = nextInput;
+        },
+        session,
+      });
       return session;
     },
   });

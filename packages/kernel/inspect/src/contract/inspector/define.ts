@@ -30,10 +30,10 @@ const assertSchema = (schema: unknown, field: string): void => {
 export const normalizeInspectorDefinition = (input: unknown): AnyInspectorDefinition => {
   if (typeof input !== 'object' || input === null) throw new Error('Inspector definition must be an object');
   const definition = input as AnyInspectorDefinition;
-  if (typeof definition.namespace !== 'string' || definition.namespace.trim().length === 0) {
+  if (!isNonEmptyString(definition.namespace)) {
     throw new Error('Inspector namespace must be a non-empty string');
   }
-  if (typeof definition.name !== 'string' || definition.name.trim().length === 0) {
+  if (!isNonEmptyString(definition.name)) {
     throw new Error('Inspector name must be a non-empty string');
   }
   assertValidOwner(definition.owner);

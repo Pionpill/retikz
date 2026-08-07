@@ -70,7 +70,7 @@ const collectControls = (commands: ReadonlyArray<PathCommand>) => {
     if (command.kind === 'arc' || command.kind === 'ellipseArc') current = endpointOfArc(command);
     if (command.kind === 'close') current = subpathStart;
   }
-  return Object.freeze({ handles: Object.freeze(handles), points: Object.freeze(points) });
+  return { handles, points };
 };
 
 /** 内置 stroke Path 控制点 Inspector */

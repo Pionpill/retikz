@@ -12,7 +12,7 @@ import { createInspectionObserver, resolveInspectionObserverOutput } from '../co
 import { inspectionPlaneToReadonlyLayers } from '../render';
 import { inspectionRulesFromVanillaSite } from './authoring';
 
-const EMPTY_SELECTION: InspectionSelection = Object.freeze({ rules: Object.freeze([]) });
+const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
 /** Inspect Vanilla 编译驱动的固定配置 */
 export type CreateInspectionVanillaDriverOptions = Readonly<{
@@ -53,13 +53,9 @@ const deliverCommit = (options: CreateInspectionVanillaDriverOptions, output: Va
 const resolveVanillaSelection = (
   input: VanillaCompileDriverInput,
   selection: InspectionSelection,
-): InspectionSelection =>
-  Object.freeze({
-    rules: Object.freeze([
-      ...selection.rules,
-      ...input.authoringSites.flatMap(site => inspectionRulesFromVanillaSite(site)),
-    ]),
-  });
+): InspectionSelection => ({
+  rules: [...selection.rules, ...input.authoringSites.flatMap(site => inspectionRulesFromVanillaSite(site))],
+});
 
 /** 创建绑定 Inspector registry、selection 与 committed callbacks 的 Vanilla 编译驱动 */
 export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDriverOptions): VanillaCompileDriver => {
@@ -95,15 +91,12 @@ export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDr
         },
         commit: output => deliverCommit(options, output),
       });
-      sessions.set(
-        input.instance,
-        Object.freeze({
-          updateInput: nextInput => {
-            currentInput = nextInput;
-          },
-          session,
-        }),
-      );
+      sessions.set(input.instance, {
+        updateInput: nextInput => {
+          currentInput = nextInput;
+        },
+        session,
+      });
       return session;
     },
   });

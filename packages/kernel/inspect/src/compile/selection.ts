@@ -133,13 +133,6 @@ const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typ
   ) {
     throw new Error('Invalid inspection authored occurrence index');
   }
-  if (
-    target.locator.kind === 'occurrence' &&
-    (typeof target.locator.occurrence.sourcePath !== 'string' ||
-      !Array.isArray(target.locator.occurrence.expansionPath))
-  ) {
-    throw new Error('Invalid inspection occurrence locator');
-  }
 };
 
 /** 在 Core traversal 前完成 selection 结构、locator、registry 与 sparse options admission */
@@ -314,15 +307,13 @@ export const resolveInspectionSelection = ({
         const last = requests.at(-1);
         throw wrapInspectionError(selectionOrigin(last?.index ?? 0, last?.rule.target ?? { kind: 'scene' }), cause);
       }
-      pending.push(
-        Object.freeze({
-          inspector: Object.freeze({ namespace: definition.namespace, name: definition.name }),
-          owner: observation.owner,
-          occurrence: observation.occurrence,
-          provenance: observation.provenance,
-          options,
-        }),
-      );
+      pending.push({
+        inspector: Object.freeze({ namespace: definition.namespace, name: definition.name }),
+        owner: observation.owner,
+        occurrence: observation.occurrence,
+        provenance: observation.provenance,
+        options,
+      });
     }
   }
   pending.sort(
