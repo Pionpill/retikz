@@ -1,12 +1,8 @@
 export type { RuntimeDiagnostic, RuntimeDiagnosticCodeValue, RuntimeDiagnosticPhaseValue } from './diagnostic';
 export { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from './diagnostic';
-export type {
-  RuntimeErrorCode,
-  RuntimeOwnerErrorCode,
-  RuntimeOwnerExecutionResult,
-  RuntimeOwnerLifecycleDiagnostic,
-  RuntimeOwnerPhase,
-} from './error';
+export type { RuntimeErrorCodeValue, RuntimeOwnerExecutionResult, RuntimeOwnerLifecycleDiagnostic } from './error';
+export type { RuntimeOwnerErrorCodeValue, RuntimeOwnerPhaseValue } from './error';
+export { RuntimeErrorCode, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from './error';
 export { RuntimeError, RuntimeIdentityError, RuntimeOwnerError, RuntimeOwnerRegistryError } from './error';
 export type { RuntimeIdentity, RuntimeIdentityIndex, RuntimeProgramId } from './identity';
 export { createRuntimeIdentity, createRuntimeIdentityIndex, runtimeIdentityEquals } from './identity';

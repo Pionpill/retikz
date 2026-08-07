@@ -1,11 +1,16 @@
-import type { RuntimeOwnerExecutionResult, RuntimeOwnerLifecycleDiagnostic, RuntimeOwnerPhase } from '../error';
+import type {
+  RuntimeOwnerErrorCodeValue,
+  RuntimeOwnerExecutionResult,
+  RuntimeOwnerLifecycleDiagnostic,
+  RuntimeOwnerPhaseValue,
+} from '../error';
 import type { RuntimeIdentityIndex } from '../identity';
 import type { RuntimeOwnerRegistry } from '../registry';
 import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
-import { RuntimeError, RuntimeOwnerError } from '../error';
+import { RuntimeError, RuntimeOwnerError, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from '../error';
 import { createRuntimeIdentityIndex } from '../identity';
 import { getRuntimeOwnerRegistryExecutor } from '../registry';
 
@@ -53,7 +58,7 @@ const createDisposeDiagnostic = (owner: string, cause: unknown): RuntimeOwnerLif
   Object.freeze({
     code: RuntimeDiagnosticCode.OwnerDisposeFailed,
     owner,
-    phase: 'retire',
+    phase: RuntimeOwnerPhase.Retire,
     message: errorMessage(cause),
     cause,
   });
@@ -75,14 +80,16 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
 
 /** 创建保留 primary cause 与 cleanup diagnostics 的 lifecycle error */
 const createLifecycleError = (
-  code:
-    | 'RUNTIME_OWNER_CAPTURE_FAILED'
-    | 'RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED'
-    | 'RUNTIME_OWNER_READ_FAILED'
-    | 'RUNTIME_OWNER_COMPARE_FAILED'
-    | 'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED',
+  code: Extract<
+    RuntimeOwnerErrorCodeValue,
+    | typeof RuntimeOwnerErrorCode.CaptureFailed
+    | typeof RuntimeOwnerErrorCode.CollectIdentitiesFailed
+    | typeof RuntimeOwnerErrorCode.ReadFailed
+    | typeof RuntimeOwnerErrorCode.CompareFailed
+    | typeof RuntimeOwnerErrorCode.ChangeSetValidationFailed
+  >,
   owner: string,
-  phase: RuntimeOwnerPhase,
+  phase: RuntimeOwnerPhaseValue,
   cause: unknown,
   diagnostics: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic> = [],
 ): RuntimeOwnerError => new RuntimeOwnerError({ code, owner, phase, cause, diagnostics });
@@ -128,7 +135,12 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       try {
         value = executor.capture<TInput, TValue>(source);
       } catch (cause) {
-        throw createLifecycleError('RUNTIME_OWNER_CAPTURE_FAILED', definition.key, 'capture', cause);
+        throw createLifecycleError(
+          RuntimeOwnerErrorCode.CaptureFailed,
+          definition.key,
+          RuntimeOwnerPhase.Capture,
+          cause,
+        );
       }
       if (current !== undefined && executor.dispose !== undefined && value === current.value) {
         throw new RuntimeError({
@@ -147,9 +159,9 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         } catch (cause) {
           const diagnostics = disposeValue(definition, executor, value);
           throw createLifecycleError(
-            'RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED',
+            RuntimeOwnerErrorCode.CollectIdentitiesFailed,
             definition.key,
-            'collect-identities',
+            RuntimeOwnerPhase.CollectIdentities,
             cause,
             diagnostics,
           );
@@ -161,7 +173,13 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         read = executor.read<TValue, TRead>(value);
       } catch (cause) {
         const diagnostics = disposeValue(definition, executor, value);
-        throw createLifecycleError('RUNTIME_OWNER_READ_FAILED', definition.key, 'read', cause, diagnostics);
+        throw createLifecycleError(
+          RuntimeOwnerErrorCode.ReadFailed,
+          definition.key,
+          RuntimeOwnerPhase.Read,
+          cause,
+          diagnostics,
+        );
       }
 
       const prepared = Object.freeze({ value, read, identities });
@@ -181,7 +199,12 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       try {
         return Object.freeze({ value: executor.equals(left.value, right.value), diagnostics: Object.freeze([]) });
       } catch (cause) {
-        throw createLifecycleError('RUNTIME_OWNER_COMPARE_FAILED', definition.key, 'compare', cause);
+        throw createLifecycleError(
+          RuntimeOwnerErrorCode.CompareFailed,
+          definition.key,
+          RuntimeOwnerPhase.Compare,
+          cause,
+        );
       }
     },
 
@@ -205,9 +228,9 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       } catch (cause) {
         const diagnostics = retire(definition, candidate).diagnostics;
         throw createLifecycleError(
-          'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED',
+          RuntimeOwnerErrorCode.ChangeSetValidationFailed,
           definition.key,
-          'validate-change-set',
+          RuntimeOwnerPhase.ValidateChangeSet,
           cause,
           diagnostics,
         );
