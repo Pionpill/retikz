@@ -232,20 +232,6 @@ spacing boundary、box outline 与 family structure 共享同一共线归一化�
 
 不保留旧 tone alias、可选 `colorScope` 或缺失 `spacing` 的兼容分支。
 
-## 测试设计
-
-- Core schema：pattern union、tone 收窄、outline / fill 非法组合、`colorScope` 数值边界、box spacing sparse/boolean/default/merge、JSON round-trip 与字段描述
-- Core inspection cascade：`spacing` 作为 base key 经过 Layout → Scope → component-local 分流与两条 sparse merge 路径；覆盖 object/object、boolean/object，React / Vanilla component-local authoring 得到相同 resolved spacing
-- Core compile：按 final occurrence 顺序连续分配 colorScope；rejected probe 不占号；分配阶段不新增基于 sourcePath 内容或 Scope 深度的颜色规则
-- Render shared：palette 取模、warning override、两种 diagonal 方向、crosshatch segment、pattern base alpha=0 与 hatch alpha 公式的确定性
-- SVG / Canvas：同一 pattern DTO 使用同一颜色与 segment；pattern 不绘 base fill；solid fill 保留；无 SVG id；Canvas clip / restore；inspection 仍不参与 hit test
-- Standard artifact：Flex row/column reverse、margin + gap + `space-between`、wrap/wrap-reverse + cross gap + `alignContent`、负 free space；Grid gap + content distribution、双轴 band 交叉与 canonical 顺序；非法 spacing 拒绝
-- Standard inspector：padding / margin / gap / distributed 的独立 option、pattern-only fill、distributed boundary-only、显式 dashed spacing boundary、共线消重、box / internal / anchor line style 与六层绘制顺序
-- 集成：nested layout 的相邻 final occurrences 得到不同 colorScope，main Scene、viewBox、resource、hydration 与 hit-test 不变
-- docs：中英文 Standard runtime / artifact、Flex/Grid 组件页与 Kernel Core / Render / compile 公开契约一致；三种 playground 的 recommended/all/off、Reset 与自定义状态一致；现有 nested 与三种 playground 在浅色、深色、桌面与 500px 下可辨认
-
-详细行为到证据映射见 ignored `notes/plans/layout-inspection-visual-semantics/TEST_CONTRACT.md`。
-
 ## 能力完备性检查
 
 - 所属能力域与能力面：Drawing Complete 的 Primitive / Scene 执行协作面，以及 Standard 通用 Layout artifact / inspector
@@ -259,48 +245,6 @@ spacing boundary、box outline 与 family structure 共享同一共线归一化�
 - 下游执行 / adapter 等价性：React / Vanilla 继续通过现有 `inspect` 对象等价暴露新增字段；两者从同一次 Core compile 获得相同 plane，SVG / Canvas 共享 resolver 与 hatch geometry
 - 不支持边界与诊断：不提供 CSS theme 注入、用户 palette、交互选择、拖拽手柄、pattern registry 或增量 inspection patch；非法 DTO / artifact fail-loud
 - 本轮结论：先下沉扩展 Drawing Complete 的 inspection DTO，再由 Standard 当前 Layout 能力消费
-
-## Schema 改动
-
-| 所有者   | 文件                                                                        | 操作                                                                                         |
-| -------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Core     | `packages/kernel/core/src/contract/inspection/primitive-schema.ts`          | tone 收窄；新增 fill pattern；rect presentation 严格 union；entry 新增 `colorScope`          |
-| Core     | `packages/kernel/core/src/contract/inspection/options-schema.ts`            | 新增 `spacing.padding` / `spacing.margin` sparse authoring、boolean 展开与 canonical resolve |
-| Standard | `packages/library/standard/src/composites/shared/layout/artifact-schema.ts` | 新增 spacing segment schema 与类型                                                           |
-| Standard | `packages/library/standard/src/composites/shared/layout/inspect-schema.ts`  | Flex / Grid 新增 `distributedSpace` family-local option                                      |
-| Standard | `packages/library/standard/src/composites/flex-layout/artifact-schema.ts`   | 新增必填 `spacing` 与跨字段校验                                                              |
-| Standard | `packages/library/standard/src/composites/grid-layout/artifact-schema.ts`   | 新增必填 `spacing` 与跨字段校验                                                              |
-
-不修改 Core IR、Standard authoring IR、Scene primitive、React 组件装配或 Vanilla builder 装配；`inspect` 的 schema-derived public type 随上述 option 扩展。
-
-## 文件 scope
-
-允许触碰：
-
-- `packages/kernel/core/src/contract/inspection/**`
-- `packages/kernel/core/src/compile/orchestration/inspection.ts`
-- `packages/kernel/core/tests/contract/inspection/**`
-- `packages/kernel/core/tests/compile/layout-inspection.test.ts`
-- `packages/kernel/render/src/shared/**`
-- `packages/kernel/render/src/svg/builders/inspection.ts`
-- `packages/kernel/render/src/canvas/draw-inspection.ts`
-- 受 DTO breaking 影响的 `packages/kernel/{render,react,vanilla}/tests/**` inspection fixtures
-- `packages/library/standard/src/composites/shared/layout/**`
-- `packages/library/standard/src/composites/{flex-layout,grid-layout,overlay-layout}/**`
-- `packages/library/standard/tests/{layout-artifacts,layout-inspection,flex-layout,grid-layout}/**`
-- `apps/docs/src/modules/docs/contents/standard/layout/reference/{runtime,contract-artifact}/**`
-- `apps/docs/src/modules/docs/contents/standard/layout/{layout-inspection-controls.ts,flex-layout/**,grid-layout/**,overlay-layout/**}`
-- `apps/docs/src/modules/docs/components/component-preview/{types.ts,control-panel/PreviewControlPanel.tsx}`
-- `apps/docs/tests/component-preview/standard-layout-doc.test.tsx`
-- `apps/docs/tests/component-preview/preview-control-panel.test.tsx`
-- `apps/docs/src/modules/docs/contents/kernel/reference/runtime/compile/index.{zh,en}.mdx`
-- `apps/docs/src/modules/docs/contents/kernel/packages/core/index.{zh,en}.mdx`
-- `apps/docs/src/modules/docs/contents/kernel/packages/render/index.{zh,en}.mdx`
-- `apps/docs/src/modules/docs/data/changelog/kernel-0-5.ts`
-- `apps/docs/src/modules/docs/data/changelog/standard-0-1.ts`
-- 本 ADR 与同 milestone roadmap
-
-偏离以上 scope、调整其它 Tier 2 或引入新 package dependency 时必须停止并重新确认。
 
 ## 依赖现有元素
 

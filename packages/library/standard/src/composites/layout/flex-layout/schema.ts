@@ -131,12 +131,12 @@ export const FlexLayoutSchema = FlexLayoutBaseSchema.superRefine(refineFlexLayou
 );
 
 const FlexLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
-  line: z.number().int().safe().nonnegative().describe('Resolved physical flex line index containing the item.'),
+  line: z.number().int().nonnegative().describe('Resolved physical flex line index containing the item.'),
 }).describe('FlexLayout item placement artifact.');
 
 const FlexLayoutLineArtifactSchema = z
   .strictObject({
-    index: z.number().int().safe().nonnegative().describe('Contiguous physical cross-axis line index.'),
+    index: z.number().int().nonnegative().describe('Contiguous physical cross-axis line index.'),
     itemKeys: z.array(z.string().min(1)).describe('Item keys in this line layout traversal order.'),
     mainAxis: z.enum(LayoutAlignmentGuideDimension).describe('Physical main axis used for line item distribution.'),
     mainStart: z.number().describe('Finite main-axis line start in container allocation coordinates.'),

@@ -36,6 +36,11 @@ const baseGroups = {
     kind: 'foundation',
     packages: ['@retikz/data'],
   },
+  standard: {
+    domain: 'library',
+    kind: 'feature',
+    packages: ['@retikz/standard'],
+  },
   plot: {
     domain: 'viz',
     kind: 'feature',
@@ -95,6 +100,19 @@ const basePackages = [
     },
   },
   {
+    path: 'packages/library/standard/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/standard',
+      version: '0.1.0-alpha.2',
+      retikz: {
+        domain: 'library',
+        releaseGroup: 'standard',
+        publishable: true,
+      },
+    },
+  },
+  {
     path: 'packages/viz/plot/package.json',
     manifest: {
       ...createRootPublishContract(),
@@ -107,6 +125,7 @@ const basePackages = [
       },
       dependencies: {
         '@retikz/data': 'workspace:^',
+        '@retikz/standard': 'workspace:^',
       },
     },
   },
@@ -355,4 +374,17 @@ test('feature release groups cannot depend on other feature release groups', () 
   });
 
   assert.ok(diagnostics.some(diagnostic => diagnostic.includes('@retikz/plot cannot depend on feature group table')));
+});
+
+test('viz feature release groups can depend on library feature release groups', () => {
+  const packages = structuredClone(basePackages);
+  packages.find(({ manifest }) => manifest.name === '@retikz/plot').manifest.dependencies['@retikz/standard'] =
+    'workspace:^';
+
+  const diagnostics = validateReleaseGroupPackages({
+    releaseGroups: baseGroups,
+    packageRecords: packages,
+  });
+
+  assert.deepEqual(diagnostics, []);
 });

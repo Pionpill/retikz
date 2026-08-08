@@ -1,5 +1,6 @@
 import type { IRScene, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
 import type {
+  RenderFrameSnapshot,
   RenderRuntimeConfigInput,
   RetainedCanvasRenderer,
   RetainedRenderer,
@@ -293,10 +294,10 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
   const createSvgRenderer = (
     input: Extract<RetainedRendererFactoryInput, Readonly<{ backend: 'svg' }>>,
   ): RetainedSvgRenderer => {
-    let current: SceneRuntimeSnapshot | undefined;
-    const prepare = (patch: ScenePatch | undefined, snapshot: SceneRuntimeSnapshot) => {
+    let current: RenderFrameSnapshot | undefined;
+    const prepare = (patch: ScenePatch | undefined, frame: RenderFrameSnapshot) => {
       if (patch !== undefined) observePatch(patch);
-      const markup = renderToSvgString(snapshot.scene as unknown as Scene, {
+      const markup = renderToSvgString(frame.primary.scene as unknown as Scene, {
         idPrefix: input.immutableOptions.idPrefix,
         animate: false,
       });
@@ -307,7 +308,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       return Object.freeze({
         commit: () => {
           replaceSvgHost(input.host, candidate);
-          current = snapshot;
+          current = frame;
         },
         rollback: () => {
           replaceSvgHost(input.host, previousHost);
@@ -320,11 +321,12 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       backend: 'svg',
       host: input.host,
       capability: 'none',
-      prepareMount: snapshot => prepare(undefined, snapshot),
-      prepare: (patch, snapshot) => prepare(patch, snapshot),
+      readonlyLayerCapability: 'unsupported',
+      prepareMount: frame => prepare(undefined, frame),
+      prepare: (patch, frame) => prepare(patch, frame),
       read: () => {
         if (current === undefined) throw new Error('none SVG benchmark renderer is not committed');
-        return Object.freeze({ snapshot: current });
+        return Object.freeze({ frame: current });
       },
       dispose: () => {
         current = undefined;
@@ -334,13 +336,13 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
   const createCanvasRenderer = (
     input: Extract<RetainedRendererFactoryInput, Readonly<{ backend: 'canvas' }>>,
   ): RetainedCanvasRenderer => {
-    let current: SceneRuntimeSnapshot | undefined;
-    const prepare = (patch: ScenePatch | undefined, snapshot: SceneRuntimeSnapshot) => {
+    let current: RenderFrameSnapshot | undefined;
+    const prepare = (patch: ScenePatch | undefined, frame: RenderFrameSnapshot) => {
       if (patch !== undefined) observePatch(patch);
       const candidate = document.createElement('canvas');
       candidate.width = input.host.width;
       candidate.height = input.host.height;
-      renderToCanvas(candidate, snapshot.scene as unknown as Scene, { devicePixelRatio: 1 });
+      renderToCanvas(candidate, frame.primary.scene as unknown as Scene, { devicePixelRatio: 1 });
       const previous = document.createElement('canvas');
       previous.width = input.host.width;
       previous.height = input.host.height;
@@ -356,7 +358,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       return Object.freeze({
         commit: () => {
           replace(candidate);
-          current = snapshot;
+          current = frame;
         },
         rollback: () => {
           replace(previous);
@@ -369,11 +371,12 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       backend: 'canvas',
       host: input.host,
       capability: 'none',
-      prepareMount: snapshot => prepare(undefined, snapshot),
-      prepare: (patch, snapshot) => prepare(patch, snapshot),
+      readonlyLayerCapability: 'unsupported',
+      prepareMount: frame => prepare(undefined, frame),
+      prepare: (patch, frame) => prepare(patch, frame),
       read: () => {
         if (current === undefined) throw new Error('none Canvas benchmark renderer is not committed');
-        return Object.freeze({ snapshot: current });
+        return Object.freeze({ frame: current });
       },
       dispose: () => {
         current = undefined;

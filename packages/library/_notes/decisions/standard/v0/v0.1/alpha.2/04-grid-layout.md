@@ -246,16 +246,6 @@ overflow=clip 使用 container allocation Scope clip；clip不改变 tracks。ne
 - 无上限 fixed-point双轴迭代：custom child可非单调或振荡，无法证明终止
 - 从 Table 复制 track schema/solver：Standard不依赖领域包；Table后续自行选择是否适配公共容器
 
-## 测试设计
-
-- schema：track union、minmax限制、零基 placement、span、默认 implicit/flow/overlap和非法值
-- placement：explicit/partial/auto、row/column flow、non-dense hole、implicit tracks、overlap与10,000 guard
-- pure solver：single/multi span、content/fixed/fraction/minmax、water-fill、fraction freeze、finite/indefinite、distribution和不可变性
-- compile：x→y text feedback、baseline、stretch refusal、nested Grid、non-zero bounds、clip和failed probe
-- artifact与adapter证据在ADR-06收口
-
-详细行为到证据映射见 ignored `TEST_CONTRACT.md`。
-
 ## 影响
 
 - 新增 `standard.gridLayout`，不修改现有 `standard.grid`
@@ -283,18 +273,6 @@ overflow=clip 使用 container allocation Scope clip；clip不改变 tracks。ne
 - Table border/cell/data/manifest语义
 - track animation、interactive resize、virtualization
 - artifact payload、最终adapter和docs接线
-
-## 最终实现摘要
-
-- 实现 `standard.gridLayout` strict schema、factory、Definition、显式/隐式 tracks、span 与稳定 non-dense auto-placement
-- track solver 支持 fixed、minimum/natural content、fraction 与 minmax，采用有界 aggregation、water-fill/fraction freeze 和物理 x→y contextual feedback
-- 与现有可视格线 `standard.grid` 保持独立；typed track/item artifact 与 adapter/docs 由 ADR-06 收口
-
-## 验证结果
-
-- schema、placement、track solver 与 compile 测试覆盖 partial/auto placement、implicit track、overlap、10,000 guard、multi-span、finite/indefinite fraction、nested 与 selected failure
-- Standard、Standard React、Standard Vanilla 包级类型检查、lint 与测试通过
-- 双语文档与 controls 预览覆盖 tracks、span、autoFlow、fraction、gap 与二维对齐
 
 ## 遗留风险
 
