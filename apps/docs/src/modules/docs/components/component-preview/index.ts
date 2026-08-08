@@ -5,6 +5,13 @@ export { ComponentPreviewCard } from './ComponentPreviewCard';
 export * from './ComponentPreviewThumbnail';
 export { DemoLocationContext, usePreviewControls } from './context';
 export { definePreviewControls } from './controls';
+export {
+  PreviewColorScheme,
+  PreviewColorSchemeColors,
+  PreviewColorSchemeOptions,
+  PreviewDefaultSharedColors,
+} from './theme';
+export type { PreviewColorSchemeValue, PreviewSharedColors } from './theme/types';
 export type {
   AlignKey,
   ComponentPreviewFile,
