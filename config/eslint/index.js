@@ -24,6 +24,9 @@ const eslintConfig = [
       '**/node_modules/**',
       '**/build/**',
       '**/dist/**',
+      // notes/reports 是本地审计与发布 smoke 的临时产物，不属于源码 lint 范围
+      'notes/reports/**',
+      '**/_notes/reports/**',
       // Vite llms 插件输出的可再生静态文档，不属于 tsconfig 项目
       'apps/docs/public/llms/**',
       '**/postcss.config.js',

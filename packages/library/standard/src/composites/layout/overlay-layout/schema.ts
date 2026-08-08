@@ -112,8 +112,8 @@ export const OverlayLayoutSchema = OverlayLayoutBaseSchema.superRefine(refineOve
 );
 
 const OverlayResolvedPointSchema = z.strictObject({
-  x: z.number().finite().describe('Finite container-local horizontal coordinate.'),
-  y: z.number().finite().describe('Finite container-local vertical coordinate.'),
+  x: z.number().describe('Finite container-local horizontal coordinate.'),
+  y: z.number().describe('Finite container-local vertical coordinate.'),
 });
 
 const OverlayResolvedPositionSchema = z.strictObject({

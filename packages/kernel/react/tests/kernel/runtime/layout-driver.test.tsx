@@ -219,7 +219,7 @@ describe('Layout compile driver', () => {
       ),
     );
     expect(onRuntimeDiagnostic).toHaveBeenCalledWith(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', phase: 'prepare' }),
+      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', phase: 'run' }),
     );
     expect(onRuntimeDiagnostic).toHaveBeenCalledTimes(1);
     expect(container.querySelector('path') === committed).toBe(true);

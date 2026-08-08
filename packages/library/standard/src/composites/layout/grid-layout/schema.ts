@@ -69,11 +69,10 @@ export const GridTrackSchema = z
 
 export const GridPlacementSchema = z
   .strictObject({
-    start: z.number().int().safe().nonnegative().optional().describe('Optional zero-based explicit track start.'),
+    start: z.number().int().nonnegative().optional().describe('Optional zero-based explicit track start.'),
     span: z
       .number()
       .int()
-      .safe()
       .positive()
       .max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
       .default(1)
@@ -156,7 +155,7 @@ export const GridLayoutSchema = GridLayoutBaseSchema.superRefine(refineGridLayou
 
 export const LayoutTrackArtifactSchema = z
   .strictObject({
-    index: z.number().int().safe().nonnegative().describe('Contiguous zero-based resolved track index.'),
+    index: z.number().int().nonnegative().describe('Contiguous zero-based resolved track index.'),
     start: z.number().describe('Finite physical track start in container allocation coordinates.'),
     size: z.number().nonnegative().describe('Finite non-negative resolved track size.'),
     sourceKind: z.enum(LayoutTrackSourceKind).describe('Authored or implicit outer sizing source for the track.'),
@@ -165,10 +164,10 @@ export const LayoutTrackArtifactSchema = z
   .describe('Resolved GridLayout track geometry and source classification.');
 
 const GridLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
-  column: z.number().int().safe().nonnegative().describe('Resolved zero-based column start.'),
-  row: z.number().int().safe().nonnegative().describe('Resolved zero-based row start.'),
-  columnSpan: z.number().int().safe().positive().describe('Positive resolved column span.'),
-  rowSpan: z.number().int().safe().positive().describe('Positive resolved row span.'),
+  column: z.number().int().nonnegative().describe('Resolved zero-based column start.'),
+  row: z.number().int().nonnegative().describe('Resolved zero-based row start.'),
+  columnSpan: z.number().int().positive().describe('Positive resolved column span.'),
+  rowSpan: z.number().int().positive().describe('Positive resolved row span.'),
 }).describe('GridLayout item placement artifact.');
 
 const GridLayoutArtifactBaseSchema = z.strictObject({

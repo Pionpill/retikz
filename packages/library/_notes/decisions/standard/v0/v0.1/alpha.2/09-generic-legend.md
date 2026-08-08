@@ -1,6 +1,6 @@
 # ADR-09：通用 Legend 的已解析呈现契约
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-02
 - 关联：[alpha.2 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Presentation lower reuse](./10-presentation-composite-reuse.md) · [Core complete Scope output](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-layout-aware-scope-output.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md) · [Plot completeness](../../../../../../../viz/_notes/architecture/plot-visualization-complete.md) · [Table completeness](../../../../../../../viz/_notes/architecture/table-visualization-complete.md)
 
@@ -344,16 +344,6 @@ Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑
 - **通过 React Context 运行时注册 marker**：引入 render 时机、SSR 与顺序依赖，而同步静态读取已足以确定生成同一 JSON-safe 输入
 - **从 marker children 自动推断 `items | ramp`**：条件 children 会让 form 与错误边界隐式漂移，也无法让 controls 直接切换稳定 discriminator
 - **将 Legend 下沉 Core**：Legend 是可选的高层解释性绘图结构，不是 Drawing Complete 的基础图元；Core 只提供完整 Scope output、probe / replay 与 lower child contract
-
-## 测试策略摘要
-
-- schema / contract 证据锁定 strict JSON、Core Scope props composition、content union、默认 size / gap、标量 gap shorthand 的 canonical 归一、root identity、normalized tick 与非法状态拒绝
-- compile contract 使用 Core primitive、显式文本 Node、registered custom composite 与 nested Standard component 证明 title/sample/label 的开放性、Core 引用语义与缺失 capability 诊断
-- layout contract 证明 heterogeneous sample、title、空内容、content / fixed / fill 对各类父 proposal 的双轴 allocation、title / body content alignment、约束换行、ramp tick、authored clip + allocation clip、root Scope props 与 artifact bounds 只经 Core layout-aware probe/replay
-- Definition 接入证明直接 Definition、领域显式传递、重复 composite key 与缺失 nested Definition 的确定结果
-- adapter parity 证明直接 IR、React 无头 marker tree 与 Vanilla plain data 产生同一 Standard input、Core 语义与 typed artifact；React 类型与失败证据同时锁定显式 form、marker 合法组合、Fragment 顺序、empty node、严格单 element / 单 `IRChild` 转换、混合 sibling 拒绝和旧 props 移除
-- 跨领域集成证据证明 Plot、Table 与逻辑组件可以生成同一通用 input，同时领域 provenance / locator 与交互状态不进入 Standard
-- renderer 只验证同一 Scene 的 SVG / Canvas parity，不建立 Legend renderer 分支或以 renderer 回读作为布局 oracle
 
 ## 能力完备性检查
 
