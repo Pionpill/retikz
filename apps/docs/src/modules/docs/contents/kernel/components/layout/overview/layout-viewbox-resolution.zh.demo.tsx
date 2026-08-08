@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Layout 以互斥优先级决定内部坐标，并独立处理页面显示尺寸 */
 const Demo: FC = () => (
   <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="coordinate-priority">
-      <LogicFrameTitle>内部坐标优先级</LogicFrameTitle>
+    <LogicFigureFrame id="coordinate-priority">
+      <LogicFigureFrameTitle>内部坐标优先级</LogicFigureFrameTitle>
       <Node
         id="viewbox-prop"
         position={[-215, -50]}
@@ -57,7 +57,7 @@ const Demo: FC = () => (
       >
         内部坐标范围
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
     <Node
       id="width-height"
       position={[-165, 90]}

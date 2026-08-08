@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Table 类型共享的结构解析、呈现、布局与下沉管线 */
 const Demo: FC = () => (
   <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="table-group">
-      <LogicFrameTitle>@retikz/table</LogicFrameTitle>
+    <LogicFigureFrame id="table-group">
+      <LogicFigureFrameTitle>@retikz/table</LogicFigureFrameTitle>
       <Node id="spec" position={[-280, 0]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} cornerRadius={4}>
         TableSpec
       </Node>
@@ -24,7 +24,7 @@ const Demo: FC = () => (
       <Node id="layout" position={[180, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
         Layout
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
     <Node id="core" position={[305, -24]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} cornerRadius={4}>
       Scene
     </Node>

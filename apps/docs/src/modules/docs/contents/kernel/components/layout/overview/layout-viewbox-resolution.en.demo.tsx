@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Layout chooses internal coordinates through exclusive precedence and keeps display size separate */
 const Demo: FC = () => (
   <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="coordinate-priority">
-      <LogicFrameTitle>Internal-coordinate precedence</LogicFrameTitle>
+    <LogicFigureFrame id="coordinate-priority">
+      <LogicFigureFrameTitle>Internal-coordinate precedence</LogicFigureFrameTitle>
       <Node
         id="viewbox-prop"
         position={[-215, -50]}
@@ -57,7 +57,7 @@ const Demo: FC = () => (
       >
         internal coordinates
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
     <Node
       id="width-height"
       position={[-165, 90]}

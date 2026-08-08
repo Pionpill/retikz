@@ -46,6 +46,14 @@ const resolveNodeShapePreset = (shape: IRNode['shape']): ResolvedNodeShapePreset
   if (shape === BuiltinShape.Diamond) return { type: 'polygon', params: { sides: 4, rotate: 0 } };
   if (typeof shape === 'string') return { type: shape, params: {} };
   const ref: IRShapeRef = shape;
+  if (ref.type === BuiltinShape.Diamond) {
+    const rawParams = ref.params ?? {};
+    const unsupported = Object.keys(rawParams).filter(key => key !== 'aspectRatio');
+    if (unsupported.length > 0) {
+      throw new Error(`Diamond shape only accepts aspectRatio; received ${unsupported.join(', ')}`);
+    }
+    return { type: 'polygon', params: { sides: 4, rotate: 0, ...rawParams } };
+  }
   return { type: ref.type, params: ref.params ?? {} };
 };
 

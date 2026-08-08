@@ -1,1 +1,1 @@
-export * from './LogicFrame';
+export * from './LogicFigureFrame';

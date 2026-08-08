@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** 内置与自定义 Definition 共用协议、registry 与 compile consumer */
 const Demo: FC = () => (
   <Layout width={760} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="definition-contract">
-      <LogicFrameTitle>XxxDefinition contract</LogicFrameTitle>
+    <LogicFigureFrame id="definition-contract">
+      <LogicFigureFrameTitle>XxxDefinition contract</LogicFigureFrameTitle>
       <Node
         id="builtins"
         text="BUILTIN_*"
@@ -31,7 +31,7 @@ const Demo: FC = () => (
         cornerRadius={4}
         font={{ size: 13 }}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
     <Node
       id="resolver"
       text="resolveXxxRegistry"
