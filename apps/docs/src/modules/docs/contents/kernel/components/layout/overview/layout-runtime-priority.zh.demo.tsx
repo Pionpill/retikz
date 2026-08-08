@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Renderer 缺省回退与动画宿主覆盖是两套独立的运行时策略 */
 const Demo: FC = () => (
   <Layout width={650} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="renderer-policy">
-      <LogicFrameTitle>Renderer（前项缺省时回退）</LogicFrameTitle>
+    <LogicFigureFrame id="renderer-policy">
+      <LogicFigureFrameTitle>Renderer（前项缺省时回退）</LogicFigureFrameTitle>
       <Node
         id="renderer-prop"
         position={[-225, -88]}
@@ -57,10 +57,10 @@ const Demo: FC = () => (
       >
         SVG / Canvas
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="animation-policy-group">
-      <LogicFrameTitle>Animation（宿主策略覆盖）</LogicFrameTitle>
+    <LogicFigureFrame id="animation-policy-group">
+      <LogicFigureFrameTitle>Animation（宿主策略覆盖）</LogicFigureFrameTitle>
       <Node
         id="snapshot-at"
         position={[-220, 0]}
@@ -157,7 +157,7 @@ const Demo: FC = () => (
         font={{ size: 12 }}
         lineHeight={13}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw way={['renderer-prop', 'renderer-provider']} arrow="->" stroke="gray" />
     <Draw way={['renderer-provider', 'renderer-default']} arrow="->" stroke="gray" />

@@ -32,6 +32,14 @@ describe('rectangle cornerRadius — emit 仍 RectPrim', () => {
     if (prim.type !== 'rect') throw new Error('expected rect');
     expect(prim.cornerRadius).toBeUndefined();
   });
+
+  it('rect_emit_clamps_cornerRadius_to_rect_bounds', () => {
+    const rect = aaRect(120, 80);
+    const prims = [...rectangle.emit(rect, {}, round2, { cornerRadius: 1_000_000 })];
+    const prim = prims[0];
+    if (prim.type !== 'rect') throw new Error('expected rect');
+    expect(prim.cornerRadius).toBe(40);
+  });
 });
 
 describe('rectangle cornerRadius — boundary aware', () => {

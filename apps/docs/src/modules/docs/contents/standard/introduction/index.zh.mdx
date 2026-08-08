@@ -3,7 +3,7 @@ title: 简介
 description: 了解标准库如何以可选的 Tier 2 能力横向扩展 Core，以及三个发布包各自负责的入口。
 ---
 
-标准库（Library）组承载不应进入最小 Core、但适合跨领域复用的官方绘图能力。Grid、Axes、Frame 与 Legend 等呈现组件用紧凑配置下沉为 Core 图元；FlexLayout、GridLayout 与 OverlayLayout 则在 Core layout-aware composite 契约上提供通用布局容器。
+标准库（Library）组承载不应进入最小 Core、但适合跨领域复用的官方绘图能力。Grid、Axes、Frame 与 Legend 等呈现组件用紧凑配置下沉为 Core 图元；FlexLayout、GridLayout 与 OverlayLayout 则在 Core layout-aware composite 契约上提供通用布局容器。Standard Logic 增加领域无关的 `LogicFrame`、语义单元、`Connector` 与 `Callout` 词汇。
 
 ## 与 Core 的边界
 
@@ -34,3 +34,5 @@ description: 了解标准库如何以可选的 Tier 2 能力横向扩展 Core，
 | 持久化 IR | schema 校验 JSON，宿主通过 `CompileOptions.composites` 选择并注入 definitions                    |
 
 从 [快速开始](/standard/get-start) 查看三条完整路径，从 [展现](/standard/composite) 或[布局容器](/standard/layout)选择能力，在 [Legend](/standard/composite/legend) 中组合已解析样本与含义，或在[Definition 接入](/standard/extension/capability-loading)中了解如何将当前图所需能力传给 Core。
+
+从[逻辑组件](/standard/logic)了解逻辑家族。它拥有 authored target 契约、显式路由与相对 target 的放置，但不拥有 `GraphModel`、自动布局、自动避障或交互。

@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Plot 从 Viz 数据处理到 Kernel Scene 的分组主链 */
 const Demo: FC = () => (
   <Layout width={760} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="viz-group">
-      <LogicFrameTitle>Viz</LogicFrameTitle>
+    <LogicFigureFrame id="viz-group">
+      <LogicFigureFrameTitle>Viz</LogicFigureFrameTitle>
       <Node
         id="data"
         text={['Data', { text: 'external datasets', fill: 'gray', font: { size: 10 } }]}
@@ -48,9 +48,9 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={14}
       />
-    </LogicFrame>
-    <LogicFrame id="kernel-group">
-      <LogicFrameTitle>Kernel</LogicFrameTitle>
+    </LogicFigureFrame>
+    <LogicFigureFrame id="kernel-group">
+      <LogicFigureFrameTitle>Kernel</LogicFigureFrameTitle>
       <Node
         id="core"
         text={['Core', { text: 'graphical primitives', fill: 'gray', font: { size: 10 } }]}
@@ -87,7 +87,7 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={14}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="definition"

@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Kernel 包级架构与主数据流总览 */
 const Demo: FC = () => (
@@ -41,8 +41,8 @@ const Demo: FC = () => (
       external IR
     </Node>
 
-    <LogicFrame id="core-group">
-      <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+    <LogicFigureFrame id="core-group">
+      <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       <Node
         id="ir"
         position={[-185, 0]}
@@ -76,7 +76,7 @@ const Demo: FC = () => (
       >
         Scene
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="math"

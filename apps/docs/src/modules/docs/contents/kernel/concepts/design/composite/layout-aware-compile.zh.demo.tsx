@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** 双轴 proposal 在同一次 Core compile 中求值、选择并提交的闭环 */
 const Demo: FC = () => (
   <Layout width={520} height={420} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="compile-boundary">
-      <LogicFrameTitle>同一次 Core compile</LogicFrameTitle>
+    <LogicFigureFrame id="compile-boundary">
+      <LogicFigureFrameTitle>同一次 Core compile</LogicFigureFrameTitle>
       <Node
         id="compile"
         position={[0, -145]}
@@ -89,7 +89,7 @@ const Demo: FC = () => (
           one-use · atomic
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw
       way={[

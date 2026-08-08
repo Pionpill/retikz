@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Core 把完整 IR Snapshot 编译为由 Runtime 原子发布的 public artifact */
 const Demo: FC = () => (
@@ -23,8 +23,8 @@ const Demo: FC = () => (
       lineHeight={15}
     />
 
-    <LogicFrame id="core-group">
-      <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+    <LogicFigureFrame id="core-group">
+      <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       <Node
         id="core-owner"
         text={[
@@ -55,7 +55,7 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={15}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="runtime-session"
