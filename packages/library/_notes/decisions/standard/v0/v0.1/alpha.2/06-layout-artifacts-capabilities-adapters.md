@@ -188,7 +188,7 @@ const layoutCompile = {
 - item kind必须与父container匹配；LayoutItem脱离container或container出现普通direct child均fail-loud
 - 默认值只由Standard schema产生，adapter不复制solver或schema defaults
 
-嵌套Standard Layout JSX必须闭环。三个React adapter精确共用contribution namespace `standard.layout`、同一个React包模块级函数引用`makeReactStandardLayoutComposites`，该函数每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` 的可变 Array 副本并保持 Flex / Grid / Overlay 顺序，datasets始终为空。namespace与maker必须同时相同，保证Kernel按namespace聚合时只调用一次maker，不向Core提交重复definition。
+嵌套 Standard Layout JSX 必须闭环。三个 React adapter 共用 `standard.layout` contribution namespace 与同一组 Flex / Grid / Overlay definition provider contract，并保持稳定顺序；Kernel 按 namespace 聚合时不得向 Core 注册重复 definition
 
 Layout container解析每个LayoutItem的drawable child时调用React公开JSX转换入口并读取contributions：零个或多个IRChild都fail-loud；恰好一个IRChild时，只接受所有contribution均满足`namespace === 'standard.layout'`、`makeComposites === makeReactStandardLayoutComposites`且datasets为空。符合者折叠为该container自己的同一family contribution；任一foreign namespace、不同maker或非空datasets立即抛稳定`Standard LayoutItem cannot forward foreign Tier 2 contributions`诊断。
 
@@ -263,17 +263,6 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 - React静默接受foreign Tier 2 nested contribution：会得到IR但缺definition/dataset，错误延迟到compile
 - adapter或renderer回读artifact修正layout：artifact是输出，不是第二轮求解输入
 
-## 测试设计
-
-- artifact schema/type：三种kind、rect空间、line/track/paint order、overflow/clip、envelope occurrence与JSON round-trip
-- direct definition：单项与完整布局 Definition、third-party Definition、duplicate Core diagnostic 和无 import 副作用
-- React：LayoutItem union、itemKey、single child/ir互斥、nestedStandard、foreignTier2 rejection和direct definition parity
-- Vanilla：三builders、partial/all adapter、nestedStandard、SSR/directIR parity
-- docs/schema registry/source link/integrity与真实demo
-- normal overflow收集到的warnings保持为空；非法schema、非有限solver、selected failure仍fail-loud
-
-详细行为到证据映射见 ignored `TEST_CONTRACT.md`。
-
 ## 影响
 
 - 修改三种definition以声明typed artifact
@@ -301,18 +290,6 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 - artifact增量diff、跨compile cache或interactive inspection runtime
 - renderer-specific layout debug overlay
 - package subpath、global registration 或隐式 Definition 收集
-
-## 最终实现摘要
-
-- 公开 `LayoutArtifactSchema` 与 Flex/Grid/Overlay 三种 strict typed payload，统一 container/item rect、overflow、visible bounds 与 alignment guide，并分别补充 line、track、span 与 paint order
-- 新增三项 layout Definition 接线以及稳定的 React / Vanilla adapter family；direct JSON、React 与 Vanilla 进入同一 Core registry / compile 路径
-- 新增 `/standard/layout` 分组、三个组件页、契约参考页、双语 controls/demo、schema registry、changelog 与 ComponentPreview IR→Vanilla 支持
-
-## 验证结果
-
-- Standard、Standard React、Standard Vanilla 与 Docs 的 lint、`tsc --noEmit` 和包级测试通过
-- artifact schema / compile、Definition loading、adapter、SSR / nested 与 docs canonical IR→Vanilla SVG 测试通过
-- docs integrity、production build，以及桌面/500px、zh/en、React/IR/Vanilla、controls 极值与 console 的真实页面检查通过
 
 ## 遗留风险
 

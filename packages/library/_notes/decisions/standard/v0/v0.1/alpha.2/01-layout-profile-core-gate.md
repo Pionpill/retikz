@@ -97,19 +97,6 @@ const compile = (node: IRContainer, context: LayoutCompositeCompileContext) => {
 - 删除 `slotSize`：父级分配与 child 真实占用无法同时表达
 - 按 Node、Text、Path、TeX 类型建立处理白名单：custom provider 与 nested Composite 无法闭环
 
-## 测试设计
-
-`packages/library/standard/tests/layout/core-gate.test.ts` 使用测试内定义的 layout-aware Composite 覆盖：
-
-- 四种 proposal、显式零、无上限 range 与非法 proposal
-- plain text 宽度反馈高度、mixed/TeX 原子 contribution、fixed Path overflow
-- non-zero allocation bounds、visual bounds 与 first/last baseline guide
-- guide 缺失仍返回可区分结果；具体 first/last baseline fallback 由拥有对齐语义的 ADR-02～05 验证
-- custom shape provider、nested Composite、Scope transform/clip
-- failed probe 丢弃/raise、one-use replay、artifact 与 occurrence 保留
-
-详细行为到证据映射见 ignored `TEST_CONTRACT.md`。
-
 ## 影响
 
 - 不改 Core、Standard 产品源码或公开导出
@@ -136,19 +123,7 @@ const compile = (node: IRContainer, context: LayoutCompositeCompileContext) => {
 - artifact payload、Definition 接入与 React/Vanilla API
 - Core ADR-08 的实现修改、接受、版本 bump 或发布
 
-## 最终实现摘要
-
-- 以 `tests/layout/core-gate.test.ts` 从 Standard 消费方视角验收 Core 的双轴 proposal、`slotSize`、真实 bounds、alignment guide、失败隔离与 one-use replay
-- Gate 覆盖文本宽高反馈、固定几何拒绝 slot、non-zero bounds、custom provider、nested Composite 与 Scope transform/clip，不在 Standard 建立私有测量或 replay 机制
-- Core ADR-08 已由 Core owner accept；其提交尚未合入本分支不改变本 ADR 的组合边界
-
-## 验证结果
-
-- Standard core-gate 定向测试与包级测试通过
-- Standard ESLint 与 `tsc --noEmit` 通过
-- Gate 只产生测试证据，没有修改 Standard 产品公开面
-
 ## 遗留风险
 
-- 当前分支继续依赖尚未合入的 Core ADR-08 提交；集成时需保持 proposal、`slotSize`、allocation/visual bounds 与 replay 契约不变
+- Standard 必须保持 Core ADR-08 冻结的 proposal、`slotSize`、allocation/visual bounds 与 replay 契约不变
 - 异步测量、跨 compile cache 与 renderer readback 仍不在支持范围

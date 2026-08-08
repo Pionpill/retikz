@@ -132,10 +132,6 @@ Legend 的 layout-aware compile 遵循 Core ADR-11：
 - **由 Vanilla occurrence 或 React key 生成 Standard root id**：把宿主生命周期错误地提升为持久化 identity
 - **为 Plot / Table 提前迁移而扩大本 ADR**：会把领域 API、provenance 和产品排期混入 Standard presentation 的通用契约
 
-## 测试策略摘要
-
-需要 schema / type 证据锁定 Core Scope fragment 的组合、root identity、Frame border migration、strict unknown-field、默认值和 domain refinements；需要 lower / compile 证据锁定四个 root shape、Core Path / Node / RectangleStep canonical path、generated child 顺序、empty / nested / prune、transform / placement、两类 clip、style/theme/resetStyle、z-index、metadata、animation、identity / namespace 与 diagnostics；需要 Legend layout / artifact 证据锁定 probe / replay 单一主链和 root / allocation Scope 分离；需要 Definition / registry、React / Vanilla parity、Scene / renderer parity 与双语 docs 证据。不得以 child 数量 snapshot 代替 root / lower contract 证据。
-
 ## 不在本 ADR 范围
 
 - Plot、Table、Gantt 或其它 Tier 2 的真实领域迁移、公开 API 与 artifact 变化
