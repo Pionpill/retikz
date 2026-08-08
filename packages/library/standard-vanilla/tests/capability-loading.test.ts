@@ -2,16 +2,23 @@ import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard'
 import {
   axes,
   AxesVanillaAdapter,
+  CalloutVanillaAdapter,
+  ConnectorVanillaAdapter,
+  DecisionVanillaAdapter,
   FlexLayoutVanillaAdapter,
   frame,
   FrameVanillaAdapter,
   grid,
   GridLayoutVanillaAdapter,
   GridVanillaAdapter,
+  JunctionVanillaAdapter,
   legend,
   LegendVanillaAdapter,
+  LogicFrameVanillaAdapter,
   OverlayLayoutVanillaAdapter,
+  StageVanillaAdapter,
   StandardVanillaAdapters,
+  TerminalVanillaAdapter,
 } from '@retikz/standard-vanilla';
 import { normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -42,6 +49,13 @@ describe('Standard Vanilla definition loading', () => {
       GridLayoutVanillaAdapter,
       OverlayLayoutVanillaAdapter,
       LegendVanillaAdapter,
+      LogicFrameVanillaAdapter,
+      TerminalVanillaAdapter,
+      StageVanillaAdapter,
+      DecisionVanillaAdapter,
+      JunctionVanillaAdapter,
+      ConnectorVanillaAdapter,
+      CalloutVanillaAdapter,
     ]);
     expect(Object.isFrozen(StandardVanillaAdapters)).toBe(true);
     expect(Object.isFrozen(GridVanillaAdapter)).toBe(false);

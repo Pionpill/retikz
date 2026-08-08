@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** publish 前失败回滚 candidate，publish 后失败只进入 diagnostics，dispose 走独立状态机 */
 const Demo: FC = () => (
   <Layout width={500} height={480} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="transaction">
-      <LogicFrameTitle>Atomic transaction</LogicFrameTitle>
+    <LogicFigureFrame id="transaction">
+      <LogicFigureFrameTitle>Atomic transaction</LogicFigureFrameTitle>
       <Node
         id="prepare"
         text={[
@@ -84,7 +84,7 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={15}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="rollback"
@@ -132,8 +132,8 @@ const Demo: FC = () => (
       lineHeight={15}
     />
 
-    <LogicFrame id="disposal">
-      <LogicFrameTitle>Session disposal</LogicFrameTitle>
+    <LogicFigureFrame id="disposal">
+      <LogicFigureFrameTitle>Session disposal</LogicFigureFrameTitle>
       <Node
         id="idle"
         position={[-120, 205]}
@@ -170,7 +170,7 @@ const Demo: FC = () => (
       >
         disposed
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw way={['prepare', 'run-programs']} arrow="->" stroke="gray" />
     <Draw way={['run-programs', 'publish']} arrow="->" stroke="green" />

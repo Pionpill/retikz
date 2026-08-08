@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Axis guide 下沉为独立 scope 后进入 Plot 语义层级的关系 */
 const Demo: FC = () => (
@@ -24,8 +24,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="lowered-scopes">
-      <LogicFrameTitle>Lowered scopes</LogicFrameTitle>
+    <LogicFigureFrame id="lowered-scopes">
+      <LogicFigureFrameTitle>Lowered scopes</LogicFigureFrameTitle>
       <Node
         id="axis-scope"
         position={[-80, -20]}
@@ -58,7 +58,7 @@ const Demo: FC = () => (
           zIndex = -300
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="layer-override"
@@ -77,8 +77,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="semantic-stack">
-      <LogicFrameTitle>Plot semantic layers</LogicFrameTitle>
+    <LogicFigureFrame id="semantic-stack">
+      <LogicFigureFrameTitle>Plot semantic layers</LogicFigureFrameTitle>
       <Node
         id="legend-layer"
         position={[270, -88]}
@@ -144,7 +144,7 @@ const Demo: FC = () => (
       >
         <Text font={{ size: 13, weight: 'bold' }}>grid · zIndex -300</Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw way={['axis-guide', 'axis-scope']} arrow="->" />
     <Draw way={['axis-guide', 'grid-scope']} arrow="->" />

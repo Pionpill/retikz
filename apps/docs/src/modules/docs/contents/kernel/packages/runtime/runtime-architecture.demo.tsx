@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Runtime 接收完整领域输入，在 registry 约束下发布 Snapshot 与 artifact */
 const Demo: FC = () => (
@@ -23,8 +23,8 @@ const Demo: FC = () => (
       lineHeight={15}
     />
 
-    <LogicFrame id="runtime-group">
-      <LogicFrameTitle>@retikz/runtime</LogicFrameTitle>
+    <LogicFigureFrame id="runtime-group">
+      <LogicFigureFrameTitle>@retikz/runtime</LogicFigureFrameTitle>
       <Node
         id="owner-registry"
         text={[
@@ -85,7 +85,7 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={15}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="published-output"

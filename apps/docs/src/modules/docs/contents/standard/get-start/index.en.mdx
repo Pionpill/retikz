@@ -113,12 +113,60 @@ mountSvg(container, scene, {
 
 If `GridDefinition` is not provided, Core emits `COMPOSITE_NOT_REGISTERED` and skips the Grid. Other registered or native Core children still compile. When a figure needs more Standard composites, place the corresponding Definitions in the same `composites` array
 
+## Logic Components
+
+The Logic family uses the same three loading paths. Logic semantic React components and Vanilla builders emit Core Nodes directly; only LogicFrame, Connector, and Callout use runtime Definitions or adapters.
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Connector, Stage, Terminal } from '@retikz/standard-react';
+
+<Layout width={360} height={140}>
+  <Scope transforms={[{ kind: 'translate', x: 24, y: 50 }]}>
+    <Terminal id="start" position={[0, 0]}>
+      Start
+    </Terminal>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 190, y: 50 }]}>
+    <Stage id="step" position={[0, 0]}>
+      Step
+    </Stage>
+  </Scope>
+  <Connector id="edge" from={{ id: 'start' }} to={{ id: 'step' }} label={{ text: 'next' }} />
+</Layout>;
+```
+
+The equivalent Vanilla target is `{ id: 'start' }` because `terminal('start', input)` returns a Node with the supplied id; `stage('step', input)` behaves the same way.
+
+```ts
+import { connector, ConnectorVanillaAdapter, stage, terminal } from '@retikz/standard-vanilla';
+import { figure, renderToSvgString, scope } from '@retikz/vanilla';
+
+const input = figure({
+  viewBox: { x: 0, y: 0, width: 360, height: 140 },
+  children: [
+    scope({ transforms: [{ kind: 'translate', x: 24, y: 50 }] }, [
+      terminal('start', { position: [0, 0], text: 'Start' }),
+    ]),
+    scope({ transforms: [{ kind: 'translate', x: 190, y: 50 }] }, [stage('step', { position: [0, 0], text: 'Step' })]),
+    connector('edge', { from: { id: 'start' }, to: { id: 'step' }, label: { text: 'next' } }),
+  ],
+});
+
+const svg = renderToSvgString(input, {
+  adapters: [ConnectorVanillaAdapter],
+  output: { width: 360, height: 140 },
+});
+```
+
+For persisted LogicFrame, Connector, or Callout IR, parse the matching schema and pass its Definition in `CompileOptions.composites`. Semantic Node IR needs no Standard Definition. See [Logic API Reference](/standard/logic/api-reference) for the complete mapping.
+
 ## Next: replace handwritten coordinates with a layout container
 
 Layout JSX uses `FlexLayout`, `GridLayout`, `OverlayLayout`, and direct `LayoutItem` children. The three containers share one `standard.layout` contribution. Direct IR can inject `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]`, while Vanilla can pass `StandardLayoutVanillaAdapters`
 
 ```tsx
-import { Layout, Node } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 <Layout width={320} height={120}>
@@ -142,4 +190,5 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 | [Frame](/standard/composite/frame)                                  | Automatic bounds, gap, border, and label                        |
 | [Legend](/standard/composite/legend)                                | Discrete samples, continuous ramps, probes, and typed artifacts |
 | [Layout Containers](/standard/layout)                               | Flex, Grid, Overlay, and typed artifacts                        |
+| [Logic Components](/standard/logic)                                 | LogicFrame, semantic units, Connector, and Callout              |
 | [Direct Definition Loading](/standard/extension/capability-loading) | Definition selection, Core injection, and host boundaries       |

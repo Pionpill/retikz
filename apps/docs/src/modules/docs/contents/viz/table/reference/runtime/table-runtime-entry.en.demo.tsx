@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 type MobileFlowNode = {
   id: string;
@@ -88,8 +88,8 @@ const Demo: FC = () => (
           </Text>
         </Node>
 
-        <LogicFrame id="table-runtime">
-          <LogicFrameTitle>@retikz/table</LogicFrameTitle>
+        <LogicFigureFrame id="table-runtime">
+          <LogicFigureFrameTitle>@retikz/table</LogicFigureFrameTitle>
           <Node
             id="runtime-input"
             position={[-105, 0]}
@@ -122,7 +122,7 @@ const Demo: FC = () => (
               layout-aware composite
             </Text>
           </Node>
-        </LogicFrame>
+        </LogicFigureFrame>
 
         <Node
           id="core-compile"
@@ -211,8 +211,8 @@ const Demo: FC = () => (
           color: 'dimgray',
         })}
 
-        <LogicFrame id="mobile-table-runtime">
-          <LogicFrameTitle>@retikz/table</LogicFrameTitle>
+        <LogicFigureFrame id="mobile-table-runtime">
+          <LogicFigureFrameTitle>@retikz/table</LogicFigureFrameTitle>
           {renderMobileNode({
             id: 'mobile-runtime-input',
             position: [0, -40],
@@ -229,7 +229,7 @@ const Demo: FC = () => (
             width: 220,
             color: 'darkorange',
           })}
-        </LogicFrame>
+        </LogicFigureFrame>
 
         {renderMobileNode({
           id: 'mobile-core-compile',

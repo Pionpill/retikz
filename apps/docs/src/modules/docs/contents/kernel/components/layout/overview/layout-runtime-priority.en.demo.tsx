@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Renderer fallback and animation host overrides are separate runtime policies */
 const Demo: FC = () => (
   <Layout width={650} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="renderer-policy">
-      <LogicFrameTitle>Renderer (fallback only when missing)</LogicFrameTitle>
+    <LogicFigureFrame id="renderer-policy">
+      <LogicFigureFrameTitle>Renderer (fallback only when missing)</LogicFigureFrameTitle>
       <Node
         id="renderer-prop"
         position={[-225, -88]}
@@ -57,10 +57,10 @@ const Demo: FC = () => (
       >
         SVG / Canvas
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="animation-policy-group">
-      <LogicFrameTitle>Animation (host policy override)</LogicFrameTitle>
+    <LogicFigureFrame id="animation-policy-group">
+      <LogicFigureFrameTitle>Animation (host policy override)</LogicFigureFrameTitle>
       <Node
         id="snapshot-at"
         position={[-220, 0]}
@@ -157,7 +157,7 @@ const Demo: FC = () => (
         font={{ size: 12 }}
         lineHeight={13}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw way={['renderer-prop', 'renderer-provider']} arrow="->" stroke="gray" />
     <Draw way={['renderer-provider', 'renderer-default']} arrow="->" stroke="gray" />

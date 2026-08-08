@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Legend 复用通道描述、选择形态并下沉为独立 scope 的流程 */
 const Demo: FC = () => (
@@ -74,8 +74,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="legend-forms">
-      <LogicFrameTitle>图例形态</LogicFrameTitle>
+    <LogicFigureFrame id="legend-forms">
+      <LogicFigureFrameTitle>图例形态</LogicFigureFrameTitle>
       <Node
         id="swatch-form"
         position={[120, -65]}
@@ -124,7 +124,7 @@ const Demo: FC = () => (
           size · shape · opacity
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="legend-scope"

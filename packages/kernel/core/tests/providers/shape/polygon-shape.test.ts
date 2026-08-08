@@ -18,7 +18,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 
 /** 标准 polygon node helper */
 const polyNode = (
-  params: { sides: number; rotate?: number },
+  params: { sides: number; rotate?: number; aspectRatio?: number },
   extra: Record<string, unknown> = {},
 ): IRScene['children'][number] => ({
   type: 'node',
@@ -69,6 +69,30 @@ describe('polygon — happy path 几何', () => {
     expect(path).toBeDefined();
     expect(vertexPoints(path!.commands).length).toBe(3);
     expect(path!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'close']);
+  });
+
+  it('diamond_object_preset：对象 diamond preset 编译为扁菱形', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'node',
+          id: 'diamond',
+          position: [0, 0],
+          shape: { type: 'diamond', params: { aspectRatio: 1.8 } },
+          minimumSize: { width: 252, height: 140 },
+        },
+      ]),
+      { precision: 6 },
+    ).scene;
+    const path = findByType(compiled.primitives, 'path');
+    expect(path).toBeDefined();
+    const verts = vertexPoints(path!.commands);
+    expect(verts).toEqual([
+      [126, 0],
+      [0, 70],
+      [-126, 0],
+      [0, -70],
+    ]);
   });
 });
 
@@ -130,7 +154,9 @@ describe('polygon — 交互（self-rotate + Node.rotate）', () => {
     //   ① 外层 group 带 rotate 15° transform；
     //   ② emit 顶点（轴对齐空间，未含 group rotate）已含 self-rotate 30°——
     //      对 sides=4 取首顶点相对中心方向角应 ≈ 30°（mod 360）。
-    const compiled = compileToScene(scene([polyNode({ sides: 4, rotate: 30 }, { rotate: 15 })]), { precision: 6 }).scene;
+    const compiled = compileToScene(scene([polyNode({ sides: 4, rotate: 30 }, { rotate: 15 })]), {
+      precision: 6,
+    }).scene;
     const group = findByType(compiled.primitives, 'group');
     expect(group).toBeDefined();
     expect(group!.transforms?.some(t => t.kind === 'rotate' && t.degrees === 15)).toBe(true);

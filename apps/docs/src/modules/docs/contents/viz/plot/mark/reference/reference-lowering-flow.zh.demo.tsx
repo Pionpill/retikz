@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 type FlowNode = {
   id: string;
@@ -128,8 +128,8 @@ const Demo: FC = () => (
     <div className="hidden sm:block">
       <Layout width={860} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
         {desktopNodes.map(renderFlowNode)}
-        <LogicFrame id="reference-core-primitives">
-          <LogicFrameTitle>Core primitives</LogicFrameTitle>
+        <LogicFigureFrame id="reference-core-primitives">
+          <LogicFigureFrameTitle>Core primitives</LogicFigureFrameTitle>
           <Node
             id="reference-core-path"
             position={[370, -65]}
@@ -154,7 +154,7 @@ const Demo: FC = () => (
           >
             Core Node
           </Node>
-        </LogicFrame>
+        </LogicFigureFrame>
         <Draw way={['reference-input', 'reference-classify']} arrow="->" />
         <Draw way={['reference-classify', 'reference-line-steps']} arrow="->" />
         <Draw way={['reference-classify', 'reference-cell']} arrow="->" />

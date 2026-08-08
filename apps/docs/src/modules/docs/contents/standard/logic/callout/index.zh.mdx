@@ -1,0 +1,87 @@
+---
+title: Callout
+description: 在 previous authored target 旁放置解释内容，并可选绘制 leader。
+---
+
+`Callout` 是相对 target 的标注。它把一个 content child 放在 target 旁边，并可选地从标注 allocation 向 target 输出一条 Core Path leader。放置是确定且局部的，不维护全局标注图，也不执行自动避障。
+
+## 用法
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Callout, Stage } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={420} height={180}>
+  <Scope transforms={[{ kind: 'translate', x: 150, y: 64 }]}>
+    <Stage id="step">
+      <Node position={[0, 0]} text="Step" />
+    </Stage>
+  </Scope>
+  <Callout id="note" target={{ id: 'step' }} placement={{ side: 'right', gap: 12 }}>
+    <Node position={[0, 0]} text="Explain this step" />
+  </Callout>
+</Layout>
+```
+
+## 示例
+
+<ComponentPreview files="callout-placement" size="lg" />
+
+直接 JSON 使用 `createCallout`、`CalloutSchema` 与 `CalloutDefinition`：
+
+```ts
+import { CalloutDefinition, createCallout } from '@retikz/standard';
+
+const note = createCallout({
+  id: 'note',
+  target: { id: 'step' },
+  content: { type: 'node', position: [0, 0], text: 'Explain' },
+  placement: { side: 'right' },
+});
+const compile = { composites: [CalloutDefinition] };
+```
+
+Vanilla 语义 builder 直接返回 Node，因此 target `terminal('start', ...)` 时应写 `{ id: 'start' }`：
+
+```ts
+import { callout, CalloutVanillaAdapter } from '@retikz/standard-vanilla';
+
+const note = callout('note', {
+  target: { id: 'start' },
+  content: { type: 'node', position: [0, 0], text: 'Explain' },
+  placement: { side: 'right' },
+});
+const adapters = [CalloutVanillaAdapter];
+```
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="日常使用可跳过"
+  description="只有排查 previous target 解析、放置或 leader 几何时才需要阅读本节"
+/>
+
+### 放置
+
+Callout target 是 previous-only：执行 Callout 放置时，target 必须已经有解析后的 authored occurrence。支持 whole target（`{ id: 'step' }`）。LogicFrame section target（`{ kind: 'logicFrame', id: 'block', section: 'body' }`）虽在 schema 中存在，但当前会在放置前 fail-loud；请使用 whole block target。`leader={false}` 会关闭 leader；否则一次 Core Path probe/replay 从 callout allocation 连接到 target。
+
+## API 参考
+
+| 字段          | 类型                                  | 默认值                                                                                         | 说明                                                       |
+| ------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `id`          | `string`                              | —                                                                                              | 稳定的 authored Callout identity                           |
+| `target`      | `LogicDiagramTargetInput`             | —                                                                                              | previous whole target；section target 会在放置前 fail-loud |
+| `content`     | `IRChild` / React child               | —                                                                                              | 必需的标注内容                                             |
+| `placement`   | `CalloutPlacementInput`               | `gap: 8`、`offset: 0`；`side` 必填                                                             | 相对 target 的 side、法向 gap 与切向 offset                |
+| `leader`      | `false` 或 `ConnectorAppearanceInput` | stroke `currentColor`、width `1`、圆角 `0`、`zIndex: 0`                                        | 可选 leader 外观；`false` 关闭 leader                      |
+| `appearance?` | content shell appearance input        | content size、padding `8`、矩形圆角 `8`、visible、中性 style、`boundary: 'shape'`、`zIndex: 0` | content 外壳外观                                           |
+
+## 相关
+
+- [语义单元](/standard/logic/semantic-units)：可被 target 的单元
+- [Connector](/standard/logic/connector)：显式图关系
+- [LogicFrame](/standard/logic/logic-frame)：whole-block target 与 section
+- [逻辑 API 参考](/standard/logic/api-reference)：schema 与 Definition 装载

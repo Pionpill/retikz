@@ -36,6 +36,37 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-08-08',
+          summary: {
+            zh: '新增可持久化的逻辑块、语义单元、连接器与标注，并保持直接 IR、React、Vanilla 及 SVG / Canvas 的等价路径。',
+            en: 'Adds persistable logic blocks, semantic units, connectors, and callouts with equivalent direct IR, React, Vanilla, SVG, and Canvas paths.',
+          },
+          items: [
+            {
+              label: { zh: '逻辑块与语义单元', en: 'Logic blocks and semantic units' },
+              content: {
+                zh: '`LogicFrame` 用任意 JSON-safe child 组合 header 与有序 section，并复用 canonical `FlexLayout` 编译；`Terminal`、`Stage`、`Decision` 与 `Junction` 以独立 discriminator 保存局部逻辑角色。',
+                en: '`LogicFrame` composes a header and ordered sections from arbitrary JSON-safe children through the canonical `FlexLayout` compiler. `Terminal`, `Stage`, `Decision`, and `Junction` preserve local logic roles with distinct discriminators.',
+              },
+            },
+            {
+              label: { zh: '显式关系与标注', en: 'Explicit relations and callouts' },
+              content: {
+                zh: '`Connector` 将直线、折线、正交和曲线路由下沉为同 id Core Path；`Callout` 复用 authored target 与 Scope placement。whole target 已闭环，section target 保留稳定输入并在 Core structured subtarget 就绪前明确失败。',
+                en: '`Connector` lowers straight, polyline, orthogonal, and curved routes to a same-id Core Path, while `Callout` reuses authored targets and Scope placement. Whole targets are supported; section targets retain stable input and fail explicitly until Core structured subtargets are available.',
+              },
+            },
+            {
+              label: { zh: '三路径文档闭环', en: 'Three-path documentation' },
+              content: {
+                zh: '新的逻辑组件文档同时覆盖 React、直接 JSON IR 与 Vanilla，并用仅属于 docs 的 Process、Class、Data recipe 展示公开组件组合，不新增 recipe package export。',
+                en: 'The Logic Components docs cover React, direct JSON IR, and Vanilla while documentation-only Process, Class, and Data recipes demonstrate composition without adding recipe package exports.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
@@ -131,6 +162,30 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-08-08',
+          summary: {
+            zh: '新增七种逻辑组件 builder、对应 adapters 与无 DOM 编译接线。',
+            en: 'Adds seven logic-component builders, their adapters, and DOM-free compilation wiring.',
+          },
+          items: [
+            {
+              label: { zh: '逻辑组件 builders', en: 'Logic component builders' },
+              content: {
+                zh: '`logicFrame()`、`terminal()`、`stage()`、`decision()`、`junction()`、`connector()` 与 `callout()` 复用 Standard schema、factory 与 Definition，并加入当前完整 adapter 目录。',
+                en: '`logicFrame()`, `terminal()`, `stage()`, `decision()`, `junction()`, `connector()`, and `callout()` reuse Standard schemas, factories, and Definitions and join the complete adapter catalog.',
+              },
+            },
+            {
+              label: { zh: 'Canonical target identity', en: 'Canonical target identity' },
+              content: {
+                zh: 'Vanilla adapter 将 embed id 稳定派生为 `<embed-id>/<kind>` canonical id；跨组件 target 必须显式使用该 identity，例如 `start/terminal`。',
+                en: 'Vanilla adapters derive stable `<embed-id>/<kind>` canonical IDs. Cross-component targets use that identity explicitly, for example `start/terminal`.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-07-30',
           summary: {
@@ -196,6 +251,30 @@ export const standardV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-08',
+          summary: {
+            zh: '新增 LogicFrame、四种语义单元、Connector 与 Callout 的 React authoring。',
+            en: 'Adds React authoring for LogicFrame, four semantic units, Connector, and Callout.',
+          },
+          items: [
+            {
+              label: { zh: '逻辑组件 JSX', en: 'Logic component JSX' },
+              content: {
+                zh: '`Terminal`、`Stage`、`Decision`、`Junction`、`Connector` 与 `Callout` 把 React children 或 plain props 归一为 canonical Standard IR，并只在当前 Layout 局部贡献所需 Definition。',
+                en: '`Terminal`, `Stage`, `Decision`, `Junction`, `Connector`, and `Callout` normalize React children or plain props into canonical Standard IR and contribute only the Definitions used by the current Layout.',
+              },
+            },
+            {
+              label: { zh: 'Headless block markers', en: 'Headless block markers' },
+              content: {
+                zh: '`LogicFrameHeader` 与 `LogicFrameSection` 只负责 JSX authoring 的 header / section 边界和顺序；marker 不进入持久化 IR、Scene 或独立 composite registry。',
+                en: '`LogicFrameHeader` and `LogicFrameSection` only express header and section boundaries and order during JSX authoring; markers do not enter persisted IR, Scene, or a separate composite registry.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.2',
           date: '2026-07-30',

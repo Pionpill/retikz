@@ -12,7 +12,7 @@
 4. 固化 Standard 按 Core 可扩展机制横向分域的代码范式，为后续 definition、composite 与 Sugar 增长留出稳定位置，不预建空目录或平行机制
 5. 建立 renderer-agnostic Box Layout Profile，补齐 Flex、Grid、Overlay、LayoutItem 与 layout artifact；需要双轴约束、intrinsic contribution、allocated box 或 replay wrapper 时先补齐并复用 Core layout-aware composite，不在 Standard 私造测量或 replay 管线
 6. 建立可由直接作者、Plot 与 Table 复用的通用 Legend 呈现；领域包保留 scale、visual encoding、formatter、provenance 与交互解析，Standard 统一 schema、布局、layout-aware compile 与领域无关 artifact
-7. 增加 headless `LogicBlockBase`、`Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 与 `Callout` 等 JSON-safe Tier 2 语义，使持久化文档、工具链和 LLM 不必从 shape、颜色或坐标反推逻辑角色
+7. 增加 headless `LogicFrame`、`Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 与 `Callout` 等 JSON-safe Tier 2 语义，使持久化文档、工具链和 LLM 不必从 shape、颜色或坐标反推逻辑角色
 
 ## 能力边界
 
@@ -31,7 +31,7 @@
 | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 Definition 接入** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、直接 Core Definition 注入、Vanilla adapter 数组、双语 docs / migration / changelog | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且按项 definitions 进入同一 Core option 路径      |
 | [alpha.2](./alpha.2/roadmap.md) | **通用 Box Layout 与 Legend**                         | Flex、Grid、Overlay、LayoutItem、layout artifact 与 inspector；领域无关 Legend items / ramp、任意 IRChild sample、typed artifact、直接 Definition 接入与 React / Vanilla authoring                      | Core layout-aware composite 主链；Legend 复用 Box Layout，领域包保留解析、provenance / locator 与交互                                                         |
-| [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件**                                    | headless `LogicBlockBase`、`Terminal`、`Stage`、`Decision`、`Junction`、`Connector`、`Callout`、布局 artifact / Scene identity、按项 Definition、React / Vanilla authoring 与 docs recipe               | alpha.1 direct Definition loading；alpha.2 Box Layout；Core composite-owned subtarget / Path host label / target-aware replay；语义不由 shape、颜色或坐标代替 |
+| [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件**                                    | headless `LogicFrame`、`Terminal`、`Stage`、`Decision`、`Junction`、`Connector`、`Callout`、布局 artifact / Scene identity、按项 Definition、React / Vanilla authoring 与 docs recipe               | alpha.1 direct Definition loading；alpha.2 Box Layout；Core composite-owned subtarget / Path host label / target-aware replay；语义不由 shape、颜色或坐标代替 |
 | beta.1                          | **收口与发布准备**                                    | public API 审查、Definition 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、release / package checks                                                                          | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                                  |
 
 ## Standard Definition 接入机制
@@ -50,13 +50,13 @@ Grid、Axes 与 Frame 都通过 Core 既有 `CompositeDefinition` 机制注册�
 
 ## Tier 2 语义约定
 
-- `Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 及固定定位的 `Callout` 以独立 Standard discriminator 保存逻辑角色；`LogicBlockBase` 只保存 headless header / sections、纵向布局、appearance 与 target，不理解内部领域内容
+- `Stage`、`Decision`、`Terminal`、`Junction`、`Connector` 及固定定位的 `Callout` 以独立 Standard discriminator 保存逻辑角色；`LogicFrame` 只保存 headless header / sections、纵向布局、appearance 与 target，不理解内部领域内容
 - Flex、Grid、Overlay、Legend 与需要测量任意内容的 Logic Diagram composite 使用 Core layout-aware contract；Connector 直接 expand 为同 id Core Path 并复用 Path host label，不为了 artifact 或 label 复制 target / path geometry，且只承诺 Core Scene 主体 id、不虚构 Path occurrence artifact；Stack / Row / Column 只作为 Flex 的 convenience authoring，Align / Distribute 由 container / item alignment 与 free-space distribution 持久化表达；现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
 - Legend 以领域无关 Standard 输入保存 title、`items | ramp`、任意 `IRChild` sample 与呈现布局；Plot/Table 只把各自领域解析结果转换为该输入，不把 channel、scale、Cell selector、formatter 函数或 interaction state 注入 Standard schema
 - 即使某个组件可以同步展开，只要其角色需要跨 JSON 持久化、工具链处理或 LLM 编辑保留，就不能仅作为 React / Vanilla Sugar
 - `diamond`、capsule、fork bar 等 shape 只拥有几何或视觉实现，不替代 `Decision`、`Terminal`、`Junction` 的语义 schema
 - `Connector` 表达 flow / branch / dependency / feedback 等局部绘图关系；它不是全局 Edge 集合，也不负责拓扑校验、自动路由或端口规则
-- Process、Class 与 Data Block 只作为 docs 内部 recipe 组合 `LogicBlockBase`，不进入 package exports、Standard IR discriminator、schema registry 或 Definition contract
+- Process、Class 与 Data Block 只作为 docs 内部 recipe 组合 `LogicFrame`，不进入 package exports、Standard IR discriminator、schema registry 或 Definition contract
 - 保存、diff、LLM 修改和跨入口交换都针对 Standard composite 输入；不承诺从 lowering 后的 Kernel IR 或 Scene 恢复原始 Standard 语义
 
 上述名称的最终公开拼写、字段、默认值、Target 形态、provenance / locator 和失败诊断由各 milestone ADR 冻结，roadmap 不替代实现契约。
@@ -80,7 +80,7 @@ packages/library/standard/src/
     axes/                  # Axes schema、definition 与 lowering
     frame/                 # Frame schema、definition 与 lowering
     legend/                # Legend schema、definition、布局、artifact 与 lowering
-    logic-block-base/      # headless 逻辑 Block 外壳、section target 与 artifact
+    logic-frame/      # headless 逻辑 Block 外壳、section target 与 artifact
     terminal/              # 开始 / 结束语义单元
     stage/                 # 轻量流程步骤
     decision/              # 条件判断语义单元
@@ -104,7 +104,7 @@ packages/library/standard-react/src/
   axes/                   # React props -> Standard Axes composite input
   frame/                  # React children -> Standard Frame composite input
   legend/                 # React props -> Standard Legend composite input
-  logic-diagram/          # LogicBlock marker 与基础逻辑组件 authoring
+  logic-diagram/          # LogicFrame marker 与基础逻辑组件 authoring
   index.ts
 
 packages/library/standard-vanilla/src/
@@ -124,7 +124,7 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 - `standard`：Grid、Axes、Frame、Flex、GridLayout、Overlay、Legend 与 Logic Diagram 组件的 schema、JSON round-trip、输入错误、identity / Target、layout artifact、route lowering、composite compile 与直接 Definition 选择不变量
 - `standard-react` / `standard-vanilla`：同一 composite input 的 IR 与 lowering 结果等价；同图多 capability 的稳定 contribution key / maker、React 静态按需贡献、Vanilla 部分 / 全量 adapter 数组与直接 IR Definition 接线；无副作用、重复 definition 和 provider key 冲突的诊断
 - Kernel 回归：`Path` / `Step`、Core compile 与 renderer 不因未安装 Standard 改变；`@retikz/react` 不再导出 Grid
-- Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例、从 `@retikz/react` 迁移 Grid 的指引；用真实逻辑图 dogfood LogicBlockBase、Decision、Connector、Junction 与 Callout，并以不导出的 Process / Class / Data recipe 展示组合方式，检查导航、source preview、import 生成和 desktop / 500px 页面
+- Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例、从 `@retikz/react` 迁移 Grid 的指引；用真实逻辑图 dogfood LogicFrame、Decision、Connector、Junction 与 Callout，并以不导出的 Process / Class / Data recipe 展示组合方式，检查导航、source preview、import 生成和 desktop / 500px 页面
 
 每个 alpha ADR 必须另附测试契约矩阵，并在实现前通过 Architecture Gate。
 
