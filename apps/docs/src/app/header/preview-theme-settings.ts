@@ -18,5 +18,4 @@ export const getPreviewThemeStyleIcon = (themeStyle: ThemeStyleValue): LucideIco
 export const isPreviewThemeStyleDocument = (
   moduleId: string | undefined,
   sectionId: string | null | undefined,
-): boolean =>
-  moduleId === 'viz' && (sectionId === 'table' || sectionId === 'chart' || sectionId === 'plot');
+): boolean => moduleId === 'viz' && (sectionId === 'table' || sectionId === 'chart' || sectionId === 'plot');
