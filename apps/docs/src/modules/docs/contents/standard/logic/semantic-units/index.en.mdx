@@ -1,0 +1,77 @@
+---
+title: Semantic units
+description: Terminal, Stage, Decision, and Junction are logic-aware sugar over Core Node
+---
+
+Semantic units are lightweight wrappers over Core `Node`. They always emit `type: 'node'`; they do not create a Standard composite, artifact, or separate layout compiler. Each wrapper fixes its shape and uses Schema `describe` text to state its logic responsibility
+
+## Usage
+
+```tsx
+import { Layout, Node, Scope, Text } from '@retikz/react';
+import { Decision, Junction, Stage, Terminal } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={440} height={180}>
+  <Terminal id="start" position={[20, 70]}>
+    Start
+  </Terminal>
+  <Stage id="step" position={[130, 70]}>
+    Process
+  </Stage>
+  <Decision id="check" position={[250, 70]}>
+    <Text>Ready?</Text>
+  </Decision>
+  <Junction id="join" position={[380, 80]} />
+</Layout>
+```
+
+String children become the Node text. You can also use `<Text>` exactly as with Core `Node`. Other Node props such as `fill`, `padding`, `minimumSize`, and `position` pass through; `shape` is fixed by the semantic unit
+
+| Unit       | Fixed shape                    | Logic responsibility               | Defaults                                          |
+| ---------- | ------------------------------ | ---------------------------------- | ------------------------------------------------- |
+| `Terminal` | Capsule (rounded rectangle)    | Start or end of a flow             | minimum `48 × 24`, padding `{ x: 12, y: 6 }`      |
+| `Stage`    | Rounded rectangle, radius `8`  | Process or action in a flow        | padding `8`                                       |
+| `Decision` | Flattened diamond, ratio `1.8` | Condition or branch                | padding `{ x: 3, y: 2 }`                          |
+| `Junction` | Circle                         | Fork, merge, or continuation point | minimum `8 × 8`, padding `0`, fill `currentColor` |
+
+## Examples
+
+<ComponentPreview files="semantic-units" size="lg" />
+
+Direct IR uses `createTerminal`, `createStage`, `createDecision`, or `createJunction`. The result is a Core Node and needs no Definition
+
+```ts
+import { createStage } from '@retikz/standard';
+
+const stage = createStage({ id: 'step', position: [0, 0], text: 'Process' });
+```
+
+Vanilla builders also return canonical Nodes directly
+
+```ts
+import { stage } from '@retikz/standard-vanilla';
+
+const step = stage('step', { position: [0, 0], text: 'Process' });
+```
+
+The following recipes stay in docs. They demonstrate composition, not new `Process`, `Class`, or `Data` exports
+
+<ComponentPreview
+  files="class-recipe"
+  size="lg"
+  caption="A Class recipe using a LogicFrame header and typed sections."
+/>
+
+<ComponentPreview files="data-recipe" size="lg" caption="A Data recipe using neutral stages and a decision." />
+
+## Semantic boundary
+
+Semantic units do not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Use `LogicFrame` for layout containers, `Connector` for relationships, and `Callout` for annotations
+
+## Related
+
+- [LogicFrame](/standard/logic/logic-frame): reusable layout container
+- [Connector](/standard/logic/connector): connect authored Node identities
+- [Callout](/standard/logic/callout): place an explanation beside a Node

@@ -1,6 +1,6 @@
 # ADR-01：Standard Logic Diagram Profile
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [逻辑制图能力域设计](../../../../../../../../notes/architecture/logical-diagram-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
 
@@ -24,7 +24,7 @@ Standard alpha.3 提供一组 JSON-safe Tier 2 composite。每个组件以自身
 
 ## 基础数据结构与公开契约
 
-所有公开逻辑组件都使用非空稳定 `id`。普通单元沿用 Core 已解析对象 target；`LogicBlockBase` 额外允许引用一个 authored section：
+所有公开逻辑组件都使用非空稳定 `id`。普通单元沿用 Core 已解析对象 target；`LogicFrame` 额外允许引用一个 authored section：
 
 ```ts
 type LogicDiagramTarget =
@@ -34,7 +34,7 @@ type LogicDiagramTarget =
       offset?: Position;
     }
   | {
-      kind: 'logicBlock';
+      kind: 'logicFrame';
       id: string;
       section?: string;
       anchor?: AnchorRef;
@@ -44,7 +44,7 @@ type LogicDiagramTarget =
 type LogicDiagramPoint = Position | LogicDiagramTarget;
 ```
 
-`kind: 'logicBlock'` 表示调用方引用公开 Block identity，而不是内部 Scope id。省略 `section` 时引用整体 Block；提供时引用该 Block 中具有相同 key 的 section。offset 只在 anchor 解析后应用，不改变 artifact bounds。
+`kind: 'logicFrame'` 表示调用方引用公开 Block identity，而不是内部 Scope id。省略 `section` 时引用整体 Block；提供时声明该 Block 中具有相同 key 的 section。当前 Core 只有扁平 string target，因此 alpha.3 先闭环整体 Block target；带 `section` 的 target 保留为稳定输入但在 Connector / Callout lowering 时 fail-loud，直到 Core 提供 composite-owned structured subtarget 后再沿同一公开输入接通。offset 只在 anchor 解析后应用，不改变 artifact bounds。
 
 `LogicDiagramPoint` 用于 Connector endpoint 与显式折点；直接 Position 不产生组件 identity，也不能作为 Callout boundary target。
 
@@ -52,7 +52,7 @@ type LogicDiagramPoint = Position | LogicDiagramTarget;
 
 除 `Terminal.role` 明确闭合为 `start | end` 外，角色与分类使用非空开放字符串。内置常量只提供常见拼写和 authoring 便利；未知值合法并保持原样，在组件提供 typed artifact 时也原样保留，但不触发隐藏 provider lookup、布局、样式或验证分支。
 
-需要公开布局区域的 `LogicBlockBase`、基础逻辑单元与 `Callout` 输出 typed artifact，并共享以下不变量：
+需要公开布局区域的 `LogicFrame`、基础逻辑单元与 `Callout` 输出 typed artifact，并共享以下不变量：
 
 - artifact 带组件 kind、稳定 id、allocation / visual / visible bounds
 - 可寻址子区域保留 authored key / role 与 bounds
@@ -79,11 +79,11 @@ type LogicOuterArtifact = {
 ## 行为、失败语义与兼容性
 
 - 默认行为：每项能力有中性可用的默认 appearance，但显式 appearance 可以替换 shape、paint、spacing 与线型；替换不改变 discriminator、id、target 或 artifact 语义
-- 失败与诊断：空白 id / role、非法数值和变体不匹配在 schema 阶段拒绝；缺失 definition 与 child layout failure 在 compile 阶段 fail-loud。Connector unresolved id / section 沿用 Core Path warning + skip 合同，其余 anchor / geometry 失败也不改写 Core Path；Callout 缺失或 forward id / section / anchor fail-loud
+- 失败与诊断：空白 id / role、非法数值和变体不匹配在 schema 阶段拒绝；缺失 definition 与 child layout failure 在 compile 阶段 fail-loud。Connector unresolved whole-target id 沿用 Core Path warning + skip 合同，其余 anchor / geometry 失败也不改写 Core Path；当前 Core 下任何带 `section` 的 Connector / Callout target 都以明确的 unsupported diagnostic fail-loud。Callout 缺失或 forward whole-target id / anchor 同样 fail-loud
 - 兼容性：alpha.3 是新增 Standard `0.x` 能力，不改变未加载 capability 时的 Core compile 与 renderer 行为
 - React / Vanilla 等价性：两套 adapter 只归一 author input，并必须产生与直接 factory 相同的 canonical Standard IR
 
-全局 duplicate id 与 namespace shadowing 继续使用 Core 当前合同。Connector 的 target 在所在 namespace 的注册阶段闭合后随 pending Path 解析，因此可以引用同一可见 namespace 中位于 Connector 前后的普通单元、整体 Block 或 section；解析阶段仍不可见的 id / section 沿用 Core Path unresolved-target 诊断并跳过整条 Path，其余 anchor / geometry 失败也沿用 Core Path。Callout 在自身 layout-aware compile 时只读取此前已发布的 target snapshot；forward、缺失 id / section / anchor 均 fail-loud。Standard 不建立第二个全局索引，也不把 warning、skip 或失败静默改写为 last-resort placeholder。
+全局 duplicate id 与 namespace shadowing 继续使用 Core 当前合同。Connector 的整体 target 在所在 namespace 的注册阶段闭合后随 pending Path 解析，因此可以引用同一可见 namespace 中位于 Connector 前后的普通单元或整体 Block；解析阶段仍不可见的 id 沿用 Core Path unresolved-target 诊断并跳过整条 Path，其余 anchor / geometry 失败也沿用 Core Path。Callout 通过 Core authored Scope placement 只读取此前已解析的整体 target；forward、缺失 id / anchor 均 fail-loud。带 `section` 的 target 在结构化 Core subtarget 出现前明确拒绝，Standard 不建立第二个全局索引、不派生扁平 section id，也不把 warning、skip 或失败静默改写为 last-resort placeholder。
 
 ## 功能与包边界
 
@@ -96,12 +96,12 @@ type LogicOuterArtifact = {
 
 ## 架构验证
 
-- 是否可由现有能力组合：Core 已能表达图形和路径，但缺少持久化逻辑 discriminator 与 collision-safe Block section target，需要扩展 Standard，并由前置 Kernel ADR 补齐通用 subtarget / target-aware replay；Path 几何与 Scene identity 继续由 Core 自身承载
+- 是否可由现有能力组合：Core 已能表达图形、Path、整体 target 与 authored Scope placement，但缺少持久化逻辑 discriminator 与 collision-safe Block section target；alpha.3 先组合现有能力闭环整体 target，并把 section target 保留为显式 deferred 分支。Path 几何与 Scene identity 继续由 Core 自身承载
 - 责任切分：Standard 保存高层语义并下沉；Core 解析 child、target、Path、Scope 与 Scene；renderer 只绘制 Scene；adapter 不解释语义
 - 是否需要新 IR / contract / registry：新增 Standard composite IR；每项继续使用 Core CompositeDefinition registry。组件集合和 route vocabulary 是闭合能力，内容与 role 已通过开放字段扩展，因此不增加新 registry
 - pipeline / lowering / renderer / diagnostics 如何闭环：Standard schema → CompositeDefinition expand 或 layout-aware compile → Core IR 与适用的 typed artifact → Scene → SVG / Canvas；失败沿 Core layout / namespace 诊断提升
 - provenance / locator 是否适用：布局组件 artifact 的 id / section key 支撑 headless 定位；Connector 只保留同 id Scene 主体挂点，不提供 compile artifact locator。领域 provenance 由消费方在 lowering 前与 authored id join，不写入 Standard
-- 结论：逻辑语义扩展当前 Standard Drawing Complete 能力，不上移为 Graph；通用 subtarget 与 target-aware replay 缺口先下沉到 Core
+- 结论：逻辑语义扩展当前 Standard Drawing Complete 能力，不上移为 Graph；通用 structured subtarget 缺口留在 Core，未闭环前由 Standard 明确拒绝 section target
 
 ## 被否决方案
 

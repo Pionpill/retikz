@@ -9,7 +9,7 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 Core exports `ThemeStyle`, `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` are sparse, JSON-safe overrides made of `style`, `mode`, and `tokens`. Compile starts from `neutral + light`, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand` and layout-aware `compile`.
 
-`theme.tokens` is an owner-namespaced bag. Core registers the built-in `core` namespace and validates `semantic.error`, `semantic.success`, `semantic.warning`, and the non-empty `palette.categorical`; Plot, Chart, Table, and third-party composites register their namespaces through their own Definitions. `composeThemeTokenOverrides(defineCoreThemeTokens(...), ...)` combines owner contributions into a root or local Theme input. Unknown namespaces, keys, values, and conflicting Definitions fail loudly.
+`theme.tokens` is an owner-namespaced bag. Core registers the built-in `core` namespace and validates `semantic.error`, `semantic.success`, `semantic.warning`, and the non-empty `palette.categorical`; Plot, Chart, Table, and third-party composites register their namespaces through their own Definitions. Callers place each owner contribution under its namespace to form a root or local Theme input. Unknown namespaces, keys, values, and conflicting Definitions fail loudly.
 
 Core only propagates, validates, and inherits namespace/token keys, then creates a detached and frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
 
@@ -160,29 +160,29 @@ session.update({
 
 ## Public API
 
-| Export                                                                                       | Role                                                                         |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                                         | Fixed identities for the Core document owner and compile Program             |
-| `CoreOwnerDefinition`                                                                        | Capture/read/equality Definition for complete IR Snapshots                   |
-| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                                   | Closed Theme vocabulary, strict IR schema, and Scene / Scope inheritance     |
-| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                                          | Sparse persisted override, complete frozen environment, and shared color view |
-| `ThemeTokenDefinition` / `ThemeTokenContribution`                                            | Owner namespace schema Definition and pure JSON contribution                 |
-| `defineThemeTokenNamespace` / `defineThemeTokenContribution` / `composeThemeTokenOverrides` | Register, freeze, and compose Theme token authoring inputs                   |
-| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens`                | Core `core` namespace and shared-color overrides                             |
-| `resolveThemeTokenRegistry`                                                                  | Merge Core and supplied owner Definitions; conflicting entries fail immediately |
-| `createCoreProgram(options, runtimeOptions?)`                                                | Create a Runtime Program Definition while preserving composite artifacts     |
-| `CoreChange`                                                                                 | `add` / `update` / `remove` / `move` change-hint union                       |
-| `CoreProgramOptions<TComposites>`                                                            | Program-lifetime `CompileOptions` without `trace`                            |
-| `CoreProgramRuntimeOptions`                                                                  | Extra Runtime owners that invalidate Core without entering IR or Scene       |
-| `CoreProgramOutput<TComposites>`                                                             | Complete compile result and warnings                                         |
-| `CoreProgramPublicRead<TComposites>`                                                         | Public `output`, `snapshot`, and optional `patch`                            |
-| `CoreProgramDefinition<TComposites>`                                                         | Artifact-input, owned-artifact, and private/public read generic relationship |
-| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                                       | Deeply readonly Scene and atomic Patch DTOs                                  |
-| `observeCompileToScene()`                                                                    | Run an explicit full compile with observer sessions                          |
-| `defineCompileObserver()` / `CompileObserverDefinition`                                      | Define a compile observation session and its stable key                      |
-| `CompileObservation` / `CompileObservationContext`                                           | Final owner output, occurrence, transform, and isolated fragment compiler    |
-| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher`                                | Declare and publish optional final Path-kind output                          |
-| `ObservedCompileResult` / `CompileObserverOutput`                                             | Primary compile result and domain-defined outputs in definition order        |
+| Export                                                                        | Role                                                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                                          | Fixed identities for the Core document owner and compile Program                |
+| `CoreOwnerDefinition`                                                         | Capture/read/equality Definition for complete IR Snapshots                      |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                                    | Closed Theme vocabulary, strict IR schema, and Scene / Scope inheritance        |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`                           | Sparse persisted override, complete frozen environment, and shared color view   |
+| `ThemeTokenDefinition` / `ThemeTokenContribution`                             | Owner namespace schema Definition and pure JSON contribution                    |
+| `defineThemeTokenNamespace` / `defineThemeTokenContribution`                  | Define, freeze, and create Theme token authoring inputs                         |
+| `CoreThemeTokenDefinition` / `CoreThemeTokenSchema` / `defineCoreThemeTokens` | Core `core` namespace and shared-color overrides                                |
+| `resolveThemeTokenRegistry`                                                   | Merge Core and supplied owner Definitions; conflicting entries fail immediately |
+| `createCoreProgram(options, runtimeOptions?)`                                 | Create a Runtime Program Definition while preserving composite artifacts        |
+| `CoreChange`                                                                  | `add` / `update` / `remove` / `move` change-hint union                          |
+| `CoreProgramOptions<TComposites>`                                             | Program-lifetime `CompileOptions` without `trace`                               |
+| `CoreProgramRuntimeOptions`                                                   | Extra Runtime owners that invalidate Core without entering IR or Scene          |
+| `CoreProgramOutput<TComposites>`                                              | Complete compile result and warnings                                            |
+| `CoreProgramPublicRead<TComposites>`                                          | Public `output`, `snapshot`, and optional `patch`                               |
+| `CoreProgramDefinition<TComposites>`                                          | Artifact-input, owned-artifact, and private/public read generic relationship    |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`                        | Deeply readonly Scene and atomic Patch DTOs                                     |
+| `observeCompileToScene()`                                                     | Run an explicit full compile with observer sessions                             |
+| `defineCompileObserver()` / `CompileObserverDefinition`                       | Define a compile observation session and its stable key                         |
+| `CompileObservation` / `CompileObservationContext`                            | Final owner output, occurrence, transform, and isolated fragment compiler       |
+| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher`                | Declare and publish optional final Path-kind output                             |
+| `ObservedCompileResult` / `CompileObserverOutput`                             | Primary compile result and domain-defined outputs in definition order           |
 
 ## Source
 

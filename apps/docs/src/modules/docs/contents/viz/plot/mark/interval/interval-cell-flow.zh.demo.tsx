@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 type FlowNode = {
   id: string;
@@ -102,8 +102,8 @@ const Demo: FC = () => (
         {desktopNodes.slice(0, -1).map((node, index) => (
           <Draw key={node.id} way={[node.id, desktopNodes[index + 1].id]} arrow="->" />
         ))}
-        <LogicFrame id="desktop-node-layer">
-          <LogicFrameTitle>Core Node 图层</LogicFrameTitle>
+        <LogicFigureFrame id="desktop-node-layer">
+          <LogicFigureFrameTitle>Core Node 图层</LogicFigureFrameTitle>
           {['rect', 'sector', 'contour'].map((kind, index) => (
             <Node
               key={kind}
@@ -119,7 +119,7 @@ const Demo: FC = () => (
               {kind}
             </Node>
           ))}
-        </LogicFrame>
+        </LogicFigureFrame>
         {['rect', 'sector', 'contour'].map(kind => (
           <Draw key={kind} way={['desktop-project', `desktop-${kind}`]} arrow="->" />
         ))}

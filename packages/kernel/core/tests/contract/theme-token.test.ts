@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { AnyThemeTokenDefinition } from '../../src';
-
-import { composeThemeTokenOverrides, defineThemeTokenNamespace } from '../../src';
+import { defineThemeTokenContribution, defineThemeTokenNamespace } from '../../src';
 
 const tokenSchema = z.strictObject({
   'surface.background': z.string().optional(),
@@ -22,28 +20,14 @@ describe('Theme token contract', () => {
     expect(definition.schema).toBe(tokenSchema);
   });
 
-  it('accepts JSON-safe contributions and emits a detached namespace bag in declaration order', () => {
-    const plotDefinition = defineThemeTokenNamespace({ namespace: 'plot', schema: tokenSchema });
-    const chartDefinition = defineThemeTokenNamespace({
-      namespace: 'chart',
-      schema: z.strictObject({ 'label.color': z.string().optional() }),
-    });
-    const contributions: Array<AnyThemeTokenDefinition> = [plotDefinition, chartDefinition];
-    void contributions;
-
+  it('accepts JSON-safe contributions and emits a detached frozen contribution', () => {
     const plotTokens = { 'surface.background': '#ffffff' };
-    const bag = composeThemeTokenOverrides(
-      { namespace: 'plot', tokens: plotTokens },
-      { namespace: 'chart', tokens: { 'label.color': '#111111' } },
-    );
+    const contribution = defineThemeTokenContribution({ namespace: 'plot', tokens: plotTokens });
 
-    expect(bag).toEqual({
-      plot: { 'surface.background': '#ffffff' },
-      chart: { 'label.color': '#111111' },
-    });
-    expect(bag.plot).not.toBe(plotTokens);
-    expect(Object.isFrozen(bag)).toBe(true);
-    expect(Object.isFrozen(bag.plot)).toBe(true);
+    expect(contribution).toEqual({ namespace: 'plot', tokens: { 'surface.background': '#ffffff' } });
+    expect(contribution.tokens).not.toBe(plotTokens);
+    expect(Object.isFrozen(contribution)).toBe(true);
+    expect(Object.isFrozen(contribution.tokens)).toBe(true);
   });
 
   it.each([
@@ -52,15 +36,6 @@ describe('Theme token contract', () => {
     ['undefined token', { namespace: 'plot', tokens: { value: undefined } }],
     ['class token', { namespace: 'plot', tokens: { value: new (class Token {})() } }],
   ])('rejects non-JSON contribution: %s', (_label, contribution) => {
-    expect(() => composeThemeTokenOverrides(contribution)).toThrow();
-  });
-
-  it('rejects duplicate contribution namespaces instead of last-wins merging', () => {
-    expect(() =>
-      composeThemeTokenOverrides(
-        { namespace: 'plot', tokens: { 'surface.background': '#ffffff' } },
-        { namespace: 'plot', tokens: { 'surface.background': '#000000' } },
-      ),
-    ).toThrow(/duplicate.*namespace.*plot/i);
+    expect(() => defineThemeTokenContribution(contribution)).toThrow();
   });
 });

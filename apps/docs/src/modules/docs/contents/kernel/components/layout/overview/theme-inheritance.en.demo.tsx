@@ -2,14 +2,7 @@ import type { IRNode } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
-import {
-  composeThemeTokenOverrides,
-  CompositeBaseSchema,
-  defineComposite,
-  defineCoreThemeTokens,
-  ThemeMode,
-  ThemeStyle,
-} from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
 import { Layout, Scope } from '@retikz/react';
 import { z } from 'zod';
 
@@ -34,11 +27,9 @@ const cardFills = {
   },
 } as const;
 
-const rootThemeTokens = composeThemeTokenOverrides(
-  defineCoreThemeTokens({
-    'palette.categorical': ['#2563eb', '#7c3aed', '#c026d3'],
-  }),
-);
+const rootThemeTokens = {
+  core: { 'palette.categorical': ['#2563eb', '#7c3aed', '#c026d3'] },
+};
 
 const themeCardComposite = defineComposite({
   namespace: 'theme-demo',

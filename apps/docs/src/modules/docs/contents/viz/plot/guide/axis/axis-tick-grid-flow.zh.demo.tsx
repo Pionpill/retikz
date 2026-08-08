@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Axis tick 与主 / 次网格的位置来源和分流逻辑 */
 const Demo: FC = () => (
   <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="axis-tick-group">
-      <LogicFrameTitle>Axis tick</LogicFrameTitle>
+    <LogicFigureFrame id="axis-tick-group">
+      <LogicFigureFrameTitle>Axis tick</LogicFigureFrameTitle>
       <Node
         id="axis-source"
         position={[-280, -55]}
@@ -57,10 +57,10 @@ const Demo: FC = () => (
           ticks.density 抽稀
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="grid-group">
-      <LogicFrameTitle>Grid</LogicFrameTitle>
+    <LogicFigureFrame id="grid-group">
+      <LogicFigureFrameTitle>Grid</LogicFigureFrameTitle>
       <Node
         id="grid-source"
         position={[285, -55]}
@@ -125,7 +125,7 @@ const Demo: FC = () => (
           过滤重叠位置
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw way={['axis-source', 'axis-candidates']} arrow="->" />
     <Draw way={['axis-candidates', 'axis-visible']} arrow="->" />

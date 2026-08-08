@@ -1,0 +1,84 @@
+---
+title: Connector
+description: 用显式 Core Path 路由连接 authored target，并在末步添加可选 label。
+---
+
+`Connector` 把一条关系下沉为一条 Core Path。端点可以是笛卡尔坐标，也可以是稳定的 authored target。路由必须显式给出：组件不会计算图路由、寻找障碍物或改变其它组件的几何。
+
+## 用法
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Connector, Stage, Terminal } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={420} height={160}>
+  <Scope transforms={[{ kind: 'translate', x: 24, y: 56 }]}>
+    <Terminal id="start" role="start">
+      <Node position={[0, 0]} text="Start" />
+    </Terminal>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 220, y: 56 }]}>
+    <Stage id="step">
+      <Node position={[0, 0]} text="Step" />
+    </Stage>
+  </Scope>
+  <Connector
+    id="start-to-step"
+    from={{ id: 'start' }}
+    to={{ id: 'step' }}
+    routing={{ kind: 'orthogonal', pattern: 'hv' }}
+    label={{ text: 'next' }}
+  />
+</Layout>
+```
+
+`label` 挂在最终可绘制的 Core step 上。即使路由包含折线，也只在一个位置写 label，不重复写 path-level label。
+
+## 示例
+
+### 路由变体
+
+| 路由              | 输入                                             | 下沉结果                                 |
+| ----------------- | ------------------------------------------------ | ---------------------------------------- |
+| Straight          | `{ kind: 'straight' }`                           | 端点之间一条 line                        |
+| Polyline          | `{ kind: 'polyline', points }`                   | 显式中间 target 或 point                 |
+| Orthogonal        | `pattern: 'hv' \| 'vh' \| 'hvh' \| 'vhv'`        | 两段或三段轴向路由；`ratio` 控制中段位置 |
+| Quadratic / Cubic | `control` 或 `control1` + `control2`             | Core Bezier step                         |
+| Bend              | `direction`、`angle`、`looseness` 或显式 tangent | Core bend step                           |
+
+<ComponentPreview files="connector-routing" size="lg" />
+
+直接 JSON 使用 `createConnector`、`ConnectorSchema` 与 `ConnectorDefinition`。Vanilla embed 使用 `connector` 与 `ConnectorVanillaAdapter`，其 canonical ID 是 `<embed-id>/connector`。
+
+Target identity 必须显式处理。Whole target 可以指向 authored traversal 中的前方或后方，因此 Connector 可以在 Stage emit 前就连接 `{ id: 'later-stage' }`。LogicFrame section target（`{ kind: 'logicFrame', id: 'block', section: 'body' }`）虽被 schema 接受，但 Connector 当前会在 lowering 时 fail-loud；请使用 whole block target。
+
+在 React/直接 IR 和 Vanilla 语义 builder 中，`Terminal id="start"` 都使用 `{ id: 'start' }` target。LogicFrame、Connector、Callout 与 Frame adapter 仍保留各自的 composite identity 规则。
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="日常使用可跳过"
+  description="只有排查 route step、target 解析或 label 放置时才需要阅读本节"
+/>
+
+`ConnectorDefinition` 是 expansion definition：它输出同 id 的 Core Path，没有 typed Connector artifact schema。label 只写入最终可绘制 step，包括折角或显式 polyline 的最后一段。section target 会在 Core Path lowering 前被拒绝，因此错误可诊断。
+
+## API 参考
+
+| 字段          | 类型                       | 默认值                                                                       | 说明                                                  |
+| ------------- | -------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `id`          | `string`                   | —                                                                            | 稳定的 authored Connector identity，也是 Core Path id |
+| `role?`       | `string`                   | 省略                                                                         | 开放的 authored Connector role                        |
+| `from`、`to`  | `LogicDiagramPointInput`   | —                                                                            | 笛卡尔 point 或带 anchor/offset 的 whole target       |
+| `routing?`    | `ConnectorRoutingInput`    | `{ kind: 'straight' }`                                                       | 闭合的显式路由 union                                  |
+| `label?`      | `LogicGeometryLabelInput`  | 省略                                                                         | 绑定到最终可绘制 step 的 label                        |
+| `appearance?` | `ConnectorAppearanceInput` | stroke `currentColor`、width `1`、圆角 `0`、`pos: 1` arrow mark、`zIndex: 0` | Core Path 描边、mark、圆角、dash 与 stacking 覆盖     |
+
+## 相关
+
+- [语义单元](/standard/logic/semantic-units)：可被 target 的单元
+- [Callout](/standard/logic/callout)：相对 target 的解释
+- [Core Path](/kernel/components/draw/overview)：路由输出的底层图元

@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Layout 在 React、Core 与渲染宿主之间的职责边界 */
 const Demo: FC = () => (
   <Layout width={640} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="react-adapter-group">
-      <LogicFrameTitle>@retikz/react</LogicFrameTitle>
+    <LogicFigureFrame id="react-adapter-group">
+      <LogicFigureFrameTitle>@retikz/react</LogicFigureFrameTitle>
       <Node
         id="react-input"
         position={[-278, -15]}
@@ -48,7 +48,7 @@ const Demo: FC = () => (
       >
         definitions / options
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="core-compile"

@@ -1,4 +1,4 @@
-﻿import type { IRScene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -373,5 +373,46 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('const standardCompile = { composites: [FlexLayoutDefinition, GridDefinition] };');
     expect(code).not.toContain('LegendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
+  });
+
+  it('keeps semantic units as ordinary Node code and only emits composite helpers for real composites', () => {
+    const code = irToVanillaCode(
+      ir([
+        {
+          type: 'node',
+          id: 'start',
+          position: [0, 0],
+          shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
+          text: 'Start',
+        },
+        {
+          type: 'node',
+          id: 'step',
+          position: [80, 0],
+          shape: { type: 'rectangle', params: { cornerRadius: 8 } },
+          text: 'Step',
+        },
+        { type: 'node', id: 'check', position: [160, 0], shape: 'diamond', text: 'Check' },
+        { type: 'node', id: 'join', position: [240, 0], shape: 'circle' },
+        {
+          namespace: 'standard',
+          type: 'connector',
+          id: 'edge',
+          from: { id: 'start' },
+          to: { id: 'step' },
+          label: { text: 'next' },
+        },
+      ] as never),
+    );
+
+    expect(code).toContain("node('start'");
+    expect(code).toContain("node('step'");
+    expect(code).toContain("node('check'");
+    expect(code).toContain("node('join'");
+    expect(code).toContain('connector(');
+    expect(code).toContain('ConnectorVanillaAdapter');
+    expect(code).not.toContain('TerminalDefinition');
+    expect(code).not.toContain('StageDefinition');
+    expect(code).not.toContain('Unsupported Standard composite');
   });
 });

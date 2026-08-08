@@ -4,23 +4,27 @@ import { convertReactNodeToIR, Node } from '@retikz/react';
 import { FrameSchema } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
-import { LogicFrame, LogicFrameDescription, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import {
+  LogicFigureFrame,
+  LogicFigureFrameDescription,
+  LogicFigureFrameTitle,
+} from '@/modules/docs/components/logic-figure';
 
 const readFrame = (element: ReactNode) => {
   const child = convertReactNodeToIR(element).children[0];
   return FrameSchema.parse(child);
 };
 
-describe('LogicFrame', () => {
+describe('LogicFigureFrame', () => {
   it('provides logic-figure defaults to Frame and its semantic header parts', () => {
     const frame = readFrame(
-      <LogicFrame id="core">
-        <LogicFrameTitle>Core</LogicFrameTitle>
-        <LogicFrameDescription>IR → Scene</LogicFrameDescription>
+      <LogicFigureFrame id="core">
+        <LogicFigureFrameTitle>Core</LogicFigureFrameTitle>
+        <LogicFigureFrameDescription>IR → Scene</LogicFigureFrameDescription>
         <Node id="compile" position={[0, 0]}>
           compileToScene
         </Node>
-      </LogicFrame>,
+      </LogicFigureFrame>,
     );
 
     expect(frame).toMatchObject({
@@ -50,7 +54,7 @@ describe('LogicFrame', () => {
 
   it('lets explicit styles replace defaults while shallow-merging header fonts', () => {
     const frame = readFrame(
-      <LogicFrame
+      <LogicFigureFrame
         id="custom"
         border={{
           style: {
@@ -63,14 +67,14 @@ describe('LogicFrame', () => {
         }}
         padding={{ x: 16, y: 8 }}
       >
-        <LogicFrameTitle textColor="currentColor" font={{ weight: 700 }}>
+        <LogicFigureFrameTitle textColor="currentColor" font={{ weight: 700 }}>
           Custom
-        </LogicFrameTitle>
-        <LogicFrameDescription opacity={0.9} font={{ family: 'serif' }}>
+        </LogicFigureFrameTitle>
+        <LogicFigureFrameDescription opacity={0.9} font={{ family: 'serif' }}>
           Description
-        </LogicFrameDescription>
+        </LogicFigureFrameDescription>
         <Node position={[0, 0]}>Body</Node>
-      </LogicFrame>,
+      </LogicFigureFrame>,
     );
 
     expect(frame).toMatchObject({
@@ -95,12 +99,12 @@ describe('LogicFrame', () => {
     expect(frame.border.style.dashPattern).toBeUndefined();
   });
 
-  it('rejects semantic header parts used outside LogicFrame', () => {
-    expect(() => convertReactNodeToIR(<LogicFrameTitle>Standalone</LogicFrameTitle>)).toThrow(
-      /direct child of LogicFrame/i,
+  it('rejects semantic header parts used outside LogicFigureFrame', () => {
+    expect(() => convertReactNodeToIR(<LogicFigureFrameTitle>Standalone</LogicFigureFrameTitle>)).toThrow(
+      /direct child of LogicFigureFrame/i,
     );
-    expect(() => convertReactNodeToIR(<LogicFrameDescription>Standalone</LogicFrameDescription>)).toThrow(
-      /direct child of LogicFrame/i,
+    expect(() => convertReactNodeToIR(<LogicFigureFrameDescription>Standalone</LogicFigureFrameDescription>)).toThrow(
+      /direct child of LogicFigureFrame/i,
     );
   });
 });
