@@ -2,6 +2,8 @@
 
 > 状态：Accepted。关联：[Standard v0 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 >
+> 图式语义后继：[Notation v0.1 roadmap](../../../../../../diagram/_notes/decisions/notation/v0/v0.1/roadmap.md) 负责把 alpha.3 元素迁入 Diagram；Standard 长期保留通用布局与绘图 capability
+>
 > v0.1 是 Standard 包家族的首个版本。`Grid`、`Axes` 和 `Frame` 已建立首批宿主无关 Tier 2 composite；当前版本继续补齐按项 Definition 接入、通用布局积木、跨领域 Legend 呈现与面向持久化 / LLM 编辑的语义逻辑组件，不把其它 Kernel 能力打包迁出。
 
 ## 版本目标
@@ -31,7 +33,7 @@
 | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 Definition 接入** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、直接 Core Definition 注入、Vanilla adapter 数组、双语 docs / migration / changelog | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且按项 definitions 进入同一 Core option 路径      |
 | [alpha.2](./alpha.2/roadmap.md) | **通用 Box Layout 与 Legend**                         | Flex、Grid、Overlay、LayoutItem、layout artifact 与 inspector；领域无关 Legend items / ramp、任意 IRChild sample、typed artifact、直接 Definition 接入与 React / Vanilla authoring                      | Core layout-aware composite 主链；Legend 复用 Box Layout，领域包保留解析、provenance / locator 与交互                                                         |
-| [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件**                                    | headless `LogicFrame`、`Terminal`、`Stage`、`Decision`、`Junction`、`Connector`、`Callout`、布局 artifact / Scene identity、按项 Definition、React / Vanilla authoring 与 docs recipe               | alpha.1 direct Definition loading；alpha.2 Box Layout；Core composite-owned subtarget / Path host label / target-aware replay；语义不由 shape、颜色或坐标代替 |
+| [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件**                                    | headless `LogicFrame`、`Terminal`、`Stage`、`Decision`、`Junction`、`Connector`、`Callout`、布局 artifact / Scene identity、按项 Definition、React / Vanilla authoring 与 docs recipe                   | alpha.1 direct Definition loading；alpha.2 Box Layout；Core composite-owned subtarget / Path host label / target-aware replay；语义不由 shape、颜色或坐标代替 |
 | beta.1                          | **收口与发布准备**                                    | public API 审查、Definition 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、release / package checks                                                                          | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                                  |
 
 ## Standard Definition 接入机制

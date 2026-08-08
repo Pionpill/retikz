@@ -2,7 +2,8 @@
 
 - 状态：Accepted（2026-08-03，人工确认）
 - 决策日期：2026-08-03
-- 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.1 ADR-05](../alpha.1/05-capability-loading.md) · [alpha.2 ADR-06](../alpha.2/06-layout-artifacts-capabilities-adapters.md) · [Standard Library 设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.1 ADR-05](../alpha.1/05-capability-loading.md) · [alpha.2 ADR-06](../alpha.2/06-layout-artifacts-capabilities-adapters.md) · [Standard Library 设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 复用本 ADR 的直接 Definition loading 原则；Notation 不增加 capability bundle 或动态注册层
 
 ## 背景与目标
 

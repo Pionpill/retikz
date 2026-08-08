@@ -3,6 +3,7 @@
 - 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01；2026-08-08 同步 semantic Node 简化
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [ADR-03](./03-semantic-logic-units.md) · [ADR-04](./04-connector-and-callout.md)
+- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已提出把直接 IR、React、Vanilla 与 docs owner 一并迁入 Notation package family
 
 ## 决策
 

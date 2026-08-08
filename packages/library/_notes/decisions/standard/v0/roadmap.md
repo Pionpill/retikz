@@ -1,5 +1,7 @@
 # Standard v0 Roadmap
 
+> 图式语义后继：[Notation v0 roadmap](../../../../../diagram/_notes/decisions/notation/v0/roadmap.md) 独立演进；Standard 只保留跨领域绘图能力
+
 > 更新于 2026-07-26。本文件记录 `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 的 v0 总体路线。具体 milestone 见对应 `v0.*/roadmap.md`，长期边界见 [`standard-library-design.md`](../../../architecture/standard-library-design.md)。
 
 ## 定位
@@ -45,7 +47,7 @@ Plot、Table 等领域 release group 可以使用兼容版本单向依赖 Standa
 - [Standard Drawing Library 设计](../../../architecture/standard-library-design.md)
 - [能力完备性与模块边界](../../../../../../notes/architecture/capability-design.md)
 - [Core 绘图完备设计](../../../../../kernel/_notes/architecture/core-drawing-complete.md)
-- [逻辑制图能力域设计](../../../../../../notes/architecture/logical-diagram-design.md)
+- [Diagram 制图能力域设计](../../../../../../notes/architecture/diagram-design.md)
 
 ## ADR 约定
 

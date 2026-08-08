@@ -3,6 +3,7 @@
 - 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01；2026-08-08 简化为 Core Node sugar
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md)
+- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已提出把四个 Core Node sugar 迁入 Notation；迁移不改变本 ADR 的 Node 等价语义
 
 ## 背景与目标
 

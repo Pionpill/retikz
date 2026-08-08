@@ -4,7 +4,9 @@
 >
 > 主题：提供可持久化的基础逻辑单元、headless `LogicFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
-> 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [逻辑制图能力域设计](../../../../../../../../notes/architecture/logical-diagram-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
+> 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已提出把本 milestone 的图式元素迁入 Diagram owner；迁移完成前本 roadmap 仍描述当前 Standard 契约
+>
+> 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
 
 ## 定位
 
