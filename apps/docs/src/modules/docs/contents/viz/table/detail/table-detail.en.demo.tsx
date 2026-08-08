@@ -1,6 +1,5 @@
 import type { FC } from 'react';
 
-import { composeThemeTokenOverrides, defineCoreThemeTokens } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { defineTableThemeTokens, TableThemeToken } from '@retikz/table';
 import { DetailColumn, DetailTable } from '@retikz/table-react';
@@ -11,10 +10,10 @@ import { scoreRows } from './table-detail.data';
 
 type ScoreTableProps = { embedded?: boolean };
 
-const rootThemeTokens = composeThemeTokenOverrides(
-  defineCoreThemeTokens({ 'palette.categorical': ['#2563eb', '#f97316'] }),
-  defineTableThemeTokens({ [TableThemeToken.CellContentFontFamily]: 'serif' }),
-);
+const rootThemeTokens = {
+  core: { 'palette.categorical': ['#2563eb', '#f97316'] },
+  table: defineTableThemeTokens({ [TableThemeToken.CellContentFontFamily]: 'serif' }).tokens,
+};
 
 const rootTheme = { style: 'academic', mode: 'light', tokens: rootThemeTokens } as const;
 

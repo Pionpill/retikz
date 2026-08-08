@@ -1,4 +1,3 @@
-import { composeThemeTokenOverrides, defineCoreThemeTokens } from '@retikz/core';
 import { definePlotThemeTokens, PlotThemeToken } from '@retikz/plot';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
@@ -13,20 +12,18 @@ const points = [
 ];
 
 /** Plot token override 经正式 theme resolver 进入 axis、palette 与 surface */
-const rootThemeTokens = composeThemeTokenOverrides(
-  defineCoreThemeTokens({
-    'palette.categorical': ['#2563EB', '#F97316'],
-  }),
-  definePlotThemeTokens({
+const rootThemeTokens = {
+  core: { 'palette.categorical': ['#2563EB', '#F97316'] },
+  plot: definePlotThemeTokens({
     [PlotThemeToken.PlotSurfaceFill]: '#F8FAFC',
-  }),
-);
+  }).tokens,
+};
 
-const localScopeTokens = composeThemeTokenOverrides(
-  definePlotThemeTokens({
+const localScopeTokens = {
+  plot: definePlotThemeTokens({
     [PlotThemeToken.AxisGridStroke]: '#60A5FA',
-  }),
-);
+  }).tokens,
+};
 
 /** Plot token override 通过 Core Theme namespace 与 Plot spec 进入同一 resolver */
 export default function ThemeTokensDemo() {
