@@ -184,15 +184,6 @@ natural contribution、anchor translation、alignment、baseline aggregation、s
 - zIndex重排schema children：会破坏authored identity和adapter round-trip
 - 百分比/inset双端约束：需要额外的indefinite percentage与constraint resolution合同，alpha.2不引入
 
-## 测试设计
-
-- schema：strict placement union、anchor范围、exact width/height、positioned baseline rejection、integer zIndex和默认值
-- pure solver：aligned/positioned、non-zero bounds、anchor/offset、baseline、include/exclude、negative overflow和stable zIndex
-- compile：stretch refusal、nested overlay、runtime Scope order、clip、custom Composite与failed probe
-- artifact与adapter证据在ADR-06收口
-
-详细行为到证据映射见 ignored `TEST_CONTRACT.md`。
-
 ## 影响
 
 - 新增 `standard.overlayLayout` 公开 schema / factory / Definition
@@ -219,18 +210,6 @@ natural contribution、anchor translation、alignment、baseline aggregation、s
 - selection handles、drag constraints、history或interaction runtime
 - per-item clip/mask/effect
 - artifact payload、最终adapter和docs接线
-
-## 最终实现摘要
-
-- 实现 `standard.overlayLayout` strict schema、factory、Definition，以及 aligned/positioned contribution 与 placement solver
-- positioned item 使用 content-local `at`、归一化 `anchor` 和可选 exact slot；`sizeParticipation`、alignment、offset 与稳定 `zIndex` paint order 保持正交
-- compile 复用 Core Scope transform/clip/replay；typed item/paint-order artifact 与 adapter/docs 由 ADR-06 收口
-
-## 验证结果
-
-- schema、pure solver 与 compile 测试覆盖 nested strict objects、anchor、baseline、include/exclude、non-zero bounds、negative overflow、stable paint order、nested/custom child 与 selected failure
-- Standard、Standard React、Standard Vanilla 包级类型检查、lint 与测试通过
-- 双语文档与 controls 预览覆盖 aligned/positioned、anchor、共享对齐和可见 zIndex 变化
 
 ## 遗留风险
 

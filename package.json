@@ -44,8 +44,7 @@
     "typecheck:apps": "pnpm --filter @retikz/docs --filter @retikz/eval --filter @retikz/bench -r exec tsc --noEmit",
     "typecheck:full": "pnpm -r exec tsc --noEmit",
     "typecheck:kernel": "pnpm --filter @retikz/math --filter @retikz/runtime --filter @retikz/core --filter @retikz/inspect --filter @retikz/render --filter @retikz/react --filter @retikz/vanilla --filter @retikz/tex -r exec tsc --noEmit",
-    "typecheck:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec tsc --noEmit",
-    "update:publish-artifact-limits": "node scripts/check-publish-artifacts.mjs --update-limits"
+    "typecheck:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec tsc --noEmit"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

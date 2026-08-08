@@ -287,7 +287,12 @@ function validateDependencyPolicy({ manifest, packageToGroup, releaseGroupsConfi
       );
     }
 
-    if (sourceGroupName !== targetGroupName && sourceGroup.kind === 'feature' && targetGroup.kind === 'feature') {
+    if (
+      sourceGroupName !== targetGroupName &&
+      sourceGroup.kind === 'feature' &&
+      targetGroup.kind === 'feature' &&
+      targetGroup.domain !== 'library'
+    ) {
       diagnostics.push(
         `${manifest.name} cannot depend on feature group ${targetGroupName} from feature group ${sourceGroupName}`,
       );

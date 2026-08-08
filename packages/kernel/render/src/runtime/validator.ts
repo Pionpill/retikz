@@ -63,12 +63,19 @@ const isDenseArray = (value: unknown, predicate: (item: unknown) => boolean): va
 };
 
 const isRuntimeIdentity = (value: unknown): value is RuntimeIdentity => {
+  if (typeof value !== 'object' || value === null) return false;
+  const owner = Reflect.get(value, 'owner');
+  const path = Reflect.get(value, 'path');
+  if (
+    typeof owner !== 'string' ||
+    owner.length === 0 ||
+    !isDenseArray(path, segment => typeof segment === 'string' && segment.length > 0) ||
+    path.length === 0
+  ) {
+    return false;
+  }
   try {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      runtimeIdentityEquals(value as RuntimeIdentity, value as RuntimeIdentity)
-    );
+    return runtimeIdentityEquals(value as RuntimeIdentity, value as RuntimeIdentity);
   } catch {
     return false;
   }

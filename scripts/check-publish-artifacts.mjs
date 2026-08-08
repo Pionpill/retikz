@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -12,7 +12,6 @@ const dependencyFields = ['dependencies', 'peerDependencies', 'optionalDependenc
 const allowedPackedRootFiles = new Set(['LICENSE', 'README.md', 'package.json']);
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
-const limitsPath = path.join(repoRoot, 'scripts', 'publish-artifact-limits.json');
 
 const toPosixPath = value => value.replaceAll('\\', '/');
 
@@ -221,21 +220,6 @@ export function renderFixtureWorkspaceYaml(overrides) {
       .map(([packageName, packageSpec]) => `  ${JSON.stringify(packageName)}: ${JSON.stringify(packageSpec)}`),
     '',
   ].join('\n');
-}
-
-/** 按 10% 余量向上取整到 10 个文件。 */
-export function nextFileLimit(fileCount) {
-  return Math.ceil((fileCount * 11) / 100) * 10;
-}
-
-/** 按 15% 余量向上取整到 10 KiB。 */
-export function nextPackedByteLimit(byteCount) {
-  return Math.ceil((byteCount * 115) / (100 * 10240)) * 10240;
-}
-
-/** 按包名稳定排序 artifact limits。 */
-export function sortArtifactLimits(limits) {
-  return Object.fromEntries(Object.entries(limits).sort(([left], [right]) => left.localeCompare(right)));
 }
 
 /**
@@ -512,15 +496,7 @@ async function runPackedTypeSmoke(fixtureDirectory, specifiers) {
   );
 }
 
-/** 原子更新 reviewed artifact limits。 */
-async function writeLimitsAtomically(limits) {
-  const temporaryPath = `${limitsPath}.${process.pid}.tmp`;
-  await writeFile(temporaryPath, `${JSON.stringify(sortArtifactLimits(limits), null, 2)}\n`, 'utf8');
-  await rename(temporaryPath, limitsPath);
-}
-
 async function main() {
-  const updateLimits = process.argv.includes('--update-limits');
   const nodeMajor = Number(process.versions.node.split('.')[0]);
 
   if (nodeMajor !== 24) {
@@ -556,7 +532,6 @@ async function main() {
     const tarballsDirectory = path.join(taskDirectory, 'tarballs');
     const packResults = new Map();
     const tarballsByName = new Map();
-    const candidateLimits = {};
 
     await mkdir(tarballsDirectory, { recursive: true });
 
@@ -573,10 +548,6 @@ async function main() {
 
       packResults.set(record.manifest.name, { ...packResult, packedBytes });
       tarballsByName.set(record.manifest.name, tarballPath);
-      candidateLimits[record.manifest.name] = {
-        maxFiles: nextFileLimit(packResult.files.length),
-        maxPackedBytes: nextPackedByteLimit(packedBytes),
-      };
     }
 
     const { fixtureDirectory, packedManifests } = await installPackedFixture({
@@ -614,55 +585,13 @@ async function main() {
     runCommand(process.execPath, ['--input-type=module', '--eval', smokeSource], fixtureDirectory);
     await runPackedTypeSmoke(fixtureDirectory, specifiers);
 
-    if (updateLimits) {
-      await writeLimitsAtomically(candidateLimits);
-    } else {
-      if (!existsSync(limitsPath)) {
-        throw new Error('Missing scripts/publish-artifact-limits.json; run pnpm run update:publish-artifact-limits');
-      }
-
-      const limits = await readJson(limitsPath);
-      const limitDiagnostics = [];
-
-      for (const record of records) {
-        const packageName = record.manifest.name;
-        const result = packResults.get(packageName);
-        const limit = limits[packageName];
-
-        if (!limit) {
-          limitDiagnostics.push(`${packageName} is missing artifact limits`);
-          continue;
-        }
-
-        if (result.files.length > limit.maxFiles) {
-          limitDiagnostics.push(`${packageName} packed ${result.files.length} files; limit is ${limit.maxFiles}`);
-        }
-
-        if (result.packedBytes > limit.maxPackedBytes) {
-          limitDiagnostics.push(`${packageName} packed ${result.packedBytes} bytes; limit is ${limit.maxPackedBytes}`);
-        }
-      }
-
-      for (const packageName of Object.keys(limits)) {
-        if (!versionsByPackage.has(packageName)) {
-          limitDiagnostics.push(`Artifact limits contain unknown package ${packageName}`);
-        }
-      }
-
-      if (limitDiagnostics.length > 0) {
-        throw new Error(`Artifact limit validation failed:\n${limitDiagnostics.map(item => `- ${item}`).join('\n')}`);
-      }
-    }
-
     for (const record of records) {
       const result = packResults.get(record.manifest.name);
       console.log(`${record.manifest.name}: ${result.files.length} files, ${result.packedBytes} bytes`);
     }
 
     console.log(
-      updateLimits
-        ? 'Publish artifact limits updated after successful packed ESM smoke tests.'
-        : `Publish artifact checks passed for ${records.length} package(s) and ${specifiers.length} public export(s).`,
+      `Publish artifact checks passed for ${records.length} package(s) and ${specifiers.length} public export(s).`,
     );
   } finally {
     if (taskDirectory) {

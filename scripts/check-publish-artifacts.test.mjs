@@ -7,11 +7,8 @@ import test from 'node:test';
 import {
   assertSafeTempPath,
   exportSpecifiers,
-  nextFileLimit,
-  nextPackedByteLimit,
   peerTypePackageName,
   renderFixtureWorkspaceYaml,
-  sortArtifactLimits,
   validateDistFiles,
   validatePackedDependencyRanges,
   validatePackedFiles,
@@ -190,21 +187,6 @@ test('fixture overrides are written in pnpm 11 workspace settings', () => {
       '',
     ].join('\n'),
   );
-});
-
-test('artifact limit formulas round up to their review units', () => {
-  assert.equal(nextFileLimit(100), 110);
-  assert.equal(nextFileLimit(101), 120);
-  assert.equal(nextPackedByteLimit(10240), 20480);
-  assert.equal(nextPackedByteLimit(20000), 30720);
-});
-
-test('artifact limits are serialized in package-name order', () => {
-  assert.deepEqual(Object.keys(sortArtifactLimits({ '@retikz/z': {}, '@retikz/a': {}, '@retikz/m': {} })), [
-    '@retikz/a',
-    '@retikz/m',
-    '@retikz/z',
-  ]);
 });
 
 test('safe temp paths accept only direct retikz publish task directories', () => {

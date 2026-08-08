@@ -1,6 +1,6 @@
 # ADR-11：Layout-aware Composite 的完整 Scope 输出契约
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-04
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-08：Layout proposal / probe contract](./08-layout-proposal-probe-contract.md) · [ADR-09：Inherited Theme context](./09-inherited-theme-context.md) · [ADR-10：Core atomic contracts](./10-core-atomic-contracts.md) · [Standard presentation composite reuse](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/10-presentation-composite-reuse.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md)
 

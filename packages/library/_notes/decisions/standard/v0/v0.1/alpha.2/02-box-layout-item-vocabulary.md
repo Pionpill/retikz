@@ -131,8 +131,6 @@ const itemInput = {
 } satisfies FlexLayoutItemInput;
 ```
 
-该示例必须由共享 schema 测试通过 `ChildSchema.safeParse(itemInput.child)` 验证，不能只依赖 TypeScript structural typing。
-
 ## 被否决的方案
 
 - 复制 CSS box-sizing、auto margin、负 margin 和 margin collapse：浏览器兼容历史不服务确定性绘图布局
@@ -141,18 +139,6 @@ const itemInput = {
 - 省略 item key并只用数组 index：插入/reorder 后 artifact identity 漂移
 - 建立可注册 LayoutDefinition：三种容器是闭合的官方 Composite，自定义容器直接使用 Core `defineComposite`
 - 用 visual bounds 做 size contribution：阴影、描边等视觉外溢会反向改变结构布局
-
-## 测试设计
-
-共享 schema 与纯几何测试覆盖：
-
-- axis size 三种 variant、默认 content、各 Core proposal、disjoint min/max 与 root/nested fill 无界失败
-- number/partial spacing、过量 padding/content rect、margin outer rect 与算术溢出
-- start/center/end/stretch、baseline guide/fallback 和 non-zero child bounds
-- visible/clip 不改变 allocation；positive rect 与 zero-area degenerate path clip 只改变可见包络
-- item kind、key、child JSON round-trip、重复 key 与 kind mismatch
-
-具体行为到证据映射见 ignored `TEST_CONTRACT.md`。
 
 ## 影响
 
@@ -180,18 +166,6 @@ const itemInput = {
 - auto margin、negative margin、margin collapse、percentage、calc、writing mode
 - border、background、scroll、pagination、fragmentation
 - 全局 identity、Target、Connector、selection 或编辑器状态
-
-## 最终实现摘要
-
-- 在 `composites/shared/layout` 建立闭合的 size、spacing、alignment、distribution、overflow 与 artifact 公共词汇，并由三种容器复用同一 schema 和几何 helper
-- `LayoutItemSchema` 以 `kind` 判别 Flex、Grid、Overlay item，保留容器本地唯一 `key` 与任意 JSON-safe `IRChild`
-- container allocation、content box、item margin、slot、真实 allocation、visual 与 visible bounds 保持独立坐标语义
-
-## 验证结果
-
-- shared schema、geometry 与 distribution 测试覆盖默认值、非法输入、过量 padding、non-zero bounds、baseline fallback 与 overflow/clip
-- Standard 包级 ESLint、`tsc --noEmit` 与测试通过
-- 三种容器 compile 与 typed artifact 测试共同验证共享词汇没有发生语义分叉
 
 ## 遗留风险
 
