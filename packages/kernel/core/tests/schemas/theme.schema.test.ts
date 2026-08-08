@@ -6,15 +6,15 @@ import { SceneSchema, ScopeSchema, ThemeMode, ThemeSchema, ThemeStyle } from '..
 
 describe('Theme schema', () => {
   it('只公开 selector 词汇和派生类型', () => {
-    expectTypeOf<ThemeStyleValue>().toEqualTypeOf<'neutral' | 'academic' | 'vibrant' | 'clean'>();
+    expectTypeOf<ThemeStyleValue>().toEqualTypeOf<string>();
     expectTypeOf<ThemeModeValue>().toEqualTypeOf<'light' | 'dark'>();
     expectTypeOf<IRTheme>().toEqualTypeOf<{
-      style?: ThemeStyleValue;
+      style?: string;
       mode?: ThemeModeValue;
     }>();
     expectTypeOf<ResolvedTheme>().toMatchTypeOf<
       Readonly<{
-        style: ThemeStyleValue;
+        style: string;
         mode: ThemeModeValue;
       }>
     >();
@@ -34,7 +34,8 @@ describe('Theme schema', () => {
   it('拒绝遗留 token bag、未知字段与非法 selector', () => {
     expect(ThemeSchema.safeParse({ tokens: { core: { 'palette.categorical': ['#2563eb'] } } }).success).toBe(false);
     expect(ThemeSchema.safeParse({ palette: 'paper' }).success).toBe(false);
-    expect(ThemeSchema.safeParse({ style: 'paper' }).success).toBe(false);
+    expect(ThemeSchema.safeParse({ style: 'paper' }).success).toBe(true);
+    expect(ThemeSchema.safeParse({ style: '' }).success).toBe(false);
     expect(ThemeSchema.safeParse({ mode: 'system' }).success).toBe(false);
     expect(ThemeSchema.safeParse({ palettePreset: ThemeStyle.Vibrant }).success).toBe(false);
   });

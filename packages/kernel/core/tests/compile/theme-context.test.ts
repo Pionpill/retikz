@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { IRChild, IRScene, ResolvedTheme } from '../../src';
 
-import { compileToScene, CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode, ThemeStyle } from '../../src';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({
   type: 'scene',
@@ -55,5 +55,32 @@ describe('Theme compile context', () => {
     );
 
     expect(observed[0]).toMatchObject({ style: 'academic', mode: 'light' });
+  });
+
+  it('通过同一 Core style registry 解析自定义 style', () => {
+    const observed: Array<ResolvedTheme> = [];
+    const brand = defineThemeStyle({
+      name: 'brand',
+      resolve: ({ mode }) => ({
+        semantic: {
+          error: mode === ThemeMode.Dark ? '#ffaaaa' : '#aa0000',
+          success: mode === ThemeMode.Dark ? '#aaffaa' : '#00aa00',
+          warning: mode === ThemeMode.Dark ? '#ffffaa' : '#aaaa00',
+        },
+        categorical: mode === ThemeMode.Dark ? ['#aabbcc'] : ['#112233'],
+      }),
+    });
+
+    compileToScene(
+      sceneOf([{ namespace: 'theme-test', type: 'probe' }], { style: 'brand', mode: ThemeMode.Dark }),
+      { composites: [createProbe(observed)], themeStyles: [brand] },
+    );
+
+    expect(observed).toHaveLength(1);
+    expect(observed[0]).toMatchObject({
+      style: 'brand',
+      mode: ThemeMode.Dark,
+      colors: { categorical: ['#aabbcc'], semantic: { error: '#ffaaaa' } },
+    });
   });
 });

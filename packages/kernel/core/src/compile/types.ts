@@ -15,6 +15,7 @@ import type {
   Scene,
   ShapeDefinition,
 } from '../contract';
+import type { ThemeStyleDefinition } from '../contract';
 import type { IRCoordinate, IRNode, IRPathBase, IRScene, IRScope, JsonValue } from '../schemas';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
@@ -177,6 +178,8 @@ export type CompileLayoutOptions = {
 
 /** 运行时注入的 provider 注册表 */
 export type CompileProviderOptions = {
+  /** 运行时注入的 Core Theme style definitions */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
   /**
    * 运行时注入的 shape 定义
    * @description 未注册名称会在编译期报错
@@ -259,7 +262,8 @@ export type LoweredIRScene = Omit<IRScene, 'children'> & {
 };
 
 /** `lowerIRToKernel` 使用的 composite Definition 与深度选项 */
-export type LowerIRToKernelOptions = Pick<CompileCompositeOptions, 'composites' | 'maxCompositeDepth'>;
+export type LowerIRToKernelOptions = Pick<CompileCompositeOptions, 'composites' | 'maxCompositeDepth'> &
+  Pick<CompileProviderOptions, 'themeStyles'>;
 
 /** compileToScene 的可选参数 */
 export type CompileOptions<
@@ -270,7 +274,6 @@ export type CompileOptions<
   CompileCompositeOptions<TComposites> & {
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
-    /** Theme token owner definitions；Core built-in definition 始终自动注册 */
     /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
     trace?: RuntimeTraceReporter<'@retikz/core'>;
   };

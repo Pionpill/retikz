@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ThemeMode, ThemeStyle } from '../../shared';
+import { ThemeMode } from '../../shared';
 
 type JsonValidationFailure = Readonly<{ path: Array<PropertyKey> }>;
 
@@ -50,12 +50,6 @@ const findJsonValidationFailure = (
   }
 };
 
-const isPlainJsonObject = (input: unknown): input is Record<string, unknown> =>
-  input !== null &&
-  typeof input === 'object' &&
-  !Array.isArray(input) &&
-  findJsonValidationFailure(input) === undefined;
-
 const isPlainObjectContainer = (input: unknown): input is Record<string, unknown> => {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) return false;
   try {
@@ -67,7 +61,7 @@ const isPlainObjectContainer = (input: unknown): input is Record<string, unknown
 };
 
 const ThemeObjectSchema = z.strictObject({
-  style: z.enum(ThemeStyle).optional().describe('Sparse visual personality inherited from the enclosing Theme.'),
+  style: z.string().min(1).optional().describe('Sparse visual personality name inherited from the enclosing Theme.'),
   mode: z.enum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
 });
 

@@ -67,7 +67,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 10   | ADR-11 | ADR-08～10 Accepted；Standard presentation reuse 的 Core capability gap 已冻结 | authored Scope 完整 surface、replay wrapper 窄职责与 bounds / clip / identity 编排稳定    |
 | 11   | ADR-12 | Core 内置 Inspector 已证明普通 IR 辅助内容可行，但包边界过重                   | Core 观测底座、Inspect registry、Standard 子入口、普通 Scene 图层与 Path 控制点闭环稳定   |
 | 12   | ADR-13 | ADR-09 Accepted；跨 owner Theme token context 方向已冻结                       | namespaced bag、sparse inheritance、Definition registry、shared colors 与 appearance 稳定 |
-| 13   | ADR-14 | ADR-13 的 token bag 已确认造成持久化 IR 负担                                   | selector-only Theme、owner-local token resolution 与 shared colors 语义稳定               |
+| 13   | ADR-14 | ADR-13 的 token bag 已确认造成持久化 IR 负担                                   | 轻量 selector、Core / owner-local style registry、token resolution 与 shared colors语义稳定 |
 
 批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
@@ -79,7 +79,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 4. 增量与完整重建可观察等价；fallback 只影响性能。
 5. React / Vanilla、SVG / Canvas 共享契约，adapter 与 renderer 不建立平行 IR 或更新协议。
 6. 内置与第三方 Program 使用同一 full-run、incremental、fallback 与 diagnostics 边界。
-7. Theme selector（style、mode 与 palette preset）持久化在 Scene / Scope IR；Core 只解析继承并生成 shared colors，领域 owner 自行物化默认 token 与局部 override，renderer 不读取 Theme 或 token。
+7. Theme selector（style、mode）持久化在 Scene / Scope IR；Core 以 style registry 解析继承并生成 shared colors，领域 owner 以同名 style registry 物化默认 token 与局部 override，renderer 不读取 Theme 或 token。
 8. layout-aware Composite 的 authored Scope props、普通 child 与 replay child 必须沿同一 Core Scope / style / theme / identity / bounds / clip / diagnostics 主链消费；compile-local replay wrapper 不承担普通 Scope 语义。
 9. Core 只发布最终 settled owner output；`@retikz/inspect` 以显式 registry 生成辅助内容，继承 occurrence 的有效 Theme / style 并复用普通 IR / Definition / compile，但使用隔离 namespace，seal 后不保留 public id / meta / animation，且与主 Scene 的 layout、resource、identity、artifact、patch、命中和水合语义隔离。
 

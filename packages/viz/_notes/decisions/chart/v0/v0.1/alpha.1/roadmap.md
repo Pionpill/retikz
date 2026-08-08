@@ -10,7 +10,7 @@ alpha.1 证明一条统一的 type-first 路径可以在不裁剪 Plot 能力的
 
 1. 建立 `@retikz/chart`、`@retikz/chart-react`、`@retikz/chart-vanilla` 三包及封闭 type recipe 主链
 2. 让 ChartSpec 保持 JSON-safe、单根 data、结构轴与 Plot 自洽，并可确定性解析为完整 PlotSpec
-3. 消费 Core effective Theme；为 Chart canvas / presentation / recipe defaults 提供严格 `chartThemeTokens`，并把 Plot-owned `plotThemeTokens`、`colors`、Plot `plotTheme` 转发到完整 PlotSpec
+3. 消费 Core effective Theme；为 Chart canvas / presentation / recipe defaults 提供 owner-local Chart style definition 与严格 `chartThemeTokens`，并把 Plot-owned `plotThemeStyles`、`plotThemeTokens`、`colors`、Plot `plotTheme` 转发到完整 PlotSpec
 4. 用 Standard FlexLayout 按 authored order 组合唯一主 Plot 占位、可选文本 preset 与任意 renderer-neutral `IRChild`
 5. 按 `scatter` / `bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 顺序逐 type 建立闭环；Scatter 与 Bubble 是共享 Point 能力但保留独立身份的平级 Canonical Type
 6. 保持手写 JSON、React JSX、Vanilla builder 的 ChartSpec、完整 PlotSpec 与最终组合结果等价
@@ -38,7 +38,7 @@ Chart 不提供 `defineChart`、Chart registry 或自定义 type。官方 recipe
 | ADR | 主题                             | 核心产出                                                                                                                                                 | 前置                                                                                                                               | 实现状态                                                                   |
 | --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | 01  | Chart 基础设施与封闭 recipe 主链 | 可实施内部 schema / resolver / inspection / authoring normalizer；逐 type composite contract；首个公开入口在 ADR-04 原子接线                             | 内部子集依赖 Plot v0.1、Data v0.1；公开 adapter 依赖 Kernel gate                                                                   | 内部完成 / 公开接线受门控                                                  |
-| 02  | Chart token 与 Plot token 转发   | Core effective Theme；`chartThemeTokens`；`plotThemeTokens` / `colors` / Plot `plotTheme` 转发；Chart + Plot definition aggregation；canvas surface gate | ADR-01、Plot theme ownership ADR-01～02、Core ADR-13、Standard arbitrary-child surface composite                                   | Proposed / owner-local 已实现；公开 adapter、surface、spatial、docs 仍阻塞 |
+| 02  | Chart token 与 Plot token 转发   | Core effective Theme；同名 Chart / Plot style definition；`chartThemeTokens`；`plotThemeTokens` / `colors` / Plot `plotTheme` 转发；canvas surface gate | ADR-01、Plot theme ownership ADR-01～02、Core ADR-14、Standard arbitrary-child surface composite                                   | Proposed / owner-local 已实现；公开 adapter、surface、spatial、docs 仍阻塞 |
 | 03  | Presentation 与 Standard layout  | 唯一主 Plot 占位、有序 preset / custom children、完整 Flex item / container authoring；headless adapter parity 继续受门控                                | owner-local 依赖 ADR-01、ADR-02 与 Standard FlexLayout；公开接线依赖 surface、Kernel contribution 聚合与 Core spatial transparency | Proposed / owner-local 已实现 / 等待 ADR-02 Accept 后复验                  |
 | 04  | Scatter 与 Bubble                | 首批两个平级 ChartSpec variants、共享 Point 主 Mark 能力、二维关系与必需面积量级角色                                                                     | ADR-01–03；owner-local Plot quantitative size dependency 已满足                                                                    | Proposed / owner-local 已实现 / 公开接线受门控                             |
 | 05  | Connected Scatter                | Point + Path + 稳定 order                                                                                                                                | ADR-04                                                                                                                             | 待人工 Accept                                                              |
@@ -52,7 +52,7 @@ ADR-02 的 owner-local schema、definition、preset、resolver 与 Plot handoff 
 
 ## 4. 契约真源
 
-Chart 的长期结构、能力归属与跨 ADR 约束以 [`Chart 总设计`](../../../../../architecture/chart-design.md) 为准；Plot token 所有权与 inherited scope 以 [`Plot 主题所有权 ADR-01`](../../../../plot/v0/v0.2/alpha.1/01-chart-layering.md) 和 [`Plot inherited theme token ADR-02`](../../../../plot/v0/v0.2/alpha.1/02-inherited-theme-token-scope.md) 为准；Chart token、presentation 与各 type 的公开契约分别由对应 ADR 维护。roadmap 只记录 milestone 顺序、依赖 gate、状态与退出条件，不重复定义字段、覆盖算法、recipe 或测试矩阵。
+Chart 的长期结构、能力归属与跨 ADR 约束以 [`Chart 总设计`](../../../../../architecture/chart-design.md) 为准；Plot token 所有权与 inherited scope 以 [`Plot 主题所有权 ADR-01`](../../../../plot/v0/v0.2/alpha.1/01-chart-layering.md)、[`Plot inherited theme token ADR-02`](../../../../plot/v0/v0.2/alpha.1/02-inherited-theme-token-scope.md) 与 [Core ADR-14](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/14-lightweight-theme-resolution.md) 为准；Chart token、presentation 与各 type 的公开契约分别由对应 ADR 维护。roadmap 只记录 milestone 顺序、依赖 gate、状态与退出条件，不重复定义字段、覆盖算法、recipe 或测试矩阵。
 
 ## 5. Strip capability gate
 

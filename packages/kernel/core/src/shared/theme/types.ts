@@ -1,7 +1,11 @@
 import type { ValueOf } from '../types';
 import type { ThemeMode, ThemeStyle } from './constants';
 
-export type ThemeStyleValue = ValueOf<typeof ThemeStyle>;
+/** 可由 Theme IR 持久化的开放视觉人格名称 */
+export type ThemeStyleValue = string;
+
+/** Core 内置视觉人格名称 */
+export type BuiltinThemeStyleValue = ValueOf<typeof ThemeStyle>;
 
 export type ThemeModeValue = ValueOf<typeof ThemeMode>;
 

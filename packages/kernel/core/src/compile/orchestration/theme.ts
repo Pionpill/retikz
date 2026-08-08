@@ -2,6 +2,7 @@ import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 
 import { resolveCoreThemeColors } from '../../providers/theme';
+import { resolveThemeStyleRegistry } from '../../providers/theme';
 import { ThemeSchema } from '../../schemas';
 import { ThemeMode, ThemeStyle } from '../../shared';
 
@@ -16,7 +17,12 @@ export const DEFAULT_RESOLVED_THEME: ResolvedTheme = Object.freeze({
  * 解析一层 sparse Theme 覆盖
  * @description 验证 Theme selector 后按字段继承，并重新生成共享 colors
  */
-export const resolveTheme = (parent: ResolvedTheme, sparse: IRTheme | undefined, path: string): ResolvedTheme => {
+export const resolveTheme = (
+  parent: ResolvedTheme,
+  sparse: IRTheme | undefined,
+  path: string,
+  styles = resolveThemeStyleRegistry(),
+): ResolvedTheme => {
   if (sparse === undefined) return parent;
   const parsed = ThemeSchema.safeParse(sparse);
   if (!parsed.success) {
@@ -33,5 +39,7 @@ export const resolveTheme = (parent: ResolvedTheme, sparse: IRTheme | undefined,
   const mode = parsed.data.mode ?? parent.mode;
   if (style === parent.style && mode === parent.mode) return parent;
 
-  return Object.freeze({ style, mode, colors: resolveCoreThemeColors(style, mode) });
+  const definition = styles.get(style);
+  if (definition === undefined) throw new Error(`Theme style '${style}' is not registered at ${path}.`);
+  return Object.freeze({ style, mode, colors: definition.resolve({ mode }) });
 };
