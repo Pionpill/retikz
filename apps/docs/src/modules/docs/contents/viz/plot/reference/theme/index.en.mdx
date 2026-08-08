@@ -3,18 +3,21 @@ title: Contract - Theme
 description: Query Plot canonical tokens, preset cascade, native theme, and inspection contracts.
 ---
 
-Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position, then selects one complete domain preset from four styles × light / dark. `PlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, guide creation, or mark structure.
+Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position, then selects the complete domain preset with the same name. `PlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, guide creation, or mark structure.
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
 The example writes surface, grid, and categorical palette values through `PlotThemeToken`. React, Vanilla, and plain JSON pass the same `plotThemeTokens` to the Plot resolver without adapter-owned presets; the Core Theme only selects the base preset through `style` / `mode`.
+
+## Extensible styles
+
+Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => tokens })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`. The resolver function and complete token map never enter `PlotSpec`; it persists only `theme.style = 'brand'`. Pass the same-named Core definition through `themeStyles` in the same figure or Core or Plot fails loudly. When Chart is used, `createChartComposites({ chartThemeStyles, plotThemeStyles })` also needs same-named Chart and Plot definitions.
 
 ## Cascade and atomic replacement
 
 ```text
 Core effective Theme
   → Plot preset
-  → shared categorical
   → PlotSpec.plotThemeTokens
   → PlotSpec.colors
   → PlotSpec.plotTheme

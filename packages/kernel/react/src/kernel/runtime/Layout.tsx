@@ -16,11 +16,13 @@ import type {
   RibbonWidthProfileDefinition,
   ShapeDefinition,
   TextMeasurer,
+  ThemeStyleDefinition,
 } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 
+import { ThemeSchema } from '@retikz/core';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import { useCallback, useId, useMemo } from 'react';
 
@@ -42,6 +44,16 @@ import { mergeThemeOverlays, useTheme } from './theme-context';
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
   return typeof fontFamily === 'string' && fontFamily.trim().length > 0 ? fontFamily : undefined;
+};
+
+/** 校验直接传入的持久化 Theme，避免 JSX overlay 在编译前吞掉非法 IR */
+const validatePersistedTheme = (theme: IRScene['theme'] | undefined): IRScene['theme'] | undefined => {
+  if (theme === undefined) return undefined;
+  const parsed = ThemeSchema.safeParse(theme);
+  if (parsed.success) return parsed.data;
+  throw new Error(`Invalid Theme at scene.theme: ${parsed.error.issues[0]?.message ?? 'Theme is invalid.'}`, {
+    cause: parsed.error,
+  });
 };
 
 /** 同一条诊断消息进程内只 `console.warn` 一次，避免组件重复 render 时刷屏 */
@@ -277,6 +289,8 @@ export type LayoutProps = ScopeStyleProps & {
    * @description 带 `namespace` / `type` 的高层节点通过本 prop 注册并展开；未注册时会发出 warning 并跳过
    */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
+  /** Runtime injected Core Theme style definitions */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
   /** 运行时注入的 Tier 2 Theme token owner definition singleton */
   /**
    * 运行时注入的公式渲染能力
@@ -337,6 +351,7 @@ export const Layout: FC<LayoutProps> = props => {
     pathKinds,
     ribbonWidthProfiles,
     composites,
+    themeStyles,
     lowerTex,
     artifacts,
     onArtifacts,
@@ -354,6 +369,7 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
   const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
   const stableComposites = canonicalizeDefinitionArray(composites);
+  const stableThemeStyles = canonicalizeDefinitionArray(themeStyles);
   const stableEmbeddables = canonicalizeDefinitionArray(embeddables);
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
@@ -442,7 +458,8 @@ export const Layout: FC<LayoutProps> = props => {
   );
   const ir = useMemo(() => {
     const base = built.ir;
-    const mergedTheme = mergeThemeOverlays(ambientTheme, base.theme, theme);
+    const persistedTheme = irFromProp === undefined ? base.theme : validatePersistedTheme(base.theme);
+    const mergedTheme = mergeThemeOverlays(ambientTheme, persistedTheme, theme);
     const withTheme = mergedTheme === undefined ? base : { ...base, theme: mergedTheme };
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     const withViewBox = viewBox !== undefined ? { ...withTheme, viewBox } : withTheme;
@@ -451,7 +468,7 @@ export const Layout: FC<LayoutProps> = props => {
     const animations =
       withViewBox.animations !== undefined ? [...withViewBox.animations, ...rootAnimations] : rootAnimations;
     return { ...withViewBox, animations };
-  }, [ambientTheme, built, theme, viewBox, rootAnimations]);
+  }, [ambientTheme, built, irFromProp, theme, viewBox, rootAnimations]);
   // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
   const aggregatedComposites = useMemo(() => {
     const fromEmbeddables = aggregateEmbeddableComposites(built.contributions);
@@ -478,6 +495,7 @@ export const Layout: FC<LayoutProps> = props => {
       pathKinds: stablePathKinds,
       ribbonWidthProfiles: stableRibbonWidthProfiles,
       composites: aggregatedComposites,
+      themeStyles: stableThemeStyles,
       lowerTex,
       artifacts: compileArtifacts,
     }),
@@ -494,6 +512,7 @@ export const Layout: FC<LayoutProps> = props => {
       stablePathKinds,
       stableRibbonWidthProfiles,
       aggregatedComposites,
+      stableThemeStyles,
       lowerTex,
       compileArtifacts,
     ],

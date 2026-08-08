@@ -28,7 +28,7 @@ export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip' |
 };
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
-export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> &
+export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'> &
   PlotPanelProps &
   LowerPlotsOptions &
   PlotLineageProps;
@@ -146,7 +146,7 @@ type EmbeddablePlotComponent = FC<PlotProps> & {
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: EmbeddablePlotComponent = props => {
-  const { width, height, className, style, renderer, onLineage } = props;
+  const { width, height, className, style, renderer, themeStyles, onLineage } = props;
   const notifiedLineageKey = useRef<string>();
   const { spec, datasets, lowerOptions } = resolvePlotRuntime(props);
   const lineage =
@@ -175,6 +175,7 @@ export const Plot: EmbeddablePlotComponent = props => {
       className={className}
       style={style}
       renderer={renderer}
+      themeStyles={themeStyles}
     />
   );
 };

@@ -39,8 +39,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
         descriptions: {
           style: '视觉人格：neutral、academic、vibrant 或 clean；省略时继承外层值',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
-          tokens:
-            '按 owner namespace 保存的 sparse token overrides；Core 内置 core，其他 namespace 由 themeTokenDefinitions 注册并校验',
         },
       },
     },

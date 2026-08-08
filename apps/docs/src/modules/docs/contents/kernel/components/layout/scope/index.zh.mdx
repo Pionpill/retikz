@@ -106,7 +106,7 @@ import { Scope } from '@retikz/react';
 
 ### 局部 Theme
 
-`<Scope theme>` 把稀疏 Theme 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。`theme.tokens` 是按 owner namespace 分组的 token bag；Scope 只覆盖自己声明的 namespace 与 token key，未声明的 namespace/key 继续从外层继承。Core 会在 owner registry 中校验 namespace、token key 和值，未知定义会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
+`<Scope theme>` 把稀疏的 `style` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。编译时 Core 根据当前 style registry 重新生成 shared colors；未注册的 style 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
 
 Theme 与样式默认值是两条独立通道：`resetStyle` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。需要恢复基线时显式设置 `{ style: ThemeStyle.Neutral, mode: ThemeMode.Light }`。
 

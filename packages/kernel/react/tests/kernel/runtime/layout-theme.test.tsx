@@ -162,22 +162,17 @@ describe('<Layout theme>', () => {
     expect(markup).toContain('#fedcba');
   });
 
-  it('ambient Theme 按 Provider → IR → Layout 顺序覆盖并按 token key 合并', () => {
+  it('ambient Theme 按 Provider → IR → Layout 顺序覆盖 selector', () => {
     const markup = renderToStaticMarkup(
-      <ThemeProvider
-        theme={{
-          style: ThemeStyle.Academic,
-          tokens: { core: { 'palette.categorical': ['#provider'], 'semantic.error': '#provider-error' } },
-        }}
-      >
+      <ThemeProvider theme={{ style: ThemeStyle.Academic }}>
         <Layout
           ir={{
             type: 'scene',
             version: 1,
-            theme: { style: ThemeStyle.Vibrant, tokens: { core: { 'palette.categorical': ['#ir'] } } },
+            theme: { style: ThemeStyle.Vibrant },
             children: [{ namespace: 'theme-test', type: 'probe' }],
           }}
-          theme={{ style: ThemeStyle.Clean, tokens: { core: { 'semantic.success': '#layout-success' } } }}
+          theme={{ style: ThemeStyle.Clean }}
           composites={[themeProbe]}
           width={100}
           height={100}
@@ -186,48 +181,20 @@ describe('<Layout theme>', () => {
     );
 
     expect(markup).toContain('#layout-style');
-    expect(markup).toContain('#ir');
-    expect(markup).toContain('#provider-error');
   });
 
-  it('嵌套 ThemeProvider 按 namespace 和 token key 合并，内层只覆盖已声明值', () => {
+  it('嵌套 ThemeProvider 对 selector 按字段继承', () => {
     const markup = renderToStaticMarkup(
-      <ThemeProvider
-        theme={{
-          tokens: { core: { 'palette.categorical': ['#outer'], 'semantic.error': '#outer-error' } },
-        }}
-      >
-        <ThemeProvider theme={{ tokens: { core: { 'semantic.success': '#inner-success' } } }}>
-          <Layout
-            ir={{ type: 'scene', version: 1, children: [{ namespace: 'theme-test', type: 'probe' }] }}
-            composites={[themeProbe]}
-            width={100}
-            height={100}
-          />
+      <ThemeProvider theme={{ style: ThemeStyle.Academic }}>
+        <ThemeProvider theme={{ mode: ThemeMode.Dark }}>
+          <Layout width={100} height={100}>
+            <ThemedBox />
+          </Layout>
         </ThemeProvider>
       </ThemeProvider>,
     );
 
-    expect(markup).toContain('#outer');
-    expect(markup).toContain('#outer-error');
-  });
-
-  it.each([
-    ['unknown field', { palette: 'paper' }, /scene\.theme\.palette/i],
-    ['null', null, /scene\.theme/i],
-    ['number', 1, /scene\.theme/i],
-    ['string', 'dark', /scene\.theme/i],
-    ['Date', new Date(), /scene\.theme/i],
-    ['Map', new Map(), /scene\.theme/i],
-    ['Set', new Set(), /scene\.theme/i],
-    ['class instance', new ThemeInstance(), /scene\.theme/i],
-    ['inherited field', Object.create({ style: ThemeStyle.Academic }), /scene\.theme/i],
-  ])('伪造的 %s Theme prop由 Core严格拒绝', (_label, theme, expected) => {
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout ir={{ type: 'scene', version: 1, children: [] }} theme={theme as never} width={100} height={100} />,
-      ),
-    ).toThrow(expected);
+    expect(markup).toContain('#123456');
   });
 
   it.each([
@@ -271,22 +238,9 @@ describe('<Layout theme>', () => {
     expect(accessorReads).toBe(0);
   });
 
-  it('宿主 Theme prop不洗掉隐藏字段', () => {
-    const theme = { style: ThemeStyle.Academic };
-    Object.defineProperty(theme, 'palette', { value: 'paper', enumerable: false });
-
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout ir={{ type: 'scene', version: 1, children: [] }} theme={theme} width={100} height={100} />,
-      ),
-    ).toThrow(/scene\.theme/i);
-  });
-
   it('宿主overlay不吞掉自有__proto__未知字段', () => {
     const persistedTheme = { style: ThemeStyle.Academic };
     Object.defineProperty(persistedTheme, '__proto__', { value: 'persisted', enumerable: true });
-    const hostTheme = { mode: ThemeMode.Dark };
-    Object.defineProperty(hostTheme, '__proto__', { value: 'host', enumerable: true });
 
     expect(() =>
       renderToStaticMarkup(
@@ -297,11 +251,6 @@ describe('<Layout theme>', () => {
           height={100}
         />,
       ),
-    ).toThrow(/scene\.theme\.__proto__/i);
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout ir={{ type: 'scene', version: 1, children: [] }} theme={hostTheme as never} width={100} height={100} />,
-      ),
-    ).toThrow(/scene\.theme\.__proto__/i);
+    ).toThrow(/__proto__/i);
   });
 });

@@ -7,10 +7,13 @@ import { createContext, useContext } from 'react';
 export const mergeThemeOverlays = (
   ...layers: ReadonlyArray<IRScene['theme'] | undefined>
 ): IRScene['theme'] | undefined => {
-  const merged = layers.reduce<NonNullable<IRScene['theme']>>(
-    (current, layer) => (layer === undefined ? current : { ...current, ...layer }),
-    {},
-  );
+  const merged = layers.reduce<NonNullable<IRScene['theme']>>((current, layer) => {
+    if (layer === undefined) return current;
+    return {
+      ...(layer.style === undefined ? current : { ...current, style: layer.style }),
+      ...(layer.mode === undefined ? {} : { mode: layer.mode }),
+    };
+  }, {});
   return Object.keys(merged).length === 0 ? undefined : merged;
 };
 

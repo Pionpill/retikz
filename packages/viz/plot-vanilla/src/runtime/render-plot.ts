@@ -1,4 +1,4 @@
-import type { IRScene } from '@retikz/core';
+import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
   IRPlotSpec,
@@ -16,6 +16,8 @@ import { renderToSvgString } from '@retikz/vanilla';
 type RenderPlotThemeOptions = {
   /** 在根 Scene 的 Core effective Theme 位置生效 */
   theme?: IRScene['theme'];
+  /** Core Theme style definitions */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
 };
 
 /** renderPlot 的默认选项；不启用图元链路时保持 SVG 字符串返回值 */
@@ -66,7 +68,7 @@ const renderPlotImpl = (
       ...(options.theme !== undefined ? { theme: options.theme } : {}),
       children: [validated],
     },
-    { composites: lowerPlots(data, options) },
+    { composites: lowerPlots(data, options), themeStyles: options.themeStyles },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;

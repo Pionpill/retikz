@@ -33,7 +33,7 @@ export const Diagram = () => (
 
 `<Layout>` 默认输出 SVG；需要像素位图时传 `renderer="canvas"`。组件用法从[快速开始](/kernel/get-start)进入，完整宿主选项见 [Layout](/kernel/components/layout/overview)。
 
-`<Layout theme>` 写入根 `IRScene.theme`，`<Scope theme>` 写入局部 `IRScope.theme`。Theme 是稀疏的 `style / mode / tokens` 覆盖；`tokens` 按 owner namespace 保存 JSON-safe token key，Core 内置 `core` namespace，领域 Composite 在 compile 中读取自己的 namespace。`themeTokenDefinitions` 是 Layout 的 compile 选项：React adapter 会把嵌入 Composite 的 Definition 与显式传入的 Definition 去重后交给 Core registry。`ir` 与显式 `theme` 同时使用时，prop 逐字段覆盖 `ir.theme`，不会修改输入对象。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
+`<Layout theme>` 写入根 `IRScene.theme`，`<Scope theme>` 写入局部 `IRScope.theme`。Theme 是稀疏的 `style / mode` 覆盖；`themeStyles` 是 Layout 的 runtime-only compile 选项，用 `defineThemeStyle` 注册自定义 Core style。`ir` 与显式 `theme` 同时使用时，prop 逐字段覆盖 `ir.theme`，不会修改输入对象。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
 
 ## 为什么需要 @retikz/react
 

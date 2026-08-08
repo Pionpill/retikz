@@ -6,8 +6,6 @@ import { ArrowUpRight, Languages, Link as LinkIcon, Moon, MoreHorizontal, Palett
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { PreviewColorSchemeValue, PreviewSharedColors } from '@/modules/docs/components/component-preview';
-
 import { GitHubIcon } from '@/components/icons';
 import { Shortcut } from '@/components/shared';
 import { buttonVariants } from '@/components/ui/button';
@@ -30,11 +28,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
-import {
-  PreviewColorScheme,
-  PreviewColorSchemeColors,
-  PreviewColorSchemeOptions,
-} from '@/modules/docs/components/component-preview';
 import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/data';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
@@ -51,63 +44,20 @@ const previewThemeStyleOptions = [
   ThemeStyle.Vibrant,
   ThemeStyle.Clean,
 ] as const;
-const previewColorSchemeOptions = PreviewColorSchemeOptions;
 const previewThemeStyleLabelKeys = {
   [ThemeStyle.Neutral]: 'preview.themeStyleNeutral',
   [ThemeStyle.Academic]: 'preview.themeStyleAcademic',
   [ThemeStyle.Vibrant]: 'preview.themeStyleVibrant',
   [ThemeStyle.Clean]: 'preview.themeStyleClean',
 } as const;
-const previewColorSchemeLabelKeys = {
-  [PreviewColorScheme.Category10]: 'preview.colorSchemeCategory10',
-  [PreviewColorScheme.Accent]: 'preview.colorSchemeAccent',
-  [PreviewColorScheme.Dark2]: 'preview.colorSchemeDark2',
-  [PreviewColorScheme.Observable10]: 'preview.colorSchemeObservable10',
-  [PreviewColorScheme.Paired]: 'preview.colorSchemePaired',
-  [PreviewColorScheme.Pastel1]: 'preview.colorSchemePastel1',
-  [PreviewColorScheme.Pastel2]: 'preview.colorSchemePastel2',
-  [PreviewColorScheme.Set1]: 'preview.colorSchemeSet1',
-  [PreviewColorScheme.Set2]: 'preview.colorSchemeSet2',
-  [PreviewColorScheme.Set3]: 'preview.colorSchemeSet3',
-  [PreviewColorScheme.Tableau10]: 'preview.colorSchemeTableau10',
-} as const;
-
-const previewSharedColorOptions = [
-  { key: 'error', labelKey: 'preview.sharedColorError' },
-  { key: 'success', labelKey: 'preview.sharedColorSuccess' },
-  { key: 'warning', labelKey: 'preview.sharedColorWarning' },
-] as const;
-
-type ColorSwatchProps = {
-  colors: ReadonlyArray<string>;
-  className?: string;
-};
-
-/** 显示 categorical 颜色数组的紧凑色带 */
-const ColorSwatch: FC<ColorSwatchProps> = props => {
-  const { colors, className } = props;
-
-  return (
-    <span aria-hidden className={cn('flex h-3 w-16 overflow-hidden rounded-sm border border-border', className)}>
-      {colors.map((color, index) => (
-        <span key={`${color}-${index}`} className="min-w-0 flex-1" style={{ backgroundColor: color }} />
-      ))}
-    </span>
-  );
-};
-
 type PreviewThemeSettingsItemsProps = {
   themeStyle: ThemeStyleValue;
-  colorScheme: PreviewColorSchemeValue;
-  sharedColors: PreviewSharedColors;
   setThemeStyle: (value: ThemeStyleValue) => void;
-  setColorScheme: (value: PreviewColorSchemeValue) => void;
-  setSharedColor: <TKey extends keyof PreviewSharedColors>(key: TKey, value: PreviewSharedColors[TKey]) => void;
 };
 
 /** 主题设置的 submenu，桌面入口与移动端菜单共用 */
 const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
-  const { themeStyle, colorScheme, sharedColors, setThemeStyle, setColorScheme, setSharedColor } = props;
+  const { themeStyle, setThemeStyle } = props;
   const { t } = useTranslation();
 
   return (
@@ -140,54 +90,6 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
           </DropdownMenuRadioGroup>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger inset>{t('preview.colorSettings')}</DropdownMenuSubTrigger>
-        <DropdownMenuSubContent className="w-72">
-          <div className="px-2 py-1.5" onPointerDown={event => event.stopPropagation()}>
-            <div className="mb-1.5 text-xs font-medium text-muted-foreground">{t('preview.sharedColors')}</div>
-            <div className="grid grid-cols-3 gap-2">
-              {previewSharedColorOptions.map(option => (
-                <label key={option.key} className="flex min-w-0 cursor-pointer flex-col gap-1">
-                  <span className="truncate text-xs">{t(option.labelKey)}</span>
-                  <input
-                    aria-label={t(option.labelKey)}
-                    className="h-6 w-full cursor-pointer rounded border border-border bg-transparent p-0"
-                    type="color"
-                    value={sharedColors[option.key]}
-                    onChange={event => setSharedColor(option.key, event.currentTarget.value)}
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
-          <DropdownMenuSeparator />
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger inset>
-              {t('preview.colorArray')}
-              <span className="ml-auto mr-1">
-                <ColorSwatch colors={PreviewColorSchemeColors[colorScheme]} />
-              </span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="max-h-80 w-64 overflow-y-auto">
-              <DropdownMenuRadioGroup
-                value={colorScheme}
-                onValueChange={value => {
-                  if (previewColorSchemeOptions.includes(value as PreviewColorSchemeValue)) {
-                    setColorScheme(value as PreviewColorSchemeValue);
-                  }
-                }}
-              >
-                {previewColorSchemeOptions.map(option => (
-                  <DropdownMenuRadioItem key={option} value={option}>
-                    <ColorSwatch colors={PreviewColorSchemeColors[option]} />
-                    {t(previewColorSchemeLabelKeys[option])}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
     </>
   );
 };
@@ -209,8 +111,6 @@ export const HeaderActions: FC = () => {
   const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
   const previewThemeMode = useComponentPreviewStore(s => s.themeMode);
   const previewThemeStyle = useComponentPreviewStore(s => s.themeStyle);
-  const previewColorScheme = useComponentPreviewStore(s => s.colorScheme);
-  const previewSharedColors = useComponentPreviewStore(s => s.sharedColors);
   const previewControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
   const previewRangePlaybackDuration = useComponentPreviewStore(s => s.rangePlaybackDuration);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
@@ -220,8 +120,6 @@ export const HeaderActions: FC = () => {
   const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
   const setPreviewThemeMode = useComponentPreviewStore(s => s.setThemeMode);
   const setPreviewThemeStyle = useComponentPreviewStore(s => s.setThemeStyle);
-  const setPreviewColorScheme = useComponentPreviewStore(s => s.setColorScheme);
-  const setPreviewSharedColor = useComponentPreviewStore(s => s.setSharedColor);
   const setPreviewControlPanelDefaultOpen = useComponentPreviewStore(s => s.setControlPanelDefaultOpen);
   const setPreviewRangePlaybackDuration = useComponentPreviewStore(s => s.setRangePlaybackDuration);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
@@ -278,14 +176,7 @@ export const HeaderActions: FC = () => {
               <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
                 {t('preview.themeSettings')}
               </DropdownMenuLabel>
-              <PreviewThemeSettingsItems
-                themeStyle={previewThemeStyle}
-                colorScheme={previewColorScheme}
-                sharedColors={previewSharedColors}
-                setThemeStyle={setPreviewThemeStyle}
-                setColorScheme={setPreviewColorScheme}
-                setSharedColor={setPreviewSharedColor}
-              />
+              <PreviewThemeSettingsItems themeStyle={previewThemeStyle} setThemeStyle={setPreviewThemeStyle} />
             </DropdownMenuContent>
           </DropdownMenu>
           <Tooltip>
@@ -356,14 +247,7 @@ export const HeaderActions: FC = () => {
                 {t('preview.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
-                <PreviewThemeSettingsItems
-                  themeStyle={previewThemeStyle}
-                  colorScheme={previewColorScheme}
-                  sharedColors={previewSharedColors}
-                  setThemeStyle={setPreviewThemeStyle}
-                  setColorScheme={setPreviewColorScheme}
-                  setSharedColor={setPreviewSharedColor}
-                />
+                <PreviewThemeSettingsItems themeStyle={previewThemeStyle} setThemeStyle={setPreviewThemeStyle} />
                 <DropdownMenuCheckboxItem
                   checked={previewRendererMode === 'canvas'}
                   onCheckedChange={togglePreviewRendererMode}

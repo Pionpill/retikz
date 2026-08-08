@@ -59,6 +59,8 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 当 `ir` 已包含根 Theme 时，显式 `theme` prop 会逐字段覆盖它，未声明字段继续采用持久化值；两份输入对象都不会被修改。Theme 不会自动改变普通 Node / Path 的 fill、stroke 或 font。
 
+自定义 style 通过 `themeStyles` 注入 `<Layout>`：`defineThemeStyle({ name: 'brand', resolve: ({ mode }) => colors })` 保持在运行时，IR 只写 `{ style: 'brand' }`。若同一 Layout 还消费 Plot 或 Chart，必须同时为其注入同名的领域 style resolver；缺失的 registry 会明确报错。
+
 ### 读取编译产物
 
 这里的 DTO 是 Data Transfer Object（数据传输对象）：`CompiledNodeLayout` 是 Core 完成 Node 布局后复制并冻结的数据快照。它记录 Node id、正文盒的中心 / 尺寸 / 全局边界、外框的位置 / 尺寸 / 旋转，以及正文行数和是否包含 TeX；artifact 外层的 `occurrence` 另行标识该 Node 在本次编译中的来源。
@@ -249,14 +251,15 @@ retained 路径让 Core Program 与 Render participant 在一次 transaction 中
 
 ### 输入与视框
 
-| 属性       | 类型                 | 默认值 | 描述                                                |
-| ---------- | -------------------- | ------ | --------------------------------------------------- |
-| `children` | `ReactNode`          | —      | Kernel / Sugar 组件树；未传 `ir` 时使用             |
-| `ir`       | `IRScene`            | —      | 已构造的 Core IR；同时传 children 时采用本项        |
-| `theme`    | `IRTheme`            | —      | 根 Theme 稀疏覆盖；`ir` 模式下逐字段覆盖 `ir.theme` |
-| `width`    | `number` \| `string` | —      | SVG / Canvas 在页面上的显示宽度                     |
-| `height`   | `number` \| `string` | —      | SVG / Canvas 在页面上的显示高度                     |
-| `viewBox`  | `IRViewBox`          | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围            |
+| 属性          | 类型                                  | 默认值 | 描述                                                |
+| ------------- | ------------------------------------- | ------ | --------------------------------------------------- |
+| `children`    | `ReactNode`                           | —      | Kernel / Sugar 组件树；未传 `ir` 时使用             |
+| `ir`          | `IRScene`                             | —      | 已构造的 Core IR；同时传 children 时采用本项        |
+| `theme`       | `IRTheme`                             | —      | 根 Theme 稀疏覆盖；`ir` 模式下逐字段覆盖 `ir.theme` |
+| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | —      | 运行时 Core style resolver；不写入 IR 或 JSON       |
+| `width`       | `number` \| `string`                  | —      | SVG / Canvas 在页面上的显示宽度                     |
+| `height`      | `number` \| `string`                  | —      | SVG / Canvas 在页面上的显示高度                     |
+| `viewBox`     | `IRViewBox`                           | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围            |
 
 ### 编译基础
 
