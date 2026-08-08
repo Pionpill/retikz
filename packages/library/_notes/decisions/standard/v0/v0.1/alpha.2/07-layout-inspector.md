@@ -179,28 +179,10 @@ retained 中修改 inspection options 可以完整重新 compile，但单次 com
 - **用 renderer callback 或 CSS 主题注入**：破坏 renderer-neutral 契约，并把命中与水合隔离交给调用方
 - **建立独立 inspector registry**：内置与自定义会走两条注册和解析路径
 
-## 实现摘要
-
-- Core 新增 strict inspection contract、级联解析、authored locator remap、final-replay plane assembly，并把 occurrence 类型移到 contract owner
-- Render 新增 static / retained frame API、能力协商、SVG / Canvas inspection 物化与原子提交
-- React 与 Vanilla 接入 root、Scope、component 三层 authoring；覆盖 static、retained、SSR、hydration 与 Scene-only 失败路径
-- Standard 为 Flex、Grid、Overlay 注册同 definition inspector，只从 typed artifact 生成辅助 primitive
-- 三个 docs playground 默认显示辅助层并可通过 controls 关闭；nested demo 使用 `<Layout inspect={{ layout: true }}>`，Scope demo 对比继承策略与 `enabled: false` 硬屏障
-- Standard 文档建立 Layout 分组与“API 参考 → 契约 - 输入 / 契约 - 产物 / 运行时”，同时同步 Kernel Layout、Scope、Compile、Core、React、Render、Vanilla 权威页
-
-## 验证结果
-
-- Core、Render、React、Vanilla、Standard、Standard React、Standard Vanilla 的 ESLint 与 `tsc --noEmit` 通过
-- 七个受影响 workspace 的全量 Vitest 通过；覆盖 strict schema、默认值、hard barrier、occurrence remap、selected replay、artifact-only lowering、双 renderer、static / retained、SSR / hydration、Scene-only fail-loud 与 cleanup retry
-- docs integrity 覆盖 Standard Layout、Kernel Layout、Compile Reference 与 Kernel packages；全部通过
-- `@retikz/docs` 全量 Vitest 与 production build 通过
-- 英文 Flex、Grid、Overlay 页面在桌面宽度验证默认辅助 group 为 1，关闭 controls 开关后为 0；三页中英文版本在 500×800 视口均无页面级横向溢出，默认辅助 group 为 1
-- Scope 中英文页面在 500×800 视口均显示 A1 / A2 / B1 / B2，Vanilla 源码保留根策略与 `enabled: false` 局部硬屏障；上述页面无未知 schema、缺失 demo、unsupported composite 或控制台 warning / error
-
 ## 遗留边界
 
 - Plot、Table、Gantt 与其它 Tier 2 的 inspector 或布局适配由各自 milestone 决定
 - 本轮不提供 selection、hover、drag handle、布局修改、history、viewport toolbar 或 DevTools 面板
 - 不提供用户主题、CSS 注入、持久化 inspect 配置、跨 compile inspector cache 或 inspection 增量 patch
 - option-only 更新允许完整 compile；后续只有在 profiling 证明必要时再设计 solver / artifact cache
-- Vanilla LayoutItem 内直接嵌套 embed 仍需独立的递归 lowering 与贡献合并设计；ComponentPreview 自动 Vanilla 当前也不承诺展平这类 nested component-local inspection sidecar
+- Vanilla LayoutItem 内直接嵌套 embed 仍需独立的递归 lowering 与贡献合并设计；自动示例转换也不承诺展平这类 nested component-local inspection sidecar
