@@ -30,7 +30,6 @@ describe('Theme compile context', () => {
       sceneOf([{ namespace: 'theme-test', type: 'probe' }], {
         style: ThemeStyle.Academic,
         mode: ThemeMode.Light,
-        palettePreset: ThemeStyle.Vibrant,
       }),
       { composites: [createProbe(observed)] },
     );
@@ -39,8 +38,7 @@ describe('Theme compile context', () => {
     expect(observed[0]).toMatchObject({
       style: ThemeStyle.Academic,
       mode: ThemeMode.Light,
-      palettePreset: ThemeStyle.Vibrant,
-      colors: { categorical: expect.arrayContaining(['#2563eb', '#9333ea', '#db2777']) },
+      colors: { categorical: expect.arrayContaining(['#1d4ed8', '#4338ca', '#7e22ce']) },
     });
     expect(observed[0]).not.toHaveProperty('tokens');
     expect(Object.isFrozen(observed[0])).toBe(true);
@@ -51,11 +49,11 @@ describe('Theme compile context', () => {
     compileToScene(
       sceneOf(
         [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [{ namespace: 'theme-test', type: 'probe' }] }],
-        { style: ThemeStyle.Academic, mode: ThemeMode.Dark, palettePreset: ThemeStyle.Clean },
+        { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
       ),
       { composites: [createProbe(observed)] },
     );
 
-    expect(observed[0]).toMatchObject({ style: 'academic', mode: 'light', palettePreset: 'clean' });
+    expect(observed[0]).toMatchObject({ style: 'academic', mode: 'light' });
   });
 });

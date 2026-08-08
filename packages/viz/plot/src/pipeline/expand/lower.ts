@@ -758,7 +758,6 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
           context?.theme ?? {
             style: ThemeStyle.Neutral,
             mode: ThemeMode.Light,
-              palettePreset: context?.theme.style ?? ThemeStyle.Neutral,
             colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
           },
         ),

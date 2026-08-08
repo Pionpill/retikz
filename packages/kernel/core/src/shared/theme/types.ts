@@ -29,8 +29,6 @@ export type ResolvedTheme = Readonly<{
   style: ThemeStyleValue;
   /** 当前明暗环境 */
   mode: ThemeModeValue;
-  /** 当前作用域继承后的分类色板预设 */
-  palettePreset: ThemeStyleValue;
   /** 由 selector 派生的 shared color view */
   colors: ResolvedThemeColors;
 }>;

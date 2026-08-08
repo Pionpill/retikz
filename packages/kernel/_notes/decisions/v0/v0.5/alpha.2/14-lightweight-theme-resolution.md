@@ -13,19 +13,17 @@ ADR-13 允许 `Theme` 在可持久化的 Scene / Scope IR 中直接携带按 nam
 
 ## 决策：Theme IR 只保存 selector，领域 token 只在 owner resolver 中物化
 
-Core Theme 固定为 `style`、`mode` 和可选的 `palettePreset`。三者都按 Scene 到 Scope 的字段级继承；省略 `palettePreset` 时跟随有效 `style`。`palettePreset` 只选择 Core categorical palette 的来源，semantic color roles 仍由 `style` 与 `mode` 决定。
+Core Theme 固定为 `style` 和 `mode`。两者都按 Scene 到 Scope 的字段级继承；`style` 同时选择 Core semantic color roles 与 categorical palette，`mode` 选择对应明暗环境。
 
 ```ts
 type IRTheme = Readonly<{
   style?: ThemeStyleValue;
   mode?: ThemeModeValue;
-  palettePreset?: ThemeStyleValue;
 }>;
 
 type ResolvedTheme = Readonly<{
   style: ThemeStyleValue;
   mode: ThemeModeValue;
-  palettePreset: ThemeStyleValue;
   colors: ResolvedThemeColors;
 }>;
 ```
@@ -38,11 +36,11 @@ Plot、Chart、Table 等领域 owner 继续拥有完整 token vocabulary、prese
 
 1. Scene / Scope IR 是持久化、diff 与 adapter 共同使用的输入，必须只保留重建所需的最小稳定语义，而不是可从 selector 推导的领域默认值
 2. token vocabulary、默认值和优先级属于领域 owner；Core 传播完整 token bag 会让通用 Theme context 成为无边界的领域数据容器
-3. `style`、`mode`、`palettePreset` 能满足跨领域共享的 Theme 环境与 Core Inspector color contract，同时保持 renderer-neutral 的稳定闭环
+3. `style`、`mode` 能满足跨领域共享的 Theme 环境与 Core Inspector color contract，同时保持 renderer-neutral 的稳定闭环
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：未声明 Theme 时使用 `neutral + light`，`palettePreset` 跟随 `neutral`，并生成对应 shared colors
+- 默认行为：未声明 Theme 时使用 `neutral + light`，并生成对应 shared colors
 - 继承行为：Scene、外层 Scope、内层 Scope 依次覆盖显式 selector；内层未声明字段继续继承
 - 解析行为：Core 在 compile 时从有效 selector 生成 shared colors；领域 owner 随后生成自身完整 token map。领域 spec 中的 sparse override 只影响该 owner，不跨 namespace 或跨领域传播
 - 失败与诊断：`Theme` 出现 `tokens` 或任何未知字段时 fail-loud。领域 token key / value 由其所属领域 spec schema 在 authoring / parse 边界诊断
@@ -53,7 +51,7 @@ Plot、Chart、Table 等领域 owner 继续拥有完整 token vocabulary、prese
 
 - 所属能力域与解决的问题：Drawing Complete 的可继承视觉环境与共享颜色。解决通用 Theme IR 被领域 token map 放大、默认值重复和跨层 payload 膨胀的问题
 - 主责包与协作包：`@retikz/core` 拥有轻量 Theme IR、selector inheritance 和 shared colors；Plot、Chart、Table 等 owner 拥有 token preset、局部 override、resolver 与正式消费；React / Vanilla 只负责等价 authoring；Render 只执行物化 Scene
-- 拥有：Core 的 `style` / `mode` / `palettePreset` 与 shared semantic / categorical color contract
+- 拥有：Core 的 `style` / `mode` 与 shared semantic / categorical color contract
 - 不拥有：任何领域 token key、完整 token map、领域 preset、领域 token registry、跨领域 arbitrary token override 或 renderer theme
 - 外部扩展与下游闭环：新增领域 Theme 能力通过该领域的 schema、spec-local sparse override、resolver 和正式 consumer 闭环，不向 Core 注册 token bag。领域默认值可从 Core effective Theme 读取 selector 和 shared colors
 - 不支持边界：不支持通过 Scope 为多个领域下发任意 token key；不支持把完整 token map、色板数组或运行时 Definition 写入 Theme IR。若未来需要跨领域可配置 Theme，必须设计新的小型 selector / reference contract，不能恢复自由 token bag

@@ -75,19 +75,14 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeStyleValue, Readonly<Record<Theme
   });
 
 /** 解析指定 style / mode 与 palette preset 的完整 shared colors */
-export const resolveCoreThemeColors = (
-  style: ThemeStyleValue,
-  mode: ThemeModeValue,
-  palettePreset: ThemeStyleValue = style,
-): ResolvedThemeColors => {
+export const resolveCoreThemeColors = (style: ThemeStyleValue, mode: ThemeModeValue): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[style][mode];
-  const palette = CORE_COLOR_PRESETS[palettePreset][mode].categorical;
   return freezeColorView(
     {
       error: preset.semantic.error,
       success: preset.semantic.success,
       warning: preset.semantic.warning,
     },
-    palette,
+    preset.categorical,
   );
 };

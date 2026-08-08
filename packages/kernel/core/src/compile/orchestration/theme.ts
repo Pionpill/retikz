@@ -9,12 +9,8 @@ import { ThemeMode, ThemeStyle } from '../../shared';
 export const DEFAULT_RESOLVED_THEME: ResolvedTheme = Object.freeze({
   style: ThemeStyle.Neutral,
   mode: ThemeMode.Light,
-  palettePreset: ThemeStyle.Neutral,
   colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
 });
-
-const formatThemeIssuePath = (path: string, issuePath: ReadonlyArray<PropertyKey>): string =>
-  issuePath.length === 0 ? path : `${path}.${issuePath.map(String).join('.')}`;
 
 /**
  * 解析一层 sparse Theme 覆盖
@@ -35,8 +31,7 @@ export const resolveTheme = (parent: ResolvedTheme, sparse: IRTheme | undefined,
 
   const style = parsed.data.style ?? parent.style;
   const mode = parsed.data.mode ?? parent.mode;
-  const palettePreset = parsed.data.palettePreset ?? parent.palettePreset;
-  if (style === parent.style && mode === parent.mode && palettePreset === parent.palettePreset) return parent;
+  if (style === parent.style && mode === parent.mode) return parent;
 
-  return Object.freeze({ style, mode, palettePreset, colors: resolveCoreThemeColors(style, mode, palettePreset) });
+  return Object.freeze({ style, mode, colors: resolveCoreThemeColors(style, mode) });
 };

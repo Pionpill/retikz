@@ -11,13 +11,11 @@ describe('Theme schema', () => {
     expectTypeOf<IRTheme>().toEqualTypeOf<{
       style?: ThemeStyleValue;
       mode?: ThemeModeValue;
-      palettePreset?: ThemeStyleValue;
     }>();
     expectTypeOf<ResolvedTheme>().toMatchTypeOf<
       Readonly<{
         style: ThemeStyleValue;
         mode: ThemeModeValue;
-        palettePreset: ThemeStyleValue;
       }>
     >();
   });
@@ -26,10 +24,9 @@ describe('Theme schema', () => {
     const parsed = ThemeSchema.parse({
       style: ThemeStyle.Academic,
       mode: ThemeMode.Dark,
-      palettePreset: ThemeStyle.Vibrant,
     });
 
-    expect(parsed).toEqual({ style: 'academic', mode: 'dark', palettePreset: 'vibrant' });
+    expect(parsed).toEqual({ style: 'academic', mode: 'dark' });
     expect(ThemeSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     expect(ThemeSchema.parse({})).toEqual({});
   });
@@ -39,7 +36,7 @@ describe('Theme schema', () => {
     expect(ThemeSchema.safeParse({ palette: 'paper' }).success).toBe(false);
     expect(ThemeSchema.safeParse({ style: 'paper' }).success).toBe(false);
     expect(ThemeSchema.safeParse({ mode: 'system' }).success).toBe(false);
-    expect(ThemeSchema.safeParse({ palettePreset: 'paper' }).success).toBe(false);
+    expect(ThemeSchema.safeParse({ palettePreset: ThemeStyle.Vibrant }).success).toBe(false);
   });
 
   it('Scene 与 Scope 复用闭合 Theme schema', () => {
@@ -47,10 +44,10 @@ describe('Theme schema', () => {
       type: 'scene',
       version: 1,
       theme: { style: ThemeStyle.Clean, mode: ThemeMode.Dark },
-      children: [{ type: 'scope', theme: { palettePreset: ThemeStyle.Vibrant }, children: [] }],
+      children: [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [] }],
     });
 
     expect(scene.theme).toEqual({ style: 'clean', mode: 'dark' });
-    expect(ScopeSchema.parse(scene.children[0]).theme).toEqual({ palettePreset: 'vibrant' });
+    expect(ScopeSchema.parse(scene.children[0]).theme).toEqual({ mode: 'light' });
   });
 });

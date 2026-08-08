@@ -69,10 +69,6 @@ const isPlainObjectContainer = (input: unknown): input is Record<string, unknown
 const ThemeObjectSchema = z.strictObject({
   style: z.enum(ThemeStyle).optional().describe('Sparse visual personality inherited from the enclosing Theme.'),
   mode: z.enum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
-  palettePreset: z
-    .enum(ThemeStyle)
-    .optional()
-    .describe('Categorical palette preset inherited from the enclosing Theme.'),
 });
 
 const ThemeInputSchema = z
@@ -84,7 +80,7 @@ const ThemeInputSchema = z
       return;
     }
     for (const key of Reflect.ownKeys(input)) {
-      if (key === 'style' || key === 'mode' || key === 'palettePreset') continue;
+      if (key === 'style' || key === 'mode') continue;
       context.addIssue({ code: 'custom', path: [key], message: `Unrecognized Theme field: "${String(key)}".` });
     }
   });
