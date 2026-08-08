@@ -1,0 +1,84 @@
+---
+title: Connector
+description: Connect authored targets with explicit Core path routes and an optional end-step label.
+---
+
+`Connector` lowers one relationship to one Core Path. Endpoints can be Cartesian points or stable authored target references. Routing is explicit: the component never computes a graph route, searches for obstacles, or changes another component's geometry.
+
+## Usage
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Connector, Stage, Terminal } from '@retikz/notation-react';
+```
+
+```tsx
+<Layout width={420} height={160}>
+  <Scope transforms={[{ kind: 'translate', x: 24, y: 56 }]}>
+    <Terminal id="start" position={[0, 0]}>
+      Start
+    </Terminal>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 220, y: 56 }]}>
+    <Stage id="step" position={[0, 0]}>
+      Step
+    </Stage>
+  </Scope>
+  <Connector
+    id="start-to-step"
+    from={{ id: 'start' }}
+    to={{ id: 'step' }}
+    routing={{ kind: 'orthogonal', pattern: 'hv' }}
+    label={{ text: 'next' }}
+  />
+</Layout>
+```
+
+The `label` is attached to the final drawable Core step. This keeps the label in one place when a route has bends and avoids a second path-level label.
+
+## Examples
+
+### Route variants
+
+| Route             | Input                                                   | Lowering                                                      |
+| ----------------- | ------------------------------------------------------- | ------------------------------------------------------------- |
+| Straight          | `{ kind: 'straight' }`                                  | One line between endpoints                                    |
+| Polyline          | `{ kind: 'polyline', points }`                          | Explicit intermediate targets or points                       |
+| Orthogonal        | `pattern: 'hv' \| 'vh' \| 'hvh' \| 'vhv'`               | Two- or three-leg axis route; `ratio` controls the middle leg |
+| Quadratic / Cubic | `control` or `control1` + `control2`                    | Core Bezier step(s)                                           |
+| Bend              | `direction`, `angle`, `looseness`, or explicit tangents | Core bend step                                                |
+
+<ComponentPreview files="connector-routing" size="lg" />
+
+Direct JSON uses `createConnector`, `ConnectorSchema`, and `ConnectorDefinition`. A Vanilla embed uses `connector` and `ConnectorVanillaAdapter`; its canonical ID is `<embed-id>/connector`.
+
+Target identity is explicit. A whole target may point forward or backward in authored traversal, so a Connector can connect `{ id: 'later-stage' }` before that Stage is emitted. A LogicFrame section target (`{ kind: 'logicFrame', id: 'block', section: 'body' }`) is accepted by the schema but currently fails loudly during Connector lowering; use a whole block target instead.
+
+In React/direct IR and Vanilla semantic builders, a `Terminal id="start"` is targeted with `{ id: 'start' }`. LogicFrame, Connector, Callout, and Frame adapters retain their own composite identity rules.
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Read this section when diagnosing route steps, target resolution, or label placement."
+/>
+
+`ConnectorDefinition` is an expansion definition: it emits a same-id Core Path and has no typed Connector artifact schema. The label is written once onto the final drawable step, including the final segment after bends or explicit polyline points. Section targets are deliberately rejected before Core path lowering so the failure is diagnosable.
+
+## API Reference
+
+| Field         | Type                       | Default                                                                                    | Description                                                     |
+| ------------- | -------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `id`          | `string`                   | —                                                                                          | Stable authored Connector identity and emitted Core Path id     |
+| `role?`       | `string`                   | omitted                                                                                    | Open authored Connector role                                    |
+| `from`, `to`  | `LogicDiagramPointInput`   | —                                                                                          | Cartesian point or whole target with optional anchor and offset |
+| `routing?`    | `ConnectorRoutingInput`    | `{ kind: 'straight' }`                                                                     | Closed explicit route union                                     |
+| `label?`      | `LogicGeometryLabelInput`  | omitted                                                                                    | Label attached to the final drawable step                       |
+| `appearance?` | `ConnectorAppearanceInput` | stroke `currentColor`, width `1`, rounded corners `0`, arrow mark at `pos: 1`, `zIndex: 0` | Core Path stroke, marks, corners, dash, and stacking overrides  |
+
+## Related
+
+- [Semantic units](/diagram/notation/semantic-units): targetable units
+- [Callout](/diagram/notation/callout): target-relative explanations
+- [Core paths](/kernel/components/draw/overview): primitive route output

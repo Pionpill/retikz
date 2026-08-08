@@ -6,6 +6,7 @@ import { kernelV02 } from './kernel-0-2';
 import { kernelV03 } from './kernel-0-3';
 import { kernelV04 } from './kernel-0-4';
 import { kernelV05 } from './kernel-0-5';
+import { notationV01 } from './notation-0-1';
 import { standardV01 } from './standard-0-1';
 import { vizV01 } from './viz-0-1';
 import { vizV02 } from './viz-0-2';
@@ -18,6 +19,7 @@ export const changelogPageDescription: Localized = {
 
 export const changelog: Array<Release> = [
   vizV02,
+  notationV01,
   standardV01,
   kernelV05,
   kernelV04,
@@ -28,9 +30,10 @@ export const changelog: Array<Release> = [
 ];
 
 /** 文档模块 id → changelog 包组 */
-const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'viz' | 'other'>([
+const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'diagram' | 'viz' | 'other'>([
   ['kernel', 'kernel'],
   ['standard', 'standard'],
+  ['diagram', 'diagram'],
   ['viz', 'viz'],
 ]);
 
@@ -54,7 +57,7 @@ const VIZ_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
 
 /** 包标识 → 所属包组 */
-const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'viz' | 'other' | undefined =>
+const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'diagram' | 'viz' | 'other' | undefined =>
   PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
 
 /**

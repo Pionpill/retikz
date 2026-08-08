@@ -2,6 +2,7 @@ import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
+import * as NotationIR from '@retikz/notation';
 import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
 import * as StandardInspectIR from '@retikz/standard/inspect';
@@ -513,6 +514,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'LegendArtifact',
     url: '/standard/composite/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
+  },
+
+  LogicFrameSchema: {
+    schema: NotationIR.LogicFrameSchema,
+    label: 'LogicFrame',
+    url: '/diagram/notation/logic-frame',
+  },
+  TerminalSchema: {
+    schema: NotationIR.TerminalSchema,
+    label: 'Terminal',
+    url: '/diagram/notation/semantic-units',
+  },
+  StageSchema: {
+    schema: NotationIR.StageSchema,
+    label: 'Stage',
+    url: '/diagram/notation/semantic-units',
+  },
+  DecisionSchema: {
+    schema: NotationIR.DecisionSchema,
+    label: 'Decision',
+    url: '/diagram/notation/semantic-units',
+  },
+  JunctionSchema: {
+    schema: NotationIR.JunctionSchema,
+    label: 'Junction',
+    url: '/diagram/notation/semantic-units',
+  },
+  ConnectorSchema: {
+    schema: NotationIR.ConnectorSchema,
+    label: 'Connector',
+    url: '/diagram/notation/connector',
+  },
+  CalloutSchema: {
+    schema: NotationIR.CalloutSchema,
+    label: 'Callout',
+    url: '/diagram/notation/callout',
   },
 
   TableSpecSchema: {

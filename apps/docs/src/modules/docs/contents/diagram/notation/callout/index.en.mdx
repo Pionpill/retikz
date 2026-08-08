@@ -1,0 +1,87 @@
+---
+title: Callout
+description: Place explanatory content beside a previous authored target and optionally draw a leader.
+---
+
+`Callout` is a target-relative annotation. It lays out one content child beside a target, then optionally emits one Core Path leader from the callout allocation to that target. Placement is deterministic and local; it does not maintain a global annotation graph or run obstacle avoidance.
+
+## Usage
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { Callout, Stage } from '@retikz/notation-react';
+```
+
+```tsx
+<Layout width={420} height={180}>
+  <Scope transforms={[{ kind: 'translate', x: 150, y: 64 }]}>
+    <Stage id="step" position={[0, 0]}>
+      Step
+    </Stage>
+  </Scope>
+  <Callout id="note" target={{ id: 'step' }} placement={{ side: 'right', gap: 12 }}>
+    <Node position={[0, 0]} text="Explain this step" />
+  </Callout>
+</Layout>
+```
+
+## Examples
+
+<ComponentPreview files="callout-placement" size="lg" />
+
+Direct JSON uses `createCallout`, `CalloutSchema`, and `CalloutDefinition`:
+
+```ts
+import { CalloutDefinition, createCallout } from '@retikz/notation';
+
+const note = createCallout({
+  id: 'note',
+  target: { id: 'step' },
+  content: { type: 'node', position: [0, 0], text: 'Explain' },
+  placement: { side: 'right' },
+});
+const compile = { composites: [CalloutDefinition] };
+```
+
+Vanilla semantic builders return Nodes directly, so a target to `terminal('start', ...)` is `{ id: 'start' }`:
+
+```ts
+import { callout, CalloutVanillaAdapter } from '@retikz/notation-vanilla';
+
+const note = callout('note', {
+  target: { id: 'start' },
+  content: { type: 'node', position: [0, 0], text: 'Explain' },
+  placement: { side: 'right' },
+});
+const adapters = [CalloutVanillaAdapter];
+```
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Read this section when diagnosing previous-target resolution, placement, or leader geometry."
+/>
+
+### Placement
+
+Callout targets are previous-only: the target must already have a resolved authored occurrence when Callout placement runs. A whole target (`{ id: 'step' }`) is supported. A LogicFrame section target (`{ kind: 'logicFrame', id: 'block', section: 'body' }`) is part of the schema but currently fails loudly before placement; use the whole block target. `leader={false}` disables the leader; otherwise one Core Path probe/replay connects the callout allocation to the target.
+
+## API Reference
+
+| Field         | Type                                  | Default                                                                                                   | Description                                                         |
+| ------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `id`          | `string`                              | —                                                                                                         | Stable authored Callout identity                                    |
+| `target`      | `LogicDiagramTargetInput`             | —                                                                                                         | Previous whole target; section targets fail loudly before placement |
+| `content`     | `IRChild` / React child               | —                                                                                                         | Required annotation content                                         |
+| `placement`   | `CalloutPlacementInput`               | `gap: 8`, `offset: 0`; `side` required                                                                    | Target-relative side, normal gap, and tangent offset                |
+| `leader`      | `false` or `ConnectorAppearanceInput` | stroke `currentColor`, width `1`, rounded corners `0`, `zIndex: 0`                                        | Optional leader appearance; `false` disables it                     |
+| `appearance?` | content shell appearance input        | content size, padding `8`, rectangle radius `8`, visible, neutral style, `boundary: 'shape'`, `zIndex: 0` | Content shell appearance                                            |
+
+## Related
+
+- [Semantic units](/diagram/notation/semantic-units): targetable units
+- [Connector](/diagram/notation/connector): explicit graph relationships
+- [LogicFrame](/diagram/notation/logic-frame): whole-block targets and sections
+- [Notation API Reference](/diagram/notation/api-reference): schemas and Definition loading

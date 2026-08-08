@@ -161,6 +161,9 @@ export const PACKAGE_IDS = [
   '@retikz/standard',
   '@retikz/standard-react',
   '@retikz/standard-vanilla',
+  '@retikz/notation',
+  '@retikz/notation-react',
+  '@retikz/notation-vanilla',
   'docs',
 ] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
@@ -185,12 +188,15 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/standard': { zh: '@retikz/standard', en: '@retikz/standard' },
   '@retikz/standard-react': { zh: '@retikz/standard-react', en: '@retikz/standard-react' },
   '@retikz/standard-vanilla': { zh: '@retikz/standard-vanilla', en: '@retikz/standard-vanilla' },
+  '@retikz/notation': { zh: '@retikz/notation', en: '@retikz/notation' },
+  '@retikz/notation-react': { zh: '@retikz/notation-react', en: '@retikz/notation-react' },
+  '@retikz/notation-vanilla': { zh: '@retikz/notation-vanilla', en: '@retikz/notation-vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 包的类别分组：kernel 基础设施 / standard 绘图库 / viz 可视化层 / other；用于映射模块 changelog 切片 */
+/** 包的类别分组：kernel 基础设施 / standard 绘图库 / diagram 制图 / viz 可视化层 / other；用于映射模块 changelog 切片 */
 export type PackageGroup = {
-  id: 'kernel' | 'standard' | 'viz' | 'other';
+  id: 'kernel' | 'standard' | 'diagram' | 'viz' | 'other';
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;
 };
@@ -211,6 +217,10 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
   {
     id: 'standard',
     members: ['@retikz/standard', '@retikz/standard-react', '@retikz/standard-vanilla'],
+  },
+  {
+    id: 'diagram',
+    members: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
   },
   {
     id: 'viz',
