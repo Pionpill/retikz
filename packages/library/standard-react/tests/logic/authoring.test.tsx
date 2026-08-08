@@ -15,12 +15,12 @@ import {
   createConnector,
   createDecision,
   createJunction,
-  createLogicBlockBase,
+  createLogicFrame,
   createStage,
   createTerminal,
   DecisionDefinition,
   JunctionDefinition,
-  LogicBlockBaseDefinition,
+  LogicFrameDefinition,
   StageDefinition,
   TerminalDefinition,
 } from '@retikz/standard';
@@ -33,9 +33,9 @@ import type {
   ConnectorProps,
   DecisionProps,
   JunctionProps,
-  LogicBlockBaseProps,
-  LogicBlockHeaderProps,
-  LogicBlockSectionProps,
+  LogicFrameHeaderProps,
+  LogicFrameProps,
+  LogicFrameSectionProps,
   StageProps,
   TerminalProps,
 } from '../../src';
@@ -45,9 +45,9 @@ import {
   Connector,
   Decision,
   Junction,
-  LogicBlockBase,
-  LogicBlockHeader,
-  LogicBlockSection,
+  LogicFrame,
+  LogicFrameHeader,
+  LogicFrameSection,
   Stage,
   Terminal,
 } from '../../src';
@@ -55,39 +55,39 @@ import {
 type IRChild = EmbeddableContribution['node'];
 
 const node = (id: string): ReactElement => <Node id={id} position={[0, 0]} text={id} />;
-const header = (children: ReactNode): ReactElement => createElement(LogicBlockHeader, { children });
-const section = (props: Omit<LogicBlockSectionProps, 'children'>, children: ReactNode): ReactElement =>
-  createElement(LogicBlockSection, { ...props, children });
+const header = (children: ReactNode): ReactElement => createElement(LogicFrameHeader, { children });
+const section = (props: Omit<LogicFrameSectionProps, 'children'>, children: ReactNode): ReactElement =>
+  createElement(LogicFrameSection, { ...props, children });
 
 describe('Standard React logic authoring', () => {
   it('exports seven flat logic components and two block markers', () => {
-    expect([LogicBlockBase, Terminal, Stage, Decision, Junction, Connector, Callout]).toHaveLength(7);
-    expect(LogicBlockHeader).toBeTypeOf('function');
-    expect(LogicBlockSection).toBeTypeOf('function');
+    expect([LogicFrame, Terminal, Stage, Decision, Junction, Connector, Callout]).toHaveLength(7);
+    expect(LogicFrameHeader).toBeTypeOf('function');
+    expect(LogicFrameSection).toBeTypeOf('function');
     expect(
-      Reflect.get({ LogicBlockBase, Terminal, Stage, Decision, Junction, Connector, Callout }, 'Logic'),
+      Reflect.get({ LogicFrame, Terminal, Stage, Decision, Junction, Connector, Callout }, 'Logic'),
     ).toBeUndefined();
   });
 
   it('publishes typed props for all logic components and markers', () => {
-    expectTypeOf<LogicBlockBaseProps>().toHaveProperty('children');
+    expectTypeOf<LogicFrameProps>().toHaveProperty('children');
     expectTypeOf<TerminalProps>().toHaveProperty('content');
     expectTypeOf<StageProps>().toHaveProperty('content');
     expectTypeOf<DecisionProps>().toHaveProperty('content');
     expectTypeOf<JunctionProps>().toHaveProperty('content');
     expectTypeOf<ConnectorProps>().toHaveProperty('label');
     expectTypeOf<CalloutProps>().toHaveProperty('content');
-    expectTypeOf<LogicBlockHeaderProps>().toHaveProperty('children');
-    expectTypeOf<LogicBlockSectionProps>().toHaveProperty('sectionKey');
+    expectTypeOf<LogicFrameHeaderProps>().toHaveProperty('children');
+    expectTypeOf<LogicFrameSectionProps>().toHaveProperty('sectionKey');
     expectTypeOf(Terminal).toMatchTypeOf<FC<TerminalProps>>();
     expectTypeOf(Stage).toMatchTypeOf<FC<StageProps>>();
     expectTypeOf(Decision).toMatchTypeOf<FC<DecisionProps>>();
     expectTypeOf(Junction).toMatchTypeOf<FC<JunctionProps>>();
     expectTypeOf(Connector).toMatchTypeOf<FC<ConnectorProps>>();
     expectTypeOf(Callout).toMatchTypeOf<FC<CalloutProps>>();
-    expectTypeOf(LogicBlockBase).toMatchTypeOf<FC<LogicBlockBaseProps>>();
-    expectTypeOf(LogicBlockHeader).toMatchTypeOf<FC<LogicBlockHeaderProps>>();
-    expectTypeOf(LogicBlockSection).toMatchTypeOf<FC<LogicBlockSectionProps>>();
+    expectTypeOf(LogicFrame).toMatchTypeOf<FC<LogicFrameProps>>();
+    expectTypeOf(LogicFrameHeader).toMatchTypeOf<FC<LogicFrameHeaderProps>>();
+    expectTypeOf(LogicFrameSection).toMatchTypeOf<FC<LogicFrameSectionProps>>();
   });
 
   it('contributes canonical IR and only its own Definition for every flat component', () => {
@@ -182,9 +182,9 @@ describe('Standard React logic authoring', () => {
         definition: CalloutDefinition,
       },
       {
-        name: 'LogicBlockBase',
+        name: 'LogicFrame',
         contribute: () =>
-          LogicBlockBase.embeddableAdapter.contribute({
+          LogicFrame.embeddableAdapter.contribute({
             id: 'react-block',
             children: createElement(
               Fragment,
@@ -193,7 +193,7 @@ describe('Standard React logic authoring', () => {
               section({ sectionKey: 'body', role: 'body' }, node('block-body')),
             ),
           }),
-        expected: createLogicBlockBase({
+        expected: createLogicFrame({
           id: 'react-block',
           header: { child: { type: 'node', id: 'block-header', position: [0, 0], text: 'block-header' } },
           sections: [
@@ -204,7 +204,7 @@ describe('Standard React logic authoring', () => {
             },
           ],
         }),
-        definition: LogicBlockBaseDefinition,
+        definition: LogicFrameDefinition,
       },
     ];
 
@@ -275,9 +275,9 @@ describe('Standard React logic authoring', () => {
     ).toThrow(/content|child/i);
   });
 
-  it('enforces LogicBlock marker grammar and duplicate authored keys', () => {
+  it('enforces LogicFrame marker grammar and duplicate authored keys', () => {
     const contribute = (children: ReactNode) =>
-      LogicBlockBase.embeddableAdapter.contribute({ id: 'invalid-block', children });
+      LogicFrame.embeddableAdapter.contribute({ id: 'invalid-block', children });
 
     expect(() => contribute(createElement(Fragment, null, header(node('a')), header(node('b'))))).toThrow(
       /header|one/i,
@@ -302,22 +302,22 @@ describe('Standard React logic authoring', () => {
   it('does not implicitly register a nested Standard Definition', () => {
     const nestedBlock = (
       <Layout width={120} height={80}>
-        <LogicBlockBase id="nested-block">
-          <LogicBlockSection sectionKey="nested">
+        <LogicFrame id="nested-block">
+          <LogicFrameSection sectionKey="nested">
             <Stage id="nested-stage">{node('nested-stage-content')}</Stage>
-          </LogicBlockSection>
-        </LogicBlockBase>
+          </LogicFrameSection>
+        </LogicFrame>
       </Layout>
     );
     expect(() => renderToStaticMarkup(nestedBlock)).toThrow(/standard\.stage|definition/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80} composites={[StageDefinition]}>
-          <LogicBlockBase id="nested-block">
-            <LogicBlockSection sectionKey="nested">
+          <LogicFrame id="nested-block">
+            <LogicFrameSection sectionKey="nested">
               <Stage id="nested-stage">{node('nested-stage-content')}</Stage>
-            </LogicBlockSection>
-          </LogicBlockBase>
+            </LogicFrameSection>
+          </LogicFrame>
         </Layout>,
       ),
     ).not.toThrow();
@@ -327,7 +327,7 @@ describe('Standard React logic authoring', () => {
     const headerInput = { child: { type: 'node', id: 'plain-header', position: [0, 0] } };
     const sectionsInput = [{ key: 'body', child: { type: 'node', id: 'plain-body', position: [0, 0] } }];
     expect(() =>
-      LogicBlockBase.embeddableAdapter.contribute({
+      LogicFrame.embeddableAdapter.contribute({
         id: 'plain-empty-false',
         header: headerInput,
         sections: sectionsInput,
@@ -335,7 +335,7 @@ describe('Standard React logic authoring', () => {
       }),
     ).not.toThrow();
     expect(() =>
-      LogicBlockBase.embeddableAdapter.contribute({
+      LogicFrame.embeddableAdapter.contribute({
         id: 'plain-empty-null',
         header: headerInput,
         sections: sectionsInput,
@@ -343,7 +343,7 @@ describe('Standard React logic authoring', () => {
       }),
     ).not.toThrow();
     expect(() =>
-      LogicBlockBase.embeddableAdapter.contribute({
+      LogicFrame.embeddableAdapter.contribute({
         id: 'marker-and-plain',
         header: headerInput,
         children: header(node('marker-header')),

@@ -7,17 +7,17 @@ The Standard Logic API is split by responsibility: `@retikz/standard` owns canon
 
 ## Public exports
 
-| Composite      | Schema / IR                                | Factory and Definition                             | React                                                     | Vanilla                                          |
-| -------------- | ------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
-| LogicBlockBase | `LogicBlockBaseSchema`, `IRLogicBlockBase` | `createLogicBlockBase`, `LogicBlockBaseDefinition` | `LogicBlockBase`, `LogicBlockHeader`, `LogicBlockSection` | `logicBlockBase`, `LogicBlockBaseVanillaAdapter` |
-| Terminal       | `TerminalSchema`, `IRTerminal`             | `createTerminal`, `TerminalDefinition`             | `Terminal`                                                | `terminal`, `TerminalVanillaAdapter`             |
-| Stage          | `StageSchema`, `IRStage`                   | `createStage`, `StageDefinition`                   | `Stage`                                                   | `stage`, `StageVanillaAdapter`                   |
-| Decision       | `DecisionSchema`, `IRDecision`             | `createDecision`, `DecisionDefinition`             | `Decision`                                                | `decision`, `DecisionVanillaAdapter`             |
-| Junction       | `JunctionSchema`, `IRJunction`             | `createJunction`, `JunctionDefinition`             | `Junction`                                                | `junction`, `JunctionVanillaAdapter`             |
-| Connector      | `ConnectorSchema`, `IRConnector`           | `createConnector`, `ConnectorDefinition`           | `Connector`                                               | `connector`, `ConnectorVanillaAdapter`           |
-| Callout        | `CalloutSchema`, `IRCallout`               | `createCallout`, `CalloutDefinition`               | `Callout`                                                 | `callout`, `CalloutVanillaAdapter`               |
+| Composite  | Schema / IR                        | Factory and Definition                     | React                                                 | Vanilla                                  |
+| ---------- | ---------------------------------- | ------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
+| LogicFrame | `LogicFrameSchema`, `IRLogicFrame` | `createLogicFrame`, `LogicFrameDefinition` | `LogicFrame`, `LogicFrameHeader`, `LogicFrameSection` | `logicFrame`, `LogicFrameVanillaAdapter` |
+| Terminal   | `TerminalSchema`, `IRTerminal`     | `createTerminal`, `TerminalDefinition`     | `Terminal`                                            | `terminal`, `TerminalVanillaAdapter`     |
+| Stage      | `StageSchema`, `IRStage`           | `createStage`, `StageDefinition`           | `Stage`                                               | `stage`, `StageVanillaAdapter`           |
+| Decision   | `DecisionSchema`, `IRDecision`     | `createDecision`, `DecisionDefinition`     | `Decision`                                            | `decision`, `DecisionVanillaAdapter`     |
+| Junction   | `JunctionSchema`, `IRJunction`     | `createJunction`, `JunctionDefinition`     | `Junction`                                            | `junction`, `JunctionVanillaAdapter`     |
+| Connector  | `ConnectorSchema`, `IRConnector`   | `createConnector`, `ConnectorDefinition`   | `Connector`                                           | `connector`, `ConnectorVanillaAdapter`   |
+| Callout    | `CalloutSchema`, `IRCallout`       | `createCallout`, `CalloutDefinition`       | `Callout`                                             | `callout`, `CalloutVanillaAdapter`       |
 
-Artifact schemas are exported for typed compile results from `LogicBlockBase`, Terminal, Stage, Decision, Junction, and Callout. Connector is an expansion composite: it emits a Core Path and intentionally has no typed Connector artifact schema.
+Artifact schemas are exported for typed compile results from `LogicFrame`, Terminal, Stage, Decision, Junction, and Callout. Connector is an expansion composite: it emits a Core Path and intentionally has no typed Connector artifact schema.
 
 ## Direct Definition loading
 
@@ -34,21 +34,21 @@ const compile = {
 compileToScene(scene, compile);
 ```
 
-Nested Standard children have the same rule. A `LogicBlockBase` containing a `Stage` needs both Definitions; a Core-only child needs no Standard Definition.
+Nested Standard children have the same rule. A `LogicFrame` containing a `Stage` needs both Definitions; a Core-only child needs no Standard Definition.
 
 ## Vanilla canonical identity
 
 Vanilla embeds separate authoring identity from canonical composite identity. The adapter appends a stable suffix:
 
-| Builder                          | Canonical id           |
-| -------------------------------- | ---------------------- |
-| `terminal('start', input)`       | `start/terminal`       |
-| `stage('step', input)`           | `step/stage`           |
-| `decision('check', input)`       | `check/decision`       |
-| `junction('join', input)`        | `join/junction`        |
-| `connector('edge', input)`       | `edge/connector`       |
-| `callout('note', input)`         | `note/callout`         |
-| `logicBlockBase('block', input)` | `block/logicBlockBase` |
+| Builder                      | Canonical id       |
+| ---------------------------- | ------------------ |
+| `terminal('start', input)`   | `start/terminal`   |
+| `stage('step', input)`       | `step/stage`       |
+| `decision('check', input)`   | `check/decision`   |
+| `junction('join', input)`    | `join/junction`    |
+| `connector('edge', input)`   | `edge/connector`   |
+| `callout('note', input)`     | `note/callout`     |
+| `logicFrame('block', input)` | `block/logicFrame` |
 
 Use the canonical value in Connector and Callout targets. For example, a Vanilla target to `terminal('start', ...)` is `{ id: 'start/terminal' }`, not `{ id: 'start' }`.
 

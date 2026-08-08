@@ -289,7 +289,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'gridLayout',
   'overlayLayout',
   'legend',
-  'logicBlockBase',
+  'logicFrame',
   'terminal',
   'stage',
   'decision',
@@ -305,7 +305,7 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutVanillaAdapter',
   'OverlayLayoutVanillaAdapter',
   'LegendVanillaAdapter',
-  'LogicBlockBaseVanillaAdapter',
+  'LogicFrameVanillaAdapter',
   'TerminalVanillaAdapter',
   'StageVanillaAdapter',
   'DecisionVanillaAdapter',
@@ -323,7 +323,7 @@ export type StandardPreviewDefinitionName =
   | 'GridLayoutDefinition'
   | 'OverlayLayoutDefinition'
   | 'LegendDefinition'
-  | 'LogicBlockBaseDefinition'
+  | 'LogicFrameDefinition'
   | 'TerminalDefinition'
   | 'StageDefinition'
   | 'DecisionDefinition'
@@ -339,7 +339,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   gridLayout: 'GridLayoutDefinition',
   overlayLayout: 'OverlayLayoutDefinition',
   legend: 'LegendDefinition',
-  logicBlockBase: 'LogicBlockBaseDefinition',
+  logicFrame: 'LogicFrameDefinition',
   terminal: 'TerminalDefinition',
   stage: 'StageDefinition',
   decision: 'DecisionDefinition',
@@ -354,7 +354,7 @@ const standardOwnedChildren = (child: IRChild & { namespace: string; type: strin
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
-  if (child.type === 'logicBlockBase') {
+  if (child.type === 'logicFrame') {
     const owned: Array<IRChild> = [];
     const header = record.header as { child?: IRChild } | undefined;
     if (header?.child !== undefined) owned.push(header.child);
@@ -432,8 +432,8 @@ export const collectStandardPreviewDefinitions = (
 
 const standardCanonicalId = (kind: string, embedId: string): string => {
   switch (kind) {
-    case 'logicBlockBase':
-      return `${embedId}/logicBlockBase`;
+    case 'logicFrame':
+      return `${embedId}/logicFrame`;
     case 'terminal':
       return `${embedId}/terminal`;
     case 'stage':
@@ -521,7 +521,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   const generatedId = `preview-${record.type}-${count}`;
   const needsDerivedId =
     record.type === 'frame' ||
-    record.type === 'logicBlockBase' ||
+    record.type === 'logicFrame' ||
     record.type === 'terminal' ||
     record.type === 'stage' ||
     record.type === 'decision' ||

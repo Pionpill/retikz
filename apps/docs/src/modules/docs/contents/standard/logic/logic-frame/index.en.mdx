@@ -1,69 +1,69 @@
 ---
-title: LogicBlockBase
+title: LogicFrame
 description: Build a bordered logic block with an optional header and ordered authored sections.
 ---
 
-`LogicBlockBase` is the generic shell for a grouped logic unit. It accepts one optional header and zero or more keyed sections. The shell reuses the package-private FlexLayout engine for region measurement, padding, gaps, placement, clipping, and replay; it does not introduce a second layout system.
+`LogicFrame` is the generic shell for a grouped logic unit. It accepts one optional header and zero or more keyed sections. The shell reuses the package-private FlexLayout engine for region measurement, padding, gaps, placement, clipping, and replay; it does not introduce a second layout system.
 
 ## Usage
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { LogicBlockBase, LogicBlockHeader, LogicBlockSection } from '@retikz/standard-react';
+import { LogicFrame, LogicFrameHeader, LogicFrameSection } from '@retikz/standard-react';
 ```
 
 ```tsx
 <Layout width={360} height={180}>
-  <LogicBlockBase id="order">
-    <LogicBlockHeader>
+  <LogicFrame id="order">
+    <LogicFrameHeader>
       <Node position={[0, 0]} text="Order" />
-    </LogicBlockHeader>
-    <LogicBlockSection sectionKey="input">
+    </LogicFrameHeader>
+    <LogicFrameSection sectionKey="input">
       <Node position={[0, 0]} text="Input" />
-    </LogicBlockSection>
-    <LogicBlockSection sectionKey="output">
+    </LogicFrameSection>
+    <LogicFrameSection sectionKey="output">
       <Node position={[0, 0]} text="Output" />
-    </LogicBlockSection>
-  </LogicBlockBase>
+    </LogicFrameSection>
+  </LogicFrame>
 </Layout>
 ```
 
-Marker children must be direct children of `LogicBlockBase`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
+Marker children must be direct children of `LogicFrame`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
 
 ## Examples
 
-<ComponentPreview files="logic-block-basic" size="md" />
+<ComponentPreview files="logic-frame-basic" size="md" />
 
 Direct IR uses the same canonical child contract and an explicit Definition:
 
 ```ts
-import { createLogicBlockBase, LogicBlockBaseDefinition } from '@retikz/standard';
+import { createLogicFrame, LogicFrameDefinition } from '@retikz/standard';
 
-const block = createLogicBlockBase({
+const block = createLogicFrame({
   id: 'order',
   header: { child: { type: 'node', position: [0, 0], text: 'Order' } },
   sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
 });
-const compile = { composites: [LogicBlockBaseDefinition] };
+const compile = { composites: [LogicFrameDefinition] };
 ```
 
 Vanilla uses an embed id for authoring and derives the canonical `id` inside the adapter:
 
 ```ts
-import { LogicBlockBaseVanillaAdapter, logicBlockBase } from '@retikz/standard-vanilla';
+import { LogicFrameVanillaAdapter, logicFrame } from '@retikz/standard-vanilla';
 
-const embed = logicBlockBase('order', {
+const embed = logicFrame('order', {
   sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
 });
-const adapters = [LogicBlockBaseVanillaAdapter];
+const adapters = [LogicFrameVanillaAdapter];
 ```
 
-The same shell can contain semantic units or nested Standard composites. Nested Definitions are still explicit: a block containing a `Stage` needs both `LogicBlockBaseDefinition` and `StageDefinition` when loading direct IR.
+The same shell can contain semantic units or nested Standard composites. Nested Definitions are still explicit: a block containing a `Stage` needs both `LogicFrameDefinition` and `StageDefinition` when loading direct IR.
 
 <ComponentPreview
   files="process-recipe"
   size="lg"
-  caption="A documentation-only Process recipe composed from LogicBlockBase, semantic units, and Connectors."
+  caption="A documentation-only Process recipe composed from LogicFrame, semantic units, and Connectors."
 />
 
 Recipes are examples, not package exports; Process, Class, and Data remain ordinary compositions of the public vocabulary.
@@ -95,7 +95,7 @@ The shell and divider are emitted as Core visual primitives. Divider rectangles 
 | `padding?`    | `number` or `IRBoxSpacing`               | `8`                                                  | Default region padding                                 |
 | `rowGap?`     | `number`                                 | `0`                                                  | Space between adjacent regions                         |
 | `overflow?`   | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
-| `appearance?` | `LogicBlockAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
+| `appearance?` | `LogicFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
 
 Blank or duplicate section keys fail loudly. Connector and Callout accept section target syntax, but both currently reject section targets before lowering or placement; use a whole block target instead.
 

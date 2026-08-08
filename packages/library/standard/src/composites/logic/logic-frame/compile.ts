@@ -12,7 +12,7 @@ import type { IRFlexLayout, IRFlexLayoutItem } from '../../layout/flex-layout';
 import type { LayoutRect } from '../../layout/internal';
 import type { LayoutArtifactItemBase, LayoutArtifactRect } from '../../layout/shared';
 import type { LogicLayoutItemArtifact } from '../shared';
-import type { IRLogicBlockBase, LogicBlockBaseArtifact } from './types';
+import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
 import { FlexLayoutDirection, FlexLayoutWrap } from '../../layout/flex-layout';
 import { compileFlexLayout } from '../../layout/flex-layout/compiler';
@@ -21,11 +21,11 @@ import { LayoutAlignment, LayoutDistribution, LayoutOverflow } from '../../layou
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LogicCompositeType } from '../shared';
 
-type LogicBlockRegion = Readonly<{
+type LogicFrameRegion = Readonly<{
   key: string;
   role?: string;
   child: IRChild;
-  padding: IRLogicBlockBase['padding'];
+  padding: IRLogicFrame['padding'];
 }>;
 
 type DividerReplay = Readonly<{
@@ -80,7 +80,7 @@ const visibleUnion = (rects: ReadonlyArray<LayoutArtifactRect | null>): LayoutAr
   return positive.length === 0 ? null : unionLayoutArtifactRects(positive);
 };
 
-const shellNodeOf = (node: IRLogicBlockBase, allocation: LayoutRect): IRChild => ({
+const shellNodeOf = (node: IRLogicFrame, allocation: LayoutRect): IRChild => ({
   type: 'node',
   id: node.id,
   position: [allocation.x + allocation.width / 2, allocation.y + allocation.height / 2],
@@ -93,7 +93,7 @@ const shellNodeOf = (node: IRLogicBlockBase, allocation: LayoutRect): IRChild =>
   ...(node.appearance.dashOffset === undefined ? {} : { dashOffset: node.appearance.dashOffset }),
 });
 
-const dividerPathOf = (node: IRLogicBlockBase, x: number, y: number, width: number): IRChild => {
+const dividerPathOf = (node: IRLogicFrame, x: number, y: number, width: number): IRChild => {
   const divider = node.appearance.divider;
   if (divider === false) throw new Error('Cannot construct a divider path when divider is disabled');
   return {
@@ -114,7 +114,7 @@ const dividerPathOf = (node: IRLogicBlockBase, x: number, y: number, width: numb
   };
 };
 
-const regionsOf = (node: IRLogicBlockBase): ReadonlyArray<LogicBlockRegion> => [
+const regionsOf = (node: IRLogicFrame): ReadonlyArray<LogicFrameRegion> => [
   ...(node.header === undefined
     ? []
     : [
@@ -132,7 +132,7 @@ const regionsOf = (node: IRLogicBlockBase): ReadonlyArray<LogicBlockRegion> => [
   })),
 ];
 
-const syntheticFlexOf = (node: IRLogicBlockBase, regions: ReadonlyArray<LogicBlockRegion>): IRFlexLayout => {
+const syntheticFlexOf = (node: IRLogicFrame, regions: ReadonlyArray<LogicFrameRegion>): IRFlexLayout => {
   const divider = node.appearance.divider;
   const strokeWidth = divider === false ? 0 : divider.strokeWidth;
   const effectiveGap = node.rowGap + (divider === false ? 0 : strokeWidth);
@@ -161,16 +161,16 @@ const syntheticFlexOf = (node: IRLogicBlockBase, regions: ReadonlyArray<LogicBlo
   };
 };
 
-/** 通过 canonical column FlexLayout owner 编译 LogicBlockBase */
-export const compileLogicBlockBase = (
-  node: IRLogicBlockBase,
+/** 通过 canonical column FlexLayout owner 编译 LogicFrame */
+export const compileLogicFrame = (
+  node: IRLogicFrame,
   context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<LogicBlockBaseArtifact> => {
+): LayoutCompositeCompileResult<LogicFrameArtifact> => {
   const regions = regionsOf(node);
   const synthetic = syntheticFlexOf(node, regions);
   const flexResult = compileFlexLayout(synthetic, context);
   const flexArtifact = flexResult.artifact;
-  if (flexArtifact === undefined) throw new Error('LogicBlockBase FlexLayout owner returned no artifact');
+  if (flexArtifact === undefined) throw new Error('LogicFrame FlexLayout owner returned no artifact');
   const allocation = flexResult.allocationBounds ?? flexArtifact.container.allocationBounds;
   const content = flexArtifact.container.contentBounds;
 
@@ -237,8 +237,8 @@ export const compileLogicBlockBase = (
     geometry: stripItemIdentity(itemsBySource[index + sectionOffset]),
   }));
 
-  const artifact: LogicBlockBaseArtifact = Object.freeze({
-    kind: LogicCompositeType.LogicBlockBase,
+  const artifact: LogicFrameArtifact = Object.freeze({
+    kind: LogicCompositeType.LogicFrame,
     id: node.id,
     outer: Object.freeze({
       allocationBounds: allocation,

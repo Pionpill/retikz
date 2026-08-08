@@ -11,7 +11,7 @@ import {
   ConnectorVanillaAdapter,
   DecisionVanillaAdapter,
   JunctionVanillaAdapter,
-  LogicBlockBaseVanillaAdapter,
+  LogicFrameVanillaAdapter,
   StageVanillaAdapter,
   TerminalVanillaAdapter,
 } from '../logic';
@@ -31,7 +31,7 @@ export const StandardVanillaAdapters: ReadonlyArray<AnyVanillaTier2Adapter> = Ob
   FrameVanillaAdapter,
   ...StandardLayoutVanillaAdapters,
   LegendVanillaAdapter,
-  LogicBlockBaseVanillaAdapter,
+  LogicFrameVanillaAdapter,
   TerminalVanillaAdapter,
   StageVanillaAdapter,
   DecisionVanillaAdapter,

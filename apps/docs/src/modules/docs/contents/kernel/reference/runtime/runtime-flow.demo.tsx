@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** 从宿主适配到渲染后端的运行时主链，并标明 Parser 只是 IR 输入旁路 */
 const Demo: FC = () => (
   <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="host-group">
-      <LogicFrameTitle>Host adapters</LogicFrameTitle>
+    <LogicFigureFrame id="host-group">
+      <LogicFigureFrameTitle>Host adapters</LogicFigureFrameTitle>
       <Node
         id="adapters"
         text={[
@@ -24,10 +24,10 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={15}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="core-group">
-      <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+    <LogicFigureFrame id="core-group">
+      <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       <Node
         id="ir"
         text={[
@@ -88,10 +88,10 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={15}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="render-group">
-      <LogicFrameTitle>Render</LogicFrameTitle>
+    <LogicFigureFrame id="render-group">
+      <LogicFigureFrameTitle>Render</LogicFigureFrameTitle>
       <Node
         id="render"
         text={[
@@ -107,7 +107,7 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={15}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw way={['adapters', 'ir']} arrow="->" stroke="gray" />
     <Draw way={['ir', 'compile']} arrow="->" stroke="gray" />

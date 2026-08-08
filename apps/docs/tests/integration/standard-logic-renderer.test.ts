@@ -37,10 +37,10 @@ import CalloutPlacementEnDemo from '../../src/modules/docs/contents/standard/log
 import CalloutPlacementZhDemo from '../../src/modules/docs/contents/standard/logic/callout/callout-placement.zh.demo';
 import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/standard/logic/connector/connector-routing.en.demo';
 import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/standard/logic/connector/connector-routing.zh.demo';
-import LogicBlockBasicEnDemo from '../../src/modules/docs/contents/standard/logic/logic-block/logic-block-basic.en.demo';
-import LogicBlockBasicZhDemo from '../../src/modules/docs/contents/standard/logic/logic-block/logic-block-basic.zh.demo';
-import ProcessRecipeEnDemo from '../../src/modules/docs/contents/standard/logic/logic-block/process-recipe.en.demo';
-import ProcessRecipeZhDemo from '../../src/modules/docs/contents/standard/logic/logic-block/process-recipe.zh.demo';
+import LogicFrameBasicEnDemo from '../../src/modules/docs/contents/standard/logic/logic-frame/logic-frame-basic.en.demo';
+import LogicFrameBasicZhDemo from '../../src/modules/docs/contents/standard/logic/logic-frame/logic-frame-basic.zh.demo';
+import ProcessRecipeEnDemo from '../../src/modules/docs/contents/standard/logic/logic-frame/process-recipe.en.demo';
+import ProcessRecipeZhDemo from '../../src/modules/docs/contents/standard/logic/logic-frame/process-recipe.zh.demo';
 import ClassRecipeEnDemo from '../../src/modules/docs/contents/standard/logic/semantic-units/class-recipe.en.demo';
 import ClassRecipeZhDemo from '../../src/modules/docs/contents/standard/logic/semantic-units/class-recipe.zh.demo';
 import DataRecipeEnDemo from '../../src/modules/docs/contents/standard/logic/semantic-units/data-recipe.en.demo';
@@ -208,8 +208,8 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
 
 describe('Standard Logic renderer integration', () => {
   it.each([
-    ['logic block en', LogicBlockBasicEnDemo],
-    ['logic block zh', LogicBlockBasicZhDemo],
+    ['logic block en', LogicFrameBasicEnDemo],
+    ['logic block zh', LogicFrameBasicZhDemo],
     ['semantic units en', SemanticUnitsEnDemo],
     ['semantic units zh', SemanticUnitsZhDemo],
     ['connector en', ConnectorRoutingEnDemo],

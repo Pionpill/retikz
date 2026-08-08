@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** React 与 Vanilla 宿主共享 Plot lowering 和 Core 编译能力的架构图 */
 const Demo: FC = () => (
   <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="host-adapters-frame">
-      <LogicFrameTitle>plot-react · plot-vanilla</LogicFrameTitle>
+    <LogicFigureFrame id="host-adapters-frame">
+      <LogicFigureFrameTitle>plot-react · plot-vanilla</LogicFigureFrameTitle>
       <Node
         id="host-adapters"
         position={[-250, 10]}
@@ -25,10 +25,10 @@ const Demo: FC = () => (
           standalone · embedded · SSR
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="plot-runtime">
-      <LogicFrameTitle>@retikz/plot</LogicFrameTitle>
+    <LogicFigureFrame id="plot-runtime">
+      <LogicFigureFrameTitle>@retikz/plot</LogicFigureFrameTitle>
       <Node
         id="lower"
         position={[-60, 10]}
@@ -45,10 +45,10 @@ const Demo: FC = () => (
           Plot semantics
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="core-runtime">
-      <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+    <LogicFigureFrame id="core-runtime">
+      <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       <Node
         id="compile"
         position={[110, 10]}
@@ -65,7 +65,7 @@ const Demo: FC = () => (
           Core IR → Scene
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="outputs"

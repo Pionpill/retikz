@@ -10,8 +10,8 @@ export const StandardGridReactNamespace = 'standard.grid';
 /** Standard React Legend 适配器使用的贡献命名空间 */
 export const StandardLegendReactNamespace = 'standard.legend';
 
-/** Standard React LogicBlockBase 使用的贡献命名空间 */
-export const StandardLogicBlockBaseReactNamespace = 'standard.logicBlockBase';
+/** Standard React LogicFrame 使用的贡献命名空间 */
+export const StandardLogicFrameReactNamespace = 'standard.logicFrame';
 
 /** Standard React Terminal 使用的贡献命名空间 */
 export const StandardTerminalReactNamespace = 'standard.terminal';

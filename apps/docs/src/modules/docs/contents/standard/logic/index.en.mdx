@@ -3,26 +3,26 @@ title: Logic Components
 description: Compose domain-neutral logic components from a block shell, semantic units, connectors, and callouts.
 ---
 
-Standard Logic provides a small vocabulary for diagrams whose meaning comes from authored identities and relationships. `LogicBlockBase` owns a reusable shell and regions; Terminal, Stage, Decision, and Junction express semantic units; Connector and Callout add relationships and explanations.
+Standard Logic provides a small vocabulary for diagrams whose meaning comes from authored identities and relationships. `LogicFrame` owns a reusable shell and regions; Terminal, Stage, Decision, and Junction express semantic units; Connector and Callout add relationships and explanations.
 
 The family is deliberately renderer- and domain-neutral. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or another Standard layout, then use stable `id` values for explicit targets.
 
 ## Responsibilities at a glance
 
-| Member           | Owns                                                           | Does not own                            |
-| ---------------- | -------------------------------------------------------------- | --------------------------------------- |
-| `LogicBlockBase` | A shell, header, ordered sections, and reusable region layout  | Graph topology or automatic placement   |
-| Semantic units   | Neutral shape, content, sizing, and semantic role              | Domain-specific state machines          |
-| `Connector`      | One Core Path route and an optional final-step label           | Automatic routing or obstacle avoidance |
-| `Callout`        | Content placed beside a previous target and an optional leader | Global annotation management            |
+| Member         | Owns                                                           | Does not own                            |
+| -------------- | -------------------------------------------------------------- | --------------------------------------- |
+| `LogicFrame`   | A shell, header, ordered sections, and reusable region layout  | Graph topology or automatic placement   |
+| Semantic units | Neutral shape, content, sizing, and semantic role              | Domain-specific state machines          |
+| `Connector`    | One Core Path route and an optional final-step label           | Automatic routing or obstacle avoidance |
+| `Callout`      | Content placed beside a previous target and an optional leader | Global annotation management            |
 
 All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Definitions are injected per figure; they never enter persisted JSON.
 
 ## In this section
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/standard/logic/logic-block">
-    <span className="font-semibold">LogicBlockBase</span>
+  <LinkedCard href="/standard/logic/logic-frame">
+    <span className="font-semibold">LogicFrame</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Shells, headers, sections, and FlexLayout reuse
     </span>

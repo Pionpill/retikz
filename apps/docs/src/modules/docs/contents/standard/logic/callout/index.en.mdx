@@ -66,7 +66,7 @@ const adapters = [CalloutVanillaAdapter];
 
 ### Placement
 
-Callout targets are previous-only: the target must already have a resolved authored occurrence when Callout placement runs. A whole target (`{ id: 'step' }`) is supported. A LogicBlockBase section target (`{ kind: 'logicBlock', id: 'block', section: 'body' }`) is part of the schema but currently fails loudly before placement; use the whole block target. `leader={false}` disables the leader; otherwise one Core Path probe/replay connects the callout allocation to the target.
+Callout targets are previous-only: the target must already have a resolved authored occurrence when Callout placement runs. A whole target (`{ id: 'step' }`) is supported. A LogicFrame section target (`{ kind: 'logicFrame', id: 'block', section: 'body' }`) is part of the schema but currently fails loudly before placement; use the whole block target. `leader={false}` disables the leader; otherwise one Core Path probe/replay connects the callout allocation to the target.
 
 ## API Reference
 
@@ -83,5 +83,5 @@ Callout targets are previous-only: the target must already have a resolved autho
 
 - [Semantic units](/standard/logic/semantic-units): targetable units
 - [Connector](/standard/logic/connector): explicit graph relationships
-- [LogicBlockBase](/standard/logic/logic-block): whole-block targets and sections
+- [LogicFrame](/standard/logic/logic-frame): whole-block targets and sections
 - [Logic API Reference](/standard/logic/api-reference): schemas and Definition loading

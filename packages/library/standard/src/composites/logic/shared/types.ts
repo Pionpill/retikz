@@ -17,10 +17,10 @@ import type {
   ConnectorBendDirectionSchema,
   ConnectorOrthogonalPatternSchema,
   ConnectorRouteKindSchema,
-  LogicBlockRegionSchema,
-  LogicBlockSectionSchema,
   LogicDiagramPointSchema,
   LogicDiagramTargetSchema,
+  LogicFrameRegionSchema,
+  LogicFrameSectionSchema,
   LogicGeometryLabelSchema,
   LogicLayoutItemArtifactSchema,
   LogicOuterArtifactSchema,
@@ -72,22 +72,22 @@ export type LogicUnitAppearance = z.infer<typeof LogicUnitAppearanceSchema>;
 /** 逻辑单元外观作者输入 */
 export type LogicUnitAppearanceInput = z.input<typeof LogicUnitAppearanceSchema>;
 
-/** LogicBlockBase region 类型 */
-export type LogicBlockRegion = z.infer<typeof LogicBlockRegionSchema>;
+/** LogicFrame region 类型 */
+export type LogicFrameRegion = z.infer<typeof LogicFrameRegionSchema>;
 
-/** LogicBlockBase region 作者输入 */
-export type LogicBlockRegionInput = z.input<typeof LogicBlockRegionSchema>;
+/** LogicFrame region 作者输入 */
+export type LogicFrameRegionInput = z.input<typeof LogicFrameRegionSchema>;
 
-/** LogicBlockBase section 类型 */
-export type LogicBlockSection = z.infer<typeof LogicBlockSectionSchema>;
+/** LogicFrame section 类型 */
+export type LogicFrameSection = z.infer<typeof LogicFrameSectionSchema>;
 
-/** LogicBlockBase section 作者输入 */
-export type LogicBlockSectionInput = z.input<typeof LogicBlockSectionSchema>;
+/** LogicFrame section 作者输入 */
+export type LogicFrameSectionInput = z.input<typeof LogicFrameSectionSchema>;
 
-/** LogicBlockBase divider outline 外观类型 */
+/** LogicFrame divider outline 外观类型 */
 export type LogicOutlineAppearance = z.infer<typeof LogicOutlineAppearanceSchema>;
 
-/** LogicBlockBase divider outline 外观作者输入 */
+/** LogicFrame divider outline 外观作者输入 */
 export type LogicOutlineAppearanceInput = z.input<typeof LogicOutlineAppearanceSchema>;
 
 /** Connector 与 leader 共用的 Core Path 外观类型 */
@@ -108,7 +108,7 @@ export type LogicOuterArtifact = z.infer<typeof LogicOuterArtifactSchema>;
 /** Core step label 输入类型 */
 export type LogicGeometryLabelInput = z.input<typeof LogicGeometryLabelSchema>;
 
-/** LogicBlockBase 中性样式规范字面量 */
+/** LogicFrame 中性样式规范字面量 */
 export type LogicNeutralStyleValue = typeof LogicNeutralStyle;
 
 /** Terminal role schema 输出 */

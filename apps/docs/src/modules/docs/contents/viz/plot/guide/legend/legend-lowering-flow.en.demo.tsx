@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Legend reuses channel descriptors, selects a form, and lowers into an independent scope */
 const Demo: FC = () => (
@@ -74,8 +74,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="legend-forms">
-      <LogicFrameTitle>Legend forms</LogicFrameTitle>
+    <LogicFigureFrame id="legend-forms">
+      <LogicFigureFrameTitle>Legend forms</LogicFigureFrameTitle>
       <Node
         id="swatch-form"
         position={[120, -65]}
@@ -124,7 +124,7 @@ const Demo: FC = () => (
           size · shape · opacity
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="legend-scope"

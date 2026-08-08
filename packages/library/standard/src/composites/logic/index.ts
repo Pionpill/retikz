@@ -1,7 +1,7 @@
 export * from './callout';
 export type { ConnectorInput, ConnectorRouting, ConnectorRoutingInput, IRConnector } from './connector';
 export { ConnectorDefinition, ConnectorRoutingSchema, ConnectorSchema, createConnector } from './connector';
-export * from './logic-block-base';
+export * from './logic-frame';
 export * from './logic-unit';
 export {
   CalloutSide,
@@ -19,10 +19,10 @@ export {
   ConnectorBendDirectionSchema,
   ConnectorOrthogonalPatternSchema,
   ConnectorRouteKindSchema,
-  LogicBlockRegionSchema,
-  LogicBlockSectionSchema,
   LogicDiagramPointSchema,
   LogicDiagramTargetSchema,
+  LogicFrameRegionSchema,
+  LogicFrameSectionSchema,
   LogicGeometryLabelSchema,
   LogicLayoutItemArtifactSchema,
   LogicOuterArtifactSchema,
@@ -39,15 +39,15 @@ export type {
   ConnectorRoleValue,
   ConnectorRouteKindValue,
   JunctionRoleValue,
-  LogicBlockRegion,
-  LogicBlockRegionInput,
-  LogicBlockSection,
-  LogicBlockSectionInput,
   LogicCompositeTypeValue,
   LogicDiagramPoint,
   LogicDiagramPointInput,
   LogicDiagramTarget,
   LogicDiagramTargetInput,
+  LogicFrameRegion,
+  LogicFrameRegionInput,
+  LogicFrameSection,
+  LogicFrameSectionInput,
   LogicGeometryLabelInput,
   LogicLayoutItemArtifact,
   LogicOuterArtifact,

@@ -2,11 +2,11 @@
 
 - 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-block-base.md) · [ADR-03](./03-semantic-logic-units.md) · [ADR-04](./04-connector-and-callout.md) · [ADR-06](./06-direct-definition-loading.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [ADR-03](./03-semantic-logic-units.md) · [ADR-04](./04-connector-and-callout.md) · [ADR-06](./06-direct-definition-loading.md)
 
 ## 背景与目标
 
-alpha.3 新增七项公开 composite。如果它们只能通过 React 私有 adapter 或 docs helper 使用，就会破坏直接 IR、React 与 Vanilla 的等价性。LogicBlockBase 的 headless 目标还要求文档展示真实组合方式，但 Process、Class、Data 等示例不能沉淀成未设计的公共 API
+alpha.3 新增七项公开 composite。如果它们只能通过 React 私有 adapter 或 docs helper 使用，就会破坏直接 IR、React 与 Vanilla 的等价性。LogicFrame 的 headless 目标还要求文档展示真实组合方式，但 Process、Class、Data 等示例不能沉淀成未设计的公共 API
 
 本 ADR 冻结每项 definition、canonical factory 与 adapter authoring 边界，并规定 retikz 内部 recipe 的非公开地位
 
@@ -15,7 +15,7 @@ alpha.3 新增七项公开 composite。如果它们只能通过 React 私有 ada
 以下能力各自提供同名 CompositeDefinition：
 
 ```ts
-LogicBlockBaseDefinition;
+LogicFrameDefinition;
 TerminalDefinition;
 StageDefinition;
 DecisionDefinition;
@@ -32,18 +32,18 @@ CalloutDefinition;
 
 基础逻辑单元以 React children 表达单一 content，Connector 以 plain prop 接收 Core `IRGeometryLabelInput`，Callout 以 children 表达 content。adapter 只把合法 React content 归一为 JSON-safe `IRChild`，不把 ReactNode 写入 Standard IR，也不为 Connector 建立 label marker 或复合 child 通道
 
-`LogicBlockBase` 提供只用于 authoring 的 marker：
+`LogicFrame` 提供只用于 authoring 的 marker：
 
 ```tsx
-<LogicBlockBase id="validate-payload">
-  <LogicBlockHeader>{headerChild}</LogicBlockHeader>
-  <LogicBlockSection sectionKey="input" role="input">
+<LogicFrame id="validate-payload">
+  <LogicFrameHeader>{headerChild}</LogicFrameHeader>
+  <LogicFrameSection sectionKey="input" role="input">
     {inputChild}
-  </LogicBlockSection>
-  <LogicBlockSection sectionKey="logic" role="code">
+  </LogicFrameSection>
+  <LogicFrameSection sectionKey="logic" role="code">
     {codeChild}
-  </LogicBlockSection>
-</LogicBlockBase>
+  </LogicFrameSection>
+</LogicFrame>
 ```
 
 marker 只描述 header / section 边界与 authored order，不是独立 Standard composite，也不进入 Scene 或持久化 IR。重复 header、非 Section child、空 section key 与无法归一为单个 `IRChild` 的内容在 authoring 阶段 fail-loud
@@ -66,7 +66,7 @@ retikz docs 可以内部实现：
 
 这些 recipe：
 
-- 只使用公开 LogicBlockBase、Core / Standard children 与 React authoring marker
+- 只使用公开 LogicFrame、Core / Standard children 与 React authoring marker
 - 不从 `@retikz/standard`、`@retikz/standard-react` 或 `@retikz/standard-vanilla` 导出
 - 不注册独立 composite type、schema registry entry 或 Standard preset
 - 源码通过 docs preview 对读者可见，读者可以复制并自行拥有
@@ -86,7 +86,7 @@ retikz docs 可以内部实现：
 - 拥有：稳定 package exports、canonical input、显式 definition 注入和 adapter parity
 - 不拥有：docs recipe schema、业务 category、React runtime template、隐式 registry 或宿主全局配置
 - 外部扩展与下游闭环：自定义内容通过 IRChild / React children / Vanilla plain child；自定义 appearance 使用既有 Core / Standard 契约
-- 不支持边界：需要发布稳定业务 Block 时由真实领域包设计自己的 Tier 2 schema，再组合 LogicBlockBase；不把 docs recipe 上移
+- 不支持边界：需要发布稳定业务 Block 时由真实领域包设计自己的 Tier 2 schema，再组合 LogicFrame；不把 docs recipe 上移
 
 ## 架构验证
 

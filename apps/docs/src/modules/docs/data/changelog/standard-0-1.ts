@@ -46,8 +46,8 @@ export const standardV01: Release = {
             {
               label: { zh: '逻辑块与语义单元', en: 'Logic blocks and semantic units' },
               content: {
-                zh: '`LogicBlockBase` 用任意 JSON-safe child 组合 header 与有序 section，并复用 canonical `FlexLayout` 编译；`Terminal`、`Stage`、`Decision` 与 `Junction` 以独立 discriminator 保存局部逻辑角色。',
-                en: '`LogicBlockBase` composes a header and ordered sections from arbitrary JSON-safe children through the canonical `FlexLayout` compiler. `Terminal`, `Stage`, `Decision`, and `Junction` preserve local logic roles with distinct discriminators.',
+                zh: '`LogicFrame` 用任意 JSON-safe child 组合 header 与有序 section，并复用 canonical `FlexLayout` 编译；`Terminal`、`Stage`、`Decision` 与 `Junction` 以独立 discriminator 保存局部逻辑角色。',
+                en: '`LogicFrame` composes a header and ordered sections from arbitrary JSON-safe children through the canonical `FlexLayout` compiler. `Terminal`, `Stage`, `Decision`, and `Junction` preserve local logic roles with distinct discriminators.',
               },
             },
             {
@@ -172,8 +172,8 @@ export const standardV01: Release = {
             {
               label: { zh: '逻辑组件 builders', en: 'Logic component builders' },
               content: {
-                zh: '`logicBlockBase()`、`terminal()`、`stage()`、`decision()`、`junction()`、`connector()` 与 `callout()` 复用 Standard schema、factory 与 Definition，并加入当前完整 adapter 目录。',
-                en: '`logicBlockBase()`, `terminal()`, `stage()`, `decision()`, `junction()`, `connector()`, and `callout()` reuse Standard schemas, factories, and Definitions and join the complete adapter catalog.',
+                zh: '`logicFrame()`、`terminal()`、`stage()`、`decision()`、`junction()`、`connector()` 与 `callout()` 复用 Standard schema、factory 与 Definition，并加入当前完整 adapter 目录。',
+                en: '`logicFrame()`, `terminal()`, `stage()`, `decision()`, `junction()`, `connector()`, and `callout()` reuse Standard schemas, factories, and Definitions and join the complete adapter catalog.',
               },
             },
             {
@@ -255,8 +255,8 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '新增 LogicBlockBase、四种语义单元、Connector 与 Callout 的 React authoring。',
-            en: 'Adds React authoring for LogicBlockBase, four semantic units, Connector, and Callout.',
+            zh: '新增 LogicFrame、四种语义单元、Connector 与 Callout 的 React authoring。',
+            en: 'Adds React authoring for LogicFrame, four semantic units, Connector, and Callout.',
           },
           items: [
             {
@@ -269,8 +269,8 @@ export const standardV01: Release = {
             {
               label: { zh: 'Headless block markers', en: 'Headless block markers' },
               content: {
-                zh: '`LogicBlockHeader` 与 `LogicBlockSection` 只负责 JSX authoring 的 header / section 边界和顺序；marker 不进入持久化 IR、Scene 或独立 composite registry。',
-                en: '`LogicBlockHeader` and `LogicBlockSection` only express header and section boundaries and order during JSX authoring; markers do not enter persisted IR, Scene, or a separate composite registry.',
+                zh: '`LogicFrameHeader` 与 `LogicFrameSection` 只负责 JSX authoring 的 header / section 边界和顺序；marker 不进入持久化 IR、Scene 或独立 composite registry。',
+                en: '`LogicFrameHeader` and `LogicFrameSection` only express header and section boundaries and order during JSX authoring; markers do not enter persisted IR, Scene, or a separate composite registry.',
               },
             },
           ],

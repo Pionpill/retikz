@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Two-axis proposals are evaluated, selected, and committed inside one Core compile */
 const Demo: FC = () => (
   <Layout width={520} height={420} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="compile-boundary">
-      <LogicFrameTitle>One Core compile</LogicFrameTitle>
+    <LogicFigureFrame id="compile-boundary">
+      <LogicFigureFrameTitle>One Core compile</LogicFigureFrameTitle>
       <Node
         id="compile"
         position={[0, -145]}
@@ -89,7 +89,7 @@ const Demo: FC = () => (
           one-use · atomic
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw
       way={[

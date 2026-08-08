@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-block-base.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md)
 
 ## 背景与目标
 
@@ -154,7 +154,7 @@ Decision 不拥有 outcomes、yes / no、branch anchors 或 connector id 列表�
 - 用一个 `LogicUnit` + `kind` union：会把差异显著的公共组件压进万能 schema，并弱化 authoring 与 artifact 类型
 - 用 shape name 表达语义：主题或自定义 shape 会破坏持久化语义
 - Decision 保存 outcomes：与 Connector 重复关系真源，并隐式引入 port / topology model
-- Stage 使用 LogicBlockBase compact mode：简单流程步骤会被迫承担 header / section 外壳，富内容 Block 也会失去清晰边界
+- Stage 使用 LogicFrame compact mode：简单流程步骤会被迫承担 header / section 外壳，富内容 Block 也会失去清晰边界
 - Junction 根据连接数量推断 fork / merge：需要全局 edge collection，超出 Standard 局部能力
 
 ## 测试策略摘要
@@ -166,4 +166,4 @@ Decision 不拥有 outcomes、yes / no、branch anchors 或 connector id 列表�
 - Connector / Callout 的字段、routing 与 label
 - 完整 UML activity、BPMN、state machine 或 workflow execution
 - 端口、outcomes、自动分支布局与连接数量验证
-- Process / Class / Data recipe 与 LogicBlockBase section 模型
+- Process / Class / Data recipe 与 LogicFrame section 模型

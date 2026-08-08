@@ -142,7 +142,7 @@
     "layoutContractArtifact": "契约 - 产物",
     "layoutRuntime": "运行时",
     "logic": "逻辑组件",
-    "logicBlock": "LogicBlockBase",
+    "logicFrame": "LogicFrame",
     "semanticUnits": "语义单元",
     "connector": "连接器",
     "callout": "标注",

@@ -2,7 +2,7 @@
 
 > 状态：已完成；ADR-01～06 均为 Accepted
 >
-> 主题：提供可持久化的基础逻辑单元、headless `LogicBlockBase`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
+> 主题：提供可持久化的基础逻辑单元、headless `LogicFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
 > 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [逻辑制图能力域设计](../../../../../../../../notes/architecture/logical-diagram-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
 
@@ -11,16 +11,16 @@
 alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻辑图语义。它同时覆盖两类内容：
 
 1. `Terminal`、`Stage`、`Decision` 与 `Junction` 等轻量逻辑单元
-2. 只规定纵向外壳、区域布局与定位能力的 headless `LogicBlockBase`
+2. 只规定纵向外壳、区域布局与定位能力的 headless `LogicFrame`
 
 `Connector` 与 `Callout` 负责显式局部关系和定位说明，使这些组件可以形成完整逻辑图。它们仍然只是独立 Standard composite，不建立 GraphModel、全局 nodes / edges、Port / Group、拓扑校验、算法布局或编辑器状态。
 
-文档可以基于 `LogicBlockBase` 组合 Process、Class、Data 等内部 recipe，展示输入、配置、伪代码、输出、类成员、schema、context 或 payload。recipe 只属于 retikz 自身示例，不进入任何包的公开出口，也不增加新的持久化 discriminator。
+文档可以基于 `LogicFrame` 组合 Process、Class、Data 等内部 recipe，展示输入、配置、伪代码、输出、类成员、schema、context 或 payload。recipe 只属于 retikz 自身示例，不进入任何包的公开出口，也不增加新的持久化 discriminator。
 
 ## 版本目标
 
 - 以独立 Standard discriminator 持久化 `Terminal`、`Stage`、`Decision` 与 `Junction`，默认形状只是可替换 preset
-- 建立内容 headless、外观中性可用的 `LogicBlockBase`，用任意 `IRChild` 组合 header 与 authored-order sections
+- 建立内容 headless、外观中性可用的 `LogicFrame`，用任意 `IRChild` 组合 header 与 authored-order sections
 - 建立统一的整体 / section target 输入；alpha.3 先以当前 Core 闭环整体 target，带 section 的输入明确 fail-loud，后续随 Core composite-owned structured subtarget 联动接通
 - 支持直线、显式折线、TikZ 风格正交折线、quadratic、cubic 与 bend 曲线
 - 复用 Core layout-aware composite、Path step label、target / anchor、Scope 与 Standard Box Layout 词汇，不建立私有测量、target resolver、路径采样或 renderer 路径
@@ -40,14 +40,14 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 | ADR                                     | 主题                    | 主要决策                                                                           | 依赖                                       | 状态     |
 | --------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ | -------- |
 | [01](./01-logic-diagram-profile.md)     | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Accepted |
-| [02](./02-headless-logic-block-base.md) | Headless LogicBlockBase | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Accepted |
+| [02](./02-headless-logic-frame.md) | Headless LogicFrame | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Accepted |
 | [03](./03-semantic-logic-units.md)      | Semantic Logic Units    | 冻结 Terminal / Stage / Decision / Junction 的统一 content、默认形状与覆盖语义     | ADR-01                                     | Accepted |
 | [04](./04-connector-and-callout.md)     | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Accepted |
 | [05](./05-capability-and-authoring.md)  | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Accepted |
 
 ```text
 01 shared profile
-├─→ 02 LogicBlockBase ─┐
+├─→ 02 LogicFrame ─┐
 └─→ 03 logic units ────┼─→ 04 Connector / Callout
                        └─→ 05 definitions / adapters
 ```
@@ -55,7 +55,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 ## 关键设计不变量
 
 - 逻辑语义存在于 Standard composite 输入；lowering 后的 shape、Path、Scope 与 Scene 不是反向恢复真源
-- `LogicBlockBase` 只理解 header、section、spacing、appearance、bounds 与 target，不理解标题、图标、字段、方法、代码、输入或输出
+- `LogicFrame` 只理解 header、section、spacing、appearance、bounds 与 target，不理解标题、图标、字段、方法、代码、输入或输出
 - section 顺序只由 `sections` authored order 决定；不维护第二份 order，也不使用 `visible: false`
 - 基础逻辑单元全部使用 `content: IRChild`；`Decision` 不拥有 condition 专有字段或 outcome 列表
 - branch 语义只保存在 `Connector`，不同时写入 `Decision`
@@ -66,12 +66,12 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - Connector 整体 target 随 Core pending Path 在 namespace 注册闭合后解析，允许同一可见 namespace 内的前后目标；Callout 复用 authored Scope placement，只读取此前已发布的整体 target，不等待 forward target；带 section 的 target 当前明确拒绝
 - Callout placement 必须显式，不执行碰撞检测或最佳位置搜索
 - Callout side 固定 target / shell 对向 side anchor；gap 沿 outward normal，offset 沿屏幕正 x / y 切向，leader 连接解析后 target anchor 与最终 shell anchor
-- `LogicBlockBase`、基础逻辑单元与 Callout artifact 都使用 strict JSON schema；`LogicLayoutItemArtifact` 去除单一 content 不适用的 key / sourceIndex，`LogicOuterArtifact` 独立合并 shell、content 与 divider / leader，且不改写 alpha.2 `LayoutArtifactContainer` 的 item-union 原义
+- `LogicFrame`、基础逻辑单元与 Callout artifact 都使用 strict JSON schema；`LogicLayoutItemArtifact` 去除单一 content 不适用的 key / sourceIndex，`LogicOuterArtifact` 独立合并 shell、content 与 divider / leader，且不改写 alpha.2 `LayoutArtifactContainer` 的 item-union 原义
 - 任意 child 的测量、失败与 replay 只经过 Core layout-aware contract；SVG / Canvas 不回读布局或路由
 
 ## 用户可观察默认
 
-- `LogicBlockBase` 提供透明背景、`currentColor` 中性边框 / divider、8-unit 默认区域 padding 与圆角，可全部显式覆盖
+- `LogicFrame` 提供透明背景、`currentColor` 中性边框 / divider、8-unit 默认区域 padding 与圆角，可全部显式覆盖
 - 空 header 合法，空 sections 合法，但二者不能同时为空；section key 必须局部唯一
 - `Terminal` 默认使用 start / end 语义与 capsule 外观，`Stage` 默认 rounded rectangle，`Decision` 默认 diamond，`Junction` 默认 dot / bar preset
 - Logic Unit 的 shape-specific 参数只存在于完整 `IRShapeRef.params`；显式 shape 替换不继承旧 preset params，不暴露对部分 shape 静默失效的通用 cornerRadius
@@ -84,7 +84,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 Gate 至少证明：
 
 - 去除 UML、Graph、Flow、Workspace、React、Class、Schema、Context 等领域词后，公开组件仍是可独立消费的 Drawing Complete 能力
-- `LogicBlockBase` 的开放性来自任意 `IRChild` 与显式 appearance，而不是新 Block registry 或 callback
+- `LogicFrame` 的开放性来自任意 `IRChild` 与显式 appearance，而不是新 Block registry 或 callback
 - 语义单元的 discriminator 与默认 shape 分离；替换 shape 后语义和 artifact 不变
 - Connector routing 只组合 Core Path step，未复制 curve / fold 数学，也未建立自动 routing pipeline
 - section target 保留稳定公开输入与 artifact geometry；当前 Core 无结构化 lookup 时 fail-loud，不暴露调用方必须手写的内部 id，也不派生可与 authored id 冲突的扁平字符串
@@ -115,7 +115,7 @@ Gate 至少证明：
 ## 完成标准
 
 - [x] ADR-01～05 完成 test contract、Architecture Gate 与人工确认
-- [x] `LogicBlockBase`、四个基础逻辑单元与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；Connector 的 schema、Definition、同 id Core Path lowering 与 factory 形成闭环
+- [x] `LogicFrame`、四个基础逻辑单元与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；Connector 的 schema、Definition、同 id Core Path lowering 与 factory 形成闭环
 - [x] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
 - [x] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
 - [x] 整体 Block 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud

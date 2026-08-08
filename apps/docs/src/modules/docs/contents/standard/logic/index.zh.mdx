@@ -3,26 +3,26 @@ title: 逻辑组件
 description: 用逻辑块外壳、语义单元、连接器与标注组合出领域无关的逻辑组件。
 ---
 
-Standard Logic 提供一组小而稳定的逻辑图词汇。`LogicBlockBase` 管理可复用外壳与区域；Terminal、Stage、Decision、Junction 表达语义单元；Connector 与 Callout 表达关系和解释。
+Standard Logic 提供一组小而稳定的逻辑图词汇。`LogicFrame` 管理可复用外壳与区域；Terminal、Stage、Decision、Junction 表达语义单元；Connector 与 Callout 表达关系和解释。
 
 这组能力保持领域无关，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或其它 Standard 布局放置单元，再用稳定的 `id` 表达显式 target。
 
 ## 职责一览
 
-| 成员             | 拥有                                              | 不拥有             |
-| ---------------- | ------------------------------------------------- | ------------------ |
-| `LogicBlockBase` | 外壳、header、有序 section 与可复用区域布局       | 图拓扑或自动放置   |
-| 语义单元         | 中性形状、content、尺寸与语义 role                | 领域状态机         |
-| `Connector`      | 一条 Core Path 路由和可选的末步 label             | 自动路由或自动避障 |
-| `Callout`        | 相对 previous target 放置的 content 与可选 leader | 全局标注管理       |
+| 成员         | 拥有                                              | 不拥有             |
+| ------------ | ------------------------------------------------- | ------------------ |
+| `LogicFrame` | 外壳、header、有序 section 与可复用区域布局       | 图拓扑或自动放置   |
+| 语义单元     | 中性形状、content、尺寸与语义 role                | 领域状态机         |
+| `Connector`  | 一条 Core Path 路由和可选的末步 label             | 自动路由或自动避障 |
+| `Callout`    | 相对 previous target 放置的 content 与可选 leader | 全局标注管理       |
 
 所有成员都下沉为既有 Core 图元，可通过 React、直接 JSON/IR 或 Vanilla embed 编写。Definition 按 figure 注入，不进入持久化 JSON。
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/standard/logic/logic-block">
-    <span className="font-semibold">LogicBlockBase</span>
+  <LinkedCard href="/standard/logic/logic-frame">
+    <span className="font-semibold">LogicFrame</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">外壳、header、section 与 FlexLayout 复用</span>
   </LinkedCard>
   <LinkedCard href="/standard/logic/semantic-units">

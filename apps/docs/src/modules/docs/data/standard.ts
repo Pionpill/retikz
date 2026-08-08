@@ -70,7 +70,7 @@ export const standardSection: Array<Section> = [
     label: 'standard.logic',
     document: true,
     pages: [
-      { id: 'logic-block', label: 'standard.logicBlock' },
+      { id: 'logic-frame', label: 'standard.logicFrame' },
       { id: 'semantic-units', label: 'standard.semanticUnits' },
       { id: 'connector', label: 'standard.connector' },
       { id: 'callout', label: 'standard.callout' },

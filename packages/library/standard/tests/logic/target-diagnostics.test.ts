@@ -16,8 +16,8 @@ const sceneOf = (children: ReadonlyArray<IRChild>): { version: 1; type: 'scene';
 });
 
 const sectionTarget = (section: string): Standard.LogicDiagramPointInput => ({
-  kind: 'logicBlock',
-  id: 'logic-block-target',
+  kind: 'logicFrame',
+  id: 'logic-frame-target',
   section,
 });
 
@@ -110,7 +110,7 @@ describe('Connector target diagnostics', () => {
     });
     const wholeBlock = Standard.createConnector({
       id: 'whole-block-target-mapping',
-      from: { kind: 'logicBlock', id: 'logic-block-target', anchor: 'bottom', offset: [6, 3] },
+      from: { kind: 'logicFrame', id: 'logic-frame-target', anchor: 'bottom', offset: [6, 3] },
       to: [100, 0],
     });
     const ordinaryPath = lowerCanonicalConnector(ordinary).find((child): child is IRPathBase => child.type === 'path');
@@ -124,22 +124,22 @@ describe('Connector target diagnostics', () => {
     });
     expect(wholeBlockPath?.children?.[0]).toMatchObject({
       kind: 'move',
-      to: { id: 'logic-block-target', anchor: 'bottom', offset: [6, 3] },
+      to: { id: 'logic-frame-target', anchor: 'bottom', offset: [6, 3] },
     });
     expect(wholeBlockPath?.children?.[0]).not.toHaveProperty('to.kind');
   });
 
-  it('keeps a whole LogicBlock target shape distinct from a section target', () => {
+  it('keeps a whole LogicFrame target shape distinct from a section target', () => {
     const connector = Standard.createConnector({
       id: 'whole-block-target',
-      from: { kind: 'logicBlock', id: 'logic-block-target' },
+      from: { kind: 'logicFrame', id: 'logic-frame-target' },
       to: [100, 0],
     });
 
     expect(() => lowerCanonicalConnector(connector)).not.toThrow();
     const lowered = lowerCanonicalConnector(connector);
     const path = lowered.find((child): child is IRPathBase => child.type === 'path');
-    expect(path?.children?.[0]).toMatchObject({ kind: 'move', to: { id: 'logic-block-target' } });
+    expect(path?.children?.[0]).toMatchObject({ kind: 'move', to: { id: 'logic-frame-target' } });
   });
 });
 
@@ -148,8 +148,8 @@ describe('Callout target diagnostics', () => {
     expect(Standard.CalloutDefinition, 'production mutation required: CalloutDefinition').toBeDefined();
   });
 
-  it('resolves a previous whole LogicBlock target through authored Scope placement', () => {
-    const block = Standard.createLogicBlockBase({
+  it('resolves a previous whole LogicFrame target through authored Scope placement', () => {
+    const block = Standard.createLogicFrame({
       id: 'callout-previous-block',
       sections: [{ key: 'body', child: calloutNode('callout-block-content') }],
     });
@@ -158,12 +158,12 @@ describe('Callout target diagnostics', () => {
         block,
         Standard.createCallout({
           id: 'callout-previous-success',
-          target: { kind: 'logicBlock', id: block.id },
+          target: { kind: 'logicFrame', id: block.id },
           content: calloutNode('callout-previous-content'),
           placement: { side: 'right' },
         }),
       ],
-      [Standard.LogicBlockBaseDefinition],
+      [Standard.LogicFrameDefinition],
     );
 
     expect(
@@ -216,7 +216,7 @@ describe('Callout target diagnostics', () => {
       children: [
         Standard.createCallout({
           id: 'callout-section-target',
-          target: { kind: 'logicBlock', id: 'section-target-block', section: 'body' },
+          target: { kind: 'logicFrame', id: 'section-target-block', section: 'body' },
           content: calloutNode('section-target-content'),
           placement: { side: 'top' },
         }),

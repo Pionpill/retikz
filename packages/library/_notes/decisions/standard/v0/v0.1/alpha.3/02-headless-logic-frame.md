@@ -1,4 +1,4 @@
-# ADR-02：Headless LogicBlockBase
+# ADR-02：Headless LogicFrame
 
 - 状态：Accepted（2026-08-08，人工确认）
 - 决策日期：2026-08-01
@@ -8,11 +8,11 @@
 
 逻辑图经常需要比单行流程节点更丰富的内容，例如输入、配置、伪代码、输出、类成员、schema、context 与 payload。为每一种内容建立封闭 Standard schema 会把软件设计术语和业务模型固化进绘图库；只接受一个自由 Scope 又会丢失统一外框、纵向区域、约束布局、section identity 与定位能力。
 
-本 ADR 建立内容 headless、外观中性可用的 `LogicBlockBase`。Standard 只提供框、header、authored-order sections、spacing、appearance、target 与 artifact，不解释任何 child 的内部含义。
+本 ADR 建立内容 headless、外观中性可用的 `LogicFrame`。Standard 只提供框、header、authored-order sections、spacing、appearance、target 与 artifact，不解释任何 child 的内部含义。
 
 ## 决策：固定纵向外壳，内容完全由 IRChild 组合
 
-`LogicBlockBase` 是公开、可持久化的 layout-aware composite。header 与每个 section 都只接收任意 JSON-safe `IRChild`；Process、Class、Data 等结构只作为 docs 内部 recipe 组合，不形成公开 discriminator 或 schema。
+`LogicFrame` 是公开、可持久化的 layout-aware composite。header 与每个 section 都只接收任意 JSON-safe `IRChild`；Process、Class、Data 等结构只作为 docs 内部 recipe 组合，不形成公开 discriminator 或 schema。
 
 理由：
 
@@ -23,17 +23,17 @@
 ## 基础数据结构与公开契约
 
 ```ts
-type LogicBlockRegionInput = {
+type LogicFrameRegionInput = {
   child: IRChild;
   padding?: number | IRBoxSpacing;
 };
 
-type LogicBlockSectionInput = LogicBlockRegionInput & {
+type LogicFrameSectionInput = LogicFrameRegionInput & {
   key: string;
   role?: string;
 };
 
-type LogicBlockAppearanceInput = {
+type LogicFrameAppearanceInput = {
   style?: IRDrawableStyle;
   cornerRadius?: number;
   dashPattern?: IRPathBase['dashPattern'];
@@ -55,27 +55,27 @@ type LogicOutlineAppearanceInput = Pick<
   | 'lineJoin'
 >;
 
-type LogicBlockBaseInput = {
+type LogicFrameInput = {
   id: string;
-  header?: LogicBlockRegionInput;
-  sections: Array<LogicBlockSectionInput>;
+  header?: LogicFrameRegionInput;
+  sections: Array<LogicFrameSectionInput>;
   size?: LayoutSizeInput;
   padding?: number | IRBoxSpacing;
   rowGap?: number;
   overflow?: 'visible' | 'clip';
-  appearance?: LogicBlockAppearanceInput;
+  appearance?: LogicFrameAppearanceInput;
 };
 ```
 
 `padding` 是所有 region 的默认内部 padding；header / section 自身的 padding 可以覆盖它，不再叠加第二层 outer padding。`sections` 的数组顺序是唯一布局与 paint 顺序。省略 section 表示不创建该区域，不提供 `visible` 字段或独立 order。
 
-canonical IR 显式包含 `namespace: 'standard'`、`type: 'logicBlockBase'` 与 schema defaults。Factory、React 与 Vanilla 必须经过同一 schema 得到 canonical IR。
+canonical IR 显式包含 `namespace: 'standard'`、`type: 'logicFrame'` 与 schema defaults。Factory、React 与 Vanilla 必须经过同一 schema 得到 canonical IR。
 
 typed artifact 的完整公开形态为：
 
 ```ts
-type LogicBlockBaseArtifact = {
-  kind: 'logicBlockBase';
+type LogicFrameArtifact = {
+  kind: 'logicFrame';
   id: string;
   outer: LogicOuterArtifact;
   container: LayoutArtifactContainer;
@@ -111,8 +111,8 @@ artifact 使用 strict JSON schema；所有 rect 与 translation 都沿用 alpha
 
 - 默认行为：组件开箱可见但不携带领域样式；所有 appearance 字段可显式覆盖，header / section child 对自身内容与内部视觉负责
 - 失败与诊断：空 Block、重复 key、负 spacing、非法 size / overflow 在输入阶段拒绝；缺失 child definition、无法解析引用或 probe failure 在 compile 阶段 fail-loud
-- 兼容性：新增 composite，不改变 Frame、FlexLayout、GridLayout 或 OverlayLayout；不把 Frame 迁成 LogicBlockBase
-- React / Vanilla 等价性：React authoring 可以用 marker children 表达 header / section，Vanilla 与直接 IR 使用 plain input；三者必须得到同一 canonical `IRLogicBlockBase`
+- 兼容性：新增 composite，不改变 Frame、FlexLayout、GridLayout 或 OverlayLayout；不把 Frame 迁成 LogicFrame
+- React / Vanilla 等价性：React authoring 可以用 marker children 表达 header / section，Vanilla 与直接 IR 使用 plain input；三者必须得到同一 canonical `IRLogicFrame`
 
 ## 功能与包边界
 
@@ -121,13 +121,13 @@ artifact 使用 strict JSON schema；所有 rect 与 translation 都沿用 alpha
 - 拥有：纵向 region 语义组合、默认外框、section identity、整体 / section bounds、整体 target 与未来 structured section target 的稳定输入
 - 不拥有：header / section 内部模型、Process / Class / Data schema、syntax highlighting、业务 category、Graph port 或交互状态
 - 外部扩展与下游闭环：任意注册 Core / Tier 2 composite 都可作为 child；未知 role 保留；appearance 显式覆盖
-- 不支持边界：需要自定义非纵向外壳时直接组合 Flex / Grid / Overlay / Frame，不为 LogicBlockBase 增加 layout registry
+- 不支持边界：需要自定义非纵向外壳时直接组合 Flex / Grid / Overlay / Frame，不为 LogicFrame 增加 layout registry
 
 ## 架构验证
 
-- 是否可由现有能力组合：FlexLayout 提供 canonical region 排列，LogicBlockBase 只补稳定 header / section identity、统一外框、整体 target 与 Block artifact；structured section target 等待 Core owner 补齐
+- 是否可由现有能力组合：FlexLayout 提供 canonical region 排列，LogicFrame 只补稳定 header / section identity、统一外框、整体 target 与 Block artifact；structured section target 等待 Core owner 补齐
 - 责任切分：Standard 组合 Box contract 与外框；Core 测量 / replay；renderer 只绘制降低后的 Node / Path / Scope
-- 是否需要新 IR / contract / registry：新增 `standard.logicBlockBase` schema 与 CompositeDefinition；content 扩展完全复用 `IRChild`，不增加 Block registry
+- 是否需要新 IR / contract / registry：新增 `standard.logicFrame` schema 与 CompositeDefinition；content 扩展完全复用 `IRChild`，不增加 Block registry
 - pipeline / lowering / renderer / diagnostics 如何闭环：canonical IR → layout-aware definition → Core children + typed artifact → Scene；所有失败沿 Core layout failure
 - provenance / locator 是否适用：Block id、section key、role 与 occurrence 提供 locator join；child provenance 仍由 child owner 保存
 - 结论：扩展 Standard，组合 alpha.2 Box 与 Core layout-aware contract

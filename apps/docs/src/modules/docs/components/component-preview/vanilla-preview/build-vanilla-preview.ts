@@ -27,8 +27,8 @@ import {
   JunctionSchema,
   LegendDefinition,
   LegendSchema,
-  LogicBlockBaseDefinition,
-  LogicBlockBaseSchema,
+  LogicFrameDefinition,
+  LogicFrameSchema,
   OverlayLayoutDefinition,
   OverlayLayoutSchema,
   StageDefinition,
@@ -57,8 +57,8 @@ import {
   JunctionVanillaAdapter,
   legend,
   LegendVanillaAdapter,
-  logicBlockBase,
-  LogicBlockBaseVanillaAdapter,
+  logicFrame,
+  LogicFrameVanillaAdapter,
   overlayLayout,
   OverlayLayoutVanillaAdapter,
   stage,
@@ -129,7 +129,7 @@ type StandardKind =
   | 'gridLayout'
   | 'overlayLayout'
   | 'legend'
-  | 'logicBlockBase'
+  | 'logicFrame'
   | 'terminal'
   | 'stage'
   | 'decision'
@@ -146,8 +146,8 @@ type StandardConversionState = {
 
 const standardCanonicalId = (kind: StandardKind, embedId: string): string => {
   switch (kind) {
-    case 'logicBlockBase':
-      return `${embedId}/logicBlockBase`;
+    case 'logicFrame':
+      return `${embedId}/logicFrame`;
     case 'terminal':
       return `${embedId}/terminal`;
     case 'stage':
@@ -176,7 +176,7 @@ const nextStandardId = (kind: StandardKind, state: StandardConversionState, auth
     state.ids.set(authoredId, generatedId);
     state.ids.set(generatedId, generatedId);
     if (
-      kind === 'logicBlockBase' ||
+      kind === 'logicFrame' ||
       kind === 'terminal' ||
       kind === 'stage' ||
       kind === 'decision' ||
@@ -239,7 +239,7 @@ const registerStandardIds = (children: ReadonlyArray<IRChild>, state: StandardCo
             'gridLayout',
             'overlayLayout',
             'legend',
-            'logicBlockBase',
+            'logicFrame',
             'terminal',
             'stage',
             'decision',
@@ -308,12 +308,12 @@ const convertStandardChild = (child: IRChild, state: StandardConversionState): V
         void _type;
         return legend(nextStandardId('legend', state, childId), input);
       }
-      case 'logicBlockBase': {
-        const { namespace: _namespace, type: _type, id: _id, ...input } = LogicBlockBaseSchema.parse(child);
+      case 'logicFrame': {
+        const { namespace: _namespace, type: _type, id: _id, ...input } = LogicFrameSchema.parse(child);
         void _namespace;
         void _type;
         void _id;
-        return logicBlockBase(nextStandardId('logicBlockBase', state, childId), input);
+        return logicFrame(nextStandardId('logicFrame', state, childId), input);
       }
       case 'terminal': {
         const { namespace: _namespace, type: _type, id: _id, ...input } = TerminalSchema.parse(child);
@@ -393,7 +393,7 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
   ...(state.adapters.has('gridLayout') ? [GridLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('overlayLayout') ? [OverlayLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('legend') ? [LegendVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('logicBlockBase') ? [LogicBlockBaseVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('logicFrame') ? [LogicFrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('terminal') ? [TerminalVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('stage') ? [StageVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('decision') ? [DecisionVanillaAdapter as AnyVanillaTier2Adapter] : []),
@@ -410,7 +410,7 @@ const definitionByName = {
   GridLayoutDefinition,
   OverlayLayoutDefinition,
   LegendDefinition,
-  LogicBlockBaseDefinition,
+  LogicFrameDefinition,
   TerminalDefinition,
   StageDefinition,
   DecisionDefinition,
@@ -429,7 +429,7 @@ const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
       gridLayout: 0,
       overlayLayout: 0,
       legend: 0,
-      logicBlockBase: 0,
+      logicFrame: 0,
       terminal: 0,
       stage: 0,
       decision: 0,

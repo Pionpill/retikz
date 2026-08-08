@@ -54,7 +54,7 @@ describe('@retikz/standard root exports', () => {
 
   it('keeps composite compiler helpers package-private', () => {
     expect(standardExports).not.toHaveProperty('compileFlexLayout');
-    expect(standardExports).not.toHaveProperty('compileLogicBlockBase');
+    expect(standardExports).not.toHaveProperty('compileLogicFrame');
     expect(standardExports).not.toHaveProperty('compileTerminal');
     expect(standardExports).not.toHaveProperty('compileStage');
     expect(standardExports).not.toHaveProperty('compileDecision');

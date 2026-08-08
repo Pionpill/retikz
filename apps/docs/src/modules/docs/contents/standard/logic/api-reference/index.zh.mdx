@@ -7,17 +7,17 @@ Standard Logic 按职责拆分 API：`@retikz/standard` 拥有 canonical JSON �
 
 ## 公开导出
 
-| Composite      | Schema / IR                                | Factory 与 Definition                              | React                                                     | Vanilla                                          |
-| -------------- | ------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
-| LogicBlockBase | `LogicBlockBaseSchema`、`IRLogicBlockBase` | `createLogicBlockBase`、`LogicBlockBaseDefinition` | `LogicBlockBase`、`LogicBlockHeader`、`LogicBlockSection` | `logicBlockBase`、`LogicBlockBaseVanillaAdapter` |
-| Terminal       | `TerminalSchema`、`IRTerminal`             | `createTerminal`、`TerminalDefinition`             | `Terminal`                                                | `terminal`、`TerminalVanillaAdapter`             |
-| Stage          | `StageSchema`、`IRStage`                   | `createStage`、`StageDefinition`                   | `Stage`                                                   | `stage`、`StageVanillaAdapter`                   |
-| Decision       | `DecisionSchema`、`IRDecision`             | `createDecision`、`DecisionDefinition`             | `Decision`                                                | `decision`、`DecisionVanillaAdapter`             |
-| Junction       | `JunctionSchema`、`IRJunction`             | `createJunction`、`JunctionDefinition`             | `Junction`                                                | `junction`、`JunctionVanillaAdapter`             |
-| Connector      | `ConnectorSchema`、`IRConnector`           | `createConnector`、`ConnectorDefinition`           | `Connector`                                               | `connector`、`ConnectorVanillaAdapter`           |
-| Callout        | `CalloutSchema`、`IRCallout`               | `createCallout`、`CalloutDefinition`               | `Callout`                                                 | `callout`、`CalloutVanillaAdapter`               |
+| Composite  | Schema / IR                        | Factory 与 Definition                      | React                                                 | Vanilla                                  |
+| ---------- | ---------------------------------- | ------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
+| LogicFrame | `LogicFrameSchema`、`IRLogicFrame` | `createLogicFrame`、`LogicFrameDefinition` | `LogicFrame`、`LogicFrameHeader`、`LogicFrameSection` | `logicFrame`、`LogicFrameVanillaAdapter` |
+| Terminal   | `TerminalSchema`、`IRTerminal`     | `createTerminal`、`TerminalDefinition`     | `Terminal`                                            | `terminal`、`TerminalVanillaAdapter`     |
+| Stage      | `StageSchema`、`IRStage`           | `createStage`、`StageDefinition`           | `Stage`                                               | `stage`、`StageVanillaAdapter`           |
+| Decision   | `DecisionSchema`、`IRDecision`     | `createDecision`、`DecisionDefinition`     | `Decision`                                            | `decision`、`DecisionVanillaAdapter`     |
+| Junction   | `JunctionSchema`、`IRJunction`     | `createJunction`、`JunctionDefinition`     | `Junction`                                            | `junction`、`JunctionVanillaAdapter`     |
+| Connector  | `ConnectorSchema`、`IRConnector`   | `createConnector`、`ConnectorDefinition`   | `Connector`                                           | `connector`、`ConnectorVanillaAdapter`   |
+| Callout    | `CalloutSchema`、`IRCallout`       | `createCallout`、`CalloutDefinition`       | `Callout`                                             | `callout`、`CalloutVanillaAdapter`       |
 
-同时导出 `LogicBlockBase`、Terminal、Stage、Decision、Junction 与 Callout 的 typed compile result artifact schema。Connector 是 expansion composite，只输出 Core Path，明确没有 typed Connector artifact schema。
+同时导出 `LogicFrame`、Terminal、Stage、Decision、Junction 与 Callout 的 typed compile result artifact schema。Connector 是 expansion composite，只输出 Core Path，明确没有 typed Connector artifact schema。
 
 ## 直接注入 Definition
 
@@ -34,21 +34,21 @@ const compile = {
 compileToScene(scene, compile);
 ```
 
-嵌套 Standard child 遵循同一规则。包含 `Stage` 的 `LogicBlockBase` 需要两个 Definition；只有 Core child 时不需要 Standard Definition。
+嵌套 Standard child 遵循同一规则。包含 `Stage` 的 `LogicFrame` 需要两个 Definition；只有 Core child 时不需要 Standard Definition。
 
 ## Vanilla canonical identity
 
 Vanilla embed 的 authoring identity 与 canonical composite identity 分离。adapter 会追加稳定 suffix：
 
-| Builder                          | Canonical id           |
-| -------------------------------- | ---------------------- |
-| `terminal('start', input)`       | `start/terminal`       |
-| `stage('step', input)`           | `step/stage`           |
-| `decision('check', input)`       | `check/decision`       |
-| `junction('join', input)`        | `join/junction`        |
-| `connector('edge', input)`       | `edge/connector`       |
-| `callout('note', input)`         | `note/callout`         |
-| `logicBlockBase('block', input)` | `block/logicBlockBase` |
+| Builder                      | Canonical id       |
+| ---------------------------- | ------------------ |
+| `terminal('start', input)`   | `start/terminal`   |
+| `stage('step', input)`       | `step/stage`       |
+| `decision('check', input)`   | `check/decision`   |
+| `junction('join', input)`    | `join/junction`    |
+| `connector('edge', input)`   | `edge/connector`   |
+| `callout('note', input)`     | `note/callout`     |
+| `logicFrame('block', input)` | `block/logicFrame` |
 
 Connector 与 Callout target 应使用 canonical 值。例如 Vanilla `terminal('start', ...)` 的 target 应为 `{ id: 'start/terminal' }`，而不是 `{ id: 'start' }`。
 

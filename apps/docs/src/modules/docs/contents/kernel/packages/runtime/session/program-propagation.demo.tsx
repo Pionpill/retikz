@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** 同一条 Program DAG 依赖边按上游 outcome 选择下游执行或复用 */
 const Demo: FC = () => (
   <Layout width={520} height={330} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="upstream-outcomes">
-      <LogicFrameTitle>Upstream outcome</LogicFrameTitle>
+    <LogicFigureFrame id="upstream-outcomes">
+      <LogicFigureFrameTitle>Upstream outcome</LogicFigureFrameTitle>
       <Node
         id="incremental"
         position={[-130, -105]}
@@ -57,10 +57,10 @@ const Demo: FC = () => (
       >
         no dependency change
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="dependent-actions">
-      <LogicFrameTitle>Dependent branch</LogicFrameTitle>
+    <LogicFigureFrame id="dependent-actions">
+      <LogicFigureFrameTitle>Dependent branch</LogicFigureFrameTitle>
       <Node
         id="update"
         position={[130, -105]}
@@ -109,7 +109,7 @@ const Demo: FC = () => (
       >
         reuse current artifact
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Draw
       way={[

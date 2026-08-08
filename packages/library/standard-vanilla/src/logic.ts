@@ -3,7 +3,7 @@ import type {
   ConnectorInput,
   DecisionInput,
   JunctionInput,
-  LogicBlockBaseInput,
+  LogicFrameInput,
   StageInput,
   TerminalInput,
 } from '@retikz/standard';
@@ -16,12 +16,12 @@ import {
   createConnector,
   createDecision,
   createJunction,
-  createLogicBlockBase,
+  createLogicFrame,
   createStage,
   createTerminal,
   DecisionDefinition,
   JunctionDefinition,
-  LogicBlockBaseDefinition,
+  LogicFrameDefinition,
   StageDefinition,
   TerminalDefinition,
 } from '@retikz/standard';
@@ -31,13 +31,13 @@ import {
   StandardConnectorVanillaNamespace,
   StandardDecisionVanillaNamespace,
   StandardJunctionVanillaNamespace,
-  StandardLogicBlockBaseVanillaNamespace,
+  StandardLogicFrameVanillaNamespace,
   StandardStageVanillaNamespace,
   StandardTerminalVanillaNamespace,
 } from './constants';
 
-/** LogicBlockBase 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type LogicBlockBaseVanillaInput = Omit<LogicBlockBaseInput, 'id'>;
+/** LogicFrame 的 Vanilla 构建器输入，embed id 提供稳定身份 */
+export type LogicFrameVanillaInput = Omit<LogicFrameInput, 'id'>;
 
 /** Terminal 的 Vanilla 构建器输入，embed id 提供稳定身份 */
 export type TerminalVanillaInput = Omit<TerminalInput, 'id'>;
@@ -58,7 +58,7 @@ export type ConnectorVanillaInput = Omit<ConnectorInput, 'id'>;
 /** Callout 的 Vanilla 构建器输入，embed id 提供稳定身份 */
 export type CalloutVanillaInput = Omit<CalloutInput, 'id'>;
 
-const makeLogicBlockBaseComposites = () => [LogicBlockBaseDefinition];
+const makeLogicFrameComposites = () => [LogicFrameDefinition];
 const makeTerminalComposites = () => [TerminalDefinition];
 const makeStageComposites = () => [StageDefinition];
 const makeDecisionComposites = () => [DecisionDefinition];
@@ -66,24 +66,21 @@ const makeJunctionComposites = () => [JunctionDefinition];
 const makeConnectorComposites = () => [ConnectorDefinition];
 const makeCalloutComposites = () => [CalloutDefinition];
 
-/** Standard LogicBlockBase 的 Vanilla 适配器 */
-export const LogicBlockBaseVanillaAdapter: VanillaTier2Adapter<LogicBlockBaseVanillaInput> = {
-  kind: StandardLogicBlockBaseVanillaNamespace,
-  namespace: StandardLogicBlockBaseVanillaNamespace,
+/** Standard LogicFrame 的 Vanilla 适配器 */
+export const LogicFrameVanillaAdapter: VanillaTier2Adapter<LogicFrameVanillaInput> = {
+  kind: StandardLogicFrameVanillaNamespace,
+  namespace: StandardLogicFrameVanillaNamespace,
   lower: (props, context) => ({
-    node: createLogicBlockBase({ ...props, id: `${context.id}/logicBlockBase` }),
+    node: createLogicFrame({ ...props, id: `${context.id}/logicFrame` }),
     datasets: {},
-    makeComposites: makeLogicBlockBaseComposites,
+    makeComposites: makeLogicFrameComposites,
   }),
 };
 
-/** 创建 Standard LogicBlockBase 的 Vanilla embed 节点 */
-export const logicBlockBase = (
-  id: string,
-  input: LogicBlockBaseVanillaInput,
-): VanillaEmbedSpec<LogicBlockBaseVanillaInput> => ({
+/** 创建 Standard LogicFrame 的 Vanilla embed 节点 */
+export const logicFrame = (id: string, input: LogicFrameVanillaInput): VanillaEmbedSpec<LogicFrameVanillaInput> => ({
   type: 'embed',
-  kind: StandardLogicBlockBaseVanillaNamespace,
+  kind: StandardLogicFrameVanillaNamespace,
   id,
   props: input,
 });

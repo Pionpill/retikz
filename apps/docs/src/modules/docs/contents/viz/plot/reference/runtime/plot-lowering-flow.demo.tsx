@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Plot 主 lowering 与 lineage、locator 独立运行路径的关系 */
 const Demo: FC = () => (
@@ -24,8 +24,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="plot-lowering">
-      <LogicFrameTitle>@retikz/plot</LogicFrameTitle>
+    <LogicFigureFrame id="plot-lowering">
+      <LogicFigureFrameTitle>@retikz/plot</LogicFigureFrameTitle>
       <Node
         id="prepare"
         position={[-150, -10]}
@@ -58,10 +58,10 @@ const Demo: FC = () => (
           transform · frame · marks
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
-    <LogicFrame id="core-compile">
-      <LogicFrameTitle>@retikz/core</LogicFrameTitle>
+    <LogicFigureFrame id="core-compile">
+      <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       <Node
         id="core-ir"
         position={[195, -10]}
@@ -94,7 +94,7 @@ const Demo: FC = () => (
           compile output
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="runtime-queries"

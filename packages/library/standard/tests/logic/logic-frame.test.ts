@@ -30,8 +30,8 @@ type LayoutItemArtifact = Readonly<{
   }>;
 }>;
 
-type LogicBlockArtifact = Readonly<{
-  kind: 'logicBlockBase';
+type LogicFrameArtifact = Readonly<{
+  kind: 'logicFrame';
   id: string;
   outer: Readonly<{
     allocationBounds: Rect;
@@ -50,10 +50,10 @@ type LogicBlockArtifact = Readonly<{
   dividerVisualBounds: ReadonlyArray<Rect>;
 }>;
 
-const blockDefinitionOf = (): AnyCompositeDefinition => Standard.LogicBlockBaseDefinition;
+const blockDefinitionOf = (): AnyCompositeDefinition => Standard.LogicFrameDefinition;
 
-const blockArtifactOf = (value: unknown): LogicBlockArtifact => {
-  return Standard.LogicBlockBaseArtifactSchema.parse(value);
+const blockArtifactOf = (value: unknown): LogicFrameArtifact => {
+  return Standard.LogicFrameArtifactSchema.parse(value);
 };
 
 const child = (id: string, width = 24, height = 14): IRChild =>
@@ -86,16 +86,16 @@ const compileBlock = (
   records: Array<{ id: string; proposal: LayoutProposal }> = [],
 ) => {
   const result = compileInHarness(block, proposal, [blockDefinitionOf(), createProbeLeafDefinition(records)]);
-  return { ...result, artifact: blockArtifactOf(compositeArtifact(result.output, 'logicBlockBase').value) };
+  return { ...result, artifact: blockArtifactOf(compositeArtifact(result.output, 'logicFrame').value) };
 };
 
-const block = (input: Parameters<typeof Standard.createLogicBlockBase>[0]) => Standard.createLogicBlockBase(input);
+const block = (input: Parameters<typeof Standard.createLogicFrame>[0]) => Standard.createLogicFrame(input);
 
 const section = (
   key: string,
   id: string,
   options: Parameters<typeof child>[1] = 24,
-): Standard.LogicBlockSectionInput => ({
+): Standard.LogicFrameSectionInput => ({
   key,
   child: child(id, options),
 });
@@ -103,13 +103,10 @@ const section = (
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'group' }>> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
-describe('LogicBlockBase layout and artifact contract', () => {
+describe('LogicFrame layout and artifact contract', () => {
   beforeAll(() => {
-    expect(Standard.LogicBlockBaseDefinition, 'production mutation required: LogicBlockBaseDefinition').toBeDefined();
-    expect(
-      Standard.LogicBlockBaseArtifactSchema,
-      'production mutation required: LogicBlockBaseArtifactSchema',
-    ).toBeDefined();
+    expect(Standard.LogicFrameDefinition, 'production mutation required: LogicFrameDefinition').toBeDefined();
+    expect(Standard.LogicFrameArtifactSchema, 'production mutation required: LogicFrameArtifactSchema').toBeDefined();
   });
 
   it('keeps header optional, preserves authored section order, and rejects empty or duplicate sections', () => {
@@ -126,17 +123,15 @@ describe('LogicBlockBase layout and artifact contract', () => {
     expect(headerArtifact.sections).toEqual([]);
     expect(sectionsArtifact.header).toBeNull();
     expect(sectionsArtifact.sections.map(item => item.key)).toEqual(['first', 'second']);
+    expect(() => Standard.LogicFrameSchema.parse({ namespace: 'standard', type: 'logicFrame', id: 'empty' })).toThrow();
     expect(() =>
-      Standard.LogicBlockBaseSchema.parse({ namespace: 'standard', type: 'logicBlockBase', id: 'empty' }),
-    ).toThrow();
-    expect(() =>
-      Standard.LogicBlockBaseSchema.parse({
+      Standard.LogicFrameSchema.parse({
         namespace: 'standard',
-        type: 'logicBlockBase',
+        type: 'logicFrame',
         id: 'duplicate',
         sections: [section('same', 'same-a'), section('same', 'same-b')],
       }),
-    ).toThrow(/Duplicate LogicBlockBase section key/);
+    ).toThrow(/Duplicate LogicFrame section key/);
   });
 
   it.each([
@@ -319,12 +314,12 @@ describe('LogicBlockBase layout and artifact contract', () => {
     expect(result.artifact.sections[0].geometry.allocationBounds.width).toBe(20);
   });
 
-  it('supports nested LogicBlockBase children through the same public definition registry', () => {
+  it('supports nested LogicFrame children through the same public definition registry', () => {
     const inner = block({ id: 'nested-inner', padding: 0, sections: [section('inner', 'nested-leaf', 12)] });
     const outer = block({ id: 'nested-outer', padding: 0, sections: [{ key: 'body', child: inner }] });
     const output = compileRoot(outer);
     const artifacts = output.artifacts
-      .filter(value => value.kind === 'composite' && value.namespace === 'standard' && value.type === 'logicBlockBase')
+      .filter(value => value.kind === 'composite' && value.namespace === 'standard' && value.type === 'logicFrame')
       .map(value => blockArtifactOf(value.value));
 
     expect(artifacts.map(value => value.id)).toEqual(expect.arrayContaining(['nested-inner', 'nested-outer']));
@@ -420,8 +415,8 @@ describe('LogicBlockBase layout and artifact contract', () => {
       }),
     );
     const artifact = result.artifact;
-    const schema = Standard.LogicBlockBaseArtifactSchema;
-    expect(artifact.kind).toBe('logicBlockBase');
+    const schema = Standard.LogicFrameArtifactSchema;
+    expect(artifact.kind).toBe('logicFrame');
     expect(artifact.id).toBe('block-artifact');
     expect(artifact.header).not.toBeNull();
     expect(artifact.sections.map(value => [value.key, value.role])).toEqual([

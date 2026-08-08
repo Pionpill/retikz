@@ -1,7 +1,7 @@
 /** Standard 逻辑复合组件的固定判别值 */
 export const LogicCompositeType = {
   /** 无头部的垂直逻辑块 */
-  LogicBlockBase: 'logicBlockBase',
+  LogicFrame: 'logicFrame',
   /** 流程起始或结束单元 */
   Terminal: 'terminal',
   /** 流程步骤单元 */

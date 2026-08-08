@@ -66,7 +66,7 @@ const adapters = [CalloutVanillaAdapter];
 
 ### 放置
 
-Callout target 是 previous-only：执行 Callout 放置时，target 必须已经有解析后的 authored occurrence。支持 whole target（`{ id: 'step' }`）。LogicBlockBase section target（`{ kind: 'logicBlock', id: 'block', section: 'body' }`）虽在 schema 中存在，但当前会在放置前 fail-loud；请使用 whole block target。`leader={false}` 会关闭 leader；否则一次 Core Path probe/replay 从 callout allocation 连接到 target。
+Callout target 是 previous-only：执行 Callout 放置时，target 必须已经有解析后的 authored occurrence。支持 whole target（`{ id: 'step' }`）。LogicFrame section target（`{ kind: 'logicFrame', id: 'block', section: 'body' }`）虽在 schema 中存在，但当前会在放置前 fail-loud；请使用 whole block target。`leader={false}` 会关闭 leader；否则一次 Core Path probe/replay 从 callout allocation 连接到 target。
 
 ## API 参考
 
@@ -83,5 +83,5 @@ Callout target 是 previous-only：执行 Callout 放置时，target 必须已�
 
 - [语义单元](/standard/logic/semantic-units)：可被 target 的单元
 - [Connector](/standard/logic/connector)：显式图关系
-- [LogicBlockBase](/standard/logic/logic-block)：whole-block target 与 section
+- [LogicFrame](/standard/logic/logic-frame)：whole-block target 与 section
 - [逻辑 API 参考](/standard/logic/api-reference)：schema 与 Definition 装载

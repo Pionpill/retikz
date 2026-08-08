@@ -8,14 +8,14 @@ import {
   createConnector,
   createDecision,
   createJunction,
-  createLogicBlockBase,
+  createLogicFrame,
   createStage,
   createTerminal,
   DecisionSchema,
   JunctionSchema,
-  LogicBlockBaseSchema,
   LogicDiagramPointSchema,
   LogicDiagramTargetSchema,
+  LogicFrameSchema,
   StageSchema,
   TerminalSchema,
 } from '../../src';
@@ -28,7 +28,7 @@ const expectRoundTrip = (schema: { parse: (value: unknown) => unknown }, value: 
 
 describe('logic composite schemas', () => {
   it('canonicalizes all seven discriminators and their neutral defaults', () => {
-    const logicBlock = createLogicBlockBase({
+    const logicFrame = createLogicFrame({
       id: 'block',
       sections: [{ key: 'body', child }],
     });
@@ -45,11 +45,11 @@ describe('logic composite schemas', () => {
     });
 
     expect(
-      [logicBlock, terminal, stage, decision, junction, connector, callout].map(
+      [logicFrame, terminal, stage, decision, junction, connector, callout].map(
         value => `${value.namespace}.${value.type}`,
       ),
     ).toEqual([
-      'standard.logicBlockBase',
+      'standard.logicFrame',
       'standard.terminal',
       'standard.stage',
       'standard.decision',
@@ -58,9 +58,9 @@ describe('logic composite schemas', () => {
       'standard.callout',
     ]);
 
-    expect(logicBlock).toMatchObject({
+    expect(logicFrame).toMatchObject({
       namespace: 'standard',
-      type: 'logicBlockBase',
+      type: 'logicFrame',
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
       padding: 8,
       rowGap: 0,
@@ -110,7 +110,7 @@ describe('logic composite schemas', () => {
     });
     expect(callout).toMatchObject({ placement: { side: 'right', gap: 8, offset: 0 } });
 
-    expectRoundTrip(LogicBlockBaseSchema, logicBlock);
+    expectRoundTrip(LogicFrameSchema, logicFrame);
     expectRoundTrip(TerminalSchema, terminal);
     expectRoundTrip(StageSchema, stage);
     expectRoundTrip(DecisionSchema, decision);
@@ -204,8 +204,8 @@ describe('logic composite schemas', () => {
     });
   });
 
-  it('merges partial LogicBlockBase style and divider overrides into their presets', () => {
-    const logicBlock = createLogicBlockBase({
+  it('merges partial LogicFrame style and divider overrides into their presets', () => {
+    const logicFrame = createLogicFrame({
       id: 'partial-block',
       sections: [{ key: 'body', child }],
       appearance: {
@@ -214,13 +214,13 @@ describe('logic composite schemas', () => {
       },
     });
 
-    expect(logicBlock.appearance.style).toEqual({
+    expect(logicFrame.appearance.style).toEqual({
       fill: '#fff',
       stroke: 'currentColor',
       strokeWidth: 1,
       opacity: 1,
     });
-    expect(logicBlock.appearance.divider).toEqual({
+    expect(logicFrame.appearance.divider).toEqual({
       stroke: 'red',
       strokeWidth: 1,
       opacity: 1,
@@ -310,9 +310,9 @@ describe('logic composite schemas', () => {
       id: '   ',
       role: 'start',
     });
-    const blankLogicBlock = LogicBlockBaseSchema.safeParse({
+    const blankLogicFrame = LogicFrameSchema.safeParse({
       namespace: 'standard',
-      type: 'logicBlockBase',
+      type: 'logicFrame',
       id: '   ',
       sections: [{ key: 'body', child }],
     });
@@ -371,7 +371,7 @@ describe('logic composite schemas', () => {
     });
 
     expect(blankTerminal.success).toBe(false);
-    expect(blankLogicBlock.success).toBe(false);
+    expect(blankLogicFrame.success).toBe(false);
     expect(blankStage.success).toBe(false);
     expect(blankDecision.success).toBe(false);
     expect(blankJunction.success).toBe(false);
@@ -381,7 +381,7 @@ describe('logic composite schemas', () => {
     expect(blankJunctionRole.success).toBe(false);
     expect(blankConnectorRole.success).toBe(false);
     if (!blankTerminal.success) expect(blankTerminal.error.issues[0]?.path).toEqual(['id']);
-    if (!blankLogicBlock.success) expect(blankLogicBlock.error.issues[0]?.path).toEqual(['id']);
+    if (!blankLogicFrame.success) expect(blankLogicFrame.error.issues[0]?.path).toEqual(['id']);
     if (!blankStage.success) expect(blankStage.error.issues[0]?.path).toEqual(['id']);
     if (!blankDecision.success) expect(blankDecision.error.issues[0]?.path).toEqual(['id']);
     if (!blankJunction.success) expect(blankJunction.error.issues[0]?.path).toEqual(['id']);
@@ -412,7 +412,7 @@ describe('logic composite schemas', () => {
       offset: [2, -3],
     });
     const sectionTarget = LogicDiagramTargetSchema.parse({
-      kind: 'logicBlock',
+      kind: 'logicFrame',
       id: 'block',
       section: 'input',
       anchor: 'center',
@@ -426,7 +426,7 @@ describe('logic composite schemas', () => {
       offset: [2, -3],
     });
     expect(sectionTarget).toEqual({
-      kind: 'logicBlock',
+      kind: 'logicFrame',
       id: 'block',
       section: 'input',
       anchor: 'center',
@@ -439,31 +439,31 @@ describe('logic composite schemas', () => {
 
   it('rejects malformed targets, blank section keys, and unknown target fields', () => {
     expect(LogicDiagramTargetSchema.safeParse({ id: '' }).success).toBe(false);
-    expect(LogicDiagramTargetSchema.safeParse({ kind: 'logicBlock', id: 'block', section: '   ' }).success).toBe(false);
+    expect(LogicDiagramTargetSchema.safeParse({ kind: 'logicFrame', id: 'block', section: '   ' }).success).toBe(false);
     expect(LogicDiagramTargetSchema.safeParse({ id: 'stage', sourceIndex: 0 }).success).toBe(false);
     expect(LogicDiagramTargetSchema.safeParse({ kind: 'node', id: 'stage' }).success).toBe(false);
     expect(LogicDiagramPointSchema.safeParse({ x: 1, y: 2 }).success).toBe(false);
   });
 
   it('rejects non-finite and negative spacing values while retaining explicit zero', () => {
-    const zero = LogicBlockBaseSchema.safeParse({
+    const zero = LogicFrameSchema.safeParse({
       namespace: 'standard',
-      type: 'logicBlockBase',
+      type: 'logicFrame',
       id: 'block',
       sections: [{ key: 'body', child }],
       padding: 0,
       rowGap: 0,
     });
-    const negativePadding = LogicBlockBaseSchema.safeParse({
+    const negativePadding = LogicFrameSchema.safeParse({
       namespace: 'standard',
-      type: 'logicBlockBase',
+      type: 'logicFrame',
       id: 'block',
       sections: [{ key: 'body', child }],
       padding: -1,
     });
-    const infiniteGap = LogicBlockBaseSchema.safeParse({
+    const infiniteGap = LogicFrameSchema.safeParse({
       namespace: 'standard',
-      type: 'logicBlockBase',
+      type: 'logicFrame',
       id: 'block',
       sections: [{ key: 'body', child }],
       rowGap: Number.POSITIVE_INFINITY,
@@ -554,8 +554,8 @@ describe('logic composite schemas', () => {
   it('rejects unknown fields on every canonical composite instead of silently stripping them', () => {
     const cases = [
       {
-        schema: LogicBlockBaseSchema,
-        value: createLogicBlockBase({ id: 'block', sections: [{ key: 'body', child }] }),
+        schema: LogicFrameSchema,
+        value: createLogicFrame({ id: 'block', sections: [{ key: 'body', child }] }),
       },
       { schema: TerminalSchema, value: createTerminal({ id: 'start', role: 'start' }) },
       { schema: StageSchema, value: createStage({ id: 'step', content: child }) },

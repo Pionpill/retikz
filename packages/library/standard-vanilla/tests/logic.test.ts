@@ -7,12 +7,12 @@ import {
   createConnector,
   createDecision,
   createJunction,
-  createLogicBlockBase,
+  createLogicFrame,
   createStage,
   createTerminal,
   DecisionDefinition,
   JunctionDefinition,
-  LogicBlockBaseDefinition,
+  LogicFrameDefinition,
   StageDefinition,
   TerminalDefinition,
 } from '@retikz/standard';
@@ -29,7 +29,7 @@ import type {
   ConnectorVanillaInput,
   DecisionVanillaInput,
   JunctionVanillaInput,
-  LogicBlockBaseVanillaInput,
+  LogicFrameVanillaInput,
   StageVanillaInput,
   TerminalVanillaInput,
 } from '../src';
@@ -43,8 +43,8 @@ import {
   DecisionVanillaAdapter,
   junction,
   JunctionVanillaAdapter,
-  logicBlockBase,
-  LogicBlockBaseVanillaAdapter,
+  logicFrame,
+  LogicFrameVanillaAdapter,
   stage,
   StageVanillaAdapter,
   terminal,
@@ -63,7 +63,7 @@ const contextOf = (adapter: AdapterIdentity, id: string) => ({
 
 describe('Standard Vanilla logic authoring', () => {
   it('publishes typed inputs, builders, and adapters', () => {
-    expectTypeOf<LogicBlockBaseVanillaInput>().toHaveProperty('sections');
+    expectTypeOf<LogicFrameVanillaInput>().toHaveProperty('sections');
     expectTypeOf<TerminalVanillaInput>().toHaveProperty('role');
     expectTypeOf<StageVanillaInput>().toHaveProperty('content');
     expectTypeOf<DecisionVanillaInput>().toHaveProperty('content');
@@ -71,8 +71,8 @@ describe('Standard Vanilla logic authoring', () => {
     expectTypeOf<ConnectorVanillaInput>().toHaveProperty('from');
     expectTypeOf<CalloutVanillaInput>().toHaveProperty('target');
 
-    expectTypeOf(logicBlockBase).parameter(0).toEqualTypeOf<string>();
-    expectTypeOf(logicBlockBase).parameter(1).toMatchTypeOf<LogicBlockBaseVanillaInput>();
+    expectTypeOf(logicFrame).parameter(0).toEqualTypeOf<string>();
+    expectTypeOf(logicFrame).parameter(1).toMatchTypeOf<LogicFrameVanillaInput>();
     expectTypeOf(terminal).parameter(0).toEqualTypeOf<string>();
     expectTypeOf(terminal).parameter(1).toMatchTypeOf<TerminalVanillaInput>();
     expectTypeOf(stage).parameter(1).toMatchTypeOf<StageVanillaInput>();
@@ -81,7 +81,7 @@ describe('Standard Vanilla logic authoring', () => {
     expectTypeOf(connector).parameter(1).toMatchTypeOf<ConnectorVanillaInput>();
     expectTypeOf(callout).parameter(1).toMatchTypeOf<CalloutVanillaInput>();
 
-    expectTypeOf(LogicBlockBaseVanillaAdapter).toMatchTypeOf<VanillaTier2Adapter<LogicBlockBaseVanillaInput>>();
+    expectTypeOf(LogicFrameVanillaAdapter).toMatchTypeOf<VanillaTier2Adapter<LogicFrameVanillaInput>>();
     expectTypeOf(TerminalVanillaAdapter).toMatchTypeOf<VanillaTier2Adapter<TerminalVanillaInput>>();
     expectTypeOf(StageVanillaAdapter).toMatchTypeOf<VanillaTier2Adapter<StageVanillaInput>>();
     expectTypeOf(DecisionVanillaAdapter).toMatchTypeOf<VanillaTier2Adapter<DecisionVanillaInput>>();
@@ -92,7 +92,7 @@ describe('Standard Vanilla logic authoring', () => {
 
   it('exports seven plain builders and seven independent adapters', () => {
     const entries = [
-      [logicBlockBase, LogicBlockBaseVanillaAdapter],
+      [logicFrame, LogicFrameVanillaAdapter],
       [terminal, TerminalVanillaAdapter],
       [stage, StageVanillaAdapter],
       [decision, DecisionVanillaAdapter],
@@ -210,23 +210,23 @@ describe('Standard Vanilla logic authoring', () => {
         definition: CalloutDefinition,
       },
       {
-        name: 'LogicBlockBase',
+        name: 'LogicFrame',
         lower: () =>
-          LogicBlockBaseVanillaAdapter.lower(
+          LogicFrameVanillaAdapter.lower(
             {
               header: { child: { type: 'node', id: 'block-header', position: [0, 0], text: 'block-header' } },
               sections: [
                 { key: 'body', child: { type: 'node', id: 'block-body', position: [0, 0], text: 'block-body' } },
               ],
             },
-            contextOf(LogicBlockBaseVanillaAdapter, 'vanilla-block'),
+            contextOf(LogicFrameVanillaAdapter, 'vanilla-block'),
           ),
-        expected: createLogicBlockBase({
-          id: 'vanilla-block/logicBlockBase',
+        expected: createLogicFrame({
+          id: 'vanilla-block/logicFrame',
           header: { child: { type: 'node', id: 'block-header', position: [0, 0], text: 'block-header' } },
           sections: [{ key: 'body', child: { type: 'node', id: 'block-body', position: [0, 0], text: 'block-body' } }],
         }),
-        definition: LogicBlockBaseDefinition,
+        definition: LogicFrameDefinition,
       },
     ];
 
@@ -238,7 +238,7 @@ describe('Standard Vanilla logic authoring', () => {
   });
 
   it('keeps nested Standard Definition loading explicit', () => {
-    const block = logicBlockBase('block', {
+    const block = logicFrame('block', {
       sections: [
         {
           key: 'nested',
@@ -246,7 +246,7 @@ describe('Standard Vanilla logic authoring', () => {
         },
       ],
     });
-    const blockAdapter = [LogicBlockBaseVanillaAdapter] as unknown as Array<AnyVanillaTier2Adapter>;
+    const blockAdapter = [LogicFrameVanillaAdapter] as unknown as Array<AnyVanillaTier2Adapter>;
     expect(() =>
       renderToSvgString(
         { type: 'figure', version: 1, children: [block as VanillaChildSpec] },
@@ -273,7 +273,7 @@ describe('Standard Vanilla logic authoring', () => {
         placement: { side: 'right' },
         content: { type: 'node', position: [0, 0] },
       }),
-      logicBlockBase('block', { sections: [{ key: 'body', child: { type: 'node', position: [0, 0] } }] }),
+      logicFrame('block', { sections: [{ key: 'body', child: { type: 'node', position: [0, 0] } }] }),
     ];
     const adapters = [
       TerminalVanillaAdapter,
@@ -282,7 +282,7 @@ describe('Standard Vanilla logic authoring', () => {
       JunctionVanillaAdapter,
       ConnectorVanillaAdapter,
       CalloutVanillaAdapter,
-      LogicBlockBaseVanillaAdapter,
+      LogicFrameVanillaAdapter,
     ] as unknown as Array<AnyVanillaTier2Adapter>;
     const normalized = normalizeFigureSpec({ type: 'figure', version: 1, children: embeds }, { adapters });
     expect(normalized.ir.children).toHaveLength(embeds.length);

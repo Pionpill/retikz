@@ -10,8 +10,8 @@ export const StandardGridVanillaNamespace = 'standard.grid';
 /** Standard Vanilla Legend 适配器使用的贡献命名空间 */
 export const StandardLegendVanillaNamespace = 'standard.legend';
 
-/** Standard Vanilla LogicBlockBase 使用的贡献命名空间 */
-export const StandardLogicBlockBaseVanillaNamespace = 'standard.logicBlockBase';
+/** Standard Vanilla LogicFrame 使用的贡献命名空间 */
+export const StandardLogicFrameVanillaNamespace = 'standard.logicFrame';
 
 /** Standard Vanilla Terminal 使用的贡献命名空间 */
 export const StandardTerminalVanillaNamespace = 'standard.terminal';

@@ -45,17 +45,17 @@ const LogicObjectTargetSchema = z
   .strictObject(LogicTargetFields)
   .describe('Reference to a regular authored Standard or Core target by stable id.');
 
-const LogicBlockTargetSchema = z
+const LogicFrameTargetSchema = z
   .strictObject({
-    kind: z.literal('logicBlock').describe('Discriminator for a LogicBlockBase target.'),
+    kind: z.literal('logicFrame').describe('Discriminator for a LogicFrame target.'),
     ...LogicTargetFields,
-    section: NonBlankStringSchema.optional().describe('Authored LogicBlockBase section key, if available.'),
+    section: NonBlankStringSchema.optional().describe('Authored LogicFrame section key, if available.'),
   })
-  .describe('Reference to a LogicBlockBase identity and optional authored section.');
+  .describe('Reference to a LogicFrame identity and optional authored section.');
 
 /** 逻辑图组件公开的整体或普通 target union */
 export const LogicDiagramTargetSchema = z
-  .union([LogicObjectTargetSchema, LogicBlockTargetSchema])
+  .union([LogicObjectTargetSchema, LogicFrameTargetSchema])
   .describe('Stable target reference used by Connector endpoints and Callout placement.');
 
 /** 逻辑图端点或显式折点 */
@@ -114,9 +114,9 @@ export const LogicOutlineAppearanceSchema = z
     lineCap: PathBaseSchema.shape.lineCap,
     lineJoin: PathBaseSchema.shape.lineJoin,
   })
-  .describe('Outline-only appearance override for a LogicBlockBase shell or divider.');
+  .describe('Outline-only appearance override for a LogicFrame shell or divider.');
 
-/** LogicBlockBase 轮廓外观与规范描边默认值 */
+/** LogicFrame 轮廓外观与规范描边默认值 */
 export const LogicOutlineAppearanceCanonicalSchema = LogicOutlineAppearanceSchema.extend({
   stroke: LogicOutlineAppearanceSchema.shape.stroke.default('currentColor'),
   strokeWidth: LogicOutlineAppearanceSchema.shape.strokeWidth.default(1),
@@ -143,23 +143,23 @@ export const ConnectorAppearanceSchema = z
   })
   .describe('Core Path stroke, decoration, and stacking appearance fields allowed for a Connector.');
 
-/** LogicBlockBase 的通用 region 输入 */
-export const LogicBlockRegionSchema = z
+/** LogicFrame 的通用 region 输入 */
+export const LogicFrameRegionSchema = z
   .strictObject({
     child: ChildSchema.describe('JSON-safe child laid out inside the region.'),
     padding: LogicSpacingSchema.optional().describe('Region-local padding overriding the block default.'),
   })
   .describe('One optional header or authored section region.');
 
-/** LogicBlockBase 的 authored section 输入 */
-export const LogicBlockSectionSchema = z
+/** LogicFrame 的 authored section 输入 */
+export const LogicFrameSectionSchema = z
   .strictObject({
     key: NonBlankStringSchema.describe('Stable authored section identity local to the block.'),
     role: NonBlankStringSchema.optional().describe('Open authored section role preserved without dispatch.'),
     child: ChildSchema.describe('JSON-safe child laid out inside the section.'),
     padding: LogicSpacingSchema.optional().describe('Section-local padding overriding the block default.'),
   })
-  .describe('One authored LogicBlockBase section.');
+  .describe('One authored LogicFrame section.');
 
 /** 逻辑单元外观的中性默认值，供各组件 schema 组合 */
 export const LogicNeutralStyle = NeutralStyleDefault;

@@ -4,25 +4,25 @@ import { Layout, Node, Scope } from '@retikz/react';
 import {
   Connector,
   Decision,
-  LogicBlockBase,
-  LogicBlockHeader,
-  LogicBlockSection,
+  LogicFrame,
+  LogicFrameHeader,
+  LogicFrameSection,
   Stage,
   Terminal,
 } from '@retikz/standard-react';
 
-/** Documentation-only Process recipe built from the public Logic vocabulary */
+/** 只存在于文档的 Process recipe，由公开 Logic 词汇组合而成 */
 const Demo: FC = () => (
   <Layout width={640} height={260}>
     <Scope transforms={[{ kind: 'translate', x: 24, y: 18 }]}>
-      <LogicBlockBase id="process-block" padding={12} rowGap={4}>
-        <LogicBlockHeader>
+      <LogicFrame id="process-block" padding={12} rowGap={4}>
+        <LogicFrameHeader>
           <Node position={[0, 0]} text="Process" />
-        </LogicBlockHeader>
-        <LogicBlockSection sectionKey="body">
+        </LogicFrameHeader>
+        <LogicFrameSection sectionKey="body">
           <Node position={[0, 0]} text="Input → transform → result" />
-        </LogicBlockSection>
-      </LogicBlockBase>
+        </LogicFrameSection>
+      </LogicFrame>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 72, y: 164 }]}>
       <Terminal id="process-start" role="start">

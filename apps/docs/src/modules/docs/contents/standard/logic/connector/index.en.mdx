@@ -52,9 +52,9 @@ The `label` is attached to the final drawable Core step. This keeps the label in
 
 Direct JSON uses `createConnector`, `ConnectorSchema`, and `ConnectorDefinition`. A Vanilla embed uses `connector` and `ConnectorVanillaAdapter`; its canonical ID is `<embed-id>/connector`.
 
-Target identity is explicit. A whole target may point forward or backward in authored traversal, so a Connector can connect `{ id: 'later-stage' }` before that Stage is emitted. A LogicBlockBase section target (`{ kind: 'logicBlock', id: 'block', section: 'body' }`) is accepted by the schema but currently fails loudly during Connector lowering; use a whole block target instead.
+Target identity is explicit. A whole target may point forward or backward in authored traversal, so a Connector can connect `{ id: 'later-stage' }` before that Stage is emitted. A LogicFrame section target (`{ kind: 'logicFrame', id: 'block', section: 'body' }`) is accepted by the schema but currently fails loudly during Connector lowering; use a whole block target instead.
 
-In React/direct IR, a `Terminal id="start"` is targeted with `{ id: 'start' }`. In Vanilla, `terminal('start', ...)` produces canonical `start/terminal`, so a Vanilla Connector or Callout must target `{ id: 'start/terminal' }`. The same suffix rule applies to Stage, Decision, Junction, LogicBlockBase, Connector, Callout, and Frame adapters.
+In React/direct IR, a `Terminal id="start"` is targeted with `{ id: 'start' }`. In Vanilla, `terminal('start', ...)` produces canonical `start/terminal`, so a Vanilla Connector or Callout must target `{ id: 'start/terminal' }`. The same suffix rule applies to Stage, Decision, Junction, LogicFrame, Connector, Callout, and Frame adapters.
 
 ## How it works
 

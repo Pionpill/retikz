@@ -1,4 +1,4 @@
-﻿import type { IRScene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -380,7 +380,7 @@ describe('irToVanillaCode fallback', () => {
       ir([
         {
           namespace: 'standard',
-          type: 'logicBlockBase',
+          type: 'logicFrame',
           id: 'block',
           sections: [
             {
@@ -427,19 +427,11 @@ describe('irToVanillaCode fallback', () => {
       ] as never),
     );
 
-    for (const helper of [
-      'logicBlockBase(',
-      'terminal(',
-      'stage(',
-      'decision(',
-      'junction(',
-      'connector(',
-      'callout(',
-    ]) {
+    for (const helper of ['logicFrame(', 'terminal(', 'stage(', 'decision(', 'junction(', 'connector(', 'callout(']) {
       expect(code).toContain(helper);
     }
     for (const adapter of [
-      'LogicBlockBaseVanillaAdapter',
+      'LogicFrameVanillaAdapter',
       'TerminalVanillaAdapter',
       'StageVanillaAdapter',
       'DecisionVanillaAdapter',
@@ -456,7 +448,7 @@ describe('irToVanillaCode fallback', () => {
       ir([
         {
           namespace: 'standard',
-          type: 'logicBlockBase',
+          type: 'logicFrame',
           id: 'nested-block',
           sections: [
             {

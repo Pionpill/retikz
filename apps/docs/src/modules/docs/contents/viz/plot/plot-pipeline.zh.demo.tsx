@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Plot 从 authoring 到 renderer 的主流程与运行时旁路 */
 const Demo: FC = () => (
@@ -22,8 +22,8 @@ const Demo: FC = () => (
         React · Vanilla · spec
       </Text>
     </Node>
-    <LogicFrame id="plot-group">
-      <LogicFrameTitle>@retikz/plot</LogicFrameTitle>
+    <LogicFigureFrame id="plot-group">
+      <LogicFigureFrameTitle>@retikz/plot</LogicFigureFrameTitle>
       <Node
         id="plot-ir"
         position={[-200, -12]}
@@ -54,7 +54,7 @@ const Demo: FC = () => (
           变换 · 映射 · 下沉
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
     <Node
       id="core-ir"
       position={[72, -12]}
