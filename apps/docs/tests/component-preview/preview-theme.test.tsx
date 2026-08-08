@@ -45,24 +45,8 @@ afterEach(() => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 describe('ComponentPreview global theme', () => {
-  it('writes all ResolvedThemeColors fields to Core token overrides', () => {
-    const sharedColors = {
-      error: '#111111',
-      success: '#222222',
-      warning: '#333333',
-    };
-
-    expect(resolvePreviewTheme(ThemeStyle.Academic, sharedColors, PreviewColorScheme.Tableau10)).toEqual({
-      style: ThemeStyle.Academic,
-      tokens: {
-        core: {
-          'semantic.error': '#111111',
-          'semantic.success': '#222222',
-          'semantic.warning': '#333333',
-          'palette.categorical': [...schemeTableau10],
-        },
-      },
-    });
+  it('writes the selected ThemeStyle as a Core selector', () => {
+    expect(resolvePreviewTheme(ThemeStyle.Academic)).toEqual({ style: ThemeStyle.Academic });
   });
 
   it('maps every categorical selector to its d3-scale-chromatic array', () => {
@@ -81,14 +65,10 @@ describe('ComponentPreview global theme', () => {
 
   it('PreviewThemeProvider bridges persisted IDs to the React ambient Theme', () => {
     useComponentPreviewStore.getState().setThemeStyle(ThemeStyle.Clean);
-    useComponentPreviewStore.getState().setColorScheme(PreviewColorScheme.Tableau10);
-    useComponentPreviewStore.getState().setSharedColor('error', '#abcdef');
 
     const ThemeReader: FC = () => {
       const theme = useTheme();
-      const palette = theme?.tokens?.core['palette.categorical'];
-      const error = theme?.tokens?.core['semantic.error'];
-      return <output>{`${theme?.style}:${error}:${Array.isArray(palette) ? palette[0] : 'none'}`}</output>;
+      return <output>{theme?.style}</output>;
     };
 
     const container = document.createElement('div');
@@ -101,9 +81,7 @@ describe('ComponentPreview global theme', () => {
         </PreviewThemeProvider>,
       );
     });
-    const palette = schemeTableau10[0];
-
-    expect(container.textContent).toContain(`clean:#abcdef:${palette}`);
+    expect(container.textContent).toBe(ThemeStyle.Clean);
     act(() => root.unmount());
   });
 

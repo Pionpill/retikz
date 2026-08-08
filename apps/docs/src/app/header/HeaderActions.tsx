@@ -124,8 +124,8 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
           <DropdownMenuRadioGroup
             value={themeStyle}
             onValueChange={value => {
-              if (previewThemeStyleOptions.includes(value as ThemeStyleValue)) {
-                setThemeStyle(value as ThemeStyleValue);
+              if (previewThemeStyleOptions.some(option => option === value)) {
+                setThemeStyle(value);
               }
             }}
           >

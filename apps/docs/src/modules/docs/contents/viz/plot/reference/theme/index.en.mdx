@@ -7,7 +7,7 @@ Plot reads `style` and `mode` from the Core effective Theme at its current Scene
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-The example writes surface, grid, and categorical palette values through `PlotThemeToken`. React, Vanilla, and plain JSON pass the same `plotThemeTokens` to the Plot resolver without adapter-owned presets; a root Core Theme `tokens.plot` namespace enters the same resolver as inherited input.
+The example writes surface, grid, and categorical palette values through `PlotThemeToken`. React, Vanilla, and plain JSON pass the same `plotThemeTokens` to the Plot resolver without adapter-owned presets; the Core Theme only selects the base preset through `style` / `mode`.
 
 ## Cascade and atomic replacement
 
@@ -15,7 +15,6 @@ The example writes surface, grid, and categorical palette values through `PlotTh
 Core effective Theme
   → Plot preset
   → shared categorical
-  → inherited Theme tokens.plot
   → PlotSpec.plotThemeTokens
   → PlotSpec.colors
   → PlotSpec.plotTheme

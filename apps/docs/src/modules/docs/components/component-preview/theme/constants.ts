@@ -69,22 +69,5 @@ export const PreviewDefaultSharedColors: ResolvedThemeColors['semantic'] = resol
   ThemeMode.Light,
 ).semantic;
 
-/** 根据 docs 偏好生成传给 Core 的 sparse Theme */
-export const resolvePreviewTheme = (
-  themeStyle: ThemeStyleValue,
-  sharedColors: ResolvedThemeColors['semantic'],
-  colorScheme: PreviewColorSchemeValue,
-): IRScene['theme'] => {
-  const categorical = PreviewColorSchemeColors[colorScheme];
-  return {
-    style: themeStyle,
-    tokens: {
-      core: {
-        'semantic.error': sharedColors.error,
-        'semantic.success': sharedColors.success,
-        'semantic.warning': sharedColors.warning,
-        'palette.categorical': [...categorical],
-      },
-    },
-  };
-};
+/** 根据 docs 偏好生成传给 Core 的 sparse Theme selector */
+export const resolvePreviewTheme = (themeStyle: ThemeStyleValue): IRScene['theme'] => ({ style: themeStyle });

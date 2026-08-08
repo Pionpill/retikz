@@ -7,7 +7,7 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择�
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；根 Core Theme 的 `tokens.plot` 则作为 inherited namespace 进入同一 resolver。
+示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 只通过 `style` / `mode` 选择基础 preset。
 
 ## 级联与原子替换
 
@@ -15,7 +15,6 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择�
 Core effective Theme
   → Plot preset
   → shared categorical
-  → inherited Theme tokens.plot
   → PlotSpec.plotThemeTokens
   → PlotSpec.colors
   → PlotSpec.plotTheme
