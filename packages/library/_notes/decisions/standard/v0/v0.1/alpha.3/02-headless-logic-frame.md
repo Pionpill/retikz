@@ -1,9 +1,9 @@
 # ADR-02：Headless LogicFrame
 
-- 状态：Accepted（2026-08-08，人工确认）
+- 状态：Superseded（由 [Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 取代；2026-08-09）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [alpha.2 Box Layout](../alpha.2/roadmap.md) · [Core layout-aware composite](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.1/07-layout-aware-composite.md)
-- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已提出把 LogicFrame 迁入 Notation，并继续复用 Standard FlexLayout 公共组合契约
+- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把 LogicFrame 迁入 Notation，并继续复用 Standard FlexLayout 公共组合契约
 
 ## 背景与目标
 

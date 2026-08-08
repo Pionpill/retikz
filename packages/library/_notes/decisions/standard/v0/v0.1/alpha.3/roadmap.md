@@ -1,10 +1,10 @@
 # Standard v0.1 alpha.3 Roadmap：语义逻辑图组件
 
-> 状态：已完成；ADR-01～06 均为 Accepted
+> 状态：已完成；ADR-01～05 已由 Notation alpha.1 Superseded，ADR-06 保持 Accepted
 >
 > 主题：提供可持久化的基础逻辑单元、headless `LogicFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
-> 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已提出把本 milestone 的图式元素迁入 Diagram owner；迁移完成前本 roadmap 仍描述当前 Standard 契约
+> 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把本 milestone 的图式元素迁入 Diagram owner；本页保留为 Standard 验证这些契约时的历史 milestone
 >
 > 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
 
@@ -39,13 +39,13 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 
 ## ADR 顺序
 
-| ADR                                    | 主题                    | 主要决策                                                                           | 依赖                                       | 状态     |
-| -------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ | -------- |
-| [01](./01-logic-diagram-profile.md)    | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Accepted |
-| [02](./02-headless-logic-frame.md)     | Headless LogicFrame     | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Accepted |
-| [03](./03-semantic-logic-units.md)     | Semantic Logic Nodes    | 冻结四个 Core Node sugar 的职责 describe、固定 shape、默认值与跨宿主输入           | ADR-01                                     | Accepted |
-| [04](./04-connector-and-callout.md)    | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Accepted |
-| [05](./05-capability-and-authoring.md) | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Accepted |
+| ADR                                    | 主题                    | 主要决策                                                                           | 依赖                                       | 状态       |
+| -------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ | ---------- |
+| [01](./01-logic-diagram-profile.md)    | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Superseded |
+| [02](./02-headless-logic-frame.md)     | Headless LogicFrame     | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Superseded |
+| [03](./03-semantic-logic-units.md)     | Semantic Logic Nodes    | 冻结四个 Core Node sugar 的职责 describe、固定 shape、默认值与跨宿主输入           | ADR-01                                     | Superseded |
+| [04](./04-connector-and-callout.md)    | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Superseded |
+| [05](./05-capability-and-authoring.md) | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Superseded |
 
 ```text
 01 shared profile

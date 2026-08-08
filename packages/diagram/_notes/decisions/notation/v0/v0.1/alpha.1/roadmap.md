@@ -1,6 +1,6 @@
 # Notation v0.1 alpha.1 Roadmap
 
-> 状态：Accepted；ADR-01 已通过 Architecture Gate 并由人工确认，进入实现。关联：[Notation v0.1 roadmap](../roadmap.md) · [Diagram Notation 完备设计](../../../../../architecture/diagram-notation-complete.md) · [Standard alpha.3 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/roadmap.md)
+> 状态：已完成；ADR-01 为 Accepted。关联：[Notation v0.1 roadmap](../roadmap.md) · [Diagram Notation 完备设计](../../../../../architecture/diagram-notation-complete.md) · [Standard alpha.3 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/roadmap.md)
 
 ## 目标
 

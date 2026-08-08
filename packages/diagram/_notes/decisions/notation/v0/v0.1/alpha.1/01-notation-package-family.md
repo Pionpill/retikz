@@ -97,6 +97,13 @@ Standard 因此提供无副作用的 `@retikz/standard/layout` 公共子入口�
 - provenance / locator：保持 authored id、LogicFrame / Callout artifact 与 Connector Scene identity；不新增 Graph provenance
 - 结论：把既有图式元素上移到 Diagram owner，同时把复用的布局原子契约留在 Standard
 
+## 实施结果
+
+- Notation 三包已形成独立 lockstep package family 与 release group，七个图式元素只从 Notation owner 导出
+- LogicFrame 直接组合 Standard 的 canonical Flex compiler；Callout 复用同一公共布局原子，Standard 继续唯一拥有通用布局求解与 artifact 语义
+- canonical namespace 已切换为 `notation`，Standard 不保留旧导出、别名或 namespace 兼容；直接 IR、React 与 Vanilla 进入同一 Core compile 主链
+- Diagram 文档、Schema 发现与 SVG / Canvas 预览已迁入 Notation。structured section target 仍按既有契约 fail-loud，Graph、UML 与自动布局继续留给后续独立设计
+
 ## 被否决方案
 
 - 继续放在 Standard：图式角色不满足跨领域 Drawing Complete 准入，未来 UML / State 会持续扩大错误 owner

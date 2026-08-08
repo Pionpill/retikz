@@ -1,6 +1,6 @@
 # Notation v0.1 Roadmap
 
-> 状态：Accepted；alpha.1 进入实现。关联：[Notation v0 roadmap](../roadmap.md) · [Diagram Notation 完备设计](../../../../architecture/diagram-notation-complete.md)
+> 状态：Accepted；alpha.1 已完成。关联：[Notation v0 roadmap](../roadmap.md) · [Diagram Notation 完备设计](../../../../architecture/diagram-notation-complete.md)
 
 ## 目标
 
