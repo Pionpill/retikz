@@ -1,24 +1,24 @@
 import type { FC } from 'react';
 
-import { Layout, Node, Scope } from '@retikz/react';
+import { Layout, Scope } from '@retikz/react';
 import { Connector, Decision, Stage, Terminal } from '@retikz/standard-react';
 
 /** Demonstrates straight, orthogonal, polyline, and labelled Connector routes */
 const Demo: FC = () => (
   <Layout width={560} height={260}>
     <Scope transforms={[{ kind: 'translate', x: 32, y: 52 }]}>
-      <Terminal id="route-start" role="start">
-        <Node position={[0, 0]} text="Start" />
+      <Terminal id="route-start" position={[0, 0]}>
+        Start
       </Terminal>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 230, y: 52 }]}>
-      <Stage id="route-stage">
-        <Node position={[0, 0]} text="Stage" />
+      <Stage id="route-stage" position={[0, 0]}>
+        Stage
       </Stage>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 430, y: 52 }]}>
-      <Decision id="route-check">
-        <Node position={[0, 0]} text="Check" />
+      <Decision id="route-check" position={[0, 0]}>
+        Check
       </Decision>
     </Scope>
     <Connector

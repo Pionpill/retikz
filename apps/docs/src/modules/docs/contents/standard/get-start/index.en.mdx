@@ -115,7 +115,7 @@ If `GridDefinition` is not provided, Core emits `COMPOSITE_NOT_REGISTERED` and s
 
 ## Logic Components
 
-The Logic family uses the same three loading paths. React components contribute local Definitions; direct IR injects only the Definitions used by the scene; Vanilla adapters lower embeds and derive canonical IDs.
+The Logic family uses the same three loading paths. Logic semantic React components and Vanilla builders emit Core Nodes directly; only LogicFrame, Connector, and Callout use runtime Definitions or adapters.
 
 ```tsx
 import { Layout, Node, Scope } from '@retikz/react';
@@ -123,52 +123,43 @@ import { Connector, Stage, Terminal } from '@retikz/standard-react';
 
 <Layout width={360} height={140}>
   <Scope transforms={[{ kind: 'translate', x: 24, y: 50 }]}>
-    <Terminal id="start" role="start">
-      <Node position={[0, 0]} text="Start" />
+    <Terminal id="start" position={[0, 0]}>
+      Start
     </Terminal>
   </Scope>
   <Scope transforms={[{ kind: 'translate', x: 190, y: 50 }]}>
-    <Stage id="step">
-      <Node position={[0, 0]} text="Step" />
+    <Stage id="step" position={[0, 0]}>
+      Step
     </Stage>
   </Scope>
   <Connector id="edge" from={{ id: 'start' }} to={{ id: 'step' }} label={{ text: 'next' }} />
 </Layout>;
 ```
 
-The equivalent Vanilla target is `{ id: 'start/terminal' }` because `terminal('start', input)` derives `start/terminal`; `stage('step', input)` similarly derives `step/stage`.
+The equivalent Vanilla target is `{ id: 'start' }` because `terminal('start', input)` returns a Node with the supplied id; `stage('step', input)` behaves the same way.
 
 ```ts
-import {
-  connector,
-  ConnectorVanillaAdapter,
-  stage,
-  StageVanillaAdapter,
-  terminal,
-  TerminalVanillaAdapter,
-} from '@retikz/standard-vanilla';
+import { connector, ConnectorVanillaAdapter, stage, terminal } from '@retikz/standard-vanilla';
 import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 
 const input = figure({
   viewBox: { x: 0, y: 0, width: 360, height: 140 },
   children: [
     scope({ transforms: [{ kind: 'translate', x: 24, y: 50 }] }, [
-      terminal('start', { role: 'start', content: { type: 'node', position: [0, 0], text: 'Start' } }),
+      terminal('start', { position: [0, 0], text: 'Start' }),
     ]),
-    scope({ transforms: [{ kind: 'translate', x: 190, y: 50 }] }, [
-      stage('step', { content: { type: 'node', position: [0, 0], text: 'Step' } }),
-    ]),
-    connector('edge', { from: { id: 'start/terminal' }, to: { id: 'step/stage' }, label: { text: 'next' } }),
+    scope({ transforms: [{ kind: 'translate', x: 190, y: 50 }] }, [stage('step', { position: [0, 0], text: 'Step' })]),
+    connector('edge', { from: { id: 'start' }, to: { id: 'step' }, label: { text: 'next' } }),
   ],
 });
 
 const svg = renderToSvgString(input, {
-  adapters: [TerminalVanillaAdapter, StageVanillaAdapter, ConnectorVanillaAdapter],
+  adapters: [ConnectorVanillaAdapter],
   output: { width: 360, height: 140 },
 });
 ```
 
-For persisted logic IR, parse `TerminalSchema`, `StageSchema`, or another member schema and pass the matching `*Definition` values in `CompileOptions.composites`. See [Logic API Reference](/standard/logic/api-reference) for the complete mapping.
+For persisted LogicFrame, Connector, or Callout IR, parse the matching schema and pass its Definition in `CompileOptions.composites`. Semantic Node IR needs no Standard Definition. See [Logic API Reference](/standard/logic/api-reference) for the complete mapping.
 
 ## Next: replace handwritten coordinates with a layout container
 
@@ -199,5 +190,5 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 | [Frame](/standard/composite/frame)                                  | Automatic bounds, gap, border, and label                        |
 | [Legend](/standard/composite/legend)                                | Discrete samples, continuous ramps, probes, and typed artifacts |
 | [Layout Containers](/standard/layout)                               | Flex, Grid, Overlay, and typed artifacts                        |
-| [Logic Components](/standard/logic)                                 | LogicFrame, semantic units, Connector, and Callout          |
+| [Logic Components](/standard/logic)                                 | LogicFrame, semantic units, Connector, and Callout              |
 | [Direct Definition Loading](/standard/extension/capability-loading) | Definition selection, Core injection, and host boundaries       |

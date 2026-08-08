@@ -54,7 +54,7 @@ import { Connector, Stage, Terminal } from '@retikz/standard-react';
 
 Target identity 必须显式处理。Whole target 可以指向 authored traversal 中的前方或后方，因此 Connector 可以在 Stage emit 前就连接 `{ id: 'later-stage' }`。LogicFrame section target（`{ kind: 'logicFrame', id: 'block', section: 'body' }`）虽被 schema 接受，但 Connector 当前会在 lowering 时 fail-loud；请使用 whole block target。
 
-在 React/直接 IR 中，`Terminal id="start"` 用 `{ id: 'start' }` target。在 Vanilla 中，`terminal('start', ...)` 生成的 canonical ID 是 `start/terminal`，因此 Vanilla Connector 或 Callout 必须 target `{ id: 'start/terminal' }`。Stage、Decision、Junction、LogicFrame、Connector、Callout 与 Frame adapter 也遵循同一 suffix 规则。
+在 React/直接 IR 和 Vanilla 语义 builder 中，`Terminal id="start"` 都使用 `{ id: 'start' }` target。LogicFrame、Connector、Callout 与 Frame adapter 仍保留各自的 composite identity 规则。
 
 ## 技术原理
 

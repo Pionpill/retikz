@@ -58,7 +58,7 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-同一外壳可以容纳语义单元或嵌套 Standard composite。嵌套 Definition 仍须显式注入：包含 `Stage` 的 block 在直接 IR 装载时需要同时传入 `LogicFrameDefinition` 与 `StageDefinition`。
+同一外壳可以容纳语义 Node 或嵌套 Standard composite。语义单元已经是 Core Node，因此包含 `Stage` 的 block 在直接 IR 装载时只需要 `LogicFrameDefinition`；只有嵌套的其它 composite 才需要额外 Definition。
 
 <ComponentPreview
   files="process-recipe"

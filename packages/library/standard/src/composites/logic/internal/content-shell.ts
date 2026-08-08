@@ -4,24 +4,16 @@ import type {
   LayoutAxisProposal,
   LayoutChildResult,
   LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
 
+import { BoundarySchema, ChildSchema, ShapeRefSchema } from '@retikz/core';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
+import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '@retikz/core';
+import { z } from 'zod';
 
 import type { LayoutArtifactContainer, LayoutArtifactItemBase, LayoutArtifactRect } from '../../layout/shared';
 import type { LogicLayoutItemArtifact, LogicOuterArtifact } from '../shared';
-import type {
-  DecisionArtifact,
-  IRDecision,
-  IRJunction,
-  IRStage,
-  IRTerminal,
-  JunctionArtifact,
-  StageArtifact,
-  TerminalArtifact,
-} from './types';
 
 import {
   alignAllocationInSlot,
@@ -33,26 +25,38 @@ import {
   resolveLayoutAxisSize,
   unionLayoutArtifactRects,
 } from '../../layout/internal';
-import { LayoutAlignment, LayoutOverflow } from '../../layout/shared';
+import { LayoutAlignment, LayoutOverflow, LayoutOverflowSchema, LayoutSizeSchema } from '../../layout/shared';
+import { LogicContentSizeDefault, LogicNeutralStyle, LogicNeutralStyleSchema, LogicSpacingSchema } from '../shared';
 
-type LogicUnitNode = IRTerminal | IRStage | IRDecision | IRJunction;
-type LogicUnitArtifact = TerminalArtifact | StageArtifact | DecisionArtifact | JunctionArtifact;
-type LogicUnitKind = LogicUnitNode['type'];
-type LogicUnitNodeOf<TKind extends LogicUnitKind> = Extract<LogicUnitNode, { type: TKind }>;
-type LogicUnitArtifactOf<TKind extends LogicUnitKind> = Extract<LogicUnitArtifact, { kind: TKind }>;
+/** Content shell 的可复用外观输入，供 Callout 等需要包裹内容的 composite 使用 */
+export const LogicContentShellAppearanceSchema = z
+  .strictObject({
+    size: LayoutSizeSchema.default(LogicContentSizeDefault),
+    padding: LogicSpacingSchema.default(8),
+    overflow: LayoutOverflowSchema.default('visible'),
+    shape: z.union([z.string().min(1), ShapeRefSchema]).default({ type: 'rectangle', params: { cornerRadius: 8 } }),
+    boundary: BoundarySchema.default('shape'),
+    style: LogicNeutralStyleSchema.default(LogicNeutralStyle),
+    dashPattern: StrokeDashPatternSchema.optional(),
+    dashOffset: StrokeDashOffsetSchema.optional(),
+    zIndex: z.number().int().default(0),
+  })
+  .describe('Content shell sizing, boundary, shape, and visual appearance.');
 
-type Rect = LayoutArtifactRect;
+/** Content shell 的完整解析状态 */
+export type LogicContentShellAppearance = z.infer<typeof LogicContentShellAppearanceSchema>;
 
+/** 单内容外壳的布局输入 */
 export type LogicShellNode = Readonly<{
   id: string;
   content?: IRChild;
-  appearance: LogicUnitNode['appearance'];
+  appearance: LogicContentShellAppearance;
 }>;
 
-/** 单内容逻辑外壳的布局结果，供逻辑单元与 Callout 共同消费 */
+/** 单内容逻辑外壳的布局结果，供 Callout 等 composite 继续消费 */
 export type LogicShellCompilation = Readonly<{
-  allocation: Rect;
-  contentBounds: Rect;
+  allocation: LayoutArtifactRect;
+  contentBounds: LayoutArtifactRect;
   contentItem?: LayoutArtifactItemBase;
   contentArtifact?: LogicLayoutItemArtifact;
   container: LayoutArtifactContainer;
@@ -86,14 +90,12 @@ const requiredProbe = (
 
 const shellShapeOf = (shape: LogicShellNode['appearance']['shape'], width: number, height: number): unknown => {
   if (typeof shape === 'object') return shape;
-  if (shape === 'capsule') {
-    return { type: 'rectangle', params: { cornerRadius: Math.min(width, height) / 2 } };
-  }
+  if (shape === 'capsule') return { type: 'rectangle', params: { cornerRadius: Math.min(width, height) / 2 } };
   return shape;
 };
 
-/** 构造 Core Node 外壳，shape、boundary、style 与 identity 继续由 Core 负责 */
-const shellNodeOf = (node: LogicShellNode, allocation: Rect): IRChild => ({
+/** 构造 Core Node 外壳，布局和视觉语义继续由 Core 负责 */
+const shellNodeOf = (node: LogicShellNode, allocation: LayoutArtifactRect): IRChild => ({
   type: 'node',
   id: node.id,
   position: [allocation.x + allocation.width / 2, allocation.y + allocation.height / 2],
@@ -119,7 +121,7 @@ export const compileLogicShell = (
   context: LayoutCompositeCompileContext,
 ): LogicShellCompilation => {
   const padding = normalizeLayoutSpacing(node.appearance.padding);
-  const authoredContent = 'content' in node ? node.content : undefined;
+  const authoredContent = node.content;
   const minimum =
     authoredContent === undefined
       ? undefined
@@ -180,7 +182,6 @@ export const compileLogicShell = (
     result: shellProbe,
     translation: { x: 0, y: 0 },
     containerAllocation: allocation,
-    // content 裁剪时仍保留外壳可见区域
     overflow: LayoutOverflow.Visible,
   });
   const positiveRectOrNull = (rect: LayoutArtifactRect): LayoutArtifactRect | null =>
@@ -214,7 +215,7 @@ export const compileLogicShell = (
   const clippedContent =
     replayedContent === undefined
       ? undefined
-      : node.appearance.overflow === LayoutOverflow.Clip
+      : node.appearance.overflow === 'clip'
         ? context.scope({ clip: layoutClipOf(allocation) }, [replayedContent])
         : replayedContent;
   return {
@@ -230,36 +231,10 @@ export const compileLogicShell = (
   };
 };
 
-const compileLogicUnit = <TKind extends LogicUnitKind>(
-  node: LogicUnitNodeOf<TKind>,
-  context: LayoutCompositeCompileContext,
-  kind: TKind,
-): LayoutCompositeCompileResult<LogicUnitArtifactOf<TKind>> => {
-  const shell = compileLogicShell(node, context);
-  const output = context.scope({ zIndex: node.appearance.zIndex }, [
-    shell.shellChild,
-    ...(shell.contentChild === undefined ? [] : [shell.contentChild]),
-  ]);
-  const artifactBase = {
-    kind,
-    id: node.id,
-    outer: shell.outer,
-    container: shell.container,
-    content: shell.contentArtifact === undefined ? null : shell.contentArtifact,
-    ...('role' in node && node.role === undefined ? {} : 'role' in node ? { role: node.role } : {}),
-    ...('category' in node && node.category === undefined ? {} : 'category' in node ? { category: node.category } : {}),
-  } as LogicUnitArtifactOf<TKind>;
-  return {
-    children: [output],
-    allocationBounds: shell.allocation,
-    artifact: Object.freeze(artifactBase) as LogicUnitArtifactOf<TKind>,
-  };
-};
-
 const placeContent = (
   result: LayoutChildResult,
-  contentBounds: Rect,
-  allocation: Rect,
+  contentBounds: LayoutArtifactRect,
+  allocation: LayoutArtifactRect,
   overflow: LogicShellNode['appearance']['overflow'],
 ): LayoutArtifactItemBase => {
   const translation = Object.freeze({
@@ -279,43 +254,23 @@ const placeContent = (
     result,
     translation,
     containerAllocation: allocation,
-    overflow,
+    overflow: overflow === 'clip' ? LayoutOverflow.Clip : LayoutOverflow.Visible,
   });
 };
 
 const resolveLogicAxis = (
   axis: 'x' | 'y',
-  policy: LogicUnitNode['appearance']['size']['x'],
+  policy: NonNullable<LogicShellNode['appearance']['size']>[typeof axis] | undefined,
   proposal: LayoutAxisProposal,
   minimumContribution: number,
   naturalContribution: number,
-): number => {
-  // 语义单元外壳复用 Standard layout container 的尺寸语义
-  return resolveLayoutAxisSize({
+): number =>
+  resolveLayoutAxisSize({
     axis,
-    policy,
+    policy: policy ?? { kind: 'content' },
     proposal,
     minimumContribution,
     naturalContribution,
   }).allocationSize;
-};
 
-export const compileTerminal = (
-  node: IRTerminal,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<TerminalArtifact> => compileLogicUnit(node, context, 'terminal');
-
-export const compileStage = (
-  node: IRStage,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<StageArtifact> => compileLogicUnit(node, context, 'stage');
-
-export const compileDecision = (
-  node: IRDecision,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<DecisionArtifact> => compileLogicUnit(node, context, 'decision');
-
-export const compileJunction = (
-  node: IRJunction,
-  context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<JunctionArtifact> => compileLogicUnit(node, context, 'junction');
+export { ChildSchema };

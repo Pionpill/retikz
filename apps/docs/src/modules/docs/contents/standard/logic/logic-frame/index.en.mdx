@@ -58,7 +58,7 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-The same shell can contain semantic units or nested Standard composites. Nested Definitions are still explicit: a block containing a `Stage` needs both `LogicFrameDefinition` and `StageDefinition` when loading direct IR.
+The same shell can contain semantic Nodes or nested Standard composites. Semantic units are already Core Nodes, so a block containing a `Stage` still needs only `LogicFrameDefinition` when loading direct IR; add Definitions only for nested composites that own lowering.
 
 <ComponentPreview
   files="process-recipe"

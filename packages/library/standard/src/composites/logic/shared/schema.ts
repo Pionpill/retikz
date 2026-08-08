@@ -6,10 +6,7 @@ import {
   DrawableStyleSchema,
   PathBaseSchema,
   PositionSchema,
-  ShapeRefSchema,
   StepLabelSchema,
-  StrokeDashOffsetSchema,
-  StrokeDashPatternSchema,
 } from '@retikz/core';
 import { z } from 'zod';
 
@@ -26,24 +23,20 @@ import {
   ConnectorOrthogonalPattern,
   ConnectorRouteKind,
   LogicCompositeType,
-  TerminalRole,
 } from './constants';
 
-/** 非空且不接受仅由空白组成的作者字符串 */
+/** Non-empty and non-whitespace authored identifier */
 export const NonBlankStringSchema = z.string().refine(value => value.trim().length > 0, {
   message: 'String must contain at least one non-whitespace character.',
 });
 
-/** Standard 逻辑组件的稳定 JSON target */
 const LogicTargetFields = {
   id: NonBlankStringSchema.describe('Stable authored target identity.'),
   anchor: AnchorRefSchema.optional().describe('Optional anchor resolved by the consuming Core path or placement.'),
   offset: PositionSchema.optional().describe('World-space offset applied after target anchor resolution.'),
 };
 
-const LogicObjectTargetSchema = z
-  .strictObject(LogicTargetFields)
-  .describe('Reference to a regular authored Standard or Core target by stable id.');
+const LogicObjectTargetSchema = z.strictObject(LogicTargetFields).describe('Reference to a regular authored target.');
 
 const LogicFrameTargetSchema = z
   .strictObject({
@@ -53,29 +46,24 @@ const LogicFrameTargetSchema = z
   })
   .describe('Reference to a LogicFrame identity and optional authored section.');
 
-/** 逻辑图组件公开的整体或普通 target union */
+/** Stable target reference used by Connector endpoints and Callout placement */
 export const LogicDiagramTargetSchema = z
   .union([LogicObjectTargetSchema, LogicFrameTargetSchema])
   .describe('Stable target reference used by Connector endpoints and Callout placement.');
 
-/** 逻辑图端点或显式折点 */
+/** Cartesian point or stable authored target reference */
 export const LogicDiagramPointSchema = z
   .union([PositionSchema, LogicDiagramTargetSchema])
   .describe('Cartesian point or stable authored target reference.');
 
-/** 逻辑组件使用的统一非负 spacing 输入 */
+/** Uniform or side-specific non-negative spacing */
 export const LogicSpacingSchema = z
   .union([z.number().nonnegative(), BoxSpacingSchema])
   .describe('Uniform or side-specific non-negative spacing.');
 
-const NeutralStyleDefault = {
-  fill: 'transparent',
-  stroke: 'currentColor',
-  strokeWidth: 1,
-  opacity: 1,
-} as const;
+const NeutralStyleDefault = { fill: 'transparent', stroke: 'currentColor', strokeWidth: 1, opacity: 1 } as const;
 
-/** 逻辑语义单元的中性样式与规范字段默认值 */
+/** Neutral style defaults retained by LogicFrame and content shells */
 export const LogicNeutralStyleSchema = DrawableStyleSchema.extend({
   fill: DrawableStyleSchema.shape.fill.default('transparent'),
   stroke: DrawableStyleSchema.shape.stroke.default('currentColor'),
@@ -83,25 +71,22 @@ export const LogicNeutralStyleSchema = DrawableStyleSchema.extend({
   opacity: DrawableStyleSchema.shape.opacity.default(1),
 });
 
-/** 逻辑单元共用的 neutral appearance schema */
+/** Legacy-compatible appearance vocabulary for remaining layout composites */
 export const LogicUnitAppearanceBaseShape = {
   size: LayoutSizeSchema.optional(),
   padding: LogicSpacingSchema.optional(),
   overflow: LayoutOverflowSchema.optional(),
-  shape: z.union([z.string().min(1), ShapeRefSchema]).optional(),
+  shape: z.string().min(1).optional(),
   boundary: BoundarySchema.optional(),
   style: DrawableStyleSchema.optional(),
-  dashPattern: StrokeDashPatternSchema.optional(),
-  dashOffset: StrokeDashOffsetSchema.optional(),
   zIndex: z.number().int().optional(),
 } as const;
 
-/** 逻辑单元的完整外观覆盖契约 */
 export const LogicUnitAppearanceSchema = z
   .strictObject(LogicUnitAppearanceBaseShape)
-  .describe('Appearance, sizing, and boundary overrides for one semantic logic unit.');
+  .describe('Appearance, sizing, and boundary overrides for one content shell.');
 
-/** 逻辑块 divider 可用的 Core outline 样式字段 */
+/** LogicFrame outline appearance */
 export const LogicOutlineAppearanceSchema = z
   .strictObject({
     color: PathBaseSchema.shape.color,
@@ -116,14 +101,13 @@ export const LogicOutlineAppearanceSchema = z
   })
   .describe('Outline-only appearance override for a LogicFrame shell or divider.');
 
-/** LogicFrame 轮廓外观与规范描边默认值 */
 export const LogicOutlineAppearanceCanonicalSchema = LogicOutlineAppearanceSchema.extend({
   stroke: LogicOutlineAppearanceSchema.shape.stroke.default('currentColor'),
   strokeWidth: LogicOutlineAppearanceSchema.shape.strokeWidth.default(1),
   opacity: LogicOutlineAppearanceSchema.shape.opacity.default(1),
 });
 
-/** Connector 与 Callout leader 共用的 Core Path appearance 白名单 */
+/** Core Path appearance shared by Connector and Callout leader */
 export const ConnectorAppearanceSchema = z
   .strictObject({
     color: PathBaseSchema.shape.color,
@@ -143,7 +127,7 @@ export const ConnectorAppearanceSchema = z
   })
   .describe('Core Path stroke, decoration, and stacking appearance fields allowed for a Connector.');
 
-/** LogicFrame 的通用 region 输入 */
+/** LogicFrame region input */
 export const LogicFrameRegionSchema = z
   .strictObject({
     child: ChildSchema.describe('JSON-safe child laid out inside the region.'),
@@ -151,7 +135,7 @@ export const LogicFrameRegionSchema = z
   })
   .describe('One optional header or authored section region.');
 
-/** LogicFrame 的 authored section 输入 */
+/** LogicFrame section input */
 export const LogicFrameSectionSchema = z
   .strictObject({
     key: NonBlankStringSchema.describe('Stable authored section identity local to the block.'),
@@ -161,13 +145,10 @@ export const LogicFrameSectionSchema = z
   })
   .describe('One authored LogicFrame section.');
 
-/** 逻辑单元外观的中性默认值，供各组件 schema 组合 */
 export const LogicNeutralStyle = NeutralStyleDefault;
-
-/** 逻辑单元尺寸默认值 */
 export const LogicContentSizeDefault = { x: { kind: 'content' }, y: { kind: 'content' } } as const;
 
-/** 逻辑组件的 strict outer artifact */
+/** Strict geometry union for a remaining Standard logic composite outer shell */
 export const LogicOuterArtifactSchema = z
   .strictObject({
     allocationBounds: LayoutArtifactRectSchema.describe('Resolved outer allocation rectangle.'),
@@ -177,29 +158,16 @@ export const LogicOuterArtifactSchema = z
   })
   .describe('Strict geometry union for a Standard logic composite outer shell.');
 
-/** 单一逻辑 region / content 的 placement artifact，不复制 layout item identity */
 export const LogicLayoutItemArtifactSchema = z
   .strictObject(LayoutArtifactItemBaseSchema.omit({ key: true, sourceIndex: true }).shape)
   .describe('Strict content placement artifact without container-owned key or source index.');
 
-/** 逻辑单元 role 枚举 schema */
-export const TerminalRoleSchema = z.enum(TerminalRole).describe('Closed Terminal role discriminator.');
-
-/** Connector route kind schema */
 export const ConnectorRouteKindSchema = z.enum(ConnectorRouteKind).describe('Connector route variant discriminator.');
-
-/** Connector orthogonal pattern schema */
 export const ConnectorOrthogonalPatternSchema = z
   .enum(ConnectorOrthogonalPattern)
   .describe('Orthogonal route direction pattern.');
-
-/** Connector bend direction schema */
 export const ConnectorBendDirectionSchema = z.enum(ConnectorBendDirection).describe('Bend side direction.');
-
-/** Callout placement side schema */
 export const CalloutSideSchema = z.enum(CalloutSide).describe('Explicit Callout placement side.');
-
-/** Connector 复用的 Core step label schema */
 export const LogicGeometryLabelSchema = StepLabelSchema.describe('Core step label input for a Connector.');
 
 export { LogicCompositeType, STANDARD_NAMESPACE };

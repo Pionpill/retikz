@@ -13,8 +13,6 @@ import {
   CalloutSchema,
   ConnectorDefinition,
   ConnectorSchema,
-  DecisionDefinition,
-  DecisionSchema,
   FlexLayoutDefinition,
   FlexLayoutSchema,
   FrameDefinition,
@@ -23,18 +21,12 @@ import {
   GridLayoutDefinition,
   GridLayoutSchema,
   GridSchema,
-  JunctionDefinition,
-  JunctionSchema,
   LegendDefinition,
   LegendSchema,
   LogicFrameDefinition,
   LogicFrameSchema,
   OverlayLayoutDefinition,
   OverlayLayoutSchema,
-  StageDefinition,
-  StageSchema,
-  TerminalDefinition,
-  TerminalSchema,
 } from '@retikz/standard';
 import {
   axes,
@@ -43,8 +35,6 @@ import {
   CalloutVanillaAdapter,
   connector,
   ConnectorVanillaAdapter,
-  decision,
-  DecisionVanillaAdapter,
   flexLayout,
   FlexLayoutVanillaAdapter,
   frame,
@@ -53,18 +43,12 @@ import {
   gridLayout,
   GridLayoutVanillaAdapter,
   GridVanillaAdapter,
-  junction,
-  JunctionVanillaAdapter,
   legend,
   LegendVanillaAdapter,
   logicFrame,
   LogicFrameVanillaAdapter,
   overlayLayout,
   OverlayLayoutVanillaAdapter,
-  stage,
-  StageVanillaAdapter,
-  terminal,
-  TerminalVanillaAdapter,
 } from '@retikz/standard-vanilla';
 import { TableSpecSchema, TableStructureKind } from '@retikz/table';
 import { createTableAdapter, embedTable } from '@retikz/table-vanilla';
@@ -130,10 +114,6 @@ type StandardKind =
   | 'overlayLayout'
   | 'legend'
   | 'logicFrame'
-  | 'terminal'
-  | 'stage'
-  | 'decision'
-  | 'junction'
   | 'connector'
   | 'callout';
 
@@ -148,14 +128,6 @@ const standardCanonicalId = (kind: StandardKind, embedId: string): string => {
   switch (kind) {
     case 'logicFrame':
       return `${embedId}/logicFrame`;
-    case 'terminal':
-      return `${embedId}/terminal`;
-    case 'stage':
-      return `${embedId}/stage`;
-    case 'decision':
-      return `${embedId}/decision`;
-    case 'junction':
-      return `${embedId}/junction`;
     case 'connector':
       return `${embedId}/connector`;
     case 'callout':
@@ -175,16 +147,7 @@ const nextStandardId = (kind: StandardKind, state: StandardConversionState, auth
     const generatedId = standardCanonicalId(kind, embedId);
     state.ids.set(authoredId, generatedId);
     state.ids.set(generatedId, generatedId);
-    if (
-      kind === 'logicFrame' ||
-      kind === 'terminal' ||
-      kind === 'stage' ||
-      kind === 'decision' ||
-      kind === 'junction' ||
-      kind === 'connector' ||
-      kind === 'callout' ||
-      kind === 'frame'
-    ) {
+    if (kind === 'logicFrame' || kind === 'connector' || kind === 'callout' || kind === 'frame') {
       state.ids.set(`${authoredId}/${kind}`, generatedId);
     }
   }
@@ -240,10 +203,6 @@ const registerStandardIds = (children: ReadonlyArray<IRChild>, state: StandardCo
             'overlayLayout',
             'legend',
             'logicFrame',
-            'terminal',
-            'stage',
-            'decision',
-            'junction',
             'connector',
             'callout',
           ].includes(kind)
@@ -315,43 +274,6 @@ const convertStandardChild = (child: IRChild, state: StandardConversionState): V
         void _id;
         return logicFrame(nextStandardId('logicFrame', state, childId), input);
       }
-      case 'terminal': {
-        const { namespace: _namespace, type: _type, id: _id, ...input } = TerminalSchema.parse(child);
-        void _namespace;
-        void _type;
-        void _id;
-        return terminal(
-          nextStandardId('terminal', state, childId),
-          rewriteLogicInput('terminal', input, state) as Parameters<typeof terminal>[1],
-        );
-      }
-      case 'stage': {
-        const { namespace: _namespace, type: _type, id: _id, ...input } = StageSchema.parse(child);
-        void _namespace;
-        void _type;
-        void _id;
-        return stage(
-          nextStandardId('stage', state, childId),
-          rewriteLogicInput('stage', input, state) as Parameters<typeof stage>[1],
-        );
-      }
-      case 'decision': {
-        const { namespace: _namespace, type: _type, id: _id, ...input } = DecisionSchema.parse(child);
-        void _namespace;
-        void _type;
-        void _id;
-        return decision(
-          nextStandardId('decision', state, childId),
-          rewriteLogicInput('decision', input, state) as Parameters<typeof decision>[1],
-        );
-      }
-      case 'junction': {
-        const { namespace: _namespace, type: _type, id: _id, ...input } = JunctionSchema.parse(child);
-        void _namespace;
-        void _type;
-        void _id;
-        return junction(nextStandardId('junction', state, childId), rewriteLogicInput('junction', input, state));
-      }
       case 'connector': {
         const { namespace: _namespace, type: _type, id: _id, ...input } = ConnectorSchema.parse(child);
         void _namespace;
@@ -394,10 +316,6 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
   ...(state.adapters.has('overlayLayout') ? [OverlayLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('legend') ? [LegendVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('logicFrame') ? [LogicFrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('terminal') ? [TerminalVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('stage') ? [StageVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('decision') ? [DecisionVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('junction') ? [JunctionVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('connector') ? [ConnectorVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('callout') ? [CalloutVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
@@ -411,10 +329,6 @@ const definitionByName = {
   OverlayLayoutDefinition,
   LegendDefinition,
   LogicFrameDefinition,
-  TerminalDefinition,
-  StageDefinition,
-  DecisionDefinition,
-  JunctionDefinition,
   ConnectorDefinition,
   CalloutDefinition,
 } as const;
@@ -430,10 +344,6 @@ const buildStandardPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
       overlayLayout: 0,
       legend: 0,
       logicFrame: 0,
-      terminal: 0,
-      stage: 0,
-      decision: 0,
-      junction: 0,
       connector: 0,
       callout: 0,
     },

@@ -1,119 +1,77 @@
 ---
 title: Semantic units
-description: Use Terminal, Stage, Decision, and Junction as neutral content-bearing logic units.
+description: Terminal, Stage, Decision, and Junction are logic-aware sugar over Core Node
 ---
 
-The semantic-unit family gives common logic nodes a stable meaning without coupling them to a domain graph. Every unit has an authored `id`, a neutral appearance, and Core-child content where appropriate.
+Semantic units are lightweight wrappers over Core `Node`. They always emit `type: 'node'`; they do not create a Standard composite, artifact, or separate layout compiler. Each wrapper fixes its shape and uses Schema `describe` text to state its logic responsibility
 
 ## Usage
 
 ```tsx
-import { Layout, Node, Scope } from '@retikz/react';
+import { Layout, Node, Scope, Text } from '@retikz/react';
 import { Decision, Junction, Stage, Terminal } from '@retikz/standard-react';
 ```
 
 ```tsx
 <Layout width={440} height={180}>
-  <Scope transforms={[{ kind: 'translate', x: 20, y: 70 }]}>
-    <Terminal id="start" role="start">
-      <Node position={[0, 0]} text="Start" />
-    </Terminal>
-  </Scope>
-  <Scope transforms={[{ kind: 'translate', x: 130, y: 70 }]}>
-    <Stage id="step">
-      <Node position={[0, 0]} text="Process" />
-    </Stage>
-  </Scope>
-  <Scope transforms={[{ kind: 'translate', x: 250, y: 70 }]}>
-    <Decision id="check">
-      <Node position={[0, 0]} text="Ready?" />
-    </Decision>
-  </Scope>
-  <Scope transforms={[{ kind: 'translate', x: 380, y: 80 }]}>
-    <Junction id="join" />
-  </Scope>
+  <Terminal id="start" position={[20, 70]}>
+    Start
+  </Terminal>
+  <Stage id="step" position={[130, 70]}>
+    Process
+  </Stage>
+  <Decision id="check" position={[250, 70]}>
+    <Text>Ready?</Text>
+  </Decision>
+  <Junction id="join" position={[380, 80]} />
 </Layout>
 ```
 
-`Terminal` content is optional, `Stage` and `Decision` content is required, and `Junction` content is optional. `role` and `category` remain authored fields; they do not invoke a hidden registry.
+String children become the Node text. You can also use `<Text>` exactly as with Core `Node`. Other Node props such as `fill`, `padding`, `minimumSize`, and `position` pass through; `shape` is fixed by the semantic unit
+
+| Unit       | Fixed shape                    | Logic responsibility               | Defaults                                          |
+| ---------- | ------------------------------ | ---------------------------------- | ------------------------------------------------- |
+| `Terminal` | Capsule (rounded rectangle)    | Start or end of a flow             | minimum `48 × 24`, padding `{ x: 12, y: 6 }`      |
+| `Stage`    | Rounded rectangle, radius `8`  | Process or action in a flow        | padding `8`                                       |
+| `Decision` | Flattened diamond, ratio `1.8` | Condition or branch                | padding `{ x: 3, y: 2 }`                          |
+| `Junction` | Circle                         | Fork, merge, or continuation point | minimum `8 × 8`, padding `0`, fill `currentColor` |
 
 ## Examples
 
 <ComponentPreview files="semantic-units" size="lg" />
 
-Direct IR uses `createTerminal`, `createStage`, `createDecision`, or `createJunction` plus the matching Definition. Vanilla uses the corresponding builder and adapter; the adapter derives canonical identity from its embed id.
+Direct IR uses `createTerminal`, `createStage`, `createDecision`, or `createJunction`. The result is a Core Node and needs no Definition
 
 ```ts
-import { StageDefinition, createStage } from '@retikz/standard';
+import { createStage } from '@retikz/standard';
 
-const stage = createStage({ id: 'step', content: { type: 'node', position: [0, 0], text: 'Process' } });
-const compile = { composites: [StageDefinition] };
+const stage = createStage({ id: 'step', position: [0, 0], text: 'Process' });
 ```
+
+Vanilla builders also return canonical Nodes directly
 
 ```ts
-import { StageVanillaAdapter, stage } from '@retikz/standard-vanilla';
+import { stage } from '@retikz/standard-vanilla';
 
-const embed = stage('step', { content: { type: 'node', position: [0, 0], text: 'Process' } });
-const adapters = [StageVanillaAdapter];
+const step = stage('step', { position: [0, 0], text: 'Process' });
 ```
 
-The following recipes deliberately stay in docs. They are compositions, not new `Process`, `Class`, or `Data` exports.
+The following recipes stay in docs. They demonstrate composition, not new `Process`, `Class`, or `Data` exports
 
-<ComponentPreview files="class-recipe" size="lg" caption="A Class recipe using a block header and typed sections." />
+<ComponentPreview
+  files="class-recipe"
+  size="lg"
+  caption="A Class recipe using a LogicFrame header and typed sections."
+/>
 
 <ComponentPreview files="data-recipe" size="lg" caption="A Data recipe using neutral stages and a decision." />
 
-## How it works
+## Semantic boundary
 
-<ComponentAlert
-  type="tip"
-  title="Optional for everyday use"
-  description="Use this section when checking content requirements or neutral appearance defaults."
-/>
-
-All four units lower through the same Core child and layout contracts. The semantic type selects defaults and artifact kind; it does not select a domain registry or automatic graph behavior.
-
-## API Reference
-
-### Terminal
-
-| Field         | Type                      | Default                                                                                                          | Description                                                  |
-| ------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `id`          | `string`                  | —                                                                                                                | Stable authored Terminal identity                            |
-| `role`        | `'start' \| 'end'`        | —                                                                                                                | Closed terminal role                                         |
-| `content?`    | `IRChild`                 | omitted                                                                                                          | Optional Core child placed inside the capsule                |
-| `appearance?` | `TerminalAppearanceInput` | size min `48 × 24`, padding `{ x: 12, y: 6 }`, capsule, visible, neutral style, `boundary: 'shape'`, `zIndex: 0` | Sizing, shape, boundary, style, dash, and stacking overrides |
-
-### Stage
-
-| Field         | Type                   | Default                                                                                                   | Description                                                  |
-| ------------- | ---------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `id`          | `string`               | —                                                                                                         | Stable authored Stage identity                               |
-| `category?`   | `string`               | omitted                                                                                                   | Open authored category                                       |
-| `content`     | `IRChild`              | —                                                                                                         | Required Core child placed inside the rounded rectangle      |
-| `appearance?` | `StageAppearanceInput` | content size, padding `8`, rectangle radius `8`, visible, neutral style, `boundary: 'shape'`, `zIndex: 0` | Sizing, shape, boundary, style, dash, and stacking overrides |
-
-### Decision
-
-| Field         | Type                      | Default                                                                                       | Description                                                  |
-| ------------- | ------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `id`          | `string`                  | —                                                                                             | Stable authored Decision identity                            |
-| `content`     | `IRChild`                 | —                                                                                             | Required Core child placed inside the diamond                |
-| `appearance?` | `DecisionAppearanceInput` | content size, padding `12`, diamond, visible, neutral style, `boundary: 'shape'`, `zIndex: 0` | Sizing, shape, boundary, style, dash, and stacking overrides |
-
-### Junction
-
-| Field         | Type                      | Default                                                                                                                                                          | Description                                                  |
-| ------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `id`          | `string`                  | —                                                                                                                                                                | Stable authored Junction identity                            |
-| `role?`       | `string`                  | omitted                                                                                                                                                          | Open authored role                                           |
-| `content?`    | `IRChild`                 | omitted                                                                                                                                                          | Optional Core child; omission selects dot appearance         |
-| `appearance?` | `JunctionAppearanceInput` | without content: size min `8 × 8`, padding `0`, circle, dot style (`fill: currentColor`), visible, `boundary: 'shape'`, `zIndex: 0`; with content: neutral style | Sizing, shape, boundary, style, dash, and stacking overrides |
-
-The `appearance` object is a top-level field on each unit input; `size`, `padding`, `overflow`, `shape`, `boundary`, `style`, `dash`, and `zIndex` are fields inside `appearance`. Direct JSON must use Core children, not React nodes.
+Semantic units do not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Use `LogicFrame` for layout containers, `Connector` for relationships, and `Callout` for annotations
 
 ## Related
 
-- [LogicFrame](/standard/logic/logic-frame): place units in reusable regions
-- [Connector](/standard/logic/connector): connect authored unit identities
-- [Callout](/standard/logic/callout): place explanations beside a previous unit
+- [LogicFrame](/standard/logic/logic-frame): reusable layout container
+- [Connector](/standard/logic/connector): connect authored Node identities
+- [Callout](/standard/logic/callout): place an explanation beside a Node

@@ -290,10 +290,6 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'overlayLayout',
   'legend',
   'logicFrame',
-  'terminal',
-  'stage',
-  'decision',
-  'junction',
   'connector',
   'callout',
 ];
@@ -306,10 +302,6 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'OverlayLayoutVanillaAdapter',
   'LegendVanillaAdapter',
   'LogicFrameVanillaAdapter',
-  'TerminalVanillaAdapter',
-  'StageVanillaAdapter',
-  'DecisionVanillaAdapter',
-  'JunctionVanillaAdapter',
   'ConnectorVanillaAdapter',
   'CalloutVanillaAdapter',
 ];
@@ -324,10 +316,6 @@ export type StandardPreviewDefinitionName =
   | 'OverlayLayoutDefinition'
   | 'LegendDefinition'
   | 'LogicFrameDefinition'
-  | 'TerminalDefinition'
-  | 'StageDefinition'
-  | 'DecisionDefinition'
-  | 'JunctionDefinition'
   | 'ConnectorDefinition'
   | 'CalloutDefinition';
 
@@ -340,10 +328,6 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   overlayLayout: 'OverlayLayoutDefinition',
   legend: 'LegendDefinition',
   logicFrame: 'LogicFrameDefinition',
-  terminal: 'TerminalDefinition',
-  stage: 'StageDefinition',
-  decision: 'DecisionDefinition',
-  junction: 'JunctionDefinition',
   connector: 'ConnectorDefinition',
   callout: 'CalloutDefinition',
 };
@@ -362,13 +346,7 @@ const standardOwnedChildren = (child: IRChild & { namespace: string; type: strin
     sections?.forEach(section => owned.push(section.child));
     return owned;
   }
-  if (
-    child.type === 'terminal' ||
-    child.type === 'stage' ||
-    child.type === 'decision' ||
-    child.type === 'junction' ||
-    child.type === 'callout'
-  ) {
+  if (child.type === 'callout') {
     const content = record.content as IRChild | undefined;
     return content === undefined ? [] : [content];
   }
@@ -434,14 +412,6 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
   switch (kind) {
     case 'logicFrame':
       return `${embedId}/logicFrame`;
-    case 'terminal':
-      return `${embedId}/terminal`;
-    case 'stage':
-      return `${embedId}/stage`;
-    case 'decision':
-      return `${embedId}/decision`;
-    case 'junction':
-      return `${embedId}/junction`;
     case 'connector':
       return `${embedId}/connector`;
     case 'callout':

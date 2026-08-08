@@ -7,8 +7,8 @@ import { Callout, Stage } from '@retikz/standard-react';
 const Demo: FC = () => (
   <Layout width={560} height={240}>
     <Scope transforms={[{ kind: 'translate', x: 220, y: 104 }]}>
-      <Stage id="callout-target">
-        <Node position={[0, 0]} text="Target" />
+      <Stage id="callout-target" position={[0, 0]}>
+        Target
       </Stage>
     </Scope>
     <Callout id="callout-right" target={{ id: 'callout-target' }} placement={{ side: 'right', gap: 14, offset: -10 }}>

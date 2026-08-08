@@ -15,13 +15,13 @@ import { Connector, Stage, Terminal } from '@retikz/standard-react';
 ```tsx
 <Layout width={420} height={160}>
   <Scope transforms={[{ kind: 'translate', x: 24, y: 56 }]}>
-    <Terminal id="start" role="start">
-      <Node position={[0, 0]} text="Start" />
+    <Terminal id="start" position={[0, 0]}>
+      Start
     </Terminal>
   </Scope>
   <Scope transforms={[{ kind: 'translate', x: 220, y: 56 }]}>
-    <Stage id="step">
-      <Node position={[0, 0]} text="Step" />
+    <Stage id="step" position={[0, 0]}>
+      Step
     </Stage>
   </Scope>
   <Connector
@@ -54,7 +54,7 @@ Direct JSON uses `createConnector`, `ConnectorSchema`, and `ConnectorDefinition`
 
 Target identity is explicit. A whole target may point forward or backward in authored traversal, so a Connector can connect `{ id: 'later-stage' }` before that Stage is emitted. A LogicFrame section target (`{ kind: 'logicFrame', id: 'block', section: 'body' }`) is accepted by the schema but currently fails loudly during Connector lowering; use a whole block target instead.
 
-In React/direct IR, a `Terminal id="start"` is targeted with `{ id: 'start' }`. In Vanilla, `terminal('start', ...)` produces canonical `start/terminal`, so a Vanilla Connector or Callout must target `{ id: 'start/terminal' }`. The same suffix rule applies to Stage, Decision, Junction, LogicFrame, Connector, Callout, and Frame adapters.
+In React/direct IR and Vanilla semantic builders, a `Terminal id="start"` is targeted with `{ id: 'start' }`. LogicFrame, Connector, Callout, and Frame adapters retain their own composite identity rules.
 
 ## How it works
 

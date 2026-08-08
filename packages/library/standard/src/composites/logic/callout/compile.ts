@@ -14,7 +14,7 @@ import type { LogicDiagramTarget } from '../shared';
 import type { CalloutArtifact, IRCallout } from './types';
 
 import { unionLayoutArtifactRects } from '../../layout/internal';
-import { compileLogicShell } from '../logic-unit/compile';
+import { compileLogicShell } from '../internal/content-shell';
 
 type SideGeometry = Readonly<{
   targetAnchor: 'top' | 'right' | 'bottom' | 'left';

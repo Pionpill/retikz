@@ -25,18 +25,18 @@ const Demo: FC = () => (
       </LogicFrame>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 72, y: 164 }]}>
-      <Terminal id="process-start" role="start">
-        <Node position={[0, 0]} text="Start" />
+      <Terminal id="process-start" position={[0, 0]}>
+        Start
       </Terminal>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 278, y: 164 }]}>
-      <Stage id="process-step">
-        <Node position={[0, 0]} text="Transform" />
+      <Stage id="process-step" position={[0, 0]}>
+        Transform
       </Stage>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 490, y: 164 }]}>
-      <Decision id="process-check">
-        <Node position={[0, 0]} text="Valid?" />
+      <Decision id="process-check" position={[0, 0]}>
+        Valid?
       </Decision>
     </Scope>
     <Connector id="process-edge-1" from={{ id: 'process-start' }} to={{ id: 'process-step' }} />

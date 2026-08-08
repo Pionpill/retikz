@@ -9,9 +9,7 @@ export {
   ConnectorOrthogonalPattern,
   ConnectorRole,
   ConnectorRouteKind,
-  JunctionRole,
   LogicCompositeType,
-  TerminalRole,
 } from './shared/constants';
 export {
   CalloutSideSchema,
@@ -28,7 +26,6 @@ export {
   LogicOuterArtifactSchema,
   LogicOutlineAppearanceSchema,
   LogicUnitAppearanceSchema,
-  TerminalRoleSchema,
 } from './shared/schema';
 export type {
   CalloutSideValue,
@@ -38,7 +35,6 @@ export type {
   ConnectorOrthogonalPatternValue,
   ConnectorRoleValue,
   ConnectorRouteKindValue,
-  JunctionRoleValue,
   LogicCompositeTypeValue,
   LogicDiagramPoint,
   LogicDiagramPointInput,
@@ -55,5 +51,4 @@ export type {
   LogicOutlineAppearanceInput,
   LogicUnitAppearance,
   LogicUnitAppearanceInput,
-  TerminalRoleValue,
 } from './shared/types';

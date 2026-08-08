@@ -15,8 +15,8 @@ import { Callout, Stage } from '@retikz/standard-react';
 ```tsx
 <Layout width={420} height={180}>
   <Scope transforms={[{ kind: 'translate', x: 150, y: 64 }]}>
-    <Stage id="step">
-      <Node position={[0, 0]} text="Step" />
+    <Stage id="step" position={[0, 0]}>
+      Step
     </Stage>
   </Scope>
   <Callout id="note" target={{ id: 'step' }} placement={{ side: 'right', gap: 12 }}>
@@ -43,13 +43,13 @@ const note = createCallout({
 const compile = { composites: [CalloutDefinition] };
 ```
 
-Vanilla uses the builder and adapter. A target to `terminal('start', ...)` is `{ id: 'start/terminal' }` because Vanilla derives canonical IDs from embed IDs:
+Vanilla semantic builders return Nodes directly, so a target to `terminal('start', ...)` is `{ id: 'start' }`:
 
 ```ts
 import { callout, CalloutVanillaAdapter } from '@retikz/standard-vanilla';
 
 const note = callout('note', {
-  target: { id: 'start/terminal' },
+  target: { id: 'start' },
   content: { type: 'node', position: [0, 0], text: 'Explain' },
   placement: { side: 'right' },
 });
@@ -77,7 +77,7 @@ Callout targets are previous-only: the target must already have a resolved autho
 | `content`     | `IRChild` / React child               | —                                                                                                         | Required annotation content                                         |
 | `placement`   | `CalloutPlacementInput`               | `gap: 8`, `offset: 0`; `side` required                                                                    | Target-relative side, normal gap, and tangent offset                |
 | `leader`      | `false` or `ConnectorAppearanceInput` | stroke `currentColor`, width `1`, rounded corners `0`, `zIndex: 0`                                        | Optional leader appearance; `false` disables it                     |
-| `appearance?` | `StageAppearanceInput`                | content size, padding `8`, rectangle radius `8`, visible, neutral style, `boundary: 'shape'`, `zIndex: 0` | Content shell appearance                                            |
+| `appearance?` | content shell appearance input        | content size, padding `8`, rectangle radius `8`, visible, neutral style, `boundary: 'shape'`, `zIndex: 0` | Content shell appearance                                            |
 
 ## Related
 

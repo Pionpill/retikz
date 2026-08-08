@@ -1,29 +1,25 @@
-import type {
-  DecisionInput,
-  IRDecision,
-  IRJunction,
-  IRStage,
-  IRTerminal,
-  JunctionInput,
-  StageInput,
-  TerminalInput,
-} from './types';
+import type { IRNode } from '@retikz/core';
 
-import { STANDARD_NAMESPACE } from '../shared';
+import type { DecisionInput, JunctionInput, StageInput, TerminalInput } from './types';
+
 import { DecisionSchema, JunctionSchema, StageSchema, TerminalSchema } from './schema';
 
-/** 校验并创建 canonical Terminal IR */
-export const createTerminal = (input: TerminalInput): IRTerminal =>
-  TerminalSchema.parse({ namespace: STANDARD_NAMESPACE, type: 'terminal', ...input });
+/** 创建带 Terminal 默认形状和逻辑 Schema 语义的 Core Node */
+export const createTerminal = (input: TerminalInput): IRNode =>
+  TerminalSchema.parse({
+    type: 'node',
+    ...input,
+    shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
+  }) as IRNode;
 
-/** 校验并创建 canonical Stage IR */
-export const createStage = (input: StageInput): IRStage =>
-  StageSchema.parse({ namespace: STANDARD_NAMESPACE, type: 'stage', ...input });
+/** 创建带 Stage 默认形状和逻辑 Schema 语义的 Core Node */
+export const createStage = (input: StageInput): IRNode =>
+  StageSchema.parse({ type: 'node', ...input, shape: { type: 'rectangle', params: { cornerRadius: 8 } } }) as IRNode;
 
-/** 校验并创建 canonical Decision IR */
-export const createDecision = (input: DecisionInput): IRDecision =>
-  DecisionSchema.parse({ namespace: STANDARD_NAMESPACE, type: 'decision', ...input });
+/** 创建带 Decision 默认形状和逻辑 Schema 语义的 Core Node */
+export const createDecision = (input: DecisionInput): IRNode =>
+  DecisionSchema.parse({ type: 'node', ...input, shape: { type: 'diamond', params: { aspectRatio: 1.8 } } }) as IRNode;
 
-/** 校验并创建 canonical Junction IR */
-export const createJunction = (input: JunctionInput): IRJunction =>
-  JunctionSchema.parse({ namespace: STANDARD_NAMESPACE, type: 'junction', ...input });
+/** 创建带 Junction 默认形状和逻辑 Schema 语义的 Core Node */
+export const createJunction = (input: JunctionInput): IRNode =>
+  JunctionSchema.parse({ type: 'node', ...input, shape: 'circle' }) as IRNode;

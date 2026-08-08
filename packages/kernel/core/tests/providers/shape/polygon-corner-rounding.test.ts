@@ -32,6 +32,17 @@ describe('polygon cornerRadius — paramsSchema', () => {
     expect(polygon.paramsSchema.parse({ sides: 1024 })).toEqual({ sides: 1024 });
     expect(() => polygon.paramsSchema.parse({ sides: 1025 })).toThrow();
   });
+
+  it('aspectRatio 只允许正四边形使用', () => {
+    expect(polygon.paramsSchema.parse({ sides: 4, aspectRatio: 1.8 })).toEqual({
+      sides: 4,
+      aspectRatio: 1.8,
+    });
+    expect(() => polygon.paramsSchema.parse({ sides: 4, aspectRatio: 0 })).toThrow();
+    expect(() => polygon.paramsSchema.parse({ sides: 4, aspectRatio: -1 })).toThrow();
+    expect(() => polygon.paramsSchema.parse({ sides: 6, aspectRatio: 1.8 })).toThrow();
+    expect(() => polygon.paramsSchema.parse({ sides: 4, rotate: 15, aspectRatio: 1.8 })).toThrow();
+  });
 });
 
 describe('polygon cornerRadius — emit', () => {
@@ -167,5 +178,35 @@ describe('polygon cornerRadius — circumscribe unchanged', () => {
     const noCorner = polygon.circumscribe(40, 30, { sides: 6 });
     const withCorner = polygon.circumscribe(40, 30, { sides: 6, cornerRadius: 12 });
     expect(withCorner).toEqual(noCorner);
+  });
+});
+
+describe('polygon diamond aspectRatio', () => {
+  it('aspectRatio=1 preserves the existing diamond dimensions', () => {
+    expect(polygon.circumscribe(40, 30, { sides: 4 })).toEqual(
+      polygon.circumscribe(40, 30, { sides: 4, aspectRatio: 1 }),
+    );
+  });
+
+  it('aspectRatio controls the four-sided diamond width-to-height ratio', () => {
+    const result = polygon.circumscribe(40, 30, { sides: 4, aspectRatio: 1.8 });
+    expect(result.halfWidth / result.halfHeight).toBeCloseTo(1.8, 10);
+    expect(result.halfWidth).toBeCloseTo(94, 10);
+    expect(result.halfHeight).toBeCloseTo(94 / 1.8, 10);
+  });
+
+  it('boundaryPoint and connectionEnvelope reuse the same anisotropic diamond contour', () => {
+    const bounds = squareRect(100);
+    const params = { sides: 4, aspectRatio: 1.8 } as const;
+    const right = polygon.boundaryPoint({ ...bounds, width: 180 }, [1000, 0], params);
+    const top = polygon.boundaryPoint(bounds, [0, 1000], params);
+    expect(right[0]).toBeCloseTo(90, 10);
+    expect(right[1]).toBeCloseTo(0, 10);
+    expect(top[0]).toBeCloseTo(0, 10);
+    expect(top[1]).toBeCloseTo(50, 10);
+    expect(polygon.connectionEnvelope!({ ...bounds, width: 180 }, 'rectangle', params)).toEqual({
+      halfWidth: 90,
+      halfHeight: 50,
+    });
   });
 });

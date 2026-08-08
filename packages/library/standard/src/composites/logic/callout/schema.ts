@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '../../layout/shared';
 import { STANDARD_NAMESPACE } from '../../shared';
-import { StageAppearanceSchema } from '../logic-unit';
+import { LogicContentShellAppearanceSchema } from '../internal/content-shell';
 import {
   CalloutSideSchema,
   ConnectorAppearanceSchema,
@@ -49,7 +49,7 @@ const CalloutShape = {
     .union([z.literal(false), CalloutLeaderAppearanceSchema])
     .default({ stroke: 'currentColor', strokeWidth: 1, roundedCorners: 0, zIndex: 0 })
     .describe('Optional leader appearance, or false to disable the leader.'),
-  appearance: StageAppearanceSchema.default({
+  appearance: LogicContentShellAppearanceSchema.default({
     size: { x: { kind: 'content' }, y: { kind: 'content' } },
     padding: 8,
     overflow: 'visible',

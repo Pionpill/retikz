@@ -375,39 +375,25 @@ describe('irToVanillaCode fallback', () => {
     expect(code).not.toMatch(/\binspect\b/);
   });
 
-  it('为 Logic family 生成七个 Vanilla builder、adapter 与 nested definitions', () => {
+  it('keeps semantic units as ordinary Node code and only emits composite helpers for real composites', () => {
     const code = irToVanillaCode(
       ir([
         {
-          namespace: 'standard',
-          type: 'logicFrame',
-          id: 'block',
-          sections: [
-            {
-              key: 'body',
-              child: {
-                namespace: 'standard',
-                type: 'stage',
-                id: 'nested-stage',
-                content: { type: 'node', position: [0, 0], text: 'Nested' },
-              },
-            },
-          ],
+          type: 'node',
+          id: 'start',
+          position: [0, 0],
+          shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
+          text: 'Start',
         },
-        { namespace: 'standard', type: 'terminal', id: 'start', role: 'start' },
         {
-          namespace: 'standard',
-          type: 'stage',
+          type: 'node',
           id: 'step',
-          content: { type: 'node', position: [20, 0], text: 'Step' },
+          position: [80, 0],
+          shape: { type: 'rectangle', params: { cornerRadius: 8 } },
+          text: 'Step',
         },
-        {
-          namespace: 'standard',
-          type: 'decision',
-          id: 'check',
-          content: { type: 'node', position: [40, 0], text: 'Check' },
-        },
-        { namespace: 'standard', type: 'junction', id: 'join' },
+        { type: 'node', id: 'check', position: [160, 0], shape: 'diamond', text: 'Check' },
+        { type: 'node', id: 'join', position: [240, 0], shape: 'circle' },
         {
           namespace: 'standard',
           type: 'connector',
@@ -416,54 +402,17 @@ describe('irToVanillaCode fallback', () => {
           to: { id: 'step' },
           label: { text: 'next' },
         },
-        {
-          namespace: 'standard',
-          type: 'callout',
-          id: 'note',
-          target: { id: 'step' },
-          content: { type: 'node', position: [0, 0], text: 'Explain' },
-          placement: { side: 'right' },
-        },
       ] as never),
     );
 
-    for (const helper of ['logicFrame(', 'terminal(', 'stage(', 'decision(', 'junction(', 'connector(', 'callout(']) {
-      expect(code).toContain(helper);
-    }
-    for (const adapter of [
-      'LogicFrameVanillaAdapter',
-      'TerminalVanillaAdapter',
-      'StageVanillaAdapter',
-      'DecisionVanillaAdapter',
-      'JunctionVanillaAdapter',
-      'ConnectorVanillaAdapter',
-      'CalloutVanillaAdapter',
-    ]) {
-      expect(code).toContain(adapter);
-    }
-    expect(code).toContain("id: 'preview-terminal-1/terminal'");
+    expect(code).toContain("node('start'");
+    expect(code).toContain("node('step'");
+    expect(code).toContain("node('check'");
+    expect(code).toContain("node('join'");
+    expect(code).toContain('connector(');
+    expect(code).toContain('ConnectorVanillaAdapter');
+    expect(code).not.toContain('TerminalDefinition');
+    expect(code).not.toContain('StageDefinition');
     expect(code).not.toContain('Unsupported Standard composite');
-
-    const nestedOnlyCode = irToVanillaCode(
-      ir([
-        {
-          namespace: 'standard',
-          type: 'logicFrame',
-          id: 'nested-block',
-          sections: [
-            {
-              key: 'body',
-              child: {
-                namespace: 'standard',
-                type: 'stage',
-                id: 'nested-stage',
-                content: { type: 'node', position: [0, 0], text: 'Nested' },
-              },
-            },
-          ],
-        },
-      ] as never),
-    );
-    expect(nestedOnlyCode).toContain('const standardCompile = { composites: [StageDefinition] };');
   });
 });
