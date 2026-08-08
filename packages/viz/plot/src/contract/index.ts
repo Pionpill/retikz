@@ -8,4 +8,3 @@ export * from './locator';
 export * from './mark';
 export * from './provenance';
 export * from './scale';
-export * from './theme-token';

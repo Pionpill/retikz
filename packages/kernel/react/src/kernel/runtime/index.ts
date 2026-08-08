@@ -8,6 +8,9 @@ export type { RendererMode } from './renderer-context';
 export { RendererModeContext, useRendererMode } from './renderer-context';
 export type { RendererModeProviderProps } from './RendererModeProvider';
 export { RendererModeProvider } from './RendererModeProvider';
+export type { ThemeProviderProps } from './ThemeProvider';
+export { ThemeProvider } from './ThemeProvider';
+export { ThemeContext, useTheme } from './theme-context';
 export type {
   LayoutRetainedRuntimeOptions,
   LayoutRuntimeModeValue,

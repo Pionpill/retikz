@@ -3,7 +3,6 @@ import type { IRChild, IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
 import type { CompileWarningInput } from '../warning';
-import type { ThemeTokenRegistry } from './theme';
 
 import { CompileWarningCode } from '../constants';
 import { CompileInvariantError } from '../probe-failure';
@@ -24,7 +23,6 @@ type LowerOptions = {
    */
   maxDepth?: number;
   /** Theme token owner definitions 的 identity registry */
-  themeTokenDefinitions?: ThemeTokenRegistry;
 };
 
 type CallableExpandDefinition = {
@@ -46,7 +44,7 @@ const lowerCompositeTree = (
   options: LowerOptions,
 ): IRScene => {
   const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
-  const rootTheme = resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', options.themeTokenDefinitions);
+  const rootTheme = resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme');
 
   const expandList = (
     children: ReadonlyArray<IRChild>,
@@ -92,7 +90,7 @@ const lowerCompositeTree = (
       return expandList(list, depth + 1, `${path}::expand`, theme);
     }
     if (child.type === 'scope') {
-      const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`, options.themeTokenDefinitions);
+      const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`);
       return [{ ...child, children: expandList(child.children, depth, `${path}.children`, scopeTheme) }];
     }
     return [child];

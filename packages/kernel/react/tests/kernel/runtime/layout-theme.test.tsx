@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import type { EmbeddableTier2Adapter } from '../../../src';
 
-import { Layout } from '../../../src/kernel';
+import { Layout, ThemeProvider } from '../../../src/kernel';
 
 const themedBox = defineComposite({
   namespace: 'theme-test',
@@ -46,6 +46,52 @@ const input: IRScene = {
   theme: { style: ThemeStyle.Academic, mode: ThemeMode.Light },
   children: [{ namespace: 'theme-test', type: 'box' }],
 };
+
+const themeProbe = defineComposite({
+  namespace: 'theme-test',
+  type: 'probe',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('theme-test'),
+    type: z.literal('probe'),
+  }),
+  expand: (_node, context) => {
+    const styleColor =
+      context.theme.style === ThemeStyle.Clean
+        ? '#layout-style'
+        : context.theme.style === ThemeStyle.Vibrant
+          ? '#ir-style'
+          : context.theme.style === ThemeStyle.Academic
+            ? '#provider-style'
+            : '#default-style';
+    return [
+      {
+        type: 'node',
+        id: 'style',
+        position: [0, 0],
+        minimumSize: 20,
+        padding: 0,
+        fill: styleColor,
+      },
+      {
+        type: 'node',
+        id: 'palette',
+        position: [30, 0],
+        minimumSize: 20,
+        padding: 0,
+        fill: context.theme.colors.categorical[0],
+      },
+      {
+        type: 'node',
+        id: 'error',
+        position: [60, 0],
+        minimumSize: 20,
+        padding: 0,
+        stroke: context.theme.colors.semantic.error,
+        strokeWidth: 2,
+      },
+    ];
+  },
+});
 
 describe('<Layout theme>', () => {
   class ThemeInstance {
@@ -114,6 +160,56 @@ describe('<Layout theme>', () => {
     );
 
     expect(markup).toContain('#fedcba');
+  });
+
+  it('ambient Theme 按 Provider → IR → Layout 顺序覆盖并按 token key 合并', () => {
+    const markup = renderToStaticMarkup(
+      <ThemeProvider
+        theme={{
+          style: ThemeStyle.Academic,
+          tokens: { core: { 'palette.categorical': ['#provider'], 'semantic.error': '#provider-error' } },
+        }}
+      >
+        <Layout
+          ir={{
+            type: 'scene',
+            version: 1,
+            theme: { style: ThemeStyle.Vibrant, tokens: { core: { 'palette.categorical': ['#ir'] } } },
+            children: [{ namespace: 'theme-test', type: 'probe' }],
+          }}
+          theme={{ style: ThemeStyle.Clean, tokens: { core: { 'semantic.success': '#layout-success' } } }}
+          composites={[themeProbe]}
+          width={100}
+          height={100}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(markup).toContain('#layout-style');
+    expect(markup).toContain('#ir');
+    expect(markup).toContain('#provider-error');
+  });
+
+  it('嵌套 ThemeProvider 按 namespace 和 token key 合并，内层只覆盖已声明值', () => {
+    const markup = renderToStaticMarkup(
+      <ThemeProvider
+        theme={{
+          tokens: { core: { 'palette.categorical': ['#outer'], 'semantic.error': '#outer-error' } },
+        }}
+      >
+        <ThemeProvider theme={{ tokens: { core: { 'semantic.success': '#inner-success' } } }}>
+          <Layout
+            ir={{ type: 'scene', version: 1, children: [{ namespace: 'theme-test', type: 'probe' }] }}
+            composites={[themeProbe]}
+            width={100}
+            height={100}
+          />
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+
+    expect(markup).toContain('#outer');
+    expect(markup).toContain('#outer-error');
   });
 
   it.each([

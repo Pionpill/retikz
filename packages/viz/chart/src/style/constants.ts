@@ -46,7 +46,6 @@ export const ChartThemeTokenSource = {
   /** effective Theme 选择的内建 preset */
   Preset: 'preset',
   /** Core effective Theme 继承的 Chart token */
-  Inherited: 'inherited',
   /** 当前 Chart 输入的稀疏 token 覆盖 */
   Local: 'local',
 } as const;

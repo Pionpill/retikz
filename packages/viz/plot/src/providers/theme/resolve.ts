@@ -15,7 +15,7 @@ import {
 import { getPlotThemePreset } from './catalog';
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 
-type PlotThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'tokens' | 'colors'>>;
+type PlotThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'colors'>>;
 
 /** 按 Plot preset、Core shared colors、inherited/local token、colors 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
@@ -25,7 +25,6 @@ export const resolvePlotTheme = (
   const style = effectiveTheme.style;
   const mode = effectiveTheme.mode;
   const sharedColors = effectiveTheme.colors ?? resolveCoreThemeColors(style, mode);
-  const inheritedTokens = effectiveTheme.tokens?.plot;
   const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
   const colors = input.colors === undefined ? undefined : structuredClone(input.colors);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
@@ -37,13 +36,8 @@ export const resolvePlotTheme = (
     [PlotThemeToken.PlotPaletteSeries]: [...sharedCategorical],
     [PlotThemeToken.PlotPaletteSector]: [...sharedCategorical],
   });
-  const inherited = PlotThemeTokenOverridesSchema.parse(inheritedTokens ?? {});
-  const tokensAfterInherited = PlotResolvedThemeTokensSchema.parse({
-    ...tokensAfterShared,
-    ...structuredClone(inherited),
-  });
   const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
-    ...tokensAfterInherited,
+    ...tokensAfterShared,
     ...structuredClone(plotThemeTokens),
   });
   const tokensAfterColors =
@@ -78,9 +72,6 @@ export const resolvePlotTheme = (
     }
     if (Object.hasOwn(plotThemeTokens, token)) {
       return { token, kind: PlotThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
-    }
-    if (Object.hasOwn(inherited, token)) {
-      return { token, kind: PlotThemeTokenSource.Inherited, path: `$theme/tokens/plot/${token}` };
     }
     if (colorTokens.has(token)) {
       return { token, kind: PlotThemeTokenSource.SharedCategorical, path: '$theme/colors/categorical' };

@@ -1,7 +1,3 @@
-import { z } from 'zod';
-
-import type { ThemeTokenContribution, ThemeTokenDefinition } from '../../contract';
-import type { IRJsonObject } from '../../schemas';
 import type {
   CssColorValue,
   NonEmptyReadonlyArray,
@@ -10,61 +6,7 @@ import type {
   ThemeStyleValue,
 } from '../../shared';
 
-import { defineThemeTokenContribution, defineThemeTokenNamespace } from '../../contract';
 import { ThemeMode, ThemeStyle } from '../../shared';
-import { cloneAndFreezeJson } from '../../shared/json';
-
-/** Core shared semantic colors 与 categorical palette 的 sparse token 输入 */
-export type IRCoreThemeTokenOverrides = Readonly<{
-  /** 跨领域错误状态颜色 */
-  'semantic.error'?: CssColorValue;
-  /** 跨领域成功状态颜色 */
-  'semantic.success'?: CssColorValue;
-  /** 跨领域警告状态颜色 */
-  'semantic.warning'?: CssColorValue;
-  /** 当前生效的非空 categorical palette */
-  'palette.categorical'?: NonEmptyReadonlyArray<CssColorValue>;
-}>;
-
-const CssColorSchema = z.string().min(1).describe('Non-empty CSS color value.');
-
-const CoreThemeTokenObjectSchema = z
-  .strictObject({
-    'semantic.error': CssColorSchema.optional(),
-    'semantic.success': CssColorSchema.optional(),
-    'semantic.warning': CssColorSchema.optional(),
-    'palette.categorical': z.tuple([CssColorSchema]).rest(CssColorSchema).optional(),
-  })
-  .describe('Strict sparse Core shared color overrides.');
-
-const isPlainJsonObject = (input: unknown): input is IRJsonObject => {
-  try {
-    const snapshot = cloneAndFreezeJson(input, 'Core theme token overrides');
-    return snapshot !== null && typeof snapshot === 'object' && !Array.isArray(snapshot);
-  } catch {
-    return false;
-  }
-};
-
-/** Core shared color schema with accessor-safe JSON validation before strict key validation */
-export const CoreThemeTokenSchema: z.ZodType<IRCoreThemeTokenOverrides> = z
-  .custom<IRCoreThemeTokenOverrides>(isPlainJsonObject, {
-    error: 'Core theme token overrides must be a plain JSON object.',
-  })
-  .pipe(CoreThemeTokenObjectSchema)
-  .describe('Strict sparse Core shared color overrides.');
-
-/** Core 内置 Theme token namespace definition singleton */
-export const CoreThemeTokenDefinition: ThemeTokenDefinition<'core', IRCoreThemeTokenOverrides> =
-  defineThemeTokenNamespace<'core', IRCoreThemeTokenOverrides>({ namespace: 'core', schema: CoreThemeTokenSchema });
-
-/** 创建冻结、脱离输入的 Core token contribution */
-export const defineCoreThemeTokens = (
-  overrides: IRCoreThemeTokenOverrides,
-): ThemeTokenContribution<'core', IRCoreThemeTokenOverrides> => {
-  const parsed = CoreThemeTokenDefinition.schema.parse(overrides);
-  return defineThemeTokenContribution({ namespace: 'core', tokens: parsed });
-};
 
 type CoreSemanticColors = Readonly<{
   error: CssColorValue;
@@ -132,21 +74,20 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeStyleValue, Readonly<Record<Theme
     }),
   });
 
-/** 解析指定 style / mode 的完整 shared colors，并应用 Core sparse overrides */
+/** 解析指定 style / mode 与 palette preset 的完整 shared colors */
 export const resolveCoreThemeColors = (
   style: ThemeStyleValue,
   mode: ThemeModeValue,
-  overrides?: IRCoreThemeTokenOverrides,
+  palettePreset: ThemeStyleValue = style,
 ): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[style][mode];
-
-  const parsed = overrides === undefined ? undefined : CoreThemeTokenDefinition.schema.parse(overrides);
+  const palette = CORE_COLOR_PRESETS[palettePreset][mode].categorical;
   return freezeColorView(
     {
-      error: parsed?.['semantic.error'] ?? preset.semantic.error,
-      success: parsed?.['semantic.success'] ?? preset.semantic.success,
-      warning: parsed?.['semantic.warning'] ?? preset.semantic.warning,
+      error: preset.semantic.error,
+      success: preset.semantic.success,
+      warning: preset.semantic.warning,
     },
-    parsed?.['palette.categorical'] ?? preset.categorical,
+    palette,
   );
 };

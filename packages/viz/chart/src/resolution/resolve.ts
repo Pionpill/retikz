@@ -34,7 +34,7 @@ const DispatchEnvelopeSchema = z
   })
   .describe('Minimal envelope used to dispatch a Chart input to its closed recipe');
 
-type ChartThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'tokens' | 'colors'>>;
+type ChartThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'colors'>>;
 
 /** 把首个 Zod issue 归一为稳定且可定位的 Chart error path */
 const issuePathOf = (error: z.ZodError): ReadonlyArray<string | number> => {

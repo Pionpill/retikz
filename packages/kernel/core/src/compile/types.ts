@@ -4,7 +4,6 @@ import type { ZodType } from 'zod';
 import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
-  AnyThemeTokenDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -260,10 +259,7 @@ export type LoweredIRScene = Omit<IRScene, 'children'> & {
 };
 
 /** `lowerIRToKernel` 使用的 composite Definition 与深度选项 */
-export type LowerIRToKernelOptions = Pick<CompileCompositeOptions, 'composites' | 'maxCompositeDepth'> & {
-  /** lowering-only 入口使用的 Theme token owner definitions */
-  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
-};
+export type LowerIRToKernelOptions = Pick<CompileCompositeOptions, 'composites' | 'maxCompositeDepth'>;
 
 /** compileToScene 的可选参数 */
 export type CompileOptions<
@@ -275,7 +271,6 @@ export type CompileOptions<
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
     /** Theme token owner definitions；Core built-in definition 始终自动注册 */
-    themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
     /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */
     trace?: RuntimeTraceReporter<'@retikz/core'>;
   };

@@ -9,7 +9,7 @@ import type {
 } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
-import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema, PlotThemeTokenDefinition } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
@@ -66,7 +66,7 @@ const renderPlotImpl = (
       ...(options.theme !== undefined ? { theme: options.theme } : {}),
       children: [validated],
     },
-    { composites: lowerPlots(data, options), themeTokenDefinitions: [PlotThemeTokenDefinition] },
+    { composites: lowerPlots(data, options) },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;

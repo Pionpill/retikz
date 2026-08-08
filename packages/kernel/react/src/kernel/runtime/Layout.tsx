@@ -1,7 +1,6 @@
 import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
-  AnyThemeTokenDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -38,6 +37,7 @@ import { useAnimationMode } from './animation-context';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
+import { mergeThemeOverlays, useTheme } from './theme-context';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -47,7 +47,6 @@ const styleFontFamily = (style: CSSProperties | undefined): string | undefined =
 /** 同一条诊断消息进程内只 `console.warn` 一次，避免组件重复 render 时刷屏 */
 const warnedMessages = new Set<string>();
 const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
-const EMPTY_THEME_TOKEN_DEFINITIONS: ReadonlyArray<AnyThemeTokenDefinition> = Object.freeze([]);
 
 type DefinitionArrayNode = {
   children: WeakMap<object, DefinitionArrayNode>;
@@ -77,52 +76,6 @@ const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
   warnedMessages.add(message);
   console.warn(message);
-};
-
-/** 读取可安全复制的 Theme 自有数据字段，不触发 accessor */
-const cloneThemeFields = (input: unknown, omitKnownUndefined: boolean): Record<string, unknown> | undefined => {
-  if (input === null || typeof input !== 'object' || Array.isArray(input)) return undefined;
-  const prototype = Object.getPrototypeOf(input);
-  if (prototype !== Object.prototype && prototype !== null) return undefined;
-
-  const output: Record<string, unknown> = {};
-  for (const key of Reflect.ownKeys(input)) {
-    if (typeof key !== 'string') return undefined;
-    const descriptor = Object.getOwnPropertyDescriptor(input, key);
-    if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) return undefined;
-    if (descriptor.value === undefined) {
-      if (omitKnownUndefined && (key === 'style' || key === 'mode')) continue;
-      return undefined;
-    }
-    Object.defineProperty(output, key, {
-      value: descriptor.value,
-      configurable: true,
-      enumerable: true,
-      writable: true,
-    });
-  }
-  return output;
-};
-
-/**
- * 把宿主 Theme 逐字段叠加到持久化 Scene
- * @description 对合法对象忽略值为 undefined 的已知字段，同时保留未知字段供 Core 严格校验；非法宿主或持久化输入原样交给 Core 诊断
- */
-const overlaySceneTheme = (base: IRScene, input: unknown): IRScene => {
-  if (input === undefined) return base;
-  const baseTheme = base.theme === undefined ? {} : cloneThemeFields(base.theme, false);
-  if (baseTheme === undefined) return base;
-  const inputTheme = cloneThemeFields(input, true);
-  if (inputTheme === undefined) {
-    return { ...base, theme: input as IRScene['theme'] };
-  }
-  return {
-    ...base,
-    theme: {
-      ...baseTheme,
-      ...inputTheme,
-    },
-  };
 };
 
 const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: string | undefined): TextMeasurer => {
@@ -178,22 +131,6 @@ const aggregateEmbeddableComposites = (
     out.push(...group.maker(Object.fromEntries(group.merged)));
   }
   return out;
-};
-
-/** 按嵌入出现顺序收集 owner Theme definition，并按对象 identity 去重 */
-const aggregateEmbeddableThemeTokenDefinitions = (
-  contributions: ReadonlyArray<EmbeddableContributionRecord>,
-): ReadonlyArray<AnyThemeTokenDefinition> => {
-  const definitions: Array<AnyThemeTokenDefinition> = [];
-  const seen = new Set<AnyThemeTokenDefinition>();
-  for (const contribution of contributions) {
-    for (const definition of contribution.themeTokenDefinitions ?? []) {
-      if (seen.has(definition)) continue;
-      seen.add(definition);
-      definitions.push(definition);
-    }
-  }
-  return definitions.length === 0 ? EMPTY_THEME_TOKEN_DEFINITIONS : Object.freeze(definitions);
 };
 
 /**
@@ -341,7 +278,6 @@ export type LayoutProps = ScopeStyleProps & {
    */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
   /** 运行时注入的 Tier 2 Theme token owner definition singleton */
-  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
   /**
    * 运行时注入的公式渲染能力
    * @description `<Node>` 文本中的 `$...$`、`$$...$$` 或显式 tex run 会通过它转成可渲染字形。
@@ -401,7 +337,6 @@ export const Layout: FC<LayoutProps> = props => {
     pathKinds,
     ribbonWidthProfiles,
     composites,
-    themeTokenDefinitions,
     lowerTex,
     artifacts,
     onArtifacts,
@@ -419,10 +354,10 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
   const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
   const stableComposites = canonicalizeDefinitionArray(composites);
-  const stableThemeTokenDefinitions = canonicalizeDefinitionArray(themeTokenDefinitions);
   const stableEmbeddables = canonicalizeDefinitionArray(embeddables);
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
+  const ambientTheme = useTheme();
   const resolvedAnimateProp =
     animationMode === undefined ? animateProp : animationMode === 'system' ? undefined : animationMode === 'enabled';
   const animate = resolveAnimationEnabled(resolvedAnimateProp, reducedMotion);
@@ -507,7 +442,8 @@ export const Layout: FC<LayoutProps> = props => {
   );
   const ir = useMemo(() => {
     const base = built.ir;
-    const withTheme = overlaySceneTheme(base, theme);
+    const mergedTheme = mergeThemeOverlays(ambientTheme, base.theme, theme);
+    const withTheme = mergedTheme === undefined ? base : { ...base, theme: mergedTheme };
     // viewBox prop 注入 IR 根（显式 > IR 内置）；prop 缺省时保留 base 自带的 viewBox
     const withViewBox = viewBox !== undefined ? { ...withTheme, viewBox } : withTheme;
     // animations prop 注入 IR 根（镜头，cameraTo）；缺省保留 base 自带，并用追加语义兼容 `ir` prop
@@ -515,19 +451,13 @@ export const Layout: FC<LayoutProps> = props => {
     const animations =
       withViewBox.animations !== undefined ? [...withViewBox.animations, ...rootAnimations] : rootAnimations;
     return { ...withViewBox, animations };
-  }, [built, theme, viewBox, rootAnimations]);
+  }, [ambientTheme, built, theme, viewBox, rootAnimations]);
   // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
   const aggregatedComposites = useMemo(() => {
     const fromEmbeddables = aggregateEmbeddableComposites(built.contributions);
     if (fromEmbeddables.length === 0) return stableComposites ?? EMPTY_COMPOSITES;
     return stableComposites !== undefined ? [...fromEmbeddables, ...stableComposites] : fromEmbeddables;
   }, [built.contributions, stableComposites]);
-  const aggregatedThemeTokenDefinitions = useMemo(() => {
-    const fromEmbeddables = aggregateEmbeddableThemeTokenDefinitions(built.contributions);
-    if (fromEmbeddables.length === 0) return stableThemeTokenDefinitions;
-    if (stableThemeTokenDefinitions === undefined) return fromEmbeddables;
-    return Object.freeze([...fromEmbeddables, ...stableThemeTokenDefinitions]);
-  }, [built.contributions, stableThemeTokenDefinitions]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
@@ -548,7 +478,6 @@ export const Layout: FC<LayoutProps> = props => {
       pathKinds: stablePathKinds,
       ribbonWidthProfiles: stableRibbonWidthProfiles,
       composites: aggregatedComposites,
-      themeTokenDefinitions: aggregatedThemeTokenDefinitions,
       lowerTex,
       artifacts: compileArtifacts,
     }),
@@ -565,7 +494,6 @@ export const Layout: FC<LayoutProps> = props => {
       stablePathKinds,
       stableRibbonWidthProfiles,
       aggregatedComposites,
-      aggregatedThemeTokenDefinitions,
       lowerTex,
       compileArtifacts,
     ],

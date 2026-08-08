@@ -34,7 +34,7 @@ export const TableBorderStyleTokenKeySchema = z
 const TableBorderStyleTokenProvenanceSchema = z.strictObject({
   key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
   source: z
-    .enum(['preset', 'shared-categorical', 'inherited-theme-token', 'local-theme-token'])
+    .enum(['preset', 'shared-categorical', 'local-theme-token'])
     .describe('Cascade layer that supplied the border token.'),
   path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
 });
@@ -216,7 +216,7 @@ export const TableCellManifestEntrySchema = z
 const TableThemeTokenSourceRecordSchema = z.strictObject({
   key: TableThemeTokenKeySchema.describe('Canonical Table theme token key.'),
   source: z
-    .enum(['preset', 'shared-categorical', 'inherited-theme-token', 'local-theme-token'])
+    .enum(['preset', 'shared-categorical', 'local-theme-token'])
     .describe('Cascade layer that supplied the resolved token.'),
   path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
 });

@@ -56,8 +56,6 @@ export {
   ChartResolvedThemeTokensSchema,
   ChartThemeSurfaceSchema,
   ChartThemeToken,
-  ChartThemeTokenDefinition,
   ChartThemeTokenOverridesSchema,
   ChartThemeTokenSource,
-  defineChartThemeTokens,
 } from './style';

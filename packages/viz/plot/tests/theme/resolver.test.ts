@@ -31,7 +31,7 @@ type PlotThemeResolution = {
 };
 
 type ResolvePlotTheme = (
-  effectiveTheme: Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'tokens' | 'colors'>>,
+  effectiveTheme: Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'colors'>>,
   input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'>,
 ) => PlotThemeResolution;
 

@@ -41,7 +41,7 @@ describe('core public compile exports', () => {
     const resolvedTheme: ResolvedTheme = {
       style: 'clean',
       mode: 'dark',
-      tokens: {},
+      palettePreset: 'clean',
       colors: {
         semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
         categorical: ['#2563eb'],
@@ -62,7 +62,7 @@ describe('core public compile exports', () => {
     expect(resolvedTheme).toEqual({
       style,
       mode,
-      tokens: {},
+      palettePreset: style,
       colors: {
         semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
         categorical: ['#2563eb'],

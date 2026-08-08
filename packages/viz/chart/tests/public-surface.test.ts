@@ -53,7 +53,6 @@ describe('@retikz/chart package root', () => {
     expectTypeOf<InternalChartSpecBound>();
     expectTypeOf<ChartStyleValue>();
     expectTypeOf<ChartThemeModeValue>();
-    expectTypeOf<typeof chart.ChartThemeTokenDefinition>();
   });
 
   it('只暴露 shared、presentation、inspection 与 theme 数据契约', () => {

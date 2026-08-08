@@ -10,7 +10,7 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE, PlotThemeTokenDefinition } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useRef } from 'react';
 
@@ -130,7 +130,6 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     return {
       node: wrapPanelScope(spec, props),
       datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
-      themeTokenDefinitions: [PlotThemeTokenDefinition],
       makeComposites: makeEmbeddedPlotComposites,
     };
   },
@@ -171,7 +170,6 @@ export const Plot: EmbeddablePlotComponent = props => {
     <Layout
       ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
       composites={lowerPlots(datasets, lowerOptions)}
-      themeTokenDefinitions={[PlotThemeTokenDefinition]}
       width={width}
       height={height}
       className={className}
