@@ -5,5 +5,4 @@ export * from './grid';
 export * from './grid-layout';
 export * from './layout-item';
 export * from './legend';
-export * from './logic';
 export * from './overlay-layout';

@@ -3,8 +3,22 @@
  *
  * @description 只公开 canonical Flex 编译器、必要的共享布局词汇，以及通用几何和 artifact 原子能力
  */
+export type {
+  FlexLayoutArtifact,
+  FlexLayoutDirectionValue,
+  FlexLayoutWrapValue,
+  IRFlexLayout,
+  IRFlexLayoutItem,
+} from '../composites/layout/flex-layout';
+export { FlexLayoutDirection, FlexLayoutSchema, FlexLayoutWrap } from '../composites/layout/flex-layout';
 export { compileFlexLayout } from '../composites/layout/flex-layout/pipeline';
-
+export type {
+  CreateLayoutArtifactItemInput,
+  LayoutInsets,
+  LayoutRect,
+  ResolvedLayoutAxisSize,
+  ResolveLayoutAxisSizeInput,
+} from '../composites/layout/internal';
 export {
   alignAllocationInSlot,
   contentRectOf,
@@ -15,37 +29,6 @@ export {
   resolveLayoutAxisSize,
   unionLayoutArtifactRects,
 } from '../composites/layout/internal';
-
-export {
-  LayoutAlignment,
-  LayoutArtifactContainerSchema,
-  LayoutArtifactItemBaseSchema,
-  LayoutArtifactRectSchema,
-  LayoutAxisSizeKind,
-  LayoutDistribution,
-  LayoutOverflow,
-  LayoutOverflowSchema,
-  LayoutSizeSchema,
-} from '../composites/layout/shared';
-
-export { FlexLayoutDirection, FlexLayoutSchema, FlexLayoutWrap } from '../composites/layout/flex-layout';
-
-export type {
-  CreateLayoutArtifactItemInput,
-  LayoutInsets,
-  LayoutRect,
-  ResolveLayoutAxisSizeInput,
-  ResolvedLayoutAxisSize,
-} from '../composites/layout/internal';
-
-export type {
-  FlexLayoutArtifact,
-  FlexLayoutDirectionValue,
-  FlexLayoutWrapValue,
-  IRFlexLayout,
-  IRFlexLayoutItem,
-} from '../composites/layout/flex-layout';
-
 export type {
   IRLayoutAxisSize,
   IRLayoutSize,
@@ -59,4 +42,15 @@ export type {
   LayoutDistributionValue,
   LayoutOverflowValue,
   LayoutSizeInput,
+} from '../composites/layout/shared';
+export {
+  LayoutAlignment,
+  LayoutArtifactContainerSchema,
+  LayoutArtifactItemBaseSchema,
+  LayoutArtifactRectSchema,
+  LayoutAxisSizeKind,
+  LayoutDistribution,
+  LayoutOverflow,
+  LayoutOverflowSchema,
+  LayoutSizeSchema,
 } from '../composites/layout/shared';
