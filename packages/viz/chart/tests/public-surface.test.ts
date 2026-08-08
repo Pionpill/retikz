@@ -14,11 +14,13 @@ import type { ChartStyleValue } from '../src';
 // @ts-expect-error 通用 mode 取值类型由 Core 所有
 import type { ChartThemeModeValue } from '../src';
 import type {
+  AnyChartThemeStyleDefinition,
   ChartContributionSourceValue,
   ChartPresentationDefaultItemKeyValue,
   ChartPresentationItemContentKindValue,
   ChartPresentationPresetValue,
   ChartPresentationResolvedContentKindValue,
+  ChartThemeStyleDefinition,
   ChartThemeTokenSourceValue,
   ChartThemeTokenValue,
   IRChartInspection,
@@ -84,12 +86,11 @@ describe('@retikz/chart package root', () => {
       'ChartSharedSchema',
       'ChartThemeSurfaceSchema',
       'ChartThemeToken',
-      'ChartThemeTokenDefinition',
       'ChartThemeTokenOverridesSchema',
       'ChartThemeTokenSource',
-      'defineChartThemeTokens',
+      'defineChartThemeStyle',
     ]);
-    expect(chart.ChartThemeTokenSource).toEqual({ Preset: 'preset', Inherited: 'inherited', Local: 'local' });
+    expect(chart.ChartThemeTokenSource).toEqual({ Preset: 'preset', Local: 'local' });
     expect(chart).not.toHaveProperty('ChartStyle');
     expect(chart).not.toHaveProperty('ChartThemeMode');
     expect(ThemeStyle).toEqual({ Neutral: 'neutral', Academic: 'academic', Vibrant: 'vibrant', Clean: 'clean' });
@@ -143,6 +144,11 @@ describe('@retikz/chart package root', () => {
       items: [itemInspection, { key: plotKey, contentKind: 'plot', sourcePath: '$spec/presentation/children/1' }],
     };
     const source: ChartContributionSourceValue = 'type-default';
+    const chartThemeStyle: ChartThemeStyleDefinition = {
+      name: 'brand',
+      resolve: () => chart.ChartResolvedThemeTokensSchema.parse({}),
+    };
+    const anyChartThemeStyle: AnyChartThemeStyleDefinition = chartThemeStyle;
     const member: IRChartInspectionMember = {
       target: 'mark.main',
       kind: 'mark',
@@ -163,6 +169,7 @@ describe('@retikz/chart package root', () => {
       presentationInspection,
       content,
       item,
+      anyChartThemeStyle,
     }).toBeDefined();
   });
 });

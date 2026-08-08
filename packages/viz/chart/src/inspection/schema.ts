@@ -1,7 +1,7 @@
 import type { IRJsonObject, ValueOf } from '@retikz/core';
 import type { z } from 'zod';
 
-import { JsonObjectSchema, ThemeMode, ThemeStyle } from '@retikz/core';
+import { JsonObjectSchema, ThemeMode } from '@retikz/core';
 import { PlotThemeResolutionSchema } from '@retikz/plot';
 import { z as zod } from 'zod';
 
@@ -73,7 +73,7 @@ const ChartThemeTokenSourceSchema = zod
 
 const ChartOwnedStyleInspectionSchema = zod
   .strictObject({
-    style: zod.enum(ThemeStyle).describe('Effective Theme style selecting the Chart preset'),
+    style: zod.string().min(1).describe('Effective Theme style selecting the Chart style definition'),
     mode: zod.enum(ThemeMode).describe('Effective Theme mode selecting Chart paints'),
     tokens: ChartResolvedThemeTokensSchema.describe('Complete resolved Chart-owned token map'),
     tokenSources: zod

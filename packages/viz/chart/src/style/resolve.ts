@@ -2,18 +2,23 @@ import type { ResolvedTheme } from '@retikz/core';
 
 import type { ChartRecipeStyleContext } from '../families/shared';
 import type { IRChartShared } from '../schemas';
+import type { ChartThemeStyleDefinition } from './definition';
 import type { ResolvedChartThemeContext } from './resolved';
 
-import { getChartThemePreset } from './catalog';
 import { ChartThemeToken, ChartThemeTokenSource } from './constants';
+import { resolveChartThemeStyleRegistry } from './registry';
 import { ChartResolvedThemeTokensSchema, ChartThemeTokenOverridesSchema } from './schema';
 
 /** 解析 effective Theme、Chart preset、稀疏 token 与稳定来源 */
 export const resolveChartStyle = (
-  effectiveTheme: Pick<ResolvedTheme, 'style' | 'mode'>,
+  effectiveTheme: ResolvedTheme,
   spec: Pick<IRChartShared, 'chartThemeTokens'>,
+  chartThemeStyles: ReadonlyArray<ChartThemeStyleDefinition> | undefined = undefined,
 ): ResolvedChartThemeContext => {
-  const preset = getChartThemePreset(effectiveTheme.style, effectiveTheme.mode);
+  const styles = resolveChartThemeStyleRegistry(chartThemeStyles);
+  const definition = styles.get(effectiveTheme.style);
+  if (definition === undefined) throw new Error(`Chart theme style '${effectiveTheme.style}' is not registered.`);
+  const preset = definition.resolve(effectiveTheme);
   const overrides = ChartThemeTokenOverridesSchema.parse(spec.chartThemeTokens ?? {});
   const tokens = ChartResolvedThemeTokensSchema.parse({
     ...preset,

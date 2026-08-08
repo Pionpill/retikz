@@ -1,7 +1,6 @@
 import type { ResolvedTheme } from '@retikz/core';
 
-import { resolveCoreThemeColors } from '@retikz/core';
-
+import type { PlotThemeStyleDefinition } from '../../contract';
 import type { IRPlotSpec, IRPlotThemeResolution, PlotThemeTokenValue } from '../../schemas';
 
 import {
@@ -12,30 +11,25 @@ import {
   PlotThemeTokenOverridesSchema,
   PlotThemeTokenSource,
 } from '../../schemas';
-import { getPlotThemePreset } from './catalog';
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
-
-type PlotThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'colors'>>;
+import { resolvePlotThemeStyleRegistry } from './registry';
 
 /** 按 Plot preset、Core shared colors、inherited/local token、colors 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
-  effectiveTheme: PlotThemeContext,
+  effectiveTheme: ResolvedTheme,
   input: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'> = {},
+  plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const style = effectiveTheme.style;
   const mode = effectiveTheme.mode;
-  const sharedColors = effectiveTheme.colors ?? resolveCoreThemeColors(style, mode);
+  const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
+  const definition = styles.get(style);
+  if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
   const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
   const colors = input.colors === undefined ? undefined : structuredClone(input.colors);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
-  const preset = getPlotThemePreset(style, mode);
-  const sharedCategorical = [...sharedColors.categorical];
-  const tokensAfterShared = PlotResolvedThemeTokensSchema.parse({
-    ...preset,
-    [PlotThemeToken.PlotPaletteCategorical]: sharedCategorical,
-    [PlotThemeToken.PlotPaletteSeries]: [...sharedCategorical],
-    [PlotThemeToken.PlotPaletteSector]: [...sharedCategorical],
-  });
+  const baseline = definition.resolve(effectiveTheme);
+  const tokensAfterShared = PlotResolvedThemeTokensSchema.parse(baseline);
   const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
     ...tokensAfterShared,
     ...structuredClone(plotThemeTokens),
@@ -72,9 +66,6 @@ export const resolvePlotTheme = (
     }
     if (Object.hasOwn(plotThemeTokens, token)) {
       return { token, kind: PlotThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
-    }
-    if (colorTokens.has(token)) {
-      return { token, kind: PlotThemeTokenSource.SharedCategorical, path: '$theme/colors/categorical' };
     }
     return {
       token,

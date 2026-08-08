@@ -1,12 +1,13 @@
 import type { IRChild, ResolvedTheme } from '@retikz/core';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlotSpec, PlotThemeStyleDefinition } from '@retikz/plot';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { PlotSpecSchema, resolvePlotTheme } from '@retikz/plot';
 import { z } from 'zod';
 
 import type { InternalChartSpecBound } from '../families/shared';
 import type { IRChartInspection } from '../inspection';
+import type { ChartThemeStyleDefinition } from '../style';
 
 import { ChartRecipeInvariantError } from '../families/shared';
 import { createChartInspection } from '../inspection';
@@ -34,7 +35,17 @@ const DispatchEnvelopeSchema = z
   })
   .describe('Minimal envelope used to dispatch a Chart input to its closed recipe');
 
-type ChartThemeContext = Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'colors'>>;
+/** Chart resolver 与 composite runtime-only style definition 选项 */
+export type ChartResolveOptions = Readonly<{
+  chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
+  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+}>;
+
+const DEFAULT_RESOLVED_THEME: ResolvedTheme = {
+  style: ThemeStyle.Neutral,
+  mode: ThemeMode.Light,
+  colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+};
 
 /** 把首个 Zod issue 归一为稳定且可定位的 Chart error path */
 const issuePathOf = (error: z.ZodError): ReadonlyArray<string | number> => {
@@ -54,7 +65,8 @@ const invalidSchemaError = (
 /** 通过封闭 recipe tuple 解析一个私有 Chart spec */
 export const resolveChartSpec = (
   input: unknown,
-  effectiveTheme: ChartThemeContext = { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
+  effectiveTheme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
+  options: ChartResolveOptions = {},
 ): ChartResolution => {
   let envelope: z.infer<typeof DispatchEnvelopeSchema>;
   try {
@@ -76,12 +88,16 @@ export const resolveChartSpec = (
     if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartSpec, error);
     throw error;
   }
-  const style = resolveChartStyle(effectiveTheme, bound.spec);
-  const plotStyle = resolvePlotTheme(effectiveTheme, {
-    plotThemeTokens: bound.spec.plotThemeTokens,
-    colors: bound.spec.colors,
-    plotTheme: bound.spec.plotTheme,
-  });
+  const style = resolveChartStyle(effectiveTheme, bound.spec, options.chartThemeStyles);
+  const plotStyle = resolvePlotTheme(
+    effectiveTheme,
+    {
+      plotThemeTokens: bound.spec.plotThemeTokens,
+      colors: bound.spec.colors,
+      plotTheme: bound.spec.plotTheme,
+    },
+    options.plotThemeStyles,
+  );
   const seriesColor = plotStyle.palette.series.at(0);
   if (seriesColor === undefined) throw new Error('Chart style must resolve a non-empty Plot series palette');
   const seed = bound.createSeed(chartRecipeStyleContextOf(style, seriesColor));

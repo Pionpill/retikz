@@ -1,4 +1,4 @@
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
 
 import { ThemeMode, ThemeStyle } from '@retikz/core';
 
@@ -44,7 +44,7 @@ type PresetPaint = Readonly<{
   palette: ReadonlyArray<string>;
 }>;
 
-const structures: Record<ThemeStyleValue, PresetStructure> = {
+const structures: Record<BuiltinThemeStyleValue, PresetStructure> = {
   [ThemeStyle.Neutral]: {
     fontFamily: 'sans-serif',
     fontSize: 12,
@@ -135,7 +135,7 @@ const structures: Record<ThemeStyleValue, PresetStructure> = {
   },
 };
 
-const paints: Record<ThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
+const paints: Record<BuiltinThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
   [ThemeStyle.Neutral]: {
     [ThemeMode.Light]: {
       surface: 'none',
@@ -294,7 +294,7 @@ const paints: Record<ThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
   },
 };
 
-const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens => {
+const createPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens => {
   const structure = structures[style];
   const paint = paints[style][mode];
   const tickMark =
@@ -353,8 +353,8 @@ const presets = Object.fromEntries(
     style,
     Object.fromEntries(Object.values(ThemeMode).map(mode => [mode, createPreset(style, mode)])),
   ]),
-) as Record<ThemeStyleValue, Record<ThemeModeValue, IRPlotResolvedThemeTokens>>;
+) as Record<BuiltinThemeStyleValue, Record<ThemeModeValue, IRPlotResolvedThemeTokens>>;
 
 /** 读取一个内建 Plot style/mode 的完整 token map */
-export const getPlotThemePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens =>
+export const getPlotThemePreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens =>
   structuredClone(presets[style][mode]);

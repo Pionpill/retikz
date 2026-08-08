@@ -1,6 +1,6 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { BuiltinThemeStyleValue, ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPlotSpec } from '../../src';
@@ -31,11 +31,92 @@ type PlotThemeResolution = {
 };
 
 type ResolvePlotTheme = (
-  effectiveTheme: Pick<ResolvedTheme, 'style' | 'mode'> & Partial<Pick<ResolvedTheme, 'colors'>>,
+  effectiveTheme: ResolvedTheme,
   input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'>,
+  plotThemeStyles?: ReadonlyArray<unknown>,
 ) => PlotThemeResolution;
 
+const themeOf = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): ResolvedTheme => ({
+  style,
+  mode,
+  colors: resolveCoreThemeColors(style, mode),
+});
+
 describe('Plot theme resolver', () => {
+  it('通过同名自定义 style definition 解析完整 Plot token 基线', () => {
+    const define = (plot as Record<string, unknown>).definePlotThemeStyle as
+      | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
+      | undefined;
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const baseline = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
+
+    expect(define).toBeTypeOf('function');
+    const definition = define?.({
+      name: 'brand',
+      resolve: () => ({
+        ...baseline,
+        [PlotThemeToken.PlotPaletteCategorical]: ['#brand-categorical'],
+        [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
+        [PlotThemeToken.PlotPaletteSector]: ['#brand-sector'],
+      }),
+    });
+    const result = resolve(
+      {
+        style: 'brand',
+        mode: ThemeMode.Light,
+        colors: {
+          semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+          categorical: ['#core-categorical'],
+        },
+      },
+      {},
+      [definition] as never,
+    );
+
+    expect(result.palette).toMatchObject({
+      categorical: ['#brand-categorical'],
+      series: ['#brand-series'],
+      sector: ['#brand-sector'],
+    });
+  });
+
+  it('拒绝缺少或重名的 Plot style definition', () => {
+    const define = (plot as Record<string, unknown>).definePlotThemeStyle as
+      | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
+      | undefined;
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const baseline = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
+    const brand = define?.({ name: 'brand', resolve: () => baseline });
+
+    expect(() =>
+      resolve(
+        {
+          style: 'brand',
+          mode: ThemeMode.Light,
+          colors: {
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            categorical: ['#brand'],
+          },
+        },
+        {},
+      ),
+    ).toThrow(/Plot theme style 'brand' is not registered/);
+    expect(() =>
+      resolve(
+        {
+          style: ThemeStyle.Neutral,
+          mode: ThemeMode.Light,
+          colors: {
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            categorical: ['#brand'],
+          },
+        },
+        {},
+        [brand, brand],
+      ),
+    ).toThrow(/Plot theme style 'brand' is already registered/);
+  });
+
   it('为四种 style 与两个 mode 提供独立的完整 preset', () => {
     const getPreset = (plot as Record<string, unknown>).getPlotThemePreset as
       | ((style: ResolvedTheme['style'], mode: ResolvedTheme['mode']) => unknown)
@@ -52,20 +133,17 @@ describe('Plot theme resolver', () => {
 
   it('按 effective Theme、token、colors、native theme 顺序解析并记录来源', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const result = resolve(
-      { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
-      {
-        plotThemeTokens: {
-          [PlotThemeToken.PlotSurfaceFill]: '#111111',
-          [PlotThemeToken.PlotPaletteSeries]: ['#token'],
-        },
-        colors: ['#colors'],
-        plotTheme: {
-          typography: { font: { family: 'serif' } },
-          palette: { series: ['#theme'] },
-        },
+    const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark), {
+      plotThemeTokens: {
+        [PlotThemeToken.PlotSurfaceFill]: '#111111',
+        [PlotThemeToken.PlotPaletteSeries]: ['#token'],
       },
-    );
+      colors: ['#colors'],
+      plotTheme: {
+        typography: { font: { family: 'serif' } },
+        palette: { series: ['#theme'] },
+      },
+    });
 
     expect(result.style).toBe(ThemeStyle.Academic);
     expect(result.mode).toBe(ThemeMode.Dark);
@@ -83,8 +161,8 @@ describe('Plot theme resolver', () => {
   it('返回深克隆、JSON-safe 且确定的结果', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const input = { plotThemeTokens: { [PlotThemeToken.PlotPaletteSeries]: ['#2563eb'] } };
-    const first = resolve({ style: ThemeStyle.Neutral, mode: ThemeMode.Light }, input);
-    const second = resolve({ style: ThemeStyle.Neutral, mode: ThemeMode.Light }, input);
+    const first = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), input);
+    const second = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), input);
 
     expect(first).toEqual(second);
     expect(JSON.parse(JSON.stringify(first))).toEqual(first);
@@ -95,22 +173,19 @@ describe('Plot theme resolver', () => {
 
   it('native theme 对数组、false 与不同 discriminator 对象做完整替换', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const result = resolve(
-      { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
-      {
-        plotThemeTokens: {
-          [PlotThemeToken.AxisTickMark]: { kind: 'line', length: 12 },
-          [PlotThemeToken.PlotPaletteSeries]: ['#111111', '#222222'],
-        },
-        plotTheme: {
-          axis: {
-            line: false,
-            ticks: { mark: { kind: 'circle', size: 5 } },
-          },
-          palette: { series: ['#333333'] },
-        },
+    const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      plotThemeTokens: {
+        [PlotThemeToken.AxisTickMark]: { kind: 'line', length: 12 },
+        [PlotThemeToken.PlotPaletteSeries]: ['#111111', '#222222'],
       },
-    );
+      plotTheme: {
+        axis: {
+          line: false,
+          ticks: { mark: { kind: 'circle', size: 5 } },
+        },
+        palette: { series: ['#333333'] },
+      },
+    });
 
     expect(result.plotTheme?.axis?.line).toBe(false);
     expect(result.tokens[PlotThemeToken.AxisLineEnabled]).toBe(false);
@@ -122,19 +197,16 @@ describe('Plot theme resolver', () => {
 
   it('保留 native theme 中没有对应 token 的合法字段', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const result = resolve(
-      { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
-      {
-        plotTheme: {
-          axis: {
-            tickLabels: {
-              rotate: -45,
-              layout: { hide: { strategy: 'greedy' } },
-            },
+    const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      plotTheme: {
+        axis: {
+          tickLabels: {
+            rotate: -45,
+            layout: { hide: { strategy: 'greedy' } },
           },
         },
       },
-    );
+    });
 
     expect(result.plotTheme?.axis?.tickLabels).toMatchObject({
       rotate: -45,
