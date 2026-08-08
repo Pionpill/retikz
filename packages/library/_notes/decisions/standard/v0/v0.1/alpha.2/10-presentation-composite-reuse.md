@@ -1,6 +1,6 @@
 # ADR-10：Presentation Composite 的 lower target 完整复用
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-04
 - 关联：[Standard alpha.2 roadmap](./roadmap.md) · [ADR-09：通用 Legend](./09-generic-legend.md) · [Core ADR-11：Layout-aware Composite 的完整 Scope 输出契约](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-layout-aware-scope-output.md) · [Core ADR-10：Core 原子契约](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/10-core-atomic-contracts.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
 

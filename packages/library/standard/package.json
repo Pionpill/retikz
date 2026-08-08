@@ -78,7 +78,7 @@
     "zod": "catalog:"
   },
   "peerDependencies": {
-    "@retikz/inspect": "workspace:*"
+    "@retikz/inspect": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@retikz/inspect": {

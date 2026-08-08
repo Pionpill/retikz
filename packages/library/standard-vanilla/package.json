@@ -77,7 +77,7 @@
     "@retikz/vanilla": "workspace:^"
   },
   "peerDependencies": {
-    "@retikz/inspect": "workspace:*"
+    "@retikz/inspect": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@retikz/inspect": {

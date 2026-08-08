@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { AnyThemeTokenDefinition, IRScene, ScenePatch } from '@retikz/core';
+import type { IRScene, ScenePatch } from '@retikz/core';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
@@ -7,16 +7,13 @@ import type {
   RetainedRendererFactoryInput,
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
-import type { FC, ReactNode } from 'react';
 
-import { CompositeBaseSchema, defineComposite, defineThemeTokenNamespace } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { defineRetainedRenderer } from '@retikz/render/runtime';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-
-import type { EmbeddableTier2Adapter } from '../../../src';
 
 import { Layout, Node } from '../../../src';
 import { createGeometryContext } from '../../helpers/geometry-context';
@@ -46,76 +43,7 @@ const compositeSource: IRScene = {
   children: [{ namespace: 'fixture', type: 'stable' }],
 };
 
-type ThemeTokenFixture = FC<{ id: string }> & {
-  isTier2Embeddable?: boolean;
-  embeddableAdapter?: EmbeddableTier2Adapter;
-};
-
-const retainedThemeComposite = defineComposite({
-  namespace: 'retained-theme-token',
-  type: 'box',
-  schema: CompositeBaseSchema.extend({
-    namespace: z.literal('retained-theme-token'),
-    type: z.literal('box'),
-    id: z.string(),
-  }),
-  expand: (node, context) => {
-    const tokens = Object.hasOwn(context.theme.tokens, 'retained-theme-token')
-      ? context.theme.tokens['retained-theme-token']
-      : undefined;
-    const fill = tokens?.fill;
-    return {
-      type: 'node',
-      id: node.id,
-      position: [0, 0],
-      fill: typeof fill === 'string' ? fill : '#eeeeee',
-    };
-  },
-});
-
-const makeRetainedThemeComposites = () => [retainedThemeComposite];
-
-const createThemeTokenFixture = (displayName: string, definition: AnyThemeTokenDefinition): ThemeTokenFixture => {
-  const adapter: EmbeddableTier2Adapter<{ id: string }> = {
-    displayName,
-    namespace: 'retained-theme-token',
-    contribute: props => ({
-      node: { namespace: 'retained-theme-token', type: 'box', id: props.id },
-      datasets: {},
-      makeComposites: makeRetainedThemeComposites,
-      themeTokenDefinitions: [definition],
-    }),
-  };
-  const Fixture: ThemeTokenFixture = () => null;
-  Fixture.displayName = displayName;
-  Fixture.isTier2Embeddable = true;
-  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
-  return Fixture;
-};
-
 /** 捕获 React client render fail-loud，并在返回前恢复全局错误处理 */
-const captureClientRenderError = async (root: ReturnType<typeof createRoot>, element: ReactNode): Promise<Error> => {
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  let reportedError: Error | undefined;
-  const preventReportedError = (event: ErrorEvent): void => {
-    event.preventDefault();
-    if (reportedError === undefined && event.error instanceof Error) reportedError = event.error;
-  };
-  window.addEventListener('error', preventReportedError);
-  let thrown: unknown;
-  try {
-    await act(() => root.render(element));
-  } catch (cause) {
-    thrown = cause;
-  } finally {
-    window.removeEventListener('error', preventReportedError);
-    consoleError.mockRestore();
-  }
-  const error = thrown instanceof Error ? thrown : reportedError;
-  if (error === undefined) throw new Error('expected React client render to fail');
-  return error;
-};
-
 /** 构造只保留 committed snapshot 的第三方 renderer */
 const createMemoryRendererFactory = (
   capability: 'none' | 'entity',

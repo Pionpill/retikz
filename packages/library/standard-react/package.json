@@ -73,7 +73,7 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "peerDependencies": {
-    "@retikz/inspect": "workspace:*",
+    "@retikz/inspect": "workspace:^",
     "react": ">=18",
     "react-dom": ">=18"
   },

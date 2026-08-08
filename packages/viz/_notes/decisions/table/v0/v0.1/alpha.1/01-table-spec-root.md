@@ -52,7 +52,6 @@ package scaffold 同时完成首阶段仓库治理接入；ADR-01 先以单成�
 
 - `scripts/release-groups.config.mjs` 注册 feature group `table` 与 `@retikz/table`
 - 根 `lint:viz`、`typecheck:viz`、`test:viz`、`coverage:viz` 先加入 `@retikz/table`
-- `scripts/publish-artifact-limits.json` 在首次 build + pack 后通过现有 update-limits 流程写入核心 package 的实测预算
 - `scripts/check-release-groups.test.mjs` 先验证 Table feature group；最终三包同组依赖测试由 ADR-06 扩展
 - `packages/viz/AGENTS.md` 与 `notes/architecture/capability-design.md` 从“未来 Table”更新为已建立的 Table 能力域、主责包与协作包
 

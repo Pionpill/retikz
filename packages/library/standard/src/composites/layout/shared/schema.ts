@@ -157,7 +157,7 @@ export const LayoutArtifactAlignmentGuideSchema = z
 export const LayoutArtifactItemBaseSchema = z
   .strictObject({
     key: z.string().min(1).describe('Container-local authored item identity.'),
-    sourceIndex: z.number().int().safe().nonnegative().describe('Zero-based authored item order.'),
+    sourceIndex: z.number().int().nonnegative().describe('Zero-based authored item order.'),
     marginBounds: LayoutArtifactRectSchema.describe('Assigned slot expanded by resolved item margins.'),
     slotBounds: LayoutArtifactRectSchema.describe('Final parent-assigned child slot without margins.'),
     allocationBounds: LayoutArtifactRectSchema.describe('Translated real child allocation bounds.'),

@@ -1,6 +1,6 @@
 # ADR-09：通用 Legend 的已解析呈现契约
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-02
 - 关联：[alpha.2 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Presentation lower reuse](./10-presentation-composite-reuse.md) · [Core complete Scope output](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/11-layout-aware-scope-output.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md) · [Plot completeness](../../../../../../../viz/_notes/architecture/plot-visualization-complete.md) · [Table completeness](../../../../../../../viz/_notes/architecture/table-visualization-complete.md)
 
