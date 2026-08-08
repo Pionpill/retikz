@@ -1,6 +1,6 @@
 {
   "name": "@retikz/standard",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "retikz": {
     "domain": "library",
     "releaseGroup": "standard",
@@ -78,7 +78,7 @@
     "zod": "catalog:"
   },
   "peerDependencies": {
-    "@retikz/inspect": "workspace:*"
+    "@retikz/inspect": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@retikz/inspect": {

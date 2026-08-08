@@ -1,6 +1,6 @@
 {
   "name": "@retikz/standard-react",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "retikz": {
     "domain": "library",
     "releaseGroup": "standard",
@@ -73,7 +73,7 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "peerDependencies": {
-    "@retikz/inspect": "workspace:*",
+    "@retikz/inspect": "workspace:^",
     "react": ">=18",
     "react-dom": ">=18"
   },

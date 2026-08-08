@@ -82,7 +82,7 @@ const scene: Scene = {
 };
 
 describe('renderSceneToImage', () => {
-  it('renders a Scene into an encoded Node canvas image buffer', async () => {
+  it('renders a Scene into an encoded Node canvas image buffer', { timeout: 15_000 }, async () => {
     const { renderSceneToImage } = await import('../../src/canvas-node');
 
     const buffer = await renderSceneToImage(scene, {

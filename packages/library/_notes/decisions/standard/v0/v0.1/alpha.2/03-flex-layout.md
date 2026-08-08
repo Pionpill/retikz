@@ -216,15 +216,6 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 - stretch 直接改 transform scale：会改变描边、文字和视觉 bounds 语义
 - 保存跨 compile flex state：alpha.2 是静态确定性布局，不引入增量 solver
 
-## 测试设计
-
-- pure solver：line formation、wrap/reverse、grow/shrink freeze、min/max、gap、distribution、终止性与不可变性
-- compile：text main→cross feedback、baseline、stretch fixed child、non-zero bounds、nested Flex、overflow/clip
-- schema：默认值、零值、非法 factor、min>max、kind mismatch、duplicate key
-- artifact 与 adapter 证据在 ADR-06 收口
-
-详细行为到证据映射见 ignored `TEST_CONTRACT.md`。
-
 ## 影响
 
 - 新增 `standard.flexLayout` layout-aware Composite、factory、Definition与公共类型
@@ -251,18 +242,6 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 - percentage/calc basis、aspect-ratio negotiation
 - masonry、二维 track、全局 collision
 - artifact payload、React/Vanilla 最终接线和 docs 页面
-
-## 最终实现摘要
-
-- 实现 `standard.flexLayout` strict schema、factory、Definition、line formation、wrap/reverse 与有界 grow/shrink freeze solver；`gap` 输入在 schema 边界归一化为 canonical `{ column, row }`
-- compile 通过 Core contextual probe 处理 minimum/natural、exact slot、文本主轴到交叉轴反馈、baseline、stretch refusal、overflow/clip 与 nested layout
-- authored order 与 paint order 保持稳定，reverse 只改变 traversal/placement；typed lines 与 adapter/docs 由 ADR-06 收口
-
-## 验证结果
-
-- schema、pure solver 与 compile 测试覆盖 wrap/reverse、grow/shrink freeze、min/max、gap、distribution、baseline、nested、fixed overflow 与 selected failure
-- Standard、Standard React、Standard Vanilla 包级类型检查、lint 与测试通过
-- 双语文档包含基础、controls 与 overflow/clip 的真实 React/IR/Vanilla 预览
 
 ## 遗留风险
 
