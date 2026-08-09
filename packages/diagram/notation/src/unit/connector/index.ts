@@ -1,4 +1,22 @@
+export * from './constants';
 export * from './definition';
 export * from './factory';
-export { ConnectorRoutingSchema, ConnectorSchema } from './schema';
-export type { ConnectorInput, ConnectorRouting, ConnectorRoutingInput, IRConnector } from './types';
+export {
+  ConnectorBendDirectionSchema,
+  ConnectorRouteKindSchema,
+  ConnectorRoutingSchema,
+  ConnectorSchema,
+  LogicGeometryLabelSchema,
+} from './schema';
+export type {
+  ConnectorBendDirectionSchemaValue,
+  ConnectorBendDirectionValue,
+  ConnectorInput,
+  ConnectorRoleValue,
+  ConnectorRouteKindSchemaValue,
+  ConnectorRouteKindValue,
+  ConnectorRouting,
+  ConnectorRoutingInput,
+  IRConnector,
+  LogicGeometryLabelInput,
+} from './types';

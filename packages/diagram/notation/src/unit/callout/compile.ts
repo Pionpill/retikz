@@ -11,7 +11,7 @@ import type { LayoutArtifactRect } from '@retikz/standard/layout';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
 import { unionLayoutArtifactRects } from '@retikz/standard/layout';
 
-import type { LogicDiagramTarget } from '../../shared';
+import type { LogicDiagramTarget } from '../shared';
 import type { CalloutArtifact, IRCallout } from './types';
 
 import { compileLogicShell } from '../internal/content-shell';

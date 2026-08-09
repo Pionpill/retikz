@@ -1,16 +1,13 @@
-import { FoldStepVia, PathBaseSchema, PositionSchema } from '@retikz/core';
+import { FoldStepVia, PathBaseSchema, PositionSchema, StepLabelSchema } from '@retikz/core';
 import { z } from 'zod';
 
-import {
-  ConnectorAppearanceSchema,
-  ConnectorBendDirectionSchema,
-  ConnectorRouteKind,
-  LogicCompositeType,
-  LogicDiagramPointSchema,
-  LogicGeometryLabelSchema,
-  NonBlankStringSchema,
-  NOTATION_NAMESPACE,
-} from '../../shared';
+import { LogicCompositeType, NonBlankStringSchema, NOTATION_NAMESPACE } from '../../shared';
+import { ConnectorAppearanceSchema, LogicDiagramPointSchema } from '../shared';
+import { ConnectorBendDirection, ConnectorRouteKind } from './constants';
+
+export const ConnectorRouteKindSchema = z.enum(ConnectorRouteKind).describe('Connector route variant discriminator.');
+export const ConnectorBendDirectionSchema = z.enum(ConnectorBendDirection).describe('Bend side direction.');
+export const LogicGeometryLabelSchema = StepLabelSchema.describe('Core step label input for a Connector.');
 
 const StraightRoutingSchema = z
   .strictObject({

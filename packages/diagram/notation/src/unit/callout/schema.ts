@@ -3,16 +3,17 @@ import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '@retikz
 import { z } from 'zod';
 
 import {
-  CalloutSideSchema,
-  ConnectorAppearanceSchema,
   LogicCompositeType,
-  LogicDiagramTargetSchema,
   LogicLayoutItemArtifactSchema,
   LogicOuterArtifactSchema,
   NonBlankStringSchema,
   NOTATION_NAMESPACE,
 } from '../../shared';
 import { LogicContentShellAppearanceSchema } from '../internal/content-shell';
+import { ConnectorAppearanceSchema, LogicDiagramTargetSchema } from '../shared';
+import { CalloutSide } from './constants';
+
+export const CalloutSideSchema = z.enum(CalloutSide).describe('Explicit Callout placement side.');
 
 const CalloutLeaderAppearanceSchema = ConnectorAppearanceSchema.extend({
   stroke: ConnectorAppearanceSchema.shape.stroke.default('currentColor'),

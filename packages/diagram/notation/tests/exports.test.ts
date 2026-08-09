@@ -45,6 +45,14 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('ConnectorAppearanceCanonicalSchema');
   });
 
+  it('preserves owner-routed public contracts and removes dead shared surface', () => {
+    expect(notationExports.ConnectorRouteKind).toBeDefined();
+    expect(notationExports.CalloutSide).toBeDefined();
+    expect(notationExports.LogicDiagramTargetSchema).toBeDefined();
+    expect(notationExports.ConnectorAppearanceSchema).toBeDefined();
+    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceSchema');
+  });
+
   it('rejects the old Standard composite namespace', () => {
     expect(() =>
       notationExports.LogicFrameSchema.parse({

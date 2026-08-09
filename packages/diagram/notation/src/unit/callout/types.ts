@@ -1,6 +1,11 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { CalloutArtifactSchema, CalloutPlacementSchema, CalloutSchema } from './schema';
+import type { CalloutSide } from './constants';
+import type { CalloutArtifactSchema, CalloutPlacementSchema, CalloutSchema, CalloutSideSchema } from './schema';
+
+export type CalloutSideValue = ValueOf<typeof CalloutSide>;
+export type CalloutSideSchemaValue = z.infer<typeof CalloutSideSchema>;
 
 /** Callout 放置的规范类型 */
 export type CalloutPlacement = z.infer<typeof CalloutPlacementSchema>;
