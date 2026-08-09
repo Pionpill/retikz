@@ -148,9 +148,11 @@
     "changelogV01": "v0.1"
   },
   "diagram": {
-    "label": "制图",
+    "label": "流程库",
     "introduction": "简介",
-    "notation": "Notation",
+    "notation": "Notation · 图式",
+    "logicUnits": "逻辑单元",
+    "compositeUnits": "复合单元",
     "logicFrame": "LogicFrame",
     "semanticUnits": "语义单元",
     "connector": "连接器",

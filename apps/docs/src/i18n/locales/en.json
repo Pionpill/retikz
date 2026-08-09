@@ -151,6 +151,8 @@
     "label": "Diagram",
     "introduction": "Introduction",
     "notation": "Notation",
+    "logicUnits": "Logic Units",
+    "compositeUnits": "Composite Units",
     "logicFrame": "LogicFrame",
     "semanticUnits": "Semantic units",
     "connector": "Connector",

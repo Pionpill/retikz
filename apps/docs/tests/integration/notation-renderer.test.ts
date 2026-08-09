@@ -29,20 +29,20 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import CalloutPlacementEnDemo from '../../src/modules/docs/contents/diagram/notation/callout/callout-placement.en.demo';
-import CalloutPlacementZhDemo from '../../src/modules/docs/contents/diagram/notation/callout/callout-placement.zh.demo';
-import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/notation/connector/connector-routing.en.demo';
-import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/notation/connector/connector-routing.zh.demo';
-import LogicFrameBasicEnDemo from '../../src/modules/docs/contents/diagram/notation/logic-frame/logic-frame-basic.en.demo';
-import LogicFrameBasicZhDemo from '../../src/modules/docs/contents/diagram/notation/logic-frame/logic-frame-basic.zh.demo';
-import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/logic-frame/process-recipe.en.demo';
-import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/logic-frame/process-recipe.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/semantic-units/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/semantic-units/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/semantic-units/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/semantic-units/data-recipe.zh.demo';
-import SemanticUnitsEnDemo from '../../src/modules/docs/contents/diagram/notation/semantic-units/semantic-units.en.demo';
-import SemanticUnitsZhDemo from '../../src/modules/docs/contents/diagram/notation/semantic-units/semantic-units.zh.demo';
+import LogicFrameBasicEnDemo from '../../src/modules/docs/contents/diagram/notation/composite/logic-frame/logic-frame-basic.en.demo';
+import LogicFrameBasicZhDemo from '../../src/modules/docs/contents/diagram/notation/composite/logic-frame/logic-frame-basic.zh.demo';
+import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/composite/logic-frame/process-recipe.en.demo';
+import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/composite/logic-frame/process-recipe.zh.demo';
+import CalloutPlacementEnDemo from '../../src/modules/docs/contents/diagram/notation/logic/callout/callout-placement.en.demo';
+import CalloutPlacementZhDemo from '../../src/modules/docs/contents/diagram/notation/logic/callout/callout-placement.zh.demo';
+import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/notation/logic/connector/connector-routing.en.demo';
+import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/notation/logic/connector/connector-routing.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/logic/semantic-units/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/logic/semantic-units/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/logic/semantic-units/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/logic/semantic-units/data-recipe.zh.demo';
+import SemanticUnitsEnDemo from '../../src/modules/docs/contents/diagram/notation/logic/semantic-units/semantic-units.en.demo';
+import SemanticUnitsZhDemo from '../../src/modules/docs/contents/diagram/notation/logic/semantic-units/semantic-units.zh.demo';
 
 const definitions = [ConnectorDefinition, CalloutDefinition] as const;
 

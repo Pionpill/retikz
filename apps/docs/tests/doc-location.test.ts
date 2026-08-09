@@ -3,17 +3,31 @@ import { describe, expect, it } from 'vitest';
 import { resolveDocLocation } from '@/modules/docs/layout/useDocLocation';
 
 describe('resolveDocLocation', () => {
-  it('将无分组父页的子页归一化为 page + subPage', () => {
+  it('将 Notation 两段路径归一化为有落地页的 section', () => {
+    expect(
+      resolveDocLocation({
+        moduleId: 'diagram',
+        firstSeg: 'notation',
+      }),
+    ).toEqual({
+      moduleId: 'diagram',
+      sectionId: 'notation',
+      pageId: null,
+    });
+  });
+
+  it('保留 Notation 分组的 section + page + subPage 语义', () => {
     expect(
       resolveDocLocation({
         moduleId: 'diagram',
         sectionId: 'notation',
-        pageId: 'logic-frame',
+        pageId: 'composite',
+        subPageId: 'logic-frame',
       }),
     ).toEqual({
       moduleId: 'diagram',
-      sectionId: null,
-      pageId: 'notation',
+      sectionId: 'notation',
+      pageId: 'composite',
       subPageId: 'logic-frame',
     });
   });

@@ -18,24 +18,16 @@ Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、�
 
 所有成员都下沉为既有 Core 图元，可通过 React、直接 JSON/IR 或 Vanilla embed 编写。Definition 按 figure 注入，不进入持久化 JSON。
 
-## 章节内容
+## 内容分组
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/diagram/notation/logic-frame">
-    <span className="font-semibold">LogicFrame</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">外壳、header、section 与 FlexLayout 复用</span>
+  <LinkedCard href="/diagram/notation/logic">
+    <span className="font-semibold">逻辑单元</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">语义单元、连接器与标注</span>
   </LinkedCard>
-  <LinkedCard href="/diagram/notation/semantic-units">
-    <span className="font-semibold">语义单元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Terminal、Stage、Decision 与 Junction</span>
-  </LinkedCard>
-  <LinkedCard href="/diagram/notation/connector">
-    <span className="font-semibold">Connector</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">路由、target 与末步 label</span>
-  </LinkedCard>
-  <LinkedCard href="/diagram/notation/callout">
-    <span className="font-semibold">Callout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">放置、previous-only target 与 leader</span>
+  <LinkedCard href="/diagram/notation/composite">
+    <span className="font-semibold">复合单元</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">LogicFrame 与后续可复用组合</span>
   </LinkedCard>
   <LinkedCard href="/diagram/notation/api-reference">
     <span className="font-semibold">Notation API 参考</span>
