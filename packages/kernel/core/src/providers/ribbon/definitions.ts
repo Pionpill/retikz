@@ -1,3 +1,4 @@
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { RibbonWidthProfileDefinition } from '../../contract';
@@ -11,8 +12,8 @@ export type BuiltinRibbonWidthProfileName = 'bulge';
 const bulge = defineRibbonWidthProfile({
   name: 'bulge',
   paramsSchema: z.strictObject({
-    base: z.number().nonnegative(),
-    peak: z.number().nonnegative(),
+    base: NonNegativeNumberSchema,
+    peak: NonNegativeNumberSchema,
   }),
   widthAt: ({ offset, params }) => {
     const t = Math.sin(Math.PI * offset);

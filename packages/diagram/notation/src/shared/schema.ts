@@ -7,6 +7,7 @@ import {
   PositionSchema,
   StepLabelSchema,
 } from '@retikz/core';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import {
   LayoutArtifactItemBaseSchema,
   LayoutArtifactRectSchema,
@@ -22,11 +23,6 @@ import {
   LogicCompositeType,
   NOTATION_NAMESPACE,
 } from './constants';
-
-/** 非空且不能仅包含空白字符的编写标识 */
-export const NonBlankStringSchema = z.string().refine(value => value.trim().length > 0, {
-  message: 'String must contain at least one non-whitespace character.',
-});
 
 const LogicTargetFields = {
   id: NonBlankStringSchema.describe('Stable authored target identity.'),
@@ -56,7 +52,7 @@ export const LogicDiagramPointSchema = z
 
 /** 统一或分边设置的非负间距 */
 export const LogicSpacingSchema = z
-  .union([z.number().nonnegative(), BoxSpacingSchema])
+  .union([NonNegativeNumberSchema, BoxSpacingSchema])
   .describe('Uniform or side-specific non-negative spacing.');
 
 const NeutralStyleDefault = { fill: 'transparent', stroke: 'currentColor', strokeWidth: 1, opacity: 1 } as const;

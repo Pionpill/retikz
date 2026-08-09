@@ -213,7 +213,7 @@ test('safe temp paths accept only direct retikz publish task directories', () =>
   }
 });
 
-test('Foundation publish artifact is root-only and has no runtime dependencies', async () => {
+test('Foundation publish artifact is root-only and has only the Zod runtime dependency', async () => {
   assert.ok(releaseGroups.kernel.packages.includes('@retikz/foundation'));
 
   const manifest = JSON.parse(
@@ -224,6 +224,6 @@ test('Foundation publish artifact is root-only and has no runtime dependencies',
   assert.equal(manifest.sideEffects, false);
   assert.deepEqual(Object.keys(manifest.exports), ['.']);
   assert.deepEqual(Object.keys(manifest.publishConfig.exports), ['.']);
-  assert.deepEqual(manifest.dependencies ?? {}, {});
+  assert.deepEqual(manifest.dependencies ?? {}, { zod: 'catalog:' });
   assert.deepEqual(manifest.peerDependencies ?? {}, {});
 });

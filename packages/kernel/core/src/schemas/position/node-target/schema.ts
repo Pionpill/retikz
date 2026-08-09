@@ -1,8 +1,9 @@
+import { NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Side } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { AngleDegreesSchema } from '../../scalar';
 
 export const BoundaryAnchorRefSchema = z
   .object({

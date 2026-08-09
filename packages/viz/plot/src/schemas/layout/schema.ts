@@ -1,4 +1,5 @@
 import { GeometryLabelPosition, TextBlockSchema } from '@retikz/core';
+import { NonNegativeNumberSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { AxisCardinalSide, GuideTextStyleSchema } from '../guide';
@@ -11,8 +12,6 @@ import {
   PlotLabelType,
   PlotLayoutMode,
 } from './constants';
-
-const NormalizedRatioSchema = z.number().min(0).max(1);
 
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
@@ -39,10 +38,10 @@ const PlotLabelTextSchema = TextBlockSchema.refine(textBlockHasContent, {
 
 export const BoxPaddingSchema = z
   .strictObject({
-    top: z.number().nonnegative().optional().describe('Top padding in user units'),
-    right: z.number().nonnegative().optional().describe('Right padding in user units'),
-    bottom: z.number().nonnegative().optional().describe('Bottom padding in user units'),
-    left: z.number().nonnegative().optional().describe('Left padding in user units'),
+    top: NonNegativeNumberSchema.optional().describe('Top padding in user units'),
+    right: NonNegativeNumberSchema.optional().describe('Right padding in user units'),
+    bottom: NonNegativeNumberSchema.optional().describe('Bottom padding in user units'),
+    left: NonNegativeNumberSchema.optional().describe('Left padding in user units'),
   })
   .describe('Optional per-side padding around a plot layout frame or coordinate composition');
 
@@ -68,10 +67,10 @@ const SideLayoutPlacementSchema = z
     target: z.enum(LayoutPlacementTarget).optional().describe('Target frame used by this placement; omit = frame'),
     side: z.enum(AxisCardinalSide).describe('Cardinal side used by this placement'),
     placement: z
-      .union([z.enum(GeometryLabelPosition), NormalizedRatioSchema])
+      .union([z.enum(GeometryLabelPosition), NormalizedFractionSchema])
       .optional()
       .describe('Position along the side: core label keyword or normalized number from start to end'),
-    padding: z.number().nonnegative().optional().describe('Outward padding from the target side in user units'),
+    padding: NonNegativeNumberSchema.optional().describe('Outward padding from the target side in user units'),
     shift: LayoutShiftSchema.optional().describe('Additional local shift after side placement is resolved'),
     anchor: z.enum(LayoutAnchor).optional().describe('Text anchor relative to the resolved placement point'),
   })
@@ -83,8 +82,8 @@ const PointLayoutPlacementSchema = z
       .literal(LayoutPlacementKind.Point)
       .describe('Placement discriminator: place the decoration at a normalized point'),
     target: z.enum(LayoutPlacementTarget).optional().describe('Target frame used by this placement; omit = frame'),
-    x: NormalizedRatioSchema.describe('Normalized x position inside the target frame'),
-    y: NormalizedRatioSchema.describe('Normalized y position inside the target frame'),
+    x: NormalizedFractionSchema.describe('Normalized x position inside the target frame'),
+    y: NormalizedFractionSchema.describe('Normalized y position inside the target frame'),
     anchor: z.enum(LayoutAnchor).optional().describe('Text anchor relative to the resolved point'),
   })
   .describe('Point-based plot decoration placement');

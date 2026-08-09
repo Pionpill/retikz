@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
@@ -32,18 +33,12 @@ const polygonParamsSchema = z
       .number()
       .optional()
       .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
-    aspectRatio: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Width-to-height ratio for a four-sided diamond; omitted for regular polygon geometry.'),
+    cornerRadius: NonNegativeNumberSchema.optional().describe(
+      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
+    aspectRatio: PositiveNumberSchema.optional().describe(
+      'Width-to-height ratio for a four-sided diamond; omitted for regular polygon geometry.',
+    ),
   })
   .superRefine((params, context) => {
     if (params.aspectRatio === undefined) return;

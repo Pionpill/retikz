@@ -5,8 +5,20 @@ import { assertNonEmptyString, isRetikzError, RetikzError } from '@retikz/founda
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 describe('foundation public surface', () => {
-  it('exports only the three runtime symbols from its root', () => {
-    expect(Object.keys(foundation).sort()).toEqual(['RetikzError', 'assertNonEmptyString', 'isRetikzError'].sort());
+  it('exports only the nine runtime symbols from its root', () => {
+    expect(Object.keys(foundation).sort()).toEqual(
+      [
+        'NonBlankStringSchema',
+        'NonNegativeIntegerSchema',
+        'NonNegativeNumberSchema',
+        'NormalizedFractionSchema',
+        'PositiveIntegerSchema',
+        'PositiveNumberSchema',
+        'RetikzError',
+        'assertNonEmptyString',
+        'isRetikzError',
+      ].sort(),
+    );
     expectTypeOf(assertNonEmptyString).toBeFunction();
     expectTypeOf(RetikzError).toBeConstructibleWith({ code: 'CODE', message: 'message', details: {} });
     expectTypeOf(isRetikzError).toBeFunction();
@@ -20,7 +32,7 @@ describe('foundation public surface', () => {
     expectTypeOf<RetikzErrorOptions<'CODE', Readonly<Record<string, unknown>>>>().toHaveProperty('cause');
   });
 
-  it.each(['types', 'assert', 'error'])('rejects the %s subpath', async subpath => {
+  it.each(['types', 'schema', 'assert', 'error'])('rejects the %s subpath', async subpath => {
     await expect(import(/* @vite-ignore */ `@retikz/foundation/${subpath}`)).rejects.toThrow();
   });
 });

@@ -26,6 +26,7 @@ describe('built-in Cell visual scales', () => {
     expect(scale?.of('a')).toBe('green');
     expect(scale?.of('outside')).toBeUndefined();
     expect(() => resolve('ordinal-color', { domain: ['a', 'b'], range: ['red'] }, ['a'])).toThrow(/range/i);
+    expect(() => resolve('ordinal-color', { range: [' '] }, ['a'])).toThrow('color must not be blank');
   });
 
   it('validates explicit ordinal domains and truncates extra colors', () => {
@@ -48,6 +49,7 @@ describe('built-in Cell visual scales', () => {
     expect(equal?.of(5)).toBe('rgb(128, 128, 128)');
     expect(() => resolve('sequential-color', { domain: [2, 1] }, [])).toThrow(/domain/i);
     expect(() => resolve('sequential-color', {}, [1, '2'])).toThrow(/number/i);
+    expect(() => resolve('sequential-color', { range: [' ', 'black'] }, [1])).toThrow('color must not be blank');
   });
 
   it('uses d3 threshold endpoint semantics and token fallback', () => {
@@ -62,6 +64,9 @@ describe('built-in Cell visual scales', () => {
     expect(() => resolve('threshold-color', { thresholds: [10, 10] }, [10])).toThrow(/threshold/i);
     expect(() => resolve('threshold-color', { thresholds: [10], range: ['red'] }, [10])).toThrow(/range/i);
     expect(() => resolve('threshold-color', { thresholds: [10] }, ['10'])).toThrow(/number/i);
+    expect(() => resolve('threshold-color', { thresholds: [10], range: [' ', 'black'] }, [10])).toThrow(
+      'color must not be blank',
+    );
   });
 
   it('returns undefined only for empty automatic domains', () => {

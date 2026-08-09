@@ -1,5 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
+import { PositiveNumberSchema } from '@retikz/foundation';
 import {
   CoordinateCompositionSchema,
   CoordinateOperationSchema,
@@ -34,8 +35,8 @@ export const ChartSharedBaseSchema = z
       .optional()
       .describe('Explicit Plot mark extensions appended after recipe marks'),
     layout: PlotLayoutSchema.optional().describe('Plot label layout forwarded to the resolved Plot'),
-    width: z.number().positive().optional().describe('Resolved Plot intrinsic width in user units'),
-    height: z.number().positive().optional().describe('Resolved Plot intrinsic height in user units'),
+    width: PositiveNumberSchema.optional().describe('Resolved Plot intrinsic width in user units'),
+    height: PositiveNumberSchema.optional().describe('Resolved Plot intrinsic height in user units'),
     meta: JsonObjectSchema.optional().describe('JSON-safe source metadata forwarded to the resolved Plot'),
   })
   .describe('Shared JSON-safe fields accepted by every Chart variant');

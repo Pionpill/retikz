@@ -36,7 +36,7 @@ describe('@retikz/notation package boundary', () => {
   });
 
   it('exposes cross-owner shared contracts and keeps implementation shapes private', () => {
-    expect(notationExports.NonBlankStringSchema).toBeDefined();
+    expect('NonBlankStringSchema' in notationExports).toBe(false);
     expect(notationExports.LogicSpacingSchema).toBeDefined();
     expect(notationExports.LogicNeutralStyleSchema).toBeDefined();
     expect(notationExports.LogicContentSizeDefault).toBeDefined();

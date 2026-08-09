@@ -1,5 +1,6 @@
 import { CompositeBaseSchema, JsonObjectSchema, TextBlockSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -23,14 +24,12 @@ import {
 
 export const CompositionSpacingSchema = z
   .strictObject({
-    panelGap: z.number().nonnegative().optional().describe('Gap between generated facet panels in user units'),
-    trackGap: z.number().nonnegative().optional().describe('Gap between tracks in a track arrangement in user units'),
-    axisGap: z.number().nonnegative().optional().describe('Outward gap between axes that share the same side or edge'),
-    labelGap: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Gap between panel, track, or axis title labels and their related plot area'),
+    panelGap: NonNegativeNumberSchema.optional().describe('Gap between generated facet panels in user units'),
+    trackGap: NonNegativeNumberSchema.optional().describe('Gap between tracks in a track arrangement in user units'),
+    axisGap: NonNegativeNumberSchema.optional().describe('Outward gap between axes that share the same side or edge'),
+    labelGap: NonNegativeNumberSchema.optional().describe(
+      'Gap between panel, track, or axis title labels and their related plot area',
+    ),
     padding: BoxPaddingSchema.optional().describe('Optional outer padding applied to composition frame calculation'),
   })
   .describe('Plot composition spacing configuration');
@@ -468,20 +467,12 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .array(PlotLabelSchema)
     .optional()
     .describe('Static plot labels such as titles, captions, source notes, and custom text'),
-  width: z
-    .number()
-    .positive()
-    .optional()
-    .describe(
-      "The panel's intrinsic width in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global width, then the built-in default.",
-    ),
-  height: z
-    .number()
-    .positive()
-    .optional()
-    .describe(
-      "The panel's intrinsic height in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global height, then the built-in default.",
-    ),
+  width: PositiveNumberSchema.optional().describe(
+    "The panel's intrinsic width in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global width, then the built-in default.",
+  ),
+  height: PositiveNumberSchema.optional().describe(
+    "The panel's intrinsic height in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global height, then the built-in default.",
+  ),
   coordinate: CoordinateOperationSchema.optional().describe(
     'Single-coordinate shorthand; required when composition is omitted and forbidden when composition is present',
   ),

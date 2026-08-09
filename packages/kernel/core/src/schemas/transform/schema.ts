@@ -1,8 +1,9 @@
+import { NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Anchor } from '../../shared';
 import { AbsoluteTargetSchema, PolarPositionSchema, PositionSchema } from '../position';
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
+import { AngleDegreesSchema } from '../scalar';
 import { ScopeSelfPointSchema } from '../scope-point';
 
 const TranslateSchema = z
@@ -34,11 +35,9 @@ const AtTranslateSchema = z
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
     direction: z.enum(Anchor).describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
     of: z.string().min(1).describe('Referenced node id; must already be defined.'),
-    distance: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 24.'),
+    distance: PositiveNumberSchema.optional().describe(
+      'Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 24.',
+    ),
   })
   .describe('Direction-relative translate transform lowered to Cartesian translate at compile time.');
 

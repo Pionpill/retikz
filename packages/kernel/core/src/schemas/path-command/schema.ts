@@ -1,3 +1,4 @@
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { AngleDegreesSchema } from '../scalar';
@@ -30,7 +31,7 @@ export const CubicPathCommandSchema = z.strictObject({
 export const ArcPathCommandSchema = z.strictObject({
   kind: z.literal('arc').describe('Discriminator for circular arc path commands.'),
   center: PointSchema.describe('Arc center point.'),
-  radius: z.number().positive().describe('Arc radius in user units.'),
+  radius: PositiveNumberSchema.describe('Arc radius in user units.'),
   startAngle: AngleDegreesSchema.describe('Arc start angle in degrees.'),
   endAngle: AngleDegreesSchema.describe('Arc end angle in degrees.'),
   counterClockwise: z.boolean().optional().describe('Whether to draw counter-clockwise.'),
@@ -39,8 +40,8 @@ export const ArcPathCommandSchema = z.strictObject({
 export const EllipseArcPathCommandSchema = z.strictObject({
   kind: z.literal('ellipseArc').describe('Discriminator for elliptical arc path commands.'),
   center: PointSchema.describe('Ellipse arc center point.'),
-  radiusX: z.number().positive().describe('Ellipse arc x radius in user units.'),
-  radiusY: z.number().positive().describe('Ellipse arc y radius in user units.'),
+  radiusX: PositiveNumberSchema.describe('Ellipse arc x radius in user units.'),
+  radiusY: PositiveNumberSchema.describe('Ellipse arc y radius in user units.'),
   rotation: AngleDegreesSchema.optional().describe('Ellipse rotation in degrees.'),
   startAngle: AngleDegreesSchema.describe('Ellipse arc start angle in degrees.'),
   endAngle: AngleDegreesSchema.describe('Ellipse arc end angle in degrees.'),

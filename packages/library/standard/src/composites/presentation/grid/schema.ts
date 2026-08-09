@@ -1,4 +1,5 @@
 import { CompositeBaseSchema, PolarPositionSchema, PositionSchema, ScopePropsSchema } from '@retikz/core';
+import { NonNegativeNumberSchema, PositiveIntegerSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -15,8 +16,8 @@ const GridCenteredBoundsSchema = z.strictObject({
   position: z
     .union([PositionSchema, PolarPositionSchema])
     .describe('Geometric grid center; PolarPosition is resolved by Core during Scene compilation.'),
-  width: z.number().nonnegative().describe('Non-negative grid width in user units.'),
-  height: z.number().nonnegative().describe('Non-negative grid height in user units.'),
+  width: NonNegativeNumberSchema.describe('Non-negative grid width in user units.'),
+  height: NonNegativeNumberSchema.describe('Non-negative grid height in user units.'),
 });
 
 const GridBoundsSchema = z
@@ -24,18 +25,16 @@ const GridBoundsSchema = z
   .describe('Either two unordered Cartesian corners or a center position with width and height.');
 
 const GridLineMajorSchema = z.strictObject({
-  every: z.number().int().positive().describe('Positive origin-relative lattice interval for major lines.'),
+  every: PositiveIntegerSchema.describe('Positive origin-relative lattice interval for major lines.'),
   offset: z.number().int().default(0).describe('Origin-relative lattice index offset for major lines.'),
   style: StandardPathStrokeStyleSchema.optional().describe('Style fields overriding ordinary grid-line style.'),
 });
 
 export const GridLineInputSchema = z
   .strictObject({
-    spacing: z
-      .number()
-      .positive()
-      .default(DEFAULT_GRID_LINE_SPACING)
-      .describe('Positive distance between adjacent grid lines in this direction.'),
+    spacing: PositiveNumberSchema.default(DEFAULT_GRID_LINE_SPACING).describe(
+      'Positive distance between adjacent grid lines in this direction.',
+    ),
     origin: z.number().optional().describe('Optional origin-relative lattice coordinate for this direction.'),
     includeBoundary: z.boolean().default(false).describe('Whether missing bounds edges are added as grid lines.'),
     style: StandardPathStrokeStyleSchema.optional().describe('Style for ordinary grid lines.'),
@@ -54,7 +53,7 @@ export const GridLineSchema = z
   .describe('Disabled, shared, or direction-specific grid-line configuration.');
 
 const GridBorderSchema = z.strictObject({
-  padding: z.number().nonnegative().default(0).describe('Uniform outward border padding in user units.'),
+  padding: NonNegativeNumberSchema.default(0).describe('Uniform outward border padding in user units.'),
   order: z
     .enum(GridBorderOrder)
     .default(GridBorderOrder.Front)

@@ -2,6 +2,7 @@ import type { IRDataScalarValue } from '@retikz/data';
 
 import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type {
@@ -14,7 +15,7 @@ import type { IRTableVisualScaleRef } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { cellVisualScaleDefinitionOf } from './registry';
 
-const ColorSchema = CssColorSchema.refine(value => value.trim().length > 0, {
+const ColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
   message: 'visual scale color must not be empty or whitespace',
 });
 const EdgesSchema = z.array(z.number()).superRefine((edges, context) => {
