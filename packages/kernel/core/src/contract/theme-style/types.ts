@@ -10,6 +10,3 @@ export type ThemeStyleDefinition = Readonly<{
   name: string;
   resolve: (context: ThemeStyleResolveContext) => ResolvedThemeColors;
 }>;
-
-/** 擦除泛型后的 Theme style definition */
-export type AnyThemeStyleDefinition = ThemeStyleDefinition;

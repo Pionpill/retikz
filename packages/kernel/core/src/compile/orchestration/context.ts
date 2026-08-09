@@ -1,7 +1,6 @@
 ﻿import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
-  AnyThemeStyleDefinition,
   ArrowDefinition,
   BoundaryDefinition,
   ClipDefinition,
@@ -9,6 +8,7 @@
   PatternDefinition,
   RibbonWidthProfileDefinition,
   ShapeDefinition,
+  ThemeStyleDefinition,
 } from '../../contract';
 import type { IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
@@ -44,7 +44,7 @@ export type CompileContext = {
   /** Scene 根解析后的完整 Theme */
   theme: ResolvedTheme;
   /** Core Theme style registry */
-  themeStyles: ReadonlyMap<string, AnyThemeStyleDefinition>;
+  themeStyles: ReadonlyMap<string, ThemeStyleDefinition>;
   /** 文字度量函数 */
   measureText: NonNullable<CompileOptions['measureText']>;
   /** 运行时注入的 TeX lowering 钩子 */
