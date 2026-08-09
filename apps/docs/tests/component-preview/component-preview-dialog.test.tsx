@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
+import type { ThemeStyleValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
+import { ThemeStyle } from '@retikz/core';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -17,6 +19,7 @@ import type {
   PreviewControlSlot,
   PreviewControlState,
   PreviewThemeMode,
+  PreviewThemeStyleSelection,
   SizeKey,
 } from '../../src/modules/docs/components/component-preview/types';
 
@@ -95,6 +98,10 @@ describe('ComponentPreviewDialog', () => {
       showContextBar: boolean;
       themeMode: PreviewThemeMode;
       onThemeModeChange: (themeMode: PreviewThemeMode) => void;
+      enableThemeSwitch?: boolean;
+      themeStyle?: ThemeStyleValue;
+      themeStyleSelection?: PreviewThemeStyleSelection;
+      onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
       controlPanelOpen: boolean;
       onControlPanelOpenChange: (open: boolean) => void;
       controlSlots?: Array<PreviewControlSlot>;
@@ -104,6 +111,32 @@ describe('ComponentPreviewDialog', () => {
     }>();
     expect(componentPreviewExports).toHaveProperty('ComponentPreviewCard');
     expect(componentPreviewExports).not.toHaveProperty(['Component', 'Detail', 'Dialog'].join(''));
+  });
+
+  it('启用局部主题切换时在预览上下文栏显示当前有效风格图标', () => {
+    const markup = renderToStaticMarkup(
+      <ComponentPreviewDialog
+        name="theme-dialog"
+        Component={Demo}
+        align="center"
+        initialSize="md"
+        controlState={controlState}
+        showContextBar
+        themeMode="inherit"
+        onThemeModeChange={() => undefined}
+        enableThemeSwitch
+        themeStyle={ThemeStyle.Academic}
+        themeStyleSelection="inherit"
+        onThemeStyleChange={() => undefined}
+        controlPanelOpen
+        onControlPanelOpenChange={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Theme style"');
+    expect(markup).toContain('lucide-graduation-cap');
+    expect(markup.indexOf('Preview theme dark')).toBeLessThan(markup.indexOf('aria-label="Theme style"'));
   });
 
   it('按规定顺序渲染 header，并用弹窗 runtime 求值动作插槽', () => {

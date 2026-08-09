@@ -27,24 +27,22 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
-import { PreviewThemeStyleOptions } from '@/modules/docs/components/component-preview/theme';
+import {
+  getPreviewThemeStyleIcon,
+  PreviewThemeStyleLabelKeys,
+  PreviewThemeStyleOptions,
+} from '@/modules/docs/components/component-preview/theme';
 import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/data';
 import { useDocLocation } from '@/modules/docs/layout';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
 
-import { getPreviewThemeStyleIcon, isPreviewThemeStyleDocument } from './preview-theme-settings';
+import { isPreviewThemeStyleDocument } from './preview-theme-settings';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 const rangePlaybackDurationOptions = [500, 1000, 2000, 3000, 5000] as const;
-const previewThemeStyleLabelKeys = {
-  neutral: 'preview.themeStyleNeutral',
-  academic: 'preview.themeStyleAcademic',
-  vibrant: 'preview.themeStyleVibrant',
-  clean: 'preview.themeStyleClean',
-} as const;
 type PreviewThemeSettingsItemsProps = {
   themeStyle: ThemeStyleValue;
   setThemeStyle: (value: ThemeStyleValue) => void;
@@ -68,7 +66,7 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
         return (
           <DropdownMenuRadioItem key={option} value={option}>
             {createElement(getPreviewThemeStyleIcon(option), { 'aria-hidden': true, className: 'size-4' })}
-            {t(previewThemeStyleLabelKeys[option])}
+            {t(PreviewThemeStyleLabelKeys[option])}
           </DropdownMenuRadioItem>
         );
       })}

@@ -293,6 +293,7 @@
     "themeMode": "Preview theme",
     "themeSettings": "Theme settings",
     "themeStyle": "Theme style",
+    "themeStyleFollowGlobal": "Follow global",
     "themeStyleNeutral": "Neutral",
     "themeStyleAcademic": "Academic",
     "themeStyleVibrant": "Vibrant",
