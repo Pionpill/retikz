@@ -4,7 +4,9 @@ import { Fragment } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { Separator } from '@/components/ui/separator';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
+import { DocDifficultyDot } from '@/modules/docs/components';
 
 import type { SidebarCategoryData } from './types';
 
@@ -38,79 +40,82 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
   }
 
   return (
-    <nav className="flex flex-col">
-      {categories.map((category, idx) => {
-        const categoryPath = category.path;
-        return (
-          <Fragment key={category.value}>
-            {idx > 0 && <Separator className="my-3" />}
-            <section className="flex flex-col">
-              {category.label &&
-                (categoryPath ? (
-                  <button
-                    type="button"
-                    className={cn(
-                      'mb-1.5 flex w-full cursor-pointer items-center rounded-md px-3 py-1 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground',
-                      pathname.toLowerCase() === categoryPath.toLowerCase() && 'text-foreground',
-                    )}
-                    onClick={e => {
-                      e.preventDefault();
-                      navigate(categoryPath);
-                      onNavigate?.();
-                    }}
-                  >
-                    <span className="truncate">{category.label}</span>
-                  </button>
-                ) : (
-                  <h4 className="mb-1.5 px-3 text-xs font-medium text-muted-foreground">{category.label}</h4>
-                ))}
-              <ul className="flex flex-col gap-0.5">
-                {category.modules.map(module => {
-                  const ModuleIcon = module.Icon;
-                  const modulePath = category.ungrouped
-                    ? `/${moduleId}/${module.value}`
-                    : `/${moduleId}/${category.value}/${module.value}`;
-                  const hasChildren = Boolean(module.children?.length);
-
-                  if (!hasChildren) {
-                    const isActive = pathname.toLowerCase() === modulePath.toLowerCase();
-                    return (
-                      <li key={module.value}>
-                        <button
-                          type="button"
-                          className={cn(leafBase, isActive && leafActive)}
-                          onClick={e => {
-                            e.preventDefault();
-                            navigate(modulePath);
-                            onNavigate?.();
-                          }}
-                        >
-                          {ModuleIcon && <ModuleIcon className="mr-1.5 size-3.5 shrink-0" />}
-                          <span className="truncate">{module.label}</span>
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  return (
-                    <AppSidebarMenuItem
-                      key={module.value}
-                      item={{
-                        value: module.value,
-                        label: module.label,
-                        Icon: module.Icon,
-                        children: module.children,
+    <TooltipProvider delayDuration={150}>
+      <nav className="flex flex-col">
+        {categories.map((category, idx) => {
+          const categoryPath = category.path;
+          return (
+            <Fragment key={category.value}>
+              {idx > 0 && <Separator className="my-3" />}
+              <section className="flex flex-col">
+                {category.label &&
+                  (categoryPath ? (
+                    <button
+                      type="button"
+                      className={cn(
+                        'mb-1.5 flex w-full cursor-pointer items-center rounded-md px-3 py-1 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground',
+                        pathname.toLowerCase() === categoryPath.toLowerCase() && 'text-foreground',
+                      )}
+                      onClick={e => {
+                        e.preventDefault();
+                        navigate(categoryPath);
+                        onNavigate?.();
                       }}
-                      path={modulePath.toLowerCase()}
-                      onNavigate={onNavigate}
-                    />
-                  );
-                })}
-              </ul>
-            </section>
-          </Fragment>
-        );
-      })}
-    </nav>
+                    >
+                      <span className="truncate">{category.label}</span>
+                    </button>
+                  ) : (
+                    <h4 className="mb-1.5 px-3 text-xs font-medium text-muted-foreground">{category.label}</h4>
+                  ))}
+                <ul className="flex flex-col gap-0.5">
+                  {category.modules.map(module => {
+                    const ModuleIcon = module.Icon;
+                    const modulePath = category.ungrouped
+                      ? `/${moduleId}/${module.value}`
+                      : `/${moduleId}/${category.value}/${module.value}`;
+                    const hasChildren = Boolean(module.children?.length);
+
+                    if (!hasChildren) {
+                      const isActive = pathname.toLowerCase() === modulePath.toLowerCase();
+                      return (
+                        <li key={module.value}>
+                          <button
+                            type="button"
+                            className={cn(leafBase, isActive && leafActive)}
+                            onClick={e => {
+                              e.preventDefault();
+                              navigate(modulePath);
+                              onNavigate?.();
+                            }}
+                          >
+                            {ModuleIcon && <ModuleIcon className="mr-1.5 size-3.5 shrink-0" />}
+                            <span className="min-w-0 flex-1 truncate text-left">{module.label}</span>
+                            <DocDifficultyDot difficulty={module.difficulty} />
+                          </button>
+                        </li>
+                      );
+                    }
+
+                    return (
+                      <AppSidebarMenuItem
+                        key={module.value}
+                        item={{
+                          value: module.value,
+                          label: module.label,
+                          Icon: module.Icon,
+                          children: module.children,
+                        }}
+                        path={modulePath.toLowerCase()}
+                        onNavigate={onNavigate}
+                      />
+                    );
+                  })}
+                </ul>
+              </section>
+            </Fragment>
+          );
+        })}
+      </nav>
+    </TooltipProvider>
   );
 };

@@ -103,6 +103,7 @@ const mapSidebarChildren = (t: TFunction, children?: Array<SubPage>): Array<Side
   children?.map(child => ({
     value: child.id,
     label: t(child.label),
+    ...(child.difficulty === undefined ? {} : { difficulty: child.difficulty }),
     children: mapSidebarChildren(t, child.children),
   }));
 
@@ -120,6 +121,7 @@ export const buildSidebarCategories = (
     modules: section.pages.map(page => ({
       value: page.id,
       label: t(page.label),
+      ...(page.difficulty === undefined ? {} : { difficulty: page.difficulty }),
       ...(page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
       children: mapSidebarChildren(t, page.children),
     })),

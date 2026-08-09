@@ -221,32 +221,34 @@ result.manifest;
 
 ### DetailTable
 
-| Prop                             | Type                                                                      | Default        | Description                                                              |
-| -------------------------------- | ------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------ |
-| `dataRef`                        | `DetailTableProps['dataRef']`                                             | —              | External dataset reference stored in the spec                            |
-| `data`                           | `DetailTableProps['data']`                                                | —              | Current detail records; excluded from the spec                           |
-| `columns?`                       | `DetailTableProps['columns']`                                             | —              | Programmatic fields, headers, and presentations; exclusive with children |
-| `children?`                      | `DetailTableProps['children']`                                            | —              | `DetailColumn` declarations in order; exclusive with `columns`           |
-| `model?`                         | `DetailTableProps['model']`                                               | —              | Optional field model                                                     |
-| `header?`                        | `DetailTableProps['header']`                                              | `true`         | Whether to generate a column-header row                                  |
-| `id?`                            | `DetailTableProps['id']`                                                  | —              | Stable Table id; required inside a parent `Layout`                       |
-| `layout?`                        | `DetailTableProps['layout']`                                              | track defaults | Default/indexed track sizes, gaps, and Table borders                     |
-| `rules?`                         | `DetailTableProps['rules']`                                               | `[]`           | Declaration-ordered formatter, presentation, or appearance overrides     |
-| `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`           | Maps selected value-Cell raw values to background or content colors      |
-| `theme?`                         | `DetailTableProps['theme']`                                               | —              | Standalone root Core Theme; embedded mode uses the outer `<Layout>`      |
-| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse TableSpec token overlay, above inherited namespace tokens         |
-| `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in TableSpec                                        |
-| `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`           | Custom Cell formatter definitions                                        |
-| `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                             |
-| `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`           | Custom Cell presentation definitions                                     |
-| `visualScaleDefinitions?`        | `DetailTableProps['visualScaleDefinitions']`                              | `[]`           | Custom Cell visual-scale definitions                                     |
-| `composites?`                    | `DetailTableProps['composites']`                                          | `[]`           | Definitions required by Tier 2 Cell content                              |
-| `onManifest?`                    | `DetailTableProps['onManifest']`                                          | —              | Standalone layout artifact callback; unsupported when embedded           |
-| `width?` / `height?`             | `DetailTableProps['width']`                                               | —              | Host size; does not change Table layout proposals                        |
-| `viewBox?`                       | `DetailTableProps['viewBox']`                                             | —              | Scene camera; does not affect track solving                              |
-| `animate?` / `snapshotAt?`       | `DetailTableProps['animate']`                                             | —              | Reuses the Kernel Layout animation host contract                         |
-| `renderer?`                      | `DetailTableProps['renderer']`                                            | `'svg'`        | Rendering backend                                                        |
-| `className?` / `containerStyle?` | `DetailTableProps['className']`<br />`DetailTableProps['containerStyle']` | —              | Passed to the standalone rendering host; rejected when embedded          |
+| Prop                             | Type                                                                      | Default        | Description                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------- |
+| `dataRef`                        | `DetailTableProps['dataRef']`                                             | —              | External dataset reference stored in the spec                                     |
+| `data`                           | `DetailTableProps['data']`                                                | —              | Current detail records; excluded from the spec                                    |
+| `columns?`                       | `DetailTableProps['columns']`                                             | —              | Programmatic fields, headers, and presentations; exclusive with children          |
+| `children?`                      | `DetailTableProps['children']`                                            | —              | `DetailColumn` declarations in order; exclusive with `columns`                    |
+| `model?`                         | `DetailTableProps['model']`                                               | —              | Optional field model                                                              |
+| `header?`                        | `DetailTableProps['header']`                                              | `true`         | Whether to generate a column-header row                                           |
+| `id?`                            | `DetailTableProps['id']`                                                  | —              | Stable Table id; required inside a parent `Layout`                                |
+| `layout?`                        | `DetailTableProps['layout']`                                              | track defaults | Default/indexed track sizes, gaps, and Table borders                              |
+| `rules?`                         | `DetailTableProps['rules']`                                               | `[]`           | Declaration-ordered formatter, presentation, or appearance overrides              |
+| `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`           | Maps selected value-Cell raw values to background or content colors               |
+| `theme?`                         | `DetailTableProps['theme']`                                               | —              | Standalone root Core Theme; embedded mode uses the outer `<Layout>`               |
+| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse TableSpec token overlay above the Table style baseline                     |
+| `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in TableSpec                                                 |
+| `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`           | Custom Cell formatter definitions                                                 |
+| `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                                      |
+| `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`           | Custom Cell presentation definitions                                              |
+| `visualScaleDefinitions?`        | `DetailTableProps['visualScaleDefinitions']`                              | `[]`           | Custom Cell visual-scale definitions                                              |
+| `themeStyles?`                   | `DetailTableProps['themeStyles']`                                         | `[]`           | Standalone Core Theme style definitions; supplied by the outer host when embedded |
+| `tableThemeStyles?`              | `DetailTableProps['tableThemeStyles']`                                    | `[]`           | Table baseline definitions sharing the Core style name                            |
+| `composites?`                    | `DetailTableProps['composites']`                                          | `[]`           | Definitions required by Tier 2 Cell content                                       |
+| `onManifest?`                    | `DetailTableProps['onManifest']`                                          | —              | Standalone layout artifact callback; unsupported when embedded                    |
+| `width?` / `height?`             | `DetailTableProps['width']`                                               | —              | Host size; does not change Table layout proposals                                 |
+| `viewBox?`                       | `DetailTableProps['viewBox']`                                             | —              | Scene camera; does not affect track solving                                       |
+| `animate?` / `snapshotAt?`       | `DetailTableProps['animate']`                                             | —              | Reuses the Kernel Layout animation host contract                                  |
+| `renderer?`                      | `DetailTableProps['renderer']`                                            | `'svg'`        | Rendering backend                                                                 |
+| `className?` / `containerStyle?` | `DetailTableProps['className']`<br />`DetailTableProps['containerStyle']` | —              | Passed to the standalone rendering host; rejected when embedded                   |
 
 ### DetailColumn
 

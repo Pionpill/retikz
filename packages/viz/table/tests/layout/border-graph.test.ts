@@ -602,8 +602,8 @@ describe('Table Border Graph', () => {
               line: line(),
               styleToken: {
                 key: 'table.border.top' as const,
-                source: 'preset' as const,
-                path: '$preset/neutral/light/table.border.top',
+                source: 'local' as const,
+                path: '$style/neutral/light/table.border.top',
               },
             },
           },

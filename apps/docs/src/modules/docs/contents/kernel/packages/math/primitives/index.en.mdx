@@ -6,7 +6,7 @@ description: Construct and transform points, vectors, bounds, ellipses, and arcs
 Primitives answer what a coordinate is and where it goes after a transform. Every API on this page works on plain data without IR or a renderer, and none mutates its input tuples.
 
 ```ts
-import { boundsOf, ellipse, point, vector2, type Position } from '@retikz/math';
+import { applyAffine, boundsOf, ellipse, point, vector2, type Position } from '@retikz/math';
 ```
 
 ## Points and vectors
@@ -42,6 +42,29 @@ const local = worldToLocal(shape, world); // approximately [20, 0]
 ```
 
 With zero rotation, the transform is translation only. Otherwise it rotates about the shape center. The functions are inverses, making them useful for moving connection, boundary, and hit-test coordinates into one coordinate system.
+
+## Affine matrices
+
+Use the `AffineMatrix` tuple and its two closed operations when a complete translation, scale, or rotation chain must be shared across packages. The tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order:
+
+```text
+x' = a*x + c*y + e
+y' = b*x + d*y + f
+```
+
+`multiplyAffine(outer, inner)` returns `outer × inner`, so it applies `inner` to a point first and `outer` second. The arguments are not interchangeable.
+
+```ts
+import { AFFINE_IDENTITY, applyAffine, multiplyAffine, type AffineMatrix } from '@retikz/math';
+
+const translate: AffineMatrix = [1, 0, 0, 1, 10, 20];
+const scale: AffineMatrix = [2, 0, 0, 3, 0, 0];
+const matrix = multiplyAffine(translate, scale);
+
+applyAffine(matrix, [4, 5]); // [18, 35]: scale first, then translate
+```
+
+`AFFINE_IDENTITY` is frozen at runtime and can be shared safely among consumers. Both operations return new tuples without mutating their inputs; ordinary results are not additionally frozen. This layer only performs JavaScript number operations. It does not parse transform strings or check whether a matrix is finite, invertible, or a similarity transform; callers own those policies.
 
 ## Bounds
 
@@ -106,6 +129,7 @@ const candidates = arcBoundingPoints({
 | ----------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | Numbers           | `Position`, `Vector2`, `DEFAULT_EPSILON`, `point`, `vector2`, `lerp`, three numeric guards                | Pure functions; explicit zero-length fallback; lerp extrapolates             |
 | Transforms        | `CenteredShape`, `localToWorld`, `worldToLocal`                                                           | Rotate about center and convert between local and world space                |
+| Affine matrices   | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`                                        | Fixed tuple order; inner before outer; inputs stay unchanged                 |
 | Bounds            | Four bounds types plus derivation, merge, conversion, guard, center, half-axis, expansion, corner helpers | Empty point sets and all-empty merges return `undefined`                     |
 | Ellipses and arcs | `Ellipse`, `CenteredBox`, `ellipse`, five arc input types, and point / interval / ray / bbox helpers      | Elliptical arcs are axis-aligned only; bbox candidates are not de-duplicated |
 
@@ -122,6 +146,12 @@ const candidates = arcBoundingPoints({
       path: 'packages/kernel/math/src/geometry/transform.ts',
       startLine: 1,
       endLine: 37,
+    },
+    {
+      label: 'Affine matrix implementation',
+      path: 'packages/kernel/math/src/geometry/affine.ts',
+      startLine: 1,
+      endLine: 26,
     },
     {
       label: 'Bounds implementation',

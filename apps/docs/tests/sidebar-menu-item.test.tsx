@@ -1,15 +1,18 @@
 // @vitest-environment jsdom
 
 import type { Root } from 'react-dom/client';
+import type * as ReactI18nextModule from 'react-i18next';
 
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { DocDifficulty } from '@/modules/docs/data';
 import { AppSidebarMenu, AppSidebarMenuItem } from '@/modules/docs/layout/sidebar';
 
-vi.mock('react-i18next', () => ({
+vi.mock('react-i18next', async importOriginal => ({
+  ...(await importOriginal<typeof ReactI18nextModule>()),
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
@@ -114,5 +117,63 @@ describe('<AppSidebarMenu>', () => {
     expect(chartLabel?.querySelector('svg')).toBeNull();
     expect(pointsButton?.querySelector('svg[aria-label="Showcase icon"]')).not.toBeNull();
     expect(scatterButton?.querySelector('svg')).toBeNull();
+  });
+
+  it('只给一级和递归叶子渲染难度圆点', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push(root);
+
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={['/kernel/intro']}>
+          <AppSidebarMenu
+            moduleId="kernel"
+            categories={[
+              {
+                value: 'root',
+                ungrouped: true,
+                modules: [
+                  { value: 'intro', label: 'Intro', difficulty: DocDifficulty.Beginner },
+                  { value: 'api', label: 'API' },
+                  {
+                    value: 'group',
+                    label: 'Group',
+                    children: [
+                      { value: 'advanced', label: 'Advanced', difficulty: DocDifficulty.Advanced },
+                      { value: 'internals', label: 'Internals', difficulty: DocDifficulty.Internals },
+                    ],
+                  },
+                ],
+              },
+            ]}
+          />
+        </MemoryRouter>,
+      );
+    });
+
+    const intro = findButton(container, 'Intro');
+    const api = findButton(container, 'API');
+    const group = findButton(container, 'Group');
+    const introDifficultySlot = intro?.querySelector('[data-doc-difficulty-slot]');
+    const groupExpandButton = group?.parentElement?.querySelector<HTMLButtonElement>(
+      'button[aria-label="common.expandSection"]',
+    );
+
+    expect(intro?.querySelector('[data-doc-difficulty-dot="beginner"]')).not.toBeNull();
+    expect(introDifficultySlot?.classList.contains('size-6')).toBe(true);
+    expect(groupExpandButton?.classList.contains('size-6')).toBe(true);
+    expect(introDifficultySlot?.classList.contains('ml-1')).toBe(true);
+    expect(groupExpandButton?.classList.contains('ml-1')).toBe(true);
+    expect(api?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
+    expect(group?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
+
+    act(() => {
+      groupExpandButton?.click();
+    });
+
+    expect(findButton(container, 'Advanced')?.querySelector('[data-doc-difficulty-dot="advanced"]')).not.toBeNull();
+    expect(findButton(container, 'Internals')?.querySelector('[data-doc-difficulty-dot="internals"]')).not.toBeNull();
   });
 });

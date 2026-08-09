@@ -1,15 +1,17 @@
 import type { ResolvedTheme } from '@retikz/core';
 
+import { ThemeTokenSource } from '@retikz/core';
+
 import type { ChartRecipeStyleContext } from '../families/shared';
 import type { IRChartShared } from '../schemas';
 import type { ChartThemeStyleDefinition } from './definition';
 import type { ResolvedChartThemeContext } from './resolved';
 
-import { ChartThemeToken, ChartThemeTokenSource } from './constants';
+import { ChartThemeToken } from './constants';
 import { resolveChartThemeStyleRegistry } from './registry';
 import { ChartResolvedThemeTokensSchema, ChartThemeTokenOverridesSchema } from './schema';
 
-/** 解析 effective Theme、Chart preset、稀疏 token 与稳定来源 */
+/** 解析 effective Theme、Chart style baseline、稀疏 token 与稳定来源 */
 export const resolveChartStyle = (
   effectiveTheme: ResolvedTheme,
   spec: Pick<IRChartShared, 'chartThemeTokens'>,
@@ -18,20 +20,20 @@ export const resolveChartStyle = (
   const styles = resolveChartThemeStyleRegistry(chartThemeStyles);
   const definition = styles.get(effectiveTheme.style);
   if (definition === undefined) throw new Error(`Chart theme style '${effectiveTheme.style}' is not registered.`);
-  const preset = definition.resolve(effectiveTheme);
+  const baseline = definition.resolve(effectiveTheme);
   const overrides = ChartThemeTokenOverridesSchema.parse(spec.chartThemeTokens ?? {});
   const tokens = ChartResolvedThemeTokensSchema.parse({
-    ...preset,
+    ...baseline,
     ...structuredClone(overrides),
   });
   const tokenSources = Object.values(ChartThemeToken).map(token => {
     const local = Object.hasOwn(overrides, token);
     return {
       token,
-      kind: local ? ChartThemeTokenSource.Local : ChartThemeTokenSource.Preset,
+      kind: ThemeTokenSource.Local,
       path: local
         ? `$spec/chartThemeTokens/${token}`
-        : `$preset/${effectiveTheme.style}/${effectiveTheme.mode}/${token}`,
+        : `$style/${effectiveTheme.style}/${effectiveTheme.mode}/${token}`,
     };
   });
   return { style: effectiveTheme.style, mode: effectiveTheme.mode, tokens, tokenSources };

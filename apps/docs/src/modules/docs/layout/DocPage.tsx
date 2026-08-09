@@ -125,7 +125,7 @@ export const DocPage: FC<DocPageProps> = props => {
                 {title}
               </h1>
               <div className="flex shrink-0 items-center gap-2">
-                {stableSource != null && <DocPageActions source={stableSource} />}
+                {stableSource != null && <DocPageActions source={stableSource} difficulty={target.difficulty} />}
                 {target.extra}
               </div>
             </div>

@@ -125,21 +125,23 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
 | `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`   | 自定义 Structure definitions                       |
 | `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`   | 自定义 Cell presentation definitions               |
 | `visualScaleDefinitions?`  | `LowerTablesOptions['visualScaleDefinitions']`  | `[]`   | 自定义 Cell visual scale definitions               |
+| `tableThemeStyles?`        | `LowerTablesOptions['tableThemeStyles']`        | `[]`   | 与 Core style 同名的 Table baseline definitions    |
 | `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`   | Cell 内嵌 Tier 2 内容使用的额外 definitions        |
 | `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —      | standalone commit 后接收同次 compile 的根 manifest |
 
 standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onArtifacts` 只选择 definition key 为 `table.table`、`sourcePath: 'children[0]'`、`expansionPath: []` 的 artifact。回调按 manifest 的序列化内容去重；SSR render 不触发副作用。
 
-四类 definitions 与 composites 进入 runtime contribution 时按稳定 key 和对象 identity 合并。runtime 保存复制后冻结的 arrays、`lowerOptions` 与 envelope，调用方后续 `push` 不会改变已创建 contribution；definition/composite 对象本身仍由调用方拥有，不会被 clone 或 freeze。
+五类 definitions 与 composites 进入 runtime contribution 时按稳定 key 和对象 identity 合并。runtime 保存复制后冻结的 arrays、`lowerOptions` 与 envelope，调用方后续 `push` 不会改变已创建 contribution；definition/composite 对象本身仍由调用方拥有，不会被 clone 或 freeze。
 
 ### Theme 输入
 
 | 输入                | 类型                              | 默认值 | 作用                                                              |
 | ------------------- | --------------------------------- | ------ | ----------------------------------------------------------------- |
 | `theme?`            | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
-| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 Table preset            |
+| `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`   | standalone Core style definitions；embedded 时由外层提供          |
+| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 Table style baseline    |
 
-`theme.style` / `theme.mode` 只决定当前 Core 环境与 Table preset。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。
+`theme.style` / `theme.mode` 选择当前 Core 环境和同名 Table style definition。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。自定义 style 在 standalone 模式分别通过 `themeStyles` 与 `tableThemeStyles` 注入；embedded 模式的 Core definition 由外层 Layout 提供。
 
 ### Embedded
 

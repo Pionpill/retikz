@@ -28,6 +28,7 @@ describe('Plot style token contract', () => {
     expect(api.PlotThemeToken).toBeDefined();
     expect(api.PlotThemeTokenOverridesSchema).toBeDefined();
     expect(api.PlotResolvedThemeTokensSchema).toBeDefined();
+    expect('PlotThemeTokenSource' in api).toBe(false);
   });
 
   it('让 PlotSpec 接受 strict flat plotThemeTokens', () => {

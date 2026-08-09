@@ -15,6 +15,7 @@ import type {
   TextMeasurer,
   ThemeModeValue,
   ThemeStyleValue,
+  ThemeTokenSourceValue,
 } from '../../src';
 // @ts-expect-error Core no longer owns the shared ValueOf type utility
 import type { ValueOf } from '../../src';
@@ -35,6 +36,10 @@ describe('core public compile exports', () => {
     expect(core.ThemeSchema).toBeDefined();
     expect(core.ThemeStyle).toBeDefined();
     expect(core.ThemeMode).toBeDefined();
+    expect(core.ThemeTokenSource).toEqual({
+      Inherit: 'inherit',
+      Local: 'local',
+    });
   });
 
   it('keeps root compile types available', () => {
@@ -57,6 +62,7 @@ describe('core public compile exports', () => {
     };
     const style: ThemeStyleValue = 'clean';
     const mode: ThemeModeValue = 'dark';
+    const source: ThemeTokenSourceValue = core.ThemeTokenSource.Inherit;
 
     expect(options).toEqual({});
     expect(warning).toBeUndefined();
@@ -67,6 +73,7 @@ describe('core public compile exports', () => {
     expect(loweredScope).toBeUndefined();
     expect(loweredScene).toBeUndefined();
     expect(theme).toEqual({ style: 'clean' });
+    expect(source).toBe('inherit');
     expect(resolvedTheme).toEqual({
       style,
       mode,

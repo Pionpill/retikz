@@ -16,7 +16,7 @@
 | `@retikz/vanilla`    | 无框架 authoring、浏览器挂载与 SSR        | plain spec、挂载生命周期、DOM 接线、SSR 入口                   | Core / Scene 语义、renderer 算法、Tier 2 领域语法    |
 | `@retikz/tex`        | 可选 TeX 排版能力接入 Core 文本契约       | TeX 引擎抽象、MathJax 集成、字形 lowering、可选 React hook     | Core 文本 IR、通用 SVG renderer、应用公式编辑体验    |
 
-依赖方向：`foundation` 保持零依赖；`runtime` 直接消费 `foundation`，`math` 当前没有 Foundation import 且继续保持零依赖；`core` 直接消费 `foundation`、`runtime` 与 `math`；`inspect` 根入口消费 `core` 并按实际 source import 直接消费 `foundation`；宿主子入口可选消费 `render`、`react` 或 `vanilla`；`render` 消费 `foundation`、`runtime` 与 `core`；`react` / `vanilla` 消费 `foundation`、`runtime`、`core` 与 `render`；`tex` 消费 `foundation` 与 `core`。Standard、Plot、Chart、Table 等其它实际 consumer 同样必须按真实 Foundation import 声明 direct dependency。不要让 foundation 反依赖上层包，不要让 runtime 反依赖领域包，也不要让 core 反依赖 Inspector、公式、React、Vanilla 或具体渲染后端。
+依赖方向：`foundation` 保持零依赖；`runtime` 直接消费 `foundation`，`math` 当前没有 Foundation import 且继续保持零依赖；`core` 直接消费 `foundation`、`runtime` 与 `math`；`inspect` 根入口消费 `core` 并按实际 source import 直接消费 `foundation`；宿主子入口可选消费 `render`、`react` 或 `vanilla`；`render` 消费 `foundation`、`runtime`、`core` 与 `math`；`react` / `vanilla` 消费 `foundation`、`runtime`、`core` 与 `render`；`tex` 消费 `foundation`、`core` 与 `math`。Standard、Plot、Chart、Table 等其它实际 consumer 同样必须按真实 Foundation import 声明 direct dependency。不要让 foundation 反依赖上层包，不要让 runtime 反依赖领域包，也不要让 core 反依赖 Inspector、公式、React、Vanilla 或具体渲染后端。
 
 每个包的输入输出与缺口流向以就近 `AGENTS.md` 为准。通用纯几何下沉 math；后端中立绘图语义进入 core；Scene 执行进入 render；框架或无框架接线进入对应 adapter；可选领域集成留在扩展包。某包需要一项能力不等于该能力归它所有。
 

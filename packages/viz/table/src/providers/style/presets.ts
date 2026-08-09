@@ -1,4 +1,4 @@
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
 
 import type { TableThemeTokenPresetMap } from '../../schemas';
 
@@ -89,7 +89,7 @@ const cleanBorders = { ...noOuter, horizontal: null, vertical: null, headerBotto
 
 /** 八份 detached、递归冻结的 Table preset token map，不包含 Core shared categorical projection */
 export const BUILTIN_TABLE_THEME_TOKENS: Readonly<
-  Record<ThemeStyleValue, Readonly<Record<ThemeModeValue, TableThemeTokenPresetMap>>>
+  Record<BuiltinThemeStyleValue, Readonly<Record<ThemeModeValue, TableThemeTokenPresetMap>>>
 > = deepFreeze({
   neutral: {
     light: preset(
@@ -206,3 +206,7 @@ export const BUILTIN_TABLE_THEME_TOKENS: Readonly<
     dark: preset(cleanAppearance, cleanBorders, ['#172554', '#60a5fa']),
   },
 });
+
+/** 读取一个内建 Table style/mode 的 detached token 基线 */
+export const getTableThemePreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): TableThemeTokenPresetMap =>
+  structuredClone(BUILTIN_TABLE_THEME_TOKENS[style][mode]);
