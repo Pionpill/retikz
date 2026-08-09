@@ -46,6 +46,11 @@ const baseGroups = {
     kind: 'feature',
     packages: ['@retikz/standard'],
   },
+  notation: {
+    domain: 'diagram',
+    kind: 'foundation',
+    packages: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
+  },
   plot: {
     domain: 'viz',
     kind: 'feature',
@@ -114,6 +119,58 @@ const basePackages = [
         domain: 'library',
         releaseGroup: 'standard',
         publishable: true,
+      },
+    },
+  },
+  {
+    path: 'packages/diagram/notation/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/notation',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'diagram',
+        releaseGroup: 'notation',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/core': 'workspace:^',
+        '@retikz/math': 'workspace:^',
+        '@retikz/standard': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/diagram/notation-react/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/notation-react',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'diagram',
+        releaseGroup: 'notation',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/notation': 'workspace:*',
+        '@retikz/react': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/diagram/notation-vanilla/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/notation-vanilla',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'diagram',
+        releaseGroup: 'notation',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/notation': 'workspace:*',
+        '@retikz/vanilla': 'workspace:^',
       },
     },
   },

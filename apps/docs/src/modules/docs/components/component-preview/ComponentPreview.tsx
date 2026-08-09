@@ -33,6 +33,7 @@ import {
   vanillaOverrides,
 } from './registry';
 import { buildPreviewSource } from './source-panel';
+import { usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
@@ -74,6 +75,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
+  const previewTheme = usePreviewTheme();
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
@@ -121,6 +123,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             exportedPreviewIR,
             vanillaOverride,
             vanillaSvg,
+            theme: previewTheme,
           })
         : { source: undefined, previewIr: null },
     [
@@ -138,6 +141,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       exportedPreviewIR,
       vanillaOverride,
       vanillaSvg,
+      previewTheme,
     ],
   );
 

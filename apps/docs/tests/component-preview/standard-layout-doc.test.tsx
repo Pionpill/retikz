@@ -98,7 +98,7 @@ describe('Standard layout documentation demos', () => {
     const vanilla = buildVanillaPreview(preview);
 
     expect(vanilla.code).toContain("legend('preview-legend-1'");
-    expect(vanilla.code).toContain('const standardCompile = { composites: [FlexLayoutDefinition, GridDefinition] };');
+    expect(vanilla.code).toContain('const compile = { composites: [FlexLayoutDefinition, GridDefinition] };');
     expect(vanilla.code).not.toContain('LegendDefinition');
     expect(vanilla.code).not.toContain('Unsupported Standard composite');
     expect(vanilla.svg).toContain('<svg');

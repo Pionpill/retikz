@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, AnyThemeTokenDefinition } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import type { LowerTablesOptions } from '../types';
@@ -19,8 +19,6 @@ export type TableRuntimeContributionInput = Readonly<{
 export type TableRuntimeContribution = Readonly<{
   /** 普通 datasets 与一个 runtime-only envelope */
   datasets: Record<string, unknown>;
-  /** Table owner 的冻结 theme token definition 单例 */
-  themeTokenDefinitions: ReadonlyArray<AnyThemeTokenDefinition>;
   /** Table namespace 共用的稳定 composite 生成器 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 }>;

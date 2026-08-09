@@ -10,7 +10,7 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE, PlotThemeTokenDefinition } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useRef } from 'react';
 
@@ -28,7 +28,7 @@ export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip' |
 };
 
 /** <Plot> 两条入口共享的展示 props + lowerPlots 选项 */
-export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer'> &
+export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'> &
   PlotPanelProps &
   LowerPlotsOptions &
   PlotLineageProps;
@@ -130,7 +130,6 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
     return {
       node: wrapPanelScope(spec, props),
       datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
-      themeTokenDefinitions: [PlotThemeTokenDefinition],
       makeComposites: makeEmbeddedPlotComposites,
     };
   },
@@ -147,7 +146,7 @@ type EmbeddablePlotComponent = FC<PlotProps> & {
  *   两路都把 spec 包成 scene、经 lowerPlots 注入数据后交 <Layout>；data 不进 IR
  */
 export const Plot: EmbeddablePlotComponent = props => {
-  const { width, height, className, style, renderer, onLineage } = props;
+  const { width, height, className, style, renderer, themeStyles, onLineage } = props;
   const notifiedLineageKey = useRef<string>();
   const { spec, datasets, lowerOptions } = resolvePlotRuntime(props);
   const lineage =
@@ -171,12 +170,12 @@ export const Plot: EmbeddablePlotComponent = props => {
     <Layout
       ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
       composites={lowerPlots(datasets, lowerOptions)}
-      themeTokenDefinitions={[PlotThemeTokenDefinition]}
       width={width}
       height={height}
       className={className}
       style={style}
       renderer={renderer}
+      themeStyles={themeStyles}
     />
   );
 };

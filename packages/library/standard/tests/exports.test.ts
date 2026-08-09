@@ -47,6 +47,15 @@ describe('@retikz/standard root exports', () => {
       'OverlayLayoutModule',
       'StandardAllPreset',
       'StandardLayoutPreset',
+      'LogicFrameDefinition',
+      'createLogicFrame',
+      'LogicFrameSchema',
+      'TerminalSchema',
+      'StageSchema',
+      'DecisionSchema',
+      'JunctionSchema',
+      'ConnectorDefinition',
+      'CalloutDefinition',
     ]) {
       expect(standardExports).not.toHaveProperty(name);
     }

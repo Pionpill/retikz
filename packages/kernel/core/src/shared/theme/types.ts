@@ -2,7 +2,11 @@ import type { ValueOf } from '@retikz/foundation';
 
 import type { ThemeMode, ThemeStyle } from './constants';
 
-export type ThemeStyleValue = ValueOf<typeof ThemeStyle>;
+/** 可由 Theme IR 持久化的开放视觉人格名称 */
+export type ThemeStyleValue = string;
+
+/** Core 内置视觉人格名称 */
+export type BuiltinThemeStyleValue = ValueOf<typeof ThemeStyle>;
 
 export type ThemeModeValue = ValueOf<typeof ThemeMode>;
 
@@ -24,27 +28,12 @@ export type ResolvedThemeColors = Readonly<{
   categorical: NonEmptyReadonlyArray<CssColorValue>;
 }>;
 
-type ResolvedThemeTokenJsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | Array<ResolvedThemeTokenJsonValue>
-  | Readonly<{ [key: string]: ResolvedThemeTokenJsonValue }>;
-
-type ResolvedThemeTokenJsonObject = Readonly<{ [key: string]: ResolvedThemeTokenJsonValue }>;
-
-/** 解析上下文中递归不可变的有效 namespace token bag */
-export type ResolvedThemeTokenNamespaceBag = Readonly<Record<string, ResolvedThemeTokenJsonObject>>;
-
 /** 编译当前位置完整、只读的有效 Theme */
 export type ResolvedTheme = Readonly<{
   /** 当前视觉人格 */
   style: ThemeStyleValue;
   /** 当前明暗环境 */
   mode: ThemeModeValue;
-  /** 当前作用域继承后的 sparse namespace token bag */
-  tokens: ResolvedThemeTokenNamespaceBag;
-  /** 由 style / mode 与 Core token 派生的 shared color view */
+  /** 由 selector 派生的 shared color view */
   colors: ResolvedThemeColors;
 }>;

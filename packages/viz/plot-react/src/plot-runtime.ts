@@ -55,6 +55,7 @@ const lowerPlotOptionsOf = (
     colorSchemes,
     markDefinitions,
     formatDefinitions,
+    plotThemeStyles,
   } = props;
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel =
@@ -83,6 +84,7 @@ const lowerPlotOptionsOf = (
     colorSchemes,
     markDefinitions,
     formatDefinitions,
+    plotThemeStyles,
   };
 };
 

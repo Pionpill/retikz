@@ -2,6 +2,7 @@ import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
+import * as NotationIR from '@retikz/notation';
 import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
 import * as StandardInspectIR from '@retikz/standard/inspect';
@@ -39,8 +40,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
         descriptions: {
           style: '视觉人格：neutral、academic、vibrant 或 clean；省略时继承外层值',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
-          tokens:
-            '按 owner namespace 保存的 sparse token overrides；Core 内置 core，其他 namespace 由 themeTokenDefinitions 注册并校验',
         },
       },
     },
@@ -513,6 +512,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'LegendArtifact',
     url: '/standard/composite/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
+  },
+
+  LogicFrameSchema: {
+    schema: NotationIR.LogicFrameSchema,
+    label: 'LogicFrame',
+    url: '/diagram/notation/composite/logic-frame',
+  },
+  TerminalSchema: {
+    schema: NotationIR.TerminalSchema,
+    label: 'Terminal',
+    url: '/diagram/notation/logic/semantic-units',
+  },
+  StageSchema: {
+    schema: NotationIR.StageSchema,
+    label: 'Stage',
+    url: '/diagram/notation/logic/semantic-units',
+  },
+  DecisionSchema: {
+    schema: NotationIR.DecisionSchema,
+    label: 'Decision',
+    url: '/diagram/notation/logic/semantic-units',
+  },
+  JunctionSchema: {
+    schema: NotationIR.JunctionSchema,
+    label: 'Junction',
+    url: '/diagram/notation/logic/semantic-units',
+  },
+  ConnectorSchema: {
+    schema: NotationIR.ConnectorSchema,
+    label: 'Connector',
+    url: '/diagram/notation/logic/connector',
+  },
+  CalloutSchema: {
+    schema: NotationIR.CalloutSchema,
+    label: 'Callout',
+    url: '/diagram/notation/logic/callout',
   },
 
   TableSpecSchema: {

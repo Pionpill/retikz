@@ -5,6 +5,8 @@ import { memo } from 'react';
 
 import type { RendererMode } from '../types';
 
+import { PreviewThemeProvider } from '../theme';
+
 export type DemoRendererProps = {
   /** demo 组件。 */
   Component: FC;
@@ -16,9 +18,11 @@ export type DemoRendererProps = {
 const DemoRendererComponent: FC<DemoRendererProps> = props => {
   const { Component, rendererMode } = props;
   return (
-    <RendererModeProvider mode={rendererMode}>
-      <Component />
-    </RendererModeProvider>
+    <PreviewThemeProvider>
+      <RendererModeProvider mode={rendererMode}>
+        <Component />
+      </RendererModeProvider>
+    </PreviewThemeProvider>
   );
 };
 

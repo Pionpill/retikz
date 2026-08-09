@@ -33,7 +33,7 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 Core Theme `style` / `mode` 选择的 preset、shared categorical、inherited `theme.tokens.table`、local `tableThemeTokens`、Cell 配置、encoding 与有序 rules 解析最终计划；value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
+1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 Core Theme `style` / `mode` 选择的 preset、shared categorical、local `tableThemeTokens`、Cell 配置、encoding 与有序 rules 解析最终计划；value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
 2. **Natural proposal probes**：每个 Cell 先用 `NaturalLayoutProposal` 执行 `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
 3. **列求解与 wrap**：natural 宽度、span、gap、track 配置，以及父级 x 轴 `exact.value` 或有限 `range.max` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再发起 `x: range(0, contentWidth)` probe。
 4. **行求解与放置**：最终 probe 的高度进入行求解，随后计算 Cell box、padding 后的 content box、fit / align / overflow placement，并建立 border conflict graph。
@@ -134,12 +134,12 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 
 ### Theme 输入
 
-| 输入                | 类型                              | 默认值 | 作用                                                                     |
-| ------------------- | --------------------------------- | ------ | ------------------------------------------------------------------------ |
-| `theme?`            | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供        |
-| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 inherited `theme.tokens.table` |
+| 输入                | 类型                              | 默认值 | 作用                                                              |
+| ------------------- | --------------------------------- | ------ | ----------------------------------------------------------------- |
+| `theme?`            | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
+| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 Table preset            |
 
-`theme.style` / `theme.mode` 只决定当前 Core 环境与 Table preset；`theme.tokens.table` 经过 `TableThemeTokenDefinition` 校验后按 namespace 继承。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。
+`theme.style` / `theme.mode` 只决定当前 Core 环境与 Table preset。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。
 
 ### Embedded
 
@@ -259,7 +259,7 @@ manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
 
-Table 的 Core preset 来自 host `theme.style` / `theme.mode`；inherited `theme.tokens.table` 与 local `tableThemeTokens` 按 namespace 和 spec 层级解析。宿主 CSS 继续使用 `containerStyle`，不进入 TableSpec。省略 Theme 时从 `neutral + light` 基线开始；resolved manifest 另行记录 effective `style`、`themeMode`、完整 token map 与来源。
+Table 的 Core preset 来自 host `theme.style` / `theme.mode`；local `tableThemeTokens` 在 TableSpec 层级覆盖它。宿主 CSS 继续使用 `containerStyle`，不进入 TableSpec。省略 Theme 时从 `neutral + light` 基线开始；resolved manifest 另行记录 effective `style`、`themeMode`、完整 token map 与来源。
 
 ## 相关
 
