@@ -10,7 +10,6 @@ import { BUILTIN_TABLE_THEME_TOKENS } from './presets';
 const defaultTheme: TableThemeContext = {
   style: ThemeStyle.Neutral,
   mode: ThemeMode.Light,
-  tokens: {},
   colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
 };
 
@@ -19,16 +18,12 @@ export const resolveTableThemeTokens = (
   effectiveTheme: TableThemeContext = defaultTheme,
   local: IRTableThemeTokenOverrides = {},
 ): ResolvedTableThemeTokens => {
-  const inherited = TableThemeTokenOverridesSchema.parse(
-    Object.hasOwn(effectiveTheme.tokens, 'table') ? effectiveTheme.tokens.table : {},
-  );
   const parsedLocal = TableThemeTokenOverridesSchema.parse(structuredClone(local));
   const preset = BUILTIN_TABLE_THEME_TOKENS[effectiveTheme.style][effectiveTheme.mode];
   const sharedCategorical = [...effectiveTheme.colors.categorical];
   const tokens = TableThemeTokenMapSchema.parse({
     ...structuredClone(preset),
     'data.categorical': sharedCategorical,
-    ...structuredClone(inherited),
     ...structuredClone(parsedLocal),
   });
   const sources = Object.fromEntries(
@@ -39,15 +34,6 @@ export const resolveTableThemeTokens = (
           {
             kind: 'local-theme-token',
             path: `$spec/tableThemeTokens/${key}`,
-          },
-        ];
-      }
-      if (Object.hasOwn(inherited, key)) {
-        return [
-          key,
-          {
-            kind: 'inherited-theme-token',
-            path: `$theme/tokens/table/${key}`,
           },
         ];
       }

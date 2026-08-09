@@ -234,12 +234,12 @@ export const kernelV05: Release = {
             },
             {
               label: {
-                zh: 'BREAKING：namespaced Theme tokens 与 shared colors',
-                en: 'BREAKING: Namespaced Theme tokens and shared colors',
+                zh: 'BREAKING：轻量 Theme selector 与 shared colors',
+                en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在是稀疏 `style / mode / tokens`；Core 内置 `core` namespace，`ResolvedTheme` 额外提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineCoreThemeTokens` 与 `themeTokenDefinitions` 支持 Core、Plot、Chart、Table 及自定义 owner 通过同一 registry 校验和聚合；未知 namespace/key/value 与冲突 Definition fail-loud。React `Layout` 与 Vanilla normalization 都会聚合嵌入 owner Definition，standalone 与 embedded compile 使用同一语义。',
-                en: '`Theme` is now sparse `style / mode / tokens`; Core registers the built-in `core` namespace, and `ResolvedTheme` adds a detached, frozen `colors.semantic` view plus a non-empty `colors.categorical` palette. `defineCoreThemeTokens` and `themeTokenDefinitions` let Core, Plot, Chart, Table, and custom owners validate and aggregate through one registry; unknown namespaces, keys, values, and conflicting Definitions fail loudly. React `Layout` and Vanilla normalization aggregate embedded owner Definitions, so standalone and embedded compile paths share the same semantics.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver；自定义 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. `defineThemeStyle` and `themeStyles` register Core runtime resolvers; each consuming owner such as Plot or Chart must provide a same-named resolver, and a missing entry fails loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {

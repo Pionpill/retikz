@@ -10,15 +10,15 @@ export const vizV02: Release = {
       stableDate: null,
       version: 'v0.2',
       description: {
-        zh: 'Plot v0.2 交付 namespaced Theme token contract：Plot 独立拥有 token、preset、解析、映射和 inspection，并通过 Core registry 消费 inherited Theme 与 shared colors。',
-        en: 'Plot v0.2 delivers the namespaced Theme token contract: Plot owns its tokens, presets, resolution, mapping, and inspection through the Core registry while consuming inherited Theme and shared colors.',
+        zh: 'Plot v0.2 交付 owner-local Theme token contract：Plot 独立拥有 token、preset、解析、映射和 inspection，并消费 Core 解析后的 Theme。',
+        en: 'Plot v0.2 delivers an owner-local Theme token contract: Plot owns its tokens, presets, resolution, mapping, and inspection while consuming the resolved Core Theme.',
       },
       highlights: [
         {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
-            zh: '40 个 `PlotThemeToken`、四种 style × light/dark preset、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；inherited `tokens.plot`、局部 `plotThemeTokens` 与 Chart 转发的 Plot 输入走同一解析路径。',
-            en: 'Plot now owns 40 `PlotThemeToken` keys, four style presets in light and dark modes, a deterministic cascade, and native `IRPlotTheme` mapping. Inherited `tokens.plot`, local `plotThemeTokens`, and Chart-forwarded Plot inputs use the same resolution path.',
+            zh: '40 个 `PlotThemeToken`、四种 style × light/dark preset、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 `plotThemeTokens` 与 Chart 转发的 Plot 输入走同一解析路径。',
+            en: 'Plot now owns 40 `PlotThemeToken` keys, four style presets in light and dark modes, a deterministic cascade, and native `IRPlotTheme` mapping. Local `plotThemeTokens` and Chart-forwarded Plot inputs use the same resolution path.',
           },
         },
         {
@@ -51,8 +51,8 @@ export const vizV02: Release = {
             {
               label: { zh: 'Theme 继承与 scheme 消费统一', en: 'Unified Theme inheritance and scheme consumption' },
               content: {
-                zh: 'Plot Composite 消费 Core effective Theme；先合并 shared categorical 与 inherited `tokens.plot`，再应用 local `plotThemeTokens`、`colors`、`plotTheme`。palette 中的 sequential/diverging scheme 与显式 scale 共用内置和 `options.colorSchemes` lookup，未注册名称在实际消费时抛错。',
-                en: 'Plot composites consume the effective Core Theme, merging shared categorical colors and inherited `tokens.plot` before local `plotThemeTokens`, `colors`, and `plotTheme`. Sequential and diverging palette schemes share the built-in and `options.colorSchemes` lookup used by explicit scales, and unknown names fail when consumed.',
+                zh: 'Plot Composite 消费 Core effective Theme 选择领域 preset，再应用 local `plotThemeTokens`、`colors`、`plotTheme`。palette 中的 sequential/diverging scheme 与显式 scale 共用内置和 `options.colorSchemes` lookup，未注册名称在实际消费时抛错。',
+                en: 'Plot composites consume the effective Core Theme to select their domain preset before applying local `plotThemeTokens`, `colors`, and `plotTheme`. Sequential and diverging palette schemes share the built-in and `options.colorSchemes` lookup used by explicit scales, and unknown names fail when consumed.',
               },
             },
             {

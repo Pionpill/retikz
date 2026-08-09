@@ -51,7 +51,6 @@ export type PlotThemeTokenValue = ValueOf<typeof PlotThemeToken>;
 export const PlotThemeTokenSource = {
   Preset: 'preset',
   SharedCategorical: 'shared-categorical',
-  Inherited: 'inherited',
   Local: 'local',
   Colors: 'colors',
   PlotTheme: 'plot-theme',

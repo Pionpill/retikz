@@ -66,18 +66,6 @@ export const standardSection: Array<Section> = [
     ],
   },
   {
-    id: 'logic',
-    label: 'standard.logic',
-    document: true,
-    pages: [
-      { id: 'logic-frame', label: 'standard.logicFrame' },
-      { id: 'semantic-units', label: 'standard.semanticUnits' },
-      { id: 'connector', label: 'standard.connector' },
-      { id: 'callout', label: 'standard.callout' },
-      { id: 'api-reference', label: 'standard.logicApiReference' },
-    ],
-  },
-  {
     id: 'extension',
     label: 'standard.extension',
     document: true,

@@ -1,6 +1,6 @@
 import type * as RetikzReact from '@retikz/react';
 
-import { createManualTableSpec, TableThemeTokenDefinition } from '@retikz/table';
+import { createManualTableSpec } from '@retikz/table';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -21,22 +21,17 @@ import { Table } from '../../src';
 
 const spec = createManualTableSpec({ id: 'scores', rows: [[null]] });
 
-describe('Table React theme token contribution identity', () => {
-  it('standalone Table passes the canonical definition to Layout', () => {
+describe('Table React runtime style contract', () => {
+  it('standalone Table does not inject removed theme token definitions into Layout', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(<Table spec={spec} />);
 
-    const definitions = capturedLayouts.at(-1)?.themeTokenDefinitions;
-    expect(definitions).toEqual([TableThemeTokenDefinition]);
-    expect((definitions as Array<unknown>)[0]).toBe(TableThemeTokenDefinition);
+    expect(capturedLayouts.at(-1)).not.toHaveProperty('themeTokenDefinitions');
   });
 
-  it('embedded Table adapter passes the same canonical definition singleton', () => {
+  it('embedded Table adapter keeps removed theme token definitions out of the contribution payload', () => {
     const contribution = Table.embeddableAdapter.contribute({ spec });
-    const definitions = contribution.themeTokenDefinitions;
-
-    expect(definitions).toEqual([TableThemeTokenDefinition]);
-    expect((definitions as Array<unknown>)[0]).toBe(TableThemeTokenDefinition);
+    expect(contribution).not.toHaveProperty('themeTokenDefinitions');
   });
 });

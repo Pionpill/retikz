@@ -1,5 +1,7 @@
 # Standard v0 Roadmap
 
+> 图式语义后继：[Notation v0 roadmap](../../../../../diagram/_notes/decisions/notation/v0/roadmap.md) 独立演进；Standard 只保留跨领域绘图能力
+
 > 更新于 2026-07-26。本文件记录 `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 的 v0 总体路线。具体 milestone 见对应 `v0.*/roadmap.md`，长期边界见 [`standard-library-design.md`](../../../architecture/standard-library-design.md)。
 
 ## 定位
@@ -14,7 +16,7 @@ Standard 家族是官方维护、相对 Core 可选安装的跨领域绘图能�
 
 ## 路线总览
 
-### v0.1：标准绘图积木与语义逻辑组件
+### v0.1：标准绘图积木、布局与 Legend
 
 v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 
@@ -22,9 +24,8 @@ v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 - 按项 Definition 接入、Core compile options 与直接/adapter authoring parity
 - Flex、GridLayout、Overlay 等不理解领域模型的通用布局 composite
 - 由 Plot、Table 与直接作者共同消费的通用 Legend 呈现
-- `Stage`、`Decision`、`Terminal`、`Junction` 等逻辑节点语义
-- `Connector`、`Callout` 等结构化关系与注释语义
 - React / Vanilla 等价 authoring、JSON-safe 语义输入、Core lowering、诊断、测试与双语文档
+- alpha.3 曾验证 LogicFrame、语义 Node、Connector 与 Callout；这些图式元素现由 [Notation v0](../../../../../diagram/_notes/decisions/notation/v0/roadmap.md) 独立拥有
 
 具体阶段见 [`v0.1 roadmap`](./v0.1/roadmap.md)。
 
@@ -45,7 +46,7 @@ Plot、Table 等领域 release group 可以使用兼容版本单向依赖 Standa
 - [Standard Drawing Library 设计](../../../architecture/standard-library-design.md)
 - [能力完备性与模块边界](../../../../../../notes/architecture/capability-design.md)
 - [Core 绘图完备设计](../../../../../kernel/_notes/architecture/core-drawing-complete.md)
-- [逻辑制图能力域设计](../../../../../../notes/architecture/logical-diagram-design.md)
+- [Diagram 制图能力域设计](../../../../../../notes/architecture/diagram-design.md)
 
 ## ADR 约定
 

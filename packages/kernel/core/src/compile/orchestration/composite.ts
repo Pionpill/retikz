@@ -1,9 +1,8 @@
-import type { AnyCompositeDefinition, CompositeExpandContext } from '../../contract';
+import type { AnyCompositeDefinition, AnyThemeStyleDefinition, CompositeExpandContext } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
 import type { CompileWarningInput } from '../warning';
-import type { ThemeTokenRegistry } from './theme';
 
 import { CompileWarningCode } from '../constants';
 import { CompileInvariantError } from '../probe-failure';
@@ -16,6 +15,7 @@ export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
 type LowerOptions = {
   onWarn: (warning: CompileWarningInput) => void;
+  themeStyles?: ReadonlyMap<string, AnyThemeStyleDefinition>;
   /** 未注册 composite 的 fail-loud 钩子；缺省继续走 compile warning + skip */
   onUnregistered?: (key: string, path: string) => never;
   /**
@@ -23,8 +23,6 @@ type LowerOptions = {
    * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
    */
   maxDepth?: number;
-  /** Theme token owner definitions 的 identity registry */
-  themeTokenDefinitions?: ThemeTokenRegistry;
 };
 
 type CallableExpandDefinition = {
@@ -45,8 +43,8 @@ const lowerCompositeTree = (
   registry: ReadonlyMap<string, AnyCompositeDefinition>,
   options: LowerOptions,
 ): IRScene => {
-  const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH } = options;
-  const rootTheme = resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', options.themeTokenDefinitions);
+  const { onWarn, onUnregistered, maxDepth = DEFAULT_MAX_COMPOSITE_DEPTH, themeStyles } = options;
+  const rootTheme = resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeStyles);
 
   const expandList = (
     children: ReadonlyArray<IRChild>,
@@ -92,7 +90,7 @@ const lowerCompositeTree = (
       return expandList(list, depth + 1, `${path}::expand`, theme);
     }
     if (child.type === 'scope') {
-      const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`, options.themeTokenDefinitions);
+      const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`, themeStyles);
       return [{ ...child, children: expandList(child.children, depth, `${path}.children`, scopeTheme) }];
     }
     return [child];

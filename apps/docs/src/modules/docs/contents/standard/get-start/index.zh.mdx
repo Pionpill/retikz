@@ -113,54 +113,6 @@ mountSvg(container, scene, {
 
 如果 `GridDefinition` 没有传入，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过 Grid；其它已注册或 Core 原生 child 仍会继续编译。需要多个 Standard composite 时，直接把对应 Definition 放入同一个 `composites` 数组
 
-## 逻辑组件
-
-Logic 家族也遵循三种装载路径。语义单元的 React 组件和 Vanilla builder 直接输出 Core Node；只有 LogicFrame、Connector、Callout 仍使用运行时 Definition 或 adapter。
-
-```tsx
-import { Layout, Node, Scope } from '@retikz/react';
-import { Connector, Stage, Terminal } from '@retikz/standard-react';
-
-<Layout width={360} height={140}>
-  <Scope transforms={[{ kind: 'translate', x: 24, y: 50 }]}>
-    <Terminal id="start" position={[0, 0]}>
-      Start
-    </Terminal>
-  </Scope>
-  <Scope transforms={[{ kind: 'translate', x: 190, y: 50 }]}>
-    <Stage id="step" position={[0, 0]}>
-      Step
-    </Stage>
-  </Scope>
-  <Connector id="edge" from={{ id: 'start' }} to={{ id: 'step' }} label={{ text: 'next' }} />
-</Layout>;
-```
-
-对应的 Vanilla target 是 `{ id: 'start' }`，因为 `terminal('start', input)` 直接返回使用该 id 的 Node；`stage('step', input)` 同理。
-
-```ts
-import { connector, ConnectorVanillaAdapter, stage, terminal } from '@retikz/standard-vanilla';
-import { figure, renderToSvgString, scope } from '@retikz/vanilla';
-
-const input = figure({
-  viewBox: { x: 0, y: 0, width: 360, height: 140 },
-  children: [
-    scope({ transforms: [{ kind: 'translate', x: 24, y: 50 }] }, [
-      terminal('start', { position: [0, 0], text: 'Start' }),
-    ]),
-    scope({ transforms: [{ kind: 'translate', x: 190, y: 50 }] }, [stage('step', { position: [0, 0], text: 'Step' })]),
-    connector('edge', { from: { id: 'start' }, to: { id: 'step' }, label: { text: 'next' } }),
-  ],
-});
-
-const svg = renderToSvgString(input, {
-  adapters: [ConnectorVanillaAdapter],
-  output: { width: 360, height: 140 },
-});
-```
-
-持久化 LogicFrame、Connector 或 Callout IR 时，请解析匹配 schema 并在 `CompileOptions.composites` 中传入对应 Definition。语义 Node IR 不需要 Standard Definition。完整映射见[逻辑 API 参考](/standard/logic/api-reference)。
-
 ## 下一步：用布局容器替代手写坐标
 
 布局 JSX 使用 `FlexLayout`、`GridLayout`、`OverlayLayout` 与直属 `LayoutItem`。三者共享一次 `standard.layout` contribution；直接 IR 可注入 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]`，Vanilla 可传 `StandardLayoutVanillaAdapters`
@@ -190,5 +142,5 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 | [分组框](/standard/composite/frame)                            | 自动 bounds、间距、边框和标签                |
 | [图例](/standard/composite/legend)                             | 离散样本、连续 ramp、probe 与 typed artifact |
 | [布局容器](/standard/layout)                                   | Flex、Grid、Overlay 与 typed artifacts       |
-| [逻辑组件](/standard/logic)                                    | LogicFrame、语义单元、Connector 与 Callout   |
+| [Diagram Notation](/diagram/notation)                          | LogicFrame、语义单元、Connector 与 Callout   |
 | [直接 Definition 装载](/standard/extension/capability-loading) | Definition 选择、Core 注入与宿主边界         |

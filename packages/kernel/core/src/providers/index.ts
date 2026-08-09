@@ -7,4 +7,4 @@ export * from './path-kind';
 export * from './pattern';
 export * from './ribbon';
 export * from './shape';
-export * from './theme-token';
+export * from './theme';

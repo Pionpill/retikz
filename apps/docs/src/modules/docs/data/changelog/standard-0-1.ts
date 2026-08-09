@@ -39,8 +39,8 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '新增可持久化的逻辑块、语义单元、连接器与标注，并保持直接 IR、React、Vanilla 及 SVG / Canvas 的等价路径。',
-            en: 'Adds persistable logic blocks, semantic units, connectors, and callouts with equivalent direct IR, React, Vanilla, SVG, and Canvas paths.',
+            zh: '历史里程碑：验证逻辑块、语义单元、连接器与标注；这些图式能力现已迁入 Notation 包族。',
+            en: 'Historical milestone: validated logic blocks, semantic units, connectors, and callouts; these diagram capabilities now live in the Notation package family.',
           },
           items: [
             {
@@ -60,8 +60,8 @@ export const standardV01: Release = {
             {
               label: { zh: '三路径文档闭环', en: 'Three-path documentation' },
               content: {
-                zh: '新的逻辑组件文档同时覆盖 React、直接 JSON IR 与 Vanilla，并用仅属于 docs 的 Process、Class、Data recipe 展示公开组件组合，不新增 recipe package export。',
-                en: 'The Logic Components docs cover React, direct JSON IR, and Vanilla while documentation-only Process, Class, and Data recipes demonstrate composition without adding recipe package exports.',
+                zh: '对应文档与 Process、Class、Data recipe 已迁入 Diagram → Notation，并继续覆盖 React、直接 JSON IR 与 Vanilla。',
+                en: 'The docs and Process, Class, and Data recipes have moved to Diagram → Notation while retaining React, direct JSON IR, and Vanilla coverage.',
               },
             },
           ],
@@ -165,15 +165,15 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '新增七种逻辑组件 builder、对应 adapters 与无 DOM 编译接线。',
-            en: 'Adds seven logic-component builders, their adapters, and DOM-free compilation wiring.',
+            zh: '历史里程碑：验证七种逻辑组件 builder 与 adapters；这些入口现从 `@retikz/notation-vanilla` 提供。',
+            en: 'Historical milestone: validated seven logic builders and adapters; these entries now come from `@retikz/notation-vanilla`.',
           },
           items: [
             {
               label: { zh: '逻辑组件 builders', en: 'Logic component builders' },
               content: {
-                zh: '`logicFrame()`、`terminal()`、`stage()`、`decision()`、`junction()`、`connector()` 与 `callout()` 复用 Standard schema、factory 与 Definition，并加入当前完整 adapter 目录。',
-                en: '`logicFrame()`, `terminal()`, `stage()`, `decision()`, `junction()`, `connector()`, and `callout()` reuse Standard schemas, factories, and Definitions and join the complete adapter catalog.',
+                zh: '`logicFrame()`、`terminal()`、`stage()`、`decision()`、`junction()`、`connector()` 与 `callout()` 已迁入 Notation 的 Schema、factory、Definition 与 adapter 目录。',
+                en: '`logicFrame()`, `terminal()`, `stage()`, `decision()`, `junction()`, `connector()`, and `callout()` have moved to the Notation schemas, factories, Definitions, and adapter catalog.',
               },
             },
             {
@@ -255,15 +255,15 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '新增 LogicFrame、四种语义单元、Connector 与 Callout 的 React authoring。',
-            en: 'Adds React authoring for LogicFrame, four semantic units, Connector, and Callout.',
+            zh: '历史里程碑：验证 LogicFrame、四种语义单元、Connector 与 Callout；这些 JSX 入口现从 `@retikz/notation-react` 提供。',
+            en: 'Historical milestone: validated LogicFrame, four semantic units, Connector, and Callout; these JSX entries now come from `@retikz/notation-react`.',
           },
           items: [
             {
               label: { zh: '逻辑组件 JSX', en: 'Logic component JSX' },
               content: {
-                zh: '`Terminal`、`Stage`、`Decision`、`Junction`、`Connector` 与 `Callout` 把 React children 或 plain props 归一为 canonical Standard IR，并只在当前 Layout 局部贡献所需 Definition。',
-                en: '`Terminal`, `Stage`, `Decision`, `Junction`, `Connector`, and `Callout` normalize React children or plain props into canonical Standard IR and contribute only the Definitions used by the current Layout.',
+                zh: '`Terminal`、`Stage`、`Decision`、`Junction`、`Connector` 与 `Callout` 现归一为 canonical Notation / Core IR，并只在当前 Layout 局部贡献所需 Definition。',
+                en: '`Terminal`, `Stage`, `Decision`, `Junction`, `Connector`, and `Callout` now normalize into canonical Notation or Core IR and contribute only the Definitions used by the current Layout.',
               },
             },
             {

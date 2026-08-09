@@ -6,4 +6,3 @@ export * from './model';
 export * from './plan';
 export * from './presentation';
 export * from './structure/public';
-export * from './theme-token';

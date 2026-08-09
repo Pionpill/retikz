@@ -1,4 +1,4 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -110,7 +110,11 @@ describe('Chart shared schemas', () => {
           path: `$preset/neutral/light/${token}`,
         })),
       },
-      plot: resolvePlotTheme({ style: ThemeStyle.Neutral, mode: ThemeMode.Light }),
+      plot: resolvePlotTheme({
+        style: ThemeStyle.Neutral,
+        mode: ThemeMode.Light,
+        colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+      }),
     } as const;
     expect(
       ChartInspectionSchema.parse({

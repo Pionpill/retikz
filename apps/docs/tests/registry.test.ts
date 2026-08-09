@@ -1,4 +1,5 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
+import { CalloutSchema, ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
@@ -45,6 +46,10 @@ describe('SCHEMA_REGISTRY', () => {
         schema: LegendArtifactSchema,
         url: '/standard/composite/legend#legendartifactschema',
       },
+      LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/composite/logic-frame' },
+      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/logic/semantic-units' },
+      ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/logic/connector' },
+      CalloutSchema: { schema: CalloutSchema, url: '/diagram/notation/logic/callout' },
     });
   });
 
@@ -52,7 +57,7 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite)\/.+/);
+      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite|notation)\/.+/);
     }
   });
 
