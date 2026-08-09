@@ -26,22 +26,52 @@ describe('Inspector definition', () => {
     >();
   });
 
-  it.each(['namespace', 'name'] as const)('rejects an empty %s', field => {
+  it.each([
+    ['namespace', ' '],
+    ['name', '\u2003'],
+  ] as const)('rejects a blank %s with the established error text', (field, value) => {
     expect(() =>
       defineInspector({
-        namespace: field === 'namespace' ? ' ' : 'test',
-        name: field === 'name' ? '' : 'bounds',
+        namespace: field === 'namespace' ? value : 'test',
+        name: field === 'name' ? value : 'bounds',
         owner: { kind: 'pathKind', name: 'stroke' },
         subjectSchema: z.null(),
         optionsInputSchema: z.strictObject({}),
         optionsSchema: z.strictObject({}),
         inspect: () => [],
       }),
-    ).toThrow(new RegExp(field, 'i'));
+    ).toThrowError(`Inspector ${field} must be a non-empty string`);
+  });
+
+  it.each([
+    ['pathKind name', { kind: 'pathKind', name: '\ufeff' }],
+    ['composite namespace', { kind: 'composite', namespace: ' ', type: 'box' }],
+    ['composite type', { kind: 'composite', namespace: 'demo', type: '\u2003' }],
+  ] as const)('rejects a blank %s owner field without reading unknown values as strings', (_label, owner) => {
+    expect(() =>
+      defineInspector({
+        namespace: 'test',
+        name: 'invalid-owner',
+        owner,
+        subjectSchema: z.null(),
+        optionsInputSchema: z.strictObject({}),
+        optionsSchema: z.strictObject({}),
+        inspect: () => [],
+      }),
+    ).toThrowError('Inspector owner must identify a non-empty composite or pathKind');
+  });
+
+  it.each([null, 1] as const)('rejects malformed unknown definition input %j', input => {
+    expect(() => defineInspector(input as never)).toThrowError('Inspector definition must be an object');
+  });
+
+  it('rejects an object missing the definition fields through the namespace boundary', () => {
+    expect(() => defineInspector({} as never)).toThrowError('Inspector namespace must be a non-empty string');
   });
 
   it.each([
     ['owner', { owner: { kind: 'pathKind', name: '' } }],
+    ['owner object field', { owner: { kind: 'pathKind', name: {} } }],
     ['subject schema', { subjectSchema: {} }],
     ['options input schema', { optionsInputSchema: {} }],
     ['options schema', { optionsSchema: {} }],

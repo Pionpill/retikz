@@ -1,3 +1,5 @@
+import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+
 import type { IRJsonObject, JsonValue } from '../../schemas';
 import type { AnyPathKindDefinition, PathKindDefinition } from './types';
 
@@ -17,8 +19,12 @@ type DefinePathKind = {
 const definePathKindImplementation = (input: unknown): unknown => {
   const definition = input as AnyPathKindDefinition;
   const kind = definition.schema.shape.kind.value;
-  if (typeof kind !== 'string' || kind.trim().length === 0) {
-    throw new Error('definePathKind: schema.shape.kind must be a non-empty z.literal string.');
+  const message = 'definePathKind: schema.shape.kind must be a non-empty z.literal string.';
+  if (typeof kind !== 'string') throw new Error(message);
+  try {
+    assertFoundationNonEmptyString(kind, 'definePathKind schema literal');
+  } catch {
+    throw new Error(message);
   }
   const record = definition as unknown as Readonly<Record<string, unknown>>;
   const ownerOutput = record.ownerOutput;

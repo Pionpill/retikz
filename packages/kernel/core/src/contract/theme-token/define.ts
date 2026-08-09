@@ -1,7 +1,8 @@
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { ThemeTokenContribution, ThemeTokenDefinition } from './types';
 
 import { cloneAndFreezeJson } from '../../shared/json';
-import { assertNonEmptyString } from '../../shared/utils';
 
 /** 定义一个冻结的 owner Theme token namespace definition */
 export const defineThemeTokenNamespace = <

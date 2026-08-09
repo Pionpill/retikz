@@ -241,6 +241,13 @@ describe('Table React components', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout>
+          <ManualTable id={'\u2003'} rows={[[null]]} />
+        </Layout>,
+      ),
+    ).toThrowError('table react: embedded manual Table spec id must be non-empty');
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout>
           <ManualTable id="same" rows={[[null]]} />
           <ManualTable id="same" rows={[[null]]} />
         </Layout>,

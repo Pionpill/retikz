@@ -29,10 +29,11 @@ describe('@retikz/table package boundary', () => {
     });
   });
 
-  it('depends only on Core, Data, Math, the formatter and scale runtimes, and the schema runtime', () => {
+  it('depends only on Core, Foundation, Data, Math, the formatter and scale runtimes, and the schema runtime', () => {
     expect(Object.keys(manifest.dependencies).sort()).toEqual([
       '@retikz/core',
       '@retikz/data',
+      '@retikz/foundation',
       '@retikz/math',
       'd3-format',
       'd3-scale',

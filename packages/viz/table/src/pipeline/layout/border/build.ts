@@ -11,7 +11,7 @@ import type {
 } from './types';
 
 import { ResolvedTableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
-import { deepFreeze } from '../../../shared';
+import { assertTableNonEmptyString, deepFreeze } from '../../../shared';
 import { mergeTableBorderAtoms } from './merge';
 import { resolveTableBorderAtoms } from './resolve';
 import { tableBorderSourceOrderKey } from './types';
@@ -117,7 +117,7 @@ const buildOccupancy = (
     return left.cellId.localeCompare(right.cellId);
   });
   cells.forEach(cell => {
-    if (cell.cellId.length === 0) throw new Error('table: Border Graph Cell id must be non-empty');
+    assertTableNonEmptyString(cell.cellId, 'table: Border Graph Cell id must be non-empty');
     if (
       !Number.isInteger(cell.rowIndex) ||
       !Number.isInteger(cell.columnIndex) ||

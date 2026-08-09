@@ -32,6 +32,8 @@ describe('Theme token contract', () => {
 
   it.each([
     ['empty namespace', { namespace: '', tokens: {} }],
+    ['ASCII whitespace namespace', { namespace: ' ', tokens: {} }],
+    ['Unicode whitespace namespace', { namespace: '\u2003', tokens: {} }],
     ['function token', { namespace: 'plot', tokens: { callback: () => '#fff' } }],
     ['undefined token', { namespace: 'plot', tokens: { value: undefined } }],
     ['class token', { namespace: 'plot', tokens: { value: new (class Token {})() } }],
