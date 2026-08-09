@@ -80,6 +80,7 @@
     "effectsCustomPattern": "Custom Patterns",
     "effectsAnimation": "Animation",
     "effectsCustomAnimation": "Custom Animation",
+    "pkgFoundation": "@retikz/foundation",
     "pkgCore": "@retikz/core",
     "pkgInspect": "@retikz/inspect",
     "pkgRuntime": "@retikz/runtime",

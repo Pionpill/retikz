@@ -12,7 +12,7 @@
 
 ## 硬约束
 
-- 运行时零依赖，不 import `@retikz/core`、renderer、框架、DOM 或领域包
+- 运行时只直接依赖 `@retikz/foundation`，不 import `@retikz/core`、renderer、框架、DOM 或领域包
 - Snapshot 是完整真源；change set 只能作为带 base revision 的可选提示，不能独立构造下一状态
 - owner / program token 必须保持 typed identity；异构 registry 只能在受控定义入口擦除泛型
 - prepare candidate 与 current state 隔离；只有 transaction commit 可以推进 current pointer 与 revision

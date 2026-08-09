@@ -1,8 +1,8 @@
-# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme token、Scope reuse 与可选 Inspector
+# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme token、Scope reuse、可选 Inspector 与 Foundation
 
-- 状态：ADR-01～10、ADR-12～13 已完成实现、测试、双语文档与 Accepted 收口；ADR-11 Proposed，alpha.2 仍为 authored Scope output 收口重新打开
+- 状态：ADR-01～10、ADR-12～14 已完成实现、测试、双语文档与 Accepted 收口；ADR-11 Proposed，alpha.2 仍为 authored Scope output 收口重新打开
 - 目标版本：`0.5.0-alpha.2`
-- 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md)
 
 ## 目标
 
@@ -13,6 +13,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 在 Standard presentation composite 暴露完整 Scope-backed lower contract 前，Core 还需要冻结 layout-aware Composite 的 authored Scope output：普通 Scope 的完整 props 必须沿 Core 主链作用于 probe / replay 结果，compile-local replay wrapper 只能保留布局提交所需的数值变换和 allocation clip。该能力由 ADR-11 提供，作为 Standard Axes、Grid、Frame、Legend 以及未来其它 Tier 2 lower reuse 的通用前置能力。
 
 本 milestone 同时重新打开 Inspector 的包边界。Core 只提供最终 occurrence 观测、所属者产物、probe / replay provenance 与隔离 IR 片段编译；独立的可选 `@retikz/inspect` 包拥有 Inspector registry、选择策略、辅助平面、色板、诊断和内置 stroke Path Inspector。Standard 通过 `/inspect` 子入口提供 Layout Inspector，Core、Render、基础 adapter 与 Standard 根入口不再内置 Inspector 语义。该能力由 ADR-12 提供。
+
+本 milestone 另登记 ADR-14 Foundation 基础契约包。它以当前 Kernel release group 的 `0.5.0-alpha.2` 版本为归属，冻结跨包原子类型、typed string 不变量、结构化错误骨架和 direct dependency 规则；Foundation 不新增 IR、Scene、renderer 或领域能力，也不改变前述增量执行语义。
 
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
@@ -32,7 +34,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-10](./10-core-atomic-contracts.md)              | Accepted | Core 原子契约与 Tier 2 / Tier 3 组合   | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                |
 | [ADR-11](./11-layout-aware-scope-output.md)          | Proposed | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排 |
 | [ADR-12](./12-extensible-inspector-content.md)       | Accepted | 可选 Inspector 扩展包                  | 冻结 Core 观测底座、独立 Inspect 包、Standard `/inspect` 与 Path 控制点闭环                         |
-| [ADR-13](./13-theme-token-namespace-context.md)      | Accepted | Theme token namespace 与共享颜色       | 冻结 namespaced bag、继承、registry、runtime validation 与 shared colors                       |
+| [ADR-13](./13-theme-token-namespace-context.md)      | Accepted | Theme token namespace 与共享颜色       | 冻结 namespaced bag、继承、registry、runtime validation 与 shared colors                            |
+| [ADR-14](./14-foundation-package.md)                 | Accepted | Foundation 基础契约包与依赖归属        | 冻结跨包原子契约、direct dependency、非空字符串语义与结构化错误兼容边界                             |
 
 ## 当前进度
 
@@ -47,24 +50,26 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-11 已完成 Proposed 设计并完成 Core 实现、Standard consumers、测试与双语文档，尚未获得人工 Accepted 收口。
 - ADR-12 已完成 Core 领域中立观测底座、独立 `@retikz/inspect`、Render 普通只读图层、React / Vanilla 通用驱动和 Standard 可选子入口迁移，并于 2026-08-07 获人工接受。
 - ADR-13 已完成 namespaced Theme token bag、Definition registry、稀疏继承、shared colors、React / Vanilla / plain JSON 等价闭环与双语文档，并于 2026-08-07 获人工接受。
+- ADR-14 已完成零依赖 Foundation 包、七个根契约、跨包 direct dependency 迁移、typed string 失败语义、结构化领域错误兼容、对抗复验与双语文档，并于 2026-08-09 获人工接受。
 
 ## 执行批次
 
-| 批次 | ADR    | 进入条件                                                                       | 退出条件                                                                                |
-| ---- | ------ | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| 0    | ADR-01 | alpha.1 发布准备完成                                                           | Runtime trace 切片、full baseline 与预算获得人工确认                                    |
-| 1    | ADR-02 | ADR-01 runtime/trace 可复现                                                    | identity、Owner Definition/registry 与 owned value 稳定                                 |
-| 2    | ADR-03 | ADR-02 owner contract Accepted                                                 | 同步 Program graph / transaction lifecycle 稳定                                         |
-| 3    | ADR-04 | ADR-03 Accepted                                                                | 完整 Program、stable Diff、fallback 与首个安全局部更新闭环稳定                          |
-| 4    | ADR-06 | alpha.1 ADR-07 已 Accepted；Standard Core Gate 已明确                          | 完整 compile 的双轴 constraint、slot size、nested 与 wrapper contract 稳定              |
-| 5    | ADR-05 | ADR-04 可产出稳定 Scene Patch                                                  | SVG / Canvas patch 与完整 redraw 等价，并有可测收益                                     |
-| 6    | ADR-07 | ADR-03～05 Accepted                                                            | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变                     |
-| 7    | ADR-08 | ADR-06 Accepted；Standard alpha.2 Core Gate 缺口已明确                         | proposal / probe / slot / guide / failure / replay contract 稳定                        |
-| 8    | ADR-09 | 通用视觉主题 owner 与 Scene / Scope 继承方向已人工确认                         | Theme IR、Composite context、第三方消费边界与入口等价性稳定                             |
-| 9    | ADR-10 | ADR-09 Accepted；原子 schema/type 目标已获人工确认                             | Core 原子契约、兼容聚合与 Tier 2 / Tier 3 组合边界稳定                                  |
-| 10   | ADR-11 | ADR-08～10 Accepted；Standard presentation reuse 的 Core capability gap 已冻结 | authored Scope 完整 surface、replay wrapper 窄职责与 bounds / clip / identity 编排稳定  |
-| 11   | ADR-12 | Core 内置 Inspector 已证明普通 IR 辅助内容可行，但包边界过重                   | Core 观测底座、Inspect registry、Standard 子入口、普通 Scene 图层与 Path 控制点闭环稳定 |
-| 12   | ADR-13 | ADR-09 Accepted；跨 owner Theme token context 方向已冻结                         | namespaced bag、sparse inheritance、Definition registry、shared colors 与 appearance 稳定 |
+| 批次 | ADR    | 进入条件                                                                       | 退出条件                                                                                  |
+| ---- | ------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| 0    | ADR-01 | alpha.1 发布准备完成                                                           | Runtime trace 切片、full baseline 与预算获得人工确认                                      |
+| 1    | ADR-02 | ADR-01 runtime/trace 可复现                                                    | identity、Owner Definition/registry 与 owned value 稳定                                   |
+| 2    | ADR-03 | ADR-02 owner contract Accepted                                                 | 同步 Program graph / transaction lifecycle 稳定                                           |
+| 3    | ADR-04 | ADR-03 Accepted                                                                | 完整 Program、stable Diff、fallback 与首个安全局部更新闭环稳定                            |
+| 4    | ADR-06 | alpha.1 ADR-07 已 Accepted；Standard Core Gate 已明确                          | 完整 compile 的双轴 constraint、slot size、nested 与 wrapper contract 稳定                |
+| 5    | ADR-05 | ADR-04 可产出稳定 Scene Patch                                                  | SVG / Canvas patch 与完整 redraw 等价，并有可测收益                                       |
+| 6    | ADR-07 | ADR-03～05 Accepted                                                            | static / retained 与 auto / full 可显式选择、对比并保持默认行为不变                       |
+| 7    | ADR-08 | ADR-06 Accepted；Standard alpha.2 Core Gate 缺口已明确                         | proposal / probe / slot / guide / failure / replay contract 稳定                          |
+| 8    | ADR-09 | 通用视觉主题 owner 与 Scene / Scope 继承方向已人工确认                         | Theme IR、Composite context、第三方消费边界与入口等价性稳定                               |
+| 9    | ADR-10 | ADR-09 Accepted；原子 schema/type 目标已获人工确认                             | Core 原子契约、兼容聚合与 Tier 2 / Tier 3 组合边界稳定                                    |
+| 10   | ADR-11 | ADR-08～10 Accepted；Standard presentation reuse 的 Core capability gap 已冻结 | authored Scope 完整 surface、replay wrapper 窄职责与 bounds / clip / identity 编排稳定    |
+| 11   | ADR-12 | Core 内置 Inspector 已证明普通 IR 辅助内容可行，但包边界过重                   | Core 观测底座、Inspect registry、Standard 子入口、普通 Scene 图层与 Path 控制点闭环稳定   |
+| 12   | ADR-13 | ADR-09 Accepted；跨 owner Theme token context 方向已冻结                       | namespaced bag、sparse inheritance、Definition registry、shared colors 与 appearance 稳定 |
+| 13   | ADR-14 | 当前 Kernel release group `0.5.0-alpha.2` 的 Foundation owner 与依赖边界已确认 | Foundation 根契约、直接依赖拓扑、断言语义与结构化错误兼容边界可独立验证                   |
 
 批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
@@ -79,6 +84,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 7. Theme 选择与 namespaced token overrides 持久化在 Scene / Scope IR；Core 只解析继承、执行 owner schema 校验并传递有效环境与 shared colors，领域 owner 自行物化默认 token，renderer 不读取 style / mode。
 8. layout-aware Composite 的 authored Scope props、普通 child 与 replay child 必须沿同一 Core Scope / style / theme / identity / bounds / clip / diagnostics 主链消费；compile-local replay wrapper 不承担普通 Scope 语义。
 9. Core 只发布最终 settled owner output；`@retikz/inspect` 以显式 registry 生成辅助内容，继承 occurrence 的有效 Theme / style 并复用普通 IR / Definition / compile，但使用隔离 namespace，seal 后不保留 public id / meta / animation，且与主 Scene 的 layout、resource、identity、artifact、patch、命中和水合语义隔离。
+10. Foundation 只提供无领域原子契约；实际 consumer 直接依赖其根入口，`@retikz/math` 在没有真实消费时不声明空依赖，Core / Runtime 旧基础类型出口不形成第二真源，领域错误与私有 identity / Diagnostic 边界保持不变。
 
 ## Milestone 验收
 
@@ -93,6 +99,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - Core 提供可独立复用的 style、stroke 与 Path 原子 schema/type；既有聚合 schema、IR、compile、Scene 与 Tier 2 / Tier 3 可观察行为保持等价。
 - ADR-11 在接受前必须证明 `ScopePropsSchema` / `IRScopeProps` 与完整 Scope 等价，layout-aware authored Scope 的 placement、style/default/resetStyle、Theme、identity、metadata、animation、bounds 与 authored / allocation clip 均可观察且不由 Standard 或 adapter 旁路实现。
 - ADR-12 在接受前必须证明未安装 Inspect 时 Core、Render、基础 adapter 与 Standard 根入口不含 Inspector 默认依赖；外部 observer 只读取最终 settled owner output，`@retikz/inspect` 的内置与第三方定义使用同一 registry，并在非递归的隔离片段编译中生成 occurrence-local Scene。Standard `/inspect`、quadratic / cubic Path 控制点、React / Vanilla 与 SVG / Canvas 必须闭环，且主 Scene 保持不变。
+- ADR-14 在接受前必须证明 Foundation 根契约、直接依赖拓扑、Math 无真实消费时不声明依赖、typed string 失败语义和 Runtime / Render / Plot / Chart 错误兼容边界稳定，且不新增 IR、Scene、renderer 或领域 registry。
 
 ## 后续性能遗留
 
@@ -108,6 +115,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - Plot / Table 的完整领域增量算法；alpha.2 只要求至少一个跨 Tier fixture 验证通用契约。
 - Box / Flex / Grid / Overlay solver、LayoutItem schema、Standard baseline alignment policy 与完整 CSS intrinsic sizing；Core 只提供领域中立的 alignment guide contract。
 - 为既有 `0.x` API 保留兼容桥接。
+- Foundation 之外的通用 helper、领域错误迁移和包拓扑重设计；Foundation 仅按 ADR-14 冻结的最小契约收口。
 
 ## 授权边界
 
