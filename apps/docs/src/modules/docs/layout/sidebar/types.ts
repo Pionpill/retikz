@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react';
 
+import type { DocDifficultyValue } from '@/modules/docs/data';
+
 /**
  * 侧边栏视图契约
  * @description 三级层次：Category（分组）→ Module（一级，可带 Icon）→ SubModule（二级及以下，递归 children）
@@ -11,6 +13,8 @@ export type SidebarSubModuleData = {
   value: string;
   /** 显示文字（已过 t()） */
   label: string;
+  /** 叶子文档的可选阅读难度；分组不声明。 */
+  difficulty?: DocDifficultyValue;
   /** 子项；存在则当前节点渲染为可展开分组，否则为叶子 */
   children?: Array<SidebarSubModuleData>;
 };

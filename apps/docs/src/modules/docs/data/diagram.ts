@@ -1,9 +1,11 @@
 import type { Section } from './types';
 
+import { DocDifficulty } from './types';
+
 /** Diagram 图式元素与后续图结构能力的文档导航 */
 export const diagramSection: Array<Section> = [
   {
-    pages: [{ id: 'introduction', label: 'diagram.introduction' }],
+    pages: [{ id: 'introduction', label: 'diagram.introduction', difficulty: DocDifficulty.Beginner }],
   },
   {
     id: 'notation',
@@ -14,15 +16,15 @@ export const diagramSection: Array<Section> = [
         id: 'logic',
         label: 'diagram.logicUnits',
         children: [
-          { id: 'semantic-units', label: 'diagram.semanticUnits' },
-          { id: 'connector', label: 'diagram.connector' },
-          { id: 'callout', label: 'diagram.callout' },
+          { id: 'semantic-units', label: 'diagram.semanticUnits', difficulty: DocDifficulty.Beginner },
+          { id: 'connector', label: 'diagram.connector', difficulty: DocDifficulty.Advanced },
+          { id: 'callout', label: 'diagram.callout', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
         id: 'composite',
         label: 'diagram.compositeUnits',
-        children: [{ id: 'logic-frame', label: 'diagram.logicFrame' }],
+        children: [{ id: 'logic-frame', label: 'diagram.logicFrame', difficulty: DocDifficulty.Advanced }],
       },
       { id: 'api-reference', label: 'diagram.notationApiReference' },
     ],

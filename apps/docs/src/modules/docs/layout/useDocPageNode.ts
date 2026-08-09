@@ -7,7 +7,7 @@ import { getSectionsByModule } from '@/modules/docs/data';
 import type { DocLocation } from './types';
 
 /** 文档页头部渲染所需的最小 data 节点。 */
-export type DocPageTarget = Pick<Page, 'id' | 'label' | 'meta' | 'extra'>;
+export type DocPageTarget = Pick<Page, 'id' | 'label' | 'meta' | 'extra' | 'difficulty'>;
 
 /** 当前文档路由命中的 data 节点。 */
 export type DocPageNode = {
