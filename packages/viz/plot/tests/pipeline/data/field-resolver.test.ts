@@ -249,16 +249,17 @@ describe('render ⟺ locator parity + scale 兼容', () => {
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
-    expect(() =>
-      compileToScene(
-        { version: 1, type: 'scene', children: [explicitSpec] },
-        {
-          composites: lowerPlots(
-            { d: [{ x: 1, y: 2 }] },
-            { resolveField: field => (field === 'x' ? { type: 'categorical' } : undefined) },
-          ),
-        },
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          { version: 1, type: 'scene', children: [explicitSpec] },
+          {
+            composites: lowerPlots(
+              { d: [{ x: 1, y: 2 }] },
+              { resolveField: field => (field === 'x' ? { type: 'categorical' } : undefined) },
+            ),
+          },
+        ).scene,
     ).toThrow(/incompatible/i);
   });
 });

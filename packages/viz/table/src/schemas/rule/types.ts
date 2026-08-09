@@ -4,12 +4,10 @@ import type { TableValueCompareOperator, TableValuePredicateKind } from './const
 import type { TableCellRuleSchema, TableCellSelectorSchema, TableValuePredicateSchema } from './schema';
 
 /** Table value predicate 判别值 */
-export type TableValuePredicateKindValue =
-  (typeof TableValuePredicateKind)[keyof typeof TableValuePredicateKind];
+export type TableValuePredicateKindValue = (typeof TableValuePredicateKind)[keyof typeof TableValuePredicateKind];
 
 /** Table value compare 运算符 */
-export type TableValueCompareOperatorValue =
-  (typeof TableValueCompareOperator)[keyof typeof TableValueCompareOperator];
+export type TableValueCompareOperatorValue = (typeof TableValueCompareOperator)[keyof typeof TableValueCompareOperator];
 
 /** Table Cell selector IR */
 export type IRTableCellSelector = z.infer<typeof TableCellSelectorSchema>;

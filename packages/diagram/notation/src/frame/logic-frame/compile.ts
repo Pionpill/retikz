@@ -70,12 +70,12 @@ const requiredProbe = (
   return probe.result;
 };
 
-const stripItemIdentity = (item: LayoutArtifactItemBase): LogicLayoutItemArtifact => {
-  const artifact: Partial<LayoutArtifactItemBase & { line?: number }> = { ...item };
-  delete artifact.key;
-  delete artifact.sourceIndex;
-  delete artifact.line;
-  return artifact as LogicLayoutItemArtifact;
+const stripItemIdentity = (item: LayoutArtifactItemBase & { line?: number }): LogicLayoutItemArtifact => {
+  const { key, sourceIndex, line, ...artifact } = item;
+  void key;
+  void sourceIndex;
+  void line;
+  return artifact;
 };
 
 const positiveRectOrNull = (rect: LayoutArtifactRect): LayoutArtifactRect | null =>

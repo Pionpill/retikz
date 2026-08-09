@@ -486,19 +486,20 @@ describe('[adversarial] boundaryPoint / AABB 数值稳定', () => {
 
 describe('[adversarial] shape preset × anchor / scale 交叉', () => {
   it('[adversarial] diamond（→polygon 4/0）的 anchor "top" 应与 rect anchor 一致、不抛', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          { type: 'node', id: 'd', position: [0, 0], text: 'X', shape: 'diamond' },
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [100, 0] },
-              { type: 'step', kind: 'line', to: { id: 'd', anchor: 'top' } },
-            ],
-          },
-        ] as IRScene['children']),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            { type: 'node', id: 'd', position: [0, 0], text: 'X', shape: 'diamond' },
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [100, 0] },
+                { type: 'step', kind: 'line', to: { id: 'd', anchor: 'top' } },
+              ],
+            },
+          ] as IRScene['children']),
+        ).scene,
     ).not.toThrow();
   });
 

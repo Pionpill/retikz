@@ -1,6 +1,7 @@
 import type {
   CompositeCompileChild,
   IRChild,
+  IRNode,
   LayoutAxisProposal,
   LayoutChildResult,
   LayoutCompositeCompileContext,
@@ -8,7 +9,7 @@ import type {
 } from '@retikz/core';
 import type { LayoutArtifactContainer, LayoutArtifactItemBase, LayoutArtifactRect } from '@retikz/layout';
 
-import { BoundarySchema, ChildSchema, ShapeRefSchema } from '@retikz/core';
+import { BoundarySchema, ShapeRefSchema } from '@retikz/core';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '@retikz/core';
 import { LayoutAlignment, LayoutOverflow, LayoutOverflowSchema, LayoutSizeSchema } from '@retikz/layout';
@@ -88,7 +89,7 @@ const requiredProbe = (
   return probe.result;
 };
 
-const shellShapeOf = (shape: LogicShellNode['appearance']['shape'], width: number, height: number): unknown => {
+const shellShapeOf = (shape: LogicShellNode['appearance']['shape'], width: number, height: number): IRNode['shape'] => {
   if (typeof shape === 'object') return shape;
   if (shape === 'capsule') return { type: 'rectangle', params: { cornerRadius: Math.min(width, height) / 2 } };
   return shape;
@@ -99,7 +100,7 @@ const shellNodeOf = (node: LogicShellNode, allocation: LayoutArtifactRect): IRCh
   type: 'node',
   id: node.id,
   position: [allocation.x + allocation.width / 2, allocation.y + allocation.height / 2],
-  shape: shellShapeOf(node.appearance.shape, allocation.width, allocation.height) as never,
+  shape: shellShapeOf(node.appearance.shape, allocation.width, allocation.height),
   boundary: node.appearance.boundary,
   minimumSize: { width: allocation.width, height: allocation.height },
   padding: 0,
@@ -109,10 +110,10 @@ const shellNodeOf = (node: LogicShellNode, allocation: LayoutArtifactRect): IRCh
 });
 
 const stripItemIdentity = (item: LayoutArtifactItemBase): LogicLayoutItemArtifact => {
-  const artifact: Partial<LayoutArtifactItemBase> = { ...item };
-  delete artifact.key;
-  delete artifact.sourceIndex;
-  return artifact as LogicLayoutItemArtifact;
+  const { key, sourceIndex, ...artifact } = item;
+  void key;
+  void sourceIndex;
+  return artifact;
 };
 
 /** 编译一个带单内容的逻辑外壳，返回可一次性重放的不透明子节点 */
@@ -272,5 +273,3 @@ const resolveLogicAxis = (
     minimumContribution,
     naturalContribution,
   }).allocationSize;
-
-export { ChildSchema };

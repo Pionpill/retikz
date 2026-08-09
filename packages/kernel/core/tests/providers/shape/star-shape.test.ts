@@ -239,7 +239,9 @@ describe('star — 交互（self-rotate / scale / Path 连接）', () => {
         { type: 'step', kind: 'line', to: [100, -20] },
       ],
     };
-    const compiled = compileToScene(scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 }), connectPath])).scene;
+    const compiled = compileToScene(
+      scene([starNode({ points: 5, innerRadius: 16, outerRadius: 40 }), connectPath]),
+    ).scene;
     const paths = allByType(compiled.primitives, 'path');
     const connector = paths.find(p => p.commands.length === 2 && p.commands[0].kind === 'move');
     expect(connector).toBeDefined();

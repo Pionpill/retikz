@@ -1,6 +1,6 @@
 import type { Scene } from '@retikz/core';
 
-import type { StaticRenderFrame } from '../../runtime/frame';
+import type { StaticRenderFrame } from '../../runtime';
 import type { BuildDocumentOptions } from '../builders/document';
 import type { SvgNode, SvgStyle } from '../types';
 

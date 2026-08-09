@@ -234,11 +234,12 @@ describe('ADV — emit 异常 / 窄子集栅栏', () => {
 describe('ADV — override 缺字段', () => {
   it('override_missing_emit：override 内置但 def 缺 emit → 抛 missing an emit function（含 shape 名）', () => {
     const def = { lineContactX: 0 } as unknown as ArrowDefinition;
-    expect(() =>
-      compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-        arrows: [{ ...def, name: 'stealth' }],
-        onWarn: () => {},
-      }).scene,
+    expect(
+      () =>
+        compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
+          arrows: [{ ...def, name: 'stealth' }],
+          onWarn: () => {},
+        }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 
@@ -250,10 +251,11 @@ describe('ADV — override 缺字段', () => {
   });
 
   it('duplicate_builtin_name_rejected：覆盖内置 stealth 直接失败', () => {
-    expect(() =>
-      compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-        arrows: [{ name: 'stealth', lineContactX: 0, emit: () => [] }],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
+          arrows: [{ name: 'stealth', lineContactX: 0, emit: () => [] }],
+        }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 });
@@ -263,7 +265,9 @@ describe('ADV — override 缺字段', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('ADV — 未注册 shape 错误质量', () => {
   it('case_mismatch：shape="Stealth"（大写）→ throw，消息含可用名列表（LLM 可看出大小写错）', () => {
-    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' })).scene).toThrow(/Unknown arrow shape 'Stealth'/);
+    expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' })).scene).toThrow(
+      /Unknown arrow shape 'Stealth'/,
+    );
     expect(() => compileToScene(horizontalPathIR('->', { shape: 'Stealth' })).scene).toThrow(/stealth/);
   });
 

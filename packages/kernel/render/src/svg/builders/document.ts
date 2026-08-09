@@ -3,8 +3,8 @@ import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
 
-import type { EasingRegistry } from '../../animation/types';
-import type { StaticRenderFrame } from '../../runtime/frame';
+import type { EasingRegistry } from '../../animation';
+import type { StaticRenderFrame } from '../../runtime';
 import type { SvgNode } from '../types';
 import type { BuildContext } from './prim';
 

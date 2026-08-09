@@ -5,7 +5,7 @@
  */
 import type { IRAnimationTrack } from '@retikz/core';
 
-import type { EasingRegistry } from '../../animation/types';
+import type { EasingRegistry } from '../../animation';
 import type { ExpandedTrack } from './shared';
 
 import { easingToCss } from './shared';

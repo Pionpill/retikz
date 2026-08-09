@@ -106,7 +106,8 @@ describe('compile zIndex 稳定排序', () => {
 
   it('scope.zIndex 不影响 scope 内部子元素的相对栈序', () => {
     const baseChildren: IRScene['children'] = [node([0, 0]), line([10, 0], 5), node([20, 0])];
-    const innerOf = (ir: IRScene): Array<string> => topGroup(compileToScene(ir, silent).scene).children.map(p => p.type);
+    const innerOf = (ir: IRScene): Array<string> =>
+      topGroup(compileToScene(ir, silent).scene).children.map(p => p.type);
     const withZ = scene([{ type: 'scope', zIndex: 3, children: baseChildren }]);
     const withoutZ = scene([{ type: 'scope', children: baseChildren }]);
     expect(innerOf(withZ)).toEqual(['rect', 'rect', 'path']);

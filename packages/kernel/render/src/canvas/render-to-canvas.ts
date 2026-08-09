@@ -1,6 +1,6 @@
 import type { Scene } from '@retikz/core';
 
-import type { StaticRenderFrame } from '../runtime/frame';
+import type { StaticRenderFrame } from '../runtime';
 import type { RenderOptions } from './types';
 
 import { validateReadonlyLayers } from '../runtime';
