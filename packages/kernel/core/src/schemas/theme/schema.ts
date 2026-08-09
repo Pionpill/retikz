@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-import type { ThemeTokenNamespaceBag } from './types';
-
-import { ThemeMode, ThemeStyle } from '../../shared';
+import { ThemeMode } from '../../shared';
 
 type JsonValidationFailure = Readonly<{ path: Array<PropertyKey> }>;
 
@@ -52,12 +50,6 @@ const findJsonValidationFailure = (
   }
 };
 
-const isPlainJsonObject = (input: unknown): input is Record<string, unknown> =>
-  input !== null &&
-  typeof input === 'object' &&
-  !Array.isArray(input) &&
-  findJsonValidationFailure(input) === undefined;
-
 const isPlainObjectContainer = (input: unknown): input is Record<string, unknown> => {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) return false;
   try {
@@ -68,22 +60,9 @@ const isPlainObjectContainer = (input: unknown): input is Record<string, unknown
   }
 };
 
-const isThemeTokenNamespaceBag = (input: unknown): input is ThemeTokenNamespaceBag =>
-  isPlainJsonObject(input) &&
-  Object.keys(input).every(
-    namespace => namespace.trim().length > 0 && isPlainJsonObject(Reflect.get(input, namespace)),
-  );
-
-const ThemeTokenNamespaceBagSchema = z
-  .custom<ThemeTokenNamespaceBag>(isThemeTokenNamespaceBag, {
-    error: 'Theme tokens must be a plain object of non-empty namespace objects.',
-  })
-  .describe('Sparse namespace bag whose owner keys are validated by the compile-time Theme token registry.');
-
 const ThemeObjectSchema = z.strictObject({
-  style: z.enum(ThemeStyle).optional().describe('Sparse visual personality inherited from the enclosing Theme.'),
+  style: z.string().min(1).optional().describe('Sparse visual personality name inherited from the enclosing Theme.'),
   mode: z.enum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
-  tokens: ThemeTokenNamespaceBagSchema.optional().describe('Sparse owner namespace token overrides.'),
 });
 
 const ThemeInputSchema = z
@@ -95,7 +74,7 @@ const ThemeInputSchema = z
       return;
     }
     for (const key of Reflect.ownKeys(input)) {
-      if (key === 'style' || key === 'mode' || key === 'tokens') continue;
+      if (key === 'style' || key === 'mode') continue;
       context.addIssue({ code: 'custom', path: [key], message: `Unrecognized Theme field: "${String(key)}".` });
     }
   });

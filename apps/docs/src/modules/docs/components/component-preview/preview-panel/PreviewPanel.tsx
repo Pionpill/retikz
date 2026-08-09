@@ -10,6 +10,7 @@ import type { PreviewControlSlot, RendererMode } from '../types';
 import type { PreviewPanelState } from './usePreviewPanelState';
 
 import { PreviewControlStateContext } from '../context';
+import { PreviewThemeProvider } from '../theme';
 import { DemoRenderer } from './DemoRenderer';
 import { PreviewControlSlotLayer } from './PreviewControlSlotLayer';
 
@@ -85,7 +86,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
           <AnimationModeProvider mode={animationMode}>
             <PreviewControlStateContext.Provider value={controlState}>
               {activeRender ? (
-                activeRender(rendererMode)
+                <PreviewThemeProvider>{activeRender(rendererMode)}</PreviewThemeProvider>
               ) : (
                 <DemoRenderer Component={Component} rendererMode={rendererMode} />
               )}

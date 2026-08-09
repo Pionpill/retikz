@@ -1,10 +1,11 @@
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
 
 import { NodeTextAlign, ThemeMode, ThemeStyle } from '@retikz/core';
 
 import type { ChartThemeTokenValue, IRChartResolvedThemeTokens } from './types';
 
 import { ChartThemeToken } from './constants';
+import { defineChartThemeStyle } from './definition';
 import { ChartResolvedThemeTokensSchema } from './schema';
 
 type PresetStructure = Readonly<{
@@ -27,7 +28,7 @@ type PresentationTokenGroup = Readonly<{
   align: ChartThemeTokenValue;
 }>;
 
-const structures: Record<ThemeStyleValue, PresetStructure> = {
+const structures: Record<BuiltinThemeStyleValue, PresetStructure> = {
   [ThemeStyle.Neutral]: {
     padding: 16,
     gap: 6,
@@ -54,7 +55,7 @@ const structures: Record<ThemeStyleValue, PresetStructure> = {
   },
 };
 
-const typography: Record<ThemeStyleValue, ReadonlyArray<readonly [number, number, number]>> = {
+const typography: Record<BuiltinThemeStyleValue, ReadonlyArray<readonly [number, number, number]>> = {
   [ThemeStyle.Neutral]: [
     [18, 600, 22],
     [13, 400, 18],
@@ -89,7 +90,7 @@ const typography: Record<ThemeStyleValue, ReadonlyArray<readonly [number, number
   ],
 };
 
-const paints: Record<ThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
+const paints: Record<BuiltinThemeStyleValue, Record<ThemeModeValue, PresetPaint>> = {
   [ThemeStyle.Neutral]: {
     [ThemeMode.Light]: {
       canvas: '#FFFFFF',
@@ -178,7 +179,7 @@ const presentationTokenGroups: ReadonlyArray<PresentationTokenGroup> = [
 ];
 
 const presentationTokens = (
-  style: ThemeStyleValue,
+  style: BuiltinThemeStyleValue,
   paint: PresetPaint,
 ): Partial<Record<ChartThemeTokenValue, unknown>> =>
   Object.fromEntries(
@@ -194,7 +195,7 @@ const presentationTokens = (
     }),
   );
 
-const createPreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedThemeTokens => {
+const createPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRChartResolvedThemeTokens => {
   const structure = structures[style];
   const paint = paints[style][mode];
   return ChartResolvedThemeTokensSchema.parse({
@@ -214,8 +215,13 @@ const presets = Object.fromEntries(
     style,
     Object.fromEntries(Object.values(ThemeMode).map(mode => [mode, createPreset(style, mode)])),
   ]),
-) as Record<ThemeStyleValue, Record<ThemeModeValue, IRChartResolvedThemeTokens>>;
+) as Record<BuiltinThemeStyleValue, Record<ThemeModeValue, IRChartResolvedThemeTokens>>;
 
 /** 读取一个内建 Chart style/mode 的完整 token map */
-export const getChartThemePreset = (style: ThemeStyleValue, mode: ThemeModeValue): IRChartResolvedThemeTokens =>
+export const getChartThemePreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRChartResolvedThemeTokens =>
   structuredClone(presets[style][mode]);
+
+/** 所有 Chart 内置 Theme style definitions */
+export const BUILTIN_CHART_THEME_STYLES = (Object.values(ThemeStyle) as Array<BuiltinThemeStyleValue>).map(style =>
+  defineChartThemeStyle({ name: style, resolve: theme => getChartThemePreset(style, theme.mode) }),
+);

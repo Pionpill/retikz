@@ -84,7 +84,7 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ## Table Theme tokens
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })` and selects the Table preset. `theme.tokens.table` is the sparse namespace inherited at the current position; `tableThemeTokens` is the local sparse overlay stored in TableSpec. Core shared `colors.categorical` projects into `data.categorical`, so Table does not maintain a second shared-palette input.
+Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })` and selects the Table preset. `tableThemeTokens` is the local sparse overlay stored in TableSpec. Core shared `colors.categorical` projects into `data.categorical`, so Table does not maintain a second shared-palette input.
 
 ### TableThemeTokenOverridesSchema
 
@@ -98,7 +98,7 @@ Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { 
 
 <ZodSchema name="TableThemeTokenPresetMapSchema" />
 
-`neutral` is the default Core `style`; `academic` follows a LaTeX/booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every preset provides a complete light/dark token map. The Table resolver cascades preset → shared categorical → inherited `theme.tokens.table` → local `tableThemeTokens`; unknown keys or invalid values identify the exact path and fail loudly. The resolved manifest retains effective `style`, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a TableSpec input field.
+`neutral` is the default Core `style`; `academic` follows a LaTeX/booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every preset provides a complete light/dark token map. The Table resolver cascades preset → shared categorical → local `tableThemeTokens`; unknown keys or invalid values identify the exact path and fail loudly. The resolved manifest retains effective `style`, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a TableSpec input field.
 
 ## Related
 

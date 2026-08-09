@@ -2,7 +2,7 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import type { VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { lowerPlots, PLOT_NAMESPACE, PlotComposite, PlotSpecSchema, PlotThemeTokenDefinition } from '@retikz/plot';
+import { lowerPlots, PLOT_NAMESPACE, PlotComposite, PlotSpecSchema } from '@retikz/plot';
 
 import type { PlotEmbedProps } from '../spec';
 
@@ -29,7 +29,7 @@ export const createPlotAdapter = (
         ...parsed,
         id: `${context.id}/${parsed.id ?? PlotComposite.Plot}`,
       });
-      return { node, datasets, themeTokenDefinitions: [PlotThemeTokenDefinition], makeComposites };
+      return { node, datasets, makeComposites };
     },
   };
 };

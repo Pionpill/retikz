@@ -97,8 +97,9 @@ const convertCoreChild = (child: IRChild): VanillaChildSpec => {
   };
 };
 
-const buildCorePreview = (preview: PreviewIR): VanillaPreviewArtifact => {
+const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
   const input = figure({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: preview.ir.children.map(convertCoreChild),
@@ -368,7 +369,7 @@ const notationDefinitionByName = {
   CalloutDefinition,
 } as const;
 
-const buildLibraryPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
+const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
   const ids = new Map<string, string>();
   const standardState: StandardConversionState = {
     counts: {
@@ -394,6 +395,7 @@ const buildLibraryPreview = (preview: PreviewIR): VanillaPreviewArtifact => {
   };
   registerPreviewIds(preview.ir.children, standardState, notationState);
   const input = figure({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: preview.ir.children.map(child => convertPreviewChild(child, standardState, notationState)),
@@ -439,7 +441,11 @@ const buildPlotCode = (spec: IRPlotSpec, datasets: ExternalDatasets, preview: Pr
   return `import { renderPlot } from '@retikz/plot-vanilla';\n\nconst spec = ${formatVanillaValue(spec)};\nconst datasets = ${formatVanillaValue(datasets)};\n\nexport const svg = renderPlot(spec, datasets${options});\n`;
 };
 
-const buildPlotPreview = (preview: PreviewIR, composite: CompositeChild): VanillaPreviewArtifact => {
+const buildPlotPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
   const spec = PlotSpecSchema.parse(composite);
   const datasets = findPlotDataset(preview, spec);
   if (datasets === null) {
@@ -448,7 +454,10 @@ const buildPlotPreview = (preview: PreviewIR, composite: CompositeChild): Vanill
   const size = outputSize(preview);
   return {
     code: buildPlotCode(spec, datasets, preview),
-    svg: renderPlot(spec, datasets, size),
+    svg: renderPlot(spec, datasets, {
+      ...size,
+      ...(options.theme === undefined ? {} : { theme: options.theme }),
+    }),
   };
 };
 
@@ -551,6 +560,7 @@ const buildTablePreview = (
   }
   const resolvedDatasets = datasets ?? {};
   const input = figure({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: [
@@ -571,13 +581,13 @@ export const buildVanillaPreview = (
 ): VanillaPreviewArtifact => {
   const composites = collectComposites(preview.ir.children);
   try {
-    if (composites.length === 0) return buildCorePreview(preview);
+    if (composites.length === 0) return buildCorePreview(preview, options);
     const firstComposite = composites[0];
     if (composites.every(child => child.namespace === 'standard' || child.namespace === 'notation')) {
-      return buildLibraryPreview(preview);
+      return buildLibraryPreview(preview, options);
     }
     if (composites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
-      return buildPlotPreview(preview, firstComposite);
+      return buildPlotPreview(preview, firstComposite, options);
     }
     if (composites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);

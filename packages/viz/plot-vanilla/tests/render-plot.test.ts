@@ -1,4 +1,3 @@
-import type { IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 
@@ -47,9 +46,9 @@ const data: ExternalDatasets = {
   ],
 };
 
-const plotSurfaceTheme = {
-  tokens: { plot: { 'plot.surface.fill': '#123456' } },
-} satisfies NonNullable<IRScene['theme']>;
+const plotThemeTokens = {
+  'plot.surface.fill': '#123456',
+} satisfies NonNullable<IRPlotSpec['plotThemeTokens']>;
 
 type ScenePrimLike = { type: string; id?: string; children?: Array<ScenePrimLike> };
 
@@ -84,8 +83,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<ellipse');
   });
 
-  it('options.theme 作为根 Scene Theme 进入 Core effective Theme', () => {
-    const svg = renderPlot(spec, data, { width: 480, height: 300, theme: plotSurfaceTheme });
+  it('Plot local token override 生效', () => {
+    const svg = renderPlot({ ...spec, plotThemeTokens }, data, { width: 480, height: 300 });
 
     expect(svg).toContain('fill="#123456"');
   });

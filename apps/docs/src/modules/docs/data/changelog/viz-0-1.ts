@@ -989,8 +989,8 @@ export const vizV01: Release = {
             {
               label: { zh: '确定性视觉级联', en: 'Deterministic visual cascade' },
               content: {
-                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core preset < shared categorical < inherited `theme.tokens.table` < local `tableThemeTokens` < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
-                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core preset < shared categorical < inherited `theme.tokens.table` < local `tableThemeTokens` < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
+                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core preset < shared categorical < local `tableThemeTokens` < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
+                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core preset < shared categorical < local `tableThemeTokens` < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
               },
             },
             {
@@ -999,8 +999,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Table visuals move to Core Theme',
               },
               content: {
-                zh: 'TableSpec 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 preset，`theme.tokens.table` 提供 inherited namespace，`tableThemeTokens` 提供 local overlay。未知 token key/value 仍会按 owner schema fail-loud。',
-                en: 'TableSpec and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the preset, `theme.tokens.table` supplies the inherited namespace, and `tableThemeTokens` supplies the local overlay. Unknown token keys/values still fail loudly through the owner schema.',
+                zh: 'TableSpec 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 preset，`tableThemeTokens` 提供 local overlay。未知 token key/value 仍会按 owner schema fail-loud。',
+                en: 'TableSpec and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the preset, and `tableThemeTokens` supplies the local overlay. Unknown token keys/values still fail loudly through the owner schema.',
               },
             },
             {

@@ -69,11 +69,11 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### Theme token owner registry
 
-| Option                  | Type                                     | Default     | 说明                                                                                                              |
-| ----------------------- | ---------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `themeTokenDefinitions` | `ReadonlyArray<AnyThemeTokenDefinition>` | Core `core` | 追加 Plot、Chart、Table 或自定义 owner 的冻结 Definition；Core 内置 namespace 始终注册，同 namespace 冲突立即抛错 |
+| Option        | Type                                  | Default     | 说明                                                    |
+| ------------- | ------------------------------------- | ----------- | ------------------------------------------------------- |
+| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | 内置 styles | 追加运行时 Core style resolver；同名 style 冲突立即抛错 |
 
-每个 Definition 绑定一个非空 namespace 与 strict Zod schema。Core 在 Scene / Scope 解析时校验 `theme.tokens` 的 namespace、token key 与值：未注册 namespace、未知 key、非法值和不同 Definition 占用同一 namespace 都 fail-loud。Core 不读取或解释 owner token 的领域含义。
+每个 Definition 绑定一个 style name 与解析 `mode` 的函数。Core 在 Scene / Scope 解析时继承 `style` / `mode`，再由该 resolver 生成 shared colors；未注册 style 或同名不同 Definition 都 fail-loud。函数只存在于运行时 options，不会写入 IR。
 
 ### Composite
 
@@ -282,7 +282,7 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 240,
+      endLine: 218,
     },
     {
       label: 'replay root 的 placement 与各类 sink 提交',

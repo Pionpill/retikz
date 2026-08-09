@@ -69,11 +69,11 @@ Definitions passed here are appended to the corresponding `BUILTIN_*` collection
 
 ### Theme token owner registry
 
-| Option                  | Type                                     | Default     | Notes                                                                                                                                                |
-| ----------------------- | ---------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `themeTokenDefinitions` | `ReadonlyArray<AnyThemeTokenDefinition>` | Core `core` | Appends frozen Definitions for Plot, Chart, Table, or custom owners; Core's built-in namespace is always registered, and conflicts throw immediately |
+| Option        | Type                                  | Default         | Notes                                                                           |
+| ------------- | ------------------------------------- | --------------- | ------------------------------------------------------------------------------- |
+| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | built-in styles | Appends runtime Core style resolvers; conflicting style names throw immediately |
 
-Each Definition binds a non-empty namespace to a strict Zod schema. While resolving Scene / Scope Themes, Core validates every `theme.tokens` namespace, token key, and value: an unregistered namespace, unknown key, invalid value, or different Definition claiming the same namespace fails loudly. Core does not read or interpret the domain meaning of an owner's tokens.
+Each Definition binds a style name to a function that resolves `mode`. While resolving Scene / Scope Themes, Core inherits `style` / `mode` and generates shared colors with that resolver; an unregistered style or different Definition claiming the same name fails loudly. Functions exist only in runtime options and never enter IR.
 
 ### Composites
 
@@ -282,7 +282,7 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       label: 'Build compile-local replay and Scope children',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 240,
+      endLine: 218,
     },
     {
       label: 'Place replay roots and commit their transaction sinks',

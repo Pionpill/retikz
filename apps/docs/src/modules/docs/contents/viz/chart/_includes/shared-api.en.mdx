@@ -106,7 +106,9 @@ Use `linear`, `time`, `log`, `sqrt`, `symlog`, or `radial`.
 
 Chart owns presentation defaults through `chartThemeTokens`; Core `style` and `mode` come from the hosting Scene or Scope. Chart does not shadow the host Theme with another style/mode field. It forwards the current Plot inputs without renaming their owner: `plotThemeTokens`, `colors`, and `plotTheme` remain Plot-owned.
 
-The Chart cascade is `Core effective Theme → Chart preset → inherited tokens.chart → local chartThemeTokens`. The Plot handoff then resolves `Core effective Theme → Plot preset → shared categorical → inherited tokens.plot → forwarded plotThemeTokens → forwarded colors → forwarded plotTheme → explicit Plot configuration`. `ChartThemeToken`, `ChartThemeTokenOverridesSchema`, and `ChartResolvedThemeTokensSchema` are public exports from `@retikz/chart`; Plot token schemas remain public exports from `@retikz/plot`.
+The Chart cascade is `Core effective Theme → Chart preset → local chartThemeTokens`. The Plot handoff then resolves `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded colors → forwarded plotTheme → explicit Plot configuration`. `ChartThemeToken`, `ChartThemeTokenOverridesSchema`, and `ChartResolvedThemeTokensSchema` are public exports from `@retikz/chart`; Plot token schemas remain public exports from `@retikz/plot`.
+
+Define a custom style with `defineChartThemeStyle`, then inject it into the Chart composite through `createChartComposites({ chartThemeStyles, plotThemeStyles })`. Core `themeStyles`, Plot `plotThemeStyles`, and Chart `chartThemeStyles` each need a resolver for the same `theme.style` name; a missing layer fails loudly, while functions and complete token maps never enter Chart IR.
 
 | Field              | Type                                 | Default | Description                                                                                        |
 | ------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------------------------- |

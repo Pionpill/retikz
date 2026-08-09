@@ -1,6 +1,5 @@
 import type {
   AnyCompositeDefinition,
-  AnyThemeTokenDefinition,
   CompileOptions,
   IRChild,
   IRPath,
@@ -107,8 +106,6 @@ export type VanillaTier2Contribution = {
   node: IRChild;
   /** 由引用键索引的外部数据集表；不进入 IR */
   datasets: Record<string, unknown>;
-  /** 该 owner 复用的冻结 Theme token definition singleton 列表 */
-  themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
   /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用 */
   makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
 };
@@ -160,8 +157,6 @@ export type VanillaNormalizedFigure = {
   ir: IRScene;
   /** 适配器贡献聚合出的组合定义 */
   composites: Array<AnyCompositeDefinition>;
-  /** 适配器贡献聚合出的 Theme token definition singleton */
-  themeTokenDefinitions: Array<AnyThemeTokenDefinition>;
   /** 运行时元数据，不进入核心 IR */
   runtimeMeta: VanillaRuntimeMeta;
   /** 按 authored 顺序收集的领域中立运行时 sites */

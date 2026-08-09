@@ -26,9 +26,5 @@ export const copyCoreProgramOptions = <TComposites extends ReadonlyArray<AnyComp
   options: CoreProgramOptions<TComposites>,
 ): CoreProgramOptions<TComposites> => {
   const copied = copyConfigValue(options, new Set());
-  if (options.themeTokenDefinitions === undefined) return copied;
-  return Object.freeze({
-    ...copied,
-    themeTokenDefinitions: Object.freeze([...options.themeTokenDefinitions]),
-  });
+  return copied;
 };

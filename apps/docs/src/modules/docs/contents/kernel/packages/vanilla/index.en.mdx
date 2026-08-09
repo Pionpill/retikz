@@ -270,38 +270,38 @@ Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React hos
 
 ## API Summary
 
-| API                             | Kind          | Description                                                         |
-| ------------------------------- | ------------- | ------------------------------------------------------------------- |
-| `figure`                        | authoring     | Builds a plain spec root with an optional root Theme                |
-| `layer`                         | authoring     | Builds a layer with ordering and metadata                           |
-| `node`                          | authoring     | Builds a named or anonymous node                                    |
-| `coordinate`                    | authoring     | Builds a named coordinate with a required id                        |
-| `path`                          | authoring     | Builds a path; `way` reuses Draw way DSL                            |
-| `scope`                         | authoring     | Builds a Theme, style, and namespace scope                          |
-| `embed`                         | authoring     | Builds a Tier 2 embed node                                          |
-| `VanillaLayerCache`             | authoring     | Provides a metadata hint for future layer invalidation optimization |
-| `VanillaViewMode`               | runtime       | Public const object for retained / static view modes                |
-| `VanillaRuntimeOptions`         | type          | Discriminated retained / static config for raw inputs               |
-| `VanillaRetainedRuntimeOptions` | type          | Retained mode, update strategy, and renderer factory                |
-| `VanillaStaticRuntimeOptions`   | type          | Closed config that only permits `mode: "static"`                    |
-| `CommonOptions`                 | type          | Output, compile, compile-driver, animation, and adapter options     |
-| `CommonOptions.compile.themeTokenDefinitions` | compile option | Supplies frozen owner Theme token Definitions, aggregated with embedded adapter contributions |
-| `VanillaFigureSpec`             | type          | Version 1 plain spec with an optional root `theme`                  |
-| `VanillaScopeSpec`              | type          | Scope spec with local Theme and opaque authoring                    |
-| `VanillaPathSpec`               | type          | Core Path spec with opaque authoring                                |
-| `VanillaEmbedSpec`              | type          | Tier 2 spec with opaque authoring                                   |
-| `VanillaCompileDriver`          | type          | Injects observers and resolves same-revision readonly layers        |
-| `isVanillaFigureSpec`           | normalization | Checks for a version 1 plain spec                                   |
-| `normalizeFigureSpec`           | normalization | Produces Core IR, composites, and runtime metadata                  |
-| `VanillaTier2Adapter`           | type          | Defines lowering for `embed()`                                      |
-| `RetainedVanillaView`           | runtime       | Transactional retained view for IR / plain specs                    |
-| `StaticVanillaView`             | runtime       | Full-redraw view for a precompiled Scene or raw input               |
-| `StaticRawSvgView`              | runtime       | SVG static view for IR / plain specs                                |
-| `StaticRawCanvasView`           | runtime       | Canvas static view for IR / plain specs                             |
-| `RawStaticMountOptions`         | type          | SVG static-mount options for IR / plain specs                       |
-| `RawStaticMountCanvasOptions`   | type          | Canvas static-mount options for IR / plain specs                    |
-| `StaticMountOptions`            | type          | SVG static-mount options for a precompiled Scene                    |
-| `StaticMountCanvasOptions`      | type          | Canvas static-mount options for a precompiled Scene                 |
-| `StaticMountUnifiedOptions`     | type          | Unified static-mount options for a precompiled Scene                |
-| `RetainedSvgUpdateOptions`      | type          | Animation config for SVG retained updates                           |
-| `RetainedCanvasUpdateOptions`   | type          | Animation and property config for Canvas retained updates           |
+| API                                 | Kind           | Description                                                                            |
+| ----------------------------------- | -------------- | -------------------------------------------------------------------------------------- |
+| `figure`                            | authoring      | Builds a plain spec root with an optional root Theme                                   |
+| `layer`                             | authoring      | Builds a layer with ordering and metadata                                              |
+| `node`                              | authoring      | Builds a named or anonymous node                                                       |
+| `coordinate`                        | authoring      | Builds a named coordinate with a required id                                           |
+| `path`                              | authoring      | Builds a path; `way` reuses Draw way DSL                                               |
+| `scope`                             | authoring      | Builds a Theme, style, and namespace scope                                             |
+| `embed`                             | authoring      | Builds a Tier 2 embed node                                                             |
+| `VanillaLayerCache`                 | authoring      | Provides a metadata hint for future layer invalidation optimization                    |
+| `VanillaViewMode`                   | runtime        | Public const object for retained / static view modes                                   |
+| `VanillaRuntimeOptions`             | type           | Discriminated retained / static config for raw inputs                                  |
+| `VanillaRetainedRuntimeOptions`     | type           | Retained mode, update strategy, and renderer factory                                   |
+| `VanillaStaticRuntimeOptions`       | type           | Closed config that only permits `mode: "static"`                                       |
+| `CommonOptions`                     | type           | Output, compile, compile-driver, animation, and adapter options                        |
+| `CommonOptions.compile.themeStyles` | compile option | Supplies runtime Core Theme style resolvers; functions never enter plain specs or JSON |
+| `VanillaFigureSpec`                 | type           | Version 1 plain spec with an optional root `theme`                                     |
+| `VanillaScopeSpec`                  | type           | Scope spec with local Theme and opaque authoring                                       |
+| `VanillaPathSpec`                   | type           | Core Path spec with opaque authoring                                                   |
+| `VanillaEmbedSpec`                  | type           | Tier 2 spec with opaque authoring                                                      |
+| `VanillaCompileDriver`              | type           | Injects observers and resolves same-revision readonly layers                           |
+| `isVanillaFigureSpec`               | normalization  | Checks for a version 1 plain spec                                                      |
+| `normalizeFigureSpec`               | normalization  | Produces Core IR, composites, and runtime metadata                                     |
+| `VanillaTier2Adapter`               | type           | Defines lowering for `embed()`                                                         |
+| `RetainedVanillaView`               | runtime        | Transactional retained view for IR / plain specs                                       |
+| `StaticVanillaView`                 | runtime        | Full-redraw view for a precompiled Scene or raw input                                  |
+| `StaticRawSvgView`                  | runtime        | SVG static view for IR / plain specs                                                   |
+| `StaticRawCanvasView`               | runtime        | Canvas static view for IR / plain specs                                                |
+| `RawStaticMountOptions`             | type           | SVG static-mount options for IR / plain specs                                          |
+| `RawStaticMountCanvasOptions`       | type           | Canvas static-mount options for IR / plain specs                                       |
+| `StaticMountOptions`                | type           | SVG static-mount options for a precompiled Scene                                       |
+| `StaticMountCanvasOptions`          | type           | Canvas static-mount options for a precompiled Scene                                    |
+| `StaticMountUnifiedOptions`         | type           | Unified static-mount options for a precompiled Scene                                   |
+| `RetainedSvgUpdateOptions`          | type           | Animation config for SVG retained updates                                              |
+| `RetainedCanvasUpdateOptions`       | type           | Animation and property config for Canvas retained updates                              |

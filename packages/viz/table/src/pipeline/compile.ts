@@ -6,7 +6,6 @@ import { compileToScene } from '@retikz/core';
 import type { IRTableSpec } from '../schemas';
 import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
-import { TableThemeTokenDefinition } from '../contract';
 import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../schemas';
 import { lowerTables } from './resolve';
 
@@ -37,7 +36,6 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
     {
       ...compileOptions,
       composites,
-      themeTokenDefinitions: [TableThemeTokenDefinition, ...(compileOptions.themeTokenDefinitions ?? [])],
     },
   );
   const matches = result.artifacts.filter(isRootTableArtifact);
