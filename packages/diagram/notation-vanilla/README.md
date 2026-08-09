@@ -32,9 +32,11 @@ const children = [
 const adapters = [TerminalVanillaAdapter, StageVanillaAdapter, ConnectorVanillaAdapter];
 ```
 
-Terminal, Stage, Decision, Junction, and Connector adapters reuse the embed id
-as the canonical Notation IR id and lower to a same-id Core Node or Path.
-Connector accepts either canonical Step `children` or authoring-only `way`.
+LogicFrame, Terminal, Stage, Decision, Junction, Connector, and Callout
+builders and adapters cover the complete Notation family. Semantic units and
+Connector reuse the embed id as the canonical Notation IR id; LogicFrame and
+Callout derive stable nested ids for their outer composites. Connector accepts
+either canonical Step `children` or authoring-only `way`.
 Direct persisted IR uses selected Definitions from `@retikz/notation` through
 Core compile options.
 

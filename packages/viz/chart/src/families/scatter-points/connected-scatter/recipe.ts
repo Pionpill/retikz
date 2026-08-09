@@ -21,60 +21,10 @@ import { ChartType } from '../../../schemas';
 import { chartRecipeId } from '../../../shared';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from '../../shared';
 import { createChartAxisGuides, createChartCartesian2DSeed, plotMarkValueOf } from '../shared';
-import { ConnectedScatterChartSpecSchema } from './schema';
+import { ConnectedPathPatchSchema, ConnectedPointPatchSchema, ConnectedScatterChartSpecSchema } from './schema';
 
-const connectedPointPatchPaths = [
-  'color',
-  'textColor',
-  'shape',
-  'fill',
-  'stroke',
-  'strokeWidth',
-  'fillOpacity',
-  'strokeOpacity',
-  'opacity',
-  'rotate',
-  'minimumSize',
-  'zIndex',
-  'align',
-  'lineHeight',
-  'maxTextWidth',
-  'cornerRadius',
-  'scale',
-  'padding',
-  'margin',
-  'dashed',
-  'dotted',
-  'dashPattern',
-  'font',
-  'boundary',
-  'shadow',
-  'blendMode',
-  'dx',
-  'dy',
-  'anchorId',
-  'label',
-] as const;
-
-const connectedPathPatchPaths = [
-  'curve',
-  'connectNulls',
-  'strokeWidth',
-  'opacity',
-  'lineCap',
-  'lineJoin',
-  'roundedCorners',
-  'fill',
-  'stroke',
-  'strokeOpacity',
-  'fillRule',
-  'thickness',
-  'marks',
-  'dashPattern',
-  'shadow',
-  'blendMode',
-  'label',
-] as const;
+const connectedPointPatchPaths = ConnectedPointPatchSchema.keyof().options;
+const connectedPathPatchPaths = ConnectedPathPatchSchema.keyof().options;
 
 const jsonObject = (value: unknown): IRJsonObject => JsonObjectSchema.parse(value);
 

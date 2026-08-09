@@ -6,7 +6,7 @@ import type { RenderOptions } from './types';
 import { validateReadonlyLayers } from '../runtime';
 import { drawReadonlyLayer } from './draw-readonly-layer';
 import { drawScene } from './draw-scene';
-import { createCssColorNormalizer, sceneFitMatrix } from './shared';
+import { createCssColorNormalizer, sceneFitMatrix } from './internal';
 
 const getDevicePixelRatio = (options: RenderOptions): number => {
   if (options.devicePixelRatio !== undefined) {
