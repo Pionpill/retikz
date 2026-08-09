@@ -77,7 +77,8 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:*",
-    "@retikz/foundation": "workspace:*"
+    "@retikz/foundation": "workspace:*",
+    "@retikz/math": "workspace:*"
   },
   "peerDependencies": {
     "mathjax-full": "catalog:",

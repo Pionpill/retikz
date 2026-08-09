@@ -1,11 +1,12 @@
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 
+import type { TableThemeStyleDefinition } from '../../contract';
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
 import type { ResolvedTableThemeTokens, TableThemeContext } from './types';
 
 import { TableThemeTokenKeySchema, TableThemeTokenMapSchema, TableThemeTokenOverridesSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
-import { BUILTIN_TABLE_THEME_TOKENS } from './presets';
+import { resolveTableThemeStyleRegistry } from './registry';
 
 const defaultTheme: TableThemeContext = {
   style: ThemeStyle.Neutral,
@@ -17,12 +18,18 @@ const defaultTheme: TableThemeContext = {
 export const resolveTableThemeTokens = (
   effectiveTheme: TableThemeContext = defaultTheme,
   local: IRTableThemeTokenOverrides = {},
+  tableThemeStyles: ReadonlyArray<TableThemeStyleDefinition> | undefined = undefined,
 ): ResolvedTableThemeTokens => {
   const parsedLocal = TableThemeTokenOverridesSchema.parse(structuredClone(local));
-  const preset = BUILTIN_TABLE_THEME_TOKENS[effectiveTheme.style][effectiveTheme.mode];
+  const styles = resolveTableThemeStyleRegistry(tableThemeStyles);
+  const definition = styles.get(effectiveTheme.style);
+  if (definition === undefined) {
+    throw new Error(`Table theme style '${effectiveTheme.style}' is not registered.`);
+  }
+  const baseline = definition.resolve(effectiveTheme);
   const sharedCategorical = [...effectiveTheme.colors.categorical];
   const tokens = TableThemeTokenMapSchema.parse({
-    ...structuredClone(preset),
+    ...structuredClone(baseline),
     'data.categorical': sharedCategorical,
     ...structuredClone(parsedLocal),
   });
@@ -32,15 +39,21 @@ export const resolveTableThemeTokens = (
         return [
           key,
           {
-            kind: 'local-theme-token',
+            kind: ThemeTokenSource.Local,
             path: `$spec/tableThemeTokens/${key}`,
           },
         ];
       }
       if (key === 'data.categorical') {
-        return [key, { kind: 'shared-categorical', path: '$theme/colors/categorical' }];
+        return [key, { kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' }];
       }
-      return [key, { kind: 'preset', path: `$preset/${effectiveTheme.style}/${effectiveTheme.mode}/${key}` }];
+      return [
+        key,
+        {
+          kind: ThemeTokenSource.Local,
+          path: `$style/${effectiveTheme.style}/${effectiveTheme.mode}/${key}`,
+        },
+      ];
     }),
   ) as Record<TableThemeTokenKey, ResolvedTableThemeTokens['sources'][TableThemeTokenKey]>;
   return deepFreeze({ tokens, sources });

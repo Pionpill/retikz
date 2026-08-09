@@ -1,3 +1,5 @@
+import { ThemeTokenSource } from '@retikz/core';
+
 import type {
   SemanticTableCell,
   SemanticTableModel,
@@ -85,8 +87,8 @@ const themeTokenSourceOf = (key: AppearanceStyleTokenKey, options: ResolveTableC
   TableCellPlanSourceSchema.parse({
     kind: TableCellPlanSourceKind.StyleToken,
     tokenKey: key,
-    tokenSource: options.tableThemeTokens?.sources[key].kind ?? 'preset',
-    tokenPath: options.tableThemeTokens?.sources[key].path ?? `$preset/neutral/light/${key}`,
+    tokenSource: options.tableThemeTokens?.sources[key].kind ?? ThemeTokenSource.Local,
+    tokenPath: options.tableThemeTokens?.sources[key].path ?? `$style/neutral/light/${key}`,
   });
 
 /** 把 style border token 物化为固定低优先级 Cell candidate */

@@ -1,15 +1,12 @@
-import type { ResolvedTheme } from '@retikz/core';
+import type { ResolvedTheme, ThemeTokenSourceValue } from '@retikz/core';
 
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey, TableThemeTokenMap } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
-/** Table token cascade 的来源层级 */
-export type TableThemeTokenSourceKind = 'preset' | 'shared-categorical' | 'local-theme-token';
-
 /** 单个 Table token 的最终来源 */
 export type TableThemeTokenSource = DeepReadonly<{
-  /** 最终胜出的 cascade 层级 */
-  kind: TableThemeTokenSourceKind;
+  /** 最终来源与 Table owner 的关系 */
+  kind: ThemeTokenSourceValue;
   /** 可诊断的输入路径 */
   path: string;
 }>;

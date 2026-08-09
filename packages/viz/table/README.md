@@ -16,21 +16,20 @@ are derived by Table. Scalar entries are value shorthands, `null` leaves a coord
 sharing structure normalization, presentation, layout, and lowering.
 
 Table first resolves one deterministic Cell plan: the Core host Theme selects a built-in preset,
-shared categorical colors project into the Table data channel, inherited `theme.tokens.table` and
-local `tableThemeTokens` provide sparse Table token overlays, then Cell-local
-formatter/presentation/appearance, ordered visual encodings, and ordered root rules contribute in
-increasing priority. Value Cells then run the winning formatter and presentation with that final
-appearance.
+shared categorical colors project into the Table data channel, and local `tableThemeTokens` provides
+a sparse Table token overlay. Cell-local formatter/presentation/appearance, ordered visual
+encodings, and ordered root rules then contribute in increasing priority. Value Cells run the
+winning formatter and presentation with that final appearance.
 The built-in `neutral`, `academic`, `vibrant`, and `clean` presets provide complete light/dark token
-maps. `theme.style` / `theme.mode` select the preset; `theme.tokens.table` is inherited and
-`tableThemeTokens` is the local TableSpec overlay. Unknown token keys fail loudly. Content Cells
-already own renderable children and therefore bypass formatter and presentation dispatch.
+maps. `theme.style` / `theme.mode` select the preset, while `tableThemeTokens` is the local TableSpec
+overlay. Unknown token keys fail loudly. Content Cells already own renderable children and therefore
+bypass formatter and presentation dispatch.
 
-`TableThemeTokenDefinition` and `defineTableThemeTokens()` expose the owner namespace contract for
-Core theme-token registry aggregation. `compileTable(spec, datasets, { theme })` accepts a sparse
-root Core Theme; `tableThemeTokens` stays in the JSON-safe TableSpec and is resolved after inherited
-tokens. The resolved `TableLayoutManifest` records effective `style`, `themeMode`, complete tokens,
-and per-token sources as output metadata.
+`compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. `tableThemeTokens` stays
+in the JSON-safe TableSpec and is resolved by the Table owner. The resolved `TableLayoutManifest`
+records effective `style`, `themeMode`, complete tokens, and per-token sources as output metadata.
+Custom styles register the same name in Core through `compile.themeStyles` and in Table through
+`lower.tableThemeStyles`; a consumed style without its Table definition fails loudly.
 
 Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
 `@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core

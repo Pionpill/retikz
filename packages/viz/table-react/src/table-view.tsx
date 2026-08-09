@@ -4,12 +4,7 @@ import type { TableCompileArtifact } from '@retikz/table';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
-import {
-  lowerTables,
-  TABLE_NAMESPACE,
-  TableComposite,
-  TableSpecSchema,
-} from '@retikz/table';
+import { lowerTables, TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '@retikz/table';
 import { useCallback, useMemo, useRef } from 'react';
 
 import type { ReactTableRuntime } from './table-runtime';
@@ -35,16 +30,30 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     [datasetReference, datasetSource],
   );
   const scene = useMemo(() => ({ version: 1 as const, type: 'scene' as const, children: [stableSpec] }), [stableSpec]);
-  const { formatterDefinitions, presentationDefinitions, structureDefinitions, visualScaleDefinitions } = lowerOptions;
+  const {
+    formatterDefinitions,
+    presentationDefinitions,
+    structureDefinitions,
+    tableThemeStyles,
+    visualScaleDefinitions,
+  } = lowerOptions;
   const tableDefinitions = useMemo(
     () =>
       lowerTables(stableDatasets, {
         formatterDefinitions,
         presentationDefinitions,
         structureDefinitions,
+        tableThemeStyles,
         visualScaleDefinitions,
       }),
-    [formatterDefinitions, presentationDefinitions, stableDatasets, structureDefinitions, visualScaleDefinitions],
+    [
+      formatterDefinitions,
+      presentationDefinitions,
+      stableDatasets,
+      structureDefinitions,
+      tableThemeStyles,
+      visualScaleDefinitions,
+    ],
   );
   const mergedComposites = useMemo(() => [...tableDefinitions, ...composites], [composites, tableDefinitions]);
   const notifiedManifestKey = useRef<string>();

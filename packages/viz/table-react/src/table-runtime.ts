@@ -42,6 +42,7 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'height',
   'viewBox',
   'theme',
+  'themeStyles',
   'className',
   'containerStyle',
   'renderer',
@@ -112,6 +113,7 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   formatterDefinitions: props.formatterDefinitions,
   presentationDefinitions: props.presentationDefinitions,
   visualScaleDefinitions: props.visualScaleDefinitions,
+  tableThemeStyles: props.tableThemeStyles,
 });
 
 /** 从共享 props 精确提取 React Layout 宿主选项 */

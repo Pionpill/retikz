@@ -1,6 +1,9 @@
+import { ThemeTokenSource } from '@retikz/core';
+import { PlotThemeToken } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { resolveChartSpec } from '../../src/resolution';
+import { ChartThemeToken } from '../../src/style';
 
 describe('Chart inspection', () => {
   it('按最终 Plot collection 顺序输出完整 member literal', () => {
@@ -28,8 +31,18 @@ describe('Chart inspection', () => {
     const { style, ...inspection } = result.inspection;
     expect(style.chart).toMatchObject({ style: 'neutral', mode: 'light' });
     expect(style.chart.tokenSources).toHaveLength(37);
+    expect(style.chart.tokenSources[0]).toEqual({
+      token: ChartThemeToken.ChartCanvasFill,
+      kind: ThemeTokenSource.Local,
+      path: '$style/neutral/light/chart.canvas.fill',
+    });
     expect(style.plot).toMatchObject({ style: 'neutral', mode: 'light', authoredOverrides: [] });
     expect(style.plot.tokenSources).toHaveLength(40);
+    expect(style.plot.tokenSources.find(source => source.token === PlotThemeToken.PlotPaletteCategorical)).toEqual({
+      token: PlotThemeToken.PlotPaletteCategorical,
+      kind: ThemeTokenSource.Inherit,
+      path: '$theme/colors/categorical',
+    });
     expect(inspection).toEqual({
       chart: { type: 'scatter', id: 'sales' },
       plot: { id: 'sales/plot' },

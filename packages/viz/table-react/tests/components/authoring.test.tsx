@@ -1,13 +1,21 @@
 import type { IRChild } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import {
+  CompositeBaseSchema,
+  defineComposite,
+  defineThemeStyle,
+  resolveCoreThemeColors,
+  ThemeStyle,
+} from '@retikz/core';
+import {
+  BUILTIN_TABLE_THEME_TOKENS,
   createDetailTableSpec,
   createManualTableSpec,
   defineCellFormatter,
   defineCellPresentation,
   defineTableStructure,
+  defineTableThemeStyle,
 } from '@retikz/table';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -321,6 +329,18 @@ describe('Table React composition root integration', () => {
         format: input => input.value,
       }),
     ];
+    const themeStyles = [
+      defineThemeStyle({
+        name: 'root-props-theme',
+        resolve: ({ mode }) => resolveCoreThemeColors(ThemeStyle.Neutral, mode),
+      }),
+    ];
+    const tableThemeStyles = [
+      defineTableThemeStyle({
+        name: 'root-props-theme',
+        resolve: theme => structuredClone(BUILTIN_TABLE_THEME_TOKENS.neutral[theme.mode]),
+      }),
+    ];
     const compositeSchema = CompositeBaseSchema.extend({
       namespace: z.literal('root-props'),
       type: z.literal('content'),
@@ -358,11 +378,13 @@ describe('Table React composition root integration', () => {
       rules,
       encodings,
       theme: { style: 'academic', mode: 'dark' },
+      themeStyles,
       tableThemeTokens: { 'cell.content.color': '#fafafa' },
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
       formatterDefinitions,
       presentationDefinitions,
+      tableThemeStyles,
       composites,
       onManifest,
       width: 640,
@@ -397,6 +419,7 @@ describe('Table React composition root integration', () => {
       structureDefinitions,
       formatterDefinitions,
       presentationDefinitions,
+      tableThemeStyles,
       visualScaleDefinitions: undefined,
     });
     expect(runtime.composites).toBe(composites);
@@ -405,6 +428,7 @@ describe('Table React composition root integration', () => {
       width: 640,
       height: 320,
       theme: { style: 'academic', mode: 'dark' },
+      themeStyles,
       className: 'table-fixture',
       style: containerStyle,
       renderer: 'svg',

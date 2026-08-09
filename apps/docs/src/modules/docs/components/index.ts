@@ -1,5 +1,6 @@
 export * from './changelog';
 export * from './component-preview';
+export * from './doc-difficulty';
 export * from './docs-search';
 export * from './highlight-code';
 export * from './inline-markdown';

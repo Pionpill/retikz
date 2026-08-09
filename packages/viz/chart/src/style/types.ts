@@ -1,7 +1,8 @@
+import type { ThemeTokenSourceValue } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { ChartThemeToken, ChartThemeTokenSourceValue } from './constants';
+import type { ChartThemeToken } from './constants';
 import type { ChartResolvedThemeTokensSchema, ChartThemeSurfaceSchema, ChartThemeTokenOverridesSchema } from './schema';
 
 /** Chart 样式 token canonical key */
@@ -19,6 +20,6 @@ export type IRChartThemeSurface = z.infer<typeof ChartThemeSurfaceSchema>;
 /** 一个 Chart token 的稳定来源记录 */
 export type ChartThemeTokenSourceRecord = {
   token: ChartThemeTokenValue;
-  kind: ChartThemeTokenSourceValue;
+  kind: ThemeTokenSourceValue;
   path: string;
 };
