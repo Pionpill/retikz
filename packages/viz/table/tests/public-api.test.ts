@@ -31,6 +31,7 @@ type PublicContractTypes = [
   TableTypes.IRTableThemeTokenOverrides,
   TableTypes.TableThemeTokenMap,
   TableTypes.TableThemeTokenKey,
+  TableTypes.TableThemeStyleDefinition,
 ];
 
 // @ts-expect-error 旧 addressed manual Cell 类型不再从包根导出
@@ -111,8 +112,7 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableVisualScaleRefSchema');
     expect(Table).toHaveProperty('TableLegendDescriptorSchema');
     expect(Table).toHaveProperty('defineCellVisualScale');
-    expect(Table).toHaveProperty('TableThemeTokenDefinition');
-    expect(Table).toHaveProperty('defineTableThemeTokens');
+    expect(Table).toHaveProperty('defineTableThemeStyle');
     expect(Table).toHaveProperty('TableThemeTokenKeySchema');
     expect(Table).toHaveProperty('TableThemeTokenBorderSchema');
     expect(Table).toHaveProperty('TableThemeTokenOverridesSchema');

@@ -1,4 +1,4 @@
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+import type { ThemeModeValue, ThemeStyleValue, ThemeTokenSourceValue } from '@retikz/core';
 
 import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -13,6 +13,8 @@ import type { InternalChartSpecBound } from '../src';
 import type { ChartStyleValue } from '../src';
 // @ts-expect-error 通用 mode 取值类型由 Core 所有
 import type { ChartThemeModeValue } from '../src';
+// @ts-expect-error Theme token 来源取值由 Core 所有
+import type { ChartThemeTokenSourceValue } from '../src';
 import type {
   AnyChartThemeStyleDefinition,
   ChartContributionSourceValue,
@@ -21,7 +23,6 @@ import type {
   ChartPresentationPresetValue,
   ChartPresentationResolvedContentKindValue,
   ChartThemeStyleDefinition,
-  ChartThemeTokenSourceValue,
   ChartThemeTokenValue,
   IRChartInspection,
   IRChartInspectionMember,
@@ -55,6 +56,7 @@ describe('@retikz/chart package root', () => {
     expectTypeOf<InternalChartSpecBound>();
     expectTypeOf<ChartStyleValue>();
     expectTypeOf<ChartThemeModeValue>();
+    expectTypeOf<ChartThemeTokenSourceValue>();
   });
 
   it('只暴露 shared、presentation、inspection 与 theme 数据契约', () => {
@@ -87,10 +89,9 @@ describe('@retikz/chart package root', () => {
       'ChartThemeSurfaceSchema',
       'ChartThemeToken',
       'ChartThemeTokenOverridesSchema',
-      'ChartThemeTokenSource',
       'defineChartThemeStyle',
     ]);
-    expect(chart.ChartThemeTokenSource).toEqual({ Preset: 'preset', Local: 'local' });
+    expect(chart).not.toHaveProperty('ChartThemeTokenSource');
     expect(chart).not.toHaveProperty('ChartStyle');
     expect(chart).not.toHaveProperty('ChartThemeMode');
     expect(ThemeStyle).toEqual({ Neutral: 'neutral', Academic: 'academic', Vibrant: 'vibrant', Clean: 'clean' });
@@ -103,7 +104,7 @@ describe('@retikz/chart package root', () => {
     const style: ThemeStyleValue = ThemeStyle.Neutral;
     const mode: ThemeModeValue = ThemeMode.Dark;
     const token: ChartThemeTokenValue = 'chart.axis.enabled';
-    const tokenSource: ChartThemeTokenSourceValue = 'local';
+    const tokenSource: ThemeTokenSourceValue = 'local';
     const overrides: IRChartThemeTokenOverrides = { [token]: false };
     const surface: IRChartThemeSurface = {
       chartThemeTokens: overrides,

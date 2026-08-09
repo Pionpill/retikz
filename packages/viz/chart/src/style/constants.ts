@@ -1,5 +1,3 @@
-import type { ValueOf } from '@retikz/foundation';
-
 /** Chart presentation 与 recipe 默认值的 canonical token key */
 export const ChartThemeToken = {
   ChartCanvasFill: 'chart.canvas.fill',
@@ -40,15 +38,3 @@ export const ChartThemeToken = {
   ChartAxisGridEnabled: 'chart.axis.grid.enabled',
   ChartLegendEnabled: 'chart.legend.enabled',
 } as const;
-
-/** Chart style token 的最终来源层 */
-export const ChartThemeTokenSource = {
-  /** effective Theme 选择的内建 preset */
-  Preset: 'preset',
-  /** Core effective Theme 继承的 Chart token */
-  /** 当前 Chart 输入的稀疏 token 覆盖 */
-  Local: 'local',
-} as const;
-
-/** Chart style token 最终来源层取值 */
-export type ChartThemeTokenSourceValue = ValueOf<typeof ChartThemeTokenSource>;

@@ -453,10 +453,10 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .min(1)
     .optional()
     .describe(
-      'Compatibility shorthand for plotTheme.palette.categorical/series/sector; omit to use the built-in palette. Explicit plotTheme.palette slots and explicit scale range/scheme have higher priority. Use "currentColor" to keep the inherited core color.',
+      'Compatibility shorthand for plotTheme.palette.categorical/series/sector; omit to use the inherited Core categorical projection. Explicit plotTheme palette slots and explicit scale range/scheme have higher priority.',
     ),
   plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
-    'Sparse canonical Plot theme token overrides applied after the effective Theme preset and before colors/plotTheme',
+    'Sparse canonical Plot theme token overrides applied after the Plot style baseline and inherited Core categorical projection, before colors/plotTheme',
   ),
   plotTheme: PlotThemeSchema.optional().describe(
     'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',
