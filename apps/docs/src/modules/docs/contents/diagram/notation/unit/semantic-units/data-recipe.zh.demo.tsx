@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { Connector, Decision, Stage, Terminal } from '@retikz/notation-react';
-import { Layout, Scope } from '@retikz/react';
+import { Layout, Scope, Step } from '@retikz/react';
 
 /** 只存在于文档的 Data recipe，使用中性单元与显式关系 */
 const Demo: FC = () => (
@@ -21,8 +21,11 @@ const Demo: FC = () => (
         Valid?
       </Decision>
     </Scope>
-    <Connector id="data-edge-1" from={{ id: 'data-source' }} to={{ id: 'data-clean' }} />
-    <Connector id="data-edge-2" from={{ id: 'data-clean' }} to={{ id: 'data-valid' }} label={{ text: 'validate' }} />
+    <Connector id="data-edge-1" way={['data-source', 'data-clean']} />
+    <Connector id="data-edge-2">
+      <Step kind="move" to="data-clean" />
+      <Step to="data-valid" label={{ text: 'validate' }} />
+    </Connector>
   </Layout>
 );
 

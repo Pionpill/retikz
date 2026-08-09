@@ -9,7 +9,6 @@ import {
 import { z } from 'zod';
 
 import {
-  LogicCompositeType,
   LogicContentSizeDefault,
   LogicLayoutItemArtifactSchema,
   LogicNeutralStyle,
@@ -17,6 +16,7 @@ import {
   LogicOuterArtifactSchema,
   LogicSpacingSchema,
   NOTATION_NAMESPACE,
+  NotationElementType,
 } from '../../shared';
 
 /** LogicFrame 轮廓外观 */
@@ -76,7 +76,7 @@ export const LogicFrameAppearanceSchema = z
 
 const LogicFrameShape = {
   namespace: z.literal(NOTATION_NAMESPACE).describe('Notation composite namespace.'),
-  type: z.literal(LogicCompositeType.LogicFrame).describe('LogicFrame composite discriminator.'),
+  type: z.literal(NotationElementType.LogicFrame).describe('LogicFrame composite discriminator.'),
   id: NonBlankStringSchema.describe('Stable authored LogicFrame identity.'),
   header: LogicFrameRegionSchema.optional().describe('Optional authored header region.'),
   sections: z
@@ -137,7 +137,7 @@ const LogicFrameSectionArtifactSchema = z
 /** LogicFrame 编译产物载荷 */
 export const LogicFrameArtifactSchema = z
   .strictObject({
-    kind: z.literal(LogicCompositeType.LogicFrame).describe('LogicFrame artifact discriminator.'),
+    kind: z.literal(NotationElementType.LogicFrame).describe('LogicFrame artifact discriminator.'),
     id: NonBlankStringSchema.describe('Stable authored LogicFrame identity.'),
     outer: LogicOuterArtifactSchema.describe('Resolved shell, content, and divider geometry union.'),
     container: LayoutArtifactContainerSchema.describe('Resolved header and section content geometry.'),

@@ -1,57 +1,68 @@
 ---
 title: Notation API 参考
-description: 查询 LogicFrame、语义 Node、Connector 和 Callout 的公开 API
+description: 查询 LogicFrame、基础单元、Connector 和 Callout 的 schema、factory、Definition 与 adapter
 ---
 
-Notation 按职责拆分：`@retikz/notation` 提供 canonical JSON、Schema 和 factory；`@retikz/notation-react` 提供 React sugar；`@retikz/notation-vanilla` 提供 Vanilla builder 与仍需要运行时 lowering 的 composite adapter
+Notation 按职责拆分：`@retikz/notation` 提供 canonical JSON、Schema、factory 与 Definition；`@retikz/notation-react` 提供 React authoring；`@retikz/notation-vanilla` 提供返回 embed 的 builder 与显式 adapter。三种入口归一到相同 Notation IR，并通过相同 Definition 下沉到 Core
 
 ## 公开导出
 
 | 能力       | Notation                                                                       | React                                                 | Vanilla                                  |
 | ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
 | LogicFrame | `LogicFrameSchema`、`IRLogicFrame`、`createLogicFrame`、`LogicFrameDefinition` | `LogicFrame`、`LogicFrameHeader`、`LogicFrameSection` | `logicFrame`、`LogicFrameVanillaAdapter` |
-| Terminal   | `TerminalSchema`、`IRTerminal`、`createTerminal`                               | `Terminal`                                            | `terminal`（直接返回 Node）              |
-| Stage      | `StageSchema`、`IRStage`、`createStage`                                        | `Stage`                                               | `stage`（直接返回 Node）                 |
-| Decision   | `DecisionSchema`、`IRDecision`、`createDecision`                               | `Decision`                                            | `decision`（直接返回 Node）              |
-| Junction   | `JunctionSchema`、`IRJunction`、`createJunction`                               | `Junction`                                            | `junction`（直接返回 Node）              |
+| Terminal   | `TerminalSchema`、`IRTerminal`、`createTerminal`、`TerminalDefinition`         | `Terminal`                                            | `terminal`、`TerminalVanillaAdapter`     |
+| Stage      | `StageSchema`、`IRStage`、`createStage`、`StageDefinition`                     | `Stage`                                               | `stage`、`StageVanillaAdapter`           |
+| Decision   | `DecisionSchema`、`IRDecision`、`createDecision`、`DecisionDefinition`         | `Decision`                                            | `decision`、`DecisionVanillaAdapter`     |
+| Junction   | `JunctionSchema`、`IRJunction`、`createJunction`、`JunctionDefinition`         | `Junction`                                            | `junction`、`JunctionVanillaAdapter`     |
 | Connector  | `ConnectorSchema`、`IRConnector`、`createConnector`、`ConnectorDefinition`     | `Connector`                                           | `connector`、`ConnectorVanillaAdapter`   |
 | Callout    | `CalloutSchema`、`IRCallout`、`createCallout`、`CalloutDefinition`             | `Callout`                                             | `callout`、`CalloutVanillaAdapter`       |
 
-Terminal、Stage、Decision、Junction 的 `IRXxx` 都是 Core `IRNode` 的语义别名，不再有独立 Definition 或 artifact schema
+七类公开元素都保留 `namespace: 'notation'` 与各自的语义 `type`。Definition 是从 Notation IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
 
-## 语义 Node 输入
+## 基础单元输入
 
-四个语义组件都接受 Core Node props。`id` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`shape` 由组件固定
+四个基础单元复用适用的 Core Node authored surface。`id` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`shape` 由具体单元固定，不能被作者替换
 
 ```tsx
 <Stage id="step" position={[0, 0]}>Process</Stage>
 <Decision id="check" position={[80, 0]}><Text>Ready?</Text></Decision>
 ```
 
-对应的 Vanilla builder 直接返回 canonical `IRNode`，不会派生 id 后缀
+对应 factory 返回规范 Notation IR，而不是 Core `IRNode`。Definition 再把它一对一下沉为同 id Node：
 
 ```ts
-const step = stage('step', { position: [0, 0], text: 'Process' });
-// step.id === 'step'
+const step = createStage({ id: 'step', position: [0, 0], text: 'Process' });
+// { namespace: 'notation', type: 'stage', id: 'step', ... }
 ```
+
+## Connector 输入
+
+`IRConnector` 的 canonical JSON 使用 Core Step `children`。`createConnector`、React 与 Vanilla 还接受 Core `WayDSL` 的 `way` authoring shorthand；两者互斥，`way` 会在入口通过 `parseWay()` 归一为 `children`，不会被持久化
+
+Connector 固定下沉为 stroke Path，因此不开放 Core `kind`、`kindOptions` 或 `ribbon`。其它适用的 Core Path 字段沿用原名、约束和诊断。省略 `marks` 会添加终点箭头，显式 `marks`（包括 `[]`）完整覆盖默认值
 
 ## Definition 加载
 
-只有 LogicFrame、Connector、Callout 仍需要运行时 Definition。Core-only Node scene 不需要 Notation composite 注入
+直接 IR 必须显式注入图中实际使用的每个 Notation Definition。缺失 Definition 时，Core 按未注册 composite fail-loud：
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { CalloutDefinition, ConnectorDefinition, LogicFrameDefinition } from '@retikz/notation';
+import { ConnectorDefinition, DecisionDefinition, StageDefinition, TerminalDefinition } from '@retikz/notation';
 
-compileToScene(scene, { composites: [LogicFrameDefinition, ConnectorDefinition, CalloutDefinition] });
+compileToScene(scene, {
+  composites: [TerminalDefinition, StageDefinition, DecisionDefinition, ConnectorDefinition],
+});
 ```
+
+React 组件与 Vanilla adapter 只为当前 authored 元素贡献对应 Definition，不注册全局状态
 
 ## Vanilla identity
 
-语义 builder 使用传入的原始 id。Connector 和 Callout target 也直接引用该 id；LogicFrame、Connector、Callout adapter 仍保留各自的 adapter identity 规则
+所有 Vanilla helper 都返回 `embed`。Terminal、Stage、Decision、Junction 与 Connector adapter 使用 embed id 作为规范 Notation IR id，并下沉为同 id Core Node / Path；Vanilla normalizer 允许 adapter 根输出复用 embed id，不要求字符串前缀。LogicFrame 与 Callout 仍按各自多元素 composite 契约派生内部 id
 
 ## 相关
 
-- [语义单元](/diagram/notation/unit/semantic-units)
+- [基础单元](/diagram/notation/unit/semantic-units)
+- [Connector](/diagram/notation/unit/connector)
 - [LogicFrame](/diagram/notation/frame/logic-frame)
 - [Definition 加载](/library/standard/extension/capability-loading)

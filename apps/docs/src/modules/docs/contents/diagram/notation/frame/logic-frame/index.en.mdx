@@ -58,12 +58,12 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-The same shell can contain semantic Nodes or nested composites. Semantic units are already Core Nodes, so a block containing a `Stage` still needs only `LogicFrameDefinition` when loading direct IR; add Definitions only for nested composites that own lowering.
+The same shell can contain Core children, Notation base units, or other nested composites. Base units retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
 
 <ComponentPreview
   files="process-recipe"
   size="lg"
-  caption="A documentation-only Process recipe composed from LogicFrame, semantic units, and Connectors."
+  caption="A documentation-only Process recipe composed from LogicFrame, base units, and Connectors."
 />
 
 Recipes are examples, not package exports; Process, Class, and Data remain ordinary compositions of the public vocabulary.
@@ -78,7 +78,7 @@ Recipes are examples, not package exports; Process, Class, and Data remain ordin
 
 ### Canonical FlexLayout reuse
 
-The compiler creates a synthetic column FlexLayout region for the header and sections, then projects the Flex artifact into the block artifact. This reuses the canonical Flex proposal, size, gap, placement, clipping, and replay semantics rather than defining a second layout engine. Region children remain regular JSON-safe Core children.
+The compiler creates a synthetic column FlexLayout region for the header and sections, then projects the Flex artifact into the block artifact. This reuses the canonical Flex proposal, size, gap, placement, clipping, and replay semantics rather than defining a second layout engine. Region children remain JSON-safe IR and enter the same Core compile path through their injected Definitions.
 
 ### Divider artifact projection
 
@@ -101,7 +101,7 @@ Blank or duplicate section keys fail loudly. Connector and Callout accept sectio
 
 ## Related
 
-- [Semantic units](/diagram/notation/unit/semantic-units): content-bearing logic nodes
+- [Base units](/diagram/notation/unit/semantic-units): content-bearing logic nodes
 - [Connector](/diagram/notation/unit/connector): relationships between authored identities
 - [Callout](/diagram/notation/unit/callout): target-relative explanations
 - [Layout containers](/library/layout): the generic layout family

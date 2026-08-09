@@ -1,32 +1,30 @@
 import type { JunctionInput } from '@retikz/notation';
-import type { EmbeddableContribution, EmbeddableTier2Adapter, NodeProps } from '@retikz/react';
+import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { JunctionSchema } from '@retikz/notation';
-import { buildIRWithContributions, Node } from '@retikz/react';
-import { createElement } from 'react';
+import { createJunction, JunctionDefinition } from '@retikz/notation';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
 import { NotationJunctionReactNamespace } from '../shared';
+import { resolveSemanticNodeInput } from './authoring';
 
-/** Junction React 编写参数，语义单元自身就是一个 Core Node */
-export type JunctionProps = Omit<JunctionInput, 'shape'> & Readonly<{ children?: ReactNode }>;
+/** Junction React 编写参数 */
+export type JunctionProps = JunctionInput & Readonly<{ children?: ReactNode }>;
 
-const makeJunctionComposites = () => [];
-const junctionShape = 'circle' as const;
-
-const buildJunctionNode = (props: JunctionProps) => {
-  const { children, ...input } = props;
-  const nodeProps = { ...input, shape: junctionShape } as unknown as NodeProps;
-  const node = buildIRWithContributions(createElement(Node, nodeProps, children)).ir.children[0];
-  return JunctionSchema.parse(node) as EmbeddableContribution['node'];
-};
+const makeJunctionComposites = () => [JunctionDefinition];
 
 const junctionEmbeddableAdapter: EmbeddableTier2Adapter<JunctionProps> = {
   displayName: 'Junction',
   namespace: NotationJunctionReactNamespace,
-  contribute: props => ({ node: buildJunctionNode(props), datasets: {}, makeComposites: makeJunctionComposites }),
+  contribute: props => {
+    const { children, ...input } = props;
+    return {
+      node: createJunction(resolveSemanticNodeInput(children, input)),
+      datasets: {},
+      makeComposites: makeJunctionComposites,
+    };
+  },
 };
 
 const JunctionComponent: FC<JunctionProps> = () => null;

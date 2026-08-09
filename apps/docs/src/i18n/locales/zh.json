@@ -153,7 +153,7 @@
     "baseUnits": "基础单元",
     "frameUnits": "复合单元",
     "logicFrame": "LogicFrame",
-    "semanticUnits": "语义单元",
+    "semanticUnits": "基础单元",
     "connector": "连接器",
     "callout": "标注",
     "notationApiReference": "Notation API 参考",

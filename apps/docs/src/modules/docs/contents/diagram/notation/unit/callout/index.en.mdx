@@ -43,17 +43,18 @@ const note = createCallout({
 const compile = { composites: [CalloutDefinition] };
 ```
 
-Vanilla semantic builders return Nodes directly, so a target to `terminal('start', ...)` is `{ id: 'start' }`:
+Vanilla base-unit builders return embeds. Their adapters create same-id Notation IR from the embed id, so `terminal('start', ...)` is still targeted with `{ id: 'start' }`:
 
 ```ts
-import { callout, CalloutVanillaAdapter } from '@retikz/notation-vanilla';
+import { callout, CalloutVanillaAdapter, terminal, TerminalVanillaAdapter } from '@retikz/notation-vanilla';
 
+const start = terminal('start', { position: [0, 0], text: 'Start' });
 const note = callout('note', {
   target: { id: 'start' },
   content: { type: 'node', position: [0, 0], text: 'Explain' },
   placement: { side: 'right' },
 });
-const adapters = [CalloutVanillaAdapter];
+const adapters = [TerminalVanillaAdapter, CalloutVanillaAdapter];
 ```
 
 ## How it works
@@ -81,7 +82,7 @@ Callout targets are previous-only: the target must already have a resolved autho
 
 ## Related
 
-- [Semantic units](/diagram/notation/unit/semantic-units): targetable units
+- [Base units](/diagram/notation/unit/semantic-units): targetable units
 - [Connector](/diagram/notation/unit/connector): explicit graph relationships
 - [LogicFrame](/diagram/notation/frame/logic-frame): whole-block targets and sections
 - [Notation API Reference](/diagram/notation/api-reference): schemas and Definition loading

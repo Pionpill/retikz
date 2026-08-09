@@ -1,18 +1,59 @@
-import { ChildSchema, PositionSchema } from '@retikz/core';
+import { AnchorRefSchema, ChildSchema, PathBaseSchema, PositionSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '@retikz/layout';
 import { z } from 'zod';
 
 import {
-  CalloutSideSchema,
-  ConnectorAppearanceSchema,
-  LogicCompositeType,
-  LogicDiagramTargetSchema,
   LogicLayoutItemArtifactSchema,
   LogicOuterArtifactSchema,
   NOTATION_NAMESPACE,
+  NotationElementType,
 } from '../../shared';
 import { LogicContentShellAppearanceSchema } from '../internal/content-shell';
+import { CalloutSide } from './constants';
+
+const LogicTargetFields = {
+  id: NonBlankStringSchema.describe('Stable authored target identity.'),
+  anchor: AnchorRefSchema.optional().describe('Optional anchor resolved by Callout placement.'),
+  offset: PositionSchema.optional().describe('World-space offset applied after target anchor resolution.'),
+};
+
+const LogicObjectTargetSchema = z.strictObject(LogicTargetFields).describe('Reference to a regular authored target.');
+
+const LogicFrameTargetSchema = z
+  .strictObject({
+    kind: z.literal(NotationElementType.LogicFrame).describe('Discriminator for a LogicFrame target.'),
+    ...LogicTargetFields,
+    section: NonBlankStringSchema.optional().describe('Authored LogicFrame section key, if available.'),
+  })
+  .describe('Reference to a LogicFrame identity and optional authored section.');
+
+/** Callout 放置使用的稳定目标引用 */
+export const LogicDiagramTargetSchema = z
+  .union([LogicObjectTargetSchema, LogicFrameTargetSchema])
+  .describe('Stable target reference used by Callout placement.');
+
+/** Callout 引导线使用的 Core Path 外观 */
+export const ConnectorAppearanceSchema = z
+  .strictObject({
+    color: PathBaseSchema.shape.color,
+    stroke: PathBaseSchema.shape.stroke,
+    strokeWidth: PathBaseSchema.shape.strokeWidth,
+    strokeOpacity: PathBaseSchema.shape.strokeOpacity,
+    opacity: PathBaseSchema.shape.opacity,
+    shadow: PathBaseSchema.shape.shadow,
+    blendMode: PathBaseSchema.shape.blendMode,
+    dashPattern: PathBaseSchema.shape.dashPattern,
+    dashOffset: PathBaseSchema.shape.dashOffset,
+    lineCap: PathBaseSchema.shape.lineCap,
+    lineJoin: PathBaseSchema.shape.lineJoin,
+    roundedCorners: PathBaseSchema.shape.roundedCorners,
+    marks: PathBaseSchema.shape.marks,
+    zIndex: PathBaseSchema.shape.zIndex,
+  })
+  .describe('Core Path stroke, decoration, and stacking appearance fields allowed for a Callout leader.');
+
+export const CalloutSideSchema = z.enum(CalloutSide).describe('Explicit Callout placement side.');
 
 const CalloutLeaderAppearanceSchema = ConnectorAppearanceSchema.extend({
   stroke: ConnectorAppearanceSchema.shape.stroke.default('currentColor'),
@@ -40,7 +81,7 @@ const CalloutResolvedPlacementSchema = z
 
 const CalloutShape = {
   namespace: z.literal(NOTATION_NAMESPACE).describe('Notation composite namespace.'),
-  type: z.literal(LogicCompositeType.Callout).describe('Callout composite discriminator.'),
+  type: z.literal(NotationElementType.Callout).describe('Callout composite discriminator.'),
   id: NonBlankStringSchema.describe('Stable authored Callout identity.'),
   target: LogicDiagramTargetSchema.describe('Whole-target or authored section target.'),
   content: ChildSchema.describe('JSON-safe Callout content.'),

@@ -1,9 +1,9 @@
 ---
 title: Notation
-description: 从统一入口选用可复用的图式元素，并用逻辑外壳、语义单元、连接器与标注表达局部结构和关系。
+description: 从统一入口选用可复用的图式元素，并用逻辑外壳、基础单元、连接器与标注表达局部结构和关系。
 ---
 
-Notation 是 Diagram 领域中可复用图式元素的统一入口。首批元素覆盖常见的逻辑链路：`LogicFrame` 管理可复用外壳与区域；Terminal、Stage、Decision、Junction 表达语义单元；Connector 与 Callout 表达关系和解释。
+Notation 是 Diagram 领域中可复用图式元素的统一入口。首批元素覆盖常见的逻辑链路：`LogicFrame` 管理可复用外壳与区域；Terminal、Stage、Decision、Junction 表达基础单元；Connector 与 Callout 表达关系和解释。
 
 Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或 Layout 布局放置单元，再用稳定的 `id` 表达显式 target。
 
@@ -12,7 +12,7 @@ Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、�
 | 成员         | 拥有                                              | 不拥有             |
 | ------------ | ------------------------------------------------- | ------------------ |
 | `LogicFrame` | 外壳、header、有序 section 与可复用区域布局       | 图拓扑或自动放置   |
-| 语义单元     | 中性形状、content、尺寸与语义 role                | 领域状态机         |
+| 基础单元     | 中性形状、content、尺寸与语义 role                | 领域状态机         |
 | `Connector`  | 一条 Core Path 路由和可选的末步 label             | 自动路由或自动避障 |
 | `Callout`    | 相对 previous target 放置的 content 与可选 leader | 全局标注管理       |
 
@@ -23,7 +23,7 @@ Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、�
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/diagram/notation/unit">
     <span className="font-semibold">基础单元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">语义单元、连接器与标注</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">基础单元、连接器与标注</span>
   </LinkedCard>
   <LinkedCard href="/diagram/notation/frame">
     <span className="font-semibold">复合单元</span>

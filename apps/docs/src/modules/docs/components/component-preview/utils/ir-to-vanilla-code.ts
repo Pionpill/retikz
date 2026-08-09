@@ -300,9 +300,21 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutVanillaAdapter',
   'OverlayLayoutVanillaAdapter',
 ];
-const NOTATION_HELPER_ORDER: ReadonlyArray<string> = ['logicFrame', 'connector', 'callout'];
+const NOTATION_HELPER_ORDER: ReadonlyArray<string> = [
+  'logicFrame',
+  'terminal',
+  'stage',
+  'decision',
+  'junction',
+  'connector',
+  'callout',
+];
 const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
   'LogicFrameVanillaAdapter',
+  'TerminalVanillaAdapter',
+  'StageVanillaAdapter',
+  'DecisionVanillaAdapter',
+  'JunctionVanillaAdapter',
   'ConnectorVanillaAdapter',
   'CalloutVanillaAdapter',
 ];
@@ -318,7 +330,14 @@ export type StandardPreviewDefinitionName =
 export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
 
 /** docs 预览能够显式注入的 Notation definition 名 */
-export type NotationPreviewDefinitionName = 'LogicFrameDefinition' | 'ConnectorDefinition' | 'CalloutDefinition';
+export type NotationPreviewDefinitionName =
+  | 'LogicFrameDefinition'
+  | 'TerminalDefinition'
+  | 'StageDefinition'
+  | 'DecisionDefinition'
+  | 'JunctionDefinition'
+  | 'ConnectorDefinition'
+  | 'CalloutDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -335,6 +354,10 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
 
 const NOTATION_DEFINITION_BY_KIND: Readonly<Record<string, NotationPreviewDefinitionName>> = {
   logicFrame: 'LogicFrameDefinition',
+  terminal: 'TerminalDefinition',
+  stage: 'StageDefinition',
+  decision: 'DecisionDefinition',
+  junction: 'JunctionDefinition',
   connector: 'ConnectorDefinition',
   callout: 'CalloutDefinition',
 };
@@ -360,7 +383,8 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const content = record.content as IRChild | undefined;
     return content === undefined ? [] : [content];
   }
-  if (child.namespace === 'notation' && child.type === 'connector') return [];
+  if (child.namespace === 'notation' && ['terminal', 'stage', 'decision', 'junction', 'connector'].includes(child.type))
+    return [];
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
@@ -456,7 +480,8 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
   return kind === 'frame' ? `${embedId}/frame` : embedId;
 };
 
-const notationCanonicalId = (kind: string, embedId: string): string => `${embedId}/${kind}`;
+const notationCanonicalId = (kind: string, embedId: string): string =>
+  kind === 'logicFrame' || kind === 'callout' ? `${embedId}/${kind}` : embedId;
 
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
@@ -495,7 +520,9 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           const generatedId = notationCanonicalId(kind, embedId);
           ctx.generatedIds.set(authoredId, generatedId);
           ctx.generatedIds.set(generatedId, generatedId);
-          ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
+          if (kind === 'logicFrame' || kind === 'callout') {
+            ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
+          }
         }
       }
       previewOwnedChildren(child).forEach(visit);
@@ -517,21 +544,25 @@ const rewriteNotationTarget = (value: unknown, ctx: Ctx): unknown => {
   return id === target.id ? value : { ...target, id };
 };
 
+/** 只改写 Core Step 明确拥有的目标字段，不递归触碰 meta 或其它普通 JSON */
+const rewriteConnectorStep = (value: unknown, ctx: Ctx): unknown => {
+  if (typeof value !== 'object' || value === null) return value;
+  const step = value as Record<string, unknown>;
+  return {
+    ...step,
+    ...('to' in step ? { to: rewriteNotationTarget(step.to, ctx) } : {}),
+    ...('from' in step ? { from: rewriteNotationTarget(step.from, ctx) } : {}),
+    ...('center' in step ? { center: rewriteNotationTarget(step.center, ctx) } : {}),
+    ...(Array.isArray(step.points) ? { points: step.points.map(point => rewriteNotationTarget(point, ctx)) } : {}),
+  };
+};
+
 const rewriteNotationInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
   if (kind === 'connector') {
     return {
       ...input,
-      from: rewriteNotationTarget(input.from, ctx),
-      to: rewriteNotationTarget(input.to, ctx),
-      ...(Array.isArray((input.routing as { points?: unknown } | undefined)?.points)
-        ? {
-            routing: {
-              ...(input.routing as Record<string, unknown>),
-              points: (input.routing as { points: Array<unknown> }).points.map(point =>
-                rewriteNotationTarget(point, ctx),
-              ),
-            },
-          }
+      ...(Array.isArray(input.children)
+        ? { children: input.children.map(step => rewriteConnectorStep(step, ctx)) }
         : {}),
     };
   }

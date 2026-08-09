@@ -2,7 +2,6 @@ import type {
   CalloutInput,
   ConnectorInput,
   DecisionInput,
-  IRTerminal,
   JunctionInput,
   LogicFrameInput,
   StageInput,
@@ -20,7 +19,11 @@ import {
   createLogicFrame,
   createStage,
   createTerminal,
+  DecisionDefinition,
+  JunctionDefinition,
   LogicFrameDefinition,
+  StageDefinition,
+  TerminalDefinition,
 } from '@retikz/notation';
 
 import {
@@ -48,19 +51,29 @@ export type DecisionVanillaInput = Omit<DecisionInput, 'id'>;
 /** Junction 的 Vanilla 构建器输入，embed id 提供稳定身份 */
 export type JunctionVanillaInput = Omit<JunctionInput, 'id'>;
 
+type OmitId<T> = T extends unknown ? Omit<T, 'id'> : never;
+
 /** Connector 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type ConnectorVanillaInput = Omit<ConnectorInput, 'id'>;
+export type ConnectorVanillaInput = OmitId<ConnectorInput>;
 
 /** Callout 的 Vanilla 构建器输入，embed id 提供稳定身份 */
 export type CalloutVanillaInput = Omit<CalloutInput, 'id'>;
 
 const makeLogicFrameComposites = () => [LogicFrameDefinition];
-const makeTerminalComposites = () => [];
-const makeStageComposites = () => [];
-const makeDecisionComposites = () => [];
-const makeJunctionComposites = () => [];
+const makeTerminalComposites = () => [TerminalDefinition];
+const makeStageComposites = () => [StageDefinition];
+const makeDecisionComposites = () => [DecisionDefinition];
+const makeJunctionComposites = () => [JunctionDefinition];
 const makeConnectorComposites = () => [ConnectorDefinition];
 const makeCalloutComposites = () => [CalloutDefinition];
+
+/** 使用 embed id 创建规范 Connector IR */
+const createEmbeddedConnector = (id: string, input: ConnectorVanillaInput) => {
+  if ('way' in input && input.way !== undefined) {
+    return createConnector({ ...input, id, way: input.way });
+  }
+  return createConnector({ ...input, id, children: input.children });
+};
 
 /** Notation LogicFrame 的 Vanilla 适配器 */
 export const LogicFrameVanillaAdapter: VanillaTier2Adapter<LogicFrameVanillaInput> = {
@@ -93,7 +106,12 @@ export const TerminalVanillaAdapter: VanillaTier2Adapter<TerminalVanillaInput> =
 };
 
 /** 创建 Notation Terminal 的 Vanilla embed 节点 */
-export const terminal = (id: string, input: TerminalVanillaInput): IRTerminal => createTerminal({ ...input, id });
+export const terminal = (id: string, input: TerminalVanillaInput): VanillaEmbedSpec<TerminalVanillaInput> => ({
+  type: 'embed',
+  kind: NotationTerminalVanillaNamespace,
+  id,
+  props: input,
+});
 
 /** Notation Stage 的 Vanilla 适配器 */
 export const StageVanillaAdapter: VanillaTier2Adapter<StageVanillaInput> = {
@@ -107,7 +125,12 @@ export const StageVanillaAdapter: VanillaTier2Adapter<StageVanillaInput> = {
 };
 
 /** 创建 Notation Stage 的 Vanilla embed 节点 */
-export const stage = (id: string, input: StageVanillaInput): IRTerminal => createStage({ ...input, id });
+export const stage = (id: string, input: StageVanillaInput): VanillaEmbedSpec<StageVanillaInput> => ({
+  type: 'embed',
+  kind: NotationStageVanillaNamespace,
+  id,
+  props: input,
+});
 
 /** Notation Decision 的 Vanilla 适配器 */
 export const DecisionVanillaAdapter: VanillaTier2Adapter<DecisionVanillaInput> = {
@@ -121,7 +144,12 @@ export const DecisionVanillaAdapter: VanillaTier2Adapter<DecisionVanillaInput> =
 };
 
 /** 创建 Notation Decision 的 Vanilla embed 节点 */
-export const decision = (id: string, input: DecisionVanillaInput): IRTerminal => createDecision({ ...input, id });
+export const decision = (id: string, input: DecisionVanillaInput): VanillaEmbedSpec<DecisionVanillaInput> => ({
+  type: 'embed',
+  kind: NotationDecisionVanillaNamespace,
+  id,
+  props: input,
+});
 
 /** Notation Junction 的 Vanilla 适配器 */
 export const JunctionVanillaAdapter: VanillaTier2Adapter<JunctionVanillaInput> = {
@@ -135,14 +163,19 @@ export const JunctionVanillaAdapter: VanillaTier2Adapter<JunctionVanillaInput> =
 };
 
 /** 创建 Notation Junction 的 Vanilla embed 节点 */
-export const junction = (id: string, input: JunctionVanillaInput): IRTerminal => createJunction({ ...input, id });
+export const junction = (id: string, input: JunctionVanillaInput): VanillaEmbedSpec<JunctionVanillaInput> => ({
+  type: 'embed',
+  kind: NotationJunctionVanillaNamespace,
+  id,
+  props: input,
+});
 
 /** Notation Connector 的 Vanilla 适配器 */
 export const ConnectorVanillaAdapter: VanillaTier2Adapter<ConnectorVanillaInput> = {
   kind: NotationConnectorVanillaNamespace,
   namespace: NotationConnectorVanillaNamespace,
   lower: (props, context) => ({
-    node: createConnector({ ...props, id: `${context.id}/connector` }),
+    node: createEmbeddedConnector(context.id, props),
     datasets: {},
     makeComposites: makeConnectorComposites,
   }),

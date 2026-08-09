@@ -30,7 +30,7 @@ import {
 import type { LogicLayoutItemArtifact } from '../../shared';
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
-import { LogicCompositeType } from '../../shared';
+import { NotationElementType } from '../../shared';
 
 type LogicFrameRegion = Readonly<{
   key: string;
@@ -249,7 +249,7 @@ export const compileLogicFrame = (
   }));
 
   const artifact: LogicFrameArtifact = Object.freeze({
-    kind: LogicCompositeType.LogicFrame,
+    kind: NotationElementType.LogicFrame,
     id: node.id,
     outer: Object.freeze({
       allocationBounds: allocation,

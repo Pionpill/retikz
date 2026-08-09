@@ -1,8 +1,11 @@
+import type { IRConnector } from '@retikz/notation';
 import type { EmbeddableContribution } from '@retikz/react';
+import type { NodeProps } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
 
-import { buildIRWithContributions } from '@retikz/react';
-import { Children, Fragment, isValidElement } from 'react';
+import { ConnectorSchema } from '@retikz/notation';
+import { buildIRWithContributions, Node, Path } from '@retikz/react';
+import { Children, createElement, Fragment, isValidElement } from 'react';
 
 type IRChild = EmbeddableContribution['node'];
 
@@ -48,4 +51,23 @@ export const resolveContent = (
   if (hasContent) return content;
   if (required) throw new Error(`${label} requires exactly one content child.`);
   return undefined;
+};
+
+/** 复用 Core Node 的 React children 解析并返回不含 Core 判别字段的作者输入 */
+export const resolveSemanticNodeInput = <TInput>(children: ReactNode | undefined, input: TInput): TInput => {
+  const node = buildIRWithContributions(createElement(Node, input as unknown as NodeProps, children)).ir.children[0];
+  if (node.type !== 'node') throw new Error('Semantic unit must convert to exactly one Core Node authoring value.');
+  const { type: _type, shape: _shape, ...authored } = node;
+  void _type;
+  void _shape;
+  return authored as TInput;
+};
+
+/** 复用 Core Path 的 React Step 解析并返回规范步骤 */
+export const resolveConnectorSteps = (children: ReactNode): IRConnector['children'] => {
+  const path = buildIRWithContributions(createElement(Path, null, children)).ir.children[0];
+  if (path.type !== 'path' || path.children === undefined) {
+    throw new Error('Connector children must convert to one Core Path Step sequence.');
+  }
+  return ConnectorSchema.shape.children.parse(path.children);
 };

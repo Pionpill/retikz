@@ -1,20 +1,20 @@
 ---
 title: Notation
-description: Choose reusable diagram elements from one entry point, then express local structure and relationships with logic shells, semantic units, connectors, and callouts.
+description: Choose reusable diagram elements from one entry point, then express local structure and relationships with logic shells, base units, connectors, and callouts.
 ---
 
-Notation is the unified entry point for reusable elements in the Diagram domain. Its first set covers common logic links: `LogicFrame` owns a reusable shell and regions; Terminal, Stage, Decision, and Junction express semantic units; Connector and Callout add relationships and explanations.
+Notation is the unified entry point for reusable elements in the Diagram domain. Its first set covers common logic links: `LogicFrame` owns a reusable shell and regions; Terminal, Stage, Decision, and Junction express base units; Connector and Callout add relationships and explanations.
 
 Notation owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Layout containers, then use stable `id` values for explicit targets.
 
 ## Responsibilities at a glance
 
-| Member         | Owns                                                           | Does not own                            |
-| -------------- | -------------------------------------------------------------- | --------------------------------------- |
-| `LogicFrame`   | A shell, header, ordered sections, and reusable region layout  | Graph topology or automatic placement   |
-| Semantic units | Neutral shape, content, sizing, and semantic role              | Domain-specific state machines          |
-| `Connector`    | One Core Path route and an optional final-step label           | Automatic routing or obstacle avoidance |
-| `Callout`      | Content placed beside a previous target and an optional leader | Global annotation management            |
+| Member       | Owns                                                           | Does not own                            |
+| ------------ | -------------------------------------------------------------- | --------------------------------------- |
+| `LogicFrame` | A shell, header, ordered sections, and reusable region layout  | Graph topology or automatic placement   |
+| Base units   | Neutral shape, content, sizing, and semantic role              | Domain-specific state machines          |
+| `Connector`  | One Core Path route and an optional final-step label           | Automatic routing or obstacle avoidance |
+| `Callout`    | Content placed beside a previous target and an optional leader | Global annotation management            |
 
 All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Definitions are injected per figure; they never enter persisted JSON.
 
@@ -23,7 +23,7 @@ All members lower to existing Core primitives and can be authored through React,
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/diagram/notation/unit">
     <span className="font-semibold">Base Units</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Semantic units, connectors, and callouts</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Base units, connectors, and callouts</span>
   </LinkedCard>
   <LinkedCard href="/diagram/notation/frame">
     <span className="font-semibold">Composite Units</span>

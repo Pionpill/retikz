@@ -213,6 +213,8 @@ retained `update()` 只接受与后端匹配的 closed plain-data options：SVG 
 
 Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 Core IR child、datasets 和 composite definitions。
 
+adapter 的根输出可以复用 embed id，表示 authoring 与 canonical IR 中的同一个语义元素；复杂 adapter 也可以输出其它唯一 id。Vanilla 通过 `identityIndex` 与 `parentIndex` 记录真实层级，不要求 id 使用 `embedId/...` 字符串前缀；整个 figure 内的公开 identity 仍必须唯一。
+
 ```ts
 import type { VanillaTier2Adapter } from '@retikz/vanilla';
 import { embed, figure, layer, node, renderToSvgString } from '@retikz/vanilla';

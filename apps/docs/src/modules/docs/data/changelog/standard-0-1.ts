@@ -56,12 +56,12 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '历史里程碑：验证逻辑块、语义单元、连接器与标注；这些图式能力现已迁入 Notation 包族。',
-            en: 'Historical milestone: validated logic blocks, semantic units, connectors, and callouts; these diagram capabilities now live in the Notation package family.',
+            zh: '历史里程碑：验证逻辑块、基础单元、连接器与标注；这些图式能力现已迁入 Notation 包族。',
+            en: 'Historical milestone: validated logic blocks, base units, connectors, and callouts; these diagram capabilities now live in the Notation package family.',
           },
           items: [
             {
-              label: { zh: '逻辑块与语义单元', en: 'Logic blocks and semantic units' },
+              label: { zh: '逻辑块与基础单元', en: 'Logic blocks and base units' },
               content: {
                 zh: '`LogicFrame` 用任意 JSON-safe child 组合 header 与有序 section，并复用 canonical `FlexLayout` 编译；`Terminal`、`Stage`、`Decision` 与 `Junction` 以独立 discriminator 保存局部逻辑角色。',
                 en: '`LogicFrame` composes a header and ordered sections from arbitrary JSON-safe children through the canonical `FlexLayout` compiler. `Terminal`, `Stage`, `Decision`, and `Junction` preserve local logic roles with distinct discriminators.',
@@ -306,8 +306,8 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '历史里程碑：验证 LogicFrame、四种语义单元、Connector 与 Callout；这些 JSX 入口现从 `@retikz/notation-react` 提供。',
-            en: 'Historical milestone: validated LogicFrame, four semantic units, Connector, and Callout; these JSX entries now come from `@retikz/notation-react`.',
+            zh: '历史里程碑：验证 LogicFrame、四种基础单元、Connector 与 Callout；这些 JSX 入口现从 `@retikz/notation-react` 提供。',
+            en: 'Historical milestone: validated LogicFrame, four base units, Connector, and Callout; these JSX entries now come from `@retikz/notation-react`.',
           },
           items: [
             {
