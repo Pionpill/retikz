@@ -19,7 +19,7 @@ import {
   NOTATION_NAMESPACE,
 } from '../../unit';
 
-/** LogicFrame outline appearance */
+/** LogicFrame 轮廓外观 */
 export const LogicOutlineAppearanceSchema = z
   .strictObject({
     color: PathBaseSchema.shape.color,
@@ -40,7 +40,7 @@ const LogicOutlineAppearanceCanonicalSchema = LogicOutlineAppearanceSchema.exten
   opacity: LogicOutlineAppearanceSchema.shape.opacity.default(1),
 });
 
-/** LogicFrame region input */
+/** LogicFrame 区域输入 */
 export const LogicFrameRegionSchema = z
   .strictObject({
     child: ChildSchema.describe('JSON-safe child laid out inside the region.'),
@@ -48,7 +48,7 @@ export const LogicFrameRegionSchema = z
   })
   .describe('One optional header or authored section region.');
 
-/** LogicFrame section input */
+/** LogicFrame 分段输入 */
 export const LogicFrameSectionSchema = z
   .strictObject({
     key: NonBlankStringSchema.describe('Stable authored section identity local to the block.'),
@@ -58,7 +58,7 @@ export const LogicFrameSectionSchema = z
   })
   .describe('One authored LogicFrame section.');
 
-/** LogicFrame 外壳及 divider 的 appearance 覆盖 */
+/** LogicFrame 外壳及分隔线的外观覆盖 */
 export const LogicFrameAppearanceSchema = z
   .strictObject({
     style: LogicNeutralStyleSchema.default(LogicNeutralStyle),
@@ -97,7 +97,7 @@ const LogicFrameShape = {
 
 type LogicFrameValue = z.infer<z.ZodObject<typeof LogicFrameShape>>;
 
-/** 校验 LogicFrame 的 authored region identity 与非空约束 */
+/** 校验 LogicFrame 的编写区域标识与非空约束 */
 const refineLogicFrame = (value: LogicFrameValue, context: z.RefinementCtx): void => {
   if (value.header === undefined && value.sections.length === 0) {
     context.addIssue({
@@ -120,7 +120,7 @@ const refineLogicFrame = (value: LogicFrameValue, context: z.RefinementCtx): voi
   });
 };
 
-/** LogicFrame canonical JSON-safe schema */
+/** LogicFrame 的 JSON 安全规范模式 */
 export const LogicFrameSchema = z
   .strictObject(LogicFrameShape)
   .superRefine(refineLogicFrame)
@@ -134,7 +134,7 @@ const LogicFrameSectionArtifactSchema = z
   })
   .describe('Resolved authored LogicFrame section artifact.');
 
-/** LogicFrame compile artifact payload */
+/** LogicFrame 编译产物载荷 */
 export const LogicFrameArtifactSchema = z
   .strictObject({
     kind: z.literal(LogicCompositeType.LogicFrame).describe('LogicFrame artifact discriminator.'),

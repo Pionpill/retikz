@@ -24,7 +24,7 @@ import {
   NOTATION_NAMESPACE,
 } from './constants';
 
-/** Non-empty and non-whitespace authored identifier */
+/** 非空且不能仅包含空白字符的编写标识 */
 export const NonBlankStringSchema = z.string().refine(value => value.trim().length > 0, {
   message: 'String must contain at least one non-whitespace character.',
 });
@@ -45,24 +45,24 @@ const LogicFrameTargetSchema = z
   })
   .describe('Reference to a LogicFrame identity and optional authored section.');
 
-/** Stable target reference used by Connector endpoints and Callout placement */
+/** Connector 端点和 Callout 放置使用的稳定目标引用 */
 export const LogicDiagramTargetSchema = z
   .union([LogicObjectTargetSchema, LogicFrameTargetSchema])
   .describe('Stable target reference used by Connector endpoints and Callout placement.');
 
-/** Cartesian point or stable authored target reference */
+/** 笛卡尔坐标点或稳定的编写目标引用 */
 export const LogicDiagramPointSchema = z
   .union([PositionSchema, LogicDiagramTargetSchema])
   .describe('Cartesian point or stable authored target reference.');
 
-/** Uniform or side-specific non-negative spacing */
+/** 统一或分边设置的非负间距 */
 export const LogicSpacingSchema = z
   .union([z.number().nonnegative(), BoxSpacingSchema])
   .describe('Uniform or side-specific non-negative spacing.');
 
 const NeutralStyleDefault = { fill: 'transparent', stroke: 'currentColor', strokeWidth: 1, opacity: 1 } as const;
 
-/** Neutral style defaults retained by LogicFrame and content shells */
+/** LogicFrame 和内容外壳保留的中性样式默认值 */
 export const LogicNeutralStyleSchema = DrawableStyleSchema.extend({
   fill: DrawableStyleSchema.shape.fill.default('transparent'),
   stroke: DrawableStyleSchema.shape.stroke.default('currentColor'),
@@ -70,7 +70,7 @@ export const LogicNeutralStyleSchema = DrawableStyleSchema.extend({
   opacity: DrawableStyleSchema.shape.opacity.default(1),
 });
 
-/** Legacy-compatible appearance vocabulary for remaining layout composites */
+/** 其余布局复合元素使用的兼容外观词汇 */
 export const LogicUnitAppearanceBaseShape = {
   size: LayoutSizeSchema.optional(),
   padding: LogicSpacingSchema.optional(),
@@ -85,7 +85,7 @@ export const LogicUnitAppearanceSchema = z
   .strictObject(LogicUnitAppearanceBaseShape)
   .describe('Appearance, sizing, and boundary overrides for one content shell.');
 
-/** Core Path appearance shared by Connector and Callout leader */
+/** Connector 和 Callout 引导线共享的 Core Path 外观 */
 export const ConnectorAppearanceSchema = z
   .strictObject({
     color: PathBaseSchema.shape.color,

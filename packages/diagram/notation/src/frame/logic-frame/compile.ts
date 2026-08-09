@@ -31,7 +31,7 @@ import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
 import { LogicCompositeType } from '../../unit';
 
-/** Standard FlexLayout 的 canonical namespace */
+/** Standard FlexLayout 的规范命名空间 */
 const STANDARD_LAYOUT_NAMESPACE = 'standard' as const;
 
 type LogicFrameRegion = Readonly<{
@@ -174,7 +174,7 @@ const syntheticFlexOf = (node: IRLogicFrame, regions: ReadonlyArray<LogicFrameRe
   };
 };
 
-/** 通过 canonical column FlexLayout owner 编译 Notation LogicFrame */
+/** 通过规范的纵向 FlexLayout 编译器编译 Notation LogicFrame */
 export const compileLogicFrame = (
   node: IRLogicFrame,
   context: LayoutCompositeCompileContext,

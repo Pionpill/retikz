@@ -28,7 +28,7 @@ import type { LogicLayoutItemArtifact, LogicOuterArtifact } from '../shared';
 
 import { LogicContentSizeDefault, LogicNeutralStyle, LogicNeutralStyleSchema, LogicSpacingSchema } from '../shared';
 
-/** Content shell 的可复用外观输入，供 Callout 等需要包裹内容的 composite 使用 */
+/** 内容外壳的可复用外观输入，供 Callout 等需要包裹内容的复合元素使用 */
 export const LogicContentShellAppearanceSchema = z
   .strictObject({
     size: LayoutSizeSchema.default(LogicContentSizeDefault),
@@ -43,7 +43,7 @@ export const LogicContentShellAppearanceSchema = z
   })
   .describe('Content shell sizing, boundary, shape, and visual appearance.');
 
-/** Content shell 的完整解析状态 */
+/** 内容外壳的完整解析状态 */
 export type LogicContentShellAppearance = z.infer<typeof LogicContentShellAppearanceSchema>;
 
 /** 单内容外壳的布局输入 */
@@ -53,7 +53,7 @@ export type LogicShellNode = Readonly<{
   appearance: LogicContentShellAppearance;
 }>;
 
-/** 单内容逻辑外壳的布局结果，供 Callout 等 composite 继续消费 */
+/** 单内容逻辑外壳的布局结果，供 Callout 等复合元素继续消费 */
 export type LogicShellCompilation = Readonly<{
   allocation: LayoutArtifactRect;
   contentBounds: LayoutArtifactRect;
@@ -94,7 +94,7 @@ const shellShapeOf = (shape: LogicShellNode['appearance']['shape'], width: numbe
   return shape;
 };
 
-/** 构造 Core Node 外壳，布局和视觉语义继续由 Core 负责 */
+/** 构造 Core 节点外壳，布局和视觉语义继续由 Core 负责 */
 const shellNodeOf = (node: LogicShellNode, allocation: LayoutArtifactRect): IRChild => ({
   type: 'node',
   id: node.id,
@@ -115,7 +115,7 @@ const stripItemIdentity = (item: LayoutArtifactItemBase): LogicLayoutItemArtifac
   return artifact as LogicLayoutItemArtifact;
 };
 
-/** 编译一个带单内容的逻辑外壳，返回可一次性 replay 的 opaque child */
+/** 编译一个带单内容的逻辑外壳，返回可一次性重放的不透明子节点 */
 export const compileLogicShell = (
   node: LogicShellNode,
   context: LayoutCompositeCompileContext,

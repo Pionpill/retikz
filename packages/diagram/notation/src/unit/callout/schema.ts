@@ -21,7 +21,7 @@ const CalloutLeaderAppearanceSchema = ConnectorAppearanceSchema.extend({
   zIndex: ConnectorAppearanceSchema.shape.zIndex.default(0),
 });
 
-/** Callout 的显式 placement 输入 */
+/** Callout 的显式放置输入 */
 export const CalloutPlacementSchema = z
   .strictObject({
     side: CalloutSideSchema,
@@ -60,7 +60,7 @@ const CalloutShape = {
   }).describe('Stage-like Callout content shell appearance.'),
 } as const;
 
-/** Callout canonical JSON-safe schema */
+/** Callout 的 JSON 安全规范模式 */
 export const CalloutSchema = z.strictObject(CalloutShape).describe('Canonical JSON-safe Notation Callout composite.');
 
 const CalloutLeaderArtifactSchema = z
@@ -71,7 +71,7 @@ const CalloutLeaderArtifactSchema = z
   })
   .describe('Resolved Callout leader geometry.');
 
-/** Callout strict JSON-safe compile artifact */
+/** Callout 的 JSON 安全严格编译产物 */
 export const CalloutArtifactSchema = z
   .strictObject({
     kind: z.literal('callout').describe('Callout artifact discriminator.'),

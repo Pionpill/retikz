@@ -9,35 +9,35 @@ import type {
   LogicOutlineAppearanceSchema,
 } from './schema';
 
-/** LogicFrame canonical IR */
+/** LogicFrame 规范 IR */
 export type IRLogicFrame = z.infer<typeof LogicFrameSchema>;
 
-/** LogicFrame factory input */
+/** LogicFrame 工厂输入 */
 export type LogicFrameInput = Omit<z.input<typeof LogicFrameSchema>, 'namespace' | 'type'>;
 
-/** LogicFrame shell appearance canonical type */
+/** LogicFrame 外壳外观的规范类型 */
 export type LogicFrameAppearance = z.infer<typeof LogicFrameAppearanceSchema>;
 
-/** LogicFrame shell appearance author input */
+/** LogicFrame 外壳外观的作者输入 */
 export type LogicFrameAppearanceInput = z.input<typeof LogicFrameAppearanceSchema>;
 
-/** LogicFrame compile artifact */
+/** LogicFrame 编译产物 */
 export type LogicFrameArtifact = z.infer<typeof LogicFrameArtifactSchema>;
 
-/** LogicFrame region canonical input */
+/** LogicFrame 区域的规范输入 */
 export type LogicFrameRegion = z.infer<typeof LogicFrameRegionSchema>;
 
-/** LogicFrame region author input */
+/** LogicFrame 区域的作者输入 */
 export type LogicFrameRegionInput = z.input<typeof LogicFrameRegionSchema>;
 
-/** LogicFrame section canonical input */
+/** LogicFrame 分段的规范输入 */
 export type LogicFrameSection = z.infer<typeof LogicFrameSectionSchema>;
 
-/** LogicFrame section author input */
+/** LogicFrame 分段的作者输入 */
 export type LogicFrameSectionInput = z.input<typeof LogicFrameSectionSchema>;
 
-/** LogicFrame outline canonical appearance */
+/** LogicFrame 轮廓的规范外观 */
 export type LogicOutlineAppearance = z.infer<typeof LogicOutlineAppearanceSchema>;
 
-/** LogicFrame outline author input */
+/** LogicFrame 轮廓的作者输入 */
 export type LogicOutlineAppearanceInput = z.input<typeof LogicOutlineAppearanceSchema>;

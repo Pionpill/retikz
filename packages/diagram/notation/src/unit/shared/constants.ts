@@ -1,14 +1,14 @@
-/** Notation composite namespace */
+/** Notation 复合元素的命名空间 */
 export const NOTATION_NAMESPACE = 'notation' as const;
 
-/** Notation composite discriminators that own local layout or routing */
+/** 具有局部布局或路由能力的 Notation 复合元素判别值 */
 export const LogicCompositeType = {
   LogicFrame: 'logicFrame',
   Connector: 'connector',
   Callout: 'callout',
 } as const;
 
-/** Connector role vocabulary */
+/** Connector 角色词汇 */
 export const ConnectorRole = {
   Flow: 'flow',
   Branch: 'branch',
@@ -16,7 +16,7 @@ export const ConnectorRole = {
   Feedback: 'feedback',
 } as const;
 
-/** Connector route variants */
+/** Connector 路由变体 */
 export const ConnectorRouteKind = {
   Straight: 'straight',
   Polyline: 'polyline',
@@ -26,7 +26,7 @@ export const ConnectorRouteKind = {
   Bend: 'bend',
 } as const;
 
-/** Orthogonal route direction patterns */
+/** 正交路由方向模式 */
 export const ConnectorOrthogonalPattern = {
   HorizontalVertical: 'hv',
   VerticalHorizontal: 'vh',
@@ -34,13 +34,13 @@ export const ConnectorOrthogonalPattern = {
   VerticalHorizontalVertical: 'vhv',
 } as const;
 
-/** Bend route side direction */
+/** 弯曲路由的侧向 */
 export const ConnectorBendDirection = {
   Left: 'left',
   Right: 'right',
 } as const;
 
-/** Callout placement sides */
+/** Callout 放置方向 */
 export const CalloutSide = {
   Top: 'top',
   Right: 'right',

@@ -8,7 +8,7 @@ import { NOTATION_NAMESPACE } from '../shared';
 import { compileCallout } from './compile';
 import { CalloutArtifactSchema, CalloutSchema } from './schema';
 
-/** Notation Callout 布局感知复合组件定义 */
+/** Notation Callout 的布局感知复合元素定义 */
 export const CalloutDefinition: LayoutCompositeDefinition<
   IRCallout,
   typeof NOTATION_NAMESPACE,
@@ -22,5 +22,5 @@ export const CalloutDefinition: LayoutCompositeDefinition<
   artifactSchema: CalloutArtifactSchema,
 });
 
-/** Callout definition 推导出的 compile artifact envelope */
+/** 由 Callout 定义推导的编译产物封装 */
 export type CalloutCompileArtifact = CompositeArtifactOf<typeof CalloutDefinition>;

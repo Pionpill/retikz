@@ -41,7 +41,7 @@ const NeutralSemanticNodeDefaults = {
   fill: LogicNeutralStyle.fill,
 } as const;
 
-/** Terminal 逻辑单元 Schema，表示流程的起点或终点 Node */
+/** Terminal 基础单元模式，表示流程的起点或终点节点 */
 export const TerminalSchema = createSemanticNodeSchema(
   {
     ...NeutralSemanticNodeDefaults,
@@ -52,7 +52,7 @@ export const TerminalSchema = createSemanticNodeSchema(
   'A terminal Node that represents the start or end of a logic flow.',
 );
 
-/** Stage 逻辑单元 Schema，表示流程中的处理或动作 Node */
+/** Stage 基础单元模式，表示流程中的处理或动作节点 */
 export const StageSchema = createSemanticNodeSchema(
   {
     ...NeutralSemanticNodeDefaults,
@@ -62,7 +62,7 @@ export const StageSchema = createSemanticNodeSchema(
   'A stage Node that represents a process or action in a logic flow.',
 );
 
-/** Decision 逻辑单元 Schema，表示流程中的条件分支 Node */
+/** Decision 基础单元模式，表示流程中的条件分支节点 */
 export const DecisionSchema = createSemanticNodeSchema(
   {
     ...NeutralSemanticNodeDefaults,
@@ -72,7 +72,7 @@ export const DecisionSchema = createSemanticNodeSchema(
   'A decision Node that represents a condition or branch in a logic flow.',
 );
 
-/** Junction 逻辑单元 Schema，表示流程中的分叉、汇合或连接点 Node */
+/** Junction 基础单元模式，表示流程中的分叉、汇合或连接点节点 */
 export const JunctionSchema = createSemanticNodeSchema(
   {
     fill: 'currentColor',

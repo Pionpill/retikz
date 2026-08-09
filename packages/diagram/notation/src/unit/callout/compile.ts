@@ -75,7 +75,7 @@ const proposalOf = (x: LayoutAxisProposal, y: LayoutAxisProposal) => ({ x, y });
 const positiveRect = (rect: LayoutArtifactRect): LayoutArtifactRect | null =>
   rect.width > 0 && rect.height > 0 ? rect : null;
 
-/** 编译显式 Callout placement、单段 Core leader 与 strict artifact */
+/** 编译显式 Callout 放置、单段 Core 引导线与严格产物 */
 export const compileCallout = (
   node: IRCallout,
   context: LayoutCompositeCompileContext,

@@ -8,7 +8,7 @@ import { NOTATION_NAMESPACE } from '../../unit';
 import { compileLogicFrame } from './compile';
 import { LogicFrameArtifactSchema, LogicFrameSchema } from './schema';
 
-/** Notation LogicFrame layout-aware composite definition */
+/** Notation LogicFrame 的布局感知复合元素定义 */
 export const LogicFrameDefinition: LayoutCompositeDefinition<
   IRLogicFrame,
   typeof NOTATION_NAMESPACE,
@@ -22,5 +22,5 @@ export const LogicFrameDefinition: LayoutCompositeDefinition<
   artifactSchema: LogicFrameArtifactSchema,
 });
 
-/** LogicFrame definition-derived compile artifact envelope */
+/** 由 LogicFrame 定义推导的编译产物封装 */
 export type LogicFrameCompileArtifact = CompositeArtifactOf<typeof LogicFrameDefinition>;

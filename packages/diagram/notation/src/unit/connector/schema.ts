@@ -77,7 +77,7 @@ const TangentBendRoutingSchema = z
   })
   .describe('Core bend routing selected by explicit tangents.');
 
-/** Connector routing union */
+/** Connector 路由联合 */
 export const ConnectorRoutingSchema = z
   .union([
     StraightRoutingSchema,
@@ -121,7 +121,7 @@ const ConnectorShape = {
 
 type ConnectorValue = z.infer<z.ZodObject<typeof ConnectorShape>>;
 
-/** 校验 Connector 的 route 交叉字段约束 */
+/** 校验 Connector 的路由交叉字段约束 */
 const refineConnector = (value: ConnectorValue, context: z.RefinementCtx): void => {
   if (value.routing.kind !== ConnectorRouteKind.Polyline) return;
 
@@ -143,11 +143,11 @@ const refineConnector = (value: ConnectorValue, context: z.RefinementCtx): void 
   }
 };
 
-/** Connector canonical JSON-safe schema */
+/** Connector 的 JSON 安全规范模式 */
 export const ConnectorSchema = z
   .strictObject(ConnectorShape)
   .superRefine(refineConnector)
   .describe('Canonical JSON-safe Notation Connector composite.');
 
-/** Expose canonical appearance schema for downstream leader consumers */
+/** 供 Connector 派生类型使用的规范外观模式 */
 export { ConnectorAppearanceCanonicalSchema };
