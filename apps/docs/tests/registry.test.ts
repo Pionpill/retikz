@@ -1,4 +1,5 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
+import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
 import { CalloutSchema, ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
 import {
   CoordinateSchema as PlotCoordinateSchema,
@@ -13,7 +14,6 @@ import {
   TransformSchema,
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema } from '@retikz/standard';
-import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/standard/inspect';
 import { TableSpecSchema } from '@retikz/table';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -40,11 +40,11 @@ describe('SCHEMA_REGISTRY', () => {
       PlotThemeSchema: { schema: PlotThemeSchema },
       LegendSchema: {
         schema: LegendSchema,
-        url: '/standard/composite/legend#legendschema',
+        url: '/library/standard/composite/legend#legendschema',
       },
       LegendArtifactSchema: {
         schema: LegendArtifactSchema,
-        url: '/standard/composite/legend#legendartifactschema',
+        url: '/library/standard/composite/legend#legendartifactschema',
       },
       LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
       DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/semantic-units' },
@@ -68,15 +68,15 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/reference/schema/path#axis-line');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
     expect(lookupSchema(LayoutInspectSpacingOptionsInputSchema)?.url).toBe(
-      '/standard/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
+      '/library/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
     );
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
-    expect(lookupSchema(LegendSchema)?.url).toBe('/standard/composite/legend#legendschema');
-    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/standard/composite/legend#legendartifactschema');
+    expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/composite/legend#legendschema');
+    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/composite/legend#legendartifactschema');
   });
 
-  it('documents the Layout Inspector spacing schema on the Standard runtime reference page', () => {
-    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/standard/layout/reference/runtime');
+  it('documents the Layout Inspector spacing schema on the Layout runtime reference page', () => {
+    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/reference/runtime');
     const zhSource = readFileSync(resolve(referenceRoot, 'index.zh.mdx'), 'utf8');
     const enSource = readFileSync(resolve(referenceRoot, 'index.en.mdx'), 'utf8');
 
@@ -112,7 +112,9 @@ describe('SCHEMA_REGISTRY', () => {
   );
 
   it('keeps every Standard composite registry URL on a documented English heading', () => {
-    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) => entry.url.startsWith('/standard/composite/'));
+    const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
+      entry.url.startsWith('/library/standard/composite/'),
+    );
 
     for (const [name, entry] of entries) {
       const [route, anchor] = entry.url.split('#');

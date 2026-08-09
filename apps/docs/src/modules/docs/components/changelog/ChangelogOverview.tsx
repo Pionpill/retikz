@@ -17,6 +17,12 @@ const VIZ_SECTION_LEAD_PACKAGE = new Map<string, PackageId>([
   ['plot', '@retikz/plot'],
 ]);
 
+/** Library 分区的更新日志主包，用于概览摘要 */
+const LIBRARY_SECTION_LEAD_PACKAGE = new Map<string, PackageId>([
+  ['standard', '@retikz/standard'],
+  ['layout', '@retikz/layout'],
+]);
+
 export type ChangelogOverviewProps = {
   /** 当前模块与分组的 changelog 切片（倒序） */
   releases: Array<Release>;
@@ -36,7 +42,9 @@ export const ChangelogOverview: FC<ChangelogOverviewProps> = ({ releases, module
   const leadPkg =
     moduleId === 'viz'
       ? (VIZ_SECTION_LEAD_PACKAGE.get(sectionId) ?? '@retikz/data')
-      : (`@retikz/${moduleId}` as PackageId);
+      : moduleId === 'library'
+        ? (LIBRARY_SECTION_LEAD_PACKAGE.get(sectionId) ?? '@retikz/standard')
+        : (`@retikz/${moduleId}` as PackageId);
 
   return (
     <ul className="flex flex-col gap-2.5">

@@ -66,7 +66,7 @@ The root entry does not load React, Vanilla, or Render. Import the host subentry
 | `@retikz/inspect/vanilla` | Authoring markers and the Vanilla compile driver                                           |
 | `@retikz/inspect/render`  | One-to-one conversion from a plane to ordinary readonly layers                             |
 
-Standard layouts use `@retikz/standard/inspect`, `@retikz/standard-react/inspect`, or `@retikz/standard-vanilla/inspect`. These entries depend explicitly on this package; Standard root entries remain usable without it.
+Layout containers use `@retikz/layout/inspect`, `@retikz/layout-react/inspect`, or `@retikz/layout-vanilla/inspect`. These entries depend explicitly on this package; Layout root entries remain usable without it.
 
 ## Execution
 
@@ -101,4 +101,4 @@ Standard layouts use `@retikz/standard/inspect`, `@retikz/standard-react/inspect
 - [Scope](/kernel/components/layout/scope): subtree selection and hard barriers
 - [Core](/kernel/packages/core): domain-neutral compile observation
 - [Render](/kernel/packages/render): ordinary readonly layer materialization
-- [Standard layout runtime](/standard/layout/reference/runtime): Flex, Grid, and Overlay Inspectors
+- [Layout runtime](/library/layout/reference/runtime): Flex, Grid, and Overlay Inspectors

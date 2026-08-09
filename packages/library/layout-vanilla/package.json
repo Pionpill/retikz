@@ -1,0 +1,95 @@
+{
+  "name": "@retikz/layout-vanilla",
+  "version": "0.1.0-alpha.1",
+  "retikz": {
+    "domain": "library",
+    "releaseGroup": "layout",
+    "layer": "adapter",
+    "publishable": true
+  },
+  "description": "Framework-free authoring bindings for retikz Layout.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "diagram",
+    "layout",
+    "vanilla"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/library/layout-vanilla"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
+  },
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./inspect": {
+      "types": "./src/inspect/index.ts",
+      "default": "./src/inspect/index.ts"
+    }
+  },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/types/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./inspect": {
+        "types": "./dist/types/inspect/index.d.ts",
+        "import": "./dist/inspect/index.js",
+        "default": "./dist/inspect/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:changed": "vitest run --changed --passWithNoTests"
+  },
+  "dependencies": {
+    "@retikz/layout": "workspace:*",
+    "@retikz/vanilla": "workspace:^"
+  },
+  "peerDependencies": {
+    "@retikz/inspect": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@retikz/inspect": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@retikz/inspect": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
+}

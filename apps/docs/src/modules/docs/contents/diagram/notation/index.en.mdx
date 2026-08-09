@@ -5,7 +5,7 @@ description: Choose reusable diagram elements from one entry point, then express
 
 Notation is the unified entry point for reusable elements in the Diagram domain. Its first set covers common logic links: `LogicFrame` owns a reusable shell and regions; Terminal, Stage, Decision, and Junction express semantic units; Connector and Callout add relationships and explanations.
 
-Notation owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Standard layouts, then use stable `id` values for explicit targets.
+Notation owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Layout containers, then use stable `id` values for explicit targets.
 
 ## Responsibilities at a glance
 
@@ -39,6 +39,6 @@ All members lower to existing Core primitives and can be authored through React,
 
 ## Related
 
-- [Layout containers](/standard/layout): generic Flex, Grid, and Overlay arrangement
+- [Layout containers](/library/layout): generic Flex, Grid, and Overlay arrangement
 - [Diagram introduction](/diagram/introduction): the boundary between Notation and future Graph capabilities
 - [Core paths](/kernel/components/draw/overview): the primitive output used by Connector

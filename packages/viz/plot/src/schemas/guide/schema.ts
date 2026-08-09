@@ -1,4 +1,4 @@
-﻿import {
+import {
   ArrowEndDetailSchema,
   CssColorSchema,
   FontSchema,
@@ -19,7 +19,7 @@ import {
   PositiveIntegerSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import { LayoutGapSchema } from '@retikz/standard';
+import { LayoutGapSchema } from '@retikz/layout';
 import { z } from 'zod';
 
 import { PlotLayerSchema } from '../layer';

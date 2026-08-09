@@ -58,7 +58,7 @@ export const ChartPresentationInspectionSchema = zod
   .strictObject({
     contentKind: zod
       .enum(ChartPresentationResolvedContentKind)
-      .describe('Whether resolved Chart content is a bare Plot or a Standard FlexLayout'),
+      .describe('Whether resolved Chart content is a bare Plot or a Layout FlexLayout'),
     items: zod
       .array(ChartPresentationItemInspectionSchema)
       .min(1)

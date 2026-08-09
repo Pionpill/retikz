@@ -3,7 +3,7 @@ title: LogicFrame
 description: 用可选 header 与有序 authored section 构建带外壳的逻辑块。
 ---
 
-`LogicFrame` 是分组基础单元的通用外壳。它接受一个可选 header 与零个或多个带 key 的 section。外壳复用 Standard 的 FlexLayout 引擎完成区域测量、padding、gap、放置、裁剪与 replay，不另造布局系统。
+`LogicFrame` 是分组基础单元的通用外壳。它接受一个可选 header 与零个或多个带 key 的 section。外壳复用 Layout 的 FlexLayout 引擎完成区域测量、padding、gap、放置、裁剪与 replay，不另造布局系统。
 
 ## 用法
 
@@ -104,4 +104,4 @@ section key 为空或重复时会 fail-loud。Connector 与 Callout 都接受 se
 - [语义单元](/diagram/notation/unit/semantic-units)：带 content 的逻辑节点
 - [Connector](/diagram/notation/unit/connector)：authored identity 之间的关系
 - [Callout](/diagram/notation/unit/callout)：相对 target 的解释
-- [布局容器](/standard/layout)：通用布局家族
+- [布局容器](/library/layout)：通用布局家族

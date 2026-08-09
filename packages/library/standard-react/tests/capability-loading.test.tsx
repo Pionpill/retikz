@@ -1,6 +1,6 @@
 import { Layout, Node } from '@retikz/react';
 import { createGrid, GridDefinition, LegendContentKind, LegendDefinition } from '@retikz/standard';
-import { Axes, FlexLayout, Frame, FrameTitle, Grid, LayoutItem, Legend, LegendItem } from '@retikz/standard-react';
+import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -15,11 +15,6 @@ describe('Standard React definition loading', () => {
             <FrameTitle text="Contract" />
             <Node position={[0, 0]} text="Body" />
           </Frame>
-          <FlexLayout>
-            <LayoutItem kind="flex" itemKey="layout-node">
-              <Node position={[30, 30]} text="Layout" />
-            </LayoutItem>
-          </FlexLayout>
           <Legend kind={LegendContentKind.Items}>
             <LegendItem itemKey="node" sample={<Node position={[0, 0]} text="N" />} />
           </Legend>

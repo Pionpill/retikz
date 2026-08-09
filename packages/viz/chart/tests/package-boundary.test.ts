@@ -36,8 +36,8 @@ describe('private Chart package boundaries', () => {
       '@retikz/core': 'workspace:^',
       '@retikz/data': 'workspace:^',
       '@retikz/foundation': 'workspace:^',
+      '@retikz/layout': 'workspace:^',
       '@retikz/plot': 'workspace:*',
-      '@retikz/standard': 'workspace:^',
       zod: 'catalog:',
     });
     expect(manifest.peerDependencies).toBeUndefined();

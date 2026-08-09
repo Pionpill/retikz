@@ -5,7 +5,7 @@ description: 从统一入口选用可复用的图式元素，并用逻辑外壳�
 
 Notation 是 Diagram 领域中可复用图式元素的统一入口。首批元素覆盖常见的逻辑链路：`LogicFrame` 管理可复用外壳与区域；Terminal、Stage、Decision、Junction 表达语义单元；Connector 与 Callout 表达关系和解释。
 
-Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或 Standard 布局放置单元，再用稳定的 `id` 表达显式 target。
+Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或 Layout 布局放置单元，再用稳定的 `id` 表达显式 target。
 
 ## 职责一览
 
@@ -39,6 +39,6 @@ Notation 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、�
 
 ## 相关
 
-- [布局容器](/standard/layout)：通用 Flex、Grid 与 Overlay 排列
+- [布局容器](/library/layout)：通用 Flex、Grid 与 Overlay 排列
 - [Diagram 简介](/diagram/introduction)：Notation 与未来 Graph 能力的边界
 - [Core Path](/kernel/components/draw/overview)：Connector 使用的底层图元

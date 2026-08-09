@@ -1,6 +1,6 @@
 import { ChildSchema, PositionSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
-import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '@retikz/standard/layout';
+import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '@retikz/layout';
 import { z } from 'zod';
 
 import {

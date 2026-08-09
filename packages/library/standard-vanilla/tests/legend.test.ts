@@ -1,6 +1,6 @@
 import type { LegendInput } from '@retikz/standard';
 
-import { createLegend, LayoutAlignment, LegendContentKind, LegendDefinition } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendDefinition } from '@retikz/standard';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -10,7 +10,7 @@ const input = {
   id: 'authored-legend',
   meta: { source: 'vanilla' },
   title: { type: 'node', position: [0, 0], text: 'Status' },
-  contentAlign: LayoutAlignment.End,
+  contentAlign: 'end',
   content: {
     kind: LegendContentKind.Items,
     items: [
@@ -36,7 +36,7 @@ describe('legend()', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.legend', id: 'status' });
     expect(contribution.node).toEqual(createLegend(input));
-    expect(contribution.node).toMatchObject({ contentAlign: LayoutAlignment.End });
+    expect(contribution.node).toMatchObject({ contentAlign: 'end' });
     expect(contribution.makeComposites({})).toEqual([LegendDefinition]);
   });
 

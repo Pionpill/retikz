@@ -10,21 +10,21 @@ import type { PreviewControlsDefinition } from '@/modules/docs/preview';
 
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
-import LegendBasicEnDemo from '@/modules/docs/contents/standard/composite/legend/legend-basic.en.demo';
-import LegendBasicZhDemo from '@/modules/docs/contents/standard/composite/legend/legend-basic.zh.demo';
+import LegendBasicEnDemo from '@/modules/docs/contents/library/standard/composite/legend/legend-basic.en.demo';
+import LegendBasicZhDemo from '@/modules/docs/contents/library/standard/composite/legend/legend-basic.zh.demo';
 import {
   legendPlaygroundControls,
   previewControlContract as legendPlaygroundContract,
-} from '@/modules/docs/contents/standard/composite/legend/legend-playground.controls';
-import { LegendPlaygroundPreview } from '@/modules/docs/contents/standard/composite/legend/legend-playground.demo';
+} from '@/modules/docs/contents/library/standard/composite/legend/legend-playground.controls';
+import { LegendPlaygroundPreview } from '@/modules/docs/contents/library/standard/composite/legend/legend-playground.demo';
 import {
   legendPlaygroundEnControls,
   previewControlContract as legendPlaygroundEnContract,
-} from '@/modules/docs/contents/standard/composite/legend/legend-playground.en.controls';
-import LegendRampEnDemo from '@/modules/docs/contents/standard/composite/legend/legend-ramp.en.demo';
-import LegendRampZhDemo from '@/modules/docs/contents/standard/composite/legend/legend-ramp.zh.demo';
+} from '@/modules/docs/contents/library/standard/composite/legend/legend-playground.en.controls';
+import LegendRampEnDemo from '@/modules/docs/contents/library/standard/composite/legend/legend-ramp.en.demo';
+import LegendRampZhDemo from '@/modules/docs/contents/library/standard/composite/legend/legend-ramp.zh.demo';
 
-const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/standard/composite/legend');
+const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/composite/legend');
 const changelogPath = resolve(process.cwd(), 'src/modules/docs/data/changelog/standard-0-1.ts');
 
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(legendRoot, `index.${language}.mdx`), 'utf8');

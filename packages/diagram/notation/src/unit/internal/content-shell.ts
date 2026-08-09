@@ -6,11 +6,12 @@ import type {
   LayoutCompositeCompileContext,
   LayoutProposal,
 } from '@retikz/core';
-import type { LayoutArtifactContainer, LayoutArtifactItemBase, LayoutArtifactRect } from '@retikz/standard/layout';
+import type { LayoutArtifactContainer, LayoutArtifactItemBase, LayoutArtifactRect } from '@retikz/layout';
 
 import { BoundarySchema, ChildSchema, ShapeRefSchema } from '@retikz/core';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '@retikz/core';
+import { LayoutAlignment, LayoutOverflow, LayoutOverflowSchema, LayoutSizeSchema } from '@retikz/layout';
 import {
   alignAllocationInSlot,
   contentRectOf,
@@ -20,8 +21,7 @@ import {
   normalizeLayoutSpacing,
   resolveLayoutAxisSize,
   unionLayoutArtifactRects,
-} from '@retikz/standard/layout';
-import { LayoutAlignment, LayoutOverflow, LayoutOverflowSchema, LayoutSizeSchema } from '@retikz/standard/layout';
+} from '@retikz/layout/compose';
 import { z } from 'zod';
 
 import type { LogicLayoutItemArtifact, LogicOuterArtifact } from '../../shared';

@@ -66,7 +66,7 @@ const inspector = defineInspector({
 | `@retikz/inspect/vanilla` | authoring 标记与 Vanilla 编译驱动                                |
 | `@retikz/inspect/render`  | 把辅助平面一对一转换为普通只读图层                               |
 
-Standard 布局使用 `@retikz/standard/inspect`、`@retikz/standard-react/inspect` 或 `@retikz/standard-vanilla/inspect`。这些入口显式依赖本包；Standard 根入口仍可在未安装 Inspector 时使用。
+Layout 布局使用 `@retikz/layout/inspect`、`@retikz/layout-react/inspect` 或 `@retikz/layout-vanilla/inspect`。这些入口显式依赖本包；Layout 根入口仍可在未安装 Inspector 时使用。
 
 ## 执行机制
 
@@ -101,4 +101,4 @@ Standard 布局使用 `@retikz/standard/inspect`、`@retikz/standard-react/inspe
 - [Scope](/kernel/components/layout/scope)：子树选择与硬屏障
 - [Core](/kernel/packages/core)：领域中立编译观测能力
 - [Render](/kernel/packages/render)：普通只读图层如何物化
-- [Standard 布局运行时](/standard/layout/reference/runtime)：Flex、Grid 与 Overlay Inspector
+- [Layout 布局运行时](/library/layout/reference/runtime)：Flex、Grid 与 Overlay Inspector
