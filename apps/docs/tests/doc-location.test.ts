@@ -21,13 +21,13 @@ describe('resolveDocLocation', () => {
       resolveDocLocation({
         moduleId: 'diagram',
         sectionId: 'notation',
-        pageId: 'composite',
+        pageId: 'frame',
         subPageId: 'logic-frame',
       }),
     ).toEqual({
       moduleId: 'diagram',
       sectionId: 'notation',
-      pageId: 'composite',
+      pageId: 'frame',
       subPageId: 'logic-frame',
     });
   });

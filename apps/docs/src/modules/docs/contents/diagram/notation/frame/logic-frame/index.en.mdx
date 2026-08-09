@@ -1,0 +1,107 @@
+---
+title: LogicFrame
+description: Build a bordered logic block with an optional header and ordered authored sections.
+---
+
+`LogicFrame` is the generic shell for grouped base units. It accepts one optional header and zero or more keyed sections. The shell reuses Standard's FlexLayout engine for region measurement, padding, gaps, placement, clipping, and replay; it does not introduce a second layout system.
+
+## Usage
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { LogicFrame, LogicFrameHeader, LogicFrameSection } from '@retikz/notation-react';
+```
+
+```tsx
+<Layout width={360} height={180}>
+  <LogicFrame id="order">
+    <LogicFrameHeader>
+      <Node position={[0, 0]} text="Order" />
+    </LogicFrameHeader>
+    <LogicFrameSection sectionKey="input">
+      <Node position={[0, 0]} text="Input" />
+    </LogicFrameSection>
+    <LogicFrameSection sectionKey="output">
+      <Node position={[0, 0]} text="Output" />
+    </LogicFrameSection>
+  </LogicFrame>
+</Layout>
+```
+
+Marker children must be direct children of `LogicFrame`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
+
+## Examples
+
+<ComponentPreview files="logic-frame-basic" size="md" />
+
+Direct IR uses the same canonical child contract and an explicit Definition:
+
+```ts
+import { createLogicFrame, LogicFrameDefinition } from '@retikz/notation';
+
+const block = createLogicFrame({
+  id: 'order',
+  header: { child: { type: 'node', position: [0, 0], text: 'Order' } },
+  sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
+});
+const compile = { composites: [LogicFrameDefinition] };
+```
+
+Vanilla uses an embed id for authoring and derives the canonical `id` inside the adapter:
+
+```ts
+import { LogicFrameVanillaAdapter, logicFrame } from '@retikz/notation-vanilla';
+
+const embed = logicFrame('order', {
+  sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
+});
+const adapters = [LogicFrameVanillaAdapter];
+```
+
+The same shell can contain semantic Nodes or nested composites. Semantic units are already Core Nodes, so a block containing a `Stage` still needs only `LogicFrameDefinition` when loading direct IR; add Definitions only for nested composites that own lowering.
+
+<ComponentPreview
+  files="process-recipe"
+  size="lg"
+  caption="A documentation-only Process recipe composed from LogicFrame, semantic units, and Connectors."
+/>
+
+Recipes are examples, not package exports; Process, Class, and Data remain ordinary compositions of the public vocabulary.
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Read this section when diagnosing region measurement, divider geometry, or compile artifacts."
+/>
+
+### Canonical FlexLayout reuse
+
+The compiler creates a synthetic column FlexLayout region for the header and sections, then projects the Flex artifact into the block artifact. This reuses the canonical Flex proposal, size, gap, placement, clipping, and replay semantics rather than defining a second layout engine. Region children remain regular JSON-safe Core children.
+
+### Divider artifact projection
+
+The shell and divider are emitted as Core visual primitives. Divider rectangles are projections in `dividerVisualBounds`; they do not become layout children or a second authored graph. A region child can be a `Node`, `Path`, another composite, or a nested block when its Definition is injected.
+
+## API Reference
+
+| Field         | Type                                     | Default                                              | Description                                            |
+| ------------- | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| `id`          | `string`                                 | —                                                    | Stable authored block identity used by targets         |
+| `header?`     | `{ child: IRChild; padding? }`           | omitted                                              | One optional header region                             |
+| `sections`    | `Array<{ key, role?, child, padding? }>` | `[]`                                                 | Ordered, uniquely keyed regions                        |
+| `size?`       | `LayoutSizeInput`                        | `{ x: { kind: 'content' }, y: { kind: 'content' } }` | Outer allocation policy                                |
+| `padding?`    | `number` or `IRBoxSpacing`               | `8`                                                  | Default region padding                                 |
+| `rowGap?`     | `number`                                 | `0`                                                  | Space between adjacent regions                         |
+| `overflow?`   | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
+| `appearance?` | `LogicFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
+
+Blank or duplicate section keys fail loudly. Connector and Callout accept section target syntax, but both currently reject section targets before lowering or placement; use a whole block target instead.
+
+## Related
+
+- [Semantic units](/diagram/notation/unit/semantic-units): content-bearing logic nodes
+- [Connector](/diagram/notation/unit/connector): relationships between authored identities
+- [Callout](/diagram/notation/unit/callout): target-relative explanations
+- [Layout containers](/standard/layout): the generic layout family
