@@ -15,9 +15,9 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ## Usage
 
-Most consumers get common drawing helpers through `@retikz/core`'s re-exports: `DEFAULT_EPSILON`, `point`, `vector2`, `localToWorld`, and `worldToLocal`; core exposes math's `lerp` as `lerpPoint`. Import `Position` / `Vector2`, bounds, ellipses, arcs, intersections, enclosures, polygons, hulls, and curves directly from `@retikz/math`.
+Most consumers get common drawing helpers through `@retikz/core`'s re-exports: `DEFAULT_EPSILON`, `point`, `vector2`, `localToWorld`, and `worldToLocal`; core exposes math's `lerp` as `lerpPoint`. Import `Position` / `Vector2`, affine matrices, bounds, ellipses, arcs, intersections, enclosures, polygons, hulls, and curves directly from `@retikz/math`.
 
-多数绘图代码可使用 `@retikz/core` 转出的 `DEFAULT_EPSILON`、`point`、`vector2`、`localToWorld` 与 `worldToLocal`；math 的 `lerp` 在 core 中名为 `lerpPoint`。`Position` / `Vector2` 类型、外接范围、椭圆、圆弧、求交、包围、多边形、凸包和曲线应直接从 `@retikz/math` 导入。
+多数绘图代码可使用 `@retikz/core` 转出的 `DEFAULT_EPSILON`、`point`、`vector2`、`localToWorld` 与 `worldToLocal`；math 的 `lerp` 在 core 中名为 `lerpPoint`。`Position` / `Vector2` 类型、仿射矩阵、外接范围、椭圆、圆弧、求交、包围、多边形、凸包和曲线应直接从 `@retikz/math` 导入。
 
 ```ts
 import { point, intersect, triangle, circle, convexHull } from '@retikz/math';
@@ -41,12 +41,17 @@ convexHull([
 
 All functions are pure and side-effect-free; degenerate inputs return `null` (`triangle.*`) or `[]` (intersections) rather than throwing. Epsilon is naive (`DEFAULT_EPSILON = 1e-9`), tuned for drawing-scale coordinates.
 
+The affine tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order. `multiplyAffine(outer, inner)` applies `inner` first; `AFFINE_IDENTITY` is frozen at runtime, while operation results are fresh unfrozen tuples. Affine helpers intentionally do not validate finite, invertible, or similarity-transform constraints.
+
+仿射六元组采用 SVG / Canvas 的 `[a,b,c,d,e,f]` 顺序。`multiplyAffine(outer, inner)` 先应用 `inner`；`AFFINE_IDENTITY` 在运行时冻结，普通运算结果则是新的未冻结 tuple。仿射 helper 刻意不检查有限性、可逆性或 similarity transform 约束。
+
 ## Exports
 
 | Group                  | Exports                                                                                                                                                                                                                                         |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Points / vectors       | `Position`, `Vector2`, `DEFAULT_EPSILON`, `isFiniteNumber`, `isFinitePoint`, `isInfiniteNumber`, `point`, `vector2`, `lerp`                                                                                                                     |
-| Affine transforms      | `CenteredShape`, `localToWorld`, `worldToLocal`                                                                                                                                                                                                 |
+| Local/world transforms | `CenteredShape`, `localToWorld`, `worldToLocal`                                                                                                                                                                                                 |
+| Affine matrices        | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`                                                                                                                                                                              |
 | Bounds                 | `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets`, `boundsOf`, `mergeBounds`, `boundsToRect`, `rectToBounds`, `isFiniteBoundsRect`, `isPositiveBoundsRect`, `boundsCenter`, `boundsHalfAxes`, `expandBounds`, `boundsCorners` |
 | Arc primitives         | `ArcAngleInRangeInput`, `ArcBoundingPointsInput`, `RayArcInput`, `EllipseArcPointInput`, `EllipseArcBoundingPointsInput`, `arcEndPoint`, `arcAngleInRange`, `rayArc`, `ellipseArcPoint`, `arcBoundingPoints`, `ellipseArcBoundingPoints`        |
 | Ellipse helpers        | `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`, `ellipse`                                                                                                                                                                                  |

@@ -1,35 +1,15 @@
-/**
- * 2D 仿射矩阵（SVG `[a,b,c,d,e,f]` 约定：`x' = a·x + c·y + e`，`y' = b·x + d·y + f`）
- * @description 用于把 MathJax SVG 嵌套 `<g transform>` 累积成「根 → 字形」的世界变换，再作用到 path 坐标
- */
-export type Matrix = [number, number, number, number, number, number];
+import type { AffineMatrix } from '@retikz/math';
 
-export const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
-
-/** 矩阵相乘 `A·B`（先 B 后 A 的坐标语义）；下降子树时 `childAccum = multiply(parentAccum, local)` */
-export const multiply = (a: Matrix, b: Matrix): Matrix => [
-  a[0] * b[0] + a[2] * b[1],
-  a[1] * b[0] + a[3] * b[1],
-  a[0] * b[2] + a[2] * b[3],
-  a[1] * b[2] + a[3] * b[3],
-  a[0] * b[4] + a[2] * b[5] + a[4],
-  a[1] * b[4] + a[3] * b[5] + a[5],
-];
-
-/** 把点经矩阵变换 */
-export const apply = (m: Matrix, x: number, y: number): [number, number] => [
-  m[0] * x + m[2] * y + m[4],
-  m[1] * x + m[3] * y + m[5],
-];
+import { AFFINE_IDENTITY, multiplyAffine } from '@retikz/math';
 
 /** 矩阵是否为有限且非奇异的仿射变换 */
-export const isFiniteNonSingular = (matrix: Matrix): boolean => {
+export const isFiniteNonSingular = (matrix: AffineMatrix): boolean => {
   const determinant = matrix[0] * matrix[3] - matrix[1] * matrix[2];
   return matrix.every(Number.isFinite) && Number.isFinite(determinant) && Math.abs(determinant) > 1e-12;
 };
 
 /** 返回 similarity transform 的统一缩放；其它矩阵返回 undefined */
-export const similarityScale = (matrix: Matrix): number | undefined => {
+export const similarityScale = (matrix: AffineMatrix): number | undefined => {
   if (!isFiniteNonSingular(matrix)) return undefined;
   const firstLength = Math.hypot(matrix[0], matrix[1]);
   const secondLength = Math.hypot(matrix[2], matrix[3]);
@@ -55,10 +35,10 @@ export class SvgTransformError extends Error {
  * @description MathJax SVG 仅用 `scale(1,-1)`（全局 y 翻转）+ `translate(x,y)`（字形偏移）；matrix 一并支持兜底。
  *   无 / 空 → 单位阵。未知函数或 malformed 参数会抛错，由上层降级为 null，避免静默错位
  */
-export const parseTransform = (value: string | undefined): Matrix => {
+export const parseTransform = (value: string | undefined): AffineMatrix => {
   const source = value?.trim();
-  if (!source) return IDENTITY;
-  let m: Matrix = IDENTITY;
+  if (!source) return AFFINE_IDENTITY;
+  let matrix: AffineMatrix = AFFINE_IDENTITY;
   const re = /([a-zA-Z][\w-]*)\s*\(([^)]*)\)/g;
   let hit: RegExpExecArray | null;
   let cursor = 0;
@@ -75,7 +55,7 @@ export const parseTransform = (value: string | undefined): Matrix => {
     if (args.some(arg => !Number.isFinite(arg))) {
       throw new SvgTransformError('malformed', `Invalid SVG transform argument: ${hit[0]}`);
     }
-    let local: Matrix;
+    let local: AffineMatrix;
     if (fn === 'translate') {
       if (args.length < 1 || args.length > 2)
         throw new SvgTransformError('malformed', `Invalid translate transform: ${hit[0]}`);
@@ -91,11 +71,11 @@ export const parseTransform = (value: string | undefined): Matrix => {
     } else {
       throw new SvgTransformError('unsupported', `Unsupported SVG transform: ${fn}`);
     }
-    m = multiply(m, local);
+    matrix = multiplyAffine(matrix, local);
     cursor = re.lastIndex;
   }
   if (source.slice(cursor).trim().length > 0) {
     throw new SvgTransformError('malformed', `Malformed SVG transform syntax: ${source}`);
   }
-  return m;
+  return matrix;
 };
