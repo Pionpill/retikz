@@ -1,9 +1,6 @@
 /** Notation composite namespace */
 export const NOTATION_NAMESPACE = 'notation' as const;
 
-/** Standard layout namespace used by the canonical FlexLayout lower target */
-export const STANDARD_LAYOUT_NAMESPACE = 'standard' as const;
-
 /** Notation composite discriminators that own local layout or routing */
 export const LogicCompositeType = {
   LogicFrame: 'logicFrame',

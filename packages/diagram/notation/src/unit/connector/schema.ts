@@ -5,7 +5,6 @@ import {
   ConnectorAppearanceSchema,
   ConnectorBendDirectionSchema,
   ConnectorRouteKind,
-  ConnectorRouteKindSchema,
   LogicCompositeType,
   LogicDiagramPointSchema,
   LogicGeometryLabelSchema,
@@ -152,4 +151,3 @@ export const ConnectorSchema = z
 
 /** Expose canonical appearance schema for downstream leader consumers */
 export { ConnectorAppearanceCanonicalSchema };
-export { ConnectorRouteKindSchema };

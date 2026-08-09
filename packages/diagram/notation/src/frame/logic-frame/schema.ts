@@ -17,7 +17,7 @@ import {
   LogicSpacingSchema,
   NonBlankStringSchema,
   NOTATION_NAMESPACE,
-} from '../../unit/shared';
+} from '../../unit';
 
 /** LogicFrame outline appearance */
 export const LogicOutlineAppearanceSchema = z

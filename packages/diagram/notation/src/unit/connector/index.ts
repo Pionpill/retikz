@@ -1,4 +1,4 @@
 export * from './definition';
 export * from './factory';
-export * from './schema';
-export * from './types';
+export { ConnectorRoutingSchema, ConnectorSchema } from './schema';
+export type { ConnectorInput, ConnectorRouting, ConnectorRoutingInput, IRConnector } from './types';

@@ -1,6 +1,5 @@
 import type { z } from 'zod';
 
-import type { LogicDiagramTarget, LogicDiagramTargetInput, LogicUnitAppearanceInput } from '../shared';
 import type { CalloutArtifactSchema, CalloutPlacementSchema, CalloutSchema } from './schema';
 
 /** Callout placement canonical type */
@@ -20,5 +19,3 @@ export type CalloutLeaderArtifact = NonNullable<CalloutArtifact['leader']>;
 
 /** Callout factory input */
 export type CalloutInput = Omit<z.input<typeof CalloutSchema>, 'namespace' | 'type'>;
-
-export type { LogicDiagramTarget, LogicDiagramTargetInput, LogicUnitAppearanceInput };

@@ -1,3 +1,46 @@
-export * from './constants';
-export * from './schema';
-export * from './types';
+export {
+  CalloutSide,
+  ConnectorBendDirection,
+  ConnectorOrthogonalPattern,
+  ConnectorRole,
+  ConnectorRouteKind,
+  LogicCompositeType,
+  NOTATION_NAMESPACE,
+} from './constants';
+export {
+  CalloutSideSchema,
+  ConnectorAppearanceSchema,
+  ConnectorBendDirectionSchema,
+  ConnectorOrthogonalPatternSchema,
+  ConnectorRouteKindSchema,
+  LogicContentSizeDefault,
+  LogicDiagramPointSchema,
+  LogicDiagramTargetSchema,
+  LogicGeometryLabelSchema,
+  LogicLayoutItemArtifactSchema,
+  LogicNeutralStyle,
+  LogicNeutralStyleSchema,
+  LogicOuterArtifactSchema,
+  LogicSpacingSchema,
+  LogicUnitAppearanceSchema,
+  NonBlankStringSchema,
+} from './schema';
+export type {
+  CalloutSideValue,
+  ConnectorAppearance,
+  ConnectorAppearanceInput,
+  ConnectorBendDirectionValue,
+  ConnectorOrthogonalPatternValue,
+  ConnectorRoleValue,
+  ConnectorRouteKindValue,
+  LogicCompositeTypeValue,
+  LogicDiagramPoint,
+  LogicDiagramPointInput,
+  LogicDiagramTarget,
+  LogicDiagramTargetInput,
+  LogicGeometryLabelInput,
+  LogicLayoutItemArtifact,
+  LogicOuterArtifact,
+  LogicUnitAppearance,
+  LogicUnitAppearanceInput,
+} from './types';

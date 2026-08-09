@@ -35,6 +35,16 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('StandardTerminal');
   });
 
+  it('exposes cross-owner shared contracts and keeps implementation shapes private', () => {
+    expect(notationExports.NonBlankStringSchema).toBeDefined();
+    expect(notationExports.LogicSpacingSchema).toBeDefined();
+    expect(notationExports.LogicNeutralStyleSchema).toBeDefined();
+    expect(notationExports.LogicContentSizeDefault).toBeDefined();
+    expect(notationExports).not.toHaveProperty('STANDARD_LAYOUT_NAMESPACE');
+    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceBaseShape');
+    expect(notationExports).not.toHaveProperty('ConnectorAppearanceCanonicalSchema');
+  });
+
   it('rejects the old Standard composite namespace', () => {
     expect(() =>
       notationExports.LogicFrameSchema.parse({

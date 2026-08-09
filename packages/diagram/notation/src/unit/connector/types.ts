@@ -1,15 +1,5 @@
 import type { z } from 'zod';
 
-import type {
-  ConnectorAppearance,
-  ConnectorAppearanceInput,
-  ConnectorBendDirectionValue,
-  ConnectorOrthogonalPatternValue,
-  ConnectorRouteKindValue,
-  LogicDiagramPoint,
-  LogicDiagramPointInput,
-  LogicGeometryLabelInput,
-} from '../shared';
 import type { ConnectorAppearanceCanonicalSchema, ConnectorRoutingSchema, ConnectorSchema } from './schema';
 
 /** Connector route canonical type */
@@ -29,14 +19,3 @@ export type ConnectorAppearanceResolved = z.infer<typeof ConnectorAppearanceCano
 
 /** Connector appearance author input */
 export type ConnectorAppearanceResolvedInput = z.input<typeof ConnectorAppearanceCanonicalSchema>;
-
-export type {
-  ConnectorAppearance,
-  ConnectorAppearanceInput,
-  ConnectorBendDirectionValue,
-  ConnectorOrthogonalPatternValue,
-  ConnectorRouteKindValue,
-  LogicDiagramPoint,
-  LogicDiagramPointInput,
-  LogicGeometryLabelInput,
-};
