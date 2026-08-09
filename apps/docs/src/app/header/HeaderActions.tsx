@@ -1,7 +1,7 @@
 import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
-import { ArrowUpRight, Languages, Link as LinkIcon, Moon, MoreHorizontal, Sun } from 'lucide-react';
+import { ArrowUpRight, Languages, Moon, MoreHorizontal, Sun } from 'lucide-react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -37,6 +37,7 @@ import { useDocLocation } from '@/modules/docs/layout';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
 
+import { DocDifficultyFilter, DocDifficultyMenuSub } from './DocDifficultyFilter';
 import { isPreviewThemeStyleDocument } from './preview-theme-settings';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
@@ -78,7 +79,7 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
   const docLocation = useDocLocation();
-  const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
+  const { theme, handleToggleTheme, handleCycleLang } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
   /** 当前页无目录内容时隐藏 TOC 开关（右栏不占位，开关无意义） */
@@ -125,15 +126,6 @@ export const HeaderActions: FC = () => {
             </TooltipTrigger>
             <TooltipContent>{t('common.github')}</TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger className={triggerClass} onClick={handleCopyLink}>
-              <LinkIcon className="size-4" />
-            </TooltipTrigger>
-            <TooltipContent className="flex items-center gap-2">
-              {t('toc.copyLink')}
-              <Shortcut keys={['mod', 'L']} />
-            </TooltipContent>
-          </Tooltip>
         </div>
         <Separator orientation="vertical" className="hidden lg:block h-4!" />
         <div className="flex items-center gap-1">
@@ -174,6 +166,7 @@ export const HeaderActions: FC = () => {
               {t('common.switchLanguage')} · {i18n.resolvedLanguage?.toUpperCase()}
             </TooltipContent>
           </Tooltip>
+          <DocDifficultyFilter className="hidden lg:inline-flex" />
           {/* modal={false}：避免 Radix 模态层给 body 加 data-scroll-locked（overflow:hidden + position:relative），
               否则窗口级滚动 + sticky 顶栏会在页面已下滑时把 header 顶出视口（详见滚动容器是 window 而非 body） */}
           <DropdownMenu modal={false}>
@@ -198,10 +191,7 @@ export const HeaderActions: FC = () => {
                   {t('common.switchLanguage')}
                   <DropdownMenuShortcut>{i18n.resolvedLanguage?.toUpperCase()}</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
-                  <LinkIcon className="size-4" />
-                  {t('toc.copyLink')}
-                </DropdownMenuItem>
+                <DocDifficultyMenuSub />
                 <DropdownMenuItem asChild className="cursor-pointer">
                   <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                     <GitHubIcon className="size-4" />
