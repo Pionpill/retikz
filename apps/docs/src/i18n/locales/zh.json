@@ -128,7 +128,6 @@
   "library": {
     "label": "能力库",
     "standard": "Standard · 拓展",
-    "standardGetStart": "快速开始",
     "standardComposite": "展现",
     "standardGrid": "网格",
     "standardAxes": "坐标轴",
@@ -137,7 +136,6 @@
     "standardExtension": "扩展",
     "standardCapabilityLoading": "能力装载",
     "layout": "Layout · 布局",
-    "layoutGetStart": "快速开始",
     "flexLayout": "弹性布局",
     "gridLayout": "网格布局",
     "overlayLayout": "叠加布局",

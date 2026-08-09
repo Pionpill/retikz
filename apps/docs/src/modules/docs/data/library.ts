@@ -7,7 +7,6 @@ export const librarySection: Array<Section> = [
     label: 'library.standard',
     document: true,
     pages: [
-      { id: 'get-start', label: 'library.standardGetStart' },
       {
         id: 'composite',
         label: 'library.standardComposite',
@@ -52,7 +51,6 @@ export const librarySection: Array<Section> = [
     label: 'library.layout',
     document: true,
     pages: [
-      { id: 'get-start', label: 'library.layoutGetStart' },
       { id: 'flex-layout', label: 'library.flexLayout' },
       { id: 'grid-layout', label: 'library.gridLayout' },
       { id: 'overlay-layout', label: 'library.overlayLayout' },

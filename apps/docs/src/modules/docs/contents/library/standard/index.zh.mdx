@@ -25,13 +25,11 @@ Standard 是 Core 的横向拓展，不是新的绘图内核：
 
 三个包共享 `@retikz/standard` 中的 schema 与 lowering。React 和 Vanilla 只负责把作者输入接入同一能力，不复制语义。
 
+使用 React 创作时，在 `@retikz/react` 的 `Layout` 中直接使用 `@retikz/standard-react` 组件；使用 Vanilla 时，通过 `@retikz/standard-vanilla` 的 plain spec helper 与 adapter 接入；读取持久化 JSON 时，则用 `@retikz/standard` 校验完整 IR，并把所需 Definition 传给 Core 编译器。
+
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/standard/get-start">
-    <span className="font-semibold">快速开始</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">React、Vanilla 与持久化 IR 三条入口</span>
-  </LinkedCard>
   <LinkedCard href="/library/standard/composite">
     <span className="font-semibold">展现</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Grid、Axes、Frame 与 Legend</span>

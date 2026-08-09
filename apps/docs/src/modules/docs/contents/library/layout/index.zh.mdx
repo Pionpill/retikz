@@ -28,13 +28,19 @@ Layout 把“如何排布子图形”从手写坐标中提取出来。Flex、Gri
 
 容器负责通用尺寸分配、间距、对齐、溢出和可观察结果；数据通道、图表语义、表格规则与算法布局仍由对应领域包负责。
 
+## 三个发布包
+
+| 包                       | 负责什么                           | 什么时候使用                        |
+| ------------------------ | ---------------------------------- | ----------------------------------- |
+| `@retikz/layout`         | schema、factory、Definition 与求解 | 校验或持久化 IR，直接接入 Core 编译 |
+| `@retikz/layout-react`   | 布局容器的 React DSL               | 在 React `Layout` 中创作            |
+| `@retikz/layout-vanilla` | plain spec helper 与 adapter       | 无 React 的浏览器或脚本入口         |
+
+使用 React 创作时，在 `@retikz/react` 的 `Layout` 中组合 `FlexLayout`、`GridLayout` 或 `OverlayLayout`；使用 Vanilla 时，通过 `@retikz/layout-vanilla` 的 helper 与 adapter 接入；读取持久化 JSON 时，则用 `@retikz/layout` 校验完整布局 IR，并把所需 Definition 传给 Core 编译器。
+
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/layout/get-start">
-    <span className="font-semibold">快速开始</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">React、Vanilla 与持久化 IR 三条入口</span>
-  </LinkedCard>
   <LinkedCard href="/library/layout/flex-layout">
     <span className="font-semibold">弹性布局</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">一维分配、换行与基线对齐</span>

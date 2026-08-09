@@ -25,13 +25,11 @@ Standard extends Core horizontally rather than creating another drawing kernel:
 
 All three packages share the schemas and lowering from `@retikz/standard`. React and Vanilla connect authoring inputs to the same capabilities without duplicating semantics.
 
+For React authoring, use components from `@retikz/standard-react` inside the `Layout` from `@retikz/react`. For Vanilla, combine the plain-spec helpers and adapters from `@retikz/standard-vanilla`. When loading persisted JSON, validate complete IR with `@retikz/standard` and pass the required Definitions to the Core compiler.
+
 ## Pages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/standard/get-start">
-    <span className="font-semibold">Get Started</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">React, Vanilla, and persisted IR paths</span>
-  </LinkedCard>
   <LinkedCard href="/library/standard/composite">
     <span className="font-semibold">Presentation</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Grid, Axes, Frame, and Legend</span>

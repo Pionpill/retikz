@@ -128,7 +128,6 @@
   "library": {
     "label": "Library",
     "standard": "Standard · Extensions",
-    "standardGetStart": "Get Started",
     "standardComposite": "Presentation",
     "standardGrid": "Grid",
     "standardAxes": "Axes",
@@ -137,7 +136,6 @@
     "standardExtension": "Extensions",
     "standardCapabilityLoading": "Capability Loading",
     "layout": "Layout",
-    "layoutGetStart": "Get Started",
     "flexLayout": "FlexLayout",
     "gridLayout": "GridLayout",
     "overlayLayout": "OverlayLayout",

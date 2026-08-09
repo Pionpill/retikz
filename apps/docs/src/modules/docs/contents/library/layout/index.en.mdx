@@ -28,13 +28,19 @@ This example uses `LayoutInspectLayout` from `@retikz/layout-react/inspect` to i
 
 Containers own generic size distribution, spacing, alignment, overflow, and observable results. Data channels, chart semantics, table rules, and algorithmic layout remain with their domain packages.
 
+## Three packages
+
+| Package                  | Responsibility                             | Use it when                                        |
+| ------------------------ | ------------------------------------------ | -------------------------------------------------- |
+| `@retikz/layout`         | Schemas, factories, Definitions, and solve | Validating or persisting IR and compiling directly |
+| `@retikz/layout-react`   | React DSL for layout containers            | Authoring inside a React `Layout`                  |
+| `@retikz/layout-vanilla` | Plain-spec helpers and adapters            | Authoring in browsers or scripts without React     |
+
+For React authoring, compose `FlexLayout`, `GridLayout`, or `OverlayLayout` inside the `Layout` from `@retikz/react`. For Vanilla, combine the helpers and adapters from `@retikz/layout-vanilla`. When loading persisted JSON, validate complete layout IR with `@retikz/layout` and pass the required Definitions to the Core compiler.
+
 ## Pages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/layout/get-start">
-    <span className="font-semibold">Get Started</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">React, Vanilla, and persisted IR paths</span>
-  </LinkedCard>
   <LinkedCard href="/library/layout/flex-layout">
     <span className="font-semibold">FlexLayout</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
