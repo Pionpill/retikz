@@ -51,15 +51,15 @@ Plot、Table、Chart 等能力都需要开箱即用的视觉默认，也需要�
 
 ## 3. Theme 核心模型
 
-一个可视化主题由持久化环境、Core shared colors 与领域覆盖组成：
+一个可视化主题由轻量持久化环境、Core shared colors 与 owner-local 解析组成：
 
 ```text
-theme environment = style + mode + namespaced token context
-shared colors = effective style/mode + Core token overrides
-domain theme = effective theme environment + owner token overrides
+theme environment = style + mode
+shared colors = Core style definition(effective style, mode)
+domain theme = owner style definition(effective theme) + owner-local overrides
 ```
 
-`style` 选择通用视觉人格，`mode` 选择明暗环境，`theme.tokens` 承载按 owner namespace 分区的 sparse overrides。三者由 Core Theme IR 统一表达，可写在 Scene 或 Scope；compile 按字段、namespace 与 token key 继承，并把 detached 的有效 context 与 derived shared colors 交给 Composite。领域 resolver 仍拥有自己的 token vocabulary、preset、mapping 与最终消费。
+`style` 选择通用视觉人格，`mode` 选择明暗环境。二者是 Core Theme IR 中唯一持久化的 selector，可写在 Scene 或 Scope；compile 按字段继承 selector，通过 Core runtime style definition 生成 detached shared colors，再把完整 effective Theme 交给 Composite。Plot、Chart、Table 等 owner 使用同名 runtime style definition 生成各自 baseline，并在自己的 spec 中保存 sparse token override。完整 token map、resolver 与 definition 都不进入 Scene / Scope IR。
 
 ### 3.1 Theme style
 
@@ -81,9 +81,9 @@ Theme 环境与领域输入必须共同无歧义地表达：
 
 - 在 Scene / Scope 选择 style
 - 在 Scene / Scope 选择 mode
-- 在 `theme.tokens.<owner>` 提供 namespaced sparse token map
-- 由 Core registry 使用 owner schema 做运行时校验
-- 由领域 owner 检查自己的 complete resolved token map
+- 在 Core 与实际消费该 style 的领域 owner 中注册同名 runtime style definition
+- 在领域 spec 的 owner-local 字段中提供 sparse token map
+- 由领域 owner 使用自己的 schema 校验输入并检查 complete resolved token map
 
 ## 4. Token vocabulary 与 namespace
 
@@ -218,18 +218,19 @@ Core default neutral + light
   -> Scene theme
   -> outer-to-inner Scope theme
   -> Core shared colors
-  -> domain preset tokens
-  -> inherited owner namespace tokens
-  -> user token overrides
-  -> domain shorthand / native theme
+  -> domain style definition baseline
+  -> inherited effective Theme projection
+  -> local owner token overrides
+  -> local domain shorthand / native theme
   -> explicit component config
 ```
 
 其中：
 
 - Scene / Scope theme 按字段继承并选定有效 style / mode
-- domain preset tokens 为有效 style / mode 提供完整人格基线
-- user token overrides 对 canonical key 做稀疏覆盖
+- domain style definition baseline 为有效 style / mode 提供完整人格基线
+- inherited effective Theme projection 是 owner resolver 从上层 `ResolvedTheme` 直接投影的共享值，例如 Core categorical colors
+- local owner token overrides 对 canonical key 做稀疏覆盖
 - domain shorthand / native theme 是更贴近该领域既有结构的显式输入，例如颜色 shorthand 或 Plot theme
 - explicit component config 是最具体的局部配置，例如某一条 axis、某个 legend 或单个 mark 的属性
 
@@ -246,32 +247,32 @@ Core default neutral + light
 - 作为 npm 数据包发布
 - 在应用层组合为自己的命名主题目录
 
-Core 使用 `ThemeTokenDefinition` registry 绑定 owner schema 并执行运行时 validation；这不是按主题名称 dispatch 的行为 registry。同一 definition identity 的重复聚合确定性去重，同 namespace 的不同 definition 与同次 contribution 组合中的重复 namespace fail-loud，不使用 last-wins。token contribution 仍是闭合数据，不执行代码、不拥有 provider 生命周期。自定义包必须声明目标领域与兼容的 token contract；strict consumer 对未知 key 继续 fail-loud。
+Core、Plot、Chart、Table 分别使用 owner-local style definition registry。自定义 style 必须在 Core 与每个实际消费它的 owner 中注册同名 definition；缺少 definition 时在对应 owner fail-loud，不回退为 `neutral`。合法 sparse token map 仍是闭合数据，不执行代码、不拥有 provider 生命周期，并由领域 strict schema 拒绝未知 key。
 
 若未来真实需求包括自定义主题命名、继承、动态加载、远程分发或按 capability 组合，再由独立 ADR 决定 registry / loader / manifest 契约。不得提前用开放 registry 规避 key 治理。
 
 ## 9. Owner 与 package 边界
 
-| 层级 / 包                      | 拥有                                                                                                                                                                                                     | 不拥有                                                      |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 根架构                         | 通用 theme 模型、style 人格、token 治理、cascade 与跨包不变量                                                                                                                                            | 具体 key、hex、尺寸、schema 和版本范围                      |
-| Plot / Table / future Geo      | 各自领域 token vocabulary、preset 具体值、领域 mapping、resolver 与诊断                                                                                                                                  | 其它领域 token、Core drawing、Standard layout               |
-| Chart                          | Chart canvas / presentation / recipe-default token、preset、mapping、resolver 与诊断；转发 Plot 公开 token 输入                                                                                          | Plot token、Plot preset / resolver、Plot native theme merge |
-| `@retikz/standard`             | 去除领域词汇后的通用 presentation / layout / composite capability                                                                                                                                        | Plot guide、Table model、Chart type 与数据 palette 语义     |
-| `@retikz/core`                 | Theme style / mode、Scene / Scope Theme IR、namespaced inheritance、ThemeTokenDefinition registry、owner schema validation、shared colors 与 Composite context，以及权威 drawing / text / paint fragment | 领域 token、preset 具体值、领域 mapping 与 token cascade    |
-| React / Vanilla adapters       | 同一 JSON-safe Scene / Scope Theme 的等价 authoring、definition aggregation 与传递                                                                                                                       | 新 token、不同默认、CSS-only 主题语义                       |
-| SVG / Canvas renderer          | 对统一 Scene 的等价呈现                                                                                                                                                                                  | preset 解析、token merge 与领域 mapping                     |
-| `apps/docs` / host application | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                                                                                                                                                     | 改写可视化 spec 的主题契约或静默补可视化默认                |
+| 层级 / 包                      | 拥有                                                                                                                                                                              | 不拥有                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 根架构                         | 通用 theme 模型、style 人格、token 治理、cascade 与跨包不变量                                                                                                                     | 具体 key、hex、尺寸、schema 和版本范围                      |
+| Plot / Table / future Geo      | 各自领域 token vocabulary、preset 具体值、领域 mapping、resolver 与诊断                                                                                                           | 其它领域 token、Core drawing、Standard layout               |
+| Chart                          | Chart canvas / presentation / recipe-default token、preset、mapping、resolver 与诊断；转发 Plot 公开 token 输入                                                                   | Plot token、Plot preset / resolver、Plot native theme merge |
+| `@retikz/standard`             | 去除领域词汇后的通用 presentation / layout / composite capability                                                                                                                 | Plot guide、Table model、Chart type 与数据 palette 语义     |
+| `@retikz/core`                 | Theme style / mode、Scene / Scope selector 继承、Core style definition registry、shared colors、`ThemeTokenSource` 与 Composite context，以及权威 drawing / text / paint fragment | 领域 token、preset 具体值、领域 mapping 与 token cascade    |
+| React / Vanilla adapters       | 同一 JSON-safe Scene / Scope selector 的等价 authoring、runtime definition 注入与传递                                                                                             | 新 token、不同默认、CSS-only 主题语义                       |
+| SVG / Canvas renderer          | 对统一 Scene 的等价呈现                                                                                                                                                           | preset 解析、token merge 与领域 mapping                     |
+| `apps/docs` / host application | 站点或产品 UI 主题、CSS variables、chrome 与交互外壳                                                                                                                              | 改写可视化 spec 的主题契约或静默补可视化默认                |
 
 ### 9.1 主题传播与消费边界
 
 Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层视觉能力物化主题，renderer 执行已经物化的样式。这里的“主题化”不是所有包都各自提供一套 Theme，而是所有拥有可视表现语义的包都成为同一 Theme 环境的 consumer。
 
-- `@retikz/core` 提供 `ThemeStyle`、`ThemeMode`、`theme.tokens`、ThemeTokenDefinition registry、owner schema validation、Scene / Scope 继承、derived shared colors 与 Composite context，但原始 Core `Node`、`Path`、Coordinate 与 renderer 不直接按 preset 分支
+- `@retikz/core` 提供 `ThemeStyle`、`ThemeMode`、Scene / Scope selector 继承、Core style definition registry、derived shared colors、`ThemeTokenSource` 与 Composite context，但原始 Core `Node`、`Path`、Coordinate 与 renderer 不直接按 preset 分支
 - Standard 的通用 presentation，以及 Plot、Chart、Table、Geo 等视觉能力必须消费有效 Theme，并解析自己拥有的 token family；Plot 即使处于比 Chart 更底层的纵向能力层，也不能因为被 Chart 复用而跳过主题解析
-- Chart 可以编排 Chart presentation、解析 Chart-owned recipe token，并把 `plotThemeTokens`、`colors` 与 Plot native `plotTheme` 交给 Plot owner；Table 可以解析 Table presentation、通过 `theme.tokens.table` 继承自己的 namespace 并消费 Standard / Core 的公开 fragment，但任何一方都不能复制另一方的 token vocabulary、preset、resolver 或 merge 规则
+- Chart 可以编排 Chart presentation、解析 Chart-owned recipe token，并把 `plotThemeTokens`、`colors` 与 Plot native `plotTheme` 交给 Plot owner；Table 可以解析 Table presentation，并把 Core shared categorical 作为继承值投影到自己的 token。任何一方都不能复制另一方的 token vocabulary、preset、resolver 或 merge 规则
 - Plot / Chart / Table 解析出的主题默认必须在 lowering 前物化为正式 Core / Standard 输入；最终 Core primitive 只接收显式 `fill`、`stroke`、`font` 等值，不再次读取 `ThemeStyle`
-- React / Vanilla adapter 只提供等价的主题 authoring、definition aggregation 与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Standard Inspector 只消费 Core `InspectionAppearance`；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
+- React / Vanilla adapter 只提供等价的主题 authoring、runtime definition 注入与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Standard Inspector 只消费 Core `InspectionAppearance`；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
 
 因此，在同一 `academic + light` 环境下，直接使用的 Plot、BubbleChart、DetailTable 都应分别得到自己的 academic token map；由这些能力生成的 Core 图元也会带有已经物化的样式。裸 Core `Node` 若没有显式样式则保持 Core 默认，不因所在 Scope 的 preset 自动改变。若产品要求裸 Node 也随 preset 改变，应另行定义 Theme-aware Core / Standard composite 或 Core primitive fallback 契约，不能让 renderer 私自补主题。
 
@@ -283,11 +284,11 @@ Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层
 
 - 实际采用的 style 与 mode
 - 通过 required schema 的 complete resolved token map
-- 每个领域 token 来自 effective Scene / Scope Theme 所选 preset、user token、domain shorthand 还是 local config
+- 每个领域 token 是直接继承自上层 effective Theme，还是由当前 owner 本地构建
 - token 映射到的正式 owner 配置或产物
 - 无法消费、冲突或被更高优先级覆盖时的诊断
 
-Core 的 `ResolvedTheme` 携带完整有效的 style / mode、detached namespaced token bag 与 derived `colors` view，不公开逐字段 winning Scene / Scope 或 locator。领域 inspection 可以把 preset/token 来源归类为 effective Theme，但不能把未提供的字段级继承来源伪装成可追踪 lineage；若未来需要这类来源查询，应由独立 Core inspection contract 冻结。
+Core 的 `ResolvedTheme` 携带完整有效的 style / mode 与 detached `colors` view，不公开逐字段 winning Scene / Scope 或 locator。Core 的公共 `ThemeTokenSource` 只包含 `inherit | local`：owner resolver 从上层 effective Theme 直接投影的值为 `inherit`，style definition 与当前 owner authoring 产生的值为 `local`。`kind` 不表达具体入口或优先级；领域 inspection 使用稳定 `path` 区分 style、shared colors、token override、shorthand 与 native theme。不得通过值相等反推来源，也不能把未提供的字段级 Scope lineage 伪装成可追踪信息。
 
 未知 key、错误 value、缺失 required token、空 palette、非法图元与无法映射的 token 必须 fail-loud。错误至少应指出 token key、输入层和期望 contract；不得静默丢弃、回退为 renderer 默认或只在某个 adapter 打 warning。
 
@@ -309,7 +310,7 @@ Core 的 `ResolvedTheme` 携带完整有效的 style / mode、detached namespace
 10. SVG、Canvas 等 renderer 消费同一 lowering 结果，不维护各自的主题默认
 11. inspection 能解释关键 token 的最终值、来源与 owner 映射
 12. 四个 preset 在典型内容和两种 mode 下完成可读性、层级、数据区分度与对比度的视觉验收
-13. Scene / Scope Theme 可 JSON 往返并按字段、namespace 与 token key 继承，嵌套 Composite 读取所在位置的同一有效 Theme 与 shared colors
+13. Scene / Scope Theme 可 JSON 往返并按 `style` / `mode` 字段继承，嵌套 Composite 读取所在位置的同一有效 Theme 与 shared colors
 14. Theme 变化不直接改变 Core primitive；只有消费 Theme 的 Composite 重新物化领域默认
 15. Theme context 只承诺有效值；没有独立 lineage contract 时，consumer 不依赖 Core 私有 traversal 状态推断 winning Scope
 
