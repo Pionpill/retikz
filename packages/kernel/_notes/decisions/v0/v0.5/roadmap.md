@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-01～10、ADR-12～14 已 Accepted，ADR-11 仍为 Proposed；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
+> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-01～10、ADR-12、ADR-14、ADR-16 已 Accepted，ADR-11 与 ADR-15 为 Proposed，ADR-13 已 Superseded；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 
@@ -24,6 +24,7 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | Box Layout Composite 合同 | 让任意 child 接受双轴 slot、反馈真实占用并带外层 transform / clip replay | [alpha.2 ADR-06 Accepted](./alpha.2/06-box-layout-composite-contract.md)      |
 | 增量性能闭环              | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本              | [alpha.2：ADR-01～10、12～13 Accepted；ADR-11 Proposed](./alpha.2/roadmap.md) |
 | Foundation 基础契约统一   | 为跨包原子类型、typed string 不变量与结构化错误建立唯一 Kernel owner     | [alpha.2 ADR-14 Accepted](./alpha.2/14-foundation-package.md)                 |
+| 二维仿射矩阵原子          | 为 Render hydration 与 TeX SVG lowering 提供同一纯数值矩阵真源           | [alpha.2 ADR-16 Accepted](./alpha.2/16-affine-matrix-primitives.md)           |
 | Concurrent 与渐进生成     | 可让出、取消地准备候选结果，并支持渐进物化与 generation                  | [alpha.3 Proposed](./alpha.3/roadmap.md)                                      |
 | Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership             | [alpha.4 候选](./alpha.4/roadmap.md)                                          |
 
@@ -42,11 +43,11 @@ Headless interaction 与 progressive compile 的 ADR、实现、测试与文档�
 
 ## 后续 Alpha 排期
 
-| 版本    | 交付边界                                                                                        | 上位设计                                                                                                                         |
-| ------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| alpha.2 | `sync + atomic + incremental`；补齐 Standard Box Layout 所需双轴 child layout / replay contract | [性能设计](../../../../../../notes/architecture/performance-design.md) · [ADR-06](./alpha.2/06-box-layout-composite-contract.md) |
-| alpha.3 | `concurrent + atomic/progressive`：调度、取消、渐进物化、generation session                     | [性能与增量运行时设计](../../../../../../notes/architecture/performance-design.md)                                               |
-| alpha.4 | Headless Interaction：事件、ownership routing、behavior、presentation、intent                   | [交互与增量运行时设计](../../../../../../notes/architecture/interaction-design.md)                                               |
+| 版本    | 交付边界                                                                                                                | 上位设计                                                                                                                                                                              |
+| ------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| alpha.2 | `sync + atomic + incremental`；补齐 Standard Box Layout 所需双轴 child layout / replay contract 与跨包 Math affine 原子 | [性能设计](../../../../../../notes/architecture/performance-design.md) · [ADR-06](./alpha.2/06-box-layout-composite-contract.md) · [ADR-16](./alpha.2/16-affine-matrix-primitives.md) |
+| alpha.3 | `concurrent + atomic/progressive`：调度、取消、渐进物化、generation session                                             | [性能与增量运行时设计](../../../../../../notes/architecture/performance-design.md)                                                                                                    |
+| alpha.4 | Headless Interaction：事件、ownership routing、behavior、presentation、intent                                           | [交互与增量运行时设计](../../../../../../notes/architecture/interaction-design.md)                                                                                                    |
 
 三段共享 identity、revision、ownership、transaction 与 retained Scene，不建立平行 Runtime。alpha.2 的 transaction 即使只同步执行，也必须隔离候选 revision 与当前状态；alpha.3 在同一契约上增加调度能力；alpha.4 只消费基础契约，不反向重定义它们。
 

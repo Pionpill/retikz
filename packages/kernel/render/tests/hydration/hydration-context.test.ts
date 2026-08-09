@@ -98,6 +98,38 @@ describe('geometryOf（同 id 全部图元并集 bbox）', () => {
     expect(geometry?.bbox).toEqual({ x: 100, y: 0, width: 10, height: 10 });
   });
 
+  it('嵌套 translate + scale/rotate 按父帧 × 子帧顺序聚合 geometry', () => {
+    const scene: Scene = {
+      layout: { x: 0, y: 0, width: 200, height: 200 },
+      primitives: [
+        {
+          type: 'group',
+          transforms: [{ kind: 'translate', x: 10, y: 20 }],
+          children: [
+            {
+              type: 'group',
+              id: 'nested',
+              transforms: [
+                { kind: 'scale', x: 2, y: 3 },
+                { kind: 'rotate', degrees: 90 },
+              ],
+              children: [{ type: 'rect', x: 1, y: 2, width: 2, height: 1 }],
+            },
+          ],
+        },
+      ],
+    };
+
+    const geometry = geometryOf(scene, 'nested');
+
+    expect(geometry?.bbox.x).toBeCloseTo(4, 8);
+    expect(geometry?.bbox.y).toBeCloseTo(23, 8);
+    expect(geometry?.bbox.width).toBeCloseTo(2, 8);
+    expect(geometry?.bbox.height).toBeCloseTo(6, 8);
+    expect(geometry?.center[0]).toBeCloseTo(5, 8);
+    expect(geometry?.center[1]).toBeCloseTo(26, 8);
+  });
+
   it('旋转椭圆 → 角点绕中心旋转后聚合 bbox（不偏小）', () => {
     const scene: Scene = {
       layout: { x: 0, y: 0, width: 100, height: 100 },

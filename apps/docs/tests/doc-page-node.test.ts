@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { DocDifficulty } from '@/modules/docs/data';
 import { resolveDocPageNode } from '@/modules/docs/layout/useDocPageNode';
 
 describe('resolveDocPageNode', () => {
@@ -7,6 +8,7 @@ describe('resolveDocPageNode', () => {
     const node = resolveDocPageNode({ moduleId: 'kernel', sectionId: null, pageId: 'get-start' });
     expect(node.section?.label).toBeUndefined();
     expect(node.target?.id).toBe('get-start');
+    expect(node.target?.difficulty).toBe(DocDifficulty.Beginner);
   });
 
   it('解析带子页的分组页面', () => {

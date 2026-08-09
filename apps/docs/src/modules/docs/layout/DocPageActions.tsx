@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+import type { DocDifficultyValue } from '@/modules/docs/data';
+
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon, GitHubIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
@@ -17,6 +19,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DocDifficultyIndicator } from '@/modules/docs/components';
+import { getDocDifficultyReadingCoefficient } from '@/modules/docs/data';
 import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib';
 
 import { useDocLocation } from './useDocLocation';
@@ -25,6 +29,8 @@ import { usePageNavigation } from './usePageNavigation';
 export type DocPageActionsProps = {
   /** 当前页面 mdx 源码（用于"复制 markdown"） */
   source: string;
+  /** 当前页面的可选阅读难度。 */
+  difficulty?: DocDifficultyValue;
 };
 
 type DocStats = {
@@ -34,13 +40,6 @@ type DocStats = {
   components: number;
   /** 估算完整阅读分钟数 */
   readingMinutes: number;
-};
-
-/** 移动端紧凑统计：>=1000 转 K，其它原值；用于 page.docStatsCompact 的字数槽位 */
-const formatCompactCount = (count: number): string => {
-  if (count >= 10000) return `${Math.round(count / 1000)}K`;
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-  return count.toString();
 };
 
 /** 中文技术文档估算阅读速度：每分钟字符数 */
@@ -62,7 +61,7 @@ const getCharsPerMinute = (lang: string): number => {
  * 估算文档统计
  * @description chars 剥掉 frontmatter / 代码块 / md 标记后的非空白字符数；components 计大写开头 JSX 开标签数量（先剥代码块避免 ``` 里的伪组件计入）
  */
-const computeDocStats = (mdx: string, lang: string): DocStats => {
+const computeDocStats = (mdx: string, lang: string, difficulty?: DocDifficultyValue): DocStats => {
   let s = mdx.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
   s = s.replace(/```[\s\S]*?```/g, '');
   s = s.replace(/`[^`\n]*`/g, '');
@@ -74,7 +73,10 @@ const computeDocStats = (mdx: string, lang: string): DocStats => {
   const chars = s.replace(/\s/g, '').length;
   const readingMinutes = Math.max(
     1,
-    Math.ceil(chars / getCharsPerMinute(lang) + components * COMPONENT_READING_MINUTES),
+    Math.ceil(
+      (chars / getCharsPerMinute(lang) + components * COMPONENT_READING_MINUTES) *
+        getDocDifficultyReadingCoefficient(difficulty),
+    ),
   );
   return { chars, components, readingMinutes };
 };
@@ -97,7 +99,7 @@ const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ ic
 );
 
 export const DocPageActions: FC<DocPageActionsProps> = props => {
-  const { source } = props;
+  const { difficulty, source } = props;
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage ?? 'zh';
   const loc = useDocLocation();
@@ -113,24 +115,19 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
     toast.success(t('page.pageCopied'));
   }, [source, t]);
 
-  const stats = useMemo(() => computeDocStats(source, lang), [lang, source]);
+  const stats = useMemo(() => computeDocStats(source, lang, difficulty), [difficulty, lang, source]);
 
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-1">
-        <span className="hidden whitespace-nowrap pr-1 text-xs text-muted-foreground sm:inline">
+        <span className="hidden whitespace-nowrap pr-1 text-xs text-muted-foreground md:inline">
           {t('page.docStats', {
             minutes: stats.readingMinutes,
             chars: stats.chars.toLocaleString(),
             components: stats.components,
           })}
         </span>
-        <span className="whitespace-nowrap pr-1 text-[11px] text-muted-foreground sm:hidden">
-          {t('page.docStatsCompact', {
-            minutes: stats.readingMinutes,
-            chars: formatCompactCount(stats.chars),
-          })}
-        </span>
+        <DocDifficultyIndicator difficulty={difficulty} />
         <ButtonGroup className="flex items-center">
           <Button variant="secondary" size="sm" className="h-8 cursor-pointer gap-1.5" onClick={handleCopyMarkdown}>
             <Copy className="size-3.5" />
@@ -214,38 +211,42 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
           </DropdownMenu>
         </ButtonGroup>
         {prev && (
-          <Tooltip>
-            <TooltipTrigger
-              className={buttonVariants({
-                variant: 'secondary',
-                size: 'icon',
-                className: 'size-8 cursor-pointer hidden sm:inline-flex',
-              })}
-              onClick={() => navigate(prev.path)}
-            >
-              <ArrowLeft className="size-4" />
-            </TooltipTrigger>
-            <TooltipContent>
-              {t('page.prevPage')} · {t(prev.label)}
-            </TooltipContent>
-          </Tooltip>
+          <span className="hidden md:inline-flex">
+            <Tooltip>
+              <TooltipTrigger
+                className={buttonVariants({
+                  variant: 'secondary',
+                  size: 'icon',
+                  className: 'size-8 cursor-pointer',
+                })}
+                onClick={() => navigate(prev.path)}
+              >
+                <ArrowLeft className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent>
+                {t('page.prevPage')} · {t(prev.label)}
+              </TooltipContent>
+            </Tooltip>
+          </span>
         )}
         {next && (
-          <Tooltip>
-            <TooltipTrigger
-              className={buttonVariants({
-                variant: 'secondary',
-                size: 'icon',
-                className: 'size-8 cursor-pointer hidden sm:inline-flex',
-              })}
-              onClick={() => navigate(next.path)}
-            >
-              <ArrowRight className="size-4" />
-            </TooltipTrigger>
-            <TooltipContent>
-              {t('page.nextPage')} · {t(next.label)}
-            </TooltipContent>
-          </Tooltip>
+          <span className="hidden md:inline-flex">
+            <Tooltip>
+              <TooltipTrigger
+                className={buttonVariants({
+                  variant: 'secondary',
+                  size: 'icon',
+                  className: 'size-8 cursor-pointer',
+                })}
+                onClick={() => navigate(next.path)}
+              >
+                <ArrowRight className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent>
+                {t('page.nextPage')} · {t(next.label)}
+              </TooltipContent>
+            </Tooltip>
+          </span>
         )}
       </div>
     </TooltipProvider>

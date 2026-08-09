@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib';
+import { DocDifficultyDot } from '@/modules/docs/components';
 
 import type { SidebarModuleData } from './types';
 
@@ -72,7 +73,8 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
           }}
         >
           {ItemIcon && <ItemIcon className="mr-1.5 size-3.5 shrink-0" />}
-          <span className="truncate">{item.label}</span>
+          <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+          <DocDifficultyDot difficulty={item.difficulty} />
         </button>
       </li>
     );

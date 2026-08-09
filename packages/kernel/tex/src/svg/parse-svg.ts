@@ -1,10 +1,12 @@
 import type { LoweredTex, LoweredTexPaint, LoweredTexPath, PathCommand } from '@retikz/core';
+import type { AffineMatrix } from '@retikz/math';
+
+import { AFFINE_IDENTITY, multiplyAffine } from '@retikz/math';
 
 import type { TexLoweringDiagnostic, TexLoweringResult } from '../lower/types';
-import type { Matrix } from './matrix';
 import type { PointMapper } from './path-d';
 
-import { IDENTITY, isFiniteNonSingular, multiply, parseTransform, similarityScale, SvgTransformError } from './matrix';
+import { isFiniteNonSingular, parseTransform, similarityScale, SvgTransformError } from './matrix';
 import { parsePathD, transformCommands } from './path-d';
 
 type SvgNode = {
@@ -241,7 +243,7 @@ const multiplyOpacity = (parent: number | undefined, own: number | undefined): n
 };
 
 type EmitContext = {
-  matrix: Matrix;
+  matrix: AffineMatrix;
   paint: PaintContext;
   opacity?: number;
   normalize: PointMapper;
@@ -254,14 +256,14 @@ type EmitContext = {
 const emitDrawable = (
   node: SvgNode,
   context: EmitContext,
-  matrix: Matrix,
+  matrix: AffineMatrix,
   paint: PaintContext,
   opacity: number | undefined,
 ): void => {
   let commands: Array<PathCommand> = [];
   let effectiveNode = node;
   let effectiveOpacity = opacity;
-  matrix = multiply(matrix, parseTransform(attribute(node, 'transform')));
+  matrix = multiplyAffine(matrix, parseTransform(attribute(node, 'transform')));
   if (node.name === 'use') {
     const href = attribute(node, 'href') ?? attribute(node, 'xlink:href');
     const definition = href ? context.definitions.get(href.replace(/^#/, '')) : undefined;
@@ -270,8 +272,8 @@ const emitDrawable = (
     effectiveNode = definition;
     const x = finiteNumber(attribute(node, 'x'), 0);
     const y = finiteNumber(attribute(node, 'y'), 0);
-    matrix = multiply(matrix, [1, 0, 0, 1, x, y]);
-    matrix = multiply(matrix, parseTransform(attribute(effectiveNode, 'transform')));
+    matrix = multiplyAffine(matrix, [1, 0, 0, 1, x, y]);
+    matrix = multiplyAffine(matrix, parseTransform(attribute(effectiveNode, 'transform')));
   }
   if (!isFiniteNonSingular(matrix)) unsupported('SVG drawable transform must be finite and non-singular');
   if (effectiveNode.name === 'path') {
@@ -335,7 +337,7 @@ const emitNode = (node: SvgNode, context: EmitContext): void => {
     unsupported('Container opacity with multiple drawables is not supported');
   }
   const opacity = multiplyOpacity(context.opacity, resolved.opacity);
-  const matrix = multiply(context.matrix, parseTransform(attribute(node, 'transform')));
+  const matrix = multiplyAffine(context.matrix, parseTransform(attribute(node, 'transform')));
   if (supportedDrawable) {
     emitDrawable(node, context, context.matrix, resolved.paint, opacity);
     return;
@@ -368,7 +370,7 @@ export const parseMathJaxSvgResult = (svg: string, fontSize: number, source = ''
       stroke: 'none',
     };
     emitNode(rootSvg, {
-      matrix: IDENTITY,
+      matrix: AFFINE_IDENTITY,
       paint: initialPaint,
       normalize,
       fontScale,

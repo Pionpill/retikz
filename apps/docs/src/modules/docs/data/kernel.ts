@@ -1,5 +1,7 @@
 import type { DocPageMetadataOverride, Section } from './types';
 
+import { DocDifficulty } from './types';
+
 /** 标记以 Definition / registry 为主线的扩展指南。 */
 const extensionGuide = (capability: string): DocPageMetadataOverride => ({
   pageType: 'extension',
@@ -11,8 +13,8 @@ const extensionGuide = (capability: string): DocPageMetadataOverride => ({
 export const kernelSection: Array<Section> = [
   {
     pages: [
-      { id: 'introduction', label: 'kernel.introduction' },
-      { id: 'get-start', label: 'kernel.getStart' },
+      { id: 'introduction', label: 'kernel.introduction', difficulty: DocDifficulty.Beginner },
+      { id: 'get-start', label: 'kernel.getStart', difficulty: DocDifficulty.Beginner },
     ],
   },
   {
@@ -24,27 +26,28 @@ export const kernelSection: Array<Section> = [
         id: 'basic',
         label: 'kernel.basicConcepts',
         children: [
-          { id: 'coordinate-system', label: 'kernel.coordinateSystem' },
-          { id: 'position', label: 'kernel.positioning' },
+          { id: 'coordinate-system', label: 'kernel.coordinateSystem', difficulty: DocDifficulty.Beginner },
+          { id: 'position', label: 'kernel.positioning', difficulty: DocDifficulty.Beginner },
         ],
       },
       {
         id: 'core',
         label: 'kernel.coreConcepts',
         children: [
-          { id: 'primitive-model', label: 'kernel.primitiveModel' },
-          { id: 'primitive-relations', label: 'kernel.primitiveRelations' },
+          { id: 'primitive-model', label: 'kernel.primitiveModel', difficulty: DocDifficulty.Advanced },
+          { id: 'primitive-relations', label: 'kernel.primitiveRelations', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
         id: 'design',
         label: 'kernel.design',
         children: [
-          { id: 'layers', label: 'kernel.layers' },
-          { id: 'composite', label: 'kernel.refComposite' },
+          { id: 'layers', label: 'kernel.layers', difficulty: DocDifficulty.Internals },
+          { id: 'composite', label: 'kernel.refComposite', difficulty: DocDifficulty.Internals },
           {
             id: 'principles',
             label: 'kernel.principles',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'architecture',
               audience: 'maintainer',
@@ -65,59 +68,99 @@ export const kernelSection: Array<Section> = [
         id: 'layout',
         label: 'kernel.layout',
         children: [
-          { id: 'overview', label: 'kernel.layoutOverview' },
-          { id: 'scope', label: 'kernel.layoutScope' },
-          { id: 'custom-clip', label: 'kernel.layoutCustomClip', meta: extensionGuide('kernel.clip') },
+          { id: 'overview', label: 'kernel.layoutOverview', difficulty: DocDifficulty.Beginner },
+          { id: 'scope', label: 'kernel.layoutScope', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'custom-clip',
+            label: 'kernel.layoutCustomClip',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.clip'),
+          },
         ],
       },
       {
         id: 'node',
         label: 'kernel.node',
         children: [
-          { id: 'overview', label: 'kernel.nodeOverview' },
-          { id: 'text', label: 'kernel.text' },
-          { id: 'coordinate', label: 'kernel.coordinate' },
-          { id: 'custom-boundary', label: 'kernel.nodeCustomBoundary', meta: extensionGuide('kernel.boundary') },
+          { id: 'overview', label: 'kernel.nodeOverview', difficulty: DocDifficulty.Beginner },
+          { id: 'text', label: 'kernel.text', difficulty: DocDifficulty.Advanced },
+          { id: 'coordinate', label: 'kernel.coordinate', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'custom-boundary',
+            label: 'kernel.nodeCustomBoundary',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.boundary'),
+          },
         ],
       },
       {
         id: 'draw',
         label: 'kernel.draw',
         children: [
-          { id: 'overview', label: 'kernel.drawOverview' },
-          { id: 'way', label: 'kernel.drawWay' },
-          { id: 'path', label: 'kernel.path' },
-          { id: 'ribbon', label: 'kernel.ribbon' },
-          { id: 'step', label: 'kernel.step' },
-          { id: 'arrow', label: 'kernel.arrow' },
-          { id: 'path-generator', label: 'kernel.drawPathGenerator', meta: extensionGuide('kernel.path-generator') },
-          { id: 'custom-path', label: 'kernel.drawCustomPath', meta: extensionGuide('kernel.path-kind') },
-          { id: 'custom-arrow', label: 'kernel.drawCustomArrow', meta: extensionGuide('kernel.arrow') },
+          { id: 'overview', label: 'kernel.drawOverview', difficulty: DocDifficulty.Beginner },
+          { id: 'way', label: 'kernel.drawWay', difficulty: DocDifficulty.Advanced },
+          { id: 'path', label: 'kernel.path', difficulty: DocDifficulty.Advanced },
+          { id: 'ribbon', label: 'kernel.ribbon', difficulty: DocDifficulty.Advanced },
+          { id: 'step', label: 'kernel.step', difficulty: DocDifficulty.Advanced },
+          { id: 'arrow', label: 'kernel.arrow', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'path-generator',
+            label: 'kernel.drawPathGenerator',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.path-generator'),
+          },
+          {
+            id: 'custom-path',
+            label: 'kernel.drawCustomPath',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.path-kind'),
+          },
+          {
+            id: 'custom-arrow',
+            label: 'kernel.drawCustomArrow',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.arrow'),
+          },
         ],
       },
       {
         id: 'shapes',
         label: 'kernel.shapes',
         children: [
-          { id: 'circle-ellipse', label: 'kernel.shapesCircleEllipse' },
-          { id: 'arc-sector', label: 'kernel.shapesArcSector' },
-          { id: 'rectangle', label: 'kernel.shapesRectangle' },
-          { id: 'polygon', label: 'kernel.shapesPolygon' },
-          { id: 'star', label: 'kernel.shapesStar' },
-          { id: 'contour', label: 'kernel.shapesContour' },
-          { id: 'custom-shape', label: 'kernel.shapesCustomShape', meta: extensionGuide('kernel.shape') },
+          { id: 'circle-ellipse', label: 'kernel.shapesCircleEllipse', difficulty: DocDifficulty.Beginner },
+          { id: 'arc-sector', label: 'kernel.shapesArcSector', difficulty: DocDifficulty.Beginner },
+          { id: 'rectangle', label: 'kernel.shapesRectangle', difficulty: DocDifficulty.Beginner },
+          { id: 'polygon', label: 'kernel.shapesPolygon', difficulty: DocDifficulty.Beginner },
+          { id: 'star', label: 'kernel.shapesStar', difficulty: DocDifficulty.Beginner },
+          { id: 'contour', label: 'kernel.shapesContour', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'custom-shape',
+            label: 'kernel.shapesCustomShape',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.shape'),
+          },
         ],
       },
       {
         id: 'effects',
         label: 'kernel.effects',
         children: [
-          { id: 'shadow', label: 'kernel.effectsShadow' },
-          { id: 'blend', label: 'kernel.effectsBlend' },
-          { id: 'animation', label: 'kernel.effectsAnimation' },
-          { id: 'pattern', label: 'kernel.effectsPattern' },
-          { id: 'custom-pattern', label: 'kernel.effectsCustomPattern', meta: extensionGuide('kernel.pattern') },
-          { id: 'custom-animation', label: 'kernel.effectsCustomAnimation', meta: extensionGuide('kernel.animation') },
+          { id: 'shadow', label: 'kernel.effectsShadow', difficulty: DocDifficulty.Beginner },
+          { id: 'blend', label: 'kernel.effectsBlend', difficulty: DocDifficulty.Beginner },
+          { id: 'animation', label: 'kernel.effectsAnimation', difficulty: DocDifficulty.Advanced },
+          { id: 'pattern', label: 'kernel.effectsPattern', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'custom-pattern',
+            label: 'kernel.effectsCustomPattern',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.pattern'),
+          },
+          {
+            id: 'custom-animation',
+            label: 'kernel.effectsCustomAnimation',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.animation'),
+          },
         ],
       },
     ],
@@ -130,7 +173,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'domains',
         label: 'kernel.refDomains',
-        children: [{ id: 'plot', label: 'kernel.refVisualizationPlot' }],
+        children: [{ id: 'plot', label: 'kernel.refVisualizationPlot', difficulty: DocDifficulty.Advanced }],
       },
       {
         id: 'schema',
@@ -149,12 +192,13 @@ export const kernelSection: Array<Section> = [
         id: 'runtime',
         label: 'kernel.refRuntime',
         children: [
-          { id: 'compile', label: 'kernel.refCompile' },
-          { id: 'scene-primitive', label: 'kernel.refScenePrimitive' },
-          { id: 'parser', label: 'kernel.refParser' },
+          { id: 'compile', label: 'kernel.refCompile', difficulty: DocDifficulty.Internals },
+          { id: 'scene-primitive', label: 'kernel.refScenePrimitive', difficulty: DocDifficulty.Internals },
+          { id: 'parser', label: 'kernel.refParser', difficulty: DocDifficulty.Internals },
           {
             id: 'extensions',
             label: 'kernel.refExtensions',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'reference',
               audience: 'extension-author',
@@ -171,32 +215,37 @@ export const kernelSection: Array<Section> = [
     label: 'kernel.packages',
     document: true,
     pages: [
-      { id: 'foundation', label: 'kernel.pkgFoundation' },
-      { id: 'core', label: 'kernel.pkgCore' },
-      { id: 'inspect', label: 'kernel.pkgInspect', meta: extensionGuide('kernel.inspect') },
+      { id: 'foundation', label: 'kernel.pkgFoundation', difficulty: DocDifficulty.Internals },
+      { id: 'core', label: 'kernel.pkgCore', difficulty: DocDifficulty.Internals },
+      {
+        id: 'inspect',
+        label: 'kernel.pkgInspect',
+        difficulty: DocDifficulty.Internals,
+        meta: extensionGuide('kernel.inspect'),
+      },
       {
         id: 'runtime',
         label: 'kernel.pkgRuntime',
-        children: [{ id: 'session', label: 'kernel.pkgRuntimeSession' }],
+        children: [{ id: 'session', label: 'kernel.pkgRuntimeSession', difficulty: DocDifficulty.Internals }],
       },
-      { id: 'react', label: 'kernel.pkgReact' },
-      { id: 'vanilla', label: 'kernel.pkgVanilla' },
-      { id: 'tex', label: 'kernel.pkgTex' },
+      { id: 'react', label: 'kernel.pkgReact', difficulty: DocDifficulty.Internals },
+      { id: 'vanilla', label: 'kernel.pkgVanilla', difficulty: DocDifficulty.Internals },
+      { id: 'tex', label: 'kernel.pkgTex', difficulty: DocDifficulty.Internals },
       {
         id: 'math',
         label: 'kernel.pkgMath',
         children: [
-          { id: 'primitives', label: 'kernel.pkgMathPrimitives' },
-          { id: 'algorithms', label: 'kernel.pkgMathAlgorithms' },
+          { id: 'primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
+          { id: 'algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
         ],
       },
       {
         id: 'render',
         label: 'kernel.pkgRender',
         children: [
-          { id: 'svg', label: 'kernel.pkgRenderSvg' },
-          { id: 'canvas', label: 'kernel.pkgRenderCanvas' },
-          { id: 'hydration', label: 'kernel.pkgHydration' },
+          { id: 'svg', label: 'kernel.pkgRenderSvg', difficulty: DocDifficulty.Internals },
+          { id: 'canvas', label: 'kernel.pkgRenderCanvas', difficulty: DocDifficulty.Internals },
+          { id: 'hydration', label: 'kernel.pkgHydration', difficulty: DocDifficulty.Internals },
         ],
       },
     ],
@@ -206,9 +255,9 @@ export const kernelSection: Array<Section> = [
     label: 'kernel.examples',
     document: true,
     pages: [
-      { id: 'karl-circle', label: 'kernel.examplesKarlCircle' },
-      { id: 'learning-path', label: 'kernel.examplesLearningPath' },
-      { id: 'ohms-law-circuit', label: 'kernel.examplesOhmsLawCircuit' },
+      { id: 'karl-circle', label: 'kernel.examplesKarlCircle', difficulty: DocDifficulty.Beginner },
+      { id: 'learning-path', label: 'kernel.examplesLearningPath', difficulty: DocDifficulty.Advanced },
+      { id: 'ohms-law-circuit', label: 'kernel.examplesOhmsLawCircuit', difficulty: DocDifficulty.Advanced },
     ],
   },
   {

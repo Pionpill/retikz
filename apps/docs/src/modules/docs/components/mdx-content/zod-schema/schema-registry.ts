@@ -517,37 +517,37 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LogicFrameSchema: {
     schema: NotationIR.LogicFrameSchema,
     label: 'LogicFrame',
-    url: '/diagram/notation/composite/logic-frame',
+    url: '/diagram/notation/frame/logic-frame',
   },
   TerminalSchema: {
     schema: NotationIR.TerminalSchema,
     label: 'Terminal',
-    url: '/diagram/notation/logic/semantic-units',
+    url: '/diagram/notation/unit/semantic-units',
   },
   StageSchema: {
     schema: NotationIR.StageSchema,
     label: 'Stage',
-    url: '/diagram/notation/logic/semantic-units',
+    url: '/diagram/notation/unit/semantic-units',
   },
   DecisionSchema: {
     schema: NotationIR.DecisionSchema,
     label: 'Decision',
-    url: '/diagram/notation/logic/semantic-units',
+    url: '/diagram/notation/unit/semantic-units',
   },
   JunctionSchema: {
     schema: NotationIR.JunctionSchema,
     label: 'Junction',
-    url: '/diagram/notation/logic/semantic-units',
+    url: '/diagram/notation/unit/semantic-units',
   },
   ConnectorSchema: {
     schema: NotationIR.ConnectorSchema,
     label: 'Connector',
-    url: '/diagram/notation/logic/connector',
+    url: '/diagram/notation/unit/connector',
   },
   CalloutSchema: {
     schema: NotationIR.CalloutSchema,
     label: 'Callout',
-    url: '/diagram/notation/logic/callout',
+    url: '/diagram/notation/unit/callout',
   },
 
   TableSpecSchema: {
