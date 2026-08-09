@@ -70,7 +70,7 @@ export const LogicNeutralStyleSchema = DrawableStyleSchema.extend({
 });
 
 /** 其余布局复合元素使用的兼容外观词汇 */
-export const LogicUnitAppearanceBaseShape = {
+const LogicUnitAppearanceBaseShape = {
   size: LayoutSizeSchema.optional(),
   padding: LogicSpacingSchema.optional(),
   overflow: LayoutOverflowSchema.optional(),
