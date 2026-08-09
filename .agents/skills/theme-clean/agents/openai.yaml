@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Clean Theme'
+  short_description: 'Define the restrained Clean theme language'
+  default_prompt: 'Use $theme-clean to design or review this Retikz theme implementation against the Clean visual contract.'
