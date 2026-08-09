@@ -1,3 +1,4 @@
+export * from './affine';
 export * from './arc';
 export * from './bounds';
 export * from './circle';

@@ -912,6 +912,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../foundation
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../math
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

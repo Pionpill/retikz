@@ -97,6 +97,28 @@ describe('[parse-svg] parseMathJaxSvg', () => {
     ]);
   });
 
+  it('嵌套 translate 与 compound scale 按父矩阵 × 子矩阵复合', () => {
+    const s =
+      '<svg viewBox="0 0 100 100"><g transform="translate(10,20)">' +
+      '<g transform="scale(2,3)"><path d="M1 2 L3 4"></path></g></g></svg>';
+    const r = parseMathJaxSvg(s, 1000)!;
+    expect(r.paths[0].commands).toEqual([
+      { kind: 'move', to: [12, 26] },
+      { kind: 'line', to: [16, 32] },
+    ]);
+  });
+
+  it('compound translate + scale(1,-1) 保留负缩放方向', () => {
+    const s =
+      '<svg viewBox="0 0 100 100"><g transform="translate(0,10) scale(1,-1)">' +
+      '<path d="M2 3 L4 5"></path></g></svg>';
+    const r = parseMathJaxSvg(s, 1000)!;
+    expect(r.paths[0].commands).toEqual([
+      { kind: 'move', to: [2, 7] },
+      { kind: 'line', to: [4, 5] },
+    ]);
+  });
+
   it('rect（分数线）→ 矩形子路径', () => {
     const s = '<svg viewBox="0 0 100 100"><g><rect x="0" y="0" width="50" height="4"></rect></g></svg>';
     const r = parseMathJaxSvg(s, 1000)!;
@@ -126,6 +148,19 @@ describe('[parse-svg] parseMathJaxSvg', () => {
     expect(r.paths[0].commands).toEqual([
       { kind: 'move', to: [10, 20] },
       { kind: 'line', to: [30, 20] },
+    ]);
+  });
+
+  it('嵌套 group 下的 <use> 按父变换 × 自身变换 × x/y 偏移复合', () => {
+    const s =
+      '<svg viewBox="0 0 100 100" xmlns:xlink="http://www.w3.org/1999/xlink">' +
+      '<defs><path id="g1" d="M1 2 L3 4"></path></defs>' +
+      '<g transform="translate(10,20)"><use xlink:href="#g1" x="5" y="7" transform="scale(2)"></use></g>' +
+      '</svg>';
+    const r = parseMathJaxSvg(s, 1000)!;
+    expect(r.paths[0].commands).toEqual([
+      { kind: 'move', to: [22, 38] },
+      { kind: 'line', to: [26, 42] },
     ]);
   });
 

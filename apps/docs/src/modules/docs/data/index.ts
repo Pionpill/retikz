@@ -2,6 +2,7 @@ export * from './about';
 export * from './changelog';
 export * from './comparison';
 export * from './diagram';
+export * from './doc-difficulty';
 export * from './kernel';
 export * from './library';
 export * from './module';

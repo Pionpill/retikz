@@ -1,4 +1,15 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { ReactNode } from 'react';
+
+/** 文档阅读难度。 */
+export const DocDifficulty = {
+  Beginner: 'beginner',
+  Advanced: 'advanced',
+  Internals: 'internals',
+} as const;
+
+/** 文档阅读难度取值。 */
+export type DocDifficultyValue = ValueOf<typeof DocDifficulty>;
 
 import type { I18nResources } from '@/i18n/locales';
 
@@ -76,7 +87,9 @@ type SubPageBase = {
 };
 
 /** 子页递归节点。 */
-export type SubPage = (SubPageBase & { children?: never }) | (SubPageBase & { children: Array<SubPage> });
+export type SubPage =
+  | (SubPageBase & { difficulty?: DocDifficultyValue; children?: never })
+  | (SubPageBase & { difficulty?: never; children: Array<SubPage> });
 
 /** 一级页：可为 Showcase 等特殊入口声明侧栏图标 */
 export type Page = SubPage & {

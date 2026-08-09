@@ -1,0 +1,22 @@
+---
+title: 复合单元
+description: 使用可复用的复合图式元素组织多个子内容、区域和局部结构。
+---
+
+复合单元把多个子内容组织成一个可复用的图式元素。它负责自身的组合语义与内部结构，但仍复用 Core 图元和 Layout 布局，不引入独立的几何或布局机制。
+
+当前由 `LogicFrame` 提供带 header 和有序 section 的逻辑外壳。后续需要跨多个基础单元复用的组合，也会归入这一分组。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/diagram/notation/frame/logic-frame">
+    <span className="font-semibold">LogicFrame</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">外壳、header、section 与 FlexLayout 复用</span>
+  </LinkedCard>
+</div>
+
+## 相关
+
+- [基础单元](/diagram/notation/unit)：使用语义单元、Connector 与 Callout
+- [布局容器](/library/layout)：复合单元复用的通用排列能力

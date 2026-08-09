@@ -46,10 +46,10 @@ describe('SCHEMA_REGISTRY', () => {
         schema: LegendArtifactSchema,
         url: '/library/standard/composite/legend#legendartifactschema',
       },
-      LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/composite/logic-frame' },
-      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/logic/semantic-units' },
-      ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/logic/connector' },
-      CalloutSchema: { schema: CalloutSchema, url: '/diagram/notation/logic/callout' },
+      LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
+      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/semantic-units' },
+      ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
+      CalloutSchema: { schema: CalloutSchema, url: '/diagram/notation/unit/callout' },
     });
   });
 

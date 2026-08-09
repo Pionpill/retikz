@@ -1,5 +1,7 @@
 import type { DocPageMetadataOverride, Section } from './types';
 
+import { DocDifficulty } from './types';
+
 /** 标记以 Definition / registry 为主线的 Plot 扩展指南。 */
 const extensionGuide = (capability: string): DocPageMetadataOverride => ({
   pageType: 'extension',
@@ -12,8 +14,8 @@ const extensionGuide = (capability: string): DocPageMetadataOverride => ({
 export const vizSection: Array<Section> = [
   {
     pages: [
-      { id: 'introduction', label: 'viz.introduction' },
-      { id: 'get-start', label: 'viz.getStart' },
+      { id: 'introduction', label: 'viz.introduction', difficulty: DocDifficulty.Beginner },
+      { id: 'get-start', label: 'viz.getStart', difficulty: DocDifficulty.Beginner },
     ],
   },
   {
@@ -25,12 +27,13 @@ export const vizSection: Array<Section> = [
         id: 'model',
         label: 'viz.dataModel',
         children: [
-          { id: 'contract', label: 'viz.dataModelContract' },
-          { id: 'intake', label: 'viz.dataModelIntake' },
-          { id: 'validation', label: 'viz.dataModelValidation' },
+          { id: 'contract', label: 'viz.dataModelContract', difficulty: DocDifficulty.Advanced },
+          { id: 'intake', label: 'viz.dataModelIntake', difficulty: DocDifficulty.Advanced },
+          { id: 'validation', label: 'viz.dataModelValidation', difficulty: DocDifficulty.Advanced },
           {
             id: 'extensions',
             label: 'viz.dataModelExtensions',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -47,6 +50,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'overview',
             label: 'viz.dataTransformComponent',
+            difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
               audience: 'user',
@@ -54,11 +58,12 @@ export const vizSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'operations', label: 'viz.dataTransformOperations' },
-          { id: 'statistics', label: 'viz.dataTransformStatistics' },
+          { id: 'operations', label: 'viz.dataTransformOperations', difficulty: DocDifficulty.Advanced },
+          { id: 'statistics', label: 'viz.dataTransformStatistics', difficulty: DocDifficulty.Advanced },
           {
             id: 'extensions',
             label: 'viz.dataTransformExtensions',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -75,6 +80,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'data',
             label: 'viz.dataProvenanceData',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'concept',
               audience: 'integrator',
@@ -85,6 +91,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'plot',
             label: 'viz.dataProvenancePlot',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'concept',
               audience: 'integrator',
@@ -127,6 +134,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'scatter',
             label: 'viz.chartScatter',
+            difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'concept',
               audience: 'user',
@@ -144,6 +152,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'bubble',
             label: 'viz.chartBubble',
+            difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'concept',
               audience: 'user',
@@ -173,15 +182,15 @@ export const vizSection: Array<Section> = [
     label: 'viz.table',
     document: true,
     pages: [
-      { id: 'detail', label: 'viz.detailTable' },
+      { id: 'detail', label: 'viz.detailTable', difficulty: DocDifficulty.Beginner },
       {
         id: 'model',
         label: 'viz.tableModel',
         children: [
-          { id: 'structure', label: 'viz.tableModelStructure' },
-          { id: 'presentation', label: 'viz.tableModelPresentation' },
-          { id: 'layout', label: 'viz.tableModelLayout' },
-          { id: 'manifest', label: 'viz.tableModelManifest' },
+          { id: 'structure', label: 'viz.tableModelStructure', difficulty: DocDifficulty.Advanced },
+          { id: 'presentation', label: 'viz.tableModelPresentation', difficulty: DocDifficulty.Advanced },
+          { id: 'layout', label: 'viz.tableModelLayout', difficulty: DocDifficulty.Advanced },
+          { id: 'manifest', label: 'viz.tableModelManifest', difficulty: DocDifficulty.Internals },
         ],
         meta: {
           pageType: 'concept',
@@ -223,11 +232,12 @@ export const vizSection: Array<Section> = [
         id: 'channel',
         label: 'viz.grammarChannel',
         children: [
-          { id: 'binding', label: 'viz.grammarChannelBinding' },
-          { id: 'builtin', label: 'viz.grammarChannelBuiltin' },
+          { id: 'binding', label: 'viz.grammarChannelBinding', difficulty: DocDifficulty.Advanced },
+          { id: 'builtin', label: 'viz.grammarChannelBuiltin', difficulty: DocDifficulty.Advanced },
           {
             id: 'custom-channel',
             label: 'viz.grammarChannelCustom',
+            difficulty: DocDifficulty.Internals,
             meta: extensionGuide('plot.channel.extensions'),
           },
         ],
@@ -236,14 +246,15 @@ export const vizSection: Array<Section> = [
         id: 'transform',
         label: 'viz.grammarTransform',
         children: [
-          { id: 'row', label: 'viz.grammarTransformRow' },
-          { id: 'annotation', label: 'viz.grammarTransformAnnotation' },
-          { id: 'bin', label: 'viz.grammarTransformBin' },
-          { id: 'statistics', label: 'viz.grammarTransformStatistics' },
-          { id: 'relate', label: 'viz.grammarTransformRelate' },
+          { id: 'row', label: 'viz.grammarTransformRow', difficulty: DocDifficulty.Advanced },
+          { id: 'annotation', label: 'viz.grammarTransformAnnotation', difficulty: DocDifficulty.Advanced },
+          { id: 'bin', label: 'viz.grammarTransformBin', difficulty: DocDifficulty.Advanced },
+          { id: 'statistics', label: 'viz.grammarTransformStatistics', difficulty: DocDifficulty.Advanced },
+          { id: 'relate', label: 'viz.grammarTransformRelate', difficulty: DocDifficulty.Advanced },
           {
             id: 'custom-transform',
             label: 'viz.grammarTransformCustom',
+            difficulty: DocDifficulty.Internals,
             meta: extensionGuide('plot.transform.extensions'),
           },
         ],
@@ -252,14 +263,15 @@ export const vizSection: Array<Section> = [
         id: 'mark',
         label: 'viz.grammarMark',
         children: [
-          { id: 'point', label: 'viz.compPointMark' },
-          { id: 'path', label: 'viz.compPathMark' },
-          { id: 'interval', label: 'viz.compIntervalMark' },
-          { id: 'reference', label: 'viz.compReferenceMark' },
-          { id: 'relation', label: 'viz.compRelationMark' },
+          { id: 'point', label: 'viz.compPointMark', difficulty: DocDifficulty.Beginner },
+          { id: 'path', label: 'viz.compPathMark', difficulty: DocDifficulty.Beginner },
+          { id: 'interval', label: 'viz.compIntervalMark', difficulty: DocDifficulty.Beginner },
+          { id: 'reference', label: 'viz.compReferenceMark', difficulty: DocDifficulty.Beginner },
+          { id: 'relation', label: 'viz.compRelationMark', difficulty: DocDifficulty.Beginner },
           {
             id: 'custom-mark',
             label: 'viz.grammarMarkCustom',
+            difficulty: DocDifficulty.Internals,
             meta: extensionGuide('plot.mark.extensions'),
           },
         ],
@@ -268,11 +280,12 @@ export const vizSection: Array<Section> = [
         id: 'scale',
         label: 'viz.grammarScale',
         children: [
-          { id: 'position', label: 'viz.grammarScalePosition' },
-          { id: 'color', label: 'viz.grammarScaleColor' },
+          { id: 'position', label: 'viz.grammarScalePosition', difficulty: DocDifficulty.Advanced },
+          { id: 'color', label: 'viz.grammarScaleColor', difficulty: DocDifficulty.Advanced },
           {
             id: 'custom-scale',
             label: 'viz.grammarScaleCustom',
+            difficulty: DocDifficulty.Internals,
             meta: extensionGuide('plot.scale.extensions'),
           },
         ],
@@ -281,12 +294,13 @@ export const vizSection: Array<Section> = [
         id: 'coordinate',
         label: 'viz.grammarCoordinate',
         children: [
-          { id: '2d', label: 'viz.grammarCoordinate2d' },
-          { id: '1d', label: 'viz.grammarCoordinate1d' },
-          { id: 'composition', label: 'viz.grammarCoordinateComposition' },
+          { id: '2d', label: 'viz.grammarCoordinate2d', difficulty: DocDifficulty.Beginner },
+          { id: '1d', label: 'viz.grammarCoordinate1d', difficulty: DocDifficulty.Advanced },
+          { id: 'composition', label: 'viz.grammarCoordinateComposition', difficulty: DocDifficulty.Advanced },
           {
             id: 'custom-coordinate',
             label: 'viz.grammarCoordinateCustom',
+            difficulty: DocDifficulty.Internals,
             meta: extensionGuide('plot.coordinate.extensions'),
           },
         ],
@@ -295,8 +309,8 @@ export const vizSection: Array<Section> = [
         id: 'guide',
         label: 'viz.grammarGuide',
         children: [
-          { id: 'axis', label: 'viz.compAxis' },
-          { id: 'legend', label: 'viz.compLegend' },
+          { id: 'axis', label: 'viz.compAxis', difficulty: DocDifficulty.Beginner },
+          { id: 'legend', label: 'viz.compLegend', difficulty: DocDifficulty.Beginner },
         ],
       },
       {

@@ -1,5 +1,7 @@
 import type { Section } from './types';
 
+import { DocDifficulty } from './types';
+
 /** Library 能力包的 Standard 与 Layout 文档导航 */
 export const librarySection: Array<Section> = [
   {
@@ -11,10 +13,10 @@ export const librarySection: Array<Section> = [
         id: 'composite',
         label: 'library.standardComposite',
         children: [
-          { id: 'grid', label: 'library.standardGrid' },
-          { id: 'axes', label: 'library.standardAxes' },
-          { id: 'frame', label: 'library.standardFrame' },
-          { id: 'legend', label: 'library.standardLegend' },
+          { id: 'grid', label: 'library.standardGrid', difficulty: DocDifficulty.Beginner },
+          { id: 'axes', label: 'library.standardAxes', difficulty: DocDifficulty.Advanced },
+          { id: 'frame', label: 'library.standardFrame', difficulty: DocDifficulty.Advanced },
+          { id: 'legend', label: 'library.standardLegend', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
@@ -24,6 +26,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'capability-loading',
             label: 'library.standardCapabilityLoading',
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -51,9 +54,9 @@ export const librarySection: Array<Section> = [
     label: 'library.layout',
     document: true,
     pages: [
-      { id: 'flex-layout', label: 'library.flexLayout' },
-      { id: 'grid-layout', label: 'library.gridLayout' },
-      { id: 'overlay-layout', label: 'library.overlayLayout' },
+      { id: 'flex-layout', label: 'library.flexLayout', difficulty: DocDifficulty.Advanced },
+      { id: 'grid-layout', label: 'library.gridLayout', difficulty: DocDifficulty.Advanced },
+      { id: 'overlay-layout', label: 'library.overlayLayout', difficulty: DocDifficulty.Advanced },
       {
         id: 'reference',
         label: 'library.layoutReference',

@@ -1,15 +1,22 @@
-import { ThemeMode } from '@retikz/core';
+import { ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { z } from 'zod';
 
-import { PlotThemeToken, PlotThemeTokenSource } from './constants';
+import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
 import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
+
+const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/colors', '$spec/plotTheme'] as const;
+const PLOT_INHERITED_COLOR_TOKENS = new Set<string>([
+  PlotThemeToken.PlotPaletteCategorical,
+  PlotThemeToken.PlotPaletteSeries,
+  PlotThemeToken.PlotPaletteSector,
+]);
 
 /** 单个 Plot token 的最终 cascade 来源 */
 export const PlotThemeTokenSourceRecordSchema = z
   .strictObject({
     token: z.enum(PlotThemeToken).describe('Canonical Plot theme token'),
-    kind: z.enum(PlotThemeTokenSource).describe('Winning Plot token source layer'),
+    kind: z.enum(ThemeTokenSource).describe('Winning Plot token source relation to the Plot owner'),
     path: z.string().min(1).describe('Stable source path for this resolved Plot token'),
   })
   .describe('Winning cascade source for one resolved Plot style token');
@@ -17,10 +24,8 @@ export const PlotThemeTokenSourceRecordSchema = z
 /** Plot shorthand 或 native theme 的 authored 入口 */
 export const PlotThemeAuthoredOverrideRecordSchema = z
   .strictObject({
-    kind: z
-      .enum([PlotThemeTokenSource.Colors, PlotThemeTokenSource.PlotTheme])
-      .describe('Authored Plot shorthand or native theme source'),
-    path: z.string().min(1).describe('Stable authored Plot input path'),
+    kind: z.literal(ThemeTokenSource.Local).describe('Plot-authored override local to the Plot owner'),
+    path: z.enum(PLOT_THEME_AUTHORED_OVERRIDE_PATHS).describe('Stable authored Plot input path'),
   })
   .describe('Authored Plot override entry applied after Plot token overrides');
 
@@ -60,11 +65,28 @@ export const PlotThemeResolutionSchema = z
         message: 'Plot token sources must contain every canonical token exactly once and in order',
       });
     }
-    const authoredKinds = resolution.authoredOverrides.map(source => source.kind);
-    const expected = [PlotThemeTokenSource.Colors, PlotThemeTokenSource.PlotTheme].filter(kind =>
-      authoredKinds.includes(kind),
-    );
-    if (authoredKinds.length !== expected.length || authoredKinds.some((kind, index) => kind !== expected[index])) {
+    resolution.tokenSources.forEach((source, index) => {
+      const inherited =
+        source.kind === ThemeTokenSource.Inherit &&
+        PLOT_INHERITED_COLOR_TOKENS.has(source.token) &&
+        source.path === '$theme/colors/categorical';
+      const local =
+        source.kind === ThemeTokenSource.Local &&
+        (source.path === `$style/${resolution.style}/${resolution.mode}/${source.token}` ||
+          source.path === `$spec/plotThemeTokens/${source.token}` ||
+          (PLOT_INHERITED_COLOR_TOKENS.has(source.token) && source.path === '$spec/colors') ||
+          source.path.startsWith('$spec/plotTheme/'));
+      if (!inherited && !local) {
+        context.addIssue({
+          code: 'custom',
+          path: ['tokenSources', index, 'path'],
+          message: 'Plot token source relation and path must identify a canonical owner input',
+        });
+      }
+    });
+    const authoredPaths = resolution.authoredOverrides.map(source => source.path);
+    const expected = PLOT_THEME_AUTHORED_OVERRIDE_PATHS.filter(path => authoredPaths.includes(path));
+    if (authoredPaths.length !== expected.length || authoredPaths.some((path, index) => path !== expected[index])) {
       context.addIssue({
         code: 'custom',
         path: ['authoredOverrides'],

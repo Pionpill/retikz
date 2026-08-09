@@ -7,7 +7,9 @@
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op
  */
 import type { IRJsonObject, Scene, ScenePrimitive } from '@retikz/core';
-import type { BoundsRect } from '@retikz/math';
+import type { AffineMatrix, BoundsRect } from '@retikz/math';
+
+import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
 
 import type { IdClockRegistry } from '../animation/id-clock';
 
@@ -95,47 +97,27 @@ export const metaOf = (scene: Scene, id: string): IRJsonObject | undefined => {
   return walk(scene.primitives);
 };
 
-/** 2x3 仿射矩阵（canvas 同序 a,b,c,d,e,f）：[x',y'] = [a·x+c·y+e, b·x+d·y+f] */
-type Matrix = [number, number, number, number, number, number];
-const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
-
-/** 复合 C = A∘B（先 B 后 A，即 C(p) = A(B(p))），用于把子帧变换叠到父帧 */
-const multiply = (a: Matrix, b: Matrix): Matrix => [
-  a[0] * b[0] + a[2] * b[1],
-  a[1] * b[0] + a[3] * b[1],
-  a[0] * b[2] + a[2] * b[3],
-  a[1] * b[2] + a[3] * b[3],
-  a[0] * b[4] + a[2] * b[5] + a[4],
-  a[1] * b[4] + a[3] * b[5] + a[5],
-];
-
-/** 把一个点经矩阵映射到父帧 */
-const applyMatrix = (m: Matrix, x: number, y: number): [number, number] => [
-  m[0] * x + m[2] * y + m[4],
-  m[1] * x + m[3] * y + m[5],
-];
-
 const DEG_TO_RAD = Math.PI / 180;
 
 /** group Transform 列表折成单矩阵（与 canvas applyTransform 同序：按数组顺序左乘进当前帧） */
 const transformsToMatrix = (
   transforms: ReadonlyArray<{ kind: string; x?: number; y?: number; degrees?: number; cx?: number; cy?: number }>,
-): Matrix => {
-  let m = IDENTITY;
+): AffineMatrix => {
+  let m = AFFINE_IDENTITY;
   for (const t of transforms) {
     if (t.kind === 'translate') {
-      m = multiply(m, [1, 0, 0, 1, t.x ?? 0, t.y ?? 0]);
+      m = multiplyAffine(m, [1, 0, 0, 1, t.x ?? 0, t.y ?? 0]);
     } else if (t.kind === 'scale') {
-      m = multiply(m, [t.x ?? 1, 0, 0, t.y ?? t.x ?? 1, 0, 0]);
+      m = multiplyAffine(m, [t.x ?? 1, 0, 0, t.y ?? t.x ?? 1, 0, 0]);
     } else if (t.kind === 'rotate') {
       const rad = (t.degrees ?? 0) * DEG_TO_RAD;
       const cos = Math.cos(rad);
       const sin = Math.sin(rad);
       const cx = t.cx ?? 0;
       const cy = t.cy ?? 0;
-      m = multiply(m, [1, 0, 0, 1, cx, cy]);
-      m = multiply(m, [cos, sin, -sin, cos, 0, 0]);
-      m = multiply(m, [1, 0, 0, 1, -cx, -cy]);
+      m = multiplyAffine(m, [1, 0, 0, 1, cx, cy]);
+      m = multiplyAffine(m, [cos, sin, -sin, cos, 0, 0]);
+      m = multiplyAffine(m, [1, 0, 0, 1, -cx, -cy]);
     }
   }
   return m;
@@ -144,10 +126,14 @@ const transformsToMatrix = (
 type BBox = { minX: number; minY: number; maxX: number; maxY: number };
 
 /** 把一组局部点经矩阵映射后并入 bbox（in-place 返回新 bbox / 初始 undefined） */
-const includePoints = (bbox: BBox | undefined, m: Matrix, points: Array<[number, number]>): BBox | undefined => {
+const includePoints = (
+  bbox: BBox | undefined,
+  matrix: AffineMatrix,
+  points: Array<[number, number]>,
+): BBox | undefined => {
   let out = bbox;
   for (const [px, py] of points) {
-    const [x, y] = applyMatrix(m, px, py);
+    const [x, y] = applyAffine(matrix, [px, py]);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     out = out
       ? {
@@ -218,15 +204,17 @@ const leafCorners = (prim: ScenePrimitive): Array<[number, number]> => {
 };
 
 /** 把图元子树（叶子角点）经累积矩阵并入 bbox；group 复合自身 transforms 再下钻全部后代 */
-const accumulateSubtree = (prim: ScenePrimitive, m: Matrix, bbox: BBox | undefined): BBox | undefined => {
+const accumulateSubtree = (prim: ScenePrimitive, matrix: AffineMatrix, bbox: BBox | undefined): BBox | undefined => {
   if (prim.type === 'group') {
     const childMatrix =
-      prim.transforms && prim.transforms.length > 0 ? multiply(m, transformsToMatrix(prim.transforms)) : m;
+      prim.transforms && prim.transforms.length > 0
+        ? multiplyAffine(matrix, transformsToMatrix(prim.transforms))
+        : matrix;
     let out = bbox;
     for (const child of prim.children) out = accumulateSubtree(child, childMatrix, out);
     return out;
   }
-  return includePoints(bbox, m, leafCorners(prim));
+  return includePoints(bbox, matrix, leafCorners(prim));
 };
 
 /**
@@ -237,17 +225,19 @@ const accumulateSubtree = (prim: ScenePrimitive, m: Matrix, bbox: BBox | undefin
  */
 export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefined => {
   let bbox: BBox | undefined;
-  const walk = (prims: ReadonlyArray<ScenePrimitive>, m: Matrix): void => {
+  const walk = (prims: ReadonlyArray<ScenePrimitive>, matrix: AffineMatrix): void => {
     for (const prim of prims) {
-      if (prim.id === id) bbox = accumulateSubtree(prim, m, bbox);
+      if (prim.id === id) bbox = accumulateSubtree(prim, matrix, bbox);
       if (prim.type === 'group') {
         const childMatrix =
-          prim.transforms && prim.transforms.length > 0 ? multiply(m, transformsToMatrix(prim.transforms)) : m;
+          prim.transforms && prim.transforms.length > 0
+            ? multiplyAffine(matrix, transformsToMatrix(prim.transforms))
+            : matrix;
         walk(prim.children, childMatrix);
       }
     }
   };
-  walk(scene.primitives, IDENTITY);
+  walk(scene.primitives, AFFINE_IDENTITY);
   if (!bbox) return undefined;
   const width = bbox.maxX - bbox.minX;
   const height = bbox.maxY - bbox.minY;
@@ -261,9 +251,9 @@ export const geometryOf = (scene: Scene, id: string): HydrationGeometry | undefi
 const primitiveAtPath = (
   scene: Scene,
   path: ReadonlyArray<number>,
-): Readonly<{ primitive: ScenePrimitive; matrix: Matrix }> | undefined => {
+): Readonly<{ primitive: ScenePrimitive; matrix: AffineMatrix }> | undefined => {
   let primitives = scene.primitives;
-  let matrix = IDENTITY;
+  let matrix = AFFINE_IDENTITY;
   for (let depth = 0; depth < path.length; depth += 1) {
     const candidate: unknown = Reflect.get(primitives, path[depth]);
     if (typeof candidate !== 'object' || candidate === null) return undefined;
@@ -271,7 +261,7 @@ const primitiveAtPath = (
     if (depth === path.length - 1) return Object.freeze({ primitive, matrix });
     if (primitive.type !== 'group') return undefined;
     if (primitive.transforms && primitive.transforms.length > 0) {
-      matrix = multiply(matrix, transformsToMatrix(primitive.transforms));
+      matrix = multiplyAffine(matrix, transformsToMatrix(primitive.transforms));
     }
     primitives = primitive.children;
   }

@@ -17,7 +17,7 @@
     "layoutDefault": "默认布局",
     "layoutCentered": "居中布局",
     "more": "更多",
-    "groupResources": "资源",
+    "groupResources": "参考资料",
     "tikzDocs": "TikZ 官方文档",
     "groupContact": "联系作者",
     "contactGithub": "GitHub 主页",
@@ -150,8 +150,8 @@
     "label": "流程库",
     "introduction": "简介",
     "notation": "Notation · 图式",
-    "logicUnits": "逻辑单元",
-    "compositeUnits": "复合单元",
+    "baseUnits": "基础单元",
+    "frameUnits": "复合单元",
     "logicFrame": "LogicFrame",
     "semanticUnits": "语义单元",
     "connector": "连接器",
@@ -275,6 +275,13 @@
     "showOutline": "显示文章目录",
     "hideOutline": "隐藏文章目录"
   },
+  "difficulty": {
+    "label": "阅读难度",
+    "beginner": "入门",
+    "advanced": "进阶",
+    "internals": "底层",
+    "pageTooltip": "难度：{{difficulty}}"
+  },
   "preview": {
     "groupLabel": "组件演示",
     "renderMode": "渲染模式",
@@ -372,8 +379,7 @@
     "pageCopied": "已复制页面 Markdown",
     "prevPage": "上一页",
     "nextPage": "下一页",
-    "docStats": "约 {{minutes}} 分钟 · 共 {{chars}} 字 · {{components}} 个组件",
-    "docStatsCompact": "{{minutes}} 分钟 · {{chars}} 字"
+    "docStats": "约 {{minutes}} 分钟 · 共 {{chars}} 字 · {{components}} 个组件"
   },
   "ai": {
     "triggerLabel": "Chat RetikZ",
