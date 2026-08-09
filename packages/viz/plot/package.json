@@ -69,6 +69,7 @@
   "dependencies": {
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/math": "workspace:^",
     "@retikz/standard": "workspace:^",
     "@types/d3-scale": "catalog:",

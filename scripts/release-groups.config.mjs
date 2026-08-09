@@ -13,6 +13,7 @@ export const releaseGroups = {
     domain: 'kernel',
     kind: 'foundation',
     packages: [
+      '@retikz/foundation',
       '@retikz/math',
       '@retikz/runtime',
       '@retikz/core',

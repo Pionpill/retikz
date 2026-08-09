@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { LucideIcon } from 'lucide-react';
 
 import { Gauge, MousePointer2, RefreshCw, Sparkles, Zap } from 'lucide-react';

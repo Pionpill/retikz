@@ -1,9 +1,13 @@
+import type { IRScene } from '@retikz/core';
+
 import type { PreviewDatasetImport } from '../types';
 
 /** 自动生成 Vanilla 预览时可用的源码上下文。 */
 export type BuildVanillaPreviewOptions = {
   /** 按外部数据引用名声明可复用的数据导入。 */
   datasetImports?: Readonly<Record<string, PreviewDatasetImport>>;
+  /** ComponentPreview 全局 ambient Theme，仅作用于动态生成的 SVG */
+  theme?: IRScene['theme'];
 };
 
 /** ComponentPreview 自动生成的 Vanilla 源码与真实 SVG。 */

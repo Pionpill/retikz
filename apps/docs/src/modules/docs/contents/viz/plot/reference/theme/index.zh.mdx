@@ -3,19 +3,21 @@ title: 契约 - 主题
 description: 查询 Plot canonical token、preset 级联、原生主题与 inspection 契约。
 ---
 
-Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择四种 style × light / dark 的完整领域 preset。`PlotSpec` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、guide 是否存在或 mark 结构。
+Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择同名的完整领域 preset。`PlotSpec` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、guide 是否存在或 mark 结构。
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；根 Core Theme 的 `tokens.plot` 则作为 inherited namespace 进入同一 resolver。
+示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 只通过 `style` / `mode` 选择基础 preset。
+
+## 可扩展 style
+
+用 `definePlotThemeStyle({ name: 'brand', resolve: theme => tokens })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`。完整 token map 和 resolver 函数不进入 `PlotSpec`；它只持久化 `theme.style = 'brand'`。在同一图中还要把同名 Core definition 传给 `themeStyles`，否则 Core 或 Plot 任一层都会 fail-loud。Chart 使用时，`createChartComposites({ chartThemeStyles, plotThemeStyles })` 还需要接收同名 Chart 与 Plot definitions。
 
 ## 级联与原子替换
 
 ```text
 Core effective Theme
   → Plot preset
-  → shared categorical
-  → inherited Theme tokens.plot
   → PlotSpec.plotThemeTokens
   → PlotSpec.colors
   → PlotSpec.plotTheme

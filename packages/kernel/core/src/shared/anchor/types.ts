@@ -1,4 +1,5 @@
-import type { ValueOf } from '../types';
+import type { ValueOf } from '@retikz/foundation';
+
 import type { Anchor, CenterAnchor, Corner, Side } from './constants';
 
 export type CenterAnchorValue = ValueOf<typeof CenterAnchor>;

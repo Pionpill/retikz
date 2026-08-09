@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeIdentity } from '@retikz/runtime';
 
 import type { HydrationContext } from './context';

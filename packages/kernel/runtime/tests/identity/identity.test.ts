@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeIdentityError } from '../../src';
-
-import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '../../src';
+import {
+  createRuntimeIdentity,
+  createRuntimeIdentityLookup,
+  runtimeIdentityEquals,
+  RuntimeIdentityError,
+} from '../../src';
 
 describe('runtime identity', () => {
   it('复制并冻结 owner 与 segment path', () => {
@@ -24,6 +27,48 @@ describe('runtime identity', () => {
     expect(createInvalid).toThrowError(
       expect.objectContaining<Partial<RuntimeIdentityError>>({ code: 'RUNTIME_IDENTITY_INVALID' }),
     );
+  });
+
+  it.each([
+    [{ owner: ' \t', path: ['node'] as ReadonlyArray<string> }, ' \t', ' \t'],
+    [{ owner: 'owner', path: ['\u2003'] as ReadonlyArray<string> }, 'owner', '\u2003'],
+  ] as const)('rejects blank identity text with the original value as cause', (input, expectedOwner, rejectedValue) => {
+    const create = () => createRuntimeIdentity(input.owner, input.path);
+
+    let failure: unknown;
+    try {
+      create();
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(RuntimeIdentityError);
+    expect(failure).toBeInstanceOf(Error);
+    expect(failure).toMatchObject({
+      name: 'RuntimeIdentityError',
+      code: 'RUNTIME_IDENTITY_INVALID',
+      owner: expectedOwner,
+      cause: rejectedValue,
+    });
+    expect((failure as RuntimeIdentityError).cause).toBe(rejectedValue);
+  });
+
+  it('rejects a Unicode-whitespace path segment with the segment as cause', () => {
+    const rejectedValue = '\u00a0';
+    let failure: unknown;
+    try {
+      createRuntimeIdentity('owner', ['group', rejectedValue]);
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(RuntimeIdentityError);
+    expect(failure).toMatchObject({
+      name: 'RuntimeIdentityError',
+      code: 'RUNTIME_IDENTITY_INVALID',
+      owner: 'owner',
+    });
+    expect((failure as RuntimeIdentityError).cause).toBe(rejectedValue);
   });
 
   it('按 segment 精确比较，不规范化 Unicode 或特殊字符', () => {

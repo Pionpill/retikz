@@ -5,6 +5,59 @@ export const kernelV05: Release = {
   stableDate: null,
   packages: [
     {
+      pkg: '@retikz/foundation',
+      version: 'v0.5',
+      description: {
+        zh: '新增零依赖 Foundation 基础契约包，为 Kernel、Standard、Viz 与 adapter 提供统一的类型工具、typed non-empty string 断言和结构化错误骨架。',
+        en: 'Adds the zero-dependency Foundation contract package with shared type utilities, a typed non-empty string assertion, and a structured error skeleton for Kernel, Standard, Viz, and adapters.',
+      },
+      highlights: [
+        {
+          label: { zh: '七个根导出，固定四文件结构', en: 'Seven root exports, four fixed source files' },
+          content: {
+            zh: '`@retikz/foundation` 只从根入口公开 `ValueOf`、`AssertEqual`、`OpenString`、`assertNonEmptyString`、`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError`；source 与 tests 各固定四个文件，不提供 subpath、IR、schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes only `ValueOf`, `AssertEqual`, `OpenString`, `assertNonEmptyString`, `RetikzErrorOptions`, `RetikzError`, and `isRetikzError` from its root. Source and tests each stay at four fixed files, with no subpaths, IR, schemas, or Diagnostics.',
+          },
+        },
+        {
+          label: { zh: '统一直接依赖与旧出口移除', en: 'Direct dependencies and removed old exports' },
+          content: {
+            zh: 'Core、Runtime 及其它真实 consumer 从 Foundation 根入口直接导入并声明 direct dependency；旧 Core / Runtime 类型工具定义和根转发出口移除。`@retikz/math` 没有真实 Foundation import，因此继续保持零依赖。',
+            en: 'Core, Runtime, and every other real consumer now imports the Foundation root and declares a direct dependency; the old Core/Runtime type definitions and root forwarding exports are removed. `@retikz/math` has no real Foundation import and keeps its zero-dependency boundary.',
+          },
+        },
+        {
+          label: {
+            zh: 'BREAKING：空白语义与错误 additive surface',
+            en: 'BREAKING: blank semantics and additive error surface',
+          },
+          content: {
+            zh: 'Runtime identity 的空 owner / path segment 现在 fail-loud，并由 `RuntimeIdentityError` 保留原始 rejected value 为 `cause`。Runtime、Render、Plot declaration 与 Chart resolution 错误保留既有 constructor、文本、字段、`instanceof` 和 recovery，同时增加 owner `details` 与统一 own `cause`。',
+            en: 'Runtime identity owners and path segments now fail loudly when blank, and `RuntimeIdentityError` keeps the rejected value as `cause`. Runtime, Render, Plot declaration, and Chart resolution errors preserve constructors, text, fields, `instanceof`, and recovery while adding owner details and a unified own `cause`.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-08-08',
+          summary: {
+            zh: '交付 Foundation 包并完成类型、断言与结构化错误的跨包迁移。',
+            en: 'Ships Foundation and completes the cross-package migration for types, assertions, and structured errors.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：基础类型工具迁移', en: 'BREAKING: Foundation type-tool migration' },
+              content: {
+                zh: '从 `@retikz/core` / `@retikz/runtime` 根入口导入 `ValueOf`、`AssertEqual`、`OpenString` 的代码改为从 `@retikz/foundation` 根入口导入；旧出口不保留 alias。',
+                en: 'Change imports of `ValueOf`, `AssertEqual`, and `OpenString` from `@retikz/core` / `@retikz/runtime` to the `@retikz/foundation` root; the old exports have no alias.',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
       pkg: '@retikz/math',
       version: 'v0.5',
       description: {
@@ -165,12 +218,12 @@ export const kernelV05: Release = {
             },
             {
               label: {
-                zh: 'BREAKING：namespaced Theme tokens 与 shared colors',
-                en: 'BREAKING: Namespaced Theme tokens and shared colors',
+                zh: 'BREAKING：轻量 Theme selector 与 shared colors',
+                en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在是稀疏 `style / mode / tokens`；Core 内置 `core` namespace，`ResolvedTheme` 额外提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineCoreThemeTokens` 与 `themeTokenDefinitions` 支持 Core、Plot、Chart、Table 及自定义 owner 通过同一 registry 校验和聚合；未知 namespace/key/value 与冲突 Definition fail-loud。React `Layout` 与 Vanilla normalization 都会聚合嵌入 owner Definition，standalone 与 embedded compile 使用同一语义。',
-                en: '`Theme` is now sparse `style / mode / tokens`; Core registers the built-in `core` namespace, and `ResolvedTheme` adds a detached, frozen `colors.semantic` view plus a non-empty `colors.categorical` palette. `defineCoreThemeTokens` and `themeTokenDefinitions` let Core, Plot, Chart, Table, and custom owners validate and aggregate through one registry; unknown namespaces, keys, values, and conflicting Definitions fail loudly. React `Layout` and Vanilla normalization aggregate embedded owner Definitions, so standalone and embedded compile paths share the same semantics.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver；自定义 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. `defineThemeStyle` and `themeStyles` register Core runtime resolvers; each consuming owner such as Plot or Chart must provide a same-named resolver, and a missing entry fails loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {

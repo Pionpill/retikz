@@ -1,5 +1,6 @@
 import type { AnyCellVisualScaleDefinition } from '../../contract';
 
+import { assertTableNonEmptyString } from '../../shared';
 import { BUILTIN_CELL_VISUAL_SCALES } from './definitions';
 
 /** 合并内置与用户 Table Cell visual scale definitions */
@@ -8,8 +9,7 @@ export const resolveCellVisualScaleRegistry = (
 ): ReadonlyMap<string, AnyCellVisualScaleDefinition> => {
   const registry = new Map<string, AnyCellVisualScaleDefinition>();
   for (const definition of [...BUILTIN_CELL_VISUAL_SCALES, ...(custom ?? [])]) {
-    if (definition.name.trim().length === 0)
-      throw new Error('cell visual scale provider key must be a non-empty string');
+    assertTableNonEmptyString(definition.name, 'cell visual scale provider key must be a non-empty string');
     if (registry.has(definition.name)) {
       throw new Error(`duplicate cell visual scale registration: "${definition.name}"`);
     }

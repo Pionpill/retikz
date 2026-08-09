@@ -1,4 +1,5 @@
-import type { IRBoxSpacing, IRStepLabelInput, ValueOf } from '@retikz/core';
+import type { IRBoxSpacing, IRStepLabelInput } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
 import type {

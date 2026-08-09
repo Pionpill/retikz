@@ -5,10 +5,10 @@
 ## 包职责契约
 
 - **解决的问题**：为所有上层 DSL、Tier 2 能力和 renderer 提供后端中立、可序列化、可扩展的二维绘图表达与确定性编译
-- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、纯 parser、IR / composite lowering、`compileToScene`、Scene / Scope Theme 环境与 namespaced Theme token registry、Scene / manifest 语义与绘图诊断
+- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、纯 parser、IR / composite lowering、`compileToScene`、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
 - **不拥有的能力**：通用计算几何算法、SVG / Canvas 执行、React / Vanilla authoring、数据处理与可视化语法、TeX 引擎或应用交互状态
-- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 owner 的 `themeTokenDefinitions`），输出 renderer-agnostic Scene、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
-- **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；authoring / runtime 接线上移 adapter；数据可视化与领域 theme token / preset 具体值进入对应 viz 能力域；可选公式集成进入 `@retikz/tex`
+- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 `themeStyles`），输出 renderer-agnostic Scene、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
+- **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；authoring / runtime 接线上移 adapter；数据可视化与领域 theme token / preset / style definition 具体值进入对应 viz 能力域；可选公式集成进入 `@retikz/tex`
 
 新增或改变图形能力前，先按 [`core-drawing-complete.md`](../_notes/architecture/core-drawing-complete.md) 确认 Drawing Complete 的能力面、主责 / 协作包和端到端闭环。
 
@@ -16,7 +16,7 @@
 
 - 不准 import `react` / `react-dom`；React 内容属于 `@retikz/react`。
 - 不准依赖 DOM API（`document` / `window` / `canvas` / `HTMLElement` 等）；浏览器能力由 adapter 或 render 包注入。
-- 运行时依赖只允许 `@retikz/runtime`、`@retikz/math` 与 `zod`；新增依赖必须先说明理由。
+- 运行时依赖只允许 `@retikz/foundation`、`@retikz/runtime`、`@retikz/math` 与 `zod`；新增依赖必须先说明理由。
 - 任何可能进入 IR 的数据都必须 JSON 可序列化，禁止函数、ref、closure、class 实例。
 - `compileToScene` 必须保持纯函数：相同 IR + options 产生相同 Scene；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
 

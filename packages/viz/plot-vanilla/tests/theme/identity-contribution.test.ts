@@ -4,7 +4,8 @@ import type { IRPlotSpec } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { VanillaEmbedContext } from '@retikz/vanilla';
 
-import { PlotThemeTokenDefinition } from '@retikz/plot';
+import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { definePlotThemeStyle, getPlotThemePreset } from '@retikz/plot';
 import { describe, expect, it, vi } from 'vitest';
 
 const compileCalls = vi.hoisted(() => [] as Array<ReadonlyArray<unknown>>);
@@ -50,22 +51,23 @@ const contextOf = (id: string): VanillaEmbedContext => ({
   identityPath: ['chart', id],
 });
 
-describe('Plot Vanilla theme token contribution identity', () => {
-  it('SSR renderPlot passes the canonical definition to compileToScene', () => {
+const plotThemeStyle = definePlotThemeStyle({
+  name: 'brand',
+  resolve: () => getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light),
+});
+
+describe('Plot Vanilla runtime style options', () => {
+  it('SSR renderPlot passes Core style definitions and keeps Plot style definitions in lowering', () => {
     compileCalls.length = 0;
 
-    expect(renderPlot(spec, data)).toBe('<svg />');
+    expect(renderPlot(spec, data, { themeStyles: [], plotThemeStyles: [plotThemeStyle] })).toBe('<svg />');
 
-    const options = compileCalls.at(-1)?.[1] as { themeTokenDefinitions?: Array<unknown> } | undefined;
-    const definition = options?.themeTokenDefinitions;
-    expect(definition).toEqual([PlotThemeTokenDefinition]);
-    expect((definition as Array<unknown>)[0]).toBe(PlotThemeTokenDefinition);
+    const options = compileCalls.at(-1)?.[1] as { themeStyles?: Array<unknown> } | undefined;
+    expect(options?.themeStyles).toEqual([]);
   });
 
-  it('embedded createPlotAdapter passes the same canonical definition singleton', () => {
+  it('embedded createPlotAdapter keeps runtime style definitions out of the contribution payload', () => {
     const contribution = createPlotAdapter(data).lower({ spec }, contextOf('panel'));
-    const definition = contribution.themeTokenDefinitions;
-    expect(definition).toEqual([PlotThemeTokenDefinition]);
-    expect((definition as Array<unknown>)[0]).toBe(PlotThemeTokenDefinition);
+    expect(contribution).not.toHaveProperty('themeTokenDefinitions');
   });
 });

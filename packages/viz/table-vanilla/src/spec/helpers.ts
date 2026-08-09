@@ -12,6 +12,8 @@ import { embed } from '@retikz/vanilla';
 
 import type { TableEmbedProps } from './types';
 
+import { assertTableVanillaNonEmptyString } from '../shared';
+
 /** 从 plain detail 输入构造 Table spec */
 export const detailTable = (input: DetailTableSpecInput): IRDetailTableSpec => createDetailTableSpec(input);
 
@@ -24,6 +26,6 @@ export const embedTable = (
   spec: IRTableSpec,
   options: Omit<TableEmbedProps, 'spec'> = {},
 ): VanillaEmbedSpec<TableEmbedProps> => {
-  if (id.trim().length === 0) throw new Error('table vanilla: embed id must be non-empty');
+  assertTableVanillaNonEmptyString(id, 'table vanilla: embed id must be non-empty');
   return embed(TABLE_NAMESPACE, id, { spec, ...options });
 };

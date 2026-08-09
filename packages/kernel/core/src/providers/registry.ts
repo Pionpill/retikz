@@ -1,4 +1,6 @@
 /** provider registry 解析输入：内置项、自定义项和 key 提取规则 */
+import { assertNonEmptyString } from '@retikz/foundation';
+
 export type ProviderRegistryOptions<TDefinition> = {
   /** 能力名称，用于错误信息 */
   capability: string;
@@ -61,9 +63,7 @@ export const defineKeyedProviderArray = <TDefinition, TKey extends string = stri
   );
 
 const assertProviderKey = (capability: string, key: string): void => {
-  if (typeof key !== 'string' || key.trim().length === 0) {
-    throw new Error(`${capability} provider key must be a non-empty string.`);
-  }
+  assertNonEmptyString(key, `${capability} provider key`);
 };
 
 const registeredNames = <TDefinition>(registry: ProviderCollection<TDefinition>): string => {

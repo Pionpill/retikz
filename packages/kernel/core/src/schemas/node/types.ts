@@ -1,6 +1,7 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { DirectionalAnchorInput, SideInput, ValueOf } from '../../shared';
+import type { DirectionalAnchorInput, SideInput } from '../../shared';
 import type { NodeTextAlign } from '../text';
 import type {
   BuiltinShape,

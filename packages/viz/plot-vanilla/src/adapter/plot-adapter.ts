@@ -2,9 +2,11 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import type { VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { lowerPlots, PLOT_NAMESPACE, PlotComposite, PlotSpecSchema, PlotThemeTokenDefinition } from '@retikz/plot';
+import { lowerPlots, PLOT_NAMESPACE, PlotComposite, PlotSpecSchema } from '@retikz/plot';
 
 import type { PlotEmbedProps } from '../spec';
+
+import { assertPlotVanillaNonEmptyString } from '../shared';
 
 /** 创建共享 datasets 与 lowering options 的 Plot Vanilla Tier2 adapter */
 export const createPlotAdapter = (
@@ -21,13 +23,13 @@ export const createPlotAdapter = (
     kind: PLOT_NAMESPACE,
     namespace: PLOT_NAMESPACE,
     lower: (props, context) => {
-      if (context.id.trim().length === 0) throw new Error('plot vanilla: embed id must be non-empty');
+      assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
       const parsed = PlotSpecSchema.parse(props.spec);
       const node = PlotSpecSchema.parse({
         ...parsed,
         id: `${context.id}/${parsed.id ?? PlotComposite.Plot}`,
       });
-      return { node, datasets, themeTokenDefinitions: [PlotThemeTokenDefinition], makeComposites };
+      return { node, datasets, makeComposites };
     },
   };
 };

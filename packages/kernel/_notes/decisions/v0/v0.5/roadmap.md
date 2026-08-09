@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-01～10 与 ADR-13 已 Accepted，ADR-11～12 仍为 Proposed；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
+> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-01～10、ADR-12～14 已 Accepted，ADR-11 仍为 Proposed；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 
@@ -22,7 +22,8 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义                     | [ADR-06 Accepted](./alpha.1/06-tex-math-syntax-compatibility.md)              |
 | 布局感知 Composite        | 让 Tier 2 在同次 compile 内测量、约束、replay 并返回 artifact            | [ADR-07 Accepted](./alpha.1/07-layout-aware-composite.md)                     |
 | Box Layout Composite 合同 | 让任意 child 接受双轴 slot、反馈真实占用并带外层 transform / clip replay | [alpha.2 ADR-06 Accepted](./alpha.2/06-box-layout-composite-contract.md)      |
-| 增量性能闭环              | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本              | [alpha.2：ADR-01～10、13 Accepted；ADR-11～12 Proposed](./alpha.2/roadmap.md) |
+| 增量性能闭环              | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本              | [alpha.2：ADR-01～10、12～13 Accepted；ADR-11 Proposed](./alpha.2/roadmap.md) |
+| Foundation 基础契约统一   | 为跨包原子类型、typed string 不变量与结构化错误建立唯一 Kernel owner     | [alpha.2 ADR-14 Accepted](./alpha.2/14-foundation-package.md)                 |
 | Concurrent 与渐进生成     | 可让出、取消地准备候选结果，并支持渐进物化与 generation                  | [alpha.3 Proposed](./alpha.3/roadmap.md)                                      |
 | Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership             | [alpha.4 候选](./alpha.4/roadmap.md)                                          |
 

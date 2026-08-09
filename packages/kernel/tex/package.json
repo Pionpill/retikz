@@ -76,7 +76,8 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
-    "@retikz/core": "workspace:*"
+    "@retikz/core": "workspace:*",
+    "@retikz/foundation": "workspace:*"
   },
   "peerDependencies": {
     "mathjax-full": "catalog:",

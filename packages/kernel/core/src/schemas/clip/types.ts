@@ -1,6 +1,6 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../shared';
 import type { IRJsonObject } from '../json';
 import type { ClipFillRule } from './constants';
 import type { CircleClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema, RectClipSchema } from './schema';

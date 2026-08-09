@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import type * as Foundation from '@retikz/foundation';
+
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
   CompileOptions,
@@ -14,6 +16,13 @@ import type {
   ThemeModeValue,
   ThemeStyleValue,
 } from '../../src';
+// @ts-expect-error Core no longer owns the shared ValueOf type utility
+import type { ValueOf } from '../../src';
+// @ts-expect-error Core no longer owns the shared AssertEqual type utility
+import type { AssertEqual } from '../../src';
+
+type RemovedCoreValueOf<T extends object> = ValueOf<T>;
+type RemovedCoreAssertEqual<TActual, TExpected> = AssertEqual<TActual, TExpected>;
 
 import * as core from '../../src';
 
@@ -41,7 +50,6 @@ describe('core public compile exports', () => {
     const resolvedTheme: ResolvedTheme = {
       style: 'clean',
       mode: 'dark',
-      tokens: {},
       colors: {
         semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
         categorical: ['#2563eb'],
@@ -62,12 +70,19 @@ describe('core public compile exports', () => {
     expect(resolvedTheme).toEqual({
       style,
       mode,
-      tokens: {},
       colors: {
         semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
         categorical: ['#2563eb'],
       },
     });
+  });
+
+  it('uses Foundation for shared type utilities', () => {
+    expectTypeOf<Foundation.ValueOf<{ Alpha: 'a' }>>().toEqualTypeOf<'a'>();
+    expectTypeOf<Foundation.AssertEqual<'a', 'a'>>().toEqualTypeOf<true>();
+    void ({} as Foundation.OpenString<'a'>);
+    void ({} as RemovedCoreValueOf<{ Alpha: 'a' }>);
+    void ({} as RemovedCoreAssertEqual<'a', 'a'>);
   });
 
   it('不暴露递归 schema 注册内部能力', () => {

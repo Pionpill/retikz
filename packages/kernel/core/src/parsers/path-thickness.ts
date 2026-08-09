@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import type { AssertEqual, ValueOf } from '@retikz/foundation';
 
-import type { AssertEqual, ValueOf } from '../shared';
+import { z } from 'zod';
 
 /** 路径语义线宽糖关键字 */
 export const PathThickness = {

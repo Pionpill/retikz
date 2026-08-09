@@ -29,10 +29,11 @@ describe('@retikz/table-react package boundary', () => {
     });
   });
 
-  it('depends on Table and Kernel React without taking a Plot dependency', () => {
+  it('depends on Table, Foundation, and Kernel React without taking a Plot dependency', () => {
     expect(Object.keys(manifest.dependencies).sort()).toEqual([
       '@retikz/core',
       '@retikz/data',
+      '@retikz/foundation',
       '@retikz/react',
       '@retikz/table',
     ]);

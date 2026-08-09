@@ -3,7 +3,7 @@ title: 契约 - 明细表
 description: 查询外部数据引用、detail columns 与 record-per-row Structure 的精确 JSON schema。
 ---
 
-明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings 与 `tableThemeTokens`。Core Theme 的 `style` / `mode` 与 inherited `theme.tokens.table` 由宿主 Scene / Scope 提供，不写入 DetailTableSpec。
+明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings 与 `tableThemeTokens`。Core Theme 的 `style` / `mode` 由宿主 Scene / Scope 提供，不写入 DetailTableSpec。
 
 ## DetailTableSpec
 

@@ -213,7 +213,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
 
 ## Table Theme token
 
-Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供，并选择 Table 的 preset。`theme.tokens.table` 是继承到当前位置的 sparse namespace；`tableThemeTokens` 是 TableSpec 的局部 sparse overlay。Core 的 shared `colors.categorical` 会投影到 `data.categorical`，所以 Table 不再维护另一份 shared palette 输入。
+Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供，并选择 Table 的 preset。`tableThemeTokens` 是 TableSpec 的局部 sparse overlay。Core 的 shared `colors.categorical` 会投影到 `data.categorical`，所以 Table 不再维护另一份 shared palette 输入。
 
 ### TableThemeTokenOverridesSchema
 
@@ -300,7 +300,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   }}
 />
 
-`neutral` 是默认 Core `style`；`academic` 偏 LaTeX/booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个 preset 都提供完整 light/dark token map；Table resolver 按 preset → shared categorical → inherited `theme.tokens.table` → local `tableThemeTokens` 级联，未知 key 或非法值会报告具体路径并 fail-loud。解析后的 manifest 会保留 effective `style`、`themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 TableSpec 输入字段。
+`neutral` 是默认 Core `style`；`academic` 偏 LaTeX/booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个 preset 都提供完整 light/dark token map；Table resolver 按 preset → shared categorical → local `tableThemeTokens` 级联，未知 key 或非法值会报告具体路径并 fail-loud。解析后的 manifest 会保留 effective `style`、`themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 TableSpec 输入字段。
 
 ## 相关
 

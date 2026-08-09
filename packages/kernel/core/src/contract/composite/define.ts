@@ -1,3 +1,4 @@
+import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { JsonValue } from '../../schemas';
@@ -25,14 +26,26 @@ const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
   });
 };
 
+/** 校验 schema literal 字段并保留 Composite 的原有错误文本 */
+const isNonEmptyLiteralString = (value: unknown, message: string): value is string => {
+  if (typeof value !== 'string') return false;
+  try {
+    assertFoundationNonEmptyString(value, 'defineComposite schema literal');
+    return true;
+  } catch {
+    throw new Error(message);
+  }
+};
+
 /** 从 composite 对象分支中读取并校验共同 namespace / type literal */
 const literalValueOf = (schema: z.ZodType, field: 'namespace' | 'type'): string => {
   const objects = objectSchemasOf(schema);
   const values = objects.map((object, index) => {
     const node = object.shape[field];
-    if (!(node instanceof z.ZodLiteral) || typeof node.value !== 'string' || node.value.trim().length === 0) {
-      const path = objects.length === 1 ? `schema.${field}` : `schema union option ${index}.${field}`;
-      throw new Error(`defineComposite: ${path} must be a non-empty z.literal string.`);
+    const path = objects.length === 1 ? `schema.${field}` : `schema union option ${index}.${field}`;
+    const message = `defineComposite: ${path} must be a non-empty z.literal string.`;
+    if (!(node instanceof z.ZodLiteral) || !isNonEmptyLiteralString(node.value, message)) {
+      throw new Error(message);
     }
     return node.value;
   });

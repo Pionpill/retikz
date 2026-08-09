@@ -1,6 +1,6 @@
-﻿import type { z } from 'zod';
+﻿import type { ValueOf } from '@retikz/foundation';
+import type { z } from 'zod';
 
-import type { ValueOf } from '../../shared';
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
 import type { ScopeBoundingShape, ScopeStyleChannel } from './constants';

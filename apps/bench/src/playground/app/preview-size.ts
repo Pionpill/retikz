@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Performance Lab 预览尺寸预设 ID */
 export const LabPreviewSizePresetId = {

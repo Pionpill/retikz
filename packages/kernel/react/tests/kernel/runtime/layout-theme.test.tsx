@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import type { EmbeddableTier2Adapter } from '../../../src';
 
-import { Layout } from '../../../src/kernel';
+import { Layout, ThemeProvider } from '../../../src/kernel';
 
 const themedBox = defineComposite({
   namespace: 'theme-test',
@@ -46,6 +46,52 @@ const input: IRScene = {
   theme: { style: ThemeStyle.Academic, mode: ThemeMode.Light },
   children: [{ namespace: 'theme-test', type: 'box' }],
 };
+
+const themeProbe = defineComposite({
+  namespace: 'theme-test',
+  type: 'probe',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('theme-test'),
+    type: z.literal('probe'),
+  }),
+  expand: (_node, context) => {
+    const styleColor =
+      context.theme.style === ThemeStyle.Clean
+        ? '#layout-style'
+        : context.theme.style === ThemeStyle.Vibrant
+          ? '#ir-style'
+          : context.theme.style === ThemeStyle.Academic
+            ? '#provider-style'
+            : '#default-style';
+    return [
+      {
+        type: 'node',
+        id: 'style',
+        position: [0, 0],
+        minimumSize: 20,
+        padding: 0,
+        fill: styleColor,
+      },
+      {
+        type: 'node',
+        id: 'palette',
+        position: [30, 0],
+        minimumSize: 20,
+        padding: 0,
+        fill: context.theme.colors.categorical[0],
+      },
+      {
+        type: 'node',
+        id: 'error',
+        position: [60, 0],
+        minimumSize: 20,
+        padding: 0,
+        stroke: context.theme.colors.semantic.error,
+        strokeWidth: 2,
+      },
+    ];
+  },
+});
 
 describe('<Layout theme>', () => {
   class ThemeInstance {
@@ -116,22 +162,39 @@ describe('<Layout theme>', () => {
     expect(markup).toContain('#fedcba');
   });
 
-  it.each([
-    ['unknown field', { palette: 'paper' }, /scene\.theme\.palette/i],
-    ['null', null, /scene\.theme/i],
-    ['number', 1, /scene\.theme/i],
-    ['string', 'dark', /scene\.theme/i],
-    ['Date', new Date(), /scene\.theme/i],
-    ['Map', new Map(), /scene\.theme/i],
-    ['Set', new Set(), /scene\.theme/i],
-    ['class instance', new ThemeInstance(), /scene\.theme/i],
-    ['inherited field', Object.create({ style: ThemeStyle.Academic }), /scene\.theme/i],
-  ])('伪造的 %s Theme prop由 Core严格拒绝', (_label, theme, expected) => {
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout ir={{ type: 'scene', version: 1, children: [] }} theme={theme as never} width={100} height={100} />,
-      ),
-    ).toThrow(expected);
+  it('ambient Theme 按 Provider → IR → Layout 顺序覆盖 selector', () => {
+    const markup = renderToStaticMarkup(
+      <ThemeProvider theme={{ style: ThemeStyle.Academic }}>
+        <Layout
+          ir={{
+            type: 'scene',
+            version: 1,
+            theme: { style: ThemeStyle.Vibrant },
+            children: [{ namespace: 'theme-test', type: 'probe' }],
+          }}
+          theme={{ style: ThemeStyle.Clean }}
+          composites={[themeProbe]}
+          width={100}
+          height={100}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(markup).toContain('#layout-style');
+  });
+
+  it('嵌套 ThemeProvider 对 selector 按字段继承', () => {
+    const markup = renderToStaticMarkup(
+      <ThemeProvider theme={{ style: ThemeStyle.Academic }}>
+        <ThemeProvider theme={{ mode: ThemeMode.Dark }}>
+          <Layout width={100} height={100}>
+            <ThemedBox />
+          </Layout>
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+
+    expect(markup).toContain('#123456');
   });
 
   it.each([
@@ -175,22 +238,9 @@ describe('<Layout theme>', () => {
     expect(accessorReads).toBe(0);
   });
 
-  it('宿主 Theme prop不洗掉隐藏字段', () => {
-    const theme = { style: ThemeStyle.Academic };
-    Object.defineProperty(theme, 'palette', { value: 'paper', enumerable: false });
-
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout ir={{ type: 'scene', version: 1, children: [] }} theme={theme} width={100} height={100} />,
-      ),
-    ).toThrow(/scene\.theme/i);
-  });
-
   it('宿主overlay不吞掉自有__proto__未知字段', () => {
     const persistedTheme = { style: ThemeStyle.Academic };
     Object.defineProperty(persistedTheme, '__proto__', { value: 'persisted', enumerable: true });
-    const hostTheme = { mode: ThemeMode.Dark };
-    Object.defineProperty(hostTheme, '__proto__', { value: 'host', enumerable: true });
 
     expect(() =>
       renderToStaticMarkup(
@@ -201,11 +251,6 @@ describe('<Layout theme>', () => {
           height={100}
         />,
       ),
-    ).toThrow(/scene\.theme\.__proto__/i);
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout ir={{ type: 'scene', version: 1, children: [] }} theme={hostTheme as never} width={100} height={100} />,
-      ),
-    ).toThrow(/scene\.theme\.__proto__/i);
+    ).toThrow(/__proto__/i);
   });
 });

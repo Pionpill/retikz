@@ -48,14 +48,14 @@ plot 可以提供依赖 mark、geometry 或 layout 语义的 plot-specific trans
 | Coordinate             | 把位置通道解析到绘图空间                                                                                                                                                 | plot                                                                                                                    | core target / anchor、geo 底图系统                          |
 | Mark                   | 定义数据在坐标空间中的几何显现                                                                                                                                           | plot                                                                                                                    | chart preset、单 demo 拼装                                  |
 | Guide                  | 解析 axis、grid、legend、axis / datum label 等解释语义并组织领域 provenance / locator                                                                                    | plot 拥有领域解析；经跨领域验证的通用呈现由 standard 拥有                                                               | Chart title / caption / source、上层 UI 控件                |
-| Theme / Palette        | 在 Core effective Theme 与 inherited `theme.tokens.plot` 下解析 Plot surface、typography / label、Axis / Legend 视觉 token 与 palette，并映射到正式 Plot / Standard 输入 | Core 负责 namespace validation；plot 拥有 token、preset、shared categorical projection、resolver、mapping 与 inspection | Chart canvas / recipe token、Core Theme 语义、renderer 默认 |
+| Theme / Palette        | 在 Core effective Theme 下通过同名 Plot style definition 解析 Plot surface、typography / label、Axis / Legend 视觉 token 与 palette，并映射到正式 Plot / Standard 输入 | Core 负责 selector 与 shared colors；plot 拥有 style definition、token、preset、resolver、mapping 与 inspection | Chart canvas / recipe token、Core Theme 语义、renderer 默认 |
 | Layer / Lowering       | 组织层、scope 与 provenance，并下沉 Core IR                                                                                                                              | plot                                                                                                                    | 独立 renderer、平行 scene graph                             |
 | Spatial Addressability | 为 view、arrangement、panel、track、plotArea 等空间保留稳定 identity 与 handle                                                                                           | plot 生成领域 handle；core 提供模型、索引与 selector 基础                                                               | Chart 外层 frame、Standard 布局、dashboard 状态             |
 | Interaction Readiness  | 保留 datum / series / scope identity、locator、selection mapping 和诊断边界                                                                                              | plot 定义语义，core 承载 metadata，adapter 消费                                                                         | DOM 事件树、tooltip UI、高频 dashboard dataflow             |
 
 这些是检测维度，不要求一一对应目录；代码仍按 `schemas / contract / providers / pipeline / shared` 分层。
 
-Plot 不拥有 Core Theme 的传播协议。Core 通过 `ThemeTokenDefinition` registry 验证并传递 `theme.tokens.plot`，Plot 负责自己的 vocabulary、preset、resolver、mapping 与 inspection。Core 只提供一套当前生效的非空 active `palette.categorical`；Plot 可将其投影为 categorical / series / sector baseline，但不得复制 active array。Standard 只消费 Plot 已解析的正式 presentation 输入和 Core `InspectionAppearance`，不读取 Plot token bag 或重新分配 Inspector 颜色。
+Plot 不拥有 Core Theme 的传播协议。Core 只传递 selector 和当前生效的 shared colors；Plot 通过同名 `PlotThemeStyleDefinition` 解析自己的 vocabulary、preset、resolver、mapping 与 inspection。style resolver 必须把 shared colors 纳入完整 Plot token 基线；局部 `plotThemeTokens`、`colors` 与 native `plotTheme` 在其后覆盖。Standard 只消费 Plot 已解析的正式 presentation 输入和 Core `InspectionAppearance`，不读取 Plot token bag 或重新分配 Inspector 颜色。
 
 ## 4. 准入原则
 
@@ -93,7 +93,7 @@ contract 可扩展
 provider / feature 可实现
 pipeline / lowering 可消费
 effective Theme + Plot token / native theme 可确定性解析
-Core ThemeTokenDefinition validation 与 shared categorical projection 可追踪
+Core style registry 与 Plot style registry 的同名解析及 shared colors 消费可追踪
 Core IR 可承载
 spatial handles / selectors 可保留 Plot 内部 identity
 provenance / locator 可追踪

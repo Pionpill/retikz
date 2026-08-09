@@ -102,12 +102,11 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(() => renderToSvgString(plotFigure, { adapters: [createPlotAdapter(datasets)] })).toThrow(ZodError);
   });
 
-  it('helper 与 adapter 都拒绝空白 embed id', () => {
+  it.each(['', '   ', '\u2003', '\ufeff'])('helper and adapter reject blank embed id %j with the Plot prefix', id => {
     const adapter = createPlotAdapter(datasets);
 
-    expect(() => embedPlot('', salesSpec())).toThrow('plot vanilla: embed id must be non-empty');
-    expect(() => embedPlot('   ', salesSpec())).toThrow('plot vanilla: embed id must be non-empty');
-    expect(() => adapter.lower({ spec: salesSpec() }, contextOf(''))).toThrow(
+    expect(() => embedPlot(id, salesSpec())).toThrowError('plot vanilla: embed id must be non-empty');
+    expect(() => adapter.lower({ spec: salesSpec() }, contextOf(id))).toThrowError(
       'plot vanilla: embed id must be non-empty',
     );
   });

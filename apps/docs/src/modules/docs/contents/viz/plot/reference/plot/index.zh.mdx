@@ -36,7 +36,7 @@ description: 查询 PlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSO
 
 `coordinate` 与 `composition` 必须且只能出现一个。同一 Plot 中的 scale name 、view id 和 arrangement id 必须唯一，图元或坐标轴引用的 `coordinateView` 必须已注册。
 
-主题输入按 Core effective Theme preset → shared categorical → inherited `tokens.plot` → local `plotThemeTokens` → `colors` → `plotTheme` → 局部 guide / mark / scale 配置解析。完整 token 与级联规则见[主题契约](/viz/plot/reference/theme)。
+主题输入按 Core effective Theme 选择的 Plot preset → local `plotThemeTokens` → `colors` → `plotTheme` → 局部 guide / mark / scale 配置解析。完整 token、可扩展 style 与级联规则见[主题契约](/viz/plot/reference/theme)。
 
 ## CoordinateCompositionSchema
 

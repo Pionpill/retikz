@@ -731,9 +731,6 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
           ctx?.contributions.push({
             namespace: adapter.namespace,
             datasets: contribution.datasets,
-            ...(contribution.themeTokenDefinitions === undefined
-              ? {}
-              : { themeTokenDefinitions: contribution.themeTokenDefinitions }),
             makeComposites: contribution.makeComposites,
           });
           return;

@@ -49,15 +49,17 @@ For everyday authoring, pass children directly. `<Layout>` converts the componen
 
 ### Inherited Theme
 
-`theme` is a persistent environment for Tier 2 composites, not implicit styling for Core primitives. It contains sparse `style`, `mode`, and `tokens` fields; `tokens` is an owner-namespaced bag, with the built-in `core` namespace providing shared colors while Plot, Chart, Table, and other owners register their own namespaces.
+`theme` is a persistent environment for Tier 2 composites, not implicit styling for Core primitives. It contains sparse `style` and `mode` selectors; Core resolves shared colors from them, while Plot, Chart, Table, and other owners resolve their own visual defaults.
 
-A root `<Layout theme>` selects the whole-figure environment, while an inner `<Scope theme>` overrides only the fields or namespace/token keys it provides. Omitted `style`, `mode`, and token keys inherit from the outer value, starting at `neutral + light`. Core validates the owner registry, namespace, token key, and value, then passes frozen `ResolvedTheme.tokens` and detached `ResolvedTheme.colors` to the Composite. Core primitives, the final Scene, and SVG / Canvas renderers do not interpret domain tokens.
+A root `<Layout theme>` selects the whole-figure environment, while an inner `<Scope theme>` overrides only the selectors it provides. Omitted `style` and `mode` inherit from the outer value, starting at `neutral + light`. Core passes frozen `ResolvedTheme.colors` to the Composite; Core primitives, the final Scene, and SVG / Canvas renderers do not interpret domain visual defaults.
 
 <ComponentPreview files="theme-inheritance" size="sm" />
 
-The example Composite consumes resolved `context.theme.colors` directly: `semantic.error` colors text, `semantic.warning` colors card strokes, and `style / mode` selects only the card-fill preset. The swatches below each card come from `context.theme.colors.categorical`. The right Scope's sparse `palette.categorical` and `semantic.warning` overrides change the swatches and stroke respectively; the Composite never reads or interprets `context.theme.tokens.core` itself.
+The example Composite consumes resolved `context.theme.colors` directly: `semantic.error` colors text, `semantic.warning` colors card strokes, and `style / mode` selects only the card-fill preset. The swatches below each card come from `context.theme.colors.categorical`. Different Scope `style` / `mode` selectors re-resolve the corresponding shared colors; the Composite never reads or interprets an internal token map.
 
-When `ir` already carries a root Theme, an explicit `theme` prop overrides it per field, and `tokens` use the same sparse namespace/token-key overlay while preserving omitted persisted fields. Neither input object is mutated. Theme does not automatically change a plain Node or Path fill, stroke, or font.
+When `ir` already carries a root Theme, an explicit `theme` prop overrides it per field while preserving omitted persisted fields. Neither input object is mutated. Theme does not automatically change a plain Node or Path fill, stroke, or font.
+
+Inject a custom style through `themeStyles`: `defineThemeStyle({ name: 'brand', resolve: ({ mode }) => colors })` stays at runtime while IR contains only `{ style: 'brand' }`. If the same Layout consumes Plot or Chart, inject a same-named domain style resolver there as well; a missing registry entry reports an explicit error.
 
 ### Reading Compile Artifacts
 
@@ -253,14 +255,15 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 
 ### Input and Viewport
 
-| Prop       | Type                 | Default | Description                                                  |
-| ---------- | -------------------- | ------- | ------------------------------------------------------------ |
-| `children` | `ReactNode`          | —       | Kernel / Sugar tree, used when `ir` is omitted               |
-| `ir`       | `IRScene`            | —       | Pre-built Core IR; wins when children also exist             |
-| `theme`    | `IRTheme`            | —       | Sparse root Theme; overrides `ir.theme` per field in IR mode |
-| `width`    | `number` \| `string` | —       | SVG / Canvas display width                                   |
-| `height`   | `number` \| `string` | —       | SVG / Canvas display height                                  |
-| `viewBox`  | `IRViewBox`          | —       | Internal range; overrides IR and automatic layout            |
+| Prop          | Type                                  | Default | Description                                                  |
+| ------------- | ------------------------------------- | ------- | ------------------------------------------------------------ |
+| `children`    | `ReactNode`                           | —       | Kernel / Sugar tree, used when `ir` is omitted               |
+| `ir`          | `IRScene`                             | —       | Pre-built Core IR; wins when children also exist             |
+| `theme`       | `IRTheme`                             | —       | Sparse root Theme; overrides `ir.theme` per field in IR mode |
+| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | —       | Runtime Core style resolvers; never written to IR or JSON    |
+| `width`       | `number` \| `string`                  | —       | SVG / Canvas display width                                   |
+| `height`      | `number` \| `string`                  | —       | SVG / Canvas display height                                  |
+| `viewBox`     | `IRViewBox`                           | —       | Internal range; overrides IR and automatic layout            |
 
 ### Compile Basics
 
@@ -285,15 +288,14 @@ These props enter `CompileOptions` together. See each extension guide for defini
 
 ### Higher-Level Capabilities and Host Integration
 
-| Prop                    | Type                                                  | Default     | Description                                                                                         |
-| ----------------------- | ----------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
-| `pathGenerators`        | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —           | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)               |
-| `pathKinds`             | `ReadonlyArray`<br />`<PathKindDefinition>`           | —           | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)                          |
-| `ribbonWidthProfiles`   | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —           | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)                    |
-| `composites`            | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —           | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite)     |
-| `themeTokenDefinitions` | `ReadonlyArray`<br />`<AnyThemeTokenDefinition>`      | Core `core` | Register Plot, Chart, Table, or custom owner token schemas; conflicting namespaces fail immediately |
-| `lowerTex`              | `LowerTex`                                            | —           | Inject formula lowering; see [TeX](/kernel/packages/tex)                                            |
-| `embeddables`           | `Array`<br />`<EmbeddableTier2Adapter>`               | —           | Explicit Tier 2 adapter injection; static component markers are primary                             |
+| Prop                  | Type                                                  | Default | Description                                                                                     |
+| --------------------- | ----------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)           |
+| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)                      |
+| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)                |
+| `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite) |
+| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                                        |
+| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —       | Explicit Tier 2 adapter injection; static component markers are primary                         |
 
 ### Whole-Figure Defaults
 

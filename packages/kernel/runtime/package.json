@@ -65,6 +65,9 @@
     "test:run": "vitest run",
     "test:changed": "vitest run --changed --passWithNoTests"
   },
+  "dependencies": {
+    "@retikz/foundation": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",

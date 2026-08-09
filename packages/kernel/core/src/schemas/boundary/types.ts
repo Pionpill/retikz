@@ -1,6 +1,6 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { ValueOf } from '../../shared';
 import type { BoundaryFit, BoundaryKeyword } from './constants';
 import type { BoundarySchema } from './schema';
 

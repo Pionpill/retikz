@@ -27,14 +27,14 @@ Diagram 领域的 Notation package family 归 `packages/diagram/*`，作为可�
 
 `scripts/release-groups.config.mjs` 是机器可读的发布组真源。
 
-| 发布组   | 包                                                                                                                                        | 版本策略                     |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                  | Standard 组 lockstep         |
-| notation | `@retikz/notation`, `@retikz/notation-react`, `@retikz/notation-vanilla`                                                                  | Diagram Notation 组 lockstep |
-| kernel   | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/inspect`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep           |
-| data     | `@retikz/data`                                                                                                                            | 独立底座包                   |
-| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                              | Plot 组 lockstep             |
-| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                           | Table 组 lockstep            |
+| 发布组   | 包                                                                                                                                                              | 版本策略             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                                        | Standard 组 lockstep |
+| notation | `@retikz/notation`, `@retikz/notation-react`, `@retikz/notation-vanilla`                                                                                        | Diagram Notation 组 lockstep |
+| kernel   | `@retikz/foundation`, `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/inspect`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | kernel 组 lockstep   |
+| data     | `@retikz/data`                                                                                                                                                  | 独立底座包           |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                                                    | Plot 组 lockstep     |
+| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                                                 | Table 组 lockstep    |
 
 未来 chart、geo 等功能家族即使放在 `packages/viz/*` 下，也只有在具体能力 ADR 确认 package manifest 后才进入 release group 真源；领域目录不能替未存在的包预留发布配置。
 
@@ -57,6 +57,8 @@ Diagram 领域的 Notation package family 归 `packages/diagram/*`，作为可�
 | ---------- | ------------- | ------------------------------ |
 | 同发布组   | `workspace:*` | 包一起发布，并解析到同一组版本 |
 | 不同发布组 | `workspace:^` | 消费方接受依赖组的兼容版本     |
+
+`@retikz/foundation` 是 Kernel 拓扑的零依赖原子契约底座；消费其公开能力的包必须从根入口直接导入并声明直接依赖。`@retikz/math` 当前没有真实 Foundation import，因此不声明空依赖。
 
 领域功能发布组不能相互依赖；Plot、Table 等官方 Tier 2 组可以单向依赖作为通用绘图服务层的 `standard` 组，Diagram Notation foundation 也可以消费 Standard 的公开 composition capability，Standard 不得反向依赖任何领域功能组。通用数据、机制或几何能力仍应下沉到 `@retikz/data`、`@retikz/core` 或 `@retikz/math`，跨领域复用的可选绘图 composite 进入 `@retikz/standard`。
 

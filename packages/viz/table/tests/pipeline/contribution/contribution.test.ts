@@ -89,8 +89,13 @@ describe('Table runtime contribution', () => {
     expect(Object.keys(contribution.datasets)).toEqual(['sales', '@@retikz/table/runtime/panel%2Fa%20b']);
   });
 
-  it('rejects empty references and collisions with the reserved runtime dataset key', () => {
-    expect(() => createTableRuntimeContribution({ reference: '  ' })).toThrow(/reference.*non-empty/i);
+  it.each(['', '  ', '\u2003', '\ufeff'])('rejects blank references with the Table prefix (%j)', reference => {
+    expect(() => createTableRuntimeContribution({ reference })).toThrowError(
+      'table: runtime contribution reference must be non-empty',
+    );
+  });
+
+  it('rejects collisions with the reserved runtime dataset key', () => {
     expect(() =>
       createTableRuntimeContribution({
         reference: 'panel',

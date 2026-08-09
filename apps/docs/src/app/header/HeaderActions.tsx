@@ -1,5 +1,8 @@
+import type { ThemeStyleValue } from '@retikz/core';
+import type { FC } from 'react';
+
 import { ArrowUpRight, Languages, Link as LinkIcon, Moon, MoreHorizontal, Sun } from 'lucide-react';
-import { type FC } from 'react';
+import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { GitHubIcon } from '@/components/icons';
@@ -24,19 +27,59 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
+import { PreviewThemeStyleOptions } from '@/modules/docs/components/component-preview/theme';
 import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/data';
+import { useDocLocation } from '@/modules/docs/layout';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
 
+import { getPreviewThemeStyleIcon, isPreviewThemeStyleDocument } from './preview-theme-settings';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 const rangePlaybackDurationOptions = [500, 1000, 2000, 3000, 5000] as const;
+const previewThemeStyleLabelKeys = {
+  neutral: 'preview.themeStyleNeutral',
+  academic: 'preview.themeStyleAcademic',
+  vibrant: 'preview.themeStyleVibrant',
+  clean: 'preview.themeStyleClean',
+} as const;
+type PreviewThemeSettingsItemsProps = {
+  themeStyle: ThemeStyleValue;
+  setThemeStyle: (value: ThemeStyleValue) => void;
+};
+
+/** 主题设置的扁平选项，桌面入口与移动端菜单共用 */
+const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
+  const { themeStyle, setThemeStyle } = props;
+  const { t } = useTranslation();
+
+  return (
+    <DropdownMenuRadioGroup
+      value={themeStyle}
+      onValueChange={value => {
+        if (PreviewThemeStyleOptions.some(option => option === value)) {
+          setThemeStyle(value);
+        }
+      }}
+    >
+      {PreviewThemeStyleOptions.map(option => {
+        return (
+          <DropdownMenuRadioItem key={option} value={option}>
+            {createElement(getPreviewThemeStyleIcon(option), { 'aria-hidden': true, className: 'size-4' })}
+            {t(previewThemeStyleLabelKeys[option])}
+          </DropdownMenuRadioItem>
+        );
+      })}
+    </DropdownMenuRadioGroup>
+  );
+};
 
 /** 顶栏右侧动作组。 */
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
+  const docLocation = useDocLocation();
   const { theme, handleToggleTheme, handleCycleLang, handleCopyLink } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
@@ -50,6 +93,7 @@ export const HeaderActions: FC = () => {
   const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
   const previewThemeMode = useComponentPreviewStore(s => s.themeMode);
+  const previewThemeStyle = useComponentPreviewStore(s => s.themeStyle);
   const previewControlPanelDefaultOpen = useComponentPreviewStore(s => s.controlPanelDefaultOpen);
   const previewRangePlaybackDuration = useComponentPreviewStore(s => s.rangePlaybackDuration);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
@@ -58,6 +102,7 @@ export const HeaderActions: FC = () => {
   const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
   const setPreviewThemeMode = useComponentPreviewStore(s => s.setThemeMode);
+  const setPreviewThemeStyle = useComponentPreviewStore(s => s.setThemeStyle);
   const setPreviewControlPanelDefaultOpen = useComponentPreviewStore(s => s.setControlPanelDefaultOpen);
   const setPreviewRangePlaybackDuration = useComponentPreviewStore(s => s.setRangePlaybackDuration);
   const comparisonTargets = useComparisonStore(s => s.visibleTargets);
@@ -65,6 +110,7 @@ export const HeaderActions: FC = () => {
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
+  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId, docLocation?.sectionId);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -99,6 +145,29 @@ export const HeaderActions: FC = () => {
             </TooltipTrigger>
             <TooltipContent>{themeLabel}</TooltipContent>
           </Tooltip>
+          {showPreviewThemeStyle && (
+            <DropdownMenu modal={false}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <DropdownMenuTrigger className={cn(triggerClass, 'hidden lg:inline-flex')}>
+                      {createElement(getPreviewThemeStyleIcon(previewThemeStyle), {
+                        'aria-hidden': true,
+                        className: 'size-4',
+                      })}
+                    </DropdownMenuTrigger>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{t('preview.themeStyle')}</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
+                  {t('preview.themeSettings')}
+                </DropdownMenuLabel>
+                <PreviewThemeSettingsItems themeStyle={previewThemeStyle} setThemeStyle={setPreviewThemeStyle} />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Tooltip>
             <TooltipTrigger className={cn(triggerClass, 'hidden lg:inline-flex')} onClick={handleCycleLang}>
               <Languages className="size-4" />
@@ -167,6 +236,9 @@ export const HeaderActions: FC = () => {
                 {t('preview.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
+                {showPreviewThemeStyle && (
+                  <PreviewThemeSettingsItems themeStyle={previewThemeStyle} setThemeStyle={setPreviewThemeStyle} />
+                )}
                 <DropdownMenuCheckboxItem
                   checked={previewRendererMode === 'canvas'}
                   onCheckedChange={togglePreviewRendererMode}

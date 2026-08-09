@@ -1,5 +1,6 @@
+import type { OpenString, ValueOf } from '@retikz/foundation';
+
 import type { RuntimeProgramId } from '../identity';
-import type { OpenString, ValueOf } from '../shared';
 import type { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from './constants';
 
 /** Runtime 内置结构化诊断码取值 */

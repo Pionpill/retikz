@@ -1,15 +1,18 @@
 // @vitest-environment jsdom
+import { ThemeStyle } from '@retikz/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
 const originalThemeMode = useComponentPreviewStore.getState().themeMode;
+const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
 const originalRangePlaybackDuration = useComponentPreviewStore.getState().rangePlaybackDuration;
 
 afterEach(() => {
   useComponentPreviewStore.getState().setControlPanelDefaultOpen(originalDefaultOpen);
   useComponentPreviewStore.getState().setThemeMode(originalThemeMode);
+  useComponentPreviewStore.getState().setThemeStyle(originalThemeStyle);
   useComponentPreviewStore.getState().setRangePlaybackDuration(originalRangePlaybackDuration);
 });
 
@@ -34,6 +37,14 @@ describe('ComponentPreview store controls panel preference', () => {
 
     useComponentPreviewStore.getState().setRangePlaybackDuration(500);
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(500);
+  });
+
+  it('stores the global preview ThemeStyle', () => {
+    expect(useComponentPreviewStore.getState().themeStyle).toBe(ThemeStyle.Neutral);
+
+    useComponentPreviewStore.getState().setThemeStyle(ThemeStyle.Academic);
+
+    expect(useComponentPreviewStore.getState().themeStyle).toBe(ThemeStyle.Academic);
   });
 
   it('不保存 panel 宽度或实例级映射', () => {

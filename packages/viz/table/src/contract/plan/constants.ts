@@ -16,7 +16,6 @@ export const TableCellPlanSourceKind = {
 export const TableThemeTokenSourceKind = {
   Preset: 'preset',
   SharedCategorical: 'shared-categorical',
-  InheritedThemeToken: 'inherited-theme-token',
   LocalThemeToken: 'local-theme-token',
 } as const;
 

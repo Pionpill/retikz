@@ -1,3 +1,5 @@
+import { RetikzError } from '@retikz/foundation';
+
 import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeProgramId } from '../identity';
 import type { RuntimeOwnerErrorCode } from './constants';
@@ -19,8 +21,28 @@ type RuntimeOwnerLifecycleErrorCode = Extract<
   | typeof RuntimeOwnerErrorCode.ChangeSetValidationFailed
 >;
 
+type RuntimeOwnerRegistryErrorCode = Extract<
+  RuntimeOwnerErrorCodeValue,
+  | typeof RuntimeOwnerErrorCode.Duplicate
+  | typeof RuntimeOwnerErrorCode.Unknown
+  | typeof RuntimeOwnerErrorCode.TokenInvalid
+>;
+
+type RuntimeErrorDetails = Readonly<{
+  phase: string;
+  owner?: string;
+  program?: RuntimeProgramId;
+  diagnostics: ReadonlyArray<RuntimeDiagnostic>;
+}>;
+
+type RuntimeOwnerErrorDetails = Readonly<{
+  owner: string;
+  phase: RuntimeOwnerPhaseValue;
+  diagnostics: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic>;
+}>;
+
 /** Runtime 公共契约或 transaction 失败的结构化错误 */
-export class RuntimeError extends Error {
+export class RuntimeError extends RetikzError<RuntimeErrorCodeValue, RuntimeErrorDetails> {
   /** 稳定错误分类 */
   readonly code: RuntimeErrorCodeValue;
   /** 发生失败的 Runtime 阶段 */
@@ -43,19 +65,31 @@ export class RuntimeError extends Error {
     program?: RuntimeProgramId;
     diagnostics?: ReadonlyArray<RuntimeDiagnostic>;
   }) {
-    super(`${input.code}: Runtime failed during ${input.phase}`, { cause: input.cause });
+    const diagnostics = Object.freeze([...(input.diagnostics ?? [])]);
+    const details = {
+      phase: input.phase,
+      ...(input.owner === undefined ? {} : { owner: input.owner }),
+      ...(input.program === undefined ? {} : { program: input.program }),
+      diagnostics,
+    };
+    super({
+      code: input.code,
+      message: `${input.code}: Runtime failed during ${input.phase}`,
+      details,
+      cause: input.cause,
+    });
     this.name = 'RuntimeError';
     this.code = input.code;
     this.phase = input.phase;
     this.cause = input.cause;
     this.owner = input.owner;
     this.program = input.program;
-    this.diagnostics = Object.freeze([...(input.diagnostics ?? [])]);
+    this.diagnostics = diagnostics;
   }
 }
 
 /** owner lifecycle callback 失败的稳定错误 */
-export class RuntimeOwnerError extends Error {
+export class RuntimeOwnerError extends RetikzError<RuntimeOwnerLifecycleErrorCode, RuntimeOwnerErrorDetails> {
   /** 稳定错误分类 */
   readonly code: RuntimeOwnerLifecycleErrorCode;
   /** 发生失败的 owner */
@@ -75,33 +109,39 @@ export class RuntimeOwnerError extends Error {
     cause: unknown;
     diagnostics?: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic>;
   }) {
-    super(`${input.code}: owner "${input.owner}" failed during ${input.phase}`, { cause: input.cause });
+    const diagnostics = Object.freeze([...(input.diagnostics ?? [])]);
+    super({
+      code: input.code,
+      message: `${input.code}: owner "${input.owner}" failed during ${input.phase}`,
+      details: { owner: input.owner, phase: input.phase, diagnostics },
+      cause: input.cause,
+    });
     this.name = 'RuntimeOwnerError';
     this.code = input.code;
     this.owner = input.owner;
     this.phase = input.phase;
     this.cause = input.cause;
-    this.diagnostics = Object.freeze([...(input.diagnostics ?? [])]);
+    this.diagnostics = diagnostics;
   }
 }
 
 /** owner registry token 或 key 违反契约时的稳定错误 */
-export class RuntimeOwnerRegistryError extends Error {
+export class RuntimeOwnerRegistryError extends RetikzError<RuntimeOwnerRegistryErrorCode, Readonly<{ owner: string }>> {
   /** 稳定错误分类 */
-  readonly code: Extract<
-    RuntimeOwnerErrorCodeValue,
-    | typeof RuntimeOwnerErrorCode.Duplicate
-    | typeof RuntimeOwnerErrorCode.Unknown
-    | typeof RuntimeOwnerErrorCode.TokenInvalid
-  >;
+  readonly code: RuntimeOwnerRegistryErrorCode;
   /** 关联的 owner key */
   readonly owner: string;
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 
   /** 创建 registry contract 错误 */
-  constructor(code: RuntimeOwnerRegistryError['code'], owner: string, cause?: unknown) {
-    super(`${code}: invalid runtime owner "${owner}"`, { cause });
+  constructor(code: RuntimeOwnerRegistryErrorCode, owner: string, cause?: unknown) {
+    super({
+      code,
+      message: `${code}: invalid runtime owner "${owner}"`,
+      details: { owner },
+      cause,
+    });
     this.name = 'RuntimeOwnerRegistryError';
     this.code = code;
     this.owner = owner;
@@ -110,7 +150,10 @@ export class RuntimeOwnerRegistryError extends Error {
 }
 
 /** Runtime identity 结构或 owner 约束无效时的稳定错误 */
-export class RuntimeIdentityError extends Error {
+export class RuntimeIdentityError extends RetikzError<
+  typeof RuntimeErrorCode.IdentityInvalid,
+  Readonly<{ owner: string }>
+> {
   /** identity 的稳定错误分类 */
   readonly code = RuntimeErrorCode.IdentityInvalid;
   /** 关联的 owner 值 */
@@ -120,7 +163,12 @@ export class RuntimeIdentityError extends Error {
 
   /** 创建 identity contract 错误 */
   constructor(owner: string, cause?: unknown) {
-    super(`${RuntimeErrorCode.IdentityInvalid}: invalid runtime identity for owner "${owner}"`, { cause });
+    super({
+      code: RuntimeErrorCode.IdentityInvalid,
+      message: `${RuntimeErrorCode.IdentityInvalid}: invalid runtime identity for owner "${owner}"`,
+      details: { owner },
+      cause,
+    });
     this.name = 'RuntimeIdentityError';
     this.owner = owner;
     this.cause = cause;

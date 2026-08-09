@@ -4,12 +4,14 @@ import { createTableRuntimeContribution, TABLE_NAMESPACE, TableComposite, TableS
 
 import type { TableEmbedProps } from '../spec';
 
+import { assertTableVanillaNonEmptyString } from '../shared';
+
 /** 创建可复用于多个 embed 与 update 周期的无状态 Table adapter */
 export const createTableAdapter = (): VanillaTier2Adapter<TableEmbedProps> => ({
   kind: TABLE_NAMESPACE,
   namespace: TABLE_NAMESPACE,
   lower: (props, context) => {
-    if (context.id.trim().length === 0) throw new Error('table vanilla: embed id must be non-empty');
+    assertTableVanillaNonEmptyString(context.id, 'table vanilla: embed id must be non-empty');
     const parsed = TableSpecSchema.parse(props.spec);
     const node = TableSpecSchema.parse({
       ...parsed,

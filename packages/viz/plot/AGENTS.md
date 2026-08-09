@@ -5,7 +5,7 @@
 ## 包职责契约
 
 - **解决的问题**：用可扩展的 grammar-of-graphics 把数据与可视化语义确定性地映射为 Core IR，而不依赖 chart type、framework 或 renderer
-- **拥有的契约**：Plot IR / schema、channel / scale / coordinate / mark / guide 领域解析 / layout definitions 与 registries、Plot surface / typography / label / Axis / Legend 视觉 token、palette、preset / resolver / mapping / inspection、plot-specific transform、lowering、visualization provenance / locator
+- **拥有的契约**：Plot IR / schema、channel / scale / coordinate / mark / guide 领域解析 / layout definitions 与 registries、Plot surface / typography / label / Axis / Legend 视觉 token、palette、style definition / preset / resolver / mapping / inspection、plot-specific transform、lowering、visualization provenance / locator
 - **不拥有的能力**：Chart canvas / presentation / recipe token、宿主无关的数据模型与 transform 算法、跨领域 Legend 视觉结构 / 内部布局 / lowering、Core Theme 继承、Core IR / Scene 语义、SVG / Canvas 执行、React / Vanilla authoring、业务 dashboard 状态
 - **输入与输出**：接收 Plot IR、Data view / datasets、plot definitions 与 lowering options，向 Standard 产生已经解析好的通用绘图输入，并输出 Core IR contribution、plot lineage / locator 和 diagnostics；不直接输出 DOM、SVG 或 Canvas
 - **缺口流向**：通用数据能力下沉 `@retikz/data`；通用机制 / 几何能力下沉 core / math；被多个领域复用的绘图 composite 进入 `@retikz/standard`；chart-level 组合上移 preset；authoring / runtime 进入对应 adapter；只有依赖可视化语法轴的能力才进入 plot
@@ -26,8 +26,8 @@ pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；g
 - `contract` 不依赖 `providers` / `pipeline`；providers 依赖 contract；pipeline 负责编排。providers 里的既有 provenance helper 依赖是历史例外，新增代码不要扩大例外。
 - `schemas` 可被所有层依赖，但 schema 不读取实现层。
 - `pipeline/guide` 负责 axis / legend 下沉为 Kernel IR；`contract/guide` 只放 coordinate provider 与 pipeline 共用的 guide context 类型。
-- Plot Composite 从 Core context 消费 effective Theme；PlotSpec 不重复 Core style / mode。`plotThemeTokens`、`colors`、native `plotTheme` 与 local guide / mark / scale config 按公开 cascade 解析；inherited `theme.tokens.plot` 与 Core shared categorical 位于 preset 之后。
-- `PlotThemeTokenDefinition` 固定注册 `plot` namespace；`definePlotThemeTokens` 生成经 schema 校验的 contribution。React / Vanilla adapter 必须把同一 Definition 注入 Core `themeTokenDefinitions`，standalone、embedded 与 plain lowering 共用这条 registry 语义
+- Plot Composite 从 Core context 消费 effective Theme；PlotSpec 不重复 Core style / mode。`PlotThemeStyleDefinition` 与内置 style 经同一 Plot registry 解析完整 token 基线；`plotThemeTokens`、`colors`、native `plotTheme` 与 local guide / mark / scale config 按公开 cascade 覆盖该基线。resolver 接收 Core shared colors 并负责默认 palette，不在后续阶段无条件重写 palette
+- `plotThemeStyles` 是 Plot lowering 的 runtime definition 入口。React / Vanilla adapter 必须将同一 option 传给 standalone、embedded 与 plain lowering；自定义 style 解析到 Plot 时缺少同名 definition 必须 fail-loud
 - Plot canonical palette 使用 `plot.palette.*`；`data.palette.*` 不属于 Data 或 Plot 的公开 token namespace，不保留 alias 或双读。
 - Chart 与其它上层只能传递 Plot 公开 token contract 或调用 Plot 公开纯 resolver，不得复制 Plot key、schema、preset、merge 或 resolved theme。
 - `pipeline/locator` 负责通过 lowering 流程解析 datum / series 锚点；`contract/locator` 只放公开 locator 类型。

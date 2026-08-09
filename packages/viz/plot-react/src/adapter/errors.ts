@@ -1,4 +1,6 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
+
+import { RetikzError } from '@retikz/foundation';
 
 import type { PlotDeclarationPath } from './contracts';
 
@@ -12,8 +14,15 @@ export const PlotDeclarationErrorCode = {
 /** Plot declaration 归一化错误码取值 */
 export type PlotDeclarationErrorCodeValue = ValueOf<typeof PlotDeclarationErrorCode>;
 
+type PlotDeclarationErrorDetails = Readonly<{
+  /** 当前声明来源路径 */
+  path: PlotDeclarationPath;
+  /** 与当前声明冲突的首个来源路径 */
+  conflictingPath?: PlotDeclarationPath;
+}>;
+
 /** 携带稳定来源路径的 Plot declaration 错误 */
-export class PlotDeclarationError extends Error {
+export class PlotDeclarationError extends RetikzError<PlotDeclarationErrorCodeValue, PlotDeclarationErrorDetails> {
   /** 机器可判定的错误码 */
   readonly code: PlotDeclarationErrorCodeValue;
   /** 当前声明来源路径 */
@@ -23,7 +32,11 @@ export class PlotDeclarationError extends Error {
 
   /** 创建结构化 Plot declaration 错误 */
   constructor(code: PlotDeclarationErrorCodeValue, path: PlotDeclarationPath, conflictingPath?: PlotDeclarationPath) {
-    super(`Plot declaration ${code} at ${JSON.stringify(path)}`);
+    const details: PlotDeclarationErrorDetails = {
+      path,
+      ...(conflictingPath === undefined ? {} : { conflictingPath }),
+    };
+    super({ code, message: `Plot declaration ${code} at ${JSON.stringify(path)}`, details });
     this.name = 'PlotDeclarationError';
     this.code = code;
     this.path = path;
