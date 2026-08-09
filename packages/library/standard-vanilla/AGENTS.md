@@ -17,4 +17,4 @@
 
 ## 当前状态
 
-v0.1 alpha.1 已提供 Grid、Axes、Frame builders / adapters 与 `StandardVanillaAdapters`。package exports 默认只保留根入口；`/inspect` 是横切可选检查能力的受控例外，不代表允许按组件扩展 subpath。
+当前提供 Grid、Axes、Frame、Legend builders / adapters 与 `StandardVanillaAdapters`。Layout builders 与 inspection 已迁入 `@retikz/layout-vanilla`，本包只保留根入口

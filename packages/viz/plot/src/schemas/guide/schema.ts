@@ -1,4 +1,4 @@
-﻿import {
+import {
   ArrowEndDetailSchema,
   CssColorSchema,
   FontSchema,
@@ -12,7 +12,7 @@
   TextAlignSchema,
   TextBlockSchema,
 } from '@retikz/core';
-import { LayoutGapSchema } from '@retikz/standard';
+import { LayoutGapSchema } from '@retikz/layout';
 import { z } from 'zod';
 
 import { PlotLayerSchema } from '../layer';

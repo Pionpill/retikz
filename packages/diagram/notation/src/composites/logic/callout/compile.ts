@@ -6,10 +6,10 @@ import type {
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '@retikz/core';
-import type { LayoutArtifactRect } from '@retikz/standard/layout';
+import type { LayoutArtifactRect } from '@retikz/layout/compose';
 
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
-import { unionLayoutArtifactRects } from '@retikz/standard/layout';
+import { unionLayoutArtifactRects } from '@retikz/layout/compose';
 
 import type { LogicDiagramTarget } from '../shared';
 import type { CalloutArtifact, IRCallout } from './types';

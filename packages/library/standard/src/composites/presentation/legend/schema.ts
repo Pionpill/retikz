@@ -1,6 +1,4 @@
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
-import { z } from 'zod';
-
 import {
   LayoutAlignment,
   LayoutArtifactContainerSchema,
@@ -8,7 +6,9 @@ import {
   LayoutArtifactRectSchema,
   LayoutContainerBoxSchema,
   LayoutGapSchema,
-} from '../../layout/shared';
+} from '@retikz/layout';
+import { z } from 'zod';
+
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 

@@ -1,5 +1,5 @@
 import { ThemeMode, ThemeStyle } from '@retikz/core';
-import { LayoutContainerBoxSchema } from '@retikz/standard';
+import { LayoutContainerBoxSchema } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
 import {

@@ -11,9 +11,10 @@ import type {
   LayoutArtifactItemBase,
   LayoutArtifactRect,
   LayoutRect,
-} from '@retikz/standard/layout';
+} from '@retikz/layout/compose';
 
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
+import { LAYOUT_NAMESPACE } from '@retikz/layout';
 import {
   compileFlexLayout,
   createLayoutArtifactItem,
@@ -24,12 +25,12 @@ import {
   LayoutOverflow,
   normalizeLayoutSpacing,
   unionLayoutArtifactRects,
-} from '@retikz/standard/layout';
+} from '@retikz/layout/compose';
 
 import type { LogicLayoutItemArtifact } from '../shared';
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
-import { LogicCompositeType, STANDARD_LAYOUT_NAMESPACE } from '../shared';
+import { LogicCompositeType } from '../shared';
 
 type LogicFrameRegion = Readonly<{
   key: string;
@@ -156,7 +157,7 @@ const syntheticFlexOf = (node: IRLogicFrame, regions: ReadonlyArray<LogicFrameRe
     shrink: 1,
   }));
   return {
-    namespace: STANDARD_LAYOUT_NAMESPACE,
+    namespace: LAYOUT_NAMESPACE,
     type: 'flexLayout',
     size: node.size,
     padding: 0,

@@ -1,9 +1,10 @@
 import type { LayoutChildResult } from '@retikz/core';
+import type { LayoutRect } from '@retikz/layout/compose';
 
-import type { LayoutRect } from '../../../layout/internal';
+import { positionedLayoutSlotOf, unionLayoutArtifactRects } from '@retikz/layout/compose';
+
 import type { IRLegendRampContent } from '../types';
 
-import { positionedLayoutSlotOf, unionLayoutArtifactRects } from '../../../layout/internal';
 import { LegendDirection } from '../constants';
 
 /** 已取得 natural slot 的 ramp tick */

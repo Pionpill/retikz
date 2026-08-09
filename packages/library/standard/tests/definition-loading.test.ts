@@ -3,29 +3,12 @@ import type { IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import {
-  createFlexLayout,
-  createGrid,
-  createLegend,
-  FlexLayoutDefinition,
-  GridDefinition,
-  LegendDefinition,
-} from '../src';
+import { createGrid, createLegend, GridDefinition, LegendDefinition } from '../src';
 
 const gridScene: IRScene = {
   type: 'scene',
   version: 1,
   children: [createGrid({ bounds: { start: [0, 0], end: [10, 10] }, line: { spacing: 10 } })],
-};
-
-const flexScene: IRScene = {
-  type: 'scene',
-  version: 1,
-  children: [
-    createFlexLayout({
-      children: [{ kind: 'flex', key: 'child', child: { type: 'node', id: 'child', position: [0, 0] } }],
-    }),
-  ],
 };
 
 describe('Standard direct definition loading', () => {
@@ -43,18 +26,6 @@ describe('Standard direct definition loading', () => {
     });
 
     expect(warningCodes).toContain('COMPOSITE_NOT_REGISTERED');
-  });
-
-  it('still requires FlexLayoutDefinition after the public compiler subpath is imported', () => {
-    const warningCodes: Array<string> = [];
-    const omitted = compileToScene(flexScene, {
-      onWarn: warning => warningCodes.push(warning.code),
-    });
-    const selected = compileToScene(flexScene, { composites: [FlexLayoutDefinition] });
-
-    expect(omitted.scene.primitives).toEqual([]);
-    expect(warningCodes).toContain('COMPOSITE_NOT_REGISTERED');
-    expect(selected.scene.primitives).not.toEqual([]);
   });
 
   it('leaves duplicate composite keys for the Core registry to diagnose', () => {

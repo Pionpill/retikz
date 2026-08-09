@@ -17,6 +17,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
+import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -24,7 +25,6 @@ import type { LegendCompileArtifact } from '../../src/composites/presentation/le
 import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/types';
 import type { LegendInput } from '../../src/composites/presentation/legend/types';
 
-import { LayoutAlignment } from '../../src/composites/layout/shared';
 import {
   LegendContentKind,
   LegendDirection,

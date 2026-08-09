@@ -9,6 +9,3 @@ export const StandardGridVanillaNamespace = 'standard.grid';
 
 /** Standard Vanilla Legend 适配器使用的贡献命名空间 */
 export const StandardLegendVanillaNamespace = 'standard.legend';
-
-/** Standard Vanilla 布局适配器共用的贡献命名空间 */
-export const StandardLayoutVanillaNamespace = 'standard.layout';

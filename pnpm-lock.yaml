@@ -353,15 +353,24 @@ importers:
       '@retikz/core':
         specifier: workspace:*
         version: link:../../packages/kernel/core
-      '@retikz/foundation':
-        specifier: workspace:*
-        version: link:../../packages/kernel/foundation
       '@retikz/data':
         specifier: workspace:*
         version: link:../../packages/viz/data
+      '@retikz/foundation':
+        specifier: workspace:*
+        version: link:../../packages/kernel/foundation
       '@retikz/inspect':
         specifier: workspace:*
         version: link:../../packages/kernel/inspect
+      '@retikz/layout':
+        specifier: workspace:*
+        version: link:../../packages/library/layout
+      '@retikz/layout-react':
+        specifier: workspace:*
+        version: link:../../packages/library/layout-react
+      '@retikz/layout-vanilla':
+        specifier: workspace:*
+        version: link:../../packages/library/layout-vanilla
       '@retikz/math':
         specifier: workspace:*
         version: link:../../packages/kernel/math
@@ -577,12 +586,12 @@ importers:
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
-      '@retikz/standard':
-        specifier: workspace:^
-        version: link:../../library/standard
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -969,7 +978,7 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
 
-  packages/library/standard:
+  packages/library/layout:
     dependencies:
       '@retikz/core':
         specifier: workspace:^
@@ -1003,6 +1012,111 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
+  packages/library/layout-react:
+    dependencies:
+      '@retikz/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@retikz/react':
+        specifier: workspace:^
+        version: link:../../kernel/react
+    devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.2.25
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.3(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      react:
+        specifier: 'catalog:'
+        version: 18.2.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.2.0(react@18.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+
+  packages/library/layout-vanilla:
+    dependencies:
+      '@retikz/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
+    devDependencies:
+      '@retikz/inspect':
+        specifier: workspace:*
+        version: link:../../kernel/inspect
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+
+  packages/library/standard:
+    dependencies:
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
+      '@retikz/foundation':
+        specifier: workspace:^
+        version: link:../../kernel/foundation
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../layout
+      '@retikz/math':
+        specifier: workspace:^
+        version: link:../../kernel/math
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4)
+      vite-plugin-dts:
+        specifier: 'catalog:'
+        version: 4.5.4(@types/node@25.6.0)(rollup@4.60.2)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+
   packages/library/standard-react:
     dependencies:
       '@retikz/react':
@@ -1012,9 +1126,6 @@ importers:
         specifier: workspace:*
         version: link:../standard
     devDependencies:
-      '@retikz/inspect':
-        specifier: workspace:*
-        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1055,9 +1166,6 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/vanilla
     devDependencies:
-      '@retikz/inspect':
-        specifier: workspace:*
-        version: link:../../kernel/inspect
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
@@ -1085,12 +1193,12 @@ importers:
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot
-      '@retikz/standard':
-        specifier: workspace:^
-        version: link:../../library/standard
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1215,12 +1323,12 @@ importers:
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
-      '@retikz/standard':
-        specifier: workspace:^
-        version: link:../../library/standard
       '@types/d3-scale':
         specifier: 'catalog:'
         version: 4.0.9

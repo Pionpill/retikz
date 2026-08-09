@@ -13,7 +13,7 @@ import {
   LayoutArtifactRectSchema,
   LayoutOverflowSchema,
   LayoutSizeSchema,
-} from '@retikz/standard/layout';
+} from '@retikz/layout';
 import { z } from 'zod';
 
 import {

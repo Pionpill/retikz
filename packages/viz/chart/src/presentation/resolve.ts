@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
+import type { FlexLayoutItemInput } from '@retikz/layout';
 import type { IRPlotSpec } from '@retikz/plot';
-import type { FlexLayoutItemInput } from '@retikz/standard';
 
 import { NodeSchema } from '@retikz/core';
 import {
@@ -10,7 +10,7 @@ import {
   LayoutContainerBoxSchema,
   LayoutDistribution,
   LayoutItemKind,
-} from '@retikz/standard';
+} from '@retikz/layout';
 
 import type { IRChartResolvedThemeTokens } from '../style';
 import type { ChartPresentationPresetValue } from './constants';
@@ -152,7 +152,7 @@ const createPresentationTextNode = (
 /** 建立一个 explicit presentation item 的 authored source path */
 const presentationItemSourcePath = (index: number): string => `$spec/presentation/children/${index}`;
 
-/** 提取一个 Chart item 显式 authored 的 sparse Standard Flex 字段 */
+/** 提取一个 Chart item 显式 authored 的 sparse Layout Flex 字段 */
 const presentationFlexFieldsOf = (
   item: IRChartPresentation['children'][number],
 ): Omit<FlexLayoutItemInput, 'kind' | 'key' | 'child'> => ({
@@ -165,7 +165,7 @@ const presentationFlexFieldsOf = (
   ...(item.alignSelf === undefined ? {} : { alignSelf: item.alignSelf }),
 });
 
-/** 将一个 authored item 映射为 Standard Flex item 与轻量 inspection record */
+/** 将一个 authored item 映射为 Layout Flex item 与轻量 inspection record */
 const resolvePresentationItem = (
   item: IRChartPresentation['children'][number],
   index: number,
@@ -205,7 +205,7 @@ const resolvePresentationItem = (
   };
 };
 
-/** 将可选 presentation 解析为 authored-order Standard Flex content 与 future surface handoff */
+/** 将可选 presentation 解析为 authored-order Layout Flex content 与 future surface handoff */
 export const resolveChartPresentation = (
   presentation: IRChartPresentation | undefined,
   plotSpec: IRPlotSpec,
