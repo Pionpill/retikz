@@ -4,7 +4,7 @@ import { defineComposite } from '@retikz/core';
 
 import type { CalloutArtifact, IRCallout } from './types';
 
-import { NOTATION_NAMESPACE } from '../shared';
+import { NOTATION_NAMESPACE } from '../../shared';
 import { compileCallout } from './compile';
 import { CalloutArtifactSchema, CalloutSchema } from './schema';
 

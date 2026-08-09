@@ -4,7 +4,7 @@ import { defineComposite } from '@retikz/core';
 
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
-import { NOTATION_NAMESPACE } from '../../unit';
+import { NOTATION_NAMESPACE } from '../../shared';
 import { compileLogicFrame } from './compile';
 import { LogicFrameArtifactSchema, LogicFrameSchema } from './schema';
 

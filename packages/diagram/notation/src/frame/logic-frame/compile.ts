@@ -26,10 +26,10 @@ import {
   unionLayoutArtifactRects,
 } from '@retikz/standard/layout';
 
-import type { LogicLayoutItemArtifact } from '../../unit';
+import type { LogicLayoutItemArtifact } from '../../shared';
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
-import { LogicCompositeType } from '../../unit';
+import { LogicCompositeType } from '../../shared';
 
 /** Standard FlexLayout 的规范命名空间 */
 const STANDARD_LAYOUT_NAMESPACE = 'standard' as const;

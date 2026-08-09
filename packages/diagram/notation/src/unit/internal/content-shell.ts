@@ -24,9 +24,9 @@ import {
 import { LayoutAlignment, LayoutOverflow, LayoutOverflowSchema, LayoutSizeSchema } from '@retikz/standard/layout';
 import { z } from 'zod';
 
-import type { LogicLayoutItemArtifact, LogicOuterArtifact } from '../shared';
+import type { LogicLayoutItemArtifact, LogicOuterArtifact } from '../../shared';
 
-import { LogicContentSizeDefault, LogicNeutralStyle, LogicNeutralStyleSchema, LogicSpacingSchema } from '../shared';
+import { LogicContentSizeDefault, LogicNeutralStyle, LogicNeutralStyleSchema, LogicSpacingSchema } from '../../shared';
 
 /** 内容外壳的可复用外观输入，供 Callout 等需要包裹内容的复合元素使用 */
 export const LogicContentShellAppearanceSchema = z

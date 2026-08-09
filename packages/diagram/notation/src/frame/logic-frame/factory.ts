@@ -1,6 +1,6 @@
 import type { IRLogicFrame, LogicFrameInput } from './types';
 
-import { NOTATION_NAMESPACE } from '../../unit';
+import { NOTATION_NAMESPACE } from '../../shared';
 import { LogicFrameSchema } from './schema';
 
 /** 校验并创建规范 LogicFrame IR */

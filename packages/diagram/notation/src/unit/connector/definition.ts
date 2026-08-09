@@ -4,8 +4,7 @@ import { defineComposite } from '@retikz/core';
 
 import type { ConnectorRouting, IRConnector } from './types';
 
-import { NOTATION_NAMESPACE } from '../shared';
-import { ConnectorRouteKind } from '../shared';
+import { ConnectorRouteKind, NOTATION_NAMESPACE } from '../../shared';
 import { ConnectorSchema } from './schema';
 
 /** 将 Notation 目标映射为 Core Path 可解析的目标，并拒绝尚未接通的分段目标 */

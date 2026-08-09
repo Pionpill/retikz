@@ -10,7 +10,7 @@ import {
   LogicGeometryLabelSchema,
   NonBlankStringSchema,
   NOTATION_NAMESPACE,
-} from '../shared';
+} from '../../shared';
 
 const StraightRoutingSchema = z
   .strictObject({

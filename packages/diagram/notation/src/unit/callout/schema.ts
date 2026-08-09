@@ -2,7 +2,6 @@ import { ChildSchema, PositionSchema } from '@retikz/core';
 import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '@retikz/standard/layout';
 import { z } from 'zod';
 
-import { LogicContentShellAppearanceSchema } from '../internal/content-shell';
 import {
   CalloutSideSchema,
   ConnectorAppearanceSchema,
@@ -12,7 +11,8 @@ import {
   LogicOuterArtifactSchema,
   NonBlankStringSchema,
   NOTATION_NAMESPACE,
-} from '../shared';
+} from '../../shared';
+import { LogicContentShellAppearanceSchema } from '../internal/content-shell';
 
 const CalloutLeaderAppearanceSchema = ConnectorAppearanceSchema.extend({
   stroke: ConnectorAppearanceSchema.shape.stroke.default('currentColor'),
