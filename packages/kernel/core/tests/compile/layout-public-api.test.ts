@@ -1,8 +1,9 @@
+import type { AssertEqual } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import { describe, expect, it } from 'vitest';
 
-import type { AssertEqual, Scene } from '../../src';
+import type { Scene } from '../../src';
 
 import {
   computeLayout,

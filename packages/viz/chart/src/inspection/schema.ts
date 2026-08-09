@@ -1,4 +1,5 @@
-import type { IRJsonObject, ValueOf } from '@retikz/core';
+import type { IRJsonObject } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
 import { JsonObjectSchema, ThemeMode, ThemeStyle } from '@retikz/core';

@@ -1,5 +1,6 @@
+import type { ValueOf } from '@retikz/foundation';
+
 import type { CompileObservationOwner, CompileOccurrenceLocator } from '../contract';
-import type { ValueOf } from '../shared';
 import type { CompileWarningCode } from './constants';
 
 /** 编译期 warning code：包含内置 code，并允许扩展能力提供自定义字符串 code */

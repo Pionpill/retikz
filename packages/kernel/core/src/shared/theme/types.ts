@@ -1,4 +1,5 @@
-import type { ValueOf } from '../types';
+import type { ValueOf } from '@retikz/foundation';
+
 import type { ThemeMode, ThemeStyle } from './constants';
 
 export type ThemeStyleValue = ValueOf<typeof ThemeStyle>;

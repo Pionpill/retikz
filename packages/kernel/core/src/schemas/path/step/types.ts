@@ -1,6 +1,7 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { SideValue, ValueOf } from '../../../shared';
+import type { SideValue } from '../../../shared';
 import type {
   BendDirection,
   FoldStepVia,

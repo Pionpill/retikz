@@ -1,4 +1,4 @@
-import type { ValueOf } from '../../shared';
+import type { ValueOf } from '@retikz/foundation';
 
 /** CSS font-weight 关键字 */
 export const FontWeightKeyword = {

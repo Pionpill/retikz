@@ -1,8 +1,9 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type { IRChild, IRClipSpec, IRScopeProps, JsonValue } from '../../schemas';
-import type { ResolvedTheme, ValueOf } from '../../shared';
+import type { ResolvedTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type {
   LayoutAlignmentGuideDimension,

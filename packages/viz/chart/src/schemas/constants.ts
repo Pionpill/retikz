@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Chart composite 的私有命名空间 */
 export const CHART_NAMESPACE = 'chart' as const;

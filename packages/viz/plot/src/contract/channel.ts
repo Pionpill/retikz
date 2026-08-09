@@ -1,5 +1,6 @@
-﻿import type { IRNode, IRPath, IRScope, JsonValue, ValueOf } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, JsonValue } from '@retikz/core';
 import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, IRDataScalarValue } from '@retikz/data';
+import type { ValueOf } from '@retikz/foundation';
 
 import type { IRPlotChannel, IRPlotMarkOperation, IRPlotSpec, LegendChannelValue } from '../schemas';
 import type { DimensionRole } from './coordinate';

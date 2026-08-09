@@ -256,6 +256,9 @@ importers:
       '@retikz/core':
         specifier: workspace:*
         version: link:../../packages/kernel/core
+      '@retikz/foundation':
+        specifier: workspace:*
+        version: link:../../packages/kernel/foundation
       '@retikz/plot-react':
         specifier: workspace:*
         version: link:../../packages/viz/plot-react
