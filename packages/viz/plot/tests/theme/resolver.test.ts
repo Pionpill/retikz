@@ -1,6 +1,6 @@
 import type { BuiltinThemeStyleValue, ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPlotSpec } from '../../src';
@@ -11,6 +11,7 @@ import {
   getPlotThemePreset,
   PlotResolvedThemeTokensSchema,
   plotThemeFromTokens,
+  PlotThemeResolutionSchema,
   PlotThemeToken,
 } from '../../src';
 
@@ -41,6 +42,9 @@ const themeOf = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): ResolvedT
   mode,
   colors: resolveCoreThemeColors(style, mode),
 });
+
+const sourceOf = (resolution: PlotThemeResolution, token: string) =>
+  resolution.tokenSources.find(source => source.token === token);
 
 describe('Plot theme resolver', () => {
   it('通过同名自定义 style definition 解析完整 Plot token 基线', () => {
@@ -74,9 +78,13 @@ describe('Plot theme resolver', () => {
     );
 
     expect(result.palette).toMatchObject({
-      categorical: ['#brand-categorical'],
-      series: ['#brand-series'],
-      sector: ['#brand-sector'],
+      categorical: ['#core-categorical'],
+      series: ['#core-categorical'],
+      sector: ['#core-categorical'],
+    });
+    expect(sourceOf(result, PlotThemeToken.PlotPaletteCategorical)).toMatchObject({
+      kind: ThemeTokenSource.Inherit,
+      path: '$theme/colors/categorical',
     });
   });
 
@@ -131,6 +139,27 @@ describe('Plot theme resolver', () => {
     }
   });
 
+  it('区分 Plot style baseline 与 Core categorical 继承层', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark));
+
+    expect(sourceOf(result, PlotThemeToken.PlotSurfaceFill)).toMatchObject({
+      kind: ThemeTokenSource.Local,
+      path: '$style/academic/dark/plot.surface.fill',
+    });
+    for (const token of [
+      PlotThemeToken.PlotPaletteCategorical,
+      PlotThemeToken.PlotPaletteSeries,
+      PlotThemeToken.PlotPaletteSector,
+    ]) {
+      expect(sourceOf(result, token)).toEqual({
+        token,
+        kind: ThemeTokenSource.Inherit,
+        path: '$theme/colors/categorical',
+      });
+    }
+  });
+
   it('按 effective Theme、token、colors、native theme 顺序解析并记录来源', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark), {
@@ -152,10 +181,22 @@ describe('Plot theme resolver', () => {
     expect(result.tokens[PlotThemeToken.PlotPaletteSeries]).toEqual(['#theme']);
     expect(result.plotTheme?.typography?.font?.family).toBe('serif');
     expect(result.palette.series).toEqual(['#theme']);
-    expect(result.tokenSources.find(source => source.token === PlotThemeToken.PlotPaletteSeries)?.kind).toBe(
-      'plot-theme',
-    );
-    expect(result.authoredOverrides.map(source => source.kind)).toEqual(['colors', 'plot-theme']);
+    expect(sourceOf(result, PlotThemeToken.PlotSurfaceFill)).toMatchObject({
+      kind: ThemeTokenSource.Local,
+      path: '$spec/plotThemeTokens/plot.surface.fill',
+    });
+    expect(sourceOf(result, PlotThemeToken.PlotPaletteCategorical)).toMatchObject({
+      kind: ThemeTokenSource.Local,
+      path: '$spec/colors',
+    });
+    expect(sourceOf(result, PlotThemeToken.PlotPaletteSeries)).toMatchObject({
+      kind: ThemeTokenSource.Local,
+      path: '$spec/plotTheme/palette/series',
+    });
+    expect(result.authoredOverrides).toEqual([
+      { kind: ThemeTokenSource.Local, path: '$spec/colors' },
+      { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
+    ]);
   });
 
   it('返回深克隆、JSON-safe 且确定的结果', () => {
@@ -169,6 +210,29 @@ describe('Plot theme resolver', () => {
     expect(first).not.toBe(second);
     expect(first.tokens).not.toBe(second.tokens);
     expect(first.palette.series).not.toBe(input.plotThemeTokens[PlotThemeToken.PlotPaletteSeries]);
+  });
+
+  it('inspection schema 只接受二元来源并按 path 固定 authored override 顺序', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      colors: ['#2563eb'],
+      plotTheme: { background: '#ffffff' },
+    });
+
+    expect(
+      PlotThemeResolutionSchema.safeParse({
+        ...result,
+        tokenSources: result.tokenSources.map((source, index) =>
+          index === 0 ? { ...source, kind: 'preset' } : source,
+        ),
+      }).success,
+    ).toBe(false);
+    expect(
+      PlotThemeResolutionSchema.safeParse({
+        ...result,
+        authoredOverrides: [...result.authoredOverrides].reverse(),
+      }).success,
+    ).toBe(false);
   });
 
   it('native theme 对数组、false 与不同 discriminator 对象做完整替换', () => {
