@@ -35,6 +35,7 @@ describe('private Chart package boundaries', () => {
     expect(manifest.dependencies).toEqual({
       '@retikz/core': 'workspace:^',
       '@retikz/data': 'workspace:^',
+      '@retikz/foundation': 'workspace:^',
       '@retikz/plot': 'workspace:*',
       '@retikz/standard': 'workspace:^',
       zod: 'catalog:',

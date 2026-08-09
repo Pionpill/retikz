@@ -1,4 +1,6 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
+
+import { RetikzError } from '@retikz/foundation';
 
 /** Chart resolution 的稳定错误码 */
 export const ChartResolveErrorCode = {
@@ -30,8 +32,17 @@ type ChartResolveErrorOptions = {
   cause?: unknown;
 };
 
+type ChartResolveErrorDetails = Readonly<{
+  /** 用户可修正的结构化输入路径 */
+  path: ReadonlyArray<string | number>;
+  /** patch semantic target */
+  target?: string;
+  /** 发生冲突的 Plot member id */
+  conflictingId?: string;
+}>;
+
 /** Chart resolver 对外提供的结构化内部错误 */
-export class ChartResolveError extends Error {
+export class ChartResolveError extends RetikzError<ChartResolveErrorCodeValue, ChartResolveErrorDetails> {
   /** 稳定错误码 */
   readonly code: ChartResolveErrorCodeValue;
   /** 用户可修正的结构化输入路径 */
@@ -45,7 +56,12 @@ export class ChartResolveError extends Error {
 
   /** 建立结构化 Chart resolution 错误 */
   constructor(code: ChartResolveErrorCodeValue, options: ChartResolveErrorOptions) {
-    super(`Chart resolution failed: ${code}`);
+    const details: ChartResolveErrorDetails = {
+      path: options.path,
+      ...(options.target === undefined ? {} : { target: options.target }),
+      ...(options.conflictingId === undefined ? {} : { conflictingId: options.conflictingId }),
+    };
+    super({ code, message: `Chart resolution failed: ${code}`, details, cause: options.cause });
     this.name = 'ChartResolveError';
     this.code = code;
     this.path = options.path;
