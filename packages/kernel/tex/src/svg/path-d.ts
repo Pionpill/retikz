@@ -1,8 +1,7 @@
 import type { PathCommand } from '@retikz/core';
+import type { AffineMatrix } from '@retikz/math';
 
-import type { Matrix } from './matrix';
-
-import { apply } from './matrix';
+import { applyAffine } from '@retikz/math';
 
 /** 把一个点经矩阵变换 + 归一化函数（viewBox 平移 + 缩放）映射成最终用户坐标 */
 export type PointMapper = (x: number, y: number) => [number, number];
@@ -181,11 +180,11 @@ export const parsePathD = (d: string): Array<PathCommand> => {
 /** 把命令里所有坐标点经 mapper 映射（矩阵变换 + viewBox 归一），返回新命令数组 */
 export const transformCommands = (
   commands: ReadonlyArray<PathCommand>,
-  matrix: Matrix,
+  matrix: AffineMatrix,
   normalize: PointMapper,
 ): Array<PathCommand> => {
   const map = (x: number, y: number): [number, number] => {
-    const [wx, wy] = apply(matrix, x, y);
+    const [wx, wy] = applyAffine(matrix, [x, y]);
     return normalize(wx, wy);
   };
   return commands.map(c => {
