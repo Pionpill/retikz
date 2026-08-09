@@ -2,6 +2,7 @@ import type { CoreProgramDefinition, IRScene, ScenePatch, SceneRuntimeSnapshot }
 import type { PerformanceTraceRecord, RuntimePreparedCommit } from '@retikz/runtime';
 
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { isRetikzError } from '@retikz/foundation';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
@@ -136,17 +137,39 @@ const createHarness = (
 describe('@retikz/render/runtime public contract', () => {
   it('公开稳定错误码、具名错误和类型守卫', () => {
     const cause = new Error('invalid patch');
+    const details = { source: 'test' };
     const error = new RetainedRenderError({
       code: RetainedRenderErrorCode.ScenePatchInvalid,
       cause,
+      details,
     });
 
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('RetainedRenderError');
     expect(error.code).toBe('SCENE_PATCH_INVALID');
     expect(error.cause).toBe(cause);
+    expect(error.details).toBe(details);
+    expect(Object.isFrozen(error.details)).toBe(false);
+    expect(isRetikzError(error)).toBe(true);
+    expect(Object.hasOwn(error, 'cause')).toBe(true);
+    expect(Object.getOwnPropertyNames(error)).toContain('cause');
     expect(isRetainedRenderError(error)).toBe(true);
     expect(isRetainedRenderError({ code: 'SCENE_PATCH_INVALID' })).toBe(false);
+  });
+
+  it('retains an own undefined cause when omitted', () => {
+    const error = new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererDisposed });
+
+    expect(error).toBeInstanceOf(RetainedRenderError);
+    expect(error.name).toBe('RetainedRenderError');
+    expect(error.message).toBe('RETAINED_RENDERER_DISPOSED');
+    expect(error.details).toEqual({});
+    expect(Object.isFrozen(error.details)).toBe(true);
+    expect(Object.hasOwn(error, 'cause')).toBe(true);
+    expect(error.cause).toBeUndefined();
+    expect(Object.getOwnPropertyNames(error)).toContain('cause');
+    expect(isRetikzError(error)).toBe(true);
+    expect(isRetainedRenderError(error)).toBe(true);
   });
 
   it('以判别联合绑定 backend、host 和 immutable options', () => {
