@@ -6,6 +6,7 @@ import type {
   AnyCellPresentationDefinition,
   AnyCellVisualScaleDefinition,
   AnyTableStructureDefinition,
+  AnyTableThemeStyleDefinition,
 } from '../../contract';
 import type { LowerTablesOptions } from '../types';
 import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
@@ -19,6 +20,7 @@ const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
 const FORMATTER_DEFINITIONS_KEY = 'formatterDefinitions';
 const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
 const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
+const TABLE_THEME_STYLES_KEY = 'tableThemeStyles';
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
 const encodeRuntimeReference = (reference: string): string =>
@@ -74,7 +76,8 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
         key === STRUCTURE_DEFINITIONS_KEY ||
         key === FORMATTER_DEFINITIONS_KEY ||
         key === PRESENTATION_DEFINITIONS_KEY ||
-        key === VISUAL_SCALE_DEFINITIONS_KEY
+        key === VISUAL_SCALE_DEFINITIONS_KEY ||
+        key === TABLE_THEME_STYLES_KEY
       )
         continue;
       if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
@@ -109,12 +112,18 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
     definition => definition.name,
     'visual scale definition',
   );
+  const tableThemeStyles = mergeByIdentity<AnyTableThemeStyleDefinition>(
+    optionSets.map(options => options.tableThemeStyles),
+    definition => definition.name,
+    'theme style definition',
+  );
   return {
     ...mergeSharedLowerOptions(optionSets),
     ...(structureDefinitions.length === 0 ? {} : { structureDefinitions }),
     ...(formatterDefinitions.length === 0 ? {} : { formatterDefinitions }),
     ...(presentationDefinitions.length === 0 ? {} : { presentationDefinitions }),
     ...(visualScaleDefinitions.length === 0 ? {} : { visualScaleDefinitions }),
+    ...(tableThemeStyles.length === 0 ? {} : { tableThemeStyles }),
   };
 };
 
@@ -166,6 +175,9 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
     ...(input.lowerOptions?.visualScaleDefinitions === undefined
       ? {}
       : { visualScaleDefinitions: Object.freeze([...input.lowerOptions.visualScaleDefinitions]) }),
+    ...(input.lowerOptions?.tableThemeStyles === undefined
+      ? {}
+      : { tableThemeStyles: Object.freeze([...input.lowerOptions.tableThemeStyles]) }),
   });
   const envelope: TableRuntimeEnvelope = Object.freeze({
     [TableRuntimeEnvelopeMarker]: true,

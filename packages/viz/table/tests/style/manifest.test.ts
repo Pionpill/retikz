@@ -31,9 +31,7 @@ describe('Table style and encoding manifest seed', () => {
       tokens: { 'cell.content.color': '#123456' },
     });
     expect(result.manifest.style.sources.map(entry => entry.key)).toEqual(TableThemeTokenKeySchema.options);
-    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe(
-      'local-theme-token',
-    );
+    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe('local');
     expect(result.manifest.encodings).toEqual([
       { id: 'value-fill', channel: 'backgroundFill', scaleName: 'ordinal-color', cellIds: ['cell.r0.c0'] },
     ]);
@@ -168,7 +166,7 @@ describe('Table style and encoding manifest seed', () => {
     const fakeManifest = structuredClone(fakeProvenance.manifest);
     const fakeWinner = fakeManifest.borders[0].atoms[0].winner;
     if (fakeWinner.kind !== 'line') throw new Error('expected explicit line winner');
-    Object.assign(fakeWinner, { styleToken: { key: 'table.border.top', source: 'preset' } });
+    Object.assign(fakeWinner, { styleToken: { key: 'table.border.top', source: 'local' } });
     expect(() => TableLayoutManifestSchema.parse(fakeManifest)).toThrow(/origin|line|styleToken/i);
 
     const wrongTokenSource = structuredClone(result.manifest);
@@ -176,8 +174,20 @@ describe('Table style and encoding manifest seed', () => {
     if (sourceWinner.kind !== 'line' || sourceWinner.origin !== 'styleToken') {
       throw new Error('expected style token line winner');
     }
-    Object.assign(sourceWinner.styleToken, { source: 'shared-categorical' });
+    Object.assign(sourceWinner.styleToken, { source: 'inherit' });
     expect(() => TableLayoutManifestSchema.parse(wrongTokenSource)).toThrow(/source/i);
+
+    const wrongInheritedPath = structuredClone(result.manifest);
+    const categoricalSource = wrongInheritedPath.style.sources.find(entry => entry.key === 'data.categorical');
+    if (categoricalSource === undefined) throw new Error('expected categorical source');
+    Object.assign(categoricalSource, { path: '$spec/tableThemeTokens/data.categorical' });
+    expect(() => TableLayoutManifestSchema.parse(wrongInheritedPath)).toThrow(/source|path/i);
+
+    const wrongLocalPath = structuredClone(result.manifest);
+    const contentSource = wrongLocalPath.style.sources.find(entry => entry.key === 'cell.content.color');
+    if (contentSource === undefined) throw new Error('expected content source');
+    Object.assign(contentSource, { path: '$spec/tableThemeTokens/cell.background.fill' });
+    expect(() => TableLayoutManifestSchema.parse(wrongLocalPath)).toThrow(/source|path/i);
   });
 
   it('rejects forged encoding, Cell, and Legend descriptor seed relationships', () => {

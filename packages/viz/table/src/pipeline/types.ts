@@ -13,6 +13,7 @@ import type {
   AnyCellPresentationDefinition,
   AnyCellVisualScaleDefinition,
   AnyTableStructureDefinition,
+  AnyTableThemeStyleDefinition,
   TableLayoutManifest,
   TableLayoutManifestSchema,
 } from '../contract';
@@ -28,6 +29,8 @@ export type LowerTablesOptions = Readonly<{
   formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
   /** 用户自定义 Cell visual scale definitions */
   visualScaleDefinitions?: ReadonlyArray<AnyCellVisualScaleDefinition>;
+  /** 用户自定义 Table Theme style definitions */
+  tableThemeStyles?: ReadonlyArray<AnyTableThemeStyleDefinition>;
 }>;
 
 /** Table layout-aware composite 的 typed artifact */

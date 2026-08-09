@@ -41,8 +41,9 @@ result.manifest;
 compile result. Core options live under `compile`, including extra composite definitions; the removed
 top-level `composites` option is not retained as an alias.
 
-Custom formatter, structure, presentation, and visual-scale definitions enter through
-`lowerOptions`. A visual-scale resolution uses `of`, `legendForm`, `domain`, `range`, and optional
+Custom formatter, structure, presentation, visual-scale, and Table Theme style definitions enter
+through `lowerOptions`. Custom styles pair `compile.themeStyles` with a same-named
+`lowerOptions.tableThemeStyles` definition. A visual-scale resolution uses `of`, `legendForm`, `domain`, `range`, and optional
 `edges`; opted-in encodings can add a JSON-safe Legend descriptor seed to the returned manifest.
 Alpha.3 intentionally ends at that seed. Table-to-Standard Legend composition and the final
 occurrence join are planned for Table alpha.6 rather than exposed by this adapter today.

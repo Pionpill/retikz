@@ -46,15 +46,3 @@ export const PlotThemeToken = {
 
 /** Plot 主题 token key 取值 */
 export type PlotThemeTokenValue = ValueOf<typeof PlotThemeToken>;
-
-/** Plot token 最终来源分类 */
-export const PlotThemeTokenSource = {
-  Preset: 'preset',
-  SharedCategorical: 'shared-categorical',
-  Local: 'local',
-  Colors: 'colors',
-  PlotTheme: 'plot-theme',
-} as const;
-
-/** Plot token 最终来源分类取值 */
-export type PlotThemeTokenSourceValue = ValueOf<typeof PlotThemeTokenSource>;

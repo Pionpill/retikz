@@ -1,17 +1,26 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineComposite,
+  defineThemeStyle,
+  resolveCoreThemeColors,
+  ThemeStyle,
+} from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerTablesOptions, TableStructureOutput } from '../../../src';
 
 import {
+  BUILTIN_TABLE_THEME_TOKENS,
   createTableRuntimeContribution,
   defineCellFormatter,
   defineCellPresentation,
   defineCellVisualScale,
   defineTableStructure,
+  defineTableThemeStyle,
   makeTableRuntimeComposites,
   TABLE_NAMESPACE,
   TableComposite,
@@ -59,6 +68,12 @@ const visualScaleOf = (name: string) =>
     name,
     optionsSchema: z.strictObject({}),
     resolve: () => ({ of: () => '#2563eb', legendForm: 'swatch', domain: [1], range: ['#2563eb'] }),
+  });
+
+const themeStyleOf = (name: string) =>
+  defineTableThemeStyle({
+    name,
+    resolve: theme => structuredClone(BUILTIN_TABLE_THEME_TOKENS.neutral[theme.mode]),
   });
 
 const compositeOf = (namespace: string, type: string): AnyCompositeDefinition => {
@@ -153,6 +168,44 @@ describe('Table runtime contribution', () => {
     expect(JSON.stringify(result.scene)).toContain('Ada');
   });
 
+  it('carries a custom Table style definition through the embedded runtime envelope', () => {
+    const tableStyle = themeStyleOf('brand');
+    const contribution = createTableRuntimeContribution({
+      reference: 'brand-table',
+      lowerOptions: { tableThemeStyles: [tableStyle] },
+    });
+    const result = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        theme: { style: 'brand', mode: 'light' },
+        children: [
+          {
+            namespace: TABLE_NAMESPACE,
+            type: TableComposite.Table,
+            structure: { kind: 'manual', rows: [['x']] },
+          },
+        ],
+      },
+      {
+        composites: contribution.makeComposites(contribution.datasets),
+        themeStyles: [
+          defineThemeStyle({
+            name: 'brand',
+            resolve: ({ mode }) => resolveCoreThemeColors(ThemeStyle.Neutral, mode),
+          }),
+        ],
+      },
+    );
+    const manifest = result.artifacts.find(
+      artifact => artifact.kind === 'composite' && artifact.namespace === TABLE_NAMESPACE,
+    );
+
+    expect(manifest?.kind === 'composite' ? manifest.value : undefined).toMatchObject({
+      style: { style: 'brand', themeMode: 'light' },
+    });
+  });
+
   it('merges definitions and composites in first-contribution order and deduplicates the same objects', () => {
     const structureA = structureOf('fixture-a');
     const structureB = structureOf('fixture-b');
@@ -162,6 +215,8 @@ describe('Table runtime contribution', () => {
     const formatterB = formatterOf('fixture-b');
     const visualScaleA = visualScaleOf('fixture-a');
     const visualScaleB = visualScaleOf('fixture-b');
+    const themeStyleA = themeStyleOf('fixture-a');
+    const themeStyleB = themeStyleOf('fixture-b');
     const compositeA = compositeOf('fixture', 'a');
     const compositeB = compositeOf('fixture', 'b');
     const first = createTableRuntimeContribution({
@@ -171,6 +226,7 @@ describe('Table runtime contribution', () => {
         formatterDefinitions: [formatterA],
         presentationDefinitions: [presentationA],
         visualScaleDefinitions: [visualScaleA],
+        tableThemeStyles: [themeStyleA],
       },
       composites: [compositeA],
     });
@@ -181,6 +237,7 @@ describe('Table runtime contribution', () => {
         formatterDefinitions: [formatterA, formatterB],
         presentationDefinitions: [presentationA, presentationB],
         visualScaleDefinitions: [visualScaleA, visualScaleB],
+        tableThemeStyles: [themeStyleA, themeStyleB],
       },
       composites: [compositeA, compositeB],
     });
@@ -202,6 +259,7 @@ describe('Table runtime contribution', () => {
       { visualScaleDefinitions: [visualScaleOf('same')] },
       { visualScaleDefinitions: [visualScaleOf('same')] },
     ],
+    ['theme style', { tableThemeStyles: [themeStyleOf('same')] }, { tableThemeStyles: [themeStyleOf('same')] }],
   ] as const)(
     'fails loud for the same %s key with different definition objects',
     (_label, firstOptions, secondOptions) => {
@@ -269,13 +327,15 @@ describe('Table runtime contribution', () => {
     const formatter = formatterOf('original-formatter');
     const presentation = presentationOf('original-presentation');
     const visualScale = visualScaleOf('original-scale');
+    const themeStyle = themeStyleOf('original-style');
     const composite = compositeOf('fixture', 'original');
     const structureDefinitions = [structure];
     const formatterDefinitions = [formatter];
     const presentationDefinitions = [presentation];
     const visualScaleDefinitions = [visualScale];
+    const tableThemeStyles = [themeStyle];
     const composites = [composite];
-    const originalFrozenStates = [structure, formatter, presentation, visualScale, composite].map(value =>
+    const originalFrozenStates = [structure, formatter, presentation, visualScale, themeStyle, composite].map(value =>
       Object.isFrozen(value),
     );
 
@@ -286,6 +346,7 @@ describe('Table runtime contribution', () => {
         formatterDefinitions,
         presentationDefinitions,
         visualScaleDefinitions,
+        tableThemeStyles,
       },
       composites,
     });
@@ -298,6 +359,7 @@ describe('Table runtime contribution', () => {
     formatterDefinitions.push(formatterOf('late-formatter'));
     presentationDefinitions.push(presentationOf('late-presentation'));
     visualScaleDefinitions.push(visualScaleOf('late-scale'));
+    tableThemeStyles.push(themeStyleOf('late-style'));
     composites.push(compositeOf('fixture', 'late'));
 
     expect(Object.isFrozen(envelope)).toBe(true);
@@ -306,19 +368,22 @@ describe('Table runtime contribution', () => {
     expect(Object.isFrozen(envelope.lowerOptions.formatterDefinitions)).toBe(true);
     expect(Object.isFrozen(envelope.lowerOptions.presentationDefinitions)).toBe(true);
     expect(Object.isFrozen(envelope.lowerOptions.visualScaleDefinitions)).toBe(true);
+    expect(Object.isFrozen(envelope.lowerOptions.tableThemeStyles)).toBe(true);
     expect(Object.isFrozen(envelope.composites)).toBe(true);
     expect(envelope.lowerOptions.structureDefinitions).toEqual([structure]);
     expect(envelope.lowerOptions.formatterDefinitions).toEqual([formatter]);
     expect(envelope.lowerOptions.presentationDefinitions).toEqual([presentation]);
     expect(envelope.lowerOptions.visualScaleDefinitions).toEqual([visualScale]);
+    expect(envelope.lowerOptions.tableThemeStyles).toEqual([themeStyle]);
     expect(envelope.composites).toEqual([composite]);
     expect(envelope.lowerOptions.structureDefinitions?.[0]).toBe(structure);
     expect(envelope.lowerOptions.formatterDefinitions?.[0]).toBe(formatter);
     expect(envelope.lowerOptions.presentationDefinitions?.[0]).toBe(presentation);
     expect(envelope.lowerOptions.visualScaleDefinitions?.[0]).toBe(visualScale);
+    expect(envelope.lowerOptions.tableThemeStyles?.[0]).toBe(themeStyle);
     expect(envelope.composites[0]).toBe(composite);
-    expect([structure, formatter, presentation, visualScale, composite].map(value => Object.isFrozen(value))).toEqual(
-      originalFrozenStates,
-    );
+    expect(
+      [structure, formatter, presentation, visualScale, themeStyle, composite].map(value => Object.isFrozen(value)),
+    ).toEqual(originalFrozenStates);
   });
 });

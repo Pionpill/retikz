@@ -118,28 +118,30 @@ The two `ManualTable` authoring modes are mutually exclusive. Props mode forward
 
 `TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters TableSpec. See the authoritative [Layout API](/kernel/components/layout/overview) for complete field semantics. Scope styles, full `compile`, `artifacts/onArtifacts`, and `embeddables` are not part of the Table-root public surface.
 
-| Shared prop                | Type                                            | Default | Description                                           |
-| -------------------------- | ----------------------------------------------- | ------- | ----------------------------------------------------- |
-| `containerStyle?`          | `LayoutProps['style']`                          | —       | Standalone host CSS; unsupported when embedded        |
-| `formatterDefinitions?`    | `LowerTablesOptions['formatterDefinitions']`    | `[]`    | Custom Cell formatter definitions                     |
-| `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                          |
-| `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                  |
-| `visualScaleDefinitions?`  | `LowerTablesOptions['visualScaleDefinitions']`  | `[]`    | Custom Cell visual-scale definitions                  |
-| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`    | Extra definitions required by Tier 2 Cell content     |
-| `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —       | Reports the same compile's root manifest after commit |
+| Shared prop                | Type                                            | Default | Description                                            |
+| -------------------------- | ----------------------------------------------- | ------- | ------------------------------------------------------ |
+| `containerStyle?`          | `LayoutProps['style']`                          | —       | Standalone host CSS; unsupported when embedded         |
+| `formatterDefinitions?`    | `LowerTablesOptions['formatterDefinitions']`    | `[]`    | Custom Cell formatter definitions                      |
+| `structureDefinitions?`    | `LowerTablesOptions['structureDefinitions']`    | `[]`    | Custom Structure definitions                           |
+| `presentationDefinitions?` | `LowerTablesOptions['presentationDefinitions']` | `[]`    | Custom Cell presentation definitions                   |
+| `visualScaleDefinitions?`  | `LowerTablesOptions['visualScaleDefinitions']`  | `[]`    | Custom Cell visual-scale definitions                   |
+| `tableThemeStyles?`        | `LowerTablesOptions['tableThemeStyles']`        | `[]`    | Table baseline definitions sharing the Core style name |
+| `composites?`              | `ReadonlyArray<AnyCompositeDefinition>`         | `[]`    | Extra definitions required by Tier 2 Cell content      |
+| `onManifest?`              | `(manifest: TableLayoutManifest) => void`       | —       | Reports the same compile's root manifest after commit  |
 
 The standalone runtime builds a canonical `children[0]` Scene. From `Layout.onArtifacts` it selects exactly one artifact with definition key `table.table`, `sourcePath: 'children[0]'`, and `expansionPath: []`. Notifications are deduplicated by serialized manifest content, and SSR render causes no callback side effect.
 
-The four definition categories and composites merge by stable key and object identity when entering a runtime contribution. Runtime stores copied frozen arrays, `lowerOptions`, and envelope, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects remain caller-owned and are neither cloned nor frozen.
+The five definition categories and composites merge by stable key and object identity when entering a runtime contribution. Runtime stores copied frozen arrays, `lowerOptions`, and envelope, so later caller `push` operations cannot mutate an existing contribution. Definition and composite objects remain caller-owned and are neither cloned nor frozen.
 
 ### Theme inputs
 
-| Input               | Type                              | Default | Purpose                                                                   |
-| ------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `theme?`            | `IRScene['theme']`                | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>` |
-| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`    | Local TableSpec token overlay above the Table preset                      |
+| Input               | Type                              | Default | Purpose                                                                     |
+| ------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------- |
+| `theme?`            | `IRScene['theme']`                | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>`   |
+| `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`    | Standalone Core style definitions; supplied by the outer host when embedded |
+| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`    | Local TableSpec token overlay above the Table style baseline                |
 
-`theme.style` / `theme.mode` select the Core environment and Table preset. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade.
+`theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; in embedded mode the outer Layout supplies the Core definition.
 
 ### Embedded
 

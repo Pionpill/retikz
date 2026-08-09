@@ -17,7 +17,7 @@
     "layoutDefault": "Default layout",
     "layoutCentered": "Centered layout",
     "more": "More",
-    "groupResources": "Resources",
+    "groupResources": "References",
     "tikzDocs": "TikZ Docs",
     "groupContact": "Contact",
     "contactGithub": "GitHub profile",
@@ -152,8 +152,8 @@
     "label": "Diagram",
     "introduction": "Introduction",
     "notation": "Notation",
-    "logicUnits": "Logic Units",
-    "compositeUnits": "Composite Units",
+    "baseUnits": "Base Units",
+    "frameUnits": "Composite Units",
     "logicFrame": "LogicFrame",
     "semanticUnits": "Semantic units",
     "connector": "Connector",
@@ -277,6 +277,13 @@
     "showOutline": "Show outline",
     "hideOutline": "Hide outline"
   },
+  "difficulty": {
+    "label": "Reading difficulty",
+    "beginner": "Beginner",
+    "advanced": "Advanced",
+    "internals": "Internals",
+    "pageTooltip": "Difficulty: {{difficulty}}"
+  },
   "preview": {
     "groupLabel": "Component Preview",
     "renderMode": "Render mode",
@@ -374,8 +381,7 @@
     "pageCopied": "Page copied",
     "prevPage": "Previous",
     "nextPage": "Next",
-    "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components",
-    "docStatsCompact": "{{minutes}} min · {{chars}} chars"
+    "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components"
   },
   "ai": {
     "triggerLabel": "Chat RetikZ",

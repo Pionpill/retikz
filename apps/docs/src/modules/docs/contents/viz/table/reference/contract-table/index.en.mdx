@@ -84,7 +84,9 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ## Table Theme tokens
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })` and selects the Table preset. `tableThemeTokens` is the local sparse overlay stored in TableSpec. Core shared `colors.categorical` projects into `data.categorical`, so Table does not maintain a second shared-palette input.
+Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table resolves an owner-local baseline through the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in TableSpec. Table therefore keeps neither a second shared-palette input nor a complete token map in Theme IR.
+
+The built-in `neutral`, `academic`, `vibrant`, and `clean` styles already have matching Core and Table definitions. A custom style must register the same name in both owners that consume it: standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
 
 ### TableThemeTokenOverridesSchema
 
@@ -98,7 +100,7 @@ Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { 
 
 <ZodSchema name="TableThemeTokenPresetMapSchema" />
 
-`neutral` is the default Core `style`; `academic` follows a LaTeX/booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every preset provides a complete light/dark token map. The Table resolver cascades preset → shared categorical → local `tableThemeTokens`; unknown keys or invalid values identify the exact path and fail loudly. The resolved manifest retains effective `style`, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a TableSpec input field.
+`neutral` is the default Core `style`; `academic` follows a LaTeX/booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every built-in definition provides a complete light/dark baseline. The Table resolver cascades style baseline → shared categorical → local `tableThemeTokens`; unknown keys, invalid values, or a missing definition identify the failing owner and fail loudly. The resolved manifest retains effective `style`, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a TableSpec input field.
 
 ## Related
 

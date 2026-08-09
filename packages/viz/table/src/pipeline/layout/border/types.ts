@@ -1,4 +1,5 @@
-import type { TableThemeTokenSourceKindValue } from '../../../contract';
+import type { ThemeTokenSourceValue } from '@retikz/core';
+
 import type {
   ResolvedTableBorderLine,
   TableBorderContribution,
@@ -14,7 +15,7 @@ export type ResolvedTableBorderCandidate =
       kind: 'line';
       priority: number;
       line: ResolvedTableBorderLine;
-      styleToken?: Readonly<{ key: TableBorderStyleTokenKey; source: TableThemeTokenSourceKindValue; path: string }>;
+      styleToken?: Readonly<{ key: TableBorderStyleTokenKey; source: ThemeTokenSourceValue; path: string }>;
     }>;
 
 /** Border Graph 支持的物理 Cell side */

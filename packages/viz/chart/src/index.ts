@@ -48,7 +48,6 @@ export { ChartSharedSchema } from './schemas';
 export type {
   AnyChartThemeStyleDefinition,
   ChartThemeStyleDefinition,
-  ChartThemeTokenSourceValue,
   ChartThemeTokenValue,
   IRChartResolvedThemeTokens,
   IRChartThemeSurface,
@@ -59,6 +58,5 @@ export {
   ChartThemeSurfaceSchema,
   ChartThemeToken,
   ChartThemeTokenOverridesSchema,
-  ChartThemeTokenSource,
   defineChartThemeStyle,
 } from './style';

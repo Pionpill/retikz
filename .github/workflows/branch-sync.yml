@@ -61,8 +61,9 @@ jobs:
       matrix:
         base:
           - next-kernel
-          - next-plot
           - next-standard
+          - next-notation
+          - next-plot
           - next-table
     steps:
       - name: Create sync PR
@@ -114,7 +115,7 @@ jobs:
       pull-requests: write
     env:
       TARGET_BRANCH: next
-      DOWNSTREAM_BRANCHES: next-kernel next-standard next-plot next-table
+      DOWNSTREAM_BRANCHES: next-kernel next-standard next-notation next-plot next-table
       ROLLUP_BRANCH_PREFIX: automation/next-rollup-
     steps:
       - name: Check for an existing rollup PR

@@ -6,7 +6,9 @@ import { useParams } from 'react-router';
 
 import { cn } from '@/lib';
 import { getSectionsByModule } from '@/modules/docs/data';
+import { useDocDifficultyStore } from '@/modules/docs/store';
 
+import { filterSectionsByDifficulty } from '../filter-doc-sections';
 import { buildSidebarCategories } from '../utils';
 import { AppSidebarMenu } from './AppSidebarMenu';
 
@@ -29,10 +31,15 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
   const moduleId = moduleIdProp ?? params.moduleId;
   const resolvedModuleId = moduleId ?? 'core';
   const sections = getSectionsByModule(resolvedModuleId);
+  const maximumDifficulty = useDocDifficultyStore(state => state.maximumDifficulty);
+  const visibleSections = useMemo(
+    () => filterSectionsByDifficulty(sections, maximumDifficulty),
+    [sections, maximumDifficulty],
+  );
 
   const categories = useMemo(
-    () => buildSidebarCategories(t, resolvedModuleId, sections),
-    [t, resolvedModuleId, sections],
+    () => buildSidebarCategories(t, resolvedModuleId, visibleSections),
+    [t, resolvedModuleId, visibleSections],
   );
 
   return (
