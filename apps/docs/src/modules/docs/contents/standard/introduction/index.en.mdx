@@ -3,7 +3,7 @@ title: Introduction
 description: Learn how the Library extends Core horizontally with optional Tier 2 capabilities and which entry point each package owns.
 ---
 
-The Library group contains official drawing capabilities that should not enter minimal Core but remain reusable across domains. Presentation components such as Grid, Axes, Frame, and Legend lower compact configuration to Core primitives. FlexLayout, GridLayout, and OverlayLayout provide generic containers on the Core layout-aware composite contract. Standard Logic adds a domain-neutral vocabulary of `LogicFrame`, semantic units, `Connector`, and `Callout`.
+The Library group contains official drawing capabilities that should not enter minimal Core but remain reusable across domains. Presentation components such as Grid, Axes, Frame, and Legend lower compact configuration to Core primitives. FlexLayout, GridLayout, and OverlayLayout provide generic containers on the Core layout-aware composite contract.
 
 ## Boundary with Core
 
@@ -35,4 +35,4 @@ All three packages share the same schemas and lowering from `@retikz/standard`. 
 
 See [Get Started](/standard/get-start) for all three paths, browse [Presentation](/standard/composite) or [Layout Containers](/standard/layout), combine resolved samples with meaning in [Legend](/standard/composite/legend), and learn how to pass the current figure's Definitions to Core in [Definition Loading](/standard/extension/capability-loading).
 
-See [Logic Components](/standard/logic) for the logic family. It owns authored target contracts, explicit routes, and target-relative placement, but not a `GraphModel`, automatic layout, obstacle avoidance, or interaction.
+For LogicFrame, semantic units, Connector, or Callout, use the corresponding packages through [Diagram Notation](/diagram/notation). Those diagram semantics reuse Standard layouts but are no longer owned by Standard.

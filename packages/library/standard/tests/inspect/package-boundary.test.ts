@@ -14,8 +14,8 @@ const packageRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 describe('@retikz/standard optional inspect boundary', () => {
   it('publishes independent root and inspect entries', () => {
-    expect(Object.keys(manifest.exports)).toEqual(['.', './inspect']);
-    expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './inspect']);
+    expect(Object.keys(manifest.exports)).toEqual(['.', './inspect', './layout']);
+    expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './inspect', './layout']);
     expect(readFileSync(new URL('../../src/index.ts', import.meta.url), 'utf8')).not.toMatch(/inspect/);
   });
 
