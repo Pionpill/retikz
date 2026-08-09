@@ -11,8 +11,8 @@ export const diagramSection: Array<Section> = [
     document: true,
     pages: [
       {
-        id: 'logic',
-        label: 'diagram.logicUnits',
+        id: 'unit',
+        label: 'diagram.baseUnits',
         children: [
           { id: 'semantic-units', label: 'diagram.semanticUnits' },
           { id: 'connector', label: 'diagram.connector' },
@@ -20,8 +20,8 @@ export const diagramSection: Array<Section> = [
         ],
       },
       {
-        id: 'composite',
-        label: 'diagram.compositeUnits',
+        id: 'frame',
+        label: 'diagram.frameUnits',
         children: [{ id: 'logic-frame', label: 'diagram.logicFrame' }],
       },
       { id: 'api-reference', label: 'diagram.notationApiReference' },
