@@ -13,14 +13,17 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 ## 设计原则
 
-- 上层包的底层机制必须源自 `@retikz/core` 或 `@retikz/math`；移除领域词汇后仍成立、被多个官方 Tier 2 包复用的通用绘图组件进入 `@retikz/standard`。Plot、Table 等领域包可以单向依赖 Standard 的公开 capability，但 Standard 不得反向依赖领域包；React / Vanilla / Docs demo 仍通过 adapter、sugar、composite、lowering、renderer 扩展表达力，不要绕开 core 另造平行 IR、平行渲染语义或平行几何底座。
-- 新能力优先抽象 Definition / registry / capability contract，再实现内置能力。内置与自定义应复用同一套注册、解析和消费逻辑，不要拆成“内置白名单 + 扩展补丁接口”。
+- 上层包的底层机制优先复用 `@retikz/foundation`、`@retikz/math`、`@retikz/core` 的公开能力；实现前先检索项目内已有 capability、类型、工具和模式，确认不能满足需求并说明理由后才能自建。移除领域词汇后仍成立、被多个官方 Tier 2 包复用的通用绘图组件进入 `@retikz/standard`。Plot、Table 等领域包可以单向依赖 Standard 的公开 capability，但 Standard 不得反向依赖领域包；React / Vanilla / Docs demo 仍通过 adapter、sugar、composite、lowering、renderer 扩展表达力，不要绕开基础包另造平行 IR、平行渲染语义或平行几何底座。
+- 当前需求明确需要扩展的公开能力，优先建立统一的 Definition / registry / capability contract，再实现内置能力。内置与自定义应复用同一套注册、解析和消费逻辑，不要拆成“内置白名单 + 扩展补丁接口”。
 - 新增或改变公开能力、IR / schema、扩展契约、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力前，先读 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档，并在 ADR 中完成能力归属、包边界与闭环检查。纯 bugfix、文案和行为等价重构只需确认不改变能力边界。
 - 上述设计还必须用 `test-contract` 把行为、可观察结果、不变量、反例与最低测试层写入 ignored 测试契约矩阵；覆盖率不能代替该矩阵。
 - 包不是功能收纳桶。每个发布包必须在就近 `AGENTS.md` 明确解决的问题、拥有的契约、不拥有的能力、输入与输出及缺口流向；新增能力只有在直接服务包使命、符合输入输出边界并能形成完整闭环时才能进入。实现方便、当前代码位置或单个消费方需求不能决定长期所有权。
-- 遇到具体需求时，先识别通用模型、边界和扩展点；确实只能局部处理时，在代码、ADR 或 notes 中说明不抽象的原因。
-- 发现既有设计方向不佳时，以当前能判断的最优方案修正架构，再评估兼容性和版本节奏。`0.x` 阶段公开 API / schema / 命名仍可为正确设计做破坏性调整，不为旧写法保留别名或桥接，除非当次版本设计文档明确要求。
-- 临时方案必须记录原因、影响范围和后续替换方向，并同步到对应 roadmap，避免沉没成长期事实。
+- 选择能完整满足当前需求的最简单方案；只在当前契约或已验证复用需求要求时抽象，不做预防性抽象，不增加没有当前消费者的配置层、扩展点或间接层。
+- 跨越多层的能力先跑通一个最小端到端闭环，再按已验证需求逐层扩展；不得为尚未实现的复杂度提前拆除、替换或拆散已经可工作的路径。
+- 组件和模块保持单一关注点与清晰边界，分离数据、业务、编译、渲染和适配等职责；通过公开契约协作，避免跨层耦合和职责混杂。
+- 过时的 API、schema、实现和路径直接删除，不保留向后兼容；禁止添加兼容层、旧名别名、migration / fallback 逻辑或新旧双轨。
+- 架构决策面向长期演进并直接采用当前可判断的长期方案，不接受“先这样、以后再优化”的临时设计；若当前约束不足以形成长期方案，先停止实现并补齐决策。
+- 做架构、能力归属或扩展机制决策前，先调研成熟项目和产品的同类设计，提炼已验证的经验、约束与适用边界；不得只凭设想发明方案。
 
 ## 动态规则
 
@@ -148,6 +151,8 @@ Control: <human-directed|llm-autonomous>
 ## 代码风格
 
 - TypeScript ESM；组件 PascalCase、hook `useXxx`、其余 camelCase。
+- 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
+- JSON、持久化配置和其他类型不明确的外部输入只在 parser / schema / adapter 入口完成一次解析、校验和归一化，内部只传递明确类型；运行时只保留必要的入口校验、TypeScript 无法表达的真实业务不变量和查找失败诊断。
 - 组件 / 类文件可 PascalCase；其他文件和目录用 kebab-case；目录通常用只 re-export 的 `index.ts`。
 - barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。

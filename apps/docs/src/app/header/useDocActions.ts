@@ -1,22 +1,16 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
 import type { Lang } from '@/i18n';
 
 import { LANGS } from '@/i18n';
 import { useThemeStore } from '@/store';
 
-/** 顶栏 / 抽屉共享的动作集合：主题、语言、复制链接。 */
+/** 顶栏 / 抽屉共享的主题与语言动作。 */
 export const useDocActions = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const theme = useThemeStore(s => s.theme);
   const setTheme = useThemeStore(s => s.setTheme);
-
-  const handleCopyLink = useCallback(() => {
-    void navigator.clipboard.writeText(window.location.href);
-    toast.success(t('toc.linkCopied'));
-  }, [t]);
 
   const handleToggleTheme = useCallback(() => {
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -33,7 +27,6 @@ export const useDocActions = () => {
     handleToggleTheme,
     currentLang: i18n.resolvedLanguage,
     handleCycleLang,
-    handleCopyLink,
   };
 };
 

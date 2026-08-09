@@ -86,9 +86,11 @@ stable spec id and receives the root Theme from the outer `Layout`. Embedded roo
 standalone host props or local `onManifest`; move them to the outer `Layout`. Datasets, custom
 definitions, and extra composites remain runtime inputs outside Table IR.
 
-Formatter, structure, presentation, and visual-scale definitions use the same `LowerTablesOptions`
-and lowering contract in standalone and embedded modes. Embedded roots additionally package those
-runtime inputs through `createTableRuntimeContribution()` for the outer Layout. A visual-scale
+Formatter, structure, presentation, visual-scale, and Table Theme style definitions use the same
+`LowerTablesOptions` and lowering contract in standalone and embedded modes. Standalone custom
+styles receive the Core definition through `themeStyles` and the same-named Table definition through
+`tableThemeStyles`; embedded roots receive the Core definition from the outer Layout and package the
+Table definition through `createTableRuntimeContribution()`. A visual-scale
 resolution exposes `of`, `legendForm`, `domain`, `range`, and optional `edges`; opted-in encodings
 copy the descriptor fields into the Table manifest. Alpha.3 intentionally ends at that seed;
 rendered Standard Legend composition and a final joined manifest are planned for Table alpha.6, so

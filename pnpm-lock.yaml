@@ -353,12 +353,12 @@ importers:
       '@retikz/core':
         specifier: workspace:*
         version: link:../../packages/kernel/core
-      '@retikz/foundation':
-        specifier: workspace:*
-        version: link:../../packages/kernel/foundation
       '@retikz/data':
         specifier: workspace:*
         version: link:../../packages/viz/data
+      '@retikz/foundation':
+        specifier: workspace:*
+        version: link:../../packages/kernel/foundation
       '@retikz/inspect':
         specifier: workspace:*
         version: link:../../packages/kernel/inspect
@@ -903,6 +903,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../foundation
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../math
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

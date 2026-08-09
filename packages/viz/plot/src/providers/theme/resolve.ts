@@ -1,5 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
 
+import { ThemeTokenSource } from '@retikz/core';
+
 import type { PlotThemeStyleDefinition } from '../../contract';
 import type { IRPlotSpec, IRPlotThemeResolution, PlotThemeTokenValue } from '../../schemas';
 
@@ -9,19 +11,17 @@ import {
   PlotThemeSchema,
   PlotThemeToken,
   PlotThemeTokenOverridesSchema,
-  PlotThemeTokenSource,
 } from '../../schemas';
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 import { resolvePlotThemeStyleRegistry } from './registry';
 
-/** 按 Plot preset、Core shared colors、inherited/local token、colors 与 native Plot theme 顺序解析主题 */
+/** 按 Plot style、Core shared colors、Plot-local 输入与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
   input: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
-  const style = effectiveTheme.style;
-  const mode = effectiveTheme.mode;
+  const { style, mode } = effectiveTheme;
   const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
   const definition = styles.get(style);
   if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
@@ -29,7 +29,13 @@ export const resolvePlotTheme = (
   const colors = input.colors === undefined ? undefined : structuredClone(input.colors);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
   const baseline = definition.resolve(effectiveTheme);
-  const tokensAfterShared = PlotResolvedThemeTokensSchema.parse(baseline);
+  const categorical = [...effectiveTheme.colors.categorical];
+  const tokensAfterShared = PlotResolvedThemeTokensSchema.parse({
+    ...baseline,
+    [PlotThemeToken.PlotPaletteCategorical]: categorical,
+    [PlotThemeToken.PlotPaletteSeries]: [...categorical],
+    [PlotThemeToken.PlotPaletteSector]: [...categorical],
+  });
   const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
     ...tokensAfterShared,
     ...structuredClone(plotThemeTokens),
@@ -59,18 +65,21 @@ export const resolvePlotTheme = (
   const tokenSources = Object.values(PlotThemeToken).map(token => {
     const nativePath = nativeSources.get(token);
     if (nativePath !== undefined) {
-      return { token, kind: PlotThemeTokenSource.PlotTheme, path: nativePath };
+      return { token, kind: ThemeTokenSource.Local, path: nativePath };
     }
     if (colors !== undefined && colorTokens.has(token)) {
-      return { token, kind: PlotThemeTokenSource.Colors, path: '$spec/colors' };
+      return { token, kind: ThemeTokenSource.Local, path: '$spec/colors' };
     }
     if (Object.hasOwn(plotThemeTokens, token)) {
-      return { token, kind: PlotThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
+      return { token, kind: ThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
+    }
+    if (colorTokens.has(token)) {
+      return { token, kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' };
     }
     return {
       token,
-      kind: PlotThemeTokenSource.Preset,
-      path: `$preset/${style}/${mode}/${token}`,
+      kind: ThemeTokenSource.Local,
+      path: `$style/${style}/${mode}/${token}`,
     };
   });
   const palette = {
@@ -81,10 +90,8 @@ export const resolvePlotTheme = (
     diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
   };
   const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] = [
-    ...(colors === undefined ? [] : [{ kind: PlotThemeTokenSource.Colors, path: '$spec/colors' } as const]),
-    ...(authoredTheme === undefined
-      ? []
-      : [{ kind: PlotThemeTokenSource.PlotTheme, path: '$spec/plotTheme' } as const]),
+    ...(colors === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/colors' } as const]),
+    ...(authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' } as const]),
   ];
   return PlotThemeResolutionSchema.parse({
     style,

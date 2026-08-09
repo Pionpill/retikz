@@ -61,19 +61,35 @@ export const kernelV05: Release = {
       pkg: '@retikz/math',
       version: 'v0.5',
       description: {
-        zh: '随 Kernel release group lockstep 进入 v0.5；alpha.1 不新增 math 能力。',
-        en: 'Moves to v0.5 in lockstep with the Kernel release group; alpha.1 adds no math capabilities.',
+        zh: '随 Kernel release group lockstep 进入 v0.5，并提供跨包共享的二维仿射矩阵原子。',
+        en: 'Moves to v0.5 with the Kernel release group and provides shared 2D affine-matrix primitives.',
       },
-      highlights: [],
+      highlights: [
+        {
+          label: { zh: '二维仿射矩阵单一真源', en: 'One source of truth for 2D affine matrices' },
+          content: {
+            zh: '`AffineMatrix` 固定 SVG / Canvas 六元组顺序；`AFFINE_IDENTITY`、`multiplyAffine()` 与 `applyAffine()` 统一单位矩阵、先 inner 后 outer 的复合语义和点映射。Render hydration 与 TeX SVG lowering 直接复用这些原子，领域解析与诊断仍留在原包。',
+            en: '`AffineMatrix` fixes the SVG / Canvas tuple order. `AFFINE_IDENTITY`, `multiplyAffine()`, and `applyAffine()` unify identity, inner-before-outer composition, and point mapping. Render hydration and TeX SVG lowering consume these primitives directly while domain parsing and diagnostics remain in their owner packages.',
+          },
+        },
+      ],
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-08-04',
+          date: '2026-08-09',
           summary: {
-            zh: '随 Kernel release group lockstep 升级；不新增 math 能力。',
-            en: 'Version-only alignment with the Kernel release group; no new math capabilities.',
+            zh: '新增二维仿射矩阵公共原子，并迁移 Render 与 TeX 的重复数值实现。',
+            en: 'Adds public 2D affine primitives and replaces duplicate numeric implementations in Render and TeX.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: '仿射矩阵复合与点映射', en: 'Affine composition and point mapping' },
+              content: {
+                zh: '从 `@retikz/math` 根入口导入 `AffineMatrix`、`AFFINE_IDENTITY`、`multiplyAffine` 与 `applyAffine`。单位矩阵运行时不可变，运算不修改输入；有限性、可逆性与 similarity 校验仍由调用方负责。',
+                en: 'Import `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, and `applyAffine` from the `@retikz/math` root. The identity is runtime-immutable and operations do not mutate inputs; callers still own finite, invertible, and similarity checks.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.1',

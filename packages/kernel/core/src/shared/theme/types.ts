@@ -1,6 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 
-import type { ThemeMode, ThemeStyle } from './constants';
+import type { ThemeMode, ThemeStyle, ThemeTokenSource } from './constants';
 
 /** 可由 Theme IR 持久化的开放视觉人格名称 */
 export type ThemeStyleValue = string;
@@ -9,6 +9,9 @@ export type ThemeStyleValue = string;
 export type BuiltinThemeStyleValue = ValueOf<typeof ThemeStyle>;
 
 export type ThemeModeValue = ValueOf<typeof ThemeMode>;
+
+/** Theme token 相对当前 owner 的来源关系取值 */
+export type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
 
 /** CSS 颜色在 Core shared color contract 中的 JSON-safe 字符串形态 */
 export type CssColorValue = string;

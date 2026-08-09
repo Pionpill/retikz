@@ -4,11 +4,17 @@ import { describe, expect, it } from 'vitest';
 
 import type { Section } from '@/modules/docs/data';
 
-import { vizSection } from '@/modules/docs/data';
-import { buildSidebarCategories, flattenLeaves, isChangelogLocation } from '@/modules/docs/layout';
+import { DocDifficulty, vizSection } from '@/modules/docs/data';
+import {
+  buildSidebarCategories,
+  filterSectionsByDifficulty,
+  flattenLeaves,
+  isChangelogLocation,
+  resolvePageNavigation,
+} from '@/modules/docs/layout';
 
 const sections: Array<Section> = [
-  { pages: [{ id: 'intro', label: 'common.notFound' }] },
+  { pages: [{ id: 'intro', label: 'common.notFound', difficulty: DocDifficulty.Beginner }] },
   {
     id: 'guide',
     label: 'common.notFound',
@@ -18,8 +24,8 @@ const sections: Array<Section> = [
         id: 'group',
         label: 'common.notFound',
         children: [
-          { id: 'a', label: 'common.notFound' },
-          { id: 'b', label: 'common.notFound' },
+          { id: 'a', label: 'common.notFound', difficulty: DocDifficulty.Beginner },
+          { id: 'b', label: 'common.notFound', difficulty: DocDifficulty.Internals },
         ],
       },
     ],
@@ -43,6 +49,19 @@ describe('layout utils', () => {
     expect(categories[1]?.value).toBe('guide');
     expect(categories[1]?.path).toBe('/kernel/guide');
     expect(categories[1]?.modules[0]?.children?.map(child => child.value)).toEqual(['a', 'b']);
+    expect(categories[0]?.modules[0]?.difficulty).toBe(DocDifficulty.Beginner);
+    expect(categories[1]?.modules[0]?.difficulty).toBeUndefined();
+    expect(categories[1]?.modules[0]?.children?.[1]?.difficulty).toBe(DocDifficulty.Internals);
+  });
+
+  it('当前页面被难度过滤时不提供上一篇或下一篇', () => {
+    const filtered = filterSectionsByDifficulty(sections, DocDifficulty.Beginner);
+    const navigation = resolvePageNavigation(
+      { moduleId: 'kernel', sectionId: 'guide', pageId: 'group', subPageId: 'b' },
+      filtered,
+    );
+
+    expect(navigation).toEqual({ prev: null, next: null });
   });
 
   it('将 Showcase 图标放在一级页面条目而非分组标题', () => {

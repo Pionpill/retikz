@@ -22,7 +22,7 @@ describe('style token Border Graph integration', () => {
         kind: 'line',
         priority: -100,
         source: { kind: 'default', scope: 'outer' },
-        styleToken: { source: 'preset' },
+        styleToken: { source: 'local' },
       });
       if (winner.kind !== 'line' || winner.origin !== 'styleToken') {
         throw new Error('expected style token line winner');
@@ -78,7 +78,7 @@ describe('style token Border Graph integration', () => {
       source: { kind: 'cell', side: 'bottom' },
       priority: -100,
       specificity: 1,
-      styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'preset' }),
+      styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'local' }),
     });
   });
 
@@ -104,11 +104,11 @@ describe('style token Border Graph integration', () => {
     expect(result.manifest.borders[0].atoms.map(atom => atom.winner)).toEqual([
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'preset' }),
+        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'local' }),
       }),
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'preset' }),
+        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'local' }),
       }),
     ]);
   });
@@ -158,7 +158,7 @@ describe('style token Border Graph integration', () => {
       expect.arrayContaining([
         expect.objectContaining({
           priority: -100,
-          styleToken: expect.objectContaining({ key: 'table.border.horizontal', source: 'preset' }),
+          styleToken: expect.objectContaining({ key: 'table.border.horizontal', source: 'local' }),
         }),
         expect.objectContaining({ priority: 0, source: expect.objectContaining({ cellId: 'target' }) }),
       ]),

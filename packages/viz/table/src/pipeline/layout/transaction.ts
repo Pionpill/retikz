@@ -651,7 +651,7 @@ export const resolveTableTransaction = (
     datasets,
     structureDefinitions: options.structureDefinitions,
   });
-  const tableThemeTokens = resolveTableThemeTokens(context.theme, parsed.tableThemeTokens);
+  const tableThemeTokens = resolveTableThemeTokens(context.theme, parsed.tableThemeTokens, options.tableThemeStyles);
   const plan = resolveTableCellPlans(semantic, {
     rules: parsed.rules,
     encodings: parsed.encodings,
