@@ -1,4 +1,5 @@
 import { ChildSchema, PositionSchema } from '@retikz/core';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutArtifactContainerSchema, LayoutArtifactRectSchema } from '@retikz/standard/layout';
 import { z } from 'zod';
 
@@ -9,7 +10,6 @@ import {
   LogicDiagramTargetSchema,
   LogicLayoutItemArtifactSchema,
   LogicOuterArtifactSchema,
-  NonBlankStringSchema,
   NOTATION_NAMESPACE,
 } from '../../shared';
 import { LogicContentShellAppearanceSchema } from '../internal/content-shell';
@@ -25,7 +25,7 @@ const CalloutLeaderAppearanceSchema = ConnectorAppearanceSchema.extend({
 export const CalloutPlacementSchema = z
   .strictObject({
     side: CalloutSideSchema,
-    gap: z.number().nonnegative().default(8),
+    gap: NonNegativeNumberSchema.default(8),
     offset: z.number().default(0),
   })
   .describe('Explicit Callout side, normal gap, and tangent offset.');
@@ -33,7 +33,7 @@ export const CalloutPlacementSchema = z
 const CalloutResolvedPlacementSchema = z
   .strictObject({
     side: CalloutSideSchema.describe('Resolved Callout placement side.'),
-    gap: z.number().nonnegative().describe('Resolved non-negative normal gap.'),
+    gap: NonNegativeNumberSchema.describe('Resolved non-negative normal gap.'),
     offset: z.number().describe('Resolved signed tangent offset.'),
   })
   .describe('Strict resolved Callout placement with all canonical fields present.');

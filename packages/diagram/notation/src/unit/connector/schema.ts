@@ -1,4 +1,5 @@
 import { FoldStepVia, PathBaseSchema, PositionSchema } from '@retikz/core';
+import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -8,7 +9,6 @@ import {
   LogicCompositeType,
   LogicDiagramPointSchema,
   LogicGeometryLabelSchema,
-  NonBlankStringSchema,
   NOTATION_NAMESPACE,
 } from '../../shared';
 
@@ -64,7 +64,7 @@ const DirectionBendRoutingSchema = z
     kind: z.literal(ConnectorRouteKind.Bend),
     direction: ConnectorBendDirectionSchema.optional(),
     angle: z.number().gt(-180).lt(180).optional(),
-    looseness: z.number().positive().optional(),
+    looseness: PositiveNumberSchema.optional(),
   })
   .describe('Core bend routing selected by direction, angle, and looseness.');
 
@@ -77,7 +77,7 @@ const TangentBendRoutingSchema = z
         inAngle: z.number().describe('Incoming tangent angle.'),
       })
       .describe('Explicit outgoing and incoming bend tangents.'),
-    looseness: z.number().positive().optional(),
+    looseness: PositiveNumberSchema.optional(),
   })
   .describe('Core bend routing selected by explicit tangents.');
 

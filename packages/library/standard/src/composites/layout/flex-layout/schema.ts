@@ -1,4 +1,5 @@
 import { CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
+import { NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -46,13 +47,13 @@ export const FlexMainDistributionSchema = z
 export const FlexLayoutItemSchema = LayoutItemBaseSchema.extend({
   kind: z.literal(LayoutItemKind.Flex).describe('Discriminator for a FlexLayout item.'),
   basis: z
-    .union([z.literal(FLEX_LAYOUT_CONTENT_BASIS), z.number().nonnegative()])
+    .union([z.literal(FLEX_LAYOUT_CONTENT_BASIS), NonNegativeNumberSchema])
     .default(FLEX_LAYOUT_CONTENT_BASIS)
     .describe('Natural content contribution or authored main-axis base slot.'),
-  grow: z.number().nonnegative().default(0).describe('Non-negative factor for receiving positive free space.'),
-  shrink: z.number().nonnegative().default(1).describe('Non-negative factor applied to the base slot for shrink.'),
-  min: z.number().nonnegative().optional().describe('Optional authored hard minimum main-axis slot.'),
-  max: z.number().nonnegative().optional().describe('Optional authored hard maximum main-axis slot.'),
+  grow: NonNegativeNumberSchema.default(0).describe('Non-negative factor for receiving positive free space.'),
+  shrink: NonNegativeNumberSchema.default(1).describe('Non-negative factor applied to the base slot for shrink.'),
+  min: NonNegativeNumberSchema.optional().describe('Optional authored hard minimum main-axis slot.'),
+  max: NonNegativeNumberSchema.optional().describe('Optional authored hard maximum main-axis slot.'),
   alignSelf: z
     .enum(LayoutAlignment)
     .optional()
@@ -131,18 +132,18 @@ export const FlexLayoutSchema = FlexLayoutBaseSchema.superRefine(refineFlexLayou
 );
 
 const FlexLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
-  line: z.number().int().nonnegative().describe('Resolved physical flex line index containing the item.'),
+  line: NonNegativeIntegerSchema.describe('Resolved physical flex line index containing the item.'),
 }).describe('FlexLayout item placement artifact.');
 
 const FlexLayoutLineArtifactSchema = z
   .strictObject({
-    index: z.number().int().nonnegative().describe('Contiguous physical cross-axis line index.'),
+    index: NonNegativeIntegerSchema.describe('Contiguous physical cross-axis line index.'),
     itemKeys: z.array(z.string().min(1)).describe('Item keys in this line layout traversal order.'),
     mainAxis: z.enum(LayoutAlignmentGuideDimension).describe('Physical main axis used for line item distribution.'),
     mainStart: z.number().describe('Finite main-axis line start in container allocation coordinates.'),
-    mainSize: z.number().nonnegative().describe('Finite non-negative main-axis line size.'),
+    mainSize: NonNegativeNumberSchema.describe('Finite non-negative main-axis line size.'),
     crossStart: z.number().describe('Finite physical cross-axis line start.'),
-    crossSize: z.number().nonnegative().describe('Finite non-negative resolved line cross size.'),
+    crossSize: NonNegativeNumberSchema.describe('Finite non-negative resolved line cross size.'),
   })
   .describe('Resolved FlexLayout line artifact.');
 

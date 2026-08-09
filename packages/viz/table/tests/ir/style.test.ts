@@ -71,6 +71,9 @@ describe('Table theme token schema', () => {
     expect(() => TableThemeTokenBorderSchema.parse({ kind: 'line', priority: 1 })).toThrow(/priority/i);
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.background.fillOpacity': 2 })).toThrow();
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.font.weight': 'heavy' })).toThrow();
+    expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.color': '  ' })).toThrow(
+      'Table style color must not be empty or whitespace.',
+    );
     expect(TableThemeTokenOverridesSchema.parse({ 'data.categorical': ['#fff', '#fff'] })).toEqual({
       'data.categorical': ['#fff', '#fff'],
     });

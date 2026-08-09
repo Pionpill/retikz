@@ -1,3 +1,4 @@
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -39,8 +40,8 @@ const OverlayPositionedPlacementSchema = z
     kind: z.literal(OverlayPlacementKind.Positioned).describe('Discriminator for local point positioning.'),
     at: OverlayAtPointSchema.describe('Finite local point relative to the content-box start.'),
     anchor: OverlayAnchorPointSchema.default({ x: 0.5, y: 0.5 }).describe('Normalized child slot anchor.'),
-    width: z.number().nonnegative().optional().describe('Optional exact child slot width.'),
-    height: z.number().nonnegative().optional().describe('Optional exact child slot height.'),
+    width: NonNegativeNumberSchema.optional().describe('Optional exact child slot width.'),
+    height: NonNegativeNumberSchema.optional().describe('Optional exact child slot height.'),
   })
   .describe('Positioned OverlayLayout placement.');
 

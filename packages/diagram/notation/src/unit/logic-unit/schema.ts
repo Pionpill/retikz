@@ -1,8 +1,9 @@
 import type { z } from 'zod';
 
 import { NodeSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 
-import { LogicNeutralStyle, NonBlankStringSchema } from '../../shared';
+import { LogicNeutralStyle } from '../../shared';
 
 const TerminalShape = { type: 'rectangle', params: { cornerRadius: 1_000_000 } } as const;
 const StageShape = { type: 'rectangle', params: { cornerRadius: 8 } } as const;
