@@ -8,6 +8,7 @@ description: Connect authored targets with explicit Core path routes and an opti
 ## Usage
 
 ```tsx
+import { FoldStepVia } from '@retikz/core';
 import { Layout, Node, Scope } from '@retikz/react';
 import { Connector, Stage, Terminal } from '@retikz/notation-react';
 ```
@@ -28,7 +29,7 @@ import { Connector, Stage, Terminal } from '@retikz/notation-react';
     id="start-to-step"
     from={{ id: 'start' }}
     to={{ id: 'step' }}
-    routing={{ kind: 'orthogonal', pattern: 'hv' }}
+    routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
     label={{ text: 'next' }}
   />
 </Layout>
@@ -40,13 +41,13 @@ The `label` is attached to the final drawable Core step. This keeps the label in
 
 ### Route variants
 
-| Route             | Input                                                   | Lowering                                                      |
-| ----------------- | ------------------------------------------------------- | ------------------------------------------------------------- |
-| Straight          | `{ kind: 'straight' }`                                  | One line between endpoints                                    |
-| Polyline          | `{ kind: 'polyline', points }`                          | Explicit intermediate targets or points                       |
-| Orthogonal        | `pattern: 'hv' \| 'vh' \| 'hvh' \| 'vhv'`               | Two- or three-leg axis route; `ratio` controls the middle leg |
-| Quadratic / Cubic | `control` or `control1` + `control2`                    | Core Bezier step(s)                                           |
-| Bend              | `direction`, `angle`, `looseness`, or explicit tangents | Core bend step                                                |
+| Route             | Input                                                   | Lowering                                                                                           |
+| ----------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Straight          | `{ kind: 'straight' }`                                  | One line between endpoints                                                                         |
+| Polyline          | `{ kind: 'polyline', points }`                          | Explicit intermediate targets or points                                                            |
+| Orthogonal        | <ApiValues name="FoldStepVia" />                        | `pattern` reuses Core fold patterns directly; `ratio` controls the middle leg for three-leg routes |
+| Quadratic / Cubic | `control` or `control1` + `control2`                    | Core Bezier step(s)                                                                                |
+| Bend              | `direction`, `angle`, `looseness`, or explicit tangents | Core bend step                                                                                     |
 
 <ComponentPreview files="connector-routing" size="lg" />
 

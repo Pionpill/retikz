@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 
+import { FoldStepVia } from '@retikz/core';
 import {
   Connector,
   Decision,
@@ -44,7 +45,7 @@ const Demo: FC = () => (
       id="process-edge-2"
       from={{ id: 'process-step' }}
       to={{ id: 'process-check' }}
-      routing={{ kind: 'orthogonal', pattern: 'hv' }}
+      routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
     />
   </Layout>
 );

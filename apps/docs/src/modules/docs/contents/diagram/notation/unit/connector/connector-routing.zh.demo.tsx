@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 
+import { FoldStepVia } from '@retikz/core';
 import { Connector, Decision, Stage, Terminal } from '@retikz/notation-react';
 import { Layout, Scope } from '@retikz/react';
 
@@ -31,8 +32,8 @@ const Demo: FC = () => (
       id="route-orthogonal"
       from={{ id: 'route-stage' }}
       to={{ id: 'route-check' }}
-      routing={{ kind: 'orthogonal', pattern: 'hv' }}
-      label={{ text: 'hv', position: 'near-start', side: 'top', distance: 10 }}
+      routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
+      label={{ text: '-|', position: 'near-start', side: 'top', distance: 10 }}
     />
     <Connector
       id="route-polyline"

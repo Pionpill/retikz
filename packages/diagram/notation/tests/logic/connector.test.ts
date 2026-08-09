@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, CompileWarning, IRChild, IRPathBase, ScenePrimitive } from '@retikz/core';
 
-import { compileToScene, CompileWarningCode, lowerIRToKernel } from '@retikz/core';
+import { compileToScene, CompileWarningCode, FoldStepVia, lowerIRToKernel } from '@retikz/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { ConnectorRoutingInput } from '../../src';
@@ -73,44 +73,44 @@ const routeCases: Array<{
     expected: { kind: 'line', to: [100, 40] },
   },
   {
-    name: 'hv orthogonal',
-    routing: { kind: 'orthogonal', pattern: 'hv' },
-    expected: { kind: 'fold', via: '-|', to: [100, 40] },
+    name: 'horizontal then vertical orthogonal',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
+    expected: { kind: 'fold', via: FoldStepVia.HorizontalThenVertical, to: [100, 40] },
   },
   {
-    name: 'vh orthogonal',
-    routing: { kind: 'orthogonal', pattern: 'vh' },
-    expected: { kind: 'fold', via: '|-', to: [100, 40] },
+    name: 'vertical then horizontal orthogonal',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.VerticalThenHorizontal },
+    expected: { kind: 'fold', via: FoldStepVia.VerticalThenHorizontal, to: [100, 40] },
   },
   {
-    name: 'hvh orthogonal default ratio',
-    routing: { kind: 'orthogonal', pattern: 'hvh' },
-    expected: { kind: 'fold', via: '-|-', fraction: 0.5, to: [100, 40] },
+    name: 'horizontal vertical horizontal orthogonal default ratio',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalVerticalHorizontal },
+    expected: { kind: 'fold', via: FoldStepVia.HorizontalVerticalHorizontal, fraction: 0.5, to: [100, 40] },
   },
   {
-    name: 'hvh orthogonal ratio zero',
-    routing: { kind: 'orthogonal', pattern: 'hvh', ratio: 0 },
-    expected: { kind: 'fold', via: '-|-', fraction: 0, to: [100, 40] },
+    name: 'horizontal vertical horizontal orthogonal ratio zero',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalVerticalHorizontal, ratio: 0 },
+    expected: { kind: 'fold', via: FoldStepVia.HorizontalVerticalHorizontal, fraction: 0, to: [100, 40] },
   },
   {
-    name: 'hvh orthogonal ratio one',
-    routing: { kind: 'orthogonal', pattern: 'hvh', ratio: 1 },
-    expected: { kind: 'fold', via: '-|-', fraction: 1, to: [100, 40] },
+    name: 'horizontal vertical horizontal orthogonal ratio one',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalVerticalHorizontal, ratio: 1 },
+    expected: { kind: 'fold', via: FoldStepVia.HorizontalVerticalHorizontal, fraction: 1, to: [100, 40] },
   },
   {
-    name: 'vhv orthogonal default ratio',
-    routing: { kind: 'orthogonal', pattern: 'vhv' },
-    expected: { kind: 'fold', via: '|-|', fraction: 0.5, to: [100, 40] },
+    name: 'vertical horizontal vertical orthogonal default ratio',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.VerticalHorizontalVertical },
+    expected: { kind: 'fold', via: FoldStepVia.VerticalHorizontalVertical, fraction: 0.5, to: [100, 40] },
   },
   {
-    name: 'vhv orthogonal ratio zero',
-    routing: { kind: 'orthogonal', pattern: 'vhv', ratio: 0 },
-    expected: { kind: 'fold', via: '|-|', fraction: 0, to: [100, 40] },
+    name: 'vertical horizontal vertical orthogonal ratio zero',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.VerticalHorizontalVertical, ratio: 0 },
+    expected: { kind: 'fold', via: FoldStepVia.VerticalHorizontalVertical, fraction: 0, to: [100, 40] },
   },
   {
-    name: 'vhv orthogonal ratio one',
-    routing: { kind: 'orthogonal', pattern: 'vhv', ratio: 1 },
-    expected: { kind: 'fold', via: '|-|', fraction: 1, to: [100, 40] },
+    name: 'vertical horizontal vertical orthogonal ratio one',
+    routing: { kind: 'orthogonal', pattern: FoldStepVia.VerticalHorizontalVertical, ratio: 1 },
+    expected: { kind: 'fold', via: FoldStepVia.VerticalHorizontalVertical, fraction: 1, to: [100, 40] },
   },
   {
     name: 'quadratic',
@@ -182,6 +182,19 @@ describe('Connector Core Path lowering contract', () => {
       { type: 'step', kind: 'move', to: [0, 10] },
       { type: 'step', kind: 'line', to: [100, 40] },
     ]);
+  });
+
+  it.each(['hv', 'vh', 'hvh', 'vhv'])('rejects the removed legacy orthogonal pattern %s', pattern => {
+    expect(
+      production.ConnectorSchema.safeParse({
+        namespace: 'notation',
+        type: 'connector',
+        id: `legacy-${pattern}`,
+        from: [0, 10],
+        to: [100, 40],
+        routing: { kind: 'orthogonal', pattern },
+      }).success,
+    ).toBe(false);
   });
 
   it('lowers the complete Core step label onto the final drawable step', () => {

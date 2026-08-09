@@ -4,7 +4,6 @@ import type { z } from 'zod';
 import type {
   CalloutSide,
   ConnectorBendDirection,
-  ConnectorOrthogonalPattern,
   ConnectorRole,
   ConnectorRouteKind,
   LogicCompositeType,
@@ -13,7 +12,6 @@ import type {
   CalloutSideSchema,
   ConnectorAppearanceSchema,
   ConnectorBendDirectionSchema,
-  ConnectorOrthogonalPatternSchema,
   ConnectorRouteKindSchema,
   LogicDiagramPointSchema,
   LogicDiagramTargetSchema,
@@ -27,7 +25,6 @@ import type { LogicNeutralStyle } from './schema';
 export type LogicCompositeTypeValue = ValueOf<typeof LogicCompositeType>;
 export type ConnectorRoleValue = ValueOf<typeof ConnectorRole>;
 export type ConnectorRouteKindValue = ValueOf<typeof ConnectorRouteKind>;
-export type ConnectorOrthogonalPatternValue = ValueOf<typeof ConnectorOrthogonalPattern>;
 export type ConnectorBendDirectionValue = ValueOf<typeof ConnectorBendDirection>;
 export type CalloutSideValue = ValueOf<typeof CalloutSide>;
 
@@ -45,5 +42,4 @@ export type LogicOuterArtifact = z.infer<typeof LogicOuterArtifactSchema>;
 export type LogicGeometryLabelInput = z.input<typeof LogicGeometryLabelSchema>;
 export type LogicNeutralStyleValue = typeof LogicNeutralStyle;
 export type ConnectorRouteKindSchemaValue = z.infer<typeof ConnectorRouteKindSchema>;
-export type ConnectorOrthogonalPatternSchemaValue = z.infer<typeof ConnectorOrthogonalPatternSchema>;
 export type ConnectorBendDirectionSchemaValue = z.infer<typeof ConnectorBendDirectionSchema>;

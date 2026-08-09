@@ -35,12 +35,13 @@ const lowerRoute = (routing: ConnectorRouting, to: IRTarget): Array<IRStep> => {
         { type: 'step', kind: 'line', to } satisfies IRStep,
       ];
     case ConnectorRouteKind.Orthogonal:
-      if (routing.pattern === 'hv' || routing.pattern === 'vh') {
+      if ('ratio' in routing) {
         return [
           {
             type: 'step',
             kind: 'fold',
-            via: routing.pattern === 'hv' ? '-|' : '|-',
+            via: routing.pattern,
+            fraction: routing.ratio,
             to,
           } satisfies IRStep,
         ];
@@ -49,8 +50,7 @@ const lowerRoute = (routing: ConnectorRouting, to: IRTarget): Array<IRStep> => {
         {
           type: 'step',
           kind: 'fold',
-          via: routing.pattern === 'hvh' ? '-|-' : '|-|',
-          fraction: 'ratio' in routing ? routing.ratio : 0.5,
+          via: routing.pattern,
           to,
         } satisfies IRStep,
       ];

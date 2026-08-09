@@ -1,7 +1,6 @@
 export {
   CalloutSide,
   ConnectorBendDirection,
-  ConnectorOrthogonalPattern,
   ConnectorRole,
   ConnectorRouteKind,
   LogicCompositeType,
@@ -11,7 +10,6 @@ export {
   CalloutSideSchema,
   ConnectorAppearanceSchema,
   ConnectorBendDirectionSchema,
-  ConnectorOrthogonalPatternSchema,
   ConnectorRouteKindSchema,
   LogicContentSizeDefault,
   LogicDiagramPointSchema,
@@ -30,7 +28,6 @@ export type {
   ConnectorAppearance,
   ConnectorAppearanceInput,
   ConnectorBendDirectionValue,
-  ConnectorOrthogonalPatternValue,
   ConnectorRoleValue,
   ConnectorRouteKindValue,
   LogicCompositeTypeValue,

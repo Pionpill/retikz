@@ -18,7 +18,6 @@ import { z } from 'zod';
 import {
   CalloutSide,
   ConnectorBendDirection,
-  ConnectorOrthogonalPattern,
   ConnectorRouteKind,
   LogicCompositeType,
   NOTATION_NAMESPACE,
@@ -123,9 +122,6 @@ export const LogicLayoutItemArtifactSchema = z
   .describe('Strict content placement artifact without container-owned key or source index.');
 
 export const ConnectorRouteKindSchema = z.enum(ConnectorRouteKind).describe('Connector route variant discriminator.');
-export const ConnectorOrthogonalPatternSchema = z
-  .enum(ConnectorOrthogonalPattern)
-  .describe('Orthogonal route direction pattern.');
 export const ConnectorBendDirectionSchema = z.enum(ConnectorBendDirection).describe('Bend side direction.');
 export const CalloutSideSchema = z.enum(CalloutSide).describe('Explicit Callout placement side.');
 export const LogicGeometryLabelSchema = StepLabelSchema.describe('Core step label input for a Connector.');

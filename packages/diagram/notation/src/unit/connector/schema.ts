@@ -1,4 +1,4 @@
-import { PathBaseSchema, PositionSchema } from '@retikz/core';
+import { FoldStepVia, PathBaseSchema, PositionSchema } from '@retikz/core';
 import { z } from 'zod';
 
 import {
@@ -28,14 +28,18 @@ const PolylineRoutingSchema = z
 const TwoLegOrthogonalRoutingSchema = z
   .strictObject({
     kind: z.literal(ConnectorRouteKind.Orthogonal),
-    pattern: z.enum(['hv', 'vh']).describe('Two-leg orthogonal direction.'),
+    pattern: z
+      .enum([FoldStepVia.HorizontalThenVertical, FoldStepVia.VerticalThenHorizontal])
+      .describe('Two-leg orthogonal direction.'),
   })
   .describe('Two-leg orthogonal routing.');
 
 const ThreeLegOrthogonalRoutingSchema = z
   .strictObject({
     kind: z.literal(ConnectorRouteKind.Orthogonal),
-    pattern: z.enum(['hvh', 'vhv']).describe('Three-leg orthogonal direction.'),
+    pattern: z
+      .enum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical])
+      .describe('Three-leg orthogonal direction.'),
     ratio: z.number().min(0).max(1).default(0.5).describe('Normalized middle-leg position.'),
   })
   .describe('Three-leg orthogonal routing with normalized middle-leg position.');

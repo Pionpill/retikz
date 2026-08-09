@@ -8,6 +8,7 @@ description: 用显式 Core Path 路由连接 authored target，并在末步添�
 ## 用法
 
 ```tsx
+import { FoldStepVia } from '@retikz/core';
 import { Layout, Node, Scope } from '@retikz/react';
 import { Connector, Stage, Terminal } from '@retikz/notation-react';
 ```
@@ -28,7 +29,7 @@ import { Connector, Stage, Terminal } from '@retikz/notation-react';
     id="start-to-step"
     from={{ id: 'start' }}
     to={{ id: 'step' }}
-    routing={{ kind: 'orthogonal', pattern: 'hv' }}
+    routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
     label={{ text: 'next' }}
   />
 </Layout>
@@ -40,13 +41,13 @@ import { Connector, Stage, Terminal } from '@retikz/notation-react';
 
 ### 路由变体
 
-| 路由              | 输入                                             | 下沉结果                                 |
-| ----------------- | ------------------------------------------------ | ---------------------------------------- |
-| Straight          | `{ kind: 'straight' }`                           | 端点之间一条 line                        |
-| Polyline          | `{ kind: 'polyline', points }`                   | 显式中间 target 或 point                 |
-| Orthogonal        | `pattern: 'hv' \| 'vh' \| 'hvh' \| 'vhv'`        | 两段或三段轴向路由；`ratio` 控制中段位置 |
-| Quadratic / Cubic | `control` 或 `control1` + `control2`             | Core Bezier step                         |
-| Bend              | `direction`、`angle`、`looseness` 或显式 tangent | Core bend step                           |
+| 路由              | 输入                                             | 下沉结果                                                          |
+| ----------------- | ------------------------------------------------ | ----------------------------------------------------------------- |
+| Straight          | `{ kind: 'straight' }`                           | 端点之间一条 line                                                 |
+| Polyline          | `{ kind: 'polyline', points }`                   | 显式中间 target 或 point                                          |
+| Orthogonal        | <ApiValues name="FoldStepVia" />                 | `pattern` 直接复用 Core 折线模式；三段模式由 `ratio` 控制中段位置 |
+| Quadratic / Cubic | `control` 或 `control1` + `control2`             | Core Bezier step                                                  |
+| Bend              | `direction`、`angle`、`looseness` 或显式 tangent | Core bend step                                                    |
 
 <ComponentPreview files="connector-routing" size="lg" />
 
