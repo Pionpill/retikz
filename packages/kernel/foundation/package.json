@@ -1,13 +1,13 @@
 {
-  "name": "@retikz/react",
+  "name": "@retikz/foundation",
   "version": "0.5.0-alpha.2",
   "retikz": {
     "domain": "kernel",
     "releaseGroup": "kernel",
-    "layer": "adapter",
+    "layer": "foundation",
     "publishable": true
   },
-  "description": "React adapter for retikz: Kernel/Sugar JSX components with SVG and Canvas renderers.",
+  "description": "retikz foundation: zero-dependency cross-package type, assertion, and structured error primitives.",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -15,17 +15,15 @@
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",
   "keywords": [
-    "react",
     "tikz",
     "diagram",
-    "svg",
-    "visualization"
+    "foundation"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/kernel/react"
+    "directory": "packages/kernel/foundation"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -66,27 +64,11 @@
     "test:run": "vitest run",
     "test:changed": "vitest run --changed --passWithNoTests"
   },
-  "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
-  },
-  "dependencies": {
-    "@retikz/core": "workspace:*",
-    "@retikz/foundation": "workspace:*",
-    "@retikz/render": "workspace:*",
-    "@retikz/runtime": "workspace:*"
-  },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:",
-    "zod": "catalog:"
+    "vitest": "catalog:"
   }
 }
