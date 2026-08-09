@@ -2,12 +2,12 @@ import type { IRJsonObject } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import { JsonObjectSchema, ThemeMode } from '@retikz/core';
+import { JsonObjectSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { PlotThemeResolutionSchema } from '@retikz/plot';
 import { z as zod } from 'zod';
 
 import { ChartPresentationInspectionSchema } from '../presentation';
-import { ChartResolvedThemeTokensSchema, ChartThemeToken, ChartThemeTokenSource } from '../style';
+import { ChartResolvedThemeTokensSchema, ChartThemeToken } from '../style';
 
 /** Chart member 的 contribution 来源 */
 export const ChartContributionSource = {
@@ -67,7 +67,7 @@ export type ChartInspectionMemberInput = {
 const ChartThemeTokenSourceSchema = zod
   .strictObject({
     token: zod.enum(ChartThemeToken).describe('Canonical Chart style token'),
-    kind: zod.enum(ChartThemeTokenSource).describe('Winning Chart token source layer'),
+    kind: zod.enum(ThemeTokenSource).describe('Winning Chart token source relation to the Chart owner'),
     path: zod.string().min(1).describe('Stable source path for this resolved Chart token'),
   })
   .describe('Winning cascade source for one resolved Chart style token');

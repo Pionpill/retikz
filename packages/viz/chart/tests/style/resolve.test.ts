@@ -1,6 +1,6 @@
 import type { BuiltinThemeStyleValue, ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 import { definePlotThemeStyle, getPlotThemePreset, PlotThemeToken } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -66,7 +66,14 @@ describe('Chart style resolution', () => {
     );
 
     expect(result.inspection.style.chart.tokens[ChartThemeToken.ChartPadding]).toBe(24);
-    expect(result.inspection.style.plot.palette.series).toEqual(['#brand-series']);
+    expect(
+      result.inspection.style.chart.tokenSources.find(source => source.token === ChartThemeToken.ChartPadding),
+    ).toEqual({
+      token: ChartThemeToken.ChartPadding,
+      kind: ThemeTokenSource.Local,
+      path: '$style/brand/light/chart.padding',
+    });
+    expect(result.inspection.style.plot.palette.series).toEqual(['#core-categorical']);
   });
 
   it('分别报告缺失的 Chart 与 Plot style definition', () => {
@@ -105,6 +112,11 @@ describe('Chart style resolution', () => {
       tokens: { [ChartThemeToken.ChartCanvasFill]: '#FFFFFF' },
     });
     expect(result.inspection.style.chart.tokenSources).toHaveLength(37);
+    expect(result.inspection.style.chart.tokenSources[0]).toEqual({
+      token: ChartThemeToken.ChartCanvasFill,
+      kind: ThemeTokenSource.Local,
+      path: '$style/neutral/light/chart.canvas.fill',
+    });
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
     expect(result.inspection.style.plot.tokenSources).toHaveLength(40);
   });
@@ -129,6 +141,13 @@ describe('Chart style resolution', () => {
     expect(result.plotSpec.colors).toEqual(input.colors);
     expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
     expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
+    expect(
+      result.inspection.style.chart.tokenSources.find(source => source.token === ChartThemeToken.ChartPadding),
+    ).toEqual({
+      token: ChartThemeToken.ChartPadding,
+      kind: ThemeTokenSource.Local,
+      path: '$spec/chartThemeTokens/chart.padding',
+    });
     expect(result.inspection.style.plot.plotTheme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
     expect(result.inspection.style.plot.palette).toMatchObject({
       categorical: ['#colors-a', '#colors-b'],
@@ -136,8 +155,8 @@ describe('Chart style resolution', () => {
       sector: ['#colors-a', '#colors-b'],
     });
     expect(result.inspection.style.plot.authoredOverrides).toEqual([
-      { kind: 'colors', path: '$spec/colors' },
-      { kind: 'plot-theme', path: '$spec/plotTheme' },
+      { kind: ThemeTokenSource.Local, path: '$spec/colors' },
+      { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
     ]);
   });
 

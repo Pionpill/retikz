@@ -1,4 +1,4 @@
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -106,8 +106,8 @@ describe('Chart shared schemas', () => {
         tokens,
         tokenSources: Object.values(ChartThemeToken).map(token => ({
           token,
-          kind: 'preset',
-          path: `$preset/neutral/light/${token}`,
+          kind: ThemeTokenSource.Local,
+          path: `$style/neutral/light/${token}`,
         })),
       },
       plot: resolvePlotTheme({
@@ -161,10 +161,33 @@ describe('Chart shared schemas', () => {
         plot: {},
         style: {
           ...style,
-          authoredOverrides: [
-            { kind: 'plot-theme', path: '$spec/plotTheme' },
-            { kind: 'colors', path: '$spec/colors' },
-          ],
+          chart: {
+            ...style.chart,
+            tokenSources: style.chart.tokenSources.map((source, index) =>
+              index === 0 ? { ...source, kind: 'preset' } : source,
+            ),
+          },
+        },
+        presentation: {
+          contentKind: 'plot',
+          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        },
+        members: [],
+      }).success,
+    ).toBe(false);
+    expect(
+      ChartInspectionSchema.safeParse({
+        chart: { type: 'scatter' },
+        plot: {},
+        style: {
+          ...style,
+          plot: {
+            ...style.plot,
+            authoredOverrides: [
+              { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
+              { kind: ThemeTokenSource.Local, path: '$spec/colors' },
+            ],
+          },
         },
         presentation: {
           contentKind: 'plot',
