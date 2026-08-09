@@ -4,13 +4,13 @@
 
 ## 目标
 
-建立独立 Notation package family 和 release group，以现有 LogicFrame、Terminal、Stage、Decision、Junction、Connector 与 Callout 验证 Core Sugar、Tier 2 composite、Standard layout composition、直接 IR、React、Vanilla、docs 与 renderer-neutral 输出闭环。
+建立独立 Notation package family 和 release group，以现有 LogicFrame、Terminal、Stage、Decision、Junction、Connector 与 Callout 验证 Core Sugar、Tier 2 composite、Layout composition、直接 IR、React、Vanilla、docs 与 renderer-neutral 输出闭环。
 
 ## Milestone
 
 | Milestone                       | 主题                | 范围                                                                 |
 | ------------------------------- | ------------------- | -------------------------------------------------------------------- |
-| [alpha.1](./alpha.1/roadmap.md) | Notation foundation | 三包、发布组、Standard 迁移、公共 layout composition、测试与双语文档 |
+| [alpha.1](./alpha.1/roadmap.md) | Notation foundation | 三包、发布组、Standard 迁移、Layout 公共 composition、测试与双语文档 |
 
 ## 边界
 

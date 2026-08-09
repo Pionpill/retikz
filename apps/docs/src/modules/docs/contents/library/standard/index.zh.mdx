@@ -1,0 +1,47 @@
+---
+title: Standard · 拓展
+description: 用可选的 Tier 2 绘图能力横向扩展 Core，保留常用呈现语义而不增加新的绘图内核。
+---
+
+Standard 提供 Grid、Axes、Frame 与 Legend 等领域无关的呈现组件。它们用 JSON-safe 高层输入保存常用绘图意图，经显式加载的 Definition 下沉为既有 Core 图元。
+
+布局容器已经由独立的 [Layout](/library/layout) 包族拥有；Standard 只在实现 Legend 等自身能力时通过 Layout 公共组合面复用排版能力，不再导出布局 API。
+
+## 与 Core 的边界
+
+Standard 是 Core 的横向拓展，不是新的绘图内核：
+
+- 不使用 Standard 时，Kernel 的安装、编译和渲染路径保持不变
+- Definition 按图显式加载，不做全局注册，也不写入持久化 JSON
+- Standard IR 经 Core composite registry 下沉后，仍由现有 SVG、Canvas 等 renderer 消费
+
+## 三个发布包
+
+| 包                         | 负责什么                                    | 什么时候使用                        |
+| -------------------------- | ------------------------------------------- | ----------------------------------- |
+| `@retikz/standard`         | schema、factory、Definition 与 lowering     | 校验或持久化 IR，直接接入 Core 编译 |
+| `@retikz/standard-react`   | 呈现组件的 React DSL                        | 在 React `Layout` 中创作            |
+| `@retikz/standard-vanilla` | plain spec helper 与 Vanilla Tier 2 adapter | 无 React 的浏览器或脚本入口         |
+
+三个包共享 `@retikz/standard` 中的 schema 与 lowering。React 和 Vanilla 只负责把作者输入接入同一能力，不复制语义。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/library/standard/get-start">
+    <span className="font-semibold">快速开始</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">React、Vanilla 与持久化 IR 三条入口</span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/composite">
+    <span className="font-semibold">展现</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Grid、Axes、Frame 与 Legend</span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/extension">
+    <span className="font-semibold">扩展</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Definition 选择、注入与宿主边界</span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/changelog">
+    <span className="font-semibold">更新日志</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Standard 包族的版本变化</span>
+  </LinkedCard>
+</div>

@@ -1,0 +1,101 @@
+---
+title: 快速开始
+description: 分别通过 React、Vanilla plain spec 与持久化 JSON 创建同一个 FlexLayout，并把所需 Definition 接入 Core。
+---
+
+本页用同一个横向容器展示三条作者入口。React 与 Vanilla 适合在代码中创作；持久化路径适合从数据库、文件或 `localStorage` 恢复布局 IR。
+
+## React
+
+<PackageManagerInstall packages="@retikz/layout-react @retikz/react react react-dom" />
+
+`FlexLayout` 与直属 `LayoutItem` 共同描述容器和有序子项。组件会在当前 React `Layout` 局部贡献 Layout family definitions。
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+
+<Layout width={320} height={120}>
+  <FlexLayout size={{ x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 72 } }} gap={8} padding={8}>
+    <LayoutItem kind="flex" itemKey="label" grow={1}>
+      <Node position={[0, 0]} text="Label" />
+    </LayoutItem>
+    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+      <Node position={[0, 0]} text="42%" />
+    </LayoutItem>
+  </FlexLayout>
+</Layout>;
+```
+
+## Vanilla
+
+<PackageManagerInstall packages="@retikz/layout-vanilla @retikz/vanilla" />
+
+`flexLayout()` 创建 plain spec embed；`FlexLayoutVanillaAdapter` 在规范化当前 figure 时贡献同一 Layout family。需要三类布局的便利目录时使用 `LayoutVanillaAdapters`。
+
+```ts
+import { flexLayout, FlexLayoutVanillaAdapter } from '@retikz/layout-vanilla';
+import { figure, mountSvg, node } from '@retikz/vanilla';
+
+const input = figure({
+  children: [
+    flexLayout('row', {
+      size: { x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 72 } },
+      gap: 8,
+      padding: 8,
+      children: [
+        { kind: 'flex', key: 'label', grow: 1, child: node({ text: 'Label' }) },
+        { kind: 'flex', key: 'value', shrink: 0, child: node({ text: '42%' }) },
+      ],
+    }),
+  ],
+});
+
+const container = document.querySelector('#diagram');
+if (container === null) throw new Error('Missing #diagram container');
+
+mountSvg(container, input, { adapters: [FlexLayoutVanillaAdapter], output: { width: 320, height: 120 } });
+```
+
+## 从持久化 JSON 加载
+
+<PackageManagerInstall packages="@retikz/layout @retikz/core @retikz/vanilla" />
+
+持久化完整 `IRFlexLayout`，而不是只保存 authoring input。IR 的 `namespace: 'layout'` 与 `type: 'flexLayout'` 可由 schema 识别；包含函数的 Definition 必须在加载时由宿主注入。
+
+```ts
+import { SceneSchema } from '@retikz/core';
+import { createFlexLayout, FlexLayoutDefinition, FlexLayoutSchema } from '@retikz/layout';
+import { mountSvg } from '@retikz/vanilla';
+
+const raw = JSON.stringify(
+  createFlexLayout({
+    size: { x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 72 } },
+    gap: 8,
+    padding: 8,
+    children: [],
+  }),
+);
+const storedLayout = FlexLayoutSchema.parse(JSON.parse(raw));
+const scene = SceneSchema.parse({ type: 'scene', version: 1, children: [storedLayout] });
+
+const container = document.querySelector('#diagram');
+if (container === null) throw new Error('Missing #diagram container');
+
+mountSvg(container, scene, {
+  compile: { composites: [FlexLayoutDefinition] },
+  output: { width: 320, height: 120 },
+});
+```
+
+缺少 `FlexLayoutDefinition` 时，Core 会产生 `COMPOSITE_NOT_REGISTERED` 诊断并跳过该 child；其它已注册或 Core 原生 child 仍可继续编译。
+
+## 接下来
+
+| 页面                                                 | 继续了解什么                     |
+| ---------------------------------------------------- | -------------------------------- |
+| [弹性布局](/library/layout/flex-layout)              | grow、shrink、换行与基线         |
+| [网格布局](/library/layout/grid-layout)              | 轨道、跨轨道与自动放置           |
+| [叠加布局](/library/layout/overlay-layout)           | 对齐、定位与稳定绘制顺序         |
+| [输入契约](/library/layout/reference/contract-input) | 三类布局与 LayoutItem schema     |
+| [运行时](/library/layout/reference/runtime)          | Definition、组合入口与 Inspector |

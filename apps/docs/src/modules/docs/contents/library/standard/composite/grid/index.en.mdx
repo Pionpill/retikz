@@ -1,0 +1,110 @@
+---
+title: Grid
+description: Describe regular guide lines, major lines, and borders as JSON-safe Tier 2 Grid IR that lowers to Core Paths or Scopes when loaded.
+---
+
+`<Grid>` is an optional Standard Tier 2 component. It retains bounds, line configuration, and border styles as compact JSON fields; it lowers to Core `Path` nodes or a center-translating `Scope` when the current figure loads `GridDefinition`.
+
+## Usage
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={280} height={170}>
+  <Grid bounds={{ start: [20, 20], end: [260, 150] }} line={{ spacing: 20, style: { stroke: 'lightgray' } }} />
+</Layout>
+```
+
+The React entry contributes `GridDefinition` locally to the current `Layout`. For persistence or non-React use, create IR through `createGrid` from `@retikz/standard` and explicitly provide `GridDefinition` to Core compile options.
+
+| Scenario         | Public entry point                                                       |
+| ---------------- | ------------------------------------------------------------------------ |
+| React            | `Grid` from `@retikz/standard-react`                                     |
+| Vanilla          | `grid` and `GridVanillaAdapter` from `@retikz/standard-vanilla`          |
+| IR / persistence | `GridSchema`, `createGrid`, and `GridDefinition` from `@retikz/standard` |
+
+See [Get Started](/library/standard/get-start) for complete Vanilla mounting and persistence flows. This page focuses on Grid-specific fields and semantics.
+
+## Examples
+
+### Basic grid
+
+You define a grid with `bounds` and `line`; spacing, alignment, styles, and major lines are configured inside that one property:
+
+- `bounds` accepts unordered `start` and `end` Cartesian corners, or a center `position` with `width` and `height`
+- `start` and `end` are sorted independently on x and y during lowering, so reversed and equal coordinates are valid; corner positions must be Cartesian `Position` values
+- centered `position` is the geometric center and accepts `Position` or `PolarPosition`; Core resolves PolarPosition, while the grid itself remains Cartesian
+- `line` may be omitted or set to `true` to enable both directions with default spacing `10`; `false` disables all grid lines while leaving `border` independent
+- a shared `line` object applies one `GridLineInput` to both directions; `{ vertical, horizontal }` configures each direction independently
+- each `GridLineInput` accepts positive `spacing`, an optional scalar `origin`, `includeBoundary`, ordinary-line `style`, and periodic `major` settings
+- `origin` uses scene coordinates for corner bounds and center-local coordinates for centered bounds
+- `border` can be configured independently and remains available when `line` is `false`
+
+The grid below covers `[20, 20]` through `[260, 150]` and emits a line every 20 user units in both directions.
+
+<ComponentPreview files="grid-basic" size="sm" />
+
+`line.origin` follows the bounds form. Corner bounds use scene coordinates and default to the normalized start; centered bounds use center-local coordinates and default to `[-width / 2, -height / 2]`. Set `line: { origin: 0 }` in a centered configuration to align both lattices through the geometric center. Direction-specific configurations can use different scalar origins. Core resolves the center `PolarPosition`.
+
+### Common variants
+
+These four side-by-side cases compare direction-specific line settings, center-plus-size bounds, periodic major lines, and reversed corners with a padded border.
+
+<ComponentPreview files="grid-variants" size="sm" />
+
+### Controls
+
+Use the panel to change corner bounds, uniform or direction-specific spacing, line alignment, major lines, and the border. The preview keeps a fixed view, so each change is visible as a change in position, density, or drawing order.
+
+<ComponentPreview
+  files="grid-playground"
+  size="lg"
+  caption="Adjust bounds, line spacing, line origins, major settings, and border to see how the fields determine the final grid."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="You only need this lowering model when working with Grid IR directly or debugging compile diagnostics."
+/>
+
+Grid IR does not become a renderer primitive. Corner bounds are normalized independently on both axes; centered bounds are expanded in a center-local rectangle. Standard normalizes the shared or direction-specific `line` input, enumerates each lattice, applies ordinary and major styles, and assembles Core `Path` nodes in border order.
+
+Centered bounds additionally use an existing Core `Scope` to carry the center translation. Cartesian Position, recursive PolarPosition, and node references are therefore resolved by Core Scene compilation; Standard does not add a second position resolver, and this is not a polar grid.
+
+The figure follows this deterministic transformation from left to right. Grid's responsibility ends once the output reaches `Core Path[]` or a positioned `Scope`.
+
+<ComponentPreview files="grid-lowering" hideCode size="xs" />
+
+Each grid line becomes a `move + line` path, while the border becomes a closed path. Core's existing compiler and renderers consume the result, so renderers never need to recognize Grid.
+
+A handwritten `IRGrid` without a loaded definition is never silently interpreted: Core emits `COMPOSITE_NOT_REGISTERED` and skips it. Standard therefore remains dynamically loaded by capability without changing compilation for other figures.
+
+<SourceLinks
+  sources={[
+    { label: 'Grid schema and contract', path: 'packages/library/standard/src/composites/presentation/grid/schema.ts' },
+    { label: 'Grid lowering', path: 'packages/library/standard/src/composites/presentation/grid/pipeline.ts' },
+  ]}
+/>
+
+## API Reference
+
+`GridProps` is a public alias of `GridInput`, and the Vanilla adapter accepts that same `GridInput`. `createGrid` validates it and returns `IRGrid` with schema defaults applied. `Position` and `PolarPosition` in the table below come from Core's positioning contract.
+
+### `GridInput`
+
+| Prop      | Type                                                                                                                                                                                                                                                                                                                                                                           | Default                                                                                                                             | Description                                                                                                                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bounds`  | `GridInput['bounds']`<br />- `{ start: Position; end: Position }`<br />- `{ position: Position \| PolarPosition; width: number; height: number }`                                                                                                                                                                                                                              | —<br />- —<br />- —                                                                                                                 | Grid bounds; the two forms are mutually exclusive<br />- Two unordered Cartesian corners, sorted independently on x and y during lowering<br />- Geometric center and non-negative dimensions; Core resolves PolarPosition as the center of a Cartesian grid |
+| `line?`   | `GridInput['line']`<br />- `boolean`<br />- `GridLineInput`<br />- `{ vertical: GridLineInput; horizontal: GridLineInput }`<br /><br />`GridLineInput`<br />- `spacing?: number`<br />- `origin?: number`<br />- `includeBoundary?: boolean`<br />- `style?: IRStandardPathStrokeStyle`<br />- `major?: { every: number; offset?: number; style?: IRStandardPathStrokeStyle }` | `true`<br />- both directions, spacing `10`<br />- `false` disables both directions<br />- shared object applies to both directions | Shared or direction-specific line configuration; `origin`, `includeBoundary`, `style`, and `major` are interpreted independently for vertical and horizontal lines when the pair form is used. `major.offset` defaults to `0`                                |
+| `border?` | `GridInput['border']`<br />- `padding?: number`<br />- `order?:` <ApiValues name="GridBorderOrder" /><br />- `extendLines?: boolean`<br />- `style?: IRStandardPathBorderStyle`                                                                                                                                                                                                | —<br />- `0`<br />- `'front'`<br />- `false`<br />- —                                                                               | Optional border configuration<br />- Uniform outward padding<br />- Emits the border behind or in front of grid lines<br />- Extends grid lines to the padded border bounds<br />- Border Path stroke and fill fields                                        |
+
+## Related
+
+- [Tier 2 Composites](/kernel/concepts/design/composite): how Core registers and lowers high-level IR
+- [Path](/kernel/components/draw/path): the Core path primitive emitted by Grid lowering

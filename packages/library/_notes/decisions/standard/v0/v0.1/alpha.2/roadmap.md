@@ -1,6 +1,8 @@
 # Standard v0.1 alpha.2 Roadmap：通用布局、Legend 与 Presentation lower reuse
 
-> 状态：Accepted；ADR-01～07、09～10 已 Accepted，ADR-08 已由 Kernel ADR-12 取代，Core ADR-11 已 Accepted，alpha.2 的通用 Legend 与 Presentation lower reuse 已完成收口
+> 状态：已完成；ADR-01～07 的当前布局 owner 已由 Layout alpha.1 ADR-01 取代，ADR-08 保持既有 Superseded 历史，ADR-09～10 继续 Accepted
+>
+> 现行后继：[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管 ADR-01～07 的排版布局所有权与长期契约；本 milestone 保留 Standard 完成验证时的历史
 >
 > 主题：由 Standard 提供 renderer-agnostic 的高层 Box/Flex/Overlay Layout 容器与已解析 Legend 呈现，让调用方复用确定性布局、视觉解释结构与 artifact
 >

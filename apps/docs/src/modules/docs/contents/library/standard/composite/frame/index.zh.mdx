@@ -1,0 +1,168 @@
+---
+title: 分组框
+description: 用 JSON-safe Frame 保留语义分组、类 Node 标题与说明，并在编译时下沉为 Core Scope、Path 和 Node。
+---
+
+`<Frame>` 是 Standard 的语义分组容器。它用默认边框和 `padding` 围合一组 Core Node，同时把可选的标题与说明作为独立组成部分保留在 IR 中；两者默认横向排列，也可以显式切换为纵向。
+
+Frame 只负责分组边界与标题区排布，不重排内容区。Node 的位置或文字尺寸改变时，边框会跟随最终边界，无需手工维护另一份矩形坐标。
+
+Frame 的根元素是 Core `Scope`。`border` 只配置内部边框 Path；Frame 的 Scope 样式、`clip`、`transforms`、`placement`、Theme、默认样式通道、metadata 与 animation 作用于整个分组及其后代，不会被解释为边框 Path 的快捷写法。
+
+## 用法
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={360} height={210}>
+  <Frame id="contract">
+    <FrameTitle>扩展契约</FrameTitle>
+    <FrameDescription>内置能力与自定义能力共用 Definition</FrameDescription>
+    <Node position={[120, 145]} text="内置能力" />
+    <Node position={[245, 145]} text="自定义能力" />
+  </Frame>
+</Layout>
+```
+
+`FrameTitle` 与 `FrameDescription` 是 `Frame` 直接消费的语义组成部分。它们沿用 Node 的文字、shape、样式、font、label、meta 与 animation 行为，只把 `position` 交给 Frame；内容区则只接受至少一个直接 `Node` 子项。
+
+| 场景        | 公开入口                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| React       | `Frame`、`FrameTitle`、`FrameDescription`（`@retikz/standard-react`）                                               |
+| Vanilla     | `frame`、`frameTitle`、`frameDescription`、`FrameVanillaAdapter`（`@retikz/standard-vanilla`）                      |
+| IR / 持久化 | `FrameSchema`、`FrameTitleSchema`、`FrameDescriptionSchema`、`createFrame`、`FrameDefinition`（`@retikz/standard`） |
+
+完整的 Vanilla 挂载与持久化加载流程见[快速开始](/library/standard/get-start)。本页只展开 Frame 自身的组合、样式与 lowering 语义。
+
+## 示例
+
+### 基础分组
+
+`id` 提供稳定标识，直接 `Node` children 决定内容区边界；`FrameTitle` 与 `FrameDescription` 都是可选的。下面的最小组合使用默认边框、`padding: 8` 与 `gap: 4`。
+
+<ComponentPreview files="frame-basic" size="sm" />
+
+### 标题与说明组合
+
+Frame 可以只围合内容区，也可以组合 Title 与 Description。两者默认在内容区上方横向排列并对齐底部；设置 `headerDirection="vertical"` 后按 Title、Description、内容区纵向排列。省略任一组成部分都不会产生占位。
+
+<ComponentPreview files="frame-variants" size="xs" />
+
+### 控制面板
+
+固定内容区位置后，可集中探索标题区方向、边框内边距和类 Node 标题样式，也可以编辑 A / B 内容并开关它们之间的真实连接。改变标题字号、内边距或说明透明度时，Frame 会重新按最终 Node 边界围合内容。
+
+<ComponentPreview
+  files="frame-playground"
+  size="md"
+  caption="A / B 始终是 Frame 的直接 Node；灰色连接线是 Frame 外部的 sibling Draw，可独立开关。"
+/>
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在直接读写 Frame IR、排查标题区排布或编译诊断时才需要理解 lowering。"
+/>
+
+### 从 Frame IR 到 Core IR
+
+Frame 的 JSON IR 不会成为新的 renderer 图元。`FrameDefinition` 先校验并匹配 `standard.frame`，随后 lowering 只输出 Core 已认识的 `Scope`、`Path` 与 `Node`。
+
+<ComponentPreview files="frame-lowering" hideCode size="xs" />
+
+输出到达 Core IR 后，Frame 的职责就结束了。未注入 `FrameDefinition` 的手写 `IRFrame` 会得到 `COMPOSITE_NOT_REGISTERED` 诊断并被跳过，而不是被 renderer 静默猜测。
+
+### 边界、标题排布与保留 id
+
+lowering 把内容区放入 `${frameId}/content` Scope。默认横向模式先把 Title 的左下 anchor 对齐到内容区左上方，再把 Description 的左下 anchor 接到 Title 的右下 anchor；纵向模式则先排 Description，再把 Title 放到其上方，从视觉上形成 Title、Description、内容区的顺序。只有一个标题区组成部分时，它会直接对齐内容区。Core 会先完成 Node 的文字、shape、padding、margin、scale 与 rotate 布局，再执行这些 anchor 对齐。
+
+边框是外层 Scope 内部的 rectangle Path，并按 `padding` 扩张标题区与内容区的最终边界。`border.style` 只作用于这个 Path，`border.cornerRadius` 由 Core rectangle step 消费；省略或设为 `0` 时保持直角，正值由 Core 限制到短边的一半。边框、内容区与标题区的内部 `zIndex` 默认分别为 `-1`、`0` 与 `1`；显式标题区或 `border.style.zIndex` 仍会保留，Frame 自身的 `zIndex` 则作用于整个外层 Scope。
+
+省略标题区 id 时会派生 `${frameId}/title` 与 `${frameId}/description`。Frame 会拒绝内容区或标题区显式占用 `frameId`、`${frameId}/content` 及这些派生 id；其它重复 id 继续使用 Core 的诊断规则。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Frame 输入与保留 id 契约',
+      path: 'packages/library/standard/src/composites/presentation/frame/schema.ts',
+    },
+    { label: '类 Node 标题契约', path: 'packages/library/standard/src/composites/presentation/frame/schema.ts' },
+    { label: 'Frame Definition', path: 'packages/library/standard/src/composites/presentation/frame/definition.ts' },
+    {
+      label: 'Frame lowering 与标题区排布',
+      path: 'packages/library/standard/src/composites/presentation/frame/pipeline.ts',
+    },
+  ]}
+/>
+
+## API 参考
+
+React、IR 与 Vanilla 最终都由 `FrameSchema` 校验为 `IRFrame`。React 用直接子项声明标题与说明；IR 与 Vanilla 使用 JSON-safe 的 `title` / `description` 对象字段。
+
+### React：`FrameProps`
+
+| 属性                   | 类型                        | 默认值                                                  | 描述                                                           |
+| ---------------------- | --------------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
+| `id`                   | `string`                    | —                                                       | 外层 Scope 的稳定标识                                          |
+| `border?`              | `FrameProps['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | 内部边框 Path 的独立配置                                       |
+| `border.style?`        | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }`            | 只作用于边框 Path；支持其公开的 Core Path 样式字段             |
+| `border.cornerRadius?` | `number`                    | —                                                       | rectangle step 的统一圆角半径；最大有效值为短边的一半          |
+| `padding?`             | `number \| IRBoxSpacing`    | `8`                                                     | 边框相对最终边界的间距；优先级为 side > axis > default         |
+| `gap?`                 | `number`                    | `4`                                                     | 相邻标题区组成部分及标题区与内容区的间距                       |
+| `headerDirection?`     | `FrameHeaderDirectionValue` | `horizontal`                                            | 标题与说明的排列方向；可选 `horizontal` 或 `vertical`          |
+| `zIndex?`              | `number`                    | —                                                       | 整个 Frame Scope 的层级                                        |
+| `children`             | `ReactNode`                 | —                                                       | 最多一个 Title、最多一个 Description，以及非空直接 Node 内容区 |
+
+Frame 还接受 Core `ScopeProps` 的其余公开字段，包括级联 graphic style、`localNamespace`、`boundingShape`、`transforms`、`placement`、`clip`、`theme`、`nodeDefault`、`pathDefault`、`labelDefault`、`arrowDefault`、`resetStyle`、`meta` 与 `animations`。这些字段作用于整个 root Scope；不要把它们当作 `border.style` 的别名。完整共享契约见 [Scope](/kernel/components/layout/scope)。
+
+### React：`FrameTitleProps` / `FrameDescriptionProps`
+
+| 属性                | 类型                           | 默认值                                                                  | 描述                                                 |
+| ------------------- | ------------------------------ | ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| `children` / `text` | `ReactNode` / `IRNode['text']` | —                                                                       | 沿用 Node 的文本转换规则，且必须得到合法的 Node text |
+| `id?`               | `string`                       | Title：`${frameId}/title`<br />Description：`${frameId}/description`    | 可覆盖派生 id，但不能占用 Frame 的保留 id            |
+| `shape?`            | `NodeProps['shape']`           | `rectangle`                                                             | 标题区的 Node shape                                  |
+| `stroke?`           | `NodeProps['stroke']`          | `none`                                                                  | 标题区描边                                           |
+| `fill?`             | `NodeProps['fill']`            | `none`                                                                  | 标题区填充                                           |
+| `padding?`          | `NodeProps['padding']`         | `0`                                                                     | 标题区 Node 内边距                                   |
+| `font?`             | `NodeProps['font']`            | Title：`{ size: 'sm', weight: 600 }`<br />Description：`{ size: 'xs' }` | 与默认 font 浅合并                                   |
+| `opacity?`          | `number`                       | Title：—<br />Description：`0.7`                                        | 整个标题区 Node 的透明度                             |
+| `zIndex?`           | `number`                       | `1`                                                                     | Frame 内部标题区层级                                 |
+
+两者还接受除 `position` 与 hydration event props 外的公开 `NodeProps`，包括 margin、scale、rotate、label、meta 与 animation；显式值保持 Node 语义并覆盖上表默认值。完整共享字段见 [Node](/kernel/components/node/overview)。
+
+### IR / 持久化：`FrameInput`
+
+| 属性               | 类型                        | 默认值                                                  | 描述                                                        |
+| ------------------ | --------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
+| `id`               | `string`                    | —                                                       | 持久化到 `IRFrame` 的外层 Scope 标识                        |
+| `border?`          | `FrameInput['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | 内部边框 Path 的独立配置                                    |
+| `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`                                            | 标题与说明的横向或纵向排列策略                              |
+| `title?`           | `FrameTitleInput`           | —                                                       | JSON-safe 类 Node Title；没有 `type`、`position` 字段       |
+| `description?`     | `FrameDescriptionInput`     | —                                                       | JSON-safe 类 Node Description；没有 `type`、`position` 字段 |
+| `children`         | `Array<IRNode>`             | —                                                       | 非空直接 Core Node 内容区；其它 Frame 字段与上表相同        |
+
+`FrameHeaderDirection` 是公开闭合集合，包含 `Horizontal: 'horizontal'` 与 `Vertical: 'vertical'`。`FrameInput` 不接收 discriminator。`createFrame(input)` 应用 schema 默认值，并返回固定包含 `namespace: 'standard'` 与 `type: 'frame'` 的 `IRFrame`。
+
+`FrameInput` 同样接受上述 Core `ScopeProps` 字段；它们作用于整个外层 Scope，`border.style` 与 `border.cornerRadius` 只作用于边框 Path。
+
+### Vanilla：`frame()`
+
+| 属性    | 类型                | 默认值 | 描述                                                                  |
+| ------- | ------------------- | ------ | --------------------------------------------------------------------- |
+| `id`    | `string`            | —      | embed 标识；外层 Scope id 派生为 `${id}/frame`                        |
+| `input` | `FrameVanillaInput` | —      | 等同于没有 `id` 的 `FrameInput`，包括 `title`、`description` 与内容区 |
+
+`frameTitle(input)` 与 `frameDescription(input)` 分别校验并返回 `IRFrameTitle` 与 `IRFrameDescription`，供 `frame()` 的 JSON-safe input 复用。
+
+## 相关
+
+- [Tier 2 Composite](/kernel/concepts/design/composite)：Frame 的注册与 lowering 机制
+- [Scope](/kernel/components/layout/scope)：Frame 下沉后的逻辑分组与边界
+- [Path](/kernel/components/draw/path)：Frame 下沉后的边框
+- [Node](/kernel/components/node/overview)：Frame 标题区与内容区复用的 Core 元素

@@ -1452,8 +1452,8 @@ describe('preview controls registry', () => {
   });
 
   it('Grid playground 覆盖完整语义并按状态隐藏无效字段', () => {
-    const segments = ['standard', 'composite', 'grid'];
-    expect(Object.keys(controlModules).filter(key => key.includes('/standard/composite/grid/'))).toEqual([
+    const segments = ['library', 'standard', 'composite', 'grid'];
+    expect(Object.keys(controlModules).filter(key => key.includes('/library/standard/composite/grid/'))).toEqual([
       buildControlsKey(segments, 'grid-playground'),
       buildLangControlsKey(segments, 'grid-playground', 'en'),
     ]);
@@ -1536,12 +1536,13 @@ describe('preview controls registry', () => {
   });
 
   it('Grid 文档按基础、常见变体和 playground 递进，并用自绘图解释 lowering', () => {
-    const contentRoot = resolve('src/modules/docs/contents/standard/composite/grid');
-    const basicSource = demoSources[buildKey(['standard', 'composite', 'grid'], 'grid-basic')];
+    const contentRoot = resolve('src/modules/docs/contents/library/standard/composite/grid');
+    const basicSource = demoSources[buildKey(['library', 'standard', 'composite', 'grid'], 'grid-basic')];
 
     for (const locale of ['zh', 'en']) {
       const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
-      const variantsSource = demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-variants', locale)];
+      const variantsSource =
+        demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-variants', locale)];
       const previewNames = Array.from(
         pageSource.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
         match => match[1],
@@ -1555,15 +1556,23 @@ describe('preview controls registry', () => {
     }
 
     expect(basicSource).toContain("border={{ style: { stroke: 'gray' } }}");
-    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-variants', 'zh')]).toBeDefined();
-    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-variants', 'en')]).toBeDefined();
-    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-lowering', 'zh')]).toBeDefined();
-    expect(demoSources[resolveDemoKey(['standard', 'composite', 'grid'], 'grid-lowering', 'en')]).toBeDefined();
+    expect(
+      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-variants', 'zh')],
+    ).toBeDefined();
+    expect(
+      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-variants', 'en')],
+    ).toBeDefined();
+    expect(
+      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-lowering', 'zh')],
+    ).toBeDefined();
+    expect(
+      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-lowering', 'en')],
+    ).toBeDefined();
   });
 
   it('Frame 文档按组合语义递进，并以双语 controls 和自绘图闭合三条入口', () => {
-    const segments = ['standard', 'composite', 'frame'];
-    const controlsKeys = Object.keys(controlModules).filter(key => key.includes('/standard/composite/frame/'));
+    const segments = ['library', 'standard', 'composite', 'frame'];
+    const controlsKeys = Object.keys(controlModules).filter(key => key.includes('/library/standard/composite/frame/'));
 
     expect(controlsKeys).toEqual([
       buildControlsKey(segments, 'frame-playground'),
@@ -1614,7 +1623,7 @@ describe('preview controls registry', () => {
     expect(playgroundSource).toContain('values.connected ? <Draw');
     expect(playgroundSource).toContain("way={['A', 'B']}");
 
-    const contentRoot = resolve('src/modules/docs/contents/standard/composite/frame');
+    const contentRoot = resolve('src/modules/docs/contents/library/standard/composite/frame');
     for (const locale of ['zh', 'en']) {
       const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
       const previewNames = Array.from(

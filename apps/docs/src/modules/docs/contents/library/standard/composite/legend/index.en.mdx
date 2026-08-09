@@ -1,0 +1,257 @@
+---
+title: Legend
+description: Preserve resolved sample-to-meaning mappings in a JSON-safe Legend that lowers through Core layout probes, slot solving, and replay into an ordinary Scene.
+---
+
+`<Legend>` is a domain-neutral presentation component. A caller first resolves colors, line styles, symbols, or continuous variation into drawable samples, then gives Legend the samples, labels, and optional title to arrange. Legend does not read a Plot scale, Table cell, or logical-relation model, and it does not store filtering, selection, or click state.
+
+Legend has two content forms. `items` preserves an authored sequence of discrete sample-label pairs. `ramp` preserves one continuous sample and ticks normalized to `0..1` along its physical main axis. A React slot accepts one convertible drawing element and still becomes a JSON-safe `IRChild`, so Core primitives and other registered Tier 2 composites share the same compile path.
+
+## Usage
+
+```tsx
+import { Node, Path, Step } from '@retikz/react';
+import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
+```
+
+```tsx
+<Legend kind="items">
+  <LegendTitle>
+    <Node position={[0, 0]} text="Status" />
+  </LegendTitle>
+  <LegendItem
+    itemKey="primary"
+    sample={
+      <Path stroke="dodgerblue">
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[32, 0]} />
+      </Path>
+    }
+  >
+    <Node position={[0, 0]} text="Primary" />
+  </LegendItem>
+</Legend>
+```
+
+React composes content through `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick`. The explicit `kind` selects `items` or `ramp`; it is never inferred from children. Every required slot must convert to exactly one `IRChild`. Title font, weight, and text alignment stay on the real `Node` inside `LegendTitle`. Vanilla authoring continues to accept JSON-safe `LegendInput`, while direct IR and persisted documents use full `IRLegend`. All three paths are validated by `LegendSchema` and compiled by `LegendDefinition`.
+
+| Scenario         | Public entry point                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| React            | `Legend`, `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick` from `@retikz/standard-react` |
+| Vanilla          | `legend()` and `LegendVanillaAdapter` from `@retikz/standard-vanilla`                               |
+| IR / persistence | `LegendSchema`, `createLegend()`, and `LegendDefinition` from `@retikz/standard`                    |
+
+See [Get Started](/library/standard/get-start) for complete mounting, direct Definition injection, and persistence flows. Domain packages produce resolved samples; Standard Legend owns only generic presentation semantics and typed Legend artifacts, while Layout provides the reusable arrangement capability.
+
+## Examples
+
+### Discrete samples
+
+`itemKey` maps to a canonical `key` that is stable and unique inside one Legend. The example uses real Path samples for direct, indirect, and reference relationships. The caller owns the meaning of solid, dashed, and dotted lines; Legend does not hard-code domain interpretations for those styles.
+
+<ComponentPreview files="legend-basic" size="md" />
+
+### Continuous sample
+
+`ramp` preserves one continuous Core child and maps each `offset` onto the sample's physical main axis. Endpoint labels may overhang the sample slot, while the typed artifact records the real allocation, visual, and visible bounds separately.
+
+<ComponentPreview files="legend-ramp" size="xs" />
+
+### Controls
+
+With a fixed container allocation and viewBox, compare content-block alignment, direction, wrapping, sample alignment, gaps, padding, and overflow. `contentAlign` aligns the title and body independently by their own structural widths along the Legend content box x axis. It is neither title text alignment nor the Legend position in its parent container. The title input accepts line breaks, and title alignment only positions lines inside a multiline text block; a single-line title uses its natural text width without reserving extra alignment space. `wrap` changes structure only when constraints require an additional row or column.
+
+<ComponentPreview
+  files="legend-playground"
+  size="md"
+  caption="The authored A–D order and fixed container stay unchanged; the panel changes only Legend arrangement and bounds policies."
+/>
+
+## How it works
+
+### React composition boundary
+
+`Legend` interprets only its direct children as a marker list. Arrays and Fragments are transparent at the current level, while `null`, `undefined`, and booleans are ignored as empty nodes. Marker and slot rules are validated synchronously as shown below; failures name the marker or slot instead of silently dropping input.
+
+| Position                   | Valid structure                                                                                                                                     | Fails loudly for                                                                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| direct `kind="items"` list | zero or one `LegendTitle` and zero or more `LegendItem` markers; empty nodes may appear between markers                                             | duplicate title, `LegendRamp` / `LegendTick`, raw text, numbers, DOM elements, or unknown wrappers                                                       |
+| direct `kind="ramp"` list  | zero or one `LegendTitle`; exactly one `LegendRamp` is required; zero or more `LegendTick` markers                                                  | missing / duplicate ramp, `LegendItem`, duplicate title, or any other non-marker sibling                                                                 |
+| required slot              | `LegendTitle.children`, `LegendItem.sample`, and `LegendRamp.children` expand arrays / Fragments, remove empty nodes, and leave exactly one element | zero or multiple elements, non-element / DOM / object wrappers such as `memo` or `forwardRef`, mixed siblings, or conversion to other than one `IRChild` |
+| optional label             | empty-only `LegendItem.children` or `LegendTick.children` is omitted; otherwise exactly one convertible function element is required                | multiple elements, non-elements / DOM / object wrappers such as `memo` or `forwardRef`, mixed siblings, or conversion to other than one `IRChild`        |
+
+Using a marker outside `Legend`, mixing a marker with the wrong form, or violating these cardinalities fails immediately. Function Sugar inside a slot still goes through the public React builder and is valid only when it finally contributes exactly one `IRChild`.
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Read about probes and replay when authoring Legend IR directly, diagnosing nested capabilities, or consuming typed artifacts."
+/>
+
+### From Legend IR to Core outputs
+
+The Core composite registry consumes `LegendDefinition`. It first runs minimum and natural probes for the title, samples, and labels to obtain structural profiles. Once the content width is known, the title is probed again with an x-axis range and a natural y axis; samples and labels receive exact probes for their final slots. Compilation replays only selected results, so discarded probes publish no primitives, resources, or artifacts.
+
+<ComponentPreview files="legend-pipeline" hideCode size="xs" />
+
+`LegendDefinition` returns ordinary Core IR children and a parallel `LegendArtifact` from the same compile call. Core then compiles those children into the Scene while the artifact remains a separate output. SVG and Canvas renderers do not know `standard.legend` and have no Legend-specific branch.
+
+### Nested capabilities and failures
+
+Core `Node`, `Path`, and `Scope` values can be used directly as `IRChild`. A nested Tier 2 composite still needs its own Definition in the same compile options. The injected `LegendDefinition` does not guess or globally install sample dependencies.
+
+An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composite probe fails, Legend preserves the original occurrence and fails the current Legend instead of continuing with an empty sample. Duplicate `items[].key` / `ticks[].key`, whitespace-only keys, out-of-range offsets, and decreasing tick offsets fail loudly at the schema boundary.
+
+### Typed artifact
+
+`LegendArtifact` is a strict `items | ramp` discriminated union. Both branches record the container, title, and body bounds. The discrete branch preserves key, sourceIndex, and sample/label placement in authored order. The continuous branch records sample placement and each tick's physical anchor. Every coordinate is in Legend allocation coordinates, so a domain owner can join a stable key to its own locator without writing provenance into Standard IR.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Legend input schema and validation',
+      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
+      startLine: 7,
+      endLine: 132,
+    },
+    {
+      label: 'React items and ramp form assembly',
+      path: 'packages/library/standard-react/src/legend/Legend.tsx',
+      startLine: 41,
+      endLine: 92,
+    },
+    {
+      label: 'Strict marker and slot conversion',
+      path: 'packages/library/standard-react/src/legend/convert-children.ts',
+      startLine: 22,
+      endLine: 128,
+    },
+    {
+      label: 'Legend Definition output boundary',
+      path: 'packages/library/standard/src/composites/presentation/legend/definition.ts',
+      startLine: 13,
+      endLine: 20,
+    },
+    {
+      label: 'Shared probes, alignment, and replay',
+      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      startLine: 98,
+      endLine: 222,
+    },
+    {
+      label: 'Ramp slots and artifact',
+      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      startLine: 244,
+      endLine: 373,
+    },
+    {
+      label: 'Items wrapping, slots, and artifact',
+      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      startLine: 375,
+      endLine: 561,
+    },
+    {
+      label: 'Typed artifact schema',
+      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
+      startLine: 42,
+      endLine: 110,
+    },
+  ]}
+/>
+
+## API Reference
+
+### Public entry points
+
+| API                    | Package                    | Responsibility                                                        | Default |
+| ---------------------- | -------------------------- | --------------------------------------------------------------------- | ------- |
+| `Legend`               | `@retikz/standard-react`   | Select an explicit form and contribute its marker tree as `IRLegend`  | —       |
+| `LegendTitle`          | `@retikz/standard-react`   | Declare the optional title slot                                       | —       |
+| `LegendItem`           | `@retikz/standard-react`   | Declare a discrete sample, stable key, and optional label             | —       |
+| `LegendRamp`           | `@retikz/standard-react`   | Declare the continuous sample slot                                    | —       |
+| `LegendTick`           | `@retikz/standard-react`   | Declare a normalized tick and optional label                          | —       |
+| `legend(id, input)`    | `@retikz/standard-vanilla` | Create an embed consumed by `LegendVanillaAdapter`                    | —       |
+| `LegendVanillaAdapter` | `@retikz/standard-vanilla` | Lower an embed through `createLegend()` and contribute its Definition | —       |
+| `createLegend(input)`  | `@retikz/standard`         | Validate input, apply defaults, and add fixed discriminators          | —       |
+| `LegendDefinition`     | `@retikz/standard`         | Core Definition injected for the Legend composite on demand           | —       |
+
+`@retikz/standard` also exports the closed value objects `LegendContentKind`, `LegendDirection`, `LegendWrap`, and `LegendSampleAlignment`; `LegendSchema` below shows their concrete values.
+
+### Legend
+
+| Prop           | Type                                               | Default                       | Description                                                                               |
+| -------------- | -------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `kind`         | `'items'` \| `'ramp'`                              | —                             | Selects the marker form explicitly; never inferred                                        |
+| `children`     | `ReactNode`                                        | —                             | Direct markers for that form; see the [composition boundary](#react-composition-boundary) |
+| `titleGap`     | `number`                                           | `8`                           | Vertical gap when both title and non-empty body exist                                     |
+| `contentAlign` | `'start'` \| `'center'` \| `'end'`                 | `'start'`                     | Physical x alignment of title and body structural blocks                                  |
+| `size`         | `LayoutSizeInput`                                  | content size                  | Reuses the two-axis Box Layout sizing policy                                              |
+| `padding`      | `number` \| `IRBoxSpacing`                         | `0`                           | Padding on the four container sides                                                       |
+| `overflow`     | `'visible'` \| `'clip'`                            | `'visible'`                   | Visibility outside the resolved allocation                                                |
+| `direction`    | `'vertical'` \| `'horizontal'`                     | `'vertical'`                  | Item direction or ramp main axis                                                          |
+| `sampleGap`    | `number`                                           | `8`                           | Physical gap from a sample to its label region                                            |
+| `wrap`         | `'nowrap'` \| `'wrap'`                             | `'nowrap'`                    | Items only: whether constraints form more rows or columns                                 |
+| `gap`          | `number`<br />or `{ row: number; column: number }` | `8` → `{ row: 8, column: 8 }` | Items only: a number applies to both axes; the object sets physical row and column gaps   |
+| ↳ `row`        | `number`                                           | `8`                           | Gap between physical rows when `gap` is an object                                         |
+| ↳ `column`     | `number`                                           | `8`                           | Gap between physical columns when `gap` is an object                                      |
+| `sampleAlign`  | `'start'` \| `'center'` \| `'end'`                 | `'center'`                    | Items only: sample-label alignment on the physical y axis                                 |
+
+### LegendTitle
+
+| Prop       | Type        | Default | Description                                                                                           |
+| ---------- | ----------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `children` | `ReactNode` | —       | Required slot; see the [composition boundary](#react-composition-boundary); the child owns its styles |
+
+### LegendItem
+
+| Prop       | Type        | Default | Description                                                                 |
+| ---------- | ----------- | ------- | --------------------------------------------------------------------------- |
+| `itemKey`  | `string`    | —       | Required; maps to the items form's canonical `key`                          |
+| `sample`   | `ReactNode` | —       | Required slot; see the [composition boundary](#react-composition-boundary)  |
+| `children` | `ReactNode` | —       | Optional label; see the [composition boundary](#react-composition-boundary) |
+
+### LegendRamp
+
+| Prop       | Type        | Default | Description                                                                |
+| ---------- | ----------- | ------- | -------------------------------------------------------------------------- |
+| `children` | `ReactNode` | —       | Required slot; see the [composition boundary](#react-composition-boundary) |
+
+### LegendTick
+
+| Prop       | Type        | Default | Description                                                                 |
+| ---------- | ----------- | ------- | --------------------------------------------------------------------------- |
+| `tickKey`  | `string`    | —       | Required; maps to the ramp form's canonical `key`                           |
+| `offset`   | `number`    | —       | Required; in `[0, 1]` and non-decreasing in authored order                  |
+| `children` | `ReactNode` | —       | Optional label; see the [composition boundary](#react-composition-boundary) |
+
+### Vanilla and IR
+
+| Parameter | Type          | Default | Description                                                    |
+| --------- | ------------- | ------- | -------------------------------------------------------------- |
+| `id`      | `string`      | —       | Embed identity passed to `legend()`; it is not persisted       |
+| `input`   | `LegendInput` | —       | JSON-safe plain-data input for `legend()` and `createLegend()` |
+
+`LegendInput` omits the fixed `namespace` and `type`. Common defaults are `titleGap: 8`, `contentAlign: 'start'`, content sizing, `padding: 0`, and `overflow: 'visible'`. Discrete content defaults to `direction: 'vertical'`, `wrap: 'nowrap'`, `gap: 8` on both axes, `sampleGap: 8`, and `sampleAlign: 'center'`. The parsed IR persists this as `gap: { row: 8, column: 8 }`.
+
+### LegendSchema
+
+<ZodSchema name="LegendSchema" expandNested />
+
+`content.kind` selects the `items` or `ramp` branch. This is persisted `IRLegend`; the function-bearing `LegendDefinition` does not enter JSON.
+
+### LegendArtifactSchema
+
+The Core composite artifact envelope separately records occurrence, namespace, and type. This schema parses only the envelope's `value`.
+
+<details>
+  <summary>View all LegendArtifactSchema fields</summary>
+
+  <ZodSchema name="LegendArtifactSchema" expandNested />
+</details>
+
+## Related
+
+- [Tier 2 Composite](/kernel/concepts/design/composite): Definition registration, probes, and lowering boundaries
+- [Layout](/kernel/components/layout/overview): Core proposals, slots, replay, and artifact contracts
+- [Direct Definition Loading](/library/standard/extension/capability-loading): pass `LegendDefinition` and other selected Definitions to Core
+- [Box Layout](/library/layout): sizing, padding, overflow, and bounds semantics reused by Legend

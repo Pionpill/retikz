@@ -26,15 +26,32 @@ export const standardV01: Release = {
             en: 'Each capability directly provides a Definition; hosts select the definitions needed by the current figure through Core `CompileOptions.composites`. Every path reuses the Core registry without global registration or a second conflict model.',
           },
         },
-        {
-          label: { zh: '通用布局容器', en: 'General layout containers' },
-          content: {
-            zh: '`FlexLayout`、`GridLayout` 与 `OverlayLayout` 用统一的双轴尺寸、间距、对齐和 overflow 契约替代手写坐标，并公开区分父级 slot、真实占用与视觉包络的 typed artifact。',
-            en: '`FlexLayout`, `GridLayout`, and `OverlayLayout` replace hand-authored coordinates with shared two-axis sizing, spacing, alignment, and overflow contracts while exposing typed artifacts that distinguish parent slots, real allocation, and visual bounds.',
-          },
-        },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-08-09',
+          summary: {
+            zh: 'BREAKING：Standard 聚焦横向绘图拓展，排版布局迁入独立 Layout 包族。',
+            en: 'BREAKING: Standard focuses on horizontal drawing extensions; layout composition moves to the independent Layout package family.',
+          },
+          items: [
+            {
+              label: { zh: '移除布局公共面', en: 'Layout surface removed' },
+              content: {
+                zh: 'Standard 根入口不再导出 FlexLayout、GridLayout、OverlayLayout、LayoutItem 或布局 artifact，也不再提供 `/layout` 与布局 `/inspect`。请改用 `@retikz/layout`、`@retikz/layout/compose` 或 `@retikz/layout/inspect`；不保留兼容别名。',
+                en: 'The Standard root no longer exports FlexLayout, GridLayout, OverlayLayout, LayoutItem, or layout artifacts, and Standard no longer provides `/layout` or layout `/inspect`. Use `@retikz/layout`, `@retikz/layout/compose`, or `@retikz/layout/inspect`; no compatibility aliases remain.',
+              },
+            },
+            {
+              label: { zh: 'Legend 组合边界', en: 'Legend composition boundary' },
+              content: {
+                zh: 'Legend 继续属于 Standard，但通过 Layout 公共组合入口复用 canonical 排版求解，不再 deep import Standard 内部布局实现。',
+                en: 'Legend remains owned by Standard while reusing canonical layout solving through the public Layout composition entry instead of deep-importing layout internals.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-08',
@@ -148,19 +165,36 @@ export const standardV01: Release = {
       pkg: '@retikz/standard-vanilla',
       version: 'v0.1',
       description: {
-        zh: 'Standard 的无框架 authoring：提供呈现与布局 builders、显式 adapters、SSR 接线与全量便利数组。',
-        en: 'Framework-free Standard authoring with presentation and layout builders, explicit adapters, SSR wiring, and all-capabilities convenience arrays.',
+        zh: 'Standard 的无框架 authoring：提供呈现 builders、显式 adapters、SSR 接线与全量便利数组。',
+        en: 'Framework-free Standard authoring with presentation builders, explicit adapters, SSR wiring, and a convenience array.',
       },
       highlights: [
         {
           label: { zh: '显式 Vanilla 接线', en: 'Explicit Vanilla wiring' },
           content: {
-            zh: '所有 builders 都构造由 Standard schema 约束的输入；布局家族提供独立的 `StandardLayoutVanillaAdapters`，`StandardVanillaAdapters` 仍是浅冻结的当前版本全量数组。',
-            en: 'Every builder constructs input governed by Standard schemas. The layout family has its own `StandardLayoutVanillaAdapters`, while `StandardVanillaAdapters` remains the shallow-frozen full array for this release.',
+            zh: '所有 builders 都构造由 Standard schema 约束的输入；`StandardVanillaAdapters` 是浅冻结的当前呈现能力便利数组。',
+            en: 'Every builder constructs input governed by Standard schemas. `StandardVanillaAdapters` is the shallow-frozen convenience array for the current presentation capabilities.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-08-09',
+          summary: {
+            zh: 'BREAKING：布局 builder、adapters 与检查驱动迁入 `@retikz/layout-vanilla`。',
+            en: 'BREAKING: layout builders, adapters, and inspection wiring move to `@retikz/layout-vanilla`.',
+          },
+          items: [
+            {
+              label: { zh: '迁移入口', en: 'Entry migration' },
+              content: {
+                zh: '从 `@retikz/layout-vanilla` 导入 `flexLayout()`、`gridLayout()`、`overlayLayout()` 与 `LayoutVanillaAdapters`；检查能力改从其 `/inspect` 入口导入。Standard 不再转发这些标识符。',
+                en: 'Import `flexLayout()`, `gridLayout()`, `overlayLayout()`, and `LayoutVanillaAdapters` from `@retikz/layout-vanilla`, with inspection support under its `/inspect` entry. Standard no longer forwards these identifiers.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-08',
@@ -238,19 +272,36 @@ export const standardV01: Release = {
       pkg: '@retikz/standard-react',
       version: 'v0.1',
       description: {
-        zh: 'Standard 的 React authoring：以静态 Tier 2 adapter 提供呈现 composite、布局容器与 LayoutItem JSX。',
-        en: 'React authoring for Standard presentation composites, layout containers, and LayoutItem JSX backed by static Tier 2 adapters.',
+        zh: 'Standard 的 React authoring：以静态 Tier 2 adapter 提供呈现 composite JSX。',
+        en: 'React authoring for Standard presentation composites backed by static Tier 2 adapters.',
       },
       highlights: [
         {
           label: { zh: '按使用项贡献', en: 'Per-use contribution' },
           content: {
-            zh: '组件只在当前 `Layout` 中按实际使用项贡献 definition；导入包不会注册全局状态。嵌套布局共用稳定 family contribution，非法 child 组合会立即 fail-loud。',
-            en: 'Components contribute definitions only for capabilities used by the current `Layout`; importing the package creates no global state. Nested layouts share one stable family contribution, and invalid child composition fails loudly.',
+            zh: '组件只在当前 `Layout` 中按实际使用项贡献 definition；导入包不会注册全局状态，非法 child 组合会立即 fail-loud。',
+            en: 'Components contribute definitions only for capabilities used by the current `Layout`; importing the package creates no global state, and invalid child composition fails loudly.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-08-09',
+          summary: {
+            zh: 'BREAKING：布局 JSX 与可选 Inspector JSX 迁入 `@retikz/layout-react`。',
+            en: 'BREAKING: layout JSX and optional Inspector JSX move to `@retikz/layout-react`.',
+          },
+          items: [
+            {
+              label: { zh: '迁移入口', en: 'Entry migration' },
+              content: {
+                zh: '从 `@retikz/layout-react` 导入 FlexLayout、GridLayout、OverlayLayout 与 LayoutItem；从其 `/inspect` 入口导入 `LayoutInspectLayout`、`LayoutInspectScope` 与 `InspectXxxLayout`。',
+                en: 'Import FlexLayout, GridLayout, OverlayLayout, and LayoutItem from `@retikz/layout-react`, and use its `/inspect` entry for `LayoutInspectLayout`, `LayoutInspectScope`, and `InspectXxxLayout`.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-08',

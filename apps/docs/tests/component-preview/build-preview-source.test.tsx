@@ -17,7 +17,7 @@ import PathInspectorDemo, {
 } from '../../src/modules/docs/contents/kernel/components/draw/path/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
-} from '../../src/modules/docs/contents/standard/composite/frame/frame-playground.demo';
+} from '../../src/modules/docs/contents/library/standard/composite/frame/frame-playground.demo';
 import TableDetailDemo, {
   previewSource as tableDetailPreviewSource,
 } from '../../src/modules/docs/contents/viz/table/detail/table-detail.zh.demo';

@@ -1,0 +1,112 @@
+---
+title: 直接 Definition 装载
+description: 通过 Core 的 CompileOptions.composites 按需注入 Standard Definition，不引入 Standard 自己的 bundle、preset 或全局注册
+---
+
+持久化 Standard IR 只保存 JSON-safe 数据，Definition 中的函数必须由宿主在编译时显式注入。Standard 直接复用 Core 的 `CompileOptions.composites`：
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
+
+const scene = compileToScene(persistedIR, {
+  composites: [GridDefinition, FrameDefinition],
+});
+```
+
+Standard 不再提供 `StandardCapabilityModule`、`StandardBundle`、`createStandardBundle()`、`*Module`、`StandardAllPreset` 或 `StandardLayoutPreset`。调用方按当前图实际使用的 composite 选择 Definition，定义数组直接进入 Core 唯一 registry
+
+## 适用边界
+
+这条路径适用于服务端编译、文件恢复、LLM 生成 IR 和需要控制依赖集合的工具链。它解决的是“编译时使用哪些 Definition”，不负责动态 import、运行时包分割、renderer 配置、布局策略或宿主生命周期
+
+React JSX 和 Vanilla embed 仍由各自 adapter 负责 authoring。它们会为当前内容贡献相同的 Definition；直接 IR 则由宿主显式传入 `composites`
+
+## 定义能力
+
+每个 Standard composite owner 直接导出自己的 Definition、factory、schema、artifact 和 lowering：
+
+```ts
+import { GridDefinition, createGrid, GridSchema } from '@retikz/standard';
+
+const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, line: { spacing: 20 } }));
+const compileOptions = { composites: [GridDefinition] };
+```
+
+第三方 composite 同样使用 Core 的 `defineComposite()` 产生 Definition，再把它和所需的 Standard Definition 一起传给 `CompileOptions.composites`。Definition 的 `namespace` 与 `type` 是 Core lookup key；JSON IR 只保存对应 discriminator 和数据
+
+## 注入宿主
+
+### 直接 IR 与 React `ir` 模式
+
+```tsx
+import { Layout } from '@retikz/react';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
+
+<Layout ir={persistedIR} composites={[GridDefinition, FrameDefinition]} />;
+```
+
+缺少某个 Definition 时，Core 保留 `COMPOSITE_NOT_REGISTERED` 诊断。Core 原生 child 和其它已注册 composite 仍按 Core 规则处理
+
+### React JSX
+
+`<Grid>`、`<Axes>`、`<Frame>` 与 `<Legend>` 通过静态 adapter 贡献 Standard Definition。布局容器由 `@retikz/layout-react` 接入同一个 Core registry；Standard 不创建第二套 registry，也不转发 Layout adapter
+
+### Vanilla
+
+Vanilla builder 继续使用 adapter 做 authoring；当前使用的 adapter 可以按需传入，也可以使用 `StandardVanillaAdapters` 这一 adapter 便利数组：
+
+```ts
+import { GridDefinition } from '@retikz/standard';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(persistedIR, {
+  compile: { composites: [GridDefinition] },
+});
+```
+
+`StandardVanillaAdapters` 属于 `@retikz/standard-vanilla` 的 authoring 便利入口，不是 Standard 的 compile preset。布局 authoring 使用 `@retikz/layout-vanilla` 的 `LayoutVanillaAdapters`
+
+## 执行机制
+
+1. 宿主从 `@retikz/standard` 选择当前图需要的 Definition
+2. 宿主把 Definition 数组放入 Core `CompileOptions.composites`
+3. Core 按 `namespace` / `type` 建立本次编译的 composite registry
+4. Core 校验 IR、展开 Definition，并产生 Scene、diagnostic 和适用的 typed artifact
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Grid Definition 与公开 composite contract',
+      path: 'packages/library/standard/src/composites/presentation/grid/definition.ts',
+    },
+  ]}
+/>
+
+## 错误与限制
+
+| 情况                                             | 结果                                                             |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
+| IR 引用未注入的 Standard composite               | Core 产生 `COMPOSITE_NOT_REGISTERED`，保持明确诊断               |
+| 同一个 Definition 在数组中重复出现               | 不由 Standard 静默去重，交给 Core 的 duplicate registration 诊断 |
+| 不同对象使用相同 `namespace` / `type`            | Core 产生 `duplicate composite registration`                     |
+| Definition 进入持久化 JSON                       | 不允许；JSON 只保存 schema 定义的数据                            |
+| 直接 IR 与 JSX / embed 同时注入相同 provider key | Core fail-loud，不建立 Standard 优先级覆盖规则                   |
+
+## API 参考
+
+| 导出                                                  | 所属包                     | 职责                                           |
+| ----------------------------------------------------- | -------------------------- | ---------------------------------------------- |
+| `GridDefinition`、`AxesDefinition`、`FrameDefinition` | `@retikz/standard`         | 对应 presentation composite 的 Core Definition |
+| `LegendDefinition`                                    | `@retikz/standard`         | Legend 的 Core Definition 与 artifact contract |
+| `GridSchema`、`createGrid()` 等                       | `@retikz/standard`         | 校验和构造 JSON-safe Standard 输入             |
+| `StandardVanillaAdapters`                             | `@retikz/standard-vanilla` | 当前 Standard Vanilla adapter 便利数组         |
+
+三个 Standard 包仍只发布根入口；Definition 是 named export，消费方 bundler 可按引用进行 tree-shaking。按需使用指编译时选择 Definition，不等同于运行时动态加载
+
+## 相关
+
+- [快速开始](/library/standard/get-start)：从 React、Vanilla 和持久化 JSON 使用 Grid
+- [复合组件](/library/standard/composite)：浏览 Standard composite 目录
+- [布局容器](/library/layout)：Flex、Grid、Overlay 与 typed artifact
+- [Core 扩展机制](/kernel/reference/runtime/extensions)：定义和注册第三方 Core Definition
