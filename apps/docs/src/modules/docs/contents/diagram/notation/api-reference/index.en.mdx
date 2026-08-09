@@ -1,57 +1,68 @@
 ---
 title: Notation API Reference
-description: Look up LogicFrame, semantic Node, Connector, and Callout APIs.
+description: Look up schemas, factories, Definitions, and adapters for LogicFrame, base units, Connector, and Callout.
 ---
 
-Notation is split by responsibility: `@retikz/notation` provides canonical JSON, schemas, and factories; `@retikz/notation-react` provides React sugar; `@retikz/notation-vanilla` provides Vanilla builders and adapters for composites that still lower at runtime
+Notation is split by responsibility: `@retikz/notation` provides canonical JSON, schemas, factories, and Definitions; `@retikz/notation-react` provides React authoring; `@retikz/notation-vanilla` provides embed-returning builders and explicit adapters. All three entries normalize to the same Notation IR and lower through the same Definitions
 
 ## Public exports
 
 | Capability | Notation                                                                       | React                                                 | Vanilla                                  |
 | ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
 | LogicFrame | `LogicFrameSchema`, `IRLogicFrame`, `createLogicFrame`, `LogicFrameDefinition` | `LogicFrame`, `LogicFrameHeader`, `LogicFrameSection` | `logicFrame`, `LogicFrameVanillaAdapter` |
-| Terminal   | `TerminalSchema`, `IRTerminal`, `createTerminal`                               | `Terminal`                                            | `terminal` (returns a Node)              |
-| Stage      | `StageSchema`, `IRStage`, `createStage`                                        | `Stage`                                               | `stage` (returns a Node)                 |
-| Decision   | `DecisionSchema`, `IRDecision`, `createDecision`                               | `Decision`                                            | `decision` (returns a Node)              |
-| Junction   | `JunctionSchema`, `IRJunction`, `createJunction`                               | `Junction`                                            | `junction` (returns a Node)              |
+| Terminal   | `TerminalSchema`, `IRTerminal`, `createTerminal`, `TerminalDefinition`         | `Terminal`                                            | `terminal`, `TerminalVanillaAdapter`     |
+| Stage      | `StageSchema`, `IRStage`, `createStage`, `StageDefinition`                     | `Stage`                                               | `stage`, `StageVanillaAdapter`           |
+| Decision   | `DecisionSchema`, `IRDecision`, `createDecision`, `DecisionDefinition`         | `Decision`                                            | `decision`, `DecisionVanillaAdapter`     |
+| Junction   | `JunctionSchema`, `IRJunction`, `createJunction`, `JunctionDefinition`         | `Junction`                                            | `junction`, `JunctionVanillaAdapter`     |
 | Connector  | `ConnectorSchema`, `IRConnector`, `createConnector`, `ConnectorDefinition`     | `Connector`                                           | `connector`, `ConnectorVanillaAdapter`   |
 | Callout    | `CalloutSchema`, `IRCallout`, `createCallout`, `CalloutDefinition`             | `Callout`                                             | `callout`, `CalloutVanillaAdapter`       |
 
-The four semantic `IRXxx` types are aliases for Core `IRNode`; they no longer have separate Definitions or artifact schemas
+All seven public elements retain `namespace: 'notation'` and their own semantic `type`. Definitions are explicit lowering contracts from Notation IR to Core IR and never enter persisted JSON
 
-## Semantic Node inputs
+## Base-unit inputs
 
-The four semantic components accept Core Node props. `id` and `position` are required, string children or `<Text>` become Node text, and `shape` is fixed by the component
+The four base units reuse the applicable Core Node authoring surface. `id` and `position` are required, string children or `<Text>` become Node text, and each unit fixes a `shape` that authors cannot replace
 
 ```tsx
 <Stage id="step" position={[0, 0]}>Process</Stage>
 <Decision id="check" position={[80, 0]}><Text>Ready?</Text></Decision>
 ```
 
-Vanilla builders return canonical `IRNode` values directly and preserve the supplied id
+The matching factory returns canonical Notation IR rather than a Core `IRNode`. Its Definition then lowers it one-to-one into a same-id Node:
 
 ```ts
-const step = stage('step', { position: [0, 0], text: 'Process' });
-// step.id === 'step'
+const step = createStage({ id: 'step', position: [0, 0], text: 'Process' });
+// { namespace: 'notation', type: 'stage', id: 'step', ... }
 ```
+
+## Connector inputs
+
+Canonical `IRConnector` JSON uses Core Step `children`. `createConnector`, React, and Vanilla also accept a Core `WayDSL` `way` authoring shorthand. The two forms are mutually exclusive, and `way` is normalized through `parseWay()` at the authoring boundary, so it is never persisted
+
+Connector always lowers to a stroke Path and therefore does not expose Core `kind`, `kindOptions`, or `ribbon`. Other applicable Core Path fields keep their original names, constraints, and diagnostics. Omitting `marks` adds a terminal arrow; an explicit `marks` value, including `[]`, completely replaces that default
 
 ## Definition loading
 
-Only LogicFrame, Connector, and Callout still need runtime Definitions. A Core-only Node scene needs no Notation composite registration
+Direct IR must explicitly inject the Definition for every Notation element used by the figure. When one is missing, Core fails loudly with its unregistered-composite diagnostic:
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { CalloutDefinition, ConnectorDefinition, LogicFrameDefinition } from '@retikz/notation';
+import { ConnectorDefinition, DecisionDefinition, StageDefinition, TerminalDefinition } from '@retikz/notation';
 
-compileToScene(scene, { composites: [LogicFrameDefinition, ConnectorDefinition, CalloutDefinition] });
+compileToScene(scene, {
+  composites: [TerminalDefinition, StageDefinition, DecisionDefinition, ConnectorDefinition],
+});
 ```
+
+React components and Vanilla adapters contribute only the Definitions required by the authored elements and do not register global state
 
 ## Vanilla identity
 
-Semantic builders use the original id. Connector and Callout targets reference that id directly. LogicFrame, Connector, and Callout adapters retain their own adapter identity rules
+Every Vanilla helper returns an `embed`. Terminal, Stage, Decision, Junction, and Connector adapters use the embed id as the canonical Notation IR id and lower to a same-id Core Node or Path. The Vanilla normalizer permits an adapter root output to reuse its embed id without a string-prefix requirement. LogicFrame and Callout retain their internal derived ids under their own multi-element composite contracts
 
 ## Related
 
-- [Semantic units](/diagram/notation/unit/semantic-units)
+- [Base units](/diagram/notation/unit/semantic-units)
+- [Connector](/diagram/notation/unit/connector)
 - [LogicFrame](/diagram/notation/frame/logic-frame)
 - [Definition loading](/standard/extension/capability-loading)

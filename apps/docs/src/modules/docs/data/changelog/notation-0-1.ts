@@ -16,12 +16,21 @@ export const notationV01: Release = {
         {
           label: { zh: '统一 Notation owner', en: 'Unified Notation owner' },
           content: {
-            zh: 'LogicFrame、四种语义 Node、Connector 与 Callout 迁入 `notation.*` canonical namespace；Standard 不保留兼容导出。',
-            en: 'LogicFrame, four semantic Nodes, Connector, and Callout move to the `notation.*` canonical namespace with no compatibility exports in Standard.',
+            zh: 'LogicFrame、四种基础单元、Connector 与 Callout 统一保留 `notation.*` canonical identity，再通过显式 Definition 下沉到 Core。',
+            en: 'LogicFrame, four base units, Connector, and Callout retain canonical `notation.*` identities and lower to Core through explicit Definitions.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-08-09',
+          summary: {
+            zh: '基础单元与 Connector 保留语义 IR 并轻量下沉；Connector 统一复用 Core Path Step 与 Draw way。',
+            en: 'Base units and Connector retain semantic IR with lightweight lowering; Connector reuses Core Path steps and Draw ways.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-08-09',
@@ -44,12 +53,21 @@ export const notationV01: Release = {
         {
           label: { zh: 'React JSX 入口', en: 'React JSX entry' },
           content: {
-            zh: '提供 LogicFrame marker、语义单元、Connector 与 Callout，并只在当前 Layout 贡献实际需要的 Definition。',
-            en: 'Provides LogicFrame markers, semantic units, Connector, and Callout while contributing only the Definitions used by the current Layout.',
+            zh: '提供 LogicFrame marker、基础单元、Connector 与 Callout；Connector 支持 `<Step>` children 或 Draw `way`，并只贡献当前 Layout 使用的 Definition。',
+            en: 'Provides LogicFrame markers, base units, Connector, and Callout; Connector accepts `<Step>` children or a Draw `way` and contributes only Definitions used by the current Layout.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-08-09',
+          summary: {
+            zh: '基础单元与 Connector JSX 统一生成 canonical Notation IR，并自动贡献各自的轻量 Definition。',
+            en: 'Base-unit and Connector JSX now produce canonical Notation IR and contribute their lightweight Definitions.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-08-09',
@@ -68,12 +86,21 @@ export const notationV01: Release = {
         {
           label: { zh: '显式 Vanilla 接线', en: 'Explicit Vanilla wiring' },
           content: {
-            zh: '语义 builder 直接返回 Core Node；LogicFrame、Connector 与 Callout 通过独立 adapter 贡献 Definition。',
-            en: 'Semantic builders return Core Nodes directly, while dedicated adapters contribute Definitions for LogicFrame, Connector, and Callout.',
+            zh: '所有 builder 返回 embed；基础单元与 Connector adapter 使用同 id Notation IR，并贡献各自的轻量 Definition。',
+            en: 'Every builder returns an embed; base-unit and Connector adapters use same-id Notation IR and contribute their lightweight Definitions.',
           },
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-08-09',
+          summary: {
+            zh: '补齐七类元素的 adapter parity，并让 Connector 同时接受 Step children 与 Draw way。',
+            en: 'Completes adapter parity for all seven elements and lets Connector accept either Step children or a Draw way.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.1',
           date: '2026-08-09',

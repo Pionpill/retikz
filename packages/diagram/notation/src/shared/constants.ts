@@ -21,10 +21,18 @@ export const LogicContentSizeDefault = {
   y: { kind: 'content' },
 } as const;
 
-/** 具有局部布局或路由能力的 Notation 复合元素判别值 */
-export const LogicCompositeType = {
+/** Notation 正式元素的稳定判别值 */
+export const NotationElementType = {
   /** 包含分区内容的逻辑框架 */
   LogicFrame: 'logicFrame',
+  /** 表示流程起点或终点的基础单元 */
+  Terminal: 'terminal',
+  /** 表示流程处理或动作的基础单元 */
+  Stage: 'stage',
+  /** 表示条件或分支的基础单元 */
+  Decision: 'decision',
+  /** 表示分叉、汇合或延续点的基础单元 */
+  Junction: 'junction',
   /** 表示图式元素间关系的连接线 */
   Connector: 'connector',
   /** 依附目标的说明标注 */

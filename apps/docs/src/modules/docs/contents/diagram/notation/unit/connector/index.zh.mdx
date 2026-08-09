@@ -1,85 +1,97 @@
 ---
 title: Connector
-description: 用显式 Core Path 路由连接 authored target，并在末步添加可选 label。
+description: 用 Core Path Step 或 Draw way 编写关系，并保留可持久化的 Notation Connector 语义
 ---
 
-`Connector` 把一条关系下沉为一条 Core Path。端点可以是笛卡尔坐标，也可以是稳定的 authored target。路由必须显式给出：组件不会计算图路由、寻找障碍物或改变其它组件的几何。
+`Connector` 是保留 `notation` namespace 的轻量关系 IR。它直接复用 Core stroke Path 的 Step、target、label、mark、描边和变换能力，再通过 `ConnectorDefinition` 一对一下沉为同 id Core Path。它不维护平行路由模型，也不计算自动路由或障碍规避
 
 ## 用法
 
 ```tsx
 import { FoldStepVia } from '@retikz/core';
-import { Layout, Node, Scope } from '@retikz/react';
+import { Layout, Scope, Step } from '@retikz/react';
 import { Connector, Stage, Terminal } from '@retikz/notation-react';
 ```
 
 ```tsx
 <Layout width={420} height={160}>
   <Scope transforms={[{ kind: 'translate', x: 24, y: 56 }]}>
-    <Terminal id="start" role="start">
-      <Node position={[0, 0]} text="Start" />
+    <Terminal id="start" position={[0, 0]}>
+      Start
     </Terminal>
   </Scope>
   <Scope transforms={[{ kind: 'translate', x: 220, y: 56 }]}>
-    <Stage id="step">
-      <Node position={[0, 0]} text="Step" />
+    <Stage id="step" position={[0, 0]}>
+      Step
     </Stage>
   </Scope>
-  <Connector
-    id="start-to-step"
-    from={{ id: 'start' }}
-    to={{ id: 'step' }}
-    routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
-    label={{ text: 'next' }}
-  />
+  <Connector id="start-to-step">
+    <Step kind="move" to="start" />
+    <Step kind="fold" via={FoldStepVia.HorizontalThenVertical} to="step" label={{ text: 'next' }} />
+  </Connector>
 </Layout>
 ```
 
-`label` 挂在最终可绘制的 Core step 上。即使路由包含折线，也只在一个位置写 label，不重复写 path-level label。
+React 的 `<Step>` children 就是 Path 作者语法，完整沿用 Core Step 约束。label 可以写在需要标注的具体 step 上，不再经过 Connector 专属字段投影
 
-## 示例
+## 两套作者语法
 
-### 路由变体
+Connector 支持两套互斥入口，但只保存一份 canonical IR：
 
-| 路由              | 输入                                             | 下沉结果                                                          |
-| ----------------- | ------------------------------------------------ | ----------------------------------------------------------------- |
-| Straight          | `{ kind: 'straight' }`                           | 端点之间一条 line                                                 |
-| Polyline          | `{ kind: 'polyline', points }`                   | 显式中间 target 或 point                                          |
-| Orthogonal        | <ApiValues name="FoldStepVia" />                 | `pattern` 直接复用 Core 折线模式；三段模式由 `ratio` 控制中段位置 |
-| Quadratic / Cubic | `control` 或 `control1` + `control2`             | Core Bezier step                                                  |
-| Bend              | `direction`、`angle`、`looseness` 或显式 tangent | Core bend step                                                    |
+```ts
+import { DrawWay } from '@retikz/core';
+import { createConnector } from '@retikz/notation';
+
+const bySteps = createConnector({
+  id: 'edge-a',
+  children: [
+    { kind: 'move', to: 'start' },
+    { kind: 'line', to: 'step' },
+  ],
+});
+
+const byWay = createConnector({
+  id: 'edge-b',
+  way: ['start', DrawWay.Hv, 'step'],
+});
+```
+
+- Path 语法传 `children: Array<IRStep>`，也是持久化 JSON 的唯一形式
+- Draw 语法传 `way: WayDSL`，factory、React 或 Vanilla 会立即复用 Core `parseWay()` 转成 `children`
+- `children` 与 `way` 必须且只能提供一个；同时提供或都省略会 fail-loud
+- `way` 不属于 `ConnectorSchema`，不会进入 JSON、Definition 或 Scene
 
 <ComponentPreview files="connector-routing" size="lg" />
 
-直接 JSON 使用 `createConnector`、`ConnectorSchema` 与 `ConnectorDefinition`。Vanilla embed 使用 `connector` 与 `ConnectorVanillaAdapter`，其 canonical ID 是 `<embed-id>/connector`。
+直接 JSON 必须写 canonical `children`，并显式注入 `ConnectorDefinition`。Vanilla 的 `connector()` 返回 embed；`ConnectorVanillaAdapter` 以 embed id 创建同 id `IRConnector`，不会添加 `/connector` 后缀
 
-Target identity 必须显式处理。Whole target 可以指向 authored traversal 中的前方或后方，因此 Connector 可以在 Stage emit 前就连接 `{ id: 'later-stage' }`。LogicFrame section target（`{ kind: 'logicFrame', id: 'block', section: 'body' }`）虽被 schema 接受，但 Connector 当前会在 lowering 时 fail-loud；请使用 whole block target。
-
-在 React/直接 IR 和 Vanilla 语义 builder 中，`Terminal id="start"` 都使用 `{ id: 'start' }` target。LogicFrame、Connector、Callout 与 Frame adapter 仍保留各自的 composite identity 规则。
+省略 `marks` 时 Connector 默认添加一个终点箭头。显式 `marks` 会完整覆盖默认值，因此 `marks: []` 可以明确关闭箭头
 
 ## 技术原理
 
 <ComponentAlert
   type="tip"
   title="日常使用可跳过"
-  description="只有排查 route step、target 解析或 label 放置时才需要阅读本节"
+  description="只有排查 canonicalization、Definition 或 Core Path 行为时才需要阅读本节"
 />
 
-`ConnectorDefinition` 是 expansion definition：它输出同 id 的 Core Path，没有 typed Connector artifact schema。label 只写入最终可绘制 step，包括折角或显式 polyline 的最后一段。section target 会在 Core Path lowering 前被拒绝，因此错误可诊断。
+`ConnectorDefinition` 只移除 `namespace`、语义 `type` 与 authored-only `role`，其余字段原样交给 Core stroke Path，并保留 authored `id`。Connector 不生成 typed artifact、额外 wrapper、专用几何或 renderer 分支；Core Path 新增适用的公开字段后，可以通过复用的 schema surface 直接进入 Connector
+
+`role` 只表达 authored 语义，不会隐式写入 Path `meta` 或 Scene primitive。target 完全遵循 Core Step：whole target、坐标和其它 Core target form 直接使用 Core 诊断；旧 LogicFrame section target、`from/to/routing/appearance` 与 Connector 专属 route 常量已经移除
 
 ## API 参考
 
-| 字段          | 类型                       | 默认值                                                                       | 说明                                                  |
-| ------------- | -------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `id`          | `string`                   | —                                                                            | 稳定的 authored Connector identity，也是 Core Path id |
-| `role?`       | `string`                   | 省略                                                                         | 开放的 authored Connector role                        |
-| `from`、`to`  | `LogicDiagramPointInput`   | —                                                                            | 笛卡尔 point 或带 anchor/offset 的 whole target       |
-| `routing?`    | `ConnectorRoutingInput`    | `{ kind: 'straight' }`                                                       | 闭合的显式路由 union                                  |
-| `label?`      | `LogicGeometryLabelInput`  | 省略                                                                         | 绑定到最终可绘制 step 的 label                        |
-| `appearance?` | `ConnectorAppearanceInput` | stroke `currentColor`、width `1`、圆角 `0`、`pos: 1` arrow mark、`zIndex: 0` | Core Path 描边、mark、圆角、dash 与 stacking 覆盖     |
+| 字段                | 类型                         | 默认值              | 说明                                                              |
+| ------------------- | ---------------------------- | ------------------- | ----------------------------------------------------------------- |
+| `id`                | `string`                     | —                   | 稳定的 authored Connector identity，也是 lower 后 Core Path id    |
+| `role?`             | `string`                     | 省略                | 开放的 authored 语义，只保留在 Notation IR                        |
+| `children`          | `Array<IRStep>`              | —                   | canonical Core Path Step 序列，也是 JSON 中唯一的几何表达         |
+| `way`（仅作者输入） | `WayDSL`                     | —                   | 与 `children` 互斥，并在入口通过 `parseWay()` 归一                |
+| `marks?`            | Core Path mark placements    | `pos: 1` 的终点箭头 | 显式数组完整覆盖默认值；`[]` 关闭箭头                             |
+| 其它 Path 字段      | 适用的 Core stroke Path 字段 | 沿用 Core 默认值    | label、stroke、fill、dash、line cap/join、圆角、变换、meta 等能力 |
 
 ## 相关
 
-- [语义单元](/diagram/notation/unit/semantic-units)：可被 target 的单元
+- [基础单元](/diagram/notation/unit/semantic-units)：可被 target 的图式单元
 - [Callout](/diagram/notation/unit/callout)：相对 target 的解释
-- [Core Path](/kernel/components/draw/overview)：路由输出的底层图元
+- [Core Path](/kernel/components/draw/overview)：Connector 直接复用的底层契约

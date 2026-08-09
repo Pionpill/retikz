@@ -10,18 +10,18 @@
 
 ## 包家族
 
-| 包                         | 解决的问题                         | 拥有                                                                   | 不拥有                                                |
-| -------------------------- | ---------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- |
-| `@retikz/notation`         | 提供可独立绘制的可复用图式语义元素 | JSON-safe schema、Core Sugar、Tier 2 composite、Definition 与 lowering | GraphModel、全局拓扑、自动布局、Editor、renderer      |
-| `@retikz/notation-react`   | 用 React 编写和运行 Notation       | JSX sugar、props → Notation 输入、React runtime 接线                   | Notation schema、lowering、Standard layout、Core 语义 |
-| `@retikz/notation-vanilla` | 用无框架 API 编写和运行 Notation   | builder、SSR / mount 编排、Vanilla runtime 接线                        | Notation schema、lowering、Standard layout、Core 语义 |
+| 包                         | 解决的问题                         | 拥有                                                           | 不拥有                                                |
+| -------------------------- | ---------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `@retikz/notation`         | 提供可独立绘制的可复用图式语义元素 | JSON-safe semantic IR、Core Sugar、Tier 2 Definition与lowering | GraphModel、全局拓扑、自动布局、Editor、renderer      |
+| `@retikz/notation-react`   | 用 React 编写和运行 Notation       | JSX sugar、props → Notation 输入、React runtime 接线           | Notation schema、lowering、Standard layout、Core 语义 |
+| `@retikz/notation-vanilla` | 用无框架 API 编写和运行 Notation   | builder、SSR / mount 编排、Vanilla runtime 接线                | Notation schema、lowering、Standard layout、Core 语义 |
 
 Notation 三包使用独立 release group `notation` 并保持 lockstep。未来 Graph 可以按兼容版本单向依赖 `@retikz/notation`；Notation 不反向依赖 Graph、Flow 或 Editor。
 
 ## 分层与依赖
 
 - `notation` 只依赖 `@retikz/core`、必要的 `@retikz/math` 与 `@retikz/standard` 公开 capability，不得依赖 adapter、renderer、Viz、Graph、Flow 或 Editor
-- Core Sugar 直接输出 Core IR；只有需要局部布局、target、artifact 或多图元 lowering 的语义才建立 Tier 2 composite
+- 正式、可持久化的Notation元素保留semantic IR；lower target复杂度只决定使用普通expansion还是layout-aware Definition。没有独立持久化语义的便捷写法才直接输出Core IR
 - Notation 不复制 Standard FlexLayout、artifact、spacing、axis sizing、clip 或 geometry 算法；公共面不足时先在 Standard owner 冻结并实现最小 composition contract
 - `notation-react` 只消费 `notation` 与 `@retikz/react`；`notation-vanilla` 只消费 `notation` 与 `@retikz/vanilla`
 - public IR 必须 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不得进入 Notation schema

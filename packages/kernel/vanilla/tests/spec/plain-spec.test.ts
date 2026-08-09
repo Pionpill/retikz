@@ -417,7 +417,7 @@ describe('@retikz/vanilla plain spec', () => {
     expect(merged.toString).toBe(sharedData);
   });
 
-  it('embed-output-identities：adapter 输出 id 必须从 embed id 派生并进入 identityIndex', () => {
+  it('embed-output-derived-identities：adapter 输出可使用派生 identity 并进入 identityIndex', () => {
     const adapter: VanillaTier2Adapter<{ label: string }> = {
       kind: 'named-output',
       namespace: 'fixture',
@@ -449,9 +449,9 @@ describe('@retikz/vanilla plain spec', () => {
     ]);
   });
 
-  it('embed-output-identity-prefix-throws：adapter 输出 id 不从 embed id 派生时抛错', () => {
+  it('embed-output-independent-identity：adapter 输出可使用不从 embed id 派生的唯一 identity', () => {
     const adapter: VanillaTier2Adapter<{ text: string }> = {
-      kind: 'bad-output',
+      kind: 'independent-output',
       namespace: 'fixture',
       lower: props => ({
         node: node('external', { position: [0, 0], text: props.text }),
@@ -460,9 +460,60 @@ describe('@retikz/vanilla plain spec', () => {
       }),
     };
 
-    const spec = figure({ layers: [layer('main', [embed('bad-output', 'chart', { text: 'A' })])] });
+    const normalized = normalizeFigureSpec(
+      figure({ layers: [layer('main', [embed('independent-output', 'chart', { text: 'A' })])] }),
+      { adapters: [adapter] },
+    );
 
-    expect(() => normalizeFigureSpec(spec, { adapters: [adapter] })).toThrow(/must start with "chart\/"/i);
+    expect(normalized.runtimeMeta.identityIndex.get('external')).toEqual(['main', 'chart', 'external']);
+    expect(normalized.runtimeMeta.parentIndex.get('external')).toBe('chart');
+  });
+
+  it('embed-output-reuses-root-identity：adapter 根输出可复用 embed identity', () => {
+    const adapter: VanillaTier2Adapter<{ text: string }> = {
+      kind: 'same-output',
+      namespace: 'fixture',
+      lower: props => ({
+        node: {
+          type: 'scope',
+          id: 'chart',
+          children: [node('label', { position: [0, 0], text: props.text })],
+        },
+        datasets: {},
+        makeComposites: () => [],
+      }),
+    };
+
+    const normalized = normalizeFigureSpec(
+      figure({ layers: [layer('main', [embed('same-output', 'chart', { text: 'A' })])] }),
+      { adapters: [adapter] },
+    );
+
+    expect(normalized.runtimeMeta.identityIndex.get('chart')).toEqual(['main', 'chart']);
+    expect(normalized.runtimeMeta.identityIndex.get('label')).toEqual(['main', 'chart', 'label']);
+    expect(normalized.runtimeMeta.parentIndex.get('label')).toBe('chart');
+  });
+
+  it('embed-output-duplicate-identity-throws：adapter 输出仍不能占用已有 identity', () => {
+    const adapter: VanillaTier2Adapter<{ text: string }> = {
+      kind: 'duplicate-output',
+      namespace: 'fixture',
+      lower: props => ({
+        node: node('external', { position: [0, 0], text: props.text }),
+        datasets: {},
+        makeComposites: () => [],
+      }),
+    };
+    const spec = figure({
+      layers: [
+        layer('main', [
+          node('external', { position: [0, 0], text: 'Existing' }),
+          embed('duplicate-output', 'chart', { text: 'A' }),
+        ]),
+      ],
+    });
+
+    expect(() => normalizeFigureSpec(spec, { adapters: [adapter] })).toThrow(/duplicate identity "external"/i);
   });
 
   it('missing-embed-adapter-throws：缺 adapter 时 fail-loud', () => {

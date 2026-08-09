@@ -375,46 +375,52 @@ describe('irToVanillaCode fallback', () => {
     expect(code).not.toMatch(/\binspect\b/);
   });
 
-  it('keeps semantic units as ordinary Node code and imports real composites from Notation', () => {
+  it('generates Notation helpers and adapters for all lightweight semantic elements', () => {
     const code = irToVanillaCode(
       ir([
         {
-          type: 'node',
+          namespace: 'notation',
+          type: 'terminal',
           id: 'start',
           position: [0, 0],
-          shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
           text: 'Start',
         },
         {
-          type: 'node',
+          namespace: 'notation',
+          type: 'stage',
           id: 'step',
           position: [80, 0],
-          shape: { type: 'rectangle', params: { cornerRadius: 8 } },
           text: 'Step',
         },
-        { type: 'node', id: 'check', position: [160, 0], shape: 'diamond', text: 'Check' },
-        { type: 'node', id: 'join', position: [240, 0], shape: 'circle' },
+        { namespace: 'notation', type: 'decision', id: 'check', position: [160, 0], text: 'Check' },
+        { namespace: 'notation', type: 'junction', id: 'join', position: [240, 0] },
         {
           namespace: 'notation',
           type: 'connector',
           id: 'edge',
-          from: { id: 'start' },
-          to: { id: 'step' },
-          label: { text: 'next' },
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'start' } },
+            { type: 'step', kind: 'line', to: { id: 'step' }, label: { text: 'next' } },
+          ],
         },
       ] as never),
     );
 
-    expect(code).toContain("node('start'");
-    expect(code).toContain("node('step'");
-    expect(code).toContain("node('check'");
-    expect(code).toContain("node('join'");
-    expect(code).toContain('connector(');
+    expect(code).toContain("terminal('preview-terminal-1'");
+    expect(code).toContain("stage('preview-stage-1'");
+    expect(code).toContain("decision('preview-decision-1'");
+    expect(code).toContain("junction('preview-junction-1'");
+    expect(code).toContain("connector('preview-connector-1'");
+    expect(code).toContain("to: { id: 'preview-terminal-1' }");
+    expect(code).toContain("to: { id: 'preview-stage-1' }");
+    expect(code).toContain('TerminalVanillaAdapter');
+    expect(code).toContain('StageVanillaAdapter');
+    expect(code).toContain('DecisionVanillaAdapter');
+    expect(code).toContain('JunctionVanillaAdapter');
     expect(code).toContain('ConnectorVanillaAdapter');
     expect(code).toContain("from '@retikz/notation-vanilla'");
     expect(code).not.toContain("ConnectorVanillaAdapter } from '@retikz/standard-vanilla'");
     expect(code).not.toContain('TerminalDefinition');
-    expect(code).not.toContain('StageDefinition');
     expect(code).not.toContain('Unsupported Standard composite');
   });
 
@@ -425,8 +431,10 @@ describe('irToVanillaCode fallback', () => {
           namespace: 'notation',
           type: 'connector',
           id: 'edge',
-          from: { id: 'block' },
-          to: { id: 'block' },
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'block' } },
+            { type: 'step', kind: 'line', to: { id: 'block' } },
+          ],
         },
         {
           namespace: 'notation',
@@ -449,7 +457,6 @@ describe('irToVanillaCode fallback', () => {
 
     expect(code).toContain("from '@retikz/notation-vanilla'");
     expect(code).toContain("import { GridDefinition } from '@retikz/standard';");
-    expect(code).toContain("from: { id: 'preview-logicFrame-1/logicFrame' }");
-    expect(code).toContain("to: { id: 'preview-logicFrame-1/logicFrame' }");
+    expect(code.match(/to: \{ id: 'preview-logicFrame-1\/logicFrame' \}/g)).toHaveLength(2);
   });
 });

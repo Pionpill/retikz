@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
 import { Layout, Scope } from '@retikz/react';
 
-/** Demonstrates the four neutral semantic units */
+/** Demonstrates the four neutral base units */
 const Demo: FC = () => (
   <Layout width={520} height={180}>
     <Scope transforms={[{ kind: 'translate', x: 24, y: 72 }]}>

@@ -1,14 +1,14 @@
 ---
-title: Semantic units
-description: Terminal, Stage, Decision, and Junction are logic-aware sugar over Core Node
+title: Base units
+description: Terminal, Stage, Decision, and Junction retain Notation semantics and lower lightly to Core Nodes.
 ---
 
-Semantic units are lightweight wrappers over Core `Node`. They always emit `type: 'node'`. Each wrapper fixes its shape and uses Schema `describe` text to state its logic responsibility
+Base units are lightweight semantic IR values that retain the `notation` namespace. Terminal, Stage, Decision, and Junction remain distinguishable in persisted data for tools, LLMs, and future Graph presentations. At compile time, each unit uses its own Definition to lower one-to-one into a same-id Core `Node`
 
 ## Usage
 
 ```tsx
-import { Layout, Node, Scope, Text } from '@retikz/react';
+import { Layout, Text } from '@retikz/react';
 import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
 ```
 
@@ -27,7 +27,7 @@ import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
 </Layout>
 ```
 
-String children become the Node text. You can also use `<Text>` exactly as with Core `Node`. Other Node props such as `fill`, `padding`, `minimumSize`, and `position` pass through; `shape` is fixed by the semantic unit
+String children become Node text, and `<Text>` works as it does with Core `Node`. Applicable Node props such as `fill`, `padding`, `minimumSize`, and `position` pass through, while the unit owns its `namespace`, semantic `type`, and fixed `shape`
 
 | Unit       | Fixed shape                    | Logic responsibility               | Defaults                                          |
 | ---------- | ------------------------------ | ---------------------------------- | ------------------------------------------------- |
@@ -40,20 +40,24 @@ String children become the Node text. You can also use `<Text>` exactly as with 
 
 <ComponentPreview files="semantic-units" size="lg" />
 
-Direct IR uses `createTerminal`, `createStage`, `createDecision`, or `createJunction`. The result is a Core Node and needs no Definition
+Direct IR uses the matching factory and explicitly injects each used Definition through Core compile options:
 
 ```ts
-import { createStage } from '@retikz/notation';
+import { compileToScene } from '@retikz/core';
+import { createStage, StageDefinition } from '@retikz/notation';
 
 const stage = createStage({ id: 'step', position: [0, 0], text: 'Process' });
+// stage.namespace === 'notation'; stage.type === 'stage'
+const scene = compileToScene({ version: 1, type: 'scene', children: [stage] }, { composites: [StageDefinition] });
 ```
 
-Vanilla builders also return canonical Nodes directly
+A Vanilla builder returns an embed instead of prematurely erasing the semantic identity into a Core Node. Its adapter creates a same-id canonical `IRStage` and contributes `StageDefinition`:
 
 ```ts
-import { stage } from '@retikz/notation-vanilla';
+import { StageVanillaAdapter, stage } from '@retikz/notation-vanilla';
 
 const step = stage('step', { position: [0, 0], text: 'Process' });
+const adapters = [StageVanillaAdapter];
 ```
 
 The following recipes stay in docs. They demonstrate composition, not new `Process`, `Class`, or `Data` exports
@@ -68,10 +72,10 @@ The following recipes stay in docs. They demonstrate composition, not new `Proce
 
 ## Semantic boundary
 
-Semantic units do not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Use `LogicFrame` for layout containers, `Connector` for relationships, and `Callout` for annotations
+Base units own only their persisted notation identity, fixed shape, and defaults. They do not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Core continues to own Node layout, style, theme, targets, compilation, and Scene output
 
 ## Related
 
 - [LogicFrame](/diagram/notation/frame/logic-frame): reusable layout container
-- [Connector](/diagram/notation/unit/connector): connect authored Node identities
-- [Callout](/diagram/notation/unit/callout): place an explanation beside a Node
+- [Connector](/diagram/notation/unit/connector): connect authored identities
+- [Callout](/diagram/notation/unit/callout): place an explanation beside a unit

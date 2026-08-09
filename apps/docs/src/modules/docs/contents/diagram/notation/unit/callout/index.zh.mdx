@@ -43,17 +43,18 @@ const note = createCallout({
 const compile = { composites: [CalloutDefinition] };
 ```
 
-Vanilla 语义 builder 直接返回 Node，因此 target `terminal('start', ...)` 时应写 `{ id: 'start' }`：
+Vanilla 基础单元 builder 返回 embed；对应 adapter 使用 embed id 创建同 id Notation IR，因此 `terminal('start', ...)` 仍通过 `{ id: 'start' }` 被 target：
 
 ```ts
-import { callout, CalloutVanillaAdapter } from '@retikz/notation-vanilla';
+import { callout, CalloutVanillaAdapter, terminal, TerminalVanillaAdapter } from '@retikz/notation-vanilla';
 
+const start = terminal('start', { position: [0, 0], text: 'Start' });
 const note = callout('note', {
   target: { id: 'start' },
   content: { type: 'node', position: [0, 0], text: 'Explain' },
   placement: { side: 'right' },
 });
-const adapters = [CalloutVanillaAdapter];
+const adapters = [TerminalVanillaAdapter, CalloutVanillaAdapter];
 ```
 
 ## 技术原理
@@ -81,7 +82,7 @@ Callout target 是 previous-only：执行 Callout 放置时，target 必须已�
 
 ## 相关
 
-- [语义单元](/diagram/notation/unit/semantic-units)：可被 target 的单元
+- [基础单元](/diagram/notation/unit/semantic-units)：可被 target 的单元
 - [Connector](/diagram/notation/unit/connector)：显式图关系
 - [LogicFrame](/diagram/notation/frame/logic-frame)：whole-block target 与 section
 - [Notation API 参考](/diagram/notation/api-reference)：schema 与 Definition 装载

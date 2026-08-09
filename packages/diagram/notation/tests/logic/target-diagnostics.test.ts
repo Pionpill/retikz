@@ -1,34 +1,15 @@
-import type { AnyCompositeDefinition, IRChild, IRPathBase } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild } from '@retikz/core';
 
-import { compileToScene, lowerIRToKernel } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import * as Notation from '../../src';
-
-const production = Notation;
-
-const connectorDefinitionOf = (): AnyCompositeDefinition => production.ConnectorDefinition;
 
 const sceneOf = (children: ReadonlyArray<IRChild>): { version: 1; type: 'scene'; children: Array<IRChild> } => ({
   version: 1,
   type: 'scene',
   children: Array.from(children),
 });
-
-const sectionTarget = (section: string): Notation.LogicDiagramPointInput => ({
-  kind: 'logicFrame',
-  id: 'logic-frame-target',
-  section,
-});
-
-const lowerConnector = (input: Parameters<typeof Notation.createConnector>[0]): Array<IRChild> => {
-  const connector = Notation.createConnector(input);
-  return lowerCanonicalConnector(connector);
-};
-
-const lowerCanonicalConnector = (connector: ReturnType<typeof Notation.createConnector>): Array<IRChild> => {
-  return lowerIRToKernel(sceneOf([connector]), { composites: [connectorDefinitionOf()] }).children;
-};
 
 const calloutDefinitionOf = (): AnyCompositeDefinition => Notation.CalloutDefinition;
 
@@ -47,101 +28,6 @@ const compileCallout = (children: ReadonlyArray<IRChild>, definitions: ReadonlyA
     composites: [calloutDefinitionOf(), ...definitions],
     padding: 0,
   });
-
-describe('Connector target diagnostics', () => {
-  beforeAll(() => {
-    expect(production.ConnectorDefinition).toBeDefined();
-  });
-
-  it('accepts and preserves a section target in canonical Connector input until lowering', () => {
-    const target = sectionTarget('body');
-    const connector = Notation.createConnector({
-      id: 'section-target-input',
-      from: target,
-      to: [100, 0],
-    });
-
-    expect(connector.from).toEqual(target);
-  });
-
-  it.each([
-    {
-      name: 'from',
-      section: 'from-section',
-      input: { from: sectionTarget('from-section'), to: [100, 0] },
-    },
-    {
-      name: 'to',
-      section: 'to-section',
-      input: { from: [0, 0], to: sectionTarget('to-section') },
-    },
-    {
-      name: 'polyline point',
-      section: 'waypoint-section',
-      input: {
-        from: [0, 0],
-        to: [100, 0],
-        routing: { kind: 'polyline', points: [sectionTarget('waypoint-section')] },
-      },
-    },
-  ] as const)('fails loudly for a $name section target before Core lowering', ({ name, section, input }) => {
-    expect(() =>
-      lowerConnector({ id: `unsupported-section-${name}`, ...input } as Parameters<typeof Notation.createConnector>[0]),
-    ).toThrow(new RegExp(`unsupported.*section.*${section}|${section}.*unsupported`, 'i'));
-  });
-
-  it('does not turn an unsupported section target into a fabricated whole-block id or path', () => {
-    const connector = Notation.createConnector({
-      id: 'section-target-no-fallback',
-      from: sectionTarget('body'),
-      to: [100, 0],
-    });
-    const definition = connectorDefinitionOf();
-
-    expect(definition.expand).toEqual(expect.any(Function));
-    expect(() => lowerCanonicalConnector(connector)).toThrow(/unsupported.*section.*body|body.*unsupported/i);
-  });
-
-  it('maps ordinary and whole-block target anchor/offset fields without fabricating ids', () => {
-    const ordinary = Notation.createConnector({
-      id: 'ordinary-target-mapping',
-      from: { id: 'ordinary-target', anchor: 'right', offset: [4, -2] },
-      to: [100, 0],
-    });
-    const wholeBlock = Notation.createConnector({
-      id: 'whole-block-target-mapping',
-      from: { kind: 'logicFrame', id: 'logic-frame-target', anchor: 'bottom', offset: [6, 3] },
-      to: [100, 0],
-    });
-    const ordinaryPath = lowerCanonicalConnector(ordinary).find((child): child is IRPathBase => child.type === 'path');
-    const wholeBlockPath = lowerCanonicalConnector(wholeBlock).find(
-      (child): child is IRPathBase => child.type === 'path',
-    );
-
-    expect(ordinaryPath?.children?.[0]).toMatchObject({
-      kind: 'move',
-      to: { id: 'ordinary-target', anchor: 'right', offset: [4, -2] },
-    });
-    expect(wholeBlockPath?.children?.[0]).toMatchObject({
-      kind: 'move',
-      to: { id: 'logic-frame-target', anchor: 'bottom', offset: [6, 3] },
-    });
-    expect(wholeBlockPath?.children?.[0]).not.toHaveProperty('to.kind');
-  });
-
-  it('keeps a whole LogicFrame target shape distinct from a section target', () => {
-    const connector = Notation.createConnector({
-      id: 'whole-block-target',
-      from: { kind: 'logicFrame', id: 'logic-frame-target' },
-      to: [100, 0],
-    });
-
-    expect(() => lowerCanonicalConnector(connector)).not.toThrow();
-    const lowered = lowerCanonicalConnector(connector);
-    const path = lowered.find((child): child is IRPathBase => child.type === 'path');
-    expect(path?.children?.[0]).toMatchObject({ kind: 'move', to: { id: 'logic-frame-target' } });
-  });
-});
 
 describe('Callout target diagnostics', () => {
   beforeAll(() => {

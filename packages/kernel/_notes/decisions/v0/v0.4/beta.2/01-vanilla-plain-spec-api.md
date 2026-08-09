@@ -51,7 +51,7 @@ layer 按 `zIndex ?? 0` 升序稳定排序，同值保持声明顺序；layer �
 - contribution 按 namespace 首次出现顺序聚合；
 - 同 namespace、同 reference 只能指向同一对象；
 - 同 namespace 必须复用同一 `makeComposites` 函数；
-- adapter 输出的公开 id 必须以当前 embed id 派生；
+- adapter 根输出可复用 embed id，其余公开 id 按真实父子关系进入 identity metadata，不要求字符串前缀；
 - adapter composites 先聚合，用户显式 `compile.composites` 后置拼接。
 
 Vanilla 不复用 React 的 JSX 静态属性协议；两端只共享“贡献 core IR 与 lowering 资源”的架构意图。
@@ -103,7 +103,7 @@ view.update(nextSpec);
 - `@retikz/vanilla` ESLint 与 `tsc --noEmit` 通过。
 - Vanilla 测试通过：10 files / 66 tests。
 - Vanilla codegen 文档测试通过：1 file / 17 tests。
-- 测试覆盖 helpers/plain object、children/layers 互斥、layer 顺序与 metadata、Tier 2 聚合与诊断、identity 约束、统一 mount、root identity、update/hydration 以及公共入口移除旧 builder。
+- 测试覆盖 helpers/plain object、children/layers 互斥、layer 顺序与 metadata、Tier 2 聚合与诊断、全局 identity 唯一性、adapter 根 identity 复用、统一 mount、root identity、update/hydration 以及公共入口移除旧 builder。
 
 主 agent 执行的 Contract Auditor 未发现实现、公开类型、README 与双语 docs 的 BLOCKING 偏差。收口时补齐 Vanilla v0.4 beta.2 changelog，使 breaking 迁移说明与实际公共面一致。
 

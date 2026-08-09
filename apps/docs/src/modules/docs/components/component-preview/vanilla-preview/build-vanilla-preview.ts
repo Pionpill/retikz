@@ -9,16 +9,32 @@ import {
   CalloutSchema,
   ConnectorDefinition,
   ConnectorSchema,
+  DecisionDefinition,
+  DecisionSchema,
+  JunctionDefinition,
+  JunctionSchema,
   LogicFrameDefinition,
   LogicFrameSchema,
+  StageDefinition,
+  StageSchema,
+  TerminalDefinition,
+  TerminalSchema,
 } from '@retikz/notation';
 import {
   callout,
   CalloutVanillaAdapter,
   connector,
   ConnectorVanillaAdapter,
+  decision,
+  DecisionVanillaAdapter,
+  junction,
+  JunctionVanillaAdapter,
   logicFrame,
   LogicFrameVanillaAdapter,
+  stage,
+  StageVanillaAdapter,
+  terminal,
+  TerminalVanillaAdapter,
 } from '@retikz/notation-vanilla';
 import { PlotSpecSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
@@ -112,7 +128,7 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
 
 type StandardKind = 'grid' | 'axes' | 'frame' | 'flexLayout' | 'gridLayout' | 'overlayLayout' | 'legend';
 
-type NotationKind = 'logicFrame' | 'connector' | 'callout';
+type NotationKind = 'logicFrame' | 'terminal' | 'stage' | 'decision' | 'junction' | 'connector' | 'callout';
 
 type StandardConversionState = {
   counts: Record<StandardKind, number>;
@@ -137,7 +153,8 @@ const standardCanonicalId = (kind: StandardKind, embedId: string): string => {
   }
 };
 
-const notationCanonicalId = (kind: NotationKind, embedId: string): string => `${embedId}/${kind}`;
+const notationCanonicalId = (kind: NotationKind, embedId: string): string =>
+  kind === 'logicFrame' || kind === 'callout' ? `${embedId}/${kind}` : embedId;
 
 const nextStandardId = (kind: StandardKind, state: StandardConversionState, authoredId?: string): string => {
   state.counts[kind] += 1;
@@ -162,7 +179,9 @@ const nextNotationId = (kind: NotationKind, state: NotationConversionState, auth
     const generatedId = notationCanonicalId(kind, embedId);
     state.ids.set(authoredId, generatedId);
     state.ids.set(generatedId, generatedId);
-    state.ids.set(`${authoredId}/${kind}`, generatedId);
+    if (kind === 'logicFrame' || kind === 'callout') {
+      state.ids.set(`${authoredId}/${kind}`, generatedId);
+    }
   }
   return embedId;
 };
@@ -174,6 +193,19 @@ const rewriteLogicTarget = (value: unknown, state: NotationConversionState): unk
   return id === target.id ? value : { ...target, id };
 };
 
+/** 只改写 Core Step 明确拥有的目标字段 */
+const rewriteConnectorStep = (value: unknown, state: NotationConversionState): unknown => {
+  if (typeof value !== 'object' || value === null) return value;
+  const step = value as Record<string, unknown>;
+  return {
+    ...step,
+    ...('to' in step ? { to: rewriteLogicTarget(step.to, state) } : {}),
+    ...('from' in step ? { from: rewriteLogicTarget(step.from, state) } : {}),
+    ...('center' in step ? { center: rewriteLogicTarget(step.center, state) } : {}),
+    ...(Array.isArray(step.points) ? { points: step.points.map(point => rewriteLogicTarget(point, state)) } : {}),
+  };
+};
+
 const rewriteLogicInput = (
   kind: NotationKind,
   input: Record<string, unknown>,
@@ -182,17 +214,8 @@ const rewriteLogicInput = (
   if (kind === 'connector') {
     return {
       ...input,
-      from: rewriteLogicTarget(input.from, state),
-      to: rewriteLogicTarget(input.to, state),
-      ...(Array.isArray((input.routing as { points?: unknown } | undefined)?.points)
-        ? {
-            routing: {
-              ...(input.routing as Record<string, unknown>),
-              points: (input.routing as { points: Array<unknown> }).points.map(point =>
-                rewriteLogicTarget(point, state),
-              ),
-            },
-          }
+      ...(Array.isArray(input.children)
+        ? { children: input.children.map(step => rewriteConnectorStep(step, state)) }
         : {}),
     };
   }
@@ -219,7 +242,7 @@ const registerPreviewIds = (
       }
       if (child.namespace === 'notation' && typeof authoredId === 'string') {
         const kind = child.type as NotationKind;
-        if (['logicFrame', 'connector', 'callout'].includes(kind)) {
+        if (['logicFrame', 'terminal', 'stage', 'decision', 'junction', 'connector', 'callout'].includes(kind)) {
           nextNotationId(kind, notationState, authoredId);
           notationState.counts[kind] -= 1;
           notationState.adapters.delete(kind);
@@ -293,6 +316,34 @@ const convertNotationChild = (child: CompositeChild, state: NotationConversionSt
       void _id;
       return logicFrame(nextNotationId('logicFrame', state, childId), input);
     }
+    case 'terminal': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = TerminalSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return terminal(nextNotationId('terminal', state, childId), input);
+    }
+    case 'stage': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = StageSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return stage(nextNotationId('stage', state, childId), input);
+    }
+    case 'decision': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = DecisionSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return decision(nextNotationId('decision', state, childId), input);
+    }
+    case 'junction': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = JunctionSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return junction(nextNotationId('junction', state, childId), input);
+    }
     case 'connector': {
       const { namespace: _namespace, type: _type, id: _id, ...input } = ConnectorSchema.parse(child);
       void _namespace;
@@ -349,6 +400,10 @@ const standardAdapters = (state: StandardConversionState): ReadonlyArray<AnyVani
 
 const notationAdapters = (state: NotationConversionState): ReadonlyArray<AnyVanillaTier2Adapter> => [
   ...(state.adapters.has('logicFrame') ? [LogicFrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('terminal') ? [TerminalVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('stage') ? [StageVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('decision') ? [DecisionVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('junction') ? [JunctionVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('connector') ? [ConnectorVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('callout') ? [CalloutVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
@@ -365,6 +420,10 @@ const standardDefinitionByName = {
 
 const notationDefinitionByName = {
   LogicFrameDefinition,
+  TerminalDefinition,
+  StageDefinition,
+  DecisionDefinition,
+  JunctionDefinition,
   ConnectorDefinition,
   CalloutDefinition,
 } as const;
@@ -387,6 +446,10 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   const notationState: NotationConversionState = {
     counts: {
       logicFrame: 0,
+      terminal: 0,
+      stage: 0,
+      decision: 0,
+      junction: 0,
       connector: 0,
       callout: 0,
     },

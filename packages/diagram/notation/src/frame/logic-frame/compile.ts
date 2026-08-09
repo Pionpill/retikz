@@ -29,7 +29,7 @@ import {
 import type { LogicLayoutItemArtifact } from '../../shared';
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
-import { LogicCompositeType } from '../../shared';
+import { NotationElementType } from '../../shared';
 
 /** Standard FlexLayout 的规范命名空间 */
 const STANDARD_LAYOUT_NAMESPACE = 'standard' as const;
@@ -251,7 +251,7 @@ export const compileLogicFrame = (
   }));
 
   const artifact: LogicFrameArtifact = Object.freeze({
-    kind: LogicCompositeType.LogicFrame,
+    kind: NotationElementType.LogicFrame,
     id: node.id,
     outer: Object.freeze({
       allocationBounds: allocation,

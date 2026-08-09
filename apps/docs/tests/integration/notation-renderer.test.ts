@@ -1,7 +1,7 @@
 import type { IRChild, Scene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { compileToScene, FoldStepVia } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import {
   CalloutArtifactSchema,
   CalloutDefinition,
@@ -10,6 +10,8 @@ import {
   createConnector,
   createStage,
   createTerminal,
+  StageDefinition,
+  TerminalDefinition,
 } from '@retikz/notation';
 import { Callout, Connector, Stage, Terminal } from '@retikz/notation-react';
 import {
@@ -18,11 +20,15 @@ import {
   connector,
   ConnectorVanillaAdapter,
   stage,
+  StageVanillaAdapter,
   terminal,
+  TerminalVanillaAdapter,
 } from '@retikz/notation-vanilla';
-import { Layout, Node, Scope } from '@retikz/react';
+import { Layout, Node, Scope, Step } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
+import type { AnyVanillaTier2Adapter } from '@retikz/vanilla';
+
 import { figure, renderToSvgString as renderVanillaToSvgString, scope } from '@retikz/vanilla';
 import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -44,7 +50,7 @@ import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/u
 import SemanticUnitsEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.en.demo';
 import SemanticUnitsZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.zh.demo';
 
-const definitions = [ConnectorDefinition, CalloutDefinition] as const;
+const definitions = [TerminalDefinition, StageDefinition, ConnectorDefinition, CalloutDefinition] as const;
 
 const sceneOf = (children: ReadonlyArray<IRChild>): Scene =>
   compileToScene(
@@ -66,10 +72,10 @@ const directChildren = (): Array<IRChild> => [
   translated(210, 65, createStage({ id: 'step', position: [0, 0], text: 'Step' })),
   createConnector({
     id: 'edge',
-    from: { id: 'start' },
-    to: { id: 'step' },
-    routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
-    label: { text: 'next' },
+    children: [
+      { type: 'step', kind: 'move', to: { id: 'start' } },
+      { type: 'step', kind: 'fold', via: '-|', to: { id: 'step' }, label: { text: 'next' } },
+    ],
   }),
   createCallout({
     id: 'note',
@@ -93,13 +99,12 @@ const ReactLogic: FC = () =>
       { transforms: [{ kind: 'translate', x: 210, y: 65 }] },
       createElement(Stage, { id: 'step', position: [0, 0] }, 'Step'),
     ),
-    createElement(Connector, {
-      id: 'edge',
-      from: { id: 'start' },
-      to: { id: 'step' },
-      routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
-      label: { text: 'next' },
-    }),
+    createElement(
+      Connector,
+      { id: 'edge' },
+      createElement(Step, { kind: 'move', to: 'start' }),
+      createElement(Step, { kind: 'fold', via: '-|', to: 'step', label: { text: 'next' } }),
+    ),
     createElement(
       Callout,
       { id: 'note', target: { id: 'step' }, placement: { side: 'right', gap: 10 } },
@@ -107,10 +112,7 @@ const ReactLogic: FC = () =>
     ),
   );
 
-const lower = (
-  adapter: typeof ConnectorVanillaAdapter | typeof CalloutVanillaAdapter,
-  embed: { id: string; kind: string; props: unknown },
-): IRChild =>
+const lower = (adapter: AnyVanillaTier2Adapter, embed: { id: string; kind: string; props: unknown }): IRChild =>
   adapter.lower(embed.props as never, {
     id: embed.id,
     kind: embed.kind,
@@ -120,15 +122,20 @@ const lower = (
   }).node;
 
 const vanillaChildren = (): Array<IRChild> => [
-  vanillaTranslated(48, 65, terminal('start', { position: [0, 0], text: 'Start' })),
-  vanillaTranslated(210, 65, stage('step', { position: [0, 0], text: 'Step' })),
+  vanillaTranslated(
+    48,
+    65,
+    lower(TerminalVanillaAdapter as AnyVanillaTier2Adapter, terminal('start', { position: [0, 0], text: 'Start' })),
+  ),
+  vanillaTranslated(
+    210,
+    65,
+    lower(StageVanillaAdapter as AnyVanillaTier2Adapter, stage('step', { position: [0, 0], text: 'Step' })),
+  ),
   lower(
     ConnectorVanillaAdapter,
     connector('edge', {
-      from: { id: 'start' },
-      to: { id: 'step' },
-      routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
-      label: { text: 'next' },
+      way: ['start', { label: { text: 'next' } }, '-|', 'step'],
     }),
   ),
   lower(
@@ -178,7 +185,7 @@ describe('Notation renderer integration', () => {
     const vanilla = vanillaChildren();
     expect(react).toEqual(direct);
     expect(vanilla.slice(0, 2)).toEqual(direct.slice(0, 2));
-    expect(vanilla.find(child => child.type === 'connector')).toMatchObject({ id: 'edge/connector' });
+    expect(vanilla.find(child => child.type === 'connector')).toMatchObject({ id: 'edge' });
     expect(vanilla.find(child => child.type === 'callout')).toMatchObject({ id: 'note/callout' });
   });
 
@@ -208,11 +215,11 @@ describe('Notation renderer integration', () => {
       children: [
         terminal('start', { position: [0, 0], text: 'Start' }),
         stage('step', { position: [80, 0], text: 'Step' }),
-        connector('edge', { from: { id: 'start' }, to: { id: 'step' }, label: { text: 'next' } }),
+        connector('edge', { way: ['start', { label: { text: 'next' } }, 'step'] }),
       ],
     });
     const svg = renderVanillaToSvgString(input, {
-      adapters: [ConnectorVanillaAdapter],
+      adapters: [TerminalVanillaAdapter, StageVanillaAdapter, ConnectorVanillaAdapter],
       output: { width: 220, height: 120 },
     });
     expect(svg).toContain('<svg');

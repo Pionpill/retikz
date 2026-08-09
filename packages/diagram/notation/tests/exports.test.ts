@@ -46,7 +46,8 @@ describe('@retikz/notation package boundary', () => {
   });
 
   it('preserves owner-routed public contracts and removes dead shared surface', () => {
-    expect(notationExports.ConnectorRouteKind).toBeDefined();
+    expect(notationExports.NotationElementType).toBeDefined();
+    expect(notationExports.ConnectorRole).toBeDefined();
     expect(notationExports.CalloutSide).toBeDefined();
     expect(notationExports.LogicDiagramTargetSchema).toBeDefined();
     expect(notationExports.ConnectorAppearanceSchema).toBeDefined();
@@ -67,8 +68,10 @@ describe('@retikz/notation package boundary', () => {
         namespace: 'standard',
         type: 'connector',
         id: 'legacy',
-        from: [0, 0],
-        to: [10, 10],
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 10] },
+        ],
       }),
     ).toThrow();
   });

@@ -14,17 +14,17 @@ Notation 是 Diagram foundation，不是 GraphModel。元素可以单独出现�
 
 ## 2. 包角色与完整链路
 
-| 角色           | 主责包 / 协作包                   | 责任                                                                    | 不拥有                         |
-| -------------- | --------------------------------- | ----------------------------------------------------------------------- | ------------------------------ |
-| Notation 主责  | `@retikz/notation`                | schema、factory、语义 sugar、Definition、lowering、局部 artifact 与诊断 | GraphModel、自动布局、renderer |
-| 通用布局与呈现 | `@retikz/standard`                | FlexLayout、Frame、spacing、artifact 与公共 composition contract        | 图式角色与关系语义             |
-| 图形表达与编译 | Core / Math                       | Node、Path、target、shape、layout-aware contract、Scene 与几何          | Notation 领域语义              |
-| authoring      | notation-react / notation-vanilla | 构造同一 Notation / Core IR 并接入宿主                                  | schema、lowering、布局算法     |
-| 未来关系模型   | Graph                             | 选择 Notation presentation 并组织全局关系与 geometry                    | Notation 元素内部实现          |
+| 角色           | 主责包 / 协作包                   | 责任                                                                              | 不拥有                         |
+| -------------- | --------------------------------- | --------------------------------------------------------------------------------- | ------------------------------ |
+| Notation 主责  | `@retikz/notation`                | schema、factory、语义 identity、sugar、Definition、lowering、局部 artifact 与诊断 | GraphModel、自动布局、renderer |
+| 通用布局与呈现 | `@retikz/standard`                | FlexLayout、Frame、spacing、artifact 与公共 composition contract                  | 图式角色与关系语义             |
+| 图形表达与编译 | Core / Math                       | Node、Path、target、shape、layout-aware contract、Scene 与几何                    | Notation 领域语义              |
+| authoring      | notation-react / notation-vanilla | 构造同一 Notation / Core IR 并接入宿主                                            | schema、lowering、布局算法     |
+| 未来关系模型   | Graph                             | 选择 Notation presentation 并组织全局关系与 geometry                              | Notation 元素内部实现          |
 
 ```text
 JSON / direct IR / React / Vanilla
-  -> Notation schema or Core Sugar
+  -> Notation semantic IR or pure Core Sugar
   -> Notation Definition / lowering
   -> Standard public layout composition + Core IR
   -> Scene
@@ -35,27 +35,28 @@ JSON / direct IR / React / Vanilla
 
 ## 3. 完备能力面
 
-| 能力面            | 完备目标                                              | 关键不变量                      |
-| ----------------- | ----------------------------------------------------- | ------------------------------- |
-| Semantic identity | 角色由 schema / describe / discriminator 表达         | 不由 shape、颜色或位置代替      |
-| Core Sugar        | 简单语义直接输出基础 Core IR                          | 不为命名一致性强造 composite    |
-| Tier 2 composite  | 局部布局、target、artifact 与多图元输出完整闭环       | 不复制 Core / Standard 机制     |
-| Composition       | 元素能独立使用，也能进入 Standard layout 与未来 Graph | 无 GraphModel 隐式依赖          |
-| Extension         | 开放 role / appearance 沿既有契约扩展                 | 不建立隐藏白名单或第二 registry |
-| Authoring parity  | direct IR、React、Vanilla 产生等价输入与结果          | JSX children 只是 sugar         |
-| Diagnostics       | schema、definition、target 与 child layout 失败可定位 | 不用 placeholder 静默兜底       |
-| Traceability      | authored id 与适用 artifact / Scene identity 稳定     | 不从 Scene 反推完整领域模型     |
-| Docs / LLM        | describe、API 与双语 recipe 可发现且一致              | 文档不把 recipe 误写成独立 IR   |
+| 能力面            | 完备目标                                              | 关键不变量                       |
+| ----------------- | ----------------------------------------------------- | -------------------------------- |
+| Semantic identity | 正式元素由 schema / describe / discriminator 表达     | 不由 shape、颜色或位置代替       |
+| Core Sugar        | 无独立持久化语义的便捷写法直接输出基础 Core IR        | 不为命名一致性强造 composite     |
+| Lightweight lower | 单 Node / Path 元素通过普通 Definition 一对一下沉     | 不复制 Core schema、parser或算法 |
+| Layout composite  | 局部布局、artifact 与多图元输出形成完整闭环           | 不复制 Core / Standard机制       |
+| Composition       | 元素能独立使用，也能进入 Standard layout 与未来 Graph | 无 GraphModel 隐式依赖           |
+| Extension         | 开放 role / appearance 沿既有契约扩展                 | 不建立隐藏白名单或第二 registry  |
+| Authoring parity  | direct IR、React、Vanilla 产生等价输入与结果          | JSX children 只是 sugar          |
+| Diagnostics       | schema、definition、target 与 child layout 失败可定位 | 不用 placeholder 静默兜底        |
+| Traceability      | authored id 与适用 artifact / Scene identity 稳定     | 不从 Scene 反推完整领域模型      |
+| Docs / LLM        | describe、API 与双语 recipe 可发现且一致              | 文档不把 recipe 误写成独立 IR    |
 
-## 4. Core Sugar 与 Tier 2 判定
+## 4. Semantic identity 与 lowering 判定
 
 新增元素先回答：
 
-1. 除固定 shape、默认值和职责 describe 外，是否仍与一个 Core IR 完全等价
-2. 是否需要多个 children、局部布局、target、artifact、identity facade 或多图元 lowering
-3. 是否具有独立、长期可持久化的图式语义，而不是某个页面 recipe
+1. 是否具有独立、长期可持久化的图式语义，而不是某个作者 shorthand 或页面 recipe
+2. 是否只需一个现有 Core Node / Path，且不增加独立布局、artifact或几何算法
+3. 是否需要多个 children、局部布局、artifact、identity facade或多图元lowering
 
-第一类优先做 Core Sugar；第二类且语义成立时做 Tier 2 composite；仅由现有元素组合且没有新不变量时保留为 docs recipe。两类都不得把函数、ReactNode、renderer 对象或运行时编辑状态写入 IR。
+没有独立持久化语义的便捷写法优先做 Core Sugar；正式元素只需一个 Core lower target时使用轻量 expansion Definition；需要局部布局、artifact或多图元输出时使用layout-aware composite；仅由现有元素组合且没有新不变量时保留为docs recipe。所有路径都不得把函数、ReactNode、renderer对象或运行时编辑状态写入IR。
 
 ## 5. Standard / Core 复用边界
 
@@ -72,7 +73,7 @@ Standard 公共 composition API 是无隐式注册的 owner-to-owner 组合面�
 
 ## 6. 语义开放与未来元素
 
-Notation 的统一入口不是封闭的组件枚举。UML Class、State、actor、lifeline、fork / join、note 等候选应从真实用例提炼，但不得因为“未来可能需要”提前固化字段。每个候选都经过 Core Sugar / Tier 2 / recipe 判定，并证明：
+Notation 的统一入口不是封闭的组件枚举。UML Class、State、actor、lifeline、fork / join、note 等候选应从真实用例提炼，但不得因为“未来可能需要”提前固化字段。每个候选都经过semantic identity / Core Sugar / lightweight / layout-aware / recipe判定，并证明：
 
 - 去除具体产品词汇后仍是可复用图式语义
 - 可以脱离 GraphModel 独立绘制
@@ -94,7 +95,7 @@ Notation 的统一入口不是封闭的组件枚举。UML Class、State、actor�
 ## Diagram Notation 完备性检查
 
 - 用户问题与图式语义：
-- Core Sugar / Tier 2 composite / docs recipe 判定：
+- Semantic identity / Core Sugar / lightweight / layout-aware / docs recipe判定：
 - JSON-safe 输入、identity、target 与 artifact：
 - 固定职责与可替换 appearance：
 - 依赖的 Standard / Core capability：

@@ -1,6 +1,6 @@
 # ADR-01：建立 Notation package family 并迁移图式元素
 
-- 状态：Accepted（2026-08-08，人工确认）
+- 状态：Accepted（2026-08-08，人工确认；语义Node与Connector契约由[alpha.2 ADR-01](../alpha.2/01-semantic-ir-lightweight-lowering.md)部分取代）
 - 决策日期：2026-08-08
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Notation v0.1 roadmap](../roadmap.md) · [Diagram Notation 完备设计](../../../../../architecture/diagram-notation-complete.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [Standard alpha.3 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/roadmap.md)
 
@@ -29,6 +29,8 @@ Notation 继续保留两类公开机制：
 1. Terminal、Stage、Decision、Junction 是 Core Node Sugar。它们固定 shape、默认值和职责 describe，输出 `type: 'node'`，不注册 Notation composite 或 artifact。
 2. LogicFrame、Connector、Callout 是 Tier 2 composite。它们保留当前 JSON-safe schema、Definition、factory、target 与适用 artifact，经 Notation namespace lowering 为 Core IR。
 
+上述机制分类是alpha.1迁移时的历史契约。alpha.2 ADR-01进一步确认：正式、可持久化的Notation元素均保留semantic IR；Terminal、Stage、Decision、Junction与Connector改为一对一轻量expansion，旧Core Node Sugar和Connector route surface不再生效。LogicFrame、Callout与本ADR冻结的package family、owner及Standard layout composition边界保持不变。
+
 组件字段与类型名本轮不变；import owner 改为：
 
 ```ts
@@ -41,7 +43,7 @@ import {
 } from '@retikz/notation';
 ```
 
-React 与 Vanilla 使用对应 Notation adapter 包。直接 IR 注入实际使用的 LogicFrame、Connector、Callout Definition；四个语义 Node 不需要 Definition。
+React 与 Vanilla 使用对应 Notation adapter 包。alpha.2 起，直接 IR 为实际使用的七类 Notation 元素分别注入 Definition；包导入本身不修改全局 registry。
 
 ## Standard 公共 layout composition contract
 
