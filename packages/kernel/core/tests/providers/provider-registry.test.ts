@@ -60,15 +60,15 @@ describe('provider registry contract', () => {
     ).toThrow(/Unknown mock provider 'gamma'.*alpha, beta.*options\.mockProviders/s);
   });
 
-  it('rejects_empty_provider_keys_at_registration_time', () => {
+  it.each(['', ' ', '\u2003'])('rejects_blank_provider_keys_at_registration_time (%j)', key => {
     expect(() =>
       resolveProviderRegistry({
         capability: 'mock provider',
-        builtins: [provider('')],
+        builtins: [provider(key)],
         custom: [],
         keyOf: def => def.name,
       }),
-    ).toThrow(/non-empty string/);
+    ).toThrowError('mock provider provider key must be a non-empty string.');
   });
 
   it('indexes_builtin_provider_arrays_by_custom_keys', () => {

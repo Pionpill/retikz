@@ -6,6 +6,8 @@ import { lowerPlots, PLOT_NAMESPACE, PlotComposite, PlotSpecSchema, PlotThemeTok
 
 import type { PlotEmbedProps } from '../spec';
 
+import { assertPlotVanillaNonEmptyString } from '../shared';
+
 /** 创建共享 datasets 与 lowering options 的 Plot Vanilla Tier2 adapter */
 export const createPlotAdapter = (
   datasets: ExternalDatasets,
@@ -21,7 +23,7 @@ export const createPlotAdapter = (
     kind: PLOT_NAMESPACE,
     namespace: PLOT_NAMESPACE,
     lower: (props, context) => {
-      if (context.id.trim().length === 0) throw new Error('plot vanilla: embed id must be non-empty');
+      assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
       const parsed = PlotSpecSchema.parse(props.spec);
       const node = PlotSpecSchema.parse({
         ...parsed,

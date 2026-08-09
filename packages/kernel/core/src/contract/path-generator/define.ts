@@ -1,3 +1,5 @@
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { PathGeneratorDefinition } from './types';
 
 /**
@@ -6,9 +8,8 @@ import type { PathGeneratorDefinition } from './types';
  * @throws 当 name、paramsSchema、generate 或 targetParams 形态非法时
  */
 export const definePathGenerator = (def: PathGeneratorDefinition): PathGeneratorDefinition => {
-  if (typeof def.name !== 'string' || def.name.trim().length === 0) {
-    throw new Error('definePathGenerator: name must be a non-empty string.');
-  }
+  if (typeof def.name !== 'string') throw new Error('definePathGenerator: name must be a non-empty string.');
+  assertNonEmptyString(def.name, 'definePathGenerator: name');
   const schema = def.paramsSchema as { safeParse?: unknown } | null | undefined;
   if (schema === null || typeof schema !== 'object' || typeof schema.safeParse !== 'function') {
     throw new Error('definePathGenerator: paramsSchema must be a zod schema (with a safeParse method).');

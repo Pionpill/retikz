@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Showcase 图表家族 frontmatter 值 */
 export const ShowcaseFamily = {

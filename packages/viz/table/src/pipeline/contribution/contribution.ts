@@ -12,6 +12,7 @@ import type { TableRuntimeContribution, TableRuntimeContributionInput } from './
 
 import { TableThemeTokenDefinition } from '../../contract';
 import { extractTableStructureKind } from '../../providers';
+import { assertTableNonEmptyString } from '../../shared';
 import { lowerTables } from '../resolve';
 
 const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
@@ -146,9 +147,7 @@ export const makeTableRuntimeComposites = (mergedDatasets: Record<string, unknow
 
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
-  if (input.reference.trim().length === 0) {
-    throw new Error('table: runtime contribution reference must be non-empty');
-  }
+  assertTableNonEmptyString(input.reference, 'table: runtime contribution reference must be non-empty');
   const runtimeReference = `@@retikz/table/runtime/${encodeRuntimeReference(input.reference)}`;
   const data = input.data ?? {};
   if (Object.hasOwn(data, runtimeReference)) {

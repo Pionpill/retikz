@@ -1,3 +1,5 @@
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { ClipDefinition, ClipDefinitionInput, ClipSpecLike } from './types';
 
 /**
@@ -6,8 +8,6 @@ import type { ClipDefinition, ClipDefinitionInput, ClipSpecLike } from './types'
  * @throws 当 kind 为空字符串时
  */
 export const defineClip = <TSpec extends ClipSpecLike>(definition: ClipDefinitionInput<TSpec>): ClipDefinition => {
-  if (definition.kind.trim().length === 0) {
-    throw new Error('clip provider key must be a non-empty string.');
-  }
+  assertNonEmptyString(definition.kind, 'clip provider key');
   return definition as unknown as ClipDefinition;
 };

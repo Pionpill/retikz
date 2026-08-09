@@ -1,3 +1,4 @@
+import { assertNonEmptyString } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { AnyThemeTokenDefinition } from '../../contract';
@@ -11,7 +12,12 @@ const assertDefinition = (definition: AnyThemeTokenDefinition, source: string): 
   if (!Object.isFrozen(definition)) {
     throw new Error(`Theme token definition "${definition.namespace}" from ${source} must be frozen.`);
   }
-  if (typeof definition.namespace !== 'string' || definition.namespace.trim().length === 0) {
+  if (typeof definition.namespace !== 'string') {
+    throw new Error(`Theme token definition from ${source} must declare a non-empty namespace.`);
+  }
+  try {
+    assertNonEmptyString(definition.namespace, `Theme token definition from ${source} namespace`);
+  } catch {
     throw new Error(`Theme token definition from ${source} must declare a non-empty namespace.`);
   }
   if (!(definition.schema instanceof z.ZodType)) {

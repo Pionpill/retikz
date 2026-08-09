@@ -57,5 +57,7 @@ describe('Table Vanilla plain authoring', () => {
     });
     expect(() => embedTable('', spec)).toThrow('table vanilla: embed id must be non-empty');
     expect(() => embedTable('   ', spec)).toThrow('table vanilla: embed id must be non-empty');
+    expect(() => embedTable('\u2003', spec)).toThrowError('table vanilla: embed id must be non-empty');
+    expect(() => embedTable('\ufeff', spec)).toThrowError('table vanilla: embed id must be non-empty');
   });
 });

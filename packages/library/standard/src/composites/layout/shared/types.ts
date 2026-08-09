@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
 import type {

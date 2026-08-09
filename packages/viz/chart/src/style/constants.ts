@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Chart presentation 与 recipe 默认值的 canonical token key */
 export const ChartThemeToken = {

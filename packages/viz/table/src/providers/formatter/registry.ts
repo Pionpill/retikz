@@ -1,5 +1,6 @@
 import type { AnyCellFormatterDefinition } from '../../contract';
 
+import { assertTableNonEmptyString } from '../../shared';
 import { BUILTIN_CELL_FORMATTERS } from './definitions';
 
 /** 合并内置与用户 Cell formatter definitions */
@@ -8,9 +9,7 @@ export const resolveCellFormatterRegistry = (
 ): ReadonlyMap<string, AnyCellFormatterDefinition> => {
   const registry = new Map<string, AnyCellFormatterDefinition>();
   for (const definition of [...BUILTIN_CELL_FORMATTERS, ...(custom ?? [])]) {
-    if (definition.name.trim().length === 0) {
-      throw new Error('cell formatter provider key must be a non-empty string');
-    }
+    assertTableNonEmptyString(definition.name, 'cell formatter provider key must be a non-empty string');
     if (registry.has(definition.name)) {
       throw new Error(`duplicate cell formatter registration: "${definition.name}"`);
     }

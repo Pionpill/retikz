@@ -143,6 +143,7 @@ export type Release = {
 
 /** 全部可能的包标识(筛选 chips 由数据中实际出现者派生) */
 export const PACKAGE_IDS = [
+  '@retikz/foundation',
   '@retikz/math',
   '@retikz/runtime',
   '@retikz/core',
@@ -167,6 +168,7 @@ export type PackageId = (typeof PACKAGE_IDS)[number];
 
 /** 包标识 -> 展示名(多数包名两语一致,docs 例外) */
 export const PACKAGE_LABEL: Record<PackageId, Localized> = {
+  '@retikz/foundation': { zh: '@retikz/foundation', en: '@retikz/foundation' },
   '@retikz/math': { zh: '@retikz/math', en: '@retikz/math' },
   '@retikz/runtime': { zh: '@retikz/runtime', en: '@retikz/runtime' },
   '@retikz/core': { zh: '@retikz/core', en: '@retikz/core' },
@@ -198,6 +200,7 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
   {
     id: 'kernel',
     members: [
+      '@retikz/foundation',
       '@retikz/math',
       '@retikz/runtime',
       '@retikz/core',

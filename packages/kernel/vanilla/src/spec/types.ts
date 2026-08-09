@@ -7,8 +7,8 @@ import type {
   IRScene,
   IRScope,
   IRViewBox,
-  ValueOf,
 } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 import type { VanillaAuthoringSite } from './authoring-site';
 import type { VanillaLayerCache } from './constants';

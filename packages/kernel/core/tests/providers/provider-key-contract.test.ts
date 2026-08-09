@@ -10,6 +10,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   definePathGenerator,
+  definePathKind,
   defineShape,
 } from '../../src';
 
@@ -55,7 +56,9 @@ describe('provider key contract', () => {
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: '' }],
     };
 
-    expect(() => compileToScene(ir, { shapes: [rectangle] }).scene).toThrow(/duplicate shape registration: "rectangle"/);
+    expect(() => compileToScene(ir, { shapes: [rectangle] }).scene).toThrow(
+      /duplicate shape registration: "rectangle"/,
+    );
   });
 
   it('path_generator_definition_declares_name_and_compiles_from_array_options', () => {
@@ -81,10 +84,32 @@ describe('provider key contract', () => {
     expect(() => compileToScene(ir, { pathGenerators: [segment] }).scene).not.toThrow();
   });
 
+  it.each(['', ' ', '\u2003', '\ufeff'])(
+    'path generator rejects a blank name with the established error (%j)',
+    name => {
+      expect(() =>
+        definePathGenerator({
+          name,
+          paramsSchema: z.object({}),
+          generate: () => [],
+        }),
+      ).toThrowError('definePathGenerator: name must be a non-empty string.');
+    },
+  );
+
   it('path_kind_definitions_are_keyed_by_schema_literal_kind', () => {
     const pathKindNames = BUILTIN_PATH_KINDS.map(def => def.schema.shape.kind.value).sort();
 
     expect(pathKindNames).toEqual(['ribbon', 'stroke']);
+  });
+
+  it.each(['', ' ', '\u2003', '\ufeff'])('path kind rejects a blank schema literal (%j)', kind => {
+    expect(() =>
+      definePathKind({
+        schema: z.object({ kind: z.literal(kind) }),
+        compile: () => null,
+      }),
+    ).toThrowError('definePathKind: schema.shape.kind must be a non-empty z.literal string.');
   });
 
   it('composite_definition_declares_namespace_and_type_as_provider_key', () => {
@@ -117,6 +142,34 @@ describe('provider key contract', () => {
         expand: () => [],
       }),
     ).toThrow(/namespace.*declared.*actual/s);
+  });
+
+  it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank namespace literal (%j)', namespace => {
+    expect(() =>
+      defineComposite({
+        namespace: 'demo',
+        type: 'badge',
+        schema: CompositeBaseSchema.extend({
+          namespace: z.literal(namespace),
+          type: z.literal('badge'),
+        }),
+        expand: () => [],
+      }),
+    ).toThrowError('defineComposite: schema.namespace must be a non-empty z.literal string.');
+  });
+
+  it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank type literal (%j)', type => {
+    expect(() =>
+      defineComposite({
+        namespace: 'demo',
+        type: 'badge',
+        schema: CompositeBaseSchema.extend({
+          namespace: z.literal('demo'),
+          type: z.literal(type),
+        }),
+        expand: () => [],
+      }),
+    ).toThrowError('defineComposite: schema.type must be a non-empty z.literal string.');
   });
 
   it('composite_object_union_declares_one_shared_provider_key', () => {

@@ -1,8 +1,8 @@
 # @retikz/core
 
-Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a TikZ-inspired diagramming library. Provides the zod-typed **IR**, the **`compileToScene`** compiler, pure **parsers**, geometry helpers, and the provider registries used by core compilation.
+Framework-agnostic core of [retikz](https://pionpill.github.io/retikz/) — a TikZ-inspired diagramming library. Provides the zod-typed **IR**, the **`compileToScene`** compiler, pure **parsers**, geometry helpers, and the provider registries used by core compilation. Runtime dependencies are `@retikz/foundation`, `@retikz/runtime`, `@retikz/math`, and `zod`; IR remains 100% JSON-serializable.
 
-零框架核心：retikz 的中间表示（IR）、`compileToScene` 编译器、纯解析器、几何工具与 core 编译期 provider 注册面。**零 React、零 DOM**，运行时依赖只有 `zod` 与 `@retikz/math`，IR 100% 可 JSON 序列化。
+零框架核心：retikz 的中间表示（IR）、`compileToScene` 编译器、纯解析器、几何工具与 core 编译期 provider 注册面。**零 React、零 DOM**，运行时依赖为 `@retikz/foundation`、`@retikz/runtime`、`@retikz/math` 与 `zod`，IR 100% 可 JSON 序列化。
 
 ## Install
 

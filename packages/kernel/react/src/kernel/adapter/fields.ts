@@ -1,4 +1,5 @@
-import type { AssertEqual, IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { AssertEqual } from '@retikz/foundation';
 
 import type { ScopeStyleProps } from '../protocol';
 

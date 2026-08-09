@@ -1,4 +1,4 @@
-import type { ValueOf } from '../shared';
+import type { ValueOf } from '@retikz/foundation';
 
 /** 性能 trace 的执行阶段常量 */
 export const PerformanceTracePhase = {
