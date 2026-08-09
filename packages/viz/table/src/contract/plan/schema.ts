@@ -17,6 +17,19 @@ const TableThemeTokenKeySchema = z.enum([
   'columnHeader.border.bottom',
 ]);
 
+/** 判断 Cell appearance token path 是否与其 local key 对应 */
+const isLocalAppearanceTokenPath = (key: string, path: string): boolean => {
+  if (path === `$spec/tableThemeTokens/${key}`) return true;
+  const prefix = '$style/';
+  const suffix = `/${key}`;
+  if (!path.startsWith(prefix) || !path.endsWith(suffix)) return false;
+  const selector = path.slice(prefix.length, -suffix.length);
+  return (
+    (selector.endsWith('/light') && selector.length > '/light'.length) ||
+    (selector.endsWith('/dark') && selector.length > '/dark'.length)
+  );
+};
+
 export const TableCellPlanSourceSchema = z
   .discriminatedUnion('kind', [
     z.strictObject({
@@ -44,6 +57,19 @@ export const TableCellPlanSourceSchema = z
       ruleIndex: z.number().int().nonnegative().describe('Zero-based declaration index of the winning root rule.'),
     }),
   ])
+  .superRefine((source, context) => {
+    if (source.kind !== TableCellPlanSourceKind.StyleToken) return;
+    if (
+      source.tokenSource !== ThemeTokenSource.Local ||
+      !isLocalAppearanceTokenPath(source.tokenKey, source.tokenPath)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['tokenPath'],
+        message: 'Table Cell style token source and path must identify the same owner-local token',
+      });
+    }
+  })
   .describe('Closed winner source for the currently executed Table Cell cascade.');
 
 export const TableCellAppearanceTracePathSchema = z

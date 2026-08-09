@@ -1,11 +1,12 @@
 import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 
+import type { TableThemeStyleDefinition } from '../../contract';
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
 import type { ResolvedTableThemeTokens, TableThemeContext } from './types';
 
 import { TableThemeTokenKeySchema, TableThemeTokenMapSchema, TableThemeTokenOverridesSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
-import { BUILTIN_TABLE_THEME_TOKENS } from './presets';
+import { resolveTableThemeStyleRegistry } from './registry';
 
 const defaultTheme: TableThemeContext = {
   style: ThemeStyle.Neutral,
@@ -17,12 +18,18 @@ const defaultTheme: TableThemeContext = {
 export const resolveTableThemeTokens = (
   effectiveTheme: TableThemeContext = defaultTheme,
   local: IRTableThemeTokenOverrides = {},
+  tableThemeStyles: ReadonlyArray<TableThemeStyleDefinition> | undefined = undefined,
 ): ResolvedTableThemeTokens => {
   const parsedLocal = TableThemeTokenOverridesSchema.parse(structuredClone(local));
-  const preset = BUILTIN_TABLE_THEME_TOKENS[effectiveTheme.style][effectiveTheme.mode];
+  const styles = resolveTableThemeStyleRegistry(tableThemeStyles);
+  const definition = styles.get(effectiveTheme.style);
+  if (definition === undefined) {
+    throw new Error(`Table theme style '${effectiveTheme.style}' is not registered.`);
+  }
+  const baseline = definition.resolve(effectiveTheme);
   const sharedCategorical = [...effectiveTheme.colors.categorical];
   const tokens = TableThemeTokenMapSchema.parse({
-    ...structuredClone(preset),
+    ...structuredClone(baseline),
     'data.categorical': sharedCategorical,
     ...structuredClone(parsedLocal),
   });

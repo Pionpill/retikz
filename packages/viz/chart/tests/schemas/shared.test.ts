@@ -181,6 +181,46 @@ describe('Chart shared schemas', () => {
         plot: {},
         style: {
           ...style,
+          chart: {
+            ...style.chart,
+            tokenSources: style.chart.tokenSources.map((source, index) =>
+              index === 0 ? { ...source, kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' } : source,
+            ),
+          },
+        },
+        presentation: {
+          contentKind: 'plot',
+          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        },
+        members: [],
+      }).success,
+    ).toBe(false);
+    expect(
+      ChartInspectionSchema.safeParse({
+        chart: { type: 'scatter' },
+        plot: {},
+        style: {
+          ...style,
+          chart: {
+            ...style.chart,
+            tokenSources: style.chart.tokenSources.map((source, index) =>
+              index === 0 ? { ...source, path: '$spec/chartThemeTokens/chart.padding' } : source,
+            ),
+          },
+        },
+        presentation: {
+          contentKind: 'plot',
+          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        },
+        members: [],
+      }).success,
+    ).toBe(false);
+    expect(
+      ChartInspectionSchema.safeParse({
+        chart: { type: 'scatter' },
+        plot: {},
+        style: {
+          ...style,
           plot: {
             ...style.plot,
             authoredOverrides: [

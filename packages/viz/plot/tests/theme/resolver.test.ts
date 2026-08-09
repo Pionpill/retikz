@@ -230,6 +230,26 @@ describe('Plot theme resolver', () => {
     expect(
       PlotThemeResolutionSchema.safeParse({
         ...result,
+        tokenSources: result.tokenSources.map(source =>
+          source.token === PlotThemeToken.PlotSurfaceFill
+            ? { ...source, kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' }
+            : source,
+        ),
+      }).success,
+    ).toBe(false);
+    expect(
+      PlotThemeResolutionSchema.safeParse({
+        ...result,
+        tokenSources: result.tokenSources.map(source =>
+          source.token === PlotThemeToken.PlotPaletteCategorical
+            ? { ...source, kind: ThemeTokenSource.Local, path: '$theme/colors/categorical' }
+            : source,
+        ),
+      }).success,
+    ).toBe(false);
+    expect(
+      PlotThemeResolutionSchema.safeParse({
+        ...result,
         authoredOverrides: [...result.authoredOverrides].reverse(),
       }).success,
     ).toBe(false);

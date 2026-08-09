@@ -1,4 +1,4 @@
-import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
+import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { z } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
@@ -219,8 +219,8 @@ const TableThemeTokenSourceRecordSchema = z.strictObject({
 
 const TableManifestStyleSchema = z
   .strictObject({
-    style: z.enum(ThemeStyle).describe('Effective Core Theme style selecting the Table preset.'),
-    themeMode: z.enum(ThemeMode).describe('Effective Core Theme mode selecting the Table preset.'),
+    style: z.string().min(1).describe('Effective Core Theme style selecting the Table style definition.'),
+    themeMode: z.enum(ThemeMode).describe('Effective Core Theme mode selecting the Table style baseline.'),
     tokens: TableThemeTokenMapSchema.describe('Complete resolved Table theme token map.'),
     sources: z
       .array(TableThemeTokenSourceRecordSchema)
@@ -229,11 +229,26 @@ const TableManifestStyleSchema = z
   })
   .superRefine((style, context) => {
     TableThemeTokenKeySchema.options.forEach((key, index) => {
-      if (style.sources[index]?.key !== key) {
+      const source = style.sources[index];
+      if (source.key !== key) {
         context.addIssue({
           code: 'custom',
           path: ['sources', index, 'key'],
           message: `Style token sources must use canonical key order; expected "${key}"`,
+        });
+        return;
+      }
+      const localPaths = [`$style/${style.style}/${style.themeMode}/${key}`, `$spec/tableThemeTokens/${key}`];
+      const valid =
+        key === 'data.categorical'
+          ? (source.source === ThemeTokenSource.Inherit && source.path === '$theme/colors/categorical') ||
+            (source.source === ThemeTokenSource.Local && source.path === localPaths[1])
+          : source.source === ThemeTokenSource.Local && localPaths.includes(source.path);
+      if (!valid) {
+        context.addIssue({
+          code: 'custom',
+          path: ['sources', index, 'path'],
+          message: `Style token source and path must identify the canonical winner for "${key}"`,
         });
       }
     });

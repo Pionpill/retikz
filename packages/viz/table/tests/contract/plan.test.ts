@@ -50,6 +50,22 @@ describe('Table Cell plan lineage contract', () => {
         tokenSource: 'foreign',
       }),
     ).toThrow(/tokenKey/i);
+    expect(() =>
+      TableCellPlanSourceSchema.parse({
+        kind: 'styleToken',
+        tokenKey: 'cell.content.color',
+        tokenSource: 'inherit',
+        tokenPath: '$theme/colors/categorical',
+      }),
+    ).toThrow(/source|path/i);
+    expect(() =>
+      TableCellPlanSourceSchema.parse({
+        kind: 'styleToken',
+        tokenKey: 'cell.content.color',
+        tokenSource: 'local',
+        tokenPath: '$spec/tableThemeTokens/cell.background.fill',
+      }),
+    ).toThrow(/source|path/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'default', ruleIndex: 0 })).toThrow();
   });
 

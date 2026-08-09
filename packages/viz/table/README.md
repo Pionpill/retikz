@@ -28,6 +28,8 @@ bypass formatter and presentation dispatch.
 `compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. `tableThemeTokens` stays
 in the JSON-safe TableSpec and is resolved by the Table owner. The resolved `TableLayoutManifest`
 records effective `style`, `themeMode`, complete tokens, and per-token sources as output metadata.
+Custom styles register the same name in Core through `compile.themeStyles` and in Table through
+`lower.tableThemeStyles`; a consumed style without its Table definition fails loudly.
 
 Use `lowerTables(datasets, options)` to register the layout-aware Table composite definition with
 `@retikz/core`. For a standalone Table, `compileTable(spec, datasets, options)` performs one Core

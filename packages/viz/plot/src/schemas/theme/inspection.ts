@@ -6,6 +6,11 @@ import { PlotThemeSchema } from './schema';
 import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
 
 const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/colors', '$spec/plotTheme'] as const;
+const PLOT_INHERITED_COLOR_TOKENS = new Set<string>([
+  PlotThemeToken.PlotPaletteCategorical,
+  PlotThemeToken.PlotPaletteSeries,
+  PlotThemeToken.PlotPaletteSector,
+]);
 
 /** 单个 Plot token 的最终 cascade 来源 */
 export const PlotThemeTokenSourceRecordSchema = z
@@ -60,6 +65,25 @@ export const PlotThemeResolutionSchema = z
         message: 'Plot token sources must contain every canonical token exactly once and in order',
       });
     }
+    resolution.tokenSources.forEach((source, index) => {
+      const inherited =
+        source.kind === ThemeTokenSource.Inherit &&
+        PLOT_INHERITED_COLOR_TOKENS.has(source.token) &&
+        source.path === '$theme/colors/categorical';
+      const local =
+        source.kind === ThemeTokenSource.Local &&
+        (source.path === `$style/${resolution.style}/${resolution.mode}/${source.token}` ||
+          source.path === `$spec/plotThemeTokens/${source.token}` ||
+          (PLOT_INHERITED_COLOR_TOKENS.has(source.token) && source.path === '$spec/colors') ||
+          source.path.startsWith('$spec/plotTheme/'));
+      if (!inherited && !local) {
+        context.addIssue({
+          code: 'custom',
+          path: ['tokenSources', index, 'path'],
+          message: 'Plot token source relation and path must identify a canonical owner input',
+        });
+      }
+    });
     const authoredPaths = resolution.authoredOverrides.map(source => source.path);
     const expected = PLOT_THEME_AUTHORED_OVERRIDE_PATHS.filter(path => authoredPaths.includes(path));
     if (authoredPaths.length !== expected.length || authoredPaths.some((path, index) => path !== expected[index])) {

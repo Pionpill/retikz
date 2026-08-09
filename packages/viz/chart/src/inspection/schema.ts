@@ -93,6 +93,19 @@ const ChartOwnedStyleInspectionSchema = zod
         message: 'Chart token sources must contain every canonical token exactly once and in order',
       });
     }
+    style.tokenSources.forEach((source, index) => {
+      const valid =
+        source.kind === ThemeTokenSource.Local &&
+        (source.path === `$style/${style.style}/${style.mode}/${source.token}` ||
+          source.path === `$spec/chartThemeTokens/${source.token}`);
+      if (!valid) {
+        context.addIssue({
+          code: 'custom',
+          path: ['tokenSources', index, 'path'],
+          message: 'Chart token source relation and path must identify the canonical owner-local input',
+        });
+      }
+    });
   })
   .describe('Resolved Chart-owned presentation and recipe style');
 
