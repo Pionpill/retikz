@@ -1,4 +1,4 @@
-import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeStyle } from '@retikz/core';
+import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 import { z } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
@@ -33,9 +33,7 @@ export const TableBorderStyleTokenKeySchema = z
 
 const TableBorderStyleTokenProvenanceSchema = z.strictObject({
   key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
-  source: z
-    .enum(['preset', 'shared-categorical', 'local-theme-token'])
-    .describe('Cascade layer that supplied the border token.'),
+  source: z.enum(ThemeTokenSource).describe('Border token source relation to the Table owner.'),
   path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
 });
 
@@ -215,9 +213,7 @@ export const TableCellManifestEntrySchema = z
 
 const TableThemeTokenSourceRecordSchema = z.strictObject({
   key: TableThemeTokenKeySchema.describe('Canonical Table theme token key.'),
-  source: z
-    .enum(['preset', 'shared-categorical', 'local-theme-token'])
-    .describe('Cascade layer that supplied the resolved token.'),
+  source: z.enum(ThemeTokenSource).describe('Resolved token source relation to the Table owner.'),
   path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
 });
 

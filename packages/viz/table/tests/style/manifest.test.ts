@@ -31,9 +31,7 @@ describe('Table style and encoding manifest seed', () => {
       tokens: { 'cell.content.color': '#123456' },
     });
     expect(result.manifest.style.sources.map(entry => entry.key)).toEqual(TableThemeTokenKeySchema.options);
-    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe(
-      'local-theme-token',
-    );
+    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe('local');
     expect(result.manifest.encodings).toEqual([
       { id: 'value-fill', channel: 'backgroundFill', scaleName: 'ordinal-color', cellIds: ['cell.r0.c0'] },
     ]);
@@ -168,7 +166,7 @@ describe('Table style and encoding manifest seed', () => {
     const fakeManifest = structuredClone(fakeProvenance.manifest);
     const fakeWinner = fakeManifest.borders[0].atoms[0].winner;
     if (fakeWinner.kind !== 'line') throw new Error('expected explicit line winner');
-    Object.assign(fakeWinner, { styleToken: { key: 'table.border.top', source: 'preset' } });
+    Object.assign(fakeWinner, { styleToken: { key: 'table.border.top', source: 'local' } });
     expect(() => TableLayoutManifestSchema.parse(fakeManifest)).toThrow(/origin|line|styleToken/i);
 
     const wrongTokenSource = structuredClone(result.manifest);
@@ -176,7 +174,7 @@ describe('Table style and encoding manifest seed', () => {
     if (sourceWinner.kind !== 'line' || sourceWinner.origin !== 'styleToken') {
       throw new Error('expected style token line winner');
     }
-    Object.assign(sourceWinner.styleToken, { source: 'shared-categorical' });
+    Object.assign(sourceWinner.styleToken, { source: 'inherit' });
     expect(() => TableLayoutManifestSchema.parse(wrongTokenSource)).toThrow(/source/i);
   });
 

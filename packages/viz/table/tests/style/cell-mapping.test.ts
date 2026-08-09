@@ -33,18 +33,18 @@ describe('theme token Cell mapping', () => {
           '/content/color': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.color',
-            tokenSource: 'local-theme-token',
+            tokenSource: 'local',
             tokenPath: '$spec/tableThemeTokens/columnHeader.content.color',
           },
           '/content/nodeDefault/font/family': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.font.family',
-            tokenSource: 'preset',
+            tokenSource: 'local',
           },
           '/content/labelDefault/font/family': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.font.family',
-            tokenSource: 'preset',
+            tokenSource: 'local',
           },
         },
       },

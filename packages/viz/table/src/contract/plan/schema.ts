@@ -1,6 +1,7 @@
+import { ThemeTokenSource } from '@retikz/core';
 import { z } from 'zod';
 
-import { TableCellAppearanceTracePath, TableCellPlanSourceKind, TableThemeTokenSourceKind } from './constants';
+import { TableCellAppearanceTracePath, TableCellPlanSourceKind } from './constants';
 
 const TableThemeTokenKeySchema = z.enum([
   'cell.background.fill',
@@ -29,9 +30,7 @@ export const TableCellPlanSourceSchema = z
     z.strictObject({
       kind: z.literal(TableCellPlanSourceKind.StyleToken).describe('Discriminator for a resolved Table token winner.'),
       tokenKey: TableThemeTokenKeySchema.describe('Appearance Table token that supplied the winning leaf.'),
-      tokenSource: z
-        .enum(Object.values(TableThemeTokenSourceKind) as [string, ...Array<string>])
-        .describe('Cascade layer that supplied the winning Table token.'),
+      tokenSource: z.enum(ThemeTokenSource).describe('Winning token source relation to the Table owner.'),
       tokenPath: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
     }),
     z.strictObject({

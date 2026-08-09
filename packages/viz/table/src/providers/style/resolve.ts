@@ -1,4 +1,4 @@
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
 
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
 import type { ResolvedTableThemeTokens, TableThemeContext } from './types';
@@ -32,15 +32,21 @@ export const resolveTableThemeTokens = (
         return [
           key,
           {
-            kind: 'local-theme-token',
+            kind: ThemeTokenSource.Local,
             path: `$spec/tableThemeTokens/${key}`,
           },
         ];
       }
       if (key === 'data.categorical') {
-        return [key, { kind: 'shared-categorical', path: '$theme/colors/categorical' }];
+        return [key, { kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' }];
       }
-      return [key, { kind: 'preset', path: `$preset/${effectiveTheme.style}/${effectiveTheme.mode}/${key}` }];
+      return [
+        key,
+        {
+          kind: ThemeTokenSource.Local,
+          path: `$style/${effectiveTheme.style}/${effectiveTheme.mode}/${key}`,
+        },
+      ];
     }),
   ) as Record<TableThemeTokenKey, ResolvedTableThemeTokens['sources'][TableThemeTokenKey]>;
   return deepFreeze({ tokens, sources });

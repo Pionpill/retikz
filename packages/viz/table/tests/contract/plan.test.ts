@@ -19,8 +19,8 @@ describe('Table Cell plan lineage contract', () => {
       TableCellPlanSourceSchema.parse({
         kind: TableCellPlanSourceKind.StyleToken,
         tokenKey: 'cell.content.color',
-        tokenSource: 'preset',
-        tokenPath: '$preset/neutral/light/cell.content.color',
+        tokenSource: 'local',
+        tokenPath: '$style/neutral/light/cell.content.color',
       }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Encoding, encodingId: 'status-color' }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.RootRule, ruleIndex: 0 }),
@@ -33,8 +33,8 @@ describe('Table Cell plan lineage contract', () => {
       {
         kind: 'styleToken',
         tokenKey: 'cell.content.color',
-        tokenSource: 'preset',
-        tokenPath: '$preset/neutral/light/cell.content.color',
+        tokenSource: 'local',
+        tokenPath: '$style/neutral/light/cell.content.color',
       },
       { kind: 'encoding', encodingId: 'status-color' },
       { kind: 'rootRule', ruleIndex: 0 },
@@ -47,7 +47,7 @@ describe('Table Cell plan lineage contract', () => {
       TableCellPlanSourceSchema.parse({
         kind: 'styleToken',
         tokenKey: 'data.categorical',
-        tokenSource: 'preset',
+        tokenSource: 'foreign',
       }),
     ).toThrow(/tokenKey/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'default', ruleIndex: 0 })).toThrow();

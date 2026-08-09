@@ -4,15 +4,15 @@ import { describe, expect, it } from 'vitest';
 import { BUILTIN_TABLE_THEME_TOKENS, resolveTableThemeTokens } from '../../src';
 
 describe('Table theme token resolution', () => {
-  it('defaults to neutral light and records preset/shared winners', () => {
+  it('defaults to neutral light and records local/inherited winners', () => {
     const resolved = resolveTableThemeTokens();
 
     expect(resolved.tokens).toMatchObject(BUILTIN_TABLE_THEME_TOKENS.neutral.light);
     expect(resolved.tokens['data.categorical']).toEqual(resolveCoreThemeColors('neutral', 'light').categorical);
     expect(Object.values(resolved.sources).map(source => source.kind)).toEqual([
-      ...Array.from({ length: 17 }, () => 'preset'),
-      'shared-categorical',
-      'preset',
+      ...Array.from({ length: 17 }, () => 'local'),
+      'inherit',
+      'local',
     ]);
     expect(Object.isFrozen(resolved)).toBe(true);
     expect(Object.isFrozen(resolved.tokens)).toBe(true);
@@ -40,8 +40,8 @@ describe('Table theme token resolution', () => {
     expect(resolved.tokens['table.border.horizontal']).toEqual(border);
     expect(resolved.tokens['data.categorical']).toEqual(['pink', 'pink']);
     expect(resolved.tokens['data.sequential']).toEqual(['orange', 'purple']);
-    expect(resolved.sources['columnHeader.content.color']).toMatchObject({ kind: 'local-theme-token' });
-    expect(resolved.sources['cell.content.color']).toMatchObject({ kind: 'preset' });
+    expect(resolved.sources['columnHeader.content.color']).toMatchObject({ kind: 'local' });
+    expect(resolved.sources['cell.content.color']).toMatchObject({ kind: 'local' });
 
     categorical[0] = 'mutated';
     border.width = 9;
