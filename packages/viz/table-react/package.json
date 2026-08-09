@@ -73,6 +73,7 @@
   "dependencies": {
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/react": "workspace:^",
     "@retikz/table": "workspace:*"
   },

@@ -1,8 +1,8 @@
 # Retikz Foundation 基础包设计
 
-> **状态：架构方向已确认，尚未进入 ADR 或实现。** 本文定义跨包基础能力的所有权、依赖边界和最小公开契约；不冻结版本、文件组织、迁移步骤或具体错误码。当前包拓扑以 [`包拓扑`](./package-topology.md) 和机器可读的 release-group 配置为准。
+> **状态：架构方向已确认，Foundation 已按 v0.5 alpha.2 ADR-14 实现并完成 Accepted 收口。** 本文定义跨包基础能力的所有权、依赖边界和最小公开契约；实现后的公开面、文件结构和迁移证据以 ADR-14、包文档、manifest 与测试为准。当前包拓扑以 [`包拓扑`](./package-topology.md) 和机器可读的 release-group 配置为准。
 >
-> 关联设计：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`性能与增量运行时设计`](./performance-design.md)
+> 关联设计：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`alpha.2 roadmap`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/roadmap.md) · [`Foundation ADR-14`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/14-foundation-package.md)
 
 ---
 
@@ -14,16 +14,16 @@ Retikz 已经有一些跨包复用、却不属于绘图、运行时或领域可�
 
 ## 2. 包边界与依赖方向
 
-`@retikz/foundation` 位于 Kernel 分组，随 kernel release group lockstep 发布。它自身没有运行时或类型依赖；任何需要其公开能力的包都直接依赖它。`@retikz/math` 与 `@retikz/runtime` 因此不再是“完全无依赖”的包，但仍不依赖 Core、renderer、框架或领域包。
+`@retikz/foundation` 位于 Kernel 分组，随 kernel release group lockstep 发布。它自身没有运行时或类型依赖；任何实际消费其公开能力的包都直接依赖它。根据已识别的真实消费，迁移后的 `@retikz/runtime` 与 `@retikz/core` 直接依赖 Foundation；`@retikz/math` 当前没有真实消费，不声明 Foundation 依赖，未来出现真实 import 时再建立直接依赖。Foundation 本身不依赖 Core、renderer、框架或领域包；Runtime 与 Math 继续不依赖这些上层，Core 的既有下层依赖方向不变。
 
 下图中箭头表示“左侧包依赖右侧包”：
 
 ```text
-math ─────┐
-runtime ──┼──> @retikz/foundation
-core ─────┘
+runtime ────────┐
+core ───────────┼──> @retikz/foundation
+其它实际 consumer ─┘
 
-任意其它 Kernel、Tier 2 或宿主包 ──> @retikz/foundation
+math：当前无真实消费，不声明 Foundation 依赖；未来有真实 import 时再连边
 ```
 
 其它包与 Core、Runtime、Math、Standard 或领域包之间的既有依赖方向不因 Foundation 改变。Foundation 只能作为更底层的直接依赖，不能成为反向依赖、领域能力的转发层或绕过正式 owner 的捷径。

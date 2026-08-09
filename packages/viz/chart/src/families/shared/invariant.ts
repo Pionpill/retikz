@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** recipe 必需结构失败原因 */
 export const ChartRecipeInvariantReason = {

@@ -41,6 +41,10 @@
     "./inspect": {
       "types": "./src/inspect/index.ts",
       "default": "./src/inspect/index.ts"
+    },
+    "./layout": {
+      "types": "./src/layout/index.ts",
+      "default": "./src/layout/index.ts"
     }
   },
   "publishConfig": {
@@ -57,6 +61,11 @@
         "types": "./dist/types/inspect/index.d.ts",
         "import": "./dist/inspect/index.js",
         "default": "./dist/inspect/index.js"
+      },
+      "./layout": {
+        "types": "./dist/types/layout/index.d.ts",
+        "import": "./dist/layout/index.js",
+        "default": "./dist/layout/index.js"
       }
     }
   },
@@ -74,6 +83,7 @@
   },
   "dependencies": {
     "@retikz/core": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/math": "workspace:^",
     "zod": "catalog:"
   },

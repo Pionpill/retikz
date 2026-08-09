@@ -1,8 +1,9 @@
 # ADR-01：Standard Logic Diagram Profile
 
-- 状态：Accepted（2026-08-08，人工确认）
+- 状态：Superseded（由 [Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 取代；2026-08-09）
 - 决策日期：2026-08-01
-- 关联：[alpha.3 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [逻辑制图能力域设计](../../../../../../../../notes/architecture/logical-diagram-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
+- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把本 ADR 的图式语义迁入 Diagram owner；本页保留为历史设计记录
 
 ## 背景与目标
 

@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { realpathSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 import {
@@ -14,6 +16,9 @@ import {
   validatePackedFiles,
   validatePackedManifestContract,
 } from './check-publish-artifacts.mjs';
+import { releaseGroups } from './release-groups.config.mjs';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 test('peer package names map to their DefinitelyTyped package names', () => {
   assert.equal(peerTypePackageName('react'), '@types/react');
@@ -206,4 +211,19 @@ test('safe temp paths accept only direct retikz publish task directories', () =>
   for (const invalidPath of invalidPaths) {
     assert.throws(() => assertSafeTempPath(invalidPath), /Refusing to delete/);
   }
+});
+
+test('Foundation publish artifact is root-only and has no runtime dependencies', async () => {
+  assert.ok(releaseGroups.kernel.packages.includes('@retikz/foundation'));
+
+  const manifest = JSON.parse(
+    await readFile(path.join(repoRoot, 'packages', 'kernel', 'foundation', 'package.json'), 'utf8'),
+  );
+
+  assert.equal(manifest.version, '0.5.0-alpha.2');
+  assert.equal(manifest.sideEffects, false);
+  assert.deepEqual(Object.keys(manifest.exports), ['.']);
+  assert.deepEqual(Object.keys(manifest.publishConfig.exports), ['.']);
+  assert.deepEqual(manifest.dependencies ?? {}, {});
+  assert.deepEqual(manifest.peerDependencies ?? {}, {});
 });

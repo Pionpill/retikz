@@ -4,7 +4,7 @@
 - 决策日期：2026-08-07
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-09：可继承 Theme IR 与 Composite 编译上下文](./09-inherited-theme-context.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 - Supersedes：本 ADR 明确取代 ADR-09 中“Theme 只由 `style` / `mode` 构成、领域 token 只能留在领域 spec”的边界；ADR-09 关于 Scene / Scope 继承、Composite context、probe / replay 与其它历史契约继续有效
-- Superseded by：[ADR-14：轻量 Theme IR 与领域 Token 解析](./14-lightweight-theme-resolution.md)。本 ADR 保留为 namespaced token bag 的历史设计记录，不再代表现行公开契约
+- Superseded by：[ADR-15：轻量 Theme IR 与领域 Token 解析](./15-lightweight-theme-resolution.md)。本 ADR 保留为 namespaced token bag 的历史设计记录，不再代表现行公开契约
 
 ## 背景与目标
 

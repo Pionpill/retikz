@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 import type { LabBackendValue, LabPolicyIdValue, LabRunSession } from '../modules/kernel';
 import type { BenchModuleIdValue } from './module-registry';

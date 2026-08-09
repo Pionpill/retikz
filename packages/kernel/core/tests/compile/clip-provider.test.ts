@@ -52,6 +52,16 @@ const roundedRectClip = (): ClipDefinition =>
   });
 
 describe('clip providers', () => {
+  it.each(['', ' ', '\u2003', '\ufeff'])('rejects a blank clip provider key with the established error (%j)', kind => {
+    expect(() =>
+      defineClip({
+        kind,
+        schema: z.strictObject({ kind: z.literal(kind) }),
+        resolve: () => ({ kind: 'circle', cx: 0, cy: 0, r: 1 }),
+      }),
+    ).toThrowError('clip provider key must be a non-empty string.');
+  });
+
   it('custom clip kind compiles through options.clips into a path clip resource', () => {
     const scene = compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }), {
       clips: [roundedRectClip()],
@@ -69,9 +79,9 @@ describe('clip providers', () => {
   });
 
   it('custom clip kind is rejected at compile time when no provider is registered', () => {
-    expect(() => compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 })).scene).toThrow(
-      /options\.clips/i,
-    );
+    expect(
+      () => compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 })).scene,
+    ).toThrow(/options\.clips/i);
   });
 
   it('custom clip cannot override builtin clip kinds', () => {
@@ -80,8 +90,9 @@ describe('clip providers', () => {
       schema: z.strictObject({ kind: z.literal('rect') }),
       resolve: () => ({ kind: 'circle', cx: 0, cy: 0, r: 1 }),
     });
-    expect(() =>
-      compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }).scene,
+    expect(
+      () =>
+        compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }).scene,
     ).toThrow(/duplicate clip registration/i);
   });
 

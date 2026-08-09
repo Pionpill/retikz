@@ -1,6 +1,7 @@
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 import type { ReactNode } from 'react';
 
+import { isRetikzError, RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 import type { PlotAuthoringContext, PlotComposition, PlotDeclarationPath } from '../../../src/adapter';
@@ -42,6 +43,31 @@ const expectDeclarationError = (
 };
 
 describe('Plot chart-extension declaration normalization', () => {
+  it('preserves the declaration error contract and maps details without a cause', () => {
+    const path = ['children', 0] as const;
+    const conflictingPath = ['props', 'guides'] as const;
+    const error = new PlotDeclarationError('duplicate-declaration-source', path, conflictingPath);
+
+    expect(error).toBeInstanceOf(PlotDeclarationError);
+    expect(error).toBeInstanceOf(RetikzError);
+    expect(isRetikzError(error)).toBe(true);
+    expect(error.name).toBe('PlotDeclarationError');
+    expect(error.message).toBe('Plot declaration duplicate-declaration-source at ["children",0]');
+    expect(error.code).toBe('duplicate-declaration-source');
+    expect(error.path).toBe(path);
+    expect(error.conflictingPath).toBe(conflictingPath);
+    expect(error.details).toEqual({ path, conflictingPath });
+    expect(error.details.path).toBe(path);
+    expect(error.details.conflictingPath).toBe(conflictingPath);
+    expect(Object.isFrozen(error.details)).toBe(false);
+
+    const omittedConflict = new PlotDeclarationError('unsupported-chart-child', path);
+    expect(omittedConflict.details).toEqual({ path });
+    expect(Object.hasOwn(omittedConflict, 'cause')).toBe(true);
+    expect(Object.getOwnPropertyNames(omittedConflict)).toContain('cause');
+    expect(omittedConflict.cause).toBeUndefined();
+  });
+
   it('emits only explicit JSON-safe members and preserves their authored order', () => {
     const result = normalizeExtension(
       [

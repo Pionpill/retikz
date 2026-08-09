@@ -1,4 +1,5 @@
-import type { ValueOf } from '../types';
+import type { ValueOf } from '@retikz/foundation';
+
 import type { ThemeMode, ThemeStyle } from './constants';
 
 /** 可由 Theme IR 持久化的开放视觉人格名称 */

@@ -1,3 +1,5 @@
+import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+
 import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
 
 import { RuntimeIdentityError } from '../error';
@@ -13,7 +15,11 @@ type MutableIdentityTrieNode = {
 };
 
 const assertNonEmptyString = (value: string, owner: string): void => {
-  if (value.length === 0) throw new RuntimeIdentityError(owner, value);
+  try {
+    assertFoundationNonEmptyString(value, owner);
+  } catch {
+    throw new RuntimeIdentityError(owner, value);
+  }
 };
 
 const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void => {

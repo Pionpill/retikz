@@ -6,15 +6,6 @@ import { FrameVanillaAdapter } from '../frame';
 import { GridVanillaAdapter } from '../grid';
 import { GridLayoutVanillaAdapter } from '../grid-layout';
 import { LegendVanillaAdapter } from '../legend';
-import {
-  CalloutVanillaAdapter,
-  ConnectorVanillaAdapter,
-  DecisionVanillaAdapter,
-  JunctionVanillaAdapter,
-  LogicFrameVanillaAdapter,
-  StageVanillaAdapter,
-  TerminalVanillaAdapter,
-} from '../logic';
 import { OverlayLayoutVanillaAdapter } from '../overlay-layout';
 
 /** 三种 Standard 布局容器的 Vanilla adapter catalog */
@@ -31,11 +22,4 @@ export const StandardVanillaAdapters: ReadonlyArray<AnyVanillaTier2Adapter> = Ob
   FrameVanillaAdapter,
   ...StandardLayoutVanillaAdapters,
   LegendVanillaAdapter,
-  LogicFrameVanillaAdapter,
-  TerminalVanillaAdapter,
-  StageVanillaAdapter,
-  DecisionVanillaAdapter,
-  JunctionVanillaAdapter,
-  ConnectorVanillaAdapter,
-  CalloutVanillaAdapter,
 ]);

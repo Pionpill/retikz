@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Plot 主题 token 的 canonical key */
 export const PlotThemeToken = {

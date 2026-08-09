@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 import type { IRDataReducerOperation, IRDataSelectorOperation, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';

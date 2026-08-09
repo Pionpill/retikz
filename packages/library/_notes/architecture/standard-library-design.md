@@ -1,8 +1,8 @@
 # Standard Drawing Library 设计
 
-> **状态：长期边界已确认，alpha.1 基线已实现。** `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 已组成独立 lockstep release group，并以同一公开 Core 扩展路径提供 Grid、Axes、Frame、Legend、React JSX 与 Vanilla authoring。本文只维护长期准入与依赖边界；具体 schema、API 和新增能力以对应 milestone ADR 与当前公开契约为准。
+> **状态：长期边界已确认，alpha.1 基线已实现。** `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 已组成独立 lockstep release group，并以同一公开 Core 扩展路径提供 Grid、Axes、Frame、布局、Legend、React JSX 与 Vanilla authoring。alpha.3 逻辑组件在 Notation 迁移完成前仍是当前公开契约，之后归入 Diagram 领域。本文只维护长期准入与依赖边界；具体 schema、API 和新增能力以对应 milestone ADR 与当前公开契约为准。
 >
-> 关联：[`packages/library/AGENTS.md`](../../AGENTS.md) · [`Standard v0.1 roadmap`](../decisions/standard/v0/v0.1/roadmap.md) · [`原子契约与组合设计`](../../../../notes/architecture/atomic-contract-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+> 关联：[`packages/library/AGENTS.md`](../../AGENTS.md) · [`Standard v0.1 roadmap`](../decisions/standard/v0/v0.1/roadmap.md) · [`原子契约与组合设计`](../../../../notes/architecture/atomic-contract-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md) · [`Diagram 制图能力域设计`](../../../../notes/architecture/diagram-design.md)
 
 ---
 
@@ -31,21 +31,23 @@ Library 的职责是在既有 Drawing Complete 机制上横向增加可复用能
 
 进入 Standard 的能力必须同时满足：
 
-1. 移除 Plot、Table、Graph、Flow、Workspace 等领域词汇后仍然成立
+1. 移除 Plot、Table、Notation、Graph、Flow、Workspace 等领域词汇后仍然成立
 2. 至少有两个独立消费场景，不能只是某个 demo 或单一 adapter 的便捷包装
 3. 通过既有 Core `defineXxx`、registry、compile options 或 CompositeDefinition / lowering 契约闭环
 4. 持久化输入保持 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不进入公开输入
 5. React 与 Vanilla 能表达同一宿主无关语义，或 ADR 明确说明某入口不适用
 
-当前已验证 Grid、Axes 与 Frame 这类具有 JSON-safe 持久化语义的通用 Tier 2 composite；v0.1 已规划 Box Layout 与跨 Plot/Table 复用的 Legend 呈现。后续候选包括可选箭头 / shape / connector 定义；是否进入 Standard、是否需要独立 schema，仍由对应能力 ADR 判断。
+当前已验证 Grid、Axes、Frame、Box Layout 与跨 Plot/Table 复用的 Legend 呈现。通用 shape、Path、target、布局容器和 composition helper 可以进入 Standard 或 Core；带有流程、UML、状态等图式职责的 Node sugar、Connector 与 Callout 进入 Notation。是否需要新 schema 或独立 Definition，仍由对应能力 ADR 判断。
 
-以下内容不得进入 Standard：数据字段与 scale、表格结构、Plot/Table 的 legend 解析与绑定、Node / Port / Edge / Group 关系模型、算法布局与路由策略、selection / history / viewport、renderer 执行语义，以及 Core 已不可缺少的基础图元。
+以下内容不得进入 Standard：数据字段与 scale、表格结构、Plot/Table 的 legend 解析与绑定、Notation 图式角色、Node / Port / Edge / Group 关系模型、算法布局与路由策略、selection / history / viewport、renderer 执行语义，以及 Core 已不可缺少的基础图元。
 
 ## 官方 Tier 2 包协作
 
-Plot、Table 等官方 Tier 2 包可以依赖 Standard，但只能消费已经移除领域词汇的公开 capability。领域包负责把 channel、scale、visual encoding、formatter、theme、provenance、locator 与交互意图解析为 Standard 输入；Standard 负责通用 schema、呈现语义、布局、lowering 与领域无关 artifact，不读取或反向导出领域契约。
+Plot、Table、Notation 等官方 Tier 2 包可以依赖 Standard，但只能消费已经移除领域词汇的公开 capability。领域包负责把自己的角色、关系、visual encoding、provenance、locator 与交互意图解析为 Standard 输入；Standard 负责通用 schema、呈现语义、布局、lowering 与领域无关 artifact，不读取或反向导出领域契约。
 
-这条依赖是单向的：`plot / table -> standard -> core / math`。Standard 不依赖 Data、Plot、Table 或其它领域 feature，领域包也不得通过 Standard barrel 转手导出其公共 API。相同 Standard capability 被直接作者和多个领域包消费时，应进入同一 Definition / compile 路径；重复 composite key 的精确诊断由 Core 统一负责，不通过隐式全局注册解决。
+这条依赖是单向的：`plot / table / notation -> standard -> core / math`。Standard 不依赖 Data、Plot、Table、Notation 或其它领域 feature，领域包也不得通过 Standard barrel 转手导出其公共 API。相同 Standard capability 被直接作者和多个领域包消费时，应进入同一 Definition / compile 路径；重复 composite key 的精确诊断由 Core 统一负责，不通过隐式全局注册解决。
+
+Notation 等上层 composite 若需要组合 Standard 布局，不得 deep import `compileFlexLayout`、artifact builder、spacing normalize、axis sizing 或 clip helper 等私有实现，也不得复制这些算法。Standard 应按稳定组合语义提供最小公共 layout composition surface；该公共面仍复用同一 schema、Definition、compile 与 artifact 真源，不为单一上层暴露整个内部模块。
 
 ## 包家族与依赖
 

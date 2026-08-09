@@ -1,0 +1,57 @@
+---
+title: Notation API 参考
+description: 查询 LogicFrame、语义 Node、Connector 和 Callout 的公开 API
+---
+
+Notation 按职责拆分：`@retikz/notation` 提供 canonical JSON、Schema 和 factory；`@retikz/notation-react` 提供 React sugar；`@retikz/notation-vanilla` 提供 Vanilla builder 与仍需要运行时 lowering 的 composite adapter
+
+## 公开导出
+
+| 能力       | Notation                                                                       | React                                                 | Vanilla                                  |
+| ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
+| LogicFrame | `LogicFrameSchema`、`IRLogicFrame`、`createLogicFrame`、`LogicFrameDefinition` | `LogicFrame`、`LogicFrameHeader`、`LogicFrameSection` | `logicFrame`、`LogicFrameVanillaAdapter` |
+| Terminal   | `TerminalSchema`、`IRTerminal`、`createTerminal`                               | `Terminal`                                            | `terminal`（直接返回 Node）              |
+| Stage      | `StageSchema`、`IRStage`、`createStage`                                        | `Stage`                                               | `stage`（直接返回 Node）                 |
+| Decision   | `DecisionSchema`、`IRDecision`、`createDecision`                               | `Decision`                                            | `decision`（直接返回 Node）              |
+| Junction   | `JunctionSchema`、`IRJunction`、`createJunction`                               | `Junction`                                            | `junction`（直接返回 Node）              |
+| Connector  | `ConnectorSchema`、`IRConnector`、`createConnector`、`ConnectorDefinition`     | `Connector`                                           | `connector`、`ConnectorVanillaAdapter`   |
+| Callout    | `CalloutSchema`、`IRCallout`、`createCallout`、`CalloutDefinition`             | `Callout`                                             | `callout`、`CalloutVanillaAdapter`       |
+
+Terminal、Stage、Decision、Junction 的 `IRXxx` 都是 Core `IRNode` 的语义别名，不再有独立 Definition 或 artifact schema
+
+## 语义 Node 输入
+
+四个语义组件都接受 Core Node props。`id` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`shape` 由组件固定
+
+```tsx
+<Stage id="step" position={[0, 0]}>Process</Stage>
+<Decision id="check" position={[80, 0]}><Text>Ready?</Text></Decision>
+```
+
+对应的 Vanilla builder 直接返回 canonical `IRNode`，不会派生 id 后缀
+
+```ts
+const step = stage('step', { position: [0, 0], text: 'Process' });
+// step.id === 'step'
+```
+
+## Definition 加载
+
+只有 LogicFrame、Connector、Callout 仍需要运行时 Definition。Core-only Node scene 不需要 Notation composite 注入
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { CalloutDefinition, ConnectorDefinition, LogicFrameDefinition } from '@retikz/notation';
+
+compileToScene(scene, { composites: [LogicFrameDefinition, ConnectorDefinition, CalloutDefinition] });
+```
+
+## Vanilla identity
+
+语义 builder 使用传入的原始 id。Connector 和 Callout target 也直接引用该 id；LogicFrame、Connector、Callout adapter 仍保留各自的 adapter identity 规则
+
+## 相关
+
+- [语义单元](/diagram/notation/logic/semantic-units)
+- [LogicFrame](/diagram/notation/composite/logic-frame)
+- [Definition 加载](/standard/extension/capability-loading)

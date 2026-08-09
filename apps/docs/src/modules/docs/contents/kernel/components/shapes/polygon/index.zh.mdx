@@ -3,7 +3,7 @@ title: Polygon
 description: 正多边形——既能画一条 Path（Sugar），也能作为节点的正多边形 / 菱形边界。
 ---
 
-正多边形（等边等角）有两副面孔：用 `<RegularPolygon>` 画一个等边多边形轮廓（Sugar），或用 `shape={{ type:'polygon', params:{ sides } }}` 让节点带上正多边形边界。`diamond` 就是 `polygon{ sides:4, rotate:0 }` 的预设。完整定义见 [形状](/kernel/components/shapes)。要画一个多边形框，用 Sugar；要一个可连接、可标注的多边形节点，用 `<Node shape>`。
+正多边形（等边等角）有两副面孔：用 `<RegularPolygon>` 画一个等边多边形轮廓（Sugar），或用 `shape={{ type:'polygon', params:{ sides } }}` 让节点带上正多边形边界。`diamond` 是 `polygon{ sides:4, rotate:0 }` 的预设；需要扁菱形时可用对象形式并设置 `aspectRatio`。完整定义见 [形状](/kernel/components/shapes)。要画一个多边形框，用 Sugar；要一个可连接、可标注的多边形节点，用 `<Node shape>`。
 
 ## 作为 Path 图形（Sugar）
 
@@ -55,11 +55,12 @@ import { Node } from '@retikz/react';
 ```tsx
 <Node shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
 <Node shape="diamond">label</Node>
+<Node shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
 ```
 
 ### 例子
 
-playground 把六边形与 `diamond` 预设放在同一场景比较；`diamond` 等价于 `{ type:'polygon', params:{ sides:4, rotate:0 } }`，不接收额外参数。选择六边形时可调整 `cornerRadius`，再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随尖角或圆角轮廓，并与命名 / 数字 anchor 对照。
+playground 把六边形与 `diamond` 预设放在同一场景比较；字符串 `diamond` 保持正菱形，对象形式可通过 `aspectRatio` 调整宽高比。选择六边形时可调整 `cornerRadius`，再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随尖角或圆角轮廓，并与命名 / 数字 anchor 对照。
 
 <ComponentPreview files="node-connection-playground" size="sm" />
 
@@ -67,10 +68,11 @@ Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/nod
 
 ### API 参考
 
-| `shape`                       | 边界                                  | 参数                                        |
-| ----------------------------- | ------------------------------------- | ------------------------------------------- |
-| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆            | `sides`（≥3） / `rotate?` / `cornerRadius?` |
-| `"diamond"`                   | = `polygon{ sides:4, rotate:0 }` 预设 | 无                                          |
+| `shape`                       | 边界                                  | 参数                                                                     |
+| ----------------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆            | `sides`（≥3） / `rotate?` / `cornerRadius?` / `aspectRatio?`（仅四边形） |
+| `"diamond"`                   | = `polygon{ sides:4, rotate:0 }` 预设 | 无                                                                       |
+| `{ type: 'diamond', params }` | 可参数化的四边形菱形                  | `aspectRatio?`（宽 / 高，缺省 `1`）                                      |
 
 `cornerRadius`（用户单位）给每个顶点倒角，省略 / `0` = 直角，逐角夹紧到不自交的最大半径。
 
@@ -121,27 +123,27 @@ Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/nod
 
 `cornerRadius` 不改变外接尺寸，而是在顶点环生成后应用倒角。同一套顶点与倒角规则既输出 Scene path，也用于从节点中心朝目标方向求边界交点，因此自动连接会落在圆角弧上。标准方位 anchor（`top`、`bottom` 等）仍取外接矩形；它们不等同于任意方向上的真实轮廓交点。
 
-`shape="diamond"` 只改变入口写法：编译器会先把它归一为 `polygon{ sides:4, rotate:0 }`，再进入完全相同的 provider 主链。4 个顶点从 0° 开始按 90° 均布，因此落在右、下、左、上四个方向；要让四边形正置，可显式写 `rotate:45`。
+`shape="diamond"` 只改变入口写法：编译器会先把它归一为 `polygon{ sides:4, rotate:0 }`，再进入完全相同的 provider 主链。对象形式 `{ type:'diamond', params:{ aspectRatio } }` 也走这条主链，其中 `aspectRatio` 表示最终轮廓的宽 / 高；缺省或设为 `1` 时等价于原有正菱形。扁菱形固定使用 0° / 90° / 180° / 270° 四个顶点方向，并由同一套顶点参与渲染、边界交点和连接面计算。
 
 <SourceLinks
   sources={[
     {
       label: 'diamond 预设归一',
       path: 'packages/kernel/core/src/compile/node/shape.ts',
-      startLine: 41,
-      endLine: 49,
+      startLine: 43,
+      endLine: 55,
     },
     {
       label: '内容内框的外接半径计算',
       path: 'packages/kernel/core/src/providers/shape/polygon.ts',
-      startLine: 63,
-      endLine: 79,
+      startLine: 91,
+      endLine: 116,
     },
     {
       label: '轮廓输出、连接交点与方位 anchor',
       path: 'packages/kernel/core/src/providers/shape/polygon.ts',
-      startLine: 114,
-      endLine: 133,
+      startLine: 128,
+      endLine: 188,
     },
   ]}
 />

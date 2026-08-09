@@ -1,20 +1,45 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
 
+import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+
 import type { AnyInspectorDefinition, InspectorDefinition } from './types';
 
-const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
+const assertInspectorString: (value: unknown, message: string) => asserts value is string = (value, message) => {
+  if (typeof value !== 'string') throw new Error(message);
+  try {
+    assertFoundationNonEmptyString(value, message);
+  } catch {
+    throw new Error(message);
+  }
+};
 
 /** 校验 Inspector owner 判别字段 */
 const assertValidOwner = (owner: unknown): void => {
   if (typeof owner !== 'object' || owner === null) throw new Error('Inspector owner must be an object');
   const kind = Reflect.get(owner, 'kind');
-  if (kind === 'pathKind' && isNonEmptyString(Reflect.get(owner, 'name'))) return;
-  if (
-    kind === 'composite' &&
-    isNonEmptyString(Reflect.get(owner, 'namespace')) &&
-    isNonEmptyString(Reflect.get(owner, 'type'))
-  ) {
-    return;
+  if (kind === 'pathKind') {
+    const name = Reflect.get(owner, 'name');
+    if (typeof name === 'string') {
+      try {
+        assertFoundationNonEmptyString(name, 'Inspector owner name');
+        return;
+      } catch {
+        // 继续抛出既有 owner 错误
+      }
+    }
+  }
+  if (kind === 'composite') {
+    const namespace = Reflect.get(owner, 'namespace');
+    const type = Reflect.get(owner, 'type');
+    if (typeof namespace === 'string' && typeof type === 'string') {
+      try {
+        assertFoundationNonEmptyString(namespace, 'Inspector owner namespace');
+        assertFoundationNonEmptyString(type, 'Inspector owner type');
+        return;
+      } catch {
+        // 继续抛出既有 owner 错误
+      }
+    }
   }
   throw new Error('Inspector owner must identify a non-empty composite or pathKind');
 };
@@ -30,12 +55,8 @@ const assertSchema = (schema: unknown, field: string): void => {
 export const normalizeInspectorDefinition = (input: unknown): AnyInspectorDefinition => {
   if (typeof input !== 'object' || input === null) throw new Error('Inspector definition must be an object');
   const definition = input as AnyInspectorDefinition;
-  if (!isNonEmptyString(definition.namespace)) {
-    throw new Error('Inspector namespace must be a non-empty string');
-  }
-  if (!isNonEmptyString(definition.name)) {
-    throw new Error('Inspector name must be a non-empty string');
-  }
+  assertInspectorString(definition.namespace, 'Inspector namespace must be a non-empty string');
+  assertInspectorString(definition.name, 'Inspector name must be a non-empty string');
   assertValidOwner(definition.owner);
   assertSchema(definition.subjectSchema, 'subjectSchema');
   assertSchema(definition.optionsInputSchema, 'optionsInputSchema');

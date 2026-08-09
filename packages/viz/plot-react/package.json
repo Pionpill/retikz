@@ -74,6 +74,7 @@
   "dependencies": {
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/plot": "workspace:*",
     "@retikz/react": "workspace:^"
   },

@@ -4,10 +4,16 @@ export const releaseGroups = {
     kind: 'feature',
     packages: ['@retikz/standard', '@retikz/standard-react', '@retikz/standard-vanilla'],
   },
+  notation: {
+    domain: 'diagram',
+    kind: 'foundation',
+    packages: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
+  },
   kernel: {
     domain: 'kernel',
     kind: 'foundation',
     packages: [
+      '@retikz/foundation',
       '@retikz/math',
       '@retikz/runtime',
       '@retikz/core',

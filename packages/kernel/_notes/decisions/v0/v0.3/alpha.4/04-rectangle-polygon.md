@@ -9,7 +9,7 @@
 ## 背景
 
 - rectangle 的 `roundedCorners` 现为 `Node` 顶层字段（「only effective on rectangle」）——形状专属参数错放顶层，[ADR-01](./01-shape-params-generalization.md) 要消除的反模式，本 ADR 迁入 rectangle params。
-- core 无 regular polygon；现有 `diamond` 本质是旋转 45° 的正方形（4-gon），与 polygon 几何重复。
+- core 无 regular polygon；现有 `diamond` 本质是 4-gon，与 polygon 几何重复（当前 preset 首顶点方向按 live code 为 0°）。
 
 ## 决策：rectangle 参数化 + regular polygon 新增，diamond 收为 polygon preset 别名
 
@@ -32,13 +32,14 @@ export const polygon = defineShape({
   circumscribe: (hw, hh, p) => /* 能容纳内框的正 p.sides 边形外接圆 → 其 AABB 半轴 */,
   // boundaryPoint：中心向 toward 射线 ∩ 多边形边；anchor：顶点 / 边中点 / 命名 anchor
 });
-// diamond ≡ { type: 'polygon', params: { sides: 4, rotate: 45 } }
+// diamond ≡ { type: 'polygon', params: { sides: 4, rotate: 0 } }
 // shape: 'diamond'（裸 string）在 compile/node.ts 规范化为上式
+// shape: { type: 'diamond', params: { aspectRatio } } 可生成扁菱形；aspectRatio = width / height
 ```
 
 - **polygon emit**：`sides` 个顶点在外接圆（circumscribe 派生半径）上、按 `rotate` 定起始角，连成闭合 path；`position` = AABB 中心（正多边形对称，= 内框中心，自然对齐 [ADR-01](./01-shape-params-generalization.md) 的 AABB 中心约束）。
 - **rectangle**：现有几何复用，仅 `roundedCorners` 从顶层挪进 params。
-- diamond 几何不再独立实现，走 polygon `sides:4, rotate:45`。
+- diamond 几何不再独立实现，走 polygon `sides:4, rotate:0`；四边形可选 `aspectRatio` 调整宽高比，缺省或 `1` 保持正菱形。
 
 **`roundedCorners` 迁移**：params.roundedCorners 优先；迁移期顶层 `Node.roundedCorners` 仍生效（回退、标 deprecated）。最终删顶层待兼容窗口后另议（超本 ADR）。
 

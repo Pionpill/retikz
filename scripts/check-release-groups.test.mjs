@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { validateEsmPublishContract, validateReleaseGroupPackages } from './check-release-groups.mjs';
+import {
+  readPackageRecords,
+  validateEsmPublishContract,
+  validateReleaseGroupPackages,
+} from './check-release-groups.mjs';
+import { releaseGroups } from './release-groups.config.mjs';
 
 const createRootPublishContract = () => ({
   type: 'module',
@@ -40,6 +45,11 @@ const baseGroups = {
     domain: 'library',
     kind: 'feature',
     packages: ['@retikz/standard'],
+  },
+  notation: {
+    domain: 'diagram',
+    kind: 'foundation',
+    packages: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
   },
   plot: {
     domain: 'viz',
@@ -109,6 +119,58 @@ const basePackages = [
         domain: 'library',
         releaseGroup: 'standard',
         publishable: true,
+      },
+    },
+  },
+  {
+    path: 'packages/diagram/notation/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/notation',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'diagram',
+        releaseGroup: 'notation',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/core': 'workspace:^',
+        '@retikz/math': 'workspace:^',
+        '@retikz/standard': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/diagram/notation-react/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/notation-react',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'diagram',
+        releaseGroup: 'notation',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/notation': 'workspace:*',
+        '@retikz/react': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/diagram/notation-vanilla/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/notation-vanilla',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'diagram',
+        releaseGroup: 'notation',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/notation': 'workspace:*',
+        '@retikz/vanilla': 'workspace:^',
       },
     },
   },
@@ -387,4 +449,24 @@ test('viz feature release groups can depend on library feature release groups', 
   });
 
   assert.deepEqual(diagnostics, []);
+});
+
+test('Foundation belongs to the kernel release group with its zero-dependency publish contract', async () => {
+  assert.ok(releaseGroups.kernel.packages.includes('@retikz/foundation'));
+
+  const packageRecords = await readPackageRecords();
+  const foundationRecord = packageRecords.find(({ manifest }) => manifest.name === '@retikz/foundation');
+
+  assert.ok(foundationRecord, 'Foundation package manifest must be discoverable');
+  assert.equal(foundationRecord.manifest.version, '0.5.0-alpha.2');
+  assert.equal(foundationRecord.manifest.retikz?.releaseGroup, 'kernel');
+  assert.equal(foundationRecord.manifest.sideEffects, false);
+  assert.deepEqual(Object.keys(foundationRecord.manifest.exports), ['.']);
+  assert.deepEqual(Object.keys(foundationRecord.manifest.publishConfig.exports), ['.']);
+  assert.deepEqual(foundationRecord.manifest.dependencies ?? {}, {});
+  assert.deepEqual(foundationRecord.manifest.peerDependencies ?? {}, {});
+
+  const kernelRecords = packageRecords.filter(({ manifest }) => releaseGroups.kernel.packages.includes(manifest.name));
+  assert.ok(kernelRecords.length > 0);
+  assert.ok(kernelRecords.every(({ manifest }) => manifest.version === foundationRecord.manifest.version));
 });

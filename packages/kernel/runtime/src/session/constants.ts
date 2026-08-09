@@ -1,4 +1,4 @@
-import type { ValueOf } from '../shared';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Runtime Session 更新策略 */
 export const RuntimeUpdateStrategy = {

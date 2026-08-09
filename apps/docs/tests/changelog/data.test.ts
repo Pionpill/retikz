@@ -5,6 +5,7 @@ import {
   changelog,
   changelogForModule,
   changelogVersionSlug,
+  diagramSection,
   kernelSection,
   PACKAGE_IDS,
   standardSection,
@@ -77,6 +78,19 @@ describe('changelog data', () => {
       expect(alpha?.summary?.en).toBeTruthy();
       expect(alpha?.items.length).toBeGreaterThan(0);
     }
+  });
+
+  it('当前 Diagram 里程碑注册详情路由并覆盖 Notation 包族', () => {
+    const releases = diagramSection.find(section => section.id === 'releases');
+    const changelogPage = releases?.pages.find(page => page.id === 'changelog');
+    const currentRelease = changelogForModule('diagram')[0];
+    expect(currentRelease).toBeDefined();
+    expect(currentRelease.packages.map(block => block.pkg)).toEqual([
+      '@retikz/notation',
+      '@retikz/notation-react',
+      '@retikz/notation-vanilla',
+    ]);
+    expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
   it.each(['data', 'table', 'plot'] as const)('当前 Viz %s 分区注册独立更新日志详情路由', sectionId => {
