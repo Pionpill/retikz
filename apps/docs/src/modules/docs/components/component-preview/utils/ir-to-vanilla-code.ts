@@ -88,6 +88,10 @@ type Ctx = {
   standardHelpers: Set<string>;
   standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
+  notationHelpers: Set<string>;
+  notationAdapters: Set<string>;
+  notationCounts: Map<string, number>;
+  generatedIds: Map<string, string>;
 };
 
 type WayFrag = { text: string; comment?: boolean };
@@ -298,6 +302,12 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'OverlayLayoutVanillaAdapter',
   'LegendVanillaAdapter',
 ];
+const NOTATION_HELPER_ORDER: ReadonlyArray<string> = ['logicFrame', 'connector', 'callout'];
+const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
+  'LogicFrameVanillaAdapter',
+  'ConnectorVanillaAdapter',
+  'CalloutVanillaAdapter',
+];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
 export type StandardPreviewDefinitionName =
@@ -309,6 +319,9 @@ export type StandardPreviewDefinitionName =
   | 'OverlayLayoutDefinition'
   | 'LegendDefinition';
 
+/** docs 预览能够显式注入的 Notation definition 名 */
+export type NotationPreviewDefinitionName = 'LogicFrameDefinition' | 'ConnectorDefinition' | 'CalloutDefinition';
+
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
@@ -319,13 +332,35 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   legend: 'LegendDefinition',
 };
 
-const standardOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
+const NOTATION_DEFINITION_BY_KIND: Readonly<Record<string, NotationPreviewDefinitionName>> = {
+  logicFrame: 'LogicFrameDefinition',
+  connector: 'ConnectorDefinition',
+  callout: 'CalloutDefinition',
+};
+
+const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
   const record = child as unknown as Record<string, unknown>;
-  if (child.type === 'flexLayout' || child.type === 'gridLayout' || child.type === 'overlayLayout') {
+  if (
+    child.namespace === 'standard' &&
+    (child.type === 'flexLayout' || child.type === 'gridLayout' || child.type === 'overlayLayout')
+  ) {
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
-  if (child.type !== 'legend') return [];
+  if (child.namespace === 'notation' && child.type === 'logicFrame') {
+    const owned: Array<IRChild> = [];
+    const header = record.header as { child?: IRChild } | undefined;
+    if (header?.child !== undefined) owned.push(header.child);
+    const sections = record.sections as ReadonlyArray<{ child: IRChild }> | undefined;
+    sections?.forEach(section => owned.push(section.child));
+    return owned;
+  }
+  if (child.namespace === 'notation' && child.type === 'callout') {
+    const content = record.content as IRChild | undefined;
+    return content === undefined ? [] : [content];
+  }
+  if (child.namespace === 'notation' && child.type === 'connector') return [];
+  if (child.namespace !== 'standard' || child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
   const content = record.content as Record<string, unknown>;
@@ -345,41 +380,134 @@ const standardOwnedChildren = (child: IRChild & { namespace: string; type: strin
   return owned;
 };
 
-/**
- * 从 Core child graph 递归收集 adapter 尚未提供的已知 Standard definitions
- *
- * @remarks 只遍历各 Standard composite 明确拥有的 child-bearing fields，不猜测未知 Tier 2
- */
-export const collectStandardPreviewDefinitions = (
+type PreviewDefinitions = {
+  standard: Array<StandardPreviewDefinitionName>;
+  notation: Array<NotationPreviewDefinitionName>;
+};
+
+/** 从 Core child graph 递归收集 adapter 尚未提供的已知 definitions */
+export const collectPreviewDefinitions = (
   children: ReadonlyArray<IRChild>,
-  adapterKinds: ReadonlySet<string>,
-): Array<StandardPreviewDefinitionName> => {
-  const definitions = new Set<StandardPreviewDefinitionName>();
-  const providedKinds = new Set(adapterKinds);
-  if (['flexLayout', 'gridLayout', 'overlayLayout'].some(kind => adapterKinds.has(kind))) {
-    providedKinds.add('flexLayout');
-    providedKinds.add('gridLayout');
-    providedKinds.add('overlayLayout');
+  standardAdapterKinds: ReadonlySet<string>,
+  notationAdapterKinds: ReadonlySet<string>,
+): PreviewDefinitions => {
+  const standard = new Set<StandardPreviewDefinitionName>();
+  const notation = new Set<NotationPreviewDefinitionName>();
+  const providedStandardKinds = new Set(standardAdapterKinds);
+  if (['flexLayout', 'gridLayout', 'overlayLayout'].some(kind => standardAdapterKinds.has(kind))) {
+    providedStandardKinds.add('flexLayout');
+    providedStandardKinds.add('gridLayout');
+    providedStandardKinds.add('overlayLayout');
   }
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
-      if (child.namespace !== 'standard') {
+      if (child.namespace === 'standard') {
+        const definitionName = (
+          STANDARD_DEFINITION_BY_KIND as Readonly<Record<string, StandardPreviewDefinitionName | undefined>>
+        )[child.type];
+        if (definitionName === undefined) {
+          throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
+        }
+        if (!providedStandardKinds.has(child.type)) standard.add(definitionName);
+      } else if (child.namespace === 'notation') {
+        const definitionName = (
+          NOTATION_DEFINITION_BY_KIND as Readonly<Record<string, NotationPreviewDefinitionName | undefined>>
+        )[child.type];
+        if (definitionName === undefined) {
+          throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
+        }
+        if (!notationAdapterKinds.has(child.type)) notation.add(definitionName);
+      } else {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
-      const definitionName = (
-        STANDARD_DEFINITION_BY_KIND as Readonly<Record<string, StandardPreviewDefinitionName | undefined>>
-      )[child.type];
-      if (definitionName === undefined) {
-        throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
-      }
-      if (!providedKinds.has(child.type)) definitions.add(definitionName);
-      standardOwnedChildren(child).forEach(visit);
+      previewOwnedChildren(child).forEach(visit);
       return;
     }
     if (child.type === 'scope') child.children.forEach(visit);
   };
   children.forEach(visit);
-  return Array.from(definitions);
+  return { standard: Array.from(standard), notation: Array.from(notation) };
+};
+
+/** 从 Core child graph 收集 Standard definitions */
+export const collectStandardPreviewDefinitions = (
+  children: ReadonlyArray<IRChild>,
+  adapterKinds: ReadonlySet<string>,
+): Array<StandardPreviewDefinitionName> => collectPreviewDefinitions(children, adapterKinds, new Set()).standard;
+
+const standardCanonicalId = (kind: string, embedId: string): string => {
+  return kind === 'frame' ? `${embedId}/frame` : embedId;
+};
+
+const notationCanonicalId = (kind: string, embedId: string): string => `${embedId}/${kind}`;
+
+const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
+  const visit = (child: IRChild): void => {
+    if ('namespace' in child) {
+      if (child.namespace === 'standard' && typeof (child as { id?: unknown }).id === 'string') {
+        const kind = child.type;
+        if (STANDARD_HELPER_ORDER.includes(kind)) {
+          const authoredId = (child as unknown as { id: string }).id;
+          const count = (ctx.standardCounts.get(kind) ?? 0) + 1;
+          ctx.standardCounts.set(kind, count);
+          const embedId = `preview-${kind}-${count}`;
+          const generatedId = standardCanonicalId(kind, embedId);
+          ctx.generatedIds.set(authoredId, generatedId);
+          ctx.generatedIds.set(generatedId, generatedId);
+          if (kind === 'frame') ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
+        }
+      }
+      if (child.namespace === 'notation' && typeof (child as { id?: unknown }).id === 'string') {
+        const kind = child.type;
+        if (NOTATION_HELPER_ORDER.includes(kind)) {
+          const authoredId = (child as unknown as { id: string }).id;
+          const count = (ctx.notationCounts.get(kind) ?? 0) + 1;
+          ctx.notationCounts.set(kind, count);
+          const embedId = `preview-${kind}-${count}`;
+          const generatedId = notationCanonicalId(kind, embedId);
+          ctx.generatedIds.set(authoredId, generatedId);
+          ctx.generatedIds.set(generatedId, generatedId);
+          ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
+        }
+      }
+      previewOwnedChildren(child).forEach(visit);
+      return;
+    }
+    if (child.type === 'scope') child.children.forEach(visit);
+  };
+  children.forEach(visit);
+  // The counters are consumed again while emitting helpers.
+  ctx.standardCounts.clear();
+  ctx.notationCounts.clear();
+};
+
+const rewriteNotationTarget = (value: unknown, ctx: Ctx): unknown => {
+  if (typeof value !== 'object' || value === null || !('id' in value)) return value;
+  const target = value as { id: string; [key: string]: unknown };
+  const id = ctx.generatedIds.get(target.id) ?? target.id;
+  return id === target.id ? value : { ...target, id };
+};
+
+const rewriteNotationInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
+  if (kind === 'connector') {
+    return {
+      ...input,
+      from: rewriteNotationTarget(input.from, ctx),
+      to: rewriteNotationTarget(input.to, ctx),
+      ...(Array.isArray((input.routing as { points?: unknown } | undefined)?.points)
+        ? {
+            routing: {
+              ...(input.routing as Record<string, unknown>),
+              points: (input.routing as { points: Array<unknown> }).points.map(point =>
+                rewriteNotationTarget(point, ctx),
+              ),
+            },
+          }
+        : {}),
+    };
+  }
+  if (kind === 'callout') return { ...input, target: rewriteNotationTarget(input.target, ctx) };
+  return input;
 };
 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -393,13 +521,30 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(record.type);
   ctx.standardAdapters.add(adapterName);
+  const generatedId = `preview-${record.type}-${count}`;
   const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
-  return `${record.type}(${formatString(`preview-${record.type}-${count}`)}, ${formatObject(input, indent)})`;
+  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
+};
+
+const notationCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+  const record = child as IRChild & { namespace: string; type: string; id?: string };
+  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
+  if (!NOTATION_HELPER_ORDER.includes(record.type) || !NOTATION_ADAPTER_ORDER.includes(adapterName)) {
+    throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
+  }
+  const count = (ctx.notationCounts.get(record.type) ?? 0) + 1;
+  ctx.notationCounts.set(record.type, count);
+  ctx.notationHelpers.add(record.type);
+  ctx.notationAdapters.add(adapterName);
+  const generatedId = `preview-${record.type}-${count}`;
+  const input = rewriteNotationInput(record.type, stripKeys(record, ['namespace', 'type', 'id']), ctx);
+  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };
 
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
     if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
+    if (child.namespace === 'notation') return notationCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -430,7 +575,12 @@ export const irToVanillaCode = (ir: IRScene): string => {
     standardHelpers: new Set(),
     standardAdapters: new Set(),
     standardCounts: new Map(),
+    notationHelpers: new Set(),
+    notationAdapters: new Set(),
+    notationCounts: new Map(),
+    generatedIds: new Map(),
   };
+  reservePreviewIds(ir.children, ctx);
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
     ...(ir.viewBox ? { viewBox: ir.viewBox } : {}),
@@ -447,20 +597,32 @@ export const irToVanillaCode = (ir: IRScene): string => {
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
   const standardHelpers = STANDARD_HELPER_ORDER.filter(name => ctx.standardHelpers.has(name));
   const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
-  const standardDefinitions = collectStandardPreviewDefinitions(ir.children, new Set(ctx.standardCounts.keys()));
+  const notationHelpers = NOTATION_HELPER_ORDER.filter(name => ctx.notationHelpers.has(name));
+  const notationAdapters = NOTATION_ADAPTER_ORDER.filter(name => ctx.notationAdapters.has(name));
+  const definitions = collectPreviewDefinitions(
+    ir.children,
+    new Set(ctx.standardCounts.keys()),
+    new Set(ctx.notationCounts.keys()),
+  );
   if (standardHelpers.length > 0) {
     imports.push(`import { ${[...standardHelpers, ...standardAdapters].join(', ')} } from '@retikz/standard-vanilla';`);
   }
-  if (standardDefinitions.length > 0) {
-    imports.push(`import { ${standardDefinitions.join(', ')} } from '@retikz/standard';`);
+  if (notationHelpers.length > 0) {
+    imports.push(`import { ${[...notationHelpers, ...notationAdapters].join(', ')} } from '@retikz/notation-vanilla';`);
+  }
+  if (definitions.standard.length > 0) {
+    imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
+  }
+  if (definitions.notation.length > 0) {
+    imports.push(`import { ${definitions.notation.join(', ')} } from '@retikz/notation';`);
   }
 
-  const adapters = standardAdapters.length > 0 ? `\nconst adapters = [${standardAdapters.join(', ')}];\n` : '';
+  const adapters = [...standardAdapters, ...notationAdapters];
+  const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
+  const definitionNames = [...definitions.standard, ...definitions.notation];
   const compile =
-    standardDefinitions.length > 0
-      ? `\nconst standardCompile = { composites: [${standardDefinitions.join(', ')}] };\n`
-      : '';
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapters}${compile}`;
+    definitionNames.length > 0 ? `\nconst compile = { composites: [${definitionNames.join(', ')}] };\n` : '';
+  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapterCode}${compile}`;
 };
 
 /** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */

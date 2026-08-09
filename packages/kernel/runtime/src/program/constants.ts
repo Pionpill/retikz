@@ -1,4 +1,4 @@
-import type { ValueOf } from '../shared';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Runtime Program 的 candidate 与 commit 执行阶段常量 */
 export const RuntimeProgramPhase = {

@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** 可选对照对象枚举。 */
 export const ComparisonTarget = {

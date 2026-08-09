@@ -15,3 +15,6 @@ export type {
   LayoutStaticRuntimeOptions,
 } from './runtime-options';
 export { LayoutRuntimeMode } from './runtime-options';
+export { ThemeContext, useTheme } from './theme-context';
+export type { ThemeProviderProps } from './ThemeProvider';
+export { ThemeProvider } from './ThemeProvider';

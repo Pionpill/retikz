@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 
 /** Performance Lab 支持的 renderer backend */
 export const LabBackend = {

@@ -1,8 +1,7 @@
 import type { FC } from 'react';
 
-import { composeThemeTokenOverrides, defineCoreThemeTokens } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { defineTableThemeTokens, TableThemeToken } from '@retikz/table';
+import { TableThemeToken } from '@retikz/table';
 import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
@@ -11,12 +10,11 @@ import { scoreRows } from './table-detail.data';
 
 type ScoreTableProps = { embedded?: boolean };
 
-const rootThemeTokens = composeThemeTokenOverrides(
-  defineCoreThemeTokens({ 'palette.categorical': ['#2563eb', '#f97316'] }),
-  defineTableThemeTokens({ [TableThemeToken.CellContentFontFamily]: 'serif' }),
-);
-
-const rootTheme = { style: 'academic', mode: 'light', tokens: rootThemeTokens } as const;
+const rootTheme = { style: 'academic', mode: 'light' } as const;
+const tableThemeTokens = {
+  [TableThemeToken.CellContentFontFamily]: 'serif',
+  [TableThemeToken.CellContentColor]: '#1e3a8a',
+};
 
 /** Reuses one Table definition for standalone display and embedded source derivation */
 const ScoreTable: FC<ScoreTableProps> = props => {
@@ -27,7 +25,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
       id="score-detail"
       dataRef="scores"
       data={scoreRows}
-      tableThemeTokens={{ [TableThemeToken.CellContentColor]: '#1e3a8a' }}
+      tableThemeTokens={tableThemeTokens}
       rules={[
         {
           selector: { fields: ['score'], value: { kind: 'compare', operator: 'lt', value: 0 } },

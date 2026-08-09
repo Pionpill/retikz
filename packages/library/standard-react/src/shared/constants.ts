@@ -1,14 +1,14 @@
-/** Standard React Axes adapter 的 contribution namespace */
+/** Standard React Axes 适配器使用的贡献命名空间 */
 export const StandardAxesReactNamespace = 'standard.axes';
 
-/** Standard React Frame adapter 的 contribution namespace */
+/** Standard React Frame 适配器使用的贡献命名空间 */
 export const StandardFrameReactNamespace = 'standard.frame';
 
-/** Standard React Grid adapter 的 contribution namespace */
+/** Standard React Grid 适配器使用的贡献命名空间 */
 export const StandardGridReactNamespace = 'standard.grid';
 
-/** Standard React Legend adapter 的 contribution namespace */
+/** Standard React Legend 适配器使用的贡献命名空间 */
 export const StandardLegendReactNamespace = 'standard.legend';
 
-/** Standard React layout adapters 共用的 contribution namespace */
+/** Standard React 布局适配器共用的贡献命名空间 */
 export const StandardLayoutReactNamespace = 'standard.layout';

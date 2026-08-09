@@ -20,13 +20,13 @@ export const roundedRectPath = (
   const bottom = y + height;
   ctx.moveTo(x + r, y);
   ctx.lineTo(right - r, y);
-  ctx.quadraticCurveTo(right, y, right, y + r);
+  ctx.arc(right - r, y + r, r, -Math.PI / 2, 0);
   ctx.lineTo(right, bottom - r);
-  ctx.quadraticCurveTo(right, bottom, right - r, bottom);
+  ctx.arc(right - r, bottom - r, r, 0, Math.PI / 2);
   ctx.lineTo(x + r, bottom);
-  ctx.quadraticCurveTo(x, bottom, x, bottom - r);
+  ctx.arc(x + r, bottom - r, r, Math.PI / 2, Math.PI);
   ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.arc(x + r, y + r, r, Math.PI, (Math.PI * 3) / 2);
   ctx.closePath();
 };
 

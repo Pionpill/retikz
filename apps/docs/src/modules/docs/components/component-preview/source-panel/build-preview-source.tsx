@@ -41,6 +41,7 @@ export type BuildPreviewSourceInput = {
   vanillaOverride?: string;
   /** Vanilla 模块显式导出的 SVG。 */
   vanillaSvg?: string;
+  theme?: IRScene['theme'];
 };
 
 /** 组件预览源码视图及宿主可安全消费的 IR。 */
@@ -70,6 +71,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     exportedPreviewIR,
     vanillaOverride,
     vanillaSvg,
+    theme,
   } = input;
 
   if (hideCode) return { source: undefined, previewIr: null };
@@ -145,10 +147,10 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
 
   const automaticVanilla =
     resolvedPreviewIr !== null && structureError === undefined
-      ? buildVanillaPreview(
-          resolvedPreviewIr,
-          previewSource?.datasetImports === undefined ? {} : { datasetImports: previewSource.datasetImports },
-        )
+      ? buildVanillaPreview(resolvedPreviewIr, {
+          ...(previewSource?.datasetImports === undefined ? {} : { datasetImports: previewSource.datasetImports }),
+          ...(theme === undefined ? {} : { theme }),
+        })
       : undefined;
   let vanillaCode = '';
   if (vanillaOverride !== undefined) {

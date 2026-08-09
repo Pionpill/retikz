@@ -48,9 +48,9 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 
 ## Theme 上下文
 
-`expand(node, context)` 与布局感知 `compile(node, context)` 都能读取冻结的 `context.theme`。它始终是完整的 `{ style, mode, tokens, colors }`：Core 从 `neutral + light` 开始，按 Scene → 外层 Scope → 内层 Scope 逐字段合并；`tokens` 按 owner namespace/key 做 sparse overlay。`colors` 是 detached/frozen 的 Core shared view，固定提供 `semantic.error/success/warning` 与非空 `categorical` palette，不是 Core 图元的隐式样式。
+`expand(node, context)` 与布局感知 `compile(node, context)` 都能读取冻结的 `context.theme`。它始终是完整的 `{ style, mode, colors }`：Core 从 `neutral + light` 开始，按 Scene → 外层 Scope → 内层 Scope 逐字段继承 selector，再由当前 style resolver 生成 `colors`。`colors` 是 detached/frozen 的 Core shared view，固定提供 `semantic.error/success/warning` 与非空 `categorical` palette，不是 Core 图元的隐式样式。
 
-Composite 负责把 shared `colors` 与自己 namespace 中的 token 映射为领域 token、palette 或其它默认，再输出已经物化的正式 IR。Core 不解释 Tier 2 key，也不拥有 Plot、Chart、Table 的具体 token；Core primitive 与 renderer 也不解释 Theme。普通输出 Scope 与 `context.scope({ theme }, children)` 可以建立更内层环境；replay child 则保留 probe 时已经解析的 Theme，不会在提交位置被重新解释。Definition 必须通过 `themeTokenDefinitions` 注入 Core registry；未知 namespace/key/value 或冲突 Definition 在 Composite 回调前 fail-loud。
+Composite 负责把 shared `colors` 与自己 style resolver 生成的领域 token、palette 或其它默认映射为已经物化的正式 IR。Core 不解释 Tier 2 token，也不拥有 Plot、Chart、Table 的具体 token；Core primitive 与 renderer 也不解释 Theme。普通输出 Scope 与 `context.scope({ theme }, children)` 可以建立更内层环境；replay child 则保留 probe 时已经解析的 Theme，不会在提交位置被重新解释。自定义 style 必须同时注入 Core 与实际消费它的 Tier 2 resolver；任一 registry 缺失该名称都会 fail-loud。
 
 ## 布局感知编译
 
@@ -237,7 +237,7 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       label: 'compile-local replay 与 Scope builder',
       path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
       startLine: 214,
-      endLine: 240,
+      endLine: 218,
     },
     {
       label: 'replay root 的 placement 与各类 sink 提交',

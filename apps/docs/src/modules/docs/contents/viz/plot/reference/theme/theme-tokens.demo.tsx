@@ -1,5 +1,4 @@
-import { composeThemeTokenOverrides, defineCoreThemeTokens } from '@retikz/core';
-import { definePlotThemeTokens, PlotThemeToken } from '@retikz/plot';
+import { PlotThemeToken } from '@retikz/plot';
 import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
@@ -12,38 +11,19 @@ const points = [
   { x: 3, y: 5, series: 'B' },
 ];
 
-/** Plot token override 经正式 theme resolver 进入 axis、palette 与 surface */
-const rootThemeTokens = composeThemeTokenOverrides(
-  defineCoreThemeTokens({
-    'palette.categorical': ['#2563EB', '#F97316'],
-  }),
-  definePlotThemeTokens({
-    [PlotThemeToken.PlotSurfaceFill]: '#F8FAFC',
-  }),
-);
+/** Plot token override 通过 PlotSpec 局部 theme cascade 进入 surface、axis 与 palette */
+const plotThemeTokens = {
+  [PlotThemeToken.PlotSurfaceFill]: '#F8FAFC',
+  [PlotThemeToken.PlotPaletteCategorical]: ['#2563EB', '#F97316'],
+  [PlotThemeToken.AxisGridStroke]: '#60A5FA',
+  [PlotThemeToken.AxisGridDrawOpacity]: 0.35,
+};
 
-const localScopeTokens = composeThemeTokenOverrides(
-  definePlotThemeTokens({
-    [PlotThemeToken.AxisGridStroke]: '#60A5FA',
-  }),
-);
-
-/** Plot token override 通过 Core Theme namespace 与 Plot spec 进入同一 resolver */
+/** Plot token override 通过当前 Plot resolver 进入同一张图表 */
 export default function ThemeTokensDemo() {
   return (
-    <Layout
-      theme={{ style: 'academic', tokens: rootThemeTokens }}
-      width={440}
-      height={270}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
-      <Plot
-        data={points}
-        width={440}
-        height={270}
-        theme={{ tokens: localScopeTokens }}
-        plotThemeTokens={{ [PlotThemeToken.AxisGridDrawOpacity]: 0.35 }}
-      >
+    <Layout width={440} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Plot data={points} width={440} height={270} plotThemeTokens={plotThemeTokens}>
         <PointMark x="x" y="y" color="series" size={8} />
         <Axis dimension="x" />
         <Axis dimension="y" grid />

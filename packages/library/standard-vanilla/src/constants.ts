@@ -1,14 +1,14 @@
-/** Standard Vanilla Axes adapter 的 contribution namespace */
+/** Standard Vanilla Axes 适配器使用的贡献命名空间 */
 export const StandardAxesVanillaNamespace = 'standard.axes';
 
-/** Standard Vanilla Frame adapter 的 contribution namespace */
+/** Standard Vanilla Frame 适配器使用的贡献命名空间 */
 export const StandardFrameVanillaNamespace = 'standard.frame';
 
-/** Standard Vanilla Grid adapter 的 contribution namespace */
+/** Standard Vanilla Grid 适配器使用的贡献命名空间 */
 export const StandardGridVanillaNamespace = 'standard.grid';
 
-/** Standard Vanilla Legend adapter 的 contribution namespace */
+/** Standard Vanilla Legend 适配器使用的贡献命名空间 */
 export const StandardLegendVanillaNamespace = 'standard.legend';
 
-/** Standard Vanilla layout adapters 共用的 contribution namespace */
+/** Standard Vanilla 布局适配器共用的贡献命名空间 */
 export const StandardLayoutVanillaNamespace = 'standard.layout';

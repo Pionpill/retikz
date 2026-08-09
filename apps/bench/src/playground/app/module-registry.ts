@@ -1,4 +1,4 @@
-import type { ValueOf } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { LucideIcon } from 'lucide-react';
 
 import { ChartNoAxesCombined, Cpu, TableProperties } from 'lucide-react';

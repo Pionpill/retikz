@@ -1,5 +1,6 @@
 import type { AnyCellPresentationDefinition } from '../../contract';
 
+import { assertTableNonEmptyString } from '../../shared';
 import { BUILTIN_CELL_PRESENTATIONS } from './definitions';
 
 /** 合并内置与用户 Cell presentation definitions */
@@ -8,9 +9,7 @@ export const resolveCellPresentationRegistry = (
 ): ReadonlyMap<string, AnyCellPresentationDefinition> => {
   const registry = new Map<string, AnyCellPresentationDefinition>();
   for (const definition of [...BUILTIN_CELL_PRESENTATIONS, ...(custom ?? [])]) {
-    if (definition.name.trim().length === 0) {
-      throw new Error('cell presentation provider key must be a non-empty string');
-    }
+    assertTableNonEmptyString(definition.name, 'cell presentation provider key must be a non-empty string');
     if (registry.has(definition.name)) {
       throw new Error(`duplicate cell presentation registration: "${definition.name}"`);
     }

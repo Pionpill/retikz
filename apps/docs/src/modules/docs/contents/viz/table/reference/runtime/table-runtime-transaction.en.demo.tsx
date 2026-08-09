@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 type MobileFlowNode = {
   id: string;
@@ -39,8 +39,8 @@ const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
       <Layout width={800} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
-        <LogicFrame id="transaction">
-          <LogicFrameTitle>One Table layout transaction</LogicFrameTitle>
+        <LogicFigureFrame id="transaction">
+          <LogicFigureFrameTitle>One Table layout transaction</LogicFigureFrameTitle>
           <Node
             id="canonical"
             position={[-278, 0]}
@@ -121,7 +121,7 @@ const Demo: FC = () => (
               replay final probe only
             </Text>
           </Node>
-        </LogicFrame>
+        </LogicFigureFrame>
 
         <Node
           id="runtime-inputs"
@@ -201,8 +201,8 @@ const Demo: FC = () => (
 
     <div className="sm:hidden">
       <Layout width={360} height={520} style={{ maxWidth: '100%', height: 'auto' }}>
-        <LogicFrame id="mobile-transaction">
-          <LogicFrameTitle>One Table layout transaction</LogicFrameTitle>
+        <LogicFigureFrame id="mobile-transaction">
+          <LogicFigureFrameTitle>One Table layout transaction</LogicFigureFrameTitle>
           {renderMobileNode({
             id: 'mobile-canonical',
             position: [-40, -150],
@@ -243,7 +243,7 @@ const Demo: FC = () => (
             width: 200,
             color: 'dodgerblue',
           })}
-        </LogicFrame>
+        </LogicFigureFrame>
 
         {renderMobileNode({
           id: 'mobile-runtime-inputs',

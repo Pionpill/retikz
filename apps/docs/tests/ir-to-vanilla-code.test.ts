@@ -1,4 +1,4 @@
-﻿import type { IRScene } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -370,8 +370,86 @@ describe('irToVanillaCode fallback', () => {
 
     expect(code).toContain("legend('preview-legend-1'");
     expect(code).toContain('LegendVanillaAdapter');
-    expect(code).toContain('const standardCompile = { composites: [FlexLayoutDefinition, GridDefinition] };');
+    expect(code).toContain('const compile = { composites: [FlexLayoutDefinition, GridDefinition] };');
     expect(code).not.toContain('LegendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
+  });
+
+  it('keeps semantic units as ordinary Node code and imports real composites from Notation', () => {
+    const code = irToVanillaCode(
+      ir([
+        {
+          type: 'node',
+          id: 'start',
+          position: [0, 0],
+          shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
+          text: 'Start',
+        },
+        {
+          type: 'node',
+          id: 'step',
+          position: [80, 0],
+          shape: { type: 'rectangle', params: { cornerRadius: 8 } },
+          text: 'Step',
+        },
+        { type: 'node', id: 'check', position: [160, 0], shape: 'diamond', text: 'Check' },
+        { type: 'node', id: 'join', position: [240, 0], shape: 'circle' },
+        {
+          namespace: 'notation',
+          type: 'connector',
+          id: 'edge',
+          from: { id: 'start' },
+          to: { id: 'step' },
+          label: { text: 'next' },
+        },
+      ] as never),
+    );
+
+    expect(code).toContain("node('start'");
+    expect(code).toContain("node('step'");
+    expect(code).toContain("node('check'");
+    expect(code).toContain("node('join'");
+    expect(code).toContain('connector(');
+    expect(code).toContain('ConnectorVanillaAdapter');
+    expect(code).toContain("from '@retikz/notation-vanilla'");
+    expect(code).not.toContain("ConnectorVanillaAdapter } from '@retikz/standard-vanilla'");
+    expect(code).not.toContain('TerminalDefinition');
+    expect(code).not.toContain('StageDefinition');
+    expect(code).not.toContain('Unsupported Standard composite');
+  });
+
+  it('splits Standard and Notation imports while preserving forward composite targets', () => {
+    const code = irToVanillaCode(
+      ir([
+        {
+          namespace: 'notation',
+          type: 'connector',
+          id: 'edge',
+          from: { id: 'block' },
+          to: { id: 'block' },
+        },
+        {
+          namespace: 'notation',
+          type: 'logicFrame',
+          id: 'block',
+          sections: [
+            {
+              key: 'body',
+              child: {
+                namespace: 'standard',
+                type: 'grid',
+                bounds: { start: [0, 0], end: [20, 20] },
+                line: { spacing: 10, includeBoundary: false },
+              },
+            },
+          ],
+        },
+      ] as never),
+    );
+
+    expect(code).toContain("from '@retikz/notation-vanilla'");
+    expect(code).toContain("import { GridDefinition } from '@retikz/standard';");
+    expect(code).toContain("from: { id: 'preview-logicFrame-1/logicFrame' }");
+    expect(code).toContain("to: { id: 'preview-logicFrame-1/logicFrame' }");
   });
 });

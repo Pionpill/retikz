@@ -1,3 +1,4 @@
+import { isRetikzError, RetikzError } from '@retikz/foundation';
 import { MarkOperationSchema, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -5,7 +6,8 @@ import { z } from 'zod';
 import type { ChartRecipeSeed } from '../../src/families/shared';
 
 import { ScatterChartRecipe } from '../../src/families/scatter-points/scatter';
-import { ChartResolveError, resolveChartSpec } from '../../src/resolution';
+import { ChartRecipeInvariantError } from '../../src/families/shared';
+import { ChartMemberParseError, ChartResolveError, resolveChartSpec } from '../../src/resolution';
 
 const base = {
   namespace: 'chart',
@@ -43,6 +45,52 @@ const resolveErrorOf = (input: unknown): ChartResolveError => {
 };
 
 describe('Chart resolution errors', () => {
+  it('preserves the resolver error contract and maps details with cause identity', () => {
+    const path = ['marks', 1, 'id'] as const;
+    const cause = new Error('duplicate member');
+    const error = new ChartResolveError('duplicate-id', {
+      path,
+      target: 'mark.main',
+      conflictingId: 'user.mark',
+      cause,
+    });
+
+    expect(error).toBeInstanceOf(ChartResolveError);
+    expect(error).toBeInstanceOf(RetikzError);
+    expect(isRetikzError(error)).toBe(true);
+    expect(error.name).toBe('ChartResolveError');
+    expect(error.message).toBe('Chart resolution failed: duplicate-id');
+    expect(error.code).toBe('duplicate-id');
+    expect(error.path).toBe(path);
+    expect(error.target).toBe('mark.main');
+    expect(error.conflictingId).toBe('user.mark');
+    expect(error.cause).toBe(cause);
+    expect(error.details).toEqual({ path, target: 'mark.main', conflictingId: 'user.mark' });
+    expect(error.details.path).toBe(path);
+    expect(error.details.target).toBe('mark.main');
+    expect(error.details.conflictingId).toBe('user.mark');
+    expect(Object.isFrozen(error.details)).toBe(false);
+
+    const noContext = new ChartResolveError('unknown-type', { path: ['type'] });
+    expect(noContext.details).toEqual({ path: ['type'] });
+    expect(Object.hasOwn(noContext, 'cause')).toBe(true);
+    expect(Object.getOwnPropertyNames(noContext)).toContain('cause');
+    expect(noContext.cause).toBeUndefined();
+  });
+
+  it('does not classify Chart recipe invariant and member parse errors as Foundation errors', () => {
+    const invariant = new ChartRecipeInvariantError('required-scale', ['scales']);
+    const memberParse = new ChartMemberParseError(
+      new z.ZodError([{ code: 'custom', path: ['type'], message: 'invalid mark' }]),
+      ['marks', 0],
+    );
+
+    expect(invariant).not.toBeInstanceOf(RetikzError);
+    expect(memberParse).not.toBeInstanceOf(RetikzError);
+    expect(isRetikzError(invariant)).toBe(false);
+    expect(isRetikzError(memberParse)).toBe(false);
+  });
+
   it.each([
     [{ namespace: 'chart', type: 'missing' }, 'unknown-type', ['type']],
     [{ ...base, mark: { unknownKey: true } }, 'invalid-chart-spec', ['mark', 'unknownKey']],

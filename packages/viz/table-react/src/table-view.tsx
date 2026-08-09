@@ -9,7 +9,6 @@ import {
   TABLE_NAMESPACE,
   TableComposite,
   TableSpecSchema,
-  TableThemeTokenDefinition,
 } from '@retikz/table';
 import { useCallback, useMemo, useRef } from 'react';
 
@@ -70,7 +69,6 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     <Layout
       ir={scene}
       composites={mergedComposites}
-      themeTokenDefinitions={[TableThemeTokenDefinition]}
       onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
       {...display}
     />

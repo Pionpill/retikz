@@ -1,5 +1,6 @@
-import type { AnyCompositeDefinition, AssertEqual, ValueOf } from '@retikz/core';
+import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
 import type {
   IRDetailTableSpec,
@@ -11,6 +12,7 @@ import type {
   TableLayoutManifest,
 } from '@retikz/table';
 
+import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
 import { createDetailTableSpec, createManualTableSpec, TableSpecSchema } from '@retikz/table';
 
 import type { DetailTableProps } from './DetailTable';
@@ -72,6 +74,15 @@ void _assertTableLayoutHostPropKeys;
 
 const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
 const EMPTY_DATASETS: ExternalDatasets = Object.freeze({});
+
+/** 校验 Table React 的字符串输入并保留 adapter 错误文本 */
+const assertTableReactNonEmptyString = (value: string, message: string): void => {
+  try {
+    assertFoundationNonEmptyString(value, 'Table React value');
+  } catch {
+    throw new Error(message);
+  }
+};
 
 /** 三个 React Table 组件共享的规范化运行时输入 */
 export type ReactTableRuntime = Readonly<{
@@ -237,9 +248,8 @@ export const resolveReactTableRuntime = (
   }
 
   if (options.embedded) {
-    if (spec.id === undefined || spec.id.trim().length === 0) {
-      throw new Error(`table react: embedded ${kind} Table spec id must be non-empty`);
-    }
+    if (spec.id === undefined) throw new Error(`table react: embedded ${kind} Table spec id must be non-empty`);
+    assertTableReactNonEmptyString(spec.id, `table react: embedded ${kind} Table spec id must be non-empty`);
     const unsupportedProps = unsupportedEmbeddedPropsOf(props);
     if (unsupportedProps.length > 0) {
       throw new Error(

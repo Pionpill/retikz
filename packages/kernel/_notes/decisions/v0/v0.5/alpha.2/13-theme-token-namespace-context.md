@@ -1,9 +1,10 @@
 # ADR-13：Theme Token Namespace Context 与共享颜色
 
-- 状态：Accepted
+- 状态：Superseded
 - 决策日期：2026-08-07
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-09：可继承 Theme IR 与 Composite 编译上下文](./09-inherited-theme-context.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 - Supersedes：本 ADR 明确取代 ADR-09 中“Theme 只由 `style` / `mode` 构成、领域 token 只能留在领域 spec”的边界；ADR-09 关于 Scene / Scope 继承、Composite context、probe / replay 与其它历史契约继续有效
+- Superseded by：[ADR-15：轻量 Theme IR 与领域 Token 解析](./15-lightweight-theme-resolution.md)。本 ADR 保留为 namespaced token bag 的历史设计记录，不再代表现行公开契约
 
 ## 背景与目标
 
@@ -69,10 +70,6 @@ declare const defineThemeTokenNamespace: <const TNamespace extends string, TToke
   definition: ThemeTokenDefinition<TNamespace, TTokens>,
 ) => ThemeTokenDefinition<TNamespace, TTokens>;
 
-declare const composeThemeTokenOverrides: (
-  ...contributions: ReadonlyArray<AnyThemeTokenContribution>
-) => ThemeTokenNamespaceBag;
-
 type CompileOptions = Readonly<{
   themeTokenDefinitions?: ReadonlyArray<AnyThemeTokenDefinition>;
 }>;
@@ -84,9 +81,9 @@ Core 内置并公开 `CoreThemeTokenDefinition`。registry 构造先加入该 bu
 
 所有会解析 Theme 的完整 compile、lowering-only 与 retained / fresh runtime 入口都消费这份同义 registry contract。registry 在读取 Scene / Scope Theme 或调用 Composite 前完成构造；Scene Theme 与每一层 Scope Theme 在生成 effective context 前先按其输入路径验证通用 bag，再由对应 namespace definition schema 校验 sparse owner map。只有全部校验通过的 detached、递归不可变 context 才会暴露给后代与 Composite，因此 unknown namespace 即使当前没有领域 consumer 也在声明它的 Theme 层 fail-loud。
 
-Definition 可以由 Core 内置 provider 或 owner 注入；Core 只比较 identity、namespace 并调用 schema，不解释领域类型或 token 语义。领域 helper（例如 `defineCoreThemeTokens`、`definePlotThemeTokens`）只返回纯 JSON contribution，不携带 schema、函数、ReactNode、class instance 或 renderer handle。`composeThemeTokenOverrides` 拒绝同一次组合中的重复 namespace；不同 Scene / Scope 层级中同一 namespace 的覆盖是合法的。
+Definition 可以由 Core 内置 provider 或 owner 注入；Core 只比较 identity、namespace 并调用 schema，不解释领域类型或 token 语义。领域 helper（例如 `defineCoreThemeTokens`、`definePlotThemeTokens`）只返回纯 JSON contribution，不携带 schema、函数、ReactNode、class instance 或 renderer handle；不同 Scene / Scope 层级中同一 namespace 的覆盖是合法的。
 
-Layout / Scope authoring 先用各 owner helper 构造 contribution，再通过 `composeThemeTokenOverrides` 形成唯一的 `theme.tokens` bag；React、Vanilla 与 plain JSON 只在 authoring 形态上不同，不产生领域专属的 Layout / Scope prop。
+Layout / Scope authoring 先用各 owner helper 构造 contribution，再按 namespace 直接形成 `theme.tokens` bag；React、Vanilla 与 plain JSON 只在 authoring 形态上不同，不产生领域专属的 Layout / Scope prop。
 
 Core 第一版自有 namespace 的最小 value contract 为：
 
@@ -115,7 +112,7 @@ type ResolvedThemeColors = Readonly<{
 - 默认行为：未声明 Theme 时使用 `neutral + light`、空的领域 namespace bag 和由该环境派生的 Core shared colors
 - 继承行为：Scene、外层 Scope 到内层 Scope 依次覆盖显式的 style、mode、namespace 和 token key；省略字段继续继承；第一版不提供 `resetTheme`、namespace reset 或单 token reset
 - 解析行为：Core shared colors 先由 style / mode 选择完整 preset，再叠加 inherited `core` token；领域 owner 在同一 effective Theme 上解析自己的 preset、shared color projection、namespace token、local token、native theme 与显式成员配置
-- 校验行为：Theme 与 contribution 必须是 plain JSON data；unknown namespace、同次组合中的 duplicate namespace、同 namespace 的不同 definition identity、unknown key、非法 value、空 categorical array 和无法通过 owner schema 的 bag 都 fail-loud，诊断至少包含输入层以及 namespace / key 路径；同一冻结 definition 对象的重复聚合只去重一次
+- 校验行为：Theme 与 contribution 必须是 plain JSON data；unknown namespace、同 namespace 的不同 definition identity、unknown key、非法 value、空 categorical array 和无法通过 owner schema 的 bag 都 fail-loud，诊断至少包含输入层以及 namespace / key 路径；同一冻结 definition 对象的重复聚合只去重一次
 - 消费行为：Core Inspector 对每个 occurrence 使用 `colorScope % palette.categorical.length` 取得 categorical scope color；warning 使用 `semantic.warning`；Standard 只消费 Core 提供的 `InspectionAppearance`，不读取 token bag、维护颜色数组或重新实现取余
 - 循环选择：Core 拥有“非空 categorical array + 非负稳定 index → index 取余后的颜色”这一领域中立 value contract；需要相同语义的 Plot / Table consumer 复用该 contract，Standard 不自行选择颜色
 - 编译行为：交给 Composite 的 context 是 detached、递归不可变的有效值；没有 Theme consumer 的 Core-only 图元保持既有输出；最终 Scene 只包含已物化样式，renderer 不读取 Theme、preset 或领域 token

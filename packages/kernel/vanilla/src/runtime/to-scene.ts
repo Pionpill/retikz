@@ -63,14 +63,6 @@ export const prepareVanillaCompileInput = (
       coreOptions: Object.freeze({
         ...options.compile,
         composites: normalized.composites,
-        ...(normalized.themeTokenDefinitions.length === 0
-          ? {}
-          : {
-              themeTokenDefinitions: [
-                ...normalized.themeTokenDefinitions,
-                ...(options.compile?.themeTokenDefinitions ?? []),
-              ],
-            }),
       }),
       authoringSites: normalized.authoringSites,
       runtimeMeta: normalized.runtimeMeta,

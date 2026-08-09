@@ -4,7 +4,7 @@ import type { IRTableThemeTokenOverrides, TableThemeTokenKey, TableThemeTokenMap
 import type { DeepReadonly } from '../../shared';
 
 /** Table token cascade 的来源层级 */
-export type TableThemeTokenSourceKind = 'preset' | 'shared-categorical' | 'inherited-theme-token' | 'local-theme-token';
+export type TableThemeTokenSourceKind = 'preset' | 'shared-categorical' | 'local-theme-token';
 
 /** 单个 Table token 的最终来源 */
 export type TableThemeTokenSource = DeepReadonly<{
@@ -15,7 +15,7 @@ export type TableThemeTokenSource = DeepReadonly<{
 }>;
 
 /** Table resolver 使用的 Core effective Theme 形态 */
-export type TableThemeContext = Pick<ResolvedTheme, 'style' | 'mode' | 'tokens' | 'colors'>;
+export type TableThemeContext = Pick<ResolvedTheme, 'style' | 'mode' | 'colors'>;
 
 /** Table resolver 产出的完整 token map 与逐 key 来源 */
 export type ResolvedTableThemeTokens = DeepReadonly<{

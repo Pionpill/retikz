@@ -270,38 +270,38 @@ plain-spec retained update 可以替换同一 composite key/schema/执行分支�
 
 ## API 摘要
 
-| API                             | 类型          | 说明                                          |
-| ------------------------------- | ------------- | --------------------------------------------- |
-| `figure`                        | authoring     | 构造可携带根 Theme 的 plain spec 根对象       |
-| `layer`                         | authoring     | 构造带顺序与 metadata 的 layer 边界           |
-| `node`                          | authoring     | 构造具名或匿名 node                           |
-| `coordinate`                    | authoring     | 构造必须带 id 的具名 coordinate               |
-| `path`                          | authoring     | 构造 path，`way` 复用 Draw way DSL            |
-| `scope`                         | authoring     | 构造 Theme、样式与 namespace 作用域           |
-| `embed`                         | authoring     | 构造 Tier 2 嵌入节点                          |
-| `VanillaLayerCache`             | authoring     | 提供未来 layer 失效优化使用的 metadata hint   |
-| `VanillaViewMode`               | runtime       | retained / static view 的公开 const object    |
-| `VanillaRuntimeOptions`         | type          | raw input 的 retained / static 判别配置       |
-| `VanillaRetainedRuntimeOptions` | type          | retained mode、更新策略与 renderer factory    |
-| `VanillaStaticRuntimeOptions`   | type          | 只允许 `mode: "static"` 的封闭配置            |
-| `CommonOptions`                 | type          | 输出、compile、编译驱动、动画与 adapter 配置  |
-| `CommonOptions.compile.themeTokenDefinitions` | compile option | 传入冻结的 owner Theme token Definition，并与嵌入 adapter contribution 一起聚合 |
-| `VanillaFigureSpec`             | type          | 可携带根 `theme` 的 version 1 plain spec      |
-| `VanillaScopeSpec`              | type          | 可携带局部 Theme 与不透明 authoring 的 Scope  |
-| `VanillaPathSpec`               | type          | 可携带不透明 authoring 的 Core Path           |
-| `VanillaEmbedSpec`              | type          | 可携带不透明 authoring 的 Tier 2 spec         |
-| `VanillaCompileDriver`          | type          | 注入 observers 并解析同 revision 只读图层     |
-| `isVanillaFigureSpec`           | normalization | 判断输入是否为 version 1 plain spec           |
-| `normalizeFigureSpec`           | normalization | 生成 Core IR、composites 与 runtime metadata  |
-| `VanillaTier2Adapter`           | type          | 定义 `embed()` 的 lowering 适配器             |
-| `RetainedVanillaView`           | runtime       | IR / plain spec 的事务式 retained view        |
-| `StaticVanillaView`             | runtime       | 预编译 Scene 或 raw input 的完整重绘 view     |
-| `StaticRawSvgView`              | runtime       | IR / plain spec 的 SVG static view            |
-| `StaticRawCanvasView`           | runtime       | IR / plain spec 的 Canvas static view         |
-| `RawStaticMountOptions`         | type          | IR / plain spec 的 SVG static mount 配置      |
-| `RawStaticMountCanvasOptions`   | type          | IR / plain spec 的 Canvas static mount 配置   |
-| `StaticMountOptions`            | type          | 预编译 Scene 的 SVG static mount 配置         |
-| `StaticMountCanvasOptions`      | type          | 预编译 Scene 的 Canvas static mount 配置      |
-| `StaticMountUnifiedOptions`     | type          | 预编译 Scene 的统一 static mount 配置         |
-| `RetainedSvgUpdateOptions`      | type          | SVG retained update 的动画配置                |
-| `RetainedCanvasUpdateOptions`   | type          | Canvas retained update 的动画与 property 配置 |
+| API                                 | 类型           | 说明                                                               |
+| ----------------------------------- | -------------- | ------------------------------------------------------------------ |
+| `figure`                            | authoring      | 构造可携带根 Theme 的 plain spec 根对象                            |
+| `layer`                             | authoring      | 构造带顺序与 metadata 的 layer 边界                                |
+| `node`                              | authoring      | 构造具名或匿名 node                                                |
+| `coordinate`                        | authoring      | 构造必须带 id 的具名 coordinate                                    |
+| `path`                              | authoring      | 构造 path，`way` 复用 Draw way DSL                                 |
+| `scope`                             | authoring      | 构造 Theme、样式与 namespace 作用域                                |
+| `embed`                             | authoring      | 构造 Tier 2 嵌入节点                                               |
+| `VanillaLayerCache`                 | authoring      | 提供未来 layer 失效优化使用的 metadata hint                        |
+| `VanillaViewMode`                   | runtime        | retained / static view 的公开 const object                         |
+| `VanillaRuntimeOptions`             | type           | raw input 的 retained / static 判别配置                            |
+| `VanillaRetainedRuntimeOptions`     | type           | retained mode、更新策略与 renderer factory                         |
+| `VanillaStaticRuntimeOptions`       | type           | 只允许 `mode: "static"` 的封闭配置                                 |
+| `CommonOptions`                     | type           | 输出、compile、编译驱动、动画与 adapter 配置                       |
+| `CommonOptions.compile.themeStyles` | compile option | 传入运行时 Core Theme style resolver；函数不进入 plain spec / JSON |
+| `VanillaFigureSpec`                 | type           | 可携带根 `theme` 的 version 1 plain spec                           |
+| `VanillaScopeSpec`                  | type           | 可携带局部 Theme 与不透明 authoring 的 Scope                       |
+| `VanillaPathSpec`                   | type           | 可携带不透明 authoring 的 Core Path                                |
+| `VanillaEmbedSpec`                  | type           | 可携带不透明 authoring 的 Tier 2 spec                              |
+| `VanillaCompileDriver`              | type           | 注入 observers 并解析同 revision 只读图层                          |
+| `isVanillaFigureSpec`               | normalization  | 判断输入是否为 version 1 plain spec                                |
+| `normalizeFigureSpec`               | normalization  | 生成 Core IR、composites 与 runtime metadata                       |
+| `VanillaTier2Adapter`               | type           | 定义 `embed()` 的 lowering 适配器                                  |
+| `RetainedVanillaView`               | runtime        | IR / plain spec 的事务式 retained view                             |
+| `StaticVanillaView`                 | runtime        | 预编译 Scene 或 raw input 的完整重绘 view                          |
+| `StaticRawSvgView`                  | runtime        | IR / plain spec 的 SVG static view                                 |
+| `StaticRawCanvasView`               | runtime        | IR / plain spec 的 Canvas static view                              |
+| `RawStaticMountOptions`             | type           | IR / plain spec 的 SVG static mount 配置                           |
+| `RawStaticMountCanvasOptions`       | type           | IR / plain spec 的 Canvas static mount 配置                        |
+| `StaticMountOptions`                | type           | 预编译 Scene 的 SVG static mount 配置                              |
+| `StaticMountCanvasOptions`          | type           | 预编译 Scene 的 Canvas static mount 配置                           |
+| `StaticMountUnifiedOptions`         | type           | 预编译 Scene 的统一 static mount 配置                              |
+| `RetainedSvgUpdateOptions`          | type           | SVG retained update 的动画配置                                     |
+| `RetainedCanvasUpdateOptions`       | type           | Canvas retained update 的动画与 property 配置                      |

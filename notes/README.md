@@ -49,7 +49,7 @@
 - [`editor-design.md`](./architecture/editor-design.md)：无 UI 图形编辑运行时、candidate transaction 与领域 editor adapter 边界。
 - [`visual-theme-design.md`](./architecture/visual-theme-design.md)：renderer-neutral 视觉主题、公开 token、通用 preset 与跨包映射原则。
 - [`attached-space-composition.md`](./architecture/attached-space-composition.md)：跨域空间贴附与复用长期方向。
-- [`logical-diagram-design.md`](./architecture/logical-diagram-design.md)：Graph / Flow / Editor 逻辑制图长期边界。
+- [`diagram-design.md`](./architecture/diagram-design.md)：Notation / Graph / Flow / Editor 制图能力长期边界。
 
 ### kernel 发布组
 

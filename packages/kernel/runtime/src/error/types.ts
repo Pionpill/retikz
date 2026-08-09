@@ -1,5 +1,6 @@
+import type { ValueOf } from '@retikz/foundation';
+
 import type { RuntimeDiagnosticCode } from '../diagnostic';
-import type { ValueOf } from '../shared';
 import type { RuntimeErrorCode, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from './constants';
 
 /** Runtime owner 执行阶段 */

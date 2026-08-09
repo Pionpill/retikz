@@ -118,7 +118,7 @@ If `GridDefinition` is not provided, Core emits `COMPOSITE_NOT_REGISTERED` and s
 Layout JSX uses `FlexLayout`, `GridLayout`, `OverlayLayout`, and direct `LayoutItem` children. The three containers share one `standard.layout` contribution. Direct IR can inject `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]`, while Vanilla can pass `StandardLayoutVanillaAdapters`
 
 ```tsx
-import { Layout, Node } from '@retikz/react';
+import { Layout, Node, Scope } from '@retikz/react';
 import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 
 <Layout width={320} height={120}>
@@ -142,4 +142,5 @@ import { FlexLayout, LayoutItem } from '@retikz/standard-react';
 | [Frame](/standard/composite/frame)                                  | Automatic bounds, gap, border, and label                        |
 | [Legend](/standard/composite/legend)                                | Discrete samples, continuous ramps, probes, and typed artifacts |
 | [Layout Containers](/standard/layout)                               | Flex, Grid, Overlay, and typed artifacts                        |
+| [Diagram Notation](/diagram/notation)                               | LogicFrame, semantic units, Connector, and Callout              |
 | [Direct Definition Loading](/standard/extension/capability-loading) | Definition selection, Core injection, and host boundaries       |

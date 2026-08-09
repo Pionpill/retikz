@@ -47,8 +47,26 @@ describe('@retikz/standard root exports', () => {
       'OverlayLayoutModule',
       'StandardAllPreset',
       'StandardLayoutPreset',
+      'LogicFrameDefinition',
+      'createLogicFrame',
+      'LogicFrameSchema',
+      'TerminalSchema',
+      'StageSchema',
+      'DecisionSchema',
+      'JunctionSchema',
+      'ConnectorDefinition',
+      'CalloutDefinition',
     ]) {
       expect(standardExports).not.toHaveProperty(name);
     }
+  });
+
+  it('keeps composite compiler helpers package-private', () => {
+    expect(standardExports).not.toHaveProperty('compileFlexLayout');
+    expect(standardExports).not.toHaveProperty('compileLogicFrame');
+    expect(standardExports).not.toHaveProperty('compileTerminal');
+    expect(standardExports).not.toHaveProperty('compileStage');
+    expect(standardExports).not.toHaveProperty('compileDecision');
+    expect(standardExports).not.toHaveProperty('compileJunction');
   });
 });

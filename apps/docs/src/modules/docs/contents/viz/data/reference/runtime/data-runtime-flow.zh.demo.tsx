@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Data 契约、运行时依赖、处理阶段与结果之间的关系图 */
 const Demo: FC = () => (
@@ -92,8 +92,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="data-runtime">
-      <LogicFrameTitle>@retikz/data 运行时</LogicFrameTitle>
+    <LogicFigureFrame id="data-runtime">
+      <LogicFigureFrameTitle>@retikz/data 运行时</LogicFigureFrameTitle>
       <Node
         id="field-preparation"
         position={[0, -37]}
@@ -126,7 +126,7 @@ const Demo: FC = () => (
           校验 · 执行
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="rows"

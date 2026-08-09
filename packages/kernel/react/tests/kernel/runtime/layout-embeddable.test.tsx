@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { Mock } from 'vitest';
 
-import { CompositeBaseSchema, defineComposite, defineThemeTokenNamespace } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { type FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -87,117 +87,6 @@ const makeFixture = (
 };
 
 describe('<Layout> 可嵌入 Tier2 聚合', () => {
-  it('嵌入适配器自动贡献 Theme definition 后，Layout 将 owner token 交给 Core compile', () => {
-    const themeTokenDefinition = defineThemeTokenNamespace({
-      namespace: 'theme-token-embed',
-      schema: z.strictObject({ 'surface.fill': z.string() }),
-    });
-    const tokenComposite = defineComposite({
-      namespace: 'theme-token-embed',
-      type: 'box',
-      schema: CompositeBaseSchema.extend({
-        namespace: z.literal('theme-token-embed'),
-        type: z.literal('box'),
-      }),
-      expand: (_node, context) => {
-        const fill = context.theme.tokens['theme-token-embed']['surface.fill'];
-        if (typeof fill !== 'string') throw new Error('expected embedded theme token');
-        return { type: 'node', position: [0, 0], minimumSize: 20, padding: 0, fill };
-      },
-    });
-    const adapter: EmbeddableTier2Adapter = {
-      displayName: 'ThemeTokenFixture',
-      namespace: 'theme-token-embed',
-      contribute: () => ({
-        node: { namespace: 'theme-token-embed', type: 'box' },
-        datasets: {},
-        makeComposites: () => [tokenComposite],
-        themeTokenDefinitions: [themeTokenDefinition],
-      }),
-    };
-    const ThemeTokenFixture: EmbeddableFixture = () => null;
-    ThemeTokenFixture.displayName = 'ThemeTokenFixture';
-    ThemeTokenFixture.isTier2Embeddable = true;
-    ThemeTokenFixture.embeddableAdapter = adapter;
-
-    const svg = renderToStaticMarkup(
-      <Layout theme={{ tokens: { 'theme-token-embed': { 'surface.fill': '#123456' } } }} width={100} height={100}>
-        <ThemeTokenFixture id="theme" data={null} />
-      </Layout>,
-    );
-
-    expect(svg).toContain('#123456');
-  });
-
-  it('同一 Theme definition singleton 同时来自 embed 与显式 Layout input 时只注册一次', () => {
-    const definition = defineThemeTokenNamespace({
-      namespace: 'theme-token-dedupe',
-      schema: z.strictObject({ value: z.string() }),
-    });
-    const adapter: EmbeddableTier2Adapter = {
-      displayName: 'DedupeFixture',
-      namespace: 'theme-token-dedupe',
-      contribute: () => ({
-        node: { type: 'node', position: [0, 0] },
-        datasets: {},
-        makeComposites: () => [],
-        themeTokenDefinitions: [definition],
-      }),
-    };
-    const DedupeFixture: EmbeddableFixture = () => null;
-    DedupeFixture.displayName = 'DedupeFixture';
-    DedupeFixture.isTier2Embeddable = true;
-    DedupeFixture.embeddableAdapter = adapter;
-
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout themeTokenDefinitions={[definition]} width={100} height={100}>
-          <DedupeFixture id="dedupe" data={null} />
-        </Layout>,
-      ),
-    ).not.toThrow();
-  });
-
-  it('同 namespace 的不同 Theme definition identity 由 Core 统一 fail-loud', () => {
-    const firstDefinition = defineThemeTokenNamespace({
-      namespace: 'theme-token-conflict',
-      schema: z.strictObject({ value: z.string().optional() }),
-    });
-    const secondDefinition = defineThemeTokenNamespace({
-      namespace: 'theme-token-conflict',
-      schema: z.strictObject({ value: z.string().optional() }),
-    });
-    const makeComposites = () => [];
-    const makeConflictFixture = (displayName: string, definition: typeof firstDefinition): EmbeddableFixture => {
-      const adapter: EmbeddableTier2Adapter = {
-        displayName,
-        namespace: 'theme-token-conflict',
-        contribute: () => ({
-          node: { type: 'node', position: [0, 0] },
-          datasets: {},
-          makeComposites,
-          themeTokenDefinitions: [definition],
-        }),
-      };
-      const Fixture: EmbeddableFixture = () => null;
-      Fixture.displayName = displayName;
-      Fixture.isTier2Embeddable = true;
-      Fixture.embeddableAdapter = adapter;
-      return Fixture;
-    };
-    const First = makeConflictFixture('ConflictFirst', firstDefinition);
-    const Second = makeConflictFixture('ConflictSecond', secondDefinition);
-
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout width={100} height={100}>
-          <First id="first" data={null} />
-          <Second id="second" data={null} />
-        </Layout>,
-      ),
-    ).toThrow(/theme-token-conflict.*conflict/i);
-  });
-
   it('同 namespace 两个可嵌入子组件 → datasets 合并、makeComposites 只调一次（含 a + b）、两面板都渲染', () => {
     const dataA = { a: [1, 2] };
     const dataB = { b: [3, 4] };

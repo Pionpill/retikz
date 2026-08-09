@@ -1,8 +1,8 @@
 # @retikz/math
 
-Zero-dependency pure computational geometry for [retikz](https://pionpill.github.io/retikz/) — vectors, affine transforms, arc primitives, intersections, triangle in-circle / circum-circle helpers, point-in-polygon, and convex hull. Pure functions over plain `Position = [number, number]` arrays; **no classes, no IR, no zod, no runtime dependencies**.
+Zero-dependency pure computational geometry for [retikz](https://pionpill.github.io/retikz/) — vectors, affine transforms, arc primitives, intersections, triangle in-circle / circum-circle helpers, point-in-polygon, and convex hull. Pure functions over plain `Position = [number, number]` arrays; **no classes, no IR, no zod, no runtime dependencies**. The package currently has no real `@retikz/foundation` import and therefore declares no such dependency.
 
-零依赖纯计算几何：向量运算、仿射变换、arc 原语、求交（线 / 圆 / 线段 / ray-arc）、三角形内切 / 外接圆、点在多边形、凸包。一律纯函数 + 普通 `Position` 数组，**不写 class、零 IR、零 zod、零运行时依赖**。作为 `@retikz/core` 与 domain（plot / flow…）包的共享计算底座。
+零依赖纯计算几何：向量运算、仿射变换、arc 原语、求交（线 / 圆 / 线段 / ray-arc）、三角形内切 / 外接圆、点在多边形、凸包。一律纯函数 + 普通 `Position` 数组，**不写 class、零 IR、零 zod、零运行时依赖**。作为 `@retikz/core` 与 domain（plot / flow…）包的共享计算底座。当前没有真实 `@retikz/foundation` import，因此不声明该依赖。
 
 ## Install
 

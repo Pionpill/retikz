@@ -1,0 +1,57 @@
+---
+title: Notation API Reference
+description: Look up LogicFrame, semantic Node, Connector, and Callout APIs.
+---
+
+Notation is split by responsibility: `@retikz/notation` provides canonical JSON, schemas, and factories; `@retikz/notation-react` provides React sugar; `@retikz/notation-vanilla` provides Vanilla builders and adapters for composites that still lower at runtime
+
+## Public exports
+
+| Capability | Notation                                                                       | React                                                 | Vanilla                                  |
+| ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
+| LogicFrame | `LogicFrameSchema`, `IRLogicFrame`, `createLogicFrame`, `LogicFrameDefinition` | `LogicFrame`, `LogicFrameHeader`, `LogicFrameSection` | `logicFrame`, `LogicFrameVanillaAdapter` |
+| Terminal   | `TerminalSchema`, `IRTerminal`, `createTerminal`                               | `Terminal`                                            | `terminal` (returns a Node)              |
+| Stage      | `StageSchema`, `IRStage`, `createStage`                                        | `Stage`                                               | `stage` (returns a Node)                 |
+| Decision   | `DecisionSchema`, `IRDecision`, `createDecision`                               | `Decision`                                            | `decision` (returns a Node)              |
+| Junction   | `JunctionSchema`, `IRJunction`, `createJunction`                               | `Junction`                                            | `junction` (returns a Node)              |
+| Connector  | `ConnectorSchema`, `IRConnector`, `createConnector`, `ConnectorDefinition`     | `Connector`                                           | `connector`, `ConnectorVanillaAdapter`   |
+| Callout    | `CalloutSchema`, `IRCallout`, `createCallout`, `CalloutDefinition`             | `Callout`                                             | `callout`, `CalloutVanillaAdapter`       |
+
+The four semantic `IRXxx` types are aliases for Core `IRNode`; they no longer have separate Definitions or artifact schemas
+
+## Semantic Node inputs
+
+The four semantic components accept Core Node props. `id` and `position` are required, string children or `<Text>` become Node text, and `shape` is fixed by the component
+
+```tsx
+<Stage id="step" position={[0, 0]}>Process</Stage>
+<Decision id="check" position={[80, 0]}><Text>Ready?</Text></Decision>
+```
+
+Vanilla builders return canonical `IRNode` values directly and preserve the supplied id
+
+```ts
+const step = stage('step', { position: [0, 0], text: 'Process' });
+// step.id === 'step'
+```
+
+## Definition loading
+
+Only LogicFrame, Connector, and Callout still need runtime Definitions. A Core-only Node scene needs no Notation composite registration
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { CalloutDefinition, ConnectorDefinition, LogicFrameDefinition } from '@retikz/notation';
+
+compileToScene(scene, { composites: [LogicFrameDefinition, ConnectorDefinition, CalloutDefinition] });
+```
+
+## Vanilla identity
+
+Semantic builders use the original id. Connector and Callout targets reference that id directly. LogicFrame, Connector, and Callout adapters retain their own adapter identity rules
+
+## Related
+
+- [Semantic units](/diagram/notation/logic/semantic-units)
+- [LogicFrame](/diagram/notation/composite/logic-frame)
+- [Definition loading](/standard/extension/capability-loading)

@@ -23,9 +23,9 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
 
 ## Theme
 
-`ThemeSchema` 是 Scene 与 Scope 共用的稀疏环境，字段为 `style`、`mode` 与 `tokens`。`tokens` 按 owner namespace 保存 sparse token key；每层只覆盖自己声明的 namespace/key，Core 内置 `core` namespace，Plot、Chart、Table 等 owner 通过 `themeTokenDefinitions` 注册各自 schema。未知 namespace、key、值或冲突 Definition 会 fail-loud。
+`ThemeSchema` 是 Scene 与 Scope 共用的稀疏环境，字段只有 `style` 与 `mode`。每层只覆盖自己声明的 selector；Core 在解析期用 runtime style registry 生成颜色。未注册 style 或同名冲突 Definition 会 fail-loud，resolver 函数和完整 token map 不写入 JSON。
 
-编译后 Composite 收到完整、冻结的 `ResolvedTheme`：除了继承后的 `style`、`mode`、`tokens`，还包含 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。这些 colors 是 Core shared view；普通 Core 图元、最终 Scene 与 renderer 不会自动读取 Theme 或替换自身颜色。
+编译后 Composite 收到完整、冻结的 `ResolvedTheme`：除了继承后的 `style`、`mode`，还包含 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。这些 colors 是 Core shared view；普通 Core 图元、最终 Scene 与 renderer 不会自动读取 Theme 或替换自身颜色。
 
 <ZodSchema name="ThemeSchema" />
 

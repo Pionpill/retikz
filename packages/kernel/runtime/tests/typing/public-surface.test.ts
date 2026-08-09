@@ -1,3 +1,5 @@
+import type * as Foundation from '@retikz/foundation';
+
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
@@ -33,6 +35,10 @@ import type {
   RuntimeSnapshot,
   RuntimeUpdateResult,
 } from '../../src';
+// @ts-expect-error Runtime no longer owns the shared OpenString type utility
+import type { OpenString } from '../../src';
+
+type RemovedRuntimeOpenString<T extends string> = OpenString<T>;
 import type { RuntimeDiagnosticPhaseValue as RuntimeDiagnosticPhaseTypeValue } from '../../src/diagnostic/types';
 
 import {
@@ -111,5 +117,10 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeSessionUpdate>().toBeObject();
     expectTypeOf<RuntimeSnapshot<unknown>>().toBeObject();
     expectTypeOf<RuntimeUpdateResult<unknown>>().toBeObject();
+  });
+
+  it('uses Foundation for the shared OpenString utility', () => {
+    expectTypeOf<Foundation.OpenString<'custom'>>().toBeString();
+    void ({} as RemovedRuntimeOpenString<'custom'>);
   });
 });

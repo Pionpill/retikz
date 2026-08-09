@@ -8,13 +8,7 @@ import type {
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  defineThemeTokenNamespace,
-  resolveCoreThemeColors,
-} from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreThemeColors } from '@retikz/core';
 import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -487,53 +481,6 @@ describe('@retikz/vanilla retained mount', () => {
     view.update(datasetFigure('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
-  });
-
-  it('plain spec update 移除 embed Theme definition 后不复用 retained registry', () => {
-    const themeDefinition = defineThemeTokenNamespace({
-      namespace: 'retained-theme',
-      schema: z.strictObject({ value: z.string() }),
-    });
-    const composite = defineComposite({
-      namespace: 'retained-theme',
-      type: 'box',
-      schema: CompositeBaseSchema.extend({
-        namespace: z.literal('retained-theme'),
-        type: z.literal('box'),
-      }),
-      expand: (_node, context) => {
-        const fill = context.theme.tokens['retained-theme'].value;
-        if (typeof fill !== 'string') throw new Error('expected retained theme token');
-        return {
-          type: 'node',
-          position: [0, 0],
-          shape: 'rectangle',
-          fill,
-        };
-      },
-    });
-    const adapter: VanillaTier2Adapter<{ includeTheme: boolean }> = {
-      kind: 'retained-theme',
-      namespace: 'retained-theme',
-      lower: props => ({
-        node: { namespace: 'retained-theme', type: 'box' },
-        datasets: {},
-        makeComposites: () => [composite],
-        ...(props.includeTheme ? { themeTokenDefinitions: [themeDefinition] } : {}),
-      }),
-    };
-    const figure = (includeTheme: boolean): VanillaFigureSpec => ({
-      type: 'figure',
-      version: 1,
-      theme: { tokens: { 'retained-theme': { value: '#123456' } } },
-      children: [{ type: 'embed', kind: 'retained-theme', id: 'theme-box', props: { includeTheme } }],
-    });
-    const container = document.createElement('div');
-    const view = mountSvg(container, figure(true), { adapters: [adapter] });
-
-    expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#123456');
-    expect(() => view.update(figure(false))).toThrow(/RUNTIME_PROGRAM_RUN_FAILED/);
-    expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#123456');
   });
 
   it('mount 后修改 adapter callback 不改变 retained session compile 语义', () => {

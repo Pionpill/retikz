@@ -7,7 +7,7 @@
 retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR 描述节点、路径、箭头、图表等图元，编译成 renderer-agnostic 的 Scene，再交给 SVG / Canvas 等后端渲染。
 
 - Monorepo：pnpm workspace，glob 为 `packages/*/*` + `apps/*`
-- Kernel 组：`packages/kernel/{math,runtime,core,render,react,vanilla,tex}`，其中 `math` 是零依赖计算底座，`runtime` 是零依赖增量执行与事务底座，`tex` 是可选 LaTeX 公式接入包
+- Kernel 组：`packages/kernel/{foundation,math,runtime,core,inspect,render,react,vanilla,tex}`，其中 `foundation` 是跨包零依赖原子契约底座，`math` 是零依赖计算底座，`runtime` 是增量执行与事务底座，`tex` 是可选 LaTeX 公式接入包
 - Viz 组：`packages/viz/{plot,plot-react,plot-vanilla}`，通过 core 的 composite / lowering 能力接入
 - Apps：`apps/docs` 文档站，`apps/eval` 评测工具
 

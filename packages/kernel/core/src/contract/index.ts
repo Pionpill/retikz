@@ -13,4 +13,4 @@ export * from './runtime';
 export * from './scene';
 export * from './scene-patch';
 export * from './shape';
-export * from './theme-token';
+export * from './theme-style';

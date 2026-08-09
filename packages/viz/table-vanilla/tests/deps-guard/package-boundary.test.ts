@@ -28,10 +28,11 @@ describe('@retikz/table-vanilla package boundary', () => {
     });
   });
 
-  it('depends on Table and Kernel Vanilla without taking React or Plot dependencies', () => {
+  it('depends on Table, Foundation, and Kernel Vanilla without taking React or Plot dependencies', () => {
     expect(Object.keys(manifest.dependencies).sort()).toEqual([
       '@retikz/core',
       '@retikz/data',
+      '@retikz/foundation',
       '@retikz/table',
       '@retikz/vanilla',
     ]);

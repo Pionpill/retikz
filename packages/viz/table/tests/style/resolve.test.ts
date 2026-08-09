@@ -25,7 +25,6 @@ describe('Table theme token resolution', () => {
       {
         style: 'neutral',
         mode: 'light',
-        tokens: {},
         colors: resolveCoreThemeColors('neutral', 'light'),
       },
       {

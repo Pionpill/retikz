@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node, Text } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Relationship between Data contracts, runtime dependencies, processing stages, and results */
 const Demo: FC = () => (
@@ -92,8 +92,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <LogicFrame id="data-runtime">
-      <LogicFrameTitle>@retikz/data runtime</LogicFrameTitle>
+    <LogicFigureFrame id="data-runtime">
+      <LogicFigureFrameTitle>@retikz/data runtime</LogicFigureFrameTitle>
       <Node
         id="field-preparation"
         position={[0, -37]}
@@ -126,7 +126,7 @@ const Demo: FC = () => (
           validate · execute
         </Text>
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="rows"

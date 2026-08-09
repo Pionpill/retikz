@@ -1,15 +1,8 @@
-import type { IRNode } from '@retikz/core';
+import type { IRNode, ThemeModeValue } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
-import {
-  composeThemeTokenOverrides,
-  CompositeBaseSchema,
-  defineComposite,
-  defineCoreThemeTokens,
-  ThemeMode,
-  ThemeStyle,
-} from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
 import { Layout, Scope } from '@retikz/react';
 import { z } from 'zod';
 
@@ -34,11 +27,12 @@ const cardFills = {
   },
 } as const;
 
-const rootThemeTokens = composeThemeTokenOverrides(
-  defineCoreThemeTokens({
-    'palette.categorical': ['#2563eb', '#7c3aed', '#c026d3'],
-  }),
-);
+const isCardFillStyle = (style: string): style is keyof typeof cardFills => style in cardFills;
+
+const resolveCardFill = (style: string, mode: ThemeModeValue): string => {
+  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[ThemeStyle.Neutral];
+  return fills[mode];
+};
 
 const themeCardComposite = defineComposite({
   namespace: 'theme-demo',
@@ -59,7 +53,7 @@ const themeCardComposite = defineComposite({
       minimumSize: { width: 132, height: 54 },
       padding: 8,
       cornerRadius: 10,
-      fill: cardFills[context.theme.style][context.theme.mode],
+      fill: resolveCardFill(context.theme.style, context.theme.mode),
       stroke: colors.semantic.warning,
       strokeWidth: 2,
       textColor: colors.semantic.error,
@@ -102,14 +96,7 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 });
 
 const Demo: FC = () => (
-  <Layout
-    theme={{
-      style: ThemeStyle.Academic,
-      tokens: rootThemeTokens,
-    }}
-    width={650}
-    height={120}
-  >
+  <Layout theme={{ style: ThemeStyle.Academic }} width={650} height={120}>
     <ThemeCard label="根：学术 / 浅色" />
     <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: ThemeStyle.Vibrant }}>
       <ThemeCard label="局部：活力 / 浅色" />
@@ -118,12 +105,6 @@ const Demo: FC = () => (
       transforms={[{ kind: 'translate', x: 400, y: 0 }]}
       theme={{
         mode: ThemeMode.Dark,
-        tokens: {
-          core: {
-            'semantic.warning': '#fbbf24',
-            'palette.categorical': ['#22d3ee', '#facc15', '#fb7185'],
-          },
-        },
       }}
     >
       <ThemeCard label="局部：学术 / 深色" />

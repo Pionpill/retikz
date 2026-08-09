@@ -1,4 +1,4 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { z } from 'zod';
 
 import { PlotThemeToken, PlotThemeTokenSource } from './constants';
@@ -38,7 +38,7 @@ export const ResolvedPlotPaletteSchema = z
 /** Plot-owned theme resolution 与 inspection 契约 */
 export const PlotThemeResolutionSchema = z
   .strictObject({
-    style: z.enum(ThemeStyle).describe('Effective Theme style selecting the Plot preset'),
+    style: z.string().min(1).describe('Effective Theme style selecting the Plot style definition'),
     mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
     tokens: PlotResolvedThemeTokensSchema.describe('Complete resolved Plot theme token map'),
     tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),

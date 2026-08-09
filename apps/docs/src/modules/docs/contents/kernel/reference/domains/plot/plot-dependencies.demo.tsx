@@ -2,13 +2,13 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-import { LogicFrame, LogicFrameTitle } from '@/modules/docs/components/logic-figure';
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
 
 /** Plot 从宿主 API 经数据处理到 Core IR 的横向主链 */
 const Demo: FC = () => (
   <Layout width={760} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
-    <LogicFrame id="api-group">
-      <LogicFrameTitle>API Layer</LogicFrameTitle>
+    <LogicFigureFrame id="api-group">
+      <LogicFigureFrameTitle>API Layer</LogicFigureFrameTitle>
       <Node
         id="plot-react"
         position={[-285, -20]}
@@ -33,7 +33,7 @@ const Demo: FC = () => (
       >
         @retikz/plot-vanilla
       </Node>
-    </LogicFrame>
+    </LogicFigureFrame>
 
     <Node
       id="data"
@@ -47,8 +47,8 @@ const Demo: FC = () => (
       font={{ size: 13 }}
       lineHeight={14}
     />
-    <LogicFrame id="plot-group">
-      <LogicFrameTitle>@retikz/plot</LogicFrameTitle>
+    <LogicFigureFrame id="plot-group">
+      <LogicFigureFrameTitle>@retikz/plot</LogicFigureFrameTitle>
       <Node
         id="plot"
         text={[
@@ -76,7 +76,7 @@ const Demo: FC = () => (
         font={{ size: 13 }}
         lineHeight={14}
       />
-    </LogicFrame>
+    </LogicFigureFrame>
     <Node
       id="core"
       text={['@retikz/core', { text: 'Core IR', fill: 'gray', font: { size: 10 } }]}

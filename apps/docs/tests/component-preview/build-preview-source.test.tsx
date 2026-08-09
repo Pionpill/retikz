@@ -1,6 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
+import { ThemeStyle } from '@retikz/core';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
@@ -414,5 +415,47 @@ describe('buildPreviewSource', () => {
     expect(result.source?.ir?.render).toBeUndefined();
     expect(result.source?.vanilla?.files[0]?.code).toContain('// Failed to generate vanilla code:');
     expect(result.previewIr).toBeNull();
+  });
+
+  it('automatic Vanilla preview consumes the ambient categorical palette', () => {
+    const first = buildPreviewSource(
+      createInput({
+        Component: PlotDemo,
+        theme: { style: ThemeStyle.Neutral, tokens: { core: { 'palette.categorical': ['#101010', '#202020'] } } },
+      }),
+    );
+    const second = buildPreviewSource(
+      createInput({
+        Component: PlotDemo,
+        theme: { style: ThemeStyle.Neutral, tokens: { core: { 'palette.categorical': ['#303030', '#404040'] } } },
+      }),
+    );
+
+    const firstMarkup = renderToStaticMarkup(first.source?.vanilla?.render?.('svg'));
+    const secondMarkup = renderToStaticMarkup(second.source?.vanilla?.render?.('svg'));
+
+    expect(firstMarkup).toContain('#101010');
+    expect(secondMarkup).toContain('#303030');
+    expect(firstMarkup).not.toBe(secondMarkup);
+  });
+
+  it('explicit vanillaSvg remains unchanged when the ambient Theme changes', () => {
+    const vanillaSvg = '<svg data-static="true"><path fill="#123456" /></svg>';
+    const first = buildPreviewSource(
+      createInput({
+        vanillaSvg,
+        theme: { style: ThemeStyle.Neutral, tokens: { core: { 'palette.categorical': ['#101010'] } } },
+      }),
+    );
+    const second = buildPreviewSource(
+      createInput({
+        vanillaSvg,
+        theme: { style: ThemeStyle.Vibrant, tokens: { core: { 'palette.categorical': ['#303030'] } } },
+      }),
+    );
+
+    expect(renderToStaticMarkup(first.source?.vanilla?.render?.('svg'))).toBe(
+      renderToStaticMarkup(second.source?.vanilla?.render?.('svg')),
+    );
   });
 });

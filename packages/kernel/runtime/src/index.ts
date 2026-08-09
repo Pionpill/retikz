@@ -44,7 +44,6 @@ export type {
 export { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from './registry';
 export type { RuntimeSession, RuntimeSessionOptions, RuntimeUpdateStrategyValue } from './session';
 export { createRuntimeSession, RuntimeUpdateStrategy } from './session';
-export type { OpenString } from './shared';
 export * from './trace';
 export type {
   RuntimeOwnerInput,

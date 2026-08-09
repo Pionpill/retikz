@@ -20,25 +20,48 @@ import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } fro
 
 const MAX_POLYGON_SIDES = 1024;
 
-const polygonParamsSchema = z.strictObject({
-  sides: z
-    .number()
-    .int()
-    .min(3)
-    .max(MAX_POLYGON_SIDES)
-    .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
-  rotate: z
-    .number()
-    .optional()
-    .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
-  cornerRadius: z
-    .number()
-    .nonnegative()
-    .optional()
-    .describe(
-      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-    ),
-});
+const polygonParamsSchema = z
+  .strictObject({
+    sides: z
+      .number()
+      .int()
+      .min(3)
+      .max(MAX_POLYGON_SIDES)
+      .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
+    rotate: z
+      .number()
+      .optional()
+      .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
+    cornerRadius: z
+      .number()
+      .nonnegative()
+      .optional()
+      .describe(
+        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+      ),
+    aspectRatio: z
+      .number()
+      .positive()
+      .optional()
+      .describe('Width-to-height ratio for a four-sided diamond; omitted for regular polygon geometry.'),
+  })
+  .superRefine((params, context) => {
+    if (params.aspectRatio === undefined) return;
+    if (params.sides !== 4) {
+      context.addIssue({
+        code: 'custom',
+        path: ['aspectRatio'],
+        message: 'aspectRatio is only supported for four-sided diamonds.',
+      });
+    }
+    if (params.rotate !== undefined && params.rotate !== 0) {
+      context.addIssue({
+        code: 'custom',
+        path: ['aspectRatio'],
+        message: 'aspectRatio diamonds do not support a non-zero rotate parameter.',
+      });
+    }
+  });
 
 type PolygonParams = z.infer<typeof polygonParamsSchema>;
 
@@ -82,6 +105,16 @@ const circumradiusFor = (hw: number, hh: number, params: PolygonParams): number 
 /** 由外接 AABB（emit / boundaryPoint 收到的 rect）反推外接圆半径：R = halfWidth / max|cosθ_k| */
 const circumradiusFromRect = (bounds: Rect, params: PolygonParams): number => bounds.width / 2 / maxAbsCos(params);
 
+/** 由内框计算扁菱形的两条半对角线，保证整个内框落在菱形内 */
+const diamondHalfAxesFor = (hw: number, hh: number, aspectRatio: number): { halfWidth: number; halfHeight: number } => {
+  const halfHeight = hw / aspectRatio + hh;
+  return { halfWidth: aspectRatio * halfHeight, halfHeight };
+};
+
+/** 判断 polygon 参数是否使用扁菱形几何 */
+const isAspectRatioDiamond = (params: PolygonParams): params is PolygonParams & { aspectRatio: number } =>
+  params.sides === 4 && params.aspectRatio !== undefined;
+
 /**
  * 正多边形顶点的世界坐标
  * @description 顶点均布在外接圆上，按 params.rotate 自旋
@@ -92,19 +125,35 @@ const polygonLocalVertices = (radius: number, params: PolygonParams): Array<Posi
     return [radius * Math.cos(a), radius * Math.sin(a)];
   });
 
+/** 从 shape AABB 得到 polygon 的局部顶点；扁菱形使用两条独立半对角线 */
+const polygonLocalVerticesForBounds = (bounds: Rect, params: PolygonParams): Array<Position> => {
+  if (isAspectRatioDiamond(params)) {
+    const halfWidth = bounds.width / 2;
+    const halfHeight = bounds.height / 2;
+    return [
+      [halfWidth, 0],
+      [0, halfHeight],
+      [-halfWidth, 0],
+      [0, -halfHeight],
+    ];
+  }
+  return polygonLocalVertices(circumradiusFromRect(bounds, params), params);
+};
+
 /** 正多边形顶点的世界坐标 */
-const polygonVertices = (bounds: Rect, radius: number, params: PolygonParams): Array<Position> =>
-  polygonLocalVertices(radius, params).map(point => localToWorld(bounds, point));
+const polygonVertices = (bounds: Rect, params: PolygonParams): Array<Position> =>
+  polygonLocalVerticesForBounds(bounds, params).map(point => localToWorld(bounds, point));
 
 /**
  * polygon 注册项：正多边形文本容器
- * @description sides/rotate 决定顶点环，cornerRadius 做顶点倒角；命名 anchor 走外接 AABB。
+ * @description sides/rotate 决定顶点环，cornerRadius 做顶点倒角；四边形可用 aspectRatio 生成扁菱形；命名 anchor 走外接 AABB。
  *   scaleParams 只缩 cornerRadius，不缩 sides / rotate。diamond 由 compile 解析为 polygon preset
  */
 export const polygon = defineShape<PolygonParams>({
   name: 'polygon',
   paramsSchema: polygonParamsSchema,
   circumscribe: (hw, hh, params) => {
+    if (isAspectRatioDiamond(params)) return diamondHalfAxesFor(hw, hh, params.aspectRatio);
     const radius = circumradiusFor(hw, hh, params);
     const angles = vertexAngles(params);
     let halfWidth = 0;
@@ -117,9 +166,8 @@ export const polygon = defineShape<PolygonParams>({
     return { halfWidth, halfHeight };
   },
   boundaryPoint: (bounds: Rect, toward: Position, params): Position => {
-    const radius = circumradiusFromRect(bounds, params);
     // 带 rotate 的 rect 下取世界系顶点环；rayOrigin = 几何中心（= rect 中心 = node position）
-    const verts = polygonVertices(bounds, radius, params);
+    const verts = polygonVertices(bounds, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
@@ -130,13 +178,11 @@ export const polygon = defineShape<PolygonParams>({
     return isDirectionalAnchor(name) ? rect.anchor(bounds, name) : undefined;
   },
   connectionEnvelope: (bounds, kind, params) => {
-    const radius = circumradiusFromRect(bounds, params);
-    return pointsConnectionEnvelope(polygonLocalVertices(radius, params), kind);
+    return pointsConnectionEnvelope(polygonLocalVerticesForBounds(bounds, params), kind);
   },
   *emit(bounds: Rect, style, round, params): Iterable<ScenePrimitive> {
-    const radius = circumradiusFromRect(bounds, params);
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
-    const verts = polygonVertices(bounds, radius, params);
+    const verts = polygonVertices(bounds, params);
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const commands = contourToPathCommands(contourCommands(segments, params.cornerRadius), round);
     yield contourToPathPrimitive(commands, style);

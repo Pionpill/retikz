@@ -6,6 +6,37 @@ import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext, scene } from './helpers';
 
 describe('drawScene 规格', () => {
+  it('rounded rect uses circular quarter-arcs so Canvas matches SVG rounded corners', () => {
+    const context = createSpyCanvasContext();
+    const roundedScene: Scene = {
+      layout: { x: 0, y: 0, width: 60, height: 40 },
+      primitives: [{ type: 'rect', x: 0, y: 0, width: 40, height: 20, cornerRadius: 10, fill: '#f00' }],
+    };
+
+    drawScene(context as unknown as CanvasRenderingContext2D, roundedScene);
+
+    expect(context.calls.map(call => call.name).filter(name => !['save', 'restore'].includes(name))).toEqual([
+      'beginPath',
+      'moveTo',
+      'lineTo',
+      'arc',
+      'lineTo',
+      'arc',
+      'lineTo',
+      'arc',
+      'lineTo',
+      'arc',
+      'closePath',
+      'fill',
+    ]);
+    expect(context.calls.filter(call => call.name === 'arc').map(call => call.args)).toEqual([
+      [30, 10, 10, -Math.PI / 2, 0],
+      [30, 10, 10, 0, Math.PI / 2],
+      [10, 10, 10, Math.PI / 2, Math.PI],
+      [10, 10, 10, Math.PI, (Math.PI * 3) / 2],
+    ]);
+  });
+
   it('draw-core-prims：按 Scene 顺序绘制 rect / ellipse / path / text / group 核心图元', () => {
     const context = createSpyCanvasContext();
 

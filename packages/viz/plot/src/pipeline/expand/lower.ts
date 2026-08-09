@@ -184,11 +184,15 @@ const expandPlot = (
     hasFacets: compositionFacets.length > 0,
     hasScaffolds: compositionScaffolds.length > 0,
   };
-  const themeResolution = resolvePlotTheme(effectiveTheme, {
-    plotThemeTokens: node.plotThemeTokens,
-    colors: node.colors,
-    plotTheme: node.plotTheme,
-  });
+  const themeResolution = resolvePlotTheme(
+    effectiveTheme,
+    {
+      plotThemeTokens: node.plotThemeTokens,
+      colors: node.colors,
+      plotTheme: node.plotTheme,
+    },
+    options.plotThemeStyles,
+  );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
   const labelReserve = resolveLabelReserve({
     layout: node.layout,
@@ -758,7 +762,6 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
           context?.theme ?? {
             style: ThemeStyle.Neutral,
             mode: ThemeMode.Light,
-            tokens: {},
             colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
           },
         ),
