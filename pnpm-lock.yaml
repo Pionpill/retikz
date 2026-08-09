@@ -574,6 +574,9 @@ importers:
       '@retikz/core':
         specifier: workspace:^
         version: link:../../kernel/core
+      '@retikz/foundation':
+        specifier: workspace:^
+        version: link:../../kernel/foundation
       '@retikz/math':
         specifier: workspace:^
         version: link:../../kernel/math
