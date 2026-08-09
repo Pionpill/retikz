@@ -20,8 +20,7 @@ export const resolvePlotTheme = (
   input: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
-  const style = effectiveTheme.style;
-  const mode = effectiveTheme.mode;
+  const { style, mode } = effectiveTheme;
   const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
   const definition = styles.get(style);
   if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
