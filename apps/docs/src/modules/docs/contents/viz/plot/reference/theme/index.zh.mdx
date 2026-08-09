@@ -20,13 +20,11 @@ Core effective Theme
   → Plot style definition
   → inherited Core categorical
   → local PlotSpec.plotThemeTokens
-  → local PlotSpec.colors
   → local PlotSpec.plotTheme
   → explicit guide / mark / scale config
 ```
 
 - `plotThemeTokens` 是严格、稀疏的 canonical token map；未知 key、显式 `undefined` 和非法值会失败
-- `colors` 只覆盖 categorical、series 与 sector palette，不影响 sequential / diverging scheme
 - 原生 `plotTheme` 更接近 Plot 正式结构，可以设置 token 没有表达的合法字段
 - 数组、scalar、`false` 与 discriminator 改变的对象整体替换；同一结构的闭合对象才按合法字段合并
 - 显式 scale `range` / `scheme` 与局部 axis、legend、mark 配置始终优先
@@ -112,11 +110,11 @@ Core effective Theme
 | `style` / `mode`    | 选择 preset 的 effective Core Theme 环境          |
 | `tokens`            | 级联后的完整 token map                            |
 | `tokenSources`      | 每个 canonical token 的唯一胜出来源与稳定 path    |
-| `authoredOverrides` | 按顺序记录 `colors` 与原生 `plotTheme` 入口       |
+| `authoredOverrides` | 记录原生 `plotTheme` 入口                         |
 | `plotTheme`         | 已映射并校验的完整原生 Plot theme                 |
 | `palette`           | scale、mark 与 legend 共享的最终 palette / scheme |
 
-`tokenSources[].kind` 只回答 token 是从上层 effective Theme 直接投影（`inherit`），还是由 Plot style definition 或当前 Plot 输入构建（`local`），不表示级联优先级。具体胜出入口由 `path` 区分：`$style/...` 表示 Plot style baseline，`$theme/colors/categorical` 表示 Core shared categorical 投影，`$spec/plotThemeTokens/...`、`$spec/colors` 与 `$spec/plotTheme/...` 表示 Plot-local 输入。`authoredOverrides` 中的 `colors` 与 `plotTheme` 也统一记录为 `local`，并按 path 保留应用顺序。
+`tokenSources[].kind` 只回答 token 是从上层 effective Theme 直接投影（`inherit`），还是由 Plot style definition 或当前 Plot 输入构建（`local`），不表示级联优先级。具体胜出入口由 `path` 区分：`$style/...` 表示 Plot style baseline，`$theme/colors/categorical` 表示 Core shared categorical 投影，`$spec/plotThemeTokens/...` 与 `$spec/plotTheme/...` 表示 Plot-local 输入。`authoredOverrides` 中的 `plotTheme` 也记录为 `local`。
 
 Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette，但不会把完整 resolved theme 写回 `PlotSpec`，也不会把 Plot token 标记为 Chart-owned。
 

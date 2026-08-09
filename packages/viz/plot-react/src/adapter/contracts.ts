@@ -102,8 +102,6 @@ export type BuildPlotSpecOptions = {
   transforms?: Array<IRPlotTransform>;
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
-  /** 分类颜色比例尺的默认 range；`currentColor` 表示继承当前文字颜色 */
-  colors?: Array<string>;
   /** Plot-owned canonical theme token 稀疏覆盖 */
   plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
   /** Plot 主题 */

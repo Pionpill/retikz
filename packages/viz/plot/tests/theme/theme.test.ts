@@ -148,10 +148,9 @@ describe('plot theme schema and lowering', () => {
     expect(fills).toContain('#E5ECF6');
   });
 
-  it('theme_palette_categorical_beats_colors_for_ordinal_scale', () => {
+  it('theme_palette_categorical_drives_ordinal_scale', () => {
     const root = expandOf(
       baseSpec({
-        colors: ['#000000'],
         plotTheme: { palette: { categorical: ['#111111', '#222222'] } },
       }),
     );

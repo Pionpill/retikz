@@ -49,6 +49,13 @@ describe('Plot style token contract', () => {
     ).toBe(false);
   });
 
+  it('拒绝已删除的顶层 colors 调色板简写', () => {
+    const result = PlotSpecSchema.safeParse({ ...baseSpec, colors: ['#2563eb', '#f97316'] });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0]).toMatchObject({ code: 'unrecognized_keys', keys: ['colors'] });
+  });
+
   it('对未知 token、错误原子、显式 undefined 与空 palette 给出可定位失败', () => {
     const unknown = PlotThemeTokenOverridesSchema.safeParse({ 'chart.canvas.fill': '#ffffff' });
     expect(unknown.success).toBe(false);

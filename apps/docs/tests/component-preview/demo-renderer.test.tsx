@@ -190,7 +190,6 @@ describe('PreviewControlSlotLayer', () => {
     const slots = buildPreviewToolSlots({
       transform: { x: 0, y: 0, scale: 1 },
       isTransformed: false,
-      panBy: noop,
       zoomBy: noop,
       resetTransform: noop,
       dragEnabled: false,
@@ -210,6 +209,40 @@ describe('PreviewControlSlotLayer', () => {
     expect(markup).toContain('aria-label="Download PNG"');
     expect(markup).not.toContain('aria-label="Download SVG"');
   });
+
+  it.each(['xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl'] as const)(
+    '%s 尺寸只显示紧凑变换工具，并把 Reset 放在 Zoom out 右侧',
+    size => {
+      const slots = buildPreviewToolSlots({
+        transform: { x: 0, y: 0, scale: 1 },
+        isTransformed: false,
+        zoomBy: noop,
+        resetTransform: noop,
+        dragEnabled: false,
+        toggleDrag: noop,
+        onMaximize: noop,
+        size,
+        onSizeChange: noop,
+        name: 'demo',
+        rendererMode: 'svg',
+        toggleRendererMode: noop,
+      });
+      const markup = renderSlots(slots, previewControlRuntime);
+      const transformLabels = Array.from(markup.matchAll(/aria-label="([^"]+)"/g), match => match[1]).filter(
+        label =>
+          label === 'Pan up' ||
+          label === 'Pan left' ||
+          label === 'Pan right' ||
+          label === 'Pan down' ||
+          label === 'Zoom in' ||
+          label === 'Zoom out' ||
+          label === 'Reset' ||
+          label === 'Enable drag',
+      );
+
+      expect(transformLabels).toEqual(['Zoom in', 'Zoom out', 'Reset', 'Enable drag']);
+    },
+  );
 
   it('渲染配置式 select 控件', () => {
     const slots = buildConfiguredControlSlots([

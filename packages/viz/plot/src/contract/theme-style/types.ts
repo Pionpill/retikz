@@ -7,6 +7,3 @@ export type PlotThemeStyleDefinition = Readonly<{
   name: string;
   resolve: (theme: ResolvedTheme) => IRPlotResolvedThemeTokens;
 }>;
-
-/** 擦除泛型后的 Plot Theme style definition */
-export type AnyPlotThemeStyleDefinition = PlotThemeStyleDefinition;

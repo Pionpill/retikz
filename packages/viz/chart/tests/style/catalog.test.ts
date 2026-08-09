@@ -27,8 +27,8 @@ describe('Chart style preset catalog', () => {
       'academic/dark': '71744045c47787e9fd0367311a1efcff1ae4f47b3e788cdd72475d4b64ec1efb',
       'vibrant/light': '696a0075edb5aa568e842c09b4cb2d97d6aedf9b0a6fd4c11e2c701900cd4fcf',
       'vibrant/dark': '5632c48d1f4dc1946b8583786876059a3e1c458825e24f9b433890ee75085ac0',
-      'clean/light': '3c685fde6be4a3cdb442c2e1a509f948a19d0a878409036841ba872deda77641',
-      'clean/dark': 'a169c975761cc5a1b696f9a816c993b30cd42955c7b5a52b5a711abb65dbd98e',
+      'clean/light': 'e2cda0c1a89fc4795a2908b118303499d46a514a61195e0fdffbfb6b3e362e59',
+      'clean/dark': '4c0482ca041613be3e7c3b12bca7987cff6cb17a209b92d97f3389860e52c5f5',
     });
   });
 
@@ -65,7 +65,21 @@ describe('Chart style preset catalog', () => {
       'chart.legend.enabled': true,
     });
     expect(getChartThemePreset('vibrant', 'dark')['chart.title.font.size']).toBe(20);
-    expect(getChartThemePreset('clean', 'light')['chart.axis.grid.enabled']).toBe(false);
+    expect(getChartThemePreset('clean', 'light')['chart.axis.grid.enabled']).toBe(true);
+  });
+
+  it('Clean 使用透明画布、编辑式留白与可读排版', () => {
+    for (const mode of modes) {
+      const preset = getChartThemePreset(ThemeStyle.Clean, mode);
+
+      expect(preset[ChartThemeToken.ChartCanvasFill]).toBe('none');
+      expect(preset[ChartThemeToken.ChartPadding]).toBeGreaterThan(16);
+      expect(preset[ChartThemeToken.ChartGap]).toBeGreaterThanOrEqual(6);
+      expect(preset[ChartThemeToken.ChartFontFamily]).toContain('Inter');
+      expect(preset[ChartThemeToken.ChartTitleFontWeight]).toBe(700);
+      expect(preset[ChartThemeToken.ChartSubtitleFontWeight]).toBe(400);
+      expect(preset[ChartThemeToken.ChartAxisGridEnabled]).toBe(true);
+    }
   });
 
   it('每次返回独立 clone', () => {

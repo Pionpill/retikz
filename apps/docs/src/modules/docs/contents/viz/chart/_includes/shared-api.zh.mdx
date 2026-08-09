@@ -104,20 +104,19 @@ datum 标签由各位置 mark 共用 `DatumLabelProps`；整图标题和说明�
 
 ## Theme 与 Layout
 
-Chart 通过 `chartThemeTokens` 拥有 presentation 默认值；Core `style` 与 `mode` 来自宿主 Scene 或 Scope。Chart 不用另一个 style/mode 字段遮蔽宿主 Theme，也没有 Chart spec-local Theme。它按 owner 原名转发当前 Plot 输入：`plotThemeTokens`、`colors` 与 `plotTheme` 仍属于 Plot。
+Chart 通过 `chartThemeTokens` 拥有 presentation 默认值；Core `style` 与 `mode` 来自宿主 Scene 或 Scope。Chart 不用另一个 style/mode 字段遮蔽宿主 Theme，也没有 Chart spec-local Theme。它按 owner 原名转发当前 Plot 输入：`plotThemeTokens` 与 `plotTheme` 仍属于 Plot。
 
-Chart 级联为 `Core effective Theme → Chart preset → local chartThemeTokens`。随后交给 Plot 的链路为 `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded colors → forwarded plotTheme → 显式 Plot 配置`。`ChartThemeToken`、`ChartThemeTokenOverridesSchema` 与 `ChartResolvedThemeTokensSchema` 都是 `@retikz/chart` 的公开导出；Plot token schema 仍从 `@retikz/plot` 导出。
+Chart 级联为 `Core effective Theme → Chart preset → local chartThemeTokens`。随后交给 Plot 的链路为 `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded plotTheme → 显式 Plot 配置`。`ChartThemeToken`、`ChartThemeTokenOverridesSchema` 与 `ChartResolvedThemeTokensSchema` 都是 `@retikz/chart` 的公开导出；Plot token schema 仍从 `@retikz/plot` 导出。
 
 自定义 style 用 `defineChartThemeStyle` 定义，并通过 `createChartComposites({ chartThemeStyles, plotThemeStyles })` 注入 Chart composite。它与 Core 的 `themeStyles`、Plot 的 `plotThemeStyles` 必须为同一个 `theme.style` 名称分别提供 resolver；任一层缺失都会 fail-loud，函数和完整 token map 不进入 Chart IR。
 
-| 字段               | 类型                                 | 默认值 | 描述                                                                |
-| ------------------ | ------------------------------------ | ------ | ------------------------------------------------------------------- |
-| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`   | Chart owner 的稀疏 presentation 与 recipe token 覆盖                |
-| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`   | 原样转发给 resolved Plot 的 Plot owner 稀疏 token 覆盖              |
-| `colors`           | `IRChartShared['colors']`            | 主题   | 原样转发的 Plot palette 简写；显式 Plot palette 与 scale 值可以覆盖 |
-| `plotTheme`        | `IRChartShared['plotTheme']`         | 主题   | 原样转发的 Plot 原生 theme                                          |
-| `layout`           | `IRChartShared['layout']`            | Plot   | Plot label 与 guide 预留空间策略                                    |
-| `width` / `height` | `IRChartShared['width' \| 'height']` | —      | resolved Plot intrinsic 尺寸                                        |
+| 字段               | 类型                                 | 默认值 | 描述                                                   |
+| ------------------ | ------------------------------------ | ------ | ------------------------------------------------------ |
+| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`   | Chart owner 的稀疏 presentation 与 recipe token 覆盖   |
+| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`   | 原样转发给 resolved Plot 的 Plot owner 稀疏 token 覆盖 |
+| `plotTheme`        | `IRChartShared['plotTheme']`         | 主题   | 原样转发的 Plot 原生 theme                             |
+| `layout`           | `IRChartShared['layout']`            | Plot   | Plot label 与 guide 预留空间策略                       |
+| `width` / `height` | `IRChartShared['width' \| 'height']` | —      | resolved Plot intrinsic 尺寸                           |
 
 ## Additional Marks
 

@@ -13,7 +13,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const curve: PathCurveValue = values[LINE_STACK_AREA_CURVE_ID];
   return (
     <Layout width={700} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Plot data={stackArea} width={360} height={230} x={0} y={35} colors={['#2563eb', '#f97316']}>
+      <Plot
+        data={stackArea}
+        width={360}
+        height={230}
+        x={0}
+        y={35}
+        plotTheme={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
+      >
         <Scale dimension="x" type="point" padding={0} />
         <Scale dimension="y" type="linear" domainPadding={0} />
         <PathMark
@@ -39,7 +46,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         coordinate="polar2D"
         x={410}
         y={10}
-        colors={['#2563eb', '#f97316']}
+        plotTheme={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
         <Scale dimension="y" type="linear" domainPadding={0} />
         <PathMark

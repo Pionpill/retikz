@@ -129,16 +129,18 @@ describe('Chart style resolution', () => {
         'plot.label.font.size': 14,
         'plot.palette.categorical': ['#token'],
       },
-      colors: ['#colors-a', '#colors-b'],
       plotTheme: {
         labelText: { font: { weight: 700 } },
-        palette: { series: ['#raw-series'] },
+        palette: {
+          categorical: ['#raw-categorical'],
+          series: ['#raw-series'],
+          sector: ['#raw-sector'],
+        },
       },
     } as const;
     const result = resolveChartSpec(input, themeOf(ThemeStyle.Academic, ThemeMode.Dark));
 
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
-    expect(result.plotSpec.colors).toEqual(input.colors);
     expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
     expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
     expect(
@@ -150,12 +152,11 @@ describe('Chart style resolution', () => {
     });
     expect(result.inspection.style.plot.plotTheme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
     expect(result.inspection.style.plot.palette).toMatchObject({
-      categorical: ['#colors-a', '#colors-b'],
+      categorical: ['#raw-categorical'],
       series: ['#raw-series'],
-      sector: ['#colors-a', '#colors-b'],
+      sector: ['#raw-sector'],
     });
     expect(result.inspection.style.plot.authoredOverrides).toEqual([
-      { kind: ThemeTokenSource.Local, path: '$spec/colors' },
       { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
     ]);
   });

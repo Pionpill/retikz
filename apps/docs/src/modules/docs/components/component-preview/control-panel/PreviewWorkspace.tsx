@@ -1,3 +1,4 @@
+import type { ThemeStyleValue } from '@retikz/core';
 import type {
   CSSProperties,
   FC,
@@ -21,6 +22,7 @@ import type {
   PreviewControlSlot,
   PreviewControlState,
   PreviewThemeMode,
+  PreviewThemeStyleSelection,
   RendererMode,
 } from '../types';
 
@@ -45,6 +47,14 @@ export type PreviewWorkspaceProps = {
   showContextBar: boolean;
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
+  /** 当前预览实际生效的 ThemeStyle */
+  themeStyle?: ThemeStyleValue;
+  /** 是否显示单预览 ThemeStyle 切换器 */
+  enableThemeSwitch?: boolean;
+  /** 当前单预览 ThemeStyle 选择 */
+  themeStyleSelection?: PreviewThemeStyleSelection;
+  /** 更新当前单预览 ThemeStyle 选择 */
+  onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
   /** 更新局部主题 */
   onThemeModeChange: (themeMode: PreviewThemeMode) => void;
   /** 属性面板当前是否打开 */
@@ -129,6 +139,10 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     controlState,
     showContextBar,
     themeMode,
+    themeStyle,
+    enableThemeSwitch = false,
+    themeStyleSelection = 'inherit',
+    onThemeStyleChange,
     onThemeModeChange,
     controlPanelOpen,
     controlDensity = 'default',
@@ -184,11 +198,22 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
       data-slot="preview-context-pane"
       className="group/preview-context relative flex h-full min-h-0 flex-col overflow-hidden"
     >
-      {showContextBar ? <PreviewContextBar themeMode={themeMode} onThemeModeChange={onThemeModeChange} /> : null}
+      {showContextBar ? (
+        <PreviewContextBar
+          themeMode={themeMode}
+          onThemeModeChange={onThemeModeChange}
+          enableThemeSwitch={enableThemeSwitch}
+          themeStyle={themeStyle}
+          themeStyleSelection={themeStyleSelection}
+          onThemeStyleChange={onThemeStyleChange}
+        />
+      ) : null}
       <PreviewPanel
         state={previewState}
         Component={Component}
         activeRender={activeRender}
+        themeStyle={themeStyle}
+        themeMode={themeMode}
         controlSlots={resolvedControlSlots}
         className={cn(previewClassName, showContextBar && 'pt-10')}
         renderPaneClassName={previewRenderPaneClassName}

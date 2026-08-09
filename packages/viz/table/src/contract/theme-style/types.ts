@@ -9,6 +9,3 @@ export type TableThemeStyleDefinition = Readonly<{
   /** 解析不含 Core categorical projection 的完整 Table 基线 */
   resolve: (theme: ResolvedTheme) => TableThemeTokenPresetMap;
 }>;
-
-/** 擦除泛型后的 Table Theme style definition */
-export type AnyTableThemeStyleDefinition = TableThemeStyleDefinition;

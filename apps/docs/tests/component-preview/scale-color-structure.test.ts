@@ -89,7 +89,7 @@ describe('颜色比例尺文档结构', () => {
     for (const page of [chinesePage, englishPage]) {
       expect(page).toContain("path: 'packages/viz/plot-react/src/adapter/scale-coordinate.ts'");
       expect(page).toContain('startLine: 22');
-      expect(page).toContain('endLine: 37');
+      expect(page).toContain('endLine: 33');
       expect(page).not.toContain('startLine: 1657');
     }
   });

@@ -15,10 +15,10 @@ import {
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 import { resolvePlotThemeStyleRegistry } from './registry';
 
-/** 按 Plot style、Core shared colors、Plot-local 输入与 native Plot theme 顺序解析主题 */
+/** 按 Plot style、Core shared colors、Plot token 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'> = {},
+  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotTheme'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;
@@ -26,7 +26,6 @@ export const resolvePlotTheme = (
   const definition = styles.get(style);
   if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
   const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
-  const colors = input.colors === undefined ? undefined : structuredClone(input.colors);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
   const baseline = definition.resolve(effectiveTheme);
   const categorical = [...effectiveTheme.colors.categorical];
@@ -40,24 +39,15 @@ export const resolvePlotTheme = (
     ...tokensAfterShared,
     ...structuredClone(plotThemeTokens),
   });
-  const tokensAfterColors =
-    colors === undefined
-      ? tokensAfterLocal
-      : PlotResolvedThemeTokensSchema.parse({
-          ...tokensAfterLocal,
-          [PlotThemeToken.PlotPaletteCategorical]: colors,
-          [PlotThemeToken.PlotPaletteSeries]: [...colors],
-          [PlotThemeToken.PlotPaletteSector]: [...colors],
-        });
-  const tokenTheme = plotThemeFromTokens(tokensAfterColors);
+  const tokenTheme = plotThemeFromTokens(tokensAfterLocal);
   const theme = authoredTheme === undefined ? tokenTheme : mergePlotTheme(tokenTheme, authoredTheme);
   const nativeResult =
     authoredTheme === undefined
-      ? { tokens: tokensAfterColors, overrides: [] }
-      : applyPlotThemeToTokens(tokensAfterColors, theme, authoredTheme);
+      ? { tokens: tokensAfterLocal, overrides: [] }
+      : applyPlotThemeToTokens(tokensAfterLocal, theme, authoredTheme);
   const tokens = PlotResolvedThemeTokensSchema.parse(nativeResult.tokens);
   const nativeSources = new Map(nativeResult.overrides.map(source => [source.token, source.path]));
-  const colorTokens = new Set<PlotThemeTokenValue>([
+  const inheritedColorTokens = new Set<PlotThemeTokenValue>([
     PlotThemeToken.PlotPaletteCategorical,
     PlotThemeToken.PlotPaletteSeries,
     PlotThemeToken.PlotPaletteSector,
@@ -67,13 +57,10 @@ export const resolvePlotTheme = (
     if (nativePath !== undefined) {
       return { token, kind: ThemeTokenSource.Local, path: nativePath };
     }
-    if (colors !== undefined && colorTokens.has(token)) {
-      return { token, kind: ThemeTokenSource.Local, path: '$spec/colors' };
-    }
     if (Object.hasOwn(plotThemeTokens, token)) {
       return { token, kind: ThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
     }
-    if (colorTokens.has(token)) {
+    if (inheritedColorTokens.has(token)) {
       return { token, kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' };
     }
     return {
@@ -89,10 +76,8 @@ export const resolvePlotTheme = (
     sequential: tokens[PlotThemeToken.PlotPaletteSequential],
     diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
   };
-  const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] = [
-    ...(colors === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/colors' } as const]),
-    ...(authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' } as const]),
-  ];
+  const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] =
+    authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }];
   return PlotThemeResolutionSchema.parse({
     style,
     mode,

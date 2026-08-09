@@ -33,7 +33,7 @@ type PlotThemeResolution = {
 
 type ResolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'>,
+  input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotTheme'>,
   plotThemeStyles?: ReadonlyArray<unknown>,
 ) => PlotThemeResolution;
 
@@ -160,14 +160,14 @@ describe('Plot theme resolver', () => {
     }
   });
 
-  it('按 effective Theme、token、colors、native theme 顺序解析并记录来源', () => {
+  it('按 effective Theme、token、native theme 顺序解析并记录来源', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark), {
       plotThemeTokens: {
         [PlotThemeToken.PlotSurfaceFill]: '#111111',
+        [PlotThemeToken.PlotPaletteCategorical]: ['#token-categorical'],
         [PlotThemeToken.PlotPaletteSeries]: ['#token'],
       },
-      colors: ['#colors'],
       plotTheme: {
         typography: { font: { family: 'serif' } },
         palette: { series: ['#theme'] },
@@ -177,7 +177,7 @@ describe('Plot theme resolver', () => {
     expect(result.style).toBe(ThemeStyle.Academic);
     expect(result.mode).toBe(ThemeMode.Dark);
     expect(result.tokens[PlotThemeToken.PlotSurfaceFill]).toBe('#111111');
-    expect(result.tokens[PlotThemeToken.PlotPaletteCategorical]).toEqual(['#colors']);
+    expect(result.tokens[PlotThemeToken.PlotPaletteCategorical]).toEqual(['#token-categorical']);
     expect(result.tokens[PlotThemeToken.PlotPaletteSeries]).toEqual(['#theme']);
     expect(result.plotTheme?.typography?.font?.family).toBe('serif');
     expect(result.palette.series).toEqual(['#theme']);
@@ -187,16 +187,13 @@ describe('Plot theme resolver', () => {
     });
     expect(sourceOf(result, PlotThemeToken.PlotPaletteCategorical)).toMatchObject({
       kind: ThemeTokenSource.Local,
-      path: '$spec/colors',
+      path: '$spec/plotThemeTokens/plot.palette.categorical',
     });
     expect(sourceOf(result, PlotThemeToken.PlotPaletteSeries)).toMatchObject({
       kind: ThemeTokenSource.Local,
       path: '$spec/plotTheme/palette/series',
     });
-    expect(result.authoredOverrides).toEqual([
-      { kind: ThemeTokenSource.Local, path: '$spec/colors' },
-      { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
-    ]);
+    expect(result.authoredOverrides).toEqual([{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }]);
   });
 
   it('返回深克隆、JSON-safe 且确定的结果', () => {
@@ -212,10 +209,9 @@ describe('Plot theme resolver', () => {
     expect(first.palette.series).not.toBe(input.plotThemeTokens[PlotThemeToken.PlotPaletteSeries]);
   });
 
-  it('inspection schema 只接受二元来源并按 path 固定 authored override 顺序', () => {
+  it('inspection schema 只接受二元来源与唯一 authored override path', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
-      colors: ['#2563eb'],
       plotTheme: { background: '#ffffff' },
     });
 
@@ -250,7 +246,7 @@ describe('Plot theme resolver', () => {
     expect(
       PlotThemeResolutionSchema.safeParse({
         ...result,
-        authoredOverrides: [...result.authoredOverrides].reverse(),
+        authoredOverrides: [...result.authoredOverrides, ...result.authoredOverrides],
       }).success,
     ).toBe(false);
   });

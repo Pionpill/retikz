@@ -20,13 +20,11 @@ Core effective Theme
   → Plot style definition
   → inherited Core categorical
   → local PlotSpec.plotThemeTokens
-  → local PlotSpec.colors
   → local PlotSpec.plotTheme
   → explicit guide / mark / scale config
 ```
 
 - `plotThemeTokens` is a strict sparse canonical map; unknown keys, explicit `undefined`, and invalid values fail
-- `colors` replaces categorical, series, and sector palettes only, leaving sequential and diverging schemes intact
 - native `plotTheme` is closer to the formal Plot structure and may carry legal fields not represented by tokens
 - arrays, scalars, `false`, and objects whose discriminator changes replace whole values; compatible closed objects merge legal fields
 - explicit scale `range` / `scheme` and local axis, legend, and mark configuration always win
@@ -62,16 +60,16 @@ Core effective Theme
 
 `resolvePlotTheme(effectiveTheme, input)` is a public pure resolver. It returns `IRPlotThemeResolution`, validated by `PlotThemeResolutionSchema`:
 
-| Field               | Meaning                                                              |
-| ------------------- | -------------------------------------------------------------------- |
-| `style` / `mode`    | Effective Core Theme environment selecting the preset                |
-| `tokens`            | Complete token map after the cascade                                 |
-| `tokenSources`      | One winning source and stable path for every canonical token         |
-| `authoredOverrides` | Ordered records for authored `colors` and native `plotTheme` entries |
-| `plotTheme`         | Complete mapped and validated native Plot theme                      |
-| `palette`           | Final palettes and schemes shared by scales, marks, and legends      |
+| Field               | Meaning                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| `style` / `mode`    | Effective Core Theme environment selecting the preset           |
+| `tokens`            | Complete token map after the cascade                            |
+| `tokenSources`      | One winning source and stable path for every canonical token    |
+| `authoredOverrides` | Record for the authored native `plotTheme` entry                |
+| `plotTheme`         | Complete mapped and validated native Plot theme                 |
+| `palette`           | Final palettes and schemes shared by scales, marks, and legends |
 
-`tokenSources[].kind` answers only whether a token is projected directly from the upper effective Theme (`inherit`) or built by the Plot style definition or current Plot input (`local`); it does not encode cascade priority. The stable `path` identifies the winning entry: `$style/...` for the Plot style baseline, `$theme/colors/categorical` for the Core shared categorical projection, and `$spec/plotThemeTokens/...`, `$spec/colors`, or `$spec/plotTheme/...` for Plot-local inputs. The `colors` and `plotTheme` records in `authoredOverrides` are also `local`, with their application order retained by path.
+`tokenSources[].kind` answers only whether a token is projected directly from the upper effective Theme (`inherit`) or built by the Plot style definition or current Plot input (`local`); it does not encode cascade priority. The stable `path` identifies the winning entry: `$style/...` for the Plot style baseline, `$theme/colors/categorical` for the Core shared categorical projection, and `$spec/plotThemeTokens/...` or `$spec/plotTheme/...` for Plot-local inputs. The `plotTheme` record in `authoredOverrides` is also `local`.
 
 Chart may call this resolver to read a transient series palette needed by a recipe, but it does not write the fully resolved theme back into `PlotSpec` or relabel Plot tokens as Chart-owned.
 
