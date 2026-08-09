@@ -47,11 +47,9 @@ export type PlotLineageProps = {
   onLineage?: (lineage: PlotLineageRun) => void;
 };
 
-export type PlotColorProps = {
+export type PlotThemeProps = {
   /** Plot-owned canonical theme token 稀疏覆盖 */
   plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
-  /** 默认颜色数组：分类 color scale 的 range；无 color 编码的 mark 按图层序取色，`currentColor` 表示继承当前文字颜色 */
-  colors?: Array<string>;
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
   plotTheme?: IRPlotSpec['plotTheme'];
   /** 整图 label 空间布局策略 */
@@ -60,7 +58,7 @@ export type PlotColorProps = {
 
 /** spec 入口（薄包装）：给已构造好的完整 IRPlotSpec + 数据集表 */
 export type PlotSpecProps = PlotCommonProps &
-  PlotColorProps & {
+  PlotThemeProps & {
     /** 已构造好的 Plot IR 根节点（手写 / 生成） */
     spec: IRPlotSpec;
     /** 外部数据集表（data.reference 按名查）；数据不进 IR，编译期经 lowerPlots 注入 */
@@ -70,7 +68,7 @@ export type PlotSpecProps = PlotCommonProps &
 
 /** 组合 DSL 入口：给裸数据行 + <PathMark>/<PointMark>/<Axis> 子组件 */
 export type PlotDslProps = PlotCommonProps &
-  PlotColorProps & {
+  PlotThemeProps & {
     spec?: never;
     /** 面板 id：写入 IRPlotSpec.id，作为外部 anchor 句柄；嵌入态未显式 dataRef 时也作为默认数据集引用 */
     id?: string;

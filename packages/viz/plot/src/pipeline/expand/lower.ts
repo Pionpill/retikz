@@ -188,7 +188,6 @@ const expandPlot = (
     effectiveTheme,
     {
       plotThemeTokens: node.plotThemeTokens,
-      colors: node.colors,
       plotTheme: node.plotTheme,
     },
     options.plotThemeStyles,

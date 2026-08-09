@@ -5,7 +5,7 @@ import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
 import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
 
-const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/colors', '$spec/plotTheme'] as const;
+const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/plotTheme'] as const;
 const PLOT_INHERITED_COLOR_TOKENS = new Set<string>([
   PlotThemeToken.PlotPaletteCategorical,
   PlotThemeToken.PlotPaletteSeries,
@@ -21,7 +21,7 @@ export const PlotThemeTokenSourceRecordSchema = z
   })
   .describe('Winning cascade source for one resolved Plot style token');
 
-/** Plot shorthand 或 native theme 的 authored 入口 */
+/** Plot native theme 的 authored 入口 */
 export const PlotThemeAuthoredOverrideRecordSchema = z
   .strictObject({
     kind: z.literal(ThemeTokenSource.Local).describe('Plot-authored override local to the Plot owner'),
@@ -49,7 +49,7 @@ export const PlotThemeResolutionSchema = z
     tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
     authoredOverrides: z
       .array(PlotThemeAuthoredOverrideRecordSchema)
-      .describe('Authored colors and native Plot theme inputs in cascade order'),
+      .describe('Authored native Plot theme inputs in cascade order'),
     plotTheme: PlotThemeSchema.describe('Complete resolved native Plot theme'),
     palette: ResolvedPlotPaletteSchema.describe('Complete resolved Plot palette'),
   })
@@ -74,7 +74,6 @@ export const PlotThemeResolutionSchema = z
         source.kind === ThemeTokenSource.Local &&
         (source.path === `$style/${resolution.style}/${resolution.mode}/${source.token}` ||
           source.path === `$spec/plotThemeTokens/${source.token}` ||
-          (PLOT_INHERITED_COLOR_TOKENS.has(source.token) && source.path === '$spec/colors') ||
           source.path.startsWith('$spec/plotTheme/'));
       if (!inherited && !local) {
         context.addIssue({
@@ -85,12 +84,11 @@ export const PlotThemeResolutionSchema = z
       }
     });
     const authoredPaths = resolution.authoredOverrides.map(source => source.path);
-    const expected = PLOT_THEME_AUTHORED_OVERRIDE_PATHS.filter(path => authoredPaths.includes(path));
-    if (authoredPaths.length !== expected.length || authoredPaths.some((path, index) => path !== expected[index])) {
+    if (authoredPaths.length > 1) {
       context.addIssue({
         code: 'custom',
         path: ['authoredOverrides'],
-        message: 'Plot authored overrides must be unique and ordered as colors then plotTheme',
+        message: 'Plot authored overrides may contain at most one native plotTheme entry',
       });
     }
   })

@@ -133,7 +133,7 @@ describe('color × series · B/C 收口（contract）', () => {
   });
 });
 
-describe('plot colors default palette', () => {
+describe('plot theme default palette', () => {
   it('mark_without_color_uses_shared_categorical_by_default', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
@@ -165,7 +165,7 @@ describe('plot colors default palette', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      colors: ['#2563eb', '#f97316', 'currentColor'],
+      plotTheme: { palette: { series: ['#2563eb', '#f97316', 'currentColor'] } },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -194,7 +194,7 @@ describe('plot colors default palette', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      colors: ['#2563eb', '#f97316'],
+      plotTheme: { palette: { categorical: ['#2563eb', '#f97316'] } },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },

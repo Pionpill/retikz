@@ -7,7 +7,7 @@ import {
   PaintValueSchema,
   TextAlignSchema,
 } from '@retikz/core';
-import { PlotSpecSchema, PlotThemeSchema, PlotThemeTokenOverridesSchema } from '@retikz/plot';
+import { PlotThemeSchema, PlotThemeTokenOverridesSchema } from '@retikz/plot';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/standard';
 import { z } from 'zod';
 
@@ -85,7 +85,6 @@ export const ChartThemeSurfaceSchema = z
     plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
       'Plot-owned token overrides forwarded unchanged',
     ),
-    colors: PlotSpecSchema.shape.colors.unwrap().optional().describe('Plot palette shorthand forwarded unchanged'),
     plotTheme: PlotThemeSchema.optional().describe('Plot native theme forwarded unchanged'),
   })
   .describe('Shared JSON-safe Chart and forwarded Plot style inputs');

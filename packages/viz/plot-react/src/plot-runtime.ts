@@ -94,11 +94,6 @@ const withIntrinsicSize = (spec: IRPlotSpec, width: number | undefined, height: 
   ...(spec.height === undefined && height !== undefined ? { height } : {}),
 });
 
-const withPlotColors = (spec: IRPlotSpec, colors: Array<string> | undefined): IRPlotSpec => ({
-  ...spec,
-  ...(colors !== undefined ? { colors } : {}),
-});
-
 const withPlotThemeTokens = (
   spec: IRPlotSpec,
   plotThemeTokens: IRPlotSpec['plotThemeTokens'] | undefined,
@@ -149,10 +144,7 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
     spec = withPlotLayout(
-      withPlotTheme(
-        withPlotColors(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.colors),
-        props.plotTheme,
-      ),
+      withPlotTheme(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.plotTheme),
       props.layout,
     );
     datasets = props.data;
@@ -168,7 +160,6 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
       plotThemeTokens: props.plotThemeTokens,
-      colors: props.colors,
       plotTheme: props.plotTheme,
       layout: props.layout,
       transforms: props.dataTransforms,

@@ -57,7 +57,6 @@ Plot 在当前位置的 Core effective Theme 上按以下顺序解析：
 Plot style/mode preset
   < shared categorical projection
   < local plotThemeTokens
-  < colors shorthand
   < plotTheme
   < explicit scale / channel / guide / mark config
 ```
@@ -66,7 +65,7 @@ Plot style/mode preset
 
 未声明 Theme 时使用 Core 的 `neutral + light` effective environment，Plot 选择与当前 Plot baseline 相容的完整 preset。未声明 Plot-local token 时不产生空的伪 token map；有效 Plot resolver 仍必须产出完整、可消费的 Plot domain view。
 
-Core shared `palette.categorical` 是一套当前生效的非空 active CSS color array。Plot resolver 直接从 `ResolvedTheme.colors.categorical` detached 投影为 `categorical`、`series`、`sector` 的 designated baseline；未被 Plot-owned token、`colors`、`plotTheme` 或显式 scale 覆盖时，三类用途都从同一共享来源得到确定性结果。该层 source 固定为 `{ kind: 'inherit', path: '$theme/colors/categorical' }`。Plot 不复制、反向修改或按名称选择另一套 shared categorical array。
+Core shared `palette.categorical` 是一套当前生效的非空 active CSS color array。Plot resolver 直接从 `ResolvedTheme.colors.categorical` detached 投影为 `categorical`、`series`、`sector` 的 designated baseline；未被 Plot-owned token、`plotTheme` 或显式 scale 覆盖时，三类用途都从同一共享来源得到确定性结果。该层 source 固定为 `{ kind: 'inherit', path: '$theme/colors/categorical' }`。Plot 不复制、反向修改或按名称选择另一套 shared categorical array。
 
 Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `options.colorSchemes` 继续由 Plot 拥有，不读取或改写 shared categorical array。显式 scale range、scheme、channel 或 mark config 按 Plot 的正式优先级覆盖主题 palette。
 
@@ -75,9 +74,9 @@ Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `o
 - Plot token 与 native input 必须是 plain JSON-safe data
 - unknown Plot key、非法 token value、空或非法颜色数组、缺失同名 style definition、无法解析的 scheme 与无法映射的 token 都 fail-loud
 - 诊断必须指出输入层以及 token key 或 Plot native path；不得静默退回 D3 默认、renderer 默认或 Chart 私有 palette
-- Plot inspection 的 source `kind` 只使用 Core `inherit | local`。style baseline、`plotThemeTokens`、`colors` 与 `plotTheme` 为 `local`，shared categorical projection 为 `inherit`；具体入口和优先级由稳定 `path` 保留
+- Plot inspection 的 source `kind` 只使用 Core `inherit | local`。style baseline、`plotThemeTokens` 与 `plotTheme` 为 `local`，shared categorical projection 为 `inherit`；具体入口和优先级由稳定 `path` 保留
 - plain JSON、React、Vanilla、standalone Plot、embedded Plot、Chart 内部 Plot 与 direct headless compile 在相同 style definition registry 和 Core effective Theme 下产生同义 Plot resolution、Scene 输入与诊断
-- `0.x` 采用破坏性命名迁移：`styleTokens` 改为 `plotThemeTokens`，Plot native `theme` 改为 `plotTheme`，不保留 alias、双读或静默 bridge
+- `0.x` 采用破坏性入口收敛：`styleTokens` 改为 `plotThemeTokens`，Plot native `theme` 改为 `plotTheme`，冗余 `colors` 简写删除并统一使用 `plotTheme.palette`，不保留 alias、双读或静默 bridge
 
 ## 功能与包边界
 

@@ -47,7 +47,6 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
       : { composition: { value: options.composition, path: ['options', 'composition'] } }),
     ...(options.transforms === undefined ? {} : { dataTransforms: options.transforms }),
     ...(options.markTransformShortcuts === undefined ? {} : { markTransformShortcuts: options.markTransformShortcuts }),
-    ...(options.colors === undefined ? {} : { colors: options.colors }),
     ...(options.deferPositionScaleInference === undefined
       ? {}
       : { deferPositionScaleInference: options.deferPositionScaleInference }),
@@ -63,7 +62,6 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     data,
     ...members,
     ...(options.plotThemeTokens === undefined ? {} : { plotThemeTokens: options.plotThemeTokens }),
-    ...(options.colors === undefined ? {} : { colors: options.colors }),
     ...(options.plotTheme === undefined ? {} : { plotTheme: options.plotTheme }),
     ...(options.layout === undefined ? {} : { layout: options.layout }),
     ...(labels.length === 0 ? {} : { labels }),

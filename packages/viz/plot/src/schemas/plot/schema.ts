@@ -448,15 +448,8 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     .describe(
       'Named scale ops; built-ins are statically validated, custom types are validated at lowering against runtime scale definitions. Referenced by coordinate roles and non-positional channels by name',
     ),
-  colors: z
-    .array(z.string().min(1))
-    .min(1)
-    .optional()
-    .describe(
-      'Compatibility shorthand for plotTheme.palette.categorical/series/sector; omit to use the inherited Core categorical projection. Explicit plotTheme palette slots and explicit scale range/scheme have higher priority.',
-    ),
   plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
-    'Sparse canonical Plot theme token overrides applied after the Plot style baseline and inherited Core categorical projection, before colors/plotTheme',
+    'Sparse canonical Plot theme token overrides applied after the Plot style baseline and inherited Core categorical projection, before plotTheme',
   ),
   plotTheme: PlotThemeSchema.optional().describe(
     'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',

@@ -104,20 +104,19 @@ Use `linear`, `time`, `log`, `sqrt`, `symlog`, or `radial`.
 
 ## Theme and Layout
 
-Chart owns presentation defaults through `chartThemeTokens`; Core `style` and `mode` come from the hosting Scene or Scope. Chart does not shadow the host Theme with another style/mode field. It forwards the current Plot inputs without renaming their owner: `plotThemeTokens`, `colors`, and `plotTheme` remain Plot-owned.
+Chart owns presentation defaults through `chartThemeTokens`; Core `style` and `mode` come from the hosting Scene or Scope. Chart does not shadow the host Theme with another style/mode field. It forwards the current Plot inputs without renaming their owner: `plotThemeTokens` and `plotTheme` remain Plot-owned.
 
-The Chart cascade is `Core effective Theme → Chart preset → local chartThemeTokens`. The Plot handoff then resolves `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded colors → forwarded plotTheme → explicit Plot configuration`. `ChartThemeToken`, `ChartThemeTokenOverridesSchema`, and `ChartResolvedThemeTokensSchema` are public exports from `@retikz/chart`; Plot token schemas remain public exports from `@retikz/plot`.
+The Chart cascade is `Core effective Theme → Chart preset → local chartThemeTokens`. The Plot handoff then resolves `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded plotTheme → explicit Plot configuration`. `ChartThemeToken`, `ChartThemeTokenOverridesSchema`, and `ChartResolvedThemeTokensSchema` are public exports from `@retikz/chart`; Plot token schemas remain public exports from `@retikz/plot`.
 
 Define a custom style with `defineChartThemeStyle`, then inject it into the Chart composite through `createChartComposites({ chartThemeStyles, plotThemeStyles })`. Core `themeStyles`, Plot `plotThemeStyles`, and Chart `chartThemeStyles` each need a resolver for the same `theme.style` name; a missing layer fails loudly, while functions and complete token maps never enter Chart IR.
 
-| Field              | Type                                 | Default | Description                                                                                        |
-| ------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------------------------- |
-| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`    | Sparse Chart-owned presentation and recipe token overrides                                         |
-| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`    | Sparse Plot-owned token overrides forwarded unchanged to the resolved Plot                         |
-| `colors`           | `IRChartShared['colors']`            | Theme   | Plot palette shorthand forwarded unchanged; explicit Plot palette and scale values may override it |
-| `plotTheme`        | `IRChartShared['plotTheme']`         | Theme   | Plot native theme forwarded unchanged                                                              |
-| `layout`           | `IRChartShared['layout']`            | Plot    | Plot label and guide reservation strategy                                                          |
-| `width` / `height` | `IRChartShared['width' \| 'height']` | —       | Resolved Plot intrinsic size                                                                       |
+| Field              | Type                                 | Default | Description                                                                |
+| ------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------- |
+| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`    | Sparse Chart-owned presentation and recipe token overrides                 |
+| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`    | Sparse Plot-owned token overrides forwarded unchanged to the resolved Plot |
+| `plotTheme`        | `IRChartShared['plotTheme']`         | Theme   | Plot native theme forwarded unchanged                                      |
+| `layout`           | `IRChartShared['layout']`            | Plot    | Plot label and guide reservation strategy                                  |
+| `width` / `height` | `IRChartShared['width' \| 'height']` | —       | Resolved Plot intrinsic size                                               |
 
 ## Additional Marks
 

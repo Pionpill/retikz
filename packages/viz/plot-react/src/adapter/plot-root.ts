@@ -30,7 +30,6 @@ const AUTO_ANGLE = '__angle';
 const AUTO_RADIUS = '__radius';
 
 type PlotRootNormalizationContext = PlotAuthoringContext & {
-  colors?: Array<string>;
   deferPositionScaleInference?: boolean;
 };
 
@@ -147,7 +146,7 @@ export const normalizePlotRoot = (
       ...(!shouldDeferPositionScales || explicitScales.y !== undefined ? [yScale] : []),
     ];
   }
-  if (collected.colored) scales.push(buildColorScale(collected.colorFields, context.model, rootContext.colors));
+  if (collected.colored) scales.push(buildColorScale(collected.colorFields, context.model));
 
   // 薄 Plot 不补默认轴：只有用户显式声明 <Axis>/<Legend> 才生成 guides
   // 需要默认轴与网格的上层组件可复用 decorateDefaultGuides

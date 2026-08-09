@@ -225,7 +225,7 @@ describe('Chart shared schemas', () => {
             ...style.plot,
             authoredOverrides: [
               { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
-              { kind: ThemeTokenSource.Local, path: '$spec/colors' },
+              { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
             ],
           },
         },
