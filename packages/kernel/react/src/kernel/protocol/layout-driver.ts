@@ -11,7 +11,7 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { compileToScene, observeCompileToScene } from '@retikz/core';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 
-import type { LayoutAuthoringSite } from '../adapter/authoring-site';
+import type { LayoutAuthoringSite } from './authoring-site';
 
 type LayoutCoreProgramOutput = CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>;
 

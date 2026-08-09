@@ -10,7 +10,7 @@ import type { BuildContext } from './prim';
 
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
-import { createSvgAnimationCollector } from '../animation/keyframes';
+import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
 import { formatViewBox } from '../view-box';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
