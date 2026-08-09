@@ -1,10 +1,11 @@
+import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { IRRibbonDirection } from './types';
 
 import { JsonObjectSchema } from '../../json';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '../../position';
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { AngleDegreesSchema } from '../../scalar';
 import { StepSchema } from '../step';
 import {
   RibbonAlignment,
@@ -21,10 +22,9 @@ export const RibbonArcCapSchema = z
     center: z
       .union([PositionSchema, PolarPositionSchema])
       .describe('Arc center as a Cartesian position or PolarPosition sugar.'),
-    radius: z
-      .number()
-      .positive()
-      .describe('Arc radius in user units; both ribbon side endpoints must lie on this circle.'),
+    radius: PositiveNumberSchema.describe(
+      'Arc radius in user units; both ribbon side endpoints must lie on this circle.',
+    ),
     sweep: z
       .enum(RibbonArcCapSweep)
       .optional()
@@ -40,7 +40,7 @@ export const RibbonCapSchema = z
 export const RibbonWidthStopSchema = z
   .object({
     offset: NormalizedFractionSchema.describe('Normalized position along the centerline.'),
-    value: z.number().nonnegative().describe('Ribbon width in user units at this stop.'),
+    value: NonNegativeNumberSchema.describe('Ribbon width in user units at this stop.'),
   })
   .strict()
   .describe('One stop in a sampled ribbon width curve.');
@@ -67,7 +67,7 @@ export const RibbonWidthProfileSchema = z
   .describe('A registered width profile reference.');
 
 export const RibbonWidthSchema = z
-  .union([z.number().nonnegative(), RibbonWidthStopsSchema, RibbonWidthProfileSchema])
+  .union([NonNegativeNumberSchema, RibbonWidthStopsSchema, RibbonWidthProfileSchema])
   .describe(
     'Ribbon width rule: fixed number, stop curve, or registered profile reference. Endpoint taper widths live on start.width and end.width.',
   );
@@ -86,7 +86,7 @@ export const RibbonDirectionSchema: z.ZodType<IRRibbonDirection> = z
 
 export const RibbonEndpointSchema = z
   .object({
-    width: z.number().nonnegative().optional().describe('Ribbon width in user units at this endpoint.'),
+    width: NonNegativeNumberSchema.optional().describe('Ribbon width in user units at this endpoint.'),
     direction: RibbonDirectionSchema.optional().describe(
       'Optional tangent direction override at this endpoint; omitted means the start-to-end connection direction.',
     ),
@@ -111,7 +111,7 @@ export const RibbonFixedSamplingSchema = z
 export const RibbonAdaptiveSamplingSchema = z
   .object({
     kind: z.literal('adaptive').describe('Choose a sample count from path length and tolerance.'),
-    tolerance: z.number().positive().describe('Approximate target segment length in user units.'),
+    tolerance: PositiveNumberSchema.describe('Approximate target segment length in user units.'),
     maxSamples: z.number().int().min(2).max(512).optional().describe('Optional upper bound for generated samples.'),
   })
   .strict()

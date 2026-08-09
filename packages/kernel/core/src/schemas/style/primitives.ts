@@ -1,6 +1,5 @@
+import { NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
-
-import { NormalizedFractionSchema } from '../scalar';
 
 export const CssColorSchema = z.string().describe('CSS color string.');
 
