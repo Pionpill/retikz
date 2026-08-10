@@ -78,7 +78,7 @@ describe('plot', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       plotTheme: {
-        background: '#ffffff',
+        plotArea: { fill: '#ffffff' },
         palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
         legend: { swatchSize: 12, label: { textColor: '#475569' } },
       },
@@ -101,7 +101,7 @@ describe('plot', () => {
     });
 
     expect(spec.plotTheme).toMatchObject({
-      background: '#ffffff',
+      plotArea: { fill: '#ffffff' },
       palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
       legend: { swatchSize: 12, label: { textColor: '#475569' } },
     });

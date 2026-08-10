@@ -28,7 +28,7 @@ export const PlotColorPaletteSchema = z.array(CssColorSchema).min(1).describe('N
 
 /** Plot 主题 token 的唯一字段契约 */
 export const PlotThemeTokenFieldShape = {
-  [PlotThemeToken.PlotSurfaceFill]: PaintValueSchema.describe('Plot panel surface fill paint'),
+  [PlotThemeToken.PlotAreaFill]: PaintValueSchema.describe('Plot area background fill paint'),
   [PlotThemeToken.PlotTypographyForeground]: CssColorSchema.describe('Global Plot guide foreground color'),
   [PlotThemeToken.PlotTypographyFontFamily]: FontFamilySchema.describe('Global Plot guide font family'),
   [PlotThemeToken.PlotTypographyFontSize]: FontSizeSchema.describe('Global Plot guide font size'),

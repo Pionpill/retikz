@@ -37,7 +37,7 @@ export const mergePlotTheme = (base: IRPlotTheme, override: IRPlotTheme): IRPlot
 /** 把完整 Plot token map 映射为正式原生 Plot theme */
 export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTheme =>
   PlotThemeSchema.parse({
-    background: tokens[PlotThemeToken.PlotSurfaceFill],
+    plotArea: { fill: tokens[PlotThemeToken.PlotAreaFill] },
     typography: {
       font: {
         family: tokens[PlotThemeToken.PlotTypographyFontFamily],
@@ -124,8 +124,8 @@ export const applyPlotThemeToTokens = (
   };
   const has = (value: object, key: PropertyKey): boolean => Object.hasOwn(value, key);
 
-  if (has(authoredTheme, 'background')) {
-    set(PlotThemeToken.PlotSurfaceFill, resolvedTheme.background!, '$spec/plotTheme/background');
+  if (authoredTheme.plotArea !== undefined && has(authoredTheme.plotArea, 'fill')) {
+    set(PlotThemeToken.PlotAreaFill, resolvedTheme.plotArea!.fill!, '$spec/plotTheme/plotArea/fill');
   }
   if (authoredTheme.typography !== undefined) {
     if (has(authoredTheme.typography, 'textColor')) {

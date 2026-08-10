@@ -36,12 +36,15 @@ describe('Plot style token contract', () => {
     const parsed = PlotSpecSchema.safeParse({
       ...baseSpec,
       plotThemeTokens: {
-        'plot.surface.fill': 'none',
+        'plot.area.fill': 'none',
         'plot.palette.series': ['#2563eb', '#f97316'],
       },
     });
 
     expect(parsed.success).toBe(true);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ 'plot.surface.fill': 'none' }).success).toBe(false);
+    expect(Object.values(PlotThemeToken)).toContain('plot.area.fill');
+    expect(Object.values(PlotThemeToken)).not.toContain('plot.surface.fill');
     expect(
       PlotSpecSchema.safeParse({
         ...baseSpec,
@@ -67,7 +70,7 @@ describe('Plot style token contract', () => {
     for (const [value, path] of [
       [{ [PlotThemeToken.AxisLineStrokeWidth]: -1 }, [PlotThemeToken.AxisLineStrokeWidth]],
       [{ [PlotThemeToken.PlotPaletteSeries]: [] }, [PlotThemeToken.PlotPaletteSeries]],
-      [{ [PlotThemeToken.PlotSurfaceFill]: undefined }, [PlotThemeToken.PlotSurfaceFill]],
+      [{ [PlotThemeToken.PlotAreaFill]: undefined }, [PlotThemeToken.PlotAreaFill]],
     ] as const) {
       const result = PlotThemeTokenOverridesSchema.safeParse(value);
       expect(result.success).toBe(false);
@@ -89,18 +92,20 @@ describe('Plot style token contract', () => {
     expect(PlotThemeSchema.safeParse({}).success).toBe(true);
     expect(
       PlotThemeSchema.safeParse({
-        background: 'none',
+        plotArea: { fill: 'none' },
         typography: { textColor: 'currentColor' },
         axis: { line: false },
         legend: { swatchSize: 12 },
         palette: { categorical: ['#2563eb'] },
       }).success,
     ).toBe(true);
+    expect(PlotThemeSchema.safeParse({ background: 'none' }).success).toBe(false);
+    expect(PlotThemeSchema.safeParse({ plotArea: { background: 'none' } }).success).toBe(false);
   });
 
   it('让 sparse 与 PlotSpec token 输入保持 JSON round-trip，并让 required map 拒绝缺项', () => {
     const plotThemeTokens = PlotThemeTokenOverridesSchema.parse({
-      [PlotThemeToken.PlotSurfaceFill]: 'none',
+      [PlotThemeToken.PlotAreaFill]: 'none',
       [PlotThemeToken.AxisTickMark]: { kind: 'circle', size: 5 },
       [PlotThemeToken.PlotPaletteSeries]: ['#2563eb', '#f97316'],
     });

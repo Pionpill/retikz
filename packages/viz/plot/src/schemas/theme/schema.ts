@@ -66,9 +66,15 @@ export const PlotPaletteThemeSchema = z
   })
   .describe('Plot palette defaults. Explicit scale range or scheme still has higher priority');
 
+export const PlotAreaThemeSchema = z
+  .strictObject({
+    fill: PaintValueSchema.optional().describe('Plot area background fill'),
+  })
+  .describe('Plot area visual defaults');
+
 export const PlotThemeSchema = z
   .strictObject({
-    background: PaintValueSchema.optional().describe('Plot panel background fill. Omit to keep the panel transparent'),
+    plotArea: PlotAreaThemeSchema.optional().describe('Plot area visual defaults'),
     typography: GuideTextStyleSchema.optional().describe('Global guide text defaults'),
     axis: PlotAxisThemeSchema.optional().describe('Axis visual defaults'),
     legend: LegendGuideStyleSchema.optional().describe('Legend visual defaults'),

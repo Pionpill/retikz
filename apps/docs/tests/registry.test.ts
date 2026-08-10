@@ -5,6 +5,7 @@ import {
   EncodingSchema,
   GuideSchema,
   MarkSchema,
+  PlotAreaThemeSchema,
   PlotLayerSchema,
   PlotSpecSchema,
   PlotThemeSchema,
@@ -35,6 +36,7 @@ describe('SCHEMA_REGISTRY', () => {
       PlotCoordinateSchema: { schema: PlotCoordinateSchema },
       GuideSchema: { schema: GuideSchema },
       PlotLayerSchema: { schema: PlotLayerSchema },
+      PlotAreaThemeSchema: { schema: PlotAreaThemeSchema },
       PlotThemeSchema: { schema: PlotThemeSchema },
       LegendSchema: {
         schema: LegendSchema,

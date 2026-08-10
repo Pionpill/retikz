@@ -7,7 +7,7 @@ Plot reads `style` and `mode` from the Core effective Theme at its current Scene
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-The example writes surface, grid, and categorical palette values through `PlotThemeToken`. React, Vanilla, and plain JSON pass the same `plotThemeTokens` to the Plot resolver without adapter-owned presets; the Core Theme provides the effective `style` / `mode` and shared colors.
+The example writes plot-area background, grid, and categorical palette values through `PlotThemeToken`. The corresponding structured-theme field is `plotArea.fill`; it fills only the Plot area after axis, legend, and layout reserves are removed, while axis-label regions, facet gaps, and the outer Chart canvas remain transparent. React, Vanilla, and plain JSON pass the same `plotThemeTokens` to the Plot resolver without adapter-owned presets; the Core Theme provides the effective `style` / `mode` and shared colors.
 
 ## Extensible styles
 
@@ -35,7 +35,7 @@ Core effective Theme
 
 | Group           | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surface         | `plot.surface.fill`                                                                                                                                                                                                                                                                                                                      |
+| Plot area       | `plot.area.fill`                                                                                                                                                                                                                                                                                                                         |
 | Typography      | `plot.typography.foreground`, `plot.typography.font.family`, `plot.typography.font.size`                                                                                                                                                                                                                                                 |
 | Axis line       | `axis.line.enabled`, `axis.line.stroke`, `axis.line.strokeWidth`, `axis.line.drawOpacity`                                                                                                                                                                                                                                                |
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
@@ -75,6 +75,10 @@ Chart may call this resolver to read a transient series palette needed by a reci
 ## PlotThemeSchema
 
 <ZodSchema name="PlotThemeSchema" />
+
+## PlotAreaThemeSchema
+
+<ZodSchema name="PlotAreaThemeSchema" />
 
 ## PlotAxisThemeSchema
 

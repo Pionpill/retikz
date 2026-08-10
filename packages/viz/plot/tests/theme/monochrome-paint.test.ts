@@ -29,7 +29,7 @@ describe('Plot theme monochrome paint', () => {
 
   it.each(Object.values(ThemeStyle))('%s 的 surface 在两个 mode 下都保持透明', style => {
     for (const mode of Object.values(ThemeMode)) {
-      expect(getPlotThemePreset(style, mode)[PlotThemeToken.PlotSurfaceFill]).toBe('none');
+      expect(getPlotThemePreset(style, mode)[PlotThemeToken.PlotAreaFill]).toBe('none');
     }
   });
 

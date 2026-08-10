@@ -7,7 +7,7 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择�
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-示例通过 `PlotThemeToken` 写入 surface、grid 与 categorical palette。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
+示例通过 `PlotThemeToken` 写入绘图区背景、grid 与 categorical palette。结构化 theme 中对应字段是 `plotArea.fill`；它只填充扣除 axis、legend 与布局预留后的 Plot area，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。React、Vanilla 和 plain JSON 都把同一 `plotThemeTokens` 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
 
 ## 可扩展 style
 
@@ -35,7 +35,7 @@ Core effective Theme
 
 | 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surface         | `plot.surface.fill`                                                                                                                                                                                                                                                                                                                      |
+| Plot area       | `plot.area.fill`                                                                                                                                                                                                                                                                                                                         |
 | Typography      | `plot.typography.foreground`、`plot.typography.font.family`、`plot.typography.font.size`                                                                                                                                                                                                                                                 |
 | Axis line       | `axis.line.enabled`、`axis.line.stroke`、`axis.line.strokeWidth`、`axis.line.drawOpacity`                                                                                                                                                                                                                                                |
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
@@ -53,7 +53,7 @@ Core effective Theme
   name="PlotThemeTokenOverridesSchema"
   description="用户可提供的严格、稀疏 Plot canonical token 覆盖。"
   descriptions={{
-    'plot.surface.fill': 'Plot panel 的 surface 填充 paint。',
+    'plot.area.fill': 'Plot area 的背景填充 paint。',
     'plot.typography.foreground': '所有 Plot guide 的全局前景色。',
     'plot.typography.font.family': '所有 Plot guide 的全局字体族。',
     'plot.typography.font.size': '所有 Plot guide 的全局字号。',
@@ -121,11 +121,21 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
   name="PlotThemeSchema"
   description="Plot lowering 消费的 JSON-safe 整图主题。"
   descriptions={{
-    background: 'Plot panel 背景填充；省略时保持透明。',
+    plotArea: 'Plot area 的视觉默认值。',
     typography: 'Axis、Legend、Facet 等 Plot-owned 文本的全局默认样式。',
     axis: '坐标轴视觉默认值。',
     legend: '图例视觉默认值。',
     palette: 'Plot 颜色调色板默认值。',
+  }}
+/>
+
+## PlotAreaThemeSchema
+
+<ZodSchema
+  name="PlotAreaThemeSchema"
+  description="有效绘图区的视觉默认值。"
+  descriptions={{
+    fill: 'Plot area 的背景填充；省略时保持透明。',
   }}
 />
 

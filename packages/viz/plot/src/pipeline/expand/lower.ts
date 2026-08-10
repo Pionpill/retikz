@@ -68,14 +68,14 @@ import { prepareRows, resolveMarkRows } from './data';
 import { resolveFrame, resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, reserveLegendBands } from './legend';
 
-const plotBackgroundNode = (width: number, height: number, fill: IRNode['fill'] | undefined): IRNode | null =>
+const plotBackgroundNode = (plotArea: Rect, fill: IRNode['fill'] | undefined): IRNode | null =>
   fill === undefined || fill === 'none'
     ? null
     : {
         type: 'node',
-        position: [width / 2, height / 2],
+        position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2],
         shape: 'rectangle',
-        minimumSize: { width, height },
+        minimumSize: { width: plotArea.width, height: plotArea.height },
         padding: 0,
         strokeWidth: 0,
         fill,
@@ -528,6 +528,7 @@ const expandPlot = (
       if (panel.row !== undefined) facetContext.row = panel.row;
       if (panel.column !== undefined) facetContext.column = panel.column;
       const panelContext: IRJsonObject = { coordinateView: panel.id, facet: facetContext };
+      const backgroundNode = plotBackgroundNode(frameResolution.plotArea, resolvedTheme.plotArea?.fill);
       const markLayers: Array<IRChild> = node.marks
         .map((mark, markIndex) => {
           const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
@@ -562,6 +563,7 @@ const expandPlot = (
         localNamespace: true,
         meta,
         children: [
+          ...(backgroundNode ? [backgroundNode] : []),
           ...(gridResolution?.gridLayers ?? []).map(layer =>
             withFacetGuideContext(layer, panelContext, node.id, panel.id),
           ),
@@ -585,8 +587,7 @@ const expandPlot = (
     });
 
     anchorRegistry.assertResolved();
-    const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
-    const children: Array<IRChild> = [...(backgroundNode ? [backgroundNode] : []), ...panelScopes, ...facetLabelScopes];
+    const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
@@ -683,7 +684,7 @@ const expandPlot = (
     );
   }
   // z-order：所有网格层 → marks → 所有轴层 → legend
-  const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
+  const backgroundNode = plotBackgroundNode(plotArea, resolvedTheme.plotArea?.fill);
   const children: Array<IRChild> = [
     ...(backgroundNode ? [backgroundNode] : []),
     ...gridLayers,

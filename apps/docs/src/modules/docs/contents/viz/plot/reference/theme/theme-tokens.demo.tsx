@@ -11,9 +11,9 @@ const points = [
   { x: 3, y: 5, series: 'B' },
 ];
 
-/** Plot token override 通过 PlotSpec 局部 theme cascade 进入 surface、axis 与 palette */
+/** Plot token override 通过 PlotSpec 局部 theme cascade 进入 Plot area、axis 与 palette */
 const plotThemeTokens = {
-  [PlotThemeToken.PlotSurfaceFill]: '#F8FAFC',
+  [PlotThemeToken.PlotAreaFill]: '#F8FAFC',
   [PlotThemeToken.PlotPaletteCategorical]: ['#2563EB', '#F97316'],
   [PlotThemeToken.AxisGridStroke]: '#60A5FA',
   [PlotThemeToken.AxisGridDrawOpacity]: 0.35,

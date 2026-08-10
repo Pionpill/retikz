@@ -1397,6 +1397,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotThemeResolution',
     url: '/viz/plot/reference/theme#inspection',
   },
+  PlotAreaThemeSchema: {
+    schema: PlotIR.PlotAreaThemeSchema,
+    label: 'PlotAreaTheme',
+    url: '/viz/plot/reference/theme#plotareathemeschema',
+  },
   PlotAxisThemeSchema: {
     schema: PlotIR.PlotAxisThemeSchema,
     label: 'PlotAxisTheme',

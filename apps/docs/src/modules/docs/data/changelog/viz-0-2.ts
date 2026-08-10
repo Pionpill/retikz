@@ -50,6 +50,16 @@ export const vizV02: Release = {
             },
             {
               label: {
+                zh: 'BREAKING：绘图区主题收敛为 plotArea.fill',
+                en: 'BREAKING: plot-area theme moves to plotArea.fill',
+              },
+              content: {
+                zh: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` 改名为 `PlotAreaFill` / `plot.area.fill`；结构化字段从 `IRPlotTheme.background` 改为 `IRPlotTheme.plotArea.fill`。它只填充扣除 axis、legend 与布局预留后的有效绘图区，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。',
+                en: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` is renamed to `PlotAreaFill` / `plot.area.fill`, and the structured field moves from `IRPlotTheme.background` to `IRPlotTheme.plotArea.fill`. It fills only the effective plotting area after axis, legend, and layout reserves are removed, leaving axis-label regions, facet gaps, and the outer Chart canvas transparent.',
+              },
+            },
+            {
+              label: {
                 zh: 'BREAKING：Plot presentation 上移 Chart',
                 en: 'BREAKING: Plot presentation moves to Chart',
               },

@@ -98,7 +98,7 @@ describe('plot theme schema and lowering', () => {
       PlotSpecSchema.parse(
         baseSpec({
           plotTheme: {
-            background: '#ffffff',
+            plotArea: { fill: '#ffffff' },
             typography: { font: { size: 11 }, textColor: '#334155' },
             axis: { grid: { stroke: '#cbd5e1', drawOpacity: 0.5 } },
             legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -109,6 +109,13 @@ describe('plot theme schema and lowering', () => {
     ).not.toThrow();
 
     expect(() =>
+      PlotSpecSchema.parse({
+        ...baseSpec(),
+        plotTheme: { background: '#ffffff' },
+      }),
+    ).toThrow();
+
+    expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
           plotTheme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlotSpec['plotTheme'],
@@ -117,12 +124,71 @@ describe('plot theme schema and lowering', () => {
     ).toThrow();
   });
 
-  it('background_emits_panel_background_when_configured', () => {
-    const root = expandOf(baseSpec({ plotTheme: { background: '#f8fafc' } }));
-    const background = root.children[0] as IRNode;
+  it('background_emits_the_effective_plot_area_before_plot_content', () => {
+    const root = expandOf(
+      baseSpec({
+        id: 'background-plot',
+        guides: [
+          { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, title: 'x' },
+          { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, title: 'y' },
+        ],
+        plotTheme: { plotArea: { fill: '#f8fafc' } },
+      }),
+    );
+    const content = root.children[0] as IRScope;
+    const background = content.children[0] as IRNode;
+    const plotAreaCarrier = root.children[1] as IRNode;
+
     expect(background.type).toBe('node');
     expect(background.fill).toBe('#f8fafc');
-    expect(hasMinimumSize(background, 480, 300)).toBe(true);
+    expect(background.position).toEqual(plotAreaCarrier.position);
+    expect(background.minimumSize).toEqual(plotAreaCarrier.minimumSize);
+    expect(hasMinimumSize(background, 480, 300)).toBe(false);
+  });
+
+  it('facet_background_emits_one_plot_area_inside_each_panel', () => {
+    const root = expandOf(
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        id: 'facet-background',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        composition: {
+          defaultView: 'root',
+          views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
+          arrangements: [
+            {
+              kind: 'facet',
+              id: 'city',
+              view: 'root',
+              column: { field: 'city', order: ['A', 'B', 'C'] },
+            },
+          ],
+          spacing: { panelGap: 24 },
+          resolve: { axis: { x: 'local', y: 'local' }, grid: { x: 'local', y: 'local' } },
+        },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        guides: [
+          { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, grid: true },
+          { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, grid: true },
+        ],
+        plotTheme: { plotArea: { fill: '#e2e8f0' } },
+      }),
+    );
+    const content = root.children[0] as IRScope;
+    const panels = scopesOf(content).filter(scope => scope.meta?.layer === 'facetPanel');
+
+    expect(content.children[0]?.type).toBe('scope');
+    expect(panels).toHaveLength(3);
+    for (const panel of panels) {
+      const background = panel.children[0] as IRNode;
+      expect(background).toMatchObject({ type: 'node', fill: '#e2e8f0' });
+      expect(hasMinimumSize(background, 144, 300)).toBe(false);
+    }
   });
 
   it('Scene 与 Scope effective Theme 进入 Plot lowering', () => {

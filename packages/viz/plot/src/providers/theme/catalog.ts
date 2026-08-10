@@ -5,7 +5,7 @@ import { resolveCoreThemeColors } from '@retikz/core';
 import type { IRPlotResolvedThemeTokens } from '../../schemas';
 
 import { PlotResolvedThemeTokensSchema } from '../../schemas';
-import { getAxisPreset, getBackgroundPreset, getLegendPreset, getPalettePreset, getTypographyPreset } from './preset';
+import { getAxisPreset, getLegendPreset, getPalettePreset, getPlotAreaPreset, getTypographyPreset } from './preset';
 
 const createPreset = (
   style: BuiltinThemeStyleValue,
@@ -13,7 +13,7 @@ const createPreset = (
   categorical: NonEmptyReadonlyArray<CssColorValue>,
 ): IRPlotResolvedThemeTokens => {
   return PlotResolvedThemeTokensSchema.parse({
-    ...getBackgroundPreset(mode),
+    ...getPlotAreaPreset(mode),
     ...getTypographyPreset(style, mode),
     ...getAxisPreset(style, mode),
     ...getLegendPreset(style, mode),

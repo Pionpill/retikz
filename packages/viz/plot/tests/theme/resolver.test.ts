@@ -150,9 +150,9 @@ describe('Plot theme resolver', () => {
     };
     const result = resolve(effectiveTheme);
 
-    expect(sourceOf(result, PlotThemeToken.PlotSurfaceFill)).toMatchObject({
+    expect(sourceOf(result, PlotThemeToken.PlotAreaFill)).toMatchObject({
       kind: ThemeTokenSource.Local,
-      path: '$style/academic/dark/plot.surface.fill',
+      path: '$style/academic/dark/plot.area.fill',
     });
     for (const token of [
       PlotThemeToken.PlotPaletteCategorical,
@@ -172,11 +172,12 @@ describe('Plot theme resolver', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark), {
       plotThemeTokens: {
-        [PlotThemeToken.PlotSurfaceFill]: '#111111',
+        [PlotThemeToken.PlotAreaFill]: '#111111',
         [PlotThemeToken.PlotPaletteCategorical]: ['#token-categorical'],
         [PlotThemeToken.PlotPaletteSeries]: ['#token'],
       },
       plotTheme: {
+        plotArea: { fill: '#native-area' },
         typography: { font: { family: 'serif' } },
         palette: { series: ['#theme'] },
       },
@@ -184,14 +185,14 @@ describe('Plot theme resolver', () => {
 
     expect(result.style).toBe(ThemeStyle.Academic);
     expect(result.mode).toBe(ThemeMode.Dark);
-    expect(result.tokens[PlotThemeToken.PlotSurfaceFill]).toBe('#111111');
+    expect(result.tokens[PlotThemeToken.PlotAreaFill]).toBe('#native-area');
     expect(result.tokens[PlotThemeToken.PlotPaletteCategorical]).toEqual(['#token-categorical']);
     expect(result.tokens[PlotThemeToken.PlotPaletteSeries]).toEqual(['#theme']);
     expect(result.plotTheme?.typography?.font?.family).toBe('serif');
     expect(result.palette.series).toEqual(['#theme']);
-    expect(sourceOf(result, PlotThemeToken.PlotSurfaceFill)).toMatchObject({
+    expect(sourceOf(result, PlotThemeToken.PlotAreaFill)).toMatchObject({
       kind: ThemeTokenSource.Local,
-      path: '$spec/plotThemeTokens/plot.surface.fill',
+      path: '$spec/plotTheme/plotArea/fill',
     });
     expect(sourceOf(result, PlotThemeToken.PlotPaletteCategorical)).toMatchObject({
       kind: ThemeTokenSource.Local,
@@ -220,7 +221,7 @@ describe('Plot theme resolver', () => {
   it('inspection schema 只接受二元来源与唯一 authored override path', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
-      plotTheme: { background: '#ffffff' },
+      plotTheme: { plotArea: { fill: '#ffffff' } },
     });
 
     expect(
@@ -235,7 +236,7 @@ describe('Plot theme resolver', () => {
       PlotThemeResolutionSchema.safeParse({
         ...result,
         tokenSources: result.tokenSources.map(source =>
-          source.token === PlotThemeToken.PlotSurfaceFill
+          source.token === PlotThemeToken.PlotAreaFill
             ? { ...source, kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' }
             : source,
         ),

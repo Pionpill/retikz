@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/foundation';
 
 /** Plot 主题 token 的 canonical key */
 export const PlotThemeToken = {
-  PlotSurfaceFill: 'plot.surface.fill',
+  PlotAreaFill: 'plot.area.fill',
   PlotTypographyForeground: 'plot.typography.foreground',
   PlotTypographyFontFamily: 'plot.typography.font.family',
   PlotTypographyFontSize: 'plot.typography.font.size',

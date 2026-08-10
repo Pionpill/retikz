@@ -5,8 +5,8 @@ import { getPlotThemePreset, PlotThemeToken } from '../../src';
 
 describe('Clean Plot theme preset', () => {
   it('在 Light 与 Dark 下都保持透明画布', () => {
-    expect(getPlotThemePreset(ThemeStyle.Clean, ThemeMode.Light)[PlotThemeToken.PlotSurfaceFill]).toBe('none');
-    expect(getPlotThemePreset(ThemeStyle.Clean, ThemeMode.Dark)[PlotThemeToken.PlotSurfaceFill]).toBe('none');
+    expect(getPlotThemePreset(ThemeStyle.Clean, ThemeMode.Light)[PlotThemeToken.PlotAreaFill]).toBe('none');
+    expect(getPlotThemePreset(ThemeStyle.Clean, ThemeMode.Dark)[PlotThemeToken.PlotAreaFill]).toBe('none');
   });
 
   it('用可读的无衬线排版建立紧凑层级', () => {

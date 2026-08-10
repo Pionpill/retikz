@@ -54,8 +54,8 @@ export type ResolvedLegendGuideTokens = Required<
 
 /** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme */
 export type ResolvedPlotGuideTheme = {
-  /** 可选背景填充；省略表示透明 */
-  background?: IRPlotTheme['background'];
+  /** 绘图区视觉样式 */
+  plotArea?: IRPlotTheme['plotArea'];
   /** 全局 guide 文本默认样式 */
   typography: GuideTextStyle;
   /** 解析后的 palette */
@@ -108,7 +108,7 @@ export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotP
   const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme.typography);
   const legend = theme.legend;
   return {
-    ...(theme.background !== undefined ? { background: theme.background } : {}),
+    ...(theme.plotArea !== undefined ? { plotArea: structuredClone(theme.plotArea) } : {}),
     typography,
     palette: structuredClone(palette),
     axis: theme.axis ?? {},
