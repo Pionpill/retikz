@@ -45,10 +45,6 @@ import {
   buildKey,
   buildLangControlsKey,
   buildSourceFileKey,
-  controlModules,
-  demoModules,
-  demoSources,
-  localSourceFiles,
   resolveControlsKey,
   resolveDemoKey,
   resolvePreviewControlContract,
@@ -62,6 +58,7 @@ import {
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/overview/node-geometry.controls';
 import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
+import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
 
 const sourceRowsOf = (field: PreviewTableControlField): PreviewTableRows => {
   if (field.rows !== undefined) return field.rows;

@@ -11,8 +11,9 @@ import { useComponentPreviewStore } from '@/modules/docs/store';
 import type { ComponentPreviewFiles } from './types';
 
 import { useDemoLocationContext } from './context';
+import { usePreviewDemoModule } from './hooks';
 import { DemoRenderer } from './preview-panel';
-import { demoModules, resolveDemoKey } from './registry';
+import { resolveDemoKey } from './registry';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewThumbnailProps = {
@@ -35,7 +36,8 @@ export const ComponentPreviewThumbnail: FC<ComponentPreviewThumbnailProps> = pro
     [contextSegments, location],
   );
   const key = segments ? resolveDemoKey(segments, name, language) : null;
-  const module = key ? demoModules[key] : undefined;
+  const moduleState = usePreviewDemoModule(key);
+  const module = moduleState.status === 'ready' ? moduleState.module : undefined;
   const rendererMode = useComponentPreviewStore(state => state.rendererMode);
   const animationMode = useComponentPreviewStore(state => state.animationMode);
   const Component = useMemo<FC | undefined>(() => {
@@ -59,6 +61,14 @@ export const ComponentPreviewThumbnail: FC<ComponentPreviewThumbnailProps> = pro
         <AnimationModeProvider mode={animationMode}>
           <DemoRenderer Component={Component} rendererMode={rendererMode} />
         </AnimationModeProvider>
+      ) : moduleState.status === 'loading' ? (
+        <span
+          data-slot="component-preview-thumbnail-loading"
+          className="h-full w-full animate-pulse rounded-md bg-muted/40"
+          aria-hidden
+        />
+      ) : moduleState.status === 'error' ? (
+        <span className="text-xs text-destructive">Failed to load demo {name}</span>
       ) : (
         <span className="text-xs text-muted-foreground">
           Demo <code>{name}</code> not found
