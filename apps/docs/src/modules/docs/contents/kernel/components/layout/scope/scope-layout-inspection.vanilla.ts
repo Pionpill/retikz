@@ -1,13 +1,13 @@
-import type { FlexLayoutInput } from '@retikz/standard';
+import type { FlexLayoutInput } from '@retikz/layout';
 
 import { createInspectionVanillaAuthoring } from '@retikz/inspect/vanilla';
-import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/standard/inspect';
-import { StandardLayoutVanillaAdapters } from '@retikz/standard-vanilla';
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
+import { LayoutVanillaAdapters } from '@retikz/layout-vanilla';
 import {
-  createStandardInspectionBarrier,
-  createStandardInspectionVanillaDriver,
+  createLayoutInspectionBarrier,
+  createLayoutInspectionVanillaDriver,
   inspectFlexLayout,
-} from '@retikz/standard-vanilla/inspect';
+} from '@retikz/layout-vanilla/inspect';
 import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 
 const flexInput = (first: string, second: string): FlexLayoutInput => ({
@@ -38,7 +38,7 @@ const fig = figure({
     ]),
     scope(
       {
-        authoring: createStandardInspectionBarrier(),
+        authoring: createLayoutInspectionBarrier(),
         transforms: [{ kind: 'translate', x: 280, y: 34 }],
       },
       [inspectFlexLayout('blocked', flexInput('B1', 'B2'))],
@@ -47,7 +47,7 @@ const fig = figure({
 });
 
 export const svg = renderToSvgString(fig, {
-  adapters: StandardLayoutVanillaAdapters,
-  compileDriver: createStandardInspectionVanillaDriver(),
+  adapters: LayoutVanillaAdapters,
+  compileDriver: createLayoutInspectionVanillaDriver(),
   output: { width: 520, height: 190 },
 });

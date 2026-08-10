@@ -1,5 +1,6 @@
 import { BoxSpacingSchema, ChildSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
+import { NonNegativeNumberSchema, PositiveIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellBordersSchema } from '../border';
@@ -37,20 +38,15 @@ export const TableCellOverflowSchema = z
 
 export const TableCellSpanSchema = z
   .strictObject({
-    rows: z.number().int().positive().optional().describe('Positive number of consecutive rows covered by the Cell.'),
-    columns: z
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe('Positive number of consecutive columns covered by the Cell.'),
+    rows: PositiveIntegerSchema.optional().describe('Positive number of consecutive rows covered by the Cell.'),
+    columns: PositiveIntegerSchema.optional().describe('Positive number of consecutive columns covered by the Cell.'),
   })
   .describe('Optional rectangular Table Cell span; omitted axes use 1 at runtime.');
 
 export const TableCellLayoutSchema = z
   .strictObject({
     padding: z
-      .union([z.number().nonnegative(), BoxSpacingSchema])
+      .union([NonNegativeNumberSchema, BoxSpacingSchema])
       .optional()
       .describe('Nonnegative uniform or per-side padding inside the Table Cell box.'),
     horizontalAlign: TableHorizontalAlignmentSchema.optional().describe(

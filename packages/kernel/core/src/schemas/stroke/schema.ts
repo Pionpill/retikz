@@ -1,9 +1,10 @@
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { PathLineCap, PathLineJoin } from './constants';
 
 export const StrokeDashPatternSchema = z
-  .array(z.number().nonnegative())
+  .array(NonNegativeNumberSchema)
   .min(1)
   .describe('Stroke dash pattern lengths in user units.');
 
@@ -15,7 +16,7 @@ export const PathLineCapSchema = z.enum(PathLineCap).describe('Path stroke endpo
 
 export const PathLineJoinSchema = z.enum(PathLineJoin).describe('Path stroke corner join keyword.');
 
-export const StrokeWidthSchema = z.number().nonnegative().describe('Stroke width in user units.');
+export const StrokeWidthSchema = NonNegativeNumberSchema.describe('Stroke width in user units.');
 
 export const StrokeStyleSchema = z
   .strictObject({

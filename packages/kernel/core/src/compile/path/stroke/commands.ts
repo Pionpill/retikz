@@ -4,7 +4,7 @@ import type { PathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
 
 import { DEG_TO_RAD } from '../../../shared/geometry';
-import { samePoint } from '../host/target';
+import { samePoint } from '../host';
 
 export type EmitCubicCommandInput = {
   control1: IRPosition;

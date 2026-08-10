@@ -1,6 +1,6 @@
 import type { LayoutChildResult } from '@retikz/core';
+import type { PairedFlowItem } from '@retikz/layout/compose';
 
-import type { PairedFlowItem } from '../../../layout/internal';
 import type { IRLegendItem } from '../types';
 
 /** Legend child 在 minimum 与 natural probe 下的结构结果 */

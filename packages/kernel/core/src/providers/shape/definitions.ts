@@ -1,7 +1,7 @@
 import type { ShapeDefinition } from '../../contract';
 import type { BuiltinShapeValue } from '../../schemas';
 
-import { defineBuiltinProviderArray } from '../registry';
+import { defineBuiltinProviderArray } from '../registry/index';
 import { arc } from './arc';
 import { contour } from './contour';
 import { ellipseShape } from './ellipse';

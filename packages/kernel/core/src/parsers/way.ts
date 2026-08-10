@@ -1,3 +1,4 @@
+import { NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type {
@@ -21,7 +22,7 @@ import type {
   IRTarget,
 } from '../schemas';
 
-import { AxisLineTargetSchema, FoldStepVia, NormalizedFractionSchema } from '../schemas';
+import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
 import { parseSideAlias } from './anchor-alias';
 import { parseTargetSugar } from './target-sugar';
 

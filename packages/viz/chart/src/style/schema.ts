@@ -7,8 +7,8 @@ import {
   PaintValueSchema,
   TextAlignSchema,
 } from '@retikz/core';
+import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotAxisThemeTokenRulesSchema, PlotThemeSchema, PlotThemeTokenOverridesSchema } from '@retikz/plot';
-import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/standard';
 import { z } from 'zod';
 
 import { ChartThemeToken } from './constants';

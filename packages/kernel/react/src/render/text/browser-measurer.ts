@@ -5,6 +5,10 @@ import { fallbackMeasurer } from '@retikz/core';
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 
+/** 旧浏览器可能缺少实际字形边界度量 */
+type BrowserTextMetrics = Pick<TextMetrics, 'width'> &
+  Partial<Pick<TextMetrics, 'actualBoundingBoxAscent' | 'actualBoundingBoxDescent'>>;
+
 /** 懒加载模块级 canvas 2d context；SSR 环境（无 document）下返回 null，由 measurer 走 fallback */
 const getCtx = (): CanvasRenderingContext2D | null => {
   if (typeof document === 'undefined') return null;
@@ -33,14 +37,11 @@ export const browserMeasurer: TextMeasurer = (text, font) => {
   const weight = font.weight ?? 'normal';
   const style = font.style ?? 'normal';
   c.font = `${style} ${weight} ${font.size}px ${family}`;
-  const m = c.measureText(text);
-  // lib.dom 把 actualBoundingBox* 标成必填，但旧 Safari / Chromium 仍可能返回 undefined，故意保留兜底
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const ascent = Math.max(0, m.actualBoundingBoxAscent ?? font.size * 0.8);
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const descent = Math.max(0, m.actualBoundingBoxDescent ?? font.size * 0.2);
+  const metrics: BrowserTextMetrics = c.measureText(text);
+  const ascent = Math.max(0, metrics.actualBoundingBoxAscent ?? font.size * 0.8);
+  const descent = Math.max(0, metrics.actualBoundingBoxDescent ?? font.size * 0.2);
   return {
-    width: m.width,
+    width: metrics.width,
     height: ascent + descent || font.size * 1.2,
     ascent,
     descent,

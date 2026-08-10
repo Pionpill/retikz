@@ -1,8 +1,8 @@
+import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Anchor, CenterAnchor } from '../../shared';
 import { JsonValueSchema } from '../json';
-import { NormalizedFractionSchema } from '../scalar';
 import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
 
 export const EasingSchema = z
@@ -65,13 +65,13 @@ export const AnimationTrackSchema = z
       .describe(
         'Keyframes sorted by `at`. Each value is absolute, not a delta. The final keyframe should represent the settled value.',
       ),
-    duration: z.number().positive().describe('Duration of one animation iteration in milliseconds.'),
-    delay: z.number().nonnegative().optional().describe('Delay before playback starts, in milliseconds.'),
+    duration: PositiveNumberSchema.describe('Duration of one animation iteration in milliseconds.'),
+    delay: NonNegativeNumberSchema.optional().describe('Delay before playback starts, in milliseconds.'),
     easing: EasingSchema.optional().describe(
       'Default easing for keyframe segments without keyframe-level easing. Omitted fields use linear easing.',
     ),
     iterations: z
-      .union([z.number().positive(), z.literal('infinite')])
+      .union([PositiveNumberSchema, z.literal('infinite')])
       .optional()
       .describe('Iteration count. Use "infinite" for endless playback. Omitted fields play once.'),
     direction: z

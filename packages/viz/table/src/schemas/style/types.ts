@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
 import type { TableThemeToken } from './constants';
@@ -25,4 +26,4 @@ export type TableThemeTokenMap = z.infer<typeof TableThemeTokenMapSchema>;
 export type TableThemeTokenPresetMap = z.infer<typeof TableThemeTokenPresetMapSchema>;
 
 /** Table theme token 的 canonical key value */
-export type TableThemeTokenValue = (typeof TableThemeToken)[keyof typeof TableThemeToken];
+export type TableThemeTokenValue = ValueOf<typeof TableThemeToken>;

@@ -1,8 +1,8 @@
+import { NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { IRAbsoluteTarget, IRBetweenPosition } from './types';
 
-import { NormalizedFractionSchema } from '../../scalar';
 import { NodeTargetSchema } from '../node-target';
 import { OffsetPositionSchema } from '../offset-position';
 import { PolarPositionSchema } from '../polar-position';

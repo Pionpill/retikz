@@ -88,6 +88,9 @@ type Ctx = {
   standardHelpers: Set<string>;
   standardAdapters: Set<string>;
   standardCounts: Map<string, number>;
+  layoutHelpers: Set<string>;
+  layoutAdapters: Set<string>;
+  layoutCounts: Map<string, number>;
   notationHelpers: Set<string>;
   notationAdapters: Set<string>;
   notationCounts: Map<string, number>;
@@ -284,29 +287,34 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
-const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
-  'grid',
-  'axes',
-  'frame',
-  'flexLayout',
-  'gridLayout',
-  'overlayLayout',
-  'legend',
-];
+const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame', 'legend'];
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridVanillaAdapter',
   'AxesVanillaAdapter',
   'FrameVanillaAdapter',
+  'LegendVanillaAdapter',
+];
+const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
+const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'FlexLayoutVanillaAdapter',
   'GridLayoutVanillaAdapter',
   'OverlayLayoutVanillaAdapter',
-  'LegendVanillaAdapter',
 ];
-const NOTATION_HELPER_ORDER: ReadonlyArray<string> = ['logicFrame', 'connector', 'callout'];
+const NOTATION_HELPER_ORDER: ReadonlyArray<string> = [
+  'logicFrame',
+  'terminal',
+  'stage',
+  'decision',
+  'junction',
+  'connector',
+];
 const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
   'LogicFrameVanillaAdapter',
+  'TerminalVanillaAdapter',
+  'StageVanillaAdapter',
+  'DecisionVanillaAdapter',
+  'JunctionVanillaAdapter',
   'ConnectorVanillaAdapter',
-  'CalloutVanillaAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -314,34 +322,46 @@ export type StandardPreviewDefinitionName =
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
-  | 'FlexLayoutDefinition'
-  | 'GridLayoutDefinition'
-  | 'OverlayLayoutDefinition'
   | 'LegendDefinition';
 
+/** docs 预览能够显式注入的 Layout definition 名 */
+export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
+
 /** docs 预览能够显式注入的 Notation definition 名 */
-export type NotationPreviewDefinitionName = 'LogicFrameDefinition' | 'ConnectorDefinition' | 'CalloutDefinition';
+export type NotationPreviewDefinitionName =
+  | 'LogicFrameDefinition'
+  | 'TerminalDefinition'
+  | 'StageDefinition'
+  | 'DecisionDefinition'
+  | 'JunctionDefinition'
+  | 'ConnectorDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
+  legend: 'LegendDefinition',
+};
+
+const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinitionName>> = {
   flexLayout: 'FlexLayoutDefinition',
   gridLayout: 'GridLayoutDefinition',
   overlayLayout: 'OverlayLayoutDefinition',
-  legend: 'LegendDefinition',
 };
 
 const NOTATION_DEFINITION_BY_KIND: Readonly<Record<string, NotationPreviewDefinitionName>> = {
   logicFrame: 'LogicFrameDefinition',
+  terminal: 'TerminalDefinition',
+  stage: 'StageDefinition',
+  decision: 'DecisionDefinition',
+  junction: 'JunctionDefinition',
   connector: 'ConnectorDefinition',
-  callout: 'CalloutDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
   const record = child as unknown as Record<string, unknown>;
   if (
-    child.namespace === 'standard' &&
+    child.namespace === 'layout' &&
     (child.type === 'flexLayout' || child.type === 'gridLayout' || child.type === 'overlayLayout')
   ) {
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
@@ -355,11 +375,8 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     sections?.forEach(section => owned.push(section.child));
     return owned;
   }
-  if (child.namespace === 'notation' && child.type === 'callout') {
-    const content = record.content as IRChild | undefined;
-    return content === undefined ? [] : [content];
-  }
-  if (child.namespace === 'notation' && child.type === 'connector') return [];
+  if (child.namespace === 'notation' && ['terminal', 'stage', 'decision', 'junction', 'connector'].includes(child.type))
+    return [];
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
@@ -382,6 +399,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
 
 type PreviewDefinitions = {
   standard: Array<StandardPreviewDefinitionName>;
+  layout: Array<LayoutPreviewDefinitionName>;
   notation: Array<NotationPreviewDefinitionName>;
 };
 
@@ -389,15 +407,15 @@ type PreviewDefinitions = {
 export const collectPreviewDefinitions = (
   children: ReadonlyArray<IRChild>,
   standardAdapterKinds: ReadonlySet<string>,
+  layoutAdapterKinds: ReadonlySet<string>,
   notationAdapterKinds: ReadonlySet<string>,
 ): PreviewDefinitions => {
   const standard = new Set<StandardPreviewDefinitionName>();
+  const layout = new Set<LayoutPreviewDefinitionName>();
   const notation = new Set<NotationPreviewDefinitionName>();
-  const providedStandardKinds = new Set(standardAdapterKinds);
-  if (['flexLayout', 'gridLayout', 'overlayLayout'].some(kind => standardAdapterKinds.has(kind))) {
-    providedStandardKinds.add('flexLayout');
-    providedStandardKinds.add('gridLayout');
-    providedStandardKinds.add('overlayLayout');
+  const providedLayoutKinds = new Set(layoutAdapterKinds);
+  if (LAYOUT_HELPER_ORDER.some(kind => layoutAdapterKinds.has(kind))) {
+    LAYOUT_HELPER_ORDER.forEach(kind => providedLayoutKinds.add(kind));
   }
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
@@ -408,7 +426,15 @@ export const collectPreviewDefinitions = (
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
-        if (!providedStandardKinds.has(child.type)) standard.add(definitionName);
+        if (!standardAdapterKinds.has(child.type)) standard.add(definitionName);
+      } else if (child.namespace === 'layout') {
+        const definitionName = (
+          LAYOUT_DEFINITION_BY_KIND as Readonly<Record<string, LayoutPreviewDefinitionName | undefined>>
+        )[child.type];
+        if (definitionName === undefined) {
+          throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
+        }
+        if (!providedLayoutKinds.has(child.type)) layout.add(definitionName);
       } else if (child.namespace === 'notation') {
         const definitionName = (
           NOTATION_DEFINITION_BY_KIND as Readonly<Record<string, NotationPreviewDefinitionName | undefined>>
@@ -426,20 +452,28 @@ export const collectPreviewDefinitions = (
     if (child.type === 'scope') child.children.forEach(visit);
   };
   children.forEach(visit);
-  return { standard: Array.from(standard), notation: Array.from(notation) };
+  return { standard: Array.from(standard), layout: Array.from(layout), notation: Array.from(notation) };
 };
 
 /** 从 Core child graph 收集 Standard definitions */
 export const collectStandardPreviewDefinitions = (
   children: ReadonlyArray<IRChild>,
   adapterKinds: ReadonlySet<string>,
-): Array<StandardPreviewDefinitionName> => collectPreviewDefinitions(children, adapterKinds, new Set()).standard;
+): Array<StandardPreviewDefinitionName> =>
+  collectPreviewDefinitions(children, adapterKinds, new Set(), new Set()).standard;
+
+/** 从 Core child graph 收集 Layout definitions */
+export const collectLayoutPreviewDefinitions = (
+  children: ReadonlyArray<IRChild>,
+  adapterKinds: ReadonlySet<string>,
+): Array<LayoutPreviewDefinitionName> => collectPreviewDefinitions(children, new Set(), adapterKinds, new Set()).layout;
 
 const standardCanonicalId = (kind: string, embedId: string): string => {
   return kind === 'frame' ? `${embedId}/frame` : embedId;
 };
 
-const notationCanonicalId = (kind: string, embedId: string): string => `${embedId}/${kind}`;
+const notationCanonicalId = (kind: string, embedId: string): string =>
+  kind === 'logicFrame' ? `${embedId}/${kind}` : embedId;
 
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
@@ -457,6 +491,17 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           if (kind === 'frame') ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
         }
       }
+      if (child.namespace === 'layout' && typeof (child as { id?: unknown }).id === 'string') {
+        const kind = child.type;
+        if (LAYOUT_HELPER_ORDER.includes(kind)) {
+          const authoredId = (child as unknown as { id: string }).id;
+          const count = (ctx.layoutCounts.get(kind) ?? 0) + 1;
+          ctx.layoutCounts.set(kind, count);
+          const embedId = `preview-${kind}-${count}`;
+          ctx.generatedIds.set(authoredId, embedId);
+          ctx.generatedIds.set(embedId, embedId);
+        }
+      }
       if (child.namespace === 'notation' && typeof (child as { id?: unknown }).id === 'string') {
         const kind = child.type;
         if (NOTATION_HELPER_ORDER.includes(kind)) {
@@ -467,7 +512,9 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           const generatedId = notationCanonicalId(kind, embedId);
           ctx.generatedIds.set(authoredId, generatedId);
           ctx.generatedIds.set(generatedId, generatedId);
-          ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
+          if (kind === 'logicFrame') {
+            ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
+          }
         }
       }
       previewOwnedChildren(child).forEach(visit);
@@ -478,6 +525,7 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
   children.forEach(visit);
   // The counters are consumed again while emitting helpers.
   ctx.standardCounts.clear();
+  ctx.layoutCounts.clear();
   ctx.notationCounts.clear();
 };
 
@@ -488,25 +536,28 @@ const rewriteNotationTarget = (value: unknown, ctx: Ctx): unknown => {
   return id === target.id ? value : { ...target, id };
 };
 
+/** 只改写 Core Step 明确拥有的目标字段，不递归触碰 meta 或其它普通 JSON */
+const rewriteConnectorStep = (value: unknown, ctx: Ctx): unknown => {
+  if (typeof value !== 'object' || value === null) return value;
+  const step = value as Record<string, unknown>;
+  return {
+    ...step,
+    ...('to' in step ? { to: rewriteNotationTarget(step.to, ctx) } : {}),
+    ...('from' in step ? { from: rewriteNotationTarget(step.from, ctx) } : {}),
+    ...('center' in step ? { center: rewriteNotationTarget(step.center, ctx) } : {}),
+    ...(Array.isArray(step.points) ? { points: step.points.map(point => rewriteNotationTarget(point, ctx)) } : {}),
+  };
+};
+
 const rewriteNotationInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
   if (kind === 'connector') {
     return {
       ...input,
-      from: rewriteNotationTarget(input.from, ctx),
-      to: rewriteNotationTarget(input.to, ctx),
-      ...(Array.isArray((input.routing as { points?: unknown } | undefined)?.points)
-        ? {
-            routing: {
-              ...(input.routing as Record<string, unknown>),
-              points: (input.routing as { points: Array<unknown> }).points.map(point =>
-                rewriteNotationTarget(point, ctx),
-              ),
-            },
-          }
+      ...(Array.isArray(input.children)
+        ? { children: input.children.map(step => rewriteConnectorStep(step, ctx)) }
         : {}),
     };
   }
-  if (kind === 'callout') return { ...input, target: rewriteNotationTarget(input.target, ctx) };
   return input;
 };
 
@@ -523,6 +574,22 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardAdapters.add(adapterName);
   const generatedId = `preview-${record.type}-${count}`;
   const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
+  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
+};
+
+const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+  const record = child as IRChild & { namespace: string; type: string; id?: string };
+  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
+  if (!LAYOUT_HELPER_ORDER.includes(record.type) || !LAYOUT_ADAPTER_ORDER.includes(adapterName)) {
+    throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
+  }
+
+  const count = (ctx.layoutCounts.get(record.type) ?? 0) + 1;
+  ctx.layoutCounts.set(record.type, count);
+  ctx.layoutHelpers.add(record.type);
+  ctx.layoutAdapters.add(adapterName);
+  const generatedId = `preview-${record.type}-${count}`;
+  const input = stripKeys(record, ['namespace', 'type']);
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };
 
@@ -544,6 +611,7 @@ const notationCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
     if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
+    if (child.namespace === 'layout') return layoutCompositeCode(child, indent, ctx);
     if (child.namespace === 'notation') return notationCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
@@ -575,6 +643,9 @@ export const irToVanillaCode = (ir: IRScene): string => {
     standardHelpers: new Set(),
     standardAdapters: new Set(),
     standardCounts: new Map(),
+    layoutHelpers: new Set(),
+    layoutAdapters: new Set(),
+    layoutCounts: new Map(),
     notationHelpers: new Set(),
     notationAdapters: new Set(),
     notationCounts: new Map(),
@@ -597,15 +668,21 @@ export const irToVanillaCode = (ir: IRScene): string => {
   if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
   const standardHelpers = STANDARD_HELPER_ORDER.filter(name => ctx.standardHelpers.has(name));
   const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
+  const layoutHelpers = LAYOUT_HELPER_ORDER.filter(name => ctx.layoutHelpers.has(name));
+  const layoutAdapters = LAYOUT_ADAPTER_ORDER.filter(name => ctx.layoutAdapters.has(name));
   const notationHelpers = NOTATION_HELPER_ORDER.filter(name => ctx.notationHelpers.has(name));
   const notationAdapters = NOTATION_ADAPTER_ORDER.filter(name => ctx.notationAdapters.has(name));
   const definitions = collectPreviewDefinitions(
     ir.children,
     new Set(ctx.standardCounts.keys()),
+    new Set(ctx.layoutCounts.keys()),
     new Set(ctx.notationCounts.keys()),
   );
   if (standardHelpers.length > 0) {
     imports.push(`import { ${[...standardHelpers, ...standardAdapters].join(', ')} } from '@retikz/standard-vanilla';`);
+  }
+  if (layoutHelpers.length > 0) {
+    imports.push(`import { ${[...layoutHelpers, ...layoutAdapters].join(', ')} } from '@retikz/layout-vanilla';`);
   }
   if (notationHelpers.length > 0) {
     imports.push(`import { ${[...notationHelpers, ...notationAdapters].join(', ')} } from '@retikz/notation-vanilla';`);
@@ -613,13 +690,16 @@ export const irToVanillaCode = (ir: IRScene): string => {
   if (definitions.standard.length > 0) {
     imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
   }
+  if (definitions.layout.length > 0) {
+    imports.push(`import { ${definitions.layout.join(', ')} } from '@retikz/layout';`);
+  }
   if (definitions.notation.length > 0) {
     imports.push(`import { ${definitions.notation.join(', ')} } from '@retikz/notation';`);
   }
 
-  const adapters = [...standardAdapters, ...notationAdapters];
+  const adapters = [...standardAdapters, ...layoutAdapters, ...notationAdapters];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
-  const definitionNames = [...definitions.standard, ...definitions.notation];
+  const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.notation];
   const compile =
     definitionNames.length > 0 ? `\nconst compile = { composites: [${definitionNames.join(', ')}] };\n` : '';
   return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapterCode}${compile}`;

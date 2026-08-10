@@ -1,3 +1,4 @@
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { FontSchema } from '../font';
@@ -6,7 +7,7 @@ import { NodeTextAlign } from './constants';
 
 export const TextAlignSchema = z.enum(NodeTextAlign).describe('Text alignment within a multi-line text block.');
 
-export const LineHeightSchema = z.number().positive().describe('Text line height in user units.');
+export const LineHeightSchema = PositiveNumberSchema.describe('Text line height in user units.');
 
 export const TextRunSchema = z
   .object({

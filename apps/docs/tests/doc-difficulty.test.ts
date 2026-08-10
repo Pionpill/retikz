@@ -9,7 +9,7 @@ import {
   DocDifficulty,
   isDocDifficultyVisible,
   kernelSection,
-  standardSection,
+  librarySection,
   vizSection,
 } from '@/modules/docs/data';
 import { filterSectionsByDifficulty, flattenLeaves } from '@/modules/docs/layout';
@@ -117,7 +117,7 @@ describe('document difficulty preference', () => {
 describe('current documentation difficulty assignments', () => {
   const modules = [
     ['kernel', kernelSection],
-    ['standard', standardSection],
+    ['library', librarySection],
     ['diagram', diagramSection],
     ['viz', vizSection],
   ] as const;
@@ -134,7 +134,7 @@ describe('current documentation difficulty assignments', () => {
 
   it.each([
     ['kernel', kernelSection],
-    ['standard', standardSection],
+    ['library', librarySection],
     ['viz', vizSection],
   ] as const)('%s includes explicit Internals documents', (_moduleId, moduleSections) => {
     const difficulties = collectDifficulties(moduleSections.flatMap(section => section.pages));

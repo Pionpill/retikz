@@ -1,4 +1,5 @@
 import { ScalarValueSchema } from '@retikz/data';
+import { NonNegativeIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellSourceKind } from '../../shared';
@@ -88,10 +89,10 @@ const selectorShape = {
   columnIds: uniqueArray(z.string().min(1), 'duplicate column id')
     .optional()
     .describe('Origin column identity membership.'),
-  rowIndices: uniqueArray(z.number().int().nonnegative(), 'duplicate row index')
+  rowIndices: uniqueArray(NonNegativeIntegerSchema, 'duplicate row index')
     .optional()
     .describe('Origin row index membership.'),
-  columnIndices: uniqueArray(z.number().int().nonnegative(), 'duplicate column index')
+  columnIndices: uniqueArray(NonNegativeIntegerSchema, 'duplicate column index')
     .optional()
     .describe('Origin column index membership.'),
   locations: uniqueArray(TableCellLocationSchema, 'duplicate Cell location')

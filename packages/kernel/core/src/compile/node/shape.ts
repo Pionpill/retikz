@@ -1,8 +1,8 @@
 import type { ShapeDefinition } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderCollection } from '../../providers/registry/index';
 import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas';
 
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers/registry/index';
 import { BuiltinShape, JsonObjectSchema } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';

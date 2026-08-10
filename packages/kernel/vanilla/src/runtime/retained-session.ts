@@ -55,6 +55,7 @@ import {
 import { createRetainedCompositeDefinitions, VanillaCompositeRevisionOwnerDefinition } from './retained-composites';
 import { captureRetainedUpdateOptions } from './retained-update-options';
 import { createEmptyRuntimeMeta } from './to-scene';
+import { validateVanillaCoreSource } from './validate-source';
 
 /** 自定义编译驱动运行时输入的领域中立失效 revision */
 const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, number, number, never>({
@@ -152,7 +153,7 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
       composites: coreOptions.composites,
     });
     return Object.freeze({
-      source: normalized.ir,
+      source: validateVanillaCoreSource(normalized.ir),
       runtimeMeta: normalized.runtimeMeta,
       authoringSites: normalized.authoringSites,
       coreOptions: {
@@ -162,7 +163,7 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
     });
   }
   return Object.freeze({
-    source: input,
+    source: validateVanillaCoreSource(input),
     runtimeMeta: createEmptyRuntimeMeta(),
     coreOptions,
     authoringSites: EMPTY_AUTHORING_SITES,

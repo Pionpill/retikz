@@ -1,6 +1,5 @@
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
-import { z } from 'zod';
-
+import { NonNegativeIntegerSchema } from '@retikz/foundation';
 import {
   LayoutAlignment,
   LayoutArtifactContainerSchema,
@@ -8,7 +7,9 @@ import {
   LayoutArtifactRectSchema,
   LayoutContainerBoxSchema,
   LayoutGapSchema,
-} from '../../layout/shared';
+} from '@retikz/layout';
+import { z } from 'zod';
+
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 
@@ -199,7 +200,7 @@ export const LegendPlacedChildArtifactSchema = LayoutArtifactItemBaseSchema.omit
 const LegendItemArtifactSchema = z
   .strictObject({
     key: z.string().min(1).describe('Stable authored item identity.'),
-    sourceIndex: z.number().int().nonnegative().describe('Zero-based authored item order.'),
+    sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
     geometry: LegendArtifactGeometrySchema.describe('Union geometry of the sample and optional label.'),
     sample: LegendPlacedChildArtifactSchema.describe('Resolved sample placement.'),
     label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved label placement, or null when omitted.'),
@@ -222,7 +223,7 @@ export const LegendItemsArtifactSchema = z
 const LegendTickArtifactSchema = z
   .strictObject({
     key: z.string().min(1).describe('Stable authored tick identity.'),
-    sourceIndex: z.number().int().nonnegative().describe('Zero-based authored tick order.'),
+    sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored tick order.'),
     anchor: z
       .strictObject({
         x: z.number().describe('Finite horizontal anchor in Legend allocation coordinates.'),

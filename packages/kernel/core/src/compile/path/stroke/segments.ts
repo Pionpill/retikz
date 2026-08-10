@@ -15,7 +15,7 @@ import {
   outInControlPoints,
   quadSegmentSample,
 } from '../../../shared/geometry';
-import { clipForTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host/target';
+import { clipForTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
 export type StrokeSegmentStep = Extract<IRStep, { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;

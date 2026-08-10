@@ -1,6 +1,6 @@
 import type { AnyPathKindDefinition } from '../../contract';
 
-import { resolveProviderRegistry } from '../registry';
+import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_PATH_KINDS } from './definitions';
 
 const keyOfPathKind = (definition: AnyPathKindDefinition): string => definition.schema.shape.kind.value;

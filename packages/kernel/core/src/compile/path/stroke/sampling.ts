@@ -3,7 +3,7 @@ import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { LowerTex, TextMeasurer } from '../../text';
 
-import { emitLabelPrimitive, tForLabelPosition } from '../host/label';
+import { emitLabelPrimitive, tForLabelPosition } from '../host';
 
 /** stroke step 的几何采样函数 */
 export type StrokeSegmentSampler = (t: number) => SegmentSample;

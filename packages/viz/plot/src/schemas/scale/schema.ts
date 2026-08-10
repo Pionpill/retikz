@@ -1,3 +1,4 @@
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { BUILTIN_SCALE_TYPES, PlotScale } from './constants';
@@ -15,11 +16,11 @@ export const CategoryValueSchema = z
 
 export const DomainPaddingSchema = z
   .union([
-    z.number().nonnegative(),
+    NonNegativeNumberSchema,
     z
       .strictObject({
-        lower: z.number().nonnegative().optional().describe('Padding fraction applied below the lower domain bound'),
-        upper: z.number().nonnegative().optional().describe('Padding fraction applied above the upper domain bound'),
+        lower: NonNegativeNumberSchema.optional().describe('Padding fraction applied below the lower domain bound'),
+        upper: NonNegativeNumberSchema.optional().describe('Padding fraction applied above the upper domain bound'),
       })
       .superRefine((padding, ctx) => {
         if (padding.lower === undefined && padding.upper === undefined) {
@@ -37,11 +38,9 @@ const ContinuousPositionDomainShape = {
   domainPadding: DomainPaddingSchema.optional().describe(
     'Fractional padding added to the resolved domain. Inferred domains default to 0.05; explicit domains default to 0',
   ),
-  singleValueSpan: z
-    .number()
-    .positive()
-    .optional()
-    .describe('Fallback domain span used when the resolved domain collapses to a single value'),
+  singleValueSpan: PositiveNumberSchema.optional().describe(
+    'Fallback domain span used when the resolved domain collapses to a single value',
+  ),
 } as const;
 
 export const LinearScaleSchema = z

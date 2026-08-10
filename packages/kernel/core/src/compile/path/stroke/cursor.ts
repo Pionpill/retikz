@@ -4,7 +4,7 @@ import type { NamespaceStack } from '../../namespace';
 
 import { CompileWarningCode } from '../../constants';
 import { nodeIdFromResolvableTarget } from '../../position';
-import { localPointOfTarget } from '../host/target';
+import { localPointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
 export type StrokeTargetStep = Exclude<

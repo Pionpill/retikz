@@ -34,8 +34,8 @@
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
     "@retikz/foundation": "workspace:^",
+    "@retikz/layout": "workspace:^",
     "@retikz/plot": "workspace:*",
-    "@retikz/standard": "workspace:^",
     "zod": "catalog:"
   },
   "devDependencies": {

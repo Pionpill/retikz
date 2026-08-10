@@ -1,3 +1,4 @@
+import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Side } from '../../shared';
@@ -13,7 +14,7 @@ import {
   PolarPositionSchema,
   PositionSchema,
 } from '../position';
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
+import { AngleDegreesSchema } from '../scalar';
 import { ShapeRefSchema } from '../shape';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
@@ -38,45 +39,45 @@ export const NodeLabelBoundaryPositionSchema = z
 
 export const BoxSpacingSchema = z
   .object({
-    default: z.number().nonnegative().optional().describe('Fallback spacing for all sides.'),
-    x: z.number().nonnegative().optional().describe('Horizontal spacing for left and right sides.'),
-    y: z.number().nonnegative().optional().describe('Vertical spacing for top and bottom sides.'),
-    left: z.number().nonnegative().optional().describe('Left-side spacing.'),
-    right: z.number().nonnegative().optional().describe('Right-side spacing.'),
-    top: z.number().nonnegative().optional().describe('Top-side spacing.'),
-    bottom: z.number().nonnegative().optional().describe('Bottom-side spacing.'),
+    default: NonNegativeNumberSchema.optional().describe('Fallback spacing for all sides.'),
+    x: NonNegativeNumberSchema.optional().describe('Horizontal spacing for left and right sides.'),
+    y: NonNegativeNumberSchema.optional().describe('Vertical spacing for top and bottom sides.'),
+    left: NonNegativeNumberSchema.optional().describe('Left-side spacing.'),
+    right: NonNegativeNumberSchema.optional().describe('Right-side spacing.'),
+    top: NonNegativeNumberSchema.optional().describe('Top-side spacing.'),
+    bottom: NonNegativeNumberSchema.optional().describe('Bottom-side spacing.'),
   })
   .strict()
   .describe('CSS-like box spacing overrides. Side fields override axis fields, then default.');
 
-const BoxSpacingValueSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
+const BoxSpacingValueSchema = z.union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
 export const AxisScaleSchema = z
   .object({
-    default: z.number().positive().optional().describe('Fallback scale factor for both axes.'),
-    x: z.number().positive().optional().describe('Horizontal scale factor.'),
-    y: z.number().positive().optional().describe('Vertical scale factor.'),
+    default: PositiveNumberSchema.optional().describe('Fallback scale factor for both axes.'),
+    x: PositiveNumberSchema.optional().describe('Horizontal scale factor.'),
+    y: PositiveNumberSchema.optional().describe('Vertical scale factor.'),
   })
   .strict()
   .describe('Axis-specific scale overrides. Axis fields override default.');
 
-const AxisScaleValueSchema = z.union([z.number().positive(), AxisScaleSchema]);
+const AxisScaleValueSchema = z.union([PositiveNumberSchema, AxisScaleSchema]);
 
 export const BoxSizeSchema = z
   .object({
-    default: z.number().nonnegative().optional().describe('Fallback size for width and height.'),
-    width: z.number().nonnegative().optional().describe('Width size.'),
-    height: z.number().nonnegative().optional().describe('Height size.'),
+    default: NonNegativeNumberSchema.optional().describe('Fallback size for width and height.'),
+    width: NonNegativeNumberSchema.optional().describe('Width size.'),
+    height: NonNegativeNumberSchema.optional().describe('Height size.'),
   })
   .strict()
   .describe('Box size overrides. Width and height override default.');
 
-const BoxSizeValueSchema = z.union([z.number().nonnegative(), BoxSizeSchema]);
+const BoxSizeValueSchema = z.union([NonNegativeNumberSchema, BoxSizeSchema]);
 
 export const NodeLabelPinSchema = z
   .object({
     stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
-    strokeWidth: z.number().positive().optional().describe('Leader line width (user units); default 1'),
+    strokeWidth: PositiveNumberSchema.optional().describe('Leader line width (user units); default 1'),
     dashPattern: z.array(z.number()).optional().describe('Leader dash pattern lengths in user units.'),
     dashOffset: z
       .number()
@@ -103,13 +104,9 @@ export const NodeLabelSchema = z
       .enum(NodeLabelPlacement)
       .optional()
       .describe('Whether the label is offset outside or inside the selected attachment point. Default `outside`.'),
-    distance: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.',
-      ),
+    distance: NonNegativeNumberSchema.optional().describe(
+      'Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.',
+    ),
     rotate: z
       .union([z.enum(NodeLabelRotateMode), AngleDegreesSchema])
       .optional()
@@ -206,12 +203,10 @@ export const NodeSchema = z
     lineHeight: LineHeightSchema.optional().describe(
       'Line height in user units; falls back to `font.size × 1.2` when omitted.',
     ),
-    maxTextWidth: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.'),
-    strokeWidth: z.number().nonnegative().optional().describe('Border width in user units; defaults to 1 when omitted'),
+    maxTextWidth: PositiveNumberSchema.optional().describe(
+      'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
+    ),
+    strokeWidth: NonNegativeNumberSchema.optional().describe('Border width in user units; defaults to 1 when omitted'),
     dashed: z.boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
     dotted: z.boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
     dashPattern: StrokeDashPatternSchema.optional().describe(
@@ -220,11 +215,9 @@ export const NodeSchema = z
     dashOffset: StrokeDashOffsetSchema.optional().describe(
       'Explicit stroke dash offset in user units. Positive and negative finite values are allowed.',
     ),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Top-level corner radius in user units. Only effective on `rectangle` shape.'),
+    cornerRadius: NonNegativeNumberSchema.optional().describe(
+      'Top-level corner radius in user units. Only effective on `rectangle` shape.',
+    ),
     minimumSize: BoxSizeValueSchema.optional().describe(
       'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
     ),

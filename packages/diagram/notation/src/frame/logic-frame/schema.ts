@@ -1,22 +1,22 @@
 import { ChildSchema, PathBaseSchema } from '@retikz/core';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import {
   LayoutArtifactContainerSchema,
   LayoutArtifactRectSchema,
   LayoutOverflowSchema,
   LayoutSizeSchema,
-} from '@retikz/standard/layout';
+} from '@retikz/layout';
 import { z } from 'zod';
 
 import {
-  LogicCompositeType,
   LogicContentSizeDefault,
   LogicLayoutItemArtifactSchema,
   LogicNeutralStyle,
   LogicNeutralStyleSchema,
   LogicOuterArtifactSchema,
   LogicSpacingSchema,
-  NonBlankStringSchema,
   NOTATION_NAMESPACE,
+  NotationElementType,
 } from '../../shared';
 
 /** LogicFrame 轮廓外观 */
@@ -62,7 +62,7 @@ export const LogicFrameSectionSchema = z
 export const LogicFrameAppearanceSchema = z
   .strictObject({
     style: LogicNeutralStyleSchema.default(LogicNeutralStyle),
-    cornerRadius: z.number().nonnegative().default(8),
+    cornerRadius: NonNegativeNumberSchema.default(8),
     dashPattern: LogicOutlineAppearanceSchema.shape.dashPattern,
     dashOffset: LogicOutlineAppearanceSchema.shape.dashOffset,
     divider: z.union([z.literal(false), LogicOutlineAppearanceCanonicalSchema]).default({
@@ -76,7 +76,7 @@ export const LogicFrameAppearanceSchema = z
 
 const LogicFrameShape = {
   namespace: z.literal(NOTATION_NAMESPACE).describe('Notation composite namespace.'),
-  type: z.literal(LogicCompositeType.LogicFrame).describe('LogicFrame composite discriminator.'),
+  type: z.literal(NotationElementType.LogicFrame).describe('LogicFrame composite discriminator.'),
   id: NonBlankStringSchema.describe('Stable authored LogicFrame identity.'),
   header: LogicFrameRegionSchema.optional().describe('Optional authored header region.'),
   sections: z
@@ -85,7 +85,7 @@ const LogicFrameShape = {
     .describe('Authored sections in stable layout and paint order.'),
   size: LayoutSizeSchema.default(LogicContentSizeDefault).describe('Allocation size policy for the outer block.'),
   padding: LogicSpacingSchema.default(8).describe('Default padding applied to each authored region.'),
-  rowGap: z.number().nonnegative().default(0).describe('Blank spacing between adjacent authored regions.'),
+  rowGap: NonNegativeNumberSchema.default(0).describe('Blank spacing between adjacent authored regions.'),
   overflow: LayoutOverflowSchema.default('visible').describe('Outer content overflow policy.'),
   appearance: LogicFrameAppearanceSchema.default({
     style: LogicNeutralStyle,
@@ -137,7 +137,7 @@ const LogicFrameSectionArtifactSchema = z
 /** LogicFrame 编译产物载荷 */
 export const LogicFrameArtifactSchema = z
   .strictObject({
-    kind: z.literal(LogicCompositeType.LogicFrame).describe('LogicFrame artifact discriminator.'),
+    kind: z.literal(NotationElementType.LogicFrame).describe('LogicFrame artifact discriminator.'),
     id: NonBlankStringSchema.describe('Stable authored LogicFrame identity.'),
     outer: LogicOuterArtifactSchema.describe('Resolved shell, content, and divider geometry union.'),
     container: LayoutArtifactContainerSchema.describe('Resolved header and section content geometry.'),

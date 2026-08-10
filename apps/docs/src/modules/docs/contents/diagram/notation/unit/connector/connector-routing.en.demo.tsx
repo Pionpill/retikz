@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { FoldStepVia } from '@retikz/core';
 import { Connector, Decision, Stage, Terminal } from '@retikz/notation-react';
-import { Layout, Scope } from '@retikz/react';
+import { Layout, Scope, Step } from '@retikz/react';
 
 /** Demonstrates straight, orthogonal, polyline, and labelled Connector routes */
 const Demo: FC = () => (
@@ -22,32 +22,25 @@ const Demo: FC = () => (
         Check
       </Decision>
     </Scope>
-    <Connector
-      id="route-straight"
-      from={{ id: 'route-start' }}
-      to={{ id: 'route-stage' }}
-      label={{ text: 'straight' }}
-    />
+    <Connector id="route-straight">
+      <Step kind="move" to="route-start" />
+      <Step to="route-stage" label={{ text: 'Path steps' }} />
+    </Connector>
     <Connector
       id="route-orthogonal"
-      from={{ id: 'route-stage' }}
-      to={{ id: 'route-check' }}
-      routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
-      label={{ text: '-|', position: 'near-start', side: 'top', distance: 10 }}
+      way={[
+        'route-stage',
+        { label: { text: 'Draw way', position: 'near-start', side: 'top', distance: 10 } },
+        FoldStepVia.HorizontalThenVertical,
+        'route-check',
+      ]}
     />
-    <Connector
-      id="route-polyline"
-      from={{ id: 'route-start' }}
-      to={{ id: 'route-check' }}
-      routing={{
-        kind: 'polyline',
-        points: [
-          [60, 190],
-          [460, 190],
-        ],
-      }}
-      label={{ text: 'polyline' }}
-    />
+    <Connector id="route-polyline">
+      <Step kind="move" to="route-start" />
+      <Step to={[60, 190]} />
+      <Step to={[460, 190]} />
+      <Step to="route-check" label={{ text: 'polyline' }} />
+    </Connector>
   </Layout>
 );
 

@@ -19,7 +19,7 @@ import {
 } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
 import { nodeIdFromResolvableTarget } from '../../position';
-import { clipForTarget, isAutoBoundaryTarget, localPointOfTarget, samePoint } from '../host/target';
+import { clipForTarget, isAutoBoundaryTarget, localPointOfTarget, samePoint } from '../host';
 import { lowerGeneratorStepToCommands } from './lower';
 
 /** 自包含或高阶几何 path step */

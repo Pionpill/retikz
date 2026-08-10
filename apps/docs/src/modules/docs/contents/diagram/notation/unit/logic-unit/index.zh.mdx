@@ -1,0 +1,76 @@
+---
+title: 逻辑单元
+description: Terminal、Stage、Decision 和 Junction 保留 Notation 语义，并轻量下沉为 Core Node
+---
+
+逻辑单元是保留 `notation` namespace 的轻量语义 IR。Terminal、Stage、Decision 和 Junction 在持久化数据中仍可被工具、LLM 与未来 Graph presentation 明确识别；编译时，每个单元通过自己的 Definition 一对一下沉为同 id 的 Core `Node`
+
+## 用法
+
+```tsx
+import { Layout, Text } from '@retikz/react';
+import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
+```
+
+```tsx
+<Layout width={440} height={180}>
+  <Terminal id="start" position={[20, 70]}>
+    Start
+  </Terminal>
+  <Stage id="step" position={[130, 70]}>
+    Process
+  </Stage>
+  <Decision id="check" position={[250, 70]}>
+    <Text>Ready?</Text>
+  </Decision>
+  <Junction id="join" position={[380, 80]} />
+</Layout>
+```
+
+字符串 children 会成为 Node 文本，也可以像 Core `Node` 一样使用 `<Text>`。适用的 Node props（例如 `fill`、`padding`、`minimumSize` 和 `position`）继续透传，但 `namespace`、语义 `type` 和固定 `shape` 由逻辑单元拥有
+
+| 单元       | 固定 shape           | 逻辑职责           | 默认样式                                          |
+| ---------- | -------------------- | ------------------ | ------------------------------------------------- |
+| `Terminal` | capsule（圆角矩形）  | 流程起点或终点     | minimum `48 × 24`，padding `{ x: 12, y: 6 }`      |
+| `Stage`    | 圆角矩形，radius `8` | 流程中的处理或动作 | padding `8`                                       |
+| `Decision` | 扁菱形，宽高比 `1.8` | 条件或分支         | padding `{ x: 3, y: 2 }`                          |
+| `Junction` | circle               | 分叉、汇合或延续点 | minimum `8 × 8`，padding `0`，fill `currentColor` |
+
+## 示例
+
+<ComponentPreview files="logic-unit" size="lg" />
+
+直接 IR 使用对应 factory，并在 Core compile options 中显式注入实际使用的 Definition：
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createStage, StageDefinition } from '@retikz/notation';
+
+const stage = createStage({ id: 'step', position: [0, 0], text: 'Process' });
+// stage.namespace === 'notation'；stage.type === 'stage'
+const scene = compileToScene({ version: 1, type: 'scene', children: [stage] }, { composites: [StageDefinition] });
+```
+
+Vanilla builder 返回 embed，而不是提前抹掉语义的 Core Node。adapter 使用 embed id 创建同 id 的规范 `IRStage`，并贡献 `StageDefinition`：
+
+```ts
+import { StageVanillaAdapter, stage } from '@retikz/notation-vanilla';
+
+const step = stage('step', { position: [0, 0], text: 'Process' });
+const adapters = [StageVanillaAdapter];
+```
+
+以下 recipe 仅存在于文档中，用于展示组合方式，不会新增 `Process`、`Class` 或 `Data` export
+
+<ComponentPreview files="class-recipe" size="lg" caption="使用 LogicFrame header 和 typed section 的 Class recipe" />
+
+<ComponentPreview files="data-recipe" size="lg" caption="使用中性 Stage 与 Decision 的 Data recipe" />
+
+## 语义边界
+
+逻辑单元只拥有可持久化的图式身份、固定 shape 与默认值，不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Node 的布局、样式、主题、target、编译和 Scene 输出继续由 Core 负责
+
+## 相关
+
+- [LogicFrame](/diagram/notation/frame/logic-frame)：可复用布局容器
+- [Connector](/diagram/notation/unit/connector)：连接 authored identity

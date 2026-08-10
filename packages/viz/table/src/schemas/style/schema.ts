@@ -1,10 +1,11 @@
 import { CssColorSchema, FontSchema, OpacitySchema, PaintValueSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableLineBorderSchema } from '../border';
 import { TableThemeToken } from './constants';
 
-const nonBlankColorSchema = CssColorSchema.refine(value => value.trim().length > 0, {
+const nonBlankColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
   message: 'Table style color must not be empty or whitespace.',
 });
 

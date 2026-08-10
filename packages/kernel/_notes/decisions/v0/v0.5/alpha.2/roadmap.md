@@ -1,6 +1,6 @@
-# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme token、Scope reuse、可选 Inspector、Foundation 与 Math affine
+# v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme token、Scope reuse、可选 Inspector、Foundation Schema 与 Math affine
 
-- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15 Proposed，ADR-13 Superseded，alpha.2 仍为 authored Scope output 与轻量 Theme 解析收口重新打开
+- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15 Proposed，ADR-13 Superseded，alpha.2 仍为 authored Scope output 与轻量 Theme 解析重新打开
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md)
 
@@ -19,6 +19,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 本 milestone 另登记 ADR-15 轻量 Theme IR 与可扩展 Style 解析。它取代 ADR-13 将 namespaced token bag 持久化到 Theme IR 的决策，保留 Scene / Scope selector 继承并将完整默认值收回 Core、Plot 与 Chart 各自的 owner-local style resolver。
 
 本 milestone 进一步登记 ADR-16 二维仿射矩阵原子。Math 只提供 SVG / Canvas 同序的六元组、运行时不可变单位矩阵、固定顺序复合与点映射；Render hydration 与 TeX SVG lowering 直接复用该真源，仍分别拥有 Scene 编排、SVG parser、可逆性、similarity、stroke policy 与领域诊断。
+
+本 milestone 另登记 ADR-17 Foundation 基础 schema 原子。它修改 ADR-14 的零生产依赖与 schema 排除边界，允许 Foundation 以 Zod 作为唯一生产依赖，统一无领域、非变换的 string / number 叶子校验；完整对象、IR、默认值、领域 refinement 与诊断继续由各 owner 负责。
 
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
@@ -42,6 +44,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-14](./14-foundation-package.md)                 | Accepted   | Foundation 基础契约包与依赖归属        | 冻结跨包原子契约、direct dependency、非空字符串语义与结构化错误兼容边界                             |
 | [ADR-15](./15-lightweight-theme-resolution.md)       | Proposed   | 轻量 Theme IR 与领域 Token 解析        | 冻结 selector-only Theme、Core shared colors 与 owner-local token resolution                        |
 | [ADR-16](./16-affine-matrix-primitives.md)           | Accepted   | 二维仿射矩阵原子                       | 冻结六元组 ABI、运行时不可变单位矩阵、复合顺序、点映射与 Math / Render / TeX 边界                   |
+| [ADR-17](./17-foundation-schema-primitives.md)       | Accepted   | Foundation 基础 Schema 原子            | 冻结唯一 Zod 依赖、基础 string / number schema、旧 owner 迁移与领域组合边界                         |
 
 ## 当前进度
 
@@ -55,10 +58,11 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
 - ADR-11 已完成 Proposed 设计并完成 Core 实现、Standard consumers、测试与双语文档，尚未获得人工 Accepted 收口。
 - ADR-12 已完成 Core 领域中立观测底座、独立 `@retikz/inspect`、Render 普通只读图层、React / Vanilla 通用驱动和 Standard 可选子入口迁移，并于 2026-08-07 获人工接受。
-- ADR-14 已完成零依赖 Foundation 包、七个根契约、跨包 direct dependency 迁移、typed string 失败语义、结构化领域错误兼容、对抗复验与双语文档，并于 2026-08-09 获人工接受。
+- ADR-14 已完成 Foundation 初始包、七个根契约、跨包 direct dependency 迁移、typed string 失败语义、结构化领域错误兼容、对抗复验与双语文档，并于 2026-08-09 获人工接受；其零依赖、无 schema 与七根导出边界随后由 ADR-17 演进。
 - ADR-13 的 namespaced Theme token bag、Definition registry 与跨 Scope token override 决策已由 ADR-15 取代；其 shared colors 与领域 owner resolver 边界由 ADR-15 继承并收窄。
 - ADR-15 已完成 Proposed 设计并进入 Core、Plot、Chart 的 selector/style resolver 实现，等待 Architecture Gate 与人工确认后才进入 Accepted 收口。
 - ADR-16 已完成 Math 仿射矩阵公共原子、Render / TeX 单一真源迁移、顺序敏感回归、对抗验证与双语文档，并于 2026-08-09 获人工接受。
+- ADR-17 已完成六个 Foundation 标量 schema、Core / Notation 旧 owner 移除、跨 Kernel / Standard / Viz 同义叶子迁移、对抗复验、发布产物验证与双语文档，并于 2026-08-09 获人工接受。
 
 ## 执行批次
 
@@ -79,6 +83,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 13   | ADR-14 | 当前 Kernel release group `0.5.0-alpha.2` 的 Foundation owner 与依赖边界已确认 | Foundation 根契约、直接依赖拓扑、断言语义与结构化错误兼容边界可独立验证                      |
 | 14   | ADR-15 | ADR-13 的 token bag 已确认造成持久化 IR 负担                                   | 轻量 selector、Core / owner-local style registry、token resolution 与 shared colors 语义稳定 |
 | 15   | ADR-16 | Render hydration 与 TeX SVG lowering 已证明同义复用六元组仿射计算              | Math 成为唯一计算真源，两个 consumer 保持现有 parser、Scene、stroke 与诊断行为               |
+| 16   | ADR-17 | 多个独立包已证明同义基础 string / number Zod 约束重复                          | Foundation 成为唯一原子 schema 真源，完整 owner schema 与既有行为保持稳定                    |
 
 批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
@@ -95,6 +100,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 9. Core 只发布最终 settled owner output；`@retikz/inspect` 以显式 registry 生成辅助内容，继承 occurrence 的有效 Theme / style 并复用普通 IR / Definition / compile，但使用隔离 namespace，seal 后不保留 public id / meta / animation，且与主 Scene 的 layout、resource、identity、artifact、patch、命中和水合语义隔离。
 10. Foundation 只提供无领域原子契约；实际 consumer 直接依赖其根入口，`@retikz/math` 在没有真实消费时不声明空依赖，Core / Runtime 旧基础类型出口不形成第二真源，领域错误与私有 identity / Diagnostic 边界保持不变。
 11. 通用二维仿射计算由 Math 以 plain numeric tuple 单一真源提供；Render 与 TeX 只组合该原子，不把 Scene、SVG parser、stroke 或诊断语义下沉。
+12. Foundation 只以 Zod 为生产依赖并拥有无领域、非变换的 string / number schema 原子；完整对象、IR、默认值、领域 refinement、错误包装与 Diagnostic 留在对应 owner。
 
 ## Milestone 验收
 
@@ -112,6 +118,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-14 在接受前必须证明 Foundation 根契约、直接依赖拓扑、Math 无真实消费时不声明依赖、typed string 失败语义和 Runtime / Render / Plot / Chart 错误兼容边界稳定，且不新增 IR、Scene、renderer 或领域 registry。
 - ADR-15 在接受前必须证明 selector-only Theme、Core / Plot / Chart 同名 style registry、领域 definition 缺失时的 fail-loud 语义、React / Vanilla / plain JSON 等价性与既有 token cascade 局部 override 优先级稳定。
 - ADR-16 已证明六元组 ABI、运行时不可变单位矩阵、复合顺序与点映射稳定；Math 保持零依赖，TeX / Render 使用同一真源，同时 SVG parser、Scene hydration、可逆性、stroke 与诊断行为不变。
+- ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、领域 refinement 或 Diagnostic。
 
 ## 后续性能遗留
 
@@ -127,7 +134,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - Plot / Table 的完整领域增量算法；alpha.2 只要求至少一个跨 Tier fixture 验证通用契约。
 - Box / Flex / Grid / Overlay solver、LayoutItem schema、Standard baseline alignment policy 与完整 CSS intrinsic sizing；Core 只提供领域中立的 alignment guide contract。
 - 为既有 `0.x` API 保留兼容桥接。
-- ADR-16 之外的 Foundation / Math 通用 helper、领域错误迁移和包拓扑重设计；Foundation 仅按 ADR-14 冻结的最小契约收口。
+- ADR-17 之外的 Foundation / Math 通用 helper、领域错误迁移和包拓扑重设计；Foundation schema 只按 ADR-17 冻结的六个原子收口。
 
 ## 授权边界
 

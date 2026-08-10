@@ -12,9 +12,7 @@ import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../s
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
 import { fallbackMeasurer } from '../../text';
-import { normalizePathSteps } from '../host/relative';
-import { resolvePathBaseProps } from '../host/resolve';
-import { localPointOfTarget } from '../host/target';
+import { localPointOfTarget, normalizePathSteps, resolvePathBaseProps } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, pathEndpointArrowSpecs, resolvePathEndpointDecorations } from './decorations';

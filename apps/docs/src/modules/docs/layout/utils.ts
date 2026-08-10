@@ -11,6 +11,9 @@ import type { DocLocation, LeafNode } from './types';
 /** Viz 内拥有独立更新日志的分区 */
 const VIZ_CHANGELOG_SECTIONS = new Set(['data', 'table', 'plot']);
 
+/** Library 内拥有独立更新日志的分区 */
+const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'layout']);
+
 /** 文档数据中的稳定图标 id 到 Lucide 组件的唯一映射 */
 const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, LucideIcon> = {
   'chart-scatter': ChartScatter,
@@ -21,7 +24,9 @@ export const isChangelogLocation = (loc: DocLocation | null): boolean =>
   loc?.pageId === 'changelog' &&
   (loc.moduleId === 'viz'
     ? loc.sectionId !== null && VIZ_CHANGELOG_SECTIONS.has(loc.sectionId)
-    : loc.sectionId === 'releases');
+    : loc.moduleId === 'library'
+      ? loc.sectionId !== null && LIBRARY_CHANGELOG_SECTIONS.has(loc.sectionId)
+      : loc.sectionId === 'releases');
 
 /** location -> URL / 文件路径所需的 segment 数组。 */
 export const docPathSegments = (loc: DocLocation): Array<string> => {

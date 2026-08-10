@@ -8,11 +8,15 @@ import type { ScenePrimitive } from '@retikz/core';
 
 import { AnimationProperty } from '@retikz/core';
 
-import type { AnimationPropertyRegistry } from '../animation/registry';
-import type { EasingRegistry } from '../animation/types';
+import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 
-import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../animation/channels';
-import { evaluateTrack } from '../animation/evaluate';
+import {
+  classifyProperty,
+  evaluateTrack,
+  isAutoplayTrigger,
+  primHasStroke,
+  resolveTransformOrigin,
+} from '../animation';
 import { commandEndpoint } from '../shared';
 import { DEG_TO_RAD } from './path-geometry';
 

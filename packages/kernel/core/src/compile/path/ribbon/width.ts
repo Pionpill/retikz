@@ -2,7 +2,7 @@
 import type { IRPathRibbonOptions, IRRibbonSampling, IRRibbonWidth } from '../../../schemas';
 import type { RibbonLike } from './types';
 
-import { providerDefinitionOf } from '../../../providers/registry';
+import { providerDefinitionOf } from '../../../providers/registry/index';
 import { JsonObjectSchema } from '../../../schemas';
 import { parseProviderPayload } from '../../provider-payload';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
