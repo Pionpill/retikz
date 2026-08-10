@@ -47,7 +47,7 @@ const sourceOf = (resolution: PlotThemeResolution, token: string) =>
   resolution.tokenSources.find(source => source.token === token);
 
 describe('Plot theme resolver', () => {
-  it('通过同名自定义 style definition 解析完整 Plot token 基线', () => {
+  it('让同名自定义 Plot style palette 高于 Core shared colors', () => {
     const define = (plot as Record<string, unknown>).definePlotThemeStyle as
       | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
       | undefined;
@@ -78,13 +78,13 @@ describe('Plot theme resolver', () => {
     );
 
     expect(result.palette).toMatchObject({
-      categorical: ['#core-categorical'],
-      series: ['#core-categorical'],
-      sector: ['#core-categorical'],
+      categorical: ['#brand-categorical'],
+      series: ['#brand-series'],
+      sector: ['#brand-sector'],
     });
     expect(sourceOf(result, PlotThemeToken.PlotPaletteCategorical)).toMatchObject({
-      kind: ThemeTokenSource.Inherit,
-      path: '$theme/colors/categorical',
+      kind: ThemeTokenSource.Local,
+      path: '$style/brand/light/plot.palette.categorical',
     });
   });
 
@@ -139,9 +139,16 @@ describe('Plot theme resolver', () => {
     }
   });
 
-  it('区分 Plot style baseline 与 Core categorical 继承层', () => {
+  it('让内建 Plot definition 从 effective Core theme 构造 categorical baseline', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark));
+    const effectiveTheme: ResolvedTheme = {
+      ...themeOf(ThemeStyle.Academic, ThemeMode.Dark),
+      colors: {
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        categorical: ['#effective-core'],
+      },
+    };
+    const result = resolve(effectiveTheme);
 
     expect(sourceOf(result, PlotThemeToken.PlotSurfaceFill)).toMatchObject({
       kind: ThemeTokenSource.Local,
@@ -152,10 +159,11 @@ describe('Plot theme resolver', () => {
       PlotThemeToken.PlotPaletteSeries,
       PlotThemeToken.PlotPaletteSector,
     ]) {
+      expect(result.tokens[token]).toEqual(effectiveTheme.colors.categorical);
       expect(sourceOf(result, token)).toEqual({
         token,
-        kind: ThemeTokenSource.Inherit,
-        path: '$theme/colors/categorical',
+        kind: ThemeTokenSource.Local,
+        path: `$style/academic/dark/${token}`,
       });
     }
   });

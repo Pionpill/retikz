@@ -40,8 +40,8 @@ describe('Chart inspection', () => {
     expect(style.plot.tokenSources).toHaveLength(40);
     expect(style.plot.tokenSources.find(source => source.token === PlotThemeToken.PlotPaletteCategorical)).toEqual({
       token: PlotThemeToken.PlotPaletteCategorical,
-      kind: ThemeTokenSource.Inherit,
-      path: '$theme/colors/categorical',
+      kind: ThemeTokenSource.Local,
+      path: '$style/neutral/light/plot.palette.categorical',
     });
     expect(inspection).toEqual({
       chart: { type: 'scatter', id: 'sales' },

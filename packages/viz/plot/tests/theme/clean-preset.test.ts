@@ -1,4 +1,4 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { getPlotThemePreset, PlotThemeToken } from '../../src';
@@ -27,6 +27,19 @@ describe('Clean Plot theme preset', () => {
       expect(preset[PlotThemeToken.AxisTickMark]).toBe(false);
       expect(gridOpacity).toBeGreaterThan(0);
       expect(gridOpacity).toBeLessThan(0.5);
+    }
+  });
+
+  it.each(Object.values(ThemeMode))('%s 复用 Core categorical palette', mode => {
+    const expectedPalette = resolveCoreThemeColors(ThemeStyle.Clean, mode).categorical;
+    const preset = getPlotThemePreset(ThemeStyle.Clean, mode);
+
+    for (const token of [
+      PlotThemeToken.PlotPaletteCategorical,
+      PlotThemeToken.PlotPaletteSeries,
+      PlotThemeToken.PlotPaletteSector,
+    ]) {
+      expect(preset[token]).toEqual(expectedPalette);
     }
   });
 });

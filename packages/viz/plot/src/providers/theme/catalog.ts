@@ -1,11 +1,11 @@
-import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
+import type { BuiltinThemeStyleValue, CssColorValue, NonEmptyReadonlyArray, ThemeModeValue } from '@retikz/core';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../schemas';
 
 import { LegendSymbolFit, PlotResolvedThemeTokensSchema, PlotThemeToken } from '../../schemas';
-import { DEFAULT_PLOT_COLORS, PlotColorScheme } from '../scale/shared';
+import { PlotColorScheme } from '../scale/shared';
 
 type PresetStructure = Readonly<{
   fontFamily: string;
@@ -41,7 +41,6 @@ type PresetPaint = Readonly<{
   gridOpacity: number;
   legendTitle: string;
   legendLabel: string;
-  palette: ReadonlyArray<string>;
 }>;
 
 const structures: Record<BuiltinThemeStyleValue, PresetStructure> = {
@@ -148,153 +147,105 @@ const paints: Record<BuiltinThemeStyleValue, Record<ThemeModeValue, PresetPaint>
       gridOpacity: 0.15,
       legendTitle: 'currentColor',
       legendLabel: 'currentColor',
-      palette: DEFAULT_PLOT_COLORS,
     },
     [ThemeMode.Dark]: {
-      surface: '#18181B',
-      foreground: '#FAFAFA',
-      label: '#D4D4D8',
-      axisLine: '#3F3F46',
-      tickLabel: '#D4D4D8',
-      axisTitle: '#E4E4E7',
-      grid: '#3F3F46',
+      surface: 'hsl(240, 5.88%, 10%)',
+      foreground: 'hsl(0, 0%, 98.04%)',
+      label: 'hsl(240, 4.88%, 83.92%)',
+      axisLine: 'hsl(240, 5.26%, 26.08%)',
+      tickLabel: 'hsl(240, 4.88%, 83.92%)',
+      axisTitle: 'hsl(240, 5.88%, 90%)',
+      grid: 'hsl(240, 5.26%, 26.08%)',
       gridOpacity: 0.55,
-      legendTitle: '#E4E4E7',
-      legendLabel: '#D4D4D8',
-      palette: ['#4C78A8', '#59A14F', '#F28E2B', '#B07AA1', '#E15759'],
+      legendTitle: 'hsl(240, 5.88%, 90%)',
+      legendLabel: 'hsl(240, 4.88%, 83.92%)',
     },
   },
   [ThemeStyle.Academic]: {
     [ThemeMode.Light]: {
-      surface: '#FFFFFF',
-      foreground: '#1F2937',
-      label: '#374151',
-      axisLine: '#9CA3AF',
-      tickLabel: '#4B5563',
-      axisTitle: '#374151',
-      grid: '#D1D5DB',
+      surface: 'hsl(0, 0%, 100%)',
+      foreground: 'hsl(215, 27.91%, 16.86%)',
+      label: 'hsl(216.92, 19.12%, 26.67%)',
+      axisLine: 'hsl(217.89, 10.61%, 64.9%)',
+      tickLabel: 'hsl(215, 13.79%, 34.12%)',
+      axisTitle: 'hsl(216.92, 19.12%, 26.67%)',
+      grid: 'hsl(216, 12.2%, 83.92%)',
       gridOpacity: 0.6,
-      legendTitle: '#374151',
-      legendLabel: '#4B5563',
-      palette: [
-        '#4E79A7',
-        '#F28E2B',
-        '#E15759',
-        '#76B7B2',
-        '#59A14F',
-        '#EDC948',
-        '#B07AA1',
-        '#FF9DA7',
-        '#9C755F',
-        '#BAB0AC',
-      ],
+      legendTitle: 'hsl(216.92, 19.12%, 26.67%)',
+      legendLabel: 'hsl(215, 13.79%, 34.12%)',
     },
     [ThemeMode.Dark]: {
-      surface: '#111827',
-      foreground: '#E5E7EB',
-      label: '#D1D5DB',
-      axisLine: '#64748B',
-      tickLabel: '#CBD5E1',
-      axisTitle: '#E2E8F0',
-      grid: '#334155',
+      surface: 'hsl(220.91, 39.29%, 10.98%)',
+      foreground: 'hsl(220, 13.04%, 90.98%)',
+      label: 'hsl(216, 12.2%, 83.92%)',
+      axisLine: 'hsl(215.38, 16.32%, 46.86%)',
+      tickLabel: 'hsl(212.73, 26.83%, 83.92%)',
+      axisTitle: 'hsl(214.29, 31.82%, 91.37%)',
+      grid: 'hsl(215.29, 25%, 26.67%)',
       gridOpacity: 0.6,
-      legendTitle: '#E2E8F0',
-      legendLabel: '#CBD5E1',
-      palette: [
-        '#60A5FA',
-        '#FDBA74',
-        '#F87171',
-        '#5EEAD4',
-        '#86EFAC',
-        '#FDE047',
-        '#D8B4FE',
-        '#FDA4AF',
-        '#D6A77A',
-        '#CBD5E1',
-      ],
+      legendTitle: 'hsl(214.29, 31.82%, 91.37%)',
+      legendLabel: 'hsl(212.73, 26.83%, 83.92%)',
     },
   },
   [ThemeStyle.Vibrant]: {
     [ThemeMode.Light]: {
-      surface: '#E5ECF6',
-      foreground: '#2A3F5F',
-      label: '#2A3F5F',
-      axisLine: '#AAB8C2',
-      tickLabel: '#2A3F5F',
-      axisTitle: '#2A3F5F',
-      grid: '#FFFFFF',
+      surface: 'hsl(215.29, 48.57%, 93.14%)',
+      foreground: 'hsl(216.23, 38.69%, 26.86%)',
+      label: 'hsl(216.23, 38.69%, 26.86%)',
+      axisLine: 'hsl(205, 16.44%, 71.37%)',
+      tickLabel: 'hsl(216.23, 38.69%, 26.86%)',
+      axisTitle: 'hsl(216.23, 38.69%, 26.86%)',
+      grid: 'hsl(0, 0%, 100%)',
       gridOpacity: 1,
-      legendTitle: '#2A3F5F',
-      legendLabel: '#425466',
-      palette: [
-        '#636EFA',
-        '#EF553B',
-        '#00CC96',
-        '#AB63FA',
-        '#FFA15A',
-        '#19D3F3',
-        '#FF6692',
-        '#B6E880',
-        '#FF97FF',
-        '#FECB52',
-      ],
+      legendTitle: 'hsl(216.23, 38.69%, 26.86%)',
+      legendLabel: 'hsl(210, 21.43%, 32.94%)',
     },
     [ThemeMode.Dark]: {
-      surface: '#1E293B',
-      foreground: '#F8FAFC',
-      label: '#E2E8F0',
-      axisLine: '#64748B',
-      tickLabel: '#E2E8F0',
-      axisTitle: '#F1F5F9',
-      grid: '#475569',
+      surface: 'hsl(217.24, 32.58%, 17.45%)',
+      foreground: 'hsl(210, 40%, 98.04%)',
+      label: 'hsl(214.29, 31.82%, 91.37%)',
+      axisLine: 'hsl(215.38, 16.32%, 46.86%)',
+      tickLabel: 'hsl(214.29, 31.82%, 91.37%)',
+      axisTitle: 'hsl(210, 40%, 96.08%)',
+      grid: 'hsl(215.29, 19.32%, 34.51%)',
       gridOpacity: 1,
-      legendTitle: '#F1F5F9',
-      legendLabel: '#E2E8F0',
-      palette: [
-        '#636EFA',
-        '#EF553B',
-        '#00CC96',
-        '#AB63FA',
-        '#FFA15A',
-        '#19D3F3',
-        '#FF6692',
-        '#B6E880',
-        '#FF97FF',
-        '#FECB52',
-      ],
+      legendTitle: 'hsl(210, 40%, 96.08%)',
+      legendLabel: 'hsl(214.29, 31.82%, 91.37%)',
     },
   },
   [ThemeStyle.Clean]: {
     [ThemeMode.Light]: {
       surface: 'none',
-      foreground: '#24231F',
-      label: '#514F49',
-      axisLine: '#8A877F',
-      tickLabel: '#66635C',
-      axisTitle: '#4A4842',
-      grid: '#77736A',
+      foreground: 'hsl(48, 7.46%, 13.14%)',
+      label: 'hsl(45, 5.19%, 30.2%)',
+      axisLine: 'hsl(43.64, 4.49%, 51.96%)',
+      tickLabel: 'hsl(42, 5.15%, 38.04%)',
+      axisTitle: 'hsl(45, 5.71%, 27.45%)',
+      grid: 'hsl(41.54, 5.78%, 44.12%)',
       gridOpacity: 0.18,
-      legendTitle: '#3E3C37',
-      legendLabel: '#66635C',
-      palette: ['#0072B2', '#E69F00', '#009E73', '#CC79A7', '#56B4E9', '#D55E00', '#F0E442', '#000000'],
+      legendTitle: 'hsl(42.86, 5.98%, 22.94%)',
+      legendLabel: 'hsl(42, 5.15%, 38.04%)',
     },
     [ThemeMode.Dark]: {
       surface: 'none',
-      foreground: '#F2F0EA',
-      label: '#D0CDC4',
-      axisLine: '#77736A',
-      tickLabel: '#C0BDB4',
-      axisTitle: '#DAD7CE',
-      grid: '#B8B4AA',
+      foreground: 'hsl(45, 23.53%, 93.33%)',
+      label: 'hsl(45, 11.32%, 79.22%)',
+      axisLine: 'hsl(41.54, 5.78%, 44.12%)',
+      tickLabel: 'hsl(45, 8.7%, 72.94%)',
+      axisTitle: 'hsl(45, 13.95%, 83.14%)',
+      grid: 'hsl(42.86, 8.97%, 69.41%)',
       gridOpacity: 0.18,
-      legendTitle: '#E2DFD6',
-      legendLabel: '#C0BDB4',
-      palette: ['#56B4E9', '#F0B44D', '#4DD4AC', '#E58AC8', '#7AC7F0', '#FF7A59', '#F6E36B', '#E5E7EB'],
+      legendTitle: 'hsl(45, 17.14%, 86.27%)',
+      legendLabel: 'hsl(45, 8.7%, 72.94%)',
     },
   },
 };
 
-const createPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens => {
+const createPreset = (
+  style: BuiltinThemeStyleValue,
+  mode: ThemeModeValue,
+  categorical: NonEmptyReadonlyArray<CssColorValue>,
+): IRPlotResolvedThemeTokens => {
   const structure = structures[style];
   const paint = paints[style][mode];
   const tickMark =
@@ -340,21 +291,17 @@ const createPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRPl
     [PlotThemeToken.LegendSymbolSize]: structure.symbolSize,
     [PlotThemeToken.LegendSymbolScale]: 1,
     [PlotThemeToken.LegendSymbolFit]: LegendSymbolFit.Fit,
-    [PlotThemeToken.PlotPaletteCategorical]: [...paint.palette],
-    [PlotThemeToken.PlotPaletteSeries]: [...paint.palette],
-    [PlotThemeToken.PlotPaletteSector]: [...paint.palette],
+    [PlotThemeToken.PlotPaletteCategorical]: [...categorical],
+    [PlotThemeToken.PlotPaletteSeries]: [...categorical],
+    [PlotThemeToken.PlotPaletteSector]: [...categorical],
     [PlotThemeToken.PlotPaletteSequential]: structure.sequential,
     [PlotThemeToken.PlotPaletteDiverging]: structure.diverging,
   });
 };
 
-const presets = Object.fromEntries(
-  Object.values(ThemeStyle).map(style => [
-    style,
-    Object.fromEntries(Object.values(ThemeMode).map(mode => [mode, createPreset(style, mode)])),
-  ]),
-) as Record<BuiltinThemeStyleValue, Record<ThemeModeValue, IRPlotResolvedThemeTokens>>;
-
 /** 读取一个内建 Plot style/mode 的完整 token map */
-export const getPlotThemePreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): IRPlotResolvedThemeTokens =>
-  structuredClone(presets[style][mode]);
+export const getPlotThemePreset = (
+  style: BuiltinThemeStyleValue,
+  mode: ThemeModeValue,
+  categorical: NonEmptyReadonlyArray<CssColorValue> = resolveCoreThemeColors(style, mode).categorical,
+): IRPlotResolvedThemeTokens => structuredClone(createPreset(style, mode, categorical));

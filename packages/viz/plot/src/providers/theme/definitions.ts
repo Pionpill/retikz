@@ -8,7 +8,7 @@ import { definePlotThemeStyle } from '../../contract';
 import { getPlotThemePreset } from './catalog';
 
 const resolveBuiltinPlotThemeStyle = (style: BuiltinThemeStyleValue, theme: ResolvedTheme): IRPlotResolvedThemeTokens =>
-  getPlotThemePreset(style, theme.mode);
+  getPlotThemePreset(style, theme.mode, theme.colors.categorical);
 
 /** 所有 Plot 内置 Theme style definitions */
 export const BUILTIN_PLOT_THEME_STYLES = (Object.values(ThemeStyle) as Array<BuiltinThemeStyleValue>).map(style =>

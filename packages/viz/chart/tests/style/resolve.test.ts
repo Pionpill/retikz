@@ -73,7 +73,7 @@ describe('Chart style resolution', () => {
       kind: ThemeTokenSource.Local,
       path: '$style/brand/light/chart.padding',
     });
-    expect(result.inspection.style.plot.palette.series).toEqual(['#core-categorical']);
+    expect(result.inspection.style.plot.palette.series).toEqual(['#brand-series']);
   });
 
   it('分别报告缺失的 Chart 与 Plot style definition', () => {

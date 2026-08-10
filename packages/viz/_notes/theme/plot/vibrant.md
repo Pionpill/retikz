@@ -26,6 +26,8 @@
 ## 边界与覆盖
 
 - 高色度集中于 marks 和有明确语义的强调；文字、axis、grid、legend 与 surface 使用受控色度。
+- 内建 Plot preset 从 Core 注入 categorical / series / sector；Plot 只维护 sequential / diverging 与领域颜色角色。
+- Plot style definition 显式提供的 palette 高于 Core baseline，之后仍可由 `plotThemeTokens` 与结构化 `plotTheme` 覆盖。
 - 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于内置 Vibrant；不得按 mode 调色、重排、补全或替换用户颜色。
 - Plot 不拥有 hover、selection 或 Chart presentation；Theme 不创造新的交互语义或 mark 渐变。
 - mark、guide 与 lowering 消费解析后的有效主题，不增加 `ThemeStyle.Vibrant` 分支。
