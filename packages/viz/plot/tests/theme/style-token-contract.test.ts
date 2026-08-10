@@ -40,6 +40,8 @@ describe('Plot style token contract', () => {
       ...baseSpec,
       plotThemeTokens: {
         'plot.area.fill': 'none',
+        'axis.title.enabled': false,
+        'axis.title.padding': 6,
         'plot.palette.series': ['#2563eb', '#f97316'],
       },
     });
@@ -72,6 +74,7 @@ describe('Plot style token contract', () => {
 
     for (const [value, path] of [
       [{ [PlotThemeToken.AxisLineStrokeWidth]: -1 }, [PlotThemeToken.AxisLineStrokeWidth]],
+      [{ [PlotThemeToken.AxisTitlePadding]: -1 }, [PlotThemeToken.AxisTitlePadding]],
       [{ [PlotThemeToken.PlotPaletteSeries]: [] }, [PlotThemeToken.PlotPaletteSeries]],
       [{ [PlotThemeToken.PlotAreaFill]: undefined }, [PlotThemeToken.PlotAreaFill]],
     ] as const) {
@@ -115,6 +118,14 @@ describe('Plot style token contract', () => {
     }
   });
 
+  it('让 axis.title 接受关闭或共享 title style', () => {
+    for (const title of [false, { textColor: 'currentColor', padding: 12 }]) {
+      expect(PlotThemeSchema.safeParse({ axis: { title } }).success).toBe(true);
+    }
+    expect(PlotThemeSchema.safeParse({ axis: { title: true } }).success).toBe(false);
+    expect(Object.values(PlotThemeToken)).toContain('axis.title.enabled');
+  });
+
   it('将 grid 表达为四个基础 canonical token 并删除复合值', () => {
     expect(
       PlotThemeTokenOverridesSchema.safeParse({
@@ -139,6 +150,8 @@ describe('Plot style token contract', () => {
           tokens: {
             [PlotThemeToken.AxisGridEnabled]: true,
             [PlotThemeToken.AxisTickMark]: false,
+            [PlotThemeToken.AxisTitleEnabled]: true,
+            [PlotThemeToken.AxisTitlePadding]: 8,
           },
         }).success,
       ).toBe(true);
@@ -175,6 +188,8 @@ describe('Plot style token contract', () => {
     const plotThemeTokens = PlotThemeTokenOverridesSchema.parse({
       [PlotThemeToken.PlotAreaFill]: 'none',
       [PlotThemeToken.AxisTickMark]: { kind: 'circle', size: 5 },
+      [PlotThemeToken.AxisTitleEnabled]: false,
+      [PlotThemeToken.AxisTitlePadding]: 6,
       [PlotThemeToken.PlotPaletteSeries]: ['#2563eb', '#f97316'],
     });
     const parsed = PlotSpecSchema.parse({ ...baseSpec, plotThemeTokens });

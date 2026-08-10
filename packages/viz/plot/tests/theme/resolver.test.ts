@@ -13,6 +13,7 @@ import {
   plotThemeFromTokens,
   PlotThemeResolutionSchema,
   PlotThemeToken,
+  resolvePlotAxisThemeTokens,
 } from '../../src';
 
 type PlotThemeResolution = {
@@ -148,8 +149,50 @@ describe('Plot theme resolver', () => {
       for (const mode of Object.values(ThemeMode)) {
         const preset = getPreset?.(style, mode);
         expect(PlotResolvedThemeTokensSchema.parse(preset)).toEqual(preset);
+        expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitleEnabled]).toBe(style !== ThemeStyle.Clean);
+        expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitlePadding]).toBe(12);
       }
     }
+  });
+
+  it('让 Axis title padding 依次接受全局 token、dimension rule 与 native theme 覆盖', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const globalAndRule = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      plotThemeTokens: { [PlotThemeToken.AxisTitlePadding]: 8 },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { [PlotThemeToken.AxisTitlePadding]: 10 },
+        },
+      ],
+    });
+    const resolution = globalAndRule as Parameters<typeof resolvePlotAxisThemeTokens>[0];
+
+    expect(globalAndRule.tokens[PlotThemeToken.AxisTitlePadding]).toBe(8);
+    expect(globalAndRule.plotTheme?.axis?.title).toMatchObject({ padding: 8 });
+    expect(resolvePlotAxisThemeTokens(resolution, 'x')[PlotThemeToken.AxisTitlePadding]).toBe(10);
+    expect(resolvePlotAxisThemeTokens(resolution, 'y')[PlotThemeToken.AxisTitlePadding]).toBe(8);
+    expect(sourceOf(globalAndRule, PlotThemeToken.AxisTitlePadding)).toMatchObject({
+      path: '$spec/plotThemeTokens/axis.title.padding',
+    });
+
+    const native = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      plotThemeTokens: { [PlotThemeToken.AxisTitlePadding]: 8 },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { [PlotThemeToken.AxisTitlePadding]: 10 },
+        },
+      ],
+      plotTheme: { axis: { title: { padding: 12 } } },
+    });
+    const nativeResolution = native as Parameters<typeof resolvePlotAxisThemeTokens>[0];
+
+    expect(native.tokens[PlotThemeToken.AxisTitlePadding]).toBe(12);
+    expect(resolvePlotAxisThemeTokens(nativeResolution, 'x')[PlotThemeToken.AxisTitlePadding]).toBe(12);
+    expect(sourceOf(native, PlotThemeToken.AxisTitlePadding)).toMatchObject({
+      path: '$spec/plotTheme/axis/title/padding',
+    });
   });
 
   it('让内建 Plot definition 从 effective Core theme 构造 categorical baseline', () => {

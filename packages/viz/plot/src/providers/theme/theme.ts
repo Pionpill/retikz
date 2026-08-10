@@ -153,11 +153,14 @@ export const resolvePlotAxisGuideTheme = (
               ...scoped.tickLabels,
               ...mergeTextStyle(global.tickLabels === false ? undefined : global.tickLabels, scoped.tickLabels),
             },
-      title: {
-        ...(global.title ?? {}),
-        ...(scoped.title ?? {}),
-        ...mergeTextStyle(global.title, scoped.title),
-      },
+      title:
+        scoped.title === false
+          ? false
+          : {
+              ...(global.title === false ? {} : (global.title ?? {})),
+              ...(scoped.title ?? {}),
+              ...mergeTextStyle(global.title === false ? undefined : global.title, scoped.title),
+            },
       grid:
         scoped.grid === false ? false : mergePathStyle(global.grid === false ? undefined : global.grid, scoped.grid),
     },
@@ -230,6 +233,7 @@ const mergeAxisTitle = (
   local: IRPlotAxisGuide['title'],
 ): IRPlotAxisGuide['title'] => {
   if (local === undefined) return undefined;
+  if (theme === false) return undefined;
   if (typeof local === 'string') return theme === undefined ? local : { text: local, ...theme };
   const themeTitle = theme === undefined ? undefined : { ...theme };
   if (local.orientation !== undefined && local.rotate === undefined && themeTitle !== undefined) {
@@ -284,10 +288,12 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRP
   ...(guide.title !== undefined
     ? {
         title: mergeAxisTitle(
-          {
-            ...(theme.axis.title ?? {}),
-            ...mergeTextStyle(theme.typography, theme.axis.title),
-          },
+          theme.axis.title === false
+            ? false
+            : {
+                ...(theme.axis.title ?? {}),
+                ...mergeTextStyle(theme.typography, theme.axis.title),
+              },
           guide.title,
         ),
       }

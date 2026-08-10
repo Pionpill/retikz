@@ -386,7 +386,7 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
     return {
       frame,
       plotArea: { x: 0, y: 0, width: ctx.width, height: ctx.height },
-      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      gridLayers: [],
       axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
     };
   },

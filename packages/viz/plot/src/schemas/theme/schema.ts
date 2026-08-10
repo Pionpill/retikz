@@ -6,6 +6,7 @@ import {
   AxisLineStyleSchema,
   AxisTickLabelLayoutSchema,
   AxisTickMarkSchema,
+  AxisTitlePaddingSchema,
   GuideTextStyleSchema,
   LegendGuideStyleSchema,
 } from '../guide';
@@ -34,12 +35,15 @@ const ThemeAxisTickLabelsSchema = z
   .describe('Theme defaults for axis tick labels. Tick label format is guide semantics and is not accepted here');
 
 const ThemeAxisTitleSchema = z
-  .strictObject({
-    padding: z.number().nonnegative().optional().describe('Default padding from tick labels to axis title center'),
-    rotate: z.number().optional().describe('Default axis title rotation in degrees around the title center'),
-    ...GuideTextStyleSchema.shape,
-  })
-  .describe('Theme defaults for axis title style. Title text stays on the axis guide root');
+  .union([
+    z.literal(false),
+    z.strictObject({
+      padding: AxisTitlePaddingSchema.optional().describe('Default padding from tick labels to axis title center'),
+      rotate: z.number().optional().describe('Default axis title rotation in degrees around the title center'),
+      ...GuideTextStyleSchema.shape,
+    }),
+  ])
+  .describe('Theme defaults for axis title visibility and style. Title text stays on the axis guide root');
 
 export const PlotAxisThemeSchema = z
   .strictObject({
@@ -49,7 +53,7 @@ export const PlotAxisThemeSchema = z
       .describe('Axis baseline default style; false hides baselines by default'),
     ticks: ThemeAxisTicksSchema.optional().describe('Axis tick mark default style'),
     tickLabels: ThemeAxisTickLabelsSchema.optional().describe('Axis tick label default style'),
-    title: ThemeAxisTitleSchema.optional().describe('Axis title default style'),
+    title: ThemeAxisTitleSchema.optional().describe('Axis title visibility and default style'),
     grid: z
       .union([z.literal(false), AxisGridLineStyleSchema])
       .optional()

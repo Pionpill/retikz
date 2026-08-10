@@ -459,6 +459,11 @@ export const AxisTickLabelGapSchema = LayoutGapSchema.describe(
   'Non-negative gap between an axis tick end and its label center.',
 );
 
+/** Axis tick label 带与 title 中心之间的非负间距 */
+export const AxisTitlePaddingSchema = LayoutGapSchema.describe(
+  'Non-negative padding from the axis tick label band to the title center.',
+);
+
 export const AxisTickLabelsSchema = z
   .strictObject({
     ...GuideTickLabelFormatSchema.shape,
@@ -561,11 +566,9 @@ const AxisCrossingSchema = z
 export const AxisTitleSchema = z
   .strictObject({
     text: AxisTitleTextSchema.describe('Axis title text block'),
-    padding: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Padding from the tick label band to the title center, in user units'),
+    padding: AxisTitlePaddingSchema.optional().describe(
+      'Padding from the tick label band to the title center, in user units',
+    ),
     placement: AxisTitlePlacementSchema.optional().describe(
       'Axis title position along the axis baseline; omit = midway',
     ),

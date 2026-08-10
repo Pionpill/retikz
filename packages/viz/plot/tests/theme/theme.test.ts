@@ -169,6 +169,43 @@ describe('plot theme schema and lowering', () => {
     expect(hasMinimumSize(background, 480, 300)).toBe(false);
   });
 
+  it('polar_background_uses_the_coordinate_circle_instead_of_the_plot_rectangle', () => {
+    const root = expandOf(
+      baseSpec({
+        coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
+        plotTheme: { plotArea: { fill: '#f8fafc' } },
+      }),
+    );
+    const background = root.children[0] as IRNode;
+
+    expect(background).toMatchObject({
+      type: 'node',
+      shape: 'circle',
+      position: [240, 150],
+      minimumSize: 300,
+      fill: '#f8fafc',
+    });
+  });
+
+  it.each([
+    ['cartesian1D', { type: 'cartesian1D', x: 'x' }],
+    ['polar1D', { type: 'polar1D', angle: 'x' }],
+  ] as const)('%s_does_not_emit_a_plot_area', (_type, coordinate) => {
+    const fill = '#f8fafc';
+    const id = `${coordinate.type}-plot`;
+    const root = expandOf(
+      baseSpec({
+        id,
+        coordinate,
+        marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
+        plotTheme: { plotArea: { fill } },
+      }),
+    );
+
+    expect(nodesOf(root).some(node => node.fill === fill)).toBe(false);
+    expect(nodesOf(root).some(node => node.id === `${id}.plotArea`)).toBe(false);
+  });
+
   it('facet_background_emits_one_plot_area_inside_each_panel', () => {
     const root = expandOf(
       PlotSpecSchema.parse({
@@ -385,18 +422,62 @@ describe('plot theme schema and lowering', () => {
   });
 
   it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
-    expect(resolveAxis({}, { type: 'axis', dimension: 'x' }).grid).toBe(false);
-    expect(resolveAxis({}, { type: 'axis', dimension: 'y' }).grid).toMatchObject({ stroke: 'currentColor' });
-    expect(resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Vibrant).grid).toMatchObject({
-      stroke: '#FFFFFF',
-    });
-    expect(resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean).grid).toBe(false);
+    const cases: Array<{ style: BuiltinThemeStyleValue; dimensions: Array<string> }> = [
+      { style: ThemeStyle.Neutral, dimensions: ['y'] },
+      { style: ThemeStyle.Academic, dimensions: [] },
+      { style: ThemeStyle.Vibrant, dimensions: ['x', 'y'] },
+      { style: ThemeStyle.Clean, dimensions: ['y'] },
+    ];
+
+    for (const { style, dimensions } of cases) {
+      for (const dimension of ['x', 'y']) {
+        const grid = resolveAxis({}, { type: 'axis', dimension }, style).grid;
+        if (dimensions.some(candidate => candidate === dimension)) {
+          expect(grid).toMatchObject({ stroke: style === ThemeStyle.Vibrant ? '#FFFFFF' : 'currentColor' });
+        } else {
+          expect(grid).toBe(false);
+        }
+      }
+    }
 
     const localMinor = { ticks: { values: [0.5] }, dashOffset: 3 };
     expect(resolveAxis({}, { type: 'axis', dimension: 'y', grid: { minor: localMinor } }).grid).toMatchObject({
       stroke: 'currentColor',
       minor: localMinor,
     });
+  });
+
+  it('Clean 只绘制 x Axis line，且 x/y Axis 都不绘制 tick mark', () => {
+    const x = resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Clean);
+    const y = resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean);
+
+    expect(x.line).toMatchObject({ stroke: 'currentColor' });
+    expect(y.line).toBe(false);
+    expect(x.ticks?.mark).toBe(false);
+    expect(y.ticks?.mark).toBe(false);
+  });
+
+  it('Clean 默认隐藏 Axis title，显式 token、dimension rule 与 native theme 可以覆盖', () => {
+    const guide = { type: 'axis', dimension: 'x', title: 'Revenue' } as const;
+
+    expect(resolveAxis({}, guide, ThemeStyle.Clean).title).toBeUndefined();
+    expect(resolveAxis({}, guide, ThemeStyle.Neutral).title).toMatchObject({ text: 'Revenue' });
+    expect(
+      resolveAxis({ plotThemeTokens: { [PlotThemeToken.AxisTitleEnabled]: true } }, guide, ThemeStyle.Clean).title,
+    ).toMatchObject({ text: 'Revenue' });
+    expect(
+      resolveAxis(
+        {
+          plotThemeTokenRules: [{ select: { dimension: 'x' }, tokens: { [PlotThemeToken.AxisTitleEnabled]: true } }],
+        },
+        guide,
+        ThemeStyle.Clean,
+      ).title,
+    ).toMatchObject({ text: 'Revenue' });
+    expect(resolveAxis({ plotTheme: { axis: { title: false } } }, guide).title).toBeUndefined();
+    expect(
+      resolveAxis({ plotTheme: { axis: { title: { textColor: '#2563eb' } } } }, guide, ThemeStyle.Clean).title,
+    ).toMatchObject({ text: 'Revenue', textColor: '#2563eb' });
   });
 
   it('typography_supplies_axis_text_defaults_beneath_axis_and_guide_styles', () => {

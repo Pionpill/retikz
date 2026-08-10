@@ -17,8 +17,8 @@ export const vizV02: Release = {
         {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
-            zh: '39 个 `PlotThemeToken`、四种 style × light/dark preset、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
-            en: 'Plot now owns 39 `PlotThemeToken` keys, four style presets in light and dark modes, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
+            zh: '41 个 `PlotThemeToken`、四种 style × light/dark preset、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
+            en: 'Plot now owns 41 `PlotThemeToken` keys, four style presets in light and dark modes, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
           },
         },
         {
@@ -54,8 +54,8 @@ export const vizV02: Release = {
                 en: 'BREAKING: plot-area theme moves to plotArea.fill',
               },
               content: {
-                zh: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` 改名为 `PlotAreaFill` / `plot.area.fill`；结构化字段从 `IRPlotTheme.background` 改为 `IRPlotTheme.plotArea.fill`。它只填充扣除 axis、legend 与布局预留后的有效绘图区，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。',
-                en: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` is renamed to `PlotAreaFill` / `plot.area.fill`, and the structured field moves from `IRPlotTheme.background` to `IRPlotTheme.plotArea.fill`. It fills only the effective plotting area after axis, legend, and layout reserves are removed, leaving axis-label regions, facet gaps, and the outer Chart canvas transparent.',
+                zh: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` 改名为 `PlotAreaFill` / `plot.area.fill`；结构化字段从 `IRPlotTheme.background` 改为 `IRPlotTheme.plotArea.fill`。它只填充二维坐标中扣除 axis、legend 与布局预留后的有效绘图区，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明；一维坐标不生成绘图区。',
+                en: '`PlotThemeToken.PlotSurfaceFill` / `plot.surface.fill` is renamed to `PlotAreaFill` / `plot.area.fill`, and the structured field moves from `IRPlotTheme.background` to `IRPlotTheme.plotArea.fill`. It fills only the effective two-dimensional plotting area after axis, legend, and layout reserves are removed, leaving axis-label regions, facet gaps, and the outer Chart canvas transparent; one-dimensional coordinates do not emit a Plot area.',
               },
             },
             {
@@ -64,8 +64,18 @@ export const vizV02: Release = {
                 en: 'BREAKING: Axis grid moves to one theme contract',
               },
               content: {
-                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth` 与 `drawOpacity` 四个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。Neutral 默认只开启 y grid，Vibrant 开启 x/y grid，Academic 与 Clean 均关闭；Axis guide 局部配置最终优先。',
-                en: 'Grid uses four flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, and `drawOpacity`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. Neutral enables y-grid only, Vibrant enables x/y-grid, and Academic and Clean disable grids; local Axis guide configuration wins last.',
+                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth` 与 `drawOpacity` 四个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。Neutral 与 Clean 默认只开启 y grid，Vibrant 开启 x/y grid，Academic 全部关闭；Axis guide 局部配置最终优先。一维坐标没有二维 Plot area，因此始终不输出 grid layer。',
+                en: 'Grid uses four flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, and `drawOpacity`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. Neutral and Clean enable y-grid only, Vibrant enables x/y-grid, and Academic disables grids; local Axis guide configuration wins last. One-dimensional coordinates have no two-dimensional Plot area and therefore never emit a grid layer.',
+              },
+            },
+            {
+              label: {
+                zh: 'Axis 标题可见性与间距进入主题 token',
+                en: 'Axis title visibility and spacing join theme tokens',
+              },
+              content: {
+                zh: '新增 `axis.title.enabled` 与 `axis.title.padding`。Neutral、Academic、Vibrant 默认显示已有 Axis title，Clean 默认隐藏；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可重新开启。四种风格的 title padding 均为 `12`。',
+                en: 'Adds `axis.title.enabled` and `axis.title.padding`. Neutral, Academic, and Vibrant show authored Axis titles by default, while Clean hides them; global tokens, dimension rules, or structured `plotTheme.axis.title` can enable them again. Title padding remains `12` in every style.',
               },
             },
             {

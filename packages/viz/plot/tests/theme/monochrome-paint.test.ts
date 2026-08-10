@@ -39,14 +39,22 @@ describe('Plot theme monochrome paint', () => {
     }
   });
 
-  it('Vibrant grid 使用与 plot area 对应的黑白分隔色', () => {
-    expect(getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Light)[PlotThemeToken.AxisGridStroke]).toBe('#FFFFFF');
-    expect(getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Dark)[PlotThemeToken.AxisGridStroke]).toBe('#000000');
+  it('Vibrant grid 使用 mode 背景色并保持不透明', () => {
+    const light = getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Light);
+    const dark = getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Dark);
+
+    expect(light[PlotThemeToken.AxisGridStroke]).toBe('#FFFFFF');
+    expect(dark[PlotThemeToken.AxisGridStroke]).toBe('#000000');
+    expect(light[PlotThemeToken.AxisGridDrawOpacity]).toBe(1);
+    expect(dark[PlotThemeToken.AxisGridDrawOpacity]).toBe(1);
   });
 
   it.each([ThemeStyle.Neutral, ThemeStyle.Academic, ThemeStyle.Clean])('%s grid 继承 currentColor', style => {
     for (const mode of Object.values(ThemeMode)) {
-      expect(getPlotThemePreset(style, mode)[PlotThemeToken.AxisGridStroke]).toBe('currentColor');
+      const preset = getPlotThemePreset(style, mode);
+
+      expect(preset[PlotThemeToken.AxisGridStroke]).toBe('currentColor');
+      expect(preset[PlotThemeToken.AxisGridDrawOpacity]).toBe(0.15);
     }
   });
 });

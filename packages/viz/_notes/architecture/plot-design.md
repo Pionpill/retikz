@@ -522,7 +522,7 @@ Scope 的职责：
 - coordinate view 与 arrangement：显式 view、facet / tracks arrangement 及其稳定派生 identity。
 - facet panel / track：数据分区 panel 与共享骨架 track。
 - panel bbox：`plot.north` / `plot.southEast`。
-- plot area：`plot.plotArea`。
+- 二维 plot area：`plot.plotArea`；一维坐标只有路径，不构造面积 anchor。
 - axis region：`plot.xAxis` / `plot.yAxis`。
 - series region：`plot.series.<id>`。
 - data point anchor：`plot.datum.<id>` 或后续等价 locator。

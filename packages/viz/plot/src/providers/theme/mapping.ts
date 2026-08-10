@@ -53,13 +53,16 @@ export const plotAxisThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPl
         textColor: tokens[PlotThemeToken.AxisTickLabelForeground],
       }
     : false,
-  title: {
-    font: {
-      size: tokens[PlotThemeToken.AxisTitleFontSize],
-      weight: tokens[PlotThemeToken.AxisTitleFontWeight],
-    },
-    textColor: tokens[PlotThemeToken.AxisTitleForeground],
-  },
+  title: tokens[PlotThemeToken.AxisTitleEnabled]
+    ? {
+        padding: tokens[PlotThemeToken.AxisTitlePadding],
+        font: {
+          size: tokens[PlotThemeToken.AxisTitleFontSize],
+          weight: tokens[PlotThemeToken.AxisTitleFontWeight],
+        },
+        textColor: tokens[PlotThemeToken.AxisTitleForeground],
+      }
+    : false,
   grid: tokens[PlotThemeToken.AxisGridEnabled]
     ? {
         stroke: tokens[PlotThemeToken.AxisGridStroke],
@@ -205,16 +208,24 @@ export const applyPlotThemeToTokens = (
         }
       }
     }
-    if (authoredAxis.title !== undefined && axis.title !== undefined) {
-      if (has(authoredAxis.title, 'textColor')) {
-        set(PlotThemeToken.AxisTitleForeground, axis.title.textColor!, '$spec/plotTheme/axis/title/textColor');
-      }
-      if (authoredAxis.title.font !== undefined) {
-        if (has(authoredAxis.title.font, 'size')) {
-          set(PlotThemeToken.AxisTitleFontSize, axis.title.font!.size!, '$spec/plotTheme/axis/title/font/size');
+    if (has(authoredAxis, 'title')) {
+      if (authoredAxis.title === false) {
+        set(PlotThemeToken.AxisTitleEnabled, false, '$spec/plotTheme/axis/title');
+      } else if (authoredAxis.title !== undefined && axis.title !== false && axis.title !== undefined) {
+        set(PlotThemeToken.AxisTitleEnabled, true, '$spec/plotTheme/axis/title');
+        if (has(authoredAxis.title, 'padding')) {
+          set(PlotThemeToken.AxisTitlePadding, axis.title.padding!, '$spec/plotTheme/axis/title/padding');
         }
-        if (has(authoredAxis.title.font, 'weight')) {
-          set(PlotThemeToken.AxisTitleFontWeight, axis.title.font!.weight!, '$spec/plotTheme/axis/title/font/weight');
+        if (has(authoredAxis.title, 'textColor')) {
+          set(PlotThemeToken.AxisTitleForeground, axis.title.textColor!, '$spec/plotTheme/axis/title/textColor');
+        }
+        if (authoredAxis.title.font !== undefined) {
+          if (has(authoredAxis.title.font, 'size')) {
+            set(PlotThemeToken.AxisTitleFontSize, axis.title.font!.size!, '$spec/plotTheme/axis/title/font/size');
+          }
+          if (has(authoredAxis.title.font, 'weight')) {
+            set(PlotThemeToken.AxisTitleFontWeight, axis.title.font!.weight!, '$spec/plotTheme/axis/title/font/weight');
+          }
         }
       }
     }

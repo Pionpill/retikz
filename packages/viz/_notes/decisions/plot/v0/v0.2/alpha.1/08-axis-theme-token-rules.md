@@ -58,6 +58,18 @@ const PlotThemeToken = {
 
 原复合 `AxisGrid: 'axis.grid'`、`PlotGridType`、`PlotAxisGridTheme` 与 Grid 专用 dimension map 直接删除，不保留 alias、双读或 fallback。
 
+## 决策：Axis Title 可见性使用基础叶子 Token
+
+Axis title 是否显示使用 `AxisTitleEnabled: 'axis.title.enabled'`。该 token 只控制已经在 Axis guide 上提供的 title 内容是否进入 lowering，不创建 title，也不改变文本、placement 或 layout 语义。
+
+Neutral、Academic 与 Vibrant 的基础值为开启，Clean 的基础值为关闭。全局 token 与 dimension rule 可以重新开启 Clean 的全部或指定 Axis title；原生 `plotTheme.axis.title` 使用 `false | ThemeAxisTitleStyle`，`false` 关闭、样式对象开启并提供视觉默认值。Axis guide 的 `title` 继续提供内容和最高优先级的局部样式，但内容本身不会越过 `axis.title.enabled: false` 自动重新开启标题。
+
+## 决策：Axis Title Padding 使用基础叶子 Token
+
+Axis title 与 tick label 带之间的距离使用 `AxisTitlePadding: 'axis.title.padding'`。该 token 是非负用户坐标值，四种内建 style 的基础值统一为 `12`，并映射到原生 `plotTheme.axis.title.padding`。
+
+它与其他 Axis token 共用同一 dimension rule，因此可以只调整某个 Axis 的 title spacing。原生 `plotTheme.axis.title.padding` 继续高于全局 token 与命中的 rule，单个 Axis guide 的 `title.padding` 最终优先；title placement、orientation、rotate、anchor、shift 与 layout 不进入 canonical token。
+
 ## 决策：Style Definition 返回 Token 与规则
 
 Plot style definition 解析完整基础 token map，并可同时返回 Axis rules：
@@ -83,7 +95,9 @@ type PlotThemeStyleDefinition = Readonly<{
 | Neutral  | 关闭   | y dimension 开启     |
 | Academic | 关闭   | 无                   |
 | Vibrant  | 关闭   | x / y dimension 开启 |
-| Clean    | 关闭   | 无                   |
+| Clean    | 关闭   | y dimension 开启     |
+
+Clean 还通过同一 rule 只为 x dimension 开启 `axis.line.enabled`；基础 `axis.tick.mark` 保持关闭，因此 x Axis 只有轴线与 label，不绘制 tick mark，y Axis line 继续关闭。
 
 Light / Dark 只改变 grid paint 等 mode-sensitive token，不改变哪些 dimension 启用 grid。
 
@@ -98,10 +112,10 @@ Plot style 基础 tokens
   -> local plotThemeTokens
   -> local plotThemeTokenRules 中匹配当前 dimension 的规则
   -> colors shorthand / native plotTheme
-  -> Axis guide 显式配置
+  -> Axis guide 显式视觉配置
 ```
 
-该顺序保证用户显式写入一个全局 `plotThemeTokens` 值可以覆盖内建 style rule；需要更具体的 dimension 差异时，再由 local rule 覆盖。native `plotTheme.axis` 仍是比 canonical token 更高的 Plot-local 结构化输入，单个 Axis guide 的显式 line、ticks、tickLabels、title 与 grid 继续拥有最高优先级。
+该顺序保证用户显式写入一个全局 `plotThemeTokens` 值可以覆盖内建 style rule；需要更具体的 dimension 差异时，再由 local rule 覆盖。native `plotTheme.axis` 仍是比 canonical token 更高的 Plot-local 结构化输入，单个 Axis guide 的显式 line、ticks、tickLabels、title 与 grid 视觉字段继续拥有最高优先级。`axis.title.enabled` 是可见性门控；guide title 内容不会自动覆盖关闭状态。
 
 rule 只覆盖自己包含的 token；未出现的 Axis token 继续继承前一层。规则应用不得改写输入数组或共享 preset 数据，相同输入必须产生确定结果。
 
@@ -158,6 +172,8 @@ const rule = {
   tokens: {
     [PlotThemeToken.AxisLineEnabled]: false,
     [PlotThemeToken.AxisTickMark]: false,
+    [PlotThemeToken.AxisTitleEnabled]: false,
+    [PlotThemeToken.AxisTitlePadding]: 12,
     [PlotThemeToken.AxisGridEnabled]: true,
   },
 };

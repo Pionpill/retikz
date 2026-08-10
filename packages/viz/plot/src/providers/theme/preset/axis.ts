@@ -16,16 +16,25 @@ type AxisPresetSource = Readonly<{
   tickLabelForeground: string;
   tickLabelFontSize: number;
   tickLabelGap: number;
+  titleEnabled: boolean;
   titleForeground: string;
   titleFontSize: number;
   titleFontWeight: number;
+  titlePadding: number;
   gridEnabled: boolean;
   gridStroke: string;
 }>;
 
 type AxisStylePreset = Pick<
   AxisPresetSource,
-  'lineEnabled' | 'tickMark' | 'tickLabelFontSize' | 'tickLabelGap' | 'titleFontSize' | 'gridEnabled'
+  | 'lineEnabled'
+  | 'tickMark'
+  | 'tickLabelFontSize'
+  | 'tickLabelGap'
+  | 'titleEnabled'
+  | 'titleFontSize'
+  | 'titlePadding'
+  | 'gridEnabled'
 >;
 
 type AxisModePreset = Pick<AxisPresetSource, 'lineStroke' | 'tickLabelForeground' | 'titleForeground' | 'gridStroke'>;
@@ -41,9 +50,11 @@ type AxisTokenPreset = Readonly<
     | typeof PlotThemeToken.AxisTickLabelForeground
     | typeof PlotThemeToken.AxisTickLabelFontSize
     | typeof PlotThemeToken.AxisTickLabelGap
+    | typeof PlotThemeToken.AxisTitleEnabled
     | typeof PlotThemeToken.AxisTitleForeground
     | typeof PlotThemeToken.AxisTitleFontSize
     | typeof PlotThemeToken.AxisTitleFontWeight
+    | typeof PlotThemeToken.AxisTitlePadding
     | typeof PlotThemeToken.AxisGridEnabled
     | typeof PlotThemeToken.AxisGridStroke
     | typeof PlotThemeToken.AxisGridStrokeWidth
@@ -57,7 +68,9 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickMark: { kind: 'line', length: 6 },
     tickLabelFontSize: 12,
     tickLabelGap: 4,
+    titleEnabled: true,
     titleFontSize: 12,
+    titlePadding: 12,
     gridEnabled: false,
   },
   [ThemeStyle.Academic]: {
@@ -65,7 +78,9 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickMark: { kind: 'line', length: 4 },
     tickLabelFontSize: 11,
     tickLabelGap: 5,
+    titleEnabled: true,
     titleFontSize: 12,
+    titlePadding: 12,
     gridEnabled: false,
   },
   [ThemeStyle.Vibrant]: {
@@ -73,7 +88,9 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickMark: false,
     tickLabelFontSize: 12,
     tickLabelGap: 6,
+    titleEnabled: true,
     titleFontSize: 13,
+    titlePadding: 12,
     gridEnabled: false,
   },
   [ThemeStyle.Clean]: {
@@ -81,7 +98,9 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickMark: false,
     tickLabelFontSize: 11,
     tickLabelGap: 5,
+    titleEnabled: false,
     titleFontSize: 12,
+    titlePadding: 12,
     gridEnabled: false,
   },
 };
@@ -124,13 +143,15 @@ export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValu
     [PlotThemeToken.AxisTickLabelForeground]: paint.tickLabelForeground,
     [PlotThemeToken.AxisTickLabelFontSize]: structure.tickLabelFontSize,
     [PlotThemeToken.AxisTickLabelGap]: structure.tickLabelGap,
+    [PlotThemeToken.AxisTitleEnabled]: structure.titleEnabled,
     [PlotThemeToken.AxisTitleForeground]: paint.titleForeground,
     [PlotThemeToken.AxisTitleFontSize]: structure.titleFontSize,
     [PlotThemeToken.AxisTitleFontWeight]: 600,
+    [PlotThemeToken.AxisTitlePadding]: structure.titlePadding,
     [PlotThemeToken.AxisGridEnabled]: structure.gridEnabled,
     [PlotThemeToken.AxisGridStroke]: gridStroke,
     [PlotThemeToken.AxisGridStrokeWidth]: 1,
-    [PlotThemeToken.AxisGridDrawOpacity]: 0.15,
+    [PlotThemeToken.AxisGridDrawOpacity]: style === ThemeStyle.Vibrant ? 1 : 0.15,
   };
 };
 
@@ -138,6 +159,13 @@ export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValu
 export const getAxisTokenRules = (style: BuiltinThemeStyleValue): IRPlotAxisThemeTokenRules => {
   switch (style) {
     case ThemeStyle.Neutral:
+      return [
+        {
+          select: { dimension: 'y' },
+          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+        },
+      ];
+    case ThemeStyle.Clean:
       return [
         {
           select: { dimension: 'y' },
@@ -152,7 +180,6 @@ export const getAxisTokenRules = (style: BuiltinThemeStyleValue): IRPlotAxisThem
         },
       ];
     case ThemeStyle.Academic:
-    case ThemeStyle.Clean:
       return [];
   }
 };
