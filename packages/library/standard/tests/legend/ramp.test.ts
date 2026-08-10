@@ -8,10 +8,10 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
+import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { LayoutAlignment } from '../../src/composites/layout/shared';
 import { LegendContentKind, LegendDirection } from '../../src/composites/presentation/legend/constants';
 import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
 import { createLegend } from '../../src/composites/presentation/legend/factory';

@@ -52,7 +52,7 @@ mount(document.querySelector('#diagram')!, spec);
 - Views: `VanillaView` from `mountSvg` exposes `root`, `update`, `hydrate`, `dispose`, and `animation`; `CanvasView` from `mountCanvas` also exposes `clientToScene`; use `VanillaViewMode` to discriminate retained and static views
 - Plain spec: `figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed`, plus `VanillaTier2Adapter` for explicit Tier 2 embedding
 
-Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`. Hydration and animation runtime helper types should be imported from `@retikz/render`.
+Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`. Render helpers use explicit subpaths: hydration from `@retikz/render/hydration`, animation from `@retikz/render/animation`, and retained runtime contracts from `@retikz/render/runtime`.
 
 ## Docs
 

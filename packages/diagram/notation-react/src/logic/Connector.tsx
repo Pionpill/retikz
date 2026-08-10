@@ -1,15 +1,20 @@
 import type { ConnectorInput } from '@retikz/notation';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { ConnectorDefinition, createConnector } from '@retikz/notation';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
 import { NotationConnectorReactNamespace } from '../shared';
+import { hasAuthoringChildren, resolveConnectorSteps } from './authoring';
 
-/** Connector 的 React 编写参数，label 保持为 plain Core step input */
-export type ConnectorProps = ConnectorInput;
+type ConnectorBaseProps = Omit<ConnectorInput, 'children' | 'way'>;
+type ConnectorWay = Exclude<ConnectorInput['way'], undefined>;
+
+/** Connector 的 React 编写参数，两套作者语法必须且只能选择一套 */
+export type ConnectorProps = ConnectorBaseProps &
+  Readonly<{ children?: ReactNode; way?: never } | { children?: never; way: ConnectorWay }>;
 
 const makeConnectorComposites = () => [ConnectorDefinition];
 
@@ -17,10 +22,15 @@ const connectorEmbeddableAdapter: EmbeddableTier2Adapter<ConnectorProps> = {
   displayName: 'Connector',
   namespace: NotationConnectorReactNamespace,
   contribute: props => {
-    if ('children' in props && props.children !== undefined) {
-      throw new Error('React Connector does not accept children; provide label as a plain prop.');
+    const { children, way, ...pathInput } = props;
+    const hasChildren = hasAuthoringChildren(children);
+    if (hasChildren && way !== undefined) {
+      throw new Error('Connector requires exactly one of `children` or `way`.');
     }
-    return { node: createConnector(props), datasets: {}, makeComposites: makeConnectorComposites };
+    const input: ConnectorInput = hasChildren
+      ? { ...pathInput, children: resolveConnectorSteps(children) }
+      : { ...pathInput, way: way as ConnectorWay };
+    return { node: createConnector(input), datasets: {}, makeComposites: makeConnectorComposites };
   },
 };
 

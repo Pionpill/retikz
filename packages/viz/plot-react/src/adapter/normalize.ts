@@ -7,7 +7,6 @@ import type {
 } from './contracts';
 
 import { assertChartExtensionCollection, normalizeChartExtension } from './chart-extension';
-import { plotTextLabelFromDeclaration } from './labels';
 import { applyDeclaration } from './member-normalizer';
 import { normalizePlotRoot } from './plot-root';
 import { styleSugarContext } from './style-sugar';
@@ -28,7 +27,6 @@ export const normalizePlotDeclarations = (
     transforms: [],
     shortcutTransforms: [],
     scales: [],
-    labels: [],
     resolveLabels: {},
     colored: false,
     colorFields: [],
@@ -42,17 +40,6 @@ export const normalizePlotDeclarations = (
   const styleContext = styleSugarContext(context);
   for (const declaration of collection.declarations) {
     if (declaration.kind === 'unsupported') continue;
-    if (declaration.kind === 'title-label' || declaration.kind === 'caption-label') {
-      const isTitle = declaration.kind === 'title-label';
-      collected.labels.push(
-        plotTextLabelFromDeclaration(
-          declaration,
-          isTitle ? 'title' : 'caption',
-          isTitle ? 'TitleLabel' : 'CaptionLabel',
-        ),
-      );
-      continue;
-    }
     applyDeclaration(declaration, collected, styleContext);
   }
   if (context.mode === 'chart-extension') {

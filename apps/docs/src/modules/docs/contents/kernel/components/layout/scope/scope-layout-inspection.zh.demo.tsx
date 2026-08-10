@@ -1,9 +1,9 @@
 import type { FC } from 'react';
 
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
+import { LayoutItem } from '@retikz/layout-react';
+import { InspectFlexLayout, LayoutInspectLayout, LayoutInspectScope } from '@retikz/layout-react/inspect';
 import { Layout, Node, Scope } from '@retikz/react';
-import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/standard/inspect';
-import { LayoutItem } from '@retikz/standard-react';
-import { InspectFlexLayout, StandardInspectLayout, StandardInspectScope } from '@retikz/standard-react/inspect';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
@@ -19,7 +19,7 @@ const SceneContents: FC = () => (
         </LayoutItem>
       </InspectFlexLayout>
     </Scope>
-    <StandardInspectScope request={false} transforms={[{ kind: 'translate', x: 280, y: 34 }]}>
+    <LayoutInspectScope request={false} transforms={[{ kind: 'translate', x: 280, y: 34 }]}>
       <InspectFlexLayout size={{ x: { kind: 'fixed', value: 220 }, y: { kind: 'fixed', value: 110 } }} padding={12}>
         <LayoutItem kind="flex" itemKey="blocked-a" grow={1}>
           <Node position={[0, 0]} text="B1" fill="#dbeafe" stroke="#2563eb" />
@@ -28,20 +28,20 @@ const SceneContents: FC = () => (
           <Node position={[0, 0]} text="B2" fill="#dcfce7" stroke="#16a34a" />
         </LayoutItem>
       </InspectFlexLayout>
-    </StandardInspectScope>
+    </LayoutInspectScope>
   </>
 );
 
 /** 对比继承全图布局检查策略与 Scope 硬屏障 */
 const Demo: FC = () => (
-  <StandardInspectLayout
+  <LayoutInspectLayout
     request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}
     width={520}
     height={190}
     viewBox={{ x: 0, y: 0, width: 520, height: 190 }}
   >
     <SceneContents />
-  </StandardInspectLayout>
+  </LayoutInspectLayout>
 );
 
 /** 源码面板只派生持久化图形，运行时选择与屏障不写入 IR */

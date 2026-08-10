@@ -1,3 +1,4 @@
+import type { ThemeStyleValue } from '@retikz/core';
 import type { ReactNode } from 'react';
 
 /** 预览区平移 / 缩放状态。 */
@@ -11,6 +12,9 @@ export type RendererMode = 'svg' | 'canvas';
 
 /** 单张预览的局部主题环境。 */
 export type PreviewThemeMode = 'inherit' | 'light' | 'dark';
+
+/** 单张预览的主题风格选择；inherit 表示跟随 docs 全局设置。 */
+export type PreviewThemeStyleSelection = 'inherit' | ThemeStyleValue;
 
 /** 预览区控制插槽位置。 */
 export type PreviewControlPlacement =

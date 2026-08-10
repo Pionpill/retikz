@@ -44,8 +44,8 @@ Solid arrows show the main path from authoring to rendered output. External data
     {
       label: 'Unified Plot composite lowering entry',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 724,
-      endLine: 735,
+      startLine: 712,
+      endLine: 734,
     },
     {
       label: 'Vanilla entry from Plot IR through Scene to SVG',
@@ -80,7 +80,7 @@ All three packages share the IR and lowering source of truth in `@retikz/plot`. 
 
 If a capability does not depend on chart field mapping—general data transforms, low-level geometry, or table Cells, for example—it should not enter Plot. Conversely, a new scale, coordinate, mark, or guide should first become a registerable Definition, then use the same path as built-ins.
 
-Plot also owns canonical theme tokens for surfaces, guides, labels, and palettes. It consumes the Core effective Theme to select the same-named domain preset, then maps local `plotThemeTokens`, `colors`, and native `plotTheme` into the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the complete key set and precedence.
+Plot also owns canonical theme tokens for its Plot area, guides, and palettes. It consumes the Core effective Theme to select the same-named domain preset, then maps local `plotThemeTokens`, Axis `plotThemeTokenRules`, and native `plotTheme` into the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the complete key set and precedence.
 
 ## Pages
 

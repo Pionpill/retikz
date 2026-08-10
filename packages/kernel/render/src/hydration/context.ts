@@ -11,9 +11,9 @@ import type { AffineMatrix, BoundsRect } from '@retikz/math';
 
 import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
 
-import type { IdClockRegistry } from '../animation/id-clock';
+import type { IdClockRegistry } from '../animation';
 
-import { pathControlPoints } from '../shared/path-command';
+import { pathControlPoints } from '../shared';
 
 /**
  * handler 内的动画控制（缺省作用于命中元素，传 id 控别的元素）

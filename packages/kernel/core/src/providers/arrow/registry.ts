@@ -1,6 +1,6 @@
 import type { ArrowDefinition } from '../../contract';
 
-import { resolveProviderRegistry } from '../registry';
+import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_ARROWS } from './definitions';
 
 /** 解析 arrow provider 注册表：内置项先注册，自定义项后注册并复用统一冲突诊断 */

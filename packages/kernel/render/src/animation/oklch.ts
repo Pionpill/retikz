@@ -5,7 +5,7 @@
  *   解析支持 hex（#rgb / #rrggbb）/ rgb(a) / oklch(...)；无法解析的颜色串（命名色 / hsl）回退为两端点直插
  */
 
-import { parseHexColor } from '../shared/color';
+import { parseHexColor } from '../shared';
 
 /** 线性 sRGB 三元组（各 0..1）+ alpha（0..1） */
 type LinearRgb = { r: number; g: number; b: number; alpha: number };

@@ -73,6 +73,17 @@ const importsFromContractSubmodule = (file: string, declaration: string): boolea
   return target.startsWith(`${contractRoot}${sep}`) && target !== join(contractRoot, 'index.ts');
 };
 
+const importsFlatProviderInternal = (file: string, declaration: string): boolean => {
+  const source = importSource(declaration);
+  if (!source?.startsWith('.')) return false;
+
+  const relativeSource = relative(SRC_ROOT, file).replace(/\\/g, '/');
+  if (relativeSource.startsWith('providers/')) return false;
+
+  const relativeTarget = relative(SRC_ROOT, resolveImportTarget(file, source)).replace(/\\/g, '/');
+  return relativeTarget !== 'providers/index.ts' && /^providers\/[^/]+\.ts$/u.test(relativeTarget);
+};
+
 const importsCrossOwnerSubmodule = (file: string, declaration: string): boolean => {
   const source = importSource(declaration);
   if (!source?.startsWith('.')) return false;
@@ -113,6 +124,16 @@ describe('core layer import boundaries', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)
         .filter(line => importsFromContractSubmodule(file, line))
+        .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('source code outside providers does not import flat provider internals', () => {
+    const offenders = tsFiles(SRC_ROOT).flatMap(file =>
+      importDeclarations(file)
+        .filter(line => importsFlatProviderInternal(file, line))
         .map(line => `${relative(SRC_ROOT, file)}: ${line}`),
     );
 

@@ -5,10 +5,9 @@
  */
 import type { Scene } from '@retikz/core';
 
-import type { EasingRegistry } from '../animation/types';
+import type { EasingRegistry } from '../animation';
 
-import { isAutoplayTrigger } from '../animation/channels';
-import { evaluateTrack } from '../animation/evaluate';
+import { evaluateTrack, isAutoplayTrigger } from '../animation';
 
 /**
  * 在 ctx 上施加 scene 根镜头变换；无镜头则不动

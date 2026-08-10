@@ -3,9 +3,10 @@ import type { ResolvedTheme } from '@retikz/core';
 import { ThemeTokenSource } from '@retikz/core';
 
 import type { PlotThemeStyleDefinition } from '../../contract';
-import type { IRPlotSpec, IRPlotThemeResolution, PlotThemeTokenValue } from '../../schemas';
+import type { IRPlotSpec, IRPlotThemeResolution } from '../../schemas';
 
 import {
+  PlotAxisThemeTokenRulesSchema,
   PlotResolvedThemeTokensSchema,
   PlotThemeResolutionSchema,
   PlotThemeSchema,
@@ -15,10 +16,10 @@ import {
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 import { resolvePlotThemeStyleRegistry } from './registry';
 
-/** 按 Plot style、Core shared colors、Plot-local 输入与 native Plot theme 顺序解析主题 */
+/** 按 Plot style、Plot token 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'colors' | 'plotTheme'> = {},
+  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;
@@ -26,55 +27,30 @@ export const resolvePlotTheme = (
   const definition = styles.get(style);
   if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
   const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
-  const colors = input.colors === undefined ? undefined : structuredClone(input.colors);
+  const localTokenRules = PlotAxisThemeTokenRulesSchema.parse(input.plotThemeTokenRules ?? []);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
-  const baseline = definition.resolve(effectiveTheme);
-  const categorical = [...effectiveTheme.colors.categorical];
-  const tokensAfterShared = PlotResolvedThemeTokensSchema.parse({
-    ...baseline,
-    [PlotThemeToken.PlotPaletteCategorical]: categorical,
-    [PlotThemeToken.PlotPaletteSeries]: [...categorical],
-    [PlotThemeToken.PlotPaletteSector]: [...categorical],
-  });
+  const styleResolution = definition.resolve(effectiveTheme);
+  const baseline = PlotResolvedThemeTokensSchema.parse(styleResolution.tokens);
+  const styleTokenRules = PlotAxisThemeTokenRulesSchema.parse(styleResolution.tokenRules ?? []);
   const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
-    ...tokensAfterShared,
+    ...baseline,
     ...structuredClone(plotThemeTokens),
   });
-  const tokensAfterColors =
-    colors === undefined
-      ? tokensAfterLocal
-      : PlotResolvedThemeTokensSchema.parse({
-          ...tokensAfterLocal,
-          [PlotThemeToken.PlotPaletteCategorical]: colors,
-          [PlotThemeToken.PlotPaletteSeries]: [...colors],
-          [PlotThemeToken.PlotPaletteSector]: [...colors],
-        });
-  const tokenTheme = plotThemeFromTokens(tokensAfterColors);
+  const tokenTheme = plotThemeFromTokens(tokensAfterLocal);
   const theme = authoredTheme === undefined ? tokenTheme : mergePlotTheme(tokenTheme, authoredTheme);
   const nativeResult =
     authoredTheme === undefined
-      ? { tokens: tokensAfterColors, overrides: [] }
-      : applyPlotThemeToTokens(tokensAfterColors, theme, authoredTheme);
+      ? { tokens: tokensAfterLocal, overrides: [] }
+      : applyPlotThemeToTokens(tokensAfterLocal, theme, authoredTheme);
   const tokens = PlotResolvedThemeTokensSchema.parse(nativeResult.tokens);
   const nativeSources = new Map(nativeResult.overrides.map(source => [source.token, source.path]));
-  const colorTokens = new Set<PlotThemeTokenValue>([
-    PlotThemeToken.PlotPaletteCategorical,
-    PlotThemeToken.PlotPaletteSeries,
-    PlotThemeToken.PlotPaletteSector,
-  ]);
   const tokenSources = Object.values(PlotThemeToken).map(token => {
     const nativePath = nativeSources.get(token);
     if (nativePath !== undefined) {
       return { token, kind: ThemeTokenSource.Local, path: nativePath };
     }
-    if (colors !== undefined && colorTokens.has(token)) {
-      return { token, kind: ThemeTokenSource.Local, path: '$spec/colors' };
-    }
     if (Object.hasOwn(plotThemeTokens, token)) {
       return { token, kind: ThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
-    }
-    if (colorTokens.has(token)) {
-      return { token, kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' };
     }
     return {
       token,
@@ -89,15 +65,26 @@ export const resolvePlotTheme = (
     sequential: tokens[PlotThemeToken.PlotPaletteSequential],
     diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
   };
-  const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] = [
-    ...(colors === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/colors' } as const]),
-    ...(authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' } as const]),
+  const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] =
+    authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }];
+  const tokenRules: IRPlotThemeResolution['tokenRules'] = [
+    ...styleTokenRules.map((rule, index) => ({
+      rule,
+      kind: ThemeTokenSource.Local,
+      path: `$style/${style}/${mode}/tokenRules/${index}`,
+    })),
+    ...localTokenRules.map((rule, index) => ({
+      rule,
+      kind: ThemeTokenSource.Local,
+      path: `$spec/plotThemeTokenRules/${index}`,
+    })),
   ];
   return PlotThemeResolutionSchema.parse({
     style,
     mode,
     tokens,
     tokenSources,
+    tokenRules,
     authoredOverrides,
     plotTheme: theme,
     palette,

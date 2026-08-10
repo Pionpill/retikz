@@ -144,70 +144,74 @@ describe('builtin path generator and ribbon width profile', () => {
   });
 
   it('parabola_missing_to_and_invalid_params_throw', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'generator', name: 'parabola', params: { control: [10, 10] } },
-            ],
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'generator', name: 'parabola', params: { control: [10, 10] } },
+              ],
+            },
+          ]),
+        ).scene,
     ).toThrow(/parabola.*to/s);
 
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'generator', name: 'parabola', to: [20, 0], params: {} },
-            ],
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'generator', name: 'parabola', to: [20, 0], params: {} },
+              ],
+            },
+          ]),
+        ).scene,
     ).toThrow();
   });
 
   it('bulge_rejects_negative_base_or_peak', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'ribbon',
-            ribbon: {
-              width: { kind: 'profile', name: 'bulge', params: { base: -1, peak: 12 } },
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'path',
+              kind: 'ribbon',
+              ribbon: {
+                width: { kind: 'profile', name: 'bulge', params: { base: -1, peak: 12 } },
+              },
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [10, 0] },
+              ],
             },
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          },
-        ]),
-      ).scene,
+          ]),
+        ).scene,
     ).toThrow();
 
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'ribbon',
-            ribbon: {
-              width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: -1 } },
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'path',
+              kind: 'ribbon',
+              ribbon: {
+                width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: -1 } },
+              },
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [10, 0] },
+              ],
             },
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          },
-        ]),
-      ).scene,
+          ]),
+        ).scene,
     ).toThrow();
   });
 
@@ -250,15 +254,17 @@ describe('builtin path generator and ribbon width profile', () => {
       widthAt: () => 4,
     });
 
-    expect(() =>
-      compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
-        pathGenerators: [parabola],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
+          pathGenerators: [parabola],
+        }).scene,
     ).toThrow(/duplicate path generator registration: "parabola"/);
-    expect(() =>
-      compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
-        ribbonWidthProfiles: [bulge],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
+          ribbonWidthProfiles: [bulge],
+        }).scene,
     ).toThrow(/duplicate ribbon width profile registration: "bulge"/);
   });
 

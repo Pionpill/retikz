@@ -1,0 +1,189 @@
+---
+title: Axes
+description: Keep the origin, directions, arrows, ticks, grids, and labels of static mathematical axes in JSON-safe Axes IR, then lower it to Core Paths and Nodes.
+---
+
+`<Axes>` is a Standard Tier 2 component for static mathematical illustrations. It preserves a number line or Cartesian reference axes as persistent configuration and deterministically lowers them to Core `Path` and `Node`.
+
+## Usage
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Axes } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={280} height={170}>
+  <Axes origin={{ position: [140, 90] }} x={{ extent: 110 }} y={{ extent: 60 }} />
+</Layout>
+```
+
+The React entry contributes `AxesDefinition` locally to the current `Layout`. For persistence or non-React authoring, create the IR from `@retikz/standard` and pass the definition explicitly through Core compile options.
+
+| Scenario     | Public entry points                                               |
+| ------------ | ----------------------------------------------------------------- |
+| React        | `Axes` (`@retikz/standard-react`)                                 |
+| Vanilla      | `axes`, `AxesVanillaAdapter` (`@retikz/standard-vanilla`)         |
+| IR / persist | `AxesSchema`, `createAxes`, `AxesDefinition` (`@retikz/standard`) |
+
+See [Standard](/library/standard) for the package family and its three entry points. Use [Plot axis](/viz/plot/guide/axis) when you need data domains, scales, automatic ticks, formatters, or guide label layout.
+
+## Examples
+
+### Basic axes
+
+`x` and `y` are required axis objects. Each axis owns its `extent`, `grid`, baseline, ticks, and axis label:
+
+- Numeric `extent` means equal lengths in both directions, for example `x: { extent: 110 }`
+- `{ negative, positive }` sets the two lengths independently and allows one side to be `0`
+- Positive x values point right and positive y values point up; this conversion applies only to primitives emitted by Axes
+- `x.grid` emits vertical grid lines and `y.grid` emits horizontal grid lines, so spacing, offset, and style can be configured independently
+
+The canonical example uses an asymmetric y range, two-sided x ticks, positive-only y ticks, static numeric labels, and two independent grids.
+
+<ComponentPreview files="axes-basic" size="sm" />
+
+`origin` groups the shared screen position and origin label. To hide only one kind of artifact, set `line`, `ticks`, `grid`, or `label` to `false` on that axis object; the axis still keeps its `extent`.
+
+### Common variants
+
+Four side-by-side cases show positive half-axes, a horizontal number line, asymmetric extents, and ticks that remain after the baseline is hidden. To hide a complete axis, keep the `x` / `y` object and turn off its individual artifacts.
+
+<ComponentPreview files="axes-variants" size="sm" />
+
+Axis labels, tick labels, and the origin label all accept Core `IRTextBlock`. Plain strings work directly; formula strings such as `'$x_1$'` and `'$\\pi/2$'` require the host to inject the [TeX capability](/kernel/packages/tex) through `lowerTex`.
+
+### Controls
+
+The panel covers the origin, each axis's extent and grid, baselines, arrows, ticks, tick labels, axis labels, and the origin label. x/y grid and tick offsets can be adjusted independently while the preview viewport stays fixed.
+
+<ComponentPreview
+  files="axes-playground"
+  size="md"
+  caption="Adjust x/y extents, grids, tick distribution, and tick sides independently to see one Axes IR lower to Core primitives."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="You can skip this section at first"
+  description="Read it when you work directly with Axes IR, align it with other Core primitives, or investigate compile diagnostics."
+/>
+
+Axes IR is not a renderer-specific primitive. After `AxesDefinition` is loaded, lowering normalizes signed extents, converts the y direction, enumerates grids and ticks, and assembles ordinary Core IR in a fixed order.
+
+The following figure shows only the conversion chain owned by Axes. Its responsibility ends when the output reaches `Core IR[]`.
+
+<ComponentPreview files="axes-lowering" hideCode size="xs" />
+
+The y-axis path always runs from its negative endpoint to its positive endpoint. A positive value `v` maps to `originY - v`, so the default positive arrow points upward. This is not a new global coordinate system: neighboring `<Node position>` and `<Step to>` values still use Core's y-down coordinates.
+
+`x.grid` and `y.grid` emit ordinary lines clipped to their corresponding axis extents. The former enumerates x positions and projects them vertically; the latter enumerates y positions and projects them horizontally. Both reuse Path style and do not depend on `GridDefinition`; use standalone [Grid](/library/standard/composite/grid) for baselines, borders, and a fuller grid contract.
+
+A hand-written `IRAxes` without its definition is not interpreted silently. Core emits `COMPOSITE_NOT_REGISTERED` and skips it. Renderers see only the lowered `Path` and text `Node` values.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Axes schema and public contract',
+      path: 'packages/library/standard/src/composites/presentation/axes/schemas/schema.ts',
+    },
+    {
+      label: 'Axes direction mapping and lowering',
+      path: 'packages/library/standard/src/composites/presentation/axes/pipeline.ts',
+    },
+  ]}
+/>
+
+## API reference
+
+`AxesProps` is the public alias of `AxesInput`, and the Vanilla adapter accepts the same `AxesInput`. `createAxes` validates the input and returns `IRAxes` with schema defaults applied. `Position` in the tables comes from `@retikz/math`.
+
+### `AxesInput`
+
+| Prop      | Type                  | Default                              | Description                                                            |
+| --------- | --------------------- | ------------------------------------ | ---------------------------------------------------------------------- |
+| `origin?` | `AxesInput['origin']` | `{ position: [0, 0], label: false }` | Shared origin configuration for axes, grids, ticks, and labels         |
+| `x`       | `AxesInput['x']`      | —                                    | Horizontal axis and its vertical grid projection; `extent` is required |
+| `y`       | `AxesInput['y']`      | —                                    | Vertical axis and its horizontal grid projection; `extent` is required |
+
+### `origin`
+
+| Prop        | Type       | Default       | Description                |
+| ----------- | ---------- | ------------- | -------------------------- | ------- | --------------------------------- |
+| `position?` | `Position` | `[0, 0]`      | Shared screen-space origin |
+| `label?`    | `false`    | `IRTextBlock` | object                     | `false` | One static label placed down-left |
+
+When `label` is an object:
+
+| Prop      | Type                 | Default | Description                          |
+| --------- | -------------------- | ------- | ------------------------------------ |
+| `text`    | `IRTextBlock`        | —       | Static origin-label text             |
+| `offset?` | `number`             | `10`    | Nonnegative down-left center offset  |
+| `style?`  | `IRLabelVisualStyle` | —       | Core text style for the origin label |
+
+### `AxesInput['x']` / `AxesInput['y']`
+
+| Prop     | Type     | Default                                  | Description              |
+| -------- | -------- | ---------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `extent` | `number` | `{ negative: number; positive: number }` | —                        | Drawing lengths in both directions; a directional object must have at least one positive side |
+| `line?`  | `false`  | `IRAxesLine`                             | `{ arrows: 'positive' }` | Baseline and endpoint arrows; `false` hides only the baseline                                 |
+| `ticks?` | `false`  | `IRAxesTicks`                            | omitted                  | Ticks and optional static text for this axis                                                  |
+| `grid?`  | `false`  | `IRAxesGrid`                             | omitted                  | Grid projected from this axis: vertical for x and horizontal for y                            |
+| `label?` | `false`  | `IRTextBlock`                            | `IRAxesLabel`            | `'x'` for x, `'y'` for y                                                                      | Static axis-name text or a hidden label |
+
+### `x.grid` / `y.grid`
+
+| Prop      | Type                        | Default | Description                                            |
+| --------- | --------------------------- | ------- | ------------------------------------------------------ |
+| `spacing` | `number`                    | —       | Positive spacing along the owning axis                 |
+| `offset?` | `number`                    | `0`     | Mathematical lattice alignment offset for this axis    |
+| `style?`  | `IRStandardPathStrokeStyle` | —       | Independent Path stroke style for this grid projection |
+
+### `x.line` / `y.line`
+
+| Prop           | Type                               | Default      | Description                                                       |
+| -------------- | ---------------------------------- | ------------ | ----------------------------------------------------------------- |
+| `arrows?`      | <ApiValues name="AxesArrowMode" /> | `'positive'` | Arrow on the negative end, positive end, both ends, or neither    |
+| `arrowDetail?` | `IRArrowDetail`                    | —            | Core arrow appearance; `start` / `end` map to negative / positive |
+| `style?`       | `IRStandardPathStrokeStyle`        | —            | Path stroke fields for this baseline                              |
+
+### `x.ticks` / `y.ticks`
+
+| Prop           | Type                              | Default  | Description                                      |
+| -------------- | --------------------------------- | -------- | ------------------------------------------------ | ------------------------------- |
+| `source`       | spacing or values branch          | —        | Regular spacing or explicit tick values          |
+| `side?`        | <ApiValues name="AxesTickSide" /> | `'both'` | Perpendicular side on which tick segments extend |
+| `endpointGap?` | `number`                          | `6`      | Omits ticks close to either endpoint             |
+| `length?`      | `number`                          | `6`      | Total tick-segment length on the selected side   |
+| `style?`       | `IRStandardPathStrokeStyle`       | —        | Path stroke style for tick segments              |
+| `labels?`      | `false`                           | object   | omitted                                          | Static labels for emitted ticks |
+
+`source` is one of these JSON object branches. The public `kind` values are listed by <ApiValues name="AxesTickSourceKind" />, and spacing-branch `extent` values by <ApiValues name="AxesTickExtent" />:
+
+| Branch          | Fields                                                               | Default          | Description                                      |
+| --------------- | -------------------------------------------------------------------- | ---------------- | ------------------------------------------------ |
+| Regular spacing | `kind: 'spacing'`, `spacing: number`, `extent?: AxesTickExtentValue` | `extent: 'both'` | Enumerates regular ticks on selected half-axes   |
+| Explicit values | `kind: 'values'`, `values: Array<number>`                            | —                | Strictly increasing nonzero values inside extent |
+
+`ticks.labels.entries` is a non-empty static list of `{ value, text }` objects. Every value must match an emitted tick after endpoint-gap filtering. `offset` defaults to `4`; `style` is shared Core text style.
+
+### `x.label` / `y.label`
+
+When `label` is an object:
+
+| Prop      | Type                              | Default      | Description                                       |
+| --------- | --------------------------------- | ------------ | ------------------------------------------------- |
+| `text`    | `IRTextBlock`                     | —            | Static axis-label text                            |
+| `end?`    | <ApiValues name="AxesLabelEnd" /> | `'positive'` | Places the label beyond the positive/negative end |
+| `offset?` | `number`                          | `8`          | Nonnegative distance from endpoint to center      |
+| `style?`  | `IRLabelVisualStyle`              | —            | Core text style for the axis label                |
+
+## Related
+
+- [Grid](/library/standard/composite/grid): baselines, borders, and a fuller regular-grid contract
+- [Tier 2 Composites](/kernel/concepts/design/composite): how Core registers and lowers high-level IR
+- [Path](/kernel/components/draw/path): axis, grid-line, and tick primitives emitted by Axes
+- [TeX](/kernel/packages/tex): LaTeX formulas in axis and tick labels
+- [Plot axis](/viz/plot/guide/axis): data scales, automatic ticks, formatters, and guide layout

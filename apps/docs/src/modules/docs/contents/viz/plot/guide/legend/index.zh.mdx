@@ -69,7 +69,7 @@ Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色�
 
 <ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
 
-选择出的形态会在 `position` 对应的预留带中下沉为独立 Legend scope。图例默认使用 `500` 层级，位于坐标轴、mark 和整图文案之上；`layer={{ zIndex }}` 只移动整个 scope，不改变内部条目的顺序。
+选择出的形态会在 `position` 对应的预留带中下沉为独立 Legend scope。图例默认使用 `500` 层级，位于坐标轴、Facet 标签和 mark 之上；`layer={{ zIndex }}` 只移动整个 scope，不改变内部条目的顺序。
 
 <SourceLinks
   sources={[
@@ -89,7 +89,7 @@ Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色�
       label: 'Plot 语义图层默认值',
       path: 'packages/viz/plot/src/schemas/layer/constants.ts',
       startLine: 1,
-      endLine: 22,
+      endLine: 20,
     },
   ]}
 />

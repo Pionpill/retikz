@@ -241,12 +241,16 @@ describe('Arrow registry — boundary', () => {
 
   it('scale_length_width：scale 乘 length → markerWidth + shrink 翻倍', () => {
     // normal length 10 → shrink 10 → 末端 90
-    const longPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'normal', length: 10 })).scene.primitives);
+    const longPath = firstPath(
+      compileToScene(horizontalPathIR('->', { shape: 'normal', length: 10 })).scene.primitives,
+    );
     expect(longPath && endpointTo(longPath)).toEqual([90, 0]);
     // stealth default length 6 × scale 2 → shrink 8.4 → 末端 91.6；markerWidth = 6×2 = 12
     const scaled = endSpecOf('->', { shape: 'stealth', scale: 2 });
     expect(scaled?.markerWidth).toBeCloseTo(12, 5);
-    const scaledPath = firstPath(compileToScene(horizontalPathIR('->', { shape: 'stealth', scale: 2 })).scene.primitives);
+    const scaledPath = firstPath(
+      compileToScene(horizontalPathIR('->', { shape: 'stealth', scale: 2 })).scene.primitives,
+    );
     expect(scaledPath && endpointTo(scaledPath)).toEqual([91.6, 0]);
   });
 
@@ -284,10 +288,11 @@ describe('Arrow registry — error path', () => {
 
   it('same_name_override_rejected: arrows cannot override a builtin name', () => {
     const ir = horizontalPathIR('->', { shape: 'stealth' });
-    expect(() =>
-      compileToScene(ir, {
-        arrows: [{ ...customArrow('stealth'), name: 'stealth' }],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(ir, {
+          arrows: [{ ...customArrow('stealth'), name: 'stealth' }],
+        }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 
@@ -372,10 +377,11 @@ describe('Arrow registry — interaction', () => {
         { type: 'path', commands: [{ kind: 'move', to: [0, 0] }, { kind: 'line', to: [10, 5] }, { kind: 'close' }] },
       ],
     };
-    expect(() =>
-      compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
-        arrows: [{ ...overridden, name: 'stealth' }],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(horizontalPathIR('->', { shape: 'stealth' }), {
+          arrows: [{ ...overridden, name: 'stealth' }],
+        }).scene,
     ).toThrow(/duplicate arrow registration: "stealth"/);
   });
 });

@@ -19,12 +19,8 @@ const AUTO_COLOR = '__color';
 
 type Collected = NormalizationState;
 
-/** 按颜色字段模型选择连续或分类比例尺，并挂载可选颜色 range */
-export const buildColorScale = (
-  colorFields: Array<string>,
-  model: IRDataModel | undefined,
-  colors: Array<string> | undefined,
-): IRPlotScale => {
+/** 按颜色字段模型选择连续或分类比例尺 */
+export const buildColorScale = (colorFields: Array<string>, model: IRDataModel | undefined): IRPlotScale => {
   if (model !== undefined) {
     const typeByField = new Map(model.map(field => [field.name, field.type] as const));
     const anyContinuous = colorFields.some(field => {
@@ -33,7 +29,7 @@ export const buildColorScale = (
     });
     if (anyContinuous) return { type: PlotScale.Sequential, name: AUTO_COLOR };
   }
-  return { type: PlotScale.Ordinal, name: AUTO_COLOR, ...(colors !== undefined ? { range: colors } : {}) };
+  return { type: PlotScale.Ordinal, name: AUTO_COLOR };
 };
 
 type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'band' | 'point'> }>;

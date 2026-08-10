@@ -234,19 +234,20 @@ describe('contour — 交互', () => {
   });
 
   it('contour-anchor-fallback：canonical 名（top）→ anchor 返回 undefined、compile 回退外接 AABB、不抛错', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          { type: 'node', id: 'c', position: [0, 0], shape: { type: 'contour', params: { points } } },
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [200, 0] },
-              { type: 'step', kind: 'line', to: { id: 'c', anchor: 'top' } },
-            ],
-          },
-        ] as IRScene['children']),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            { type: 'node', id: 'c', position: [0, 0], shape: { type: 'contour', params: { points } } },
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [200, 0] },
+                { type: 'step', kind: 'line', to: { id: 'c', anchor: 'top' } },
+              ],
+            },
+          ] as IRScene['children']),
+        ).scene,
     ).not.toThrow();
   });
 });

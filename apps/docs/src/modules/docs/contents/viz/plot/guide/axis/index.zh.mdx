@@ -90,7 +90,7 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
 
 ### 语义图层
 
-坐标轴默认位于 mark 之上，网格位于 mark 之下。`layer={{ zIndex }}` 只覆盖轴 scope 的层级；grid 始终使用独立网格层，避免背景线盖住数据。默认顺序是网格 `-300`、mark `0`、轴 `200`、整图文案 `400`、图例 `500`。
+坐标轴默认位于 mark 之上，网格位于 mark 之下。`layer={{ zIndex }}` 只覆盖轴 scope 的层级；grid 始终使用独立网格层，避免背景线盖住数据。默认顺序是网格 `-300`、mark `0`、轴 `200`、Facet 标签 `300`、图例 `500`。
 
 <ComponentPreview files="axis-semantic-layers" size="md" hideCode />
 
@@ -106,7 +106,7 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
       label: 'Plot 语义图层默认值',
       path: 'packages/viz/plot/src/schemas/layer/constants.ts',
       startLine: 1,
-      endLine: 22,
+      endLine: 20,
     },
   ]}
 />

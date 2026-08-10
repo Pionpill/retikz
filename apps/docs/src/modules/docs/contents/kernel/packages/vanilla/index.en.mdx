@@ -199,7 +199,7 @@ mount(svgRoot, spec, {
 
 `figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `compileDriver` supplies domain-neutral observer, readonly-layer, and extension-diagnostic wiring, `animation` controls playback or snapshots, and `canvas` applies only to Canvas mounts. The default driver runs ordinary Core compilation and produces no readonly layers. `runtime.mode` defaults to `retained`, while `runtime.updateStrategy` defaults to `auto`; `rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. Static mode remains mutually exclusive with `updateStrategy` and `rendererFactory`, and invalid modes, primitives, or accessors throw `RETAINED_RUNTIME_INPUT_INVALID` before DOM creation.
 
-A plain spec figure, Scope, Path, or embed may carry an opaque `authoring` payload. The base normalizer only reports a stable source path and site kind; it neither interprets the payload nor writes it into final Core IR. Optional `@retikz/inspect/vanilla` provides `createInspectionVanillaAuthoring()` and an inspection driver. Standard layout adds family helpers, a barrier, and a preconfigured driver from `@retikz/standard-vanilla/inspect`. When a retained update changes authoring sites, the candidate transaction creates a new driver session; failure preserves the old frame.
+A plain spec figure, Scope, Path, or embed may carry an opaque `authoring` payload. The base normalizer only reports a stable source path and site kind; it neither interprets the payload nor writes it into final Core IR. Optional `@retikz/inspect/vanilla` provides `createInspectionVanillaAuthoring()` and an inspection driver. Layout adds family helpers, a barrier, and a preconfigured driver from `@retikz/layout-vanilla/inspect`. When a retained update changes authoring sites, the candidate transaction creates a new driver session; failure preserves the old frame.
 
 `RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` are the existing static options for SSR or precompiled Scenes and continue to reject the whole `runtime` field. Raw-input static mounts instead use `RawStaticMountOptions` / `RawStaticMountCanvasOptions` and require `runtime: { mode: 'static' }`.
 
@@ -212,6 +212,8 @@ Retained `update()` accepts only backend-matched closed plain-data options. SVG 
 `figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR. Alpha.2 folds it into a retained-config hint, but the SVG and Canvas renderers do not consume it yet and do not enable auto, static, or dynamic layer reuse from it.
 
 Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child, datasets, and composite definitions.
+
+An adapter root may reuse the embed id when authoring and canonical IR represent the same semantic element; a complex adapter may also emit other unique ids. Vanilla records actual ownership through `identityIndex` and `parentIndex` instead of requiring an `embedId/...` string prefix. Public identities must still be unique across the figure.
 
 ```ts
 import type { VanillaTier2Adapter } from '@retikz/vanilla';

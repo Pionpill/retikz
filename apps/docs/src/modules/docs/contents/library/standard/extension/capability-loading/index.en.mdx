@@ -1,0 +1,112 @@
+---
+title: Direct Definition Loading
+description: Inject the Standard Definitions needed by a figure through Core CompileOptions.composites without a Standard bundle, preset, or global registry
+---
+
+Persisted Standard IR contains only JSON-safe data. Definitions contain functions, so the host injects them explicitly at compile time through Core's `CompileOptions.composites`:
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
+
+const scene = compileToScene(persistedIR, {
+  composites: [GridDefinition, FrameDefinition],
+});
+```
+
+Standard no longer provides `StandardCapabilityModule`, `StandardBundle`, `createStandardBundle()`, `*Module`, `StandardAllPreset`, or `StandardLayoutPreset`. Select the Definitions used by the current figure and pass the array directly to Core's single registry
+
+## Scope
+
+This path is for server-side compilation, file restoration, LLM-generated IR, and tooling that needs a controlled dependency set. It answers which Definitions are available during compilation; it does not provide dynamic import, runtime package splitting, renderer settings, layout policy, or host lifecycle state
+
+React JSX and Vanilla embeds remain authoring surfaces owned by their adapters. They contribute the same Definitions for the content they author, while direct IR hosts provide `composites` explicitly
+
+## Define a capability
+
+Each Standard composite owner directly exports its Definition, factory, schema, artifact, and lowering:
+
+```ts
+import { createGrid, GridDefinition, GridSchema } from '@retikz/standard';
+
+const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, line: { spacing: 20 } }));
+const compileOptions = { composites: [GridDefinition] };
+```
+
+Third-party composites use Core's `defineComposite()` in the same way, then pass their Definition alongside the required Standard Definitions. `namespace` and `type` form the Core lookup key; persisted JSON contains the discriminator and data, not the Definition
+
+## Inject into a host
+
+### Direct IR and React `ir` mode
+
+```tsx
+import { Layout } from '@retikz/react';
+import { FrameDefinition, GridDefinition } from '@retikz/standard';
+
+<Layout ir={persistedIR} composites={[GridDefinition, FrameDefinition]} />;
+```
+
+If a Definition is missing, Core retains its `COMPOSITE_NOT_REGISTERED` diagnostic. Core-native children and other registered composites continue according to Core semantics
+
+### React JSX
+
+`<Grid>`, `<Axes>`, `<Frame>`, and `<Legend>` contribute Standard Definitions through static adapters. Layout containers enter the same Core registry through `@retikz/layout-react`; Standard neither creates a second registry nor forwards Layout adapters
+
+### Vanilla
+
+Vanilla builders continue to use adapters for authoring. Pass only the adapters used by the current figure, or use `StandardVanillaAdapters` as the adapter convenience array:
+
+```ts
+import { GridDefinition } from '@retikz/standard';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const svg = renderToSvgString(persistedIR, {
+  compile: { composites: [GridDefinition] },
+});
+```
+
+`StandardVanillaAdapters` is an authoring convenience from `@retikz/standard-vanilla`, not a Standard compile preset. Layout authoring uses `LayoutVanillaAdapters` from `@retikz/layout-vanilla`
+
+## Execution model
+
+1. The host selects the Definitions needed by the current figure from `@retikz/standard`
+2. The host places the Definition array in Core `CompileOptions.composites`
+3. Core builds the composite registry for this compilation from `namespace` and `type`
+4. Core validates IR, expands Definitions, and produces Scene, diagnostics, and applicable typed artifacts
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Grid Definition and public composite contract',
+      path: 'packages/library/standard/src/composites/presentation/grid/definition.ts',
+    },
+  ]}
+/>
+
+## Errors and limits
+
+| Situation                                                            | Result                                                                             |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| IR references a Standard composite whose Definition was not injected | Core emits `COMPOSITE_NOT_REGISTERED` with an explicit diagnostic                  |
+| The same Definition appears twice in the array                       | Standard does not silently deduplicate it; Core reports the duplicate registration |
+| Different objects use the same `namespace` / `type`                  | Core reports `duplicate composite registration`                                    |
+| A Definition is placed in persisted JSON                             | Not allowed; JSON contains schema-defined data only                                |
+| Direct IR and JSX / an embed inject the same provider key            | Core fails loudly; Standard adds no overwrite priority                             |
+
+## API reference
+
+| Export                                                | Package                    | Responsibility                                              |
+| ----------------------------------------------------- | -------------------------- | ----------------------------------------------------------- |
+| `GridDefinition`, `AxesDefinition`, `FrameDefinition` | `@retikz/standard`         | Core Definitions for the presentation composites            |
+| `LegendDefinition`                                    | `@retikz/standard`         | Legend Definition and artifact contract                     |
+| `GridSchema`, `createGrid()`, and peers               | `@retikz/standard`         | Validate and construct JSON-safe Standard input             |
+| `StandardVanillaAdapters`                             | `@retikz/standard-vanilla` | Convenience array for the current Standard Vanilla adapters |
+
+All three Standard packages still expose only their root entry. Definitions are named exports, so consumers' bundlers can tree-shake by reference. On-demand use means selecting Definitions for compilation; it is not runtime dynamic loading
+
+## Related
+
+- [Standard](/library/standard): understand the package family and its React, Vanilla, and persisted JSON entry points
+- [Composites](/library/standard/composite): browse the Standard composite catalog
+- [Layout Containers](/library/layout): Flex, Grid, Overlay, and typed artifacts
+- [Core Extension Mechanisms](/kernel/reference/runtime/extensions): define and register third-party Core Definitions

@@ -166,7 +166,11 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 8]), line([0, 60]), line([92, 60])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+      move([0, 8]),
+      line([0, 60]),
+      line([92, 60]),
+    ]);
   });
 
   it('旧两段 fold 在同轴退化时保持原 clipping 语义', () => {
@@ -185,7 +189,11 @@ describe("compile path: 'step' 折角", () => {
         },
       ],
     };
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([0, 0]), line([0, 52])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+      move([0, 0]),
+      line([0, 0]),
+      line([0, 52]),
+    ]);
   });
 
   it.each([

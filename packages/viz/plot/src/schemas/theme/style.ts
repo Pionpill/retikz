@@ -12,6 +12,7 @@ import { z } from 'zod';
 import {
   AxisTickLabelGapSchema,
   AxisTickMarkSchema,
+  AxisTitlePaddingSchema,
   LegendGuideStyleSchema,
   LegendLayoutGapSchema,
   LegendRampLengthSchema,
@@ -28,12 +29,10 @@ export const PlotColorPaletteSchema = z.array(CssColorSchema).min(1).describe('N
 
 /** Plot 主题 token 的唯一字段契约 */
 export const PlotThemeTokenFieldShape = {
-  [PlotThemeToken.PlotSurfaceFill]: PaintValueSchema.describe('Plot panel surface fill paint'),
+  [PlotThemeToken.PlotAreaFill]: PaintValueSchema.describe('Plot area background fill paint'),
   [PlotThemeToken.PlotTypographyForeground]: CssColorSchema.describe('Global Plot guide foreground color'),
   [PlotThemeToken.PlotTypographyFontFamily]: FontFamilySchema.describe('Global Plot guide font family'),
   [PlotThemeToken.PlotTypographyFontSize]: FontSizeSchema.describe('Global Plot guide font size'),
-  [PlotThemeToken.PlotLabelForeground]: CssColorSchema.describe('Plot label foreground color'),
-  [PlotThemeToken.PlotLabelFontSize]: FontSizeSchema.describe('Plot label font size'),
   [PlotThemeToken.AxisLineEnabled]: z.boolean().describe('Whether existing Plot axes show baselines by default'),
   [PlotThemeToken.AxisLineStroke]: PaintValueSchema.describe('Axis baseline stroke paint'),
   [PlotThemeToken.AxisLineStrokeWidth]: StrokeWidthSchema.describe('Axis baseline stroke width'),
@@ -43,9 +42,14 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.AxisTickLabelForeground]: CssColorSchema.describe('Axis tick label foreground color'),
   [PlotThemeToken.AxisTickLabelFontSize]: FontSizeSchema.describe('Axis tick label font size'),
   [PlotThemeToken.AxisTickLabelGap]: AxisTickLabelGapSchema.describe('Gap from axis ticks to labels'),
+  [PlotThemeToken.AxisTitleEnabled]: z.boolean().describe('Whether authored axis titles are visible by default'),
   [PlotThemeToken.AxisTitleForeground]: CssColorSchema.describe('Axis title foreground color'),
   [PlotThemeToken.AxisTitleFontSize]: FontSizeSchema.describe('Axis title font size'),
   [PlotThemeToken.AxisTitleFontWeight]: FontWeightSchema.describe('Axis title font weight'),
+  [PlotThemeToken.AxisTitlePadding]: AxisTitlePaddingSchema.describe(
+    'Padding from the axis tick label band to the title center',
+  ),
+  [PlotThemeToken.AxisGridEnabled]: z.boolean().describe('Whether existing Plot axes show grid lines by default'),
   [PlotThemeToken.AxisGridStroke]: PaintValueSchema.describe('Axis grid stroke paint'),
   [PlotThemeToken.AxisGridStrokeWidth]: StrokeWidthSchema.describe('Axis grid stroke width'),
   [PlotThemeToken.AxisGridDrawOpacity]: OpacitySchema.describe('Axis grid draw opacity'),
@@ -70,22 +74,60 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.PlotPaletteDiverging]: ColorSchemeNameSchema.describe('Diverging color scheme name'),
 } as const;
 
+/** Axis rule 可覆盖的 canonical token 字段契约 */
+export const PlotAxisThemeTokenFieldShape = {
+  [PlotThemeToken.AxisLineEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineEnabled],
+  [PlotThemeToken.AxisLineStroke]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineStroke],
+  [PlotThemeToken.AxisLineStrokeWidth]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineStrokeWidth],
+  [PlotThemeToken.AxisLineDrawOpacity]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineDrawOpacity],
+  [PlotThemeToken.AxisTickMark]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickMark],
+  [PlotThemeToken.AxisTickLabelEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelEnabled],
+  [PlotThemeToken.AxisTickLabelForeground]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelForeground],
+  [PlotThemeToken.AxisTickLabelFontSize]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelFontSize],
+  [PlotThemeToken.AxisTickLabelGap]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelGap],
+  [PlotThemeToken.AxisTitleEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleEnabled],
+  [PlotThemeToken.AxisTitleForeground]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleForeground],
+  [PlotThemeToken.AxisTitleFontSize]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleFontSize],
+  [PlotThemeToken.AxisTitleFontWeight]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleFontWeight],
+  [PlotThemeToken.AxisTitlePadding]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitlePadding],
+  [PlotThemeToken.AxisGridEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridEnabled],
+  [PlotThemeToken.AxisGridStroke]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStroke],
+  [PlotThemeToken.AxisGridStrokeWidth]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStrokeWidth],
+  [PlotThemeToken.AxisGridDrawOpacity]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridDrawOpacity],
+} as const;
+
+const rejectExplicitUndefined = (
+  overrides: Record<string, unknown>,
+  tokens: ReadonlyArray<string>,
+  context: z.core.$RefinementCtx<Record<string, unknown>>,
+): void => {
+  for (const token of tokens) {
+    if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: [token],
+        message: 'Plot theme token overrides must omit unset values instead of using undefined',
+        input: overrides,
+      });
+    }
+  }
+};
+
 /** 用户可稀疏覆盖的严格 Plot token map */
 export const PlotThemeTokenOverridesSchema = z
   .strictObject(PlotThemeTokenFieldShape)
   .partial()
-  .superRefine((overrides, context) => {
-    for (const token of Object.values(PlotThemeToken)) {
-      if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: [token],
-          message: 'Plot theme token overrides must omit unset values instead of using undefined',
-        });
-      }
-    }
-  })
+  .superRefine((overrides, context) => rejectExplicitUndefined(overrides, Object.values(PlotThemeToken), context))
   .describe('Sparse strict overrides for canonical Plot theme tokens');
+
+/** Axis scoped rule 可稀疏覆盖的严格 token map */
+export const PlotAxisThemeTokenOverridesSchema = z
+  .strictObject(PlotAxisThemeTokenFieldShape)
+  .partial()
+  .superRefine((overrides, context) =>
+    rejectExplicitUndefined(overrides, Object.keys(PlotAxisThemeTokenFieldShape), context),
+  )
+  .describe('Sparse strict Axis token overrides for one scoped theme rule');
 
 /** preset 与用户覆盖解析后的完整 Plot token map */
 export const PlotResolvedThemeTokensSchema = z

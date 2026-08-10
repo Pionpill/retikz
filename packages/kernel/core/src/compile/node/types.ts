@@ -1,7 +1,7 @@
 ﻿import type { BoundsInsets } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderCollection } from '../../providers/registry/index';
 import type {
   BlendModeValue,
   IRAnimationTrack,

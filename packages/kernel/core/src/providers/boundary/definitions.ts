@@ -6,7 +6,7 @@ import type { Rect } from '../../shared';
 
 import { defineBoundary } from '../../contract';
 import { BoundaryFit, BuiltinShape } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry';
+import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape, rectangle } from '../shape';
 
 const builtinBoundaryParamsSchema = z.strictObject({
@@ -15,11 +15,7 @@ const builtinBoundaryParamsSchema = z.strictObject({
     .optional()
     .default(BoundaryFit.Tight)
     .describe('How the regular boundary fits the visual shape: shape-aware tight envelope or AABB bounds.'),
-  gap: z
-    .number()
-    .optional()
-    .default(0)
-    .describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
+  gap: z.number().optional().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
 });
 
 type BuiltinBoundaryParams = { fit: BoundaryFitValue; gap: number };

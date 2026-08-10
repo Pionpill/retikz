@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { RibbonWidthProfileDefinition } from '../../contract';
 
 import { defineRibbonWidthProfile } from '../../contract';
-import { defineBuiltinProviderArray } from '../registry';
+import { defineBuiltinProviderArray } from '../registry/index';
 
 export type BuiltinRibbonWidthProfileName = 'bulge';
 

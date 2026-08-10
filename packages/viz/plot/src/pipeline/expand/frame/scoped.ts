@@ -4,7 +4,7 @@ import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
 import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlotSpec } from '../../../schemas';
-import type { Margins, Rect } from '../../../shared';
+import type { Rect } from '../../../shared';
 import type {
   CompositionAxisPolicyValue,
   CompositionLayout,
@@ -62,7 +62,6 @@ export type ResolveScopedFramesInput = {
   compositionPolicyContext: { hasFacets: boolean; hasScaffolds: boolean };
   allGuides: Array<IRPlotGuide>;
   allGuidesWithCompositionGap: Array<IRPlotGuide>;
-  scopedLabelReserve?: Partial<Margins>;
 };
 
 /** scoped/scaffold frame 解析结果及后续 facet/mark lowering 需要的 scope 查询 */
@@ -100,7 +99,6 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
     compositionPolicyContext,
     allGuides,
     allGuidesWithCompositionGap,
-    scopedLabelReserve,
   } = input;
   const coordinateScopes = resolveCoordinateScopeRegistry(node);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
@@ -376,7 +374,6 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
       height,
       fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
       margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
-      ...(scopedLabelReserve !== undefined ? { layoutReserve: scopedLabelReserve } : {}),
       labelGap: scopedLayout?.labelGap,
       ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
       ...(scaffoldFrame !== undefined && (scaffold?.frame ?? ScaffoldFrameMode.Shared) === ScaffoldFrameMode.Shared

@@ -7,6 +7,7 @@ import {
   AxisLineStyleSchema,
   AxisTickLabelLayoutSchema,
   AxisTickMarkSchema,
+  AxisTitlePaddingSchema,
   GuideTextStyleSchema,
   LegendGuideStyleSchema,
 } from '../guide';
@@ -35,12 +36,15 @@ const ThemeAxisTickLabelsSchema = z
   .describe('Theme defaults for axis tick labels. Tick label format is guide semantics and is not accepted here');
 
 const ThemeAxisTitleSchema = z
-  .strictObject({
-    padding: NonNegativeNumberSchema.optional().describe('Default padding from tick labels to axis title center'),
-    rotate: z.number().optional().describe('Default axis title rotation in degrees around the title center'),
-    ...GuideTextStyleSchema.shape,
-  })
-  .describe('Theme defaults for axis title style. Title text stays on the axis guide root');
+  .union([
+    z.literal(false),
+    z.strictObject({
+      padding: AxisTitlePaddingSchema.optional().describe('Default padding from tick labels to axis title center'),
+      rotate: z.number().optional().describe('Default axis title rotation in degrees around the title center'),
+      ...GuideTextStyleSchema.shape,
+    }),
+  ])
+  .describe('Theme defaults for axis title visibility and style. Title text stays on the axis guide root');
 
 export const PlotAxisThemeSchema = z
   .strictObject({
@@ -50,10 +54,11 @@ export const PlotAxisThemeSchema = z
       .describe('Axis baseline default style; false hides baselines by default'),
     ticks: ThemeAxisTicksSchema.optional().describe('Axis tick mark default style'),
     tickLabels: ThemeAxisTickLabelsSchema.optional().describe('Axis tick label default style'),
-    title: ThemeAxisTitleSchema.optional().describe('Axis title default style'),
-    grid: AxisGridLineStyleSchema.optional().describe(
-      'Axis grid line default style. It does not enable grid by itself',
-    ),
+    title: ThemeAxisTitleSchema.optional().describe('Axis title visibility and default style'),
+    grid: z
+      .union([z.literal(false), AxisGridLineStyleSchema])
+      .optional()
+      .describe('Axis grid visibility and shared major line style defaults'),
   })
   .describe('Plot theme defaults for axis visual tokens');
 
@@ -67,11 +72,16 @@ export const PlotPaletteThemeSchema = z
   })
   .describe('Plot palette defaults. Explicit scale range or scheme still has higher priority');
 
+export const PlotAreaThemeSchema = z
+  .strictObject({
+    fill: PaintValueSchema.optional().describe('Plot area background fill'),
+  })
+  .describe('Plot area visual defaults');
+
 export const PlotThemeSchema = z
   .strictObject({
-    background: PaintValueSchema.optional().describe('Plot panel background fill. Omit to keep the panel transparent'),
+    plotArea: PlotAreaThemeSchema.optional().describe('Plot area visual defaults'),
     typography: GuideTextStyleSchema.optional().describe('Global guide text defaults'),
-    labelText: GuideTextStyleSchema.optional().describe('Default text style for static plot labels'),
     axis: PlotAxisThemeSchema.optional().describe('Axis visual defaults'),
     legend: LegendGuideStyleSchema.optional().describe('Legend visual defaults'),
     palette: PlotPaletteThemeSchema.optional().describe('Plot color palette defaults'),

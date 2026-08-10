@@ -22,15 +22,22 @@ describe('@retikz/notation package boundary', () => {
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
   });
 
-  it('exposes the seven accepted Notation elements without compatibility aliases', () => {
+  it('exposes the six accepted Notation elements without compatibility aliases', () => {
     expect(notationExports.NOTATION_NAMESPACE).toBe('notation');
     expect(notationExports.LogicFrameDefinition).toBeDefined();
     expect(notationExports.ConnectorDefinition).toBeDefined();
-    expect(notationExports.CalloutDefinition).toBeDefined();
     expect(notationExports.TerminalSchema).toBeDefined();
     expect(notationExports.StageSchema).toBeDefined();
     expect(notationExports.DecisionSchema).toBeDefined();
     expect(notationExports.JunctionSchema).toBeDefined();
+    expect(notationExports.NotationElementType).toEqual({
+      LogicFrame: 'logicFrame',
+      Terminal: 'terminal',
+      Stage: 'stage',
+      Decision: 'decision',
+      Junction: 'junction',
+      Connector: 'connector',
+    });
     expect(notationExports).not.toHaveProperty('StandardLogicFrameDefinition');
     expect(notationExports).not.toHaveProperty('StandardTerminal');
   });
@@ -43,6 +50,21 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('STANDARD_LAYOUT_NAMESPACE');
     expect(notationExports).not.toHaveProperty('LogicUnitAppearanceBaseShape');
     expect(notationExports).not.toHaveProperty('ConnectorAppearanceCanonicalSchema');
+  });
+
+  it('preserves owner-routed public contracts and removes dead shared surface', () => {
+    expect(notationExports.NotationElementType).toBeDefined();
+    expect(notationExports.ConnectorRole).toBeDefined();
+    expect(notationExports).not.toHaveProperty('CalloutSide');
+    expect(notationExports).not.toHaveProperty('CalloutSideSchema');
+    expect(notationExports).not.toHaveProperty('CalloutPlacementSchema');
+    expect(notationExports).not.toHaveProperty('CalloutSchema');
+    expect(notationExports).not.toHaveProperty('CalloutArtifactSchema');
+    expect(notationExports).not.toHaveProperty('LogicDiagramTargetSchema');
+    expect(notationExports).not.toHaveProperty('ConnectorAppearanceSchema');
+    expect(notationExports).not.toHaveProperty('createCallout');
+    expect(notationExports).not.toHaveProperty('CalloutDefinition');
+    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceSchema');
   });
 
   it('rejects the old Standard composite namespace', () => {
@@ -59,8 +81,10 @@ describe('@retikz/notation package boundary', () => {
         namespace: 'standard',
         type: 'connector',
         id: 'legacy',
-        from: [0, 0],
-        to: [10, 10],
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 10] },
+        ],
       }),
     ).toThrow();
   });

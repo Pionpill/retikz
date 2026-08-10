@@ -23,7 +23,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       data={waterfallRows}
       width={420}
       height={260}
-      colors={['#16a34a', '#dc2626']}
+      plotTheme={{ palette: { categorical: ['#16a34a', '#dc2626'] } }}
       transformDefinitions={[waterfallTransform]}
     >
       <Transform {...waterfallOperationOf(values)} />

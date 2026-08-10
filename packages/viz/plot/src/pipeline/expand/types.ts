@@ -14,10 +14,10 @@ import type {
   AnyChannelDefinition,
   AnyCoordinateDefinition,
   AnyMarkDefinition,
-  AnyPlotThemeStyleDefinition,
   AnyScaleDefinition,
   CoordinateFrame,
   DimensionRole,
+  PlotThemeStyleDefinition,
   ResolveLabel,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
@@ -57,7 +57,7 @@ export type CoordinateScopeRegistry = {
 /** lowerPlots 运行时选项；尺寸、registry 与 runtime resolver 均不进入 Plot IR */
 export type LowerPlotsOptions = {
   /** 运行时注入的 Plot Theme style definitions */
-  plotThemeStyles?: ReadonlyArray<AnyPlotThemeStyleDefinition>;
+  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
   /** 整图宽（user units），默认 480 */
   width?: number;
   /** 整图高（user units），默认 300 */

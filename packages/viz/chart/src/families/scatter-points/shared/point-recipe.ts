@@ -101,7 +101,6 @@ export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
     ...(spec.composition === undefined ? { coordinate: cartesian.coordinate } : { composition: spec.composition }),
     marks: [mark],
     guides,
-    ...(spec.layout === undefined ? {} : { layout: spec.layout }),
     ...(spec.width === undefined ? {} : { width: spec.width }),
     ...(spec.height === undefined ? {} : { height: spec.height }),
     ...(spec.meta === undefined ? {} : { meta: spec.meta }),
