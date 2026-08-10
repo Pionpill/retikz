@@ -1,20 +1,12 @@
 import type { IRPlotRelateTransform, IRPlotRelationRoutingSpec, IRPlotSpec } from '@retikz/plot';
-import type { TextProps } from '@retikz/react';
-import type { FC } from 'react';
 
 import { lowerPlots, PlotSpecSchema } from '@retikz/plot';
-import { Text } from '@retikz/react';
-import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
 import { buildPlotSpec } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
-import { CaptionLabel, TitleLabel } from '../../../src/components/labels';
 import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';
-
-const ShadowText: FC<TextProps> = () => null;
-ShadowText.displayName = Text.displayName;
 
 describe('buildPlotSpec 装配', () => {
   it('透传 Plot plotThemeTokens 到 canonical PlotSpec', () => {
@@ -85,13 +77,12 @@ describe('buildPlotSpec 装配', () => {
     });
   });
 
-  it('layer prop forwards to mark, guide, legend, and plot labels', () => {
+  it('layer prop forwards to marks and guides', () => {
     const spec = buildPlotSpec(
       <>
         <PointMark x="x" y="y" layer={{ zIndex: 120 }} color="kind" />
         <Axis dimension="x" layer={{ zIndex: 240 }} />
         <Legend channel="color" layer={{ zIndex: 520 }} />
-        <TitleLabel text="Revenue" layer={{ zIndex: 430 }} />
       </>,
       '__plot',
       { dataFieldNames: new Set(['kind']) },
@@ -102,7 +93,6 @@ describe('buildPlotSpec 装配', () => {
       { type: 'axis', dimension: 'x', layer: { zIndex: 240 } },
       { type: 'legend', channel: 'color', layer: { zIndex: 520 } },
     ]);
-    expect(spec.labels?.[0]).toMatchObject({ role: 'title', layer: { zIndex: 430 } });
   });
 
   it('point shape 字段 → shape 通道', () => {
@@ -335,145 +325,6 @@ describe('buildPlotSpec 装配', () => {
   it('装配产物是合法 IR（过 PlotSpecSchema）', () => {
     const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('collects plot label components as plot-level labels', () => {
-    const spec = buildPlotSpec(
-      <>
-        <TitleLabel
-          text={['Monthly Revenue', 'Internal view']}
-          placement={{ kind: 'side', side: 'top', placement: 'midway', padding: 8 }}
-        />
-        <CaptionLabel>Source: internal data</CaptionLabel>
-        <PathMark x="month" y="revenue" />
-      </>,
-      '__plot',
-      {
-        layout: { autoPadding: true },
-      },
-    );
-    expect(spec.layout).toEqual({ autoPadding: true });
-    expect(spec.labels?.[0]).toMatchObject({
-      type: 'text',
-      role: 'title',
-      text: ['Monthly Revenue', 'Internal view'],
-    });
-    expect(spec.labels?.[1]).toMatchObject({ type: 'text', role: 'caption', text: 'Source: internal data' });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('collects core Text children inside plot labels as styled text lines', () => {
-    const spec = buildPlotSpec(
-      <>
-        <TitleLabel>
-          <Text fill="#0f172a" font={{ weight: 'bold' }}>
-            Monthly Revenue
-          </Text>
-          <Text opacity={0.65}>Internal view</Text>
-        </TitleLabel>
-        <PathMark x="month" y="revenue" />
-      </>,
-      '__plot',
-    );
-    expect(spec.labels?.[0]).toMatchObject({
-      type: 'text',
-      role: 'title',
-      text: [
-        { text: 'Monthly Revenue', fill: '#0f172a', font: { weight: 'bold' } },
-        { text: 'Internal view', opacity: 0.65 },
-      ],
-    });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('collects plain text followed by core Text inside plot labels', () => {
-    const spec = buildPlotSpec(
-      <>
-        <TitleLabel>
-          Monthly Revenue
-          <Text opacity={0.65}>Internal view</Text>
-        </TitleLabel>
-        <PathMark x="month" y="revenue" />
-      </>,
-      '__plot',
-    );
-    expect(spec.labels?.[0]).toMatchObject({
-      type: 'text',
-      role: 'title',
-      text: ['Monthly Revenue', { text: 'Internal view', opacity: 0.65 }],
-    });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('collects core Text children when the text child is wrapped in a single-item array', () => {
-    const textElement = createElement(Text, { opacity: 0.65, children: ['Internal view'] } as unknown as TextProps);
-    const spec = buildPlotSpec(
-      <>
-        <TitleLabel>
-          Monthly Revenue
-          {textElement}
-        </TitleLabel>
-        <PathMark x="month" y="revenue" />
-      </>,
-      '__plot',
-    );
-    expect(spec.labels?.[0]).toMatchObject({
-      type: 'text',
-      role: 'title',
-      text: ['Monthly Revenue', { text: 'Internal view', opacity: 0.65 }],
-    });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('collects Text-compatible children by displayName across module instances', () => {
-    const spec = buildPlotSpec(
-      <>
-        <TitleLabel>
-          Monthly Revenue
-          <ShadowText opacity={0.65}>Internal view</ShadowText>
-        </TitleLabel>
-        <PathMark x="month" y="revenue" />
-      </>,
-      '__plot',
-    );
-    expect(spec.labels?.[0]).toMatchObject({
-      type: 'text',
-      role: 'title',
-      text: ['Monthly Revenue', { text: 'Internal view', opacity: 0.65 }],
-    });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('does not invoke unknown function components while collecting plot label children', () => {
-    const ThrowingWrapper: FC = () => {
-      throw new Error('wrapper component must not run during buildPlotSpec');
-    };
-
-    const spec = buildPlotSpec(
-      <>
-        <TitleLabel>
-          Monthly Revenue
-          <ThrowingWrapper />
-        </TitleLabel>
-        <PathMark x="month" y="revenue" />
-      </>,
-      '__plot',
-    );
-
-    expect(spec.labels?.[0]).toMatchObject({ type: 'text', role: 'title', text: 'Monthly Revenue' });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
-  it('rejects plot labels with both text prop and children', () => {
-    expect(() =>
-      buildPlotSpec(
-        <>
-          <TitleLabel text="Monthly Revenue">Internal view</TitleLabel>
-          <PathMark x="month" y="revenue" />
-        </>,
-        '__plot',
-      ),
-    ).toThrow(/<TitleLabel> cannot use both text and children/);
   });
 
   it('忽略非 mark 子节点（裸文本等）', () => {

@@ -107,11 +107,6 @@ const withPlotTheme = (spec: IRPlotSpec, plotTheme: IRPlotSpec['plotTheme'] | un
   ...(plotTheme !== undefined ? { plotTheme } : {}),
 });
 
-const withPlotLayout = (spec: IRPlotSpec, layout: IRPlotSpec['layout'] | undefined): IRPlotSpec => ({
-  ...spec,
-  ...(layout !== undefined ? { layout } : {}),
-});
-
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
   for (const [key, child] of Object.entries(value)) {
@@ -143,10 +138,7 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
-    spec = withPlotLayout(
-      withPlotTheme(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.plotTheme),
-      props.layout,
-    );
+    spec = withPlotTheme(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.plotTheme);
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
@@ -161,7 +153,6 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
       dataFieldNames: dataFieldNamesOf(props.data),
       plotThemeTokens: props.plotThemeTokens,
       plotTheme: props.plotTheme,
-      layout: props.layout,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,

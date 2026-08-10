@@ -126,35 +126,6 @@ describe('plot', () => {
     expect(spec.plotThemeTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
   });
 
-  it('透传 layout 与 labels', () => {
-    const spec = plot({
-      data: { reference: 'sales' },
-      scales: [
-        { type: 'linear', name: 'x' },
-        { type: 'linear', name: 'y' },
-      ],
-      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      layout: { autoPadding: true },
-      labels: [
-        {
-          type: 'text',
-          role: 'title',
-          text: 'Sales Overview',
-          placement: { kind: 'side', side: 'top', placement: 'midway', padding: 8 },
-        },
-      ],
-      marks: [{ type: 'path', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-      guides: [
-        { type: 'axis', dimension: 'x' },
-        { type: 'axis', dimension: 'y' },
-      ],
-    });
-
-    expect(spec.layout).toEqual({ autoPadding: true });
-    expect(spec.labels?.[0]).toMatchObject({ type: 'text', role: 'title', text: 'Sales Overview' });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
-  });
-
   it('展开 yAxisId binding sugar 为 overlay composition', () => {
     const spec = plot({
       data: { reference: 'weather' },

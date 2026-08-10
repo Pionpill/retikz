@@ -12,13 +12,11 @@ import type {
   PlotDeclarationCollection,
   PlotDeclarationKind,
   PlotDeclarationPath,
-  PlotLabelTextBlock,
   ScaffoldTrackSpec,
 } from './contracts';
 
 import {
   Axis,
-  CaptionLabel,
   Facet,
   IntervalMark,
   Legend,
@@ -28,18 +26,14 @@ import {
   RelationMark,
   Scaffold,
   Scale,
-  TitleLabel,
   Track,
   Transform as TransformComponent,
 } from '../components';
-import { labelTextBlockFromChildren } from './labels';
 
 const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefined => {
   if (element.type === Facet) return 'facet';
   if (element.type === Scaffold) return 'scaffold';
   if (element.type === Track) return 'track';
-  if (element.type === TitleLabel) return 'title-label';
-  if (element.type === CaptionLabel) return 'caption-label';
   if (element.type === PathMark) return 'path-mark';
   if (element.type === PointMark) return 'point-mark';
   if (element.type === IntervalMark) return 'interval-mark';
@@ -80,14 +74,12 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
     props: IRJsonObject,
     path: PlotDeclarationPath,
     context: CollectionContext,
-    labelChildText?: PlotLabelTextBlock,
   ): void => {
     declarations.push({
       kind,
       props,
       path,
       ...(Object.keys(context).length === 0 ? {} : { context: { ...context } }),
-      ...(labelChildText === undefined ? {} : { labelChildText }),
     });
   };
 
@@ -221,11 +213,6 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
       return;
     }
 
-    if (kind === 'title-label' || kind === 'caption-label') {
-      const childText = labelTextBlockFromChildren(rawProps.children as ReactNode);
-      appendDeclaration(kind, plainPropsOf(rawProps), path, context, childText);
-      return;
-    }
     appendDeclaration(kind, plainPropsOf(rawProps), path, context);
   };
 

@@ -52,8 +52,6 @@ export type PlotThemeProps = {
   plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
   plotTheme?: IRPlotSpec['plotTheme'];
-  /** 整图 label 空间布局策略 */
-  layout?: IRPlotSpec['layout'];
 };
 
 /** spec 入口（薄包装）：给已构造好的完整 IRPlotSpec + 数据集表 */

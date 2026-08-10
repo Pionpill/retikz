@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
+import * as plotReact from '../src';
 import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotLineage } from '../src';
 
 const spec: IRPlotSpec = {
@@ -56,6 +57,11 @@ const geometry = (svg: string) => {
 };
 
 describe('<Plot spec data> 薄包装', () => {
+  it('不再公开 Plot presentation label authoring', () => {
+    expect('TitleLabel' in plotReact).toBe(false);
+    expect('CaptionLabel' in plotReact).toBe(false);
+  });
+
   it('渲染出含 path（折线）与 circle（散点）的 SVG', () => {
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
     expect(svg).toContain('<svg');
@@ -96,20 +102,6 @@ describe('<Plot spec data> 薄包装', () => {
     // 模拟运行时拿到的残缺 spec（如 LLM 生成漏字段）
     const malformed = {} as unknown as IRPlotSpec;
     expect(() => renderToStaticMarkup(<Plot spec={malformed} data={{}} width={480} height={300} />)).toThrow(ZodError);
-  });
-
-  it('spec 入口 layout props 会合并进 spec 并参与 schema 校验', () => {
-    expect(() =>
-      renderToStaticMarkup(
-        <Plot
-          spec={spec}
-          data={data}
-          width={480}
-          height={300}
-          layout={{ autoPadding: 'yes' } as unknown as IRPlotSpec['layout']}
-        />,
-      ),
-    ).toThrow(ZodError);
   });
 
   it('几何与手写 <Layout ir composites> 一致（证明薄包装不引入额外语义）', () => {

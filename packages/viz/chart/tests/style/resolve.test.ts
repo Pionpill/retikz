@@ -118,7 +118,7 @@ describe('Chart style resolution', () => {
       path: '$style/neutral/light/chart.canvas.fill',
     });
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
-    expect(result.inspection.style.plot.tokenSources).toHaveLength(40);
+    expect(result.inspection.style.plot.tokenSources).toHaveLength(38);
   });
 
   it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
@@ -126,11 +126,11 @@ describe('Chart style resolution', () => {
       ...base,
       chartThemeTokens: { 'chart.padding': 20 },
       plotThemeTokens: {
-        'plot.label.font.size': 14,
+        'plot.typography.font.size': 14,
         'plot.palette.categorical': ['#token'],
       },
       plotTheme: {
-        labelText: { font: { weight: 700 } },
+        typography: { font: { weight: 700 } },
         palette: {
           categorical: ['#raw-categorical'],
           series: ['#raw-series'],
@@ -150,7 +150,7 @@ describe('Chart style resolution', () => {
       kind: ThemeTokenSource.Local,
       path: '$spec/chartThemeTokens/chart.padding',
     });
-    expect(result.inspection.style.plot.plotTheme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
+    expect(result.inspection.style.plot.plotTheme.typography).toMatchObject({ font: { size: 14, weight: 700 } });
     expect(result.inspection.style.plot.palette).toMatchObject({
       categorical: ['#raw-categorical'],
       series: ['#raw-series'],
