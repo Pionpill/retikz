@@ -105,7 +105,7 @@ Definition 是闭合内置元素的 lowering contract，不新增可由第三方
 - adapter parity：直接 TypeScript、React 与 Vanilla 对相同作者输入生成等价 canonical Notation IR，并进入同一 Definition / Core compile 主链
 - 兼容性：这是 `0.x` breaking change。旧 `type: 'node'` 基础单元、Connector `from/to/routing/appearance`、旧 route 常量与无需 Definition 的调用方式直接移除，不提供 alias、migration、fallback 或新旧双轨
 
-本 ADR 部分 supersede alpha.1 ADR-01 中“四个基础单元是直接 Core Node Sugar”及“Connector 保留旧 JSON-safe route surface”的决策。alpha.1 的 package family、owner、release group、Standard layout composition、LogicFrame、Callout 与其它边界继续有效。
+本 ADR 部分 supersede alpha.1 ADR-01 中“四个基础单元是直接 Core Node Sugar”及“Connector 保留旧 JSON-safe route surface”的决策。alpha.1 的 package family、owner、release group、Layout composition、LogicFrame、Callout 与其它边界继续有效。
 
 Diagram architecture、Notation completeness 与 Diagram / Notation family `AGENTS.md` 统一采用以下长期边界：正式持久化元素保留 Notation semantic IR，lower target 复杂度只决定 expansion 或 layout-aware channel；没有独立持久化语义的便利写法仍可使用纯 Core Sugar。
 

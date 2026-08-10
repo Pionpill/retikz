@@ -1,7 +1,8 @@
 import { PathBaseSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import { NonBlankStringSchema, NOTATION_NAMESPACE, NotationElementType } from '../../shared';
+import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
 
 const ConnectorPathShape = PathBaseSchema.omit({
   type: true,

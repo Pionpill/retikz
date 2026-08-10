@@ -43,7 +43,7 @@ describe('Chart presentation schema', () => {
     });
   });
 
-  it('按 authored order 接受完整 Standard Flex container 与 item 字段', () => {
+  it('按 authored order 接受完整 Layout Flex container 与 item 字段', () => {
     const input = {
       layout: {
         size: { x: { kind: 'fixed', value: 360 }, y: { kind: 'content' } },

@@ -1,9 +1,10 @@
 # ADR-07：以内置 Layout Inspector 可视化布局求解结果
 
-- 状态：Accepted
+- 状态：Superseded by [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md)（2026-08-09）
 - 日期：2026-07-31
 - 范围：Core inspection contract、Render frame、React / Vanilla authoring、Standard Flex / Grid / Overlay inspector
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-06](./06-layout-artifacts-capabilities-adapters.md) · [Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md)
+- 后继：[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管当前 Layout Inspector owner；本 ADR 保留 Standard 验证期历史
 
 ## 后续演进
 

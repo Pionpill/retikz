@@ -32,6 +32,7 @@ import {
   ShadowPreset,
   ShapeRefSchema,
 } from '@retikz/core';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
@@ -189,7 +190,7 @@ export const RelationRouteStepSchema = z
     bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
     outAngle: z.number().optional().describe('Outgoing angle for kind=bend'),
     inAngle: z.number().optional().describe('Incoming angle for kind=bend'),
-    looseness: z.number().positive().optional().describe('Curve looseness for kind=bend'),
+    looseness: PositiveNumberSchema.optional().describe('Curve looseness for kind=bend'),
     label: RelationStepLabelSchema.optional().describe('Optional label attached to this drawable step'),
   })
   .describe('Relation route step lowered to a core path step');
@@ -209,7 +210,7 @@ const RelationBendRoutingSchema = z
     bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
     outAngle: z.number().optional().describe('Outgoing angle in degrees for bend routing'),
     inAngle: z.number().optional().describe('Incoming angle in degrees for bend routing'),
-    looseness: z.number().positive().optional().describe('Curve looseness factor for bend routing'),
+    looseness: PositiveNumberSchema.optional().describe('Curve looseness factor for bend routing'),
   })
   .describe('Bend relation routing strategy');
 
@@ -291,8 +292,8 @@ const markValueSchema = <T extends z.ZodTypeAny>(
 
 const StylePaintSchema = z.union([z.string(), PaintSpecSchema]);
 const StyleNumberSchema = z.number();
-const StyleNonnegativeNumberSchema = z.number().nonnegative();
-const StylePositiveNumberSchema = z.number().positive();
+const StyleNonnegativeNumberSchema = NonNegativeNumberSchema;
+const StylePositiveNumberSchema = PositiveNumberSchema;
 const StyleOpacitySchema = z.number().min(0).max(1);
 const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
 const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
@@ -844,14 +845,9 @@ export const IntervalMarkSchema = z
     fillOpacity: PointOpacityStyleSchema.optional().describe(
       'Interval cell fill opacity: field-bound datum channel or constant opacity 0..1',
     ),
-    padAngle: z
-      .number()
-
-      .nonnegative()
-      .optional()
-      .describe(
-        'Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it',
-      ),
+    padAngle: NonNegativeNumberSchema.optional().describe(
+      'Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it',
+    ),
     pull: PointNonnegativeNumberStyleSchema.optional().describe(
       'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
     ),

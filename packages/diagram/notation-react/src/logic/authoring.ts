@@ -8,6 +8,10 @@ import { buildIRWithContributions, Node, Path } from '@retikz/react';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 type IRChild = EmbeddableContribution['node'];
+type SemanticNodeAuthoringInput = Readonly<{
+  id: string;
+  position: unknown;
+}>;
 
 /** 展开透明 Fragment，并保留非空的 authoring 节点 */
 const flattenAuthoringNodes = (children: ReactNode): Array<ReactNode> => {
@@ -54,8 +58,11 @@ export const resolveContent = (
 };
 
 /** 复用 Core Node 的 React children 解析并返回不含 Core 判别字段的作者输入 */
-export const resolveSemanticNodeInput = <TInput>(children: ReactNode | undefined, input: TInput): TInput => {
-  const node = buildIRWithContributions(createElement(Node, input as unknown as NodeProps, children)).ir.children[0];
+export const resolveSemanticNodeInput = <TInput extends SemanticNodeAuthoringInput>(
+  children: ReactNode | undefined,
+  input: TInput,
+): TInput => {
+  const node = buildIRWithContributions(createElement(Node, input as NodeProps, children)).ir.children[0];
   if (node.type !== 'node') throw new Error('Semantic unit must convert to exactly one Core Node authoring value.');
   const { type: _type, shape: _shape, ...authored } = node;
   void _type;

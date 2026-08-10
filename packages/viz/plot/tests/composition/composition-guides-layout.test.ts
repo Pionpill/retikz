@@ -379,6 +379,29 @@ describe('composition guides layout lowering', () => {
     expect(gridLayersOf(outer)).toHaveLength(0);
   });
 
+  it('theme_default_grid_enters_facet_policy_before_dimension_override', () => {
+    const spec = {
+      ...facetSpec,
+      guides: facetSpec.guides.map(guide => ({ ...guide, grid: undefined })),
+      plotThemeTokens: {
+        'axis.grid.enabled': false,
+        'axis.grid.stroke': '#ffffff',
+        'axis.grid.drawOpacity': 0.15,
+      },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'y' },
+          tokens: { 'axis.grid.enabled': true },
+        },
+      ],
+    };
+    const outer = expandOf(parsePlotSpec(spec), { sales: salesRows });
+    const panels = panelScopesOf(outer);
+
+    expect(panels.map(panel => gridLayersOf(panel).map(layer => layer.meta?.dimension))).toEqual([['y'], ['y']]);
+    expect(panels.flatMap(gridLayersOf).every(layer => firstPathOf(layer).stroke === '#ffffff')).toBe(true);
+  });
+
   it('facet_outer_shared_axes_can_keep_per_panel_grids', () => {
     const spec = {
       ...facetSpec,

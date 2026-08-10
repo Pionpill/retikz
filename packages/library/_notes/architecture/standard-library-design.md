@@ -1,70 +1,69 @@
-# Standard Drawing Library 设计
+# Standard 拓展库设计
 
-> **状态：长期边界已确认，alpha.1 基线已实现。** `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 已组成独立 lockstep release group，并以同一公开 Core 扩展路径提供 Grid、Axes、Frame、布局、Legend、React JSX 与 Vanilla authoring。alpha.3 逻辑组件在 Notation 迁移完成前仍是当前公开契约，之后归入 Diagram 领域。本文只维护长期准入与依赖边界；具体 schema、API 和新增能力以对应 milestone ADR 与当前公开契约为准。
+> **状态：长期边界已确认并落地。** Standard 三包提供 Grid、Axes、Frame、Legend 等通用绘图能力；Flex / GridLayout / OverlayLayout 已迁入独立 Layout package family，不再属于 Standard。
 >
-> 关联：[`packages/library/AGENTS.md`](../../AGENTS.md) · [`Standard v0.1 roadmap`](../decisions/standard/v0/v0.1/roadmap.md) · [`原子契约与组合设计`](../../../../notes/architecture/atomic-contract-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md) · [`Diagram 制图能力域设计`](../../../../notes/architecture/diagram-design.md)
+> 关联：[`Library 能力库设计`](./library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`Standard v0.1 roadmap`](../decisions/standard/v0/v0.1/roadmap.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
 
 ---
 
 ## 定位
 
-Library 是 Retikz 在 Core 之上的官方通用绘图能力库分组，不是 Core 扩展机制的替代品。Core 保持必要的 IR、definition / registry 契约、compile 与 Scene 真源；`@retikz/standard` 用这些公开契约为作者与 Plot、Table 等官方 Tier 2 包提供常用、可按需导入的定义和通用绘图 composite。
+Standard 是 Retikz 在 Core 之上的官方绘图拓展包家族。它横向提供可按需安装的 definition、factory、简单 Tier 2 composite 与 Sugar，不把这些能力变成 Core 默认内置，也不建立 Standard 私有 IR、Scene、renderer 或全局 registry。
 
-`standard` 的“标准”表示官方维护且适合跨领域重复使用，不表示默认内置、自动全局注册或必须随 Core 安装。直接作者按图选择 Definition 与 factory，并把所需 Definition 显式注入现有 Core / adapter 入口；官方 Tier 2 包也可以声明依赖所需 capability，并通过自己的 compile 入口显式接入。
+“Standard”表示官方维护、跨领域可复用和拥有稳定公共契约，不表示所有通用能力都必须进入同一包。形成独立纵向模型、求解、artifact 与工具链的能力应拥有自己的 package family；排版布局因此由 Layout 主责。
 
-## 可选加载与横向扩展
-
-`packages/library/` 下的包和能力相对 Core、renderer 与基础 adapter 保持可选，不成为它们的默认依赖。直接使用方按需安装，并在编译时选择当前图所需的 Definition；Plot、Table 等官方 Tier 2 包可以把所需 Standard capability 作为正常声明依赖，但仍须通过自己的 compile 入口显式接入，不得依赖 import 副作用、module-level 全局 registry 或由 Core 反向自动加载。
-
-Library 的职责是在既有 Drawing Complete 机制上横向增加可复用能力：提供更多官方 definition、factory、composite 与 Sugar 组合，而不向 Core 迁入新的默认基础图元、平行 IR、Scene 语义或 renderer 分支。Core 继续保持最小且完整的基础表达与扩展合同；Library 只消费这些公开入口，领域包则先完成自身语义解析，再把领域无关的绘图输入交给 Standard。
-
-## 原子化 API 与组合
-
-底层 Core 向外导出的 schema、类型、contract、definition 与纯函数，应优先按稳定语义提供可独立复用的原子契约；Standard、其它 Tier 2 与 adapter 按需组合这些契约。原子边界按可观察语义、不变量和扩展边界划分，不等于逐字段暴露，也不为单一消费方预先固化组合 bundle。
-
-- 多个上层包以相同语义复用同一字段子集时，优先在拥有该语义的底层提供命名原子契约
-- 上层自己的默认值、禁用字段、输入收窄和领域组合语义留在上层，通过组合、扩展或收窄表达
-- 多个 Tier 2 反复对同一个大型底层 schema 做相同 `pick` / `omit`，视为底层缺少可组合公共契约的架构信号
-- 原子契约必须继续复用同一 JSON / IR / registry / pipeline 真源，不得因为组合便利复制平行词汇或消费路径
-
-## 边界
+## 准入边界
 
 进入 Standard 的能力必须同时满足：
 
-1. 移除 Plot、Table、Notation、Graph、Flow、Workspace 等领域词汇后仍然成立
-2. 至少有两个独立消费场景，不能只是某个 demo 或单一 adapter 的便捷包装
-3. 通过既有 Core `defineXxx`、registry、compile options 或 CompositeDefinition / lowering 契约闭环
-4. 持久化输入保持 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不进入公开输入
-5. React 与 Vanilla 能表达同一宿主无关语义，或 ADR 明确说明某入口不适用
+1. 移除 Plot、Table、Notation、Graph、Flow、Workspace 等领域词汇后仍成立
+2. 解决的是绘图词汇或简单组合缺口，不建立独立的纵向运行模型
+3. 通过 Core 既有 definition / registry / composite / lowering 契约闭环
+4. 持久化输入保持 JSON-safe，React 与 Vanilla 表达同一宿主无关语义
+5. 至少具有两个独立消费场景，或属于官方维护的通用扩展实现
 
-当前已验证 Grid、Axes、Frame、Box Layout 与跨 Plot/Table 复用的 Legend 呈现。通用 shape、Path、target、布局容器和 composition helper 可以进入 Standard 或 Core；带有流程、UML、状态等图式职责的 Node sugar、Connector 与 Callout 进入 Notation。是否需要新 schema 或独立 Definition，仍由对应能力 ADR 判断。
+Arrow、Shape、Boundary、Pattern、PathGenerator 等 Definition 和 Grid、Axes、Frame、Legend 等领域无关绘图 composite 可以进入 Standard。数据解析、图式角色、关系模型、排版 solver、算法布局、编辑器状态与 renderer 执行不得进入 Standard。
 
-以下内容不得进入 Standard：数据字段与 scale、表格结构、Plot/Table 的 legend 解析与绑定、Notation 图式角色、Node / Port / Edge / Group 关系模型、算法布局与路由策略、selection / history / viewport、renderer 执行语义，以及 Core 已不可缺少的基础图元。
+## 横向扩展与原子能力
 
-## 官方 Tier 2 包协作
+Standard 每项能力直接使用 Core 的同一扩展入口。内置与自定义 Definition 复用相同 contract、registry、冲突诊断与 dispatch；Standard 不提供隐式全量 bundle、module-level 注册或“内置优先”旁路。
 
-Plot、Table、Notation 等官方 Tier 2 包可以依赖 Standard，但只能消费已经移除领域词汇的公开 capability。领域包负责把自己的角色、关系、visual encoding、provenance、locator 与交互意图解析为 Standard 输入；Standard 负责通用 schema、呈现语义、布局、lowering 与领域无关 artifact，不读取或反向导出领域契约。
+多个能力反复组合相同下层契约时，优先由 Core / Math / Layout 等 owner 提供命名原子 capability。Standard 可以组合和收窄公共契约，但不 deep import owner 私有模块、复制 schema / solver 或把单个消费方需要的内部 helper 强行公开。
 
-这条依赖是单向的：`plot / table / notation -> standard -> core / math`。Standard 不依赖 Data、Plot、Table、Notation 或其它领域 feature，领域包也不得通过 Standard barrel 转手导出其公共 API。相同 Standard capability 被直接作者和多个领域包消费时，应进入同一 Definition / compile 路径；重复 composite key 的精确诊断由 Core 统一负责，不通过隐式全局注册解决。
+## 与 Layout 协作
 
-Notation 等上层 composite 若需要组合 Standard 布局，不得 deep import `compileFlexLayout`、artifact builder、spacing normalize、axis sizing 或 clip helper 等私有实现，也不得复制这些算法。Standard 应按稳定组合语义提供最小公共 layout composition surface；该公共面仍复用同一 schema、Definition、compile 与 artifact 真源，不为单一上层暴露整个内部模块。
+Standard composite 需要排版时，直接依赖 `@retikz/layout` 的公开 composition capability。Legend 仍拥有 title、items / ramp、sample / label、领域无关 artifact 与独立 Definition；Layout 只提供 child probe / placement / replay、排版求解、spacing、clip 与 Layout artifact 原子语义。
 
-## 包家族与依赖
+Standard 不通过自己的 barrel 转手导出 Layout API，不保留 `@retikz/standard/layout`、Standard Layout Definition 或 `standard.*Layout` namespace。Layout 的失败与诊断继续沿 Core layout-aware context fail-loud，Standard 不捕获后使用私有降级或 renderer 回读。
+
+## 包家族
 
 ```text
 @retikz/standard
-  ├─ 按需 definition / factory / composite
-  ├─ JSON-safe schema、contract、provider、pipeline / lowering
-  └─ 直接 Definition 注入
+  ├─ 官方 definition / factory / composite
+  ├─ JSON-safe schema、Definition 与 lowering
+  └─ 按需 Core capability contribution
 
-@retikz/standard-react ──→ @retikz/standard + @retikz/react
+@retikz/standard-react ───→ @retikz/standard + @retikz/react
 @retikz/standard-vanilla ─→ @retikz/standard + @retikz/vanilla
 ```
 
-`standard` 不依赖 adapter、renderer 或领域 feature package。两个 adapter 不复制 Standard 的 schema、definition、registry、layout 或 lowering；它们只负责 authoring 输入、宿主生命周期与输出接线。领域 feature package 可以按兼容版本依赖 `standard`，但不能改变 Standard 三包自己的 lockstep 发布边界。
+Standard 三包使用独立 release group `standard` 并保持组内 lockstep。宿主无关包可以依赖 Core、Math、Foundation 与 Layout 的公开能力，不依赖 adapter、renderer 或领域 feature；两个 adapter 不复制 Standard 或 Layout 的 schema、solver、registry 与 lowering。
+
+## 领域包协作
+
+Plot、Table、Notation 等领域包先把 channel、scale、表格规则、图式角色、provenance 与交互意图解析为领域无关输入，再分别消费 Standard 与 Layout。Standard 不反向读取领域 IR，不提供领域 adapter，也不成为其它 Library capability 的 re-export 汇总入口。
 
 ## 发布与演进
 
-三包使用独立 `standard` release group 并保持组内 lockstep。Plot、Table 等 feature group 使用兼容版本单向依赖所需 Standard capability；Standard 不反向依赖或与领域 feature lockstep。
+新增 Standard 能力继续由对应 milestone ADR 冻结公共契约、Definition、lowering、adapter、测试与文档。能力迁出时，旧 ADR 原地保留并标记 Superseded，由新 owner ADR 建立后继映射；不搬动历史文件，也不保留跨 owner alias。
 
-alpha.1 已完成 package manifest、版本起点、根入口、首批能力、发布配置和用户文档闭环。新增能力继续由对应 milestone ADR 冻结 schema、definition、lowering、adapter、测试与文档；本文不维护具体功能清单或重复公开字段。
+文档站在 Library 模块的 `Standard · 拓展` 分组维护 Standard 自己的介绍、组件、参考与更新日志，不承载 Layout 页面或 Layout release group 日志。
+
+## 非目标
+
+- 排版布局 schema、solver、artifact、inspection 与 adapter
+- Tree、Layered、Force、GraphModel、edge routing 与碰撞避让
+- Plot / Table 数据语义、Notation 图式语义、领域 provenance 与交互
+- Core IR、Scene、renderer、运行时资源或编辑器状态
+- 兼容 re-export、双 namespace、隐式全局注册或跨 package 私有导入

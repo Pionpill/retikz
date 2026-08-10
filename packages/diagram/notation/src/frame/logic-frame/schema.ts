@@ -1,10 +1,11 @@
 import { ChildSchema, PathBaseSchema } from '@retikz/core';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import {
   LayoutArtifactContainerSchema,
   LayoutArtifactRectSchema,
   LayoutOverflowSchema,
   LayoutSizeSchema,
-} from '@retikz/standard/layout';
+} from '@retikz/layout';
 import { z } from 'zod';
 
 import {
@@ -14,7 +15,6 @@ import {
   LogicNeutralStyleSchema,
   LogicOuterArtifactSchema,
   LogicSpacingSchema,
-  NonBlankStringSchema,
   NOTATION_NAMESPACE,
   NotationElementType,
 } from '../../shared';
@@ -62,7 +62,7 @@ export const LogicFrameSectionSchema = z
 export const LogicFrameAppearanceSchema = z
   .strictObject({
     style: LogicNeutralStyleSchema.default(LogicNeutralStyle),
-    cornerRadius: z.number().nonnegative().default(8),
+    cornerRadius: NonNegativeNumberSchema.default(8),
     dashPattern: LogicOutlineAppearanceSchema.shape.dashPattern,
     dashOffset: LogicOutlineAppearanceSchema.shape.dashOffset,
     divider: z.union([z.literal(false), LogicOutlineAppearanceCanonicalSchema]).default({
@@ -85,7 +85,7 @@ const LogicFrameShape = {
     .describe('Authored sections in stable layout and paint order.'),
   size: LayoutSizeSchema.default(LogicContentSizeDefault).describe('Allocation size policy for the outer block.'),
   padding: LogicSpacingSchema.default(8).describe('Default padding applied to each authored region.'),
-  rowGap: z.number().nonnegative().default(0).describe('Blank spacing between adjacent authored regions.'),
+  rowGap: NonNegativeNumberSchema.default(0).describe('Blank spacing between adjacent authored regions.'),
   overflow: LayoutOverflowSchema.default('visible').describe('Outer content overflow policy.'),
   appearance: LogicFrameAppearanceSchema.default({
     style: LogicNeutralStyle,

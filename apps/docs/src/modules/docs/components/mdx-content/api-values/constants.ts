@@ -30,6 +30,16 @@ import {
 } from '@retikz/core';
 import { DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
 import {
+  FlexLayoutDirection,
+  FlexLayoutWrap,
+  GridAutoFlow,
+  GridOverlap,
+  LayoutAlignment,
+  LayoutDistribution,
+  LayoutOverflow,
+  LayoutSizeParticipation,
+} from '@retikz/layout';
+import {
   AxisPlacementKind,
   DensityBandwidthKind,
   JitterAxis,
@@ -50,15 +60,7 @@ import {
   AxesTickExtent,
   AxesTickSide,
   AxesTickSourceKind,
-  FlexLayoutDirection,
-  FlexLayoutWrap,
-  GridAutoFlow,
   GridBorderOrder,
-  GridOverlap,
-  LayoutAlignment,
-  LayoutDistribution,
-  LayoutOverflow,
-  LayoutSizeParticipation,
 } from '@retikz/standard';
 import {
   TableBorderKind,

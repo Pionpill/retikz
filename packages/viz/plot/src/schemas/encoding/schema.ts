@@ -1,4 +1,5 @@
 ﻿import { GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 export const ChannelSchema = z
@@ -75,11 +76,9 @@ export const SizeChannelSchema = z
       .describe(
         'Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale',
       ),
-    value: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)'),
+    value: NonNegativeNumberSchema.optional().describe(
+      'Constant final radius in px, bypassing the scale entirely (mutually exclusive with field)',
+    ),
     scale: z
       .string()
       .min(1)
@@ -173,7 +172,7 @@ export const TextChannelSchema = z
 export const LabelPinStyleSchema = z
   .object({
     stroke: z.string().optional().describe('Leader line color; defaults to the label color / currentColor'),
-    strokeWidth: z.number().positive().optional().describe('Leader line width in user units; default 1'),
+    strokeWidth: PositiveNumberSchema.optional().describe('Leader line width in user units; default 1'),
     dashPattern: z.array(z.number()).optional().describe('Leader dash pattern, e.g. [2, 2]'),
   })
   .describe('Styled label leader line options aligned with core NodeLabelSchema.pin');

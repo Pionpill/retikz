@@ -5,14 +5,13 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPlotSpec, resolveLabelOf } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
-import { TitleLabel } from '../../../src/components/labels';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 import { Transform } from '../../../src/components/transform';
 import { resolvePlotRuntime } from '../../../src/plot-runtime';
 
 describe('Plot member extraction characterization', () => {
-  it('preserves mixed members, automatic bindings, shortcuts, labels, and runtime callbacks', () => {
+  it('preserves mixed members, automatic bindings, shortcuts, and runtime callbacks', () => {
     const resolvePointLabel = (row: Record<string, unknown>): string => String(row.category);
     const spec = buildPlotSpec(
       <>
@@ -23,7 +22,6 @@ describe('Plot member extraction characterization', () => {
         <Scale dimension="y" type="log" base={2} />
         <Axis dimension="x" grid />
         <Legend channel="color" title="Category" />
-        <TitleLabel text="Mixed members" />
       </>,
       'rows',
       {
@@ -51,7 +49,6 @@ describe('Plot member extraction characterization', () => {
         { type: 'log', name: '__y', base: 2 },
         { type: 'ordinal', name: '__color' },
       ],
-      labels: [{ type: 'text', role: 'title', text: 'Mixed members' }],
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
       marks: [
         {

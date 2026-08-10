@@ -46,8 +46,10 @@ describe('Chart style resolution', () => {
     const plotStyle = definePlotThemeStyle({
       name: 'brand',
       resolve: () => ({
-        ...plotBaseline,
-        [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
+        tokens: {
+          ...plotBaseline,
+          [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
+        },
       }),
     });
 
@@ -73,7 +75,7 @@ describe('Chart style resolution', () => {
       kind: ThemeTokenSource.Local,
       path: '$style/brand/light/chart.padding',
     });
-    expect(result.inspection.style.plot.palette.series).toEqual(['#core-categorical']);
+    expect(result.inspection.style.plot.palette.series).toEqual(['#brand-series']);
   });
 
   it('分别报告缺失的 Chart 与 Plot style definition', () => {
@@ -118,7 +120,7 @@ describe('Chart style resolution', () => {
       path: '$style/neutral/light/chart.canvas.fill',
     });
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
-    expect(result.inspection.style.plot.tokenSources).toHaveLength(40);
+    expect(result.inspection.style.plot.tokenSources).toHaveLength(41);
   });
 
   it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
@@ -126,19 +128,28 @@ describe('Chart style resolution', () => {
       ...base,
       chartThemeTokens: { 'chart.padding': 20 },
       plotThemeTokens: {
-        'plot.label.font.size': 14,
+        'plot.typography.font.size': 14,
         'plot.palette.categorical': ['#token'],
       },
-      colors: ['#colors-a', '#colors-b'],
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { 'axis.tickLabel.enabled': false },
+        },
+      ],
       plotTheme: {
-        labelText: { font: { weight: 700 } },
-        palette: { series: ['#raw-series'] },
+        typography: { font: { weight: 700 } },
+        palette: {
+          categorical: ['#raw-categorical'],
+          series: ['#raw-series'],
+          sector: ['#raw-sector'],
+        },
       },
     } as const;
     const result = resolveChartSpec(input, themeOf(ThemeStyle.Academic, ThemeMode.Dark));
 
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
-    expect(result.plotSpec.colors).toEqual(input.colors);
+    expect(result.plotSpec.plotThemeTokenRules).toEqual(input.plotThemeTokenRules);
     expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
     expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
     expect(
@@ -148,14 +159,17 @@ describe('Chart style resolution', () => {
       kind: ThemeTokenSource.Local,
       path: '$spec/chartThemeTokens/chart.padding',
     });
-    expect(result.inspection.style.plot.plotTheme.labelText).toMatchObject({ font: { size: 14, weight: 700 } });
+    expect(result.inspection.style.plot.plotTheme.typography).toMatchObject({ font: { size: 14, weight: 700 } });
+    expect(result.inspection.style.plot.tokenRules.at(-1)).toMatchObject({
+      rule: input.plotThemeTokenRules[0],
+      path: '$spec/plotThemeTokenRules/0',
+    });
     expect(result.inspection.style.plot.palette).toMatchObject({
-      categorical: ['#colors-a', '#colors-b'],
+      categorical: ['#raw-categorical'],
       series: ['#raw-series'],
-      sector: ['#colors-a', '#colors-b'],
+      sector: ['#raw-sector'],
     });
     expect(result.inspection.style.plot.authoredOverrides).toEqual([
-      { kind: ThemeTokenSource.Local, path: '$spec/colors' },
       { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
     ]);
   });

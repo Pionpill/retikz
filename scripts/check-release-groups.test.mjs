@@ -46,6 +46,11 @@ const baseGroups = {
     kind: 'feature',
     packages: ['@retikz/standard'],
   },
+  layout: {
+    domain: 'library',
+    kind: 'feature',
+    packages: ['@retikz/layout', '@retikz/layout-react', '@retikz/layout-vanilla'],
+  },
   notation: {
     domain: 'diagram',
     kind: 'foundation',
@@ -110,6 +115,51 @@ const basePackages = [
     },
   },
   {
+    path: 'packages/library/layout/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/layout',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'library',
+        releaseGroup: 'layout',
+        publishable: true,
+      },
+    },
+  },
+  {
+    path: 'packages/library/layout-react/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/layout-react',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'library',
+        releaseGroup: 'layout',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/layout': 'workspace:*',
+      },
+    },
+  },
+  {
+    path: 'packages/library/layout-vanilla/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/layout-vanilla',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'library',
+        releaseGroup: 'layout',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/layout': 'workspace:*',
+      },
+    },
+  },
+  {
     path: 'packages/library/standard/package.json',
     manifest: {
       ...createRootPublishContract(),
@@ -119,6 +169,9 @@ const basePackages = [
         domain: 'library',
         releaseGroup: 'standard',
         publishable: true,
+      },
+      dependencies: {
+        '@retikz/layout': 'workspace:^',
       },
     },
   },
@@ -136,7 +189,7 @@ const basePackages = [
       dependencies: {
         '@retikz/core': 'workspace:^',
         '@retikz/math': 'workspace:^',
-        '@retikz/standard': 'workspace:^',
+        '@retikz/layout': 'workspace:^',
       },
     },
   },
@@ -187,7 +240,7 @@ const basePackages = [
       },
       dependencies: {
         '@retikz/data': 'workspace:^',
-        '@retikz/standard': 'workspace:^',
+        '@retikz/layout': 'workspace:^',
       },
     },
   },
@@ -451,7 +504,7 @@ test('viz feature release groups can depend on library feature release groups', 
   assert.deepEqual(diagnostics, []);
 });
 
-test('Foundation belongs to the kernel release group with its zero-dependency publish contract', async () => {
+test('Foundation belongs to the kernel release group with its Zod-only publish contract', async () => {
   assert.ok(releaseGroups.kernel.packages.includes('@retikz/foundation'));
 
   const packageRecords = await readPackageRecords();
@@ -463,7 +516,7 @@ test('Foundation belongs to the kernel release group with its zero-dependency pu
   assert.equal(foundationRecord.manifest.sideEffects, false);
   assert.deepEqual(Object.keys(foundationRecord.manifest.exports), ['.']);
   assert.deepEqual(Object.keys(foundationRecord.manifest.publishConfig.exports), ['.']);
-  assert.deepEqual(foundationRecord.manifest.dependencies ?? {}, {});
+  assert.deepEqual(foundationRecord.manifest.dependencies ?? {}, { zod: 'catalog:' });
   assert.deepEqual(foundationRecord.manifest.peerDependencies ?? {}, {});
 
   const kernelRecords = packageRecords.filter(({ manifest }) => releaseGroups.kernel.packages.includes(manifest.name));

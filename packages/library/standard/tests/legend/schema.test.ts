@@ -1,3 +1,4 @@
+import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
@@ -9,7 +10,6 @@ import type {
   LegendInput,
 } from '../../src/composites/presentation/legend/types';
 
-import { LayoutAlignment } from '../../src/composites/layout/shared';
 import {
   LegendContentKind,
   LegendDirection,

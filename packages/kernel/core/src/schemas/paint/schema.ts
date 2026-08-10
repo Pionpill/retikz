@@ -1,6 +1,7 @@
+import { NonNegativeIntegerSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../scalar';
+import { AngleDegreesSchema } from '../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, OpacitySchema } from '../style';
 import { ImageFit } from './constants';
@@ -31,7 +32,7 @@ export const RadialGradientPaintSpecSchema = z
       .tuple([z.number(), z.number()])
       .optional()
       .describe('Center in object-bounding-box coordinates. Omitted fields use [0.5, 0.5].'),
-    radius: z.number().positive().optional().describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
+    radius: PositiveNumberSchema.optional().describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
   })
   .describe('Radial gradient paint server');
 
@@ -49,7 +50,7 @@ export const ConicGradientPaintSpecSchema = z
 
 export const PatternLineStyleSchema = z.strictObject({
   color: CssColorSchema.optional().describe('Line motif color override.'),
-  lineWidth: z.number().positive().optional().describe('Line motif stroke width override in user units.'),
+  lineWidth: PositiveNumberSchema.optional().describe('Line motif stroke width override in user units.'),
   dashed: z.boolean().optional().describe('Dashed preset override. Explicit `dashPattern` takes precedence.'),
   dotted: z
     .boolean()
@@ -64,7 +65,7 @@ export const PatternLineStyleSchema = z.strictObject({
 });
 
 export const PatternLineStyleOverrideSchema = z.strictObject({
-  index: z.number().int().nonnegative().describe('Zero-based line index within the style cycle.'),
+  index: NonNegativeIntegerSchema.describe('Zero-based line index within the style cycle.'),
   style: PatternLineStyleSchema.describe('Partial line style applied at this cycle index.'),
 });
 
@@ -117,13 +118,9 @@ export const PatternPaintSpecSchema = z
       ),
     color: PatternLineStyleSchema.shape.color.describe('Motif color; any CSS color, defaults to `currentColor`'),
     background: CssColorSchema.optional().describe('Tile background fill; omitted = transparent'),
-    size: z
-      .number()
-      .positive()
-      .optional()
-      .describe(
-        'Base motif size or spacing in user units; the definition may emit a different final tile size. Defaults to the definition value or 8.',
-      ),
+    size: PositiveNumberSchema.optional().describe(
+      'Base motif size or spacing in user units; the definition may emit a different final tile size. Defaults to the definition value or 8.',
+    ),
     lineWidth: PatternLineStyleSchema.shape.lineWidth.describe(
       'Line / grid stroke width; for dots, drives the dot radius. Default 1 (dots default to size/5)',
     ),

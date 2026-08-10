@@ -1,3 +1,4 @@
+export * from './authoring-site';
 export * from './display-names';
 export * from './embeddable';
 export type { HydrationEventPropName, HydrationEventProps } from './event-props';

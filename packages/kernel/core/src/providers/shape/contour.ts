@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 import { z } from 'zod';
 
@@ -17,13 +18,9 @@ const contourParamsSchema = z.strictObject({
     .describe(
       "Closed local-frame vertex ring (any local origin — core auto-centers on the points' AABB center so Node position aligns to the geometric center; no caller pre-centering needed), >=3 points; edges are straight lines, last point auto-connects to first.",
     ),
-  cornerRadius: z
-    .number()
-    .nonnegative()
-    .optional()
-    .describe(
-      'Uniform per-vertex fillet radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-    ),
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
+    'Uniform per-vertex fillet radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+  ),
 });
 
 export type ContourParams = z.infer<typeof contourParamsSchema>;

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { PlotAuthoringContext, PlotComposition, PlotDeclarationPath } from '../../../src/adapter';
 
 import { collectPlotDeclarations, normalizePlotDeclarations, PlotDeclarationError } from '../../../src/adapter';
-import { Axis, CaptionLabel, Facet, Legend, PointMark, Scale, Transform } from '../../../src/components';
+import { Axis, Facet, Legend, PointMark, Scale, Transform } from '../../../src/components';
 import { Plot } from '../../../src/Plot';
 
 const extensionContext = (overrides: Partial<PlotAuthoringContext> = {}): PlotAuthoringContext => ({
@@ -143,18 +143,6 @@ describe('Plot chart-extension declaration normalization', () => {
       children: <PointMark id="point" x="x" y="y" resolveLabel={row => String(row.x)} />,
       code: 'non-serializable-extension' as const,
       path: ['children', 0, 'props', 'resolveLabel'] as const,
-    },
-    {
-      name: 'static label',
-      children: <CaptionLabel text="caption" />,
-      code: 'unsupported-chart-child' as const,
-      path: ['children', 0] as const,
-    },
-    {
-      name: 'internally conflicting static label',
-      children: <CaptionLabel text="caption">conflicting child</CaptionLabel>,
-      code: 'unsupported-chart-child' as const,
-      path: ['children', 0] as const,
     },
     {
       name: 'nested Plot',

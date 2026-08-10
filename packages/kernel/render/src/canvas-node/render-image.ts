@@ -4,7 +4,7 @@ import type { Buffer } from 'node:buffer';
 import type { CanvasNodeImageFormat, RenderSceneToImageOptions } from './types';
 
 import { drawScene } from '../canvas';
-import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/shared';
+import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/internal';
 
 type NapiCanvas = {
   width: number;

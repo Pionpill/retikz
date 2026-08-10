@@ -1,3 +1,5 @@
+import { CssColorSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { scaleThreshold as d3ScaleThreshold } from 'd3-scale';
 import { z } from 'zod';
 
@@ -11,7 +13,10 @@ const thresholdsSchema = z.array(z.number()).superRefine((thresholds, context) =
   });
 });
 
-const rangeSchema = z.array(z.string().refine(value => value.trim().length > 0, 'color must not be blank')).min(1);
+const colorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
+  message: 'color must not be blank',
+});
+const rangeSchema = z.array(colorSchema).min(1);
 
 /** 阈值分档颜色 scale */
 export const THRESHOLD_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({

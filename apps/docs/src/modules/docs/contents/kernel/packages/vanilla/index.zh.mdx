@@ -199,7 +199,7 @@ mount(svgRoot, spec, {
 
 `figure()` 只描述图；`output` 控制显示尺寸和资源 id，`compile` 注入 Core 编译能力，`compileDriver` 提供领域中立的 observer、只读图层与扩展诊断接线，`animation` 控制播放或截帧，`canvas` 只给 Canvas mount 使用。默认驱动执行普通 Core 编译且不产生只读图层。`runtime.mode` 默认是 `retained`，`runtime.updateStrategy` 默认是 `auto`；`rendererFactory` 只在 retained IR / plain spec mount 中替换内置 factory。static 与 `updateStrategy` / `rendererFactory` 互斥，非法 mode、primitive 或 accessor 都会在创建 DOM 前抛 `RETAINED_RUNTIME_INPUT_INVALID`。
 
-Plain spec 的 figure、Scope、Path 与 embed 可以携带不透明 `authoring` 载荷。基础 normalizer 只报告稳定来源路径与 site 类型，不解释其语义，也不把载荷写入最终 Core IR。可选的 `@retikz/inspect/vanilla` 提供 `createInspectionVanillaAuthoring()` 与检查驱动；Standard 布局另从 `@retikz/standard-vanilla/inspect` 提供 family helper、屏障和预配置驱动。retained 更新改变 authoring site 时会在候选 transaction 中创建新的驱动 session；失败时保留旧 frame。
+Plain spec 的 figure、Scope、Path 与 embed 可以携带不透明 `authoring` 载荷。基础 normalizer 只报告稳定来源路径与 site 类型，不解释其语义，也不把载荷写入最终 Core IR。可选的 `@retikz/inspect/vanilla` 提供 `createInspectionVanillaAuthoring()` 与检查驱动；Layout 另从 `@retikz/layout-vanilla/inspect` 提供 family helper、屏障和预配置驱动。retained 更新改变 authoring site 时会在候选 transaction 中创建新的驱动 session；失败时保留旧 frame。
 
 `RenderToStringOptions`、`StaticMountOptions`、`StaticMountCanvasOptions` 与 `StaticMountUnifiedOptions` 是 SSR / 预编译 Scene 的既有 static 配置，继续拒绝整个 `runtime` 字段。raw-input static 则使用 `RawStaticMountOptions` / `RawStaticMountCanvasOptions`，必须显式传 `runtime: { mode: 'static' }`。
 

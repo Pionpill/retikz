@@ -1,9 +1,10 @@
 import type { z } from 'zod';
 
 import { NodeSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z as zod } from 'zod';
 
-import { LogicNeutralStyle, NonBlankStringSchema, NOTATION_NAMESPACE, NotationElementType } from '../../shared';
+import { LogicNeutralStyle, NOTATION_NAMESPACE, NotationElementType } from '../../shared';
 
 const SemanticNodeShape = NodeSchema.omit({ type: true, id: true, shape: true }).shape;
 
@@ -13,7 +14,7 @@ type SemanticNodeDefaults = Readonly<{
   fill: NonNullable<z.input<typeof NodeSchema>['fill']>;
 }>;
 
-/** 创建保留Notation身份并复用Core Node字段的基础单元模式 */
+/** 创建保留 Notation 身份并复用 Core Node 字段的基础单元模式 */
 const createSemanticNodeSchema = <const TType extends string>(
   type: TType,
   defaults: SemanticNodeDefaults,

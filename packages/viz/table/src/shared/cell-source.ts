@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** Table Cell 来源的判别值 */
 export const TableCellSourceKind = {
   /** 来自 manual structure 的显式 Cell */
@@ -9,4 +11,4 @@ export const TableCellSourceKind = {
 } as const;
 
 /** Table Cell 来源判别值 */
-export type TableCellSourceKindValue = (typeof TableCellSourceKind)[keyof typeof TableCellSourceKind];
+export type TableCellSourceKindValue = ValueOf<typeof TableCellSourceKind>;

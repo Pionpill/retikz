@@ -1,0 +1,149 @@
+---
+title: OverlayLayout
+description: Mix alignment and local positioning in one region with independent size participation and stable stacking order.
+---
+
+`OverlayLayout` lets several graphical children share one region. Aligned items follow container alignment, while positioned items use local `at` and `anchor` values for badges, callouts, and similar overlays. `sizeParticipation` controls container sizing, while `zIndex` controls only stable paint layers.
+
+## Usage
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
+```
+
+```tsx
+<Layout width={360} height={180}>
+  <OverlayLayout size={{ x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 120 } }}>
+    <LayoutItem kind="overlay" itemKey="base">
+      <Node position={[0, 0]} text="Base" />
+    </LayoutItem>
+    <LayoutItem
+      kind="overlay"
+      itemKey="badge"
+      placement={{ kind: 'positioned', at: { x: 270, y: 10 }, anchor: { x: 1, y: 0 } }}
+      sizeParticipation="exclude"
+      zIndex={1}
+    >
+      <Node position={[0, 0]} text="3" shape="circle" />
+    </LayoutItem>
+  </OverlayLayout>
+</Layout>
+```
+
+Use `createOverlayLayout()` with `OverlayLayoutDefinition` for JSON/IR, or `overlayLayout()` with `OverlayLayoutVanillaAdapter` for Vanilla.
+
+| Scenario         | Public entry                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| React            | `OverlayLayout`, `LayoutItem` (`@retikz/layout-react`)                                                        |
+| Vanilla          | `overlayLayout`, `OverlayLayoutVanillaAdapter` (`@retikz/layout-vanilla`)                                     |
+| Optional inspect | `InspectOverlayLayout` (`@retikz/layout-react/inspect`), `inspectOverlayLayout` (Vanilla)                     |
+| IR / persistence | `OverlayLayoutSchema`, `createOverlayLayout`, `IROverlayLayout`, `OverlayLayoutDefinition` (`@retikz/layout`) |
+
+## Examples
+
+The structural layer contributes intrinsic size. The top-right badge uses positioned placement and excludes its size contribution. The caption remains aligned. Paint order sorts by ascending `zIndex`, preserving authored `sourceIndex` within one layer.
+
+<ComponentPreview files="overlay-layout-basic" size="md" />
+
+### Aligned and positioned
+
+| Mode         | Slot source                                                     | Typical use                             |
+| ------------ | --------------------------------------------------------------- | --------------------------------------- |
+| `aligned`    | Content box after margins, resolved by alignment                | Backgrounds, centered content, captions |
+| `positioned` | `at` selects a target; `anchor` selects the slot point attached | Badges, callouts, local annotations     |
+
+### Controls
+
+Switch shared alignment, then move the positioned badge's target, anchor, and `zIndex`. The three items overlap, making paint-layer changes directly visible.
+
+<ComponentPreview
+  files="overlay-layout-playground"
+  size="lg"
+  caption="Recommended shows only the content outline; use Inspection overlay to reveal placement, anchors, padding, margin, and other details."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit this section when diagnosing baselines, structural size participation, or stable paint order."
+/>
+
+`offset` translates after placement. Baseline-aligned items require zero vertical offset, and positioned items require edge alignment, keeping local point positioning separate from cross-item baseline solving.
+
+`sizeParticipation="exclude"` excludes only minimum and natural profiles. It does not hide the item, skip replay, or change paint order. Typed artifacts preserve its slot, allocation, visual, and visible bounds even outside the container allocation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'OverlayLayout input contract',
+      path: 'packages/library/layout/src/composites/overlay-layout/schema.ts',
+    },
+    {
+      label: 'Overlay profile and placement',
+      path: 'packages/library/layout/src/composites/overlay-layout/solve.ts',
+    },
+    {
+      label: 'Overlay compile and paint order',
+      path: 'packages/library/layout/src/composites/overlay-layout/pipeline.ts',
+    },
+    {
+      label: 'OverlayLayout React adapter',
+      path: 'packages/library/layout-react/src/overlay-layout/OverlayLayout.tsx',
+    },
+  ]}
+/>
+
+## API Reference
+
+### Optional React inspection component
+
+| Prop       | Type                                               | Default | Description                                                                                |
+| ---------- | -------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `inspect?` | `false` \| `true` \| `OverlayLayoutInspectOptions` | `true`  | `InspectOverlayLayout` requests this occurrence; `false` only cancels the current instance |
+
+Base `OverlayLayout` has no `inspect` prop. The optional `InspectOverlayLayout` object form controls `placements`, `anchors`, and `stacking` independently while reusing shared bounds and box-spacing switches. See [Runtime Reference](/library/layout/reference/runtime#layout-inspector) for every field and host or Scope rules.
+
+### `OverlayLayoutInput`
+
+| Prop            | Type                                        | Default           | Description                           |
+| --------------- | ------------------------------------------- | ----------------- | ------------------------------------- |
+| `size?`         | `LayoutSizeInput`                           | content / content | Per-axis allocation policy            |
+| `padding?`      | `number` \| `IRBoxSpacing`                  | `0`               | Insets from allocation to content     |
+| `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'`       | Whether visuals clip to allocation    |
+| `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`        | Default horizontal alignment          |
+| `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`        | Default vertical alignment            |
+| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`              | Authored items with local unique keys |
+
+### `OverlayLayoutItemInput`
+
+| Prop                 | Type                                         | Default     | Description                                  |
+| -------------------- | -------------------------------------------- | ----------- | -------------------------------------------- |
+| `kind`               | `'overlay'`                                  | —           | OverlayLayout item discriminator             |
+| `key`                | `string`                                     | —           | Container-local authored identity            |
+| `child`              | `IRChild`                                    | —           | Any JSON-safe Core child                     |
+| `placement?`         | `OverlayPlacementInput`                      | aligned     | Alignment or content-local positioning       |
+| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | Translation after placement                  |
+| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | Margin around the aligned or positioned slot |
+| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | container   | Horizontal alignment override                |
+| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | container   | Vertical alignment override                  |
+| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | Whether the item contributes to profiles     |
+| `zIndex?`            | `number`                                     | `0`         | Integer paint layer with stable source order |
+
+### `OverlayPlacementInput`
+
+| kind         | Fields                                   | Meaning                                      |
+| ------------ | ---------------------------------------- | -------------------------------------------- |
+| `aligned`    | none                                     | Uses container and item alignment            |
+| `positioned` | `at`, `anchor?`, `width?`, and `height?` | Content-local target and optional exact slot |
+
+In React, write `key` as `itemKey` and provide `child` through one drawable child or `ir`.
+
+## Related
+
+- [Layout containers](/library/layout): recursive composition and common artifacts
+- [API Reference](/library/layout/reference): input contracts, artifact contracts, and runtime wiring
+- [GridLayout](/library/layout/grid-layout): two-dimensional structural arrangement
+- [FlexLayout](/library/layout/flex-layout): one-axis distribution and wrapping

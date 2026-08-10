@@ -205,7 +205,10 @@ describe('compile path: arrow 箭头', () => {
           },
         ],
       };
-      expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
+      expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
+        move([0, 0]),
+        line([expectedEndX, 0]),
+      ]);
     },
   );
 

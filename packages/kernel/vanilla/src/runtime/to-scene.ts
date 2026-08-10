@@ -14,6 +14,7 @@ import {
   createVanillaCompileDriverSession,
   defaultVanillaCompileDriver,
 } from './compile-driver';
+import { validateVanillaCoreSource } from './validate-source';
 
 /** 为非 plain spec 输入创建独立的空 runtime metadata */
 export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => createEmptyRuntimeMetaSnapshot();
@@ -59,7 +60,7 @@ export const prepareVanillaCompileInput = (
       composites: options.compile?.composites,
     });
     return Object.freeze({
-      source: normalized.ir,
+      source: validateVanillaCoreSource(normalized.ir),
       coreOptions: Object.freeze({
         ...options.compile,
         composites: normalized.composites,
@@ -69,7 +70,7 @@ export const prepareVanillaCompileInput = (
     });
   }
   return Object.freeze({
-    source: input,
+    source: validateVanillaCoreSource(input),
     coreOptions: Object.freeze({ ...(options.compile ?? {}) }),
     authoringSites: EMPTY_AUTHORING_SITES,
     runtimeMeta: createEmptyRuntimeMeta(),

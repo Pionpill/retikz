@@ -270,7 +270,7 @@ Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层
 
 - `@retikz/core` 提供 `ThemeStyle`、`ThemeMode`、Scene / Scope selector 继承、Core style definition registry、derived shared colors、`ThemeTokenSource` 与 Composite context，但原始 Core `Node`、`Path`、Coordinate 与 renderer 不直接按 preset 分支
 - Standard 的通用 presentation，以及 Plot、Chart、Table、Geo 等视觉能力必须消费有效 Theme，并解析自己拥有的 token family；Plot 即使处于比 Chart 更底层的纵向能力层，也不能因为被 Chart 复用而跳过主题解析
-- Chart 可以编排 Chart presentation、解析 Chart-owned recipe token，并把 `plotThemeTokens`、`colors` 与 Plot native `plotTheme` 交给 Plot owner；Table 可以解析 Table presentation，并把 Core shared categorical 作为继承值投影到自己的 token。任何一方都不能复制另一方的 token vocabulary、preset、resolver 或 merge 规则
+- Chart 可以编排 Chart presentation、解析 Chart-owned recipe token，并把 `plotThemeTokens` 与 Plot native `plotTheme` 交给 Plot owner；Table 可以解析 Table presentation，并把 Core shared categorical 作为继承值投影到自己的 token。任何一方都不能复制另一方的 token vocabulary、preset、resolver 或 merge 规则
 - Plot / Chart / Table 解析出的主题默认必须在 lowering 前物化为正式 Core / Standard 输入；最终 Core primitive 只接收显式 `fill`、`stroke`、`font` 等值，不再次读取 `ThemeStyle`
 - React / Vanilla adapter 只提供等价的主题 authoring、runtime definition 注入与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Standard Inspector 只消费 Core `InspectionAppearance`；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
 
@@ -288,7 +288,7 @@ Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层
 - token 映射到的正式 owner 配置或产物
 - 无法消费、冲突或被更高优先级覆盖时的诊断
 
-Core 的 `ResolvedTheme` 携带完整有效的 style / mode 与 detached `colors` view，不公开逐字段 winning Scene / Scope 或 locator。Core 的公共 `ThemeTokenSource` 只包含 `inherit | local`：owner resolver 从上层 effective Theme 直接投影的值为 `inherit`，style definition 与当前 owner authoring 产生的值为 `local`。`kind` 不表达具体入口或优先级；领域 inspection 使用稳定 `path` 区分 style、shared colors、token override、shorthand 与 native theme。不得通过值相等反推来源，也不能把未提供的字段级 Scope lineage 伪装成可追踪信息。
+Core 的 `ResolvedTheme` 携带完整有效的 style / mode 与 detached `colors` view，不公开逐字段 winning Scene / Scope 或 locator。Core 的公共 `ThemeTokenSource` 只包含 `inherit | local`：owner resolver 从上层 effective Theme 直接投影的值为 `inherit`，style definition 与当前 owner authoring 产生的值为 `local`。`kind` 不表达具体入口或优先级；领域 inspection 使用稳定 `path` 区分 style、shared colors、token override 与 native theme。不得通过值相等反推来源，也不能把未提供的字段级 Scope lineage 伪装成可追踪信息。
 
 未知 key、错误 value、缺失 required token、空 palette、非法图元与无法映射的 token 必须 fail-loud。错误至少应指出 token key、输入层和期望 contract；不得静默丢弃、回退为 renderer 默认或只在某个 adapter 打 warning。
 

@@ -9,7 +9,6 @@ export type {
 export { buildPlotSpec, resolveLabelOf } from './adapter';
 export type {
   AxisProps,
-  CaptionLabelProps,
   DatumLabelProps,
   FacetDimensionInput,
   FacetProps,
@@ -17,8 +16,6 @@ export type {
   IntervalMarkProps,
   LegendProps,
   PathMarkProps,
-  PlotLabelText,
-  PlotTextLabelProps,
   PointMarkProps,
   PositionScaleType,
   ReferenceMarkProps,
@@ -26,13 +23,11 @@ export type {
   ScaffoldProps,
   ScaleDimension,
   ScaleProps,
-  TitleLabelProps,
   TrackProps,
   TransformProps,
 } from './components';
 export {
   Axis,
-  CaptionLabel,
   Facet,
   IntervalMark,
   Legend,
@@ -42,7 +37,6 @@ export {
   RelationMark,
   Scaffold,
   Scale,
-  TitleLabel,
   Track,
   Transform,
 } from './components';

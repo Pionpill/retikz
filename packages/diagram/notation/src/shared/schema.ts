@@ -1,17 +1,13 @@
 import { BoxSpacingSchema, DrawableStyleSchema } from '@retikz/core';
-import { LayoutArtifactItemBaseSchema, LayoutArtifactRectSchema } from '@retikz/standard/layout';
+import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { LayoutArtifactItemBaseSchema, LayoutArtifactRectSchema } from '@retikz/layout';
 import { z } from 'zod';
 
 import { LogicNeutralStyle } from './constants';
 
-/** 非空且不能仅包含空白字符的编写标识 */
-export const NonBlankStringSchema = z.string().refine(value => value.trim().length > 0, {
-  message: 'String must contain at least one non-whitespace character.',
-});
-
 /** 统一或分边设置的非负间距 */
 export const LogicSpacingSchema = z
-  .union([z.number().nonnegative(), BoxSpacingSchema])
+  .union([NonNegativeNumberSchema, BoxSpacingSchema])
   .describe('Uniform or side-specific non-negative spacing.');
 
 /** LogicFrame 和内容外壳保留的中性样式默认值 */

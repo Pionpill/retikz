@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { MathJaxLowerTexOptions } from '../lower';
 import type { MathJaxSvgEngine } from '../mathjax';
-import type { ResolvedMathJaxEngineOptions } from '../mathjax/types';
+import type { ResolvedMathJaxEngineOptions } from '../mathjax/internal';
 
 import { createLowerTex } from '../lower';
 import { createMathJaxEngine } from '../mathjax';
-import { resolveMathJaxEngineOptions } from '../mathjax/profiles';
+import { resolveMathJaxEngineOptions } from '../mathjax/internal';
 
 type EngineEntry = {
   promise: Promise<MathJaxSvgEngine>;
@@ -22,17 +22,16 @@ const getEngine = (options: ResolvedMathJaxEngineOptions): EngineEntry => {
   const cached = engineEntries.get(options.key);
   if (cached) return cached;
   const entry: EngineEntry = {
-    promise: Promise.resolve(undefined as never),
+    promise: createMathJaxEngine({
+      profile: options.profile,
+      extensions: options.extensions,
+    }),
     diagnosticReported: false,
   };
-  const promise = createMathJaxEngine({
-    profile: options.profile,
-    extensions: options.extensions,
-  }).catch(error => {
+  entry.promise = entry.promise.catch(error => {
     if (engineEntries.get(options.key) === entry) engineEntries.delete(options.key);
     throw error;
   });
-  entry.promise = promise;
   engineEntries.set(options.key, entry);
   return entry;
 };

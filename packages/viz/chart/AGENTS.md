@@ -6,7 +6,7 @@
 
 - **解决的问题**：把封闭的 Chart 类型配方确定性解析为完整 PlotSpec，并把可选 presentation 映射为 Standard Flex 输入，同时提供可诊断的 resolution inspection
 - **拥有的契约**：Chart shared / presentation schema fragments、封闭 recipe 协议、Chart style definition、Chart canvas / presentation / recipe-default token 与 preset / resolver / mapping、Plot style option 与 authoring 输入转发、Chart 到 Plot 的 merge / validation、inspection 和逐类型 composite definition
-- **不拥有的能力**：Plot surface / guide / label / palette token、Plot preset / resolver / `plotTheme` merge、Data 算法、Plot lowering / registry、Standard layout、Core compile、renderer、框架 authoring、跨 adapter definition 聚合
+- **不拥有的能力**：Plot surface / typography / guide / palette token、Plot preset / resolver / `plotTheme` merge、Axis / Legend / Facet / mark / reference / annotation 文本、Data 算法、Plot lowering / registry、Standard layout、Core compile、renderer、框架 authoring、跨 adapter definition 聚合
 - **输入与输出**：接收 JSON-safe Chart variant 输入，输出完整 PlotSpec、裸 Plot 或 Standard Flex content、Chart identity node 与 inspection；不直接输出 Core primitives、Scene、DOM、SVG 或 Canvas
 - **缺口流向**：数据能力下沉 `@retikz/data`；可视化 operation 与 lowering 进入 `@retikz/plot`；通用布局进入 `@retikz/standard`；composite / adapter 聚合与 identity 进入 Kernel owner；React / Vanilla authoring 进入对应 adapter
 

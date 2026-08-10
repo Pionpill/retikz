@@ -1,15 +1,4 @@
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  Download,
-  Hand,
-  Maximize2,
-  RotateCcw,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
+import { Download, Hand, Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
 import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../../types';
 
@@ -22,15 +11,13 @@ import {
   PreviewToolbarToggleGroup,
 } from '../PreviewToolbar';
 import { RendererModeButton } from '../RendererModeButton';
-import { PAN_STEP, ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from '../usePanZoom';
+import { ZOOM_FACTOR, ZOOM_MAX, ZOOM_MIN } from '../usePanZoom';
 
 export type BuildPreviewToolSlotsOptions = {
   /** 当前平移与缩放状态。 */
   transform: Transform;
   /** 当前是否存在非默认变换。 */
   isTransformed: boolean;
-  /** 按像素增量平移预览。 */
-  panBy: (dx: number, dy: number) => void;
   /** 按比例缩放预览。 */
   zoomBy: (factor: number) => void;
   /** 重置平移与缩放。 */
@@ -62,7 +49,6 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
   const {
     transform,
     isTransformed,
-    panBy,
     zoomBy,
     resetTransform,
     dragEnabled,
@@ -76,7 +62,6 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
     toggleRendererMode,
   } = options;
   const downloadLabel = rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
-  const isSmallPreview = size === 'xs' || size === 'sm';
 
   return [
     {
@@ -85,28 +70,6 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
       visibility: 'hover',
       render: runtime => (
         <PreviewToolbar className="flex-col">
-          <div className={isSmallPreview ? 'hidden' : 'hidden grid-cols-3 gap-0.5 md:grid'}>
-            <span />
-            <PreviewToolbarButton label="Pan up" onClick={() => panBy(0, -PAN_STEP)}>
-              <ArrowUp className="size-3.5" />
-            </PreviewToolbarButton>
-            <span />
-            <PreviewToolbarButton label="Pan left" onClick={() => panBy(-PAN_STEP, 0)}>
-              <ArrowLeft className="size-3.5" />
-            </PreviewToolbarButton>
-            <PreviewToolbarButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
-              <RotateCcw className="size-3.5" />
-            </PreviewToolbarButton>
-            <PreviewToolbarButton label="Pan right" onClick={() => panBy(PAN_STEP, 0)}>
-              <ArrowRight className="size-3.5" />
-            </PreviewToolbarButton>
-            <span />
-            <PreviewToolbarButton label="Pan down" onClick={() => panBy(0, PAN_STEP)}>
-              <ArrowDown className="size-3.5" />
-            </PreviewToolbarButton>
-            <span />
-          </div>
-          {!isSmallPreview && <PreviewToolbarSeparator orientation="horizontal" className="hidden md:block" />}
           <div className="flex gap-0.5">
             <PreviewToolbarButton
               label="Zoom in"
@@ -122,11 +85,9 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
             >
               <ZoomOut className="size-3.5" />
             </PreviewToolbarButton>
-            {isSmallPreview && (
-              <PreviewToolbarButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
-                <RotateCcw className="size-3.5" />
-              </PreviewToolbarButton>
-            )}
+            <PreviewToolbarButton label="Reset" disabled={!isTransformed} onClick={resetTransform}>
+              <RotateCcw className="size-3.5" />
+            </PreviewToolbarButton>
             <PreviewToolbarButton
               label={dragEnabled ? 'Disable drag' : 'Enable drag'}
               pressed={dragEnabled}
@@ -134,16 +95,6 @@ export const buildPreviewToolSlots = (options: BuildPreviewToolSlotsOptions): Ar
             >
               <Hand className="size-3.5" />
             </PreviewToolbarButton>
-            {!isSmallPreview && (
-              <PreviewToolbarButton
-                label="Reset"
-                disabled={!isTransformed}
-                className="md:hidden"
-                onClick={resetTransform}
-              >
-                <RotateCcw className="size-3.5" />
-              </PreviewToolbarButton>
-            )}
             <PreviewToolbarButton
               label={downloadLabel}
               onClick={() => downloadPreviewImage(runtime.renderPane, name, rendererMode)}

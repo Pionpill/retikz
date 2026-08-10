@@ -1,0 +1,49 @@
+---
+title: Standard · Extensions
+description: Extend Core horizontally with optional Tier 2 drawing capabilities that preserve common presentation intent without adding another drawing kernel.
+---
+
+Standard provides domain-neutral presentation components such as Grid, Axes, Frame, and Legend. Their JSON-safe high-level inputs preserve common drawing intent and lower through explicitly loaded Definitions into existing Core primitives.
+
+Layout containers now belong to the independent [Layout](/library/layout) package family. Standard only reuses Layout's public composition surface inside capabilities such as Legend; it no longer exports layout APIs.
+
+## Boundary with Core
+
+Standard extends Core horizontally rather than creating another drawing kernel:
+
+- Kernel installation, compilation, and rendering stay unchanged when Standard is unused
+- Definitions load explicitly per figure; they are not global and never enter persisted JSON
+- Standard IR lowers through the Core composite registry and remains consumable by existing SVG, Canvas, and other renderers
+
+## Three packages
+
+| Package                    | Responsibility                                 | Use it when                                        |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------------- |
+| `@retikz/standard`         | Schemas, factories, Definitions, and lowering  | Validating or persisting IR and compiling directly |
+| `@retikz/standard-react`   | React DSL for presentation components          | Authoring inside a React `Layout`                  |
+| `@retikz/standard-vanilla` | Plain-spec helpers and Vanilla Tier 2 adapters | Authoring in browsers or scripts without React     |
+
+All three packages share the schemas and lowering from `@retikz/standard`. React and Vanilla connect authoring inputs to the same capabilities without duplicating semantics.
+
+For React authoring, use components from `@retikz/standard-react` inside the `Layout` from `@retikz/react`. For Vanilla, combine the plain-spec helpers and adapters from `@retikz/standard-vanilla`. When loading persisted JSON, validate complete IR with `@retikz/standard` and pass the required Definitions to the Core compiler.
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/library/standard/composite">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Grid, Axes, Frame, and Legend</span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/extension">
+    <span className="font-semibold">Extensions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Definition selection, injection, and host boundaries
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/changelog">
+    <span className="font-semibold">Changelog</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Version history for the Standard package family
+    </span>
+  </LinkedCard>
+</div>

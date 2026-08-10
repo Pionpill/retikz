@@ -6,6 +6,7 @@ import {
   RESERVED_TRANSFORM_KINDS,
   SelectorOperationSchema,
 } from '@retikz/data';
+import { NonNegativeNumberSchema, PositiveIntegerSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -57,19 +58,12 @@ export const BinTransformSchema = z
       .string()
       .min(1)
       .describe('Continuous source field to bin; its value range is the binning domain unless extent is set'),
-    count: z
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe('Target number of bins; mutually exclusive with step / thresholds; default 10 when no strategy is set'),
-    step: z
-      .number()
-      .positive()
-      .optional()
-      .describe(
-        'Fixed bin width in data units; bins tile the domain from the lower bound; mutually exclusive with count / thresholds',
-      ),
+    count: PositiveIntegerSchema.optional().describe(
+      'Target number of bins; mutually exclusive with step / thresholds; default 10 when no strategy is set',
+    ),
+    step: PositiveNumberSchema.optional().describe(
+      'Fixed bin width in data units; bins tile the domain from the lower bound; mutually exclusive with count / thresholds',
+    ),
     thresholds: z
       .array(z.number())
       .min(1)
@@ -233,13 +227,9 @@ export const JitterTransformSchema = z
       .min(1)
       .optional()
       .describe('Continuous numeric field jittered on the y axis; default "y". Read when axis is "y" or "both"'),
-    amount: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Maximum absolute offset in DATA units added to each value pre-scale; offsets are drawn uniformly from [-amount, +amount]. Default 1. Data-space only',
-      ),
+    amount: NonNegativeNumberSchema.optional().describe(
+      'Maximum absolute offset in DATA units added to each value pre-scale; offsets are drawn uniformly from [-amount, +amount]. Default 1. Data-space only',
+    ),
     seed: z
       .number()
       .int()
@@ -266,7 +256,7 @@ export const DensityBandwidthSpecSchema = z
         kind: z
           .literal(DensityBandwidthKind.Value)
           .describe('Bandwidth strategy discriminator: use an explicit positive numeric bandwidth'),
-        value: z.number().positive().describe('Explicit positive finite KDE bandwidth in source data units'),
+        value: PositiveNumberSchema.describe('Explicit positive finite KDE bandwidth in source data units'),
       })
       .describe('Explicit bandwidth strategy'),
   ])

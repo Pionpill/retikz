@@ -289,17 +289,17 @@ describe('irToVanillaCode fallback', () => {
     );
   });
 
-  it('为三种 Standard layout composite 生成对应 Vanilla builder 与 adapter', () => {
+  it('为三种 Layout composite 生成对应 Vanilla builder 与 adapter', () => {
     const code = irToVanillaCode(
       ir([
-        { namespace: 'standard', type: 'flexLayout', children: [] },
+        { namespace: 'layout', type: 'flexLayout', children: [] },
         {
-          namespace: 'standard',
+          namespace: 'layout',
           type: 'gridLayout',
           columns: [{ kind: 'fixed', value: 10 }],
           children: [],
         },
-        { namespace: 'standard', type: 'overlayLayout', children: [] },
+        { namespace: 'layout', type: 'overlayLayout', children: [] },
       ]),
     );
 
@@ -311,7 +311,7 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('OverlayLayoutVanillaAdapter');
   });
 
-  it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard definitions', () => {
+  it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard / Layout definitions', () => {
     const code = irToVanillaCode(
       ir([
         {
@@ -333,7 +333,7 @@ describe('irToVanillaCode fallback', () => {
               {
                 key: 'nested',
                 sample: {
-                  namespace: 'standard',
+                  namespace: 'layout',
                   type: 'flexLayout',
                   size: { x: { kind: 'content' }, y: { kind: 'content' } },
                   padding: 0,
@@ -370,7 +370,7 @@ describe('irToVanillaCode fallback', () => {
 
     expect(code).toContain("legend('preview-legend-1'");
     expect(code).toContain('LegendVanillaAdapter');
-    expect(code).toContain('const compile = { composites: [FlexLayoutDefinition, GridDefinition] };');
+    expect(code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
     expect(code).not.toContain('LegendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
   });

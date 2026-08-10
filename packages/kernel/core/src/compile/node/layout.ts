@@ -1,5 +1,5 @@
 ﻿import type { BoundaryDefinition, LayoutAxisProposal, ShapeDefinition, Transform } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderCollection } from '../../providers/registry/index';
 import type { IRAnchorPosition, IRLabelDefault, IRNode, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';

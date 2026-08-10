@@ -93,7 +93,7 @@ export const resolveChartSpec = (
     effectiveTheme,
     {
       plotThemeTokens: bound.spec.plotThemeTokens,
-      colors: bound.spec.colors,
+      plotThemeTokenRules: bound.spec.plotThemeTokenRules,
       plotTheme: bound.spec.plotTheme,
     },
     options.plotThemeStyles,
@@ -112,19 +112,19 @@ export const resolveChartSpec = (
   }
   const {
     plotThemeTokens: recipeThemeTokens,
-    colors: recipeColors,
+    plotThemeTokenRules: recipeThemeTokenRules,
     plotTheme: recipeTheme,
     ...plotWithoutThemeInputs
   } = merged.plotSpec;
   void recipeThemeTokens;
-  void recipeColors;
+  void recipeThemeTokenRules;
   void recipeTheme;
   merged = {
     ...merged,
     plotSpec: {
       ...plotWithoutThemeInputs,
       ...(bound.spec.plotThemeTokens === undefined ? {} : { plotThemeTokens: bound.spec.plotThemeTokens }),
-      ...(bound.spec.colors === undefined ? {} : { colors: bound.spec.colors }),
+      ...(bound.spec.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: bound.spec.plotThemeTokenRules }),
       ...(bound.spec.plotTheme === undefined ? {} : { plotTheme: bound.spec.plotTheme }),
     },
   };

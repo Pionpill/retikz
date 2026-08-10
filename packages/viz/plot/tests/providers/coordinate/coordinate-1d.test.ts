@@ -1,4 +1,4 @@
-import type { IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -27,6 +27,15 @@ const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOp
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
   layer.children.map(child => (child as IRNode).position as [number, number]);
+
+const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
+const gridLayersOf = (scope: IRScope): Array<IRScope> =>
+  scope.children.flatMap(child => {
+    if (!isScope(child)) return [];
+    const nested = gridLayersOf(child);
+    return child.meta?.source === 'plot' && child.meta.layer === 'grid' ? [child, ...nested] : nested;
+  });
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -148,6 +157,20 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
     // 轴层在 mark 之后（压顶）；至少有 mark 层 + 轴层两个 children
     expect(root.children.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('cartesian1d_does_not_emit_grid_without_a_plot_area', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'linear', name: 'xs', domain: [0, 10] }],
+      coordinate: { type: 'cartesian1D', x: 'xs' },
+      marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
+      guides: [{ type: 'axis', dimension: 'x', grid: true }],
+    });
+
+    expect(gridLayersOf(expandOf(spec, { d: [{ v: 1 }, { v: 9 }] }, { ...opts, provenance: true }))).toHaveLength(0);
+  });
 });
 
 describe('polar1D 圆周坐标系 (contract)', () => {
@@ -203,6 +226,22 @@ describe('polar1D 圆周坐标系 (contract)', () => {
     });
     const root = expandOf(spec, { d: [{ deg: 0 }, { deg: 120 }, { deg: 240 }] }, opts);
     expect(root.children.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('polar1d_does_not_emit_grid_without_a_plot_area', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [{ type: 'linear', name: 'a', domain: [0, 360] }],
+      coordinate: { type: 'polar1D', angle: 'a' },
+      marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
+      guides: [{ type: 'axis', dimension: 'x', grid: true }],
+    });
+
+    expect(gridLayersOf(expandOf(spec, { d: [{ deg: 0 }, { deg: 180 }] }, { ...opts, provenance: true }))).toHaveLength(
+      0,
+    );
   });
 
   // 错误路径：sector 在 polar1D 无几何意义 → fail-loud

@@ -1,4 +1,4 @@
-import type { IRNodeTarget } from '../node-target/types';
+import type { IRNodeTarget } from '../node-target';
 import type { PolarPosition } from '../polar-position';
 
 import { type IROffsetPosition } from '../offset-position';

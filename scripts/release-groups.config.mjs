@@ -1,4 +1,9 @@
 export const releaseGroups = {
+  layout: {
+    domain: 'library',
+    kind: 'feature',
+    packages: ['@retikz/layout', '@retikz/layout-react', '@retikz/layout-vanilla'],
+  },
   standard: {
     domain: 'library',
     kind: 'feature',

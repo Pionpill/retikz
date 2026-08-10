@@ -4,13 +4,13 @@
 
 ## 目标
 
-建立独立 Notation package family 和 release group，以具有明确图式职责的 LogicFrame、Terminal、Stage、Decision、Junction 与 Connector 验证语义 IR、轻量 lowering、Tier 2 layout composite、Standard layout composition、直接 IR、React、Vanilla、docs 与 renderer-neutral 输出闭环，并在 `0.x` 阶段撤回缺少真实场景支撑的候选能力。
+建立独立 Notation package family 和 release group，以具有明确图式职责的 LogicFrame、Terminal、Stage、Decision、Junction 与 Connector 验证语义 IR、轻量 lowering、Tier 2 layout composite、Layout composition、直接 IR、React、Vanilla、docs 与 renderer-neutral 输出闭环，并在 `0.x` 阶段撤回缺少真实场景支撑的候选能力。
 
 ## Milestone
 
 | Milestone                       | 主题                | 范围                                                                 |
 | ------------------------------- | ------------------- | -------------------------------------------------------------------- |
-| [alpha.1](./alpha.1/roadmap.md) | Notation foundation | 三包、发布组、Standard 迁移、公共 layout composition、测试与双语文档 |
+| [alpha.1](./alpha.1/roadmap.md) | Notation foundation | 三包、发布组、Standard 迁移、Layout 公共 composition、测试与双语文档 |
 | [alpha.2](./alpha.2/roadmap.md) | Semantic IR         | 语义身份、轻量 Node / Path lowering、Connector 双作者语法            |
 | [alpha.3](./alpha.3/roadmap.md) | Surface pruning     | 撤回缺少用例验证的 Callout 公共契约                                  |
 

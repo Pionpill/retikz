@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { convertReactNodeToIR, Layout, Node, Path, Step } from '@retikz/react';
-import { createLegend, LayoutAlignment, LegendContentKind, LegendDefinition } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendDefinition } from '@retikz/standard';
 import { forwardRef, Fragment, memo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -65,7 +65,7 @@ describe('<Legend>', () => {
   it('converts items and ramp marker trees to canonical Legend IR', () => {
     const itemsProps = {
       kind: LegendContentKind.Items,
-      contentAlign: LayoutAlignment.End,
+      contentAlign: 'end' as const,
       gap: { row: 6, column: 5 },
       children: (
         <>
@@ -102,7 +102,7 @@ describe('<Legend>', () => {
     expect(contribute(itemsProps).node).toEqual(
       createLegend({
         title: { type: 'node', position: [0, 0], text: 'Status' },
-        contentAlign: LayoutAlignment.End,
+        contentAlign: 'end',
         content: {
           kind: LegendContentKind.Items,
           gap: { row: 6, column: 5 },

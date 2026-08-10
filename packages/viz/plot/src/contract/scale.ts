@@ -49,7 +49,7 @@ export type ChannelResolveContext = {
   coerceTimestamp: (value: unknown) => number | null;
   /** scheme 名 → interpolator（先查内置、再查 options.colorSchemes；未注册 throw） */
   resolveColorScheme: (name: string) => (t: number) => string;
-  /** plot 级默认分类调色板（ordinal range 缺省取此；= PlotSpec.colors） */
+  /** Plot 级默认分类调色板（ordinal range 缺省取 plotTheme.palette.categorical） */
   defaultColors?: ReadonlyArray<string>;
   /** 连续单向色阶默认 scheme；显式 scale.scheme / range 优先 */
   defaultSequentialScheme?: string;

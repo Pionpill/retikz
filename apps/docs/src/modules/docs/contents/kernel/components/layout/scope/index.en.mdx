@@ -96,7 +96,7 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 ### Layout inspection scope
 
-The base `<Scope>` has no inspection prop. The example uses the optional `StandardInspectScope` to declare authored-subtree selection. The left side inherits the inspection host's scene request, while the right side sets `request={false}` as a hard barrier, so descendant containers emit no guides.
+The base `<Scope>` has no inspection prop. The example uses the optional `LayoutInspectScope` to declare authored-subtree selection. The left side inherits the inspection host's scene request, while the right side sets `request={false}` as a hard barrier, so descendant containers emit no guides.
 
 <ComponentPreview
   files="scope-layout-inspection"
@@ -258,7 +258,7 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                         |
 | `on<Event>`      | `ScopeProps['onClick']`                 | —             | Uses the `onClick` signature and requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
 
-Inspection support comes from `StandardInspectScope` in `@retikz/standard-react/inspect`. Its `request` accepts one or more Inspector requests; `request={false}` is the hard barrier descendants cannot cross. This runtime marker never enters `IRScope`. If a nested Scope contribution cannot be located precisely, inspection compilation fails loudly instead of attributing guides to the outer Scope. See [Standard Layout Inspector](/standard/layout/reference/runtime#layout-inspector) for the complete rules.
+Inspection support comes from `LayoutInspectScope` in `@retikz/layout-react/inspect`. Its `request` accepts one or more Inspector requests; `request={false}` is the hard barrier descendants cannot cross. This runtime marker never enters `IRScope`. If a nested Scope contribution cannot be located precisely, inspection compilation fails loudly instead of attributing guides to the outer Scope. See [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for the complete rules.
 
 ### Style defaults
 

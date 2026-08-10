@@ -1,9 +1,10 @@
+import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Side } from '../../../shared';
 import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
 import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
@@ -31,11 +32,9 @@ export const GeometryLabelSchema = z
       .describe(
         'Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.',
       ),
-    distance: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Side offset distance in user units. Defaults to the same distance as Path step labels.'),
+    distance: NonNegativeNumberSchema.optional().describe(
+      'Side offset distance in user units. Defaults to the same distance as Path step labels.',
+    ),
   })
   .describe(
     'Geometry label spec attached to a path-like host; compiled to a TextPrim positioned from a centerline sample.',
@@ -156,26 +155,22 @@ export const BendStepSchema = z
     inAngle: AngleDegreesSchema.optional().describe(
       'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
     ),
-    looseness: z
-      .number()
-      .positive()
-      .optional()
-      .describe(
-        'Curve looseness factor controlling control-point distance from the endpoints. Larger values produce a looser curve.',
-      ),
+    looseness: PositiveNumberSchema.optional().describe(
+      'Curve looseness factor controlling control-point distance from the endpoints. Larger values produce a looser curve.',
+    ),
     label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
   })
   .describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
 export const StepAnisotropicRadiusSchema = z
   .strictObject({
-    x: z.number().positive().describe('Horizontal radius in user units.'),
-    y: z.number().positive().describe('Vertical radius in user units.'),
+    x: PositiveNumberSchema.describe('Horizontal radius in user units.'),
+    y: PositiveNumberSchema.describe('Vertical radius in user units.'),
   })
   .describe('Anisotropic radius object.');
 
 export const StepRadiusSchema = z
-  .union([z.number().positive(), StepAnisotropicRadiusSchema])
+  .union([PositiveNumberSchema, StepAnisotropicRadiusSchema])
   .describe('Circular radius number or anisotropic radius object.');
 
 const refinePartialAngles = (
@@ -235,7 +230,7 @@ const CirclePathStepBaseSchema = z
       .describe(
         'Circle centered at the cursor. Without angles, emits a full circle; with angles, emits a partial arc closed by `closed`.',
       ),
-    radius: z.number().positive().describe('Circle radius in user units'),
+    radius: PositiveNumberSchema.describe('Circle radius in user units'),
     startAngle: AngleDegreesSchema.optional().describe(
       'Partial-circle start angle in degrees (same convention as arc: 0°=+x, 90°=+y screen-down). Give both startAngle and endAngle for a partial circle, or neither for a full circle.',
     ),
@@ -297,13 +292,9 @@ export const RectangleStepSchema = z
       ),
     from: TargetSchema.describe('One corner of the rectangle'),
     to: TargetSchema.describe('The opposite corner; order is irrelevant (compile normalizes to min/max)'),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Single corner radius applied to all four corners; omitted = sharp corners. Clamped to half the smaller side at compile time.',
-      ),
+    cornerRadius: NonNegativeNumberSchema.optional().describe(
+      'Single corner radius applied to all four corners; omitted = sharp corners. Clamped to half the smaller side at compile time.',
+    ),
   })
   .describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
@@ -321,11 +312,9 @@ export const SmoothStepSchema = z
       .describe(
         'Through-points after the cursor, in order. The cursor is the implicit first knot and ends at the last point.',
       ),
-    tension: z
-      .number()
-      .positive()
-      .optional()
-      .describe('Tangent-length multiplier controlling curve slackness. Omitted fields use 1.'),
+    tension: PositiveNumberSchema.optional().describe(
+      'Tangent-length multiplier controlling curve slackness. Omitted fields use 1.',
+    ),
     label: StepLabelSchema.optional().describe(
       'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
     ),

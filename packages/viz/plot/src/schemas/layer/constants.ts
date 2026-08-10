@@ -13,9 +13,7 @@ export const PlotLayerZIndex = {
   Axis: 200,
   /** 分面标签层，用于各分面区域的标题或标识 */
   FacetLabel: 300,
-  /** Plot 标签层，用于标题、说明和来源等静态文本 */
-  PlotLabel: 400,
-  /** 图例层，位于 Plot 标签层之上 */
+  /** 图例层，位于其它绘图内容之上 */
   Legend: 500,
   /** 交互覆盖层，用于需要置于其他语义内容之上的交互反馈 */
   Interaction: 900,

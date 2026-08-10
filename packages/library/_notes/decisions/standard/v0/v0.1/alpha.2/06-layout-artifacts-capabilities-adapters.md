@@ -1,8 +1,9 @@
 # ADR-06：用 Typed Artifact、Definition 与等价 Adapter 收口布局容器
 
-- 状态：Accepted（artifact、Definition 与 adapter 契约仍生效；组合接线由 [alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) 统一）
+- 状态：Superseded by [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md)（2026-08-09；直接 Definition 原则仍由 [alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) 统一）
 - 决策日期：2026-07-30
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-02](./02-box-layout-item-vocabulary.md) · [ADR-03](./03-flex-layout.md) · [ADR-04](./04-grid-layout.md) · [ADR-05](./05-overlay-layout.md) · [alpha.1 ADR-05](../alpha.1/05-capability-loading.md)
+- 后继：[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管 artifact、Definition 与 adapter owner；本 ADR 保留 Standard 验证期历史
 
 ## 背景
 

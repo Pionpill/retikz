@@ -3,7 +3,7 @@ import type { BuiltinArrowShapeValue } from '../../schemas';
 
 import { defineArrow } from '../../contract';
 import { BuiltinArrowShape } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry';
+import { defineBuiltinProviderArray } from '../registry/index';
 
 /** 空心 path 的可选几何配置，后续扩展描边端点或连接策略时集中放在这里 */
 type HollowPathOptions = {

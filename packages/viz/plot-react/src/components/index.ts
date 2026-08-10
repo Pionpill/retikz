@@ -3,8 +3,6 @@ export type { FacetDimensionInput, FacetProps, ScaffoldProps, TrackProps } from 
 export { Facet, Scaffold, Track } from './composition';
 export type { AxisProps, LegendProps } from './guides';
 export { Axis, Legend } from './guides';
-export type { CaptionLabelProps, PlotLabelText, PlotTextLabelProps, TitleLabelProps } from './labels';
-export { CaptionLabel, TitleLabel } from './labels';
 export type {
   CoreNodeChannelProps,
   CorePathChannelProps,

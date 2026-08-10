@@ -96,7 +96,7 @@ import { Scope } from '@retikz/react';
 
 ### 布局检查范围
 
-基础 `<Scope>` 不拥有检查属性。下面由可选入口的 `StandardInspectScope` 声明 authored 子树选择：左侧继承检查宿主的整图请求，右侧用 `request={false}` 建立硬屏障，因此后代容器不会生成辅助层。
+基础 `<Scope>` 不拥有检查属性。下面由可选入口的 `LayoutInspectScope` 声明 authored 子树选择：左侧继承检查宿主的整图请求，右侧用 `request={false}` 建立硬屏障，因此后代容器不会生成辅助层。
 
 <ComponentPreview
   files="scope-layout-inspection"
@@ -254,7 +254,7 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 | `animations`     | `Array<IRAnimationTrack>`               | —             | Scope 整体动画，不下传 children                                                         |
 | `on<Event>`      | `ScopeProps['onClick']`                 | —             | 与 `onClick` 同签名；需要 `id`，完整事件列表见[水合](/kernel/packages/render/hydration) |
 
-检查能力由 `@retikz/standard-react/inspect` 的 `StandardInspectScope` 提供。`request` 可为一个或多个检查器请求；`request={false}` 是后代不能越过的硬屏障。该运行时标记不进入 `IRScope`。如果嵌套 Scope 的贡献无法精确定位，检查编译会直接报错，避免把辅助图元错误归属到外层 Scope。完整规则见 [Standard 布局检查器](/standard/layout/reference/runtime#布局检查器)。
+检查能力由 `@retikz/layout-react/inspect` 的 `LayoutInspectScope` 提供。`request` 可为一个或多个检查器请求；`request={false}` 是后代不能越过的硬屏障。该运行时标记不进入 `IRScope`。如果嵌套 Scope 的贡献无法精确定位，检查编译会直接报错，避免把辅助图元错误归属到外层 Scope。完整规则见 [Layout 布局检查器](/library/layout/reference/runtime#布局检查器)。
 
 ### 样式默认值
 

@@ -297,7 +297,9 @@ describe('ATTACK 5: 退化 bbox + path transform', () => {
 describe('ATTACK 6: marks + path transform 交互（二次变换 / 定向污染）', () => {
   it('marks + rotate 同给：mark marker 坐标进 group 还是裸坐标（二次旋转风险）', () => {
     // 无 transform 基准
-    const baseScene = compileToScene(linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] })).scene;
+    const baseScene = compileToScene(
+      linePath({ marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),
+    ).scene;
     // 加 rotate
     const rotScene = compileToScene(
       linePath({ rotate: 90, marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }] }),

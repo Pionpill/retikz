@@ -26,13 +26,18 @@ import type { PathProps } from '../components';
 import type { ScopeProps } from '../components';
 import type { StepProps } from '../components';
 import type { TextProps } from '../components';
-import type { ScopeStyleProps } from '../protocol';
-import type { EmbeddableContributionRecord, EmbeddableTier2Adapter } from '../protocol';
-import type { LayoutAuthoringSite } from './authoring-site';
+import type {
+  EmbeddableContributionRecord,
+  EmbeddableTier2Adapter,
+  LayoutAuthoringSite,
+  ScopeStyleProps,
+} from '../protocol';
 
 import { Scope } from '../components';
 import {
+  createLayoutAuthoringSite,
   getDisplayName,
+  resolveEmbeddableAdapter,
   TIKZ_COORDINATE,
   TIKZ_EDGE_LABEL,
   TIKZ_NODE,
@@ -41,8 +46,6 @@ import {
   TIKZ_STEP,
   TIKZ_TEXT,
 } from '../protocol';
-import { resolveEmbeddableAdapter } from '../protocol';
-import { createLayoutAuthoringSite } from './authoring-site';
 import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS } from './fields';
 
 // NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 fields.ts 与 unbuilder 共享

@@ -69,7 +69,7 @@ Legend resolves a channel descriptor and an optional named scale from `channel` 
 
 <ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
 
-The selected form lowers into an independent Legend scope inside the band reserved by `position`. Legends use zIndex `500` by default, above axes, marks, and plot-level labels; `layer={{ zIndex }}` moves the whole scope without changing entry order inside it.
+The selected form lowers into an independent Legend scope inside the band reserved by `position`. Legends use zIndex `500` by default, above axes, facet labels, and marks; `layer={{ zIndex }}` moves the whole scope without changing entry order inside it.
 
 <SourceLinks
   sources={[
@@ -89,7 +89,7 @@ The selected form lowers into an independent Legend scope inside the band reserv
       label: 'Default Plot semantic layer values',
       path: 'packages/viz/plot/src/schemas/layer/constants.ts',
       startLine: 1,
-      endLine: 22,
+      endLine: 20,
     },
   ]}
 />

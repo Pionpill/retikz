@@ -3,7 +3,7 @@ import type { AffineMatrix } from '@retikz/math';
 
 import { AFFINE_IDENTITY, multiplyAffine } from '@retikz/math';
 
-import type { TexLoweringDiagnostic, TexLoweringResult } from '../lower/types';
+import type { TexLoweringDiagnostic, TexLoweringResult } from '../lower/internal';
 import type { PointMapper } from './path-d';
 
 import { isFiniteNonSingular, parseTransform, similarityScale, SvgTransformError } from './matrix';

@@ -8,15 +8,15 @@ export const kernelV05: Release = {
       pkg: '@retikz/foundation',
       version: 'v0.5',
       description: {
-        zh: '新增零依赖 Foundation 基础契约包，为 Kernel、Standard、Viz 与 adapter 提供统一的类型工具、typed non-empty string 断言和结构化错误骨架。',
-        en: 'Adds the zero-dependency Foundation contract package with shared type utilities, a typed non-empty string assertion, and a structured error skeleton for Kernel, Standard, Viz, and adapters.',
+        zh: '新增 Foundation 基础契约包，为 Kernel、Standard、Viz 与 adapter 提供统一的类型工具、Zod 标量 schema、typed non-empty string 断言和结构化错误骨架。',
+        en: 'Adds the Foundation contract package with shared type utilities, Zod scalar schemas, a typed non-empty string assertion, and a structured error skeleton for Kernel, Standard, Viz, and adapters.',
       },
       highlights: [
         {
-          label: { zh: '七个根导出，固定四文件结构', en: 'Seven root exports, four fixed source files' },
+          label: { zh: '十三个根导出，固定五文件结构', en: 'Thirteen root exports, five fixed source files' },
           content: {
-            zh: '`@retikz/foundation` 只从根入口公开 `ValueOf`、`AssertEqual`、`OpenString`、`assertNonEmptyString`、`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError`；source 与 tests 各固定四个文件，不提供 subpath、IR、schema 或 Diagnostic。',
-            en: '`@retikz/foundation` exposes only `ValueOf`, `AssertEqual`, `OpenString`, `assertNonEmptyString`, `RetikzErrorOptions`, `RetikzError`, and `isRetikzError` from its root. Source and tests each stay at four fixed files, with no subpaths, IR, schemas, or Diagnostics.',
+            zh: '`@retikz/foundation` 从根入口公开四个类型 / 错误契约、三个既有 runtime symbol 与六个非变换 Zod 标量 schema；source 与 tests 各固定五个文件，不提供 subpath、IR、对象 schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes four type/error contracts, three existing runtime symbols, and six non-transforming Zod scalar schemas from its root. Source and tests each stay at five fixed files, with no subpaths, IR, object schemas, or Diagnostics.',
           },
         },
         {
@@ -40,10 +40,10 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.2',
-          date: '2026-08-08',
+          date: '2026-08-09',
           summary: {
-            zh: '交付 Foundation 包并完成类型、断言与结构化错误的跨包迁移。',
-            en: 'Ships Foundation and completes the cross-package migration for types, assertions, and structured errors.',
+            zh: '交付 Foundation 包，并完成类型、标量 schema、断言与结构化错误的跨包迁移。',
+            en: 'Ships Foundation and completes the cross-package migration for types, scalar schemas, assertions, and structured errors.',
           },
           items: [
             {
@@ -51,6 +51,13 @@ export const kernelV05: Release = {
               content: {
                 zh: '从 `@retikz/core` / `@retikz/runtime` 根入口导入 `ValueOf`、`AssertEqual`、`OpenString` 的代码改为从 `@retikz/foundation` 根入口导入；旧出口不保留 alias。',
                 en: 'Change imports of `ValueOf`, `AssertEqual`, and `OpenString` from `@retikz/core` / `@retikz/runtime` to the `@retikz/foundation` root; the old exports have no alias.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：标量 schema 迁移', en: 'BREAKING: Scalar schema migration' },
+              content: {
+                zh: '六个无领域标量 schema 统一从 `@retikz/foundation` 根入口导入。Core 不再导出 `NormalizedFractionSchema`，Notation 不再导出自己的 `NonBlankStringSchema`；对象 schema、默认值和领域 refine 继续由消费包拥有。',
+                en: 'Import the six domain-free scalar schemas from the `@retikz/foundation` root. Core no longer exports `NormalizedFractionSchema`, and Notation no longer exports its former `NonBlankStringSchema`; consumers still own object schemas, defaults, and domain refinements.',
               },
             },
           ],

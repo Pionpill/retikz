@@ -4,33 +4,23 @@ import type {
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '@retikz/core';
-
-import { LayoutAxisProposalKind } from '@retikz/core';
-
 import type {
+  LayoutArtifactItemBase,
   LayoutChildHandle,
   LayoutRect,
   PairedFlowItem,
   PairedFlowPlan,
   PlacedLayoutChild,
-} from '../../layout/internal';
-import type { LayoutArtifactItemBase } from '../../layout/shared';
-import type { MeasuredLegendChild, MeasuredLegendItem } from './providers';
-import type {
-  IRLegend,
-  IRLegendItem,
-  IRLegendItemsContent,
-  LegendArtifact,
-  LegendArtifactGeometry,
-  LegendPlacedChildArtifact,
-  LegendRampArtifact,
-} from './types';
+} from '@retikz/layout/compose';
 
+import { LayoutAxisProposalKind } from '@retikz/core';
 import {
   compensatedLayoutSum,
   contentRectOf,
   createLayoutArtifactContainer,
   intrinsicLayoutProposal,
+  LayoutAlignment,
+  LayoutAxisSizeKind,
   measureLayoutChild,
   normalizeLayoutSpacing,
   placeLayoutChild,
@@ -43,8 +33,19 @@ import {
   resolvePairedFlowPlan,
   translatePairedFlowPlan,
   unionLayoutArtifactRects,
-} from '../../layout/internal';
-import { LayoutAlignment, LayoutAxisSizeKind } from '../../layout/shared';
+} from '@retikz/layout/compose';
+
+import type { MeasuredLegendChild, MeasuredLegendItem } from './providers';
+import type {
+  IRLegend,
+  IRLegendItem,
+  IRLegendItemsContent,
+  LegendArtifact,
+  LegendArtifactGeometry,
+  LegendPlacedChildArtifact,
+  LegendRampArtifact,
+} from './types';
+
 import { LegendContentKind, LegendDirection } from './constants';
 import { pairedFlowItemsOf } from './providers';
 import { createLegendRampStructure, translateLegendRampStructure } from './providers';

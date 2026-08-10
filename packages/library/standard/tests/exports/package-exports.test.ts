@@ -19,15 +19,15 @@ const adapterManifests = [
 ];
 
 describe('Standard package exports', () => {
-  it('exposes the controlled layout and inspect subpaths from Standard', () => {
-    expect(Object.keys(standardManifest.exports)).toEqual(['.', './inspect', './layout']);
-    expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(['.', './inspect', './layout']);
+  it('keeps Standard root-only after Layout ownership moves', () => {
+    expect(Object.keys(standardManifest.exports)).toEqual(['.']);
+    expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(['.']);
   });
 
-  it('keeps root and inspect subpaths across the adapter family', () => {
+  it('keeps Standard adapters root-only after Layout ownership moves', () => {
     for (const manifest of adapterManifests) {
-      expect(Object.keys(manifest.exports)).toEqual(['.', './inspect']);
-      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './inspect']);
+      expect(Object.keys(manifest.exports)).toEqual(['.']);
+      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
     }
   });
 });

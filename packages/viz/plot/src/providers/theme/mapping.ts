@@ -1,4 +1,4 @@
-import type { IRPlotResolvedThemeTokens, IRPlotTheme, PlotThemeTokenValue } from '../../schemas';
+import type { IRPlotAxisTheme, IRPlotResolvedThemeTokens, IRPlotTheme, PlotThemeTokenValue } from '../../schemas';
 
 import { PlotThemeSchema, PlotThemeToken } from '../../schemas';
 
@@ -26,7 +26,9 @@ const mergeThemeValue = (base: unknown, override: unknown): unknown => {
     return structuredClone(override);
   }
   const result: JsonObject = structuredClone(base);
-  for (const [key, value] of Object.entries(override)) result[key] = mergeThemeValue(result[key], value);
+  for (const [key, value] of Object.entries(override)) {
+    result[key] = mergeThemeValue(result[key], value);
+  }
   return result;
 };
 
@@ -34,10 +36,46 @@ const mergeThemeValue = (base: unknown, override: unknown): unknown => {
 export const mergePlotTheme = (base: IRPlotTheme, override: IRPlotTheme): IRPlotTheme =>
   PlotThemeSchema.parse(mergeThemeValue(base, override));
 
+/** 把完整 Plot token map 中的 Axis token 映射为原生 Axis theme */
+export const plotAxisThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotAxisTheme => ({
+  line: tokens[PlotThemeToken.AxisLineEnabled]
+    ? {
+        stroke: tokens[PlotThemeToken.AxisLineStroke],
+        strokeWidth: tokens[PlotThemeToken.AxisLineStrokeWidth],
+        drawOpacity: tokens[PlotThemeToken.AxisLineDrawOpacity],
+      }
+    : false,
+  ticks: { mark: tokens[PlotThemeToken.AxisTickMark] },
+  tickLabels: tokens[PlotThemeToken.AxisTickLabelEnabled]
+    ? {
+        gap: tokens[PlotThemeToken.AxisTickLabelGap],
+        font: { size: tokens[PlotThemeToken.AxisTickLabelFontSize] },
+        textColor: tokens[PlotThemeToken.AxisTickLabelForeground],
+      }
+    : false,
+  title: tokens[PlotThemeToken.AxisTitleEnabled]
+    ? {
+        padding: tokens[PlotThemeToken.AxisTitlePadding],
+        font: {
+          size: tokens[PlotThemeToken.AxisTitleFontSize],
+          weight: tokens[PlotThemeToken.AxisTitleFontWeight],
+        },
+        textColor: tokens[PlotThemeToken.AxisTitleForeground],
+      }
+    : false,
+  grid: tokens[PlotThemeToken.AxisGridEnabled]
+    ? {
+        stroke: tokens[PlotThemeToken.AxisGridStroke],
+        strokeWidth: tokens[PlotThemeToken.AxisGridStrokeWidth],
+        drawOpacity: tokens[PlotThemeToken.AxisGridDrawOpacity],
+      }
+    : false,
+});
+
 /** 把完整 Plot token map 映射为正式原生 Plot theme */
 export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTheme =>
   PlotThemeSchema.parse({
-    background: tokens[PlotThemeToken.PlotSurfaceFill],
+    plotArea: { fill: tokens[PlotThemeToken.PlotAreaFill] },
     typography: {
       font: {
         family: tokens[PlotThemeToken.PlotTypographyFontFamily],
@@ -45,39 +83,7 @@ export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTh
       },
       textColor: tokens[PlotThemeToken.PlotTypographyForeground],
     },
-    labelText: {
-      font: { size: tokens[PlotThemeToken.PlotLabelFontSize] },
-      textColor: tokens[PlotThemeToken.PlotLabelForeground],
-    },
-    axis: {
-      line: tokens[PlotThemeToken.AxisLineEnabled]
-        ? {
-            stroke: tokens[PlotThemeToken.AxisLineStroke],
-            strokeWidth: tokens[PlotThemeToken.AxisLineStrokeWidth],
-            drawOpacity: tokens[PlotThemeToken.AxisLineDrawOpacity],
-          }
-        : false,
-      ticks: { mark: tokens[PlotThemeToken.AxisTickMark] },
-      tickLabels: tokens[PlotThemeToken.AxisTickLabelEnabled]
-        ? {
-            gap: tokens[PlotThemeToken.AxisTickLabelGap],
-            font: { size: tokens[PlotThemeToken.AxisTickLabelFontSize] },
-            textColor: tokens[PlotThemeToken.AxisTickLabelForeground],
-          }
-        : false,
-      title: {
-        font: {
-          size: tokens[PlotThemeToken.AxisTitleFontSize],
-          weight: tokens[PlotThemeToken.AxisTitleFontWeight],
-        },
-        textColor: tokens[PlotThemeToken.AxisTitleForeground],
-      },
-      grid: {
-        stroke: tokens[PlotThemeToken.AxisGridStroke],
-        strokeWidth: tokens[PlotThemeToken.AxisGridStrokeWidth],
-        drawOpacity: tokens[PlotThemeToken.AxisGridDrawOpacity],
-      },
-    },
+    axis: plotAxisThemeFromTokens(tokens),
     legend: {
       title: {
         font: {
@@ -128,8 +134,8 @@ export const applyPlotThemeToTokens = (
   };
   const has = (value: object, key: PropertyKey): boolean => Object.hasOwn(value, key);
 
-  if (has(authoredTheme, 'background')) {
-    set(PlotThemeToken.PlotSurfaceFill, resolvedTheme.background!, '$spec/plotTheme/background');
+  if (authoredTheme.plotArea !== undefined && has(authoredTheme.plotArea, 'fill')) {
+    set(PlotThemeToken.PlotAreaFill, resolvedTheme.plotArea!.fill!, '$spec/plotTheme/plotArea/fill');
   }
   if (authoredTheme.typography !== undefined) {
     if (has(authoredTheme.typography, 'textColor')) {
@@ -156,23 +162,6 @@ export const applyPlotThemeToTokens = (
       }
     }
   }
-  if (authoredTheme.labelText !== undefined) {
-    if (has(authoredTheme.labelText, 'textColor')) {
-      set(
-        PlotThemeToken.PlotLabelForeground,
-        resolvedTheme.labelText!.textColor!,
-        '$spec/plotTheme/labelText/textColor',
-      );
-    }
-    if (authoredTheme.labelText.font !== undefined && has(authoredTheme.labelText.font, 'size')) {
-      set(
-        PlotThemeToken.PlotLabelFontSize,
-        resolvedTheme.labelText!.font!.size!,
-        '$spec/plotTheme/labelText/font/size',
-      );
-    }
-  }
-
   const authoredAxis = authoredTheme.axis;
   const axis = resolvedTheme.axis;
   if (authoredAxis !== undefined && axis !== undefined) {
@@ -219,28 +208,41 @@ export const applyPlotThemeToTokens = (
         }
       }
     }
-    if (authoredAxis.title !== undefined && axis.title !== undefined) {
-      if (has(authoredAxis.title, 'textColor')) {
-        set(PlotThemeToken.AxisTitleForeground, axis.title.textColor!, '$spec/plotTheme/axis/title/textColor');
-      }
-      if (authoredAxis.title.font !== undefined) {
-        if (has(authoredAxis.title.font, 'size')) {
-          set(PlotThemeToken.AxisTitleFontSize, axis.title.font!.size!, '$spec/plotTheme/axis/title/font/size');
+    if (has(authoredAxis, 'title')) {
+      if (authoredAxis.title === false) {
+        set(PlotThemeToken.AxisTitleEnabled, false, '$spec/plotTheme/axis/title');
+      } else if (authoredAxis.title !== undefined && axis.title !== false && axis.title !== undefined) {
+        set(PlotThemeToken.AxisTitleEnabled, true, '$spec/plotTheme/axis/title');
+        if (has(authoredAxis.title, 'padding')) {
+          set(PlotThemeToken.AxisTitlePadding, axis.title.padding!, '$spec/plotTheme/axis/title/padding');
         }
-        if (has(authoredAxis.title.font, 'weight')) {
-          set(PlotThemeToken.AxisTitleFontWeight, axis.title.font!.weight!, '$spec/plotTheme/axis/title/font/weight');
+        if (has(authoredAxis.title, 'textColor')) {
+          set(PlotThemeToken.AxisTitleForeground, axis.title.textColor!, '$spec/plotTheme/axis/title/textColor');
+        }
+        if (authoredAxis.title.font !== undefined) {
+          if (has(authoredAxis.title.font, 'size')) {
+            set(PlotThemeToken.AxisTitleFontSize, axis.title.font!.size!, '$spec/plotTheme/axis/title/font/size');
+          }
+          if (has(authoredAxis.title.font, 'weight')) {
+            set(PlotThemeToken.AxisTitleFontWeight, axis.title.font!.weight!, '$spec/plotTheme/axis/title/font/weight');
+          }
         }
       }
     }
     if (authoredAxis.grid !== undefined && axis.grid !== undefined) {
-      if (has(authoredAxis.grid, 'stroke')) {
-        set(PlotThemeToken.AxisGridStroke, axis.grid.stroke!, '$spec/plotTheme/axis/grid/stroke');
-      }
-      if (has(authoredAxis.grid, 'strokeWidth')) {
-        set(PlotThemeToken.AxisGridStrokeWidth, axis.grid.strokeWidth!, '$spec/plotTheme/axis/grid/strokeWidth');
-      }
-      if (has(authoredAxis.grid, 'drawOpacity')) {
-        set(PlotThemeToken.AxisGridDrawOpacity, axis.grid.drawOpacity!, '$spec/plotTheme/axis/grid/drawOpacity');
+      if (authoredAxis.grid === false) {
+        set(PlotThemeToken.AxisGridEnabled, false, '$spec/plotTheme/axis/grid');
+      } else if (axis.grid !== false) {
+        set(PlotThemeToken.AxisGridEnabled, true, '$spec/plotTheme/axis/grid');
+        if (has(authoredAxis.grid, 'stroke')) {
+          set(PlotThemeToken.AxisGridStroke, axis.grid.stroke!, '$spec/plotTheme/axis/grid/stroke');
+        }
+        if (has(authoredAxis.grid, 'strokeWidth')) {
+          set(PlotThemeToken.AxisGridStrokeWidth, axis.grid.strokeWidth!, '$spec/plotTheme/axis/grid/strokeWidth');
+        }
+        if (has(authoredAxis.grid, 'drawOpacity')) {
+          set(PlotThemeToken.AxisGridDrawOpacity, axis.grid.drawOpacity!, '$spec/plotTheme/axis/grid/drawOpacity');
+        }
       }
     }
   }

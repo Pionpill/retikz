@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
@@ -19,21 +20,17 @@ const starParamsSchema = z
       .min(3)
       .max(MAX_STAR_POINTS)
       .describe(`Number of star points (3..${MAX_STAR_POINTS}); capped to bound vertex count (mirrors polygon sides).`),
-    innerRadius: z.number().positive().describe('Inner (notch) radius in user units.'),
-    outerRadius: z.number().positive().describe('Outer (tip) radius in user units; must be > innerRadius.'),
+    innerRadius: PositiveNumberSchema.describe('Inner (notch) radius in user units.'),
+    outerRadius: PositiveNumberSchema.describe('Outer (tip) radius in user units; must be > innerRadius.'),
     rotate: z
       .number()
       .optional()
       .describe(
         'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
       ),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
+    cornerRadius: NonNegativeNumberSchema.optional().describe(
+      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
   })
   .refine(p => p.outerRadius > p.innerRadius, {
     message: 'outerRadius must be greater than innerRadius',

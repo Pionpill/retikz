@@ -1,0 +1,189 @@
+---
+title: 坐标轴
+description: 用 JSON-safe Axes 保留数轴与坐标参考轴的原点、方向、箭头、刻度、网格和文字意图，并下沉为 Core Path 与 Node。
+---
+
+`<Axes>` 是面向静态数学插图的 Standard Tier 2 组件。它把数轴或笛卡尔参考轴保留为一份可持久化配置，再确定性下沉为 Core `Path` 与 `Node`。
+
+## 用法
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Axes } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={280} height={170}>
+  <Axes origin={{ position: [140, 90] }} x={{ extent: 110 }} y={{ extent: 60 }} />
+</Layout>
+```
+
+React 入口会在当前 `Layout` 局部贡献 `AxesDefinition`。持久化或非 React 场景可从 `@retikz/standard` 创建完整 IR，并在 Core compile options 中显式传入 definition。
+
+| 场景        | 公开入口                                                           |
+| ----------- | ------------------------------------------------------------------ |
+| React       | `Axes`（`@retikz/standard-react`）                                 |
+| Vanilla     | `axes`、`AxesVanillaAdapter`（`@retikz/standard-vanilla`）         |
+| IR / 持久化 | `AxesSchema`、`createAxes`、`AxesDefinition`（`@retikz/standard`） |
+
+包族定位和三种使用入口见 [Standard](/library/standard)。当需求包含数据 domain、scale、自动 tick、formatter 或标签避让时，应改用 [Plot axis](/viz/plot/guide/axis)。
+
+## 例子
+
+### 基础坐标轴
+
+`x` 与 `y` 是必填的轴对象；每条轴同时拥有自己的 `extent`、`grid`、基线、刻度和轴名：
+
+- 数字 `extent` 表示两侧等长，例如 `x: { extent: 110 }`
+- `{ negative, positive }` 分别设置两侧长度，并允许其中一侧为 `0`
+- x 正值视觉向右，y 正值视觉向上；这套方向换算只作用于 Axes 自己生成的图元
+- `x.grid` 生成竖直格线，`y.grid` 生成水平格线，因此两条轴可以独立设置间距、偏移和样式
+
+下面的 canonical 示例使用非对称 y 范围、双向 x 刻度、仅正向 y 刻度、静态数字文字和两组独立网格。
+
+<ComponentPreview files="axes-basic" size="sm" />
+
+`origin` 统一承载共同的屏幕位置和原点文字。若只隐藏一条轴的某类产物，在对应轴对象中将 `line`、`ticks`、`grid` 或 `label` 设为 `false`；轴对象仍需保留 `extent`。
+
+### 常见变体
+
+四个并列场景展示仅正半轴、只保留水平数轴、非对称范围，以及隐藏轴线但保留多组刻度和文字。隐藏整条轴时仍使用完整的 `x` / `y` 对象，并关闭该对象的各类产物。
+
+<ComponentPreview files="axes-variants" size="sm" />
+
+轴名、刻度文字和原点文字都接受 Core `IRTextBlock`。普通字符串可直接使用；`'$x_1$'`、`'$\\pi/2$'` 等公式写法需要宿主通过 `lowerTex` 注入 [TeX 能力](/kernel/packages/tex)。
+
+### 控制面板
+
+面板覆盖 Axes 的坐标原点、两条轴各自的范围和网格、轴线、箭头、刻度、刻度文字、轴名和原点文字，并可分别调整 x/y 网格与刻度的偏移。预览视野保持固定。
+
+<ComponentPreview
+  files="axes-playground"
+  size="md"
+  caption="分别调整 x/y 的范围、网格、刻度分布与伸出侧，观察同一 Axes IR 如何下沉为 Core 图元。"
+/>
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="只有在直接读写 Axes IR、对齐其它 Core 图元或排查编译诊断时才需要理解 lowering。"
+/>
+
+Axes IR 不会成为 renderer 专有图元。当前图加载 `AxesDefinition` 后，lowering 才会规范化正负范围、换算 y 方向、枚举网格与刻度，并按固定顺序组装普通 Core IR。
+
+下图只展示 Axes 自己负责的转换链。输出到达 `Core IR[]` 后，它的职责就结束了。
+
+<ComponentPreview files="axes-lowering" hideCode size="xs" />
+
+y 轴路径始终从负端走向正端；正值 `v` 映射到屏幕位置 `originY - v`，所以默认正向箭头稳定朝上。这不是新的全局坐标系，旁边的 `<Node position>` 与 `<Step to>` 仍使用 Core 的 y-down 坐标。
+
+Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格线：前者沿 x 轴枚举并投影为竖直线，后者沿 y 轴枚举并投影为水平线。两者都复用 Path style，不依赖 `GridDefinition`；主线、边框和更完整的网格能力继续使用单独的 [Grid](/library/standard/composite/grid)。
+
+未加载 definition 的手写 `IRAxes` 不会被静默解释：Core 会发出 `COMPOSITE_NOT_REGISTERED` 并跳过它。renderer 只看到 lowering 后的 `Path` 与文字 `Node`，不需要识别 Axes。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Axes schema 与公开契约',
+      path: 'packages/library/standard/src/composites/presentation/axes/schemas/schema.ts',
+    },
+    {
+      label: 'Axes 方向换算与 lowering',
+      path: 'packages/library/standard/src/composites/presentation/axes/pipeline.ts',
+    },
+  ]}
+/>
+
+## API 参考
+
+`AxesProps` 是 `AxesInput` 的公开别名，Vanilla adapter 也接收同一个 `AxesInput`；`createAxes` 校验输入并返回应用了 schema 默认值的 `IRAxes`。下表中的 `Position` 来自 `@retikz/math`。
+
+### `AxesInput`
+
+| 属性      | 类型                  | 默认值                               | 描述                                        |
+| --------- | --------------------- | ------------------------------------ | ------------------------------------------- |
+| `origin?` | `AxesInput['origin']` | `{ position: [0, 0], label: false }` | 轴、网格、刻度和文字的共同原点配置          |
+| `x`       | `AxesInput['x']`      | —                                    | 水平轴及其投影的竖直网格；必须提供 `extent` |
+| `y`       | `AxesInput['y']`      | —                                    | 垂直轴及其投影的水平网格；必须提供 `extent` |
+
+### `origin`
+
+| 属性        | 类型       | 默认值        | 描述               |
+| ----------- | ---------- | ------------- | ------------------ | ------- | ------------------------ |
+| `position?` | `Position` | `[0, 0]`      | 共同的屏幕坐标原点 |
+| `label?`    | `false`    | `IRTextBlock` | 对象               | `false` | 原点左下方的单一静态文字 |
+
+原点文字对象的字段如下：
+
+| 属性      | 类型                 | 默认值 | 描述                           |
+| --------- | -------------------- | ------ | ------------------------------ |
+| `text`    | `IRTextBlock`        | —      | 静态原点文字                   |
+| `offset?` | `number`             | `10`   | 文字中心向左下方移动的非负距离 |
+| `style?`  | `IRLabelVisualStyle` | —      | 原点文字的 Core 文字样式       |
+
+### `AxesInput['x']` / `AxesInput['y']`
+
+| 属性     | 类型     | 默认值                                   | 描述                     |
+| -------- | -------- | ---------------------------------------- | ------------------------ | -------------------------------------------------- | ---------------------- |
+| `extent` | `number` | `{ negative: number; positive: number }` | —                        | 轴两侧绘图长度；数字表示两侧等长，至少一侧必须为正 |
+| `line?`  | `false`  | `IRAxesLine`                             | `{ arrows: 'positive' }` | 基线与端点箭头；`false` 只隐藏基线                 |
+| `ticks?` | `false`  | `IRAxesTicks`                            | 省略                     | 本轴的刻度和可选静态文字                           |
+| `grid?`  | `false`  | `IRAxesGrid`                             | 省略                     | 本轴投影的网格；x 轴投影为竖直线，y 轴投影为水平线 |
+| `label?` | `false`  | `IRTextBlock`                            | `IRAxesLabel`            | x 为 `'x'`，y 为 `'y'`                             | 静态轴名文字或隐藏配置 |
+
+### `x.grid` / `y.grid`
+
+| 属性      | 类型                        | 默认值 | 描述                                                   |
+| --------- | --------------------------- | ------ | ------------------------------------------------------ |
+| `spacing` | `number`                    | —      | 正格距；`x.grid` 沿 x 方向枚举，`y.grid` 沿 y 方向枚举 |
+| `offset?` | `number`                    | `0`    | 该轴局部数学方向的格线起算偏移                         |
+| `style?`  | `IRStandardPathStrokeStyle` | —      | 该组网格线独立的 Path 描边样式                         |
+
+### `x.line` / `y.line`
+
+| 属性           | 类型                               | 默认值       | 描述                                         |
+| -------------- | ---------------------------------- | ------------ | -------------------------------------------- |
+| `arrows?`      | <ApiValues name="AxesArrowMode" /> | `'positive'` | 负端、正端、两端或不生成箭头                 |
+| `arrowDetail?` | `IRArrowDetail`                    | —            | Core 箭头外观；`start` / `end` 对应负 / 正端 |
+| `style?`       | `IRStandardPathStrokeStyle`        | —            | 本轴基线的 Path 描边样式                     |
+
+### `x.ticks` / `y.ticks`
+
+| 属性           | 类型                              | 默认值   | 描述                         |
+| -------------- | --------------------------------- | -------- | ---------------------------- | -------------------------- |
+| `source`       | spacing 或 values 分支            | —        | 规则间距或显式位置来源       |
+| `side?`        | <ApiValues name="AxesTickSide" /> | `'both'` | 刻度相对轴线的伸出侧         |
+| `endpointGap?` | `number`                          | `6`      | 端点附近不生成刻度的距离     |
+| `length?`      | `number`                          | `6`      | 分配在所选侧上的刻度线段总长 |
+| `style?`       | `IRStandardPathStrokeStyle`       | —        | 刻度线的 Path 描边样式       |
+| `labels?`      | `false`                           | 对象     | 省略                         | 为已生成的刻度附加静态文字 |
+
+`source` 有两个 JSON 对象分支。`kind` 的公开取值见 <ApiValues name="AxesTickSourceKind" />，规则间距分支的 `extent` 取值见 <ApiValues name="AxesTickExtent" />：
+
+| 分支     | 字段                                                                 | 默认值           | 描述                                     |
+| -------- | -------------------------------------------------------------------- | ---------------- | ---------------------------------------- |
+| 规则间距 | `kind: 'spacing'`、`spacing: number`、`extent?: AxesTickExtentValue` | `extent: 'both'` | 按正间距枚举，可限制到一个半轴           |
+| 显式位置 | `kind: 'values'`、`values: Array<number>`                            | —                | 严格递增、非零且位于本轴范围内的有符号值 |
+
+`ticks.labels` 的 `entries` 是非空静态列表，每项包含 `value` 和 `text`，且 `value` 必须命中实际生成并通过端点留白过滤的刻度；`offset` 默认 `4`，`style` 是共享的 Core 文字样式。
+
+### `x.label` / `y.label`
+
+当 `label` 使用对象时，字段如下：
+
+| 属性      | 类型                              | 默认值       | 描述                         |
+| --------- | --------------------------------- | ------------ | ---------------------------- |
+| `text`    | `IRTextBlock`                     | —            | 静态轴名文字                 |
+| `end?`    | <ApiValues name="AxesLabelEnd" /> | `'positive'` | 放在正端或负端之外           |
+| `offset?` | `number`                          | `8`          | 文字中心到所选端点的非负距离 |
+| `style?`  | `IRLabelVisualStyle`              | —            | 轴名的 Core 文字样式         |
+
+## Related
+
+- [Grid](/library/standard/composite/grid)：主线、边框和更完整的规则网格契约
+- [Tier 2 Composites](/kernel/concepts/design/composite)：Core 如何注册并下沉高层 IR
+- [Path](/kernel/components/draw/path)：Axes 生成的轴线、网格线和刻度图元
+- [TeX](/kernel/packages/tex)：轴名和刻度文字中的 LaTeX 公式
+- [Plot axis](/viz/plot/guide/axis)：数据 scale、自动刻度、formatter 和 guide layout

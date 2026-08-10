@@ -6,7 +6,7 @@ import type {
   AnyCellPresentationDefinition,
   AnyCellVisualScaleDefinition,
   AnyTableStructureDefinition,
-  AnyTableThemeStyleDefinition,
+  TableThemeStyleDefinition,
 } from '../../contract';
 import type { LowerTablesOptions } from '../types';
 import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
@@ -112,7 +112,7 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
     definition => definition.name,
     'visual scale definition',
   );
-  const tableThemeStyles = mergeByIdentity<AnyTableThemeStyleDefinition>(
+  const tableThemeStyles = mergeByIdentity<TableThemeStyleDefinition>(
     optionSets.map(options => options.tableThemeStyles),
     definition => definition.name,
     'theme style definition',

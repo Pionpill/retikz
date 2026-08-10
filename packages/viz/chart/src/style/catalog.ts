@@ -48,10 +48,10 @@ const structures: Record<BuiltinThemeStyleValue, PresetStructure> = {
     gridEnabled: true,
   },
   [ThemeStyle.Clean]: {
-    padding: 12,
-    gap: 4,
-    fontFamily: 'system-ui, Segoe UI, sans-serif',
-    gridEnabled: false,
+    padding: 20,
+    gap: 8,
+    fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif',
+    gridEnabled: true,
   },
 };
 
@@ -81,12 +81,12 @@ const typography: Record<BuiltinThemeStyleValue, ReadonlyArray<readonly [number,
     [11, 500, 15],
   ],
   [ThemeStyle.Clean]: [
-    [17, 600, 21],
-    [12, 400, 17],
-    [11, 400, 15],
-    [10, 400, 14],
-    [10, 400, 14],
-    [10, 400, 14],
+    [20, 700, 25],
+    [13, 400, 18],
+    [11, 400, 16],
+    [11, 400, 16],
+    [10, 500, 14],
+    [10, 500, 14],
   ],
 };
 
@@ -123,12 +123,12 @@ const paints: Record<BuiltinThemeStyleValue, Record<ThemeModeValue, PresetPaint>
   },
   [ThemeStyle.Clean]: {
     [ThemeMode.Light]: {
-      canvas: '#FFFFFF',
-      slots: ['#111827', '#374151', '#4B5563', '#6B7280', '#6B7280', '#6B7280'],
+      canvas: 'none',
+      slots: ['#24231F', '#514F49', '#66635C', '#77736A', '#8A877F', '#8A877F'],
     },
     [ThemeMode.Dark]: {
-      canvas: '#0B0F14',
-      slots: ['#F9FAFB', '#D1D5DB', '#D1D5DB', '#9CA3AF', '#9CA3AF', '#9CA3AF'],
+      canvas: 'none',
+      slots: ['#F2F0EA', '#D0CDC4', '#C0BDB4', '#A7A39A', '#8E8A82', '#8E8A82'],
     },
   },
 };
