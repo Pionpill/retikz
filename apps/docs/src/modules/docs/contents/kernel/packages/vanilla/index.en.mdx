@@ -213,6 +213,8 @@ Retained `update()` accepts only backend-matched closed plain-data options. SVG 
 
 Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child, datasets, and composite definitions.
 
+An adapter root may reuse the embed id when authoring and canonical IR represent the same semantic element; a complex adapter may also emit other unique ids. Vanilla records actual ownership through `identityIndex` and `parentIndex` instead of requiring an `embedId/...` string prefix. Public identities must still be unique across the figure.
+
 ```ts
 import type { VanillaTier2Adapter } from '@retikz/vanilla';
 import { embed, figure, layer, node, renderToSvgString } from '@retikz/vanilla';

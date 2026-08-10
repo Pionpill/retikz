@@ -28,14 +28,18 @@ const rectNode = (extra: Record<string, unknown> = {}): IRScene['children'][numb
 
 describe('rectangle — cornerRadius 入 params', () => {
   it('rectangle_rounded_from_params：{type:"rectangle", params:{cornerRadius:6}} → 圆角矩形（cornerRadius=6）', () => {
-    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })])).scene;
+    const compiled = compileToScene(
+      scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 6 } } })]),
+    ).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(6);
   });
 
   it('rectangle_rounded_zero_sharp：params.cornerRadius:0 → 直角（cornerRadius=0）', () => {
-    const compiled = compileToScene(scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })])).scene;
+    const compiled = compileToScene(
+      scene([rectNode({ shape: { type: 'rectangle', params: { cornerRadius: 0 } } })]),
+    ).scene;
     const r = findByType(compiled.primitives, 'rect');
     expect(r).toBeDefined();
     expect(r!.cornerRadius).toBe(0);

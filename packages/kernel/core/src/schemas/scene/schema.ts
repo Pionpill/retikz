@@ -1,3 +1,4 @@
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { IRChild } from './types';
@@ -28,8 +29,8 @@ export const ViewBoxSchema = z
   .strictObject({
     x: z.number().describe('ViewBox left-top x'),
     y: z.number().describe('ViewBox left-top y'),
-    width: z.number().positive().describe('ViewBox width in user units.'),
-    height: z.number().positive().describe('ViewBox height in user units.'),
+    width: PositiveNumberSchema.describe('ViewBox width in user units.'),
+    height: PositiveNumberSchema.describe('ViewBox height in user units.'),
   })
   .describe('Explicit viewBox overriding auto-computed layout bounds.');
 

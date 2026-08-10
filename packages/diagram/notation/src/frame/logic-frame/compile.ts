@@ -30,7 +30,7 @@ import {
 import type { LogicLayoutItemArtifact } from '../../shared';
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
-import { LogicCompositeType } from '../../shared';
+import { NotationElementType } from '../../shared';
 
 type LogicFrameRegion = Readonly<{
   key: string;
@@ -70,12 +70,12 @@ const requiredProbe = (
   return probe.result;
 };
 
-const stripItemIdentity = (item: LayoutArtifactItemBase): LogicLayoutItemArtifact => {
-  const artifact: Partial<LayoutArtifactItemBase & { line?: number }> = { ...item };
-  delete artifact.key;
-  delete artifact.sourceIndex;
-  delete artifact.line;
-  return artifact as LogicLayoutItemArtifact;
+const stripItemIdentity = (item: LayoutArtifactItemBase & { line?: number }): LogicLayoutItemArtifact => {
+  const { key, sourceIndex, line, ...artifact } = item;
+  void key;
+  void sourceIndex;
+  void line;
+  return artifact;
 };
 
 const positiveRectOrNull = (rect: LayoutArtifactRect): LayoutArtifactRect | null =>
@@ -249,7 +249,7 @@ export const compileLogicFrame = (
   }));
 
   const artifact: LogicFrameArtifact = Object.freeze({
-    kind: LogicCompositeType.LogicFrame,
+    kind: NotationElementType.LogicFrame,
     id: node.id,
     outer: Object.freeze({
       allocationBounds: allocation,

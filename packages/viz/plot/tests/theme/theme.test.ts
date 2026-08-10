@@ -1,12 +1,19 @@
-import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
+import type { BuiltinThemeStyleValue, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 
-import { compileToScene, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlotAxisGuide, IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
-import { PlotSpecSchema } from '../../src/schemas';
+import {
+  resolveAxisGuideTokens,
+  resolvePlotAxisGuideTheme,
+  resolvePlotAxisThemeTokens,
+  resolvePlotGuideTheme,
+  resolvePlotTheme,
+} from '../../src/providers';
+import { PlotSpecSchema, PlotThemeToken } from '../../src/schemas';
 
 const ROWS = [
   { x: 0, y: 1, city: 'A', value: 1 },
@@ -92,13 +99,29 @@ const hasMinimumSize = (node: IRNode, width: number, height: number): boolean =>
   return size?.width === width && size.height === height;
 };
 
+const resolveAxis = (
+  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
+  guide: IRPlotAxisGuide,
+  style: BuiltinThemeStyleValue = ThemeStyle.Neutral,
+): IRPlotAxisGuide => {
+  const effectiveTheme = {
+    style,
+    mode: ThemeMode.Light,
+    colors: resolveCoreThemeColors(style, ThemeMode.Light),
+  };
+  const resolution = resolvePlotTheme(effectiveTheme, input);
+  const guideTheme = resolvePlotGuideTheme(resolution.plotTheme, resolution.palette);
+  const tokens = resolvePlotAxisThemeTokens(resolution, guide.dimension);
+  return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(guideTheme, tokens), guide);
+};
+
 describe('plot theme schema and lowering', () => {
   it('accepts_json_safe_theme_and_rejects_unknown_keys', () => {
     expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
           plotTheme: {
-            background: '#ffffff',
+            plotArea: { fill: '#ffffff' },
             typography: { font: { size: 11 }, textColor: '#334155' },
             axis: { grid: { stroke: '#cbd5e1', drawOpacity: 0.5 } },
             legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -109,6 +132,13 @@ describe('plot theme schema and lowering', () => {
     ).not.toThrow();
 
     expect(() =>
+      PlotSpecSchema.parse({
+        ...baseSpec(),
+        plotTheme: { background: '#ffffff' },
+      }),
+    ).toThrow();
+
+    expect(() =>
       PlotSpecSchema.parse(
         baseSpec({
           plotTheme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlotSpec['plotTheme'],
@@ -117,12 +147,108 @@ describe('plot theme schema and lowering', () => {
     ).toThrow();
   });
 
-  it('background_emits_panel_background_when_configured', () => {
-    const root = expandOf(baseSpec({ plotTheme: { background: '#f8fafc' } }));
-    const background = root.children[0] as IRNode;
+  it('background_emits_the_effective_plot_area_before_plot_content', () => {
+    const root = expandOf(
+      baseSpec({
+        id: 'background-plot',
+        guides: [
+          { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, title: 'x' },
+          { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, title: 'y' },
+        ],
+        plotTheme: { plotArea: { fill: '#f8fafc' } },
+      }),
+    );
+    const content = root.children[0] as IRScope;
+    const background = content.children[0] as IRNode;
+    const plotAreaCarrier = root.children[1] as IRNode;
+
     expect(background.type).toBe('node');
     expect(background.fill).toBe('#f8fafc');
-    expect(hasMinimumSize(background, 480, 300)).toBe(true);
+    expect(background.position).toEqual(plotAreaCarrier.position);
+    expect(background.minimumSize).toEqual(plotAreaCarrier.minimumSize);
+    expect(hasMinimumSize(background, 480, 300)).toBe(false);
+  });
+
+  it('polar_background_uses_the_coordinate_circle_instead_of_the_plot_rectangle', () => {
+    const root = expandOf(
+      baseSpec({
+        coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
+        plotTheme: { plotArea: { fill: '#f8fafc' } },
+      }),
+    );
+    const background = root.children[0] as IRNode;
+
+    expect(background).toMatchObject({
+      type: 'node',
+      shape: 'circle',
+      position: [240, 150],
+      minimumSize: 300,
+      fill: '#f8fafc',
+    });
+  });
+
+  it.each([
+    ['cartesian1D', { type: 'cartesian1D', x: 'x' }],
+    ['polar1D', { type: 'polar1D', angle: 'x' }],
+  ] as const)('%s_does_not_emit_a_plot_area', (_type, coordinate) => {
+    const fill = '#f8fafc';
+    const id = `${coordinate.type}-plot`;
+    const root = expandOf(
+      baseSpec({
+        id,
+        coordinate,
+        marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
+        plotTheme: { plotArea: { fill } },
+      }),
+    );
+
+    expect(nodesOf(root).some(node => node.fill === fill)).toBe(false);
+    expect(nodesOf(root).some(node => node.id === `${id}.plotArea`)).toBe(false);
+  });
+
+  it('facet_background_emits_one_plot_area_inside_each_panel', () => {
+    const root = expandOf(
+      PlotSpecSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        id: 'facet-background',
+        data: { reference: 'd' },
+        scales: [
+          { type: 'linear', name: 'x' },
+          { type: 'linear', name: 'y' },
+        ],
+        composition: {
+          defaultView: 'root',
+          views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'x', y: 'y' } }],
+          arrangements: [
+            {
+              kind: 'facet',
+              id: 'city',
+              view: 'root',
+              column: { field: 'city', order: ['A', 'B', 'C'] },
+            },
+          ],
+          spacing: { panelGap: 24 },
+          resolve: { axis: { x: 'local', y: 'local' }, grid: { x: 'local', y: 'local' } },
+        },
+        marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+        guides: [
+          { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, grid: true },
+          { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, grid: true },
+        ],
+        plotTheme: { plotArea: { fill: '#e2e8f0' } },
+      }),
+    );
+    const content = root.children[0] as IRScope;
+    const panels = scopesOf(content).filter(scope => scope.meta?.layer === 'facetPanel');
+
+    expect(content.children[0]?.type).toBe('scope');
+    expect(panels).toHaveLength(3);
+    for (const panel of panels) {
+      const background = panel.children[0] as IRNode;
+      expect(background).toMatchObject({ type: 'node', fill: '#e2e8f0' });
+      expect(hasMinimumSize(background, 144, 300)).toBe(false);
+    }
   });
 
   it('Scene 与 Scope effective Theme 进入 Plot lowering', () => {
@@ -144,14 +270,13 @@ describe('plot theme schema and lowering', () => {
     ).scene;
     const fills = primitiveFillsOf(scene.primitives);
 
-    expect(fills).toContain('#111827');
-    expect(fills).toContain('#E5ECF6');
+    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Academic, ThemeMode.Dark).categorical[0]);
+    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Vibrant, ThemeMode.Light).categorical[0]);
   });
 
-  it('theme_palette_categorical_beats_colors_for_ordinal_scale', () => {
+  it('theme_palette_categorical_drives_ordinal_scale', () => {
     const root = expandOf(
       baseSpec({
-        colors: ['#000000'],
         plotTheme: { palette: { categorical: ['#111111', '#222222'] } },
       }),
     );
@@ -221,6 +346,177 @@ describe('plot theme schema and lowering', () => {
     const labels = nodesOf(root).filter(node => node.text !== undefined && node.textColor !== undefined);
     expect(labels.every(label => label.textColor === '#2563eb')).toBe(true);
     expect(labels.every(label => label.font?.size === 10)).toBe(true);
+  });
+
+  it('Axis rule 按开放 dimension 控制 line、tick、label、title 与 grid，后声明规则优先', () => {
+    const input = {
+      plotThemeTokenRules: [
+        {
+          select: { dimension: ['x', 'radius'] },
+          tokens: {
+            [PlotThemeToken.AxisLineEnabled]: false,
+            [PlotThemeToken.AxisTickMark]: false,
+            [PlotThemeToken.AxisTickLabelEnabled]: false,
+            [PlotThemeToken.AxisTitleForeground]: '#7c3aed',
+            [PlotThemeToken.AxisGridEnabled]: true,
+          },
+        },
+        {
+          select: { dimension: 'x' },
+          tokens: {
+            [PlotThemeToken.AxisTickLabelEnabled]: true,
+            [PlotThemeToken.AxisGridStroke]: '#ef4444',
+          },
+        },
+      ],
+    } satisfies Pick<IRPlotSpec, 'plotThemeTokenRules'>;
+
+    const x = resolveAxis(input, { type: 'axis', dimension: 'x', title: 'x' });
+    const radius = resolveAxis(input, { type: 'axis', dimension: 'radius', title: 'r' });
+
+    expect(x.line).toBe(false);
+    expect(x.ticks?.mark).toBe(false);
+    expect(x.tickLabels).not.toBe(false);
+    expect(x.title).toMatchObject({ text: 'x', textColor: '#7c3aed' });
+    expect(x.grid).toMatchObject({ stroke: '#ef4444' });
+    expect(radius.tickLabels).toBe(false);
+    expect(radius.grid).toMatchObject({ stroke: 'currentColor' });
+  });
+
+  it('用户全局 token 高于 style rule，local rule 高于用户全局 token，native 与 guide 依次更高', () => {
+    expect(
+      resolveAxis({ plotThemeTokens: { [PlotThemeToken.AxisGridEnabled]: false } }, { type: 'axis', dimension: 'y' })
+        .grid,
+    ).toBe(false);
+
+    const input = {
+      plotThemeTokens: {
+        [PlotThemeToken.AxisGridEnabled]: false,
+        [PlotThemeToken.AxisGridStroke]: '#94a3b8',
+      },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'y' },
+          tokens: {
+            [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisGridStroke]: '#2563eb',
+          },
+        },
+      ],
+      plotTheme: { axis: { grid: { stroke: '#f97316', dashPattern: [4, 2] } } },
+    } satisfies Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>;
+
+    const y = resolveAxis(input, {
+      type: 'axis',
+      dimension: 'y',
+      grid: { strokeWidth: 2, dashOffset: 1 },
+    });
+
+    expect(y.grid).toEqual({
+      stroke: '#f97316',
+      strokeWidth: 2,
+      drawOpacity: 0.15,
+      dashPattern: [4, 2],
+      dashOffset: 1,
+    });
+  });
+
+  it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
+    const cases: Array<{ style: BuiltinThemeStyleValue; dimensions: Array<string> }> = [
+      { style: ThemeStyle.Neutral, dimensions: ['y'] },
+      { style: ThemeStyle.Academic, dimensions: [] },
+      { style: ThemeStyle.Vibrant, dimensions: ['x', 'y'] },
+      { style: ThemeStyle.Clean, dimensions: ['y'] },
+    ];
+
+    for (const { style, dimensions } of cases) {
+      for (const dimension of ['x', 'y']) {
+        const grid = resolveAxis({}, { type: 'axis', dimension }, style).grid;
+        if (dimensions.some(candidate => candidate === dimension)) {
+          expect(grid).toMatchObject({ stroke: style === ThemeStyle.Vibrant ? '#FFFFFF' : 'currentColor' });
+        } else {
+          expect(grid).toBe(false);
+        }
+      }
+    }
+
+    const localMinor = { ticks: { values: [0.5] }, dashOffset: 3 };
+    expect(resolveAxis({}, { type: 'axis', dimension: 'y', grid: { minor: localMinor } }).grid).toMatchObject({
+      stroke: 'currentColor',
+      minor: localMinor,
+    });
+  });
+
+  it('Clean 默认不绘制 x/y Axis line 与 tick mark', () => {
+    const x = resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Clean);
+    const y = resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean);
+
+    expect(x.line).toBe(false);
+    expect(y.line).toBe(false);
+    expect(x.ticks?.mark).toBe(false);
+    expect(y.ticks?.mark).toBe(false);
+  });
+
+  it('Clean 默认隐藏 Axis title，显式 token、dimension rule 与 native theme 可以覆盖', () => {
+    const guide = { type: 'axis', dimension: 'x', title: 'Revenue' } as const;
+
+    expect(resolveAxis({}, guide, ThemeStyle.Clean).title).toBeUndefined();
+    expect(resolveAxis({}, guide, ThemeStyle.Neutral).title).toMatchObject({ text: 'Revenue' });
+    expect(
+      resolveAxis({ plotThemeTokens: { [PlotThemeToken.AxisTitleEnabled]: true } }, guide, ThemeStyle.Clean).title,
+    ).toMatchObject({ text: 'Revenue' });
+    expect(
+      resolveAxis(
+        {
+          plotThemeTokenRules: [{ select: { dimension: 'x' }, tokens: { [PlotThemeToken.AxisTitleEnabled]: true } }],
+        },
+        guide,
+        ThemeStyle.Clean,
+      ).title,
+    ).toMatchObject({ text: 'Revenue' });
+    expect(resolveAxis({ plotTheme: { axis: { title: false } } }, guide).title).toBeUndefined();
+    expect(
+      resolveAxis({ plotTheme: { axis: { title: { textColor: '#2563eb' } } } }, guide, ThemeStyle.Clean).title,
+    ).toMatchObject({ text: 'Revenue', textColor: '#2563eb' });
+  });
+
+  it('typography_supplies_axis_text_defaults_beneath_axis_and_guide_styles', () => {
+    const root = expandOf(
+      baseSpec({
+        guides: [
+          {
+            type: 'axis',
+            dimension: 'x',
+            title: { text: 'Revenue', textColor: '#dc2626', font: { weight: 700 } },
+          },
+        ],
+        plotTheme: {
+          typography: {
+            font: { family: 'Source Serif 4', size: 15 },
+            textColor: '#0f766e',
+            lineHeight: 1.4,
+          },
+          axis: {
+            tickLabels: { textColor: '#2563eb', font: { size: 10 } },
+            title: { textColor: '#7c3aed', font: { size: 13 } },
+          },
+        },
+      }),
+    );
+    const textNodes = nodesOf(root).filter(node => node.text !== undefined);
+    const title = textNodes.find(node => node.text === 'Revenue');
+    const tickLabels = textNodes.filter(node => node.text !== 'Revenue');
+
+    expect(tickLabels.length).toBeGreaterThan(0);
+    expect(tickLabels.every(label => label.font?.family === 'Source Serif 4')).toBe(true);
+    expect(tickLabels.every(label => label.font?.size === 10)).toBe(true);
+    expect(tickLabels.every(label => label.textColor === '#2563eb')).toBe(true);
+    expect(tickLabels.every(label => label.lineHeight === 1.4)).toBe(true);
+    expect(title).toMatchObject({
+      textColor: '#dc2626',
+      lineHeight: 1.4,
+      font: { family: 'Source Serif 4', size: 13, weight: 700 },
+    });
   });
 
   it('axis_tick_label_local_layout_overrides_theme_layout', () => {

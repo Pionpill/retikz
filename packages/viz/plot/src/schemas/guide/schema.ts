@@ -12,6 +12,13 @@ import {
   TextAlignSchema,
   TextBlockSchema,
 } from '@retikz/core';
+import {
+  NonNegativeIntegerSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveIntegerSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { LayoutGapSchema } from '@retikz/layout';
 import { z } from 'zod';
 
@@ -55,11 +62,9 @@ const AxisSidePlacementSchema = z
       .literal(AxisPlacementKind.Side)
       .describe('Placement discriminator: place the axis on a cardinal side of the plot area'),
     side: z.enum(AxisCardinalSide).describe('Cardinal side of the plot area: top, right, bottom, or left'),
-    offset: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Additional outward offset in user units for axes sharing the same placement key; omit = 0'),
+    offset: NonNegativeNumberSchema.optional().describe(
+      'Additional outward offset in user units for axes sharing the same placement key; omit = 0',
+    ),
   })
   .describe('Cardinal-side axis placement');
 
@@ -69,11 +74,9 @@ const AxisEdgePlacementSchema = z
       .literal(AxisPlacementKind.Edge)
       .describe('Placement discriminator: place the axis on a coordinate-native edge'),
     edge: z.string().min(1).describe('Coordinate-native edge id; interpreted by the active coordinate definition'),
-    offset: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Additional outward offset in user units for axes sharing the same native edge; omit = 0'),
+    offset: NonNegativeNumberSchema.optional().describe(
+      'Additional outward offset in user units for axes sharing the same native edge; omit = 0',
+    ),
   })
   .describe('Coordinate-native edge axis placement');
 
@@ -105,9 +108,6 @@ export const AxisPlacementSchema = z
   .describe(
     'Axis placement mode: automatic coordinate default, cardinal plot-area side, coordinate-native edge, or cartesian origin',
   );
-
-const NonNegativeFiniteSchema = z.number().nonnegative();
-const NormalizedRatioSchema = z.number().min(0).max(1);
 
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
@@ -142,7 +142,7 @@ export const GuideLineStyleSchema = z
     strokeWidth: StrokeWidthSchema.optional().describe('Guide line stroke width in user units'),
     drawOpacity: OpacitySchema.optional().describe('Guide line stroke opacity'),
     dashPattern: z
-      .array(z.number().nonnegative())
+      .array(NonNegativeNumberSchema)
       .min(1)
       .optional()
       .describe('Guide line dash pattern lengths in user units'),
@@ -169,7 +169,7 @@ export const GuideTextStyleSchema = z
     opacity: OpacitySchema.optional().describe('Guide text opacity'),
     align: TextAlignSchema.optional().describe('Multi-line guide text alignment'),
     lineHeight: LineHeightSchema.optional().describe('Guide text line height in user units'),
-    maxTextWidth: z.number().positive().optional().describe('Maximum guide text line width before wrapping'),
+    maxTextWidth: PositiveNumberSchema.optional().describe('Maximum guide text line width before wrapping'),
   })
   .describe('Shared guide text style fields mapped to core node text vocabulary');
 
@@ -177,7 +177,7 @@ export const GuideTickIntervalSchema = z
   .discriminatedUnion('kind', [
     z.strictObject({
       kind: z.literal(GuideTickIntervalKind.Number).describe('Numeric fixed-step tick interval'),
-      step: z.number().positive().describe('Positive numeric step between candidate ticks'),
+      step: PositiveNumberSchema.describe('Positive numeric step between candidate ticks'),
       anchor: z
         .number()
         .optional()
@@ -186,12 +186,9 @@ export const GuideTickIntervalSchema = z
     z.strictObject({
       kind: z.literal(GuideTickIntervalKind.Time).describe('UTC time fixed-step tick interval'),
       unit: z.enum(GuideTickTimeUnit).describe('UTC time unit used by this interval'),
-      step: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe('Positive integer number of units between candidate ticks; omit = 1'),
+      step: PositiveIntegerSchema.optional().describe(
+        'Positive integer number of units between candidate ticks; omit = 1',
+      ),
       anchor: z
         .union([z.string().min(1), z.number()])
         .optional()
@@ -199,20 +196,17 @@ export const GuideTickIntervalSchema = z
     }),
     z.strictObject({
       kind: z.literal(GuideTickIntervalKind.Category).describe('Category index fixed-step tick interval'),
-      step: z.number().int().positive().describe('Positive integer category stride'),
-      offset: z.number().int().nonnegative().optional().describe('Zero-based category offset; omit = 0'),
+      step: PositiveIntegerSchema.describe('Positive integer category stride'),
+      offset: NonNegativeIntegerSchema.optional().describe('Zero-based category offset; omit = 0'),
     }),
   ])
   .describe('Fixed-interval candidate tick source. Priority is values > interval > count');
 
 export const GuideTickSourceSchema = z
   .strictObject({
-    count: z
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .describe('Target number of guide ticks; ignored when values or interval are provided'),
+    count: PositiveIntegerSchema.optional().describe(
+      'Target number of guide ticks; ignored when values or interval are provided',
+    ),
     values: z
       .array(z.union([z.string(), z.number()]))
       .min(1)
@@ -283,8 +277,8 @@ export const AxisTickDensitySchema = z
     z
       .strictObject({
         kind: z.literal(AxisTickDensityKind.Sample).describe('Deterministically sample candidate ticks'),
-        maxCount: z.number().int().positive().optional().describe('Hard upper bound for visible ticks'),
-        minGap: NonNegativeFiniteSchema.optional().describe('Minimum projected gap between adjacent visible ticks'),
+        maxCount: PositiveIntegerSchema.optional().describe('Hard upper bound for visible ticks'),
+        minGap: NonNegativeNumberSchema.optional().describe('Minimum projected gap between adjacent visible ticks'),
         preserveEnds: z
           .boolean()
           .optional()
@@ -307,7 +301,7 @@ const AxisTickEndpointPolicySchema = z
     z.literal(false),
     z.strictObject({
       hideWhenArrow: z.boolean().optional().describe('Hide endpoint ticks near axis arrows; omit = true'),
-      distance: NonNegativeFiniteSchema.optional().describe(
+      distance: NonNegativeNumberSchema.optional().describe(
         'Endpoint distance threshold in user units; omit = derived from arrow and tick size',
       ),
       affect: z.enum(AxisTickEndpointAffect).optional().describe('Which tick artifacts are hidden; omit = mark'),
@@ -318,7 +312,7 @@ const AxisTickEndpointPolicySchema = z
 const AxisTickLineMarkSchema = z
   .strictObject({
     kind: z.literal(AxisTickMarkKind.Line).describe('Line tick mark'),
-    length: NonNegativeFiniteSchema.optional().describe('Line tick length in user units'),
+    length: NonNegativeNumberSchema.optional().describe('Line tick length in user units'),
     line: z
       .union([z.literal(false), GuideLineStyleSchema])
       .optional()
@@ -327,17 +321,17 @@ const AxisTickLineMarkSchema = z
   .describe('Line tick mark configuration');
 
 const AxisTickShapeMarkBase = {
-  size: NonNegativeFiniteSchema.optional().describe('Uniform shape tick size in user units'),
-  width: NonNegativeFiniteSchema.optional().describe('Shape tick width; overrides size for width'),
-  height: NonNegativeFiniteSchema.optional().describe('Shape tick height; overrides size for height'),
-  offset: NonNegativeFiniteSchema.optional().describe(
+  size: NonNegativeNumberSchema.optional().describe('Uniform shape tick size in user units'),
+  width: NonNegativeNumberSchema.optional().describe('Shape tick width; overrides size for width'),
+  height: NonNegativeNumberSchema.optional().describe('Shape tick height; overrides size for height'),
+  offset: NonNegativeNumberSchema.optional().describe(
     'Shape center offset along the tick normal; omit = half effective size',
   ),
   orientation: z.enum(AxisTickShapeOrientation).optional().describe('Shape tick rotation strategy; omit = fixed'),
   rotate: z.number().optional().describe('Additional rotation in degrees'),
   fill: PaintValueSchema.optional().describe('Shape tick fill paint'),
   stroke: PaintValueSchema.optional().describe('Shape tick stroke paint'),
-  strokeWidth: NonNegativeFiniteSchema.optional().describe('Shape tick stroke width'),
+  strokeWidth: NonNegativeNumberSchema.optional().describe('Shape tick stroke width'),
   opacity: OpacitySchema.optional().describe('Shape tick node opacity'),
   drawOpacity: OpacitySchema.optional().describe('Shape tick draw opacity'),
 };
@@ -366,7 +360,7 @@ export const AxisTickMarkSchema = z
 export const AxisTicksSchema = z
   .strictObject({
     ...GuideTickSourceSchema.shape,
-    length: z.number().nonnegative().optional().describe('Tick mark length in user units'),
+    length: NonNegativeNumberSchema.optional().describe('Tick mark length in user units'),
     line: z
       .union([z.literal(false), GuideLineStyleSchema])
       .optional()
@@ -412,7 +406,7 @@ export const AxisTickLabelAutoHideSchema = z
       .boolean()
       .optional()
       .describe('Whether first and last labels should be preserved when possible; omit = true'),
-    separation: NonNegativeFiniteSchema.optional().describe(
+    separation: NonNegativeNumberSchema.optional().describe(
       'Minimum separation between label boxes in user units; omit = 0',
     ),
   })
@@ -424,7 +418,7 @@ export const AxisTickLabelBoundsSchema = z
       .enum(AxisTickLabelOverflow)
       .optional()
       .describe('How labels outside the axis span are handled; omit = flush'),
-    tolerance: NonNegativeFiniteSchema.optional().describe('Overflow tolerance in user units; omit = 1'),
+    tolerance: NonNegativeNumberSchema.optional().describe('Overflow tolerance in user units; omit = 1'),
   })
   .describe('Axis tick label boundary handling strategy');
 
@@ -444,12 +438,7 @@ export const AxisTickLabelLayoutSchema = z
         .union([z.literal(false), AxisTickLabelBoundsSchema])
         .optional()
         .describe('Axis-span boundary strategy; false disables boundary handling'),
-      sampleSize: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe('Number of labels sampled while choosing auto rotation'),
+      sampleSize: PositiveIntegerSchema.optional().describe('Number of labels sampled while choosing auto rotation'),
     }),
   ])
   .describe('Axis tick label adaptive layout strategy');
@@ -457,6 +446,11 @@ export const AxisTickLabelLayoutSchema = z
 /** Axis tick 与 label 中心之间的非负间距 */
 export const AxisTickLabelGapSchema = LayoutGapSchema.describe(
   'Non-negative gap between an axis tick end and its label center.',
+);
+
+/** Axis tick label 带与 title 中心之间的非负间距 */
+export const AxisTitlePaddingSchema = LayoutGapSchema.describe(
+  'Non-negative padding from the axis tick label band to the title center.',
 );
 
 export const AxisTickLabelsSchema = z
@@ -473,7 +467,7 @@ export const AxisTickLabelsSchema = z
   .describe('Axis tick label style. Text content comes from the resolved tick set');
 
 const AxisTitlePlacementSchema = z
-  .union([z.enum(GeometryLabelPosition), NormalizedRatioSchema])
+  .union([z.enum(GeometryLabelPosition), NormalizedFractionSchema])
   .describe('Axis title position along the baseline: keyword or normalized number from negative to positive direction');
 
 const AxisTitleAnchorAlignSchema = z.enum([AxisTitleAnchor.Start, AxisTitleAnchor.Center, AxisTitleAnchor.End]);
@@ -561,11 +555,9 @@ const AxisCrossingSchema = z
 export const AxisTitleSchema = z
   .strictObject({
     text: AxisTitleTextSchema.describe('Axis title text block'),
-    padding: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Padding from the tick label band to the title center, in user units'),
+    padding: AxisTitlePaddingSchema.optional().describe(
+      'Padding from the tick label band to the title center, in user units',
+    ),
     placement: AxisTitlePlacementSchema.optional().describe(
       'Axis title position along the axis baseline; omit = midway',
     ),
@@ -579,22 +571,19 @@ export const AxisTitleSchema = z
   .describe('Axis title text block and style');
 
 /** Legend swatch 的基准尺寸 */
-export const LegendSwatchSizeSchema = z.number().positive().describe('Positive legend swatch size in user units.');
+export const LegendSwatchSizeSchema = PositiveNumberSchema.describe('Positive legend swatch size in user units.');
 
 /** Legend ramp 的主轴长度 */
-export const LegendRampLengthSchema = z.number().positive().describe('Positive legend ramp length in user units.');
+export const LegendRampLengthSchema = PositiveNumberSchema.describe('Positive legend ramp length in user units.');
 
 /** Legend ramp 的短轴厚度 */
-export const LegendRampThicknessSchema = z
-  .number()
-  .positive()
-  .describe('Positive legend ramp thickness in user units.');
+export const LegendRampThicknessSchema = PositiveNumberSchema.describe('Positive legend ramp thickness in user units.');
 
 /** Legend symbol 的目标视觉盒尺寸 */
-export const LegendSymbolSizeSchema = z.number().positive().describe('Positive legend symbol box size in user units.');
+export const LegendSymbolSizeSchema = PositiveNumberSchema.describe('Positive legend symbol box size in user units.');
 
 /** Legend symbol 在 fit 后应用的正比例 */
-export const LegendSymbolScaleSchema = z.number().positive().describe('Positive legend symbol scale factor.');
+export const LegendSymbolScaleSchema = PositiveNumberSchema.describe('Positive legend symbol scale factor.');
 
 /** Legend 内部相邻内容的非负间距 */
 export const LegendLayoutGapSchema = LayoutGapSchema.describe('Non-negative legend layout gap in user units.');
@@ -704,7 +693,7 @@ const AxisGridSourceShape = {
   density: AxisTickDensitySchema.optional().describe(
     'Visible grid tick density strategy; omit = all candidate grid ticks',
   ),
-  bandPosition: NormalizedRatioSchema.optional().describe(
+  bandPosition: NormalizedFractionSchema.optional().describe(
     'Position inside a band scale used by grid lines; omit = 0.5',
   ),
 } as const;
@@ -715,7 +704,7 @@ const AxisMinorGridSchema = z
     density: AxisTickDensitySchema.optional().describe(
       'Visible minor grid tick density strategy; omit = all candidate minor ticks',
     ),
-    bandPosition: NormalizedRatioSchema.optional().describe(
+    bandPosition: NormalizedFractionSchema.optional().describe(
       'Position inside a band scale used by minor grid lines; omit = parent bandPosition or 0.5',
     ),
     ...AxisGridLineStyleSchema.shape,

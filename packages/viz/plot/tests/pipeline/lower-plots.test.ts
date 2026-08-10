@@ -172,7 +172,7 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
 
-  it('semantic_layers_emit_default_zindex_scopes', () => {
+  it('drawing_semantic_layers_emit_default_zindex_scopes_without_presentation_decoration', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -197,7 +197,6 @@ describe('lowerPlots (contract)', () => {
         { type: 'axis', dimension: 'x', grid: true },
         { type: 'legend', channel: 'color', scale: 'regionColor', title: 'Region' },
       ],
-      labels: [{ type: 'text', role: 'title', text: 'Revenue' }],
     });
     const root = expandOf(
       spec,
@@ -208,8 +207,29 @@ describe('lowerPlots (contract)', () => {
     expect(scopeByLayerMeta(root, 'grid').zIndex).toBe(-300);
     expect(scopeByLayerMeta(root, 'mark').zIndex).toBe(0);
     expect(scopeByLayerMeta(root, 'axis').zIndex).toBe(200);
-    expect(scopeByLayerMeta(root, 'decoration').zIndex).toBe(400);
     expect(scopeByLayerMeta(root, 'legend').zIndex).toBe(500);
+  });
+
+  it('theme_grid_enables_every_existing_axis_without_local_grid', () => {
+    const spec = PlotSpecSchema.parse({
+      ...pointSpec(),
+      id: 'theme-grid',
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+      ],
+      plotTheme: {
+        axis: {
+          grid: { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15 },
+        },
+      },
+    });
+    const root = expandOf(spec, { sales: SALES }, { ...opts, provenance: true });
+    const grids = collectScopes(root).filter(scope => scope.meta?.layer === 'grid');
+
+    expect(grids.map(scope => scope.meta?.dimension)).toEqual(['x', 'y']);
+    expect(grids.every(scope => (scope.children[0] as IRPath).stroke === '#ffffff')).toBe(true);
+    expect(grids.every(scope => (scope.children[0] as IRPath).strokeOpacity === 0.15)).toBe(true);
   });
 
   it('layer_zindex_overrides_semantic_scope_without_reusing_mark_node_zindex', () => {
@@ -412,6 +432,7 @@ describe('lowerPlots (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      plotThemeTokens: { 'axis.grid.enabled': false },
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },

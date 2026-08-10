@@ -59,7 +59,7 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers/registry/index';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';

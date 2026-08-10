@@ -1,4 +1,5 @@
 import { JsonObjectSchema } from '@retikz/core';
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
@@ -51,7 +52,7 @@ export const QuantileBandWhiskerSpecSchema = z
     z
       .strictObject({
         kind: z.literal('spread').describe('Discriminator: spread fences'),
-        factor: z.number().nonnegative().optional().describe('Spread multiplier; default 1.5'),
+        factor: NonNegativeNumberSchema.optional().describe('Spread multiplier; default 1.5'),
       })
       .describe('Spread fence whisker strategy'),
   ])

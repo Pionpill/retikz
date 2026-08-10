@@ -16,7 +16,6 @@ import type { ChartThemeModeValue } from '../src';
 // @ts-expect-error Theme token 来源取值由 Core 所有
 import type { ChartThemeTokenSourceValue } from '../src';
 import type {
-  AnyChartThemeStyleDefinition,
   ChartContributionSourceValue,
   ChartPresentationDefaultItemKeyValue,
   ChartPresentationItemContentKindValue,
@@ -149,7 +148,6 @@ describe('@retikz/chart package root', () => {
       name: 'brand',
       resolve: () => chart.ChartResolvedThemeTokensSchema.parse({}),
     };
-    const anyChartThemeStyle: AnyChartThemeStyleDefinition = chartThemeStyle;
     const member: IRChartInspectionMember = {
       target: 'mark.main',
       kind: 'mark',
@@ -170,7 +168,7 @@ describe('@retikz/chart package root', () => {
       presentationInspection,
       content,
       item,
-      anyChartThemeStyle,
+      chartThemeStyle,
     }).toBeDefined();
   });
 });

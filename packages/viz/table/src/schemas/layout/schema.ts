@@ -1,9 +1,10 @@
+import { NonNegativeIntegerSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableBordersSchema } from '../border';
 import { TableTrackSizeKind } from './constants';
 
-const NonnegativeGapSchema = z.number().nonnegative();
+const NonnegativeGapSchema = NonNegativeNumberSchema;
 
 export const TableTrackSizeKindSchema = z
   .enum(TableTrackSizeKind)
@@ -12,7 +13,7 @@ export const TableTrackSizeKindSchema = z
 export const TableFixedTrackSizeSchema = z
   .strictObject({
     kind: z.literal(TableTrackSizeKind.Fixed).describe('Discriminator for an explicit fixed track size.'),
-    value: z.number().nonnegative().describe('Nonnegative fixed track size.'),
+    value: NonNegativeNumberSchema.describe('Nonnegative fixed track size.'),
   })
   .describe('Table track with an explicit nonnegative size.');
 
@@ -25,7 +26,7 @@ export const TableAutoTrackSizeSchema = z
 export const TableFractionTrackSizeSchema = z
   .strictObject({
     kind: z.literal(TableTrackSizeKind.Fraction).describe('Discriminator for a fractional track.'),
-    weight: z.number().positive().optional().describe('Positive flex weight. Omitted fields use 1 at runtime.'),
+    weight: PositiveNumberSchema.optional().describe('Positive flex weight. Omitted fields use 1 at runtime.'),
   })
   .describe('Table track that receives a weighted share of constrained remaining space.');
 
@@ -68,7 +69,7 @@ export const TableTrackSizeSchema = z
 
 export const TableTrackOverrideSchema = z
   .strictObject({
-    index: z.number().int().nonnegative().describe('Canonical zero-based track index.'),
+    index: NonNegativeIntegerSchema.describe('Canonical zero-based track index.'),
     size: TableTrackSizeSchema.describe('Track size that replaces the axis default at this index.'),
   })
   .describe('Sparse Table track-size override addressed by canonical index.');

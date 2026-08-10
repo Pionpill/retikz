@@ -1,4 +1,5 @@
 import { OpacitySchema, PaintValueSchema } from '@retikz/core';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableBorderKind, TableBorderMode } from './constants';
@@ -28,10 +29,10 @@ export const TableLineBorderSchema = z
     })
       .optional()
       .describe('Core paint for the border line. Omitted fields use currentColor.'),
-    width: z.number().nonnegative().optional().describe('Nonnegative border width. Omitted fields use 1.'),
+    width: NonNegativeNumberSchema.optional().describe('Nonnegative border width. Omitted fields use 1.'),
     strokeOpacity: OpacitySchema.optional().describe('Border stroke opacity. Omitted fields use 1.'),
     dashPattern: z
-      .array(z.number().positive())
+      .array(PositiveNumberSchema)
       .min(1)
       .optional()
       .describe('Optional non-empty positive dash pattern; omission means solid.'),

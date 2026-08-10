@@ -53,7 +53,7 @@ type NormalizeContext = {
 
 /** 校验 adapter 输出身份标识时额外需要的上下文 */
 type AdapterOutputContext = NormalizeContext & {
-  /** 当前 embed id；adapter 输出 id 必须以它作为前缀 */
+  /** 当前 embed id；adapter 根输出可以复用这个公开 identity */
   embedId: string;
   parentId: string;
   path: Array<string>;
@@ -141,24 +141,26 @@ const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): 
   return out;
 };
 
-/** 注册 adapter 输出的公开身份标识，并要求它被当前 embed id 命名空间约束 */
-const registerAdapterOutputIdentity = (id: string | undefined, ctx: AdapterOutputContext): void => {
+/** 注册 adapter 输出的公开身份标识，根输出与 embed 同 id 时复用已注册 identity */
+const registerAdapterOutputIdentity = (
+  id: string | undefined,
+  ctx: AdapterOutputContext,
+  reusesEmbedIdentity: boolean,
+): void => {
   if (id === undefined) return;
-  const requiredPrefix = `${ctx.embedId}/`;
-  if (!id.startsWith(requiredPrefix)) {
-    throw new Error(`vanilla spec adapter output id "${id}" must start with "${requiredPrefix}".`);
-  }
+  if (reusesEmbedIdentity) return;
   registerIdentity(id, ctx.parentId, [...ctx.path, id], ctx);
 };
 
 /** 递归检查 adapter 输出树，避免 Tier2 输出抢占外部节点 id */
-const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputContext): void => {
+const validateAdapterOutputIdentities = (child: IRChild, ctx: AdapterOutputContext, isRoot = false): void => {
   const identity = readIdentity(child);
-  registerAdapterOutputIdentity(identity, ctx);
+  const reusesEmbedIdentity = isRoot && identity === ctx.embedId;
+  registerAdapterOutputIdentity(identity, ctx, reusesEmbedIdentity);
   if (!isIRScope(child)) return;
 
   const scopeParentId = identity ?? ctx.parentId;
-  const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
+  const scopePath = identity === undefined || reusesEmbedIdentity ? ctx.path : [...ctx.path, identity];
   const childCtx: AdapterOutputContext = { ...ctx, parentId: scopeParentId, path: scopePath };
   for (const scopeChild of child.children) validateAdapterOutputIdentities(scopeChild, childCtx);
 };
@@ -181,12 +183,16 @@ const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild 
     datasets: contribution.datasets,
     makeComposites: contribution.makeComposites,
   });
-  validateAdapterOutputIdentities(contribution.node, {
-    ...ctx,
-    embedId: embed.id,
-    parentId: embed.id,
-    path: [...ctx.path, embed.id],
-  });
+  validateAdapterOutputIdentities(
+    contribution.node,
+    {
+      ...ctx,
+      embedId: embed.id,
+      parentId: embed.id,
+      path: [...ctx.path, embed.id],
+    },
+    true,
+  );
   return contribution.node;
 };
 

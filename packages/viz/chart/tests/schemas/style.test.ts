@@ -70,8 +70,15 @@ describe('Chart style schema', () => {
     const surface = ChartThemeSurfaceSchema.parse({
       chartThemeTokens: { 'chart.padding': padding },
       plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
-      colors: ['#111827', '#f97316'],
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { 'axis.grid.enabled': true },
+        },
+      ],
+      plotTheme: { palette: { categorical: ['#111827', '#f97316'] } },
     });
     expect(JSON.parse(JSON.stringify(surface))).toEqual(surface);
+    expect(ChartThemeSurfaceSchema.safeParse({ colors: ['#111827', '#f97316'] }).success).toBe(false);
   });
 });

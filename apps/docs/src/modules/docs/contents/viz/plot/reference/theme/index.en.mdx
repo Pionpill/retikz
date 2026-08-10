@@ -3,52 +3,64 @@ title: Contract - Theme
 description: Query Plot canonical tokens, preset cascade, native theme, and inspection contracts.
 ---
 
-Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position, then selects the complete domain preset with the same name. `PlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, guide creation, or mark structure.
+Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position, then selects the complete domain preset with the same name. `PlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-The example writes surface, grid, and categorical palette values through `PlotThemeToken`. React, Vanilla, and plain JSON pass the same `plotThemeTokens` to the Plot resolver without adapter-owned presets; the Core Theme provides the effective `style` / `mode` and shared colors.
+The example writes a plot-area background and categorical palette through `PlotThemeToken`, then uses `plotThemeTokenRules` to enable grid lines for the y Axis only. React, Vanilla, and plain JSON pass the same tokens and rules to the Plot resolver without adapter-owned presets. The structured `plotArea.fill` field fills only the two-dimensional Plot area after axis, legend, and layout reserves are removed. One-dimensional lines and circles expose only a projection path, so they emit neither a fillable Plot area nor a grid layer across one.
+
+The built-in Vibrant preset uses a light blue-gray Plot area in Light mode and a dark Plot area in Dark mode; Neutral, Academic, and Clean remain transparent by default. Explicit `plot.area.fill` or `plotTheme.plotArea.fill` values still override the preset through the normal cascade.
 
 ## Extensible styles
 
-Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => tokens })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`. The resolver function and complete token map never enter `PlotSpec`; it persists only `theme.style = 'brand'`. Pass the same-named Core definition through `themeStyles` in the same figure or Core or Plot fails loudly. When Chart is used, `createChartComposites({ chartThemeStyles, plotThemeStyles })` also needs same-named Chart and Plot definitions.
+Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `PlotSpec`. Pass the same-named Core definition through `themeStyles` or Core or Plot fails loudly.
 
 ## Cascade and atomic replacement
 
 ```text
 Core effective Theme
-  → Plot style definition
+  → Plot style base tokens
+  → matching Plot style tokenRules
   → inherited Core categorical
   → local PlotSpec.plotThemeTokens
-  → local PlotSpec.colors
+  → matching local PlotSpec.plotThemeTokenRules
   → local PlotSpec.plotTheme
   → explicit guide / mark / scale config
 ```
 
 - `plotThemeTokens` is a strict sparse canonical map; unknown keys, explicit `undefined`, and invalid values fail
-- `colors` replaces categorical, series, and sector palettes only, leaving sequential and diverging schemes intact
 - native `plotTheme` is closer to the formal Plot structure and may carry legal fields not represented by tokens
+- `plotThemeTokenRules` accepts Axis tokens only and matches existing axes by `select.dimension`; later matching rules at the same layer win
 - arrays, scalars, `false`, and objects whose discriminator changes replace whole values; compatible closed objects merge legal fields
 - explicit scale `range` / `scheme` and local axis, legend, and mark configuration always win
 
 ## Canonical tokens
 
-`PlotThemeToken` exports 40 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
+`PlotThemeToken` exports 41 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
 
 | Group           | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surface         | `plot.surface.fill`                                                                                                                                                                                                                                                                                                                      |
+| Plot area       | `plot.area.fill`                                                                                                                                                                                                                                                                                                                         |
 | Typography      | `plot.typography.foreground`, `plot.typography.font.family`, `plot.typography.font.size`                                                                                                                                                                                                                                                 |
-| Label           | `plot.label.foreground`, `plot.label.font.size`                                                                                                                                                                                                                                                                                          |
 | Axis line       | `axis.line.enabled`, `axis.line.stroke`, `axis.line.strokeWidth`, `axis.line.drawOpacity`                                                                                                                                                                                                                                                |
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
 | Axis tick label | `axis.tickLabel.enabled`, `axis.tickLabel.foreground`, `axis.tickLabel.font.size`, `axis.tickLabel.gap`                                                                                                                                                                                                                                  |
-| Axis title      | `axis.title.foreground`, `axis.title.font.size`, `axis.title.font.weight`                                                                                                                                                                                                                                                                |
-| Axis grid       | `axis.grid.stroke`, `axis.grid.strokeWidth`, `axis.grid.drawOpacity`                                                                                                                                                                                                                                                                     |
+| Axis title      | `axis.title.enabled`, `axis.title.foreground`, `axis.title.font.size`, `axis.title.font.weight`, `axis.title.padding`                                                                                                                                                                                                                    |
+| Axis grid       | `axis.grid.enabled`, `axis.grid.stroke`, `axis.grid.strokeWidth`, `axis.grid.drawOpacity`                                                                                                                                                                                                                                                |
 | Legend          | `legend.title.foreground`, `legend.title.font.size`, `legend.title.font.weight`, `legend.label.foreground`, `legend.label.font.size`, `legend.swatch.size`, `legend.swatch.gap`, `legend.entry.gap`, `legend.title.gap`, `legend.ramp.length`, `legend.ramp.thickness`, `legend.symbol.size`, `legend.symbol.scale`, `legend.symbol.fit` |
 | Palette         | `plot.palette.categorical`, `plot.palette.series`, `plot.palette.sector`, `plot.palette.sequential`, `plot.palette.diverging`                                                                                                                                                                                                            |
 
-`axis.line.enabled` changes the baseline default of an existing Axis only. Grid and legend creation are Chart recipe or explicit guide semantics, not Plot tokens. Legacy `data.palette.*`, bare `axis.enabled`, `axis.grid.enabled`, and `legend.enabled` are not canonical Plot keys.
+`axis.line.enabled` and `axis.grid.enabled` change visual defaults for existing axes only. The other grid tokens style enabled major grid lines. Themes never create axes, ticks, or minor grids; major/minor tick sources and separate styles remain local Axis guide semantics.
+
+`axis.title.enabled` controls whether title content authored on an existing Axis guide is rendered. Neutral, Academic, and Vibrant enable it by default, while Clean disables it. A global token, dimension rule, or structured `plotTheme.axis.title` style object can enable it again. The Axis guide `title` still supplies content and local style, but does not bypass the disabled state by itself.
+
+`axis.title.padding` controls the default distance from the tick-label band to the axis-title center. Every built-in style defaults to `12`. A dimension rule may override it for selected axes, followed by the higher-priority structured `plotTheme.axis.title.padding` and local Axis `title.padding` inputs.
+
+`plotThemeTokenRules` uses `{ select: { dimension }, tokens }`. `dimension` accepts one non-empty open string or a non-empty unique array, so the same contract matches `x`, `y`, `radius`, `angle`, and custom Coordinate roles. Rules accept only `axis.line.*`, `axis.tick.*`, `axis.tickLabel.*`, `axis.title.*`, and `axis.grid.*`; explicit Axis guide visual fields win last, but title content does not bypass `axis.title.enabled: false`.
+
+## PlotAxisThemeTokenRulesSchema
+
+<ZodSchema name="PlotAxisThemeTokenRulesSchema" />
 
 ## PlotThemeTokenOverridesSchema
 
@@ -56,28 +68,33 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` uses the exact same 40-field contract with every field required. All eight built-in presets and the `tokens` returned by `resolvePlotTheme()` must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
+`PlotResolvedThemeTokensSchema` uses the exact same 41-field contract with every field required. All eight built-in presets and the `tokens` returned by `resolvePlotTheme()` must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
 
 ## Inspection
 
 `resolvePlotTheme(effectiveTheme, input)` is a public pure resolver. It returns `IRPlotThemeResolution`, validated by `PlotThemeResolutionSchema`:
 
-| Field               | Meaning                                                              |
-| ------------------- | -------------------------------------------------------------------- |
-| `style` / `mode`    | Effective Core Theme environment selecting the preset                |
-| `tokens`            | Complete token map after the cascade                                 |
-| `tokenSources`      | One winning source and stable path for every canonical token         |
-| `authoredOverrides` | Ordered records for authored `colors` and native `plotTheme` entries |
-| `plotTheme`         | Complete mapped and validated native Plot theme                      |
-| `palette`           | Final palettes and schemes shared by scales, marks, and legends      |
+| Field               | Meaning                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| `style` / `mode`    | Effective Core Theme environment selecting the preset           |
+| `tokens`            | Complete token map after the cascade                            |
+| `tokenSources`      | One winning source and stable path for every canonical token    |
+| `tokenRules`        | Style and PlotSpec Axis rules in effective cascade order        |
+| `authoredOverrides` | Record for the authored native `plotTheme` entry                |
+| `plotTheme`         | Complete mapped and validated native Plot theme                 |
+| `palette`           | Final palettes and schemes shared by scales, marks, and legends |
 
-`tokenSources[].kind` answers only whether a token is projected directly from the upper effective Theme (`inherit`) or built by the Plot style definition or current Plot input (`local`); it does not encode cascade priority. The stable `path` identifies the winning entry: `$style/...` for the Plot style baseline, `$theme/colors/categorical` for the Core shared categorical projection, and `$spec/plotThemeTokens/...`, `$spec/colors`, or `$spec/plotTheme/...` for Plot-local inputs. The `colors` and `plotTheme` records in `authoredOverrides` are also `local`, with their application order retained by path.
+`tokenSources[].kind` answers only whether a token is projected directly from the upper effective Theme (`inherit`) or built by the Plot style definition or current Plot input (`local`); it does not encode cascade priority. `tokenRules[].path` uses `$style/.../tokenRules/<index>` or `$spec/plotThemeTokenRules/<index>`. The `plotTheme` record in `authoredOverrides` is also `local`.
 
 Chart may call this resolver to read a transient series palette needed by a recipe, but it does not write the fully resolved theme back into `PlotSpec` or relabel Plot tokens as Chart-owned.
 
 ## PlotThemeSchema
 
 <ZodSchema name="PlotThemeSchema" />
+
+## PlotAreaThemeSchema
+
+<ZodSchema name="PlotAreaThemeSchema" />
 
 ## PlotAxisThemeSchema
 
@@ -87,4 +104,4 @@ Chart may call this resolver to read a transient series palette needed by a reci
 
 <ZodSchema name="PlotPaletteThemeSchema" />
 
-`PlotThemeSchema` is the formal native structure consumed by guides, scales, and lowering after the cascade. It can carry legal non-token fields such as tick-label rotation / layout or axis-title padding; those values remain in the final `plotTheme` without inventing token sources.
+`PlotThemeSchema` is the formal native structure consumed by guides, scales, and lowering after the cascade. It can carry legal non-token fields such as tick-label rotation / layout or axis-title rotation; those values remain in the final `plotTheme` without inventing token sources. `axis.title.enabled` and `axis.title.padding` map both ways to structured `axis.title` as `false | style` and to `axis.title.padding`, while retaining formal token sources.

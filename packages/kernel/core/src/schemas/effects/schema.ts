@@ -1,3 +1,4 @@
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { CssColorSchema, OpacitySchema } from '../style';
@@ -16,11 +17,9 @@ export const DropShadowSchema = z
       .number()
       .optional()
       .describe('Vertical shadow offset in user units (overrides preset); positive = downward under screen y-down.'),
-    blur: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe('Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.'),
+    blur: NonNegativeNumberSchema.optional().describe(
+      'Shadow blur radius in user units. Overrides the preset value; 0 means hard-edged.',
+    ),
     color: CssColorSchema.optional().describe(
       'Shadow color, any CSS color (overrides preset); when neither preset nor color given = translucent black rgba(0,0,0,0.5).',
     ),

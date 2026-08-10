@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
 import { z } from 'zod';
 
@@ -11,7 +12,7 @@ import { boundsConnectionEnvelope, localToWorld, normalizeAngleRange, RAD_TO_DEG
 import { pathPrimitiveStyle } from './style';
 
 const arcParamsSchema = z.strictObject({
-  radius: z.number().positive().describe('Arc radius in user units.'),
+  radius: PositiveNumberSchema.describe('Arc radius in user units.'),
   startAngle: z
     .number()
     .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),

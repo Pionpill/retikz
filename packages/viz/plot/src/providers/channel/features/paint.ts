@@ -8,7 +8,7 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
-import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotSpec } from '../../../schemas';
+import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
 import type { CategoryOrder } from '../../scale';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
@@ -96,7 +96,7 @@ export const makeColorChannelDefinition = (
       const resolution = resolveChannelScale(
         scaleOperation,
         rawValues,
-        colorResolveContext(ctx.node, ctx.fieldTypes, field, ctx.resolveColorScheme, ctx.palette),
+        colorResolveContext(ctx.fieldTypes, field, ctx.resolveColorScheme, ctx.palette),
         ctx.scaleRegistry,
       );
       return {
@@ -117,7 +117,6 @@ export const makeColorChannelDefinition = (
 });
 
 const colorResolveContext = (
-  node: IRPlotSpec,
   fieldTypes: DataFieldTypeMap,
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
@@ -127,7 +126,7 @@ const colorResolveContext = (
   toNumber: value => (isFiniteNumber(value) ? value : null),
   coerceTimestamp,
   resolveColorScheme,
-  defaultColors: palette?.categorical ?? node.colors,
+  defaultColors: palette?.categorical,
   defaultSequentialScheme: palette?.sequential,
   defaultDivergingScheme: palette?.diverging,
 });

@@ -64,10 +64,8 @@ const GROW_UP: IRAnimationTrack = {
 
 describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
   it('node track → 平铺 shape 图元带 animations', () => {
-    const prims = compileToScene(
-      scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]),
-      silent,
-    ).scene.primitives;
+    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]), silent).scene
+      .primitives;
     const rects = allOfType(prims, 'rect');
     expect(rects.length).toBeGreaterThanOrEqual(1);
     for (const rect of rects) expect(rect.animations).toEqual([FADE]);
@@ -151,10 +149,8 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
 
 describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
   it('scaleY + origin:"bottom" track → 图元原样透传（含 origin）', () => {
-    const prims = compileToScene(
-      scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]),
-      silent,
-    ).scene.primitives;
+    const prims = compileToScene(scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]), silent)
+      .scene.primitives;
     const rects = allOfType(prims, 'rect');
     expect(rects.length).toBeGreaterThanOrEqual(1);
     for (const rect of rects) expect(rect.animations).toEqual([GROW_UP]);
@@ -249,20 +245,16 @@ describe('错误路径：zod reject', () => {
 describe('compile 校验：viewBox ⇔ 根', () => {
   it('元素级 viewBox track → warn(ANIMATION_INVALID_PROPERTY) + drop', () => {
     const c = collector();
-    const prims = compileToScene(
-      scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]),
-      c,
-    ).scene.primitives;
+    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]), c).scene
+      .primitives;
     expect(c.warnings.some(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toBe(true);
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toBeUndefined();
   });
 
   it('元素级混合：viewBox 被 drop、其余 track 保留', () => {
     const c = collector();
-    const prims = compileToScene(
-      scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]),
-      c,
-    ).scene.primitives;
+    const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]), c)
+      .scene.primitives;
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([FADE]);
     expect(c.warnings.filter(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toHaveLength(1);
   });

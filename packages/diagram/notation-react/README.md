@@ -1,8 +1,8 @@
 # @retikz/notation-react
 
-React authoring bindings for [`@retikz/notation`](../notation). The package
-provides Notation JSX components that contribute the same composite
-definitions used by persisted IR and Vanilla hosts.
+React authoring bindings for [`@retikz/notation`](../notation). The components
+preserve canonical Notation semantic IR and contribute the same Definitions
+used by direct IR and Vanilla hosts.
 
 ## Install
 
@@ -14,20 +14,26 @@ This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
 ```tsx
-import { Layout, Node } from '@retikz/react';
-import { LogicFrame, LogicFrameSection } from '@retikz/notation-react';
+import { Layout, Step } from '@retikz/react';
+import { Connector, Stage, Terminal } from '@retikz/notation-react';
 
 <Layout>
-  <LogicFrame id="contract/frame">
-    <LogicFrameSection sectionKey="body">
-      <Node position={[0, 0]}>Notation</Node>
-    </LogicFrameSection>
-  </LogicFrame>
+  <Terminal id="start" position={[0, 0]}>
+    Start
+  </Terminal>
+  <Stage id="step" position={[160, 0]}>
+    Process
+  </Stage>
+  <Connector id="edge">
+    <Step kind="move" to="start" />
+    <Step to="step" />
+  </Connector>
 </Layout>;
 ```
 
-Components register definitions only for the current `Layout`; importing this
-package does not create global state.
+`Connector` accepts either Core `<Step>` children or a Core Draw `way`, never
+both. Components contribute Definitions only for the current `Layout`;
+importing this package does not create global state.
 
 See the [Notation documentation](https://pionpill.github.io/retikz/diagram/notation)
 for complete examples.

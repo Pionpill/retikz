@@ -1,26 +1,26 @@
 import type { IRChild, Scene } from '@retikz/core';
+import type { AnyVanillaTier2Adapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { compileToScene, FoldStepVia } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import {
-  CalloutArtifactSchema,
-  CalloutDefinition,
   ConnectorDefinition,
-  createCallout,
   createConnector,
   createStage,
   createTerminal,
+  StageDefinition,
+  TerminalDefinition,
 } from '@retikz/notation';
-import { Callout, Connector, Stage, Terminal } from '@retikz/notation-react';
+import { Connector, Stage, Terminal } from '@retikz/notation-react';
 import {
-  callout,
-  CalloutVanillaAdapter,
   connector,
   ConnectorVanillaAdapter,
   stage,
+  StageVanillaAdapter,
   terminal,
+  TerminalVanillaAdapter,
 } from '@retikz/notation-vanilla';
-import { Layout, Node, Scope } from '@retikz/react';
+import { Layout, Scope, Step } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { figure, renderToSvgString as renderVanillaToSvgString, scope } from '@retikz/vanilla';
@@ -33,18 +33,16 @@ import LogicFrameBasicEnDemo from '../../src/modules/docs/contents/diagram/notat
 import LogicFrameBasicZhDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/logic-frame-basic.zh.demo';
 import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/process-recipe.en.demo';
 import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/process-recipe.zh.demo';
-import CalloutPlacementEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/callout/callout-placement.en.demo';
-import CalloutPlacementZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/callout/callout-placement.zh.demo';
 import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.en.demo';
 import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/data-recipe.zh.demo';
-import SemanticUnitsEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.en.demo';
-import SemanticUnitsZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/data-recipe.zh.demo';
+import LogicUnitEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/logic-unit.en.demo';
+import LogicUnitZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/logic-unit.zh.demo';
 
-const definitions = [ConnectorDefinition, CalloutDefinition] as const;
+const definitions = [TerminalDefinition, StageDefinition, ConnectorDefinition] as const;
 
 const sceneOf = (children: ReadonlyArray<IRChild>): Scene =>
   compileToScene(
@@ -66,16 +64,10 @@ const directChildren = (): Array<IRChild> => [
   translated(210, 65, createStage({ id: 'step', position: [0, 0], text: 'Step' })),
   createConnector({
     id: 'edge',
-    from: { id: 'start' },
-    to: { id: 'step' },
-    routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
-    label: { text: 'next' },
-  }),
-  createCallout({
-    id: 'note',
-    target: { id: 'step' },
-    content: { type: 'node', position: [0, 0], text: 'Explain' },
-    placement: { side: 'right', gap: 10 },
+    children: [
+      { type: 'step', kind: 'move', to: { id: 'start' } },
+      { type: 'step', kind: 'fold', via: '-|', to: { id: 'step' }, label: { text: 'next' } },
+    ],
   }),
 ];
 
@@ -93,24 +85,15 @@ const ReactLogic: FC = () =>
       { transforms: [{ kind: 'translate', x: 210, y: 65 }] },
       createElement(Stage, { id: 'step', position: [0, 0] }, 'Step'),
     ),
-    createElement(Connector, {
-      id: 'edge',
-      from: { id: 'start' },
-      to: { id: 'step' },
-      routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
-      label: { text: 'next' },
-    }),
     createElement(
-      Callout,
-      { id: 'note', target: { id: 'step' }, placement: { side: 'right', gap: 10 } },
-      createElement(Node, { position: [0, 0], text: 'Explain' }),
+      Connector,
+      { id: 'edge' },
+      createElement(Step, { kind: 'move', to: 'start' }),
+      createElement(Step, { kind: 'fold', via: '-|', to: 'step', label: { text: 'next' } }),
     ),
   );
 
-const lower = (
-  adapter: typeof ConnectorVanillaAdapter | typeof CalloutVanillaAdapter,
-  embed: { id: string; kind: string; props: unknown },
-): IRChild =>
+const lower = (adapter: AnyVanillaTier2Adapter, embed: { id: string; kind: string; props: unknown }): IRChild =>
   adapter.lower(embed.props as never, {
     id: embed.id,
     kind: embed.kind,
@@ -120,23 +103,12 @@ const lower = (
   }).node;
 
 const vanillaChildren = (): Array<IRChild> => [
-  vanillaTranslated(48, 65, terminal('start', { position: [0, 0], text: 'Start' })),
-  vanillaTranslated(210, 65, stage('step', { position: [0, 0], text: 'Step' })),
+  vanillaTranslated(48, 65, lower(TerminalVanillaAdapter, terminal('start', { position: [0, 0], text: 'Start' }))),
+  vanillaTranslated(210, 65, lower(StageVanillaAdapter, stage('step', { position: [0, 0], text: 'Step' }))),
   lower(
     ConnectorVanillaAdapter,
     connector('edge', {
-      from: { id: 'start' },
-      to: { id: 'step' },
-      routing: { kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical },
-      label: { text: 'next' },
-    }),
-  ),
-  lower(
-    CalloutVanillaAdapter,
-    callout('note', {
-      target: { id: 'step' },
-      content: { type: 'node', position: [0, 0], text: 'Explain' },
-      placement: { side: 'right', gap: 10 },
+      way: ['start', { label: { text: 'next' } }, '-|', 'step'],
     }),
   ),
 ];
@@ -154,12 +126,10 @@ describe('Notation renderer integration', () => {
   it.each([
     ['logic block en', LogicFrameBasicEnDemo],
     ['logic block zh', LogicFrameBasicZhDemo],
-    ['semantic units en', SemanticUnitsEnDemo],
-    ['semantic units zh', SemanticUnitsZhDemo],
+    ['logic unit en', LogicUnitEnDemo],
+    ['logic unit zh', LogicUnitZhDemo],
     ['connector en', ConnectorRoutingEnDemo],
     ['connector zh', ConnectorRoutingZhDemo],
-    ['callout en', CalloutPlacementEnDemo],
-    ['callout zh', CalloutPlacementZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],
     ['process recipe zh', ProcessRecipeZhDemo],
     ['class recipe en', ClassRecipeEnDemo],
@@ -178,19 +148,14 @@ describe('Notation renderer integration', () => {
     const vanilla = vanillaChildren();
     expect(react).toEqual(direct);
     expect(vanilla.slice(0, 2)).toEqual(direct.slice(0, 2));
-    expect(vanilla.find(child => child.type === 'connector')).toMatchObject({ id: 'edge/connector' });
-    expect(vanilla.find(child => child.type === 'callout')).toMatchObject({ id: 'note/callout' });
+    expect(vanilla.find(child => child.type === 'connector')).toMatchObject({ id: 'edge' });
   });
 
-  it('produces a typed Callout artifact and one renderer-agnostic Scene', () => {
+  it('produces one renderer-agnostic Scene without Notation discriminators', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: directChildren() },
       { composites: [...definitions], padding: 0 },
     );
-    const artifact = result.artifacts
-      .filter(entry => entry.kind === 'composite')
-      .find(entry => CalloutArtifactSchema.safeParse(entry.value).success);
-    expect(CalloutArtifactSchema.parse(artifact?.value)).toMatchObject({ kind: 'callout', id: 'note' });
     expect(JSON.stringify(result.scene)).not.toContain('notation.logic');
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(true);
   });
@@ -208,11 +173,11 @@ describe('Notation renderer integration', () => {
       children: [
         terminal('start', { position: [0, 0], text: 'Start' }),
         stage('step', { position: [80, 0], text: 'Step' }),
-        connector('edge', { from: { id: 'start' }, to: { id: 'step' }, label: { text: 'next' } }),
+        connector('edge', { way: ['start', { label: { text: 'next' } }, 'step'] }),
       ],
     });
     const svg = renderVanillaToSvgString(input, {
-      adapters: [ConnectorVanillaAdapter],
+      adapters: [TerminalVanillaAdapter, StageVanillaAdapter, ConnectorVanillaAdapter],
       output: { width: 220, height: 120 },
     });
     expect(svg).toContain('<svg');

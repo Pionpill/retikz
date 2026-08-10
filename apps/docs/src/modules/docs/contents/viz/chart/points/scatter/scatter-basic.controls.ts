@@ -9,7 +9,6 @@ export const SCATTER_BASIC_CONTROL_IDS = {
   pointSize: 'pointSize',
   pointOpacity: 'pointOpacity',
   colorByGroup: 'colorByGroup',
-  gridVisible: 'gridVisible',
 } as const;
 
 /** 基础 Scatter 的中文控制面板 */
@@ -65,17 +64,6 @@ export const scatterBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '坐标轴',
-      controls: [
-        {
-          kind: 'switch',
-          id: SCATTER_BASIC_CONTROL_IDS.gridVisible,
-          label: '显示网格',
-          defaultValue: true,
-        },
-      ],
-    },
   ],
 });
 
@@ -86,7 +74,6 @@ export const previewControlContract = {
     [SCATTER_BASIC_CONTROL_IDS.pointSize]: 10,
     [SCATTER_BASIC_CONTROL_IDS.pointOpacity]: 0.82,
     [SCATTER_BASIC_CONTROL_IDS.colorByGroup]: true,
-    [SCATTER_BASIC_CONTROL_IDS.gridVisible]: true,
   },
-  relatedApis: ['PointMark.size', 'PointMark.opacity', 'PointMark.color', 'Axis.grid'],
+  relatedApis: ['PointMark.size', 'PointMark.opacity', 'PointMark.color'],
 } satisfies PreviewControlContract;

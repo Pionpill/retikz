@@ -1,3 +1,9 @@
+import {
+  NonNegativeIntegerSchema,
+  NonNegativeNumberSchema,
+  PositiveIntegerSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
@@ -19,7 +25,7 @@ import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap, LayoutTrack
 const GridFixedTrackBreadthSchema = z
   .strictObject({
     kind: z.literal('fixed').describe('Discriminator for a fixed grid track breadth.'),
-    value: z.number().nonnegative().describe('Finite authored fixed track breadth.'),
+    value: NonNegativeNumberSchema.describe('Finite authored fixed track breadth.'),
   })
   .describe('Fixed GridLayout track breadth.');
 
@@ -33,7 +39,7 @@ const GridContentTrackBreadthSchema = z
 const GridFractionTrackBreadthSchema = z
   .strictObject({
     kind: z.literal('fraction').describe('Discriminator for a fractional grid track breadth.'),
-    factor: z.number().positive().describe('Finite positive share of remaining finite axis space.'),
+    factor: PositiveNumberSchema.describe('Finite positive share of remaining finite axis space.'),
   })
   .describe('Fractional GridLayout track breadth.');
 
@@ -69,12 +75,8 @@ export const GridTrackSchema = z
 
 export const GridPlacementSchema = z
   .strictObject({
-    start: z.number().int().nonnegative().optional().describe('Optional zero-based explicit track start.'),
-    span: z
-      .number()
-      .int()
-      .positive()
-      .max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
+    start: NonNegativeIntegerSchema.optional().describe('Optional zero-based explicit track start.'),
+    span: PositiveIntegerSchema.max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
       .default(1)
       .describe('Positive explicit or auto track span within the track guard.'),
   })
@@ -107,8 +109,8 @@ const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
   implicitRow: GridTrackSchema.default(ImplicitTrackDefault).describe('Track definition for implicit rows.'),
   autoFlow: z.enum(GridAutoFlow).default(GridAutoFlow.Row).describe('Non-dense fully-auto placement flow.'),
   overlap: z.enum(GridOverlap).default(GridOverlap.Reject).describe('Policy for fully explicit authored overlap.'),
-  columnGap: z.number().nonnegative().default(0).describe('Physical horizontal gap between column tracks.'),
-  rowGap: z.number().nonnegative().default(0).describe('Physical vertical gap between row tracks.'),
+  columnGap: NonNegativeNumberSchema.default(0).describe('Physical horizontal gap between column tracks.'),
+  rowGap: NonNegativeNumberSchema.default(0).describe('Physical vertical gap between row tracks.'),
   justifyItems: LayoutEdgeAlignmentSchema.default(LayoutAlignment.Stretch).describe(
     'Default horizontal item alignment.',
   ),
@@ -155,19 +157,19 @@ export const GridLayoutSchema = GridLayoutBaseSchema.superRefine(refineGridLayou
 
 export const LayoutTrackArtifactSchema = z
   .strictObject({
-    index: z.number().int().nonnegative().describe('Contiguous zero-based resolved track index.'),
+    index: NonNegativeIntegerSchema.describe('Contiguous zero-based resolved track index.'),
     start: z.number().describe('Finite physical track start in container allocation coordinates.'),
-    size: z.number().nonnegative().describe('Finite non-negative resolved track size.'),
+    size: NonNegativeNumberSchema.describe('Finite non-negative resolved track size.'),
     sourceKind: z.enum(LayoutTrackSourceKind).describe('Authored or implicit outer sizing source for the track.'),
     implicit: z.boolean().describe('Whether the track was materialized beyond the authored explicit track list.'),
   })
   .describe('Resolved GridLayout track geometry and source classification.');
 
 const GridLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
-  column: z.number().int().nonnegative().describe('Resolved zero-based column start.'),
-  row: z.number().int().nonnegative().describe('Resolved zero-based row start.'),
-  columnSpan: z.number().int().positive().describe('Positive resolved column span.'),
-  rowSpan: z.number().int().positive().describe('Positive resolved row span.'),
+  column: NonNegativeIntegerSchema.describe('Resolved zero-based column start.'),
+  row: NonNegativeIntegerSchema.describe('Resolved zero-based row start.'),
+  columnSpan: PositiveIntegerSchema.describe('Positive resolved column span.'),
+  rowSpan: PositiveIntegerSchema.describe('Positive resolved row span.'),
 }).describe('GridLayout item placement artifact.');
 
 const GridLayoutArtifactBaseSchema = z.strictObject({

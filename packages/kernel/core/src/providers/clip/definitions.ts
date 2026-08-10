@@ -17,7 +17,7 @@ import {
   PolygonClipSchema,
   RectClipSchema,
 } from '../../schemas';
-import { defineKeyedProviderArray } from '../registry';
+import { defineKeyedProviderArray } from '../registry/index';
 
 /** 内置 clip provider 名称 */
 export type BuiltinClipProviderName = 'rect' | 'circle' | 'ellipse' | 'polygon' | 'path' | 'compound';

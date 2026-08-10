@@ -1,4 +1,5 @@
 import { BoxSpacingSchema, ChildSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
+import { NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -11,23 +12,23 @@ import {
 } from './constants';
 
 /** 布局中相邻内容之间的非负物理间距 */
-export const LayoutGapSchema = z.number().nonnegative().describe('Non-negative physical gap in user units.');
+export const LayoutGapSchema = NonNegativeNumberSchema.describe('Non-negative physical gap in user units.');
 
 const LayoutContentAxisSizeSchema = z.strictObject({
   kind: z.literal(LayoutAxisSizeKind.Content).describe('Discriminator for intrinsic content sizing.'),
-  min: z.number().nonnegative().optional().describe('Optional authored minimum allocation size.'),
-  max: z.number().nonnegative().optional().describe('Optional authored maximum allocation size.'),
+  min: NonNegativeNumberSchema.optional().describe('Optional authored minimum allocation size.'),
+  max: NonNegativeNumberSchema.optional().describe('Optional authored maximum allocation size.'),
 });
 
 const LayoutFixedAxisSizeSchema = z.strictObject({
   kind: z.literal(LayoutAxisSizeKind.Fixed).describe('Discriminator for fixed allocation sizing.'),
-  value: z.number().nonnegative().describe('Authored fixed allocation size.'),
+  value: NonNegativeNumberSchema.describe('Authored fixed allocation size.'),
 });
 
 const LayoutFillAxisSizeSchema = z.strictObject({
   kind: z.literal(LayoutAxisSizeKind.Fill).describe('Discriminator for filling finite parent allocation.'),
-  min: z.number().nonnegative().optional().describe('Optional authored minimum allocation size.'),
-  max: z.number().nonnegative().optional().describe('Optional authored maximum allocation size.'),
+  min: NonNegativeNumberSchema.optional().describe('Optional authored minimum allocation size.'),
+  max: NonNegativeNumberSchema.optional().describe('Optional authored maximum allocation size.'),
 });
 
 export const LayoutAxisSizeSchema = z
@@ -54,7 +55,7 @@ export const LayoutSizeSchema = z
   .describe('Physical x and y allocation size policies.');
 
 const LayoutSpacingSchema = z
-  .union([z.number().nonnegative(), BoxSpacingSchema])
+  .union([NonNegativeNumberSchema, BoxSpacingSchema])
   .describe('Uniform or side-specific non-negative box spacing.');
 
 export const LayoutOverflowSchema = z
@@ -104,8 +105,8 @@ export const LayoutArtifactRectSchema = z
   .strictObject({
     x: z.number().describe('Finite container-local horizontal origin.'),
     y: z.number().describe('Finite container-local vertical origin.'),
-    width: z.number().nonnegative().describe('Finite non-negative rectangle width.'),
-    height: z.number().nonnegative().describe('Finite non-negative rectangle height.'),
+    width: NonNegativeNumberSchema.describe('Finite non-negative rectangle width.'),
+    height: NonNegativeNumberSchema.describe('Finite non-negative rectangle height.'),
   })
   .describe('Finite rectangle in the current layout container allocation coordinate.');
 
@@ -157,7 +158,7 @@ export const LayoutArtifactAlignmentGuideSchema = z
 export const LayoutArtifactItemBaseSchema = z
   .strictObject({
     key: z.string().min(1).describe('Container-local authored item identity.'),
-    sourceIndex: z.number().int().nonnegative().describe('Zero-based authored item order.'),
+    sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
     marginBounds: LayoutArtifactRectSchema.describe('Assigned slot expanded by resolved item margins.'),
     slotBounds: LayoutArtifactRectSchema.describe('Final parent-assigned child slot without margins.'),
     allocationBounds: LayoutArtifactRectSchema.describe('Translated real child allocation bounds.'),

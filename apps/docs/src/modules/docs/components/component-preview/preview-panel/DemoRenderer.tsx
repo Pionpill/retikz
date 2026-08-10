@@ -1,9 +1,10 @@
+import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
 import { RendererModeProvider } from '@retikz/react';
 import { memo } from 'react';
 
-import type { RendererMode } from '../types';
+import type { PreviewThemeMode, RendererMode } from '../types';
 
 import { PreviewThemeProvider } from '../theme';
 
@@ -12,13 +13,17 @@ export type DemoRendererProps = {
   Component: FC;
   /** 当前渲染目标。 */
   rendererMode: RendererMode;
+  /** 当前预览实际生效的 ThemeStyle。 */
+  themeStyle?: ThemeStyleValue;
+  /** 当前预览使用的明暗选择。 */
+  themeMode?: PreviewThemeMode;
 };
 
 /** 用当前渲染目标渲染 demo，避免每个示例源码都显式写 renderer。 */
 const DemoRendererComponent: FC<DemoRendererProps> = props => {
-  const { Component, rendererMode } = props;
+  const { Component, rendererMode, themeStyle, themeMode } = props;
   return (
-    <PreviewThemeProvider>
+    <PreviewThemeProvider themeStyle={themeStyle} themeMode={themeMode}>
       <RendererModeProvider mode={rendererMode}>
         <Component />
       </RendererModeProvider>

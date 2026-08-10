@@ -1,7 +1,7 @@
 import type { ClipDefinition, ClipResource, ClipShape, PathClipShape, PathCommand } from '../../contract';
 import type { IRClipSpec } from '../../schemas';
 
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers/registry/index';
 import { JsonObjectSchema, PathCommandSchema } from '../../schemas';
 import {
   CompositeContractError,

@@ -1,13 +1,13 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
 import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
-import { CalloutSchema, ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
+import { ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
   GuideSchema,
   MarkSchema,
+  PlotAreaThemeSchema,
   PlotLayerSchema,
-  PlotLayoutSchema,
   PlotSpecSchema,
   PlotThemeSchema,
   ScaleSchema,
@@ -35,8 +35,8 @@ describe('SCHEMA_REGISTRY', () => {
       ScaleSchema: { schema: ScaleSchema },
       PlotCoordinateSchema: { schema: PlotCoordinateSchema },
       GuideSchema: { schema: GuideSchema },
-      PlotLayoutSchema: { schema: PlotLayoutSchema },
       PlotLayerSchema: { schema: PlotLayerSchema },
+      PlotAreaThemeSchema: { schema: PlotAreaThemeSchema },
       PlotThemeSchema: { schema: PlotThemeSchema },
       LegendSchema: {
         schema: LegendSchema,
@@ -47,9 +47,8 @@ describe('SCHEMA_REGISTRY', () => {
         url: '/library/standard/composite/legend#legendartifactschema',
       },
       LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
-      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/semantic-units' },
+      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/logic-unit' },
       ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
-      CalloutSchema: { schema: CalloutSchema, url: '/diagram/notation/unit/callout' },
     });
   });
 

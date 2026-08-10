@@ -1,4 +1,5 @@
 import { ThemeTokenSource } from '@retikz/core';
+import { NonNegativeIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellAppearanceTracePath, TableCellPlanSourceKind } from './constants';
@@ -54,7 +55,7 @@ export const TableCellPlanSourceSchema = z
     }),
     z.strictObject({
       kind: z.literal(TableCellPlanSourceKind.RootRule).describe('Discriminator for an ordered root rule winner.'),
-      ruleIndex: z.number().int().nonnegative().describe('Zero-based declaration index of the winning root rule.'),
+      ruleIndex: NonNegativeIntegerSchema.describe('Zero-based declaration index of the winning root rule.'),
     }),
   ])
   .superRefine((source, context) => {

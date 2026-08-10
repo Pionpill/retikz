@@ -7,7 +7,7 @@
     "layer": "foundation",
     "publishable": true
   },
-  "description": "retikz foundation: zero-dependency cross-package type, assertion, and structured error primitives.",
+  "description": "retikz foundation: cross-package type, assertion, structured error, and schema primitives.",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -63,6 +63,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:changed": "vitest run --changed --passWithNoTests"
+  },
+  "dependencies": {
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

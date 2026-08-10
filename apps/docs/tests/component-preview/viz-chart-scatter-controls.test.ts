@@ -64,6 +64,19 @@ const canonicalAxisTitles = (source: PreviewSourceConfig): Array<string | undefi
   );
 };
 
+const canonicalAxisGrids = (source: PreviewSourceConfig): Array<unknown> => {
+  const chart = source.canonicalRender?.();
+  if (!isValidElement<{ children?: ReactNode }>(chart)) {
+    throw new Error('Chart preview must provide a canonical element');
+  }
+
+  return Children.toArray(chart.props.children).flatMap(child =>
+    isValidElement<{ dimension?: string; grid?: unknown }>(child) && child.props.dimension !== undefined
+      ? [child.props.grid]
+      : [],
+  );
+};
+
 describe('Viz Chart scatter controls', () => {
   it('保持两组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
@@ -81,8 +94,13 @@ describe('Viz Chart scatter controls', () => {
       pointSize: 10,
       pointOpacity: 0.82,
       colorByGroup: true,
-      gridVisible: true,
     });
+    expect(JSON.stringify(basicZh.controls)).not.toContain('gridVisible');
+  });
+
+  it('基础 Scatter 不显式覆盖 Axis grid 主题规则', () => {
+    expect(canonicalAxisGrids(basicZhPreviewSource)).toEqual([undefined, undefined]);
+    expect(canonicalAxisGrids(basicEnPreviewSource)).toEqual([undefined, undefined]);
   });
 
   it('Bubble 只在两个定量字段尺寸编码之间切换，不提供固定尺寸', () => {

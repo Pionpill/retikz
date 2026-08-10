@@ -46,7 +46,6 @@ export {
 export type { IRChartShared } from './schemas';
 export { ChartSharedSchema } from './schemas';
 export type {
-  AnyChartThemeStyleDefinition,
   ChartThemeStyleDefinition,
   ChartThemeTokenValue,
   IRChartResolvedThemeTokens,

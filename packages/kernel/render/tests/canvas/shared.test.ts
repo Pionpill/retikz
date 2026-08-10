@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { sceneFitMatrix } from '../../src/canvas/shared';
+import { sceneFitMatrix } from '../../src/canvas/internal';
 
 describe('sceneFitMatrix', () => {
   const layout = { x: 0, y: 0, width: 100, height: 100 };

@@ -57,7 +57,7 @@ const createDisposeDiagnostic = (owner: string, cause: unknown): RuntimeOwnerLif
     code: RuntimeDiagnosticCode.OwnerDisposeFailed,
     owner,
     phase: RuntimeOwnerPhase.Retire,
-    message: (cause instanceof Error ? cause.message : String(cause)),
+    message: cause instanceof Error ? cause.message : String(cause),
     cause,
   });
 

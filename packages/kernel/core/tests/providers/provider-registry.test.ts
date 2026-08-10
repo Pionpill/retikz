@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { BUILTIN_CLIPS } from '../../src/providers/clip';
-import { defineKeyedProviderArray, providerDefinitionOf, resolveProviderRegistry } from '../../src/providers/registry';
+import {
+  defineKeyedProviderArray,
+  providerDefinitionOf,
+  resolveProviderRegistry,
+} from '../../src/providers/registry/index';
 
 type MockProvider = {
   name: string;

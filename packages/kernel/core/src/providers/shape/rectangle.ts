@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
@@ -19,13 +20,9 @@ import { verticesToSegments } from './outline';
 import { rectPrimitiveStyle } from './style';
 
 const rectangleParamsSchema = z.strictObject({
-  cornerRadius: z
-    .number()
-    .nonnegative()
-    .optional()
-    .describe(
-      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-    ),
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
+    'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+  ),
 });
 
 type RectangleParams = z.infer<typeof rectangleParamsSchema>;

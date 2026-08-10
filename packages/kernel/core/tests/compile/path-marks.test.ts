@@ -70,8 +70,8 @@ describe('marks → 中段 marker primitive', () => {
     };
     const without = leafCount(compileToScene(linePathIR()).scene.primitives);
     const withMark = leafCount(
-      compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) }).scene
-        .primitives,
+      compileToScene(ir, { arrows: Object.entries(customArrow).map(([name, definition]) => ({ ...definition, name })) })
+        .scene.primitives,
     );
     expect(withMark).toBeGreaterThan(without);
   });

@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, AnyThemeStyleDefinition, CompositeExpandContext } from '../../contract';
+import type { AnyCompositeDefinition, CompositeExpandContext, ThemeStyleDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
@@ -15,7 +15,7 @@ export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;
 
 type LowerOptions = {
   onWarn: (warning: CompileWarningInput) => void;
-  themeStyles?: ReadonlyMap<string, AnyThemeStyleDefinition>;
+  themeStyles?: ReadonlyMap<string, ThemeStyleDefinition>;
   /** 未注册 composite 的 fail-loud 钩子；缺省继续走 compile warning + skip */
   onUnregistered?: (key: string, path: string) => never;
   /**

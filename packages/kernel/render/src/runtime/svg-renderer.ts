@@ -32,8 +32,7 @@ import {
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
-import { buildSvgDocument, buildSvgFragment } from '../svg';
-import { buildSvgReadonlyLayer } from '../svg/builders/readonly-layer';
+import { buildSvgDocument, buildSvgFragment, buildSvgReadonlyLayer } from '../svg';
 import { mergeRenderHandlers } from './handlers';
 import { validateReadonlyLayers } from './readonly-layer';
 import { defineRetainedRenderer } from './renderer';

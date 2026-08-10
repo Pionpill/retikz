@@ -17,7 +17,7 @@ const palettes = {
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot
     data={climate}
-    colors={[...palettes[values.palette]]}
+    plotTheme={{ palette: { categorical: [...palettes[values.palette]] } }}
     width={400}
     height={250}
     style={{ maxWidth: '100%', height: 'auto' }}

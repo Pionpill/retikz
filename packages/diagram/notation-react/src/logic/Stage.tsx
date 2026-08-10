@@ -1,32 +1,30 @@
 import type { StageInput } from '@retikz/notation';
-import type { EmbeddableContribution, EmbeddableTier2Adapter, NodeProps } from '@retikz/react';
+import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { StageSchema } from '@retikz/notation';
-import { buildIRWithContributions, Node } from '@retikz/react';
-import { createElement } from 'react';
+import { createStage, StageDefinition } from '@retikz/notation';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
 import { NotationStageReactNamespace } from '../shared';
+import { resolveSemanticNodeInput } from './authoring';
 
-/** Stage React 编写参数，语义单元自身就是一个 Core Node */
-export type StageProps = Omit<StageInput, 'shape'> & Readonly<{ children?: ReactNode }>;
+/** Stage React 编写参数 */
+export type StageProps = StageInput & Readonly<{ children?: ReactNode }>;
 
-const makeStageComposites = () => [];
-const stageShape = { type: 'rectangle', params: { cornerRadius: 8 } } as const;
-
-const buildStageNode = (props: StageProps) => {
-  const { children, ...input } = props;
-  const nodeProps = { ...input, shape: stageShape } as unknown as NodeProps;
-  const node = buildIRWithContributions(createElement(Node, nodeProps, children)).ir.children[0];
-  return StageSchema.parse(node) as EmbeddableContribution['node'];
-};
+const makeStageComposites = () => [StageDefinition];
 
 const stageEmbeddableAdapter: EmbeddableTier2Adapter<StageProps> = {
   displayName: 'Stage',
   namespace: NotationStageReactNamespace,
-  contribute: props => ({ node: buildStageNode(props), datasets: {}, makeComposites: makeStageComposites }),
+  contribute: props => {
+    const { children, ...input } = props;
+    return {
+      node: createStage(resolveSemanticNodeInput(children, input)),
+      datasets: {},
+      makeComposites: makeStageComposites,
+    };
+  },
 };
 
 const StageComponent: FC<StageProps> = () => null;

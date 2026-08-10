@@ -1,25 +1,21 @@
-import type { IRNode } from '@retikz/core';
-
+import type { IRDecision, IRJunction, IRStage, IRTerminal } from './types';
 import type { DecisionInput, JunctionInput, StageInput, TerminalInput } from './types';
 
+import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
 import { DecisionSchema, JunctionSchema, StageSchema, TerminalSchema } from './schema';
 
-/** 创建带 Terminal 默认形状和逻辑模式语义的 Core 节点 */
-export const createTerminal = (input: TerminalInput): IRNode =>
-  TerminalSchema.parse({
-    type: 'node',
-    ...input,
-    shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
-  }) as IRNode;
+/** 创建规范Terminal IR */
+export const createTerminal = (input: TerminalInput): IRTerminal =>
+  TerminalSchema.parse({ namespace: NOTATION_NAMESPACE, type: NotationElementType.Terminal, ...input });
 
-/** 创建带 Stage 默认形状和逻辑模式语义的 Core 节点 */
-export const createStage = (input: StageInput): IRNode =>
-  StageSchema.parse({ type: 'node', ...input, shape: { type: 'rectangle', params: { cornerRadius: 8 } } }) as IRNode;
+/** 创建规范Stage IR */
+export const createStage = (input: StageInput): IRStage =>
+  StageSchema.parse({ namespace: NOTATION_NAMESPACE, type: NotationElementType.Stage, ...input });
 
-/** 创建带 Decision 默认形状和逻辑模式语义的 Core 节点 */
-export const createDecision = (input: DecisionInput): IRNode =>
-  DecisionSchema.parse({ type: 'node', ...input, shape: { type: 'diamond', params: { aspectRatio: 1.8 } } }) as IRNode;
+/** 创建规范Decision IR */
+export const createDecision = (input: DecisionInput): IRDecision =>
+  DecisionSchema.parse({ namespace: NOTATION_NAMESPACE, type: NotationElementType.Decision, ...input });
 
-/** 创建带 Junction 默认形状和逻辑模式语义的 Core 节点 */
-export const createJunction = (input: JunctionInput): IRNode =>
-  JunctionSchema.parse({ type: 'node', ...input, shape: 'circle' }) as IRNode;
+/** 创建规范Junction IR */
+export const createJunction = (input: JunctionInput): IRJunction =>
+  JunctionSchema.parse({ namespace: NOTATION_NAMESPACE, type: NotationElementType.Junction, ...input });
