@@ -21,8 +21,6 @@ import {
   OverlayLayoutVanillaAdapter,
 } from '@retikz/layout-vanilla';
 import {
-  CalloutDefinition,
-  CalloutSchema,
   ConnectorDefinition,
   ConnectorSchema,
   DecisionDefinition,
@@ -37,8 +35,6 @@ import {
   TerminalSchema,
 } from '@retikz/notation';
 import {
-  callout,
-  CalloutVanillaAdapter,
   connector,
   ConnectorVanillaAdapter,
   decision,
@@ -136,7 +132,7 @@ type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
 type LibraryKind = StandardKind | LayoutKind;
 
-type NotationKind = 'logicFrame' | 'terminal' | 'stage' | 'decision' | 'junction' | 'connector' | 'callout';
+type NotationKind = 'logicFrame' | 'terminal' | 'stage' | 'decision' | 'junction' | 'connector';
 
 type LibraryConversionState = {
   counts: Record<LibraryKind, number>;
@@ -162,7 +158,7 @@ const libraryCanonicalId = (kind: LibraryKind, embedId: string): string => {
 };
 
 const notationCanonicalId = (kind: NotationKind, embedId: string): string =>
-  kind === 'logicFrame' || kind === 'callout' ? `${embedId}/${kind}` : embedId;
+  kind === 'logicFrame' ? `${embedId}/${kind}` : embedId;
 
 const nextLibraryId = (kind: LibraryKind, state: LibraryConversionState, authoredId?: string): string => {
   state.counts[kind] += 1;
@@ -187,7 +183,7 @@ const nextNotationId = (kind: NotationKind, state: NotationConversionState, auth
     const generatedId = notationCanonicalId(kind, embedId);
     state.ids.set(authoredId, generatedId);
     state.ids.set(generatedId, generatedId);
-    if (kind === 'logicFrame' || kind === 'callout') {
+    if (kind === 'logicFrame') {
       state.ids.set(`${authoredId}/${kind}`, generatedId);
     }
   }
@@ -227,7 +223,6 @@ const rewriteLogicInput = (
         : {}),
     };
   }
-  if (kind === 'callout') return { ...input, target: rewriteLogicTarget(input.target, state) };
   return input;
 };
 
@@ -258,7 +253,7 @@ const registerPreviewIds = (
       }
       if (child.namespace === 'notation' && typeof authoredId === 'string') {
         const kind = child.type as NotationKind;
-        if (['logicFrame', 'terminal', 'stage', 'decision', 'junction', 'connector', 'callout'].includes(kind)) {
+        if (['logicFrame', 'terminal', 'stage', 'decision', 'junction', 'connector'].includes(kind)) {
           nextNotationId(kind, notationState, authoredId);
           notationState.counts[kind] -= 1;
           notationState.adapters.delete(kind);
@@ -378,16 +373,6 @@ const convertNotationChild = (child: CompositeChild, state: NotationConversionSt
         rewriteLogicInput('connector', input, state) as Parameters<typeof connector>[1],
       );
     }
-    case 'callout': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = CalloutSchema.parse(child);
-      void _namespace;
-      void _type;
-      void _id;
-      return callout(
-        nextNotationId('callout', state, childId),
-        rewriteLogicInput('callout', input, state) as Parameters<typeof callout>[1],
-      );
-    }
     default:
       throw new Error(`Unsupported Notation composite "${child.namespace}.${child.type}".`);
   }
@@ -433,7 +418,6 @@ const notationAdapters = (state: NotationConversionState): ReadonlyArray<AnyVani
   ...(state.adapters.has('decision') ? [DecisionVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('junction') ? [JunctionVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('connector') ? [ConnectorVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('callout') ? [CalloutVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
 
 const standardDefinitionByName = {
@@ -456,7 +440,6 @@ const notationDefinitionByName = {
   DecisionDefinition,
   JunctionDefinition,
   ConnectorDefinition,
-  CalloutDefinition,
 } as const;
 
 const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
@@ -482,7 +465,6 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
       decision: 0,
       junction: 0,
       connector: 0,
-      callout: 0,
     },
     adapters: new Set(),
     ids,

@@ -1,6 +1,6 @@
 ---
 title: Notation API Reference
-description: Look up schemas, factories, Definitions, and adapters for LogicFrame, base units, Connector, and Callout.
+description: Look up schemas, factories, Definitions, and adapters for LogicFrame, base units, and Connector.
 ---
 
 Notation is split by responsibility: `@retikz/notation` provides canonical JSON, schemas, factories, and Definitions; `@retikz/notation-react` provides React authoring; `@retikz/notation-vanilla` provides embed-returning builders and explicit adapters. All three entries normalize to the same Notation IR and lower through the same Definitions
@@ -15,9 +15,8 @@ Notation is split by responsibility: `@retikz/notation` provides canonical JSON,
 | Decision   | `DecisionSchema`, `IRDecision`, `createDecision`, `DecisionDefinition`         | `Decision`                                            | `decision`, `DecisionVanillaAdapter`     |
 | Junction   | `JunctionSchema`, `IRJunction`, `createJunction`, `JunctionDefinition`         | `Junction`                                            | `junction`, `JunctionVanillaAdapter`     |
 | Connector  | `ConnectorSchema`, `IRConnector`, `createConnector`, `ConnectorDefinition`     | `Connector`                                           | `connector`, `ConnectorVanillaAdapter`   |
-| Callout    | `CalloutSchema`, `IRCallout`, `createCallout`, `CalloutDefinition`             | `Callout`                                             | `callout`, `CalloutVanillaAdapter`       |
 
-All seven public elements retain `namespace: 'notation'` and their own semantic `type`. Definitions are explicit lowering contracts from Notation IR to Core IR and never enter persisted JSON
+All six public elements retain `namespace: 'notation'` and their own semantic `type`. Definitions are explicit lowering contracts from Notation IR to Core IR and never enter persisted JSON
 
 ## Base-unit inputs
 
@@ -58,11 +57,11 @@ React components and Vanilla adapters contribute only the Definitions required b
 
 ## Vanilla identity
 
-Every Vanilla helper returns an `embed`. Terminal, Stage, Decision, Junction, and Connector adapters use the embed id as the canonical Notation IR id and lower to a same-id Core Node or Path. The Vanilla normalizer permits an adapter root output to reuse its embed id without a string-prefix requirement. LogicFrame and Callout retain their internal derived ids under their own multi-element composite contracts
+Every Vanilla helper returns an `embed`. Terminal, Stage, Decision, Junction, and Connector adapters use the embed id as the canonical Notation IR id and lower to a same-id Core Node or Path. The Vanilla normalizer permits an adapter root output to reuse its embed id without a string-prefix requirement. LogicFrame retains its internal derived ids under its multi-element composite contract
 
 ## Related
 
-- [Base units](/diagram/notation/unit/semantic-units)
+- [Logic Unit](/diagram/notation/unit/logic-unit)
 - [Connector](/diagram/notation/unit/connector)
 - [LogicFrame](/diagram/notation/frame/logic-frame)
 - [Definition loading](/library/standard/extension/capability-loading)

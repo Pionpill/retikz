@@ -78,6 +78,21 @@ describe('Connector canonical semantic IR', () => {
     expect(connector).not.toHaveProperty('way');
   });
 
+  it('treats an explicitly undefined counterpart as an omitted authoring syntax', () => {
+    expect(Notation.createConnector({ id: 'steps-with-undefined-way', children: steps, way: undefined })).toMatchObject(
+      {
+        id: 'steps-with-undefined-way',
+        children: steps,
+      },
+    );
+    expect(
+      Notation.createConnector({ id: 'way-with-undefined-children', way: ['source', 'target'], children: undefined }),
+    ).toMatchObject({
+      id: 'way-with-undefined-children',
+      children: parseWay(['source', 'target']),
+    });
+  });
+
   it('fails loudly unless exactly one authoring syntax is provided', () => {
     expect(() => Notation.createConnector({ id: 'missing' } as never)).toThrow(/children|way/i);
     expect(() => Notation.createConnector({ id: 'both', children: steps, way: ['source', 'target'] } as never)).toThrow(

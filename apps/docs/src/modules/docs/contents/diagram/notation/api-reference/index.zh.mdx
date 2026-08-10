@@ -1,6 +1,6 @@
 ---
 title: Notation API 参考
-description: 查询 LogicFrame、基础单元、Connector 和 Callout 的 schema、factory、Definition 与 adapter
+description: 查询 LogicFrame、逻辑单元与 Connector 的 schema、factory、Definition 与 adapter
 ---
 
 Notation 按职责拆分：`@retikz/notation` 提供 canonical JSON、Schema、factory 与 Definition；`@retikz/notation-react` 提供 React authoring；`@retikz/notation-vanilla` 提供返回 embed 的 builder 与显式 adapter。三种入口归一到相同 Notation IR，并通过相同 Definition 下沉到 Core
@@ -15,13 +15,12 @@ Notation 按职责拆分：`@retikz/notation` 提供 canonical JSON、Schema、f
 | Decision   | `DecisionSchema`、`IRDecision`、`createDecision`、`DecisionDefinition`         | `Decision`                                            | `decision`、`DecisionVanillaAdapter`     |
 | Junction   | `JunctionSchema`、`IRJunction`、`createJunction`、`JunctionDefinition`         | `Junction`                                            | `junction`、`JunctionVanillaAdapter`     |
 | Connector  | `ConnectorSchema`、`IRConnector`、`createConnector`、`ConnectorDefinition`     | `Connector`                                           | `connector`、`ConnectorVanillaAdapter`   |
-| Callout    | `CalloutSchema`、`IRCallout`、`createCallout`、`CalloutDefinition`             | `Callout`                                             | `callout`、`CalloutVanillaAdapter`       |
 
-七类公开元素都保留 `namespace: 'notation'` 与各自的语义 `type`。Definition 是从 Notation IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
+六类公开元素都保留 `namespace: 'notation'` 与各自的语义 `type`。Definition 是从 Notation IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
 
-## 基础单元输入
+## 逻辑单元输入
 
-四个基础单元复用适用的 Core Node authored surface。`id` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`shape` 由具体单元固定，不能被作者替换
+四个逻辑单元复用适用的 Core Node authored surface。`id` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`shape` 由具体单元固定，不能被作者替换
 
 ```tsx
 <Stage id="step" position={[0, 0]}>Process</Stage>
@@ -58,11 +57,11 @@ React 组件与 Vanilla adapter 只为当前 authored 元素贡献对应 Definit
 
 ## Vanilla identity
 
-所有 Vanilla helper 都返回 `embed`。Terminal、Stage、Decision、Junction 与 Connector adapter 使用 embed id 作为规范 Notation IR id，并下沉为同 id Core Node / Path；Vanilla normalizer 允许 adapter 根输出复用 embed id，不要求字符串前缀。LogicFrame 与 Callout 仍按各自多元素 composite 契约派生内部 id
+所有 Vanilla helper 都返回 `embed`。Terminal、Stage、Decision、Junction 与 Connector adapter 使用 embed id 作为规范 Notation IR id，并下沉为同 id Core Node / Path；Vanilla normalizer 允许 adapter 根输出复用 embed id，不要求字符串前缀。LogicFrame 按多元素 composite 契约派生内部 id
 
 ## 相关
 
-- [基础单元](/diagram/notation/unit/semantic-units)
+- [逻辑单元](/diagram/notation/unit/logic-unit)
 - [Connector](/diagram/notation/unit/connector)
 - [LogicFrame](/diagram/notation/frame/logic-frame)
 - [Definition 加载](/library/standard/extension/capability-loading)

@@ -7,14 +7,14 @@ import { ConnectorSchema } from './schema';
 
 /** 校验并创建规范 Connector IR */
 export const createConnector = (input: ConnectorInput): IRConnector => {
-  const hasChildren = 'children' in input && input.children !== undefined;
-  const hasWay = 'way' in input && input.way !== undefined;
+  const { children, way, ...pathInput } = input;
+  const hasChildren = children !== undefined;
+  const hasWay = way !== undefined;
   if (hasChildren === hasWay) {
     throw new Error('Connector requires exactly one of `children` or `way`.');
   }
 
-  if ('way' in input && input.way !== undefined) {
-    const { way, ...pathInput } = input;
+  if (way !== undefined) {
     return ConnectorSchema.parse({
       namespace: NOTATION_NAMESPACE,
       type: NotationElementType.Connector,
@@ -23,7 +23,6 @@ export const createConnector = (input: ConnectorInput): IRConnector => {
     });
   }
 
-  const { children, ...pathInput } = input;
   return ConnectorSchema.parse({
     namespace: NOTATION_NAMESPACE,
     type: NotationElementType.Connector,

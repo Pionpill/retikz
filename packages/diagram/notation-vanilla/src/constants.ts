@@ -15,6 +15,3 @@ export const NotationJunctionVanillaNamespace = 'notation.junction';
 
 /** Notation Vanilla Connector adapter namespace */
 export const NotationConnectorVanillaNamespace = 'notation.connector';
-
-/** Notation Vanilla Callout adapter namespace */
-export const NotationCalloutVanillaNamespace = 'notation.callout';

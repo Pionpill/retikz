@@ -1,5 +1,4 @@
 import type {
-  CalloutInput,
   ConnectorInput,
   DecisionInput,
   JunctionInput,
@@ -10,9 +9,7 @@ import type {
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
 import {
-  CalloutDefinition,
   ConnectorDefinition,
-  createCallout,
   createConnector,
   createDecision,
   createJunction,
@@ -27,7 +24,6 @@ import {
 } from '@retikz/notation';
 
 import {
-  NotationCalloutVanillaNamespace,
   NotationConnectorVanillaNamespace,
   NotationDecisionVanillaNamespace,
   NotationJunctionVanillaNamespace,
@@ -56,16 +52,12 @@ type OmitId<T> = T extends unknown ? Omit<T, 'id'> : never;
 /** Connector 的 Vanilla 构建器输入，embed id 提供稳定身份 */
 export type ConnectorVanillaInput = OmitId<ConnectorInput>;
 
-/** Callout 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type CalloutVanillaInput = Omit<CalloutInput, 'id'>;
-
 const makeLogicFrameComposites = () => [LogicFrameDefinition];
 const makeTerminalComposites = () => [TerminalDefinition];
 const makeStageComposites = () => [StageDefinition];
 const makeDecisionComposites = () => [DecisionDefinition];
 const makeJunctionComposites = () => [JunctionDefinition];
 const makeConnectorComposites = () => [ConnectorDefinition];
-const makeCalloutComposites = () => [CalloutDefinition];
 
 /** 使用 embed id 创建规范 Connector IR */
 const createEmbeddedConnector = (id: string, input: ConnectorVanillaInput) => {
@@ -185,25 +177,6 @@ export const ConnectorVanillaAdapter: VanillaTier2Adapter<ConnectorVanillaInput>
 export const connector = (id: string, input: ConnectorVanillaInput): VanillaEmbedSpec<ConnectorVanillaInput> => ({
   type: 'embed',
   kind: NotationConnectorVanillaNamespace,
-  id,
-  props: input,
-});
-
-/** Notation Callout 的 Vanilla 适配器 */
-export const CalloutVanillaAdapter: VanillaTier2Adapter<CalloutVanillaInput> = {
-  kind: NotationCalloutVanillaNamespace,
-  namespace: NotationCalloutVanillaNamespace,
-  lower: (props, context) => ({
-    node: createCallout({ ...props, id: `${context.id}/callout` }),
-    datasets: {},
-    makeComposites: makeCalloutComposites,
-  }),
-};
-
-/** 创建 Notation Callout 的 Vanilla embed 节点 */
-export const callout = (id: string, input: CalloutVanillaInput): VanillaEmbedSpec<CalloutVanillaInput> => ({
-  type: 'embed',
-  kind: NotationCalloutVanillaNamespace,
   id,
   props: input,
 });

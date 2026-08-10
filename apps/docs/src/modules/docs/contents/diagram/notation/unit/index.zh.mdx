@@ -1,32 +1,27 @@
 ---
 title: 基础单元
-description: 使用基础单元表达逻辑对象，以连接器表达关系，并用标注补充局部说明。
+description: 使用逻辑单元表达逻辑对象，并以连接器表达关系。
 ---
 
-基础单元是一组可以直接放进图中的基础图式元素。Terminal、Stage、Decision 与 Junction 承担逻辑职责并提供稳定的 `id`；Connector 连接这些 authored identity；Callout 相对已有 target 放置解释。三者可以独立使用，也可以组合成完整的局部逻辑链路。
+逻辑单元是一组可以直接放进图中的基础图式元素。Terminal、Stage、Decision 与 Junction 承担逻辑职责并提供稳定的 `id`；Connector 连接这些 authored identity。它们可以独立使用，也可以组合成完整的局部逻辑链路。
 
 ## 职责一览
 
-| 成员      | 表达什么                              | 适合场景                       |
-| --------- | ------------------------------------- | ------------------------------ |
-| 基础单元  | Terminal、Stage、Decision 与 Junction | 起止、步骤、判断与汇合         |
-| Connector | authored identity 之间的显式关系      | 流向、依赖与带 label 的连接    |
-| Callout   | 相对已有 target 的说明与可选 leader   | 注释、解释与不进入主链路的信息 |
+| 成员      | 表达什么                              | 适合场景                    |
+| --------- | ------------------------------------- | --------------------------- |
+| 逻辑单元  | Terminal、Stage、Decision 与 Junction | 起止、步骤、判断与汇合      |
+| Connector | authored identity 之间的显式关系      | 流向、依赖与带 label 的连接 |
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/diagram/notation/unit/semantic-units">
-    <span className="font-semibold">基础单元</span>
+  <LinkedCard href="/diagram/notation/unit/logic-unit">
+    <span className="font-semibold">逻辑单元</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Terminal、Stage、Decision 与 Junction</span>
   </LinkedCard>
   <LinkedCard href="/diagram/notation/unit/connector">
     <span className="font-semibold">Connector</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Path Step、Draw way 与 target</span>
-  </LinkedCard>
-  <LinkedCard href="/diagram/notation/unit/callout">
-    <span className="font-semibold">Callout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">放置、previous-only target 与 leader</span>
   </LinkedCard>
 </div>
 

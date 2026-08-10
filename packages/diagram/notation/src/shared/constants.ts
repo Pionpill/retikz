@@ -35,6 +35,4 @@ export const NotationElementType = {
   Junction: 'junction',
   /** 表示图式元素间关系的连接线 */
   Connector: 'connector',
-  /** 依附目标的说明标注 */
-  Callout: 'callout',
 } as const;

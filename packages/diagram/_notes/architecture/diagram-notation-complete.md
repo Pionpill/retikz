@@ -61,7 +61,7 @@ JSON / direct IR / React / Vanilla
 
 ## 5. Layout / Standard / Core 复用边界
 
-Notation 可以拥有“LogicFrame 是有序语义区域”“Connector 是局部关系”“Callout 是对目标的说明”等职责，但不拥有它们依赖的通用布局和几何算法：
+Notation 可以拥有“LogicFrame 是有序语义区域”“Connector 是局部关系”等职责，但不拥有它们依赖的通用布局和几何算法：
 
 - children 排布复用 Layout FlexLayout / GridLayout / OverlayLayout
 - spacing、axis sizing、allocation、clip 与 layout artifact 复用 Layout 公共 composition contract
@@ -123,4 +123,4 @@ Notation 的统一入口不是封闭的组件枚举。UML Class、State、actor�
 
 ## 10. 与版本的关系
 
-本文定义长期 Notation Complete 标准；具体元素、字段、默认值、迁移批次和发布版本进入 milestone ADR。v0.1 alpha.1 只建立 package family、公共底层复用和首批迁移，不以当前清单限制后续图式元素，也不把 Graph / Flow / Editor 纳入同一版本承诺。
+本文定义长期 Notation Complete 标准；具体元素、字段、默认值、迁移批次和发布版本进入 milestone ADR。v0.1 alpha.1 建立 package family、公共底层复用和首批迁移，alpha.3 撤回缺少真实场景验证的 Callout；当前清单不限制后续图式元素，也不把 Graph / Flow / Editor 纳入同一版本承诺。

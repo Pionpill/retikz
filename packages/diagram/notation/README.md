@@ -9,7 +9,6 @@ The first release includes:
 - `LogicFrame` for authored headers and sections
 - `Terminal`, `Stage`, `Decision`, and `Junction` as semantic IR that lowers one-to-one to same-id Core Nodes
 - `Connector` as semantic IR that reuses Core Path steps or Draw ways and lowers one-to-one to a same-id stroke Path
-- `Callout` for target-relative explanations
 - one explicit `Definition` for each element
 
 ## Install

@@ -29,7 +29,7 @@ Notation 三包使用独立 release group `notation` 并保持 lockstep。未来
 
 ## 当前状态
 
-Notation v0.1 alpha.1 负责建立三包与发布组，并把 Standard alpha.3 的 LogicFrame、Terminal、Stage、Decision、Junction、Connector、Callout 迁入 Diagram。迁移不保留 Standard 转发或兼容别名；公开组件名和字段语义保持不变，canonical namespace 改为 Notation owner。
+Notation v0.1 alpha.1 建立三包与发布组，并把 Standard alpha.3 的 LogicFrame、Terminal、Stage、Decision、Junction、Connector、Callout 迁入 Diagram；alpha.3 撤回缺少真实场景验证的 Callout 完整契约。当前公开元素为 LogicFrame、Terminal、Stage、Decision、Junction 与 Connector，不保留 Callout 转发、兼容别名或 fallback。
 
 ## 验证
 
