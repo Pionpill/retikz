@@ -33,6 +33,7 @@ Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映�
 | 05  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性                                     | red   | ADR-04、data view / lineage               | 待起草   |
 | 06  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界                                | red   | ADR-04、plot v0.1 coordinate registry     | 待起草   |
 | 07  | **Plot area background**：把既有 background 与 flat token 限定为每个有效绘图区背景，外围 Chart canvas 保持独立                                                  | red   | ADR-01、ADR-03、既有 Plot area lowering   | Proposed |
+| 08  | **Axis 主题 Token 作用域规则**：保持基础 token 扁平，通过 dimension rule 统一覆盖 line、tick、tick label、title 与 grid                                         | red   | ADR-01、ADR-02、既有 guide lowering       | Proposed |
 
 ADR-01～03 已冻结并交付 Plot 的主题所有权、inherited scope、owner contribution、shared categorical projection、跨入口等价性与 presentation 边界。Chart type / recipe / presentation 继续由 chart v0.1 路线维护。Spatial Mapping ADR-04～06 仍为待起草，不因本次边界收口而改变状态。
 

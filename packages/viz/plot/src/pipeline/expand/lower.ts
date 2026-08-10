@@ -22,7 +22,13 @@ import type {
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
 import { rootMeta, slug } from '../../contract';
-import { resolveAxisGuideTokens, resolvePlotGuideTheme, resolvePlotTheme } from '../../providers';
+import {
+  resolveAxisGuideTokens,
+  resolvePlotAxisGuideTheme,
+  resolvePlotAxisThemeTokens,
+  resolvePlotGuideTheme,
+  resolvePlotTheme,
+} from '../../providers';
 import {
   channelKindsForMark,
   lowerMark,
@@ -187,14 +193,17 @@ const expandPlot = (
     effectiveTheme,
     {
       plotThemeTokens: node.plotThemeTokens,
+      plotThemeTokenRules: node.plotThemeTokenRules,
       plotTheme: node.plotTheme,
     },
     options.plotThemeStyles,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
-  const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide =>
-    isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
-  );
+  const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
+    if (!isAxisGuide(guide)) return guide;
+    const axisTokens = resolvePlotAxisThemeTokens(themeResolution, guide.dimension);
+    return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolvedTheme, axisTokens), guide);
+  });
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const { coordinateScopes, scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
     resolveScopedFrames({

@@ -83,6 +83,36 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg).toContain('fill="#123456"');
   });
 
+  it('spec 与 DSL 入口都透传 Axis theme token rules', () => {
+    const plotThemeTokenRules: NonNullable<IRPlotSpec['plotThemeTokenRules']> = [
+      {
+        select: { dimension: 'x' },
+        tokens: {
+          'axis.grid.enabled': true,
+          'axis.grid.stroke': '#ff00ff',
+        },
+      },
+    ];
+    const specSvg = renderToStaticMarkup(
+      <Plot
+        spec={{ ...spec, guides: [{ type: 'axis', dimension: 'x' }] }}
+        data={data}
+        plotThemeTokenRules={plotThemeTokenRules}
+        width={480}
+        height={300}
+      />,
+    );
+    const dslSvg = renderToStaticMarkup(
+      <Plot data={revenue} plotThemeTokenRules={plotThemeTokenRules} width={480} height={300}>
+        <PointMark x="quarter" y="value" />
+        <Axis dimension="x" />
+      </Plot>,
+    );
+
+    expect(specSvg).toContain('stroke="#ff00ff"');
+    expect(dslSvg).toContain('stroke="#ff00ff"');
+  });
+
   it('embedded Plot 的 local token override 只作用于该 Plot', () => {
     const svg = renderToStaticMarkup(
       <Layout width={960} height={300}>

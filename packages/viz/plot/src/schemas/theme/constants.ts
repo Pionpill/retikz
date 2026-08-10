@@ -18,6 +18,7 @@ export const PlotThemeToken = {
   AxisTitleForeground: 'axis.title.foreground',
   AxisTitleFontSize: 'axis.title.font.size',
   AxisTitleFontWeight: 'axis.title.font.weight',
+  AxisGridEnabled: 'axis.grid.enabled',
   AxisGridStroke: 'axis.grid.stroke',
   AxisGridStrokeWidth: 'axis.grid.strokeWidth',
   AxisGridDrawOpacity: 'axis.grid.drawOpacity',

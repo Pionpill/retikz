@@ -17,15 +17,13 @@ describe('Clean Plot theme preset', () => {
     expect(preset[PlotThemeToken.LegendSwatchSize]).toBeGreaterThanOrEqual(12);
   });
 
-  it('隐藏轴线与 tick，同时保留低对比网格', () => {
+  it('隐藏轴线、tick 与 grid', () => {
     for (const mode of Object.values(ThemeMode)) {
       const preset = getPlotThemePreset(ThemeStyle.Clean, mode);
-      const gridOpacity = preset[PlotThemeToken.AxisGridDrawOpacity];
 
       expect(preset[PlotThemeToken.AxisLineEnabled]).toBe(false);
       expect(preset[PlotThemeToken.AxisTickMark]).toBe(false);
-      expect(gridOpacity).toBeGreaterThan(0);
-      expect(gridOpacity).toBeLessThan(0.5);
+      expect(preset[PlotThemeToken.AxisGridEnabled]).toBe(false);
     }
   });
 

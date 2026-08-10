@@ -13,7 +13,7 @@ const createPreset = (
   categorical: NonEmptyReadonlyArray<CssColorValue>,
 ): IRPlotResolvedThemeTokens => {
   return PlotResolvedThemeTokensSchema.parse({
-    ...getPlotAreaPreset(mode),
+    ...getPlotAreaPreset(style, mode),
     ...getTypographyPreset(style, mode),
     ...getAxisPreset(style, mode),
     ...getLegendPreset(style, mode),

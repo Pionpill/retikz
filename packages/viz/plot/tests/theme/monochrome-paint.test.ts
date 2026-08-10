@@ -8,16 +8,8 @@ const inheritedPaint = {
   [PlotThemeToken.AxisLineStroke]: 'currentColor',
   [PlotThemeToken.AxisTickLabelForeground]: 'currentColor',
   [PlotThemeToken.AxisTitleForeground]: 'currentColor',
-  [PlotThemeToken.AxisGridStroke]: 'currentColor',
   [PlotThemeToken.LegendTitleForeground]: 'currentColor',
   [PlotThemeToken.LegendLabelForeground]: 'currentColor',
-};
-
-const gridOpacity = {
-  [ThemeStyle.Neutral]: 0.15,
-  [ThemeStyle.Academic]: 0.15,
-  [ThemeStyle.Vibrant]: 0.15,
-  [ThemeStyle.Clean]: 0.1,
 };
 
 describe('Plot theme monochrome paint', () => {
@@ -27,15 +19,34 @@ describe('Plot theme monochrome paint', () => {
     }
   });
 
-  it.each(Object.values(ThemeStyle))('%s 的 surface 在两个 mode 下都保持透明', style => {
+  it.each([ThemeStyle.Neutral, ThemeStyle.Academic, ThemeStyle.Clean])(
+    '%s 的 surface 在两个 mode 下都保持透明',
+    style => {
+      for (const mode of Object.values(ThemeMode)) {
+        expect(getPlotThemePreset(style, mode)[PlotThemeToken.PlotAreaFill]).toBe('none');
+      }
+    },
+  );
+
+  it('Vibrant 使用与 mode 匹配的 tinted plot area', () => {
+    expect(getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Light)[PlotThemeToken.PlotAreaFill]).toBe('#E5ECF6');
+    expect(getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Dark)[PlotThemeToken.PlotAreaFill]).toBe('#111111');
+  });
+
+  it.each(Object.values(ThemeStyle))('%s 的基础 grid 在两个 mode 下默认关闭', style => {
     for (const mode of Object.values(ThemeMode)) {
-      expect(getPlotThemePreset(style, mode)[PlotThemeToken.PlotAreaFill]).toBe('none');
+      expect(getPlotThemePreset(style, mode)[PlotThemeToken.AxisGridEnabled]).toBe(false);
     }
   });
 
-  it.each(Object.values(ThemeStyle))('%s 的 grid 在两个 mode 下使用默认 opacity', style => {
+  it('Vibrant grid 使用与 plot area 对应的黑白分隔色', () => {
+    expect(getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Light)[PlotThemeToken.AxisGridStroke]).toBe('#FFFFFF');
+    expect(getPlotThemePreset(ThemeStyle.Vibrant, ThemeMode.Dark)[PlotThemeToken.AxisGridStroke]).toBe('#000000');
+  });
+
+  it.each([ThemeStyle.Neutral, ThemeStyle.Academic, ThemeStyle.Clean])('%s grid 继承 currentColor', style => {
     for (const mode of Object.values(ThemeMode)) {
-      expect(getPlotThemePreset(style, mode)[PlotThemeToken.AxisGridDrawOpacity]).toBe(gridOpacity[style]);
+      expect(getPlotThemePreset(style, mode)[PlotThemeToken.AxisGridStroke]).toBe('currentColor');
     }
   });
 });

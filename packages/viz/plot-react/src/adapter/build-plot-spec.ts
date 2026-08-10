@@ -19,7 +19,7 @@ export type {
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 Plot 本身不补） */
 const DEFAULT_GUIDES: ReadonlyArray<IRPlotGuide> = [
   { type: PlotGuide.Axis, dimension: 'x' },
-  { type: PlotGuide.Axis, dimension: 'y', grid: true },
+  { type: PlotGuide.Axis, dimension: 'y' },
 ];
 
 /** buildPlotSpec 收集的 resolveLabel 运行时旁路 */
@@ -60,6 +60,7 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     data,
     ...fragment,
     ...(options.plotThemeTokens === undefined ? {} : { plotThemeTokens: options.plotThemeTokens }),
+    ...(options.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: options.plotThemeTokenRules }),
     ...(options.plotTheme === undefined ? {} : { plotTheme: options.plotTheme }),
     ...(options.width === undefined ? {} : { width: options.width }),
     ...(options.height === undefined ? {} : { height: options.height }),

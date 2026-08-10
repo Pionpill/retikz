@@ -126,6 +126,34 @@ describe('plot', () => {
     expect(spec.plotThemeTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
   });
 
+  it('plain PlotSpec 透传 Axis theme token rules', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }],
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { 'axis.grid.enabled': true },
+        },
+      ],
+    });
+
+    expect(spec.plotThemeTokenRules).toEqual([
+      {
+        select: { dimension: 'x' },
+        tokens: { 'axis.grid.enabled': true },
+      },
+    ]);
+  });
+
   it('展开 yAxisId binding sugar 为 overlay composition', () => {
     const spec = plot({
       data: { reference: 'weather' },

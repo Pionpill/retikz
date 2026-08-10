@@ -2,7 +2,7 @@ import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
 
 import { ThemeMode, ThemeStyle } from '@retikz/core';
 
-import type { IRPlotResolvedThemeTokens } from '../../../schemas';
+import type { IRPlotAxisThemeTokenRules, IRPlotResolvedThemeTokens } from '../../../schemas';
 
 import { PlotThemeToken } from '../../../schemas';
 
@@ -19,14 +19,13 @@ type AxisPresetSource = Readonly<{
   titleForeground: string;
   titleFontSize: number;
   titleFontWeight: number;
+  gridEnabled: boolean;
   gridStroke: string;
-  gridStrokeWidth: number;
-  gridDrawOpacity: number;
 }>;
 
 type AxisStylePreset = Pick<
   AxisPresetSource,
-  'lineEnabled' | 'tickMark' | 'tickLabelFontSize' | 'tickLabelGap' | 'titleFontSize' | 'gridDrawOpacity'
+  'lineEnabled' | 'tickMark' | 'tickLabelFontSize' | 'tickLabelGap' | 'titleFontSize' | 'gridEnabled'
 >;
 
 type AxisModePreset = Pick<AxisPresetSource, 'lineStroke' | 'tickLabelForeground' | 'titleForeground' | 'gridStroke'>;
@@ -45,6 +44,7 @@ type AxisTokenPreset = Readonly<
     | typeof PlotThemeToken.AxisTitleForeground
     | typeof PlotThemeToken.AxisTitleFontSize
     | typeof PlotThemeToken.AxisTitleFontWeight
+    | typeof PlotThemeToken.AxisGridEnabled
     | typeof PlotThemeToken.AxisGridStroke
     | typeof PlotThemeToken.AxisGridStrokeWidth
     | typeof PlotThemeToken.AxisGridDrawOpacity
@@ -58,7 +58,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickLabelFontSize: 12,
     tickLabelGap: 4,
     titleFontSize: 12,
-    gridDrawOpacity: 0.15,
+    gridEnabled: false,
   },
   [ThemeStyle.Academic]: {
     lineEnabled: true,
@@ -66,7 +66,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickLabelFontSize: 11,
     tickLabelGap: 5,
     titleFontSize: 12,
-    gridDrawOpacity: 0.15,
+    gridEnabled: false,
   },
   [ThemeStyle.Vibrant]: {
     lineEnabled: false,
@@ -74,7 +74,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickLabelFontSize: 12,
     tickLabelGap: 6,
     titleFontSize: 13,
-    gridDrawOpacity: 0.15,
+    gridEnabled: false,
   },
   [ThemeStyle.Clean]: {
     lineEnabled: false,
@@ -82,7 +82,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     tickLabelFontSize: 11,
     tickLabelGap: 5,
     titleFontSize: 12,
-    gridDrawOpacity: 0.1,
+    gridEnabled: false,
   },
 };
 
@@ -91,13 +91,13 @@ const modes: Record<ThemeModeValue, AxisModePreset> = {
     lineStroke: 'currentColor',
     tickLabelForeground: 'currentColor',
     titleForeground: 'currentColor',
-    gridStroke: 'currentColor',
+    gridStroke: '#FFFFFF',
   },
   [ThemeMode.Dark]: {
     lineStroke: 'currentColor',
     tickLabelForeground: 'currentColor',
     titleForeground: 'currentColor',
-    gridStroke: 'currentColor',
+    gridStroke: '#000000',
   },
 };
 
@@ -105,6 +105,7 @@ const modes: Record<ThemeModeValue, AxisModePreset> = {
 export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): AxisTokenPreset => {
   const structure = styles[style];
   const paint = modes[mode];
+  const gridStroke = style === ThemeStyle.Vibrant ? paint.gridStroke : 'currentColor';
   const tickMark =
     structure.tickMark !== false && structure.tickMark.kind === 'line'
       ? {
@@ -126,8 +127,32 @@ export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValu
     [PlotThemeToken.AxisTitleForeground]: paint.titleForeground,
     [PlotThemeToken.AxisTitleFontSize]: structure.titleFontSize,
     [PlotThemeToken.AxisTitleFontWeight]: 600,
-    [PlotThemeToken.AxisGridStroke]: paint.gridStroke,
+    [PlotThemeToken.AxisGridEnabled]: structure.gridEnabled,
+    [PlotThemeToken.AxisGridStroke]: gridStroke,
     [PlotThemeToken.AxisGridStrokeWidth]: 1,
-    [PlotThemeToken.AxisGridDrawOpacity]: structure.gridDrawOpacity,
+    [PlotThemeToken.AxisGridDrawOpacity]: 0.15,
   };
+};
+
+/** 读取内建主题的 Axis dimension 规则 */
+export const getAxisTokenRules = (style: BuiltinThemeStyleValue): IRPlotAxisThemeTokenRules => {
+  switch (style) {
+    case ThemeStyle.Neutral:
+      return [
+        {
+          select: { dimension: 'y' },
+          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+        },
+      ];
+    case ThemeStyle.Vibrant:
+      return [
+        {
+          select: { dimension: ['x', 'y'] },
+          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+        },
+      ];
+    case ThemeStyle.Academic:
+    case ThemeStyle.Clean:
+      return [];
+  }
 };

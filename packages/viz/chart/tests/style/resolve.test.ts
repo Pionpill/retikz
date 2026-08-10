@@ -46,8 +46,10 @@ describe('Chart style resolution', () => {
     const plotStyle = definePlotThemeStyle({
       name: 'brand',
       resolve: () => ({
-        ...plotBaseline,
-        [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
+        tokens: {
+          ...plotBaseline,
+          [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
+        },
       }),
     });
 
@@ -118,7 +120,7 @@ describe('Chart style resolution', () => {
       path: '$style/neutral/light/chart.canvas.fill',
     });
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
-    expect(result.inspection.style.plot.tokenSources).toHaveLength(38);
+    expect(result.inspection.style.plot.tokenSources).toHaveLength(39);
   });
 
   it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
@@ -129,6 +131,12 @@ describe('Chart style resolution', () => {
         'plot.typography.font.size': 14,
         'plot.palette.categorical': ['#token'],
       },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { 'axis.tickLabel.enabled': false },
+        },
+      ],
       plotTheme: {
         typography: { font: { weight: 700 } },
         palette: {
@@ -141,6 +149,7 @@ describe('Chart style resolution', () => {
     const result = resolveChartSpec(input, themeOf(ThemeStyle.Academic, ThemeMode.Dark));
 
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
+    expect(result.plotSpec.plotThemeTokenRules).toEqual(input.plotThemeTokenRules);
     expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
     expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
     expect(
@@ -151,6 +160,10 @@ describe('Chart style resolution', () => {
       path: '$spec/chartThemeTokens/chart.padding',
     });
     expect(result.inspection.style.plot.plotTheme.typography).toMatchObject({ font: { size: 14, weight: 700 } });
+    expect(result.inspection.style.plot.tokenRules.at(-1)).toMatchObject({
+      rule: input.plotThemeTokenRules[0],
+      path: '$spec/plotThemeTokenRules/0',
+    });
     expect(result.inspection.style.plot.palette).toMatchObject({
       categorical: ['#raw-categorical'],
       series: ['#raw-series'],

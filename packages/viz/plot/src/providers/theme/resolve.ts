@@ -6,6 +6,7 @@ import type { PlotThemeStyleDefinition } from '../../contract';
 import type { IRPlotSpec, IRPlotThemeResolution } from '../../schemas';
 
 import {
+  PlotAxisThemeTokenRulesSchema,
   PlotResolvedThemeTokensSchema,
   PlotThemeResolutionSchema,
   PlotThemeSchema,
@@ -18,7 +19,7 @@ import { resolvePlotThemeStyleRegistry } from './registry';
 /** 按 Plot style、Plot token 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotTheme'> = {},
+  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;
@@ -26,8 +27,11 @@ export const resolvePlotTheme = (
   const definition = styles.get(style);
   if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
   const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
+  const localTokenRules = PlotAxisThemeTokenRulesSchema.parse(input.plotThemeTokenRules ?? []);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
-  const baseline = definition.resolve(effectiveTheme);
+  const styleResolution = definition.resolve(effectiveTheme);
+  const baseline = PlotResolvedThemeTokensSchema.parse(styleResolution.tokens);
+  const styleTokenRules = PlotAxisThemeTokenRulesSchema.parse(styleResolution.tokenRules ?? []);
   const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
     ...baseline,
     ...structuredClone(plotThemeTokens),
@@ -63,11 +67,24 @@ export const resolvePlotTheme = (
   };
   const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] =
     authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }];
+  const tokenRules: IRPlotThemeResolution['tokenRules'] = [
+    ...styleTokenRules.map((rule, index) => ({
+      rule,
+      kind: ThemeTokenSource.Local,
+      path: `$style/${style}/${mode}/tokenRules/${index}`,
+    })),
+    ...localTokenRules.map((rule, index) => ({
+      rule,
+      kind: ThemeTokenSource.Local,
+      path: `$spec/plotThemeTokenRules/${index}`,
+    })),
+  ];
   return PlotThemeResolutionSchema.parse({
     style,
     mode,
     tokens,
     tokenSources,
+    tokenRules,
     authoredOverrides,
     plotTheme: theme,
     palette,

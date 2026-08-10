@@ -13,7 +13,7 @@ Plot describes the drawing body and its Axis, Legend, Facet, mark, reference, an
 
 Exactly one of `coordinate` and `composition` must be present. Scale names, view ids, and arrangement ids must be unique within one Plot; every `coordinateView` referenced by a mark or axis must already be registered.
 
-Theme inputs resolve in this order: the Plot preset selected by the Core effective Theme → local `plotThemeTokens` → `colors` → `plotTheme` → local guide / mark / scale configuration. See the [theme contract](/viz/plot/reference/theme) for the complete token catalog, extensible styles, and cascade.
+Theme inputs resolve in this order: the Plot preset and Axis rules selected by the Core effective Theme → local `plotThemeTokens` → local `plotThemeTokenRules` → `plotTheme` → local guide / mark / scale configuration. See the [theme contract](/viz/plot/reference/theme) for the complete token catalog, extensible styles, and cascade.
 
 ## CoordinateCompositionSchema
 

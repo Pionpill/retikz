@@ -20,6 +20,11 @@ type PlotThemeResolution = {
   mode: ResolvedTheme['mode'];
   tokens: Record<string, unknown>;
   tokenSources: Array<{ token: string; kind: string; path: string }>;
+  tokenRules: Array<{
+    rule: NonNullable<IRPlotSpec['plotThemeTokenRules']>[number];
+    kind: string;
+    path: string;
+  }>;
   authoredOverrides: Array<{ kind: string; path: string }>;
   plotTheme: IRPlotSpec['plotTheme'];
   palette: {
@@ -33,7 +38,7 @@ type PlotThemeResolution = {
 
 type ResolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotTheme'>,
+  input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
   plotThemeStyles?: ReadonlyArray<unknown>,
 ) => PlotThemeResolution;
 
@@ -49,7 +54,10 @@ const sourceOf = (resolution: PlotThemeResolution, token: string) =>
 describe('Plot theme resolver', () => {
   it('让同名自定义 Plot style palette 高于 Core shared colors', () => {
     const define = (plot as Record<string, unknown>).definePlotThemeStyle as
-      | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
+      | ((definition: {
+          name: string;
+          resolve: (theme: ResolvedTheme) => { tokens: Record<string, unknown>; tokenRules?: Array<unknown> };
+        }) => unknown)
       | undefined;
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const baseline = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
@@ -58,10 +66,12 @@ describe('Plot theme resolver', () => {
     const definition = define?.({
       name: 'brand',
       resolve: () => ({
-        ...baseline,
-        [PlotThemeToken.PlotPaletteCategorical]: ['#brand-categorical'],
-        [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
-        [PlotThemeToken.PlotPaletteSector]: ['#brand-sector'],
+        tokens: {
+          ...baseline,
+          [PlotThemeToken.PlotPaletteCategorical]: ['#brand-categorical'],
+          [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
+          [PlotThemeToken.PlotPaletteSector]: ['#brand-sector'],
+        },
       }),
     });
     const result = resolve(
@@ -90,11 +100,14 @@ describe('Plot theme resolver', () => {
 
   it('拒绝缺少或重名的 Plot style definition', () => {
     const define = (plot as Record<string, unknown>).definePlotThemeStyle as
-      | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
+      | ((definition: {
+          name: string;
+          resolve: (theme: ResolvedTheme) => { tokens: Record<string, unknown> };
+        }) => unknown)
       | undefined;
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const baseline = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
-    const brand = define?.({ name: 'brand', resolve: () => baseline });
+    const brand = define?.({ name: 'brand', resolve: () => ({ tokens: baseline }) });
 
     expect(() =>
       resolve(
@@ -284,6 +297,79 @@ describe('Plot theme resolver', () => {
     expect(result.tokens[PlotThemeToken.PlotPaletteSeries]).toEqual(['#333333']);
   });
 
+  it('保留 style 与 local Axis rules 的顺序和稳定来源', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      plotThemeTokens: {
+        [PlotThemeToken.AxisGridEnabled]: false,
+      },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: {
+            [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisTickLabelEnabled]: false,
+          },
+        },
+      ],
+    });
+
+    expect(result.tokenRules).toEqual([
+      {
+        rule: {
+          select: { dimension: 'y' },
+          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+        },
+        kind: ThemeTokenSource.Local,
+        path: '$style/neutral/light/tokenRules/0',
+      },
+      {
+        rule: {
+          select: { dimension: 'x' },
+          tokens: {
+            [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisTickLabelEnabled]: false,
+          },
+        },
+        kind: ThemeTokenSource.Local,
+        path: '$spec/plotThemeTokenRules/0',
+      },
+    ]);
+    expect(sourceOf(result, PlotThemeToken.AxisGridEnabled)).toMatchObject({
+      path: '$spec/plotThemeTokens/axis.grid.enabled',
+    });
+  });
+
+  it('把 native grid 投影到四个基础 token 并只标记 authored 字段', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
+      plotTheme: {
+        axis: {
+          grid: {
+            stroke: '#cbd5e1',
+            dashPattern: [4, 2],
+          },
+        },
+      },
+    });
+
+    expect(result.plotTheme?.axis?.grid).toMatchObject({
+      stroke: '#cbd5e1',
+      dashPattern: [4, 2],
+    });
+    expect(result.tokens[PlotThemeToken.AxisGridEnabled]).toBe(true);
+    expect(result.tokens[PlotThemeToken.AxisGridStroke]).toBe('#cbd5e1');
+    expect(sourceOf(result, PlotThemeToken.AxisGridEnabled)).toMatchObject({
+      path: '$spec/plotTheme/axis/grid',
+    });
+    expect(sourceOf(result, PlotThemeToken.AxisGridStroke)).toMatchObject({
+      path: '$spec/plotTheme/axis/grid/stroke',
+    });
+    expect(sourceOf(result, PlotThemeToken.AxisGridStrokeWidth)).toMatchObject({
+      path: '$style/neutral/light/axis.grid.strokeWidth',
+    });
+  });
+
   it('保留 native theme 中没有对应 token 的合法字段', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
@@ -304,14 +390,18 @@ describe('Plot theme resolver', () => {
     expect(result.tokenSources.some(source => source.path.includes('rotate'))).toBe(false);
   });
 
-  it('让每个 canonical token 都经正式 native theme mapping 唯一投影', () => {
+  it('让启用后的每个 canonical token 都经正式 native theme mapping 唯一投影', () => {
     const preset = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
-    const theme = plotThemeFromTokens(preset);
-    const projection = applyPlotThemeToTokens(preset, theme, theme);
+    const enabled = PlotResolvedThemeTokensSchema.parse({
+      ...preset,
+      [PlotThemeToken.AxisGridEnabled]: true,
+    });
+    const theme = plotThemeFromTokens(enabled);
+    const projection = applyPlotThemeToTokens(enabled, theme, theme);
     const canonical = Object.values(PlotThemeToken);
     const projected = projection.overrides.map(override => override.token);
 
-    expect(projection.tokens).toEqual(preset);
+    expect(projection.tokens).toEqual(enabled);
     expect(new Set(projected)).toEqual(new Set(canonical));
     expect(new Set(projected).size).toBe(canonical.length);
   });

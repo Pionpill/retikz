@@ -50,9 +50,10 @@ export const PlotAxisThemeSchema = z
     ticks: ThemeAxisTicksSchema.optional().describe('Axis tick mark default style'),
     tickLabels: ThemeAxisTickLabelsSchema.optional().describe('Axis tick label default style'),
     title: ThemeAxisTitleSchema.optional().describe('Axis title default style'),
-    grid: AxisGridLineStyleSchema.optional().describe(
-      'Axis grid line default style. It does not enable grid by itself',
-    ),
+    grid: z
+      .union([z.literal(false), AxisGridLineStyleSchema])
+      .optional()
+      .describe('Axis grid visibility and shared major line style defaults'),
   })
   .describe('Plot theme defaults for axis visual tokens');
 

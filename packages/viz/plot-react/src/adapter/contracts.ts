@@ -103,6 +103,8 @@ export type BuildPlotSpecOptions = {
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** Plot-owned canonical theme token 稀疏覆盖 */
   plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
+  /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
+  plotThemeTokenRules?: IRPlotSpec['plotThemeTokenRules'];
   /** Plot 主题 */
   plotTheme?: IRPlotSpec['plotTheme'];
   /** 当前数据集可见字段名集合 */

@@ -1,8 +1,9 @@
 import type { IRNode, IRPath } from '@retikz/core';
 
-import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotTheme } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotResolvedThemeTokens, IRPlotTheme } from '../../schemas';
 
 import { LegendSymbolFit } from '../../schemas';
+import { plotAxisThemeFromTokens } from './mapping';
 
 type GuidePathStyle = Partial<
   Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
@@ -128,6 +129,41 @@ export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotP
   };
 };
 
+/** 用某个 Axis dimension 的有效 token 替换 guide theme 中的 Axis token 字段 */
+export const resolvePlotAxisGuideTheme = (
+  theme: ResolvedPlotGuideTheme,
+  tokens: IRPlotResolvedThemeTokens,
+): ResolvedPlotGuideTheme => {
+  const scoped = plotAxisThemeFromTokens(tokens);
+  const global = theme.axis;
+  return {
+    ...theme,
+    axis: {
+      line:
+        scoped.line === false ? false : mergePathStyle(global.line === false ? undefined : global.line, scoped.line),
+      ticks: {
+        ...(global.ticks ?? {}),
+        ...(scoped.ticks ?? {}),
+      },
+      tickLabels:
+        scoped.tickLabels === false
+          ? false
+          : {
+              ...(global.tickLabels === false ? {} : (global.tickLabels ?? {})),
+              ...scoped.tickLabels,
+              ...mergeTextStyle(global.tickLabels === false ? undefined : global.tickLabels, scoped.tickLabels),
+            },
+      title: {
+        ...(global.title ?? {}),
+        ...(scoped.title ?? {}),
+        ...mergeTextStyle(global.title, scoped.title),
+      },
+      grid:
+        scoped.grid === false ? false : mergePathStyle(global.grid === false ? undefined : global.grid, scoped.grid),
+    },
+  };
+};
+
 const mergeAxisTicks = (
   theme: NonNullable<IRPlotTheme['axis']>['ticks'] | undefined,
   local: IRPlotAxisGuide['ticks'],
@@ -210,8 +246,10 @@ const mergeAxisGrid = (
   theme: NonNullable<IRPlotTheme['axis']>['grid'] | undefined,
   local: IRPlotAxisGuide['grid'],
 ): IRPlotAxisGuide['grid'] => {
-  if (local === undefined || local === false || theme === undefined) return local;
-  if (local === true) return mergePathStyle(theme, undefined) satisfies AxisGridToken;
+  if (local === false) return false;
+  if (theme === undefined) return local;
+  if (theme === false) return local ?? false;
+  if (local === undefined || local === true) return { ...theme } satisfies AxisGridToken;
   return { ...mergePathStyle(theme, local), ...local };
 };
 
@@ -255,7 +293,9 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRP
       }
     : {}),
   ...(theme.axis.grid !== undefined || guide.grid !== undefined
-    ? { grid: mergeAxisGrid(theme.axis.grid, guide.grid) }
+    ? {
+        grid: mergeAxisGrid(theme.axis.grid, guide.grid),
+      }
     : {}),
 });
 

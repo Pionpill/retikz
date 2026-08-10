@@ -80,7 +80,7 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 如果一种能力不依赖图表字段映射，例如通用数据变换、底层几何或表格 Cell，它就不应进入 Plot。反过来，新的 scale、coordinate、mark 或 guide 应先成为可注册的 Definition，再以内置能力使用同一条路径。
 
-Plot 还拥有 surface、guide、label 与 palette 的 canonical theme token。它消费 Core effective Theme 选择同名领域 preset，再把局部 `plotThemeTokens`、`colors` 与原生 `plotTheme` 映射到同一 lowering 主链；完整 key 与优先级见[主题契约](/viz/plot/reference/theme)。内置与自定义 preset 都通过 `definePlotThemeStyle` / `plotThemeStyles` 走同一 resolver。
+Plot 还拥有绘图区、guide 与 palette 的 canonical theme token。它消费 Core effective Theme 选择同名领域 preset，再把局部 `plotThemeTokens`、Axis `plotThemeTokenRules` 与原生 `plotTheme` 映射到同一 lowering 主链；完整 key 与优先级见[主题契约](/viz/plot/reference/theme)。内置与自定义 preset 都通过 `definePlotThemeStyle` / `plotThemeStyles` 走同一 resolver。
 
 ## 章节内容
 

@@ -1,12 +1,19 @@
-import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
+import type { BuiltinThemeStyleValue, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlotAxisGuide, IRPlotSpec } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
-import { PlotSpecSchema } from '../../src/schemas';
+import {
+  resolveAxisGuideTokens,
+  resolvePlotAxisGuideTheme,
+  resolvePlotAxisThemeTokens,
+  resolvePlotGuideTheme,
+  resolvePlotTheme,
+} from '../../src/providers';
+import { PlotSpecSchema, PlotThemeToken } from '../../src/schemas';
 
 const ROWS = [
   { x: 0, y: 1, city: 'A', value: 1 },
@@ -90,6 +97,22 @@ const hasMinimumSize = (node: IRNode, width: number, height: number): boolean =>
   const size = node.minimumSize;
   if (typeof size === 'number') return size === width && size === height;
   return size?.width === width && size.height === height;
+};
+
+const resolveAxis = (
+  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
+  guide: IRPlotAxisGuide,
+  style: BuiltinThemeStyleValue = ThemeStyle.Neutral,
+): IRPlotAxisGuide => {
+  const effectiveTheme = {
+    style,
+    mode: ThemeMode.Light,
+    colors: resolveCoreThemeColors(style, ThemeMode.Light),
+  };
+  const resolution = resolvePlotTheme(effectiveTheme, input);
+  const guideTheme = resolvePlotGuideTheme(resolution.plotTheme, resolution.palette);
+  const tokens = resolvePlotAxisThemeTokens(resolution, guide.dimension);
+  return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(guideTheme, tokens), guide);
 };
 
 describe('plot theme schema and lowering', () => {
@@ -286,6 +309,94 @@ describe('plot theme schema and lowering', () => {
     const labels = nodesOf(root).filter(node => node.text !== undefined && node.textColor !== undefined);
     expect(labels.every(label => label.textColor === '#2563eb')).toBe(true);
     expect(labels.every(label => label.font?.size === 10)).toBe(true);
+  });
+
+  it('Axis rule 按开放 dimension 控制 line、tick、label、title 与 grid，后声明规则优先', () => {
+    const input = {
+      plotThemeTokenRules: [
+        {
+          select: { dimension: ['x', 'radius'] },
+          tokens: {
+            [PlotThemeToken.AxisLineEnabled]: false,
+            [PlotThemeToken.AxisTickMark]: false,
+            [PlotThemeToken.AxisTickLabelEnabled]: false,
+            [PlotThemeToken.AxisTitleForeground]: '#7c3aed',
+            [PlotThemeToken.AxisGridEnabled]: true,
+          },
+        },
+        {
+          select: { dimension: 'x' },
+          tokens: {
+            [PlotThemeToken.AxisTickLabelEnabled]: true,
+            [PlotThemeToken.AxisGridStroke]: '#ef4444',
+          },
+        },
+      ],
+    } satisfies Pick<IRPlotSpec, 'plotThemeTokenRules'>;
+
+    const x = resolveAxis(input, { type: 'axis', dimension: 'x', title: 'x' });
+    const radius = resolveAxis(input, { type: 'axis', dimension: 'radius', title: 'r' });
+
+    expect(x.line).toBe(false);
+    expect(x.ticks?.mark).toBe(false);
+    expect(x.tickLabels).not.toBe(false);
+    expect(x.title).toMatchObject({ text: 'x', textColor: '#7c3aed' });
+    expect(x.grid).toMatchObject({ stroke: '#ef4444' });
+    expect(radius.tickLabels).toBe(false);
+    expect(radius.grid).toMatchObject({ stroke: 'currentColor' });
+  });
+
+  it('用户全局 token 高于 style rule，local rule 高于用户全局 token，native 与 guide 依次更高', () => {
+    expect(
+      resolveAxis({ plotThemeTokens: { [PlotThemeToken.AxisGridEnabled]: false } }, { type: 'axis', dimension: 'y' })
+        .grid,
+    ).toBe(false);
+
+    const input = {
+      plotThemeTokens: {
+        [PlotThemeToken.AxisGridEnabled]: false,
+        [PlotThemeToken.AxisGridStroke]: '#94a3b8',
+      },
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'y' },
+          tokens: {
+            [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisGridStroke]: '#2563eb',
+          },
+        },
+      ],
+      plotTheme: { axis: { grid: { stroke: '#f97316', dashPattern: [4, 2] } } },
+    } satisfies Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>;
+
+    const y = resolveAxis(input, {
+      type: 'axis',
+      dimension: 'y',
+      grid: { strokeWidth: 2, dashOffset: 1 },
+    });
+
+    expect(y.grid).toEqual({
+      stroke: '#f97316',
+      strokeWidth: 2,
+      drawOpacity: 0.15,
+      dashPattern: [4, 2],
+      dashOffset: 1,
+    });
+  });
+
+  it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
+    expect(resolveAxis({}, { type: 'axis', dimension: 'x' }).grid).toBe(false);
+    expect(resolveAxis({}, { type: 'axis', dimension: 'y' }).grid).toMatchObject({ stroke: 'currentColor' });
+    expect(resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Vibrant).grid).toMatchObject({
+      stroke: '#FFFFFF',
+    });
+    expect(resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean).grid).toBe(false);
+
+    const localMinor = { ticks: { values: [0.5] }, dashOffset: 3 };
+    expect(resolveAxis({}, { type: 'axis', dimension: 'y', grid: { minor: localMinor } }).grid).toMatchObject({
+      stroke: 'currentColor',
+      minor: localMinor,
+    });
   });
 
   it('typography_supplies_axis_text_defaults_beneath_axis_and_guide_styles', () => {

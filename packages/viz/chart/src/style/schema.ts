@@ -7,7 +7,7 @@ import {
   PaintValueSchema,
   TextAlignSchema,
 } from '@retikz/core';
-import { PlotThemeSchema, PlotThemeTokenOverridesSchema } from '@retikz/plot';
+import { PlotAxisThemeTokenRulesSchema, PlotThemeSchema, PlotThemeTokenOverridesSchema } from '@retikz/plot';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/standard';
 import { z } from 'zod';
 
@@ -84,6 +84,9 @@ export const ChartThemeSurfaceSchema = z
     chartThemeTokens: ChartThemeTokenOverridesSchema.optional().describe('Sparse canonical Chart token overrides'),
     plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
       'Plot-owned token overrides forwarded unchanged',
+    ),
+    plotThemeTokenRules: PlotAxisThemeTokenRulesSchema.optional().describe(
+      'Plot-owned Axis token rules forwarded unchanged',
     ),
     plotTheme: PlotThemeSchema.optional().describe('Plot native theme forwarded unchanged'),
   })

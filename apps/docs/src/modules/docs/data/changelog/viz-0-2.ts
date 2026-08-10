@@ -17,8 +17,8 @@ export const vizV02: Release = {
         {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
-            zh: '38 个 `PlotThemeToken`、四种 style × light/dark preset、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 `plotThemeTokens` 与 Chart 转发的 Plot 输入走同一解析路径。',
-            en: 'Plot now owns 38 `PlotThemeToken` keys, four style presets in light and dark modes, a deterministic cascade, and native `IRPlotTheme` mapping. Local `plotThemeTokens` and Chart-forwarded Plot inputs use the same resolution path.',
+            zh: '39 个 `PlotThemeToken`、四种 style × light/dark preset、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
+            en: 'Plot now owns 39 `PlotThemeToken` keys, four style presets in light and dark modes, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
           },
         },
         {
@@ -60,6 +60,26 @@ export const vizV02: Release = {
             },
             {
               label: {
+                zh: 'BREAKING：Axis grid 收敛为统一主题契约',
+                en: 'BREAKING: Axis grid moves to one theme contract',
+              },
+              content: {
+                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth` 与 `drawOpacity` 四个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。Neutral 默认只开启 y grid，Vibrant 开启 x/y grid，Academic 与 Clean 均关闭；Axis guide 局部配置最终优先。',
+                en: 'Grid uses four flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, and `drawOpacity`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. Neutral enables y-grid only, Vibrant enables x/y-grid, and Academic and Clean disable grids; local Axis guide configuration wins last.',
+              },
+            },
+            {
+              label: {
+                zh: 'Vibrant 绘图区表面',
+                en: 'Vibrant Plot-area surface',
+              },
+              content: {
+                zh: '内建 Vibrant preset 在 Light 下使用 `#E5ECF6`，在 Dark 下使用 `#111111`；其他内建风格继续保持透明绘图区。',
+                en: 'The built-in Vibrant preset uses `#E5ECF6` in Light mode and `#111111` in Dark mode; the other built-in styles keep transparent Plot areas.',
+              },
+            },
+            {
+              label: {
                 zh: 'BREAKING：Plot presentation 上移 Chart',
                 en: 'BREAKING: Plot presentation moves to Chart',
               },
@@ -78,8 +98,8 @@ export const vizV02: Release = {
             {
               label: { zh: 'Chart 所有权边界调整', en: 'Chart ownership boundary adjusted' },
               content: {
-                zh: 'Chart 只拥有 `chartThemeTokens` 的 presentation/recipe namespace，并原样转发 Plot owner 的 `plotThemeTokens`、`colors` 与 `plotTheme`；Chart 与 Plot 通过各自 Definition 接入同一 Core registry。',
-                en: 'Chart owns only the `chartThemeTokens` presentation/recipe namespace and forwards Plot-owned `plotThemeTokens`, `colors`, and `plotTheme` unchanged. Chart and Plot enter the same Core registry through their respective Definitions.',
+                zh: 'Chart 只拥有 `chartThemeTokens` 的 presentation/recipe namespace，并原样转发 Plot owner 的 `plotThemeTokens`、`plotThemeTokenRules` 与 `plotTheme`；Chart 与 Plot 通过各自 Definition 接入同一 Core registry。',
+                en: 'Chart owns only the `chartThemeTokens` presentation/recipe namespace and forwards Plot-owned `plotThemeTokens`, `plotThemeTokenRules`, and `plotTheme` unchanged. Chart and Plot enter the same Core registry through their respective Definitions.',
               },
             },
           ],
@@ -98,8 +118,8 @@ export const vizV02: Release = {
         {
           label: { zh: 'React PlotTheme parity', en: 'React PlotTheme parity' },
           content: {
-            zh: '`<Plot plotThemeTokens={...}>` 与 spec 输入生成同一 `IRPlotSpec.plotThemeTokens`；standalone 与 embedded 的 `<Plot theme>` 都是面板局部 Core Scope，adapter 不维护 preset、merge 或默认值。',
-            en: '`<Plot plotThemeTokens={...}>` and spec authoring produce the same `IRPlotSpec.plotThemeTokens`; `<Plot theme>` is a panel-local Core Scope in both standalone and embedded paths, and the adapter owns no presets, merging, or defaults.',
+            zh: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` 与 spec 输入生成同一 canonical PlotSpec；standalone 与 embedded 都复用 Plot resolver，adapter 不维护 selector、preset 或 merge。',
+            en: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` and spec authoring produce the same canonical PlotSpec; standalone and embedded paths reuse the Plot resolver without adapter-owned selectors, presets, or merging.',
           },
         },
       ],

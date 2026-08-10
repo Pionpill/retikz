@@ -44,6 +44,7 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.AxisTitleForeground]: CssColorSchema.describe('Axis title foreground color'),
   [PlotThemeToken.AxisTitleFontSize]: FontSizeSchema.describe('Axis title font size'),
   [PlotThemeToken.AxisTitleFontWeight]: FontWeightSchema.describe('Axis title font weight'),
+  [PlotThemeToken.AxisGridEnabled]: z.boolean().describe('Whether existing Plot axes show grid lines by default'),
   [PlotThemeToken.AxisGridStroke]: PaintValueSchema.describe('Axis grid stroke paint'),
   [PlotThemeToken.AxisGridStrokeWidth]: StrokeWidthSchema.describe('Axis grid stroke width'),
   [PlotThemeToken.AxisGridDrawOpacity]: OpacitySchema.describe('Axis grid draw opacity'),
@@ -68,22 +69,58 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.PlotPaletteDiverging]: ColorSchemeNameSchema.describe('Diverging color scheme name'),
 } as const;
 
+/** Axis rule 可覆盖的 canonical token 字段契约 */
+export const PlotAxisThemeTokenFieldShape = {
+  [PlotThemeToken.AxisLineEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineEnabled],
+  [PlotThemeToken.AxisLineStroke]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineStroke],
+  [PlotThemeToken.AxisLineStrokeWidth]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineStrokeWidth],
+  [PlotThemeToken.AxisLineDrawOpacity]: PlotThemeTokenFieldShape[PlotThemeToken.AxisLineDrawOpacity],
+  [PlotThemeToken.AxisTickMark]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickMark],
+  [PlotThemeToken.AxisTickLabelEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelEnabled],
+  [PlotThemeToken.AxisTickLabelForeground]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelForeground],
+  [PlotThemeToken.AxisTickLabelFontSize]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelFontSize],
+  [PlotThemeToken.AxisTickLabelGap]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTickLabelGap],
+  [PlotThemeToken.AxisTitleForeground]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleForeground],
+  [PlotThemeToken.AxisTitleFontSize]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleFontSize],
+  [PlotThemeToken.AxisTitleFontWeight]: PlotThemeTokenFieldShape[PlotThemeToken.AxisTitleFontWeight],
+  [PlotThemeToken.AxisGridEnabled]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridEnabled],
+  [PlotThemeToken.AxisGridStroke]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStroke],
+  [PlotThemeToken.AxisGridStrokeWidth]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStrokeWidth],
+  [PlotThemeToken.AxisGridDrawOpacity]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridDrawOpacity],
+} as const;
+
+const rejectExplicitUndefined = (
+  overrides: Record<string, unknown>,
+  tokens: ReadonlyArray<string>,
+  context: z.core.$RefinementCtx<Record<string, unknown>>,
+): void => {
+  for (const token of tokens) {
+    if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: [token],
+        message: 'Plot theme token overrides must omit unset values instead of using undefined',
+        input: overrides,
+      });
+    }
+  }
+};
+
 /** 用户可稀疏覆盖的严格 Plot token map */
 export const PlotThemeTokenOverridesSchema = z
   .strictObject(PlotThemeTokenFieldShape)
   .partial()
-  .superRefine((overrides, context) => {
-    for (const token of Object.values(PlotThemeToken)) {
-      if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: [token],
-          message: 'Plot theme token overrides must omit unset values instead of using undefined',
-        });
-      }
-    }
-  })
+  .superRefine((overrides, context) => rejectExplicitUndefined(overrides, Object.values(PlotThemeToken), context))
   .describe('Sparse strict overrides for canonical Plot theme tokens');
+
+/** Axis scoped rule 可稀疏覆盖的严格 token map */
+export const PlotAxisThemeTokenOverridesSchema = z
+  .strictObject(PlotAxisThemeTokenFieldShape)
+  .partial()
+  .superRefine((overrides, context) =>
+    rejectExplicitUndefined(overrides, Object.keys(PlotAxisThemeTokenFieldShape), context),
+  )
+  .describe('Sparse strict Axis token overrides for one scoped theme rule');
 
 /** preset 与用户覆盖解析后的完整 Plot token map */
 export const PlotResolvedThemeTokensSchema = z

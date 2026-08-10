@@ -7,7 +7,7 @@ import { GuideSchema, GuideTextStyleSchema } from '../guide';
 import { BoxPaddingSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
-import { PlotThemeSchema, PlotThemeTokenOverridesSchema } from '../theme';
+import { PlotAxisThemeTokenRulesSchema, PlotThemeSchema, PlotThemeTokenOverridesSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import {
   CompositionAxisResolve,
@@ -450,6 +450,9 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
     ),
   plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
     'Sparse canonical Plot theme token overrides applied after the Plot style baseline and before plotTheme',
+  ),
+  plotThemeTokenRules: PlotAxisThemeTokenRulesSchema.optional().describe(
+    'Ordered Axis dimension rules applied after Plot theme token overrides and before plotTheme',
   ),
   plotTheme: PlotThemeSchema.optional().describe(
     'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',

@@ -15,6 +15,17 @@ describe('buildPlotSpec 装配', () => {
     expect(spec.plotThemeTokens).toEqual(plotThemeTokens);
   });
 
+  it('透传 Plot plotThemeTokenRules 到 canonical PlotSpec', () => {
+    const plotThemeTokenRules: NonNullable<IRPlotSpec['plotThemeTokenRules']> = [
+      {
+        select: { dimension: 'x' },
+        tokens: { 'axis.grid.enabled': true },
+      },
+    ];
+    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokenRules });
+    expect(spec.plotThemeTokenRules).toEqual(plotThemeTokenRules);
+  });
+
   it('单 line：装配出等价手写 IRPlotSpec（薄 Plot：无默认 guides）', () => {
     const spec = buildPlotSpec(<PathMark x="month" y="revenue" order="month" />, '__plot');
     const expected: IRPlotSpec = {
