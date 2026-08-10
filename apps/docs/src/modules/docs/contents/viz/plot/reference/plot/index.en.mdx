@@ -9,6 +9,8 @@ description: Query the JSON schemas for the PlotSpec root, coordinate views, fac
 
 <ZodSchema name="PlotSpecSchema" />
 
+Plot describes the drawing body and its Axis, Legend, Facet, mark, reference, and annotation text. Complete-chart titles, notes, and sources belong to Chart presentation, which composes them with the Plot body through Standard. The removed top-level `layout` and `labels` fields are rejected strictly.
+
 Exactly one of `coordinate` and `composition` must be present. Scale names, view ids, and arrangement ids must be unique within one Plot; every `coordinateView` referenced by a mark or axis must already be registered.
 
 Theme inputs resolve in this order: the Plot preset selected by the Core effective Theme → local `plotThemeTokens` → `colors` → `plotTheme` → local guide / mark / scale configuration. See the [theme contract](/viz/plot/reference/theme) for the complete token catalog, extensible styles, and cascade.

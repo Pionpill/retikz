@@ -9,19 +9,19 @@ API Reference is for stable contracts, not introductory teaching. Ten contract p
 
 ## Responsibilities
 
-| Topic                 | Responsibility                                   | Consult it when                               |
-| --------------------- | ------------------------------------------------ | --------------------------------------------- |
-| Contract - Plot Spec  | Root spec, coordinate views, and composition     | Generating or validating an `IRPlotSpec`      |
-| Contract - Encoding   | Field, constant, and channel bindings            | Mapping data columns to position and style    |
-| Contract - Transform  | Ordered Plot-domain data transforms              | Declaring stack, bin, density, or trend steps |
-| Contract - Mark       | Marks, relations, references, and path closure   | Selecting geometry and exact configuration    |
-| Contract - Scale      | Positional, ordinal, radial, and color scales    | Validating domains, ranges, and scale options |
-| Contract - Coordinate | 1D, 2D, and custom coordinate operations         | Defining positional roles and scale ownership |
-| Contract - Guide      | Axes, grids, ticks, titles, and legends          | Configuring guides and precise subcomponents  |
-| Contract - Layout     | Padding, label placement, and space reservation  | Controlling the plot frame and static text    |
-| Contract - Layer      | Semantic-layer zIndex override                   | Adjusting lowered primitive stacking          |
-| Contract - Theme      | Background, text, axes, legends, and palettes    | Defining JSON-safe visual defaults            |
-| Runtime Overview      | Host entry points, lowering, Scene, and sidecars | Integrating React, Vanilla, SSR, or tools     |
+| Topic                 | Responsibility                                   | Consult it when                                         |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------------- |
+| Contract - Plot Spec  | Root spec, coordinate views, and composition     | Generating or validating an `IRPlotSpec`                |
+| Contract - Encoding   | Field, constant, and channel bindings            | Mapping data columns to position and style              |
+| Contract - Transform  | Ordered Plot-domain data transforms              | Declaring stack, bin, density, or trend steps           |
+| Contract - Mark       | Marks, relations, references, and path closure   | Selecting geometry and exact configuration              |
+| Contract - Scale      | Positional, ordinal, radial, and color scales    | Validating domains, ranges, and scale options           |
+| Contract - Coordinate | 1D, 2D, and custom coordinate operations         | Defining positional roles and scale ownership           |
+| Contract - Guide      | Axes, grids, ticks, titles, and legends          | Configuring guides and precise subcomponents            |
+| Contract - Layout     | Composition padding and ownership boundary       | Configuring drawing spacing or checking Chart ownership |
+| Contract - Layer      | Semantic-layer zIndex override                   | Adjusting lowered primitive stacking                    |
+| Contract - Theme      | Background, text, axes, legends, and palettes    | Defining JSON-safe visual defaults                      |
+| Runtime Overview      | Host entry points, lowering, Scene, and sidecars | Integrating React, Vanilla, SSR, or tools               |
 
 ## Pages
 
@@ -64,7 +64,9 @@ API Reference is for stable contracts, not introductory teaching. Ten contract p
   </LinkedCard>
   <LinkedCard href="/viz/plot/reference/layout">
     <span className="font-semibold">Contract - Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Padding, static label, and placement schemas</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Composition padding and the Chart presentation boundary
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/plot/reference/layer">
     <span className="font-semibold">Contract - Layer</span>

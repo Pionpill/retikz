@@ -31,13 +31,12 @@ Core effective Theme
 
 ## Canonical tokens
 
-`PlotThemeToken` exports 40 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
+`PlotThemeToken` exports 38 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
 
 | Group           | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Surface         | `plot.surface.fill`                                                                                                                                                                                                                                                                                                                      |
 | Typography      | `plot.typography.foreground`, `plot.typography.font.family`, `plot.typography.font.size`                                                                                                                                                                                                                                                 |
-| Label           | `plot.label.foreground`, `plot.label.font.size`                                                                                                                                                                                                                                                                                          |
 | Axis line       | `axis.line.enabled`, `axis.line.stroke`, `axis.line.strokeWidth`, `axis.line.drawOpacity`                                                                                                                                                                                                                                                |
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
 | Axis tick label | `axis.tickLabel.enabled`, `axis.tickLabel.foreground`, `axis.tickLabel.font.size`, `axis.tickLabel.gap`                                                                                                                                                                                                                                  |
@@ -54,7 +53,7 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` uses the exact same 40-field contract with every field required. All eight built-in presets and the `tokens` returned by `resolvePlotTheme()` must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
+`PlotResolvedThemeTokensSchema` uses the exact same 38-field contract with every field required. All eight built-in presets and the `tokens` returned by `resolvePlotTheme()` must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
 
 ## Inspection
 

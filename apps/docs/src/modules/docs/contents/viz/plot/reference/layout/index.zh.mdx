@@ -1,9 +1,11 @@
 ---
 title: 契约 - 布局
-description: 查询 Plot 外边距、自动空间预留、静态标签与放置 schema。
+description: 查询 Plot composition 使用的外边距 schema，并区分绘图布局与 Chart presentation。
 ---
 
-布局契约只描述 Plot 外框与装饰的放置意图。具体文本测量和空间预留在 lowering 时计算。
+Plot 的布局只服务绘图本体：composition 可以使用 `BoxPaddingSchema` 设置外围间距，Axis、Legend、Facet 等 owner 继续使用各自的放置与空间契约。
+
+`PlotSpec` 不接受顶层 `layout` 或 `labels`。标题、副标题、说明、来源等完整图表 presentation 由 Chart 声明，并通过 Standard 布局与唯一 Plot body 组合。
 
 ## BoxPaddingSchema
 
@@ -15,43 +17,5 @@ description: 查询 Plot 外边距、自动空间预留、静态标签与放置 
     right: '右边距，用户单位。',
     bottom: '下边距，用户单位。',
     left: '左边距，用户单位。',
-  }}
-/>
-
-## LayoutPlacementSchema
-
-<ZodSchema name="LayoutPlacementSchema" description="相对 Plot frame 或图区的 side / point 装饰放置联合。" />
-
-## PlotLayoutSchema
-
-<ZodSchema
-  name="PlotLayoutSchema"
-  description="Plot 级标签空间布局策略。"
-  descriptions={{
-    mode: '布局模式：auto 为装饰预留空间，fixed 只保留显式 padding。',
-    autoPadding: '可见标签是否允许扩展外边距；省略时为 true。',
-    padding: '自动标签预留前应用的显式外边距。',
-  }}
-/>
-
-## PlotLabelSchema
-
-<ZodSchema
-  name="PlotLabelSchema"
-  description="标题、副标题、说明或来源等静态 Plot 文本。"
-  descriptions={{
-    type: '静态文本标签判别值。',
-    id: '可选稳定标签 id，用于输出元数据。',
-    role: '影响默认放置和优先级的语义文本角色。',
-    text: '不得为空的文本块。',
-    layer: '该标签生成 Scope 的语义图层覆盖。',
-    placement: '标签放置；省略时从 role 派生。',
-    reserveSpace: '该标签是否参与布局空间预留。',
-    textColor: '文本颜色。',
-    opacity: '文本不透明度。',
-    font: '文本字体配置。',
-    align: '文本块水平对齐。',
-    lineHeight: '文本行高。',
-    maxTextWidth: '文本换行前的最大行宽。',
   }}
 />

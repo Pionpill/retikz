@@ -6,7 +6,6 @@ import {
   GuideSchema,
   MarkSchema,
   PlotLayerSchema,
-  PlotLayoutSchema,
   PlotSpecSchema,
   PlotThemeSchema,
   ScaleSchema,
@@ -35,7 +34,6 @@ describe('SCHEMA_REGISTRY', () => {
       ScaleSchema: { schema: ScaleSchema },
       PlotCoordinateSchema: { schema: PlotCoordinateSchema },
       GuideSchema: { schema: GuideSchema },
-      PlotLayoutSchema: { schema: PlotLayoutSchema },
       PlotLayerSchema: { schema: PlotLayerSchema },
       PlotThemeSchema: { schema: PlotThemeSchema },
       LegendSchema: {

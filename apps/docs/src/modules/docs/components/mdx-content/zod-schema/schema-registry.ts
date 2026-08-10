@@ -1377,21 +1377,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'BoxPadding',
     url: '/viz/plot/reference/layout#boxpaddingschema',
   },
-  LayoutPlacementSchema: {
-    schema: PlotIR.LayoutPlacementSchema,
-    label: 'LayoutPlacement',
-    url: '/viz/plot/reference/layout#layoutplacementschema',
-  },
-  PlotLayoutSchema: {
-    schema: PlotIR.PlotLayoutSchema,
-    label: 'PlotLayout',
-    url: '/viz/plot/reference/layout#plotlayoutschema',
-  },
-  PlotLabelSchema: {
-    schema: PlotIR.PlotLabelSchema,
-    label: 'PlotLabel',
-    url: '/viz/plot/reference/layout#plotlabelschema',
-  },
   PlotLayerSchema: {
     schema: PlotIR.PlotLayerSchema,
     label: 'PlotLayer',

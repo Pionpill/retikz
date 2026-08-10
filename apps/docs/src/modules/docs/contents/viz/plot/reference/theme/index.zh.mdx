@@ -31,13 +31,12 @@ Core effective Theme
 
 ## Canonical token
 
-`PlotThemeToken` 公开 40 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
+`PlotThemeToken` 公开 38 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
 
 | 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Surface         | `plot.surface.fill`                                                                                                                                                                                                                                                                                                                      |
 | Typography      | `plot.typography.foreground`、`plot.typography.font.family`、`plot.typography.font.size`                                                                                                                                                                                                                                                 |
-| Label           | `plot.label.foreground`、`plot.label.font.size`                                                                                                                                                                                                                                                                                          |
 | Axis line       | `axis.line.enabled`、`axis.line.stroke`、`axis.line.strokeWidth`、`axis.line.drawOpacity`                                                                                                                                                                                                                                                |
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
 | Axis tick label | `axis.tickLabel.enabled`、`axis.tickLabel.foreground`、`axis.tickLabel.font.size`、`axis.tickLabel.gap`                                                                                                                                                                                                                                  |
@@ -58,8 +57,6 @@ Core effective Theme
     'plot.typography.foreground': '所有 Plot guide 的全局前景色。',
     'plot.typography.font.family': '所有 Plot guide 的全局字体族。',
     'plot.typography.font.size': '所有 Plot guide 的全局字号。',
-    'plot.label.foreground': 'Plot 静态标签的前景色。',
-    'plot.label.font.size': 'Plot 静态标签的字号。',
     'axis.line.enabled': '已有坐标轴是否默认显示 baseline。',
     'axis.line.stroke': '坐标轴 baseline 的描边 paint。',
     'axis.line.strokeWidth': '坐标轴 baseline 的描边宽度。',
@@ -99,7 +96,7 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` 使用完全相同的 40 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
+`PlotResolvedThemeTokensSchema` 使用完全相同的 38 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
 
 ## Inspection
 
@@ -125,8 +122,7 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
   description="Plot lowering 消费的 JSON-safe 整图主题。"
   descriptions={{
     background: 'Plot panel 背景填充；省略时保持透明。',
-    typography: '所有辅助文本的全局默认样式。',
-    labelText: '静态 Plot 标签的默认文本样式。',
+    typography: 'Axis、Legend、Facet 等 Plot-owned 文本的全局默认样式。',
     axis: '坐标轴视觉默认值。',
     legend: '图例视觉默认值。',
     palette: 'Plot 颜色调色板默认值。',

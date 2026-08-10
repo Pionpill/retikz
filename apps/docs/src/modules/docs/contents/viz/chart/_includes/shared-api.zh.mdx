@@ -36,23 +36,20 @@
 
 ## Label
 
-datum 标签由各位置 mark 共用 `DatumLabelProps`；整图标题和说明分别使用 `TitleLabel` 与 `CaptionLabel`。两者都进入 Plot 的标签与空间预留管线。
+datum 标签由各位置 mark 共用 `DatumLabelProps`，并继续属于 Plot 绘图语义。整图标题、说明和来源使用 Chart presentation，由 Standard 在 Plot body 外完成布局。
 
-| 属性                                         | 类型                                                                     | 默认值   | 描述                                                    |
-| -------------------------------------------- | ------------------------------------------------------------------------ | -------- | ------------------------------------------------------- |
-| `label`                                      | `DatumLabelProps['label']`                                               | —        | datum 标签内容字段                                      |
-| `labelDisplayFormat`                         | `DatumLabelProps['labelDisplayFormat']`                                  | —        | 数值或时间字段的显示格式                                |
-| `labelPosition`                              | `DatumLabelProps['labelPosition']`                                       | `top`    | 标签相对宿主图元的位置                                  |
-| `labelDistance`                              | `DatumLabelProps['labelDistance']`                                       | `12`     | 标签与宿主边界的距离                                    |
-| `labelPin`                                   | `DatumLabelProps['labelPin']`                                            | `false`  | 是否绘制引线及其样式                                    |
-| `labelTextColor` / `labelOpacity`            | `DatumLabelProps['labelTextColor' \| 'labelOpacity']`                    | 主题值   | 标签颜色与透明度                                        |
-| `labelFont`                                  | `DatumLabelProps['labelFont']`                                           | 主题值   | datum 标签字体                                          |
-| `labelRotate`                                | `DatumLabelProps['labelRotate']`                                         | `'none'` | 标签旋转策略或角度                                      |
-| `labelKeepUpright`                           | `DatumLabelProps['labelKeepUpright']`                                    | `false`  | 旋转后是否保持文字正向                                  |
-| `resolveLabel`                               | `DatumLabelProps['resolveLabel']`                                        | —        | runtime-only 的完全自定义内容函数；需同时提供 mark `id` |
-| `TitleLabel` / `CaptionLabel` 的 `text`      | `TitleLabelProps['text']` \| `CaptionLabelProps['text']`                 | —        | 字符串、多行文本或 styled text block                    |
-| `TitleLabel` / `CaptionLabel` 的 `placement` | `TitleLabelProps['placement']` \| `CaptionLabelProps['placement']`       | 按 role  | side 或归一化 point 放置                                |
-| `reserveSpace`                               | `TitleLabelProps['reserveSpace']` \| `CaptionLabelProps['reserveSpace']` | 按 role  | 是否参与 Plot 的标签空间预留                            |
+| 属性                              | 类型                                                  | 默认值   | 描述                                                    |
+| --------------------------------- | ----------------------------------------------------- | -------- | ------------------------------------------------------- |
+| `label`                           | `DatumLabelProps['label']`                            | —        | datum 标签内容字段                                      |
+| `labelDisplayFormat`              | `DatumLabelProps['labelDisplayFormat']`               | —        | 数值或时间字段的显示格式                                |
+| `labelPosition`                   | `DatumLabelProps['labelPosition']`                    | `top`    | 标签相对宿主图元的位置                                  |
+| `labelDistance`                   | `DatumLabelProps['labelDistance']`                    | `12`     | 标签与宿主边界的距离                                    |
+| `labelPin`                        | `DatumLabelProps['labelPin']`                         | `false`  | 是否绘制引线及其样式                                    |
+| `labelTextColor` / `labelOpacity` | `DatumLabelProps['labelTextColor' \| 'labelOpacity']` | 主题值   | 标签颜色与透明度                                        |
+| `labelFont`                       | `DatumLabelProps['labelFont']`                        | 主题值   | datum 标签字体                                          |
+| `labelRotate`                     | `DatumLabelProps['labelRotate']`                      | `'none'` | 标签旋转策略或角度                                      |
+| `labelKeepUpright`                | `DatumLabelProps['labelKeepUpright']`                 | `false`  | 旋转后是否保持文字正向                                  |
+| `resolveLabel`                    | `DatumLabelProps['resolveLabel']`                     | —        | runtime-only 的完全自定义内容函数；需同时提供 mark `id` |
 
 ## Scale
 
@@ -102,7 +99,7 @@ datum 标签由各位置 mark 共用 `DatumLabelProps`；整图标题和说明�
 | 内置 `kind`                    | `'sort'` \| `'summarize'` \| `'select'` \| `'annotate'` \| `'stack'` \| `'bin'` \| `'normalize'` \| `'derive-interval'` \| `'relate'` \| `'jitter'` \| `'density'` \| `'smooth'` | —      | 选择内置 operation，并开放该分支字段                                                |
 | 自定义 `kind`                  | `string`                                                                                                                                                                         | —      | 可使用已注册且不与保留名称冲突的外部 transform kind；其余字段由对应 definition 校验 |
 
-## Theme 与 Layout
+## Theme 与 Presentation
 
 Chart 通过 `chartThemeTokens` 拥有 presentation 默认值；Core `style` 与 `mode` 来自宿主 Scene 或 Scope。Chart 不用另一个 style/mode 字段遮蔽宿主 Theme，也没有 Chart spec-local Theme。它按 owner 原名转发当前 Plot 输入：`plotThemeTokens` 与 `plotTheme` 仍属于 Plot。
 
@@ -115,7 +112,7 @@ Chart 级联为 `Core effective Theme → Chart preset → local chartThemeToken
 | `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`   | Chart owner 的稀疏 presentation 与 recipe token 覆盖   |
 | `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`   | 原样转发给 resolved Plot 的 Plot owner 稀疏 token 覆盖 |
 | `plotTheme`        | `IRChartShared['plotTheme']`         | 主题   | 原样转发的 Plot 原生 theme                             |
-| `layout`           | `IRChartShared['layout']`            | Plot   | Plot label 与 guide 预留空间策略                       |
+| `presentation`     | `IRChartShared['presentation']`      | —      | Chart-owned 文案、顺序与 Standard Flex 布局            |
 | `width` / `height` | `IRChartShared['width' \| 'height']` | —      | resolved Plot intrinsic 尺寸                           |
 
 ## Additional Marks

@@ -21,8 +21,6 @@ description: 查询 PlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSO
     scales: '具名比例尺操作；内置变体在此校验，自定义变体在 lowering 时校验。',
     plotThemeTokens: '严格、稀疏的 Plot canonical theme token 覆盖；每个 token 按完整值替换。',
     plotTheme: 'Plot lowering 消费的 JSON-safe 原生视觉覆盖，优先级高于 plotThemeTokens。',
-    layout: 'Plot 标签、图例和辅助预留空间的布局策略。',
-    labels: '标题、说明、来源等静态 Plot 文本。',
     width: '图区内在宽度；省略时回退到 lowering 全局宽度和内置默认值。',
     height: '图区内在高度；省略时回退到 lowering 全局高度和内置默认值。',
     coordinate: '单坐标系简写；未使用 composition 时必需。',
@@ -34,6 +32,8 @@ description: 查询 PlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSO
 />
 
 `coordinate` 与 `composition` 必须且只能出现一个。同一 Plot 中的 scale name 、view id 和 arrangement id 必须唯一，图元或坐标轴引用的 `coordinateView` 必须已注册。
+
+Plot 只描述绘图本体及其 Axis、Legend、Facet、mark、reference 与 annotation 文本。完整图表的标题、说明和来源由 Chart presentation 通过 Standard 与 Plot body 组合；旧顶层 `layout`、`labels` 会被严格拒绝。
 
 主题输入按 Core effective Theme 选择的 Plot preset → local `plotThemeTokens` → `plotTheme` → 局部 guide / mark / scale 配置解析。完整 token、可扩展 style 与级联规则见[主题契约](/viz/plot/reference/theme)。
 

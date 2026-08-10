@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-06
 - 关联：[plot v0.2-alpha.1 roadmap](./roadmap.md) · [plot v0.2 roadmap](../roadmap.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md) · [Chart 基础设施 ADR-01](../../../../chart/v0/v0.1/alpha.1/01-chart-infrastructure.md) · [通用视觉主题设计](../../../../../../../../notes/architecture/visual-theme-design.md) · [原子契约与组合设计](../../../../../../../../notes/architecture/atomic-contract-design.md)
-- Superseded-by：关于 inherited token scope、局部 token 输入名称与 Core namespace context 的冲突边界，已由 [ADR-02：继承 Theme Token Scope 与 Plot owner contribution](./02-inherited-theme-token-scope.md) supersede；本 ADR 继续作为 Plot / Chart 主题所有权与消费边界的历史 Accepted 决策
+- Superseded-by：关于 inherited token scope、局部 token 输入名称与 Core namespace context 的冲突边界，已由 [ADR-02：继承 Theme Token Scope 与 Plot owner contribution](./02-inherited-theme-token-scope.md) supersede；关于 Plot static label、`plot.label.*` token 与 `IRPlotTheme.labelText` 的决策，由 [ADR-03：Plot 绘图边界与 Chart presentation 归属](./03-plot-presentation-boundary.md) supersede；其余 Plot / Chart 主题所有权与消费边界继续有效
 
 ## 背景与目标
 

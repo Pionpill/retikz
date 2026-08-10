@@ -14,24 +14,26 @@
 4. **建立通用局部坐标契约**：为 coordinate、mark、guide、locator 和 structured mapping 提供共同的局部空间语义，包括原点、维度角色、方向、切向 / 法向、边界 / clip 以及点、向量、路径等空间对象的关系。
 5. **扩大自定义坐标表达力**：从 dimension、axis 粒度定义任意坐标系，并表达维度的法向 / 切向组合关系；自定义能力与内置坐标系走同一 registry、解析和诊断链路。
 6. **保持可追溯与可 lower**：映射结果保留稳定 identity / provenance，并继续进入 Plot 的 channel、scale、coordinate、mark、guide 和 Core lowering 链路，不建立平行 IR 或 `@retikz/struct` 包。
+7. **收敛 Plot presentation 边界**：删除 Plot static labels、专用 layout 与对应 theme contract，title、caption、note、source 等单图 presentation 统一由 Chart 通过 Standard 组合。
 
-Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映射缺口，可追加到本 milestone 的候选 ADR；Chart type、recipe、presentation 和默认值不进入 Plot。
+Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映射缺口，可追加到本 milestone 的候选 ADR；Chart type、recipe、presentation 和默认值不进入 Plot。ADR-03 仅删除 Plot 中与 Chart presentation 重复的 static label、layout 与 theme contract，不在 Plot 内实现或复制 Chart presentation。
 
-在进入 Spatial Mapping 设计前，Plot theme token ownership 与 inherited token scope 已由 Accepted ADR-01～02 冻结，包括 `theme.tokens` 中继承的 Plot namespace、owner contribution 与 shared color projection；Chart 仍只组合或传递 Plot 公开契约。两条主题决策与本 milestone 的映射契约共用同一条 Plot / Core lowering 主链。
+在进入 Spatial Mapping 设计前，Plot theme token ownership 与 inherited token scope 已由 Accepted ADR-01～02 冻结，包括 `theme.tokens` 中继承的 Plot namespace、owner contribution 与 shared color projection；Chart 仍只组合或传递 Plot 公开契约。ADR-03 进一步删除不属于绘图本体的 Plot presentation label 能力及对应 token；三条主题与边界决策和后续映射契约共用同一条 Plot / Core lowering 主链。
 
 ## ADR 清单
 
-完整 milestone 的 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary，ADR-02 冻结 inherited Theme token scope 与 Plot owner contribution。Spatial Mapping 候选从 ADR-03 顺延编号，避免与本次主题 scope 决策冲突。
+完整 milestone 的 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary，ADR-02 冻结 inherited Theme token scope 与 Plot owner contribution。ADR-03 收敛 Plot 绘图边界并把 presentation 完全交由 Chart；Spatial Mapping 候选从 ADR-04 顺延编号。
 
 | ADR | 主题                                                                                                                                                            | Level | 依赖                                      | 状态     |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | -------- |
 | 01  | **Plot 主题 token 所有权与 Chart 消费边界**：Plot 拥有领域 token / preset / resolver，Chart 只组合或转发 Plot 公开 contract                                     | red   | Core effective Theme、plot v0.1 theme     | Accepted |
 | 02  | **继承 Theme Token Scope 与 Plot owner contribution**：消费 Core namespace context，冻结 Plot 局部输入、shared categorical projection 与 Plot-owned scheme 边界 | red   | Core ADR-13、ADR-01                       | Accepted |
-| 03  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系                           | red   | plot v0.1 coordinate / transform registry | 待起草   |
-| 04  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性                                     | red   | ADR-03、data view / lineage               | 待起草   |
-| 05  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界                                | red   | ADR-03、plot v0.1 coordinate registry     | 待起草   |
+| 03  | **Plot 绘图边界与 Chart presentation 归属**：删除 Plot static labels、专用 layout 与对应 theme contract，单图 presentation 统一交由 Chart                       | red   | ADR-01、Chart presentation                | Accepted |
+| 04  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系                           | red   | plot v0.1 coordinate / transform registry | 待起草   |
+| 05  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性                                     | red   | ADR-04、data view / lineage               | 待起草   |
+| 06  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界                                | red   | ADR-04、plot v0.1 coordinate registry     | 待起草   |
 
-ADR-01～02 已冻结并交付 Plot 的主题所有权、inherited scope、owner contribution、shared categorical projection 与跨入口等价性。旧版由 Chart 拥有 Plot token 的方向已被否决，Chart type / recipe / presentation 继续由 chart v0.1 路线维护。Spatial Mapping ADR-03～05 仍为待起草，不因主题收口而改变状态。
+ADR-01～03 已冻结并交付 Plot 的主题所有权、inherited scope、owner contribution、shared categorical projection、跨入口等价性与 presentation 边界。Chart type / recipe / presentation 继续由 chart v0.1 路线维护。Spatial Mapping ADR-04～06 仍为待起草，不因本次边界收口而改变状态。
 
 ## 前置
 
@@ -45,7 +47,7 @@ ADR-01～02 已冻结并交付 Plot 的主题所有权、inherited scope、owner
 - Plot 性能优化、增量 lowering、retained Scene、Runtime transaction 或缓存策略；这些进入 alpha.2，并等待 Kernel 底层能力。
 - Plot 交互优化、事件 / ownership / behavior / presentation 运行时；这些进入 alpha.3，并等待 Kernel headless interaction 能力。
 - 完整 tree、network、word cloud、treemap、circle packing、gauge、progress、pictogram 算法集合。
-- ChartSpec、`<Chart>`、Chart type、Chart-level presentation 和业务默认值。
+- ChartSpec、`<Chart>`、Chart type、Chart-level presentation 的新增或重设计和业务默认值；ADR-03 只删除 Plot 中的重复入口并声明 owner。
 - table / geo 的独立包设计，以及跨域 dashboard / workspace 状态。
 - 将所有映射统一为带 `unknown` 的万能 definition，或把 Structured Mapping 塞进 Data 的 row-only transform contract。
 
@@ -67,6 +69,7 @@ ADR-01～02 已冻结并交付 Plot 的主题所有权、inherited scope、owner
 
 - Plot 直接使用与 Chart 内部使用都从 Core effective Theme 解析同一 Plot preset / token / native theme 主链；Chart 不复制 Plot token、preset、resolver 或 merge。
 - `plotThemeTokens` 与 `plotTheme` 作为 Plot 局部输入，继承的 Plot namespace 通过 `theme.tokens` 进入同一 resolver；shared categorical projection 与 Plot-owned sequential / diverging scheme 保持清晰分界。
+- PlotSpec 不再承载 Chart-level title、caption、note、source 或 custom presentation，Plot theme 不再保留 `plot.label.*` 与 `labelText`；Axis、Legend、Facet、datum / mark / reference / annotation text 继续由 Plot owner 表达。
 - Plot 可以用统一的 Spatial Mapping 语言描述 coordinate mapping 与 structured mapping 的关系，同时保留两类专门契约。
 - `nodes`、`links` 等命名内容可以作为结构化输入，不再被 rows-only transform 模型限制。
 - 映射可以改变数量、顺序或拓扑时，identity、provenance、失败语义和确定性边界仍然清楚。
