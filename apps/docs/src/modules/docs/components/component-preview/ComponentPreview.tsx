@@ -3,6 +3,7 @@ import type { FC, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { cn } from '@/lib';
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
 import type {
@@ -17,22 +18,12 @@ import type {
 } from './types';
 
 import { ComponentPreviewCard } from './ComponentPreviewCard';
+import { sizeClass } from './constants';
 import { useDemoLocationContext } from './context';
 import { mergePreviewControlSlots, resolveBuiltinControlSlots } from './controls';
+import { usePreviewResources } from './hooks';
 import { buildConfiguredControlSlots } from './preview-panel';
-import {
-  buildIrJsonKey,
-  buildVanillaKey,
-  controlModules,
-  demoModules,
-  demoSources,
-  irJsonOverrides,
-  resolveControlsKey,
-  resolveDemoKey,
-  resolvePreviewControlContract,
-  vanillaModules,
-  vanillaOverrides,
-} from './registry';
+import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
 import { usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
@@ -84,45 +75,56 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
-  const key = segments ? resolveDemoKey(segments, name, lang) : null;
-  const mod = key ? demoModules[key] : undefined;
-  const rawSource = key ? demoSources[key] : undefined;
-  const Component = mod?.default;
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
-  const controlKey =
-    segments && !controlsDisabled ? resolveControlsKey(segments, explicitControlsName ?? name, lang) : null;
-  const controlModule = controlKey ? controlModules[controlKey] : undefined;
+  const resourceRequest = useMemo(
+    () =>
+      segments === null
+        ? null
+        : {
+            segments,
+            name,
+            lang,
+            controlName: typeof controlOptions.name === 'string' ? controlOptions.name : null,
+            controlsDisabled: controlOptions.name === false,
+            sourceFiles,
+            diffFrom,
+          },
+    [controlOptions.name, diffFrom, lang, name, segments, sourceFiles],
+  );
+  const resourcesState = usePreviewResources(resourceRequest);
+  const resources = resourcesState.status === 'ready' ? resourcesState.resources : undefined;
+  const mod = resources?.module;
+  const rawSource = resources?.rawSource;
+  const Component = mod?.default;
+  const controlModule = resources?.controlModule;
   const controlContract: PreviewControlContract | undefined = controlsDisabled
     ? undefined
     : explicitControlsName === null
       ? (resolvePreviewControlContract(controlModule) ?? resolvePreviewControlContract(mod))
       : resolvePreviewControlContract(controlModule);
   const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
-  const baselineKey = segments && diffFrom ? resolveDemoKey(segments, diffFrom, lang) : null;
-  const baselineRawSource = baselineKey ? demoSources[baselineKey] : undefined;
-
-  const irJsonOverrideKey = segments ? buildIrJsonKey(segments, name) : null;
-  const irJsonOverride = irJsonOverrideKey ? irJsonOverrides[irJsonOverrideKey] : undefined;
-  const vanillaKey = segments ? buildVanillaKey(segments, name) : null;
-  const vanillaOverride = vanillaKey ? vanillaOverrides[vanillaKey] : undefined;
-  const vanillaModule = vanillaKey ? vanillaModules[vanillaKey] : undefined;
+  const baselineRawSource = resources?.baselineRawSource;
+  const irJsonOverride = resources?.irJsonOverride;
+  const vanillaOverride = resources?.vanillaOverride;
+  const vanillaModule = resources?.vanillaModule;
   const vanillaSvg = typeof vanillaModule?.svg === 'string' ? vanillaModule.svg : undefined;
   const previewSource = mod?.previewSource;
   const exportedPreviewIR = mod?.previewIR;
   const sourceResult = useMemo(
     () =>
-      Component && key && segments && rawSource !== undefined
+      Component && resourcesState.status === 'ready' && segments && rawSource !== undefined
         ? buildPreviewSource({
             Component,
             previewSource,
             name,
-            key,
+            key: resourcesState.key,
             segments,
             rawSource,
             sourceFiles,
             diffFrom,
             baselineRawSource,
+            sourceContents: resourcesState.resources.sourceContents,
             hideCode,
             irJsonOverride,
             exportedPreviewIR,
@@ -135,7 +137,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       Component,
       previewSource,
       name,
-      key,
+      resourcesState,
       segments,
       rawSource,
       sourceFiles,
@@ -153,12 +155,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   if (!loc) return null;
   if (!segments) return null;
 
-  if (!mod || rawSource == null || !key || !Component) {
+  if (resourcesState.status === 'idle') return null;
+
+  if (resourcesState.status === 'missing') {
     return (
       <div className="my-6">
         <div className="rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
           Demo <code className="rounded bg-muted px-1">{name}</code> not found at{' '}
-          <code className="rounded bg-muted px-1">{key ?? '(unknown)'}</code>
+          <code className="rounded bg-muted px-1">{resourcesState.key}</code>
         </div>
         {caption ? (
           <p data-slot="component-preview-caption" className="mt-2 text-sm text-muted-foreground">
@@ -168,6 +172,33 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       </div>
     );
   }
+
+  if (resourcesState.status === 'loading') {
+    return (
+      <div className="my-6">
+        <div
+          data-slot="component-preview-loading"
+          className={cn('animate-pulse rounded-xl border bg-muted/30', sizeClass[size])}
+          aria-hidden
+        />
+        {caption ? (
+          <p data-slot="component-preview-caption" className="mt-2 text-sm text-muted-foreground">
+            {caption}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (resourcesState.status === 'error') {
+    return (
+      <div className="my-6 rounded-md border border-destructive/40 px-4 py-3 text-sm text-destructive">
+        Failed to load demo <code>{name}</code> at <code>{resourcesState.key}</code>: {resourcesState.message}
+      </div>
+    );
+  }
+
+  if (!mod || rawSource == null || !Component) return null;
 
   const configuredControlSlots =
     controlDefinition?.presentation === 'overlay' ? buildConfiguredControlSlots(controlDefinition.controls) : [];
