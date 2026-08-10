@@ -97,6 +97,7 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
   segments: ['test'],
   rawSource: 'export default Demo;\n',
   sourceFiles: [],
+  sourceContents: {},
   hideCode: false,
   ...overrides,
 });

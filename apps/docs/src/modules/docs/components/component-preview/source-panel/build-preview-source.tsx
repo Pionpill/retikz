@@ -31,6 +31,8 @@ export type BuildPreviewSourceInput = {
   diffFrom?: string;
   /** 主 demo baseline 的原始源码。 */
   baselineRawSource?: string;
+  /** 已按当前 preview 请求加载的附加源码。 */
+  sourceContents: Readonly<Record<string, string | undefined>>;
   /** 是否完全隐藏源码区域。 */
   hideCode: boolean;
   /** 同级 IR JSON 文件覆盖。 */
@@ -66,6 +68,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     sourceFiles,
     diffFrom,
     baselineRawSource,
+    sourceContents,
     hideCode,
     irJsonOverride,
     exportedPreviewIR,
@@ -84,6 +87,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     sourceFiles,
     diffFrom,
     baselineRawSource,
+    sourceContents,
     hideCode,
   });
   const extraSourceFiles = reactFiles.filter(file => !file.isMain);

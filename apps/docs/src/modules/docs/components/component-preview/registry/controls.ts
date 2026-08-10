@@ -1,14 +1,14 @@
 import type { PreviewControlContract, PreviewControlsDefinition, PreviewControlValues } from '../types';
+import type { PreviewLoader } from './contents';
 
 import { buildPreviewControlDefaults, definePreviewControls, getPreviewControlFields } from '../controls';
 
 /** 收集 contents 下 canonical 与本地化 controls definition 模块 */
-export const controlModules: Record<string, Record<string, unknown> | undefined> = import.meta.glob<
-  Record<string, unknown>
->(['../../contents/**/*.controls.ts', '../../contents/**/*.zh.controls.ts', '../../contents/**/*.en.controls.ts'], {
-  base: '../',
-  eager: true,
-});
+export const controlModuleLoaders: Record<string, PreviewLoader<Record<string, unknown>> | undefined> =
+  import.meta.glob<Record<string, unknown>>(
+    ['../../contents/**/*.controls.ts', '../../contents/**/*.zh.controls.ts', '../../contents/**/*.en.controls.ts'],
+    { base: '../' },
+  );
 
 export const buildControlsKey = (segments: Array<string>, name: string) =>
   `../../contents/${segments.join('/')}/${name}.controls.ts`;
@@ -20,7 +20,7 @@ export const buildLangControlsKey = (segments: Array<string>, name: string, lang
 /** 优先解析语言化 controls，缺失时回退到语言无关文件。 */
 export const resolveControlsKey = (segments: Array<string>, name: string, lang: string): string => {
   const langKey = buildLangControlsKey(segments, name, lang);
-  return controlModules[langKey] !== undefined ? langKey : buildControlsKey(segments, name);
+  return controlModuleLoaders[langKey] !== undefined ? langKey : buildControlsKey(segments, name);
 };
 
 /** 判断模块导出是否是声明式预览控件定义 */
