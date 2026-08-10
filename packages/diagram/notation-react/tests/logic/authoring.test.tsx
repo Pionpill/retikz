@@ -4,6 +4,14 @@ import { describe, expect, it } from 'vitest';
 
 import { Connector, Decision, Junction, Stage, Terminal } from '../../src';
 
+describe('@retikz/notation-react package boundary', () => {
+  it('does not expose Callout authoring', async () => {
+    const notationReact = await import('../../src');
+
+    expect(notationReact).not.toHaveProperty('Callout');
+  });
+});
+
 describe('Notation React semantic unit authoring', () => {
   it('keeps semantic IR while supporting the same text children as Core Node', () => {
     const stage = buildIRWithContributions(createElement(Stage, { id: 'stage', position: [0, 0] }, 'Process'));

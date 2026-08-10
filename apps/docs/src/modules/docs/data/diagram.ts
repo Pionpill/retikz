@@ -18,7 +18,6 @@ export const diagramSection: Array<Section> = [
         children: [
           { id: 'semantic-units', label: 'diagram.semanticUnits', difficulty: DocDifficulty.Beginner },
           { id: 'connector', label: 'diagram.connector', difficulty: DocDifficulty.Advanced },
-          { id: 'callout', label: 'diagram.callout', difficulty: DocDifficulty.Advanced },
         ],
       },
       {

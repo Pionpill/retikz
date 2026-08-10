@@ -309,7 +309,6 @@ const NOTATION_HELPER_ORDER: ReadonlyArray<string> = [
   'decision',
   'junction',
   'connector',
-  'callout',
 ];
 const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
   'LogicFrameVanillaAdapter',
@@ -318,7 +317,6 @@ const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
   'DecisionVanillaAdapter',
   'JunctionVanillaAdapter',
   'ConnectorVanillaAdapter',
-  'CalloutVanillaAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -338,8 +336,7 @@ export type NotationPreviewDefinitionName =
   | 'StageDefinition'
   | 'DecisionDefinition'
   | 'JunctionDefinition'
-  | 'ConnectorDefinition'
-  | 'CalloutDefinition';
+  | 'ConnectorDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -358,7 +355,6 @@ const NOTATION_DEFINITION_BY_KIND: Readonly<Record<string, NotationPreviewDefini
   decision: 'DecisionDefinition',
   junction: 'JunctionDefinition',
   connector: 'ConnectorDefinition',
-  callout: 'CalloutDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
@@ -377,10 +373,6 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const sections = record.sections as ReadonlyArray<{ child: IRChild }> | undefined;
     sections?.forEach(section => owned.push(section.child));
     return owned;
-  }
-  if (child.namespace === 'notation' && child.type === 'callout') {
-    const content = record.content as IRChild | undefined;
-    return content === undefined ? [] : [content];
   }
   if (child.namespace === 'notation' && ['terminal', 'stage', 'decision', 'junction', 'connector'].includes(child.type))
     return [];
@@ -464,7 +456,7 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
 };
 
 const notationCanonicalId = (kind: string, embedId: string): string =>
-  kind === 'logicFrame' || kind === 'callout' ? `${embedId}/${kind}` : embedId;
+  kind === 'logicFrame' ? `${embedId}/${kind}` : embedId;
 
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
@@ -492,7 +484,7 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           const generatedId = notationCanonicalId(kind, embedId);
           ctx.generatedIds.set(authoredId, generatedId);
           ctx.generatedIds.set(generatedId, generatedId);
-          if (kind === 'logicFrame' || kind === 'callout') {
+          if (kind === 'logicFrame') {
             ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
           }
         }
@@ -537,7 +529,6 @@ const rewriteNotationInput = (kind: string, input: Record<string, unknown>, ctx:
         : {}),
     };
   }
-  if (kind === 'callout') return { ...input, target: rewriteNotationTarget(input.target, ctx) };
   return input;
 };
 

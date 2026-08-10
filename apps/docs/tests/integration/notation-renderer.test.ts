@@ -1,22 +1,18 @@
 import type { IRChild, Scene } from '@retikz/core';
+import type { AnyVanillaTier2Adapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { compileToScene } from '@retikz/core';
 import {
-  CalloutArtifactSchema,
-  CalloutDefinition,
   ConnectorDefinition,
-  createCallout,
   createConnector,
   createStage,
   createTerminal,
   StageDefinition,
   TerminalDefinition,
 } from '@retikz/notation';
-import { Callout, Connector, Stage, Terminal } from '@retikz/notation-react';
+import { Connector, Stage, Terminal } from '@retikz/notation-react';
 import {
-  callout,
-  CalloutVanillaAdapter,
   connector,
   ConnectorVanillaAdapter,
   stage,
@@ -24,11 +20,9 @@ import {
   terminal,
   TerminalVanillaAdapter,
 } from '@retikz/notation-vanilla';
-import { Layout, Node, Scope, Step } from '@retikz/react';
+import { Layout, Scope, Step } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
-import type { AnyVanillaTier2Adapter } from '@retikz/vanilla';
-
 import { figure, renderToSvgString as renderVanillaToSvgString, scope } from '@retikz/vanilla';
 import { createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -39,8 +33,6 @@ import LogicFrameBasicEnDemo from '../../src/modules/docs/contents/diagram/notat
 import LogicFrameBasicZhDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/logic-frame-basic.zh.demo';
 import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/process-recipe.en.demo';
 import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/process-recipe.zh.demo';
-import CalloutPlacementEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/callout/callout-placement.en.demo';
-import CalloutPlacementZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/callout/callout-placement.zh.demo';
 import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.en.demo';
 import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.zh.demo';
 import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/class-recipe.en.demo';
@@ -50,7 +42,7 @@ import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/u
 import SemanticUnitsEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.en.demo';
 import SemanticUnitsZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.zh.demo';
 
-const definitions = [TerminalDefinition, StageDefinition, ConnectorDefinition, CalloutDefinition] as const;
+const definitions = [TerminalDefinition, StageDefinition, ConnectorDefinition] as const;
 
 const sceneOf = (children: ReadonlyArray<IRChild>): Scene =>
   compileToScene(
@@ -77,12 +69,6 @@ const directChildren = (): Array<IRChild> => [
       { type: 'step', kind: 'fold', via: '-|', to: { id: 'step' }, label: { text: 'next' } },
     ],
   }),
-  createCallout({
-    id: 'note',
-    target: { id: 'step' },
-    content: { type: 'node', position: [0, 0], text: 'Explain' },
-    placement: { side: 'right', gap: 10 },
-  }),
 ];
 
 const ReactLogic: FC = () =>
@@ -105,11 +91,6 @@ const ReactLogic: FC = () =>
       createElement(Step, { kind: 'move', to: 'start' }),
       createElement(Step, { kind: 'fold', via: '-|', to: 'step', label: { text: 'next' } }),
     ),
-    createElement(
-      Callout,
-      { id: 'note', target: { id: 'step' }, placement: { side: 'right', gap: 10 } },
-      createElement(Node, { position: [0, 0], text: 'Explain' }),
-    ),
   );
 
 const lower = (adapter: AnyVanillaTier2Adapter, embed: { id: string; kind: string; props: unknown }): IRChild =>
@@ -125,25 +106,17 @@ const vanillaChildren = (): Array<IRChild> => [
   vanillaTranslated(
     48,
     65,
-    lower(TerminalVanillaAdapter as AnyVanillaTier2Adapter, terminal('start', { position: [0, 0], text: 'Start' })),
+    lower(TerminalVanillaAdapter, terminal('start', { position: [0, 0], text: 'Start' })),
   ),
   vanillaTranslated(
     210,
     65,
-    lower(StageVanillaAdapter as AnyVanillaTier2Adapter, stage('step', { position: [0, 0], text: 'Step' })),
+    lower(StageVanillaAdapter, stage('step', { position: [0, 0], text: 'Step' })),
   ),
   lower(
     ConnectorVanillaAdapter,
     connector('edge', {
       way: ['start', { label: { text: 'next' } }, '-|', 'step'],
-    }),
-  ),
-  lower(
-    CalloutVanillaAdapter,
-    callout('note', {
-      target: { id: 'step' },
-      content: { type: 'node', position: [0, 0], text: 'Explain' },
-      placement: { side: 'right', gap: 10 },
     }),
   ),
 ];
@@ -165,8 +138,6 @@ describe('Notation renderer integration', () => {
     ['semantic units zh', SemanticUnitsZhDemo],
     ['connector en', ConnectorRoutingEnDemo],
     ['connector zh', ConnectorRoutingZhDemo],
-    ['callout en', CalloutPlacementEnDemo],
-    ['callout zh', CalloutPlacementZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],
     ['process recipe zh', ProcessRecipeZhDemo],
     ['class recipe en', ClassRecipeEnDemo],
@@ -186,18 +157,13 @@ describe('Notation renderer integration', () => {
     expect(react).toEqual(direct);
     expect(vanilla.slice(0, 2)).toEqual(direct.slice(0, 2));
     expect(vanilla.find(child => child.type === 'connector')).toMatchObject({ id: 'edge' });
-    expect(vanilla.find(child => child.type === 'callout')).toMatchObject({ id: 'note/callout' });
   });
 
-  it('produces a typed Callout artifact and one renderer-agnostic Scene', () => {
+  it('produces one renderer-agnostic Scene without Notation discriminators', () => {
     const result = compileToScene(
       { type: 'scene', version: 1, children: directChildren() },
       { composites: [...definitions], padding: 0 },
     );
-    const artifact = result.artifacts
-      .filter(entry => entry.kind === 'composite')
-      .find(entry => CalloutArtifactSchema.safeParse(entry.value).success);
-    expect(CalloutArtifactSchema.parse(artifact?.value)).toMatchObject({ kind: 'callout', id: 'note' });
     expect(JSON.stringify(result.scene)).not.toContain('notation.logic');
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(true);
   });

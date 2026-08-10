@@ -1,5 +1,5 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
-import { CalloutSchema, ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
+import { ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
@@ -49,7 +49,6 @@ describe('SCHEMA_REGISTRY', () => {
       LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
       DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/semantic-units' },
       ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
-      CalloutSchema: { schema: CalloutSchema, url: '/diagram/notation/unit/callout' },
     });
   });
 

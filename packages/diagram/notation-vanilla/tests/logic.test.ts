@@ -24,6 +24,16 @@ const lower = <TProps>(spec: VanillaEmbedSpec<TProps>, adapter: VanillaTier2Adap
     identityPath: ['layer', spec.id],
   } satisfies VanillaEmbedContext);
 
+describe('@retikz/notation-vanilla package boundary', () => {
+  it('does not expose Callout authoring', async () => {
+    const notationVanilla = await import('../src');
+
+    expect(notationVanilla).not.toHaveProperty('callout');
+    expect(notationVanilla).not.toHaveProperty('CalloutVanillaAdapter');
+    expect(notationVanilla).not.toHaveProperty('NotationCalloutVanillaNamespace');
+  });
+});
+
 describe('Notation Vanilla semantic authoring', () => {
   it('returns embeds for all five lightweight semantic elements', () => {
     expect(terminal('start', { position: [0, 0], text: 'Start' })).toMatchObject({

@@ -15,6 +15,3 @@ export const NotationJunctionReactNamespace = 'notation.junction';
 
 /** Notation React Connector adapter namespace */
 export const NotationConnectorReactNamespace = 'notation.connector';
-
-/** Notation React Callout adapter namespace */
-export const NotationCalloutReactNamespace = 'notation.callout';

@@ -544,12 +544,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Connector',
     url: '/diagram/notation/unit/connector',
   },
-  CalloutSchema: {
-    schema: NotationIR.CalloutSchema,
-    label: 'Callout',
-    url: '/diagram/notation/unit/callout',
-  },
-
   TableSpecSchema: {
     schema: TableIR.TableSpecSchema,
     label: 'TableSpec',

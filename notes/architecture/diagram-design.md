@@ -93,7 +93,7 @@ Notation 元素先判断是否拥有独立、长期可持久化的领域身份�
 
 1. **Core Sugar**：没有独立持久化语义的便捷写法直接归一为 Core IR，不为命名一致性强行创建 composite。
 2. **轻量 expansion composite**：正式 Notation 元素保留 semantic IR，但当前只需一个 Core Node 或 Path 时，通过普通 Definition 一对一下沉，例如 Terminal、Stage、Decision、Junction 与 Connector。
-3. **Layout-aware composite**：需要局部布局、artifact 或多图元输出的正式元素使用 layout-aware Definition，例如 LogicFrame 与 Callout。
+3. **Layout-aware composite**：需要局部布局、artifact 或多图元输出的正式元素使用 layout-aware Definition，例如 LogicFrame。
 
 Notation 的边界以“可独立绘制的图式语义元素”为准，而不是当前逻辑组件清单或 lower target 的复杂度。未来 UML Class、State、actor、lifeline、fork / join、note 等候选可以在真实契约出现后进入相应 milestone；每项仍需判断是已有元素的 recipe、无独立语义的 Core Sugar，还是拥有持久化身份的轻量或 layout-aware composite。
 
@@ -386,7 +386,7 @@ Plot ─────→ Data + Core
 
 ### 阶段 1：Notation foundation
 
-建立 `notation`、`notation-react`、`notation-vanilla` 三包，把 Standard alpha.3 的 LogicFrame、Terminal、Stage、Decision、Junction、Connector 与 Callout 迁入统一入口。迁移保持公开组件名和字段语义，不保留 Standard 转发；同时补齐 Standard 公共 layout composition surface，完成直接 IR、React、Vanilla、SVG / Canvas、双语文档和发布组闭环。
+建立 `notation`、`notation-react`、`notation-vanilla` 三包，把 Standard alpha.3 的 LogicFrame、Terminal、Stage、Decision、Junction、Connector 与 Callout 迁入统一入口。迁移保持公开组件名和字段语义，不保留 Standard 转发；同时补齐 Standard 公共 layout composition surface，完成直接 IR、React、Vanilla、SVG / Canvas、双语文档和发布组闭环。Notation alpha.3 随后撤回缺少真实场景验证的 Callout 完整契约，当前元素集合为 LogicFrame、Terminal、Stage、Decision、Junction 与 Connector。
 
 ### 阶段 2：Graph 最小契约
 

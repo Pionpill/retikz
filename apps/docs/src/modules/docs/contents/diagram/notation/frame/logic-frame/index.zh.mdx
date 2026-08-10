@@ -97,11 +97,10 @@ Recipe 只是示例，不会新增 package export；Process、Class、Data 都�
 | `overflow?`   | `'visible'` 或 `'clip'`                  | `'visible'`                                          | 外层内容可见性策略                           |
 | `appearance?` | `LogicFrameAppearanceInput`              | 中性 shell、圆角 `8`、divider 开启、`zIndex: 0`      | 外壳、divider、圆角与 stacking 外观          |
 
-section key 为空或重复时会 fail-loud。Connector 与 Callout 都接受 section target 语法，但当前都会在 lowering 或放置前拒绝 section target；请使用 whole block target。
+section key 为空或重复时会 fail-loud。Connector 接受 section target 语法，但当前会在 lowering 前拒绝 section target；请使用 whole block target。
 
 ## 相关
 
 - [基础单元](/diagram/notation/unit/semantic-units)：带 content 的逻辑节点
 - [Connector](/diagram/notation/unit/connector)：authored identity 之间的关系
-- [Callout](/diagram/notation/unit/callout)：相对 target 的解释
 - [布局容器](/standard/layout)：通用布局家族

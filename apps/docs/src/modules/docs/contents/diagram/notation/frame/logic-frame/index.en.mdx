@@ -97,11 +97,10 @@ The shell and divider are emitted as Core visual primitives. Divider rectangles 
 | `overflow?`   | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
 | `appearance?` | `LogicFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
 
-Blank or duplicate section keys fail loudly. Connector and Callout accept section target syntax, but both currently reject section targets before lowering or placement; use a whole block target instead.
+Blank or duplicate section keys fail loudly. Connector accepts section target syntax but currently rejects section targets before lowering; use a whole block target instead.
 
 ## Related
 
 - [Base units](/diagram/notation/unit/semantic-units): content-bearing logic nodes
 - [Connector](/diagram/notation/unit/connector): relationships between authored identities
-- [Callout](/diagram/notation/unit/callout): target-relative explanations
 - [Layout containers](/standard/layout): the generic layout family
