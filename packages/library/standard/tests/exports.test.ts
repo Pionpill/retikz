@@ -4,26 +4,20 @@ import * as standardExports from '../src';
 import {
   AxesDefinition,
   createGrid,
-  FlexLayoutDefinition,
   FrameDefinition,
   GridDefinition,
-  GridLayoutDefinition,
   LegendArtifactSchema,
   LegendDefinition,
   LegendSchema,
-  OverlayLayoutDefinition,
   STANDARD_NAMESPACE,
 } from '../src';
 
 describe('@retikz/standard root exports', () => {
   it('exposes composite definitions and factories', () => {
     expect(AxesDefinition).toBe(standardExports.AxesDefinition);
-    expect(FlexLayoutDefinition).toBe(standardExports.FlexLayoutDefinition);
     expect(FrameDefinition).toBe(standardExports.FrameDefinition);
     expect(GridDefinition).toBe(standardExports.GridDefinition);
-    expect(GridLayoutDefinition).toBe(standardExports.GridLayoutDefinition);
     expect(LegendDefinition).toBe(standardExports.LegendDefinition);
-    expect(OverlayLayoutDefinition).toBe(standardExports.OverlayLayoutDefinition);
     expect(STANDARD_NAMESPACE).toBe(standardExports.STANDARD_NAMESPACE);
     expect(LegendDefinition.schema).toBe(LegendSchema);
     expect(LegendDefinition.artifactSchema).toBe(LegendArtifactSchema);
@@ -42,6 +36,9 @@ describe('@retikz/standard root exports', () => {
       'AxesModule',
       'FrameModule',
       'LegendModule',
+      'FlexLayoutDefinition',
+      'GridLayoutDefinition',
+      'OverlayLayoutDefinition',
       'FlexLayoutModule',
       'GridLayoutModule',
       'OverlayLayoutModule',

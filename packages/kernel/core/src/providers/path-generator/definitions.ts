@@ -4,7 +4,7 @@ import type { PathGeneratorDefinition } from '../../contract';
 
 import { definePathGenerator } from '../../contract';
 import { TargetSchema } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry';
+import { defineBuiltinProviderArray } from '../registry/index';
 
 export type BuiltinPathGeneratorName = 'parabola';
 

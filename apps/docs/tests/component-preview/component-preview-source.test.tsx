@@ -157,7 +157,10 @@ describe('ComponentPreview Vanilla source', () => {
   });
 
   it('Standard Grid controls 的 canonical 状态生成可运行的 Vanilla 视图', () => {
-    const props = renderPreview(['standard', 'composite', 'grid'], <ComponentPreview files="grid-playground" />);
+    const props = renderPreview(
+      ['library', 'standard', 'composite', 'grid'],
+      <ComponentPreview files="grid-playground" />,
+    );
     const vanilla = props.source?.vanilla;
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");

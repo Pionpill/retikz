@@ -8,7 +8,7 @@ import type {
 } from '../../contract';
 import type { IRPaintSpec } from '../../schemas';
 
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers/registry/index';
 import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../probe-failure';
 import { validateMarkerPrimitives } from './marker-primitive';
 import { resolvePatternStyleContext } from './pattern-style';

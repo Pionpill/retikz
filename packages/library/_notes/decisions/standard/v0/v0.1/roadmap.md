@@ -2,9 +2,9 @@
 
 > 状态：Accepted。关联：[Standard v0 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 >
-> 图式语义后继：[Notation v0.1 roadmap](../../../../../../diagram/_notes/decisions/notation/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram；Standard 长期保留通用布局与绘图 capability
+> 图式语义后继：[Notation v0.1 roadmap](../../../../../../diagram/_notes/decisions/notation/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram。布局后继：[Layout v0.1 roadmap](../../../layout/v0/v0.1/roadmap.md) 已在 alpha.1 接管排版布局
 >
-> v0.1 是 Standard 包家族的首个版本。`Grid`、`Axes` 和 `Frame` 已建立首批宿主无关 Tier 2 composite；当前版本继续补齐按项 Definition 接入、通用布局积木与跨领域 Legend 呈现，不把其它 Kernel 或 Diagram 能力打包迁入。
+> v0.1 是 Standard 包家族的首个版本。`Grid`、`Axes`、`Frame` 与 Legend 建立宿主无关 Tier 2 composite；alpha.2 曾验证的通用布局已在 alpha.4 迁入 Layout package family，Standard 回归横向绘图拓展边界。
 
 ## 版本目标
 
@@ -12,20 +12,21 @@
 2. 将 React `Grid` 迁为宿主无关的 Standard Tier 2 composite，并新增 Axes 与 Frame，使 React 与 Vanilla 对同一 JSON-safe 输入得到等价的 composite IR 与 lowering 结果
 3. 建立 Standard 的直接 Definition 接入约定：用户按当前图选择 Definition 并通过 Core `CompileOptions.composites` 接入；React 保持组件静态 adapter，Vanilla 提供显式 adapter 数组便利入口
 4. 固化 Standard 按 Core 可扩展机制横向分域的代码范式，为后续 definition、composite 与 Sugar 增长留出稳定位置，不预建空目录或平行机制
-5. 建立 renderer-agnostic Box Layout Profile，补齐 Flex、Grid、Overlay、LayoutItem 与 layout artifact；需要双轴约束、intrinsic contribution、allocated box 或 replay wrapper 时先补齐并复用 Core layout-aware composite，不在 Standard 私造测量或 replay 管线
-6. 建立可由直接作者、Plot 与 Table 复用的通用 Legend 呈现；领域包保留 scale、visual encoding、formatter、provenance 与交互解析，Standard 统一 schema、布局、layout-aware compile 与领域无关 artifact
-7. alpha.3 验证 headless `LogicFrame`、语义 Node、Connector 与 Callout 后，将这些图式契约迁入 Notation；Standard 只保留其复用的通用 layout composition
+5. alpha.2 建立 renderer-agnostic Box Layout Profile，验证 Flex、Grid、Overlay、LayoutItem、layout artifact 与 Core layout-aware composite 的完整闭环
+6. 建立可由直接作者、Plot 与 Table 复用的通用 Legend 呈现；领域包保留 scale、visual encoding、formatter、provenance 与交互解析，Standard 统一 Legend schema、layout-aware compile 与领域无关 artifact
+7. alpha.3 验证 headless `LogicFrame`、语义 Node、Connector 与 Callout 后，将这些图式契约迁入 Notation
+8. alpha.4 配合 Layout v0.1 alpha.1 把排版布局迁入独立 owner；Standard 只通过 Layout 公共 composition capability 完成自身需要排版的 composite
 
 ## 能力边界
 
-- **主责包**：`@retikz/standard` 拥有 Standard schema、composite definition、factory 与 lowering；它只依赖 `@retikz/core`，必要时依赖 `@retikz/math`
+- **主责包**：`@retikz/standard` 拥有 Standard schema、composite definition、factory 与 lowering；它依赖 `@retikz/core`，需要几何计算时依赖 `@retikz/math`，需要排版组合时依赖 `@retikz/layout` 根入口或 `/compose`
 - **协作包**：`standard-react` 与 `standard-vanilla` 只将同一 Standard 输入接到 `@retikz/react` / `@retikz/vanilla`，不得复制 schema、几何计算或 registry 合并
 - **领域消费包**：Plot、Table 等官方 Tier 2 包可以使用兼容版本单向依赖 Standard；它们先把领域语义解析为 Standard 输入，并继续拥有 provenance / locator、交互与领域诊断，Standard 不反向依赖或读取领域 IR
 - **Core 保留**：IR、Scene、`CompileOptions`、definition / registry contract、compile、renderer 语义，以及 `Path` / `Step` 等基础图元
 - **语义真源**：Standard 拥有的 Tier 2 schema 以既有 Core composite IR 持久化；输入保留 Standard discriminator 与结构化引用，lowering 后的 Kernel IR / Scene 只是派生产物
-- **当前 Standard composite**：`Grid`、`Axes`、`Frame`、布局与 Legend 复用同一 Core composite registry，不新增平行 IR、Scene primitive、renderer 分支或 Core compile option
+- **Standard composite**：`Grid`、`Axes`、`Frame` 与 Legend 复用 Core composite registry；排版 Layout 由独立 package family 通过同一 registry 接入
 - **领域边界**：Standard 不拥有 Diagram Notation、GraphModel、全局 nodes / edges、Port / Group 规则、拓扑校验、算法布局或编辑器状态
-- **Legend 边界**：Standard 拥有已经解析好的 title、`items | ramp`、任意 `IRChild` sample、布局与 artifact；Plot/Table 拥有 channel / scale、visual encoding、formatter、theme mapping、领域 provenance 与交互意图
+- **Legend 边界**：Standard 拥有已经解析好的 title、`items | ramp`、任意 `IRChild` sample、Legend 排版规则与 artifact；Layout 提供领域无关排版 composition；Plot/Table 拥有 channel / scale、visual encoding、formatter、theme mapping、领域 provenance 与交互意图
 
 ## Milestones
 
@@ -34,6 +35,7 @@
 | [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 Definition 接入** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、直接 Core Definition 注入、Vanilla adapter 数组、双语 docs / migration / changelog | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且按项 definitions 进入同一 Core option 路径 |
 | [alpha.2](./alpha.2/roadmap.md) | **通用 Box Layout 与 Legend**                         | Flex、Grid、Overlay、LayoutItem、layout artifact 与 inspector；领域无关 Legend items / ramp、任意 IRChild sample、typed artifact、直接 Definition 接入与 React / Vanilla authoring                      | Core layout-aware composite 主链；Legend 复用 Box Layout，领域包保留解析、provenance / locator 与交互                                                    |
 | [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件（历史）**                            | 验证 headless `LogicFrame`、语义 Node、Connector 与 Callout；现行 owner 与后续演进由 Notation alpha.1 接管                                                                                              | ADR-01～05 已 Superseded；直接 Definition 原则 ADR-06 继续约束 Standard 与 Notation                                                                      |
+| [alpha.4](./alpha.4/roadmap.md) | **Layout package family 迁移**                        | 配合 Layout alpha.1 移除 Standard 的布局 owner、旧 namespace、adapter、inspect 与 docs，并让 Legend 改用 Layout `/compose`                                                                              | 已完成；[Layout alpha.1 ADR-01](../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 为现行契约；无兼容层                                        |
 | beta.1                          | **收口与发布准备**                                    | public API 审查、Definition 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、release / package checks                                                                          | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                             |
 
 ## Standard Definition 接入机制
@@ -46,14 +48,14 @@ v0.1 只提供显式的细粒度 Definition 接入，不建立隐式全局 regis
 - **冲突模型**：definition 合并、重复 composite key、缺失 definition 与 warning/error 均沿 Core registry / diagnostics 语义处理；Standard 不另造“内置优先”或静默覆盖规则
 - **领域包依赖**：Plot/Table 直接组合所需 Standard definitions 进入自己的 compile options；不使用 module identity、全局自动注册或私有去重
 
-Grid、Axes、Frame、布局与 Legend 都通过 Core 既有 `CompositeDefinition` 机制注册。调用者显式传入当前图需要的 definitions 后，Core 才将相应能力接入 `CompileOptions.composites`；不传入时，未注册 composite 必须保持 Core 的明确诊断。
+Grid、Axes、Frame 与 Legend 都通过 Core 既有 `CompositeDefinition` 机制注册。Layout 迁移后也直接使用同一机制，不由 Standard 转手注册。调用者显式传入当前图需要的 definitions 后，Core 才将相应能力接入 `CompileOptions.composites`；不传入时，未注册 composite 必须保持 Core 的明确诊断。
 
 公开 Definition、factory 与 adapter 的最终命名由各 milestone ADR 冻结；组合接入统一以 alpha.3 ADR-06 的 direct Definition contract 为准。
 
 ## Tier 2 语义约定
 
 - LogicFrame、语义 Node、Connector 与 Callout 的现行 owner、namespace 和图式职责由 [Notation v0.1](../../../../../../diagram/_notes/decisions/notation/v0/v0.1/roadmap.md) 维护；Standard 不保留对应 discriminator、Definition 或 adapter
-- Flex、Grid、Overlay 与 Legend 使用 Core layout-aware contract；Stack / Row / Column 只作为 Flex 的 convenience authoring，Align / Distribute 由 container / item alignment 与 free-space distribution 持久化表达；现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
+- FlexLayout、GridLayout、OverlayLayout 与通用 LayoutItem 由 Layout v0.1 维护；Standard Legend 只通过 Layout `/compose` 复用排版，现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
 - Legend 以领域无关 Standard 输入保存 title、`items | ramp`、任意 `IRChild` sample 与呈现布局；Plot/Table 只把各自领域解析结果转换为该输入，不把 channel、scale、Cell selector、formatter 函数或 interaction state 注入 Standard schema
 - 即使某个组件可以同步展开，只要其角色需要跨 JSON 持久化、工具链处理或 LLM 编辑保留，就不能仅作为 React / Vanilla Sugar
 - 保存、diff、LLM 修改和跨入口交换都针对 Standard composite 输入；不承诺从 lowering 后的 Kernel IR 或 Scene 恢复原始 Standard 语义
@@ -111,7 +113,7 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 
 ## 测试与文档基线
 
-- `standard`：Grid、Axes、Frame、Flex、GridLayout、Overlay 与 Legend 的 schema、JSON round-trip、输入错误、identity / Target、layout artifact、composite compile 与直接 Definition 选择不变量
+- `standard`：Grid、Axes、Frame 与 Legend 的 schema、JSON round-trip、输入错误、identity / Target、Legend artifact、composite compile、Layout composition 消费与直接 Definition 选择不变量
 - `standard-react` / `standard-vanilla`：同一 composite input 的 IR 与 lowering 结果等价；同图多 capability 的稳定 contribution key / maker、React 静态按需贡献、Vanilla 部分 / 全量 adapter 数组与直接 IR Definition 接线；无副作用、重复 definition 和 provider key 冲突的诊断
 - Kernel 回归：`Path` / `Step`、Core compile 与 renderer 不因未安装 Standard 改变；`@retikz/react` 不再导出 Grid
 - Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例与从 `@retikz/react` 迁移 Grid 的指引；Diagram/Notation 单独维护图式元素、recipe、source preview 与 Schema 发现
@@ -128,7 +130,9 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 - 从 lowering 后的 Kernel IR 或 Scene 反向推断原始 Standard Tier 2 语义
 - LLM prompt、模型调用、agent runtime 或自然语言解析器；v0.1 只提供稳定、带描述、可生成的语义契约
 - 对外导出 ProcessBlock、ClassBlock、DataBlock 或把 docs recipe 固化为新的 Standard discriminator
-- `RadialLayout`、Tree / Layered / Force、subgrid、masonry、Dimension / BraceLabel 等扩展能力；按真实消费证据进入 v0.2 或后续领域版本评估
+- `RadialLayout`、Tree / Layered / Force 等算法布局；由图关系与算法布局 owner 评估，不进入 Standard
+- subgrid、masonry 等排版能力；按真实消费证据进入 Layout 后续版本评估
+- Dimension / BraceLabel 等绘图拓展；按真实消费证据进入 Standard v0.2 或后续版本评估
 - 为兼容旧 import 保留 `@retikz/react` 的 Grid alias；迁移以 v0.x 的正确 owner 为准，并提供文档迁移说明
 
 ## ADR 约定

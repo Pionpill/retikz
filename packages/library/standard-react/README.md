@@ -1,8 +1,10 @@
 # @retikz/standard-react
 
 React authoring bindings for [`@retikz/standard`](../standard). The package
-provides `Grid`, `Axes`, and `Frame` JSX components that contribute the
-same Standard composite definitions used by persisted IR and Vanilla hosts.
+provides `Grid`, `Axes`, `Frame`, and `Legend` JSX components that contribute
+the same Standard composite definitions used by persisted IR and Vanilla
+hosts. `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick` provide its
+headless marker authoring forms.
 
 ## Install
 

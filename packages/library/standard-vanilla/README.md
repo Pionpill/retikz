@@ -1,8 +1,8 @@
 # @retikz/standard-vanilla
 
 Framework-free authoring bindings for [`@retikz/standard`](../standard). It
-provides Grid, Axes, and Frame builders plus explicit Vanilla adapters for
-normalization, SSR, and mount workflows.
+provides Grid, Axes, Frame, and Legend builders plus explicit Vanilla adapters
+for normalization, SSR, and mount workflows.
 
 ## Install
 

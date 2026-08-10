@@ -93,7 +93,9 @@ describe('clip 非 finite 守卫：必须编译期抛、绝不进 Scene', () => 
   }
 
   it('抛出的错误信息含 kind + 字段线索（清晰错）', () => {
-    expect(() => compileToScene(handcraftedScope({ kind: 'circle', cx: 0, cy: 0, r: Infinity })).scene).toThrow(/circle/i);
+    expect(() => compileToScene(handcraftedScope({ kind: 'circle', cx: 0, cy: 0, r: Infinity })).scene).toThrow(
+      /circle/i,
+    );
   });
 });
 

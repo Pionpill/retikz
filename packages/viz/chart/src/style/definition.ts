@@ -8,8 +8,5 @@ export type ChartThemeStyleDefinition = Readonly<{
   resolve: (theme: ResolvedTheme) => IRChartResolvedThemeTokens;
 }>;
 
-/** 擦除泛型后的 Chart Theme style definition */
-export type AnyChartThemeStyleDefinition = ChartThemeStyleDefinition;
-
 /** 定义一个 Chart Theme style resolver */
 export const defineChartThemeStyle = (definition: ChartThemeStyleDefinition): ChartThemeStyleDefinition => definition;

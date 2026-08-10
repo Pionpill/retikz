@@ -1,0 +1,35 @@
+---
+title: API 参考
+description: 查询 Layout 布局容器的持久化输入、编译产物，以及 Core、React 与 Vanilla 运行时接线。
+---
+
+API 参考用于查询稳定契约，不承担入门教学。输入契约集中说明三个容器与 `LayoutItem` 的 JSON-safe schema；产物契约记录求解后的容器、子项和专属布局结果；运行时页说明 Definition、Core 编译、React 与 Vanilla 如何汇入同一条执行链。
+
+> 这里是参考层。开始使用布局容器请从[布局容器](/library/layout)阅读，再根据排布模型进入[弹性布局](/library/layout/flex-layout)、[网格布局](/library/layout/grid-layout)或[叠加布局](/library/layout/overlay-layout)。
+
+## 职责一览
+
+| 主题        | 职责                                             | 何时查阅                               |
+| ----------- | ------------------------------------------------ | -------------------------------------- |
+| 契约 - 输入 | 容器配置、`LayoutItem` 联合与可持久化子图形      | 生成、持久化或校验布局 IR              |
+| 契约 - 产物 | 容器几何、子项占用、溢出状态与容器专属求解结果   | 读取同次编译的布局产物或排查布局结果   |
+| 运行时      | Definition、测量/回放、React 与 Vanilla 适配接线 | 集成宿主、接入能力或理解布局的执行过程 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/library/layout/reference/contract-input">
+    <span className="font-semibold">契约 - 输入</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">三种容器、LayoutItem 与可 JSON 序列化子图形</span>
+  </LinkedCard>
+  <LinkedCard href="/library/layout/reference/contract-artifact">
+    <span className="font-semibold">契约 - 产物</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">分配区域、真实占用、视觉边界与专属结果</span>
+  </LinkedCard>
+  <LinkedCard href="/library/layout/reference/runtime">
+    <span className="font-semibold">运行时</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Definition 接入、Core 编译、测量/回放与适配器
+    </span>
+  </LinkedCard>
+</div>

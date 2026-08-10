@@ -230,10 +230,9 @@ describe('Connected Scatter Chart recipe', () => {
     ]);
   });
 
-  it('uses the final style token, colors, and raw theme cascade for the shared default color', () => {
+  it('uses the final style token and native theme cascade for the shared default color', () => {
     const spec = connectedScatter({
       plotThemeTokens: { 'plot.palette.series': ['#111111'] },
-      colors: ['#222222'],
       plotTheme: { palette: { series: ['#333333'] } },
     });
     const effectiveTheme = {
@@ -244,7 +243,6 @@ describe('Connected Scatter Chart recipe', () => {
     const resolved = resolveChartStyle(effectiveTheme, spec);
     const plotTheme = resolvePlotTheme(effectiveTheme, {
       plotThemeTokens: spec.plotThemeTokens,
-      colors: spec.colors,
       plotTheme: spec.plotTheme,
     });
     const seriesColor = plotTheme.palette.series[0];

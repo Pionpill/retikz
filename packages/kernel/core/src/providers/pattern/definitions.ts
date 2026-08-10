@@ -9,7 +9,7 @@ import type { BuiltinPatternName } from '../../schemas';
 
 import { definePattern } from '../../contract';
 import { PatternShape } from '../../schemas';
-import { defineBuiltinProviderArray } from '../registry';
+import { defineBuiltinProviderArray } from '../registry/index';
 
 const DEFAULT_PATTERN_SIZE = 8;
 const DEFAULT_STROKE_WIDTH = 1;

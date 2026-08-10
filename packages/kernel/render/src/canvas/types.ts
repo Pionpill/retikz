@@ -1,7 +1,6 @@
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
-import type { AnimationPropertyRegistry } from '../animation/registry';
-import type { EasingRegistry } from '../animation/types';
+import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 
 /** Canvas renderer 暂不支持能力的降级类别 */
 export type UnsupportedCanvasFeature = 'paint' | 'clip' | 'animation';

@@ -10,7 +10,7 @@ import {
   Stage,
   Terminal,
 } from '@retikz/notation-react';
-import { Layout, Node, Scope } from '@retikz/react';
+import { Layout, Node, Scope, Step } from '@retikz/react';
 
 /** 只存在于文档的 Process recipe，由公开 Notation 词汇组合而成 */
 const Demo: FC = () => (
@@ -40,13 +40,11 @@ const Demo: FC = () => (
         Valid?
       </Decision>
     </Scope>
-    <Connector id="process-edge-1" from={{ id: 'process-start' }} to={{ id: 'process-step' }} />
-    <Connector
-      id="process-edge-2"
-      from={{ id: 'process-step' }}
-      to={{ id: 'process-check' }}
-      routing={{ kind: 'orthogonal', pattern: FoldStepVia.HorizontalThenVertical }}
-    />
+    <Connector id="process-edge-1" way={['process-start', 'process-step']} />
+    <Connector id="process-edge-2">
+      <Step kind="move" to="process-step" />
+      <Step kind="fold" via={FoldStepVia.HorizontalThenVertical} to="process-check" />
+    </Connector>
   </Layout>
 );
 

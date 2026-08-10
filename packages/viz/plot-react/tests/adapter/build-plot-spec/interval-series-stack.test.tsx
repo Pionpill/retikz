@@ -51,14 +51,14 @@ describe('buildPlotSpec IntervalMark / color / series / stack / Scale', () => {
     expect(spec.marks[0]).toMatchObject({ color: { kind: 'field', value: 'continent', scale: '__color' } });
   });
 
-  it('plot_colors_builds_palette_and_ordinal_range', () => {
+  it('plot_theme_palette_is_preserved_without_adapter_owned_range', () => {
     const colors = ['#2563eb', '#f97316', 'currentColor'];
     const spec = buildPlotSpec(<PointMark x="gdp" y="life" color="continent" />, '__plot', {
-      colors,
+      plotTheme: { palette: { categorical: colors } },
       dataFieldNames: new Set(['continent']),
     });
-    expect(spec.colors).toEqual(colors);
-    expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color', range: colors });
+    expect(spec.plotTheme?.palette?.categorical).toEqual(colors);
+    expect(spec.scales).toContainEqual({ type: 'ordinal', name: '__color' });
   });
 
   it('no_color_no_ordinal_scale', () => {

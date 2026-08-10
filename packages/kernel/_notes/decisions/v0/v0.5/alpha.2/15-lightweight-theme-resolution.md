@@ -51,7 +51,7 @@ Plot、Chart、Table 分别拥有自己的 token vocabulary 和 style definition
 
 所有领域 resolver 都消费完整 `ResolvedTheme`，不以 `style + mode` 重新查找或复制 Core 色表。直接调用 Plot 或 Chart resolver 的使用者必须提供由 Core 同一 registry 解析的完整 effective Theme；内置默认入口可以使用 `neutral + light` 的完整值。
 
-每个 owner 只解析自己拥有的默认值。Plot style resolver 的输出是 Plot token cascade 的基线，随后先投影 Core shared categorical，再按既有优先级应用 `plotThemeTokens`、`colors` 和 native `plotTheme`。Chart style resolver 的输出是 Chart token cascade 的基线，随后只应用 `chartThemeTokens`。Table style resolver 的输出是 Table token cascade 的基线，随后投影 Core shared categorical 并应用 `tableThemeTokens`。Chart 继续把 Plot authoring 输入原样转发，并调用 Plot 的公开 resolver，不复制 Plot token、preset 或 merge 语义。
+每个 owner 只解析自己拥有的默认值。Plot style resolver 的输出是 Plot token cascade 的基线，随后先投影 Core shared categorical，再按既有优先级应用 `plotThemeTokens` 和 native `plotTheme`。Chart style resolver 的输出是 Chart token cascade 的基线，随后只应用 `chartThemeTokens`。Table style resolver 的输出是 Table token cascade 的基线，随后投影 Core shared categorical 并应用 `tableThemeTokens`。Chart 继续把 Plot authoring 输入原样转发，并调用 Plot 的公开 resolver，不复制 Plot token、preset 或 merge 语义。
 
 在一个实际消费 style 的 owner 中，若找不到同名 definition，必须 fail-loud。也就是说，自定义 `brand` style 用于 Plot 时必须注册同名 `PlotThemeStyleDefinition`；用于 Chart 时还必须注册同名 `ChartThemeStyleDefinition`，并提供 Chart 调用的 Plot definition；用于 Table 时必须注册同名 Table definition。纯 Core Scene 不要求注册不消费它的领域 definition。
 

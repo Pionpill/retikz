@@ -1,4 +1,4 @@
-import { assertNonEmptyString } from '@retikz/foundation';
+import { assertNonEmptyString, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 describe('assertNonEmptyString', () => {
@@ -9,6 +9,7 @@ describe('assertNonEmptyString', () => {
   });
 
   it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
+    expect(NonBlankStringSchema.safeParse(value).success).toBe(false);
     expect(() => assertNonEmptyString(value, 'name')).toThrowError('name must be a non-empty string.');
   });
 

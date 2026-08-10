@@ -1,13 +1,13 @@
 import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderCollection } from '../../providers/registry/index';
 import type { IRPosition } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
 import { resolveBoundaryRegistry } from '../../providers/boundary';
-import { providerDefinitionOf } from '../../providers/registry';
+import { providerDefinitionOf } from '../../providers/registry/index';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { applyTransformChain } from '../transform';
 import { boxInsets } from './box';

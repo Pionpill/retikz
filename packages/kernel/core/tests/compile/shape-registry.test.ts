@@ -243,10 +243,11 @@ describe('Shape registry — boundary', () => {
         },
       ],
     };
-    expect(() =>
-      compileToScene(ir, {
-        shapes: [{ ...sentinelRect, name: 'rectangle' }],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(ir, {
+          shapes: [{ ...sentinelRect, name: 'rectangle' }],
+        }).scene,
     ).toThrow(/duplicate shape registration: "rectangle"/);
   });
 });

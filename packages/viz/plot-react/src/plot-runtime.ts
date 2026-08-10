@@ -94,11 +94,6 @@ const withIntrinsicSize = (spec: IRPlotSpec, width: number | undefined, height: 
   ...(spec.height === undefined && height !== undefined ? { height } : {}),
 });
 
-const withPlotColors = (spec: IRPlotSpec, colors: Array<string> | undefined): IRPlotSpec => ({
-  ...spec,
-  ...(colors !== undefined ? { colors } : {}),
-});
-
 const withPlotThemeTokens = (
   spec: IRPlotSpec,
   plotThemeTokens: IRPlotSpec['plotThemeTokens'] | undefined,
@@ -107,14 +102,17 @@ const withPlotThemeTokens = (
   ...(plotThemeTokens !== undefined ? { plotThemeTokens } : {}),
 });
 
+const withPlotThemeTokenRules = (
+  spec: IRPlotSpec,
+  plotThemeTokenRules: IRPlotSpec['plotThemeTokenRules'] | undefined,
+): IRPlotSpec => ({
+  ...spec,
+  ...(plotThemeTokenRules !== undefined ? { plotThemeTokenRules } : {}),
+});
+
 const withPlotTheme = (spec: IRPlotSpec, plotTheme: IRPlotSpec['plotTheme'] | undefined): IRPlotSpec => ({
   ...spec,
   ...(plotTheme !== undefined ? { plotTheme } : {}),
-});
-
-const withPlotLayout = (spec: IRPlotSpec, layout: IRPlotSpec['layout'] | undefined): IRPlotSpec => ({
-  ...spec,
-  ...(layout !== undefined ? { layout } : {}),
 });
 
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
@@ -148,12 +146,9 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
-    spec = withPlotLayout(
-      withPlotTheme(
-        withPlotColors(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.colors),
-        props.plotTheme,
-      ),
-      props.layout,
+    spec = withPlotTheme(
+      withPlotThemeTokenRules(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.plotThemeTokenRules),
+      props.plotTheme,
     );
     datasets = props.data;
   } else {
@@ -168,9 +163,8 @@ export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boole
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
       plotThemeTokens: props.plotThemeTokens,
-      colors: props.colors,
+      plotThemeTokenRules: props.plotThemeTokenRules,
       plotTheme: props.plotTheme,
-      layout: props.layout,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,

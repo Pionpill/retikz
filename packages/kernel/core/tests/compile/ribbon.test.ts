@@ -629,7 +629,9 @@ describe('compile ribbon', () => {
   });
 
   it('throws for an unregistered width profile', () => {
-    expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])).scene).toThrow(/missing/);
+    expect(() => compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'missing' } })])).scene).toThrow(
+      /missing/,
+    );
   });
 
   it('throws when a registered width profile returns a non-finite width', () => {
@@ -638,10 +640,11 @@ describe('compile ribbon', () => {
       widthAt: () => Number.NaN,
     });
 
-    expect(() =>
-      compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-        ribbonWidthProfiles: [bad],
-      }).scene,
+    expect(
+      () =>
+        compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
+          ribbonWidthProfiles: [bad],
+        }).scene,
     ).toThrow(/profile "bad"/);
   });
 
@@ -675,33 +678,35 @@ describe('compile ribbon', () => {
   });
 
   it('rejects closed centerlines', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          ribbon({
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-              { type: 'step', kind: 'cycle' },
-            ],
-          }),
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            ribbon({
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [10, 0] },
+                { type: 'step', kind: 'cycle' },
+              ],
+            }),
+          ]),
+        ).scene,
     ).toThrow(/open/);
   });
 
   it('rejects zero-length centerlines', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          ribbon({
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [0, 0] },
-            ],
-          }),
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            ribbon({
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [0, 0] },
+              ],
+            }),
+          ]),
+        ).scene,
     ).toThrow(/zero length/);
   });
 

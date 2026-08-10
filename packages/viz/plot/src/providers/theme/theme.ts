@@ -1,8 +1,9 @@
 import type { IRNode, IRPath } from '@retikz/core';
 
-import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotTheme } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotResolvedThemeTokens, IRPlotTheme } from '../../schemas';
 
 import { LegendSymbolFit } from '../../schemas';
+import { plotAxisThemeFromTokens } from './mapping';
 
 type GuidePathStyle = Partial<
   Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
@@ -54,8 +55,8 @@ export type ResolvedLegendGuideTokens = Required<
 
 /** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme */
 export type ResolvedPlotGuideTheme = {
-  /** 可选背景填充；省略表示透明 */
-  background?: IRPlotTheme['background'];
+  /** 绘图区视觉样式 */
+  plotArea?: IRPlotTheme['plotArea'];
   /** 全局 guide 文本默认样式 */
   typography: GuideTextStyle;
   /** 解析后的 palette */
@@ -64,8 +65,6 @@ export type ResolvedPlotGuideTheme = {
   axis: NonNullable<IRPlotTheme['axis']>;
   /** Legend 视觉默认值 */
   legend: ResolvedLegendGuideTokens;
-  /** Plot label 文本默认样式 */
-  labelText: GuideTextStyle;
 };
 
 const DEFAULT_TYPOGRAPHY: GuideTextStyle = { font: { size: 12 }, textColor: 'currentColor' };
@@ -110,11 +109,10 @@ export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotP
   const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme.typography);
   const legend = theme.legend;
   return {
-    ...(theme.background !== undefined ? { background: theme.background } : {}),
+    ...(theme.plotArea !== undefined ? { plotArea: structuredClone(theme.plotArea) } : {}),
     typography,
     palette: structuredClone(palette),
     axis: theme.axis ?? {},
-    labelText: mergeTextStyle(typography, theme.labelText),
     legend: {
       swatchSize: legend?.swatchSize ?? DEFAULT_LEGEND.swatchSize,
       swatchGap: legend?.swatchGap ?? DEFAULT_LEGEND.swatchGap,
@@ -127,6 +125,44 @@ export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotP
       symbolFit: legend?.symbolFit ?? DEFAULT_LEGEND.symbolFit,
       title: mergeTextStyle(typography, legend?.title),
       label: mergeTextStyle(typography, legend?.label),
+    },
+  };
+};
+
+/** 用某个 Axis dimension 的有效 token 替换 guide theme 中的 Axis token 字段 */
+export const resolvePlotAxisGuideTheme = (
+  theme: ResolvedPlotGuideTheme,
+  tokens: IRPlotResolvedThemeTokens,
+): ResolvedPlotGuideTheme => {
+  const scoped = plotAxisThemeFromTokens(tokens);
+  const global = theme.axis;
+  return {
+    ...theme,
+    axis: {
+      line:
+        scoped.line === false ? false : mergePathStyle(global.line === false ? undefined : global.line, scoped.line),
+      ticks: {
+        ...(global.ticks ?? {}),
+        ...(scoped.ticks ?? {}),
+      },
+      tickLabels:
+        scoped.tickLabels === false
+          ? false
+          : {
+              ...(global.tickLabels === false ? {} : (global.tickLabels ?? {})),
+              ...scoped.tickLabels,
+              ...mergeTextStyle(global.tickLabels === false ? undefined : global.tickLabels, scoped.tickLabels),
+            },
+      title:
+        scoped.title === false
+          ? false
+          : {
+              ...(global.title === false ? {} : (global.title ?? {})),
+              ...(scoped.title ?? {}),
+              ...mergeTextStyle(global.title === false ? undefined : global.title, scoped.title),
+            },
+      grid:
+        scoped.grid === false ? false : mergePathStyle(global.grid === false ? undefined : global.grid, scoped.grid),
     },
   };
 };
@@ -197,6 +233,7 @@ const mergeAxisTitle = (
   local: IRPlotAxisGuide['title'],
 ): IRPlotAxisGuide['title'] => {
   if (local === undefined) return undefined;
+  if (theme === false) return undefined;
   if (typeof local === 'string') return theme === undefined ? local : { text: local, ...theme };
   const themeTitle = theme === undefined ? undefined : { ...theme };
   if (local.orientation !== undefined && local.rotate === undefined && themeTitle !== undefined) {
@@ -213,8 +250,10 @@ const mergeAxisGrid = (
   theme: NonNullable<IRPlotTheme['axis']>['grid'] | undefined,
   local: IRPlotAxisGuide['grid'],
 ): IRPlotAxisGuide['grid'] => {
-  if (local === undefined || local === false || theme === undefined) return local;
-  if (local === true) return mergePathStyle(theme, undefined) satisfies AxisGridToken;
+  if (local === false) return false;
+  if (theme === undefined) return local;
+  if (theme === false) return local ?? false;
+  if (local === undefined || local === true) return { ...theme } satisfies AxisGridToken;
   return { ...mergePathStyle(theme, local), ...local };
 };
 
@@ -237,14 +276,32 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRP
   ...(theme.axis.ticks !== undefined || guide.ticks !== undefined
     ? { ticks: mergeAxisTicks(theme.axis.ticks, guide.ticks) }
     : {}),
-  ...(theme.axis.tickLabels !== undefined || guide.tickLabels !== undefined
-    ? { tickLabels: mergeAxisTickLabels(theme.axis.tickLabels, guide.tickLabels) }
-    : {}),
-  ...(theme.axis.title !== undefined || guide.title !== undefined
-    ? { title: mergeAxisTitle(theme.axis.title, guide.title) }
+  tickLabels: mergeAxisTickLabels(
+    theme.axis.tickLabels === false
+      ? false
+      : {
+          ...(theme.axis.tickLabels ?? {}),
+          ...mergeTextStyle(theme.typography, theme.axis.tickLabels),
+        },
+    guide.tickLabels,
+  ),
+  ...(guide.title !== undefined
+    ? {
+        title: mergeAxisTitle(
+          theme.axis.title === false
+            ? false
+            : {
+                ...(theme.axis.title ?? {}),
+                ...mergeTextStyle(theme.typography, theme.axis.title),
+              },
+          guide.title,
+        ),
+      }
     : {}),
   ...(theme.axis.grid !== undefined || guide.grid !== undefined
-    ? { grid: mergeAxisGrid(theme.axis.grid, guide.grid) }
+    ? {
+        grid: mergeAxisGrid(theme.axis.grid, guide.grid),
+      }
     : {}),
 });
 

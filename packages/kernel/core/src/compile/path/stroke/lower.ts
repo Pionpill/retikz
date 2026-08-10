@@ -3,7 +3,7 @@
 import type { PathCommand, PathGeneratorDefinition } from '../../../contract';
 import type { IRPosition, IRStep } from '../../../schemas';
 
-import { providerDefinitionOf } from '../../../providers/registry';
+import { providerDefinitionOf } from '../../../providers/registry/index';
 import { JsonObjectSchema } from '../../../schemas';
 import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../probe-failure';
 import { parseProviderPayload } from '../../provider-payload';

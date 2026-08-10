@@ -19,7 +19,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={400}
       height={280}
       coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}
-      colors={['#0f8f98', '#8cf27e']}
+      plotTheme={{ palette: { categorical: ['#0f8f98', '#8cf27e'] } }}
     >
       <Scale dimension="x" type="linear" domainPadding={0} />
       <Scale dimension="y" type="linear" domainPadding={0} />

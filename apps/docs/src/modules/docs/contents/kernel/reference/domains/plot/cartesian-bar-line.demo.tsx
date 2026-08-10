@@ -16,7 +16,7 @@ const Demo: FC = () => (
     ]}
     width={560}
     height={220}
-    colors={['#2563eb', '#f97316']}
+    plotTheme={{ palette: { series: ['#2563eb', '#f97316'] } }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <IntervalMark x="quarter" y="actual" fillOpacity={0.72} />

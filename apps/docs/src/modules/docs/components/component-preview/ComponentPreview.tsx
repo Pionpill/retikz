@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
@@ -12,6 +12,7 @@ import type {
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlsOptions,
+  PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
 
@@ -53,6 +54,8 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
+  /** 是否允许当前预览单独切换四种内置 ThemeStyle。 */
+  enableThemeSwitch?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
   caption?: ReactNode;
 };
@@ -68,14 +71,16 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     size = 'md',
     previewClassName,
     hideCode = false,
+    enableThemeSwitch = false,
     caption,
   } = props;
+  const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
   const controlOptions = controls ?? {};
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
-  const previewTheme = usePreviewTheme();
+  const previewTheme = usePreviewTheme(themeStyleSelection === 'inherit' ? undefined : themeStyleSelection);
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
@@ -190,6 +195,10 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlDefinition={controlDefinition}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
+      enableThemeSwitch={enableThemeSwitch}
+      themeStyle={previewTheme.style}
+      themeStyleSelection={themeStyleSelection}
+      onThemeStyleChange={setThemeStyleSelection}
       caption={caption}
     />
   );

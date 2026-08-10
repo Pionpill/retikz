@@ -47,7 +47,7 @@ const data: ExternalDatasets = {
 };
 
 const plotThemeTokens = {
-  'plot.surface.fill': '#123456',
+  'plot.area.fill': '#123456',
 } satisfies NonNullable<IRPlotSpec['plotThemeTokens']>;
 
 type ScenePrimLike = { type: string; id?: string; children?: Array<ScenePrimLike> };

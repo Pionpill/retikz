@@ -1,4 +1,6 @@
+import { CssColorSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
@@ -19,7 +21,10 @@ const uniqueDomainSchema = z
     });
   });
 
-const colorRangeSchema = z.array(z.string().refine(value => value.trim().length > 0, 'color must not be blank')).min(1);
+const colorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
+  message: 'color must not be blank',
+});
+const colorRangeSchema = z.array(colorSchema).min(1);
 
 /** 首次出现顺序的分类颜色 scale */
 export const ORDINAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({

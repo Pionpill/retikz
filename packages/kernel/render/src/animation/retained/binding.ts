@@ -1,4 +1,4 @@
-import type { WaapiDescriptor } from '../../svg/animation/waapi';
+import type { WaapiDescriptor } from '../../svg/animation';
 import type { AnimationControls } from '../runtime';
 
 /** WAAPI 接管前的 inline transform style 快照 */

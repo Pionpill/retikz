@@ -1,7 +1,7 @@
 ﻿import type { Position } from '@retikz/math';
 
 import type { BoundaryAnchorName, BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
+import type { ProviderCollection } from '../../providers/registry/index';
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { CompileWarningCodeValue } from '../warning';

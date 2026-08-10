@@ -90,7 +90,7 @@ Axis creates candidate ticks with the priority `ticks.values > ticks.interval > 
 
 ### Semantic layers
 
-Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }}` overrides only the axis scope; grid always uses its separate background layer so lines do not cover the data. The default order is grid `-300`, marks `0`, axis `200`, plot labels `400`, and legend `500`.
+Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }}` overrides only the axis scope; grid always uses its separate background layer so lines do not cover the data. The default order is grid `-300`, marks `0`, axis `200`, facet labels `300`, and legend `500`.
 
 <ComponentPreview files="axis-semantic-layers" size="md" hideCode />
 
@@ -106,7 +106,7 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
       label: 'Default Plot semantic layer values',
       path: 'packages/viz/plot/src/schemas/layer/constants.ts',
       startLine: 1,
-      endLine: 22,
+      endLine: 20,
     },
   ]}
 />

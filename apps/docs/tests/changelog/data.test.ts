@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
@@ -7,8 +7,8 @@ import {
   changelogVersionSlug,
   diagramSection,
   kernelSection,
+  librarySection,
   PACKAGE_IDS,
-  standardSection,
   vizSection,
 } from '@/modules/docs/data';
 
@@ -46,6 +46,11 @@ describe('changelog data', () => {
     expect(changelog.length).toBeGreaterThan(0);
   });
 
+  it('Library 按 Standard 在上、Layout 在下注册独立分区', () => {
+    expect(librarySection.map(section => section.id)).toEqual(['standard', 'layout']);
+    expect(librarySection.every(section => section.document)).toBe(true);
+  });
+
   it('当前 kernel 里程碑注册详情路由', () => {
     const releases = kernelSection.find(section => section.id === 'releases');
     const changelogPage = releases?.pages.find(page => page.id === 'changelog');
@@ -57,9 +62,9 @@ describe('changelog data', () => {
   });
 
   it('当前 standard 里程碑注册详情路由', () => {
-    const releases = standardSection.find(section => section.id === 'releases');
-    const changelogPage = releases?.pages.find(page => page.id === 'changelog');
-    const currentStandardRelease = changelogForModule('standard')[0];
+    const standard = librarySection.find(section => section.id === 'standard');
+    const changelogPage = standard?.pages.find(page => page.id === 'changelog');
+    const currentStandardRelease = changelogForModule('library', 'standard')[0];
     expect(currentStandardRelease).toBeDefined();
     const currentReleaseId = changelogVersionSlug(currentStandardRelease.minor);
 
@@ -67,7 +72,7 @@ describe('changelog data', () => {
   });
 
   it('Standard alpha.2 更新日志覆盖三个发布包', () => {
-    const release = changelogForModule('standard')[0];
+    const release = changelogForModule('library', 'standard')[0];
     const packages = ['@retikz/standard', '@retikz/standard-vanilla', '@retikz/standard-react'];
 
     expect(release.packages.map(block => block.pkg)).toEqual(packages);
@@ -78,6 +83,21 @@ describe('changelog data', () => {
       expect(alpha?.summary?.en).toBeTruthy();
       expect(alpha?.items.length).toBeGreaterThan(0);
     }
+  });
+
+  it('当前 Layout 里程碑注册详情路由并覆盖三个发布包', () => {
+    const layout = librarySection.find(section => section.id === 'layout');
+    const changelogPage = layout?.pages.find(page => page.id === 'changelog');
+    const currentLayoutRelease = changelogForModule('library', 'layout')[0];
+    expect(currentLayoutRelease).toBeDefined();
+    expect(currentLayoutRelease.packages.map(block => block.pkg)).toEqual([
+      '@retikz/layout',
+      '@retikz/layout-vanilla',
+      '@retikz/layout-react',
+    ]);
+    expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentLayoutRelease.minor))).toBe(
+      true,
+    );
   });
 
   it('当前 Diagram 里程碑注册详情路由并覆盖 Notation 包族', () => {

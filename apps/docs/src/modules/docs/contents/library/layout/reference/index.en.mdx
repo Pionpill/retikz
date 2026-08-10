@@ -1,0 +1,39 @@
+---
+title: API Reference
+description: Look up persisted Layout inputs, compile artifacts, and Core, React, and Vanilla runtime wiring.
+---
+
+The API reference covers stable contracts rather than introductory teaching. The input contract documents the JSON-safe schemas for all three containers and `LayoutItem`. The artifact contract records resolved container, item, and container-specific results. The runtime page explains how Definitions, Core compilation, React, and Vanilla converge on one execution path.
+
+> This is the reference layer. Start with [Layout containers](/library/layout), then choose [FlexLayout](/library/layout/flex-layout), [GridLayout](/library/layout/grid-layout), or [OverlayLayout](/library/layout/overlay-layout) for task-oriented guidance.
+
+## Responsibilities
+
+| Topic               | Responsibility                                                       | When to read                                    |
+| ------------------- | -------------------------------------------------------------------- | ----------------------------------------------- |
+| Contract - Input    | Container configuration, the `LayoutItem` union, and persisted child | Generating, persisting, or validating layout IR |
+| Contract - Artifact | Container geometry, item occupancy, overflow, and resolved results   | Reading compile artifacts or diagnosing layout  |
+| Runtime             | Definitions, probe/replay, and React or Vanilla wiring               | Integrating a host or loading layout capability |
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/library/layout/reference/contract-input">
+    <span className="font-semibold">Contract - Input</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Three containers, LayoutItem, and JSON-safe children
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/library/layout/reference/contract-artifact">
+    <span className="font-semibold">Contract - Artifact</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Allocation slots, real occupancy, visual bounds, and resolved results
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/library/layout/reference/runtime">
+    <span className="font-semibold">Runtime</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Definition loading, Core compilation, probe/replay, and adapters
+    </span>
+  </LinkedCard>
+</div>

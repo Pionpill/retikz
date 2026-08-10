@@ -25,7 +25,7 @@ export type IRChartPresentationStyledText = z.infer<typeof ChartPresentationStyl
 /** Chart presentation preset 的 shorthand 或 styled text */
 export type IRChartPresentationText = z.infer<typeof ChartPresentationTextSchema>;
 
-/** Chart presentation 的 sparse Standard Flex container 覆盖 */
+/** Chart presentation 的 sparse Layout Flex container 覆盖 */
 export type IRChartPresentationLayout = z.infer<typeof ChartPresentationLayoutSchema>;
 
 /** Chart presentation Plot content */

@@ -1,8 +1,9 @@
+import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { JsonObjectSchema } from '../../json';
-import { AngleDegreesSchema, NormalizedFractionSchema } from '../../scalar';
+import { AngleDegreesSchema } from '../../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
 import { PathRibbonOptionsSchema } from '../ribbon';
@@ -13,14 +14,14 @@ export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule 
 
 export const PathAnisotropicScaleSchema = z
   .object({
-    x: z.number().positive().describe('Scale factor on the x axis.'),
-    y: z.number().positive().describe('Scale factor on the y axis.'),
+    x: PositiveNumberSchema.describe('Scale factor on the x axis.'),
+    y: PositiveNumberSchema.describe('Scale factor on the y axis.'),
   })
   .strict()
   .describe('Anisotropic scale with independent x / y factors.');
 
 export const PathScaleSchema = z
-  .union([z.number().positive(), PathAnisotropicScaleSchema])
+  .union([PositiveNumberSchema, PathAnisotropicScaleSchema])
   .describe(
     'Whole-path scale: a single number for uniform scaling, or an { x, y } object for anisotropic scaling. Applied around the path bounding-box center with rotate.',
   );
@@ -67,13 +68,9 @@ export const PathFillSchema = z
 
 export const PathGeometrySchema = z
   .strictObject({
-    roundedCorners: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
-      ),
+    roundedCorners: NonNegativeNumberSchema.optional().describe(
+      'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
+    ),
     rotate: AngleDegreesSchema.optional().describe(
       'Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.',
     ),

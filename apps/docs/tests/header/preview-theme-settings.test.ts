@@ -2,8 +2,11 @@ import { ThemeStyle } from '@retikz/core';
 import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
-import { getPreviewThemeStyleIcon, isPreviewThemeStyleDocument } from '../../src/app/header/preview-theme-settings';
-import { PreviewThemeStyleOptions } from '../../src/modules/docs/components/component-preview/theme';
+import { isPreviewThemeStyleDocument } from '../../src/app/header/preview-theme-settings';
+import {
+  getPreviewThemeStyleIcon,
+  PreviewThemeStyleOptions,
+} from '../../src/modules/docs/components/component-preview/theme';
 
 describe('preview theme settings icons', () => {
   it('maps each ThemeStyle to its semantic icon', () => {

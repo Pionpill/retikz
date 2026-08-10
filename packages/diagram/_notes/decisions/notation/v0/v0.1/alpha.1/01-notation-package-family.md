@@ -1,6 +1,6 @@
 # ADR-01：建立 Notation package family 并迁移图式元素
 
-- 状态：Accepted（2026-08-08，人工确认）
+- 状态：Accepted（2026-08-08，人工确认；语义Node与Connector契约由[alpha.2 ADR-01](../alpha.2/01-semantic-ir-lightweight-lowering.md)部分取代）
 - 决策日期：2026-08-08
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Notation v0.1 roadmap](../roadmap.md) · [Diagram Notation 完备设计](../../../../../architecture/diagram-notation-complete.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [Standard alpha.3 roadmap](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/roadmap.md)
 
@@ -10,7 +10,7 @@ Standard alpha.3 已验证 LogicFrame、Terminal、Stage、Decision、Junction�
 
 本 ADR 建立 Diagram 领域的统一 Notation 入口，把现有元素迁入正确 owner，并冻结 Notation 与 Standard / Core / Graph 的依赖边界。迁移必须复用当前已验证行为，不借机创建 GraphModel、复制布局算法或保留两个公共真源。
 
-## 决策：独立三包，按底层机制迁移，公共布局仍由 Standard 拥有
+## 决策：独立三包，按底层机制迁移，公共排版由 Layout 拥有
 
 建立 lockstep package family：
 
@@ -29,6 +29,8 @@ Notation 继续保留两类公开机制：
 1. Terminal、Stage、Decision、Junction 是 Core Node Sugar。它们固定 shape、默认值和职责 describe，输出 `type: 'node'`，不注册 Notation composite 或 artifact。
 2. LogicFrame、Connector、Callout 是 Tier 2 composite。它们保留当前 JSON-safe schema、Definition、factory、target 与适用 artifact，经 Notation namespace lowering 为 Core IR。
 
+上述机制分类是 alpha.1 迁移时的历史契约。alpha.2 ADR-01 进一步确认：正式、可持久化的 Notation 元素均保留 semantic IR；Terminal、Stage、Decision、Junction 与 Connector 改为一对一轻量 expansion，旧 Core Node Sugar 和 Connector route surface 不再生效。LogicFrame、Callout 与本 ADR 冻结的 package family、owner 及 Layout composition 边界保持不变。
+
 组件字段与类型名本轮不变；import owner 改为：
 
 ```ts
@@ -41,26 +43,26 @@ import {
 } from '@retikz/notation';
 ```
 
-React 与 Vanilla 使用对应 Notation adapter 包。直接 IR 注入实际使用的 LogicFrame、Connector、Callout Definition；四个语义 Node 不需要 Definition。
+React 与 Vanilla 使用对应 Notation adapter 包。alpha.2 起，直接 IR 为实际使用的七类 Notation 元素分别注入 Definition；包导入本身不修改全局 registry。
 
-## Standard 公共 layout composition contract
+## Layout 公共 composition contract
 
-LogicFrame 通过 canonical FlexLayout 排布 header 与 sections；Callout 的内容外壳复用 Standard 的尺寸、spacing、allocation、clip 与 artifact 语义。Notation 不允许跨包引用 Standard `internal`、`pipeline` 或私有 compiler 路径，也不允许复制算法。
+LogicFrame 通过 canonical FlexLayout 排布 header 与 sections；Callout 的内容外壳复用 Layout 的尺寸、spacing、allocation、clip 与 artifact 语义。Notation 不允许跨包引用 Layout `internal`、`pipeline` 或私有 compiler 路径，也不允许复制算法。
 
-Standard 因此提供无副作用的 `@retikz/standard/layout` 公共子入口，只暴露上层 Tier 2 组合当前需要且具有稳定通用语义的原子能力：
+Layout 通过无副作用的 `@retikz/layout/compose` 公共子入口，只暴露上层 Tier 2 组合当前需要且具有稳定通用语义的原子能力：
 
 | 能力                                                        | 输入                                                                                                          | 输出与不变量                                                                                                                                 | 失败语义                                                                                                   |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `compileFlexLayout`                                         | 已由 `FlexLayoutSchema` 解析的 `IRFlexLayout` 与当前 `LayoutCompositeCompileContext`                          | `LayoutCompositeCompileResult<FlexLayoutArtifact>`；复用 canonical minimum / natural / exact probe、placement、replay、clip 与 artifact 主链 | child probe、fill 无有限父 allocation、非法求解或 replay 失败沿现有 layout-aware context fail-loud，不降级 |
 | `normalizeLayoutSpacing`、`contentRectOf`                   | Core spacing 或 container-local allocation / insets                                                           | canonical 四边 spacing 与非负 content rect；padding 超过 allocation 时 content size clamp 为零                                               | 非有限或不满足 Core spacing 契约的输入 fail-loud                                                           |
-| `resolveLayoutAxisSize`                                     | 轴、Standard size policy、Core axis proposal、minimum / natural contribution                                  | allocation size 与可选 finite available；继续遵守 content / fill / fixed、min / max 与 proposal 交集语义                                     | contribution 非有限 / 负值或 fill 缺少 finite parent allocation 时 fail-loud                               |
+| `resolveLayoutAxisSize`                                     | 轴、Layout size policy、Core axis proposal、minimum / natural contribution                                    | allocation size 与可选 finite available；继续遵守 content / fill / fixed、min / max 与 proposal 交集语义                                     | contribution 非有限 / 负值或 fill 缺少 finite parent allocation 时 fail-loud                               |
 | `alignAllocationInSlot`、`layoutClipOf`                     | container-local slot / allocation / alignment，或非负 size                                                    | 对应轴的 translation；正面积 size 生成 rect clip，退化 size 生成 canonical zero-area path clip                                               | 非有限坐标或负尺寸 fail-loud                                                                               |
 | `createLayoutArtifactItem`                                  | authored key / source index、margin、slot、child layout result、translation、container allocation 与 overflow | 把 child-local bounds 变换到 container-local 坐标，统一计算 margin、allocation / visual overflow、clip 与 nullable visible bounds            | 非法 rect / translation 或不一致 child result 不做修复，沿几何合同 fail-loud                               |
 | `createLayoutArtifactContainer`、`unionLayoutArtifactRects` | 同一 container-local 坐标系的 item / rect 集合                                                                | 汇总 allocation / content / visual / nullable visible bounds；空 rect 集合返回 canonical zero rect                                           | 不接受跨坐标系或非有限 rect；输入违反几何合同时 fail-loud                                                  |
 
-这些函数及其输入 / 结果类型构成一个版本化公共 surface，但不暴露 distribution engine、Flex line 中间状态、Grid / Overlay 私有 pipeline 或可变 registry。它们继续调用同一 Standard 实现，不建立第二套 solver、schema、Definition 或 artifact 语义。
+这些函数及其输入 / 结果类型构成一个版本化公共 surface，但不暴露 distribution engine、Flex line 中间状态、Grid / Overlay 私有 pipeline 或可变 registry。它们继续调用同一 Layout 实现，不建立第二套 solver、schema、Definition 或 artifact 语义。
 
-直接调用 `compileFlexLayout` 是一个 composite owner 在自己的 `compile` 内组合 Standard solver，不经过 composite registry，也不会隐式注册 `FlexLayoutDefinition`；因此 Notation 的 `LogicFrameDefinition` 只需注册自身。若作者把独立 `IRFlexLayout` 作为 scene child，宿主仍须按现有 Standard 契约显式注入 `FlexLayoutDefinition`。两种入口共享相同 compiler 与失败语义，子节点所需的其它 Definition 也始终由宿主显式提供。
+直接调用 `compileFlexLayout` 是一个 composite owner 在自己的 `compile` 内组合 Layout solver，不经过 composite registry，也不会隐式注册 `FlexLayoutDefinition`；因此 Notation 的 `LogicFrameDefinition` 只需注册自身。若作者把独立 `IRFlexLayout` 作为 scene child，宿主仍须按 Layout 契约显式注入 `FlexLayoutDefinition`。两种入口共享相同 compiler 与失败语义，子节点所需的其它 Definition 也始终由宿主显式提供。
 
 ## 行为、失败语义与兼容性
 
@@ -75,32 +77,32 @@ Standard 因此提供无副作用的 `@retikz/standard/layout` 公共子入口�
 迁移完成并通过测试与文档闭环后：
 
 - Standard alpha.3 ADR-01（Logic Diagram Profile）、ADR-02（LogicFrame）、ADR-03（语义 Node）、ADR-04（Connector / Callout）与 ADR-05（跨 adapter authoring / recipe）标记为由本 ADR Superseded；长期行为保留在 Notation owner，不表示删除这些能力
-- Standard alpha.3 ADR-06（直接 Definition loading）继续保持 Accepted，因为它仍约束 Grid、Axes、Frame、布局、Legend 等 Standard 能力；本 ADR只复用同一原则，不 supersede 它
+- Standard alpha.3 ADR-06（直接 Definition loading）继续保持 Accepted，因为它仍约束 Grid、Axes、Frame 与 Legend 等 Standard 能力；Layout 与 Notation 复用同一 Core 原则，不 supersede 它
 - Standard alpha.3 roadmap 保留为已完成的历史 milestone，并明确其图式契约已由 Notation alpha.1 取代；Standard v0 / v0.1 roadmap 删除继续拥有图式元素的长期表述
-- `@retikz/standard/layout`、FlexLayout、artifact 与公共 composition contract 始终由 Standard 维护，不迁入 Notation，也不随 Standard alpha.3 ADR 一并 supersede
+- `@retikz/layout`、FlexLayout、artifact 与公共 composition contract 由 Layout 维护，不迁入 Notation，也不随 Standard alpha.3 ADR 一并 supersede
 
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Diagram Notation Complete，提供可独立绘制并可由未来 Graph 复用的图式元素
-- 主责包与协作包：Notation 三包主责图式语义；Standard 主责通用布局 composition；Core 主责 Node / Path / target / Scene；docs 提供发现与示例
+- 主责包与协作包：Notation 三包主责图式语义；Layout 主责通用排版 composition；Standard 按需提供通用绘图拓展；Core 主责 Node / Path / target / Scene；docs 提供发现与示例
 - 拥有：七个元素的 schema / factory / Definition / adapter / artifact、Notation namespace 与图式职责 describe
-- 不拥有：GraphModel、全局拓扑、自动布局 / routing、Editor 状态、UML / 状态执行模型、renderer、Standard layout solver
+- 不拥有：GraphModel、全局拓扑、自动布局 / routing、Editor 状态、UML / 状态执行模型、renderer、Layout solver
 - 外部扩展与下游闭环：开放 role / appearance 继续沿当前输入；未来 Graph 通过 Notation 公共入口选择元素，不依赖其私有文件
 - 不支持边界：本轮不增加新的图式元素、字段、registry 类别或自动行为
 
 ## 架构验证
 
-- 是否可由现有能力组合：七个元素的语义与行为已由 Standard alpha.3 验证；需要新增的只有正确 package owner、release topology 与 Standard 公共 composition boundary
-- 能力责任切分：Notation 保存图式语义；Standard 保存领域无关布局；Core 保存图元、几何、target 和 Scene；renderer 无专用分支
-- 是否需要新 IR / contract / registry：不新增能力轴或 registry；迁移既有 schema，新增 Standard layout 公共组合入口和 Notation package namespace
+- 是否可由现有能力组合：七个元素的语义与行为已由 Standard alpha.3 验证；新增的只有正确 package owner、release topology、Layout 公共 composition boundary 与 Notation package namespace
+- 能力责任切分：Notation 保存图式语义；Layout 保存领域无关排版；Standard 保存通用绘图拓展；Core 保存图元、几何、target 和 Scene；renderer 无专用分支
+- 是否需要新 IR / contract / registry：不新增能力轴或 registry；迁移既有 schema，复用 Layout 公共组合入口和 Notation package namespace
 - pipeline / lowering / renderer / diagnostics：复用当前 Definition / layout-aware lowering / Core compile 主链，迁移后从 Notation owner 注入；SVG / Canvas 消费同一 Scene
 - provenance / locator：保持 authored id、LogicFrame / Callout artifact 与 Connector Scene identity；不新增 Graph provenance
-- 结论：把既有图式元素上移到 Diagram owner，同时把复用的布局原子契约留在 Standard
+- 结论：把既有图式元素上移到 Diagram owner，同时从 Layout owner 复用排版原子契约
 
 ## 实施结果
 
 - Notation 三包已形成独立 lockstep package family 与 release group，七个图式元素只从 Notation owner 导出
-- LogicFrame 直接组合 Standard 的 canonical Flex compiler；Callout 复用同一公共布局原子，Standard 继续唯一拥有通用布局求解与 artifact 语义
+- LogicFrame 直接组合 Layout 的 canonical Flex compiler；Callout 复用同一公共布局原子，Layout 唯一拥有通用排版求解与 artifact 语义
 - canonical namespace 已切换为 `notation`，Standard 不保留旧导出、别名或 namespace 兼容；直接 IR、React 与 Vanilla 进入同一 Core compile 主链
 - Diagram 文档、Schema 发现与 SVG / Canvas 预览已迁入 Notation。structured section target 仍按既有契约 fail-loud，Graph、UML 与自动布局继续留给后续独立设计
 
@@ -110,12 +112,12 @@ Standard 因此提供无副作用的 `@retikz/standard/layout` 公共子入口�
 - 建立 `@retikz/logic`：名称把统一入口限制为当前流程式组件，不能覆盖完整 Diagram notation
 - 建立 `@retikz/diagram` 聚合包：目录分组不需要无独立问题边界的发布包，也会模糊未来 Graph / Flow 的版本依赖
 - Standard 保留 re-export：形成双 owner、双文档入口和长期兼容负担
-- Notation deep import 或复制 Standard layout：跨包私有依赖不可发布，复制 solver 会破坏同一布局真源
+- Notation deep import 或复制 Layout：跨包私有依赖不可发布，复制 solver 会破坏同一布局真源
 - 本轮同时实现 Graph / UML Class / State：超出 package foundation 与迁移目标，且相关长期契约尚未验证
 
 ## 测试策略摘要
 
-需要 package exports 与 release metadata 证据锁定三包边界；schema / factory 证据锁定 Core Sugar 与 Tier 2 canonical IR；compile / artifact 证据锁定 Standard public layout composition、target、identity 和 failure parity；React / Vanilla 证据锁定 adapter 等价；迁移负证据锁定 Standard 不再导出七个元素；renderer 与 docs 证据锁定同一 Scene 的 SVG / Canvas 行为和双语 import / navigation 一致。
+需要 package exports 与 release metadata 证据锁定三包边界；schema / factory 证据锁定 Core Sugar 与 Tier 2 canonical IR；compile / artifact 证据锁定 Layout public composition、target、identity 和 failure parity；React / Vanilla 证据锁定 adapter 等价；迁移负证据锁定 Standard 不再导出七个元素；renderer 与 docs 证据锁定同一 Scene 的 SVG / Canvas 行为和双语 import / navigation 一致。
 
 ## 不在本 ADR 范围
 

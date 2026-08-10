@@ -4,6 +4,8 @@
 - 决策日期：2026-08-08
 - 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [包拓扑](../../../../../../../notes/architecture/package-topology.md)
 
+> **后续演进：** [ADR-17](./17-foundation-schema-primitives.md) 已 Accepted，并取代本 ADR 的零生产依赖、无 Zod schema、七个根导出三项边界；类型、断言、错误、root-only、direct dependency 与领域职责继续保持本 ADR 的 Accepted 决策。
+
 ## 背景与目标
 
 Retikz 已有若干跨包同义复用、却不包含绘图、几何、Runtime 状态或领域可视化语义的原子能力。`ValueOf`、`AssertEqual`、`OpenString` 和非空字符串不变量曾分别位于 Core、Runtime 或 adapter；具有稳定 code 与上下文的领域错误也各自重复建立 Error 结构。把这些能力留在上层 owner 会阻止不依赖该 owner 的包复用，把它们复制到各包则会使类型、空白语义、错误分类和 `cause` 行为分叉。

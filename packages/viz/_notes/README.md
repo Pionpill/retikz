@@ -6,6 +6,7 @@
 
 - [`architecture/`](./architecture)：viz 能力域与 plot / chart / table 长期架构设计。
 - [`decisions/`](./decisions)：版本路线、milestone roadmap、ADR。
+- [`theme/`](./theme)：ThemeStyle 的 package owner 视觉映射；当前包含 Plot 指导。
 - `plans/`：与 ADR 相对路径镜像的 ignored implementation plan、测试契约、任务状态与评审记录；不 stage / commit。
 - [`analysis/`](./analysis)：plot / chart / table 相关一次性分析。
 
@@ -20,6 +21,10 @@
 - [`architecture/chart-encapsulation-complete.md`](./architecture/chart-encapsulation-complete.md)：chart 封装闭环、能力复用与准入检测设计。
 - [`architecture/table-visualization-complete.md`](./architecture/table-visualization-complete.md)：table 表格可视化完备检测设计。
 - [`architecture/table-design.md`](./architecture/table-design.md)：table grammar、Table Algebra、约束布局与 lowering 总设计。
+- [`theme/plot/neutral.md`](./theme/plot/neutral.md)：Neutral 在 Plot surface、Axis、Legend 与 palette 上的映射。
+- [`theme/plot/academic.md`](./theme/plot/academic.md)：Academic 在 Plot surface、Axis、Legend 与 palette 上的映射。
+- [`theme/plot/vibrant.md`](./theme/plot/vibrant.md)：Vibrant 在 Plot surface、Axis、Legend 与 palette 上的映射。
+- [`theme/plot/clean.md`](./theme/plot/clean.md)：Clean 在 Plot surface、Axis、Legend 与 palette 上的映射。
 - [`decisions/plot/v0/roadmap.md`](./decisions/plot/v0/roadmap.md)：plot v0 总路线。
 - [`decisions/plot/v0/v0.1/roadmap.md`](./decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`decisions/table/v0/roadmap.md`](./decisions/table/v0/roadmap.md)：table v0 总路线。

@@ -54,10 +54,9 @@ declare const definePlotThemeTokens: (
 Plot 在当前位置的 Core effective Theme 上按以下顺序解析：
 
 ```text
-Plot style/mode preset
-  < shared categorical projection
+Core shared categorical
+  < Plot style/mode definition
   < local plotThemeTokens
-  < colors shorthand
   < plotTheme
   < explicit scale / channel / guide / mark config
 ```
@@ -66,7 +65,7 @@ Plot style/mode preset
 
 未声明 Theme 时使用 Core 的 `neutral + light` effective environment，Plot 选择与当前 Plot baseline 相容的完整 preset。未声明 Plot-local token 时不产生空的伪 token map；有效 Plot resolver 仍必须产出完整、可消费的 Plot domain view。
 
-Core shared `palette.categorical` 是一套当前生效的非空 active CSS color array。Plot resolver 直接从 `ResolvedTheme.colors.categorical` detached 投影为 `categorical`、`series`、`sector` 的 designated baseline；未被 Plot-owned token、`colors`、`plotTheme` 或显式 scale 覆盖时，三类用途都从同一共享来源得到确定性结果。该层 source 固定为 `{ kind: 'inherit', path: '$theme/colors/categorical' }`。Plot 不复制、反向修改或按名称选择另一套 shared categorical array。
+Core shared `palette.categorical` 是一套当前生效的非空 active CSS color array，也是内建 categorical 色值的单一真源。内建 Plot definition 接收 `ResolvedTheme.colors.categorical`，detached 投影为 `categorical`、`series`、`sector`，不在 Plot paint catalog 复制另一套默认色值。自定义 Plot style definition 可以显式提供这三类 palette，并作为完整 style baseline 高于 Core；之后仍可被 Plot-owned token、`plotTheme` 或显式 scale 覆盖。style definition 产出的 token 直接记录为 `local + $style/...`，resolver 不通过 style 名称或最终数组值反推来源。
 
 Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `options.colorSchemes` 继续由 Plot 拥有，不读取或改写 shared categorical array。显式 scale range、scheme、channel 或 mark config 按 Plot 的正式优先级覆盖主题 palette。
 
@@ -75,14 +74,14 @@ Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `o
 - Plot token 与 native input 必须是 plain JSON-safe data
 - unknown Plot key、非法 token value、空或非法颜色数组、缺失同名 style definition、无法解析的 scheme 与无法映射的 token 都 fail-loud
 - 诊断必须指出输入层以及 token key 或 Plot native path；不得静默退回 D3 默认、renderer 默认或 Chart 私有 palette
-- Plot inspection 的 source `kind` 只使用 Core `inherit | local`。style baseline、`plotThemeTokens`、`colors` 与 `plotTheme` 为 `local`，shared categorical projection 为 `inherit`；具体入口和优先级由稳定 `path` 保留
+- Plot inspection 的 source `kind` 只使用 Core `inherit | local`。当前完整 style baseline、`plotThemeTokens` 与 `plotTheme` 为 `local`；具体入口和优先级由稳定 `path` 保留
 - plain JSON、React、Vanilla、standalone Plot、embedded Plot、Chart 内部 Plot 与 direct headless compile 在相同 style definition registry 和 Core effective Theme 下产生同义 Plot resolution、Scene 输入与诊断
-- `0.x` 采用破坏性命名迁移：`styleTokens` 改为 `plotThemeTokens`，Plot native `theme` 改为 `plotTheme`，不保留 alias、双读或静默 bridge
+- `0.x` 采用破坏性入口收敛：`styleTokens` 改为 `plotThemeTokens`，Plot native `theme` 改为 `plotTheme`，冗余 `colors` 简写删除并统一使用 `plotTheme.palette`，不保留 alias、双读或静默 bridge
 
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Visualization Complete 的 Theme / Palette 与 Plot lowering，解决 Plot token 无法沿 Core Scope 继承和 shared categorical 多重真源问题
-- `@retikz/plot` 拥有 Plot token vocabulary、四种 style × 两种 mode 的 Plot preset、resolver、shared color projection、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
+- `@retikz/plot` 拥有 Plot token vocabulary、四种 style × 两种 mode 的 Plot preset、resolver、shared color projection 与显式领域 palette 覆盖、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
 - `@retikz/core` 拥有 selector 继承、Core style registry、Core shared colors、`ThemeTokenSource` 与 `InspectionAppearance`；不解释 Plot token 语义
 - `@retikz/chart` 拥有 Chart token 与 recipe；只转发或贡献 Plot 输入，并在需要默认 series color 时读取 Plot resolver 的最终 palette
 - `@retikz/standard` 只消费 Plot 已解析的领域无关 presentation / layout 输入与 Core `InspectionAppearance`，不读取 Plot token
@@ -96,13 +95,13 @@ Plot 不拥有 Core selector 继承协议、Chart presentation、Table token、�
 - 现有 Core effective Theme、Composite context、Plot schema / provider / pipeline 与 Standard lowering 可以组合出本能力；新增的是 Plot owner-local style definition 与 shared color projection 的跨层契约
 - Math 不承载 Theme；Runtime 不解释 Plot token；Core 解析 selector 与 shared colors；Plot 解析并 mapping；Standard 消费正式输入；React / Vanilla 与 plain JSON 生成等价输入；Render 只执行 Scene
 - `PlotThemeStyleDefinition` 进入 Plot owner registry，standalone、embedded、Chart adapter 与 direct headless 使用同一 name lookup 和失败语义；Plot 不建立跨 owner theme registry
-- 闭环为 Core effective Theme → Plot style definition → shared projection / local token resolution → Plot mapping → Standard / Core formal input → Scene / manifest / inspection
+- 闭环为 Core effective Theme → Plot style definition 注入或覆盖 categorical baseline → local token resolution → Plot mapping → Standard / Core formal input → Scene / manifest / inspection
 - shared categorical 的非空约束、detached projection 与 stable index consumption 属于跨包 value contract；sequential / diverging 仍由 Plot resolver 完整闭环
 - 本轮结论：扩展 Visualization Complete 的 Plot Theme / Palette 能力并接入 Core effective Theme；不下沉 Plot 语义，不改变 Plot → Core lowering 方向
 
 ## 最终实现与验证摘要
 
-最终实现已闭合 Plot owner style definition、resolver、mapping、inspection 与 shared categorical projection，并让 standalone Plot、embedded Plot 与 Chart bundle 复用同一 Plot registry 和 cascade。React、Vanilla、headless 与根 Theme authoring 共享正式 definition 注入及失败语义，Plot native input 与局部 token 也已完成破坏性命名迁移。
+最终实现已闭合 Plot owner style definition、resolver、mapping、inspection 与 shared categorical projection，并让内建 definition 复用 Core palette、自定义 definition 显式 palette 高于 Core。standalone Plot、embedded Plot 与 Chart bundle 复用同一 Plot registry 和 cascade；React、Vanilla、headless 与根 Theme authoring 共享正式 definition 注入及失败语义，Plot native input 与局部 token 也已完成破坏性命名迁移。
 
 验证覆盖 inherited / local source 分类、Plot token cascade、Plot native theme 与显式配置优先级、owner/source inspection、Chart handoff、SSR 与 SVG / Canvas 最终语义；fresh / retained compile 环境的完整验证、对抗验证以及双语文档和浏览器验收均无遗留阻塞。
 
@@ -118,7 +117,7 @@ Plot 不拥有 Core selector 继承协议、Chart presentation、Table token、�
 
 ## 测试策略摘要
 
-需要 schema / type 证据证明 Plot token、native theme 与 shared categorical projection 的 JSON-safe、strict、non-empty 和 breaking naming 边界；registry 证据证明 Plot style definition 在 standalone、embedded、Chart adapter 与 direct headless 入口使用同一注入、name lookup 和失败语义；compile / pipeline 证据证明 Core Scope selector inheritance、Plot cascade、正式 mapping、inspection source 与 Scene / manifest consumer 闭环；颜色证据证明 Plot categorical / series / sector 从同一 `ResolvedTheme.colors.categorical` detached 投影，并记录 `inherit + $theme/colors/categorical`，sequential / diverging 不读取该数组；React、Vanilla、plain JSON、SSR、SVG、Canvas 与 nested Chart parity 证据证明 adapter 和 renderer 不维护旁路默认。详细矩阵属于后续 ignored implementation plan。
+需要 schema / type 证据证明 Plot token、native theme 与 shared categorical projection 的 JSON-safe、strict、non-empty 和 breaking naming 边界；registry 证据证明 Plot style definition 在 standalone、embedded、Chart adapter 与 direct headless 入口使用同一注入、name lookup 和失败语义；compile / pipeline 证据证明 Core Scope selector inheritance、Plot cascade、正式 mapping、inspection source 与 Scene / manifest consumer 闭环；颜色证据证明内建 Plot categorical / series / sector 从同一 `ResolvedTheme.colors.categorical` detached 投影、自定义 definition palette 高于 Core，并记录直接 winning entry，sequential / diverging 不读取该数组；React、Vanilla、plain JSON、SSR、SVG、Canvas 与 nested Chart parity 证据证明 adapter 和 renderer 不维护旁路默认。详细矩阵属于后续 ignored implementation plan。
 
 ## 不在本 ADR 范围
 

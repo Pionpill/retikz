@@ -3,7 +3,7 @@ title: LogicFrame
 description: Build a bordered logic block with an optional header and ordered authored sections.
 ---
 
-`LogicFrame` is the generic shell for grouped base units. It accepts one optional header and zero or more keyed sections. The shell reuses Standard's FlexLayout engine for region measurement, padding, gaps, placement, clipping, and replay; it does not introduce a second layout system.
+`LogicFrame` is the generic shell for grouped base units. It accepts one optional header and zero or more keyed sections. The shell reuses Layout's FlexLayout engine for region measurement, padding, gaps, placement, clipping, and replay; it does not introduce a second layout system.
 
 ## Usage
 
@@ -58,12 +58,12 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-The same shell can contain semantic Nodes or nested composites. Semantic units are already Core Nodes, so a block containing a `Stage` still needs only `LogicFrameDefinition` when loading direct IR; add Definitions only for nested composites that own lowering.
+The same shell can contain Core children, Notation logic units, or other nested composites. Logic units retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
 
 <ComponentPreview
   files="process-recipe"
   size="lg"
-  caption="A documentation-only Process recipe composed from LogicFrame, semantic units, and Connectors."
+  caption="A documentation-only Process recipe composed from LogicFrame, base units, and Connectors."
 />
 
 Recipes are examples, not package exports; Process, Class, and Data remain ordinary compositions of the public vocabulary.
@@ -78,7 +78,7 @@ Recipes are examples, not package exports; Process, Class, and Data remain ordin
 
 ### Canonical FlexLayout reuse
 
-The compiler creates a synthetic column FlexLayout region for the header and sections, then projects the Flex artifact into the block artifact. This reuses the canonical Flex proposal, size, gap, placement, clipping, and replay semantics rather than defining a second layout engine. Region children remain regular JSON-safe Core children.
+The compiler creates a synthetic column FlexLayout region for the header and sections, then projects the Flex artifact into the block artifact. This reuses the canonical Flex proposal, size, gap, placement, clipping, and replay semantics rather than defining a second layout engine. Region children remain JSON-safe IR and enter the same Core compile path through their injected Definitions.
 
 ### Divider artifact projection
 
@@ -97,11 +97,10 @@ The shell and divider are emitted as Core visual primitives. Divider rectangles 
 | `overflow?`   | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
 | `appearance?` | `LogicFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
 
-Blank or duplicate section keys fail loudly. Connector and Callout accept section target syntax, but both currently reject section targets before lowering or placement; use a whole block target instead.
+Blank or duplicate section keys fail loudly. Connector accepts section target syntax but currently rejects section targets before lowering; use a whole block target instead.
 
 ## Related
 
-- [Semantic units](/diagram/notation/unit/semantic-units): content-bearing logic nodes
+- [Logic Unit](/diagram/notation/unit/logic-unit): content-bearing logic nodes
 - [Connector](/diagram/notation/unit/connector): relationships between authored identities
-- [Callout](/diagram/notation/unit/callout): target-relative explanations
-- [Layout containers](/standard/layout): the generic layout family
+- [Layout containers](/library/layout): the generic layout family

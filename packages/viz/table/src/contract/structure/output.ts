@@ -1,3 +1,4 @@
+import { NonNegativeIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
@@ -19,15 +20,15 @@ export const TableCellSourceSchema = z
       kind: z
         .literal(TableCellSourceKind.Manual)
         .describe('Discriminator for a source Cell authored by manual structure input.'),
-      row: z.number().int().nonnegative().describe('Zero-based row of the source entry in the manual matrix.'),
-      column: z.number().int().nonnegative().describe('Zero-based column of the source entry in the manual matrix.'),
+      row: NonNegativeIntegerSchema.describe('Zero-based row of the source entry in the manual matrix.'),
+      column: NonNegativeIntegerSchema.describe('Zero-based column of the source entry in the manual matrix.'),
     }),
     z.strictObject({
       kind: z
         .literal(TableCellSourceKind.Field)
         .describe('Discriminator for a Cell derived from an external data field.'),
       reference: z.string().min(1).describe('External dataset reference used by the Table root.'),
-      sourceIndex: z.number().int().nonnegative().describe('Stable source row index in the external dataset.'),
+      sourceIndex: NonNegativeIntegerSchema.describe('Stable source row index in the external dataset.'),
       field: z.string().min(1).describe('Non-empty field name or dotted path read from the source row.'),
     }),
     z.strictObject({
@@ -47,12 +48,9 @@ export const TableStructureOutputSchema = z
         z.strictObject({
           id: z.string().min(1).describe('Stable row id supplied by the structure definition.'),
           kind: TableRowKindSchema.describe('Semantic row kind.'),
-          sourceIndex: z
-            .number()
-            .int()
-            .nonnegative()
-            .optional()
-            .describe('Optional external source row index for a body row.'),
+          sourceIndex: NonNegativeIntegerSchema.optional().describe(
+            'Optional external source row index for a body row.',
+          ),
         }),
       )
       .describe('Ordered canonical row candidates.'),
@@ -68,8 +66,8 @@ export const TableStructureOutputSchema = z
       .array(
         z.strictObject({
           id: z.string().min(1).describe('Stable Cell id supplied by the structure definition.'),
-          row: z.number().int().nonnegative().describe('Zero-based index into output rows.'),
-          column: z.number().int().nonnegative().describe('Zero-based index into output columns.'),
+          row: NonNegativeIntegerSchema.describe('Zero-based index into output rows.'),
+          column: NonNegativeIntegerSchema.describe('Zero-based index into output columns.'),
           payload: TableCellPayloadSchema.describe('Validated Cell value or direct Core content.'),
           location: TableCellLocationSchema.describe('Semantic Cell location.'),
           roles: z.array(TableCellRoleSchema).min(1).describe('Non-empty semantic Cell roles.'),

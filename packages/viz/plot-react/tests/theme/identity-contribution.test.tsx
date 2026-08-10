@@ -38,7 +38,7 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light),
+  resolve: () => ({ tokens: getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light) }),
 });
 
 describe('Plot React runtime style options', () => {

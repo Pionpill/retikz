@@ -101,7 +101,7 @@ ADR-02 的完整 canvas 与 ADR-03 的公开组合入口因此等待 `@retikz/st
 
 - 不允许 Chart 私造 layout / bbox / background primitive 主链
 - 不允许 React / Vanilla 用 DOM / CSS 主题替代 JSON / Canvas 能力
-- 不允许只实现 `plot.surface.fill` 就宣称完整 dark mode
+- 不允许只实现 `plot.area.fill` 就宣称完整 dark mode
 - ADR-04 不公开带未消费 token 的 ChartSpec surface
 
 ## 11. Spatial transparency dependency gate

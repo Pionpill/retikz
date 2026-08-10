@@ -140,7 +140,7 @@ Chart presentation 只覆盖一个独立 Chart 可以选择绘制、但不构成
 
 presentation 不属于 Canonical Type 核心配方。没有显式内容时，type 不得凭空生成标题、来源或说明；用户可以省略或关闭整套展示外壳。Chart 可以为已声明内容提供样式与排列默认，但不能用开放 `graphic`、任意 ReactNode 或任意 slots 建立第二套通用组合系统。
 
-现有 Plot 实现中与 title、caption、note、source 对应的 chart-level label 是后续迁移候选，不能因为当前代码位置而继续把展示外壳定义为 Plot 长期职责。axis / datum / annotation label 不在该迁移范围。
+PlotSpec 不承载 title、caption、note、source 等 chart-level presentation。它们由 Chart presentation 通过 Standard 与唯一 Plot body 组合；axis、legend、facet、datum、mark、reference 与 annotation 文本继续属于 Plot。
 
 ## 6. Plot registry 横向扩展与 `defineChart` 不适用
 
@@ -236,7 +236,7 @@ Chart 隐式内容越多，越需要可解释性。完整闭环至少要求：
 - ID 冲突不自动重命名或覆盖
 - 所需 Plot definition 缺失时保留 capability key 与来源信息
 - 工具可以查看展开后的 PlotSpec
-- 工具可以查看 Chart presentation 的来源、最终组合位置及其与 Plot label / guide 的区别
+- 工具可以查看 Chart presentation 的来源、最终组合位置及其与 Plot-owned mark / guide 文本的区别
 - 工具可以区分 Chart 外层 handle 与 Plot 内部 handle，并检查 qualified selector 的委托路径
 - Plot 的 view / arrangement / facet panel / track / plotArea identity、provenance / locator / lineage 能继续定位最终视觉贡献
 

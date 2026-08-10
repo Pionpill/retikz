@@ -74,15 +74,15 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 基础 `<Layout>` 不内置检查逻辑。安装可选的 `@retikz/inspect` 后，由检查宿主提供注册表、运行时选择与编译驱动；Standard 已在独立入口中封装三种布局检查器。辅助层不进入 IR，不扩大 viewBox，也不参与命中测试。
 
 ```tsx
-import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/standard/inspect';
-import { StandardInspectLayout } from '@retikz/standard-react/inspect';
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
+import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 
-<StandardInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}>
+<LayoutInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}>
   {/* FlexLayout */}
-</StandardInspectLayout>;
+</LayoutInspectLayout>;
 ```
 
-需要只检查一段 authored 子树时使用 `StandardInspectScope`；只检查一个 Standard 容器时使用 `InspectFlexLayout`、`InspectGridLayout` 或 `InspectOverlayLayout`。通用机制见 [`@retikz/inspect`](/kernel/packages/inspect)，布局选项与选择规则见 [Standard 布局检查器](/standard/layout/reference/runtime#布局检查器)。
+需要只检查一段 authored 子树时使用 `LayoutInspectScope`；只检查一个 Layout 容器时使用 `InspectFlexLayout`、`InspectGridLayout` 或 `InspectOverlayLayout`。通用机制见 [`@retikz/inspect`](/kernel/packages/inspect)，布局选项与选择规则见 [Layout 布局检查器](/library/layout/reference/runtime#布局检查器)。
 
 ### 输出边界
 

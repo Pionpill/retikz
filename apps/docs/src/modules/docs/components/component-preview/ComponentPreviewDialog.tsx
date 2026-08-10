@@ -1,3 +1,4 @@
+import type { ThemeStyleValue } from '@retikz/core';
 import type { CSSProperties, FC } from 'react';
 
 import {
@@ -30,6 +31,7 @@ import type {
   PreviewControlSlot,
   PreviewControlState,
   PreviewThemeMode,
+  PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
 
@@ -74,6 +76,14 @@ export type ComponentPreviewDialogProps = {
   themeMode: PreviewThemeMode;
   /** 更新 Card/Dialog 共享的局部主题 */
   onThemeModeChange: (themeMode: PreviewThemeMode) => void;
+  /** 是否显示单预览 ThemeStyle 切换器。 */
+  enableThemeSwitch?: boolean;
+  /** 当前预览实际生效的 ThemeStyle。 */
+  themeStyle?: ThemeStyleValue;
+  /** 当前单预览 ThemeStyle 选择。 */
+  themeStyleSelection?: PreviewThemeStyleSelection;
+  /** 更新当前单预览 ThemeStyle 选择。 */
+  onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
   /** 与所属 Card 共享的属性面板打开状态 */
   controlPanelOpen: boolean;
   /** 更新 Card/Dialog 共享的属性面板打开状态 */
@@ -147,6 +157,10 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     showContextBar,
     themeMode,
     onThemeModeChange,
+    enableThemeSwitch = false,
+    themeStyle,
+    themeStyleSelection = 'inherit',
+    onThemeStyleChange,
     controlPanelOpen,
     onControlPanelOpenChange,
     controlSlots,
@@ -190,7 +204,11 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       controlState={controlState}
       showContextBar={showContextBar}
       themeMode={themeMode}
+      themeStyle={themeStyle}
       onThemeModeChange={onThemeModeChange}
+      enableThemeSwitch={enableThemeSwitch}
+      themeStyleSelection={themeStyleSelection}
+      onThemeStyleChange={onThemeStyleChange}
       controlPanelOpen={controlPanelOpen}
       controlDensity="default"
       onControlPanelOpenChange={onControlPanelOpenChange}

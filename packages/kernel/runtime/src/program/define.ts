@@ -16,7 +16,7 @@ import type {
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
 import { RuntimeError } from '../error';
-import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../trace/constants';
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../trace';
 
 /** Program prepare 完成但尚未发布的 artifact 与双层 read cache */
 export type RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead> = Readonly<{

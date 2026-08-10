@@ -81,7 +81,7 @@ const Demo: FC = () => (
       <LogicFigureFrameTitle>Plot semantic layers</LogicFigureFrameTitle>
       <Node
         id="legend-layer"
-        position={[270, -88]}
+        position={[270, -66]}
         minimumSize={{ width: 164, height: 30 }}
         stroke="gray"
         fill="gray"
@@ -93,21 +93,8 @@ const Demo: FC = () => (
         <Text font={{ size: 13, weight: 'bold' }}>legend · zIndex 500</Text>
       </Node>
       <Node
-        id="plot-label-layer"
-        position={[270, -44]}
-        minimumSize={{ width: 164, height: 30 }}
-        stroke="gray"
-        fill="gray"
-        fillOpacity={0.06}
-        cornerRadius={4}
-        align="middle"
-        lineHeight={15}
-      >
-        <Text font={{ size: 13, weight: 'bold' }}>plot labels · zIndex 400</Text>
-      </Node>
-      <Node
         id="axis-layer"
-        position={[270, 0]}
+        position={[270, -22]}
         minimumSize={{ width: 164, height: 30 }}
         stroke="gray"
         fill="gray"
@@ -120,7 +107,7 @@ const Demo: FC = () => (
       </Node>
       <Node
         id="mark-layer"
-        position={[270, 44]}
+        position={[270, 22]}
         minimumSize={{ width: 164, height: 30 }}
         stroke="gray"
         fill="gray"
@@ -133,7 +120,7 @@ const Demo: FC = () => (
       </Node>
       <Node
         id="grid-layer"
-        position={[270, 88]}
+        position={[270, 66]}
         minimumSize={{ width: 164, height: 30 }}
         stroke="gray"
         fill="gray"

@@ -2,15 +2,12 @@ import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard'
 import {
   axes,
   AxesVanillaAdapter,
-  FlexLayoutVanillaAdapter,
   frame,
   FrameVanillaAdapter,
   grid,
-  GridLayoutVanillaAdapter,
   GridVanillaAdapter,
   legend,
   LegendVanillaAdapter,
-  OverlayLayoutVanillaAdapter,
   StandardVanillaAdapters,
 } from '@retikz/standard-vanilla';
 import { normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
@@ -38,9 +35,6 @@ describe('Standard Vanilla definition loading', () => {
       GridVanillaAdapter,
       AxesVanillaAdapter,
       FrameVanillaAdapter,
-      FlexLayoutVanillaAdapter,
-      GridLayoutVanillaAdapter,
-      OverlayLayoutVanillaAdapter,
       LegendVanillaAdapter,
     ]);
     expect(Object.isFrozen(StandardVanillaAdapters)).toBe(true);

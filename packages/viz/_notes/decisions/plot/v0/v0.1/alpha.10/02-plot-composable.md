@@ -14,7 +14,7 @@
 
 1. **IRPlotSpec 自描述尺寸**：`IRPlotSpec.width` / `height` 表示本面板尺寸；lowering 取值顺序为 `plot.width ?? lowerPlots.width ?? DEFAULT_WIDTH`（height 同理）。additive，不新增组合 IR schema，组合真源仍是 core IR，data 仍外置于 IR。
 2. **摆位由外层 Scope 承担**：plot 节点只描述「多大」，不描述「在哪」；`<Plot x/y>` 编译为外层 `Scope{transforms:[translate]}`。
-3. **id 触发外部 anchor**：仅当 `IRPlotSpec.id` 存在时，lowering 输出外层非 local panel scope，并额外生成不可见矩形 carrier `<plotId>.plotArea`。无 id 时保持旧 root 结构（单图零回归）。
+3. **id 触发外部 anchor**：仅当 `IRPlotSpec.id` 存在时，lowering 输出外层非 local panel scope；二维坐标额外生成不可见矩形 carrier `<plotId>.plotArea`，一维坐标只保留 panel bbox，不伪造面积 anchor。无 id 时保持旧 root 结构（单图零回归）。
 4. **内部 id 仍封闭**：marks / axes / datum / series 继续在 `localNamespace: true` 内层 scope 中，避免污染父 frame。
 5. **组合容器就是 core `<Layout>`**：`<Plot>` 在 `<Layout>` 外维持 standalone 行为；在 `<Layout>` 内不自建 svg，而是贡献 plot composite node、datasets 与 lowering factory。
 6. **依赖 core-react 通用 embeddable 机制**：`Layout` / `buildIR` 收纳任意 Tier 2 子组件贡献的 `{ node, datasets, makeComposites }`。机制通用，不写死 plot，不新增 core IR schema。
@@ -32,16 +32,20 @@ height?: z.number().finite().positive()  // 面板本性高；缺省回退全局
 ### 定稿 lowering 结构
 
 ```txt
-// IRPlotSpec.id 存在
+// IRPlotSpec.id 存在，二维坐标
 Scope { id: <plotId> }                            // 外部可见 panel bbox
   Scope { localNamespace: true, children: [...] } // 内部 marks / axes / datum id
   Node { id: '<plotId>.plotArea', shape: rectangle, visible: false }
+
+// IRPlotSpec.id 存在，一维坐标
+Scope { id: <plotId> }                            // 外部可见 panel bbox
+  Scope { localNamespace: true, children: [...] } // 内部 marks / axes / datum id；无 plotArea carrier
 
 // IRPlotSpec.id 不存在
 Scope { localNamespace: true, children: [...] }   // 旧结构，单图零回归
 ```
 
-`<plotId>` 表示整面板 bbox anchor；`<plotId>.plotArea` 表示扣除 axis / legend 后的精确绘图区矩形（非 marks bbox），在 local namespace 外可被兄弟节点引用。
+`<plotId>` 表示整面板 bbox anchor；二维坐标的 `<plotId>.plotArea` 表示扣除 axis / legend 后的精确绘图区矩形（非 marks bbox），在 local namespace 外可被兄弟节点引用。一维直线与一维圆周只有投影路径，没有可填充的二维区域，因此不生成 `<plotId>.plotArea`，也不输出跨绘图区的 grid layer。
 
 ## 代价
 
