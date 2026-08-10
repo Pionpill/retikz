@@ -1,15 +1,29 @@
-import type { BuiltinThemeStyleValue } from '@retikz/core';
+import type { BuiltinThemeStyleValue, CssColorValue, NonEmptyReadonlyArray } from '@retikz/core';
 
 import { ThemeStyle } from '@retikz/core';
 
+import type { IRPlotResolvedThemeTokens } from '../../../schemas';
+
+import { PlotThemeToken } from '../../../schemas';
 import { PlotColorScheme } from '../../scale/shared';
 
-type PalettePreset = Readonly<{
+type PalettePresetSource = Readonly<{
   sequential: string;
   diverging: string;
 }>;
 
-const presets: Record<BuiltinThemeStyleValue, PalettePreset> = {
+type PaletteTokenPreset = Readonly<
+  Pick<
+    IRPlotResolvedThemeTokens,
+    | typeof PlotThemeToken.PlotPaletteCategorical
+    | typeof PlotThemeToken.PlotPaletteSeries
+    | typeof PlotThemeToken.PlotPaletteSector
+    | typeof PlotThemeToken.PlotPaletteSequential
+    | typeof PlotThemeToken.PlotPaletteDiverging
+  >
+>;
+
+const presets: Record<BuiltinThemeStyleValue, PalettePresetSource> = {
   [ThemeStyle.Neutral]: {
     sequential: PlotColorScheme.Viridis,
     diverging: PlotColorScheme.RdBu,
@@ -28,5 +42,17 @@ const presets: Record<BuiltinThemeStyleValue, PalettePreset> = {
   },
 };
 
-/** 读取内建主题的 sequential 与 diverging palette preset */
-export const getPalettePreset = (style: BuiltinThemeStyleValue): PalettePreset => presets[style];
+/** 读取内建主题的 Plot palette token slice */
+export const getPalettePreset = (
+  style: BuiltinThemeStyleValue,
+  categorical: NonEmptyReadonlyArray<CssColorValue>,
+): PaletteTokenPreset => {
+  const preset = presets[style];
+  return {
+    [PlotThemeToken.PlotPaletteCategorical]: [...categorical],
+    [PlotThemeToken.PlotPaletteSeries]: [...categorical],
+    [PlotThemeToken.PlotPaletteSector]: [...categorical],
+    [PlotThemeToken.PlotPaletteSequential]: preset.sequential,
+    [PlotThemeToken.PlotPaletteDiverging]: preset.diverging,
+  };
+};

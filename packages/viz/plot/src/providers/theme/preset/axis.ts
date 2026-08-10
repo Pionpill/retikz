@@ -4,7 +4,9 @@ import { ThemeMode, ThemeStyle } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
-type AxisPreset = Readonly<{
+import { PlotThemeToken } from '../../../schemas';
+
+type AxisPresetSource = Readonly<{
   lineEnabled: boolean;
   lineStroke: string;
   lineStrokeWidth: number;
@@ -23,11 +25,31 @@ type AxisPreset = Readonly<{
 }>;
 
 type AxisStylePreset = Pick<
-  AxisPreset,
+  AxisPresetSource,
   'lineEnabled' | 'tickMark' | 'tickLabelFontSize' | 'tickLabelGap' | 'titleFontSize' | 'gridDrawOpacity'
 >;
 
-type AxisModePreset = Pick<AxisPreset, 'lineStroke' | 'tickLabelForeground' | 'titleForeground' | 'gridStroke'>;
+type AxisModePreset = Pick<AxisPresetSource, 'lineStroke' | 'tickLabelForeground' | 'titleForeground' | 'gridStroke'>;
+type AxisTokenPreset = Readonly<
+  Pick<
+    IRPlotResolvedThemeTokens,
+    | typeof PlotThemeToken.AxisLineEnabled
+    | typeof PlotThemeToken.AxisLineStroke
+    | typeof PlotThemeToken.AxisLineStrokeWidth
+    | typeof PlotThemeToken.AxisLineDrawOpacity
+    | typeof PlotThemeToken.AxisTickMark
+    | typeof PlotThemeToken.AxisTickLabelEnabled
+    | typeof PlotThemeToken.AxisTickLabelForeground
+    | typeof PlotThemeToken.AxisTickLabelFontSize
+    | typeof PlotThemeToken.AxisTickLabelGap
+    | typeof PlotThemeToken.AxisTitleForeground
+    | typeof PlotThemeToken.AxisTitleFontSize
+    | typeof PlotThemeToken.AxisTitleFontWeight
+    | typeof PlotThemeToken.AxisGridStroke
+    | typeof PlotThemeToken.AxisGridStrokeWidth
+    | typeof PlotThemeToken.AxisGridDrawOpacity
+  >
+>;
 
 const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
   [ThemeStyle.Neutral]: {
@@ -80,7 +102,7 @@ const modes: Record<ThemeModeValue, AxisModePreset> = {
 };
 
 /** 读取内建主题的 Axis preset，并把 line tick 绑定到有效轴线颜色 */
-export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): AxisPreset => {
+export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): AxisTokenPreset => {
   const structure = styles[style];
   const paint = modes[mode];
   const tickMark =
@@ -92,13 +114,20 @@ export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValu
       : structure.tickMark;
 
   return {
-    ...structure,
-    ...paint,
-    lineStrokeWidth: 1,
-    lineDrawOpacity: 1,
-    tickMark,
-    tickLabelEnabled: true,
-    titleFontWeight: 600,
-    gridStrokeWidth: 1,
+    [PlotThemeToken.AxisLineEnabled]: structure.lineEnabled,
+    [PlotThemeToken.AxisLineStroke]: paint.lineStroke,
+    [PlotThemeToken.AxisLineStrokeWidth]: 1,
+    [PlotThemeToken.AxisLineDrawOpacity]: 1,
+    [PlotThemeToken.AxisTickMark]: tickMark,
+    [PlotThemeToken.AxisTickLabelEnabled]: true,
+    [PlotThemeToken.AxisTickLabelForeground]: paint.tickLabelForeground,
+    [PlotThemeToken.AxisTickLabelFontSize]: structure.tickLabelFontSize,
+    [PlotThemeToken.AxisTickLabelGap]: structure.tickLabelGap,
+    [PlotThemeToken.AxisTitleForeground]: paint.titleForeground,
+    [PlotThemeToken.AxisTitleFontSize]: structure.titleFontSize,
+    [PlotThemeToken.AxisTitleFontWeight]: 600,
+    [PlotThemeToken.AxisGridStroke]: paint.gridStroke,
+    [PlotThemeToken.AxisGridStrokeWidth]: 1,
+    [PlotThemeToken.AxisGridDrawOpacity]: structure.gridDrawOpacity,
   };
 };

@@ -4,9 +4,9 @@ import { ThemeMode, ThemeStyle } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
-import { LegendSymbolFit } from '../../../schemas';
+import { LegendSymbolFit, PlotThemeToken } from '../../../schemas';
 
-type LegendPreset = Readonly<{
+type LegendPresetSource = Readonly<{
   titleForeground: string;
   titleFontSize: number;
   titleFontWeight: number;
@@ -23,8 +23,27 @@ type LegendPreset = Readonly<{
   symbolFit: IRPlotResolvedThemeTokens['legend.symbol.fit'];
 }>;
 
-type LegendStylePreset = Omit<LegendPreset, 'titleForeground' | 'labelForeground' | 'symbolScale' | 'symbolFit'>;
-type LegendModePreset = Pick<LegendPreset, 'titleForeground' | 'labelForeground'>;
+type LegendStylePreset = Omit<LegendPresetSource, 'titleForeground' | 'labelForeground' | 'symbolScale' | 'symbolFit'>;
+type LegendModePreset = Pick<LegendPresetSource, 'titleForeground' | 'labelForeground'>;
+type LegendTokenPreset = Readonly<
+  Pick<
+    IRPlotResolvedThemeTokens,
+    | typeof PlotThemeToken.LegendTitleForeground
+    | typeof PlotThemeToken.LegendTitleFontSize
+    | typeof PlotThemeToken.LegendTitleFontWeight
+    | typeof PlotThemeToken.LegendLabelForeground
+    | typeof PlotThemeToken.LegendLabelFontSize
+    | typeof PlotThemeToken.LegendSwatchSize
+    | typeof PlotThemeToken.LegendSwatchGap
+    | typeof PlotThemeToken.LegendEntryGap
+    | typeof PlotThemeToken.LegendTitleGap
+    | typeof PlotThemeToken.LegendRampLength
+    | typeof PlotThemeToken.LegendRampThickness
+    | typeof PlotThemeToken.LegendSymbolSize
+    | typeof PlotThemeToken.LegendSymbolScale
+    | typeof PlotThemeToken.LegendSymbolFit
+  >
+>;
 
 const styles: Record<BuiltinThemeStyleValue, LegendStylePreset> = {
   [ThemeStyle.Neutral]: {
@@ -89,9 +108,23 @@ const modes: Record<ThemeModeValue, LegendModePreset> = {
 };
 
 /** 读取内建主题的 Legend preset */
-export const getLegendPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): LegendPreset => ({
-  ...styles[style],
-  ...modes[mode],
-  symbolScale: 1,
-  symbolFit: LegendSymbolFit.Fit,
-});
+export const getLegendPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): LegendTokenPreset => {
+  const structure = styles[style];
+  const paint = modes[mode];
+  return {
+    [PlotThemeToken.LegendTitleForeground]: paint.titleForeground,
+    [PlotThemeToken.LegendTitleFontSize]: structure.titleFontSize,
+    [PlotThemeToken.LegendTitleFontWeight]: structure.titleFontWeight,
+    [PlotThemeToken.LegendLabelForeground]: paint.labelForeground,
+    [PlotThemeToken.LegendLabelFontSize]: structure.labelFontSize,
+    [PlotThemeToken.LegendSwatchSize]: structure.swatchSize,
+    [PlotThemeToken.LegendSwatchGap]: structure.swatchGap,
+    [PlotThemeToken.LegendEntryGap]: structure.entryGap,
+    [PlotThemeToken.LegendTitleGap]: structure.titleGap,
+    [PlotThemeToken.LegendRampLength]: structure.rampLength,
+    [PlotThemeToken.LegendRampThickness]: structure.rampThickness,
+    [PlotThemeToken.LegendSymbolSize]: structure.symbolSize,
+    [PlotThemeToken.LegendSymbolScale]: 1,
+    [PlotThemeToken.LegendSymbolFit]: LegendSymbolFit.Fit,
+  };
+};
