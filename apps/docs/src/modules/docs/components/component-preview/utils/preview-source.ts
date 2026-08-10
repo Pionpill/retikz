@@ -1,6 +1,6 @@
 import type { ComponentPreviewFileConfig, ComponentSourceFile } from '../types';
 
-import { buildSourceFileKey, filenameFromKey, langOfFilename, localSourceFiles } from '../registry';
+import { buildSourceFileKey, filenameFromKey, langOfFilename, resolveSourceBaselineFilename } from '../registry';
 import { computeUnifiedDiff } from './diff';
 
 /** 构建 React 源码视图文件列表。 */
@@ -12,12 +12,13 @@ export type BuildReactSourceFilesInput = {
   sourceFiles: Array<ComponentPreviewFileConfig>;
   diffFrom?: string;
   baselineRawSource?: string;
+  sourceContents: Readonly<Record<string, string | undefined>>;
   hideCode: boolean;
 };
 
 /** 构建 React 源码视图文件列表。 */
 export const buildReactSourceFiles = (input: BuildReactSourceFilesInput): Array<ComponentSourceFile> => {
-  const { key, name, segments, rawSource, sourceFiles, diffFrom, baselineRawSource, hideCode } = input;
+  const { key, name, segments, rawSource, sourceFiles, diffFrom, baselineRawSource, sourceContents, hideCode } = input;
   const trimmedSource = rawSource.replace(/\n$/, '');
   const reactDiff =
     !hideCode && baselineRawSource !== undefined
@@ -25,15 +26,11 @@ export const buildReactSourceFiles = (input: BuildReactSourceFilesInput): Array<
       : undefined;
   const extraSourceFiles: Array<ComponentSourceFile> = sourceFiles.map(entry => {
     const filename = entry.file;
-    const rawSourceFile = localSourceFiles[buildSourceFileKey(segments, filename)];
+    const rawSourceFile = sourceContents[buildSourceFileKey(segments, filename)];
     const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
-    const baselineFilename =
-      entry.diffFrom ??
-      (diffFrom !== undefined && filename.startsWith(`${name}.`)
-        ? `${diffFrom}.${filename.slice(name.length + 1)}`
-        : undefined);
+    const baselineFilename = resolveSourceBaselineFilename(entry, name, diffFrom);
     if (baselineFilename === undefined) return { filename, code, lang: langOfFilename(filename) };
-    const baselineRaw = localSourceFiles[buildSourceFileKey(segments, baselineFilename)];
+    const baselineRaw = sourceContents[buildSourceFileKey(segments, baselineFilename)];
     const diff =
       !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
         ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)
