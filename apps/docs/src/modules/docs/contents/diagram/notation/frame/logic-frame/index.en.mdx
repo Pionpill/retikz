@@ -58,7 +58,7 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-The same shell can contain Core children, Notation base units, or other nested composites. Base units retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
+The same shell can contain Core children, Notation logic units, or other nested composites. Logic units retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
 
 <ComponentPreview
   files="process-recipe"
@@ -101,6 +101,6 @@ Blank or duplicate section keys fail loudly. Connector accepts section target sy
 
 ## Related
 
-- [Base units](/diagram/notation/unit/semantic-units): content-bearing logic nodes
+- [Logic Unit](/diagram/notation/unit/logic-unit): content-bearing logic nodes
 - [Connector](/diagram/notation/unit/connector): relationships between authored identities
 - [Layout containers](/standard/layout): the generic layout family

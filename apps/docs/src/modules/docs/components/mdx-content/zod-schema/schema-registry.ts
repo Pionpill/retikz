@@ -522,22 +522,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   TerminalSchema: {
     schema: NotationIR.TerminalSchema,
     label: 'Terminal',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   StageSchema: {
     schema: NotationIR.StageSchema,
     label: 'Stage',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   DecisionSchema: {
     schema: NotationIR.DecisionSchema,
     label: 'Decision',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   JunctionSchema: {
     schema: NotationIR.JunctionSchema,
     label: 'Junction',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   ConnectorSchema: {
     schema: NotationIR.ConnectorSchema,

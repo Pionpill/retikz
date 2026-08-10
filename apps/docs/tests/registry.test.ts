@@ -47,7 +47,7 @@ describe('SCHEMA_REGISTRY', () => {
         url: '/standard/composite/legend#legendartifactschema',
       },
       LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
-      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/semantic-units' },
+      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/logic-unit' },
       ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
     });
   });

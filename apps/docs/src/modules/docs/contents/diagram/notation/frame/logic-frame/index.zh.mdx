@@ -3,7 +3,7 @@ title: LogicFrame
 description: 用可选 header 与有序 authored section 构建带外壳的逻辑块。
 ---
 
-`LogicFrame` 是分组基础单元的通用外壳。它接受一个可选 header 与零个或多个带 key 的 section。外壳复用 Standard 的 FlexLayout 引擎完成区域测量、padding、gap、放置、裁剪与 replay，不另造布局系统。
+`LogicFrame` 是分组逻辑单元的通用外壳。它接受一个可选 header 与零个或多个带 key 的 section。外壳复用 Standard 的 FlexLayout 引擎完成区域测量、padding、gap、放置、裁剪与 replay，不另造布局系统。
 
 ## 用法
 
@@ -58,12 +58,12 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-同一外壳可以容纳 Core child、Notation 基础单元或其它嵌套 composite。基础单元保留自己的 Notation IR，因此直接 IR 中包含 `Stage` 时需要同时注入 `LogicFrameDefinition` 与 `StageDefinition`；React 组件和 Vanilla adapter 会为实际使用的元素自动贡献对应 Definition。
+同一外壳可以容纳 Core child、Notation 逻辑单元或其它嵌套 composite。逻辑单元保留自己的 Notation IR，因此直接 IR 中包含 `Stage` 时需要同时注入 `LogicFrameDefinition` 与 `StageDefinition`；React 组件和 Vanilla adapter 会为实际使用的元素自动贡献对应 Definition。
 
 <ComponentPreview
   files="process-recipe"
   size="lg"
-  caption="只存在于文档的 Process recipe，由 LogicFrame、基础单元与 Connector 组合而成"
+  caption="只存在于文档的 Process recipe，由 LogicFrame、逻辑单元与 Connector 组合而成"
 />
 
 Recipe 只是示例，不会新增 package export；Process、Class、Data 都只是公开词汇的组合。
@@ -101,6 +101,6 @@ section key 为空或重复时会 fail-loud。Connector 接受 section target �
 
 ## 相关
 
-- [基础单元](/diagram/notation/unit/semantic-units)：带 content 的逻辑节点
+- [逻辑单元](/diagram/notation/unit/logic-unit)：带 content 的逻辑节点
 - [Connector](/diagram/notation/unit/connector)：authored identity 之间的关系
 - [布局容器](/standard/layout)：通用布局家族

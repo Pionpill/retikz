@@ -35,12 +35,12 @@ import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/notatio
 import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/process-recipe.zh.demo';
 import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.en.demo';
 import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/data-recipe.zh.demo';
-import SemanticUnitsEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.en.demo';
-import SemanticUnitsZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/semantic-units/semantic-units.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/data-recipe.zh.demo';
+import LogicUnitEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/logic-unit.en.demo';
+import LogicUnitZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/logic-unit.zh.demo';
 
 const definitions = [TerminalDefinition, StageDefinition, ConnectorDefinition] as const;
 
@@ -103,16 +103,8 @@ const lower = (adapter: AnyVanillaTier2Adapter, embed: { id: string; kind: strin
   }).node;
 
 const vanillaChildren = (): Array<IRChild> => [
-  vanillaTranslated(
-    48,
-    65,
-    lower(TerminalVanillaAdapter, terminal('start', { position: [0, 0], text: 'Start' })),
-  ),
-  vanillaTranslated(
-    210,
-    65,
-    lower(StageVanillaAdapter, stage('step', { position: [0, 0], text: 'Step' })),
-  ),
+  vanillaTranslated(48, 65, lower(TerminalVanillaAdapter, terminal('start', { position: [0, 0], text: 'Start' }))),
+  vanillaTranslated(210, 65, lower(StageVanillaAdapter, stage('step', { position: [0, 0], text: 'Step' }))),
   lower(
     ConnectorVanillaAdapter,
     connector('edge', {
@@ -134,8 +126,8 @@ describe('Notation renderer integration', () => {
   it.each([
     ['logic block en', LogicFrameBasicEnDemo],
     ['logic block zh', LogicFrameBasicZhDemo],
-    ['semantic units en', SemanticUnitsEnDemo],
-    ['semantic units zh', SemanticUnitsZhDemo],
+    ['logic unit en', LogicUnitEnDemo],
+    ['logic unit zh', LogicUnitZhDemo],
     ['connector en', ConnectorRoutingEnDemo],
     ['connector zh', ConnectorRoutingZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],

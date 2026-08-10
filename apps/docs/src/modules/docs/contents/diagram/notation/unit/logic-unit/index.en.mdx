@@ -1,9 +1,9 @@
 ---
-title: Base units
+title: Logic Unit
 description: Terminal, Stage, Decision, and Junction retain Notation semantics and lower lightly to Core Nodes.
 ---
 
-Base units are lightweight semantic IR values that retain the `notation` namespace. Terminal, Stage, Decision, and Junction remain distinguishable in persisted data for tools, LLMs, and future Graph presentations. At compile time, each unit uses its own Definition to lower one-to-one into a same-id Core `Node`
+Logic units are lightweight semantic IR values that retain the `notation` namespace. Terminal, Stage, Decision, and Junction remain distinguishable in persisted data for tools, LLMs, and future Graph presentations. At compile time, each unit uses its own Definition to lower one-to-one into a same-id Core `Node`
 
 ## Usage
 
@@ -38,7 +38,7 @@ String children become Node text, and `<Text>` works as it does with Core `Node`
 
 ## Examples
 
-<ComponentPreview files="semantic-units" size="lg" />
+<ComponentPreview files="logic-unit" size="lg" />
 
 Direct IR uses the matching factory and explicitly injects each used Definition through Core compile options:
 
@@ -72,7 +72,7 @@ The following recipes stay in docs. They demonstrate composition, not new `Proce
 
 ## Semantic boundary
 
-Base units own only their persisted notation identity, fixed shape, and defaults. They do not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Core continues to own Node layout, style, theme, targets, compilation, and Scene output
+Logic units own only their persisted notation identity, fixed shape, and defaults. They do not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Core continues to own Node layout, style, theme, targets, compilation, and Scene output
 
 ## Related
 

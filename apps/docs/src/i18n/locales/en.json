@@ -155,7 +155,7 @@
     "baseUnits": "Base Units",
     "frameUnits": "Composite Units",
     "logicFrame": "LogicFrame",
-    "semanticUnits": "Base units",
+    "logicUnit": "Logic Unit",
     "connector": "Connector",
     "notationApiReference": "Notation API Reference",
     "releases": "Releases",

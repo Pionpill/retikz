@@ -1,9 +1,9 @@
 ---
-title: 基础单元
+title: 逻辑单元
 description: Terminal、Stage、Decision 和 Junction 保留 Notation 语义，并轻量下沉为 Core Node
 ---
 
-基础单元是保留 `notation` namespace 的轻量语义 IR。Terminal、Stage、Decision 和 Junction 在持久化数据中仍可被工具、LLM 与未来 Graph presentation 明确识别；编译时，每个单元通过自己的 Definition 一对一下沉为同 id 的 Core `Node`
+逻辑单元是保留 `notation` namespace 的轻量语义 IR。Terminal、Stage、Decision 和 Junction 在持久化数据中仍可被工具、LLM 与未来 Graph presentation 明确识别；编译时，每个单元通过自己的 Definition 一对一下沉为同 id 的 Core `Node`
 
 ## 用法
 
@@ -27,7 +27,7 @@ import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
 </Layout>
 ```
 
-字符串 children 会成为 Node 文本，也可以像 Core `Node` 一样使用 `<Text>`。适用的 Node props（例如 `fill`、`padding`、`minimumSize` 和 `position`）继续透传，但 `namespace`、语义 `type` 和固定 `shape` 由基础单元拥有
+字符串 children 会成为 Node 文本，也可以像 Core `Node` 一样使用 `<Text>`。适用的 Node props（例如 `fill`、`padding`、`minimumSize` 和 `position`）继续透传，但 `namespace`、语义 `type` 和固定 `shape` 由逻辑单元拥有
 
 | 单元       | 固定 shape           | 逻辑职责           | 默认样式                                          |
 | ---------- | -------------------- | ------------------ | ------------------------------------------------- |
@@ -38,7 +38,7 @@ import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
 
 ## 示例
 
-<ComponentPreview files="semantic-units" size="lg" />
+<ComponentPreview files="logic-unit" size="lg" />
 
 直接 IR 使用对应 factory，并在 Core compile options 中显式注入实际使用的 Definition：
 
@@ -68,7 +68,7 @@ const adapters = [StageVanillaAdapter];
 
 ## 语义边界
 
-基础单元只拥有可持久化的图式身份、固定 shape 与默认值，不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Node 的布局、样式、主题、target、编译和 Scene 输出继续由 Core 负责
+逻辑单元只拥有可持久化的图式身份、固定 shape 与默认值，不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Node 的布局、样式、主题、target、编译和 Scene 输出继续由 Core 负责
 
 ## 相关
 
