@@ -1,31 +1,77 @@
+import type { VanillaEmbedContext, VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
+
 import { describe, expect, it } from 'vitest';
 
-import { decision, junction, stage, terminal } from '../src';
+import {
+  connector,
+  ConnectorVanillaAdapter,
+  decision,
+  DecisionVanillaAdapter,
+  junction,
+  JunctionVanillaAdapter,
+  stage,
+  StageVanillaAdapter,
+  terminal,
+  TerminalVanillaAdapter,
+} from '../src';
 
-describe('Notation Vanilla semantic Node sugar', () => {
-  it('returns canonical Core Nodes directly', () => {
+const lower = <TProps>(spec: VanillaEmbedSpec<TProps>, adapter: VanillaTier2Adapter<TProps>) =>
+  adapter.lower(spec.props, {
+    id: spec.id,
+    kind: spec.kind,
+    namespace: adapter.namespace,
+    layerId: 'layer',
+    identityPath: ['layer', spec.id],
+  } satisfies VanillaEmbedContext);
+
+describe('@retikz/notation-vanilla package boundary', () => {
+  it('does not expose Callout authoring', async () => {
+    const notationVanilla = await import('../src');
+
+    expect(notationVanilla).not.toHaveProperty('callout');
+    expect(notationVanilla).not.toHaveProperty('CalloutVanillaAdapter');
+    expect(notationVanilla).not.toHaveProperty('NotationCalloutVanillaNamespace');
+  });
+});
+
+describe('Notation Vanilla semantic authoring', () => {
+  it('returns embeds for all five lightweight semantic elements', () => {
     expect(terminal('start', { position: [0, 0], text: 'Start' })).toMatchObject({
-      type: 'node',
+      type: 'embed',
       id: 'start',
-      text: 'Start',
-      shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
     });
-    expect(stage('step', { position: [20, 0] })).toMatchObject({
-      type: 'node',
-      id: 'step',
-      shape: { type: 'rectangle', params: { cornerRadius: 8 } },
-    });
-    expect(decision('check', { position: [40, 0] })).toMatchObject({
-      type: 'node',
-      id: 'check',
-      shape: { type: 'diamond', params: { aspectRatio: 1.8 } },
-    });
-    expect(junction('join', { position: [60, 0] })).toMatchObject({ type: 'node', id: 'join', shape: 'circle' });
+    expect(stage('step', { position: [20, 0] })).toMatchObject({ type: 'embed', id: 'step' });
+    expect(decision('check', { position: [40, 0] })).toMatchObject({ type: 'embed', id: 'check' });
+    expect(junction('join', { position: [60, 0] })).toMatchObject({ type: 'embed', id: 'join' });
+    expect(connector('flow', { way: ['start', 'step'] })).toMatchObject({ type: 'embed', id: 'flow' });
   });
 
-  it('does not derive semantic ids or composite definitions', () => {
-    const node = terminal('start', { position: [0, 0] });
-    expect(node.id).toBe('start');
-    expect(node).not.toHaveProperty('namespace');
+  it.each([
+    {
+      type: 'terminal',
+      id: 'terminal',
+      lower: () => lower(terminal('terminal', { position: [0, 0] }), TerminalVanillaAdapter),
+    },
+    { type: 'stage', id: 'stage', lower: () => lower(stage('stage', { position: [20, 0] }), StageVanillaAdapter) },
+    {
+      type: 'decision',
+      id: 'decision',
+      lower: () => lower(decision('decision', { position: [40, 0] }), DecisionVanillaAdapter),
+    },
+    {
+      type: 'junction',
+      id: 'junction',
+      lower: () => lower(junction('junction', { position: [60, 0] }), JunctionVanillaAdapter),
+    },
+    {
+      type: 'connector',
+      id: 'connector',
+      lower: () => lower(connector('connector', { way: ['terminal', 'stage'] }), ConnectorVanillaAdapter),
+    },
+  ])('lowers $type to same-id semantic IR and contributes its Definition', ({ type, id, lower: runLower }) => {
+    const contribution = runLower();
+
+    expect(contribution.node).toMatchObject({ namespace: 'notation', type, id });
+    expect(contribution.makeComposites({})).toEqual([expect.objectContaining({ namespace: 'notation', type })]);
   });
 });

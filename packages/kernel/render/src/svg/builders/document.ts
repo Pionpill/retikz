@@ -3,14 +3,14 @@ import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
 
-import type { EasingRegistry } from '../../animation/types';
-import type { StaticRenderFrame } from '../../runtime/frame';
+import type { EasingRegistry } from '../../animation';
+import type { StaticRenderFrame } from '../../runtime';
 import type { SvgNode } from '../types';
 import type { BuildContext } from './prim';
 
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
-import { createSvgAnimationCollector } from '../animation/keyframes';
+import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
 import { formatViewBox } from '../view-box';
 import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';

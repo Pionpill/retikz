@@ -3,8 +3,8 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
+import { FlexLayoutDefinition } from '@retikz/layout';
 import { createPlotLocator, defineMark, lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
-import { FlexLayoutDefinition } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -170,7 +170,7 @@ describe('Chart composite recursive integration', () => {
     expect(collectPlotTrace(result.scene.primitives).length).toBeGreaterThan(0);
   });
 
-  it('保留缺失 Standard FlexLayout definition 的 Core 原生诊断', () => {
+  it('保留缺失 Layout FlexLayout definition 的 Core 原生诊断', () => {
     const warnings: Array<CompileWarning> = [];
 
     compileToScene(sceneOf(presentedChartSpec), {
@@ -181,7 +181,7 @@ describe('Chart composite recursive integration', () => {
     expect(warnings).toEqual([
       expect.objectContaining({
         code: 'COMPOSITE_NOT_REGISTERED',
-        message: "No composite registered for 'standard.flexLayout'; the node is skipped.",
+        message: "No composite registered for 'layout.flexLayout'; the node is skipped.",
       }),
     ]);
   });
@@ -196,7 +196,7 @@ describe('Chart composite recursive integration', () => {
       id: 'sales',
       children: [
         {
-          namespace: 'standard',
+          namespace: 'layout',
           type: 'flexLayout',
           children: [
             { key: 'chart.presentation.title' },

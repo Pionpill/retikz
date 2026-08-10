@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { ThemeStyle } from '@retikz/core';
+import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
@@ -17,7 +17,7 @@ import PathInspectorDemo, {
 } from '../../src/modules/docs/contents/kernel/components/draw/path/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
-} from '../../src/modules/docs/contents/standard/composite/frame/frame-playground.demo';
+} from '../../src/modules/docs/contents/library/standard/composite/frame/frame-playground.demo';
 import TableDetailDemo, {
   previewSource as tableDetailPreviewSource,
 } from '../../src/modules/docs/contents/viz/table/detail/table-detail.zh.demo';
@@ -97,6 +97,7 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
   segments: ['test'],
   rawSource: 'export default Demo;\n',
   sourceFiles: [],
+  sourceContents: {},
   hideCode: false,
   ...overrides,
 });
@@ -417,25 +418,29 @@ describe('buildPreviewSource', () => {
     expect(result.previewIr).toBeNull();
   });
 
-  it('automatic Vanilla preview consumes the ambient categorical palette', () => {
+  it('automatic Vanilla preview consumes the ambient Theme selector', () => {
+    const firstTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Light };
+    const secondTheme = { style: ThemeStyle.Vibrant, mode: ThemeMode.Dark };
+    const firstColor = resolveCoreThemeColors(firstTheme.style, firstTheme.mode).categorical[0];
+    const secondColor = resolveCoreThemeColors(secondTheme.style, secondTheme.mode).categorical[0];
     const first = buildPreviewSource(
       createInput({
         Component: PlotDemo,
-        theme: { style: ThemeStyle.Neutral, tokens: { core: { 'palette.categorical': ['#101010', '#202020'] } } },
+        theme: firstTheme,
       }),
     );
     const second = buildPreviewSource(
       createInput({
         Component: PlotDemo,
-        theme: { style: ThemeStyle.Neutral, tokens: { core: { 'palette.categorical': ['#303030', '#404040'] } } },
+        theme: secondTheme,
       }),
     );
 
     const firstMarkup = renderToStaticMarkup(first.source?.vanilla?.render?.('svg'));
     const secondMarkup = renderToStaticMarkup(second.source?.vanilla?.render?.('svg'));
 
-    expect(firstMarkup).toContain('#101010');
-    expect(secondMarkup).toContain('#303030');
+    expect(firstMarkup).toContain(firstColor);
+    expect(secondMarkup).toContain(secondColor);
     expect(firstMarkup).not.toBe(secondMarkup);
   });
 

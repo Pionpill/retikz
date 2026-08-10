@@ -1,3 +1,4 @@
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { FontStyle, FontWeightKeyword, WebFontSizePreset } from './constants';
@@ -9,7 +10,7 @@ const RelativeFontSizeSchema = z
   .describe('Relative font size with `em` or `rem`, resolved during compile.');
 
 export const FontSizeSchema = z
-  .union([z.number().positive(), z.enum(WebFontSizePreset), RelativeFontSizeSchema])
+  .union([PositiveNumberSchema, z.enum(WebFontSizePreset), RelativeFontSizeSchema])
   .describe('Font size as user units, web preset, or relative `em` / `rem` value.');
 
 export const FontFamilySchema = z

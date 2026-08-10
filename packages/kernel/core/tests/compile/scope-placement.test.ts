@@ -197,23 +197,26 @@ describe('Scope placement 两阶段布局', () => {
       ],
     ],
   ] as const)('%s Scope target fail-loud，不读取未完成 placeholder', (_name, children) => {
-    expect(() => compileToScene(scene(children as unknown as IRScene['children'])).scene).toThrow(/scope placement target/i);
+    expect(() => compileToScene(scene(children as unknown as IRScene['children'])).scene).toThrow(
+      /scope placement target/i,
+    );
   });
 
   it('空 Scope 的 {side,fraction} selfAnchor 沿用零尺寸 fail-loud', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'scope',
-            placement: {
-              target: [0, 0],
-              selfAnchor: { side: 'top', fraction: 0.5 },
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'scope',
+              placement: {
+                target: [0, 0],
+                selfAnchor: { side: 'top', fraction: 0.5 },
+              },
+              children: [],
             },
-            children: [],
-          },
-        ]),
-      ).scene,
+          ]),
+        ).scene,
     ).toThrow(/zero-size target/);
   });
 
@@ -327,37 +330,39 @@ describe('Scope placement 两阶段布局', () => {
 
 describe('Scope zero-scale 反投影契约', () => {
   it('纯视觉 zero scale 合法', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'scope',
-            transforms: [{ kind: 'scale', x: 0 }],
-            children: [node('inside', [10, 20])],
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'scope',
+              transforms: [{ kind: 'scale', x: 0 }],
+              children: [node('inside', [10, 20])],
+            },
+          ]),
+        ).scene,
     ).not.toThrow();
   });
 
   it('跨 zero-scale ancestor chain 解析外部 target 时稳定抛错', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          { type: 'coordinate', id: 'outside', position: [20, 30] },
-          {
-            type: 'scope',
-            transforms: [{ kind: 'scale', x: 0 }],
-            children: [
-              {
-                type: 'scope',
-                placement: { target: { id: 'outside' } },
-                children: [],
-              },
-            ],
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            { type: 'coordinate', id: 'outside', position: [20, 30] },
+            {
+              type: 'scope',
+              transforms: [{ kind: 'scale', x: 0 }],
+              children: [
+                {
+                  type: 'scope',
+                  placement: { target: { id: 'outside' } },
+                  children: [],
+                },
+              ],
+            },
+          ]),
+        ).scene,
     ).toThrow('non-invertible scope transform');
   });
 });

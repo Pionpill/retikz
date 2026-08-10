@@ -1,11 +1,16 @@
+// @vitest-environment jsdom
+
 import type { FC, ReactNode } from 'react';
+import type { Root } from 'react-dom/client';
 
 import { fadeIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { createRoot } from 'react-dom/client';
+import { act } from 'react-dom/test-utils';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewCardProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
+import type { PreviewDemoModule } from '../../src/modules/docs/components/component-preview/registry';
 import type {
   PreviewControlContract,
   PreviewControlSlot,
@@ -16,12 +21,14 @@ import * as componentPreviewExports from '../../src/modules/docs/components/comp
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreview } from '../../src/modules/docs/components/component-preview/ComponentPreview';
 import { DemoLocationContext } from '../../src/modules/docs/components/component-preview/context';
+import { mergePreviewControlSlots } from '../../src/modules/docs/components/component-preview/controls';
+import { buildConfiguredControlSlots } from '../../src/modules/docs/components/component-preview/preview-panel';
 import {
   buildControlsKey,
   buildKey,
-  controlModules,
-  demoModules,
-  demoSources,
+  controlModuleLoaders,
+  demoModuleLoaders,
+  demoSourceLoaders,
 } from '../../src/modules/docs/components/component-preview/registry';
 
 const RegistryAnimatedDemo: FC = () => (
@@ -45,14 +52,18 @@ const replaceRegistryValue = <T,>(record: Record<string, T | undefined>, key: st
 
 const installDemoRegistryFixture = (
   name: string,
-  previewControls: NonNullable<(typeof demoModules)[string]>['previewControls'],
+  previewControls: PreviewDemoModule['previewControls'],
 ): (() => void) => {
   const key = buildKey(fixtureSegments, name);
-  const restoreModule = replaceRegistryValue(demoModules, key, {
-    default: RegistryAnimatedDemo,
-    previewControls,
-  });
-  const restoreSource = replaceRegistryValue(demoSources, key, 'export default RegistryAnimatedDemo;');
+  const restoreModule = replaceRegistryValue(demoModuleLoaders, key, () =>
+    Promise.resolve({
+      default: RegistryAnimatedDemo,
+      previewControls,
+    }),
+  );
+  const restoreSource = replaceRegistryValue(demoSourceLoaders, key, () =>
+    Promise.resolve('export default RegistryAnimatedDemo;'),
+  );
 
   return () => {
     restoreSource();
@@ -65,11 +76,15 @@ const installDemoRegistryContractFixture = (
   previewControlContract: PreviewControlContract,
 ): (() => void) => {
   const key = buildKey(fixtureSegments, name);
-  const restoreModule = replaceRegistryValue(demoModules, key, {
-    default: RegistryAnimatedDemo,
-    previewControlContract,
-  });
-  const restoreSource = replaceRegistryValue(demoSources, key, 'export default RegistryAnimatedDemo;');
+  const restoreModule = replaceRegistryValue(demoModuleLoaders, key, () =>
+    Promise.resolve({
+      default: RegistryAnimatedDemo,
+      previewControlContract,
+    }),
+  );
+  const restoreSource = replaceRegistryValue(demoSourceLoaders, key, () =>
+    Promise.resolve('export default RegistryAnimatedDemo;'),
+  );
 
   return () => {
     restoreSource();
@@ -105,12 +120,37 @@ vi.mock('../../src/modules/docs/layout', () => ({
 }));
 
 beforeAll(async () => {
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   await i18n.changeLanguage('zh');
 });
 
-const renderPreview = (segments: Array<string>, node: ReactNode): ComponentPreviewCardProps => {
+afterAll(() => {
+  vi.restoreAllMocks();
+});
+
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+const roots: Array<Root> = [];
+
+afterEach(() => {
+  roots.splice(0).forEach(root => act(() => root.unmount()));
+  document.body.replaceChildren();
+});
+
+const renderPreview = async (segments: Array<string>, node: ReactNode): Promise<ComponentPreviewCardProps> => {
   capture.reset();
-  renderToStaticMarkup(<DemoLocationContext.Provider value={segments}>{node}</DemoLocationContext.Provider>);
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  roots.push(root);
+
+  act(() => {
+    root.render(<DemoLocationContext.Provider value={segments}>{node}</DemoLocationContext.Provider>);
+  });
+  await act(async () => {
+    await Promise.resolve();
+  });
+  await vi.waitFor(() => capture.read(), { timeout: 10_000 });
   return capture.read();
 };
 
@@ -119,9 +159,9 @@ describe('ComponentPreview Vanilla source', () => {
     expect(componentPreviewExports).not.toHaveProperty(['Component', 'Render'].join(''));
   });
 
-  it('viz 文档按内容路由自动开启单预览主题切换', () => {
-    const vizProps = renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
-    const kernelProps = renderPreview(
+  it('viz 文档按内容路由自动开启单预览主题切换', async () => {
+    const vizProps = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+    const kernelProps = await renderPreview(
       ['kernel', 'components', 'node', 'overview'],
       <ComponentPreview files="node-styled" />,
     );
@@ -130,23 +170,23 @@ describe('ComponentPreview Vanilla source', () => {
     expect(kernelProps.enableThemeSwitch).toBe(false);
   });
 
-  it('Tier 2 Plot composite 自动生成 Vanilla 源码与真实 SVG', () => {
-    const props = renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+  it('Tier 2 Plot composite 自动生成 Vanilla 源码与真实 SVG', async () => {
+    const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
 
     expect(props.source?.vanilla?.files[0]?.code).toContain("from '@retikz/plot-vanilla'");
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
 
-  it('原手写 Plot 示例改由统一管线自动生成 Vanilla', () => {
-    const props = renderPreview(['viz', 'get-start'], <ComponentPreview files="line-scatter" />);
+  it('原手写 Plot 示例改由统一管线自动生成 Vanilla', async () => {
+    const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="line-scatter" />);
 
     expect(props.source?.vanilla?.files[0].filename).toBe('line-scatter.vanilla.ts');
     expect(props.source?.vanilla?.files[0].code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
 
-  it('自动 Core Vanilla view 使用真实 SVG 并固定 renderer', () => {
-    const props = renderPreview(
+  it('自动 Core Vanilla view 使用真实 SVG 并固定 renderer', async () => {
+    const props = await renderPreview(
       ['kernel', 'components', 'effects', 'custom-animation'],
       <ComponentPreview files="custom-property" />,
     );
@@ -156,8 +196,8 @@ describe('ComponentPreview Vanilla source', () => {
     expect(props.source?.vanilla?.rendererMode).toBe('svg');
   });
 
-  it('controls demo 使用默认状态提供 React、IR 与 Vanilla 视图', () => {
-    const props = renderPreview(
+  it('controls demo 使用默认状态提供 React、IR 与 Vanilla 视图', async () => {
+    const props = await renderPreview(
       ['kernel', 'components', 'node', 'coordinate'],
       <ComponentPreview files="coordinate-between" />,
     );
@@ -167,8 +207,11 @@ describe('ComponentPreview Vanilla source', () => {
     expect(props.source?.vanilla).toBeDefined();
   });
 
-  it('Standard Grid controls 的 canonical 状态生成可运行的 Vanilla 视图', () => {
-    const props = renderPreview(['standard', 'composite', 'grid'], <ComponentPreview files="grid-playground" />);
+  it('Standard Grid controls 的 canonical 状态生成可运行的 Vanilla 视图', async () => {
+    const props = await renderPreview(
+      ['library', 'standard', 'composite', 'grid'],
+      <ComponentPreview files="grid-playground" />,
+    );
     const vanilla = props.source?.vanilla;
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");
@@ -182,8 +225,8 @@ describe('ComponentPreview Vanilla source', () => {
     [['viz', 'plot', 'mark', 'custom-mark'], 'mark-custom'],
     [['viz', 'plot', 'scale', 'custom-scale'], 'scale-custom'],
     [['viz', 'plot', 'transform', 'custom-transform'], 'waterfall'],
-  ] as const)('%s 的运行时 Definition 生成可执行 Vanilla 预览', (segments, name) => {
-    const props = renderPreview([...segments], <ComponentPreview files={name} />);
+  ] as const)('%s 的运行时 Definition 生成可执行 Vanilla 预览', async (segments, name) => {
+    const props = await renderPreview([...segments], <ComponentPreview files={name} />);
     const vanilla = props.source?.vanilla;
 
     expect(vanilla?.files[0]?.code).not.toContain('Failed to generate Vanilla preview');
@@ -192,8 +235,8 @@ describe('ComponentPreview Vanilla source', () => {
 });
 
 describe('ComponentPreview localized controls', () => {
-  it('将默认源码文件名透传给卡片', () => {
-    const props = renderPreview(
+  it('将默认源码文件名透传给卡片', async () => {
+    const props = await renderPreview(
       ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files={['line-basic', 'line-basic.data.ts']} defaultSourceFile="line-basic.data.ts" />,
     );
@@ -201,8 +244,8 @@ describe('ComponentPreview localized controls', () => {
     expect(props.defaultSourceFile).toBe('line-basic.data.ts');
   });
 
-  it('将 previewClassName 透传给卡片且不再传旧名称', () => {
-    const props = renderPreview(
+  it('将 previewClassName 透传给卡片且不再传旧名称', async () => {
+    const props = await renderPreview(
       ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files="line-basic" previewClassName="outer-preview-class" />,
     );
@@ -213,13 +256,13 @@ describe('ComponentPreview localized controls', () => {
     expect(props).not.toHaveProperty('interactive');
   });
 
-  it('自动合并 animation provider 与局部 slots', () => {
+  it('自动合并 animation provider 与局部 slots', async () => {
     const localSlot: PreviewControlSlot = {
       id: 'local-control',
       visibility: 'always',
       render: () => <button aria-label="Local control" />,
     };
-    const props = renderPreview(
+    const props = await renderPreview(
       ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files="line-basic" controls={{ animation: true, slots: [localSlot] }} />,
     );
@@ -227,7 +270,7 @@ describe('ComponentPreview localized controls', () => {
     expect(props.controlSlots?.map(slot => slot.id)).toEqual(['animation-controls', 'local-control']);
   });
 
-  it('按 provider、overlay field、definition slot、local slot 顺序组合真实预览 controls', () => {
+  it('按 provider、overlay field、definition slot、local slot 顺序组合真实预览 controls', async () => {
     const moduleSlot: PreviewControlSlot = {
       id: 'module-raw-slot',
       visibility: 'always',
@@ -254,7 +297,7 @@ describe('ComponentPreview localized controls', () => {
     const restore = installDemoRegistryFixture('control-order-fixture', definition);
 
     try {
-      const props = renderPreview(
+      const props = await renderPreview(
         fixtureSegments,
         <ComponentPreview files="control-order-fixture" controls={{ slots: [localSlot] }} />,
       );
@@ -278,33 +321,26 @@ describe('ComponentPreview localized controls', () => {
       visibility: 'always',
       render: () => <button aria-label="Duplicate middle slot" />,
     };
-    const restore = installDemoRegistryFixture(
-      'control-duplicate-fixture',
-      definePreviewControls({
-        presentation: 'overlay',
-        controls: [
-          {
-            kind: 'text',
-            id: duplicateSlot.id,
-            label: 'Duplicate config',
-            defaultValue: 'fixture',
-            visibility: 'hover',
-          },
-        ],
-        slots: [duplicateSlot],
-      }),
-    );
+    const definition = definePreviewControls({
+      presentation: 'overlay',
+      controls: [
+        {
+          kind: 'text',
+          id: duplicateSlot.id,
+          label: 'Duplicate config',
+          defaultValue: 'fixture',
+          visibility: 'hover',
+        },
+      ],
+      slots: [duplicateSlot],
+    });
 
-    try {
-      expect(() => renderPreview(fixtureSegments, <ComponentPreview files="control-duplicate-fixture" />)).toThrow(
-        'Duplicate preview control slot id: "duplicate-middle-slot".',
-      );
-    } finally {
-      restore();
-    }
+    expect(() =>
+      mergePreviewControlSlots([], buildConfiguredControlSlots(definition.controls), definition.slots),
+    ).toThrow('Duplicate preview control slot id: "duplicate-middle-slot".');
   });
 
-  it('panel definition 到达 Card 且不生成字段 slot', () => {
+  it('panel definition 到达 Card 且不生成字段 slot', async () => {
     const definition = definePreviewControls({
       presentation: 'panel',
       sections: [{ controls: [{ kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' }] }],
@@ -312,7 +348,7 @@ describe('ComponentPreview localized controls', () => {
     const restore = installDemoRegistryFixture('control-panel-fixture', definition);
 
     try {
-      const props = renderPreview(fixtureSegments, <ComponentPreview files="control-panel-fixture" />);
+      const props = await renderPreview(fixtureSegments, <ComponentPreview files="control-panel-fixture" />);
 
       expect(props.controlDefinition).toBe(definition);
       expect(props.controlSlots?.map(slot => slot.id)).toEqual(['animation-controls']);
@@ -321,7 +357,7 @@ describe('ComponentPreview localized controls', () => {
     }
   });
 
-  it('文件化 controls 优先于 demo 内联的兜底定义', () => {
+  it('文件化 controls 优先于 demo 内联的兜底定义', async () => {
     const name = 'localized-control-panel-fixture';
     const fallbackDefinition = definePreviewControls({
       presentation: 'panel',
@@ -334,12 +370,12 @@ describe('ComponentPreview localized controls', () => {
       sections: [{ controls: [{ kind: 'text', id: 'text', label: 'Localized', defaultValue: 'Node' }] }],
     });
     const restoreDemo = installDemoRegistryFixture(name, fallbackDefinition);
-    const restoreControls = replaceRegistryValue(controlModules, buildControlsKey(fixtureSegments, name), {
-      previewControls: localizedDefinition,
-    });
+    const restoreControls = replaceRegistryValue(controlModuleLoaders, buildControlsKey(fixtureSegments, name), () =>
+      Promise.resolve({ previewControls: localizedDefinition }),
+    );
 
     try {
-      const props = renderPreview(fixtureSegments, <ComponentPreview files={name} />);
+      const props = await renderPreview(fixtureSegments, <ComponentPreview files={name} />);
 
       expect(props.controlDefinition).toBe(localizedDefinition);
     } finally {
@@ -348,7 +384,7 @@ describe('ComponentPreview localized controls', () => {
     }
   });
 
-  it('将 canonical values 与 presets 随完整 contract 传给 Card', () => {
+  it('将 canonical values 与 presets 随完整 contract 传给 Card', async () => {
     const contract = {
       controls: definePreviewControls({
         presentation: 'panel',
@@ -363,7 +399,7 @@ describe('ComponentPreview localized controls', () => {
     const restore = installDemoRegistryContractFixture('control-contract-fixture', contract);
 
     try {
-      const props = renderPreview(fixtureSegments, <ComponentPreview files="control-contract-fixture" />);
+      const props = await renderPreview(fixtureSegments, <ComponentPreview files="control-contract-fixture" />);
 
       expect(props.controlContract).toBe(contract);
       expect(props.controlDefinition).toBe(contract.controls);
@@ -372,8 +408,11 @@ describe('ComponentPreview localized controls', () => {
     }
   });
 
-  it('为 node-styled 解析真实 panel definition', () => {
-    const props = renderPreview(['kernel', 'components', 'node', 'overview'], <ComponentPreview files="node-styled" />);
+  it('为 node-styled 解析真实 panel definition', async () => {
+    const props = await renderPreview(
+      ['kernel', 'components', 'node', 'overview'],
+      <ComponentPreview files="node-styled" />,
+    );
 
     expect(props.controlDefinition).toMatchObject({
       presentation: 'panel',
@@ -386,7 +425,7 @@ describe('ComponentPreview localized controls', () => {
     await i18n.changeLanguage('en');
 
     try {
-      const props = renderPreview(['viz', 'plot', 'mark', 'path'], <ComponentPreview files="line-curve" />);
+      const props = await renderPreview(['viz', 'plot', 'mark', 'path'], <ComponentPreview files="line-curve" />);
 
       expect(props.controlDefinition).toMatchObject({
         presentation: 'panel',
@@ -416,7 +455,7 @@ describe('ComponentPreview localized controls', () => {
     await i18n.changeLanguage('en');
 
     try {
-      const props = renderPreview(
+      const props = await renderPreview(
         ['viz', 'plot', 'mark', 'path'],
         <ComponentPreview files="line-basic" controls={{ name: 'line-curve' }} />,
       );
@@ -436,8 +475,8 @@ describe('ComponentPreview localized controls', () => {
     }
   });
 
-  it('可通过 name=false 禁用内容 controls', () => {
-    const props = renderPreview(
+  it('可通过 name=false 禁用内容 controls', async () => {
+    const props = await renderPreview(
       ['viz', 'plot', 'mark', 'path'],
       <ComponentPreview files="line-curve" controls={{ name: false }} />,
     );
@@ -453,18 +492,15 @@ describe('ComponentPreview localized controls', () => {
       render: () => <button aria-label="Duplicate control" />,
     };
 
-    expect(() =>
-      renderPreview(
-        ['viz', 'plot', 'mark', 'path'],
-        <ComponentPreview files="line-curve" controls={{ slots: [localSlot, localSlot] }} />,
-      ),
-    ).toThrow('Duplicate preview control slot id: "path-curve".');
+    expect(() => mergePreviewControlSlots([], [], undefined, [localSlot, localSlot])).toThrow(
+      'Duplicate preview control slot id: "path-curve".',
+    );
   });
 });
 
 describe('ComponentPreview files source', () => {
-  it('将主文件对象的 diffFrom 用作 React 主源码 baseline', () => {
-    const props = renderPreview(
+  it('将主文件对象的 diffFrom 用作 React 主源码 baseline', async () => {
+    const props = await renderPreview(
       ['kernel', 'examples', 'learning-path'],
       <ComponentPreview files={{ file: 'learning-path-02-spine', diffFrom: 'learning-path-01-title' }} />,
     );
@@ -477,8 +513,8 @@ describe('ComponentPreview files source', () => {
     expect(props.source?.react?.files[0].diff).toBeDefined();
   });
 
-  it('将附加文件对象的 diffFrom 用作该文件自己的 baseline', () => {
-    const props = renderPreview(
+  it('将附加文件对象的 diffFrom 用作该文件自己的 baseline', async () => {
+    const props = await renderPreview(
       ['kernel', 'examples', 'ohms-law-circuit'],
       <ComponentPreview
         files={['circuit-01-meters', { file: 'circuit-01-meters.meter.tsx', diffFrom: 'circuit-01-meters.meter.tsx' }]}
@@ -491,8 +527,8 @@ describe('ComponentPreview files source', () => {
     expect(props.source?.react?.files[1].diff).toBeDefined();
   });
 
-  it('主文件有 baseline 时继续为同前缀附加文件推导 baseline 文件名', () => {
-    const props = renderPreview(
+  it('主文件有 baseline 时继续为同前缀附加文件推导 baseline 文件名', async () => {
+    const props = await renderPreview(
       ['kernel', 'examples', 'ohms-law-circuit'],
       <ComponentPreview
         files={[{ file: 'circuit-01-meters', diffFrom: 'circuit-01-meters' }, 'circuit-01-meters.meter.tsx']}

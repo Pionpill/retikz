@@ -37,7 +37,7 @@ describe('Chart inspection', () => {
       path: '$style/neutral/light/chart.canvas.fill',
     });
     expect(style.plot).toMatchObject({ style: 'neutral', mode: 'light', authoredOverrides: [] });
-    expect(style.plot.tokenSources).toHaveLength(39);
+    expect(style.plot.tokenSources).toHaveLength(41);
     expect(style.plot.tokenSources.find(source => source.token === PlotThemeToken.PlotPaletteCategorical)).toEqual({
       token: PlotThemeToken.PlotPaletteCategorical,
       kind: ThemeTokenSource.Local,

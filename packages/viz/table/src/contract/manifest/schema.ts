@@ -1,4 +1,10 @@
 import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
+import {
+  NonNegativeIntegerSchema,
+  NonNegativeNumberSchema,
+  PositiveIntegerSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
@@ -46,10 +52,10 @@ export const ResolvedTableBorderLineSchema = z.strictObject({
   stroke: PaintValueSchema.refine(value => value !== 'none', {
     message: 'Resolved border stroke must not be none.',
   }).describe('Resolved non-none Core paint for the border line.'),
-  width: z.number().nonnegative().describe('Resolved nonnegative border width.'),
+  width: NonNegativeNumberSchema.describe('Resolved nonnegative border width.'),
   strokeOpacity: OpacitySchema.describe('Resolved border stroke opacity.'),
   dashPattern: z
-    .array(z.number().positive())
+    .array(PositiveNumberSchema)
     .min(1)
     .optional()
     .describe('Optional non-empty positive dash pattern; omission means solid.'),
@@ -61,8 +67,8 @@ export const ResolvedTableBorderLineSchema = z.strictObject({
 const TableCellBorderSourceSchema = z.strictObject({
   kind: z.literal('cell').describe('Discriminator for a Cell-side border source.'),
   cellId: z.string().min(1).describe('Semantic Cell id retained for provenance.'),
-  row: z.number().int().nonnegative().describe('Canonical origin row index.'),
-  column: z.number().int().nonnegative().describe('Canonical origin column index.'),
+  row: NonNegativeIntegerSchema.describe('Canonical origin row index.'),
+  column: NonNegativeIntegerSchema.describe('Canonical origin column index.'),
   side: TableBorderSideSchema.describe('Physical Cell side that supplied the candidate.'),
 });
 
@@ -75,7 +81,7 @@ const TableOuterBorderSourceSchema = z.strictObject({
 const TableGridBorderSourceSchema = z.strictObject({
   kind: z.literal('default').describe('Discriminator for a Table default border source.'),
   scope: z.enum(['horizontal', 'vertical']).describe('Internal grid default scope.'),
-  boundaryIndex: z.number().int().nonnegative().describe('Canonical internal boundary index.'),
+  boundaryIndex: NonNegativeIntegerSchema.describe('Canonical internal boundary index.'),
 });
 
 export const TableBorderSourceSchema = z.union([
@@ -159,17 +165,17 @@ const TableManifestBoundsSchema = z
   .strictObject({
     x: z.number().describe('Finite Table-local left coordinate.'),
     y: z.number().describe('Finite Table-local top coordinate.'),
-    width: z.number().nonnegative().describe('Finite nonnegative bounds width.'),
-    height: z.number().nonnegative().describe('Finite nonnegative bounds height.'),
+    width: NonNegativeNumberSchema.describe('Finite nonnegative bounds width.'),
+    height: NonNegativeNumberSchema.describe('Finite nonnegative bounds height.'),
   })
   .describe('Detached Table-local axis-aligned bounds.');
 
 export const TableTrackManifestEntrySchema = z
   .strictObject({
     id: z.string().min(1).describe('Stable semantic track id.'),
-    index: z.number().int().nonnegative().describe('Canonical track index.'),
+    index: NonNegativeIntegerSchema.describe('Canonical track index.'),
     offset: z.number().describe('Finite Table-local axis offset.'),
-    size: z.number().nonnegative().describe('Finite nonnegative track size.'),
+    size: NonNegativeNumberSchema.describe('Finite nonnegative track size.'),
   })
   .describe('Resolved Table row or column track geometry.');
 
@@ -178,12 +184,12 @@ export const TableCellManifestEntrySchema = z
     cellId: z.string().min(1).describe('Stable semantic Cell id.'),
     rowId: z.string().min(1).describe('Stable semantic row id.'),
     columnId: z.string().min(1).describe('Stable semantic column id.'),
-    rowIndex: z.number().int().nonnegative().describe('Canonical origin row index.'),
-    columnIndex: z.number().int().nonnegative().describe('Canonical origin column index.'),
+    rowIndex: NonNegativeIntegerSchema.describe('Canonical origin row index.'),
+    columnIndex: NonNegativeIntegerSchema.describe('Canonical origin column index.'),
     span: z
       .strictObject({
-        rows: z.number().int().positive().describe('Resolved positive row span.'),
-        columns: z.number().int().positive().describe('Resolved positive column span.'),
+        rows: PositiveIntegerSchema.describe('Resolved positive row span.'),
+        columns: PositiveIntegerSchema.describe('Resolved positive column span.'),
       })
       .describe('Resolved rectangular Cell span.'),
     box: TableManifestBoundsSchema.describe('Table-local Cell box.'),
@@ -197,7 +203,7 @@ export const TableCellManifestEntrySchema = z
     source: TableCellSourceSchema.optional().describe('Optional stable Cell source identity.'),
     formatterName: z.string().min(1).optional().describe('Executed formatter name for value Cells.'),
     presentationName: z.string().min(1).optional().describe('Executed presentation name for value Cells.'),
-    matchedRuleIndices: z.array(z.number().int().nonnegative()).describe('Ordered matched root rule indices.'),
+    matchedRuleIndices: z.array(NonNegativeIntegerSchema).describe('Ordered matched root rule indices.'),
     encodingIds: z.array(z.string().min(1)).describe('Ordered visual encodings that produced a Cell color.'),
     appearance: TableCellAppearanceSchema.describe('Resolved Cell appearance consumed by layout.'),
     appearanceTrace: z

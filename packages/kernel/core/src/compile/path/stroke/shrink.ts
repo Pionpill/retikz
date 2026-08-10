@@ -10,7 +10,7 @@ import type {
 } from '../../../contract';
 import type { IRArrowMark, IRPosition } from '../../../schemas';
 
-import { providerDefinitionOf } from '../../../providers/registry';
+import { providerDefinitionOf } from '../../../providers/registry/index';
 import {
   ARROW_MARKER_DEFAULT_SIZE,
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,

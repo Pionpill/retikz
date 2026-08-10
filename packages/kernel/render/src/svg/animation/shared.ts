@@ -6,10 +6,9 @@ import type { IRAnimationTrack, ScenePrimitive } from '@retikz/core';
 
 import { AnimationProperty } from '@retikz/core';
 
-import type { CubicBezier, EasingRegistry } from '../../animation/types';
+import type { CubicBezier, EasingRegistry } from '../../animation';
 
-import { classifyProperty, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
-import { sampleColorOklch } from '../../animation/oklch';
+import { classifyProperty, primHasStroke, resolveTransformOrigin, sampleColorOklch } from '../../animation';
 
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */
 export const cssPropertyName = (property: string): string =>

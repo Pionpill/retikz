@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
 
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
@@ -24,19 +25,15 @@ import { sectorGeometry, sectorPolarPoint } from './sector-geometry';
  */
 const sectorParamsSchema = z
   .strictObject({
-    innerRadius: z.number().nonnegative().describe('Inner radius (user units); 0 = solid pie slice.'),
-    outerRadius: z.number().positive().describe('Outer radius (user units); must be > innerRadius.'),
+    innerRadius: NonNegativeNumberSchema.describe('Inner radius (user units); 0 = solid pie slice.'),
+    outerRadius: PositiveNumberSchema.describe('Outer radius (user units); must be > innerRadius.'),
     startAngle: z
       .number()
       .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
     endAngle: z.number().describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
-    cornerRadius: z
-      .number()
-      .nonnegative()
-      .optional()
-      .describe(
-        'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-      ),
+    cornerRadius: NonNegativeNumberSchema.optional().describe(
+      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+    ),
   })
   .refine(p => p.outerRadius > p.innerRadius, {
     message: 'outerRadius must be greater than innerRadius',

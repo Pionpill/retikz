@@ -1,10 +1,11 @@
 import { CssColorSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableVisualChannel } from '../../schemas';
 
-const descriptorColorSchema = CssColorSchema.refine(value => value.trim().length > 0, {
+const descriptorColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
   message: 'Table Legend descriptor color must not be empty or whitespace.',
 });
 

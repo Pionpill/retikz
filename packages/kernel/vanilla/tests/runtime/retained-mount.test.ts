@@ -767,6 +767,16 @@ describe('@retikz/vanilla retained mount', () => {
     expect(() => view.update(source('#22c55e'))).toThrow('materialization failed');
   });
 
+  it('retained update 在 Vanilla 边界拒绝非法 Core Theme 并保留旧 view', () => {
+    const view = mountSvg(document.createElement('div'), source('#ef4444'));
+    const html = view.root.innerHTML;
+    const artifacts = view.artifacts;
+
+    expect(() => view.update({ ...source('#22c55e'), theme: 1 } as never)).toThrow(/scene\.theme/i);
+    expect(view.root.innerHTML).toBe(html);
+    expect(view.artifacts).toBe(artifacts);
+  });
+
   it('retained hydrate 以 contribution transaction 添加和移除 handler', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'));

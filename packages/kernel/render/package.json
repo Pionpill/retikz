@@ -7,7 +7,7 @@
     "layer": "renderer",
     "publishable": true
   },
-  "description": "retikz renderers: Scene to SVG (descriptor / string) and Canvas 2D. Subpath exports per backend (./svg, ./canvas).",
+  "description": "retikz rendering backends and shared hydration, animation, and retained runtime contracts, exposed through explicit subpaths.",
   "type": "module",
   "engines": {
     "node": ">=24"

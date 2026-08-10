@@ -1,4 +1,5 @@
 import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema, ScopePropsSchema } from '@retikz/core';
+import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -17,7 +18,7 @@ export const FrameDescriptionSchema = z
   .strictObject(FrameHeaderShape)
   .describe('Node-like supporting description authored without an explicit position.');
 
-const FramePaddingSchema = z.union([z.number().nonnegative(), BoxSpacingSchema]);
+const FramePaddingSchema = z.union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
 export const FrameBorderSchema = z.strictObject({
   style: StandardPathBorderStyleSchema.default({ stroke: 'currentColor', strokeWidth: 1 }),
@@ -37,11 +38,9 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   padding: FramePaddingSchema.default(8).describe(
     'Border padding around the final body and header bounds. Side fields override axis fields, then default.',
   ),
-  gap: z
-    .number()
-    .nonnegative()
-    .default(4)
-    .describe('Gap between adjacent header parts and between the header and body.'),
+  gap: NonNegativeNumberSchema.default(4).describe(
+    'Gap between adjacent header parts and between the header and body.',
+  ),
   headerDirection: z
     .enum(FrameHeaderDirection)
     .default(FrameHeaderDirection.Horizontal)

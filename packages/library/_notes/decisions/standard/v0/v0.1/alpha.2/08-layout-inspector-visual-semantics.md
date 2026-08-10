@@ -5,6 +5,7 @@
 - Level：red
 - 范围：Core inspection DTO 与 plane assembly、Render SVG / Canvas inspection theme、Standard Layout artifact 与 inspector、双语文档
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-07](./07-layout-inspector.md) · [Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+- 计划 owner 迁移：[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管当前 Layout Inspector package owner；本 ADR 保持既有 Superseded 历史状态
 
 ## 取代关系
 

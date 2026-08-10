@@ -336,102 +336,113 @@ describe('Node anchor-to-anchor position', () => {
 
 describe('Node anchor-to-anchor position fail-loud', () => {
   it('拒绝 undefined target', () => {
-    expect(() =>
-      compileToScene(scene([{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'missing' } } }])).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'missing' } } }]),
+        ).scene,
     ).toThrow(/anchor position target 'missing'.*undefined or defined later/i);
   });
 
   it('拒绝 later target', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          { type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'later' } } },
-          { type: 'node', id: 'later', position: [0, 0] },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            { type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'later' } } },
+            { type: 'node', id: 'later', position: [0, 0] },
+          ]),
+        ).scene,
     ).toThrow(/anchor position target 'later'.*undefined or defined later/i);
   });
 
   it('拒绝 self target', () => {
-    expect(() =>
-      compileToScene(scene([{ type: 'node', id: 'self', position: { kind: 'anchor', target: { id: 'self' } } }])).scene,
+    expect(
+      () =>
+        compileToScene(scene([{ type: 'node', id: 'self', position: { kind: 'anchor', target: { id: 'self' } } }]))
+          .scene,
     ).toThrow(/anchor position.*cannot reference itself/i);
   });
 
   it('拒绝尚未完成布局的祖先 Scope placeholder', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'scope',
-            id: 'open',
-            children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'open' } } }],
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            {
+              type: 'scope',
+              id: 'open',
+              children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'open' } } }],
+            },
+          ]),
+        ).scene,
     ).toThrow(/anchor position target 'open'.*Scope.*still being laid out/i);
   });
 
   it('拒绝当前 Scope chain 中的零缩放轴', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          { type: 'node', id: 'target', position: [0, 0] },
-          {
-            type: 'scope',
-            transforms: [{ kind: 'scale', x: 0 }],
-            children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'target' } } }],
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            { type: 'node', id: 'target', position: [0, 0] },
+            {
+              type: 'scope',
+              transforms: [{ kind: 'scale', x: 0 }],
+              children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'target' } } }],
+            },
+          ]),
+        ).scene,
     ).toThrow(/anchor position.*zero scale axis/i);
   });
 
   it('拒绝零尺寸 resolved Scope 的边上比例 anchor', () => {
-    expect(() =>
-      compileToScene(
-        scene([
-          { type: 'scope', id: 'empty', children: [] },
-          {
-            type: 'node',
-            id: 'current',
-            position: {
-              kind: 'anchor',
-              target: { id: 'empty', anchor: { side: 'top', fraction: 0.5 } },
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            { type: 'scope', id: 'empty', children: [] },
+            {
+              type: 'node',
+              id: 'current',
+              position: {
+                kind: 'anchor',
+                target: { id: 'empty', anchor: { side: 'top', fraction: 0.5 } },
+              },
             },
-          },
-        ]),
-      ).scene,
+          ]),
+        ).scene,
     ).toThrow(/zero-size target/i);
   });
 
   it('未知 anchor 与 boundary 保持既有 provider 诊断', () => {
     const target: IRNode = { type: 'node', id: 'target', position: [0, 0] };
-    expect(() =>
-      compileToScene(
-        scene([
-          target,
-          {
-            type: 'node',
-            position: { kind: 'anchor', target: { id: 'target', anchor: 'missing-anchor' } },
-          },
-        ]),
-      ).scene,
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            target,
+            {
+              type: 'node',
+              position: { kind: 'anchor', target: { id: 'target', anchor: 'missing-anchor' } },
+            },
+          ]),
+        ).scene,
     ).toThrow(/Unknown anchor 'missing-anchor'/);
 
-    expect(() =>
-      compileToScene(
-        scene([
-          target,
-          {
-            type: 'node',
-            position: {
-              kind: 'anchor',
-              target: { id: 'target', anchor: 'right', boundary: 'missing-boundary' },
+    expect(
+      () =>
+        compileToScene(
+          scene([
+            target,
+            {
+              type: 'node',
+              position: {
+                kind: 'anchor',
+                target: { id: 'target', anchor: 'right', boundary: 'missing-boundary' },
+              },
             },
-          },
-        ]),
-      ).scene,
+          ]),
+        ).scene,
     ).toThrow(/Unknown connection surface provider 'missing-boundary'/);
   });
 });

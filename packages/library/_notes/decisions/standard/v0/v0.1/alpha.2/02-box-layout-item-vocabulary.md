@@ -1,8 +1,9 @@
 # ADR-02：建立 Box、LayoutItem 与共享布局词汇
 
-- 状态：Accepted
+- 状态：Superseded by [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md)（2026-08-09）
 - 决策日期：2026-07-30
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-01](./01-layout-profile-core-gate.md) · [Core ADR-08](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/08-layout-proposal-probe-contract.md) · [Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+- 后继：[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管当前 owner；本 ADR 保留 Standard 验证期历史
 
 ## 背景
 

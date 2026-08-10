@@ -4,7 +4,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { demoModules, resolveDemoKey } from '../../src/modules/docs/components/component-preview/registry/contents';
+import { resolveDemoKey } from '../../src/modules/docs/components/component-preview/registry/contents';
+import { demoModules } from './load-preview-registry';
 
 const scalePositionRoot = resolve('src/modules/docs/contents/viz/plot/scale/position');
 const scaleRoot = resolve(scalePositionRoot, '..');

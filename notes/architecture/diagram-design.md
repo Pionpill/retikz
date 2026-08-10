@@ -75,7 +75,7 @@ Standard Library：Frame / FlexLayout 等通用绘图积木 ─→ Notation / Gr
                                                              Scene
 ```
 
-Notation、Graph、Flow 和 Editor 都不拥有 renderer。Notation 直接通过 Core sugar 或 Tier 2 lowering 进入 Core IR；GraphDocument 无论来自人工几何、Flow 计算还是 Editor 编辑，都复用 Graph 的 presentation / lowering。两条路径都只通过公开 Core IR / composite / definition 契约进入 Kernel 编译与 SVG、Canvas 等后端。
+Notation、Graph、Flow 和 Editor 都不拥有 renderer。Notation 通过纯 Core sugar 或 Notation semantic IR 的 Tier 2 lowering 进入 Core IR；GraphDocument 无论来自人工几何、Flow 计算还是 Editor 编辑，都复用 Graph 的 presentation / lowering。两条路径都只通过公开 Core IR / composite / definition 契约进入 Kernel 编译与 SVG、Canvas 等后端。
 
 ---
 
@@ -89,12 +89,13 @@ Notation 是 Diagram 领域的基础元素库，提供可以脱离 GraphModel �
 - `@retikz/notation-react` 与 `@retikz/notation-vanilla` 只提供等价 authoring，不拥有新的 IR、布局或 renderer 语义。
 - package family 作为 Diagram foundation 独立演进；未来 Graph 可以单向依赖 Notation，而 Notation 不依赖 Graph、Flow 或 Editor。
 
-Notation 元素按底层机制分为两类：
+Notation 元素先判断是否拥有独立、长期可持久化的领域身份，再按 lower target 复杂度选择机制：
 
-1. **Core Sugar**：语义本身只是在 Core Node 等基础 IR 上固定 shape、默认值和可感知职责，例如 Terminal、Stage、Decision 与 Junction。输出仍是相应 Core IR，不为命名一致性强行创建 composite。
-2. **Tier 2 composite**：需要局部布局、target、artifact 或多图元 lowering 的元素，例如 LogicFrame、Connector 与 Callout。它们通过公开 Core / Standard capability 实现，不复制布局算法或私有编译工具。
+1. **Core Sugar**：没有独立持久化语义的便捷写法直接归一为 Core IR，不为命名一致性强行创建 composite。
+2. **轻量 expansion composite**：正式 Notation 元素保留 semantic IR，但当前只需一个 Core Node 或 Path 时，通过普通 Definition 一对一下沉，例如 Terminal、Stage、Decision、Junction 与 Connector。
+3. **Layout-aware composite**：需要局部布局、artifact 或多图元输出的正式元素使用 layout-aware Definition，例如 LogicFrame。
 
-Notation 的边界以“可独立绘制的图式语义元素”为准，而不是当前逻辑组件清单。未来 UML Class、State、actor、lifeline、fork / join、note 等候选可以在真实契约出现后进入相应 milestone；每项仍需判断是已有元素的 recipe、Core Sugar，还是拥有独立持久化语义的 Tier 2 composite。
+Notation 的边界以“可独立绘制的图式语义元素”为准，而不是当前逻辑组件清单或 lower target 的复杂度。未来 UML Class、State、actor、lifeline、fork / join、note 等候选可以在真实契约出现后进入相应 milestone；每项仍需判断是已有元素的 recipe、无独立语义的 Core Sugar，还是拥有持久化身份的轻量或 layout-aware composite。
 
 Notation 不拥有：
 
@@ -346,7 +347,7 @@ Plot ─────→ Data + Core
 当前工作名：
 
 - `diagram`：逻辑制图领域目录，不要求存在 `@retikz/diagram` 包。
-- `@retikz/notation`：可复用图式语义元素、Core Sugar 与 Tier 2 composite 的统一入口。
+- `@retikz/notation`：可复用图式语义元素、纯 Core Sugar 与 Tier 2 composite 的统一入口。
 - `@retikz/notation-react` / `@retikz/notation-vanilla`：Notation 的等价 authoring adapters。
 - `@retikz/graph`：关系模型、几何契约与统一 presentation / lowering。
 - `@retikz/flow`：算法布局与连线路由。
@@ -385,7 +386,7 @@ Plot ─────→ Data + Core
 
 ### 阶段 1：Notation foundation
 
-建立 `notation`、`notation-react`、`notation-vanilla` 三包，把 Standard alpha.3 的 LogicFrame、Terminal、Stage、Decision、Junction、Connector 与 Callout 迁入统一入口。迁移保持公开组件名和字段语义，不保留 Standard 转发；同时补齐 Standard 公共 layout composition surface，完成直接 IR、React、Vanilla、SVG / Canvas、双语文档和发布组闭环。
+建立 `notation`、`notation-react`、`notation-vanilla` 三包，把 Standard alpha.3 的 LogicFrame、Terminal、Stage、Decision、Junction、Connector 与 Callout 迁入统一入口。迁移保持公开组件名和字段语义，不保留 Standard 转发；同时补齐 Standard 公共 layout composition surface，完成直接 IR、React、Vanilla、SVG / Canvas、双语文档和发布组闭环。Notation alpha.3 随后撤回缺少真实场景验证的 Callout 完整契约，当前元素集合为 LogicFrame、Terminal、Stage、Decision、Junction 与 Connector。
 
 ### 阶段 2：Graph 最小契约
 

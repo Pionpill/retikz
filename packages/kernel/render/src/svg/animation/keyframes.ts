@@ -7,13 +7,18 @@ import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 
 import { AnimationProperty } from '@retikz/core';
 
-import type { EasingRegistry } from '../../animation/types';
+import type { EasingRegistry } from '../../animation';
 import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
 import type { ExpandedTrack } from './shared';
 import type { WaapiDescriptor } from './waapi';
 
-import { classifyProperty, isAutoplayTrigger, primHasStroke, resolveTransformOrigin } from '../../animation/channels';
-import { evaluateTrack } from '../../animation/evaluate';
+import {
+  classifyProperty,
+  evaluateTrack,
+  isAutoplayTrigger,
+  primHasStroke,
+  resolveTransformOrigin,
+} from '../../animation';
 import { toSafeSvgToken } from '../safe-token';
 import { easingToCss, expandTrack, iterationsToCss, transformValue } from './shared';
 import { buildWaapiDescriptor } from './waapi';

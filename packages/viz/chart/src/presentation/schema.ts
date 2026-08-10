@@ -6,10 +6,10 @@ import {
   FlexLayoutItemSchema,
   FlexLayoutSchema,
   FlexLayoutWrap,
+  LAYOUT_NAMESPACE,
   LayoutDistribution,
   LayoutItemKind,
-  STANDARD_NAMESPACE,
-} from '@retikz/standard';
+} from '@retikz/layout';
 import { z } from 'zod';
 
 import {
@@ -76,42 +76,42 @@ export const ChartPresentationTextSchema = z
 
 export const ChartPresentationLayoutSchema = z
   .strictObject({
-    size: FlexLayoutSchema.shape.size.unwrap().optional().describe('Optional Standard Flex container size policy'),
-    padding: FlexLayoutSchema.shape.padding.unwrap().optional().describe('Optional Standard Flex content padding'),
-    overflow: FlexLayoutSchema.shape.overflow.unwrap().optional().describe('Optional Standard Flex overflow policy'),
+    size: FlexLayoutSchema.shape.size.unwrap().optional().describe('Optional Layout Flex container size policy'),
+    padding: FlexLayoutSchema.shape.padding.unwrap().optional().describe('Optional Layout Flex content padding'),
+    overflow: FlexLayoutSchema.shape.overflow.unwrap().optional().describe('Optional Layout Flex overflow policy'),
     direction: FlexLayoutSchema.shape.direction
       .unwrap()
       .optional()
-      .describe('Optional Standard Flex main-axis direction'),
-    wrap: FlexLayoutSchema.shape.wrap.unwrap().optional().describe('Optional Standard Flex wrapping policy'),
-    gap: FlexLayoutSchema.shape.gap.unwrap().optional().describe('Optional Standard Flex physical gap'),
+      .describe('Optional Layout Flex main-axis direction'),
+    wrap: FlexLayoutSchema.shape.wrap.unwrap().optional().describe('Optional Layout Flex wrapping policy'),
+    gap: FlexLayoutSchema.shape.gap.unwrap().optional().describe('Optional Layout Flex physical gap'),
     justifyContent: FlexLayoutSchema.shape.justifyContent
       .unwrap()
       .optional()
-      .describe('Optional Standard Flex main-axis distribution'),
+      .describe('Optional Layout Flex main-axis distribution'),
     alignItems: FlexLayoutSchema.shape.alignItems
       .unwrap()
       .optional()
-      .describe('Optional Standard Flex cross-axis item alignment'),
+      .describe('Optional Layout Flex cross-axis item alignment'),
     alignContent: FlexLayoutSchema.shape.alignContent
       .unwrap()
       .optional()
-      .describe('Optional Standard Flex wrapped-line distribution'),
+      .describe('Optional Layout Flex wrapped-line distribution'),
   })
   .superRefine(rejectOwnUndefined)
-  .describe('Sparse Standard Flex container fields authored by Chart presentation');
+  .describe('Sparse Layout Flex container fields authored by Chart presentation');
 
 const ChartPresentationFlexItemShape = {
-  margin: FlexLayoutItemSchema.shape.margin.unwrap().optional().describe('Optional Standard Flex item margin'),
-  basis: FlexLayoutItemSchema.shape.basis.unwrap().optional().describe('Optional Standard Flex item basis'),
-  grow: FlexLayoutItemSchema.shape.grow.unwrap().optional().describe('Optional Standard Flex item grow factor'),
-  shrink: FlexLayoutItemSchema.shape.shrink.unwrap().optional().describe('Optional Standard Flex item shrink factor'),
-  min: FlexLayoutItemSchema.shape.min.unwrap().optional().describe('Optional Standard Flex item minimum slot'),
-  max: FlexLayoutItemSchema.shape.max.unwrap().optional().describe('Optional Standard Flex item maximum slot'),
+  margin: FlexLayoutItemSchema.shape.margin.unwrap().optional().describe('Optional Layout Flex item margin'),
+  basis: FlexLayoutItemSchema.shape.basis.unwrap().optional().describe('Optional Layout Flex item basis'),
+  grow: FlexLayoutItemSchema.shape.grow.unwrap().optional().describe('Optional Layout Flex item grow factor'),
+  shrink: FlexLayoutItemSchema.shape.shrink.unwrap().optional().describe('Optional Layout Flex item shrink factor'),
+  min: FlexLayoutItemSchema.shape.min.unwrap().optional().describe('Optional Layout Flex item minimum slot'),
+  max: FlexLayoutItemSchema.shape.max.unwrap().optional().describe('Optional Layout Flex item maximum slot'),
   alignSelf: FlexLayoutItemSchema.shape.alignSelf
     .unwrap()
     .optional()
-    .describe('Optional Standard Flex item cross-axis alignment'),
+    .describe('Optional Layout Flex item cross-axis alignment'),
 };
 
 export const ChartPresentationPlotContentSchema = z
@@ -207,7 +207,7 @@ type ChartPresentationItemVariant = z.infer<typeof ChartPresentationItemVariantS
 
 export const ChartPresentationItemSchema = ChartPresentationItemBaseSchema.pipe(
   ChartPresentationItemVariantSchema as z.ZodType<ChartPresentationItemVariant, ChartPresentationItemBase>,
-).describe('Strict authored Chart presentation item with sparse Standard Flex fields');
+).describe('Strict authored Chart presentation item with sparse Layout Flex fields');
 
 type ChartPresentationItem = z.infer<typeof ChartPresentationItemSchema>;
 
@@ -216,11 +216,11 @@ type ChartPresentationInput = {
   children: Array<ChartPresentationItem>;
 };
 
-// 用 Standard Flex schema 校验 Chart 不拥有的 container 与 item 语义
+// 用 Layout Flex schema 校验 Chart 不拥有的 container 与 item 语义
 const validateStandardFlexContract = (presentation: ChartPresentationInput, context: z.RefinementCtx): void => {
   const placeholder: IRChild = { type: 'scope', children: [] };
   const result = FlexLayoutSchema.safeParse({
-    namespace: STANDARD_NAMESPACE,
+    namespace: LAYOUT_NAMESPACE,
     type: 'flexLayout',
     direction: FlexLayoutDirection.Column,
     wrap: FlexLayoutWrap.NoWrap,
@@ -257,7 +257,7 @@ const validateStandardFlexContract = (presentation: ChartPresentationInput, cont
 
 export const ChartPresentationSchema = z
   .strictObject({
-    layout: ChartPresentationLayoutSchema.optional().describe('Optional sparse Standard Flex container overrides'),
+    layout: ChartPresentationLayoutSchema.optional().describe('Optional sparse Layout Flex container overrides'),
     children: z.array(ChartPresentationItemSchema).min(1).describe('Non-empty presentation items in authored order'),
   })
   .superRefine((presentation, context) => {
@@ -280,4 +280,4 @@ export const ChartPresentationSchema = z
     }
     validateStandardFlexContract(presentation, context);
   })
-  .describe('Strict authored-order Chart presentation mapped to one Standard FlexLayout');
+  .describe('Strict authored-order Chart presentation mapped to one Layout FlexLayout');

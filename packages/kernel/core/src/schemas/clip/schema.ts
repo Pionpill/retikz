@@ -1,3 +1,4 @@
+import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { IRClipSpec, IRCompoundClipSpec } from './types';
@@ -13,8 +14,8 @@ export const RectClipSchema = z
     kind: z.literal('rect').describe('Discriminator for rectangular clip regions.'),
     x: z.number().describe('Rect left-top x in scope-local coords.'),
     y: z.number().describe('Rect left-top y in scope-local coords.'),
-    width: z.number().positive().describe('Rect width in user units.'),
-    height: z.number().positive().describe('Rect height in user units.'),
+    width: PositiveNumberSchema.describe('Rect width in user units.'),
+    height: PositiveNumberSchema.describe('Rect height in user units.'),
   })
   .describe('Rectangular clip region.');
 
@@ -23,7 +24,7 @@ export const CircleClipSchema = z
     kind: z.literal('circle').describe('Discriminator for circular clip regions.'),
     cx: z.number().describe('Circle center x.'),
     cy: z.number().describe('Circle center y.'),
-    r: z.number().positive().describe('Circle radius in user units.'),
+    r: PositiveNumberSchema.describe('Circle radius in user units.'),
   })
   .describe('Circular clip region.');
 
@@ -32,8 +33,8 @@ export const EllipseClipSchema = z
     kind: z.literal('ellipse').describe('Discriminator for elliptical clip regions.'),
     cx: z.number().describe('Ellipse center x.'),
     cy: z.number().describe('Ellipse center y.'),
-    rx: z.number().positive().describe('Ellipse x radius in user units.'),
-    ry: z.number().positive().describe('Ellipse y radius in user units.'),
+    rx: PositiveNumberSchema.describe('Ellipse x radius in user units.'),
+    ry: PositiveNumberSchema.describe('Ellipse y radius in user units.'),
   })
   .describe('Elliptical clip region.');
 

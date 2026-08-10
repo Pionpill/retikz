@@ -2,10 +2,11 @@ import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
+import * as LayoutIR from '@retikz/layout';
+import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as NotationIR from '@retikz/notation';
 import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
-import * as StandardInspectIR from '@retikz/standard/inspect';
 import * as TableIR from '@retikz/table';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
@@ -426,91 +427,91 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   LayoutInspectBoundsOptionsInputSchema: {
-    schema: StandardInspectIR.LayoutInspectBoundsOptionsInputSchema,
+    schema: LayoutInspectIR.LayoutInspectBoundsOptionsInputSchema,
     label: 'LayoutInspectBoundsOptionsInput',
-    url: '/standard/layout/reference/runtime#layoutinspectboundsoptionsinputschema',
+    url: '/library/layout/reference/runtime#layoutinspectboundsoptionsinputschema',
   },
   LayoutInspectSpacingOptionsInputSchema: {
-    schema: StandardInspectIR.LayoutInspectSpacingOptionsInputSchema,
+    schema: LayoutInspectIR.LayoutInspectSpacingOptionsInputSchema,
     label: 'LayoutInspectSpacingOptionsInput',
-    url: '/standard/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
+    url: '/library/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
   },
   BaseLayoutInspectOptionsInputSchema: {
-    schema: StandardInspectIR.BaseLayoutInspectOptionsInputSchema,
+    schema: LayoutInspectIR.BaseLayoutInspectOptionsInputSchema,
     label: 'BaseLayoutInspectOptionsInput',
-    url: '/standard/layout/reference/runtime#baselayoutinspectoptionsinputschema',
+    url: '/library/layout/reference/runtime#baselayoutinspectoptionsinputschema',
   },
   FlexLayoutInspectOptionsInputSchema: {
-    schema: StandardInspectIR.FlexLayoutInspectOptionsInputSchema,
+    schema: LayoutInspectIR.FlexLayoutInspectOptionsInputSchema,
     label: 'FlexLayoutInspectOptionsInput',
-    url: '/standard/layout/reference/runtime#flexlayoutinspectoptionsinputschema',
+    url: '/library/layout/reference/runtime#flexlayoutinspectoptionsinputschema',
   },
   GridLayoutInspectOptionsInputSchema: {
-    schema: StandardInspectIR.GridLayoutInspectOptionsInputSchema,
+    schema: LayoutInspectIR.GridLayoutInspectOptionsInputSchema,
     label: 'GridLayoutInspectOptionsInput',
-    url: '/standard/layout/reference/runtime#gridlayoutinspectoptionsinputschema',
+    url: '/library/layout/reference/runtime#gridlayoutinspectoptionsinputschema',
   },
   OverlayLayoutInspectOptionsInputSchema: {
-    schema: StandardInspectIR.OverlayLayoutInspectOptionsInputSchema,
+    schema: LayoutInspectIR.OverlayLayoutInspectOptionsInputSchema,
     label: 'OverlayLayoutInspectOptionsInput',
-    url: '/standard/layout/reference/runtime#overlaylayoutinspectoptionsinputschema',
+    url: '/library/layout/reference/runtime#overlaylayoutinspectoptionsinputschema',
   },
 
   FlexLayoutSchema: {
-    schema: StandardIR.FlexLayoutSchema,
+    schema: LayoutIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/standard/layout/reference/contract-input#flexlayoutschema',
+    url: '/library/layout/reference/contract-input#flexlayoutschema',
   },
   GridLayoutSchema: {
-    schema: StandardIR.GridLayoutSchema,
+    schema: LayoutIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/standard/layout/reference/contract-input#gridlayoutschema',
+    url: '/library/layout/reference/contract-input#gridlayoutschema',
   },
   OverlayLayoutSchema: {
-    schema: StandardIR.OverlayLayoutSchema,
+    schema: LayoutIR.OverlayLayoutSchema,
     label: 'OverlayLayout',
-    url: '/standard/layout/reference/contract-input#overlaylayoutschema',
+    url: '/library/layout/reference/contract-input#overlaylayoutschema',
   },
   LayoutItemSchema: {
-    schema: StandardIR.LayoutItemSchema,
+    schema: LayoutIR.LayoutItemSchema,
     label: 'LayoutItem',
-    url: '/standard/layout/reference/contract-input#layoutitemschema',
+    url: '/library/layout/reference/contract-input#layoutitemschema',
   },
   LayoutArtifactSchema: {
-    schema: StandardIR.LayoutArtifactSchema,
+    schema: LayoutIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/standard/layout/reference/contract-artifact#layoutartifactschema',
+    url: '/library/layout/reference/contract-artifact#layoutartifactschema',
   },
   LayoutSpacingArtifactSchema: {
-    schema: StandardIR.LayoutSpacingArtifactSchema,
+    schema: LayoutIR.LayoutSpacingArtifactSchema,
     label: 'LayoutSpacingArtifact',
-    url: '/standard/layout/reference/contract-artifact#layoutspacingartifactschema',
+    url: '/library/layout/reference/contract-artifact#layoutspacingartifactschema',
   },
   FlexLayoutArtifactSchema: {
-    schema: StandardIR.FlexLayoutArtifactSchema,
+    schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/standard/layout/reference/contract-artifact#flexlayoutartifactschema',
+    url: '/library/layout/reference/contract-artifact#flexlayoutartifactschema',
   },
   GridLayoutArtifactSchema: {
-    schema: StandardIR.GridLayoutArtifactSchema,
+    schema: LayoutIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/standard/layout/reference/contract-artifact#gridlayoutartifactschema',
+    url: '/library/layout/reference/contract-artifact#gridlayoutartifactschema',
   },
   OverlayLayoutArtifactSchema: {
-    schema: StandardIR.OverlayLayoutArtifactSchema,
+    schema: LayoutIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
-    url: '/standard/layout/reference/contract-artifact#overlaylayoutartifactschema',
+    url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
   },
   LegendSchema: {
     schema: StandardIR.LegendSchema,
     label: 'Legend',
-    url: '/standard/composite/legend#legendschema',
+    url: '/library/standard/composite/legend#legendschema',
     localizations: { zh: LegendSchemaZhLocalization },
   },
   LegendArtifactSchema: {
     schema: StandardIR.LegendArtifactSchema,
     label: 'LegendArtifact',
-    url: '/standard/composite/legend#legendartifactschema',
+    url: '/library/standard/composite/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
 
@@ -522,34 +523,28 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   TerminalSchema: {
     schema: NotationIR.TerminalSchema,
     label: 'Terminal',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   StageSchema: {
     schema: NotationIR.StageSchema,
     label: 'Stage',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   DecisionSchema: {
     schema: NotationIR.DecisionSchema,
     label: 'Decision',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   JunctionSchema: {
     schema: NotationIR.JunctionSchema,
     label: 'Junction',
-    url: '/diagram/notation/unit/semantic-units',
+    url: '/diagram/notation/unit/logic-unit',
   },
   ConnectorSchema: {
     schema: NotationIR.ConnectorSchema,
     label: 'Connector',
     url: '/diagram/notation/unit/connector',
   },
-  CalloutSchema: {
-    schema: NotationIR.CalloutSchema,
-    label: 'Callout',
-    url: '/diagram/notation/unit/callout',
-  },
-
   TableSpecSchema: {
     schema: TableIR.TableSpecSchema,
     label: 'TableSpec',

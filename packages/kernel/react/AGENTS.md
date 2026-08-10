@@ -20,7 +20,7 @@
 ## 硬约束
 
 - `react` / `react-dom` 保持 peerDependencies，本地开发再放 devDependencies。
-- workspace 依赖限于 `@retikz/runtime`、`@retikz/core` 与 `@retikz/render`；不 import app 包或 Tier 2 包。
+- workspace 依赖限于 `@retikz/foundation`、`@retikz/runtime`、`@retikz/core` 与 `@retikz/render`；不 import app 包或 Tier 2 包。
 - 不新增第三方运行时依赖；确需新增时先说明理由。
 - 不引 Tailwind / shadcn / 样式库；adapter 输出原生 SVG / Canvas 宿主，样式由消费者或 props 控制。
 - `kernel/` 与 `sugar/` 必须 SSR-safe，不访问 `document` / `window` / `HTMLElement`。浏览器全局只允许在 `render/` 下出现。

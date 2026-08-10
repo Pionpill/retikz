@@ -9,6 +9,7 @@ The first release includes:
 - `Grid` for rule-based reference grids
 - `Axes` for static mathematical coordinate axes
 - `Frame` for bordered semantic groups with Node-like titles and descriptions
+- `Legend` for discrete items and continuous ramps with shared layout artifacts
 - per-composite `Definition` exports for explicit Core compilation
 
 ## Install

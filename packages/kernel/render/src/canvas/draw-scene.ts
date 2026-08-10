@@ -240,8 +240,11 @@ type ImageSpec = Extract<IRPaintSpec, { kind: 'image' }>;
 
 /** 取图片源的固有尺寸（HTMLImageElement 用 naturalWidth，其余回退 width/height） */
 const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
-  const any = img as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
-  return { w: any.naturalWidth || any.width || 0, h: any.naturalHeight || any.height || 0 };
+  const dimensions = img as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
+  return {
+    w: dimensions.naturalWidth || dimensions.width || 0,
+    h: dimensions.naturalHeight || dimensions.height || 0,
+  };
 };
 
 /**

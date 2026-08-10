@@ -1,4 +1,5 @@
 import { JsonObjectSchema } from '@retikz/core';
+import { NonNegativeIntegerSchema, NonNegativeNumberSchema, PositiveIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { DataSortOrder, RESERVED_SELECTOR_OPERATION_KINDS, RowSelectorTie, SelectorOperationKind } from './constants';
@@ -40,7 +41,7 @@ const createTopBottomSelectorOperationSchema = <TKind extends string>(kind: TKin
     .strictObject({
       kind: z.literal(kind).describe('Discriminator: top/bottom row selector'),
       by: z.string().min(1).describe('Numeric ranking field'),
-      n: z.number().int().positive().describe('Selected row count'),
+      n: PositiveIntegerSchema.describe('Selected row count'),
       tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy; default first'),
     })
     .describe('Top/bottom row selector operation');
@@ -50,7 +51,7 @@ const NthSelectorOperationSchema = z
   .strictObject({
     kind: z.literal(SelectorOperationKind.Nth).describe('Discriminator: nth row selector'),
     orderBy: z.array(OrderBySchema).min(1).describe('Ordering before selection'),
-    index: z.number().int().nonnegative().describe('Zero-based row index'),
+    index: NonNegativeIntegerSchema.describe('Zero-based row index'),
   })
   .describe('Nth row selector operation');
 
@@ -65,7 +66,7 @@ export const OutsideQuantileBandBoundarySpecSchema = z
     z
       .strictObject({
         kind: z.literal('spread').describe('Discriminator: spread fences'),
-        factor: z.number().nonnegative().optional().describe('Spread multiplier; default 1.5'),
+        factor: NonNegativeNumberSchema.optional().describe('Spread multiplier; default 1.5'),
       })
       .describe('Spread fence boundary strategy'),
   ])

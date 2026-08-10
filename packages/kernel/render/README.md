@@ -2,7 +2,7 @@
 
 Rendering backends for [retikz](https://pionpill.github.io/retikz/). Consumes a compiled `Scene` from [`@retikz/core`](https://www.npmjs.com/package/@retikz/core) and renders it. The package has no root export; use the documented subpaths below.
 
-retikz 的渲染后端：消费 `@retikz/core` 编译出的 `Scene`，按使用环境走子路径。`./svg` 产出 framework-neutral 的 `SvgNode` 描述树与字符串；`./canvas` 直接绘制到 Canvas 2D，不经 SVG 中转；`./canvas-node` 在 Node 环境通过可选 peer 渲染；`./hydration` 与 `./animation` 提供适配器复用的交互和动画运行时能力。
+retikz 的渲染后端：消费 `@retikz/core` 编译出的 `Scene`，按使用环境走子路径。`./svg` 产出 framework-neutral 的 `SvgNode` 描述树与字符串；`./canvas` 直接绘制到 Canvas 2D，不经 SVG 中转；`./canvas-node` 在 Node 环境通过可选 peer 渲染；`./hydration`、`./animation` 与 `./runtime` 提供适配器复用的交互、动画和 retained runtime 能力。
 
 > Merged from the former `@retikz/svg` + `@retikz/canvas`. / 由原 `@retikz/svg` + `@retikz/canvas` 合并而来。
 
@@ -30,6 +30,7 @@ pnpm add @napi-rs/canvas
 | `@retikz/render/canvas-node` | Render a compiled `Scene` to a Node canvas and export image bytes.                            | Node.js                        | `@napi-rs/canvas` |
 | `@retikz/render/hydration`   | Locate rendered SVG/Canvas nodes and bind runtime interaction or animation controllers.       | Browser DOM hosts              | None              |
 | `@retikz/render/animation`   | Shared animation evaluation, clocks, runtime, easing, and custom property registry utilities. | Browser and Node runtimes      | None              |
+| `@retikz/render/runtime`     | Retained render session, readonly layers, patch validation, and runtime host contracts.       | Browser and Node hosts         | None              |
 
 ## `@retikz/render/svg`
 

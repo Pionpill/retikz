@@ -1,5 +1,5 @@
 import { NodeSchema } from '@retikz/core';
-import { FlexLayoutSchema } from '@retikz/standard';
+import { FlexLayoutSchema } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
 import type { IRChartPresentation } from '../../src/presentation';
@@ -88,7 +88,7 @@ describe('Chart presentation content', () => {
     const content = FlexLayoutSchema.parse(result.content);
 
     expect(content).toMatchObject({
-      namespace: 'standard',
+      namespace: 'layout',
       type: 'flexLayout',
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
       padding: 0,
@@ -360,7 +360,7 @@ describe('Chart presentation content', () => {
       id: 'sales',
       children: [
         {
-          namespace: 'standard',
+          namespace: 'layout',
           type: 'flexLayout',
           children: [
             { key: 'badge', child: { type: 'scope', id: 'badge' } },

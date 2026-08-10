@@ -1,5 +1,6 @@
 import type * as Foundation from '@retikz/foundation';
 
+import { NormalizedFractionSchema } from '@retikz/foundation';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
@@ -90,6 +91,11 @@ describe('core public compile exports', () => {
     void ({} as Foundation.OpenString<'a'>);
     void ({} as RemovedCoreValueOf<{ Alpha: 'a' }>);
     void ({} as RemovedCoreAssertEqual<'a', 'a'>);
+  });
+
+  it('uses Foundation for shared schema primitives', () => {
+    expect(NormalizedFractionSchema.parse(0.5)).toBe(0.5);
+    expect('NormalizedFractionSchema' in core).toBe(false);
   });
 
   it('不暴露递归 schema 注册内部能力', () => {

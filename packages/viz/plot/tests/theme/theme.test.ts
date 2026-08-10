@@ -447,11 +447,11 @@ describe('plot theme schema and lowering', () => {
     });
   });
 
-  it('Clean 只绘制 x Axis line，且 x/y Axis 都不绘制 tick mark', () => {
+  it('Clean 默认不绘制 x/y Axis line 与 tick mark', () => {
     const x = resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Clean);
     const y = resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean);
 
-    expect(x.line).toMatchObject({ stroke: 'currentColor' });
+    expect(x.line).toBe(false);
     expect(y.line).toBe(false);
     expect(x.ticks?.mark).toBe(false);
     expect(y.ticks?.mark).toBe(false);

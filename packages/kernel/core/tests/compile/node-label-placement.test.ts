@@ -178,18 +178,19 @@ describe('Node label placement', () => {
     });
 
     it('非 box-like shape 使用 boundary position 时抛出诊断', () => {
-      expect(() =>
-        compileToScene(
-          sceneWithLabel(
-            {
-              text: 'L',
-              position: { boundary: 'top', fraction: 0.5 },
-              placement: 'inside',
-            },
-            'circle',
-          ),
-          silent,
-        ).scene,
+      expect(
+        () =>
+          compileToScene(
+            sceneWithLabel(
+              {
+                text: 'L',
+                position: { boundary: 'top', fraction: 0.5 },
+                placement: 'inside',
+              },
+              'circle',
+            ),
+            silent,
+          ).scene,
       ).toThrow(/boundary.*box-like|box-like.*boundary/i);
     });
   });

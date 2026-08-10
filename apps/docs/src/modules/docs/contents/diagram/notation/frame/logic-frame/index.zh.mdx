@@ -3,7 +3,7 @@ title: LogicFrame
 description: 用可选 header 与有序 authored section 构建带外壳的逻辑块。
 ---
 
-`LogicFrame` 是分组基础单元的通用外壳。它接受一个可选 header 与零个或多个带 key 的 section。外壳复用 Standard 的 FlexLayout 引擎完成区域测量、padding、gap、放置、裁剪与 replay，不另造布局系统。
+`LogicFrame` 是分组逻辑单元的通用外壳。它接受一个可选 header 与零个或多个带 key 的 section。外壳复用 Layout 的 FlexLayout 引擎完成区域测量、padding、gap、放置、裁剪与 replay，不另造布局系统。
 
 ## 用法
 
@@ -58,12 +58,12 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameVanillaAdapter];
 ```
 
-同一外壳可以容纳语义 Node 或嵌套 composite。语义单元已经是 Core Node，因此包含 `Stage` 的 block 在直接 IR 装载时只需要 `LogicFrameDefinition`；只有嵌套的其它 composite 才需要额外 Definition。
+同一外壳可以容纳 Core child、Notation 逻辑单元或其它嵌套 composite。逻辑单元保留自己的 Notation IR，因此直接 IR 中包含 `Stage` 时需要同时注入 `LogicFrameDefinition` 与 `StageDefinition`；React 组件和 Vanilla adapter 会为实际使用的元素自动贡献对应 Definition。
 
 <ComponentPreview
   files="process-recipe"
   size="lg"
-  caption="只存在于文档的 Process recipe，由 LogicFrame、语义单元与 Connector 组合而成"
+  caption="只存在于文档的 Process recipe，由 LogicFrame、逻辑单元与 Connector 组合而成"
 />
 
 Recipe 只是示例，不会新增 package export；Process、Class、Data 都只是公开词汇的组合。
@@ -78,7 +78,7 @@ Recipe 只是示例，不会新增 package export；Process、Class、Data 都�
 
 ### 复用 canonical FlexLayout
 
-编译器为 header 与 sections 创建合成的 column FlexLayout 区域，再把 Flex artifact 投影到 block artifact。它复用 canonical Flex 的 proposal、size、gap、放置、裁剪与 replay 语义，不另造布局引擎。区域 child 仍是 JSON-safe Core child。
+编译器为 header 与 sections 创建合成的 column FlexLayout 区域，再把 Flex artifact 投影到 block artifact。它复用 canonical Flex 的 proposal、size、gap、放置、裁剪与 replay 语义，不另造布局引擎。区域 child 仍是 JSON-safe IR，并通过已注入的 Definition 进入同一 Core compile 主链。
 
 ### Divider artifact 投影
 
@@ -97,11 +97,10 @@ Recipe 只是示例，不会新增 package export；Process、Class、Data 都�
 | `overflow?`   | `'visible'` 或 `'clip'`                  | `'visible'`                                          | 外层内容可见性策略                           |
 | `appearance?` | `LogicFrameAppearanceInput`              | 中性 shell、圆角 `8`、divider 开启、`zIndex: 0`      | 外壳、divider、圆角与 stacking 外观          |
 
-section key 为空或重复时会 fail-loud。Connector 与 Callout 都接受 section target 语法，但当前都会在 lowering 或放置前拒绝 section target；请使用 whole block target。
+section key 为空或重复时会 fail-loud。Connector 接受 section target 语法，但当前会在 lowering 前拒绝 section target；请使用 whole block target。
 
 ## 相关
 
-- [语义单元](/diagram/notation/unit/semantic-units)：带 content 的逻辑节点
+- [逻辑单元](/diagram/notation/unit/logic-unit)：带 content 的逻辑节点
 - [Connector](/diagram/notation/unit/connector)：authored identity 之间的关系
-- [Callout](/diagram/notation/unit/callout)：相对 target 的解释
-- [布局容器](/standard/layout)：通用布局家族
+- [布局容器](/library/layout)：通用布局家族

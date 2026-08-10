@@ -120,7 +120,7 @@ describe('Chart style resolution', () => {
       path: '$style/neutral/light/chart.canvas.fill',
     });
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
-    expect(result.inspection.style.plot.tokenSources).toHaveLength(39);
+    expect(result.inspection.style.plot.tokenSources).toHaveLength(41);
   });
 
   it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
