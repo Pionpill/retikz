@@ -29,6 +29,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib';
 import {
   getPreviewThemeStyleIcon,
+  isPreviewThemeStyleDocument,
   PreviewThemeStyleLabelKeys,
   PreviewThemeStyleOptions,
 } from '@/modules/docs/components/component-preview/theme';
@@ -38,7 +39,6 @@ import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/mod
 import { useLayoutStore } from '@/store';
 
 import { DocDifficultyFilter, DocDifficultyMenuSub } from './DocDifficultyFilter';
-import { isPreviewThemeStyleDocument } from './preview-theme-settings';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
@@ -109,7 +109,7 @@ export const HeaderActions: FC = () => {
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
-  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId, docLocation?.sectionId);
+  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId);
 
   return (
     <TooltipProvider delayDuration={150}>

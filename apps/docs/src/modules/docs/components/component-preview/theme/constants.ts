@@ -34,6 +34,9 @@ export const PreviewThemeStyleLabelKeys = {
   [ThemeStyle.Clean]: 'preview.themeStyleClean',
 } as const;
 
+/** 判断当前文档路由是否提供 ComponentPreview 主题风格切换 */
+export const isPreviewThemeStyleDocument = (moduleId: string | undefined): boolean => moduleId === 'viz';
+
 /** 返回主题风格对应的图标组件 */
 export const getPreviewThemeStyleIcon = (themeStyle: ThemeStyleValue): LucideIcon => previewThemeStyleIcons[themeStyle];
 

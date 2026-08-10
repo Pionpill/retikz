@@ -2,9 +2,9 @@ import { ThemeStyle } from '@retikz/core';
 import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
-import { isPreviewThemeStyleDocument } from '../../src/app/header/preview-theme-settings';
 import {
   getPreviewThemeStyleIcon,
+  isPreviewThemeStyleDocument,
   PreviewThemeStyleOptions,
 } from '../../src/modules/docs/components/component-preview/theme';
 
@@ -16,18 +16,15 @@ describe('preview theme settings icons', () => {
     expect(getPreviewThemeStyleIcon(ThemeStyle.Clean)).toBe(BrushCleaning);
   });
 
-  it('exposes four flat style options only for viz table, chart, and plot docs', () => {
+  it('exposes four flat style options for every viz document', () => {
     expect(PreviewThemeStyleOptions).toEqual([
       ThemeStyle.Neutral,
       ThemeStyle.Academic,
       ThemeStyle.Vibrant,
       ThemeStyle.Clean,
     ]);
-    expect(isPreviewThemeStyleDocument('viz', 'table')).toBe(true);
-    expect(isPreviewThemeStyleDocument('viz', 'chart')).toBe(true);
-    expect(isPreviewThemeStyleDocument('viz', 'plot')).toBe(true);
-    expect(isPreviewThemeStyleDocument('kernel', 'table')).toBe(false);
-    expect(isPreviewThemeStyleDocument('viz', 'standard')).toBe(false);
-    expect(isPreviewThemeStyleDocument(undefined, null)).toBe(false);
+    expect(isPreviewThemeStyleDocument('viz')).toBe(true);
+    expect(isPreviewThemeStyleDocument('kernel')).toBe(false);
+    expect(isPreviewThemeStyleDocument(undefined)).toBe(false);
   });
 });

@@ -34,7 +34,7 @@ import {
   vanillaOverrides,
 } from './registry';
 import { buildPreviewSource } from './source-panel';
-import { usePreviewTheme } from './theme';
+import { isPreviewThemeStyleDocument, usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
@@ -54,8 +54,6 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
-  /** 是否允许当前预览单独切换四种内置 ThemeStyle。 */
-  enableThemeSwitch?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
   caption?: ReactNode;
 };
@@ -71,7 +69,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     size = 'md',
     previewClassName,
     hideCode = false,
-    enableThemeSwitch = false,
     caption,
   } = props;
   const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
@@ -84,6 +81,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
+  const enableThemeSwitch = isPreviewThemeStyleDocument(segments?.[0]);
   const key = segments ? resolveDemoKey(segments, name, lang) : null;
   const mod = key ? demoModules[key] : undefined;
   const rawSource = key ? demoSources[key] : undefined;

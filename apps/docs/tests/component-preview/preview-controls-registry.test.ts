@@ -238,7 +238,6 @@ describe('preview controls registry', () => {
       size?: SizeKey;
       previewClassName?: string;
       hideCode?: boolean;
-      enableThemeSwitch?: boolean;
       caption?: ReactNode;
     }>();
   });
