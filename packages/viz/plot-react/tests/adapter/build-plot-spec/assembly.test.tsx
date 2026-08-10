@@ -409,6 +409,18 @@ describe('buildPlotSpec 装配', () => {
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'y', grid: true }]);
   });
 
+  it('dsl_axis_grid_domain_endpoints：端点策略原样进入 canonical guide', () => {
+    const spec = buildPlotSpec(
+      <>
+        <PathMark x="m" y="r" />
+        <Axis dimension="x" grid={{ includeDomainEndpoints: true }} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: true } }]);
+  });
+
   it('dsl_built_guides_pass_schema：默认装配产物过 PlotSpecSchema', () => {
     const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();

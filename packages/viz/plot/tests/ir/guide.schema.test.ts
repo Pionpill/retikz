@@ -56,6 +56,7 @@ describe('GuideSchema contract', () => {
       grid: {
         ticks: { interval: { kind: 'number', step: 10 } },
         density: { kind: 'sample', maxCount: 4 },
+        includeDomainEndpoints: true,
         bandPosition: 0,
         lineCap: 'round',
         minor: {
@@ -69,6 +70,16 @@ describe('GuideSchema contract', () => {
     };
 
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_grid_domain_endpoint_policy_accepts_boolean_and_roundtrips', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      grid: { includeDomainEndpoints: false },
+    };
+
+    expect(AxisGuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 
   // 边界
@@ -108,6 +119,22 @@ describe('GuideSchema contract', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: 1.1 } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: true } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: {} } })).toThrow();
+  });
+
+  it('axis_grid_domain_endpoint_policy_rejects_non_boolean_and_minor_usage', () => {
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: 'yes' } }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        grid: { minor: { ticks: { values: [0.5] }, includeDomainEndpoints: true } },
+      }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: true, endpoint: true } }),
+    ).toThrow();
   });
 
   it('legend_symbol_layout_rejects_invalid_values', () => {
@@ -474,6 +501,7 @@ describe('GuideSchema contract', () => {
     for (const grid of [
       { ticks: { count: 4 } },
       { density: { kind: 'sample', maxCount: 4 } },
+      { includeDomainEndpoints: true },
       { minor: { ticks: { values: [1] } } },
       { bandPosition: 0.5 },
       { applyTo: 'all' },

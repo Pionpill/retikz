@@ -70,6 +70,16 @@ export const vizV02: Release = {
             },
             {
               label: {
+                zh: 'Axis 主网格可包含 effective domain 端点',
+                en: 'Axis major grids can include effective-domain endpoints',
+              },
+              content: {
+                zh: '`grid.includeDomainEndpoints` 可在常规来源与密度解析后追加缺失的最终 scale domain 首尾位置，并按投影坐标去重；默认关闭，不改变轴 tick，不为次网格追加端点，也不进入 Theme。',
+                en: '`grid.includeDomainEndpoints` appends missing final scale-domain endpoints after normal source and density resolution and deduplicates by projected coordinate. It is disabled by default, does not change axis ticks or add endpoints to minor grids, and does not enter Theme.',
+              },
+            },
+            {
+              label: {
                 zh: 'Axis 标题可见性与间距进入主题 token',
                 en: 'Axis title visibility and spacing join theme tokens',
               },

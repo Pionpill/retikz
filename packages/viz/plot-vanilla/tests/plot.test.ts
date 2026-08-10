@@ -69,6 +69,26 @@ describe('plot', () => {
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
 
+  it('透传 axis grid effective domain endpoint policy', () => {
+    const spec = plot({
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
+      guides: [{ type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: true } }],
+    });
+
+    expect(spec.guides?.[0]).toMatchObject({
+      type: 'axis',
+      dimension: 'x',
+      grid: { includeDomainEndpoints: true },
+    });
+    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  });
+
   it('透传 theme 与 legend style', () => {
     const spec = plot({
       data: { reference: 'cities' },

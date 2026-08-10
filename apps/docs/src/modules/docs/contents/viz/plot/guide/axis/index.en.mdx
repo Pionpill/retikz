@@ -61,7 +61,7 @@ In the origin scene, both axes use `placement.kind="origin"` to cross the other 
 
 ### Tick and grid sources
 
-Axis creates candidate ticks with the priority `ticks.values > ticks.interval > ticks.count`, then applies `density` to obtain visible ticks. The grid reuses those results unless `grid.ticks` requests a separate candidate source, so its density can remain independent from axis labels. Minor-grid positions come from `grid.minor.ticks`, then drop positions that overlap the major grid.
+Axis creates candidate ticks with the priority `ticks.values > ticks.interval > ticks.count`, then applies `density` to obtain visible ticks. The grid reuses those results unless `grid.ticks` requests a separate candidate source, so its density can remain independent from axis labels. `grid.includeDomainEndpoints` appends missing effective scale-domain endpoints after that resolution and deduplicates them by final projected coordinate; it does not change axis ticks or automatically add endpoints to the minor grid. Minor-grid positions still come from `grid.minor.ticks`, then drop positions that overlap the major grid.
 
 <ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
 
@@ -74,16 +74,16 @@ Axis creates candidate ticks with the priority `ticks.values > ticks.interval > 
       endLine: 303,
     },
     {
-      label: 'Grid tick reuse, independent resolution, and minor-grid deduplication',
+      label: 'Grid sources, endpoint appending, and projected deduplication',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
-      startLine: 685,
-      endLine: 716,
+      startLine: 686,
+      endLine: 742,
     },
     {
       label: 'Cartesian minor-grid deduplication call',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
-      startLine: 1024,
-      endLine: 1037,
+      startLine: 1040,
+      endLine: 1070,
     },
   ]}
 />
@@ -129,26 +129,27 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 
 ### Key object fields
 
-| Object field        | Type                                                | Default               | Purpose                                                                                             |
-| ------------------- | --------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
-| `placement.kind`    | <ApiValues name="AxisPlacementKind" />              | inferred              | Select automatic, cardinal-side, coordinate-native-edge, or Cartesian-origin placement              |
-| `placement.side`    | `'top' \| 'right' \| 'bottom' \| 'left'`            | —                     | Required cardinal side for `kind:'side'`                                                            |
-| `placement.edge`    | `string`                                            | —                     | Required coordinate-native edge id for `kind:'edge'`                                                |
-| `placement.origin`  | `string \| number`                                  | `0`                   | Cross-dimension data value for `kind:'origin'`                                                      |
-| `ticks.values`      | `Array<string \| number>`                           | —                     | Explicit candidates; higher priority than `interval` and `count`                                    |
-| `ticks.interval`    | `{ kind:'number' \| 'time' \| 'category'; ... }`    | —                     | Fixed numeric step, UTC time unit, or category-index stride                                         |
-| `ticks.count`       | `number`                                            | scale default         | Target candidate count when `values` and `interval` are absent                                      |
-| `ticks.density`     | `{ kind:'all' \| 'sample'; ... }`                   | all candidates        | The sample branch thins visible ticks by `maxCount` or `minGap`                                     |
-| `ticks.mark`        | `false \| { kind; ... }`                            | line mark             | Select a line, built-in shape, or custom mark; do not combine it with `ticks.length` / `ticks.line` |
-| `ticks.endpoint`    | `false \| { hideWhenArrow?; distance?; affect? }`   | avoid arrow endpoints | Hide tick marks near endpoint arrows; `affect` can hide labels too                                  |
-| `tickLabels.format` | `string`                                            | automatic format      | d3-format for numbers or UTC d3-time-format for temporal ticks                                      |
-| `tickLabels.rotate` | `number`                                            | adaptive              | Fixed rotation angle; an explicit value wins over `layout.rotate`                                   |
-| `tickLabels.layout` | `false \| { rotate?; hide?; bounds?; sampleSize? }` | adaptive layout       | Control auto rotation, overlap hiding, and axis-span boundary handling                              |
-| `grid.ticks`        | `{ values?; interval?; count? }`                    | visible axis ticks    | Give the major grid an independent candidate source                                                 |
-| `grid.density`      | `{ kind:'all' \| 'sample'; ... }`                   | all grid candidates   | Thin grid positions without changing axis ticks                                                     |
-| `grid.minor`        | `false \| { ticks; density?; bandPosition?; ... }`  | `false`               | Generate minor lines from a separate source and remove positions overlapping the major grid         |
-| `grid.applyTo`      | `'local' \| 'all' \| 'none' \| 'selected'`          | composition policy    | Project the grid to the current, shared, or explicitly selected targets                             |
-| `grid.select`       | `{ view?; facet?; track? }`                         | —                     | Required with `applyTo:'selected'`; matches view, facet, or track targets                           |
+| Object field                  | Type                                                | Default               | Purpose                                                                                             |
+| ----------------------------- | --------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
+| `placement.kind`              | <ApiValues name="AxisPlacementKind" />              | inferred              | Select automatic, cardinal-side, coordinate-native-edge, or Cartesian-origin placement              |
+| `placement.side`              | `'top' \| 'right' \| 'bottom' \| 'left'`            | —                     | Required cardinal side for `kind:'side'`                                                            |
+| `placement.edge`              | `string`                                            | —                     | Required coordinate-native edge id for `kind:'edge'`                                                |
+| `placement.origin`            | `string \| number`                                  | `0`                   | Cross-dimension data value for `kind:'origin'`                                                      |
+| `ticks.values`                | `Array<string \| number>`                           | —                     | Explicit candidates; higher priority than `interval` and `count`                                    |
+| `ticks.interval`              | `{ kind:'number' \| 'time' \| 'category'; ... }`    | —                     | Fixed numeric step, UTC time unit, or category-index stride                                         |
+| `ticks.count`                 | `number`                                            | scale default         | Target candidate count when `values` and `interval` are absent                                      |
+| `ticks.density`               | `{ kind:'all' \| 'sample'; ... }`                   | all candidates        | The sample branch thins visible ticks by `maxCount` or `minGap`                                     |
+| `ticks.mark`                  | `false \| { kind; ... }`                            | line mark             | Select a line, built-in shape, or custom mark; do not combine it with `ticks.length` / `ticks.line` |
+| `ticks.endpoint`              | `false \| { hideWhenArrow?; distance?; affect? }`   | avoid arrow endpoints | Hide tick marks near endpoint arrows; `affect` can hide labels too                                  |
+| `tickLabels.format`           | `string`                                            | automatic format      | d3-format for numbers or UTC d3-time-format for temporal ticks                                      |
+| `tickLabels.rotate`           | `number`                                            | adaptive              | Fixed rotation angle; an explicit value wins over `layout.rotate`                                   |
+| `tickLabels.layout`           | `false \| { rotate?; hide?; bounds?; sampleSize? }` | adaptive layout       | Control auto rotation, overlap hiding, and axis-span boundary handling                              |
+| `grid.ticks`                  | `{ values?; interval?; count? }`                    | visible axis ticks    | Give the major grid an independent candidate source                                                 |
+| `grid.density`                | `{ kind:'all' \| 'sample'; ... }`                   | all grid candidates   | Thin grid positions without changing axis ticks                                                     |
+| `grid.includeDomainEndpoints` | `boolean`                                           | `false`               | Append missing effective-domain endpoint positions after major-grid source and density resolution   |
+| `grid.minor`                  | `false \| { ticks; density?; bandPosition?; ... }`  | `false`               | Generate minor lines from a separate source and remove positions overlapping the major grid         |
+| `grid.applyTo`                | `'local' \| 'all' \| 'none' \| 'selected'`          | composition policy    | Project the grid to the current, shared, or explicitly selected targets                             |
+| `grid.select`                 | `{ view?; facet?; track? }`                         | —                     | Required with `applyTo:'selected'`; matches view, facet, or track targets                           |
 
 `coordinateView`, `facetId`, `scaffoldId`, and `trackId` are advanced fields used by composition and facet flows to locate axis ownership. Ordinary single plots do not need them; see [coordinate composition](/viz/plot/coordinate/composition) when building composed axes.
 
