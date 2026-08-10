@@ -127,7 +127,6 @@ const createConnectedScatterSeed = (
     ...(spec.composition === undefined ? { coordinate: cartesian.coordinate } : { composition: spec.composition }),
     marks: [connection, points],
     guides,
-    ...(spec.layout === undefined ? {} : { layout: spec.layout }),
     ...(spec.width === undefined ? {} : { width: spec.width }),
     ...(spec.height === undefined ? {} : { height: spec.height }),
     ...(spec.meta === undefined ? {} : { meta: spec.meta }),

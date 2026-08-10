@@ -50,10 +50,10 @@ export type PlotLineageProps = {
 export type PlotThemeProps = {
   /** Plot-owned canonical theme token 稀疏覆盖 */
   plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
+  /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
+  plotThemeTokenRules?: IRPlotSpec['plotThemeTokenRules'];
   /** Plot theme：背景、typography、axis、legend、palette 的 JSON-safe 默认值 */
   plotTheme?: IRPlotSpec['plotTheme'];
-  /** 整图 label 空间布局策略 */
-  layout?: IRPlotSpec['layout'];
 };
 
 /** spec 入口（薄包装）：给已构造好的完整 IRPlotSpec + 数据集表 */

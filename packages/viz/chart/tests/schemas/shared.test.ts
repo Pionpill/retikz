@@ -17,8 +17,7 @@ describe('Chart shared schemas', () => {
         coordinate: { type: 'cartesian2D', x: 'x' },
         guides: [{ type: 'axis', dimension: 'x' }],
         marks: [{ type: 'point', encoding: { x: { field: 'amount', scale: 'x' } } }],
-        plotTheme: { background: '#ffffff' },
-        layout: { autoPadding: true },
+        plotTheme: { plotArea: { fill: '#ffffff' } },
         width: 480,
         height: 300,
         meta: { source: 'test' },
@@ -31,8 +30,7 @@ describe('Chart shared schemas', () => {
       coordinate: { type: 'cartesian2D', x: 'x' },
       guides: [{ type: 'axis', dimension: 'x' }],
       marks: [{ type: 'point', encoding: { x: { field: 'amount', scale: 'x' } } }],
-      plotTheme: { background: '#ffffff' },
-      layout: { autoPadding: true },
+      plotTheme: { plotArea: { fill: '#ffffff' } },
       width: 480,
       height: 300,
       meta: { source: 'test' },
@@ -42,6 +40,15 @@ describe('Chart shared schemas', () => {
     expect(() =>
       ChartSharedSchema.parse({ data: { reference: 'rows' }, scales: [{ type: 'linear', name: '' }] }),
     ).toThrow();
+  });
+
+  it('拒绝已移除的 Plot-level presentation layout', () => {
+    expect(
+      ChartSharedSchema.safeParse({
+        data: { reference: 'rows' },
+        layout: { autoPadding: true },
+      }).success,
+    ).toBe(false);
   });
 
   it('通过 shared owner fragment 接受 presentation', () => {

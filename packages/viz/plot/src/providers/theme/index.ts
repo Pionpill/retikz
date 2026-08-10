@@ -4,3 +4,4 @@ export * from './mapping';
 export * from './registry';
 export * from './resolve';
 export * from './theme';
+export * from './token-rule';

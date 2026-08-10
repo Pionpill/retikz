@@ -5,7 +5,7 @@ import { categoricalColorAt, defineComposite, resolveCoreThemeColors, ThemeMode,
 import { applyTransforms, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
-import type { DatumIdRegistrar, ProvenanceContext } from '../../contract';
+import type { CoordinateFrame, DatumIdRegistrar, ProvenanceContext } from '../../contract';
 import type { IRPlotAxisGuide, IRPlotGuide, IRPlotSpec } from '../../schemas';
 import type { Rect } from '../../shared';
 import type {
@@ -22,7 +22,14 @@ import type {
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
 import { rootMeta, slug } from '../../contract';
-import { resolveAxisGuideTokens, resolvePlotGuideTheme, resolvePlotTheme } from '../../providers';
+import {
+  isPolarCoordinateFrame,
+  resolveAxisGuideTokens,
+  resolvePlotAxisGuideTheme,
+  resolvePlotAxisThemeTokens,
+  resolvePlotGuideTheme,
+  resolvePlotTheme,
+} from '../../providers';
 import {
   channelKindsForMark,
   lowerMark,
@@ -35,12 +42,12 @@ import {
   CoordinateArrangementKind,
   CoordinateViewPlacementKind,
   PLOT_NAMESPACE,
+  PlotCoordinate,
   PlotLayerZIndex,
   PlotSpecSchema,
 } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { createAnchorRegistry } from '../anchors';
-import { lowerPlotLabels, resolveLabelReserve } from '../decoration-layout';
 import { createDatumIdRegistrar } from '../provenance';
 import {
   axisGridApplyToOf,
@@ -69,19 +76,34 @@ import { prepareRows, resolveMarkRows } from './data';
 import { resolveFrame, resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, reserveLegendBands } from './legend';
 
-const plotBackgroundNode = (width: number, height: number, fill: IRNode['fill'] | undefined): IRNode | null =>
-  fill === undefined || fill === 'none'
-    ? null
-    : {
-        type: 'node',
-        position: [width / 2, height / 2],
-        shape: 'rectangle',
-        minimumSize: { width, height },
-        padding: 0,
-        strokeWidth: 0,
-        fill,
-        zIndex: PlotLayerZIndex.Background,
-      };
+/** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
+const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
+  frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
+
+/** 按坐标帧的实际绘图区几何生成背景节点 */
+const plotBackgroundNode = (
+  plotArea: Rect,
+  frame: CoordinateFrame | undefined,
+  fill: IRNode['fill'] | undefined,
+): IRNode | null => {
+  if (!supportsPlotArea(frame) || fill === undefined || fill === 'none') return null;
+  const geometry =
+    frame !== undefined && isPolarCoordinateFrame(frame)
+      ? { position: frame.center, shape: 'circle' as const, minimumSize: frame.outerRadius * 2 }
+      : {
+          position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2] as [number, number],
+          shape: 'rectangle' as const,
+          minimumSize: { width: plotArea.width, height: plotArea.height },
+        };
+  return {
+    type: 'node',
+    ...geometry,
+    padding: 0,
+    strokeWidth: 0,
+    fill,
+    zIndex: PlotLayerZIndex.Background,
+  };
+};
 
 const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
   child.type === 'coordinate' ? child : { ...child, zIndex };
@@ -188,21 +210,17 @@ const expandPlot = (
     effectiveTheme,
     {
       plotThemeTokens: node.plotThemeTokens,
+      plotThemeTokenRules: node.plotThemeTokenRules,
       plotTheme: node.plotTheme,
     },
     options.plotThemeStyles,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
-  const labelReserve = resolveLabelReserve({
-    layout: node.layout,
-    labels: node.labels ?? [],
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    textStyle: resolvedTheme.labelText,
+  const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
+    if (!isAxisGuide(guide)) return guide;
+    const axisTokens = resolvePlotAxisThemeTokens(themeResolution, guide.dimension);
+    return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolvedTheme, axisTokens), guide);
   });
-  const scopedLabelReserve = node.composition === undefined ? labelReserve : undefined;
-  const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide =>
-    isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
-  );
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const { coordinateScopes, scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
     resolveScopedFrames({
@@ -222,7 +240,6 @@ const expandPlot = (
       compositionPolicyContext,
       allGuides,
       allGuidesWithCompositionGap,
-      ...(scopedLabelReserve !== undefined ? { scopedLabelReserve } : {}),
     });
   const facets = compositionFacets;
   const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
@@ -309,9 +326,16 @@ const expandPlot = (
       value: FacetScalar,
       rect: Rect,
     ): IRScope => {
-      const style = facetHeaderLabelStyleOf(facet, dimension);
+      const localStyle = facetHeaderLabelStyleOf(facet, dimension);
+      const style = {
+        ...resolvedTheme.typography,
+        ...localStyle,
+        ...(resolvedTheme.typography.font !== undefined || localStyle?.font !== undefined
+          ? { font: { ...(resolvedTheme.typography.font ?? {}), ...(localStyle?.font ?? {}) } }
+          : {}),
+      };
       const rotate = facetHeaderLabelRotateOf(facet, dimension);
-      const maxTextWidth = style?.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
+      const maxTextWidth = style.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
@@ -530,6 +554,11 @@ const expandPlot = (
       if (panel.row !== undefined) facetContext.row = panel.row;
       if (panel.column !== undefined) facetContext.column = panel.column;
       const panelContext: IRJsonObject = { coordinateView: panel.id, facet: facetContext };
+      const backgroundNode = plotBackgroundNode(
+        frameResolution.plotArea,
+        frameResolution.frame,
+        resolvedTheme.plotArea?.fill,
+      );
       const markLayers: Array<IRChild> = node.marks
         .map((mark, markIndex) => {
           const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
@@ -564,6 +593,7 @@ const expandPlot = (
         localNamespace: true,
         meta,
         children: [
+          ...(backgroundNode ? [backgroundNode] : []),
           ...(gridResolution?.gridLayers ?? []).map(layer =>
             withFacetGuideContext(layer, panelContext, node.id, panel.id),
           ),
@@ -587,22 +617,7 @@ const expandPlot = (
     });
 
     anchorRegistry.assertResolved();
-    const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
-    const labelLayers = lowerPlotLabels({
-      layout: node.layout,
-      labels: node.labels ?? [],
-      width,
-      height,
-      plotArea: { x: 0, y: 0, width, height },
-      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-      textStyle: resolvedTheme.labelText,
-    });
-    const children: Array<IRChild> = [
-      ...(backgroundNode ? [backgroundNode] : []),
-      ...panelScopes,
-      ...facetLabelScopes,
-      ...labelLayers,
-    ];
+    const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
@@ -698,24 +713,14 @@ const expandPlot = (
       ),
     );
   }
-  const labelLayers = lowerPlotLabels({
-    layout: node.layout,
-    labels: node.labels ?? [],
-    width,
-    height,
-    plotArea,
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    textStyle: resolvedTheme.labelText,
-  });
-
-  // z-order：所有网格层 → marks → 所有轴层 → plot labels → legend（legend 在预留带最上）
-  const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
+  // z-order：所有网格层 → marks → 所有轴层 → legend
+  const defaultFrame = frameByScope.get(coordinateScopes.defaultScope);
+  const backgroundNode = plotBackgroundNode(plotArea, defaultFrame, resolvedTheme.plotArea?.fill);
   const children: Array<IRChild> = [
     ...(backgroundNode ? [backgroundNode] : []),
     ...gridLayers,
     ...markLayers,
     ...axisLayers,
-    ...labelLayers,
     ...legendLayers,
   ];
 
@@ -726,10 +731,11 @@ const expandPlot = (
   }
 
   // 有 id：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
-  //   ⊃ [ 内层 localNamespace 内容 scope（封内部 datum/series id、承 provenance meta）, plotArea 不可见 carrier ]。
-  // 让面板 bbox `<plotId>` 与绘图区 `<plotId>.plotArea` 都落在 localNamespace 之外、外部兄弟可锚（组合连线）。
+  //   ⊃ [ 内层 localNamespace 内容 scope（封内部 datum/series id、承 provenance meta）, 二维坐标的 plotArea 不可见 carrier ]。
+  // 让面板 bbox `<plotId>` 与二维绘图区 `<plotId>.plotArea` 都落在 localNamespace 之外、外部兄弟可锚（组合连线）。
   const inner: IRScope = { type: 'scope', localNamespace: true, children };
   const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
+  if (!supportsPlotArea(defaultFrame)) return { type: 'scope', id: node.id, children: [innerContent] };
   // plotArea 精确矩形 carrier：几何 = 扣除轴 / legend 后的绘图区；opacity 0 不可见，仅登记 bbox 锚
   const plotAreaCarrier: IRNode = {
     type: 'node',

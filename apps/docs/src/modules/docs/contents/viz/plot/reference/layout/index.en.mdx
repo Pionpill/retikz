@@ -1,22 +1,12 @@
 ---
 title: Contract - Layout
-description: Query the Plot schemas for padding, automatic space reservation, static labels, and placement.
+description: Query the padding schema used by Plot composition and distinguish drawing layout from Chart presentation.
 ---
 
-Layout contracts describe placement intent around the Plot frame. Concrete text measurement and space reservation are resolved during lowering.
+Plot layout serves the drawing body only. Composition can use `BoxPaddingSchema` for outer spacing, while Axis, Legend, Facet, and other owners retain their own placement and space contracts.
+
+`PlotSpec` does not accept top-level `layout` or `labels`. Complete-chart presentation such as titles, subtitles, notes, and sources belongs to Chart, which composes it with the single Plot body through Standard layout.
 
 ## BoxPaddingSchema
 
 <ZodSchema name="BoxPaddingSchema" />
-
-## LayoutPlacementSchema
-
-<ZodSchema name="LayoutPlacementSchema" />
-
-## PlotLayoutSchema
-
-<ZodSchema name="PlotLayoutSchema" />
-
-## PlotLabelSchema
-
-<ZodSchema name="PlotLabelSchema" />

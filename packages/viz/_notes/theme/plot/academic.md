@@ -26,6 +26,8 @@
 ## 边界与覆盖
 
 - Plot 不拥有 LaTeX、期刊栏宽、导出 DPI 或字体资源，只维护 renderer-neutral Plot token。
+- 内建 Plot preset 从 Core 注入 categorical / series / sector；Plot 只维护 sequential / diverging 与领域颜色角色。
+- Plot style definition 显式提供的 palette 高于 Core baseline，之后仍可由 `plotThemeTokens` 与结构化 `plotTheme` 覆盖。
 - 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于内置 Academic；不得调色、重排或替换用户输入。
 - 颜色不足以支持灰度辨识时，复用 mark / encoding 已有线型、形状或标注能力，不在 Theme 中创造新编码。
 - mark、guide 与 lowering 消费解析后的有效主题，不增加 `ThemeStyle.Academic` 分支。

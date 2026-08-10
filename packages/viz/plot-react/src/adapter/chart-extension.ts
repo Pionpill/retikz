@@ -70,9 +70,6 @@ export const assertChartExtensionCollection = (
           : PlotDeclarationErrorCode.UnsupportedChartChild;
       throw new PlotDeclarationError(code, declaration.path);
     }
-    if (declaration.kind === 'title-label' || declaration.kind === 'caption-label') {
-      throw new PlotDeclarationError(PlotDeclarationErrorCode.UnsupportedChartChild, declaration.path);
-    }
   }
 
   const scaleDeclaration = firstScaleDeclarationOf(collection);

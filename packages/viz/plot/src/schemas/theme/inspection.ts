@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
 import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
+import { PlotAxisThemeTokenRuleSchema } from './token-rule';
 
 const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/plotTheme'] as const;
 const PLOT_INHERITED_COLOR_TOKENS = new Set<string>([
@@ -20,6 +21,15 @@ export const PlotThemeTokenSourceRecordSchema = z
     path: z.string().min(1).describe('Stable source path for this resolved Plot token'),
   })
   .describe('Winning cascade source for one resolved Plot style token');
+
+/** 单条 Axis theme token rule 的稳定来源记录 */
+export const PlotThemeTokenRuleSourceRecordSchema = z
+  .strictObject({
+    rule: PlotAxisThemeTokenRuleSchema.describe('Axis theme token rule preserved in cascade order'),
+    kind: z.literal(ThemeTokenSource.Local).describe('Rule authored by the Plot owner'),
+    path: z.string().min(1).describe('Stable source path for this Axis theme token rule'),
+  })
+  .describe('Ordered source record for one scoped Plot Axis theme token rule');
 
 /** Plot native theme 的 authored 入口 */
 export const PlotThemeAuthoredOverrideRecordSchema = z
@@ -47,6 +57,9 @@ export const PlotThemeResolutionSchema = z
     mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
     tokens: PlotResolvedThemeTokensSchema.describe('Complete resolved Plot theme token map'),
     tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
+    tokenRules: z
+      .array(PlotThemeTokenRuleSourceRecordSchema)
+      .describe('Axis theme token rules preserved in effective cascade order'),
     authoredOverrides: z
       .array(PlotThemeAuthoredOverrideRecordSchema)
       .describe('Authored native Plot theme inputs in cascade order'),
@@ -80,6 +93,20 @@ export const PlotThemeResolutionSchema = z
           code: 'custom',
           path: ['tokenSources', index, 'path'],
           message: 'Plot token source relation and path must identify a canonical owner input',
+        });
+      }
+    });
+    resolution.tokenRules.forEach((source, index) => {
+      const stylePath = `$style/${resolution.style}/${resolution.mode}/tokenRules/`;
+      const localPath = '$spec/plotThemeTokenRules/';
+      const validPath =
+        source.path === `${stylePath}${index}` ||
+        (source.path.startsWith(localPath) && /^\$spec\/plotThemeTokenRules\/\d+$/.test(source.path));
+      if (!validPath) {
+        context.addIssue({
+          code: 'custom',
+          path: ['tokenRules', index, 'path'],
+          message: 'Plot token rule source path must identify a style or PlotSpec rule entry',
         });
       }
     });

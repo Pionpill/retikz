@@ -18,7 +18,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       color={values[SCATTER_BASIC_CONTROL_IDS.colorByGroup] ? 'group' : undefined}
     />
     <Axis dimension="x" title="Weight (kg)" />
-    <Axis dimension="y" title="Efficiency (km/L)" grid={values[SCATTER_BASIC_CONTROL_IDS.gridVisible]} />
+    <Axis dimension="y" title="Efficiency (km/L)" />
   </Plot>
 ));
 

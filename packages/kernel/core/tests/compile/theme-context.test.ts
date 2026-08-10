@@ -45,7 +45,9 @@ describe('Theme compile context', () => {
     expect(observed[0]).toMatchObject({
       style: ThemeStyle.Academic,
       mode: ThemeMode.Light,
-      colors: { categorical: expect.arrayContaining(['#1d4ed8', '#4338ca', '#7e22ce']) },
+      colors: {
+        categorical: expect.arrayContaining(['hsl(210, 93%, 43%)', 'hsl(30, 100%, 43%)', 'hsl(150, 83%, 28%)']),
+      },
     });
     expect(observed[0]).not.toHaveProperty('tokens');
     expect(Object.isFrozen(observed[0])).toBe(true);

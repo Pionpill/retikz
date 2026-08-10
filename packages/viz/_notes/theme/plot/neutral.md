@@ -24,6 +24,8 @@
 ## 边界与覆盖
 
 - Plot 只拥有 `PlotThemeToken` 和原生 `plotTheme` 中的 Plot 视觉，不重定义 `ResolvedThemeColors`。
+- 内建 Plot preset 从 Core 注入 categorical / series / sector；Plot 只维护 sequential / diverging 与领域颜色角色。
+- Plot style definition 显式提供的 palette 高于 Core baseline，之后仍可由 `plotThemeTokens` 与结构化 `plotTheme` 覆盖。
 - 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于内置 Neutral；不得重排或二次处理用户颜色。
 - mark、guide 与 lowering 消费解析后的有效主题，不增加 `ThemeStyle.Neutral` 分支或硬编码专属色值。
 - Chart 转发 Plot 输入时不得复制 Neutral preset；adapter 与 docs 只负责接线。

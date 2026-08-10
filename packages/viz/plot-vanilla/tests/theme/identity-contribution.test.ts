@@ -53,7 +53,7 @@ const contextOf = (id: string): VanillaEmbedContext => ({
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light),
+  resolve: () => ({ tokens: getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light) }),
 });
 
 describe('Plot Vanilla runtime style options', () => {

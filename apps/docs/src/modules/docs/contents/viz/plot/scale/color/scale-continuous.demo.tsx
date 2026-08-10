@@ -48,7 +48,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       { type: 'axis', dimension: 'y', grid: true },
       { type: 'legend', channel: 'color', scale: 'color', position: 'bottom' },
     ],
-    labels: [{ type: 'text', role: 'title', text: values.scaleType }],
   };
 
   return (

@@ -2,12 +2,10 @@ import type { ValueOf } from '@retikz/foundation';
 
 /** Plot 主题 token 的 canonical key */
 export const PlotThemeToken = {
-  PlotSurfaceFill: 'plot.surface.fill',
+  PlotAreaFill: 'plot.area.fill',
   PlotTypographyForeground: 'plot.typography.foreground',
   PlotTypographyFontFamily: 'plot.typography.font.family',
   PlotTypographyFontSize: 'plot.typography.font.size',
-  PlotLabelForeground: 'plot.label.foreground',
-  PlotLabelFontSize: 'plot.label.font.size',
   AxisLineEnabled: 'axis.line.enabled',
   AxisLineStroke: 'axis.line.stroke',
   AxisLineStrokeWidth: 'axis.line.strokeWidth',
@@ -17,9 +15,12 @@ export const PlotThemeToken = {
   AxisTickLabelForeground: 'axis.tickLabel.foreground',
   AxisTickLabelFontSize: 'axis.tickLabel.font.size',
   AxisTickLabelGap: 'axis.tickLabel.gap',
+  AxisTitleEnabled: 'axis.title.enabled',
   AxisTitleForeground: 'axis.title.foreground',
   AxisTitleFontSize: 'axis.title.font.size',
   AxisTitleFontWeight: 'axis.title.font.weight',
+  AxisTitlePadding: 'axis.title.padding',
+  AxisGridEnabled: 'axis.grid.enabled',
   AxisGridStroke: 'axis.grid.stroke',
   AxisGridStrokeWidth: 'axis.grid.strokeWidth',
   AxisGridDrawOpacity: 'axis.grid.drawOpacity',

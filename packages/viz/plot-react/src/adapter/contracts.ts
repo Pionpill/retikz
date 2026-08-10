@@ -3,7 +3,6 @@ import type { ExternalRow, IRDataModel, IRDataReference } from '@retikz/data';
 import type {
   IRPlotCoordinateOperation,
   IRPlotGuide,
-  IRPlotLabel,
   IRPlotMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
@@ -104,12 +103,10 @@ export type BuildPlotSpecOptions = {
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** Plot-owned canonical theme token 稀疏覆盖 */
   plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
+  /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
+  plotThemeTokenRules?: IRPlotSpec['plotThemeTokenRules'];
   /** Plot 主题 */
   plotTheme?: IRPlotSpec['plotTheme'];
-  /** Plot 级标签布局策略 */
-  layout?: IRPlotSpec['layout'];
-  /** 标题、说明、注记或来源文本等静态 Plot 标签 */
-  labels?: IRPlotSpec['labels'];
   /** 当前数据集可见字段名集合 */
   dataFieldNames?: ReadonlySet<string>;
   /** 是否省略未显式声明的位置比例尺绑定，让 lowering 按实际字段类型派生
@@ -170,8 +167,6 @@ export type PlotMemberFragment = {
   guides?: Array<IRPlotGuide>;
   /** Plot mark 集合 */
   marks?: Array<IRPlotMarkOperation>;
-  /** Plot 标签集合 */
-  labels?: Array<IRPlotLabel>;
 };
 
 /** 运行时 datum label 解析器 */
@@ -236,8 +231,6 @@ export type NormalizationState = {
   facets: Array<CollectedFacet>;
   /** 已收集的 scaffold */
   scaffolds: Array<CollectedScaffold>;
-  /** Plot 级静态文本标签 */
-  labels: Array<IRPlotLabel>;
   /** 显式变换 */
   transforms: Array<IRPlotTransform>;
   /** mark 简写自动装配的变换 */
@@ -277,8 +270,6 @@ export type PlotDeclarationKind =
   | 'facet'
   | 'scaffold'
   | 'track'
-  | 'title-label'
-  | 'caption-label'
   | 'path-mark'
   | 'point-mark'
   | 'interval-mark'
@@ -290,9 +281,6 @@ export type PlotDeclarationKind =
   | 'transform'
   | 'unsupported';
 
-/** Text Plot label 的 JSON-safe 文本块 */
-export type PlotLabelTextBlock = Extract<IRPlotLabel, { type: 'text' }>['text'];
-
 /** collector 保存的单个 JSON-safe React declaration */
 export type PlotAuthoringDeclaration = {
   /** 稳定组件 kind */
@@ -303,8 +291,6 @@ export type PlotAuthoringDeclaration = {
   path: PlotDeclarationPath;
   /** Facet、Scaffold 或 Track 提供的声明上下文 */
   context?: CollectionContext;
-  /** Label children 预归一化后的 JSON-safe 文本块 */
-  labelChildText?: PlotLabelTextBlock;
 };
 
 /** collector 保存的有序 React declarations */

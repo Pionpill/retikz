@@ -299,7 +299,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
     return {
       frame,
       plotArea,
-      gridLayers: lowered.flatMap(layer => (layer.gridLayer ? [layer.gridLayer] : [])),
+      gridLayers: [],
       axisLayers: lowered.flatMap(layer => (layer.axisLayer ? [layer.axisLayer] : [])),
     };
   },

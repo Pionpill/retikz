@@ -36,23 +36,20 @@
 
 ## Label
 
-Datum labels are shared by position marks through `DatumLabelProps`; chart-level headings and captions use `TitleLabel` and `CaptionLabel`. Both participate in Plot label placement and space reservation.
+Datum labels are shared by position marks through `DatumLabelProps` and remain part of Plot drawing semantics. Complete-chart headings, notes, and sources use Chart presentation, with Standard laying them out around the Plot body.
 
-| Prop                                      | Type                                                                     | Default  | Description                                                     |
-| ----------------------------------------- | ------------------------------------------------------------------------ | -------- | --------------------------------------------------------------- |
-| `label`                                   | `DatumLabelProps['label']`                                               | —        | Datum-label content field                                       |
-| `labelDisplayFormat`                      | `DatumLabelProps['labelDisplayFormat']`                                  | —        | Display format for numeric or temporal fields                   |
-| `labelPosition`                           | `DatumLabelProps['labelPosition']`                                       | `top`    | Label position relative to the host mark                        |
-| `labelDistance`                           | `DatumLabelProps['labelDistance']`                                       | `12`     | Distance from the host boundary                                 |
-| `labelPin`                                | `DatumLabelProps['labelPin']`                                            | `false`  | Leader-line visibility and style                                |
-| `labelTextColor` / `labelOpacity`         | `DatumLabelProps['labelTextColor' \| 'labelOpacity']`                    | Theme    | Label color and opacity                                         |
-| `labelFont`                               | `DatumLabelProps['labelFont']`                                           | Theme    | Datum-label font                                                |
-| `labelRotate`                             | `DatumLabelProps['labelRotate']`                                         | `'none'` | Label rotation strategy or angle                                |
-| `labelKeepUpright`                        | `DatumLabelProps['labelKeepUpright']`                                    | `false`  | Keep text upright after rotation                                |
-| `resolveLabel`                            | `DatumLabelProps['resolveLabel']`                                        | —        | Runtime-only custom content function; also requires a mark `id` |
-| `TitleLabel` / `CaptionLabel` `text`      | `TitleLabelProps['text']` \| `CaptionLabelProps['text']`                 | —        | String, multiline text, or styled text block                    |
-| `TitleLabel` / `CaptionLabel` `placement` | `TitleLabelProps['placement']` \| `CaptionLabelProps['placement']`       | By role  | Side or normalized-point placement                              |
-| `reserveSpace`                            | `TitleLabelProps['reserveSpace']` \| `CaptionLabelProps['reserveSpace']` | By role  | Whether the label reserves Plot layout space                    |
+| Prop                              | Type                                                  | Default  | Description                                                     |
+| --------------------------------- | ----------------------------------------------------- | -------- | --------------------------------------------------------------- |
+| `label`                           | `DatumLabelProps['label']`                            | —        | Datum-label content field                                       |
+| `labelDisplayFormat`              | `DatumLabelProps['labelDisplayFormat']`               | —        | Display format for numeric or temporal fields                   |
+| `labelPosition`                   | `DatumLabelProps['labelPosition']`                    | `top`    | Label position relative to the host mark                        |
+| `labelDistance`                   | `DatumLabelProps['labelDistance']`                    | `12`     | Distance from the host boundary                                 |
+| `labelPin`                        | `DatumLabelProps['labelPin']`                         | `false`  | Leader-line visibility and style                                |
+| `labelTextColor` / `labelOpacity` | `DatumLabelProps['labelTextColor' \| 'labelOpacity']` | Theme    | Label color and opacity                                         |
+| `labelFont`                       | `DatumLabelProps['labelFont']`                        | Theme    | Datum-label font                                                |
+| `labelRotate`                     | `DatumLabelProps['labelRotate']`                      | `'none'` | Label rotation strategy or angle                                |
+| `labelKeepUpright`                | `DatumLabelProps['labelKeepUpright']`                 | `false`  | Keep text upright after rotation                                |
+| `resolveLabel`                    | `DatumLabelProps['resolveLabel']`                     | —        | Runtime-only custom content function; also requires a mark `id` |
 
 ## Scale
 
@@ -102,7 +99,7 @@ Use `linear`, `time`, `log`, `sqrt`, `symlog`, or `radial`.
 | Built-in `kind`                | `'sort'` \| `'summarize'` \| `'select'` \| `'annotate'` \| `'stack'` \| `'bin'` \| `'normalize'` \| `'derive-interval'` \| `'relate'` \| `'jitter'` \| `'density'` \| `'smooth'` | —       | Select a built-in operation and expose its branch fields                                                                        |
 | Custom `kind`                  | `string`                                                                                                                                                                         | —       | Any registered external transform kind that does not collide with reserved names; its definition validates the remaining fields |
 
-## Theme and Layout
+## Theme and Presentation
 
 Chart owns presentation defaults through `chartThemeTokens`; Core `style` and `mode` come from the hosting Scene or Scope. Chart does not shadow the host Theme with another style/mode field. It forwards the current Plot inputs without renaming their owner: `plotThemeTokens` and `plotTheme` remain Plot-owned.
 
@@ -115,7 +112,7 @@ Define a custom style with `defineChartThemeStyle`, then inject it into the Char
 | `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`    | Sparse Chart-owned presentation and recipe token overrides                 |
 | `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`    | Sparse Plot-owned token overrides forwarded unchanged to the resolved Plot |
 | `plotTheme`        | `IRChartShared['plotTheme']`         | Theme   | Plot native theme forwarded unchanged                                      |
-| `layout`           | `IRChartShared['layout']`            | Plot    | Plot label and guide reservation strategy                                  |
+| `presentation`     | `IRChartShared['presentation']`      | —       | Chart-owned copy, authored order, and Standard Flex layout                 |
 | `width` / `height` | `IRChartShared['width' \| 'height']` | —       | Resolved Plot intrinsic size                                               |
 
 ## Additional Marks

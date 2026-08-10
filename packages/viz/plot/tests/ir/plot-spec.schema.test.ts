@@ -142,97 +142,20 @@ describe('PlotSpecSchema (contract)', () => {
     expect(PlotSpecSchema.parse(spec)).toEqual(spec);
   });
 
-  it('plot_layout_and_text_labels_valid', () => {
-    const spec = {
-      ...baseLine,
-      layout: {
-        mode: 'auto',
-        autoPadding: true,
-        padding: { top: 4, right: 6, bottom: 8, left: 10 },
-      },
-      labels: [
-        {
-          type: 'text',
-          role: 'title',
-          text: ['Monthly Revenue', 'Internal view'],
-          placement: { kind: 'side', side: 'top', placement: 'midway', padding: 8 },
-          font: { size: 18 },
-        },
-        {
-          type: 'text',
-          role: 'note',
-          text: 'Preliminary',
-          reserveSpace: false,
-          placement: { kind: 'point', target: 'plotArea', x: 0.98, y: 0.02, anchor: 'end' },
-        },
-      ],
-    };
-    expect(PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)))).toEqual(spec);
-  });
-
-  it('plot_label_point_ratio_out_of_range_rejected', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
-        ...baseLine,
-        labels: [
-          {
-            type: 'text',
-            text: 'Outside',
-            placement: { kind: 'point', x: 1.2, y: 0.5 },
-          },
-        ],
-      }),
-    ).toThrow();
-  });
-
   it.each([
-    ['layout.maxIterations', { ...baseLine, layout: { maxIterations: 3 } }],
-    ['layout.collision', { ...baseLine, layout: { collision: { strategy: 'shift', padding: 2 } } }],
-    ['labels.priority', { ...baseLine, labels: [{ type: 'text', text: 'Title', priority: 10 }] }],
-    ['labels.overflow', { ...baseLine, labels: [{ type: 'text', text: 'Title', overflow: 'hide' }] }],
-    [
-      'labels.placement.target.view',
-      {
-        ...baseLine,
-        labels: [
-          {
-            type: 'text',
-            text: 'Title',
-            placement: { kind: 'point', target: 'view', view: 'main', x: 0.5, y: 0.5 },
-          },
-        ],
-      },
-    ],
-  ])('plot_unavailable_layout_field_%s_rejected', (_field, spec) => {
+    ['layout', { ...baseLine, layout: { autoPadding: true } }],
+    ['labels', { ...baseLine, labels: [{ type: 'text', role: 'title', text: 'Monthly Revenue' }] }],
+  ])('plot_presentation_field_%s_is_rejected', (_field, spec) => {
     expect(PlotSpecSchema.safeParse(spec).success).toBe(false);
   });
 
-  it('plot_label_text_must_not_be_empty', () => {
-    expect(() => PlotSpecSchema.parse({ ...baseLine, labels: [{ type: 'text', text: '' }] })).toThrow();
-  });
-
-  it('plot_label_accepts_layer_zindex', () => {
-    const spec = {
-      ...baseLine,
-      labels: [{ type: 'text', role: 'title', text: 'Monthly Revenue', layer: { zIndex: 430 } }],
-    };
-
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
-  });
-
-  it('plot_label_layer_rejects_fractional_zindex_and_unknown_fields', () => {
-    expect(() =>
-      PlotSpecSchema.parse({
+  it('plot_theme_label_text_is_rejected', () => {
+    expect(
+      PlotSpecSchema.safeParse({
         ...baseLine,
-        labels: [{ type: 'text', text: 'Monthly Revenue', layer: { zIndex: 1.5 } }],
-      }),
-    ).toThrow();
-    expect(() =>
-      PlotSpecSchema.parse({
-        ...baseLine,
-        labels: [{ type: 'text', text: 'Monthly Revenue', layer: { zIndex: 1, order: 2 } }],
-      }),
-    ).toThrow();
+        plotTheme: { labelText: { textColor: '#111111', font: { size: 14 } } },
+      }).success,
+    ).toBe(false);
   });
 
   it('guides_coexist_with_marks', () => {

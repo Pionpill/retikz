@@ -78,7 +78,7 @@ describe('plot', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       plotTheme: {
-        background: '#ffffff',
+        plotArea: { fill: '#ffffff' },
         palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
         legend: { swatchSize: 12, label: { textColor: '#475569' } },
       },
@@ -101,7 +101,7 @@ describe('plot', () => {
     });
 
     expect(spec.plotTheme).toMatchObject({
-      background: '#ffffff',
+      plotArea: { fill: '#ffffff' },
       palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
       legend: { swatchSize: 12, label: { textColor: '#475569' } },
     });
@@ -126,33 +126,32 @@ describe('plot', () => {
     expect(spec.plotThemeTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
   });
 
-  it('透传 layout 与 labels', () => {
-    const spec = plot({
+  it('plain PlotSpec 透传 Axis theme token rules', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
       data: { reference: 'sales' },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      layout: { autoPadding: true },
-      labels: [
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }],
+      plotThemeTokenRules: [
         {
-          type: 'text',
-          role: 'title',
-          text: 'Sales Overview',
-          placement: { kind: 'side', side: 'top', placement: 'midway', padding: 8 },
+          select: { dimension: 'x' },
+          tokens: { 'axis.grid.enabled': true },
         },
-      ],
-      marks: [{ type: 'path', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-      guides: [
-        { type: 'axis', dimension: 'x' },
-        { type: 'axis', dimension: 'y' },
       ],
     });
 
-    expect(spec.layout).toEqual({ autoPadding: true });
-    expect(spec.labels?.[0]).toMatchObject({ type: 'text', role: 'title', text: 'Sales Overview' });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(spec.plotThemeTokenRules).toEqual([
+      {
+        select: { dimension: 'x' },
+        tokens: { 'axis.grid.enabled': true },
+      },
+    ]);
   });
 
   it('展开 yAxisId binding sugar 为 overlay composition', () => {

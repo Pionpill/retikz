@@ -1,4 +1,4 @@
-import type { IRPlotCoordinateOperation, IRPlotLabel, IRPlotScale } from '@retikz/plot';
+import type { IRPlotCoordinateOperation, IRPlotScale } from '@retikz/plot';
 
 import { CoordinateOperationSchema, normalizePlotBindings, PlotCoordinate, PlotGuide, PlotMark } from '@retikz/plot';
 
@@ -43,8 +43,6 @@ export const normalizePlotRoot = (
   // 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
   // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错
   const transforms = assembledTransformsOf(collected, context);
-  const labels: Array<IRPlotLabel> = [...collected.labels];
-
   const coordinateInput = context.coordinate?.value;
   const coordKind = coordinateTypeOf(coordinateInput);
   if (collected.hasSector && coordKind !== 'polar2D') {
@@ -178,7 +176,6 @@ export const normalizePlotRoot = (
   const fragment: PlotMemberFragment = {
     ...(transforms.length > 0 ? { transform: transforms } : {}),
     scales: normalizedScales,
-    ...(labels.length > 0 ? { labels } : {}),
     ...(normalizedAxisBinding.composition !== undefined
       ? { composition: normalizedAxisBinding.composition }
       : { coordinate: normalizedAxisBinding.coordinate }),

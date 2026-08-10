@@ -19,7 +19,7 @@ export type {
 /** 默认 guide（供 decorateDefaultGuides 复用，薄 Plot 本身不补） */
 const DEFAULT_GUIDES: ReadonlyArray<IRPlotGuide> = [
   { type: PlotGuide.Axis, dimension: 'x' },
-  { type: PlotGuide.Axis, dimension: 'y', grid: true },
+  { type: PlotGuide.Axis, dimension: 'y' },
 ];
 
 /** buildPlotSpec 收集的 resolveLabel 运行时旁路 */
@@ -53,18 +53,15 @@ export const buildPlotSpec = (children: ReactNode, dataRef: string, options: Bui
     mode: 'plot-root' as const,
   };
   const { fragment, runtime } = normalizePlotDeclarations(collection, plotRootContext);
-  const { labels: declarationLabels, ...members } = fragment;
-  const labels = [...(options.labels ?? []), ...(declarationLabels ?? [])];
   const parsed = PlotSpecSchema.parse({
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
     ...(options.id === undefined ? {} : { id: options.id }),
     data,
-    ...members,
+    ...fragment,
     ...(options.plotThemeTokens === undefined ? {} : { plotThemeTokens: options.plotThemeTokens }),
+    ...(options.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: options.plotThemeTokenRules }),
     ...(options.plotTheme === undefined ? {} : { plotTheme: options.plotTheme }),
-    ...(options.layout === undefined ? {} : { layout: options.layout }),
-    ...(labels.length === 0 ? {} : { labels }),
     ...(options.width === undefined ? {} : { width: options.width }),
     ...(options.height === undefined ? {} : { height: options.height }),
   });

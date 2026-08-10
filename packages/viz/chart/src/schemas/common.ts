@@ -6,7 +6,6 @@ import {
   CoordinateOperationSchema,
   GuideSchema,
   MarkOperationSchema,
-  PlotLayoutSchema,
   ScaleOperationSchema,
   TransformSchema,
 } from '@retikz/plot';
@@ -34,7 +33,6 @@ export const ChartSharedBaseSchema = z
       .array(MarkOperationSchema)
       .optional()
       .describe('Explicit Plot mark extensions appended after recipe marks'),
-    layout: PlotLayoutSchema.optional().describe('Plot label layout forwarded to the resolved Plot'),
     width: PositiveNumberSchema.optional().describe('Resolved Plot intrinsic width in user units'),
     height: PositiveNumberSchema.optional().describe('Resolved Plot intrinsic height in user units'),
     meta: JsonObjectSchema.optional().describe('JSON-safe source metadata forwarded to the resolved Plot'),
