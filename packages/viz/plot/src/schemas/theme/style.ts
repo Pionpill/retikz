@@ -32,8 +32,6 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.PlotTypographyForeground]: CssColorSchema.describe('Global Plot guide foreground color'),
   [PlotThemeToken.PlotTypographyFontFamily]: FontFamilySchema.describe('Global Plot guide font family'),
   [PlotThemeToken.PlotTypographyFontSize]: FontSizeSchema.describe('Global Plot guide font size'),
-  [PlotThemeToken.PlotLabelForeground]: CssColorSchema.describe('Plot label foreground color'),
-  [PlotThemeToken.PlotLabelFontSize]: FontSizeSchema.describe('Plot label font size'),
   [PlotThemeToken.AxisLineEnabled]: z.boolean().describe('Whether existing Plot axes show baselines by default'),
   [PlotThemeToken.AxisLineStroke]: PaintValueSchema.describe('Axis baseline stroke paint'),
   [PlotThemeToken.AxisLineStrokeWidth]: StrokeWidthSchema.describe('Axis baseline stroke width'),

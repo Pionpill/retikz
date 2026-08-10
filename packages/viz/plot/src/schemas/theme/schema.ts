@@ -70,7 +70,6 @@ export const PlotThemeSchema = z
   .strictObject({
     background: PaintValueSchema.optional().describe('Plot panel background fill. Omit to keep the panel transparent'),
     typography: GuideTextStyleSchema.optional().describe('Global guide text defaults'),
-    labelText: GuideTextStyleSchema.optional().describe('Default text style for static plot labels'),
     axis: PlotAxisThemeSchema.optional().describe('Axis visual defaults'),
     legend: LegendGuideStyleSchema.optional().describe('Legend visual defaults'),
     palette: PlotPaletteThemeSchema.optional().describe('Plot color palette defaults'),

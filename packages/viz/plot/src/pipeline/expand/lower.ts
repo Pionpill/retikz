@@ -40,7 +40,6 @@ import {
 } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { createAnchorRegistry } from '../anchors';
-import { lowerPlotLabels, resolveLabelReserve } from '../decoration-layout';
 import { createDatumIdRegistrar } from '../provenance';
 import {
   axisGridApplyToOf,
@@ -193,13 +192,6 @@ const expandPlot = (
     options.plotThemeStyles,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
-  const labelReserve = resolveLabelReserve({
-    layout: node.layout,
-    labels: node.labels ?? [],
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    textStyle: resolvedTheme.labelText,
-  });
-  const scopedLabelReserve = node.composition === undefined ? labelReserve : undefined;
   const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide =>
     isAxisGuide(guide) ? resolveAxisGuideTokens(resolvedTheme, guide) : guide,
   );
@@ -222,7 +214,6 @@ const expandPlot = (
       compositionPolicyContext,
       allGuides,
       allGuidesWithCompositionGap,
-      ...(scopedLabelReserve !== undefined ? { scopedLabelReserve } : {}),
     });
   const facets = compositionFacets;
   const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
@@ -309,9 +300,16 @@ const expandPlot = (
       value: FacetScalar,
       rect: Rect,
     ): IRScope => {
-      const style = facetHeaderLabelStyleOf(facet, dimension);
+      const localStyle = facetHeaderLabelStyleOf(facet, dimension);
+      const style = {
+        ...resolvedTheme.typography,
+        ...localStyle,
+        ...(resolvedTheme.typography.font !== undefined || localStyle?.font !== undefined
+          ? { font: { ...(resolvedTheme.typography.font ?? {}), ...(localStyle?.font ?? {}) } }
+          : {}),
+      };
       const rotate = facetHeaderLabelRotateOf(facet, dimension);
-      const maxTextWidth = style?.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
+      const maxTextWidth = style.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
@@ -588,21 +586,7 @@ const expandPlot = (
 
     anchorRegistry.assertResolved();
     const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
-    const labelLayers = lowerPlotLabels({
-      layout: node.layout,
-      labels: node.labels ?? [],
-      width,
-      height,
-      plotArea: { x: 0, y: 0, width, height },
-      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-      textStyle: resolvedTheme.labelText,
-    });
-    const children: Array<IRChild> = [
-      ...(backgroundNode ? [backgroundNode] : []),
-      ...panelScopes,
-      ...facetLabelScopes,
-      ...labelLayers,
-    ];
+    const children: Array<IRChild> = [...(backgroundNode ? [backgroundNode] : []), ...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
       return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
@@ -698,24 +682,13 @@ const expandPlot = (
       ),
     );
   }
-  const labelLayers = lowerPlotLabels({
-    layout: node.layout,
-    labels: node.labels ?? [],
-    width,
-    height,
-    plotArea,
-    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-    textStyle: resolvedTheme.labelText,
-  });
-
-  // z-order：所有网格层 → marks → 所有轴层 → plot labels → legend（legend 在预留带最上）
+  // z-order：所有网格层 → marks → 所有轴层 → legend
   const backgroundNode = plotBackgroundNode(width, height, resolvedTheme.background);
   const children: Array<IRChild> = [
     ...(backgroundNode ? [backgroundNode] : []),
     ...gridLayers,
     ...markLayers,
     ...axisLayers,
-    ...labelLayers,
     ...legendLayers,
   ];
 

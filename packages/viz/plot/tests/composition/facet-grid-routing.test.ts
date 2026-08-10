@@ -444,6 +444,54 @@ describe('facet grid data routing lowering', () => {
     expect(rowLabelNodes.map(node => node.textColor)).toEqual(['#334155', '#334155']);
   });
 
+  it('typography_supplies_facet_header_defaults_beneath_local_header_style', () => {
+    const spec = {
+      ...baseFacetSpec,
+      plotTheme: {
+        typography: {
+          font: { family: 'Source Serif 4', size: 15 },
+          textColor: '#0f766e',
+          lineHeight: 1.4,
+        },
+      },
+      composition: {
+        ...baseFacetSpec.composition,
+        arrangements: [
+          facetArrangement({
+            id: 'region-channel',
+            row: { field: 'region', order: ['north', 'south'] },
+            column: { field: 'channel', order: ['online', 'store'] },
+            header: {
+              row: true,
+              column: { textColor: '#2563eb', font: { weight: 700 } },
+            },
+          }),
+        ],
+      },
+    };
+
+    const outer = expandOf(parsePlotSpec(spec));
+    const rowNodes = facetLabelsOf(outer)
+      .filter(label => label.meta?.dimension === 'row')
+      .flatMap(allNodes);
+    const columnNodes = facetLabelsOf(outer)
+      .filter(label => label.meta?.dimension === 'column')
+      .flatMap(allNodes);
+
+    expect(rowNodes.length).toBeGreaterThan(0);
+    expect(rowNodes.every(node => node.textColor === '#0f766e')).toBe(true);
+    expect(rowNodes.every(node => node.font?.family === 'Source Serif 4' && node.font.size === 15)).toBe(true);
+    expect(rowNodes.every(node => node.lineHeight === 1.4)).toBe(true);
+    expect(columnNodes.length).toBeGreaterThan(0);
+    expect(columnNodes.every(node => node.textColor === '#2563eb')).toBe(true);
+    expect(
+      columnNodes.every(
+        node => node.font?.family === 'Source Serif 4' && node.font.size === 15 && node.font.weight === 700,
+      ),
+    ).toBe(true);
+    expect(columnNodes.every(node => node.lineHeight === 1.4)).toBe(true);
+  });
+
   it('facet_dimension_labels_override_header_text_blocks', () => {
     const spec = {
       ...baseFacetSpec,

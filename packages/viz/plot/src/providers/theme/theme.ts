@@ -64,8 +64,6 @@ export type ResolvedPlotGuideTheme = {
   axis: NonNullable<IRPlotTheme['axis']>;
   /** Legend 视觉默认值 */
   legend: ResolvedLegendGuideTokens;
-  /** Plot label 文本默认样式 */
-  labelText: GuideTextStyle;
 };
 
 const DEFAULT_TYPOGRAPHY: GuideTextStyle = { font: { size: 12 }, textColor: 'currentColor' };
@@ -114,7 +112,6 @@ export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotP
     typography,
     palette: structuredClone(palette),
     axis: theme.axis ?? {},
-    labelText: mergeTextStyle(typography, theme.labelText),
     legend: {
       swatchSize: legend?.swatchSize ?? DEFAULT_LEGEND.swatchSize,
       swatchGap: legend?.swatchGap ?? DEFAULT_LEGEND.swatchGap,
@@ -237,11 +234,25 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRP
   ...(theme.axis.ticks !== undefined || guide.ticks !== undefined
     ? { ticks: mergeAxisTicks(theme.axis.ticks, guide.ticks) }
     : {}),
-  ...(theme.axis.tickLabels !== undefined || guide.tickLabels !== undefined
-    ? { tickLabels: mergeAxisTickLabels(theme.axis.tickLabels, guide.tickLabels) }
-    : {}),
-  ...(theme.axis.title !== undefined || guide.title !== undefined
-    ? { title: mergeAxisTitle(theme.axis.title, guide.title) }
+  tickLabels: mergeAxisTickLabels(
+    theme.axis.tickLabels === false
+      ? false
+      : {
+          ...(theme.axis.tickLabels ?? {}),
+          ...mergeTextStyle(theme.typography, theme.axis.tickLabels),
+        },
+    guide.tickLabels,
+  ),
+  ...(guide.title !== undefined
+    ? {
+        title: mergeAxisTitle(
+          {
+            ...(theme.axis.title ?? {}),
+            ...mergeTextStyle(theme.typography, theme.axis.title),
+          },
+          guide.title,
+        ),
+      }
     : {}),
   ...(theme.axis.grid !== undefined || guide.grid !== undefined
     ? { grid: mergeAxisGrid(theme.axis.grid, guide.grid) }

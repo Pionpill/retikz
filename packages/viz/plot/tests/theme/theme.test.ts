@@ -1,6 +1,6 @@
 import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 
-import { compileToScene, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPlotSpec } from '../../src/schemas';
@@ -144,8 +144,8 @@ describe('plot theme schema and lowering', () => {
     ).scene;
     const fills = primitiveFillsOf(scene.primitives);
 
-    expect(fills).toContain('#111827');
-    expect(fills).toContain('#E5ECF6');
+    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Academic, ThemeMode.Dark).categorical[0]);
+    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Vibrant, ThemeMode.Light).categorical[0]);
   });
 
   it('theme_palette_categorical_drives_ordinal_scale', () => {
@@ -220,6 +220,45 @@ describe('plot theme schema and lowering', () => {
     const labels = nodesOf(root).filter(node => node.text !== undefined && node.textColor !== undefined);
     expect(labels.every(label => label.textColor === '#2563eb')).toBe(true);
     expect(labels.every(label => label.font?.size === 10)).toBe(true);
+  });
+
+  it('typography_supplies_axis_text_defaults_beneath_axis_and_guide_styles', () => {
+    const root = expandOf(
+      baseSpec({
+        guides: [
+          {
+            type: 'axis',
+            dimension: 'x',
+            title: { text: 'Revenue', textColor: '#dc2626', font: { weight: 700 } },
+          },
+        ],
+        plotTheme: {
+          typography: {
+            font: { family: 'Source Serif 4', size: 15 },
+            textColor: '#0f766e',
+            lineHeight: 1.4,
+          },
+          axis: {
+            tickLabels: { textColor: '#2563eb', font: { size: 10 } },
+            title: { textColor: '#7c3aed', font: { size: 13 } },
+          },
+        },
+      }),
+    );
+    const textNodes = nodesOf(root).filter(node => node.text !== undefined);
+    const title = textNodes.find(node => node.text === 'Revenue');
+    const tickLabels = textNodes.filter(node => node.text !== 'Revenue');
+
+    expect(tickLabels.length).toBeGreaterThan(0);
+    expect(tickLabels.every(label => label.font?.family === 'Source Serif 4')).toBe(true);
+    expect(tickLabels.every(label => label.font?.size === 10)).toBe(true);
+    expect(tickLabels.every(label => label.textColor === '#2563eb')).toBe(true);
+    expect(tickLabels.every(label => label.lineHeight === 1.4)).toBe(true);
+    expect(title).toMatchObject({
+      textColor: '#dc2626',
+      lineHeight: 1.4,
+      font: { family: 'Source Serif 4', size: 13, weight: 700 },
+    });
   });
 
   it('axis_tick_label_local_layout_overrides_theme_layout', () => {

@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
 import { GuideSchema, GuideTextStyleSchema } from '../guide';
-import { BoxPaddingSchema, PlotLabelSchema, PlotLayoutSchema } from '../layout';
+import { BoxPaddingSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { PlotThemeSchema, PlotThemeTokenOverridesSchema } from '../theme';
@@ -454,13 +454,6 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
   plotTheme: PlotThemeSchema.optional().describe(
     'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',
   ),
-  layout: PlotLayoutSchema.optional().describe(
-    'Plot-level label layout strategy for titles, captions, legends, and guide reservations',
-  ),
-  labels: z
-    .array(PlotLabelSchema)
-    .optional()
-    .describe('Static plot labels such as titles, captions, source notes, and custom text'),
   width: z
     .number()
     .positive()

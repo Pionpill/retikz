@@ -14,7 +14,6 @@ describe('Clean Plot theme preset', () => {
 
     expect(preset[PlotThemeToken.PlotTypographyFontFamily]).toContain('Inter');
     expect(preset[PlotThemeToken.PlotTypographyFontSize]).toBeGreaterThanOrEqual(12);
-    expect(preset[PlotThemeToken.PlotLabelFontSize]).toBeGreaterThanOrEqual(11);
     expect(preset[PlotThemeToken.LegendSwatchSize]).toBeGreaterThanOrEqual(12);
   });
 

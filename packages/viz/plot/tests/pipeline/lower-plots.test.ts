@@ -172,7 +172,7 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
 
-  it('semantic_layers_emit_default_zindex_scopes', () => {
+  it('drawing_semantic_layers_emit_default_zindex_scopes_without_presentation_decoration', () => {
     const spec = PlotSpecSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -197,7 +197,6 @@ describe('lowerPlots (contract)', () => {
         { type: 'axis', dimension: 'x', grid: true },
         { type: 'legend', channel: 'color', scale: 'regionColor', title: 'Region' },
       ],
-      labels: [{ type: 'text', role: 'title', text: 'Revenue' }],
     });
     const root = expandOf(
       spec,
@@ -208,7 +207,6 @@ describe('lowerPlots (contract)', () => {
     expect(scopeByLayerMeta(root, 'grid').zIndex).toBe(-300);
     expect(scopeByLayerMeta(root, 'mark').zIndex).toBe(0);
     expect(scopeByLayerMeta(root, 'axis').zIndex).toBe(200);
-    expect(scopeByLayerMeta(root, 'decoration').zIndex).toBe(400);
     expect(scopeByLayerMeta(root, 'legend').zIndex).toBe(500);
   });
 

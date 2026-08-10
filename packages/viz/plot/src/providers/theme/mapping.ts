@@ -45,10 +45,6 @@ export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTh
       },
       textColor: tokens[PlotThemeToken.PlotTypographyForeground],
     },
-    labelText: {
-      font: { size: tokens[PlotThemeToken.PlotLabelFontSize] },
-      textColor: tokens[PlotThemeToken.PlotLabelForeground],
-    },
     axis: {
       line: tokens[PlotThemeToken.AxisLineEnabled]
         ? {
@@ -156,23 +152,6 @@ export const applyPlotThemeToTokens = (
       }
     }
   }
-  if (authoredTheme.labelText !== undefined) {
-    if (has(authoredTheme.labelText, 'textColor')) {
-      set(
-        PlotThemeToken.PlotLabelForeground,
-        resolvedTheme.labelText!.textColor!,
-        '$spec/plotTheme/labelText/textColor',
-      );
-    }
-    if (authoredTheme.labelText.font !== undefined && has(authoredTheme.labelText.font, 'size')) {
-      set(
-        PlotThemeToken.PlotLabelFontSize,
-        resolvedTheme.labelText!.font!.size!,
-        '$spec/plotTheme/labelText/font/size',
-      );
-    }
-  }
-
   const authoredAxis = authoredTheme.axis;
   const axis = resolvedTheme.axis;
   if (authoredAxis !== undefined && axis !== undefined) {

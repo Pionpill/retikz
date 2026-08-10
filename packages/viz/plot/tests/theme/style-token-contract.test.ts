@@ -4,6 +4,7 @@ import * as plot from '../../src';
 import {
   PlotResolvedThemeTokensSchema,
   PlotSpecSchema,
+  PlotThemeSchema,
   PlotThemeToken,
   PlotThemeTokenOverridesSchema,
 } from '../../src';
@@ -73,6 +74,28 @@ describe('Plot style token contract', () => {
       if (!result.success)
         expect(result.error.issues.some(issue => issue.path.join('.') === path.join('.'))).toBe(true);
     }
+  });
+
+  it('拒绝已移除的 Plot presentation theme contract', () => {
+    expect(PlotThemeTokenOverridesSchema.safeParse({ 'plot.label.foreground': '#111111' }).success).toBe(false);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ 'plot.label.font.size': 14 }).success).toBe(false);
+    expect(PlotThemeSchema.safeParse({ labelText: { textColor: '#111111' } }).success).toBe(false);
+    expect(Object.values(PlotThemeToken)).not.toContain('plot.label.foreground');
+    expect(Object.values(PlotThemeToken)).not.toContain('plot.label.font.size');
+    expect(plot.PlotLayerZIndex as Record<string, number>).not.toHaveProperty('PlotLabel');
+  });
+
+  it('保留五个可选 Plot theme 顶层成员', () => {
+    expect(PlotThemeSchema.safeParse({}).success).toBe(true);
+    expect(
+      PlotThemeSchema.safeParse({
+        background: 'none',
+        typography: { textColor: 'currentColor' },
+        axis: { line: false },
+        legend: { swatchSize: 12 },
+        palette: { categorical: ['#2563eb'] },
+      }).success,
+    ).toBe(true);
   });
 
   it('让 sparse 与 PlotSpec token 输入保持 JSON round-trip，并让 required map 拒绝缺项', () => {

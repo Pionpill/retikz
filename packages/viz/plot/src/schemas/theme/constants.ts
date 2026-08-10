@@ -6,8 +6,6 @@ export const PlotThemeToken = {
   PlotTypographyForeground: 'plot.typography.foreground',
   PlotTypographyFontFamily: 'plot.typography.font.family',
   PlotTypographyFontSize: 'plot.typography.font.size',
-  PlotLabelForeground: 'plot.label.foreground',
-  PlotLabelFontSize: 'plot.label.font.size',
   AxisLineEnabled: 'axis.line.enabled',
   AxisLineStroke: 'axis.line.stroke',
   AxisLineStrokeWidth: 'axis.line.strokeWidth',
