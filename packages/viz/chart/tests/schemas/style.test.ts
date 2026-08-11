@@ -11,7 +11,7 @@ import {
 
 describe('Chart style schema', () => {
   it('只冻结 Chart-owned canonical token，不复制 Plot token', () => {
-    expect(Object.values(ThemeStyle)).toEqual(['neutral', 'academic', 'vibrant', 'clean']);
+    expect(Object.values(ThemeStyle)).toEqual(['neutral']);
     expect(Object.values(ThemeMode)).toEqual(['light', 'dark']);
     expect(Object.values(ChartThemeToken)).toHaveLength(37);
     expect(new Set(Object.values(ChartThemeToken)).size).toBe(37);
@@ -22,7 +22,7 @@ describe('Chart style schema', () => {
   });
 
   it('从 authoring surface 删除 spec-local style/mode', () => {
-    expect(ChartThemeSurfaceSchema.safeParse({ style: ThemeStyle.Clean }).success).toBe(false);
+    expect(ChartThemeSurfaceSchema.safeParse({ style: 'clean' }).success).toBe(false);
     expect(ChartThemeSurfaceSchema.safeParse({ themeMode: ThemeMode.Dark }).success).toBe(false);
     expect(ChartThemeSurfaceSchema.parse({})).toEqual({});
   });

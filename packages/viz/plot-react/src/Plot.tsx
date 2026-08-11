@@ -12,12 +12,13 @@ import type { FC, ReactNode } from 'react';
 
 import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
 import { Layout } from '@retikz/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import type { CoordinateInput, MarkTransformShortcutDefinition } from './adapter';
 
 import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-runtime';
 import { resolvePlotRuntime } from './plot-runtime';
+import { usePlotThemeStyles } from './theme-context';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip' | 'theme'> & {
@@ -145,8 +146,14 @@ type EmbeddablePlotComponent = FC<PlotProps> & {
  */
 export const Plot: EmbeddablePlotComponent = props => {
   const { width, height, className, style, renderer, themeStyles, onLineage } = props;
+  const ambientPlotThemeStyles = usePlotThemeStyles();
+  const effectiveProps = useMemo(() => {
+    if (ambientPlotThemeStyles === undefined) return props;
+    if (props.plotThemeStyles === undefined) return { ...props, plotThemeStyles: ambientPlotThemeStyles };
+    return { ...props, plotThemeStyles: [...ambientPlotThemeStyles, ...props.plotThemeStyles] };
+  }, [ambientPlotThemeStyles, props]);
   const notifiedLineageKey = useRef<string>();
-  const { spec, datasets, lowerOptions } = resolvePlotRuntime(props);
+  const { spec, datasets, lowerOptions } = resolvePlotRuntime(effectiveProps);
   const lineage =
     onLineage === undefined || props.lineage === false
       ? undefined

@@ -20,7 +20,7 @@ vi.mock('@retikz/react', async importOriginal => {
   };
 });
 
-import { Plot } from '../../src';
+import { Plot, PlotThemeProvider } from '../../src';
 
 const spec: IRPlotSpec = {
   namespace: 'plot',
@@ -49,6 +49,31 @@ describe('Plot React runtime style options', () => {
 
     const layout = capturedLayouts.at(-1);
     expect(layout?.themeStyles).toEqual([]);
+    const composites = layout?.composites as Array<{ expand: (node: IRPlotSpec, context: unknown) => unknown }>;
+    expect(() =>
+      composites[0].expand(spec, {
+        theme: {
+          style: 'brand',
+          mode: 'light',
+          colors: {
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            categorical: ['#2563eb'],
+          },
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it('standalone Plot consumes ambient Plot style definitions', () => {
+    capturedLayouts.length = 0;
+
+    renderToStaticMarkup(
+      <PlotThemeProvider plotThemeStyles={[plotThemeStyle]}>
+        <Plot spec={spec} data={data} />
+      </PlotThemeProvider>,
+    );
+
+    const layout = capturedLayouts.at(-1);
     const composites = layout?.composites as Array<{ expand: (node: IRPlotSpec, context: unknown) => unknown }>;
     expect(() =>
       composites[0].expand(spec, {

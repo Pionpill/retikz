@@ -120,7 +120,7 @@ describe('Chart style resolution', () => {
       path: '$style/neutral/light/chart.canvas.fill',
     });
     expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
-    expect(result.inspection.style.plot.tokenSources).toHaveLength(41);
+    expect(result.inspection.style.plot.tokenSources).toHaveLength(43);
   });
 
   it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
@@ -146,7 +146,7 @@ describe('Chart style resolution', () => {
         },
       },
     } as const;
-    const result = resolveChartSpec(input, themeOf(ThemeStyle.Academic, ThemeMode.Dark));
+    const result = resolveChartSpec(input, themeOf(ThemeStyle.Neutral, ThemeMode.Dark));
 
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
     expect(result.plotSpec.plotThemeTokenRules).toEqual(input.plotThemeTokenRules);
@@ -189,7 +189,7 @@ describe('Chart style resolution', () => {
 
   it('effective Theme 切换不改变 data、核心 recipe、空间根与 identity', () => {
     const neutral = resolveChartSpec(base);
-    const clean = resolveChartSpec(base, themeOf(ThemeStyle.Clean, ThemeMode.Dark));
+    const clean = resolveChartSpec(base, themeOf(ThemeStyle.Neutral, ThemeMode.Dark));
     const stableProjection = (result: typeof neutral) => ({
       data: result.plotSpec.data,
       transform: result.plotSpec.transform,

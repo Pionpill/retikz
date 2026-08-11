@@ -14,7 +14,7 @@ import { DetailTable } from '@retikz/table-react';
   id="scores"
   dataRef="scores"
   data={rows}
-  theme={{ style: 'academic', mode: 'light' }}
+  theme={{ style: 'neutral', mode: 'light' }}
   tableThemeTokens={{ 'cell.content.color': '#1e3a8a' }}
   columns={[
     { id: 'name', field: 'name', header: 'Name', bodyLayout: { padding: 6, wrap: true } },
@@ -95,6 +95,10 @@ resolution exposes `of`, `legendForm`, `domain`, `range`, and optional `edges`; 
 copy the descriptor fields into the Table manifest. Alpha.3 intentionally ends at that seed;
 rendered Standard Legend composition and a final joined manifest are planned for Table alpha.6, so
 this adapter exposes neither `legendLayout` nor a private Legend child in alpha.3.
+
+Applications can also provide Core definitions through `ThemeProvider` and Table definitions through
+`TableThemeProvider`. The package itself only guarantees `neutral`; additional visual personalities
+remain host-owned definitions.
 
 ## Install
 

@@ -43,3 +43,5 @@ export {
 export type { PlotDslProps, PlotLineageProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';
 export { Plot } from './Plot';
 export { resolvePlotLineage } from './plot-runtime';
+export type { PlotThemeProviderProps } from './theme-provider';
+export { PlotThemeProvider } from './theme-provider';

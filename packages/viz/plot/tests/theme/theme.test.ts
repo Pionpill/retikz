@@ -23,7 +23,7 @@ const ROWS = [
 
 const expandOf = (spec: IRPlotSpec): IRScope => {
   const [def] = lowerPlots({ d: ROWS }, { width: 480, height: 300 });
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const baseSpec = (override: Partial<IRPlotSpec> = {}): IRPlotSpec =>
@@ -256,12 +256,12 @@ describe('plot theme schema and lowering', () => {
       {
         version: 1,
         type: 'scene',
-        theme: { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
+        theme: { style: ThemeStyle.Neutral, mode: ThemeMode.Dark },
         children: [
           baseSpec({ id: 'scene-theme-plot' }),
           {
             type: 'scope',
-            theme: { style: ThemeStyle.Vibrant, mode: ThemeMode.Light },
+            theme: { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
             children: [baseSpec({ id: 'scope-theme-plot' })],
           },
         ],
@@ -270,8 +270,8 @@ describe('plot theme schema and lowering', () => {
     ).scene;
     const fills = primitiveFillsOf(scene.primitives);
 
-    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Academic, ThemeMode.Dark).categorical[0]);
-    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Vibrant, ThemeMode.Light).categorical[0]);
+    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Dark).categorical[0]);
+    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light).categorical[0]);
   });
 
   it('theme_palette_categorical_drives_ordinal_scale', () => {
@@ -450,9 +450,6 @@ describe('plot theme schema and lowering', () => {
   it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
     const cases: Array<{ style: BuiltinThemeStyleValue; dimensions: Array<string> }> = [
       { style: ThemeStyle.Neutral, dimensions: ['x', 'y'] },
-      { style: ThemeStyle.Academic, dimensions: [] },
-      { style: ThemeStyle.Vibrant, dimensions: ['x', 'y'] },
-      { style: ThemeStyle.Clean, dimensions: ['y'] },
     ];
 
     for (const { style, dimensions } of cases) {
@@ -460,7 +457,7 @@ describe('plot theme schema and lowering', () => {
         const grid = resolveAxis({}, { type: 'axis', dimension }, style).grid;
         if (dimensions.some(candidate => candidate === dimension)) {
           expect(grid).toMatchObject({
-            stroke: style === ThemeStyle.Vibrant ? '#FFFFFF' : 'currentColor',
+            stroke: 'currentColor',
             includeDomain: style === ThemeStyle.Neutral,
           });
         } else {
@@ -474,39 +471,6 @@ describe('plot theme schema and lowering', () => {
       stroke: 'currentColor',
       minor: localMinor,
     });
-  });
-
-  it('Clean 默认不绘制 x/y Axis line 与 tick mark', () => {
-    const x = resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Clean);
-    const y = resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean);
-
-    expect(x.line).toBe(false);
-    expect(y.line).toBe(false);
-    expect(x.ticks?.mark).toBe(false);
-    expect(y.ticks?.mark).toBe(false);
-  });
-
-  it('Clean 默认隐藏 Axis title，显式 token、dimension rule 与 native theme 可以覆盖', () => {
-    const guide = { type: 'axis', dimension: 'x', title: 'Revenue' } as const;
-
-    expect(resolveAxis({}, guide, ThemeStyle.Clean).title).toBeUndefined();
-    expect(resolveAxis({}, guide, ThemeStyle.Neutral).title).toMatchObject({ text: 'Revenue' });
-    expect(
-      resolveAxis({ plotThemeTokens: { [PlotThemeToken.AxisTitleEnabled]: true } }, guide, ThemeStyle.Clean).title,
-    ).toMatchObject({ text: 'Revenue' });
-    expect(
-      resolveAxis(
-        {
-          plotThemeTokenRules: [{ select: { dimension: 'x' }, tokens: { [PlotThemeToken.AxisTitleEnabled]: true } }],
-        },
-        guide,
-        ThemeStyle.Clean,
-      ).title,
-    ).toMatchObject({ text: 'Revenue' });
-    expect(resolveAxis({ plotTheme: { axis: { title: false } } }, guide).title).toBeUndefined();
-    expect(
-      resolveAxis({ plotTheme: { axis: { title: { textColor: '#2563eb' } } } }, guide, ThemeStyle.Clean).title,
-    ).toMatchObject({ text: 'Revenue', textColor: '#2563eb' });
   });
 
   it('typography_supplies_axis_text_defaults_beneath_axis_and_guide_styles', () => {

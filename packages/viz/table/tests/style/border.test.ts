@@ -9,10 +9,15 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'academic',
+        tableThemeTokens: {
+          'table.border.top': { kind: 'line', stroke: '#111111', width: 1.2 },
+          'table.border.bottom': { kind: 'line', stroke: '#111111', width: 1.2 },
+          'table.border.horizontal': null,
+        },
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
-      { theme: { style: 'academic', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(result.manifest.borders).toHaveLength(2);
@@ -37,11 +42,16 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'explicit',
+        tableThemeTokens: {
+          'table.border.top': { kind: 'line', stroke: '#111111', width: 1.2 },
+          'table.border.bottom': { kind: 'line', stroke: '#111111', width: 1.2 },
+          'table.border.horizontal': null,
+        },
         structure: { kind: 'manual', rows: [['x'], ['y']] },
         layout: { borders: { outer: { kind: 'none' }, horizontal: { kind: 'line', stroke: 'red', width: 2 } } },
       },
       {},
-      { theme: { style: 'academic', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(result.manifest.borders).toHaveLength(1);
@@ -59,11 +69,15 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'vibrant',
+        tableThemeTokens: {
+          'table.border.horizontal': { kind: 'line', stroke: '#ffffff', width: 1 },
+          'columnHeader.border.bottom': { kind: 'line', stroke: '#ffffff', width: 1 },
+        },
         data: { reference: 'rows' },
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
-      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
     );
     const headerBoundary = result.manifest.borders.find(border =>
       border.atoms.some(
@@ -119,6 +133,7 @@ describe('style token Border Graph integration', () => {
         namespace: 'table',
         type: 'table',
         id: 'border-precedence',
+        tableThemeTokens: { 'table.border.horizontal': { kind: 'line', stroke: '#ffffff', width: 1 } },
         structure: {
           kind: 'manual',
           rows: [
@@ -140,7 +155,7 @@ describe('style token Border Graph integration', () => {
         ],
       },
       {},
-      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
     );
     const boundary = result.manifest.borders.find(border =>
       border.atoms.some(atom => atom.winner.source.kind === 'cell' && atom.winner.source.cellId === 'target'),

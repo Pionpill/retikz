@@ -17,12 +17,6 @@ const transparentModes: Record<ThemeModeValue, PlotAreaFill> = {
 
 const styles: Record<BuiltinThemeStyleValue, Record<ThemeModeValue, PlotAreaFill>> = {
   [ThemeStyle.Neutral]: transparentModes,
-  [ThemeStyle.Academic]: transparentModes,
-  [ThemeStyle.Vibrant]: {
-    [ThemeMode.Light]: '#E5ECF6',
-    [ThemeMode.Dark]: '#111111',
-  },
-  [ThemeStyle.Clean]: transparentModes,
 };
 
 /** 读取内建主题的 Plot area token slice */

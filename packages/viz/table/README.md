@@ -15,15 +15,16 @@ are derived by Table. Scalar entries are value shorthands, `null` leaves a coord
 `{ value: null }` stores a real null Cell. Both helpers return plain, JSON-safe precise specs while
 sharing structure normalization, presentation, layout, and lowering.
 
-Table first resolves one deterministic Cell plan: the Core host Theme selects a built-in preset,
+Table first resolves one deterministic Cell plan: the Core host Theme selects a same-named style definition,
 shared categorical colors project into the Table data channel, and local `tableThemeTokens` provides
 a sparse Table token overlay. Cell-local formatter/presentation/appearance, ordered visual
 encodings, and ordered root rules then contribute in increasing priority. Value Cells run the
 winning formatter and presentation with that final appearance.
-The built-in `neutral`, `academic`, `vibrant`, and `clean` presets provide complete light/dark token
-maps. `theme.style` / `theme.mode` select the preset, while `tableThemeTokens` is the local TableSpec
-overlay. Unknown token keys fail loudly. Content Cells already own renderable children and therefore
-bypass formatter and presentation dispatch.
+The built-in `neutral` preset provides complete light/dark token maps. Other style names use the
+same public Core and Table definition registries; `theme.style` / `theme.mode` select the matching
+definitions, while `tableThemeTokens` is the local TableSpec overlay. Unknown token keys fail
+loudly. Content Cells already own renderable children and therefore bypass formatter and
+presentation dispatch.
 
 `compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. `tableThemeTokens` stays
 in the JSON-safe TableSpec and is resolved by the Table owner. The resolved `TableLayoutManifest`

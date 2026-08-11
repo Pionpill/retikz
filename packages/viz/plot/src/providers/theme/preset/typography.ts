@@ -25,9 +25,6 @@ type TypographyTokenPreset = Readonly<
 
 const styles: Record<BuiltinThemeStyleValue, TypographyStylePreset> = {
   [ThemeStyle.Neutral]: { fontFamily: 'sans-serif', fontSize: 12 },
-  [ThemeStyle.Academic]: { fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif', fontSize: 12 },
-  [ThemeStyle.Vibrant]: { fontFamily: 'Inter, Segoe UI, Arial, sans-serif', fontSize: 13 },
-  [ThemeStyle.Clean]: { fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif', fontSize: 12 },
 };
 
 const modes: Record<ThemeModeValue, TypographyModePreset> = {

@@ -157,7 +157,7 @@ describe('Plot theme resolver', () => {
     ).toThrow(/axis\.grid\.includeDomain/);
   });
 
-  it('为四种 style 与两个 mode 提供独立的完整 preset', () => {
+  it('为唯一内建 Neutral 的两个 mode 提供独立完整 preset', () => {
     const getPreset = (plot as Record<string, unknown>).getPlotThemePreset as
       | ((style: ResolvedTheme['style'], mode: ResolvedTheme['mode']) => unknown)
       | undefined;
@@ -167,7 +167,7 @@ describe('Plot theme resolver', () => {
       for (const mode of Object.values(ThemeMode)) {
         const preset = getPreset?.(style, mode);
         expect(PlotResolvedThemeTokensSchema.parse(preset)).toEqual(preset);
-        expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitleEnabled]).toBe(style !== ThemeStyle.Clean);
+        expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitleEnabled]).toBe(true);
         expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitlePadding]).toBe(12);
         expect((preset as Record<string, unknown>)[PlotThemeToken.AxisGridIncludeDomain]).toBe(false);
 
@@ -180,12 +180,12 @@ describe('Plot theme resolver', () => {
 
   it('只让 Neutral x/y Axis rule 默认包含 grid domain endpoints', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    for (const style of Object.values(ThemeStyle)) {
-      const resolution = resolve(themeOf(style, ThemeMode.Light)) as Parameters<typeof resolvePlotAxisThemeTokens>[0];
-      for (const dimension of ['x', 'y']) {
-        const tokens = resolvePlotAxisThemeTokens(resolution, dimension);
-        expect(tokens[PlotThemeToken.AxisGridIncludeDomain]).toBe(style === ThemeStyle.Neutral);
-      }
+    const resolution = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light)) as Parameters<
+      typeof resolvePlotAxisThemeTokens
+    >[0];
+    for (const dimension of ['x', 'y']) {
+      const tokens = resolvePlotAxisThemeTokens(resolution, dimension);
+      expect(tokens[PlotThemeToken.AxisGridIncludeDomain]).toBe(true);
     }
   });
 
@@ -232,7 +232,7 @@ describe('Plot theme resolver', () => {
   it('让内建 Plot definition 从 effective Core theme 构造 categorical baseline', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const effectiveTheme: ResolvedTheme = {
-      ...themeOf(ThemeStyle.Academic, ThemeMode.Dark),
+      ...themeOf(ThemeStyle.Neutral, ThemeMode.Dark),
       colors: {
         semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
         categorical: ['#effective-core'],
@@ -242,7 +242,7 @@ describe('Plot theme resolver', () => {
 
     expect(sourceOf(result, PlotThemeToken.PlotAreaFill)).toMatchObject({
       kind: ThemeTokenSource.Local,
-      path: '$style/academic/dark/plot.area.fill',
+      path: '$style/neutral/dark/plot.area.fill',
     });
     for (const token of [
       PlotThemeToken.PlotPaletteCategorical,
@@ -253,14 +253,14 @@ describe('Plot theme resolver', () => {
       expect(sourceOf(result, token)).toEqual({
         token,
         kind: ThemeTokenSource.Local,
-        path: `$style/academic/dark/${token}`,
+        path: `$style/neutral/dark/${token}`,
       });
     }
   });
 
   it('按 effective Theme、token、native theme 顺序解析并记录来源', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const result = resolve(themeOf(ThemeStyle.Academic, ThemeMode.Dark), {
+    const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Dark), {
       plotThemeTokens: {
         [PlotThemeToken.PlotAreaFill]: '#111111',
         [PlotThemeToken.PlotPaletteCategorical]: ['#token-categorical'],
@@ -274,7 +274,7 @@ describe('Plot theme resolver', () => {
       },
     });
 
-    expect(result.style).toBe(ThemeStyle.Academic);
+    expect(result.style).toBe(ThemeStyle.Neutral);
     expect(result.mode).toBe(ThemeMode.Dark);
     expect(result.tokens[PlotThemeToken.PlotAreaFill]).toBe('#native-area');
     expect(result.tokens[PlotThemeToken.PlotPaletteCategorical]).toEqual(['#token-categorical']);

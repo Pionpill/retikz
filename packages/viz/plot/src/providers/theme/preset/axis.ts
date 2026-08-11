@@ -77,39 +77,6 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     gridEnabled: false,
     gridIncludeDomain: false,
   },
-  [ThemeStyle.Academic]: {
-    lineEnabled: true,
-    tickMark: { kind: 'line', length: 4 },
-    tickLabelFontSize: 11,
-    tickLabelGap: 5,
-    titleEnabled: true,
-    titleFontSize: 12,
-    titlePadding: 12,
-    gridEnabled: false,
-    gridIncludeDomain: false,
-  },
-  [ThemeStyle.Vibrant]: {
-    lineEnabled: false,
-    tickMark: false,
-    tickLabelFontSize: 12,
-    tickLabelGap: 6,
-    titleEnabled: true,
-    titleFontSize: 13,
-    titlePadding: 12,
-    gridEnabled: false,
-    gridIncludeDomain: false,
-  },
-  [ThemeStyle.Clean]: {
-    lineEnabled: false,
-    tickMark: false,
-    tickLabelFontSize: 11,
-    tickLabelGap: 5,
-    titleEnabled: false,
-    titleFontSize: 12,
-    titlePadding: 12,
-    gridEnabled: false,
-    gridIncludeDomain: false,
-  },
 };
 
 const modes: Record<ThemeModeValue, AxisModePreset> = {
@@ -131,7 +98,7 @@ const modes: Record<ThemeModeValue, AxisModePreset> = {
 export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): AxisTokenPreset => {
   const structure = styles[style];
   const paint = modes[mode];
-  const gridStroke = style === ThemeStyle.Vibrant ? paint.gridStroke : 'currentColor';
+  const gridStroke = 'currentColor';
   const tickMark =
     structure.tickMark !== false && structure.tickMark.kind === 'line'
       ? {
@@ -158,39 +125,18 @@ export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValu
     [PlotThemeToken.AxisGridEnabled]: structure.gridEnabled,
     [PlotThemeToken.AxisGridStroke]: gridStroke,
     [PlotThemeToken.AxisGridStrokeWidth]: 1,
-    [PlotThemeToken.AxisGridDrawOpacity]: style === ThemeStyle.Vibrant ? 1 : 0.15,
+    [PlotThemeToken.AxisGridDrawOpacity]: 0.15,
     [PlotThemeToken.AxisGridIncludeDomain]: structure.gridIncludeDomain,
   };
 };
 
 /** 读取内建主题的 Axis dimension 规则 */
-export const getAxisTokenRules = (style: BuiltinThemeStyleValue): IRPlotAxisThemeTokenRules => {
-  switch (style) {
-    case ThemeStyle.Neutral:
-      return [
-        {
-          select: { dimension: ['x', 'y'] },
-          tokens: {
-            [PlotThemeToken.AxisGridEnabled]: true,
-            [PlotThemeToken.AxisGridIncludeDomain]: true,
-          },
-        },
-      ];
-    case ThemeStyle.Clean:
-      return [
-        {
-          select: { dimension: 'y' },
-          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
-        },
-      ];
-    case ThemeStyle.Vibrant:
-      return [
-        {
-          select: { dimension: ['x', 'y'] },
-          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
-        },
-      ];
-    case ThemeStyle.Academic:
-      return [];
-  }
-};
+export const getAxisTokenRules = (): IRPlotAxisThemeTokenRules => [
+  {
+    select: { dimension: ['x', 'y'] },
+    tokens: {
+      [PlotThemeToken.AxisGridEnabled]: true,
+      [PlotThemeToken.AxisGridIncludeDomain]: true,
+    },
+  },
+];

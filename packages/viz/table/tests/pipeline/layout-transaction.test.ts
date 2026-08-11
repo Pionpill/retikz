@@ -16,6 +16,7 @@ import type { IRTableSpec, TableCompileArtifact } from '../../src';
 
 import { compileTable, lowerTables, TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../../src';
 import { resolveTableTransaction } from '../../src/pipeline/layout';
+import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
 const tableArtifactsOf = (artifacts: ReturnType<typeof compileTable>['artifacts']): Array<TableCompileArtifact> =>
   artifacts.filter(
@@ -39,6 +40,7 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -60,7 +62,7 @@ describe('Table layout transaction', () => {
         columnGap: 2,
       },
     };
-    const result = compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { padding: 0 } });
+    const result = compileTable(spec, {}, { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } });
 
     expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 64, height: 12 });
     expect(result.manifest.columns.map(column => [column.offset, column.size])).toEqual([
@@ -78,6 +80,7 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -105,7 +108,7 @@ describe('Table layout transaction', () => {
       spec,
       {},
       {
-        theme: { style: 'clean', mode: 'light' },
+        theme: { style: 'neutral', mode: 'light' },
         compile: { padding: 0, artifacts: { nodeLayouts: true } },
       },
     );
@@ -159,6 +162,7 @@ describe('Table layout transaction', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -176,7 +180,7 @@ describe('Table layout transaction', () => {
       spec,
       {},
       {
-        theme: { style: 'clean', mode: 'light' },
+        theme: { style: 'neutral', mode: 'light' },
         compile: { composites: [probe], padding: 0 },
       },
     );
@@ -436,6 +440,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'intrinsic-failure' } }]],
@@ -444,7 +449,7 @@ describe('Table layout transaction', () => {
 
     let thrown: unknown;
     try {
-      compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { composites: [failing] } });
+      compileTable(spec, {}, { theme: { style: 'neutral', mode: 'light' }, compile: { composites: [failing] } });
     } catch (error) {
       thrown = error;
     }
@@ -483,6 +488,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'nested-table-failure' } }]],
@@ -552,6 +558,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -563,7 +570,7 @@ describe('Table layout transaction', () => {
 
     let thrown: unknown;
     try {
-      compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { composites: [failing] } });
+      compileTable(spec, {}, { theme: { style: 'neutral', mode: 'light' }, compile: { composites: [failing] } });
     } catch (error) {
       thrown = error;
     }

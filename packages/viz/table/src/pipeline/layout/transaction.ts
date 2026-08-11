@@ -398,10 +398,10 @@ export const resolvePresentedTableTransaction = (
   const manifestTheme =
     input.theme ??
     ({
-      style: ThemeStyle.Clean,
+      style: ThemeStyle.Neutral,
       mode: ThemeMode.Light,
       tokens: {},
-      colors: resolveCoreThemeColors(ThemeStyle.Clean, ThemeMode.Light),
+      colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
     } as const);
   const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
 

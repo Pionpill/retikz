@@ -30,18 +30,6 @@ const presets: Record<BuiltinThemeStyleValue, PalettePresetSource> = {
     sequential: PlotColorScheme.Viridis,
     diverging: PlotColorScheme.RdBu,
   },
-  [ThemeStyle.Academic]: {
-    sequential: PlotColorScheme.Cividis,
-    diverging: PlotColorScheme.RdBu,
-  },
-  [ThemeStyle.Vibrant]: {
-    sequential: PlotColorScheme.Turbo,
-    diverging: PlotColorScheme.Spectral,
-  },
-  [ThemeStyle.Clean]: {
-    sequential: PlotColorScheme.Cividis,
-    diverging: PlotColorScheme.RdBu,
-  },
 };
 
 /** 读取内建主题的 Plot palette token slice */

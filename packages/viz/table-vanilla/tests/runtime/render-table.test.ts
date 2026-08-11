@@ -1,11 +1,42 @@
 import type { CellPresentationInput } from '@retikz/table';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { defineCellFormatter, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeStyle } from '@retikz/core';
+import {
+  defineCellFormatter,
+  defineCellPresentation,
+  defineCellVisualScale,
+  defineTableThemeStyle,
+  getTableThemePreset,
+} from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { detailTable, manualTable, renderTable } from '../../src';
+
+const cleanCoreTheme = defineThemeStyle({
+  name: 'clean',
+  resolve: () => ({
+    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+    categorical: ['#112233'],
+  }),
+});
+
+const cleanTableTheme = defineTableThemeStyle({
+  name: 'clean',
+  resolve: theme => ({
+    ...getTableThemePreset(ThemeStyle.Neutral, theme.mode),
+    'cell.background.fill': null,
+    'cell.content.color': null,
+    'cell.content.font.family': null,
+    'cell.content.font.weight': null,
+    'columnHeader.background.fill': null,
+    'columnHeader.content.color': null,
+    'columnHeader.content.font.family': null,
+    'columnHeader.content.font.weight': null,
+    'table.border.horizontal': null,
+    'columnHeader.border.bottom': null,
+  }),
+});
 
 describe('renderTable', () => {
   it('renders anonymous manual specs without data and detail specs with runtime data in SSR', () => {
@@ -87,7 +118,8 @@ describe('renderTable', () => {
     const result = renderTable(spec, {
       artifacts: true,
       theme: { style: 'clean', mode: 'dark' },
-      lowerOptions: { visualScaleDefinitions: [visualScale] },
+      compile: { themeStyles: [cleanCoreTheme] },
+      lowerOptions: { tableThemeStyles: [cleanTableTheme], visualScaleDefinitions: [visualScale] },
     });
 
     expect(result.svg).toContain('#123456');
@@ -114,6 +146,8 @@ describe('renderTable', () => {
     const clean = renderTable(manualTable({ rows: [['Ada']] }), {
       artifacts: true,
       theme: { style: 'clean', mode: 'light' },
+      compile: { themeStyles: [cleanCoreTheme] },
+      lowerOptions: { tableThemeStyles: [cleanTableTheme] },
     });
 
     expect(neutral.manifest).toMatchObject({
@@ -282,7 +316,7 @@ describe('renderTable', () => {
       namespace: 'fixture',
       type: 'badge',
       schema: badgeSchema,
-      expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
+      expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
     const spec = manualTable({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
