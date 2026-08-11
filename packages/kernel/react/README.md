@@ -38,9 +38,13 @@ Switch the backend with one prop — same JSX, same IR:
 <Layout renderer="canvas">{/* ... */}</Layout>
 ```
 
+`ThemeProvider` supplies an ambient sparse Core Theme and optional `themeStyles` definitions to
+descendant Layouts. The published packages only guarantee `neutral`; applications inject other
+style names through `defineThemeStyle` and the matching owner-local definitions they consume.
+
 ## Exports
 
-- Kernel: `Layout` / `Node` / `Path` / `Step` / `Text` / `Coordinate` / `Scope`
+- Kernel: `Layout` / `ThemeProvider` / `Node` / `Path` / `Step` / `Text` / `Coordinate` / `Scope`
 - Sugar: `Draw` and the shape components (`Circle` / `Rectangle` / …)
 - IR interop: `convertReactNodeToIR` / `convertIRToReactNode`; the reverse conversion preserves Tier 1 structure and accepts composite definitions to lower Tier 2 IR into equivalent Kernel JSX
 - Re-exported from core: `DrawWay`, target/anchor types, and extension definitions/helpers such as `defineArrow`, `defineBoundary`, `defineClip`, `definePattern`, `definePathGenerator`, `definePathKind`, and `defineRibbonWidthProfile`

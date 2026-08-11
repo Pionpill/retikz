@@ -40,6 +40,7 @@ import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
 import { mergeThemeOverlays, useTheme } from './theme-context';
+import { mergeThemeStyleDefinitions, useThemeStyles } from './theme-styles-context';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -369,7 +370,12 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
   const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
   const stableComposites = canonicalizeDefinitionArray(composites);
-  const stableThemeStyles = canonicalizeDefinitionArray(themeStyles);
+  const ambientThemeStyles = useThemeStyles();
+  const mergedThemeStyles = useMemo(
+    () => mergeThemeStyleDefinitions(ambientThemeStyles, themeStyles),
+    [ambientThemeStyles, themeStyles],
+  );
+  const stableThemeStyles = canonicalizeDefinitionArray(mergedThemeStyles);
   const stableEmbeddables = canonicalizeDefinitionArray(embeddables);
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();

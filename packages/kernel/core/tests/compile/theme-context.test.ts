@@ -35,7 +35,7 @@ describe('Theme compile context', () => {
     const observed: Array<ResolvedTheme> = [];
     compileToScene(
       sceneOf([{ namespace: 'theme-test', type: 'probe' }], {
-        style: ThemeStyle.Academic,
+        style: ThemeStyle.Neutral,
         mode: ThemeMode.Light,
       }),
       { composites: [createProbe(observed)] },
@@ -43,10 +43,10 @@ describe('Theme compile context', () => {
 
     expect(observed).toHaveLength(1);
     expect(observed[0]).toMatchObject({
-      style: ThemeStyle.Academic,
+      style: ThemeStyle.Neutral,
       mode: ThemeMode.Light,
       colors: {
-        categorical: expect.arrayContaining(['hsl(210, 44%, 49%)', 'hsl(30, 72%, 56%)', 'hsl(150, 44%, 48%)']),
+        categorical: expect.arrayContaining(['hsl(210, 38%, 48%)', 'hsl(30, 78%, 55%)', 'hsl(150, 36%, 48%)']),
       },
     });
     expect(observed[0]).not.toHaveProperty('tokens');
@@ -58,12 +58,12 @@ describe('Theme compile context', () => {
     compileToScene(
       sceneOf(
         [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [{ namespace: 'theme-test', type: 'probe' }] }],
-        { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
+        { style: ThemeStyle.Neutral, mode: ThemeMode.Dark },
       ),
       { composites: [createProbe(observed)] },
     );
 
-    expect(observed[0]).toMatchObject({ style: 'academic', mode: 'light' });
+    expect(observed[0]).toMatchObject({ style: 'neutral', mode: 'light' });
   });
 
   it('通过同一 Core style registry 解析自定义 style', () => {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -60,7 +60,7 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
 
 describe('@retikz/vanilla plain spec', () => {
   class ThemeInstance {
-    style = ThemeStyle.Academic;
+    style = 'academic';
   }
 
   it('embed adapter 只贡献 composite 数据，不再携带 Theme token registry', () => {
@@ -84,7 +84,7 @@ describe('@retikz/vanilla plain spec', () => {
   });
 
   it('figure helper 与 Scope 原样写入同一 Core Theme IR', () => {
-    const rootTheme = { style: ThemeStyle.Academic, mode: ThemeMode.Dark };
+    const rootTheme = { style: 'academic', mode: ThemeMode.Dark };
     const spec = figure({
       theme: rootTheme,
       children: [scope({ theme: { mode: ThemeMode.Light } }, [node('inside', { position: [0, 0] })])],
@@ -141,7 +141,7 @@ describe('@retikz/vanilla plain spec', () => {
     ['figure helper class', figure({ theme: new ThemeInstance(), children: [] }), /scene\.theme/i],
     [
       'Scope helper inherited field',
-      figure({ children: [scope({ theme: Object.create({ style: ThemeStyle.Academic }) as never }, [])] }),
+      figure({ children: [scope({ theme: Object.create({ style: 'academic' }) as never }, [])] }),
       /children\[0\]\.scope\.theme/i,
     ],
   ])('伪造的 %s Theme输入保留到 Core并严格拒绝', (_label, spec, expected) => {
@@ -158,7 +158,7 @@ describe('@retikz/vanilla plain spec', () => {
         return ThemeMode.Dark;
       },
     });
-    const hiddenTheme = { style: ThemeStyle.Academic };
+    const hiddenTheme = { style: 'academic' };
     Object.defineProperty(hiddenTheme, 'palette', { value: 'paper', enumerable: false });
 
     expect(() => renderToSvgString(figure({ theme: accessorTheme, children: [] }))).toThrow(/scene\.theme/i);
@@ -169,7 +169,7 @@ describe('@retikz/vanilla plain spec', () => {
   });
 
   it('Theme helper不吞掉自有__proto__未知字段', () => {
-    const rootTheme = { style: ThemeStyle.Academic };
+    const rootTheme = { style: 'academic' };
     Object.defineProperty(rootTheme, '__proto__', { value: 'root', enumerable: true });
     const localTheme = { mode: ThemeMode.Dark };
     Object.defineProperty(localTheme, '__proto__', { value: 'scope', enumerable: true });

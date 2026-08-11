@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 
-import { compileToScene, CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -25,20 +25,29 @@ const labeledBox = defineComposite({
     position: [0, 0],
     shape: 'rectangle',
     text: node.text,
-    fill: context.theme.style === ThemeStyle.Academic && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+    fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
   }),
 });
 
 const ir: IRScene = {
   version: 1,
   type: 'scene',
-  theme: { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
+  theme: { style: 'academic', mode: ThemeMode.Dark },
   children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
 };
 
+const academicTheme = defineThemeStyle({
+  name: 'academic',
+  resolve: () => ({
+    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+    categorical: ['#112233'],
+  }),
+});
+
 describe('Tier 2 composite —— renderer 对照', () => {
   it('composite IR → Scene → svg 渲染出 rect', () => {
-    const scene = compileToScene(ir, { composites: [labeledBox] }).scene;
+    const result = compileToScene(ir, { composites: [labeledBox], themeStyles: [academicTheme] });
+    const { scene } = result;
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
     expect(svg).toContain('<rect');
     expect(svg).toContain('fill="#123456"');
@@ -46,7 +55,8 @@ describe('Tier 2 composite —— renderer 对照', () => {
   });
 
   it('Theme-aware Composite物化后的同一 Scene由SVG与Canvas等价消费', () => {
-    const scene = compileToScene(ir, { composites: [labeledBox] }).scene;
+    const result = compileToScene(ir, { composites: [labeledBox], themeStyles: [academicTheme] });
+    const { scene } = result;
     const calls: Array<string> = [];
     const fillStyles: Array<string> = [];
     const ctx = new Proxy({} as CanvasRenderingContext2D, {

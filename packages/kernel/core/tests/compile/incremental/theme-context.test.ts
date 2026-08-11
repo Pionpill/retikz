@@ -73,7 +73,7 @@ describe('Theme retained invalidation', () => {
     const initial: IRScene = {
       type: 'scene',
       version: 1,
-      theme: { style: ThemeStyle.Academic },
+      theme: { style: ThemeStyle.Neutral },
       children: [
         {
           type: 'scope',
