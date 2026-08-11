@@ -15,7 +15,6 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 
 import type { PreviewPanelState } from '../preview-panel';
-import type { PreviewThemeStyleValue } from '../theme';
 import type {
   PreviewControlContract,
   PreviewControlsDefinition,
@@ -30,6 +29,7 @@ import { ToolbarIconButton } from '../components';
 import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
 import { mergePreviewControlSlots } from '../controls';
 import { PreviewPanel } from '../preview-panel';
+import { usePreviewTheme } from '../theme';
 import { PreviewControlPanel } from './PreviewControlPanel';
 import { PreviewResizeHandle } from './PreviewResizeHandle';
 
@@ -48,7 +48,6 @@ export type PreviewWorkspaceProps = {
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
   /** 当前预览实际生效的 ThemeStyle */
-  themeStyle?: PreviewThemeStyleValue;
   /** 是否显示单预览 ThemeStyle 切换器 */
   enableThemeSwitch?: boolean;
   /** 当前单预览 ThemeStyle 选择 */
@@ -139,7 +138,6 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     controlState,
     showContextBar,
     themeMode,
-    themeStyle,
     enableThemeSwitch = false,
     themeStyleSelection = 'inherit',
     onThemeStyleChange,
@@ -156,6 +154,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     previewStyle,
     pinControlsOnClick,
   } = props;
+  const previewTheme = usePreviewTheme(themeStyleSelection, themeMode);
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
   const defaultControlPanelSize =
     definition?.presentation === 'panel'
@@ -203,7 +202,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
           themeMode={themeMode}
           onThemeModeChange={onThemeModeChange}
           enableThemeSwitch={enableThemeSwitch}
-          themeStyle={themeStyle}
+          themeStyle={previewTheme.style}
           themeStyleSelection={themeStyleSelection}
           onThemeStyleChange={onThemeStyleChange}
         />
@@ -212,8 +211,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
         state={previewState}
         Component={Component}
         activeRender={activeRender}
-        themeStyle={themeStyle}
-        themeMode={themeMode}
+        theme={previewTheme}
         controlSlots={resolvedControlSlots}
         className={cn(previewClassName, showContextBar && 'pt-10')}
         renderPaneClassName={previewRenderPaneClassName}

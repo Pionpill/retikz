@@ -68,7 +68,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
-  const previewTheme = usePreviewTheme(themeStyleSelection === 'inherit' ? undefined : themeStyleSelection);
+  const previewTheme = usePreviewTheme(themeStyleSelection);
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
@@ -225,7 +225,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}
-      themeStyle={previewTheme.style}
       themeStyleSelection={themeStyleSelection}
       onThemeStyleChange={setThemeStyleSelection}
       caption={caption}

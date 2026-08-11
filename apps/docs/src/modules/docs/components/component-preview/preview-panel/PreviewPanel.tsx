@@ -6,8 +6,8 @@ import { Fragment } from 'react';
 import { cn } from '@/lib';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
-import type { PreviewThemeStyleValue } from '../theme';
-import type { PreviewControlSlot, PreviewThemeMode, RendererMode } from '../types';
+import type { PreviewTheme } from '../theme';
+import type { PreviewControlSlot, RendererMode } from '../types';
 import type { PreviewPanelState } from './usePreviewPanelState';
 
 import { PreviewControlStateContext } from '../context';
@@ -24,9 +24,8 @@ export type PreviewPanelProps = {
   /** 当前源码视图提供的不可变渲染函数。 */
   activeRender?: (rendererMode: RendererMode) => ReactNode;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: PreviewThemeStyleValue;
+  theme?: PreviewTheme;
   /** 当前预览使用的明暗选择。 */
-  themeMode?: PreviewThemeMode;
   /** 针对当前面板 runtime 求值的控制定义。 */
   controlSlots?: Array<PreviewControlSlot>;
   /** 面板容器附加样式。 */
@@ -46,8 +45,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
     state,
     Component,
     activeRender,
-    themeStyle,
-    themeMode,
+    theme,
     controlSlots = [],
     className,
     renderPaneClassName,
@@ -93,16 +91,9 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
           <AnimationModeProvider mode={animationMode}>
             <PreviewControlStateContext.Provider value={controlState}>
               {activeRender ? (
-                <PreviewThemeProvider themeStyle={themeStyle} themeMode={themeMode}>
-                  {activeRender(rendererMode)}
-                </PreviewThemeProvider>
+                <PreviewThemeProvider theme={theme}>{activeRender(rendererMode)}</PreviewThemeProvider>
               ) : (
-                <DemoRenderer
-                  Component={Component}
-                  rendererMode={rendererMode}
-                  themeStyle={themeStyle}
-                  themeMode={themeMode}
-                />
+                <DemoRenderer Component={Component} rendererMode={rendererMode} theme={theme} />
               )}
             </PreviewControlStateContext.Provider>
           </AnimationModeProvider>

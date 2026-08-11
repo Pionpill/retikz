@@ -60,6 +60,28 @@ describe('ComponentPreview global theme', () => {
     act(() => root.unmount());
   });
 
+  it('keeps the Core default baseline when an explicit preview theme omits style', () => {
+    useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Vibrant);
+
+    const ThemeReader: FC = () => {
+      const theme = useTheme();
+      return <output>{theme?.style ?? 'default'}</output>;
+    };
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        <PreviewThemeProvider theme={{ mode: ThemeMode.Light }}>
+          <ThemeReader />
+        </PreviewThemeProvider>,
+      );
+    });
+    expect(container.textContent).toBe('default');
+    act(() => root.unmount());
+  });
+
   it('keeps an explicit preview ThemeStyle above later global changes', () => {
     useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean);
 
@@ -73,7 +95,7 @@ describe('ComponentPreview global theme', () => {
     const root = createRoot(container);
     act(() => {
       root.render(
-        <PreviewThemeProvider themeStyle={PreviewThemeStyle.Academic}>
+        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Academic, mode: ThemeMode.Light }}>
           <ThemeReader />
         </PreviewThemeProvider>,
       );
@@ -96,7 +118,7 @@ describe('ComponentPreview global theme', () => {
     const root = createRoot(container);
     act(() => {
       root.render(
-        <PreviewThemeProvider themeMode="dark">
+        <PreviewThemeProvider theme={{ mode: ThemeMode.Dark }}>
           <ThemeReader />
         </PreviewThemeProvider>,
       );
@@ -110,7 +132,7 @@ describe('ComponentPreview global theme', () => {
 
     expect(() =>
       renderToStaticMarkup(
-        <PreviewThemeProvider themeStyle={PreviewThemeStyle.Academic} themeMode="light">
+        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Academic, mode: ThemeMode.Light }}>
           <PreviewDetailTable
             id="preview-table"
             dataRef="people"

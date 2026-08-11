@@ -10,6 +10,7 @@ import { cn } from '@/lib';
 import type { PreviewThemeStyleValue } from '../theme';
 import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
 
+import { PreviewThemeStyle } from '../theme';
 import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
 
 export type PreviewContextBarProps = {
@@ -39,6 +40,7 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
   } = props;
   const { t } = useTranslation();
   const [themeStyleMenuOpen, setThemeStyleMenuOpen] = useState(false);
+  const effectiveThemeStyle = themeStyle ?? PreviewThemeStyle.Default;
 
   return (
     <div
@@ -73,10 +75,10 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
             <span>{t('preview.themeDark')}</span>
           </ToggleGroupItem>
         </ToggleGroup>
-        {enableThemeSwitch && themeStyle && onThemeStyleChange ? (
+        {enableThemeSwitch && onThemeStyleChange ? (
           <ThemeStyleSwitchButton
             selection={themeStyleSelection}
-            effectiveStyle={themeStyle}
+            effectiveStyle={effectiveThemeStyle}
             onSelectionChange={onThemeStyleChange}
             onOpenChange={setThemeStyleMenuOpen}
             className="size-8 border border-input bg-background shadow-xs"
