@@ -141,7 +141,7 @@ The five definition categories and composites merge by stable key and object ide
 | `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`    | Standalone Core style definitions; supplied by the outer host when embedded |
 | `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`    | Local TableSpec token overlay above the Table style baseline                |
 
-`theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; in embedded mode the outer Layout supplies the Core definition.
+`theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; React subtrees may instead combine the Core `ThemeProvider` with `TableThemeProvider`. In embedded mode the outer Layout supplies the Core definition.
 
 ### Embedded
 
@@ -209,7 +209,7 @@ The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An
 
 ```ts
 const result = renderTable(spec, {
-  theme: { style: 'academic', mode: 'light' },
+  theme: { style: 'neutral', mode: 'light' },
   data: { scores: rows },
   lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {

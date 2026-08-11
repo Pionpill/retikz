@@ -350,6 +350,9 @@ importers:
       '@mdx-js/mdx':
         specifier: 'catalog:'
         version: 3.1.1
+      '@retikz/chart':
+        specifier: workspace:*
+        version: link:../../packages/viz/chart
       '@retikz/core':
         specifier: workspace:*
         version: link:../../packages/kernel/core

@@ -57,7 +57,7 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 示例 Composite 直接消费 resolved `context.theme.colors`：`semantic.error` 用作文字色，`semantic.warning` 用作卡片描边，`style / mode` 只选择卡片填充 preset；每张卡片下方的 swatch 来自 `context.theme.colors.categorical`。不同 Scope 的 `style` / `mode` 会重新解析对应的 shared colors，Composite 不读取或自行解释任何内部 token map。
 
-四种内建 style 保留相同的 16 项 Hue 与索引，只改变色度和明度节奏：`neutral` 参考 D3 Tableau10，`academic` 参考 Vega Category10 与 Seaborn deep，`clean` 参考 D3 Set2，`vibrant` 参考 D3 Observable10。Light / Dark 会同步适配 categorical 与 semantic colors；semantic role 始终是 error 红、success 绿、warning 黄。
+发布包只内置 `neutral`，其 16 项 categorical palette 参考 D3 Tableau10。本站另外通过公开 definitions 注入 `academic`、`clean` 与 `vibrant` 三个参考 style，分别参考 Vega Category10 / Seaborn deep、D3 Set2 与 D3 Observable10；四种预览选择保持相同 Hue 索引，只改变色度和明度节奏。Light / Dark 会同步适配 categorical 与 semantic colors；semantic role 始终是 error 红、success 绿、warning 黄。
 
 当 `ir` 已包含根 Theme 时，显式 `theme` prop 会逐字段覆盖它，未声明字段继续采用持久化值；两份输入对象都不会被修改。Theme 不会自动改变普通 Node / Path 的 fill、stroke 或 font。
 

@@ -141,7 +141,7 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 | `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`   | standalone Core style definitions；embedded 时由外层提供          |
 | `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 Table style baseline    |
 
-`theme.style` / `theme.mode` 选择当前 Core 环境和同名 Table style definition。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。自定义 style 在 standalone 模式分别通过 `themeStyles` 与 `tableThemeStyles` 注入；embedded 模式的 Core definition 由外层 Layout 提供。
+`theme.style` / `theme.mode` 选择当前 Core 环境和同名 Table style definition。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。自定义 style 在 standalone 模式分别通过 `themeStyles` 与 `tableThemeStyles` 注入，也可在 React 子树中组合 Core `ThemeProvider` 与 `TableThemeProvider` ambient 注入；embedded 模式的 Core definition 由外层 Layout 提供。
 
 ### Embedded
 
@@ -209,7 +209,7 @@ Table 会检查 options / domain 的 JSON 形状、range / evaluator 的 Core CS
 
 ```ts
 const result = renderTable(spec, {
-  theme: { style: 'academic', mode: 'light' },
+  theme: { style: 'neutral', mode: 'light' },
   data: { scores: rows },
   lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {

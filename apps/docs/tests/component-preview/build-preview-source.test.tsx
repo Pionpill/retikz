@@ -420,7 +420,7 @@ describe('buildPreviewSource', () => {
 
   it('automatic Vanilla preview consumes the ambient Theme selector', () => {
     const firstTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Light };
-    const secondTheme = { style: ThemeStyle.Vibrant, mode: ThemeMode.Dark };
+    const secondTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Dark };
     const firstColor = resolveCoreThemeColors(firstTheme.style, firstTheme.mode).categorical[0];
     const secondColor = resolveCoreThemeColors(secondTheme.style, secondTheme.mode).categorical[0];
     const first = buildPreviewSource(
@@ -455,7 +455,7 @@ describe('buildPreviewSource', () => {
     const second = buildPreviewSource(
       createInput({
         vanillaSvg,
-        theme: { style: ThemeStyle.Vibrant, tokens: { core: { 'palette.categorical': ['#303030'] } } },
+        theme: { style: 'vibrant', tokens: { core: { 'palette.categorical': ['#303030'] } } },
       }),
     );
 

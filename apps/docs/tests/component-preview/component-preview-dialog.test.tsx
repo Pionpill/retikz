@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import { ThemeStyle } from '@retikz/core';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -22,6 +20,9 @@ import type {
   PreviewThemeStyleSelection,
   SizeKey,
 } from '../../src/modules/docs/components/component-preview/types';
+import type { PreviewThemeStyleValue } from '../../src/modules/docs/components/component-preview/theme';
+
+import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
@@ -99,7 +100,7 @@ describe('ComponentPreviewDialog', () => {
       themeMode: PreviewThemeMode;
       onThemeModeChange: (themeMode: PreviewThemeMode) => void;
       enableThemeSwitch?: boolean;
-      themeStyle?: ThemeStyleValue;
+      themeStyle?: PreviewThemeStyleValue;
       themeStyleSelection?: PreviewThemeStyleSelection;
       onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
       controlPanelOpen: boolean;
@@ -125,7 +126,7 @@ describe('ComponentPreviewDialog', () => {
         themeMode="inherit"
         onThemeModeChange={() => undefined}
         enableThemeSwitch
-        themeStyle={ThemeStyle.Academic}
+        themeStyle={PreviewThemeStyle.Academic}
         themeStyleSelection="inherit"
         onThemeStyleChange={() => undefined}
         controlPanelOpen

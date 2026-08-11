@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { useCallback, useRef, useState } from 'react';
@@ -18,6 +17,7 @@ import type {
   PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
+import type { PreviewThemeStyleValue } from './theme';
 
 import { ComponentPreviewDialog } from './ComponentPreviewDialog';
 import { alignClass, sizeClass } from './constants';
@@ -59,7 +59,7 @@ export type ComponentPreviewCardProps = {
   /** 是否显示单预览 ThemeStyle 切换器。 */
   enableThemeSwitch?: boolean;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: ThemeStyleValue;
+  themeStyle?: PreviewThemeStyleValue;
   /** 当前单预览 ThemeStyle 选择。 */
   themeStyleSelection?: PreviewThemeStyleSelection;
   /** 更新当前单预览 ThemeStyle 选择。 */

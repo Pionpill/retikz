@@ -1,17 +1,20 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
+import { PlotThemeProvider } from '@retikz/plot-react';
 import { ThemeProvider } from '@retikz/react';
+import { TableThemeProvider } from '@retikz/table-react';
 
 import type { PreviewThemeMode } from '../types';
+import type { PreviewThemeStyleValue } from './constants';
 
+import { PreviewThemeDefinitionBundle, PreviewThemeDefinitionsContext } from './presets';
 import { usePreviewTheme } from './usePreviewTheme';
 
 export type PreviewThemeProviderProps = {
   /** ComponentPreview 动态渲染内容 */
   children?: ReactNode;
   /** 单张预览显式选择的 ThemeStyle；缺省时跟随全局设置 */
-  themeStyle?: ThemeStyleValue;
+  themeStyle?: PreviewThemeStyleValue;
   /** 单张预览的明暗选择；inherit 或缺省时跟随站点主题 */
   themeMode?: PreviewThemeMode;
 };
@@ -21,5 +24,13 @@ export const PreviewThemeProvider: FC<PreviewThemeProviderProps> = props => {
   const { children, themeStyle, themeMode } = props;
   const theme = usePreviewTheme(themeStyle, themeMode);
 
-  return <ThemeProvider theme={theme}>{children}</ThemeProvider>;
+  return (
+    <PreviewThemeDefinitionsContext.Provider value={PreviewThemeDefinitionBundle}>
+      <ThemeProvider theme={theme} themeStyles={PreviewThemeDefinitionBundle.core}>
+        <PlotThemeProvider plotThemeStyles={PreviewThemeDefinitionBundle.plot}>
+          <TableThemeProvider tableThemeStyles={PreviewThemeDefinitionBundle.table}>{children}</TableThemeProvider>
+        </PlotThemeProvider>
+      </ThemeProvider>
+    </PreviewThemeDefinitionsContext.Provider>
+  );
 };

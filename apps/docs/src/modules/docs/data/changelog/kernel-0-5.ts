@@ -245,15 +245,15 @@ export const kernelV05: Release = {
                 en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver；自定义 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
-                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. `defineThemeStyle` and `themeStyles` register Core runtime resolvers; each consuming owner such as Plot or Chart must provide a same-named resolver, and a missing entry fails loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。发布包只内置 `neutral`；`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Published packages only include `neutral`; `defineThemeStyle` and `themeStyles` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
               },
             },
             {
               label: { zh: '内建 shared colors 调整', en: 'Built-in shared color refinement' },
               content: {
-                zh: '四种内建 style 以 D3 Tableau10、Vega Category10 / Seaborn deep、D3 Set2 与 D3 Observable10 为风格参考，重新平衡固定 16 项 categorical palette 的色度与明度；Light / Dark semantic colors 同步调整，并固定 error 红、success 绿、warning 黄。Hue 索引、显式 palette 与覆盖级联保持不变。',
-                en: 'The four built-in styles now reference D3 Tableau10, Vega Category10 / Seaborn deep, D3 Set2, and D3 Observable10 to rebalance chroma and lightness across the fixed 16-color categorical palette. Light / Dark semantic colors move with them while keeping error red, success green, and warning yellow. Hue indices, explicit palettes, and the override cascade remain unchanged.',
+                zh: '内置 Neutral 以 D3 Tableau10 为参考；本站注入的 Academic、Clean 与 Vibrant reference definitions 分别参考 Vega Category10 / Seaborn deep、D3 Set2 与 D3 Observable10。四种预览选择重新平衡固定 16 项 categorical palette 的色度与明度；Light / Dark semantic colors 同步调整，并固定 error 红、success 绿、warning 黄。Hue 索引、显式 palette 与覆盖级联保持不变。',
+                en: 'Built-in Neutral references D3 Tableau10. The site-injected Academic, Clean, and Vibrant reference definitions draw from Vega Category10 / Seaborn deep, D3 Set2, and D3 Observable10. All four preview choices rebalance chroma and lightness across the fixed 16-color categorical palette. Light / Dark semantic colors move with them while keeping error red, success green, and warning yellow. Hue indices, explicit palettes, and the override cascade remain unchanged.',
               },
             },
             {

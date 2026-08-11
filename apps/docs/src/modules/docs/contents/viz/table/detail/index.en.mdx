@@ -47,7 +47,7 @@ Header strings become value Cells automatically. The three external records belo
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-The example selects the Core `academic/light` environment through a standalone root `theme` or an outer `<Layout theme>` in embedded mode, and applies a spec-local `tableThemeTokens` override. `containerStyle` remains standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
+The site's preview Provider injects same-named Core and Table Academic definitions. The example then selects the `academic/light` environment through a standalone root `theme` or an outer `<Layout theme>` in embedded mode, while `tableThemeTokens` remains a spec-local overlay and `containerStyle` remains standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
 
 <ComponentAlert
   type="tip"

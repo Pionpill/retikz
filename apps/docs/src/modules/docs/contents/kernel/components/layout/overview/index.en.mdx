@@ -57,7 +57,7 @@ A root `<Layout theme>` selects the whole-figure environment, while an inner `<S
 
 The example Composite consumes resolved `context.theme.colors` directly: `semantic.error` colors text, `semantic.warning` colors card strokes, and `style / mode` selects only the card-fill preset. The swatches below each card come from `context.theme.colors.categorical`. Different Scope `style` / `mode` selectors re-resolve the corresponding shared colors; the Composite never reads or interprets an internal token map.
 
-The four built-in styles retain the same 16 hues and indices while varying chroma and lightness rhythm: `neutral` references D3 Tableau10, `academic` references Vega Category10 and Seaborn deep, `clean` references D3 Set2, and `vibrant` references D3 Observable10. Light / Dark modes adapt categorical and semantic colors together; semantic roles remain red for error, green for success, and yellow for warning.
+Published packages only include `neutral`, whose 16-color categorical palette references D3 Tableau10. This site injects three additional reference styles through public definitions: `academic` references Vega Category10 and Seaborn deep, `clean` references D3 Set2, and `vibrant` references D3 Observable10. All four preview choices retain the same hue indices while varying chroma and lightness rhythm. Light / Dark modes adapt categorical and semantic colors together; semantic roles remain red for error, green for success, and yellow for warning.
 
 When `ir` already carries a root Theme, an explicit `theme` prop overrides it per field while preserving omitted persisted fields. Neither input object is mutated. Theme does not automatically change a plain Node or Path fill, stroke, or font.
 

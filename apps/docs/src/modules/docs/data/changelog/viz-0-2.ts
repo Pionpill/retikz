@@ -17,8 +17,8 @@ export const vizV02: Release = {
         {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
-            zh: '42 个 `PlotThemeToken`、四种 style × light/dark preset、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
-            en: 'Plot now owns 42 `PlotThemeToken` keys, four style presets in light and dark modes, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
+            zh: '42 个 `PlotThemeToken`、内置 Neutral light/dark preset、开放 style definition、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
+            en: 'Plot now owns 42 `PlotThemeToken` keys, the built-in Neutral light/dark preset, open style definitions, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
           },
         },
         {
@@ -38,6 +38,16 @@ export const vizV02: Release = {
             en: 'Moves surface, guide, and palette token ownership into Plot while assigning complete-chart presentation to Chart.',
           },
           items: [
+            {
+              label: {
+                zh: 'BREAKING：发布包主题收敛为 Neutral',
+                en: 'BREAKING: published themes converge on Neutral',
+              },
+              content: {
+                zh: 'Core、Plot、Chart 与 Table 只内置 `neutral`；`academic`、`vibrant`、`clean` 改由文档站通过各 owner 的公开 definition / registry 注入，不增加跨 owner registry。应用自定义 style 继续为每个实际消费 owner 提供同名 definition。',
+                en: "Core, Plot, Chart, and Table now include only `neutral`. The docs site injects `academic`, `vibrant`, and `clean` through each owner's public definition and registry contracts without adding a cross-owner registry. Application-defined styles still provide same-named definitions for every consuming owner.",
+              },
+            },
             {
               label: {
                 zh: 'BREAKING：PlotThemeToken 与 namespaced inputs',
@@ -84,8 +94,8 @@ export const vizV02: Release = {
                 en: 'Axis title visibility and spacing join theme tokens',
               },
               content: {
-                zh: '新增 `axis.title.enabled` 与 `axis.title.padding`。Neutral、Academic、Vibrant 默认显示已有 Axis title，Clean 默认隐藏；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可重新开启。四种风格的 title padding 均为 `12`。',
-                en: 'Adds `axis.title.enabled` and `axis.title.padding`. Neutral, Academic, and Vibrant show authored Axis titles by default, while Clean hides them; global tokens, dimension rules, or structured `plotTheme.axis.title` can enable them again. Title padding remains `12` in every style.',
+                zh: '新增 `axis.title.enabled` 与 `axis.title.padding`。Neutral 与本站 Academic / Vibrant reference 默认显示已有 Axis title，Clean reference 默认隐藏；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可重新开启。四种预览风格的 title padding 均为 `12`。',
+                en: "Adds `axis.title.enabled` and `axis.title.padding`. Neutral and the site's Academic / Vibrant references show authored Axis titles by default, while the Clean reference hides them; global tokens, dimension rules, or structured `plotTheme.axis.title` can enable them again. Title padding remains `12` in all four preview styles.",
               },
             },
             {
@@ -94,8 +104,8 @@ export const vizV02: Release = {
                 en: 'Vibrant Plot-area surface',
               },
               content: {
-                zh: '内建 Vibrant preset 在 Light 下使用 `#E5ECF6`，在 Dark 下使用 `#111111`；其他内建风格继续保持透明绘图区。',
-                en: 'The built-in Vibrant preset uses `#E5ECF6` in Light mode and `#111111` in Dark mode; the other built-in styles keep transparent Plot areas.',
+                zh: '本站 Vibrant reference preset 在 Light 下使用 `#E5ECF6`，在 Dark 下使用 `#111111`；Neutral 与本站其它 reference 继续保持透明绘图区。',
+                en: "The site's Vibrant reference preset uses `#E5ECF6` in Light mode and `#111111` in Dark mode; Neutral and the site's other references keep transparent Plot areas.",
               },
             },
             {

@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type {
   CSSProperties,
   FC,
@@ -25,6 +24,7 @@ import type {
   PreviewThemeStyleSelection,
   RendererMode,
 } from '../types';
+import type { PreviewThemeStyleValue } from '../theme';
 
 import { ToolbarIconButton } from '../components';
 import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
@@ -48,7 +48,7 @@ export type PreviewWorkspaceProps = {
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
   /** 当前预览实际生效的 ThemeStyle */
-  themeStyle?: ThemeStyleValue;
+  themeStyle?: PreviewThemeStyleValue;
   /** 是否显示单预览 ThemeStyle 切换器 */
   enableThemeSwitch?: boolean;
   /** 当前单预览 ThemeStyle 选择 */

@@ -1,47 +1,58 @@
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+import type { ThemeModeValue } from '@retikz/core';
 import type { LucideIcon } from 'lucide-react';
 
-import { ThemeStyle } from '@retikz/core';
 import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
+
+/** 文档站维护的闭合 Theme style 选项 */
+export const PreviewThemeStyle = {
+  Neutral: 'neutral',
+  Academic: 'academic',
+  Vibrant: 'vibrant',
+  Clean: 'clean',
+} as const;
+
+/** 文档站可选择的 Theme style */
+export type PreviewThemeStyleValue = (typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle];
 
 /** ComponentPreview 解析后的最小 Theme 选择器 */
 export type PreviewTheme = {
-  style: ThemeStyleValue;
+  style: PreviewThemeStyleValue;
   mode: ThemeModeValue;
 };
 
 /** ComponentPreview 支持的 ThemeStyle 选项 */
 export const PreviewThemeStyleOptions = [
-  ThemeStyle.Neutral,
-  ThemeStyle.Academic,
-  ThemeStyle.Vibrant,
-  ThemeStyle.Clean,
-] as const satisfies ReadonlyArray<ThemeStyleValue>;
+  PreviewThemeStyle.Neutral,
+  PreviewThemeStyle.Academic,
+  PreviewThemeStyle.Vibrant,
+  PreviewThemeStyle.Clean,
+] as const satisfies ReadonlyArray<PreviewThemeStyleValue>;
 
 /** ThemeStyle 对应的文档站图标 */
-const previewThemeStyleIcons: Record<ThemeStyleValue, LucideIcon> = {
-  [ThemeStyle.Neutral]: Feather,
-  [ThemeStyle.Academic]: GraduationCap,
-  [ThemeStyle.Vibrant]: Sparkles,
-  [ThemeStyle.Clean]: BrushCleaning,
+const previewThemeStyleIcons: Record<PreviewThemeStyleValue, LucideIcon> = {
+  [PreviewThemeStyle.Neutral]: Feather,
+  [PreviewThemeStyle.Academic]: GraduationCap,
+  [PreviewThemeStyle.Vibrant]: Sparkles,
+  [PreviewThemeStyle.Clean]: BrushCleaning,
 };
 
 /** ThemeStyle 对应的本地化文案 key */
 export const PreviewThemeStyleLabelKeys = {
-  [ThemeStyle.Neutral]: 'preview.themeStyleNeutral',
-  [ThemeStyle.Academic]: 'preview.themeStyleAcademic',
-  [ThemeStyle.Vibrant]: 'preview.themeStyleVibrant',
-  [ThemeStyle.Clean]: 'preview.themeStyleClean',
+  [PreviewThemeStyle.Neutral]: 'preview.themeStyleNeutral',
+  [PreviewThemeStyle.Academic]: 'preview.themeStyleAcademic',
+  [PreviewThemeStyle.Vibrant]: 'preview.themeStyleVibrant',
+  [PreviewThemeStyle.Clean]: 'preview.themeStyleClean',
 } as const;
 
 /** 判断当前文档路由是否提供 ComponentPreview 主题风格切换 */
 export const isPreviewThemeStyleDocument = (moduleId: string | undefined): boolean => moduleId === 'viz';
 
 /** 返回主题风格对应的图标组件 */
-export const getPreviewThemeStyleIcon = (themeStyle: ThemeStyleValue): LucideIcon => previewThemeStyleIcons[themeStyle];
+export const getPreviewThemeStyleIcon = (themeStyle: PreviewThemeStyleValue): LucideIcon =>
+  previewThemeStyleIcons[themeStyle];
 
 /** 根据 docs 偏好生成传给 Core 的 sparse Theme selector */
-export const resolvePreviewTheme = (themeStyle: ThemeStyleValue, themeMode: ThemeModeValue): PreviewTheme => ({
+export const resolvePreviewTheme = (themeStyle: PreviewThemeStyleValue, themeMode: ThemeModeValue): PreviewTheme => ({
   style: themeStyle,
   mode: themeMode,
 });

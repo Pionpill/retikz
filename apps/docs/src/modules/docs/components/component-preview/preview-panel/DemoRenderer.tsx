@@ -1,10 +1,10 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
 import { RendererModeProvider } from '@retikz/react';
 import { memo } from 'react';
 
 import type { PreviewThemeMode, RendererMode } from '../types';
+import type { PreviewThemeStyleValue } from '../theme';
 
 import { PreviewThemeProvider } from '../theme';
 
@@ -14,7 +14,7 @@ export type DemoRendererProps = {
   /** 当前渲染目标。 */
   rendererMode: RendererMode;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: ThemeStyleValue;
+  themeStyle?: PreviewThemeStyleValue;
   /** 当前预览使用的明暗选择。 */
   themeMode?: PreviewThemeMode;
 };

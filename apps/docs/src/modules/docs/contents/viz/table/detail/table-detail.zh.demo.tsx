@@ -2,9 +2,11 @@ import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
 import { TableThemeToken } from '@retikz/table';
-import { DetailColumn, DetailTable } from '@retikz/table-react';
+import { DetailColumn } from '@retikz/table-react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
+
+import { PreviewDetailTable as DetailTable } from '@/modules/docs/components/component-preview/theme';
 
 import { scoreRows } from './table-detail.data';
 

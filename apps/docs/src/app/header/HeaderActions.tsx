@@ -1,9 +1,10 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
 import { ArrowUpRight, Languages, Moon, MoreHorizontal, Sun } from 'lucide-react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import type { PreviewThemeStyleValue } from '@/modules/docs/components/component-preview/theme';
 
 import { GitHubIcon } from '@/components/icons';
 import { Shortcut } from '@/components/shared';
@@ -45,9 +46,12 @@ import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './u
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 const rangePlaybackDurationOptions = [500, 1000, 2000, 3000, 5000] as const;
 type PreviewThemeSettingsItemsProps = {
-  themeStyle: ThemeStyleValue;
-  setThemeStyle: (value: ThemeStyleValue) => void;
+  themeStyle: PreviewThemeStyleValue;
+  setThemeStyle: (value: PreviewThemeStyleValue) => void;
 };
+
+const isPreviewThemeStyle = (value: string): value is PreviewThemeStyleValue =>
+  PreviewThemeStyleOptions.some(option => option === value);
 
 /** 主题设置的扁平选项，桌面入口与移动端菜单共用 */
 const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
@@ -58,7 +62,7 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
     <DropdownMenuRadioGroup
       value={themeStyle}
       onValueChange={value => {
-        if (PreviewThemeStyleOptions.some(option => option === value)) {
+        if (isPreviewThemeStyle(value)) {
           setThemeStyle(value);
         }
       }}

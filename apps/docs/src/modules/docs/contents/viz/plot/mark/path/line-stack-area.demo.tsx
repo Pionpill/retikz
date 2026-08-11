@@ -1,9 +1,10 @@
 ﻿import type { PathCurveValue } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { Axis, Legend, PathMark, Plot, Scale } from '@retikz/plot-react';
+import { Axis, Legend, PathMark, Scale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
+import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { LINE_STACK_AREA_CURVE_ID, previewControlContract } from './line-stack-area.controls';

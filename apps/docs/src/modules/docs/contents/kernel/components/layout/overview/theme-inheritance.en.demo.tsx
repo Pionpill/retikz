@@ -2,26 +2,28 @@ import type { IRNode, ThemeModeValue } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
-import { CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
 import { Layout, Scope } from '@retikz/react';
 import { z } from 'zod';
+
+import { PreviewCoreThemeStyles, PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
 
 type ThemeCardProps = { label: string };
 
 const cardFills = {
-  [ThemeStyle.Neutral]: {
+  [PreviewThemeStyle.Neutral]: {
     [ThemeMode.Light]: '#e2e8f0',
     [ThemeMode.Dark]: '#334155',
   },
-  [ThemeStyle.Academic]: {
+  [PreviewThemeStyle.Academic]: {
     [ThemeMode.Light]: '#dbeafe',
     [ThemeMode.Dark]: '#1e3a8a',
   },
-  [ThemeStyle.Vibrant]: {
+  [PreviewThemeStyle.Vibrant]: {
     [ThemeMode.Light]: '#fae8ff',
     [ThemeMode.Dark]: '#701a75',
   },
-  [ThemeStyle.Clean]: {
+  [PreviewThemeStyle.Clean]: {
     [ThemeMode.Light]: '#f8fafc',
     [ThemeMode.Dark]: '#0f172a',
   },
@@ -30,7 +32,7 @@ const cardFills = {
 const isCardFillStyle = (style: string): style is keyof typeof cardFills => style in cardFills;
 
 const resolveCardFill = (style: string, mode: ThemeModeValue): string => {
-  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[ThemeStyle.Neutral];
+  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[PreviewThemeStyle.Neutral];
   return fills[mode];
 };
 
@@ -96,9 +98,9 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 });
 
 const Demo: FC = () => (
-  <Layout theme={{ style: ThemeStyle.Academic }} width={650} height={120}>
+  <Layout theme={{ style: PreviewThemeStyle.Academic }} themeStyles={PreviewCoreThemeStyles} width={650} height={120}>
     <ThemeCard label="Root: academic / light" />
-    <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: ThemeStyle.Vibrant }}>
+    <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: PreviewThemeStyle.Vibrant }}>
       <ThemeCard label="Local: vibrant / light" />
     </Scope>
     <Scope

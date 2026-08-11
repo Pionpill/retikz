@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { ThemeStyle } from '@retikz/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const originalDefaultOpen = useComponentPreviewStore.getState().controlPanelDefaultOpen;
@@ -40,11 +40,11 @@ describe('ComponentPreview store controls panel preference', () => {
   });
 
   it('stores the global preview ThemeStyle', () => {
-    expect(useComponentPreviewStore.getState().themeStyle).toBe(ThemeStyle.Neutral);
+    expect(useComponentPreviewStore.getState().themeStyle).toBe(PreviewThemeStyle.Neutral);
 
-    useComponentPreviewStore.getState().setThemeStyle(ThemeStyle.Academic);
+    useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Academic);
 
-    expect(useComponentPreviewStore.getState().themeStyle).toBe(ThemeStyle.Academic);
+    expect(useComponentPreviewStore.getState().themeStyle).toBe(PreviewThemeStyle.Academic);
   });
 
   it('不保存 panel 宽度或实例级映射', () => {

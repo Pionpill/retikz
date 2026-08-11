@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { CSSProperties, FC, ReactNode } from 'react';
 
 import { AnimationModeProvider } from '@retikz/react';
@@ -8,6 +7,7 @@ import { cn } from '@/lib';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import type { PreviewControlSlot, PreviewThemeMode, RendererMode } from '../types';
+import type { PreviewThemeStyleValue } from '../theme';
 import type { PreviewPanelState } from './usePreviewPanelState';
 
 import { PreviewControlStateContext } from '../context';
@@ -24,7 +24,7 @@ export type PreviewPanelProps = {
   /** 当前源码视图提供的不可变渲染函数。 */
   activeRender?: (rendererMode: RendererMode) => ReactNode;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: ThemeStyleValue;
+  themeStyle?: PreviewThemeStyleValue;
   /** 当前预览使用的明暗选择。 */
   themeMode?: PreviewThemeMode;
   /** 针对当前面板 runtime 求值的控制定义。 */
