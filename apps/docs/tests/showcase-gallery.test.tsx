@@ -5,7 +5,7 @@ import type { Root } from 'react-dom/client';
 
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewProps } from '@/modules/docs/components/component-preview';
@@ -65,6 +65,11 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
 
+const LocationProbe = () => {
+  const location = useLocation();
+  return <output data-location>{`${location.pathname}${location.search}`}</output>;
+};
+
 const examples = [
   {
     id: 'basic',
@@ -92,6 +97,7 @@ const examples = [
 
 const renderGallery = (
   galleryExamples: readonly [GalleryExample, ...Array<GalleryExample>] = examples,
+  initialEntry = '/viz/chart/points/scatter',
 ): HTMLElement => {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -103,7 +109,7 @@ const renderGallery = (
 
   act(() => {
     root.render(
-      <MemoryRouter initialEntries={['/viz/chart/points/scatter']}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route
             path="/:moduleId/:sectionId/:pageId/:subPageId"
@@ -114,6 +120,7 @@ const renderGallery = (
             }
           />
         </Routes>
+        <LocationProbe />
       </MemoryRouter>,
     );
   });
@@ -154,6 +161,27 @@ describe('<ShowcaseGallery>', () => {
     expect(nextCards[0]?.textContent).not.toContain('气泡编码');
     expect(container.textContent).not.toContain('基础散点说明');
     expect(container.textContent).toContain('气泡编码说明');
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?example=bubble');
+
+    act(() => nextCards[0]?.click());
+
+    expect(container.textContent).toContain('基础散点说明');
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter');
+  });
+
+  it('从 example 参数恢复示例，非法值回退默认示例，并与 tab 参数独立组合', () => {
+    const deepLinkContainer = renderGallery(examples, '/viz/chart/points/scatter?example=bubble&tab=api');
+
+    expect(deepLinkContainer.textContent).toContain('气泡编码说明');
+    expect(deepLinkContainer.textContent).toContain('API body');
+
+    act(() => roots.shift()?.unmount());
+    deepLinkContainer.remove();
+
+    const invalidContainer = renderGallery(examples, '/viz/chart/points/scatter?example=unknown');
+
+    expect(invalidContainer.textContent).toContain('基础散点说明');
+    expect(invalidContainer.textContent).not.toContain('气泡编码说明');
   });
 
   it('把普通 MDX children 作为 API 标签内容', () => {
