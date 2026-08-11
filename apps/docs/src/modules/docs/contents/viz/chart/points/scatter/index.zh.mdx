@@ -1,6 +1,6 @@
 ---
 title: 散点图
-description: 用散点比较两个连续变量，并通过颜色补充分类信息。
+description: 用散点直接比较两个连续变量，并通过使用示例探索比例尺与分类编码。
 family: scatter-points
 usage: distribution
 ---
@@ -10,17 +10,28 @@ usage: distribution
     {
       id: 'scatter-basic',
       title: '基础散点',
-      description: '比较两个连续变量，并用颜色区分类别。',
+      description: '用单色散点比较各国城镇人口占比与互联网使用人口占比。',
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
         size: 'xl',
-        caption: '调整点大小、透明度与分组颜色，观察数据位置保持不变。',
+        caption: '调整点大小与透明度，观察两个百分比字段在线性坐标中的关系。',
+      },
+    },
+    {
+      id: 'scatter-income-life-expectancy',
+      title: '收入与预期寿命',
+      description: '用对数收入轴比较各国人均 GDP 与预期寿命，并按大洲着色。',
+      preview: {
+        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
+        controls: { name: 'scatter-income-life-expectancy' },
+        size: 'xl',
+        caption: '调整散点外观与大洲颜色图例，探索 Gapminder 2007 年国家截面。',
       },
     },
   ]}
 >
-  这是基于公开 Plot API 的非契约概念预览，不是 `@retikz/chart` 的 API 文档。页面只使用 `@retikz/plot-react` 根入口公开的 `Plot`、`PointMark` 与 `Axis` 组合 API，图表尺寸固定为 `800 × 400`。
+  这是基于公开 Plot API 的非契约概念预览，不是 `@retikz/chart` 的 API 文档。基础示例只使用 `@retikz/plot-react` 根入口公开的 `Plot`、`PointMark` 与 `Axis` 组合 API；收入与预期寿命示例另用 `Legend` 表达大洲颜色编码。图表尺寸固定为 `800 × 400`。
 
 ## Point Mark
 

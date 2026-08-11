@@ -1,7 +1,7 @@
 import type { CompileOptions } from '@mdx-js/mdx';
 
 import { compile } from '@mdx-js/mdx';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
@@ -18,6 +18,8 @@ import { expandMdxIncludes } from '@/modules/docs/lib';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/index.${lang}.mdx`);
+const scatterExamplePath = (filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/${filename}`);
 const bubbleContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
 const sharedApiContentPath = (lang: 'zh' | 'en') =>
@@ -190,7 +192,7 @@ describe('collectShowcasePages', () => {
         '## Label',
         '## Scale',
         '## Transform',
-        '## Theme 与 Layout',
+        '## Theme 与 Presentation',
         '## Additional Marks',
       ],
     ],
@@ -203,7 +205,7 @@ describe('collectShowcasePages', () => {
         '## Label',
         '## Scale',
         '## Transform',
-        '## Theme and Layout',
+        '## Theme and Presentation',
         '## Additional Marks',
       ],
     ],
@@ -252,11 +254,26 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 不再把 Bubble 当成同类型示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并保留收入与寿命使用示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
     expect(source).not.toMatch(/scatter-bubble|Bubble encoding|气泡编码/);
     expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);
+    expect(source.match(/id: 'scatter-income-life-expectancy'/g)).toHaveLength(1);
+    expect(source).toContain("files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts']");
+    expect(source).toContain("controls: { name: 'scatter-income-life-expectancy' }");
+  });
+
+  it('Scatter 收入与寿命使用示例提供完整的双语 preview 文件', () => {
+    for (const filename of [
+      'scatter-income-life-expectancy.data.ts',
+      'scatter-income-life-expectancy.controls.ts',
+      'scatter-income-life-expectancy.en.controls.ts',
+      'scatter-income-life-expectancy.zh.demo.tsx',
+      'scatter-income-life-expectancy.en.demo.tsx',
+    ]) {
+      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+    }
   });
 
   it.each(['zh', 'en'] as const)('%s 共享标签 API 使用真实默认值', lang => {

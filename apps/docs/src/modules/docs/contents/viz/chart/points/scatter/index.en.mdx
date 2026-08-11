@@ -1,6 +1,6 @@
 ---
 title: Scatter
-description: Compare two continuous variables with points and add categories through color.
+description: Compare two continuous variables directly, then explore scales and categorical encoding through examples.
 family: scatter-points
 usage: distribution
 ---
@@ -10,17 +10,28 @@ usage: distribution
     {
       id: 'scatter-basic',
       title: 'Basic scatter',
-      description: 'Compare two continuous variables and distinguish categories with color.',
+      description: 'Use single-color points to compare urban population share and Internet use across countries.',
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
         size: 'xl',
-        caption: 'Adjust point size, opacity, and group color while positions stay fixed.',
+        caption: 'Adjust point size and opacity while comparing two percentage fields on linear axes.',
+      },
+    },
+    {
+      id: 'scatter-income-life-expectancy',
+      title: 'Income and life expectancy',
+      description: 'Compare GDP per capita and life expectancy on a log income axis, colored by continent.',
+      preview: {
+        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
+        controls: { name: 'scatter-income-life-expectancy' },
+        size: 'xl',
+        caption: 'Adjust point appearance and the continent color legend for the Gapminder 2007 snapshot.',
       },
     },
   ]}
 >
-  This is a non-contract conceptual preview built with the public Plot API, not API documentation for `@retikz/chart`. It only uses the `Plot`, `PointMark`, and `Axis` composition API exported from the `@retikz/plot-react` root, with a fixed `800 × 400` chart size.
+  This is a non-contract conceptual preview built with the public Plot API, not API documentation for `@retikz/chart`. The basic example only uses the `Plot`, `PointMark`, and `Axis` composition API exported from the `@retikz/plot-react` root; the income and life expectancy example also uses `Legend` for continent color encoding. Both use a fixed `800 × 400` chart size.
 
 ## Point Mark
 
