@@ -1,11 +1,11 @@
 ---
 name: theme-academic
-description: Use when designing, implementing, reviewing, or documenting Retikz ThemeStyle.Academic in any package, especially for publication-oriented hierarchy, compact information density, print legibility, monochrome resilience, package ownership, or explicit color overrides.
+description: Use when designing, implementing, reviewing, or documenting Retikz Academic reference theme in any host or package, especially for publication-oriented hierarchy, compact information density, print legibility, monochrome resilience, package ownership, or explicit color overrides.
 ---
 
 # Academic Theme
 
-`ThemeStyle.Academic` 表达严谨、紧凑、适合论文与技术报告的出版型视觉语言。它重视精确阅读、稳定排版、有限数据墨水和脱离屏幕后仍可辨认的结构，但不等于把任意内容强制变成 LaTeX 或某个期刊模板。
+`academic` 是 docs 维护的参考 style，表达严谨、紧凑、适合论文与技术报告的出版型视觉语言。它重视精确阅读、稳定排版、有限数据墨水和脱离屏幕后仍可辨认的结构，但不等于把任意内容强制变成 LaTeX 或某个期刊模板。
 
 ## 参考与使用边界
 
@@ -29,7 +29,7 @@ Academic 比 Neutral 更紧凑、更强调出版层级；比 Clean 保留更多�
 ## 颜色与 ThemeMode
 
 - `ResolvedThemeColors` 与 owner 的显式颜色配置继续决定最终颜色；Academic 不重排、调色或替换显式输入。
-- 内置 fallback 应克制、可区分，并在灰度下尽量保留明度差；不能把参考项目的 color cycle 固化为唯一答案。
+- docs reference fallback 应克制、可区分，并在灰度下尽量保留明度差；不能把参考项目的 color cycle 固化为唯一答案。
 - 颜色不足以支持黑白辨识时，复用对应 owner 已有的线型、形状或直接标注能力，不在 Theme 中创造数据编码。
 - semantic colors 只表达成功、警告和错误。
 - Light 使用纸白与深墨关系；Dark 使用深中性表面与浅前景，并保持相同结构。Dark 是屏幕适配，不模拟黑纸印刷。
@@ -37,9 +37,9 @@ Academic 比 Neutral 更紧凑、更强调出版层级；比 Clean 保留更多�
 ## Package 所有权
 
 - 本 skill 只定义跨包视觉意图，不维护 package token、preset 数值、导出 DPI、期刊栏宽或局部组件规则。
-- Core 拥有 `ThemeStyle.Academic`、Theme 继承、registry 与 shared semantic / categorical colors。
+- Core 拥有开放 style selector、Theme 继承、registry 与内置 Neutral；docs 通过公开 definition 维护 Academic 的 shared semantic / categorical colors。
 - 每个领域 package 只把公共意图映射到自己拥有的 token；不得复制其它 owner 的 preset 或建立主题特判。
-- adapter 与 docs 只传递标准 selector 和显式覆盖，不创建平行 Theme 实现。
+- adapter 只传递标准 selector 和 definitions；docs 通过各 owner 的公开 definition / registry 组合参考实现，不创建跨 owner registry。
 - 处理 `@retikz/plot` 时，必须同时读取 [Academic Plot Theme](../../../packages/viz/_notes/theme/plot/academic.md)。
 
 ## 实施与验收

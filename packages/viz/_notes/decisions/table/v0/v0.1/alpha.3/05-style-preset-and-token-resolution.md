@@ -71,7 +71,7 @@ Table inspection 与 manifest 复用 Core `ThemeTokenSource`：style baseline �
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Tabular Visualization Complete 的 Presentation、Rules、Visual Encoding 与 shared color projection
-- `@retikz/table` 拥有 Table token vocabulary、四种 style × 两种 mode 的 Table preset、resolver、Cell / header / border / encoding mapping、Legend descriptor 与 inspection
+- `@retikz/table` 拥有 Table token vocabulary、内置 Neutral × 两种 mode 的 preset、开放 style definition / registry、resolver、Cell / header / border / encoding mapping、Legend descriptor 与 inspection
 - `@retikz/core` 拥有 selector 继承、Core style registry、shared colors、`ThemeTokenSource` 与 `InspectionAppearance`
 - `@retikz/data` 拥有数据、字段与通用 transform；Table 不把数据算法提升为 Theme token
 - `@retikz/standard` 拥有通用 Legend / 外围布局与 `InspectionAppearance` consumer；不读取 Table token

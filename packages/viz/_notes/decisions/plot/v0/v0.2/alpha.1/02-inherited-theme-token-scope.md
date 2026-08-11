@@ -83,7 +83,7 @@ Plot 同时拥有独立于颜色的非空 shape palette。内建 `plot.palette.s
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Visualization Complete 的 Theme / Palette 与 Plot lowering，解决 Plot token 无法沿 Core Scope 继承和 shared categorical 多重真源问题
-- `@retikz/plot` 拥有 Plot token vocabulary、四种 style × 两种 mode 的 Plot preset、resolver、shared color projection 与显式领域 palette 覆盖、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
+- `@retikz/plot` 拥有 Plot token vocabulary、内置 Neutral × 两种 mode 的 preset、开放 style definition / registry、resolver、shared color projection 与显式领域 palette 覆盖、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
 - `@retikz/core` 拥有 selector 继承、Core style registry、Core shared colors、`ThemeTokenSource` 与 `InspectionAppearance`；不解释 Plot token 语义
 - `@retikz/chart` 拥有 Chart token 与 recipe；只转发或贡献 Plot 输入，并在需要默认 series color 时读取 Plot resolver 的最终 palette
 - `@retikz/standard` 只消费 Plot 已解析的领域无关 presentation / layout 输入与 Core `InspectionAppearance`，不读取 Plot token
