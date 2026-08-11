@@ -12,7 +12,7 @@ Axis grid 已经能够复用可见轴刻度，或通过独立 tick source 与 de
 
 ## 决策：主网格可显式包含 effective domain 端点
 
-`AxisGridOptions` 增加 `includeDomainEndpoints?: boolean`。字段省略或为 `false` 时保持既有行为；为 `true` 时，主网格在常规位置解析完成后保证包含绑定位置 scale 的首尾 domain 值。
+`AxisGridOptions` 增加 `includeDomain?: boolean`。字段省略或为 `false` 时保持既有行为；为 `true` 时，主网格在常规位置解析完成后保证包含绑定位置 scale 的首尾 domain 值。
 
 理由：
 
@@ -27,13 +27,13 @@ type AxisGridOptions = AxisGridProjection &
   AxisGridLineStyle & {
     ticks?: GuideTickSource;
     density?: AxisTickDensity;
-    includeDomainEndpoints?: boolean;
+    includeDomain?: boolean;
     bandPosition?: number;
     minor?: false | AxisMinorGridOptions;
   };
 ```
 
-`includeDomainEndpoints` 只属于主网格配置，不进入 `AxisMinorGridOptions`。次网格继续要求显式 tick source，避免底层自动生成新的 minor 语义。
+`includeDomain` 只属于主网格配置，不进入 `AxisMinorGridOptions`。次网格继续要求显式 tick source，避免底层自动生成新的 minor 语义。
 
 ## 行为、失败语义与兼容性
 
@@ -44,7 +44,7 @@ type AxisGridOptions = AxisGridProjection &
 - 显式来源：`grid.ticks` 仍决定常规主网格候选；开启本字段只追加缺失端点，不改写显式来源。
 - 分类位置：band / point scale 使用 domain 的首尾类别及既有 `bandPosition` 投影；该字段不表示绘图区外边框。
 - 隔离性：本字段不改变 axis tick mark、tick label、title、minor grid、grid projection target、layer 或 provenance。
-- Theme：该字段是动态结构语义，Plot Theme token 与结构化 theme 均不得提供默认值或覆盖入口。
+- Theme：本 ADR 最初把该字段限定为 guide 局部结构语义；后续 ADR-10 将同一 boolean 纳入 Axis Theme cascade，但不改变本 ADR 的端点解析与投影算法。
 - 失败语义：字段只接受 boolean；PositionScale 必须维持 domain 值可由自身 coordinate 投影的既有契约，本决策不增加 renderer 降级或 adapter 私有错误路径。
 - 兼容性：纯新增可选字段，既有 JSON、React、Vanilla 与主题输出保持兼容。
 - React / Vanilla 等价性：React `<Axis>`、Vanilla spec 与手写 JSON 继续表达同一份 `IRPlotAxisGuide.grid`，不增加 adapter 专用配置。
@@ -81,7 +81,7 @@ type AxisGridOptions = AxisGridProjection &
 
 ## 最终结果与遗留边界
 
-`includeDomainEndpoints` 已贯通 Axis major grid schema、guide lowering、React / Vanilla authoring 与双语文档。实现固定在常规 source 与 density 之后读取 effective PositionScale domain，按最终网格投影坐标追加并去重端点；默认关闭，minor source、axis ticks、Theme、Core 与 renderer 契约保持不变。
+`includeDomain` 已贯通 Axis major grid schema、guide lowering、React / Vanilla authoring 与双语文档。实现固定在常规 source 与 density 之后读取 effective PositionScale domain，按最终网格投影坐标追加并去重端点；guide 局部默认关闭，minor source、axis ticks、Core 与 renderer 契约保持不变。后续 ADR-10 只为已启用的 major grid 增加 Theme 默认，不修改这里的算法边界。
 
 空 domain 不追加，单值 domain 最多追加一次，非有限投影会被跳过；循环坐标和分类坐标继续服从既有 coordinate 与 `bandPosition` 语义。端点与 minor grid 重合时仍沿用既有 major-over-minor overlap 规则，不引入第二套网格优先级。
 

@@ -68,6 +68,7 @@ export const plotAxisThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPl
         stroke: tokens[PlotThemeToken.AxisGridStroke],
         strokeWidth: tokens[PlotThemeToken.AxisGridStrokeWidth],
         drawOpacity: tokens[PlotThemeToken.AxisGridDrawOpacity],
+        includeDomain: tokens[PlotThemeToken.AxisGridIncludeDomain],
       }
     : false,
 });
@@ -242,6 +243,13 @@ export const applyPlotThemeToTokens = (
         }
         if (has(authoredAxis.grid, 'drawOpacity')) {
           set(PlotThemeToken.AxisGridDrawOpacity, axis.grid.drawOpacity!, '$spec/plotTheme/axis/grid/drawOpacity');
+        }
+        if (has(authoredAxis.grid, 'includeDomain')) {
+          set(
+            PlotThemeToken.AxisGridIncludeDomain,
+            axis.grid.includeDomain!,
+            '$spec/plotTheme/axis/grid/includeDomain',
+          );
         }
       }
     }

@@ -370,7 +370,7 @@ describe('lowerGuide (contract)', () => {
     };
     const withoutEndpoints = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, endpointCtx);
     const explicitlyDisabled = lowerGuide(
-      { type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: false } },
+      { type: 'axis', dimension: 'x', grid: { includeDomain: false } },
       endpointCtx,
     );
 
@@ -383,7 +383,7 @@ describe('lowerGuide (contract)', () => {
       {
         type: 'axis',
         dimension: 'x',
-        grid: { ticks: { values: [0, 2] }, includeDomainEndpoints: true },
+        grid: { ticks: { values: [0, 2] }, includeDomain: true },
       },
       { ...ctx, projectX: fakeScale(value => 40 + value * 40, [-1, 3]) },
     );
@@ -401,7 +401,7 @@ describe('lowerGuide (contract)', () => {
       {
         type: 'axis',
         dimension: 'x',
-        grid: { density: { kind: 'sample', maxCount: 2 }, includeDomainEndpoints: true },
+        grid: { density: { kind: 'sample', maxCount: 2 }, includeDomain: true },
       },
       {
         ...ctx,
@@ -417,7 +417,7 @@ describe('lowerGuide (contract)', () => {
 
   it('axis_grid_domain_endpoints_dedupe_by_finite_projected_coordinate', () => {
     const existingEndpoint = lowerGuide(
-      { type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: true } },
+      { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
       {
         ...ctx,
         projectX: fakeScale(value => 40 + value * 40, [0, 2]),
@@ -428,7 +428,7 @@ describe('lowerGuide (contract)', () => {
       {
         type: 'axis',
         dimension: 'x',
-        grid: { ticks: { values: [] }, includeDomainEndpoints: true },
+        grid: { ticks: { values: [] }, includeDomain: true },
       },
       { ...ctx, projectX: fakeScale(() => 40, [0, 10]) },
     );
@@ -436,7 +436,7 @@ describe('lowerGuide (contract)', () => {
       {
         type: 'axis',
         dimension: 'x',
-        grid: { ticks: { values: [5] }, includeDomainEndpoints: true },
+        grid: { ticks: { values: [5] }, includeDomain: true },
       },
       {
         ...ctx,
@@ -454,7 +454,7 @@ describe('lowerGuide (contract)', () => {
       {
         type: 'axis',
         dimension: 'x',
-        grid: { includeDomainEndpoints: true, bandPosition: 0 },
+        grid: { includeDomain: true, bandPosition: 0 },
       },
       {
         ...ctx,
@@ -476,7 +476,7 @@ describe('lowerGuide (contract)', () => {
         dimension: 'x',
         grid: {
           ticks: { values: [1] },
-          includeDomainEndpoints: true,
+          includeDomain: true,
           minor: { ticks: { values: [0.5, 1.5] } },
         },
       },
@@ -600,7 +600,7 @@ describe('lowerGuide (contract)', () => {
       {
         type: 'axis',
         dimension: 'x',
-        grid: { ticks: { values: [90] }, includeDomainEndpoints: true },
+        grid: { ticks: { values: [90] }, includeDomain: true },
       },
       {
         ...ctx,
@@ -1178,12 +1178,13 @@ describe('lowerPlots guide orchestration (contract)', () => {
         { type: 'axis', dimension: 'y', grid: true },
       ]),
     );
-    // children = [y 网格层, mark 层, x 轴层, y 轴层]
-    expect(outer.children).toHaveLength(4);
-    // 第一个是网格层（带 strokeOpacity）
+    // children = [x 网格层, y 网格层, mark 层, x 轴层, y 轴层]
+    expect(outer.children).toHaveLength(5);
+    // 前两个是网格层（带 strokeOpacity）
     expect(((outer.children[0] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
+    expect(((outer.children[1] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
     // 最后一个是轴层（纯文字 nodeDefault）
-    expect((outer.children[3] as IRScope).nodeDefault?.stroke).toBe('none');
+    expect((outer.children[4] as IRScope).nodeDefault?.stroke).toBe('none');
   });
 
   it('compile_with_guides_scene', () => {
@@ -1231,7 +1232,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     expect((axisLine[1] as { to: [number, number] }).to[0]).toBe(200);
   });
 
-  it('grid_uses_density_sampled_visible_tick_set', () => {
+  it('grid_uses_density_sampled_visible_tick_set_then_appends_theme_endpoints', () => {
     const outer = expandOf(
       guidedSpec([
         {
@@ -1245,6 +1246,6 @@ describe('lowerPlots guide orchestration (contract)', () => {
     const gridLayer = outer.children[0] as IRScope;
     const gridPath = gridLayer.children[0] as IRPath;
 
-    expect(gridPath.children).toHaveLength(6);
+    expect(gridPath.children).toHaveLength(10);
   });
 });

@@ -42,6 +42,7 @@ describe('Plot style token contract', () => {
         'plot.area.fill': 'none',
         'axis.title.enabled': false,
         'axis.title.padding': 6,
+        [PlotThemeToken.AxisGridIncludeDomain]: true,
         'plot.palette.series': ['#2563eb', '#f97316'],
       },
     });
@@ -75,6 +76,8 @@ describe('Plot style token contract', () => {
     for (const [value, path] of [
       [{ [PlotThemeToken.AxisLineStrokeWidth]: -1 }, [PlotThemeToken.AxisLineStrokeWidth]],
       [{ [PlotThemeToken.AxisTitlePadding]: -1 }, [PlotThemeToken.AxisTitlePadding]],
+      [{ [PlotThemeToken.AxisGridIncludeDomain]: 'yes' }, [PlotThemeToken.AxisGridIncludeDomain]],
+      [{ [PlotThemeToken.AxisGridIncludeDomain]: undefined }, [PlotThemeToken.AxisGridIncludeDomain]],
       [{ [PlotThemeToken.PlotPaletteSeries]: [] }, [PlotThemeToken.PlotPaletteSeries]],
       [{ [PlotThemeToken.PlotAreaFill]: undefined }, [PlotThemeToken.PlotAreaFill]],
     ] as const) {
@@ -109,12 +112,28 @@ describe('Plot style token contract', () => {
     expect(PlotThemeSchema.safeParse({ plotArea: { background: 'none' } }).success).toBe(false);
   });
 
-  it('让 axis.grid 只接受关闭或共享 line style', () => {
-    for (const grid of [false, { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15 }]) {
+  it('让 axis.grid 只接受关闭或共享 line style 与 domain endpoint 默认', () => {
+    for (const grid of [false, { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true }]) {
       expect(PlotThemeSchema.safeParse({ axis: { grid } }).success).toBe(true);
     }
-    for (const grid of [true, { major: { stroke: '#ffffff' } }, { default: false, x: true }]) {
+    for (const grid of [
+      true,
+      { includeDomain: 'yes' },
+      { major: { stroke: '#ffffff' } },
+      { default: false, x: true },
+    ]) {
       expect(PlotThemeSchema.safeParse({ axis: { grid } }).success).toBe(false);
+    }
+
+    const explicitUndefined = PlotThemeSchema.safeParse({
+      axis: { grid: { includeDomain: undefined } },
+    });
+    expect(explicitUndefined.success).toBe(false);
+    if (!explicitUndefined.success) {
+      expect(explicitUndefined.error.issues[0]).toMatchObject({
+        code: 'custom',
+        path: ['axis', 'grid', 'includeDomain'],
+      });
     }
   });
 
@@ -126,20 +145,39 @@ describe('Plot style token contract', () => {
     expect(Object.values(PlotThemeToken)).toContain('axis.title.enabled');
   });
 
-  it('将 grid 表达为四个基础 canonical token 并删除复合值', () => {
+  it('将 grid 表达为五个基础 canonical token 并删除复合值', () => {
     expect(
       PlotThemeTokenOverridesSchema.safeParse({
         'axis.grid.enabled': true,
         'axis.grid.stroke': '#ffffff',
         'axis.grid.strokeWidth': 1,
         'axis.grid.drawOpacity': 0.15,
+        [PlotThemeToken.AxisGridIncludeDomain]: true,
       }).success,
     ).toBe(true);
     expect(PlotThemeTokenOverridesSchema.safeParse({ 'axis.grid': true }).success).toBe(false);
     expect(Object.values(PlotThemeToken)).not.toContain('axis.grid');
-    for (const token of ['axis.grid.enabled', 'axis.grid.stroke', 'axis.grid.strokeWidth', 'axis.grid.drawOpacity']) {
+    for (const token of [
+      'axis.grid.enabled',
+      'axis.grid.stroke',
+      'axis.grid.strokeWidth',
+      'axis.grid.drawOpacity',
+      PlotThemeToken.AxisGridIncludeDomain,
+    ]) {
       expect(Object.values(PlotThemeToken)).toContain(token);
     }
+  });
+
+  it('统一使用 includeDomain 表达 grid domain 端点策略', () => {
+    const removedToken = ['axis.grid.includeDomain', 'Endpoints'].join('');
+    const removedField = ['includeDomain', 'Endpoints'].join('');
+
+    expect(Object.values(PlotThemeToken)).toContain('axis.grid.includeDomain');
+    expect(Object.values(PlotThemeToken)).not.toContain(removedToken);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ 'axis.grid.includeDomain': true }).success).toBe(true);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ [removedToken]: true }).success).toBe(false);
+    expect(PlotThemeSchema.safeParse({ axis: { grid: { includeDomain: true } } }).success).toBe(true);
+    expect(PlotThemeSchema.safeParse({ axis: { grid: { [removedField]: true } } }).success).toBe(false);
   });
 
   it('让 Axis token rule 支持单个、多个和自定义 dimension', () => {
@@ -149,6 +187,7 @@ describe('Plot style token contract', () => {
           select: { dimension },
           tokens: {
             [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisGridIncludeDomain]: true,
             [PlotThemeToken.AxisTickMark]: false,
             [PlotThemeToken.AxisTitleEnabled]: true,
             [PlotThemeToken.AxisTitlePadding]: 8,

@@ -530,7 +530,7 @@ describe('lowerPlots interval/bar (contract)', () => {
       },
       opts,
     );
-    const xAxis = outer.children[1] as IRScope;
+    const xAxis = outer.children[outer.children.length - 1] as IRScope;
     const labels = xAxis.children.filter((child): child is IRNode => (child as IRNode).text !== undefined);
     expect(labels.map(label => label.text)).toEqual(['Norway', 'France', 'Germany']);
     const xs = labels.map(label => (label.position as [number, number])[0]);

@@ -28,14 +28,14 @@ const fieldContractOf = (definition: PreviewControlsDefinition) => {
   }));
 };
 
-const renderWithDomainEndpoints = (includeDomainEndpoints: boolean): string =>
+const renderWithDomainEndpoints = (includeDomain: boolean): string =>
   renderToStaticMarkup(
     createElement(
       PreviewControlStateContext.Provider,
       {
         value: {
           canonicalValues: previewControlContract.canonicalValues,
-          values: { ...previewControlContract.canonicalValues, includeDomainEndpoints },
+          values: { ...previewControlContract.canonicalValues, includeDomain },
           setValue: () => undefined,
           applyValues: () => undefined,
           reset: () => undefined,
@@ -59,7 +59,7 @@ describe('Axis 文档 playground', () => {
         expect.objectContaining({
           fields: expect.arrayContaining([
             expect.objectContaining({
-              id: 'includeDomainEndpoints',
+              id: 'includeDomain',
               kind: 'switch',
               defaultValue: false,
             }),
@@ -67,9 +67,9 @@ describe('Axis 文档 playground', () => {
         }),
       ]),
     );
-    expect(previewControlContract.canonicalValues.includeDomainEndpoints).toBe(false);
+    expect(previewControlContract.canonicalValues.includeDomain).toBe(false);
     expect(englishPreviewControlContract.canonicalValues).toEqual(previewControlContract.canonicalValues);
-    expect(previewControlContract.relatedApis).toContain('Axis.grid.includeDomainEndpoints');
+    expect(previewControlContract.relatedApis).toContain('Axis.grid.includeDomain');
     expect(englishPreviewControlContract.relatedApis).toEqual(previewControlContract.relatedApis);
   });
 

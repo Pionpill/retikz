@@ -393,6 +393,7 @@ describe('plot theme schema and lowering', () => {
       plotThemeTokens: {
         [PlotThemeToken.AxisGridEnabled]: false,
         [PlotThemeToken.AxisGridStroke]: '#94a3b8',
+        [PlotThemeToken.AxisGridIncludeDomain]: false,
       },
       plotThemeTokenRules: [
         {
@@ -400,10 +401,13 @@ describe('plot theme schema and lowering', () => {
           tokens: {
             [PlotThemeToken.AxisGridEnabled]: true,
             [PlotThemeToken.AxisGridStroke]: '#2563eb',
+            [PlotThemeToken.AxisGridIncludeDomain]: true,
           },
         },
       ],
-      plotTheme: { axis: { grid: { stroke: '#f97316', dashPattern: [4, 2] } } },
+      plotTheme: {
+        axis: { grid: { stroke: '#f97316', dashPattern: [4, 2], includeDomain: false } },
+      },
     } satisfies Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>;
 
     const y = resolveAxis(input, {
@@ -418,12 +422,34 @@ describe('plot theme schema and lowering', () => {
       drawOpacity: 0.15,
       dashPattern: [4, 2],
       dashOffset: 1,
+      includeDomain: false,
     });
+
+    expect(
+      resolveAxis(input, {
+        type: 'axis',
+        dimension: 'y',
+        grid: { includeDomain: true },
+      }).grid,
+    ).toMatchObject({ includeDomain: true });
+    expect(resolveAxis(input, { type: 'axis', dimension: 'y', grid: false }).grid).toBe(false);
+  });
+
+  it('endpoint token 不创建 grid，disabled Theme 下的 grid shorthand 不恢复休眠默认', () => {
+    const disabled = {
+      plotThemeTokens: {
+        [PlotThemeToken.AxisGridEnabled]: false,
+        [PlotThemeToken.AxisGridIncludeDomain]: true,
+      },
+    } satisfies Pick<IRPlotSpec, 'plotThemeTokens'>;
+
+    expect(resolveAxis(disabled, { type: 'axis', dimension: 'x' }).grid).toBe(false);
+    expect(resolveAxis(disabled, { type: 'axis', dimension: 'x', grid: true }).grid).toBe(true);
   });
 
   it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
     const cases: Array<{ style: BuiltinThemeStyleValue; dimensions: Array<string> }> = [
-      { style: ThemeStyle.Neutral, dimensions: ['y'] },
+      { style: ThemeStyle.Neutral, dimensions: ['x', 'y'] },
       { style: ThemeStyle.Academic, dimensions: [] },
       { style: ThemeStyle.Vibrant, dimensions: ['x', 'y'] },
       { style: ThemeStyle.Clean, dimensions: ['y'] },
@@ -433,7 +459,10 @@ describe('plot theme schema and lowering', () => {
       for (const dimension of ['x', 'y']) {
         const grid = resolveAxis({}, { type: 'axis', dimension }, style).grid;
         if (dimensions.some(candidate => candidate === dimension)) {
-          expect(grid).toMatchObject({ stroke: style === ThemeStyle.Vibrant ? '#FFFFFF' : 'currentColor' });
+          expect(grid).toMatchObject({
+            stroke: style === ThemeStyle.Vibrant ? '#FFFFFF' : 'currentColor',
+            includeDomain: style === ThemeStyle.Neutral,
+          });
         } else {
           expect(grid).toBe(false);
         }

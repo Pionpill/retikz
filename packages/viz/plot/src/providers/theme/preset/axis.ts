@@ -23,6 +23,7 @@ type AxisPresetSource = Readonly<{
   titlePadding: number;
   gridEnabled: boolean;
   gridStroke: string;
+  gridIncludeDomain: boolean;
 }>;
 
 type AxisStylePreset = Pick<
@@ -35,6 +36,7 @@ type AxisStylePreset = Pick<
   | 'titleFontSize'
   | 'titlePadding'
   | 'gridEnabled'
+  | 'gridIncludeDomain'
 >;
 
 type AxisModePreset = Pick<AxisPresetSource, 'lineStroke' | 'tickLabelForeground' | 'titleForeground' | 'gridStroke'>;
@@ -59,6 +61,7 @@ type AxisTokenPreset = Readonly<
     | typeof PlotThemeToken.AxisGridStroke
     | typeof PlotThemeToken.AxisGridStrokeWidth
     | typeof PlotThemeToken.AxisGridDrawOpacity
+    | typeof PlotThemeToken.AxisGridIncludeDomain
   >
 >;
 
@@ -72,6 +75,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     titleFontSize: 12,
     titlePadding: 12,
     gridEnabled: false,
+    gridIncludeDomain: false,
   },
   [ThemeStyle.Academic]: {
     lineEnabled: true,
@@ -82,6 +86,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     titleFontSize: 12,
     titlePadding: 12,
     gridEnabled: false,
+    gridIncludeDomain: false,
   },
   [ThemeStyle.Vibrant]: {
     lineEnabled: false,
@@ -92,6 +97,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     titleFontSize: 13,
     titlePadding: 12,
     gridEnabled: false,
+    gridIncludeDomain: false,
   },
   [ThemeStyle.Clean]: {
     lineEnabled: false,
@@ -102,6 +108,7 @@ const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
     titleFontSize: 12,
     titlePadding: 12,
     gridEnabled: false,
+    gridIncludeDomain: false,
   },
 };
 
@@ -152,6 +159,7 @@ export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValu
     [PlotThemeToken.AxisGridStroke]: gridStroke,
     [PlotThemeToken.AxisGridStrokeWidth]: 1,
     [PlotThemeToken.AxisGridDrawOpacity]: style === ThemeStyle.Vibrant ? 1 : 0.15,
+    [PlotThemeToken.AxisGridIncludeDomain]: structure.gridIncludeDomain,
   };
 };
 
@@ -161,8 +169,11 @@ export const getAxisTokenRules = (style: BuiltinThemeStyleValue): IRPlotAxisThem
     case ThemeStyle.Neutral:
       return [
         {
-          select: { dimension: 'y' },
-          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+          select: { dimension: ['x', 'y'] },
+          tokens: {
+            [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisGridIncludeDomain]: true,
+          },
         },
       ];
     case ThemeStyle.Clean:

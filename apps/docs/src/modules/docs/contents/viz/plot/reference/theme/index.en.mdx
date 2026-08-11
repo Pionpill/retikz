@@ -36,7 +36,7 @@ Core effective Theme
 
 ## Canonical tokens
 
-`PlotThemeToken` exports 41 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
+`PlotThemeToken` exports 42 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
 
 | Group           | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,11 +46,11 @@ Core effective Theme
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
 | Axis tick label | `axis.tickLabel.enabled`, `axis.tickLabel.foreground`, `axis.tickLabel.font.size`, `axis.tickLabel.gap`                                                                                                                                                                                                                                  |
 | Axis title      | `axis.title.enabled`, `axis.title.foreground`, `axis.title.font.size`, `axis.title.font.weight`, `axis.title.padding`                                                                                                                                                                                                                    |
-| Axis grid       | `axis.grid.enabled`, `axis.grid.stroke`, `axis.grid.strokeWidth`, `axis.grid.drawOpacity`                                                                                                                                                                                                                                                |
+| Axis grid       | `axis.grid.enabled`, `axis.grid.stroke`, `axis.grid.strokeWidth`, `axis.grid.drawOpacity`, `axis.grid.includeDomain`                                                                                                                                                                                                                     |
 | Legend          | `legend.title.foreground`, `legend.title.font.size`, `legend.title.font.weight`, `legend.label.foreground`, `legend.label.font.size`, `legend.swatch.size`, `legend.swatch.gap`, `legend.entry.gap`, `legend.title.gap`, `legend.ramp.length`, `legend.ramp.thickness`, `legend.symbol.size`, `legend.symbol.scale`, `legend.symbol.fit` |
 | Palette         | `plot.palette.categorical`, `plot.palette.series`, `plot.palette.sector`, `plot.palette.sequential`, `plot.palette.diverging`                                                                                                                                                                                                            |
 
-`axis.line.enabled` and `axis.grid.enabled` change visual defaults for existing axes only. The other grid tokens style enabled major grid lines. Themes never create axes, ticks, or minor grids; major/minor tick sources and separate styles remain local Axis guide semantics.
+`axis.line.enabled` and `axis.grid.enabled` change visual defaults for existing axes only. Three grid paint tokens style enabled major grid lines, while `axis.grid.includeDomain` controls whether they include effective-domain endpoints. The endpoint token never creates or enables a grid by itself. Neutral enables it for existing x/y major grids; the other built-in styles keep it disabled, and an explicit Axis guide boolean wins last. Themes never create axes, ticks, or minor grids; major/minor tick sources and separate styles remain local Axis guide semantics.
 
 `axis.title.enabled` controls whether title content authored on an existing Axis guide is rendered. Neutral, Academic, and Vibrant enable it by default, while Clean disables it. A global token, dimension rule, or structured `plotTheme.axis.title` style object can enable it again. The Axis guide `title` still supplies content and local style, but does not bypass the disabled state by itself.
 
@@ -68,7 +68,7 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` uses the exact same 41-field contract with every field required. All eight built-in presets and the `tokens` returned by `resolvePlotTheme()` must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
+`PlotResolvedThemeTokensSchema` uses the exact same 42-field contract with every field required. All eight built-in presets and the `tokens` returned by `resolvePlotTheme()` must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
 
 ## Inspection
 
@@ -104,4 +104,4 @@ Chart may call this resolver to read a transient series palette needed by a reci
 
 <ZodSchema name="PlotPaletteThemeSchema" />
 
-`PlotThemeSchema` is the formal native structure consumed by guides, scales, and lowering after the cascade. It can carry legal non-token fields such as tick-label rotation / layout or axis-title rotation; those values remain in the final `plotTheme` without inventing token sources. `axis.title.enabled` and `axis.title.padding` map both ways to structured `axis.title` as `false | style` and to `axis.title.padding`, while retaining formal token sources.
+`PlotThemeSchema` is the formal native structure consumed by guides, scales, and lowering after the cascade. It can carry legal non-token fields such as tick-label rotation / layout or axis-title rotation; those values remain in the final `plotTheme` without inventing token sources. `axis.title.enabled` and `axis.title.padding` map both ways to structured `axis.title` as `false | style` and to `axis.title.padding`; `axis.grid.includeDomain` maps both ways to the same-named canonical token. All retain formal token sources.

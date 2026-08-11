@@ -24,6 +24,7 @@ export const PlotThemeToken = {
   AxisGridStroke: 'axis.grid.stroke',
   AxisGridStrokeWidth: 'axis.grid.strokeWidth',
   AxisGridDrawOpacity: 'axis.grid.drawOpacity',
+  AxisGridIncludeDomain: 'axis.grid.includeDomain',
   LegendTitleForeground: 'legend.title.foreground',
   LegendTitleFontSize: 'legend.title.font.size',
   LegendTitleFontWeight: 'legend.title.font.weight',

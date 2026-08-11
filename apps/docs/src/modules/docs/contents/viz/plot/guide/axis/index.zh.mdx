@@ -61,7 +61,7 @@ import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 ### 刻度与网格来源
 
-Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomainEndpoints` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
+Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomain` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。该字段的 guide 局部默认是 `false`，Theme 可以为已启用的 major grid 提供默认：Neutral 的 x / y Axis 默认为 `true`，其余内建风格为 `false`。Theme 端点 token 不会单独启用 grid，guide 显式 boolean 最终优先。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
 
 <ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
 
@@ -129,27 +129,27 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
 
 ### 关键对象字段
 
-| 对象字段                      | 类型                                                | 默认值           | 作用                                                                          |
-| ----------------------------- | --------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------- |
-| `placement.kind`              | <ApiValues name="AxisPlacementKind" />              | 自动推断         | 选择自动、四边、坐标系原生边或笛卡尔原点轴                                    |
-| `placement.side`              | `'top' \| 'right' \| 'bottom' \| 'left'`            | —                | `kind:'side'` 的必填四边位置                                                  |
-| `placement.edge`              | `string`                                            | —                | `kind:'edge'` 的必填坐标系原生边 id                                           |
-| `placement.origin`            | `string \| number`                                  | `0`              | `kind:'origin'` 时另一维的交叉数据值                                          |
-| `ticks.values`                | `Array<string \| number>`                           | —                | 显式候选值，优先级高于 `interval` 和 `count`                                  |
-| `ticks.interval`              | `{ kind:'number' \| 'time' \| 'category'; ... }`    | —                | 固定数值步长、UTC 时间单位或分类索引步长                                      |
-| `ticks.count`                 | `number`                                            | scale 默认       | 未提供 `values` / `interval` 时的目标候选数量                                 |
-| `ticks.density`               | `{ kind:'all' \| 'sample'; ... }`                   | 全部候选         | sample 分支按 `maxCount` 或 `minGap` 抽稀可见 tick                            |
-| `ticks.mark`                  | `false \| { kind; ... }`                            | 线刻度           | 选择 line / 内置 shape / custom 标记；不与 `ticks.length` / `ticks.line` 同用 |
-| `ticks.endpoint`              | `false \| { hideWhenArrow?; distance?; affect? }`   | 箭头端点自动避让 | 控制端点箭头附近隐藏刻度标记，`affect` 可把标签一并隐藏                       |
-| `tickLabels.format`           | `string`                                            | 自动格式         | 数值使用 d3-format，时间使用 UTC d3-time-format                               |
-| `tickLabels.rotate`           | `number`                                            | 自适应           | 固定旋转角；显式值优先于 `layout.rotate`                                      |
-| `tickLabels.layout`           | `false \| { rotate?; hide?; bounds?; sampleSize? }` | 自适应布局       | 控制自动旋转、重叠隐藏与轴范围边界处理                                        |
-| `grid.ticks`                  | `{ values?; interval?; count? }`                    | 复用可见轴 tick  | 为主网格指定独立候选来源                                                      |
-| `grid.density`                | `{ kind:'all' \| 'sample'; ... }`                   | 全部网格候选     | 只抽稀网格，不改变轴 tick                                                     |
-| `grid.includeDomainEndpoints` | `boolean`                                           | `false`          | 在来源与密度解析后追加缺失的 effective domain 首尾主网格位置                  |
-| `grid.minor`                  | `false \| { ticks; density?; bandPosition?; ... }`  | `false`          | 用独立来源生成次网格，并自动移除与主网格重合的位置                            |
-| `grid.applyTo`                | `'local' \| 'all' \| 'none' \| 'selected'`          | 组合策略         | 决定网格投放到当前视图、共享目标或显式选中目标                                |
-| `grid.select`                 | `{ view?; facet?; track? }`                         | —                | `applyTo:'selected'` 时必填，用 view / facet / track 条件选择目标             |
+| 对象字段             | 类型                                                | 默认值                | 作用                                                                             |
+| -------------------- | --------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| `placement.kind`     | <ApiValues name="AxisPlacementKind" />              | 自动推断              | 选择自动、四边、坐标系原生边或笛卡尔原点轴                                       |
+| `placement.side`     | `'top' \| 'right' \| 'bottom' \| 'left'`            | —                     | `kind:'side'` 的必填四边位置                                                     |
+| `placement.edge`     | `string`                                            | —                     | `kind:'edge'` 的必填坐标系原生边 id                                              |
+| `placement.origin`   | `string \| number`                                  | `0`                   | `kind:'origin'` 时另一维的交叉数据值                                             |
+| `ticks.values`       | `Array<string \| number>`                           | —                     | 显式候选值，优先级高于 `interval` 和 `count`                                     |
+| `ticks.interval`     | `{ kind:'number' \| 'time' \| 'category'; ... }`    | —                     | 固定数值步长、UTC 时间单位或分类索引步长                                         |
+| `ticks.count`        | `number`                                            | scale 默认            | 未提供 `values` / `interval` 时的目标候选数量                                    |
+| `ticks.density`      | `{ kind:'all' \| 'sample'; ... }`                   | 全部候选              | sample 分支按 `maxCount` 或 `minGap` 抽稀可见 tick                               |
+| `ticks.mark`         | `false \| { kind; ... }`                            | 线刻度                | 选择 line / 内置 shape / custom 标记；不与 `ticks.length` / `ticks.line` 同用    |
+| `ticks.endpoint`     | `false \| { hideWhenArrow?; distance?; affect? }`   | 箭头端点自动避让      | 控制端点箭头附近隐藏刻度标记，`affect` 可把标签一并隐藏                          |
+| `tickLabels.format`  | `string`                                            | 自动格式              | 数值使用 d3-format，时间使用 UTC d3-time-format                                  |
+| `tickLabels.rotate`  | `number`                                            | 自适应                | 固定旋转角；显式值优先于 `layout.rotate`                                         |
+| `tickLabels.layout`  | `false \| { rotate?; hide?; bounds?; sampleSize? }` | 自适应布局            | 控制自动旋转、重叠隐藏与轴范围边界处理                                           |
+| `grid.ticks`         | `{ values?; interval?; count? }`                    | 复用可见轴 tick       | 为主网格指定独立候选来源                                                         |
+| `grid.density`       | `{ kind:'all' \| 'sample'; ... }`                   | 全部网格候选          | 只抽稀网格，不改变轴 tick                                                        |
+| `grid.includeDomain` | `boolean`                                           | `false`，Theme 可覆盖 | 在来源与密度解析后追加缺失的 effective domain 首尾主网格位置；局部显式值最终优先 |
+| `grid.minor`         | `false \| { ticks; density?; bandPosition?; ... }`  | `false`               | 用独立来源生成次网格，并自动移除与主网格重合的位置                               |
+| `grid.applyTo`       | `'local' \| 'all' \| 'none' \| 'selected'`          | 组合策略              | 决定网格投放到当前视图、共享目标或显式选中目标                                   |
+| `grid.select`        | `{ view?; facet?; track? }`                         | —                     | `applyTo:'selected'` 时必填，用 view / facet / track 条件选择目标                |
 
 `coordinateView`、`facetId`、`scaffoldId` 和 `trackId` 是组合 / 分面流程用于定位轴归属的高级字段。普通单图无需设置；需要组合轴时请查看[坐标组合](/viz/plot/coordinate/composition)。
 

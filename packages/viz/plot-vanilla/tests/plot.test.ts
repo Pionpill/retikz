@@ -78,13 +78,13 @@ describe('plot', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
-      guides: [{ type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: true } }],
+      guides: [{ type: 'axis', dimension: 'x', grid: { includeDomain: true } }],
     });
 
     expect(spec.guides?.[0]).toMatchObject({
       type: 'axis',
       dimension: 'x',
-      grid: { includeDomainEndpoints: true },
+      grid: { includeDomain: true },
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
@@ -161,7 +161,10 @@ describe('plot', () => {
       plotThemeTokenRules: [
         {
           select: { dimension: 'x' },
-          tokens: { 'axis.grid.enabled': true },
+          tokens: {
+            'axis.grid.enabled': true,
+            'axis.grid.includeDomain': true,
+          },
         },
       ],
     });
@@ -169,7 +172,10 @@ describe('plot', () => {
     expect(spec.plotThemeTokenRules).toEqual([
       {
         select: { dimension: 'x' },
-        tokens: { 'axis.grid.enabled': true },
+        tokens: {
+          'axis.grid.enabled': true,
+          'axis.grid.includeDomain': true,
+        },
       },
     ]);
   });

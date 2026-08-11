@@ -19,7 +19,10 @@ describe('buildPlotSpec 装配', () => {
     const plotThemeTokenRules: NonNullable<IRPlotSpec['plotThemeTokenRules']> = [
       {
         select: { dimension: 'x' },
-        tokens: { 'axis.grid.enabled': true },
+        tokens: {
+          'axis.grid.enabled': true,
+          'axis.grid.includeDomain': true,
+        },
       },
     ];
     const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokenRules });
@@ -413,12 +416,12 @@ describe('buildPlotSpec 装配', () => {
     const spec = buildPlotSpec(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="x" grid={{ includeDomainEndpoints: true }} />
+        <Axis dimension="x" grid={{ includeDomain: true }} />
       </>,
       '__plot',
     );
 
-    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x', grid: { includeDomainEndpoints: true } }]);
+    expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x', grid: { includeDomain: true } }]);
   });
 
   it('dsl_built_guides_pass_schema：默认装配产物过 PlotSpecSchema', () => {

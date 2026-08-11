@@ -17,8 +17,8 @@ export const vizV02: Release = {
         {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
-            zh: '41 个 `PlotThemeToken`、四种 style × light/dark preset、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
-            en: 'Plot now owns 41 `PlotThemeToken` keys, four style presets in light and dark modes, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
+            zh: '42 个 `PlotThemeToken`、四种 style × light/dark preset、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
+            en: 'Plot now owns 42 `PlotThemeToken` keys, four style presets in light and dark modes, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
           },
         },
         {
@@ -64,8 +64,8 @@ export const vizV02: Release = {
                 en: 'BREAKING: Axis grid moves to one theme contract',
               },
               content: {
-                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth` 与 `drawOpacity` 四个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。Neutral 与 Clean 默认只开启 y grid，Vibrant 开启 x/y grid，Academic 全部关闭；Axis guide 局部配置最终优先。一维坐标没有二维 Plot area，因此始终不输出 grid layer。',
-                en: 'Grid uses four flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, and `drawOpacity`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. Neutral and Clean enable y-grid only, Vibrant enables x/y-grid, and Academic disables grids; local Axis guide configuration wins last. One-dimensional coordinates have no two-dimensional Plot area and therefore never emit a grid layer.',
+                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth`、`drawOpacity` 与 `includeDomain` 五个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。Neutral 与 Vibrant 默认开启 x/y grid，Clean 只开启 y grid，Academic 全部关闭；Neutral 的 x/y grid 还会覆盖 effective domain 端点。Axis guide 局部配置最终优先。一维坐标没有二维 Plot area，因此始终不输出 grid layer。',
+                en: 'Grid uses five flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, `drawOpacity`, and `includeDomain`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. Neutral and Vibrant enable x/y grids, Clean enables y-grid only, and Academic disables grids; Neutral x/y grids also include effective-domain endpoints. Local Axis guide configuration wins last. One-dimensional coordinates have no two-dimensional Plot area and therefore never emit a grid layer.',
               },
             },
             {
@@ -74,8 +74,8 @@ export const vizV02: Release = {
                 en: 'Axis major grids can include effective-domain endpoints',
               },
               content: {
-                zh: '`grid.includeDomainEndpoints` 可在常规来源与密度解析后追加缺失的最终 scale domain 首尾位置，并按投影坐标去重；默认关闭，不改变轴 tick，不为次网格追加端点，也不进入 Theme。',
-                en: '`grid.includeDomainEndpoints` appends missing final scale-domain endpoints after normal source and density resolution and deduplicates by projected coordinate. It is disabled by default, does not change axis ticks or add endpoints to minor grids, and does not enter Theme.',
+                zh: '`grid.includeDomain` 可在常规来源与密度解析后追加缺失的最终 scale domain 首尾位置，并按投影坐标去重；guide 局部默认关闭，不改变轴 tick，也不为次网格追加端点。`axis.grid.includeDomain` 将同一默认接入 Theme cascade，Neutral 的 x/y grid 默认开启，端点 token 本身不会创建 grid。',
+                en: '`grid.includeDomain` appends missing final scale-domain endpoints after normal source and density resolution and deduplicates by projected coordinate. Its guide-local default is disabled, and it changes neither axis ticks nor minor grids. `axis.grid.includeDomain` brings the same default into the Theme cascade: Neutral enables it for x/y grids, while the endpoint token never creates a grid by itself.',
               },
             },
             {

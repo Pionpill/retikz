@@ -53,6 +53,9 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.AxisGridStroke]: PaintValueSchema.describe('Axis grid stroke paint'),
   [PlotThemeToken.AxisGridStrokeWidth]: StrokeWidthSchema.describe('Axis grid stroke width'),
   [PlotThemeToken.AxisGridDrawOpacity]: OpacitySchema.describe('Axis grid draw opacity'),
+  [PlotThemeToken.AxisGridIncludeDomain]: z
+    .boolean()
+    .describe('Whether enabled major axis grids include effective domain endpoints'),
   [PlotThemeToken.LegendTitleForeground]: CssColorSchema.describe('Legend title foreground color'),
   [PlotThemeToken.LegendTitleFontSize]: FontSizeSchema.describe('Legend title font size'),
   [PlotThemeToken.LegendTitleFontWeight]: FontWeightSchema.describe('Legend title font weight'),
@@ -94,6 +97,7 @@ export const PlotAxisThemeTokenFieldShape = {
   [PlotThemeToken.AxisGridStroke]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStroke],
   [PlotThemeToken.AxisGridStrokeWidth]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStrokeWidth],
   [PlotThemeToken.AxisGridDrawOpacity]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridDrawOpacity],
+  [PlotThemeToken.AxisGridIncludeDomain]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridIncludeDomain],
 } as const;
 
 const rejectExplicitUndefined = (

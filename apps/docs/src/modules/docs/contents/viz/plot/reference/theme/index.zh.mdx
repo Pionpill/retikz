@@ -36,7 +36,7 @@ Core effective Theme
 
 ## Canonical token
 
-`PlotThemeToken` 公开 41 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
+`PlotThemeToken` 公开 42 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
 
 | 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,11 +46,11 @@ Core effective Theme
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
 | Axis tick label | `axis.tickLabel.enabled`、`axis.tickLabel.foreground`、`axis.tickLabel.font.size`、`axis.tickLabel.gap`                                                                                                                                                                                                                                  |
 | Axis title      | `axis.title.enabled`、`axis.title.foreground`、`axis.title.font.size`、`axis.title.font.weight`、`axis.title.padding`                                                                                                                                                                                                                    |
-| Axis grid       | `axis.grid.enabled`、`axis.grid.stroke`、`axis.grid.strokeWidth`、`axis.grid.drawOpacity`                                                                                                                                                                                                                                                |
+| Axis grid       | `axis.grid.enabled`、`axis.grid.stroke`、`axis.grid.strokeWidth`、`axis.grid.drawOpacity`、`axis.grid.includeDomain`                                                                                                                                                                                                                     |
 | Legend          | `legend.title.foreground`、`legend.title.font.size`、`legend.title.font.weight`、`legend.label.foreground`、`legend.label.font.size`、`legend.swatch.size`、`legend.swatch.gap`、`legend.entry.gap`、`legend.title.gap`、`legend.ramp.length`、`legend.ramp.thickness`、`legend.symbol.size`、`legend.symbol.scale`、`legend.symbol.fit` |
 | Palette         | `plot.palette.categorical`、`plot.palette.series`、`plot.palette.sector`、`plot.palette.sequential`、`plot.palette.diverging`                                                                                                                                                                                                            |
 
-`axis.line.enabled` 与 `axis.grid.enabled` 只决定已有 Axis 的视觉默认；三个 grid paint token 设置启用后的 major grid 线条。Theme 不创建 Axis、tick 或 minor grid，major/minor tick source 与独立样式仍由 Axis guide 局部配置负责。
+`axis.line.enabled` 与 `axis.grid.enabled` 只决定已有 Axis 的视觉默认；三个 grid paint token 设置启用后的 major grid 线条，`axis.grid.includeDomain` 决定它是否补齐 effective domain 首尾位置。端点 token 不会单独创建或启用 grid。Neutral 默认让已有 x / y major grid 包含端点，其余内建风格保持关闭；Axis guide 的显式 boolean 最终优先。Theme 不创建 Axis、tick 或 minor grid，major/minor tick source 与独立样式仍由 Axis guide 局部配置负责。
 
 `axis.title.enabled` 控制已有 Axis guide 提供的 title 是否渲染。Neutral、Academic 与 Vibrant 默认开启，Clean 默认关闭；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 样式对象可以重新开启。Axis guide 的 `title` 仍提供内容和局部样式，但不会自动越过关闭状态。
 
@@ -90,6 +90,7 @@ Core effective Theme
     'axis.grid.stroke': 'major grid 的描边 paint。',
     'axis.grid.strokeWidth': 'major grid 的描边宽度。',
     'axis.grid.drawOpacity': 'major grid 的绘制不透明度。',
+    'axis.grid.includeDomain': '已启用的 major grid 是否包含 effective scale domain 首尾位置。',
     'legend.title.foreground': '图例标题前景色。',
     'legend.title.font.size': '图例标题字号。',
     'legend.title.font.weight': '图例标题字重。',
@@ -114,7 +115,7 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` 使用完全相同的 41 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
+`PlotResolvedThemeTokensSchema` 使用完全相同的 42 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
 
 ## Inspection
 
@@ -177,7 +178,7 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
     'title.align': '多行轴标题对齐。',
     'title.lineHeight': '轴标题行高，单位为用户坐标。',
     'title.maxTextWidth': '轴标题换行前的最大行宽。',
-    grid: '所有已有 Axis 共用的 major grid 开关与线条样式；dimension 差异由 plotThemeTokenRules 表达。',
+    grid: '所有已有 Axis 共用的 major grid 开关、线条样式与 domain 端点默认；dimension 差异由 plotThemeTokenRules 表达。',
   }}
 />
 
@@ -195,4 +196,4 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
   }}
 />
 
-`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title rotate 等 canonical token 之外的合法字段；这些字段保留在最终 `plotTheme` 中，不会伪造不存在的 token source。`axis.title.enabled` / `axis.title.padding` 分别与结构化 `axis.title` 的 `false | style` 和 `axis.title.padding` 双向映射，并保留正式 token source。
+`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title rotate 等 canonical token 之外的合法字段；这些字段保留在最终 `plotTheme` 中，不会伪造不存在的 token source。`axis.title.enabled` / `axis.title.padding` 分别与结构化 `axis.title` 的 `false | style` 和 `axis.title.padding` 双向映射；`axis.grid.includeDomain` 也与同名 canonical token 双向映射，三者都保留正式 token source。

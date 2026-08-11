@@ -35,7 +35,9 @@ describe('Plot theme monochrome paint', () => {
 
   it.each(Object.values(ThemeStyle))('%s 的基础 grid 在两个 mode 下默认关闭', style => {
     for (const mode of Object.values(ThemeMode)) {
-      expect(getPlotThemePreset(style, mode)[PlotThemeToken.AxisGridEnabled]).toBe(false);
+      const preset = getPlotThemePreset(style, mode);
+      expect(preset[PlotThemeToken.AxisGridEnabled]).toBe(false);
+      expect(preset[PlotThemeToken.AxisGridIncludeDomain]).toBe(false);
     }
   });
 

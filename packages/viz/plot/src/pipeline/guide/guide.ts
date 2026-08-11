@@ -665,7 +665,7 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
 
 type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
 type AxisMinorGridToken = Exclude<NonNullable<AxisGridToken['minor']>, false>;
-type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'includeDomainEndpoints' | 'bandPosition'>;
+type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'includeDomain' | 'bandPosition'>;
 
 const axisGridTokenOf = (guide: IRPlotAxisGuide): AxisGridToken | undefined =>
   typeof guide.grid === 'object' ? guide.grid : undefined;
@@ -720,7 +720,7 @@ const resolveAxisGridTicks = (
     options?.density === undefined
       ? candidateTicks
       : resolveVisibleGuideTicks(candidateTicks, { density: options.density }, coordinate);
-  if (options?.includeDomainEndpoints !== true) return visibleTicks;
+  if (options?.includeDomain !== true) return visibleTicks;
   return appendMissingDomainEndpoints(scale, visibleTicks, coordinate);
 };
 

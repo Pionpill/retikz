@@ -693,7 +693,7 @@ const AxisGridSourceShape = {
   density: AxisTickDensitySchema.optional().describe(
     'Visible grid tick density strategy; omit = all candidate grid ticks',
   ),
-  includeDomainEndpoints: z
+  includeDomain: z
     .boolean()
     .optional()
     .describe('Whether to append missing effective scale-domain endpoints after grid source and density; omit = false'),

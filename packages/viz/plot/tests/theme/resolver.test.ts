@@ -108,7 +108,10 @@ describe('Plot theme resolver', () => {
       | undefined;
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const baseline = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
+    const incomplete = structuredClone(baseline) as Record<string, unknown>;
+    delete incomplete[PlotThemeToken.AxisGridIncludeDomain];
     const brand = define?.({ name: 'brand', resolve: () => ({ tokens: baseline }) });
+    const incompleteBrand = define?.({ name: 'incomplete-brand', resolve: () => ({ tokens: incomplete }) });
 
     expect(() =>
       resolve(
@@ -137,6 +140,20 @@ describe('Plot theme resolver', () => {
         [brand, brand],
       ),
     ).toThrow(/Plot theme style 'brand' is already registered/);
+    expect(() =>
+      resolve(
+        {
+          style: 'incomplete-brand',
+          mode: ThemeMode.Light,
+          colors: {
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            categorical: ['#brand'],
+          },
+        },
+        {},
+        [incompleteBrand] as never,
+      ),
+    ).toThrow(/axis\.grid\.includeDomain/);
   });
 
   it('为四种 style 与两个 mode 提供独立的完整 preset', () => {
@@ -151,6 +168,22 @@ describe('Plot theme resolver', () => {
         expect(PlotResolvedThemeTokensSchema.parse(preset)).toEqual(preset);
         expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitleEnabled]).toBe(style !== ThemeStyle.Clean);
         expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitlePadding]).toBe(12);
+        expect((preset as Record<string, unknown>)[PlotThemeToken.AxisGridIncludeDomain]).toBe(false);
+
+        const incomplete = structuredClone(preset) as Record<string, unknown>;
+        delete incomplete[PlotThemeToken.AxisGridIncludeDomain];
+        expect(PlotResolvedThemeTokensSchema.safeParse(incomplete).success).toBe(false);
+      }
+    }
+  });
+
+  it('只让 Neutral x/y Axis rule 默认包含 grid domain endpoints', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    for (const style of Object.values(ThemeStyle)) {
+      const resolution = resolve(themeOf(style, ThemeMode.Light)) as Parameters<typeof resolvePlotAxisThemeTokens>[0];
+      for (const dimension of ['x', 'y']) {
+        const tokens = resolvePlotAxisThemeTokens(resolution, dimension);
+        expect(tokens[PlotThemeToken.AxisGridIncludeDomain]).toBe(style === ThemeStyle.Neutral);
       }
     }
   });
@@ -360,8 +393,11 @@ describe('Plot theme resolver', () => {
     expect(result.tokenRules).toEqual([
       {
         rule: {
-          select: { dimension: 'y' },
-          tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+          select: { dimension: ['x', 'y'] },
+          tokens: {
+            [PlotThemeToken.AxisGridEnabled]: true,
+            [PlotThemeToken.AxisGridIncludeDomain]: true,
+          },
         },
         kind: ThemeTokenSource.Local,
         path: '$style/neutral/light/tokenRules/0',
@@ -383,7 +419,7 @@ describe('Plot theme resolver', () => {
     });
   });
 
-  it('把 native grid 投影到四个基础 token 并只标记 authored 字段', () => {
+  it('把 native grid 投影到五个基础 token 并只标记 authored 字段', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
     const result = resolve(themeOf(ThemeStyle.Neutral, ThemeMode.Light), {
       plotTheme: {
@@ -391,6 +427,7 @@ describe('Plot theme resolver', () => {
           grid: {
             stroke: '#cbd5e1',
             dashPattern: [4, 2],
+            includeDomain: true,
           },
         },
       },
@@ -399,14 +436,19 @@ describe('Plot theme resolver', () => {
     expect(result.plotTheme?.axis?.grid).toMatchObject({
       stroke: '#cbd5e1',
       dashPattern: [4, 2],
+      includeDomain: true,
     });
     expect(result.tokens[PlotThemeToken.AxisGridEnabled]).toBe(true);
     expect(result.tokens[PlotThemeToken.AxisGridStroke]).toBe('#cbd5e1');
+    expect(result.tokens[PlotThemeToken.AxisGridIncludeDomain]).toBe(true);
     expect(sourceOf(result, PlotThemeToken.AxisGridEnabled)).toMatchObject({
       path: '$spec/plotTheme/axis/grid',
     });
     expect(sourceOf(result, PlotThemeToken.AxisGridStroke)).toMatchObject({
       path: '$spec/plotTheme/axis/grid/stroke',
+    });
+    expect(sourceOf(result, PlotThemeToken.AxisGridIncludeDomain)).toMatchObject({
+      path: '$spec/plotTheme/axis/grid/includeDomain',
     });
     expect(sourceOf(result, PlotThemeToken.AxisGridStrokeWidth)).toMatchObject({
       path: '$style/neutral/light/axis.grid.strokeWidth',

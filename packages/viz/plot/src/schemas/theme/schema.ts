@@ -46,6 +46,26 @@ const ThemeAxisTitleSchema = z
   ])
   .describe('Theme defaults for axis title visibility and style. Title text stays on the axis guide root');
 
+const ThemeAxisGridSchema = z
+  .strictObject({
+    ...AxisGridLineStyleSchema.shape,
+    includeDomain: z
+      .boolean()
+      .optional()
+      .describe('Whether enabled major grid lines include effective scale-domain endpoints'),
+  })
+  .superRefine((grid, context) => {
+    if (Object.hasOwn(grid, 'includeDomain') && grid.includeDomain === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['includeDomain'],
+        message: 'Axis grid theme fields must omit unset values instead of using undefined',
+        input: grid,
+      });
+    }
+  })
+  .describe('Theme defaults for major axis grid visibility, line style, and domain endpoint inclusion');
+
 export const PlotAxisThemeSchema = z
   .strictObject({
     line: z
@@ -56,9 +76,9 @@ export const PlotAxisThemeSchema = z
     tickLabels: ThemeAxisTickLabelsSchema.optional().describe('Axis tick label default style'),
     title: ThemeAxisTitleSchema.optional().describe('Axis title visibility and default style'),
     grid: z
-      .union([z.literal(false), AxisGridLineStyleSchema])
+      .union([z.literal(false), ThemeAxisGridSchema])
       .optional()
-      .describe('Axis grid visibility and shared major line style defaults'),
+      .describe('Axis grid visibility, shared major line style, and domain endpoint defaults'),
   })
   .describe('Plot theme defaults for axis visual tokens');
 
