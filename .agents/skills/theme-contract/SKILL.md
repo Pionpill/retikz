@@ -43,12 +43,12 @@ description: Use when designing, implementing, reviewing, or documenting shared 
 - 相邻分类不明显时先扩大逐 Hue 明度节奏，再最小幅调整饱和度；不要退回全局固定 S/L。
 - 具体 S/L 数值由 Core provider 维护；主题 skill 规定风格意图与参考边界，领域 package 不复制 shared palette 数值。
 
-| ThemeStyle | Categorical tone 参考方向                                    |
-| ---------- | ------------------------------------------------------------ |
-| Neutral    | D3 Category10 与 Flint default 的均衡、通用分布              |
-| Academic   | Flint nature 的出版型区分度与明度节奏                        |
-| Vibrant    | Flint Power BI Light 与 D3 Tableau10 的高区分度屏幕配色      |
-| Clean      | Lieflat Charts Palm 的低色度彩色倾向，并吸收 Wire 的克制层级 |
+| ThemeStyle | Categorical tone 参考方向                     |
+| ---------- | --------------------------------------------- |
+| Neutral    | D3 Tableau10 的均衡、通用分布                 |
+| Academic   | Vega Category10 / Seaborn deep 的稳健出版配色 |
+| Vibrant    | D3 Observable10 的高区分度、屏幕优先配色      |
+| Clean      | D3 Set2 的柔和、低色度但不灰的编辑式彩色倾向  |
 
 黑、白、灰属于中性色，不占用 categorical palette 的色相槽位。
 

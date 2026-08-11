@@ -250,6 +250,13 @@ export const kernelV05: Release = {
               },
             },
             {
+              label: { zh: '内建 shared colors 调整', en: 'Built-in shared color refinement' },
+              content: {
+                zh: '四种内建 style 以 D3 Tableau10、Vega Category10 / Seaborn deep、D3 Set2 与 D3 Observable10 为风格参考，重新平衡固定 16 项 categorical palette 的色度与明度；Light / Dark semantic colors 同步调整，并固定 error 红、success 绿、warning 黄。Hue 索引、显式 palette 与覆盖级联保持不变。',
+                en: 'The four built-in styles now reference D3 Tableau10, Vega Category10 / Seaborn deep, D3 Set2, and D3 Observable10 to rebalance chroma and lightness across the fixed 16-color categorical palette. Light / Dark semantic colors move with them while keeping error red, success green, and warning yellow. Hue indices, explicit palettes, and the override cascade remain unchanged.',
+              },
+            },
+            {
               label: { zh: '原子绘图 schema / type 片段', en: 'Atomic drawing schema/type fragments' },
               content: {
                 zh: 'Core 公开 `GraphicPaint`、`GraphicOpacity`、`GraphicEffects`、`StrokeStyle` 与五个 `Path` fragment 的严格 schema 及 `IRXxx` 类型；完整 `PathSchema`、`PathDefaultSchema` 与既有 compile / Scene / lowering 语义保持不变，fragment 只提供可组合的 JSON 契约，不成为独立编译入口。',

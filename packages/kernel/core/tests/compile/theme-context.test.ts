@@ -46,7 +46,7 @@ describe('Theme compile context', () => {
       style: ThemeStyle.Academic,
       mode: ThemeMode.Light,
       colors: {
-        categorical: expect.arrayContaining(['hsl(210, 93%, 43%)', 'hsl(30, 100%, 43%)', 'hsl(150, 83%, 28%)']),
+        categorical: expect.arrayContaining(['hsl(210, 44%, 49%)', 'hsl(30, 72%, 56%)', 'hsl(150, 44%, 48%)']),
       },
     });
     expect(observed[0]).not.toHaveProperty('tokens');
