@@ -113,6 +113,7 @@ export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTh
       sector: tokens[PlotThemeToken.PlotPaletteSector],
       sequential: tokens[PlotThemeToken.PlotPaletteSequential],
       diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
+      shape: tokens[PlotThemeToken.PlotPaletteShape],
     },
   });
 
@@ -308,6 +309,7 @@ export const applyPlotThemeToTokens = (
       [PlotThemeToken.PlotPaletteSector, 'sector'],
       [PlotThemeToken.PlotPaletteSequential, 'sequential'],
       [PlotThemeToken.PlotPaletteDiverging, 'diverging'],
+      [PlotThemeToken.PlotPaletteShape, 'shape'],
     ] as const;
     for (const [token, field] of paletteTokens) {
       if (has(authoredPalette, field)) set(token, palette[field]!, `$spec/plotTheme/palette/${field}`);

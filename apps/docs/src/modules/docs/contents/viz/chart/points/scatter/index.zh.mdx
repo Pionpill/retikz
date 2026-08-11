@@ -29,9 +29,19 @@ usage: distribution
         caption: '调整散点外观与大洲颜色图例，探索 Gapminder 2007 年国家截面。',
       },
     },
+    {
+      id: 'scatter-fertility-work',
+      title: '生育率与女性劳动参与率',
+      description: '用不同形状区分 World Bank 收入组，比较各经济体的生育率与女性劳动参与率。',
+      preview: {
+        files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
+        size: 'xl',
+        caption: 'World Bank 2022 年 186 个经济体快照；形状只编码收入组，所有点保持单色。',
+      },
+    },
   ]}
 >
-  这是基于公开 Plot API 的非契约概念预览，不是 `@retikz/chart` 的 API 文档。基础示例只使用 `@retikz/plot-react` 根入口公开的 `Plot`、`PointMark` 与 `Axis` 组合 API；收入与预期寿命示例另用 `Legend` 表达大洲颜色编码。图表尺寸固定为 `800 × 400`。
+  这是基于公开 Plot API 的非契约概念预览，不是 `@retikz/chart` 的 API 文档。基础示例只使用 `@retikz/plot-react` 根入口公开的 `Plot`、`PointMark` 与 `Axis` 组合 API；另外两个示例用 `Legend` 分别表达颜色或形状编码。图表尺寸固定为 `800 × 400`。
 
 ## Point Mark
 

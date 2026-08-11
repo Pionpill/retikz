@@ -34,6 +34,7 @@ type PlotThemeResolution = {
     sector: Array<string>;
     sequential: string;
     diverging: string;
+    shape: Array<string | { type: string; params?: Record<string, unknown> }>;
   };
 };
 
@@ -264,11 +265,12 @@ describe('Plot theme resolver', () => {
         [PlotThemeToken.PlotAreaFill]: '#111111',
         [PlotThemeToken.PlotPaletteCategorical]: ['#token-categorical'],
         [PlotThemeToken.PlotPaletteSeries]: ['#token'],
+        [PlotThemeToken.PlotPaletteShape]: ['circle', 'cross'],
       },
       plotTheme: {
         plotArea: { fill: '#native-area' },
         typography: { font: { family: 'serif' } },
-        palette: { series: ['#theme'] },
+        palette: { series: ['#theme'], shape: [{ type: 'polygon', params: { sides: 5 } }] },
       },
     });
 
@@ -279,6 +281,7 @@ describe('Plot theme resolver', () => {
     expect(result.tokens[PlotThemeToken.PlotPaletteSeries]).toEqual(['#theme']);
     expect(result.plotTheme?.typography?.font?.family).toBe('serif');
     expect(result.palette.series).toEqual(['#theme']);
+    expect(result.palette.shape).toEqual([{ type: 'polygon', params: { sides: 5 } }]);
     expect(sourceOf(result, PlotThemeToken.PlotAreaFill)).toMatchObject({
       kind: ThemeTokenSource.Local,
       path: '$spec/plotTheme/plotArea/fill',
@@ -290,6 +293,10 @@ describe('Plot theme resolver', () => {
     expect(sourceOf(result, PlotThemeToken.PlotPaletteSeries)).toMatchObject({
       kind: ThemeTokenSource.Local,
       path: '$spec/plotTheme/palette/series',
+    });
+    expect(sourceOf(result, PlotThemeToken.PlotPaletteShape)).toMatchObject({
+      kind: ThemeTokenSource.Local,
+      path: '$spec/plotTheme/palette/shape',
     });
     expect(result.authoredOverrides).toEqual([{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }]);
   });

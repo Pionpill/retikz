@@ -69,6 +69,8 @@ Core shared `palette.categorical` 是一套当前生效的非空 active CSS colo
 
 Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `options.colorSchemes` 继续由 Plot 拥有，不读取或改写 shared categorical array。显式 scale range、scheme、channel 或 mark config 按 Plot 的正式优先级覆盖主题 palette。
 
+Plot 同时拥有独立于颜色的非空 shape palette。内建 `plot.palette.shape` 提供八项有序默认值，`plotThemeTokens['plot.palette.shape']` 与 `plotTheme.palette.shape` 可用 `Array<string | IRShapeRef>` 覆盖；该 palette 不投影 Core shared colors，按相同 cascade 解析并由 shape channel 与 legend 同源消费。
+
 ## 失败语义、兼容性与入口等价
 
 - Plot token 与 native input 必须是 plain JSON-safe data

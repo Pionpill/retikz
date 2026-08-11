@@ -6,6 +6,7 @@ import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
 import { PlotThemeToken } from '../../../schemas';
 import { PlotColorScheme } from '../../scale/shared';
+import { PLOT_SHAPE_PALETTE } from '../shape-palette';
 
 type PalettePresetSource = Readonly<{
   sequential: string;
@@ -20,6 +21,7 @@ type PaletteTokenPreset = Readonly<
     | typeof PlotThemeToken.PlotPaletteSector
     | typeof PlotThemeToken.PlotPaletteSequential
     | typeof PlotThemeToken.PlotPaletteDiverging
+    | typeof PlotThemeToken.PlotPaletteShape
   >
 >;
 
@@ -54,5 +56,6 @@ export const getPalettePreset = (
     [PlotThemeToken.PlotPaletteSector]: [...categorical],
     [PlotThemeToken.PlotPaletteSequential]: preset.sequential,
     [PlotThemeToken.PlotPaletteDiverging]: preset.diverging,
+    [PlotThemeToken.PlotPaletteShape]: structuredClone(PLOT_SHAPE_PALETTE),
   };
 };

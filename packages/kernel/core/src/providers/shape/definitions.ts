@@ -4,6 +4,7 @@ import type { BuiltinShapeValue } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';
 import { arc } from './arc';
 import { contour } from './contour';
+import { cross } from './cross';
 import { ellipseShape } from './ellipse';
 import { polygon } from './polygon';
 import { rectangle } from './rectangle';
@@ -28,4 +29,5 @@ export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, Builti
   polygon,
   star,
   contour,
+  cross,
 ]);

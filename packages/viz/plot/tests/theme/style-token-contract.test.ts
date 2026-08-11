@@ -79,6 +79,7 @@ describe('Plot style token contract', () => {
       [{ [PlotThemeToken.AxisGridIncludeDomain]: 'yes' }, [PlotThemeToken.AxisGridIncludeDomain]],
       [{ [PlotThemeToken.AxisGridIncludeDomain]: undefined }, [PlotThemeToken.AxisGridIncludeDomain]],
       [{ [PlotThemeToken.PlotPaletteSeries]: [] }, [PlotThemeToken.PlotPaletteSeries]],
+      [{ [PlotThemeToken.PlotPaletteShape]: [] }, [PlotThemeToken.PlotPaletteShape]],
       [{ [PlotThemeToken.PlotAreaFill]: undefined }, [PlotThemeToken.PlotAreaFill]],
     ] as const) {
       const result = PlotThemeTokenOverridesSchema.safeParse(value);
@@ -86,6 +87,15 @@ describe('Plot style token contract', () => {
       if (!result.success)
         expect(result.error.issues.some(issue => issue.path.join('.') === path.join('.'))).toBe(true);
     }
+  });
+
+  it('shape palette 接受 string 或结构化引用并拒绝任意对象', () => {
+    expect(
+      PlotThemeTokenOverridesSchema.parse({
+        [PlotThemeToken.PlotPaletteShape]: ['circle', { type: 'polygon', params: { sides: 5 } }],
+      })[PlotThemeToken.PlotPaletteShape],
+    ).toEqual(['circle', { type: 'polygon', params: { sides: 5 } }]);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ [PlotThemeToken.PlotPaletteShape]: [{}] }).success).toBe(false);
   });
 
   it('拒绝已移除的 Plot presentation theme contract', () => {

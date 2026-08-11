@@ -48,7 +48,7 @@ Core effective Theme
 | Axis title      | `axis.title.enabled`、`axis.title.foreground`、`axis.title.font.size`、`axis.title.font.weight`、`axis.title.padding`                                                                                                                                                                                                                    |
 | Axis grid       | `axis.grid.enabled`、`axis.grid.stroke`、`axis.grid.strokeWidth`、`axis.grid.drawOpacity`、`axis.grid.includeDomain`                                                                                                                                                                                                                     |
 | Legend          | `legend.title.foreground`、`legend.title.font.size`、`legend.title.font.weight`、`legend.label.foreground`、`legend.label.font.size`、`legend.swatch.size`、`legend.swatch.gap`、`legend.entry.gap`、`legend.title.gap`、`legend.ramp.length`、`legend.ramp.thickness`、`legend.symbol.size`、`legend.symbol.scale`、`legend.symbol.fit` |
-| Palette         | `plot.palette.categorical`、`plot.palette.series`、`plot.palette.sector`、`plot.palette.sequential`、`plot.palette.diverging`                                                                                                                                                                                                            |
+| Palette         | `plot.palette.categorical`、`plot.palette.series`、`plot.palette.sector`、`plot.palette.sequential`、`plot.palette.diverging`、`plot.palette.shape`                                                                                                                                                                                      |
 
 `axis.line.enabled` 与 `axis.grid.enabled` 只决定已有 Axis 的视觉默认；三个 grid paint token 设置启用后的 major grid 线条，`axis.grid.includeDomain` 决定它是否补齐 effective domain 首尾位置。端点 token 不会单独创建或启用 grid。Neutral 默认让已有 x / y major grid 包含端点，其余内建风格保持关闭；Axis guide 的显式 boolean 最终优先。Theme 不创建 Axis、tick 或 minor grid，major/minor tick source 与独立样式仍由 Axis guide 局部配置负责。
 
@@ -107,6 +107,7 @@ Core effective Theme
     'legend.symbol.fit': '图例 symbol 在 box 内的适配方式。',
     'plot.palette.categorical': '分类比例尺使用的非空有序调色板。',
     'plot.palette.series': 'mark 与 series 使用的非空有序调色板。',
+    'plot.palette.shape': 'shape 分类通道使用的非空有序形状数组，元素为 shape 名或结构化 shape 引用。',
     'plot.palette.sector': 'sector mark 使用的非空有序调色板。',
     'plot.palette.sequential': '顺序连续色方案名。',
     'plot.palette.diverging': '发散连续色方案名。',

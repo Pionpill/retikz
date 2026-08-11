@@ -1,5 +1,6 @@
 export * from './arc';
 export * from './contour';
+export * from './cross';
 export * from './definitions';
 export * from './ellipse';
 export * from './polygon';

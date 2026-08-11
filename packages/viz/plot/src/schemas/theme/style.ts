@@ -5,6 +5,7 @@ import {
   FontWeightSchema,
   OpacitySchema,
   PaintValueSchema,
+  ShapeValueSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
 import { z } from 'zod';
@@ -26,6 +27,12 @@ import { PlotThemeToken } from './constants';
 
 /** Plot 数据颜色使用的非空有序 CSS color palette */
 export const PlotColorPaletteSchema = z.array(CssColorSchema).min(1).describe('Non-empty ordered Plot color palette.');
+
+/** Plot shape 分类通道使用的非空有序 shape palette */
+export const PlotShapePaletteSchema = z
+  .array(ShapeValueSchema)
+  .min(1)
+  .describe('Non-empty ordered Plot shape palette.');
 
 /** Plot 主题 token 的唯一字段契约 */
 export const PlotThemeTokenFieldShape = {
@@ -75,6 +82,7 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.PlotPaletteSector]: PlotColorPaletteSchema.describe('Sector mark palette'),
   [PlotThemeToken.PlotPaletteSequential]: ColorSchemeNameSchema.describe('Sequential color scheme name'),
   [PlotThemeToken.PlotPaletteDiverging]: ColorSchemeNameSchema.describe('Diverging color scheme name'),
+  [PlotThemeToken.PlotPaletteShape]: PlotShapePaletteSchema.describe('Categorical shape palette'),
 } as const;
 
 /** Axis rule 可覆盖的 canonical token 字段契约 */

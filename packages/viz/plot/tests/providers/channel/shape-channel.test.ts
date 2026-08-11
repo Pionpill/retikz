@@ -1,4 +1,5 @@
 ﻿import type { IRNode, IRScope } from '@retikz/core';
+import type { IRShapeValue } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -32,7 +33,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const shapeOf = (node: IRNode): string | undefined => (node as { shape?: string }).shape;
+const shapeOf = (node: IRNode): IRShapeValue | undefined => node.shape;
 
 const pointSpec = (
   shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined,
@@ -63,10 +64,26 @@ describe('shape channel 类别映射', () => {
   });
 
   it('shape_palette_cycles', () => {
-    const cats = ['A', 'B', 'C', 'D'];
+    const cats = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
     const data = cats.map((g, i) => ({ x: i, y: i, g }));
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
-    expect(shapeOf(nodes[3])).toBe(PLOT_SHAPE_PALETTE[3 % PLOT_SHAPE_PALETTE.length]);
+    expect(PLOT_SHAPE_PALETTE).toHaveLength(8);
+    expect(nodes.map(shapeOf)).toEqual([...PLOT_SHAPE_PALETTE, PLOT_SHAPE_PALETTE[0]]);
+  });
+
+  it('plotTheme_shape_palette_preserves_structured_refs', () => {
+    const custom = [{ type: 'polygon', params: { sides: 5, rotate: -90 } }, 'cross'] satisfies Array<IRShapeValue>;
+    const spec = PlotSpecSchema.parse({
+      ...pointSpec({ kind: 'field', value: 'g' }),
+      plotTheme: { palette: { shape: custom } },
+    });
+    const data = [
+      { x: 0, y: 0, g: 'A' },
+      { x: 1, y: 1, g: 'B' },
+      { x: 2, y: 2, g: 'C' },
+    ];
+    const nodes = collectNodes(firstLayer(spec, { d: data }));
+    expect(nodes.map(shapeOf)).toEqual([custom[0], custom[1], custom[0]]);
   });
 
   it('shape_value_constant', () => {

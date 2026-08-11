@@ -64,6 +64,7 @@ export const resolvePlotTheme = (
     sector: [...tokens[PlotThemeToken.PlotPaletteSector]],
     sequential: tokens[PlotThemeToken.PlotPaletteSequential],
     diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
+    shape: structuredClone(tokens[PlotThemeToken.PlotPaletteShape]),
   };
   const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] =
     authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }];

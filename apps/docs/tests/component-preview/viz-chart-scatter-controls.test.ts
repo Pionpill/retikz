@@ -22,6 +22,10 @@ import {
 import { previewControlContract as basicEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.controls';
 import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.demo';
 import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.zh.demo';
+import {
+  fertilityWorkData,
+  WORLD_BANK_FERTILITY_WORK_YEAR,
+} from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.data';
 import { previewControlContract as incomeLifeExpectancyZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.controls';
 import {
   countryScatterData as incomeLifeExpectancyData,
@@ -118,6 +122,22 @@ const canonicalLegends = (
 };
 
 describe('Viz Chart scatter controls', () => {
+  it('生育率与女性劳动参与率示例使用完整的 World Bank 2022 有效快照', () => {
+    expect(WORLD_BANK_FERTILITY_WORK_YEAR).toBe(2022);
+    expect(fertilityWorkData).toHaveLength(186);
+    expect(new Set(fertilityWorkData.map(datum => datum.incomeGroup))).toEqual(new Set(['HIC', 'UMC', 'LMC', 'LIC']));
+    expect(
+      fertilityWorkData.every(
+        datum =>
+          datum.country.length > 0 &&
+          Number.isFinite(datum.fertilityRate) &&
+          datum.fertilityRate > 0 &&
+          Number.isFinite(datum.femaleLaborParticipation) &&
+          datum.femaleLaborParticipation >= 0 &&
+          datum.femaleLaborParticipation <= 100,
+      ),
+    ).toBe(true);
+  });
   it('保持各组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
       [basicZh, basicEn],

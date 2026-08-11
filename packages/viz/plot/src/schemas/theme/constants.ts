@@ -44,6 +44,7 @@ export const PlotThemeToken = {
   PlotPaletteSector: 'plot.palette.sector',
   PlotPaletteSequential: 'plot.palette.sequential',
   PlotPaletteDiverging: 'plot.palette.diverging',
+  PlotPaletteShape: 'plot.palette.shape',
 } as const;
 
 /** Plot 主题 token key 取值 */

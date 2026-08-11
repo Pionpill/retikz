@@ -15,7 +15,7 @@ import {
   PositionSchema,
 } from '../position';
 import { AngleDegreesSchema } from '../scalar';
-import { ShapeRefSchema } from '../shape';
+import { ShapeValueSchema } from '../shape';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, GraphicStyleSchema } from '../style';
 import {
@@ -170,12 +170,9 @@ export const NodeSchema = z
       .min(1)
       .optional()
       .describe('Optional unique id; required if any path needs to reference this node by string'),
-    shape: z
-      .union([z.string().min(1), ShapeRefSchema])
-      .optional()
-      .describe(
-        'Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.',
-      ),
+    shape: ShapeValueSchema.optional().describe(
+      'Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.',
+    ),
     boundary: BoundarySchema.optional().describe(
       'Default connection surface for edges meeting this node. Per-edge endpoints may override it.',
     ),
@@ -249,4 +246,4 @@ export const NodeSchema = z
       ),
   })
   .strict()
-  .describe('Node primitive: a positioned, optionally textual shape (rectangle / circle / ellipse / diamond)');
+  .describe('Node primitive: a positioned, optionally textual shape');

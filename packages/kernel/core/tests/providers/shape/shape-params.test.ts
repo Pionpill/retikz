@@ -9,7 +9,7 @@ import type { Rect } from '../../../src/shared/geometry';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { defineShape } from '../../../src/contract';
-import { NodeSchema, ShapeRefSchema } from '../../../src/schemas';
+import { NodeSchema, ShapeRefSchema, ShapeValueSchema } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -84,6 +84,15 @@ describe('ShapeRefSchema / Node.shape — happy path 解析', () => {
         params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 },
       }),
     ).toEqual({ type: 'sector', params: { innerRadius: 20, outerRadius: 60, startAngle: 0, endAngle: 90 } });
+  });
+
+  it('ShapeValueSchema 接受字符串与结构化引用并拒绝额外字段', () => {
+    expect(ShapeValueSchema.parse('circle')).toBe('circle');
+    expect(ShapeValueSchema.parse({ type: 'polygon', params: { sides: 5 } })).toEqual({
+      type: 'polygon',
+      params: { sides: 5 },
+    });
+    expect(ShapeValueSchema.safeParse({ type: 'circle', extra: true }).success).toBe(false);
   });
 
   it('nested shape 经 Node.shape union 解析', () => {

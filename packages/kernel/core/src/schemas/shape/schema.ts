@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { JsonObjectSchema } from '../json';
 
 export const ShapeRefSchema = z
-  .object({
+  .strictObject({
     type: z
       .string()
       .min(1)
@@ -15,3 +15,8 @@ export const ShapeRefSchema = z
     ),
   })
   .describe('Shape reference: type name + optional JSON params, validated at compile time by the registered shape.');
+
+/** Core shape 值：裸 provider 名或带 JSON 参数的结构化引用 */
+export const ShapeValueSchema = z
+  .union([z.string().min(1), ShapeRefSchema])
+  .describe('Core shape value: a non-empty shape name or a structured shape reference.');

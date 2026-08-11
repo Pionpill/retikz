@@ -12,7 +12,7 @@ import {
   LegendGuideStyleSchema,
 } from '../guide';
 import { ColorSchemeNameSchema } from '../scale';
-import { PlotColorPaletteSchema } from './style';
+import { PlotColorPaletteSchema, PlotShapePaletteSchema } from './style';
 
 const ThemeAxisTicksSchema = z
   .strictObject({
@@ -89,6 +89,7 @@ export const PlotPaletteThemeSchema = z
     sector: PlotColorPaletteSchema.optional().describe('Default sector color palette'),
     sequential: ColorSchemeNameSchema.optional().describe('Default sequential color scheme name'),
     diverging: ColorSchemeNameSchema.optional().describe('Default diverging color scheme name'),
+    shape: PlotShapePaletteSchema.optional().describe('Default categorical shape palette'),
   })
   .describe('Plot palette defaults. Explicit scale range or scheme still has higher priority');
 
@@ -104,6 +105,6 @@ export const PlotThemeSchema = z
     typography: GuideTextStyleSchema.optional().describe('Global guide text defaults'),
     axis: PlotAxisThemeSchema.optional().describe('Axis visual defaults'),
     legend: LegendGuideStyleSchema.optional().describe('Legend visual defaults'),
-    palette: PlotPaletteThemeSchema.optional().describe('Plot color palette defaults'),
+    palette: PlotPaletteThemeSchema.optional().describe('Plot color and shape palette defaults'),
   })
   .describe('JSON-safe plot theme consumed during plot lowering');

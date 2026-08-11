@@ -1,4 +1,5 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type { IRShapeValue } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
@@ -1595,7 +1596,7 @@ export type LegendEntry = {
   /** 色块填充色（color / 分箱 swatch） */
   color?: string;
   /** glyph 形状名（shape swatch） */
-  shape?: string;
+  shape?: IRShapeValue;
   /** glyph 视觉盒尺寸（shape swatch） */
   symbolSize?: number;
   /** size 梯度符号半径（px） */

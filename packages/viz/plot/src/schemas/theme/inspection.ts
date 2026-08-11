@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
-import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
+import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema, PlotShapePaletteSchema } from './style';
 import { PlotAxisThemeTokenRuleSchema } from './token-rule';
 
 const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/plotTheme'] as const;
@@ -47,6 +47,7 @@ export const ResolvedPlotPaletteSchema = z
     sector: PlotColorPaletteSchema.describe('Resolved sector palette'),
     sequential: z.string().min(1).describe('Resolved sequential scheme name'),
     diverging: z.string().min(1).describe('Resolved diverging scheme name'),
+    shape: PlotShapePaletteSchema.describe('Resolved categorical shape palette'),
   })
   .describe('Complete Plot palette after the domain theme cascade');
 
