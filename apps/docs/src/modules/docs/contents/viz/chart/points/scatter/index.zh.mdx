@@ -9,34 +9,35 @@ usage: distribution
   examples={[
     {
       id: 'scatter-basic',
-      title: '基础散点',
-      description: '用单色散点比较各国城镇人口占比与互联网使用人口占比。',
+      title: '位置编码',
+      description: '将两个连续字段绑定到 x 和 y 位置；调整点大小与透明度，观察散点的重叠与密度。',
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
         size: 'xxl',
-        caption: '调整点大小与透明度，观察两个百分比字段在线性坐标中的关系。',
-      },
-    },
-    {
-      id: 'scatter-income-life-expectancy',
-      title: '收入与预期寿命',
-      description: '用对数收入轴比较各国人均 GDP 与预期寿命，并按大洲着色。',
-      preview: {
-        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
-        controls: { name: 'scatter-income-life-expectancy' },
-        size: 'xxl',
-        caption: '调整散点外观与大洲颜色图例，探索 Gapminder 2007 年国家截面。',
+        caption: '通过 x/y 绑定两个连续字段；调整点大小与透明度，观察散点的重叠与密度。',
       },
     },
     {
       id: 'scatter-fertility-work',
-      title: '生育率与女性劳动参与率',
-      description: '用不同形状区分 World Bank 收入组，比较各经济体的生育率与女性劳动参与率。',
+      title: '分类编码',
+      description: '将同一分类字段切换映射为颜色或形状，并观察图例如何随通道变化。',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
+        controls: { name: 'scatter-fertility-work' },
         size: 'xxl',
-        caption: 'World Bank 2022 年 186 个经济体快照；形状只编码收入组，所有点保持单色。',
+        caption: '将收入组映射为颜色或形状；切换编码通道，图例会同步更新。',
+      },
+    },
+    {
+      id: 'scatter-income-life-expectancy',
+      title: '对数比例尺',
+      description: '将跨度很大的连续字段映射到对数轴，观察变换如何保留低值区间的可读性。',
+      preview: {
+        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
+        controls: { name: 'scatter-income-life-expectancy' },
+        size: 'xxl',
+        caption: '横轴使用对数比例尺；调整散点大小与透明度，观察不同数量级的连续值。',
       },
     },
   ]}

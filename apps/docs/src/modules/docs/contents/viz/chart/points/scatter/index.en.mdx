@@ -9,34 +9,35 @@ usage: distribution
   examples={[
     {
       id: 'scatter-basic',
-      title: 'Basic scatter',
-      description: 'Use single-color points to compare urban population share and Internet use across countries.',
+      title: 'Position encoding',
+      description: 'Bind two continuous fields to x and y positions; adjust point size and opacity to observe overlap and density.',
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
         size: 'xxl',
-        caption: 'Adjust point size and opacity while comparing two percentage fields on linear axes.',
-      },
-    },
-    {
-      id: 'scatter-income-life-expectancy',
-      title: 'Income and life expectancy',
-      description: 'Compare GDP per capita and life expectancy on a log income axis, colored by continent.',
-      preview: {
-        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
-        controls: { name: 'scatter-income-life-expectancy' },
-        size: 'xxl',
-        caption: 'Adjust point appearance and the continent color legend for the Gapminder 2007 snapshot.',
+        caption: 'Bind two continuous fields through x and y; adjust point size and opacity to observe overlap and density.',
       },
     },
     {
       id: 'scatter-fertility-work',
-      title: 'Fertility and female labor participation',
-      description: 'Compare fertility and female labor participation across economies, using shape for World Bank income groups.',
+      title: 'Categorical encoding',
+      description: 'Switch one categorical field between color and shape, then observe how the legend follows the active channel.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
+        controls: { name: 'scatter-fertility-work' },
         size: 'xxl',
-        caption: 'A 2022 World Bank snapshot of 186 economies; shape alone encodes income group while every point keeps one color.',
+        caption: 'Map income group to color or shape; switch the encoding channel and the legend updates with it.',
+      },
+    },
+    {
+      id: 'scatter-income-life-expectancy',
+      title: 'Logarithmic scales',
+      description: 'Map a continuous field with a wide numeric range to a logarithmic axis, preserving readability in the lower range.',
+      preview: {
+        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
+        controls: { name: 'scatter-income-life-expectancy' },
+        size: 'xxl',
+        caption: 'Use a logarithmic x scale; adjust point size and opacity to compare continuous values across magnitudes.',
       },
     },
   ]}

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, Plot, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -15,13 +15,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       y="lifeExpectancy"
       size={values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize]}
       opacity={values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity]}
-      color={values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.colorByGroup] ? 'continent' : undefined}
     />
     <Axis dimension="x" title="GDP per capita (inflation-adjusted US$)" scale="log" />
     <Axis dimension="y" title="Life expectancy at birth (years)" />
-    {values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.colorByGroup] ? (
-      <Legend channel="color" title="Continent" position="right" />
-    ) : null}
   </Plot>
 ));
 

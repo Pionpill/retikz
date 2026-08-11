@@ -8,7 +8,6 @@ import { countryScatterData, GAPMINDER_SCATTER_YEAR } from './scatter-income-lif
 export const SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS = {
   pointSize: 'pointSize',
   pointOpacity: 'pointOpacity',
-  colorByGroup: 'colorByGroup',
 } as const;
 
 /** 收入与寿命 Scatter 的中文控制面板 */
@@ -29,7 +28,6 @@ export const scatterIncomeLifeExpectancyControls = definePreviewControls({
             { key: 'country', label: '国家' },
             { key: 'gdpPerCapita', label: '人均 GDP' },
             { key: 'lifeExpectancy', label: '预期寿命' },
-            { key: 'continent', label: '大洲' },
           ],
         },
       ],
@@ -55,12 +53,6 @@ export const scatterIncomeLifeExpectancyControls = definePreviewControls({
           max: 1,
           step: 0.02,
         },
-        {
-          kind: 'switch',
-          id: SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.colorByGroup,
-          label: '按大洲着色',
-          defaultValue: true,
-        },
       ],
     },
   ],
@@ -72,7 +64,6 @@ export const previewControlContract = {
   canonicalValues: {
     [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize]: 10,
     [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity]: 0.82,
-    [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.colorByGroup]: true,
   },
-  relatedApis: ['PointMark.size', 'PointMark.opacity', 'PointMark.color', 'Legend.channel'],
+  relatedApis: ['PointMark.size', 'PointMark.opacity', 'Axis.scale'],
 } satisfies PreviewControlContract;

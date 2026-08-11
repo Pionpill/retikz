@@ -149,6 +149,10 @@ describe('<ShowcaseGallery>', () => {
     expect(cards[0]?.textContent).toContain('增加数值尺寸编码。');
     expect(cards[0]?.querySelector('[data-slot="component-preview-thumbnail"]')?.classList).toContain('bg-transparent');
     expect(cards[0]?.querySelector('[data-slot="showcase-example-copy"]')?.classList).toContain('bg-muted/40');
+    expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('基础散点');
+    expect(container.querySelector('[data-slot="showcase-featured-description"]')?.textContent).toBe(
+      '比较两个连续变量。',
+    );
     expect(container.textContent).toContain('基础散点说明');
     expect(container.textContent).not.toContain('气泡编码说明');
 
@@ -159,6 +163,10 @@ describe('<ShowcaseGallery>', () => {
     expect(nextCards).toHaveLength(1);
     expect(nextCards[0]?.textContent).toContain('基础散点');
     expect(nextCards[0]?.textContent).not.toContain('气泡编码');
+    expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('气泡编码');
+    expect(container.querySelector('[data-slot="showcase-featured-description"]')?.textContent).toBe(
+      '增加数值尺寸编码。',
+    );
     expect(container.textContent).not.toContain('基础散点说明');
     expect(container.textContent).toContain('气泡编码说明');
     expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?example=bubble');

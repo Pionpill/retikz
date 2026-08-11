@@ -43,7 +43,20 @@ export const ShowcaseGallery: FC<ShowcaseGalleryProps> = props => {
 
   return (
     <>
-      <div aria-label={selected.title}>
+      <header data-slot="showcase-featured-copy" className="mb-4">
+        <h2
+          id="showcase-featured-title"
+          data-slot="showcase-featured-title"
+          className="text-lg font-semibold tracking-tight"
+        >
+          {selected.title}
+        </h2>
+        <p data-slot="showcase-featured-description" className="mt-3 leading-relaxed">
+          {selected.description}
+        </p>
+      </header>
+
+      <div aria-labelledby="showcase-featured-title">
         <ComponentPreview key={selected.id} {...selected.preview} />
       </div>
 

@@ -23,7 +23,6 @@ export const scatterIncomeLifeExpectancyControls = definePreviewControls({
             { key: 'country', label: 'Country' },
             { key: 'gdpPerCapita', label: 'GDP per capita' },
             { key: 'lifeExpectancy', label: 'Life expectancy' },
-            { key: 'continent', label: 'Continent' },
           ],
         },
       ],
@@ -49,12 +48,6 @@ export const scatterIncomeLifeExpectancyControls = definePreviewControls({
           max: 1,
           step: 0.02,
         },
-        {
-          kind: 'switch',
-          id: SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.colorByGroup,
-          label: 'Color by continent',
-          defaultValue: true,
-        },
       ],
     },
   ],
@@ -66,7 +59,6 @@ export const previewControlContract = {
   canonicalValues: {
     [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize]: 10,
     [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity]: 0.82,
-    [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.colorByGroup]: true,
   },
-  relatedApis: ['PointMark.size', 'PointMark.opacity', 'PointMark.color', 'Legend.channel'],
+  relatedApis: ['PointMark.size', 'PointMark.opacity', 'Axis.scale'],
 } satisfies PreviewControlContract;
