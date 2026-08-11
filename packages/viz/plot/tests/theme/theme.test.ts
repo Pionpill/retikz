@@ -1,6 +1,6 @@
-import type { BuiltinThemeStyleValue, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 
-import { compileToScene, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPlotAxisGuide, IRPlotSpec } from '../../src/schemas';
@@ -102,12 +102,12 @@ const hasMinimumSize = (node: IRNode, width: number, height: number): boolean =>
 const resolveAxis = (
   input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
   guide: IRPlotAxisGuide,
-  style: BuiltinThemeStyleValue = ThemeStyle.Neutral,
+  style: string | undefined = undefined,
 ): IRPlotAxisGuide => {
   const effectiveTheme = {
-    style,
+    ...(style === undefined ? {} : { style }),
     mode: ThemeMode.Light,
-    colors: resolveCoreThemeColors(style, ThemeMode.Light),
+    colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
   };
   const resolution = resolvePlotTheme(effectiveTheme, input);
   const guideTheme = resolvePlotGuideTheme(resolution.plotTheme, resolution.palette);
@@ -256,12 +256,12 @@ describe('plot theme schema and lowering', () => {
       {
         version: 1,
         type: 'scene',
-        theme: { style: ThemeStyle.Neutral, mode: ThemeMode.Dark },
+        theme: { mode: ThemeMode.Dark },
         children: [
           baseSpec({ id: 'scene-theme-plot' }),
           {
             type: 'scope',
-            theme: { style: ThemeStyle.Neutral, mode: ThemeMode.Light },
+            theme: { mode: ThemeMode.Light },
             children: [baseSpec({ id: 'scope-theme-plot' })],
           },
         ],
@@ -270,8 +270,8 @@ describe('plot theme schema and lowering', () => {
     ).scene;
     const fills = primitiveFillsOf(scene.primitives);
 
-    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Dark).categorical[0]);
-    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light).categorical[0]);
+    expect(fills).toContain(resolveDefaultCoreThemeColors(ThemeMode.Dark).categorical[0]);
+    expect(fills).toContain(resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0]);
   });
 
   it('theme_palette_categorical_drives_ordinal_scale', () => {
@@ -448,17 +448,15 @@ describe('plot theme schema and lowering', () => {
   });
 
   it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
-    const cases: Array<{ style: BuiltinThemeStyleValue; dimensions: Array<string> }> = [
-      { style: ThemeStyle.Neutral, dimensions: ['x', 'y'] },
-    ];
+    const cases: Array<{ dimensions: Array<string> }> = [{ dimensions: ['x', 'y'] }];
 
-    for (const { style, dimensions } of cases) {
+    for (const { dimensions } of cases) {
       for (const dimension of ['x', 'y']) {
-        const grid = resolveAxis({}, { type: 'axis', dimension }, style).grid;
+        const grid = resolveAxis({}, { type: 'axis', dimension }).grid;
         if (dimensions.some(candidate => candidate === dimension)) {
           expect(grid).toMatchObject({
             stroke: 'currentColor',
-            includeDomain: style === ThemeStyle.Neutral,
+            includeDomain: true,
           });
         } else {
           expect(grid).toBe(false);

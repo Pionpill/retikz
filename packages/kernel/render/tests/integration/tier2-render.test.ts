@@ -20,12 +20,17 @@ const labeledBox = defineComposite({
     text: z.string(),
   }),
   expand: (node, context) => ({
-    type: 'node',
-    id: 'lb',
-    position: [0, 0],
-    shape: 'rectangle',
-    text: node.text,
-    fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+    children: [
+      {
+        type: 'node',
+        id: 'lb',
+        position: [0, 0],
+        shape: 'rectangle',
+        text: node.text,
+        fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+      },
+    ],
+    spatialHandles: [{ key: 'body', role: 'labeled-box', bounds: { x: -5, y: -5, width: 10, height: 10 } }],
   }),
 });
 
@@ -49,8 +54,11 @@ describe('Tier 2 composite —— renderer 对照', () => {
     const result = compileToScene(ir, { composites: [labeledBox], themeStyles: [academicTheme] });
     const { scene } = result;
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
+    expect(result.spatialHandles.entries).toHaveLength(1);
     expect(svg).toContain('<rect');
     expect(svg).toContain('fill="#123456"');
+    expect(svg).not.toContain('spatial');
+    expect(scene).not.toHaveProperty('spatialHandles');
     expect(scene).not.toHaveProperty('theme');
   });
 
@@ -71,6 +79,9 @@ describe('Tier 2 composite —— renderer 对照', () => {
     const svg = renderToSvgString(scene, { idPrefix: 'r' });
     expect(() => drawScene(ctx, scene)).not.toThrow();
     expect(svg).toContain('fill="#123456"');
+    expect(svg).not.toContain('spatial');
+    expect(result.spatialHandles.entries).toHaveLength(1);
+    expect(scene).not.toHaveProperty('spatialHandles');
     expect(fillStyles).toContain('#123456');
     expect(calls.length).toBeGreaterThan(0);
   });

@@ -1,4 +1,4 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { LayoutContainerBoxSchema } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
@@ -11,11 +11,12 @@ import {
 
 describe('Chart style schema', () => {
   it('只冻结 Chart-owned canonical token，不复制 Plot token', () => {
-    expect(Object.values(ThemeStyle)).toEqual(['neutral']);
     expect(Object.values(ThemeMode)).toEqual(['light', 'dark']);
-    expect(Object.values(ChartThemeToken)).toHaveLength(37);
-    expect(new Set(Object.values(ChartThemeToken)).size).toBe(37);
+    expect(Object.values(ChartThemeToken)).toHaveLength(27);
+    expect(new Set(Object.values(ChartThemeToken)).size).toBe(27);
     expect(Object.values(ChartThemeToken)).toContain('chart.canvas.fill');
+    expect(Object.values(ChartThemeToken)).not.toContain('chart.caption.foreground');
+    expect(Object.values(ChartThemeToken)).not.toContain('chart.credit.foreground');
     expect(Object.values(ChartThemeToken)).toContain('chart.axis.enabled');
     expect(Object.values(ChartThemeToken)).not.toContain('axis.tick.mark');
     expect(Object.values(ChartThemeToken)).not.toContain('data.palette.diverging');

@@ -20,7 +20,7 @@ shared categorical colors project into the Table data channel, and local `tableT
 a sparse Table token overlay. Cell-local formatter/presentation/appearance, ordered visual
 encodings, and ordered root rules then contribute in increasing priority. Value Cells run the
 winning formatter and presentation with that final appearance.
-The built-in `neutral` preset provides complete light/dark token maps. Other style names use the
+The default baseline provides complete light/dark token maps when `style` is omitted. Named styles use the
 same public Core and Table definition registries; `theme.style` / `theme.mode` select the matching
 definitions, while `tableThemeTokens` is the local TableSpec overlay. Unknown token keys fail
 loudly. Content Cells already own renderable children and therefore bypass formatter and

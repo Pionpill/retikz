@@ -1,10 +1,10 @@
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { ChartInspectionSchema } from '../../src/inspection';
 import { ChartSharedSchema } from '../../src/schemas/common';
-import { ChartThemeToken, getChartThemePreset } from '../../src/style';
+import { ChartThemeToken, getDefaultChartThemePreset } from '../../src/style';
 
 describe('Chart shared schemas', () => {
   it('复用 Data 与 Plot 字段契约', () => {
@@ -51,21 +51,18 @@ describe('Chart shared schemas', () => {
     ).toBe(false);
   });
 
-  it('通过 shared owner fragment 接受 presentation', () => {
+  it('拒绝把 canonical presentation 混入 typed Chart shared fragment', () => {
     expect(
-      ChartSharedSchema.parse({
+      ChartSharedSchema.safeParse({
         data: { reference: 'rows' },
         presentation: {
-          layout: { gap: { column: 0, row: 6 }, alignItems: 'start' },
-          children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
+          children: [
+            { kind: 'preset', key: 'chart.presentation.title', preset: 'title', text: 'Revenue' },
+            { kind: 'plot', key: 'chart.plot' },
+          ],
         },
-      }),
-    ).toMatchObject({
-      presentation: {
-        layout: { gap: { column: 0, row: 6 }, alignItems: 'start' },
-        children: [{ content: { kind: 'preset', preset: 'title', text: 'Revenue' } }, { content: { kind: 'plot' } }],
-      },
-    });
+      }).success,
+    ).toBe(false);
   });
 
   it('接受 owner composition 字段作为唯一空间根', () => {
@@ -105,22 +102,20 @@ describe('Chart shared schemas', () => {
   });
 
   it('校验 inspection 的公开 JSON 结构', () => {
-    const tokens = getChartThemePreset('neutral', 'light');
+    const tokens = getDefaultChartThemePreset('light');
     const style = {
       chart: {
-        style: 'neutral',
         mode: 'light',
         tokens,
         tokenSources: Object.values(ChartThemeToken).map(token => ({
           token,
           kind: ThemeTokenSource.Local,
-          path: `$style/neutral/light/${token}`,
+          path: `$default/light/${token}`,
         })),
       },
       plot: resolvePlotTheme({
-        style: ThemeStyle.Neutral,
         mode: ThemeMode.Light,
-        colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+        colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
       }),
     } as const;
     expect(
@@ -129,8 +124,8 @@ describe('Chart shared schemas', () => {
         plot: { id: 'sales/plot' },
         style,
         presentation: {
-          contentKind: 'plot',
-          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+          kind: 'plot',
+          items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
         },
         members: [
           {
@@ -148,8 +143,8 @@ describe('Chart shared schemas', () => {
       plot: { id: 'sales/plot' },
       style,
       presentation: {
-        contentKind: 'plot',
-        items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        kind: 'plot',
+        items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
       },
       members: [
         {
@@ -176,8 +171,8 @@ describe('Chart shared schemas', () => {
           },
         },
         presentation: {
-          contentKind: 'plot',
-          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+          kind: 'plot',
+          items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
         },
         members: [],
       }).success,
@@ -196,8 +191,8 @@ describe('Chart shared schemas', () => {
           },
         },
         presentation: {
-          contentKind: 'plot',
-          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+          kind: 'plot',
+          items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
         },
         members: [],
       }).success,
@@ -216,8 +211,8 @@ describe('Chart shared schemas', () => {
           },
         },
         presentation: {
-          contentKind: 'plot',
-          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+          kind: 'plot',
+          items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
         },
         members: [],
       }).success,
@@ -237,8 +232,8 @@ describe('Chart shared schemas', () => {
           },
         },
         presentation: {
-          contentKind: 'plot',
-          items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+          kind: 'plot',
+          items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
         },
         members: [],
       }).success,
@@ -254,39 +249,49 @@ describe('Chart shared schemas', () => {
       ChartInspectionSchema.parse({
         ...inspectionBase,
         presentation: {
-          contentKind: 'flex-layout',
+          kind: 'flex-layout',
           items: [
             {
-              key: 'chart.presentation.credit',
-              contentKind: 'preset',
-              preset: 'credit',
+              key: 'chart.presentation.subtitle',
+              kind: 'preset',
+              preset: 'subtitle',
               sourcePath: '$spec/presentation/children/0',
             },
-            { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/presentation/children/1' },
-            { key: 'badge', contentKind: 'child', sourcePath: '$spec/presentation/children/2' },
+            { key: 'chart.plot', kind: 'plot', sourcePath: '$spec/presentation/children/1' },
+            {
+              key: 'chart.presentation.title',
+              kind: 'preset',
+              preset: 'title',
+              sourcePath: '$spec/presentation/children/2',
+            },
           ],
         },
       }).presentation.items.map(item => item.key),
-    ).toEqual(['chart.presentation.credit', 'chart.plot', 'badge']);
+    ).toEqual(['chart.presentation.subtitle', 'chart.plot', 'chart.presentation.title']);
 
     for (const presentation of [
-      { contentKind: 'flex-layout', items: [] },
+      { kind: 'flex-layout', items: [] },
       {
         contentKind: 'plot',
-        items: [{ key: 'chart.presentation.title', contentKind: 'preset', preset: 'title', sourcePath: '$spec/x' }],
+        items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
       },
       {
-        contentKind: 'flex-layout',
+        kind: 'flex-layout',
         items: [
-          { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/0' },
-          { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/1' },
+          { key: 'chart.plot', kind: 'plot', sourcePath: '$spec/0' },
+          { key: 'badge', kind: 'child', sourcePath: '$spec/1' },
         ],
       },
       {
-        contentKind: 'flex-layout',
+        kind: 'flex-layout',
         items: [
           { key: 'chart.plot', contentKind: 'plot', sourcePath: '$spec/0' },
-          { key: 'chart.plot', contentKind: 'child', sourcePath: '$spec/1' },
+          {
+            key: 'chart.presentation.credit',
+            kind: 'preset',
+            preset: 'credit',
+            sourcePath: '$spec/1',
+          },
         ],
       },
     ] as const) {

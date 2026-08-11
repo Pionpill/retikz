@@ -7,9 +7,9 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 ## Theme 环境
 
-Core 公开 `ThemeStyle`、`ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColors`。`IRScene.theme` 和 `IRScope.theme` 仅保存稀疏、JSON-safe 的 `style` / `mode` selector；compile 从 `neutral + light` 开始按 Scene → Scope 继承，并把完整、冻结的 `ResolvedTheme` 传给 `CompositeDefinition.expand` 与布局感知 `compile`。
+Core 公开 `ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColors`。`IRScene.theme` 和 `IRScope.theme` 仅保存稀疏、JSON-safe 的 `style` / `mode` selector；compile 从默认 light 基线开始按 Scene → Scope 继承，并把完整、冻结的 `ResolvedTheme` 传给 `CompositeDefinition.expand` 与布局感知 `compile`。
 
-内置 style 由 `ThemeStyle` 提供；自定义 style 用 `defineThemeStyle` 定义并经 compile 的 `themeStyles` 注入。style resolver 在解析期生成 shared colors，因此函数和完整 token map 不进入 IR、snapshot 或 JSON。未注册名称立即 fail-loud。
+发布包不提供命名 style；自定义 style 用 `defineThemeStyle` 定义并经 compile 的 `themeStyles` 注入。style resolver 在解析期生成 shared colors，因此函数和完整 token map 不进入 IR、snapshot 或 JSON。未注册名称立即 fail-loud。
 
 Core 只负责传播 selector 并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors 与当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
 

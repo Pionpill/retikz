@@ -108,7 +108,7 @@ describe('Table layout-aware lowering', () => {
         rowGap: 3,
       },
     };
-    const result = compileTable(spec, {}, { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } });
+    const result = compileTable(spec, {}, { theme: { mode: 'light' }, compile: { padding: 0 } });
 
     expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 310, height: 63 });
     expect(result.manifest.visualOverflowBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });

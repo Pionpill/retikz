@@ -209,7 +209,7 @@ The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An
 
 ```ts
 const result = renderTable(spec, {
-  theme: { style: 'neutral', mode: 'light' },
+  theme: { mode: 'light' },
   data: { scores: rows },
   lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {
@@ -261,7 +261,7 @@ The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
 
-The Table preset comes from host Core `theme.style` / `theme.mode`; local `tableThemeTokens` overrides it at the TableSpec level. Host CSS remains `containerStyle` and does not enter TableSpec. An omitted Theme starts from the `neutral + light` baseline; the resolved manifest separately records effective `style`, `themeMode`, the complete token map, and token sources.
+The Table preset comes from host Core `theme.style` / `theme.mode`; local `tableThemeTokens` overrides it at the TableSpec level. Host CSS remains `containerStyle` and does not enter TableSpec. An omitted `style` uses the default light baseline; the resolved manifest records `style` only when one was selected, together with `themeMode`, the complete token map, and token sources.
 
 ## Related
 

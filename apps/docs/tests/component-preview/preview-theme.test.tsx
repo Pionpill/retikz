@@ -34,6 +34,10 @@ describe('ComponentPreview global theme', () => {
     });
   });
 
+  it('omits style when the docs default option is selected', () => {
+    expect(resolvePreviewTheme(PreviewThemeStyle.Default, ThemeMode.Light)).toEqual({ mode: ThemeMode.Light });
+  });
+
   it('PreviewThemeProvider bridges persisted IDs to the React ambient Theme', () => {
     useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean);
 

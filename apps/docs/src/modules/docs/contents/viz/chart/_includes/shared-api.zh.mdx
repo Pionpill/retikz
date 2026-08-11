@@ -105,7 +105,7 @@ Chart 通过 `chartThemeTokens` 拥有 presentation 默认值；Core `style` 与
 
 Chart 级联为 `Core effective Theme → Chart preset → local chartThemeTokens`。随后交给 Plot 的链路为 `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded plotTheme → 显式 Plot 配置`。`ChartThemeToken`、`ChartThemeTokenOverridesSchema` 与 `ChartResolvedThemeTokensSchema` 都是 `@retikz/chart` 的公开导出；Plot token schema 仍从 `@retikz/plot` 导出。
 
-发布包只内置 Neutral；本站的 Academic、Vibrant、Clean 与应用自定义 style 一样，用 `defineChartThemeStyle` 定义，并通过 `createChartComposites({ chartThemeStyles, plotThemeStyles })` 注入 Chart composite。它与 Core 的 `themeStyles`、Plot 的 `plotThemeStyles` 必须为同一个 `theme.style` 名称分别提供 resolver；任一层缺失都会 fail-loud，函数和完整 token map 不进入 Chart IR。
+未声明 `theme.style` 时，Chart 使用自身随 `mode` 变化的默认 baseline；发布包不再内置命名 style。本站的 Academic、Vibrant、Clean 与应用自定义 style 一样，用 `defineChartThemeStyle` 定义，并通过 `createChartComposites({ chartThemeStyles, plotThemeStyles })` 注入 Chart composite。显式 style 时，Core 的 `themeStyles`、Plot 的 `plotThemeStyles` 与 Chart 的 `chartThemeStyles` 必须为同一个 `theme.style` 名称分别提供 resolver；任一层缺失都会 fail-loud，函数和完整 token map 不进入 Chart IR。
 
 | 字段               | 类型                                 | 默认值 | 描述                                                   |
 | ------------------ | ------------------------------------ | ------ | ------------------------------------------------------ |

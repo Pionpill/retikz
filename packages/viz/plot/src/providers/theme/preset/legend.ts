@@ -1,6 +1,6 @@
-import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
+import type { ThemeModeValue } from '@retikz/core';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
@@ -45,19 +45,17 @@ type LegendTokenPreset = Readonly<
   >
 >;
 
-const styles: Record<BuiltinThemeStyleValue, LegendStylePreset> = {
-  [ThemeStyle.Neutral]: {
-    titleFontSize: 12,
-    titleFontWeight: 600,
-    labelFontSize: 12,
-    swatchSize: 14,
-    swatchGap: 6,
-    entryGap: 6,
-    titleGap: 6,
-    rampLength: 100,
-    rampThickness: 12,
-    symbolSize: 14,
-  },
+const defaultStructure: LegendStylePreset = {
+  titleFontSize: 12,
+  titleFontWeight: 600,
+  labelFontSize: 12,
+  swatchSize: 14,
+  swatchGap: 6,
+  entryGap: 6,
+  titleGap: 6,
+  rampLength: 100,
+  rampThickness: 12,
+  symbolSize: 14,
 };
 
 const modes: Record<ThemeModeValue, LegendModePreset> = {
@@ -72,8 +70,8 @@ const modes: Record<ThemeModeValue, LegendModePreset> = {
 };
 
 /** 读取内建主题的 Legend preset */
-export const getLegendPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): LegendTokenPreset => {
-  const structure = styles[style];
+export const getLegendPreset = (mode: ThemeModeValue): LegendTokenPreset => {
+  const structure = defaultStructure;
   const paint = modes[mode];
   return {
     [PlotThemeToken.LegendTitleForeground]: paint.titleForeground,

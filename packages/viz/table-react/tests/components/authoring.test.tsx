@@ -5,11 +5,11 @@ import {
   CompositeBaseSchema,
   defineComposite,
   defineThemeStyle,
-  resolveCoreThemeColors,
+  resolveDefaultCoreThemeColors,
   ThemeStyle,
 } from '@retikz/core';
 import {
-  BUILTIN_TABLE_THEME_TOKENS,
+  getDefaultTableThemePreset,
   createDetailTableSpec,
   createManualTableSpec,
   defineCellFormatter,
@@ -332,13 +332,13 @@ describe('Table React composition root integration', () => {
     const themeStyles = [
       defineThemeStyle({
         name: 'root-props-theme',
-        resolve: ({ mode }) => resolveCoreThemeColors(ThemeStyle.Neutral, mode),
+        resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
       }),
     ];
     const tableThemeStyles = [
       defineTableThemeStyle({
         name: 'root-props-theme',
-        resolve: theme => structuredClone(BUILTIN_TABLE_THEME_TOKENS.neutral[theme.mode]),
+        resolve: theme => getDefaultTableThemePreset(theme.mode),
       }),
     ];
     const compositeSchema = CompositeBaseSchema.extend({
@@ -350,7 +350,7 @@ describe('Table React composition root integration', () => {
         namespace: 'root-props',
         type: 'content',
         schema: compositeSchema,
-        expand: () => content,
+        expand: () => ({ children: [content] }),
       }),
     ];
     const onManifest = vi.fn();
@@ -611,8 +611,9 @@ describe('Table React composition root integration', () => {
         columns: [{ id: 'name', field: 'name' }],
       }),
     );
-    expect(contribution.datasets).toMatchObject({ people: [{ name: 'Grace' }] });
-    expect(Object.keys(contribution.datasets)).toContain('@@retikz/table/runtime/detail-runtime-reference');
+    const tableProvider = contribution.compositeDependencies.providers[0];
+    expect(tableProvider.datasets).toMatchObject({ people: [{ name: 'Grace' }] });
+    expect(Object.keys(tableProvider.datasets)).toContain('@@retikz/table/runtime/detail-runtime-reference');
     expect(renderToStaticMarkup(<DetailTable {...props} />)).toContain('Grace');
   });
 

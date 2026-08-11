@@ -5,7 +5,7 @@ import { defineTableThemeStyle, TableThemeTokenPresetMapSchema } from '@retikz/t
 
 import { PreviewThemeStyle } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'neutral'>;
+type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
 
 const line = (stroke: string, width: number) => ({ kind: 'line' as const, stroke, width });
 

@@ -9,7 +9,6 @@ import {
   defineComposite,
   defineThemeStyle,
   ThemeMode,
-  ThemeStyle,
 } from '../../src';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({
@@ -26,7 +25,7 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
     schema: CompositeBaseSchema.extend({ namespace: z.literal('theme-test'), type: z.literal('probe') }),
     expand: (_node, context) => {
       observed.push(context.theme);
-      return { type: 'node', position: [0, 0] };
+      return { children: [{ type: 'node', position: [0, 0] }] };
     },
   });
 
@@ -34,16 +33,12 @@ describe('Theme compile context', () => {
   it('从 selector 生成没有 token bag 的完整共享 Theme', () => {
     const observed: Array<ResolvedTheme> = [];
     compileToScene(
-      sceneOf([{ namespace: 'theme-test', type: 'probe' }], {
-        style: ThemeStyle.Neutral,
-        mode: ThemeMode.Light,
-      }),
+      sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }),
       { composites: [createProbe(observed)] },
     );
 
     expect(observed).toHaveLength(1);
     expect(observed[0]).toMatchObject({
-      style: ThemeStyle.Neutral,
       mode: ThemeMode.Light,
       colors: {
         categorical: expect.arrayContaining(['hsl(210, 38%, 48%)', 'hsl(30, 78%, 55%)', 'hsl(150, 36%, 48%)']),
@@ -58,12 +53,13 @@ describe('Theme compile context', () => {
     compileToScene(
       sceneOf(
         [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [{ namespace: 'theme-test', type: 'probe' }] }],
-        { style: ThemeStyle.Neutral, mode: ThemeMode.Dark },
+        { mode: ThemeMode.Dark },
       ),
       { composites: [createProbe(observed)] },
     );
 
-    expect(observed[0]).toMatchObject({ style: 'neutral', mode: 'light' });
+    expect(observed[0]).toMatchObject({ mode: 'light' });
+    expect(observed[0]).not.toHaveProperty('style');
   });
 
   it('通过同一 Core style registry 解析自定义 style', () => {

@@ -29,26 +29,26 @@ describe('Chart inspection', () => {
     });
 
     const { style, ...inspection } = result.inspection;
-    expect(style.chart).toMatchObject({ style: 'neutral', mode: 'light' });
-    expect(style.chart.tokenSources).toHaveLength(37);
+    expect(style.chart).toMatchObject({ mode: 'light' });
+    expect(style.chart.tokenSources).toHaveLength(27);
     expect(style.chart.tokenSources[0]).toEqual({
       token: ChartThemeToken.ChartCanvasFill,
       kind: ThemeTokenSource.Local,
-      path: '$style/neutral/light/chart.canvas.fill',
+      path: '$default/light/chart.canvas.fill',
     });
-    expect(style.plot).toMatchObject({ style: 'neutral', mode: 'light', authoredOverrides: [] });
-    expect(style.plot.tokenSources).toHaveLength(41);
+    expect(style.plot).toMatchObject({ mode: 'light', authoredOverrides: [] });
+    expect(style.plot.tokenSources).toHaveLength(Object.values(PlotThemeToken).length);
     expect(style.plot.tokenSources.find(source => source.token === PlotThemeToken.PlotPaletteCategorical)).toEqual({
       token: PlotThemeToken.PlotPaletteCategorical,
       kind: ThemeTokenSource.Local,
-      path: '$style/neutral/light/plot.palette.categorical',
+      path: '$default/light/plot.palette.categorical',
     });
     expect(inspection).toEqual({
       chart: { type: 'scatter', id: 'sales' },
       plot: { id: 'sales/plot' },
       presentation: {
-        contentKind: 'plot',
-        items: [{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }],
+        kind: 'plot',
+        items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
       },
       members: [
         {
@@ -168,57 +168,56 @@ describe('Chart inspection', () => {
   });
 
   it('按 authored order 记录 presentation item identity 与 source，不复制 payload', () => {
-    const result = resolveChartSpec({
-      namespace: 'chart',
-      type: 'scatter',
-      data: { reference: 'rows' },
-      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-      presentation: {
-        children: [
-          {
-            key: 'badge',
-            content: { kind: 'child', child: { type: 'scope', id: 'badge', children: [] } },
-          },
-          {
-            key: 'closing-credit',
-            content: {
-              kind: 'preset',
-              preset: 'credit',
-              text: { text: [{ runs: [{ text: 'Retikz', font: { style: 'italic' } }] }] },
-            },
-          },
-          { content: { kind: 'plot' } },
-          {
-            content: { kind: 'preset', preset: 'title', text: { text: 'Revenue', font: { size: 20 } } },
-          },
+    const result = resolveChartSpec(
+      {
+        namespace: 'chart',
+        type: 'scatter',
+        data: { reference: 'rows' },
+        encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+      },
+      undefined,
+      {},
+      {
+        presentation: [
+          { preset: 'subtitle', position: 'top', text: 'Quarterly revenue' },
+          { preset: 'title', position: 'top', text: 'Revenue', font: { size: 20 } },
+          { preset: 'source', position: 'bottom', text: 'Internal ledger' },
+          { preset: 'note', position: 'bottom', text: 'Unaudited' },
         ],
       },
-    });
+    );
 
     expect(result.inspection.presentation).toEqual({
-      contentKind: 'flex-layout',
+      kind: 'flex-layout',
       items: [
         {
-          key: 'badge',
-          contentKind: 'child',
+          key: 'chart.presentation.subtitle',
+          kind: 'preset',
+          preset: 'subtitle',
           sourcePath: '$spec/presentation/children/0',
         },
         {
-          key: 'closing-credit',
-          contentKind: 'preset',
-          preset: 'credit',
+          key: 'chart.presentation.title',
+          kind: 'preset',
+          preset: 'title',
           sourcePath: '$spec/presentation/children/1',
         },
         {
           key: 'chart.plot',
-          contentKind: 'plot',
+          kind: 'plot',
           sourcePath: '$spec/presentation/children/2',
         },
         {
-          key: 'chart.presentation.title',
-          contentKind: 'preset',
-          preset: 'title',
+          key: 'chart.presentation.source',
+          kind: 'preset',
+          preset: 'source',
           sourcePath: '$spec/presentation/children/3',
+        },
+        {
+          key: 'chart.presentation.note',
+          kind: 'preset',
+          preset: 'note',
+          sourcePath: '$spec/presentation/children/4',
         },
       ],
     });

@@ -6,8 +6,8 @@ import { Fragment } from 'react';
 import { cn } from '@/lib';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
-import type { PreviewControlSlot, PreviewThemeMode, RendererMode } from '../types';
 import type { PreviewThemeStyleValue } from '../theme';
+import type { PreviewControlSlot, PreviewThemeMode, RendererMode } from '../types';
 import type { PreviewPanelState } from './usePreviewPanelState';
 
 import { PreviewControlStateContext } from '../context';

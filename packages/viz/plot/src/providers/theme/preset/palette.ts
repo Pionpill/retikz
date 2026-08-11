@@ -1,6 +1,4 @@
-import type { BuiltinThemeStyleValue, CssColorValue, NonEmptyReadonlyArray } from '@retikz/core';
-
-import { ThemeStyle } from '@retikz/core';
+import type { CssColorValue, NonEmptyReadonlyArray } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
@@ -25,19 +23,14 @@ type PaletteTokenPreset = Readonly<
   >
 >;
 
-const presets: Record<BuiltinThemeStyleValue, PalettePresetSource> = {
-  [ThemeStyle.Neutral]: {
-    sequential: PlotColorScheme.Viridis,
-    diverging: PlotColorScheme.RdBu,
-  },
+const defaultPreset: PalettePresetSource = {
+  sequential: PlotColorScheme.Viridis,
+  diverging: PlotColorScheme.RdBu,
 };
 
 /** 读取内建主题的 Plot palette token slice */
-export const getPalettePreset = (
-  style: BuiltinThemeStyleValue,
-  categorical: NonEmptyReadonlyArray<CssColorValue>,
-): PaletteTokenPreset => {
-  const preset = presets[style];
+export const getPalettePreset = (categorical: NonEmptyReadonlyArray<CssColorValue>): PaletteTokenPreset => {
+  const preset = defaultPreset;
   return {
     [PlotThemeToken.PlotPaletteCategorical]: [...categorical],
     [PlotThemeToken.PlotPaletteSeries]: [...categorical],

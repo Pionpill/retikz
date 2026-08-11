@@ -1,11 +1,11 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { getPlotThemePreset, PlotThemeToken } from '../../src';
+import { getDefaultPlotThemePreset, PlotThemeToken } from '../../src';
 
-describe('Neutral Plot theme monochrome paint', () => {
+describe('default Plot theme monochrome paint', () => {
   it.each(Object.values(ThemeMode))('%s 的文本与结构继承 currentColor', mode => {
-    expect(getPlotThemePreset(ThemeStyle.Neutral, mode)).toMatchObject({
+    expect(getDefaultPlotThemePreset(mode)).toMatchObject({
       [PlotThemeToken.PlotTypographyForeground]: 'currentColor',
       [PlotThemeToken.AxisLineStroke]: 'currentColor',
       [PlotThemeToken.AxisTickLabelForeground]: 'currentColor',

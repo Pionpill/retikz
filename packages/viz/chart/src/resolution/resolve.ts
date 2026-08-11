@@ -1,18 +1,20 @@
-import type { IRChild, ResolvedTheme } from '@retikz/core';
+import type { ResolvedTheme } from '@retikz/core';
 import type { IRPlotSpec, PlotThemeStyleDefinition } from '@retikz/plot';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { PlotSpecSchema, resolvePlotTheme } from '@retikz/plot';
 import { z } from 'zod';
 
 import type { InternalChartSpecBound } from '../families/shared';
 import type { IRChartInspection } from '../inspection';
+import type { ChartPresentationAuthoringRecord, ChartPresentationShorthand } from '../presentation';
+import type { IRChart } from '../schemas';
 import type { ChartThemeStyleDefinition } from '../style';
 
 import { ChartRecipeInvariantError } from '../families/shared';
 import { createChartInspection } from '../inspection';
-import { resolveChartPresentation } from '../presentation';
-import { CHART_NAMESPACE } from '../schemas';
+import { normalizeChartPresentation, resolveChartPresentation } from '../presentation';
+import { ChartSchema, CHART_NAMESPACE } from '../schemas';
 import { chartRecipeStyleContextOf, resolveChartStyle } from '../style';
 import { BUILTIN_CHART_RECIPES } from './catalog';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
@@ -22,8 +24,8 @@ import { chartInspectionMemberInputsOf, ChartMemberParseError, mergeChartSeed } 
 export type ChartResolution = {
   /** merge 与最终 parse 后的 PlotSpec */
   plotSpec: IRPlotSpec;
-  /** 供 Core composite 递归消费的 PlotSpec 或 Scope */
-  node: IRChild;
+  /** 进入唯一 chart.chart Definition 的 canonical IR */
+  chart: IRChart;
   /** 与最终 Plot member 对齐的 resolution inspection */
   inspection: IRChartInspection;
 };
@@ -41,10 +43,14 @@ export type ChartResolveOptions = Readonly<{
   plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
 }>;
 
+/** typed Chart 在 recipe 外共享的 presentation authoring */
+export type TypedChartPresentationAuthoring = ChartPresentationShorthand & {
+  presentation?: ReadonlyArray<ChartPresentationAuthoringRecord>;
+};
+
 const DEFAULT_RESOLVED_THEME: ResolvedTheme = {
-  style: ThemeStyle.Neutral,
   mode: ThemeMode.Light,
-  colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+  colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
 
 /** 把首个 Zod issue 归一为稳定且可定位的 Chart error path */
@@ -67,6 +73,7 @@ export const resolveChartSpec = (
   input: unknown,
   effectiveTheme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
   options: ChartResolveOptions = {},
+  presentationAuthoring: TypedChartPresentationAuthoring = {},
 ): ChartResolution => {
   let envelope: z.infer<typeof DispatchEnvelopeSchema>;
   try {
@@ -148,7 +155,16 @@ export const resolveChartSpec = (
     throw error;
   }
   const spec: InternalChartSpecBound = bound.spec;
-  const presentation = resolveChartPresentation(spec.presentation, plotSpec, style.tokens);
+  const canonicalPresentation = normalizeChartPresentation(presentationAuthoring);
+  const chart = ChartSchema.parse({
+    namespace: CHART_NAMESPACE,
+    type: 'chart',
+    ...(spec.id === undefined ? {} : { id: spec.id }),
+    ...(spec.chartThemeTokens === undefined ? {} : { chartThemeTokens: spec.chartThemeTokens }),
+    plot: plotSpec,
+    ...(canonicalPresentation === undefined ? {} : { presentation: canonicalPresentation }),
+  });
+  const presentation = resolveChartPresentation(chart.presentation, plotSpec, style.tokens);
   const inspection = createChartInspection(
     spec,
     plotSpec,
@@ -157,7 +173,5 @@ export const resolveChartSpec = (
     plotStyle,
     presentation.inspection,
   );
-  const node: IRChild =
-    spec.id === undefined ? presentation.content : { type: 'scope', id: spec.id, children: [presentation.content] };
-  return { plotSpec, node, inspection };
+  return { plotSpec, chart, inspection };
 };

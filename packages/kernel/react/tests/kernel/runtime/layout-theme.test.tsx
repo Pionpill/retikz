@@ -27,22 +27,34 @@ const themedBox = defineComposite({
     type: z.literal('box'),
   }),
   expand: (_node, context) => ({
-    type: 'node',
-    position: [0, 0],
-    minimumSize: 20,
-    padding: 0,
-    fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+    children: [
+      {
+        type: 'node',
+        position: [0, 0],
+        minimumSize: 20,
+        padding: 0,
+        fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+      },
+    ],
   }),
 });
 
-const makeThemedBoxComposites = () => [themedBox];
+const makeThemedBoxDefinition = () => themedBox;
 const themedBoxAdapter: EmbeddableTier2Adapter = {
   displayName: 'ThemedBox',
-  namespace: 'theme-test',
   contribute: () => ({
     node: { namespace: 'theme-test', type: 'box' },
-    datasets: {},
-    makeComposites: makeThemedBoxComposites,
+    compositeDependencies: {
+      roots: [{ namespace: 'theme-test', type: 'box' }],
+      providers: [
+        {
+          key: { namespace: 'theme-test', type: 'box' },
+          dependencies: [],
+          datasets: {},
+          makeDefinition: makeThemedBoxDefinition,
+        },
+      ],
+    },
   }),
 };
 const ThemedBox = Object.assign(() => null, {
@@ -73,33 +85,35 @@ const themeProbe = defineComposite({
           : context.theme.style === 'academic'
             ? '#provider-style'
             : '#default-style';
-    return [
-      {
-        type: 'node',
-        id: 'style',
-        position: [0, 0],
-        minimumSize: 20,
-        padding: 0,
-        fill: styleColor,
-      },
-      {
-        type: 'node',
-        id: 'palette',
-        position: [30, 0],
-        minimumSize: 20,
-        padding: 0,
-        fill: context.theme.colors.categorical[0],
-      },
-      {
-        type: 'node',
-        id: 'error',
-        position: [60, 0],
-        minimumSize: 20,
-        padding: 0,
-        stroke: context.theme.colors.semantic.error,
-        strokeWidth: 2,
-      },
-    ];
+    return {
+      children: [
+        {
+          type: 'node',
+          id: 'style',
+          position: [0, 0],
+          minimumSize: 20,
+          padding: 0,
+          fill: styleColor,
+        },
+        {
+          type: 'node',
+          id: 'palette',
+          position: [30, 0],
+          minimumSize: 20,
+          padding: 0,
+          fill: context.theme.colors.categorical[0],
+        },
+        {
+          type: 'node',
+          id: 'error',
+          position: [60, 0],
+          minimumSize: 20,
+          padding: 0,
+          stroke: context.theme.colors.semantic.error,
+          strokeWidth: 2,
+        },
+      ],
+    };
   },
 });
 

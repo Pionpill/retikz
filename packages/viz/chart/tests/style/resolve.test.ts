@@ -1,12 +1,12 @@
-import type { BuiltinThemeStyleValue, ResolvedTheme, ThemeModeValue } from '@retikz/core';
+import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
-import { definePlotThemeStyle, getPlotThemePreset, PlotThemeToken } from '@retikz/plot';
+import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
+import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotThemeToken } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import * as chart from '../../src';
 import { resolveChartSpec } from '../../src/resolution';
-import { ChartThemeToken, getChartThemePreset } from '../../src/style';
+import { ChartThemeToken, getDefaultChartThemePreset } from '../../src/style';
 
 const base = {
   namespace: 'chart',
@@ -16,10 +16,10 @@ const base = {
   encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
-const themeOf = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): ResolvedTheme => ({
-  style,
+const themeOf = (style: string | undefined, mode: ThemeModeValue): ResolvedTheme => ({
+  ...(style === undefined ? {} : { style }),
   mode,
-  colors: resolveCoreThemeColors(style, mode),
+  colors: resolveDefaultCoreThemeColors(mode),
 });
 
 type ResolveChartSpec = (
@@ -37,8 +37,8 @@ describe('Chart style resolution', () => {
       | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
       | undefined;
     const resolve = resolveChartSpec as unknown as ResolveChartSpec;
-    const chartBaseline = getChartThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
-    const plotBaseline = getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light);
+    const chartBaseline = getDefaultChartThemePreset(ThemeMode.Light);
+    const plotBaseline = getDefaultPlotThemePreset(ThemeMode.Light);
     const chartStyle = define?.({
       name: 'brand',
       resolve: () => ({ ...chartBaseline, [ChartThemeToken.ChartPadding]: 24 }),
@@ -96,7 +96,7 @@ describe('Chart style resolution', () => {
           (chart as Record<string, unknown>).defineChartThemeStyle
             ? ((chart as Record<string, unknown>).defineChartThemeStyle as (definition: unknown) => unknown)({
                 name: 'brand',
-                resolve: () => getChartThemePreset(ThemeStyle.Neutral, ThemeMode.Light),
+                resolve: () => getDefaultChartThemePreset(ThemeMode.Light),
               })
             : undefined,
         ],
@@ -104,22 +104,21 @@ describe('Chart style resolution', () => {
     ).toThrow(/Plot theme style 'brand' is not registered/);
   });
 
-  it('默认解析 neutral/light，并保持 Plot authoring 输入未物化', () => {
+  it('默认解析 light baseline，并保持 Plot authoring 输入未物化', () => {
     const result = resolveChartSpec(base);
     expect(result.plotSpec.plotTheme).toBeUndefined();
     expect(result.plotSpec.plotThemeTokens).toBeUndefined();
     expect(result.inspection.style.chart).toMatchObject({
-      style: 'neutral',
       mode: 'light',
       tokens: { [ChartThemeToken.ChartCanvasFill]: '#FFFFFF' },
     });
-    expect(result.inspection.style.chart.tokenSources).toHaveLength(37);
+    expect(result.inspection.style.chart.tokenSources).toHaveLength(27);
     expect(result.inspection.style.chart.tokenSources[0]).toEqual({
       token: ChartThemeToken.ChartCanvasFill,
       kind: ThemeTokenSource.Local,
-      path: '$style/neutral/light/chart.canvas.fill',
+      path: '$default/light/chart.canvas.fill',
     });
-    expect(result.inspection.style.plot).toMatchObject({ style: 'neutral', mode: 'light' });
+    expect(result.inspection.style.plot).toMatchObject({ mode: 'light' });
     expect(result.inspection.style.plot.tokenSources).toHaveLength(43);
   });
 
@@ -146,7 +145,7 @@ describe('Chart style resolution', () => {
         },
       },
     } as const;
-    const result = resolveChartSpec(input, themeOf(ThemeStyle.Neutral, ThemeMode.Dark));
+    const result = resolveChartSpec(input, themeOf(undefined, ThemeMode.Dark));
 
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
     expect(result.plotSpec.plotThemeTokenRules).toEqual(input.plotThemeTokenRules);
@@ -188,9 +187,9 @@ describe('Chart style resolution', () => {
   });
 
   it('effective Theme 切换不改变 data、核心 recipe、空间根与 identity', () => {
-    const neutral = resolveChartSpec(base);
-    const clean = resolveChartSpec(base, themeOf(ThemeStyle.Neutral, ThemeMode.Dark));
-    const stableProjection = (result: typeof neutral) => ({
+    const defaultLight = resolveChartSpec(base);
+    const defaultDark = resolveChartSpec(base, themeOf(undefined, ThemeMode.Dark));
+    const stableProjection = (result: typeof defaultLight) => ({
       data: result.plotSpec.data,
       transform: result.plotSpec.transform,
       scales: result.plotSpec.scales,
@@ -203,6 +202,6 @@ describe('Chart style resolution', () => {
         .filter(member => member.kind !== 'guide')
         .map(member => [member.kind, member.target]),
     });
-    expect(stableProjection(clean)).toEqual(stableProjection(neutral));
+    expect(stableProjection(defaultDark)).toEqual(stableProjection(defaultLight));
   });
 });

@@ -1,23 +1,21 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { BUILTIN_TABLE_THEME_TOKENS, TableThemeTokenKeySchema, TableThemeTokenPresetMapSchema } from '../../src';
+import { getDefaultTableThemePreset, TableThemeTokenKeySchema, TableThemeTokenPresetMapSchema } from '../../src';
 
-describe('built-in Table theme token presets', () => {
-  it('provides two complete detached frozen Neutral preset maps', () => {
-    for (const style of Object.values(ThemeStyle)) {
-      for (const mode of Object.values(ThemeMode)) {
-        const tokens = BUILTIN_TABLE_THEME_TOKENS[style][mode];
-        expect(TableThemeTokenPresetMapSchema.parse(tokens)).toEqual(tokens);
-        expect(Object.keys(tokens)).toEqual(TableThemeTokenKeySchema.options.filter(key => key !== 'data.categorical'));
-        expect(Object.isFrozen(tokens)).toBe(true);
-        expect(Object.isFrozen(tokens['data.sequential'])).toBe(true);
-      }
+describe('default Table theme token presets', () => {
+  it('provides two complete detached default preset maps', () => {
+    for (const mode of Object.values(ThemeMode)) {
+      const tokens = getDefaultTableThemePreset(mode);
+      expect(TableThemeTokenPresetMapSchema.parse(tokens)).toEqual(tokens);
+      expect(Object.keys(tokens)).toEqual(TableThemeTokenKeySchema.options.filter(key => key !== 'data.categorical'));
+      expect(Object.isFrozen(tokens)).toBe(false);
+      expect(Object.isFrozen(tokens['data.sequential'])).toBe(false);
     }
   });
 
-  it('freezes the observable Neutral defaults', () => {
-    expect(BUILTIN_TABLE_THEME_TOKENS.neutral.light).toMatchObject({
+  it('keeps the observable default values', () => {
+    expect(getDefaultTableThemePreset(ThemeMode.Light)).toMatchObject({
       'cell.background.fill': '#ffffff',
       'cell.content.color': '#18181b',
       'columnHeader.content.color': '#71717a',

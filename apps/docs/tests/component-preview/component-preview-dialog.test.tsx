@@ -8,6 +8,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { ComponentPreviewDialogProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
+import type { PreviewThemeStyleValue } from '../../src/modules/docs/components/component-preview/theme';
 import type {
   AlignKey,
   ComponentRenderSource,
@@ -20,13 +21,11 @@ import type {
   PreviewThemeStyleSelection,
   SizeKey,
 } from '../../src/modules/docs/components/component-preview/types';
-import type { PreviewThemeStyleValue } from '../../src/modules/docs/components/component-preview/theme';
-
-import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import { ComponentPreviewDialog } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
+import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 

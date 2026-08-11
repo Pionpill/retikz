@@ -10,7 +10,7 @@ import {
 
 describe('preview theme settings icons', () => {
   it('maps each ThemeStyle to its semantic icon', () => {
-    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Neutral)).toBe(Feather);
+    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Default)).toBe(Feather);
     expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Academic)).toBe(GraduationCap);
     expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Vibrant)).toBe(Sparkles);
     expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Clean)).toBe(BrushCleaning);
@@ -18,7 +18,7 @@ describe('preview theme settings icons', () => {
 
   it('exposes four flat style options for every viz document', () => {
     expect(PreviewThemeStyleOptions).toEqual([
-      PreviewThemeStyle.Neutral,
+      PreviewThemeStyle.Default,
       PreviewThemeStyle.Academic,
       PreviewThemeStyle.Vibrant,
       PreviewThemeStyle.Clean,

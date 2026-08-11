@@ -1,4 +1,4 @@
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -236,9 +236,8 @@ describe('Connected Scatter Chart recipe', () => {
       plotTheme: { palette: { series: ['#333333'] } },
     });
     const effectiveTheme = {
-      style: ThemeStyle.Neutral,
       mode: ThemeMode.Light,
-      colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const;
     const resolved = resolveChartStyle(effectiveTheme, spec);
     const plotTheme = resolvePlotTheme(effectiveTheme, {

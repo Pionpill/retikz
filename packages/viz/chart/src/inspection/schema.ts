@@ -6,7 +6,7 @@ import { JsonObjectSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { PlotThemeResolutionSchema } from '@retikz/plot';
 import { z as zod } from 'zod';
 
-import { ChartPresentationInspectionSchema } from '../presentation';
+import { ChartPresentationInspectionSchema } from '../presentation/inspection';
 import { ChartResolvedThemeTokensSchema, ChartThemeToken } from '../style';
 
 /** Chart member 的 contribution 来源 */
@@ -74,7 +74,7 @@ const ChartThemeTokenSourceSchema = zod
 
 const ChartOwnedStyleInspectionSchema = zod
   .strictObject({
-    style: zod.string().min(1).describe('Effective Theme style selecting the Chart style definition'),
+    style: zod.string().min(1).optional().describe('Optional effective Theme style selecting the Chart style definition'),
     mode: zod.enum(ThemeMode).describe('Effective Theme mode selecting Chart paints'),
     tokens: ChartResolvedThemeTokensSchema.describe('Complete resolved Chart-owned token map'),
     tokenSources: zod
@@ -94,10 +94,13 @@ const ChartOwnedStyleInspectionSchema = zod
       });
     }
     style.tokenSources.forEach((source, index) => {
+      const baselinePath =
+        style.style === undefined
+          ? `$default/${style.mode}/${source.token}`
+          : `$style/${style.style}/${style.mode}/${source.token}`;
       const valid =
         source.kind === ThemeTokenSource.Local &&
-        (source.path === `$style/${style.style}/${style.mode}/${source.token}` ||
-          source.path === `$spec/chartThemeTokens/${source.token}`);
+        (source.path === baselinePath || source.path === `$spec/chartThemeTokens/${source.token}`);
       if (!valid) {
         context.addIssue({
           code: 'custom',

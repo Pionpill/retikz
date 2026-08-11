@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
@@ -419,10 +419,10 @@ describe('buildPreviewSource', () => {
   });
 
   it('automatic Vanilla preview consumes the ambient Theme selector', () => {
-    const firstTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Light };
-    const secondTheme = { style: ThemeStyle.Neutral, mode: ThemeMode.Dark };
-    const firstColor = resolveCoreThemeColors(firstTheme.style, firstTheme.mode).categorical[0];
-    const secondColor = resolveCoreThemeColors(secondTheme.style, secondTheme.mode).categorical[0];
+    const firstTheme = { mode: ThemeMode.Light };
+    const secondTheme = { mode: ThemeMode.Dark };
+    const firstColor = resolveDefaultCoreThemeColors(firstTheme.mode).categorical[0];
+    const secondColor = resolveDefaultCoreThemeColors(secondTheme.mode).categorical[0];
     const first = buildPreviewSource(
       createInput({
         Component: PlotDemo,
@@ -449,7 +449,7 @@ describe('buildPreviewSource', () => {
     const first = buildPreviewSource(
       createInput({
         vanillaSvg,
-        theme: { style: ThemeStyle.Neutral, tokens: { core: { 'palette.categorical': ['#101010'] } } },
+        theme: { tokens: { core: { 'palette.categorical': ['#101010'] } } },
       }),
     );
     const second = buildPreviewSource(

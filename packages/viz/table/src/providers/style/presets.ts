@@ -1,6 +1,4 @@
-import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
-
-import { ThemeStyle } from '@retikz/core';
+import type { ThemeModeValue } from '@retikz/core';
 
 import type { TableThemeTokenPresetMap } from '../../schemas';
 
@@ -52,12 +50,6 @@ const presets: Readonly<Record<ThemeModeValue, TableThemeTokenPresetMap>> = deep
   }),
 });
 
-/** Table 内置 Neutral 的两份 detached、递归冻结 token map */
-export const BUILTIN_TABLE_THEME_TOKENS: Readonly<
-  Record<BuiltinThemeStyleValue, Readonly<Record<ThemeModeValue, TableThemeTokenPresetMap>>>
-> = deepFreeze({ [ThemeStyle.Neutral]: presets });
-
-/** 读取唯一内建 Neutral Table style/mode 的 detached token 基线 */
-export const getTableThemePreset = (_style: BuiltinThemeStyleValue, mode: ThemeModeValue): TableThemeTokenPresetMap => {
-  return structuredClone(BUILTIN_TABLE_THEME_TOKENS[ThemeStyle.Neutral][mode]);
-};
+/** 读取默认 Table style/mode 的 detached token 基线 */
+export const getDefaultTableThemePreset = (mode: ThemeModeValue): TableThemeTokenPresetMap =>
+  structuredClone(presets[mode]);

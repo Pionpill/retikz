@@ -26,7 +26,6 @@ describe('Table style and encoding manifest seed', () => {
     );
 
     expect(result.manifest.style).toMatchObject({
-      style: 'neutral',
       themeMode: 'light',
       tokens: { 'cell.content.color': '#123456' },
     });
@@ -71,7 +70,7 @@ describe('Table style and encoding manifest seed', () => {
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
-      { theme: { style: 'neutral', mode: 'dark' }, compile: { padding: 0 } },
+      { theme: { mode: 'dark' }, compile: { padding: 0 } },
     );
     const repeatedSources = structuredClone(result.manifest);
     Object.assign(repeatedSources.style, {
@@ -104,7 +103,7 @@ describe('Table style and encoding manifest seed', () => {
         structure: { kind: 'manual', rows: [[1], [2]] },
       },
       {},
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongGridToken = structuredClone(gridResult.manifest);
     const gridWinner = wrongGridToken.borders
@@ -127,7 +126,7 @@ describe('Table style and encoding manifest seed', () => {
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongHeaderCell = structuredClone(headerResult.manifest);
     const headerWinner = wrongHeaderCell.borders

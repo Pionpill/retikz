@@ -4,8 +4,8 @@ import type { IRPlotSpec } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { VanillaEmbedContext } from '@retikz/vanilla';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
-import { definePlotThemeStyle, getPlotThemePreset } from '@retikz/plot';
+import { ThemeMode } from '@retikz/core';
+import { definePlotThemeStyle, getDefaultPlotThemePreset } from '@retikz/plot';
 import { describe, expect, it, vi } from 'vitest';
 
 const compileCalls = vi.hoisted(() => [] as Array<ReadonlyArray<unknown>>);
@@ -46,14 +46,13 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 const contextOf = (id: string): VanillaEmbedContext => ({
   id,
   kind: 'plot',
-  namespace: 'plot',
   layerId: 'chart',
   identityPath: ['chart', id],
 });
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => ({ tokens: getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light) }),
+  resolve: () => ({ tokens: getDefaultPlotThemePreset(ThemeMode.Light) }),
 });
 
 describe('Plot Vanilla runtime style options', () => {
@@ -69,5 +68,9 @@ describe('Plot Vanilla runtime style options', () => {
   it('embedded createPlotAdapter keeps runtime style definitions out of the contribution payload', () => {
     const contribution = createPlotAdapter(data).lower({ spec }, contextOf('panel'));
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
+    expect(contribution).not.toHaveProperty('datasets');
+    expect(contribution).not.toHaveProperty('makeComposites');
+    expect(contribution.compositeDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(contribution.compositeDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
   });
 });

@@ -12,7 +12,7 @@ import {
 
 import { PreviewThemeStyle } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'neutral'>;
+type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
 
 const shapePalette = PlotShapePaletteSchema.parse([
   'circle',

@@ -17,7 +17,7 @@ describe('style token Border Graph integration', () => {
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(result.manifest.borders).toHaveLength(2);
@@ -51,7 +51,7 @@ describe('style token Border Graph integration', () => {
         layout: { borders: { outer: { kind: 'none' }, horizontal: { kind: 'line', stroke: 'red', width: 2 } } },
       },
       {},
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(result.manifest.borders).toHaveLength(1);
@@ -77,7 +77,7 @@ describe('style token Border Graph integration', () => {
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const headerBoundary = result.manifest.borders.find(border =>
       border.atoms.some(
@@ -155,7 +155,7 @@ describe('style token Border Graph integration', () => {
         ],
       },
       {},
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const boundary = result.manifest.borders.find(border =>
       border.atoms.some(atom => atom.winner.source.kind === 'cell' && atom.winner.source.cellId === 'target'),

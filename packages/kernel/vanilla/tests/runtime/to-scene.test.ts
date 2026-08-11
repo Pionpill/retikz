@@ -4,8 +4,7 @@ import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } fro
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { toSceneResult } from '../../src/runtime/to-scene';
-import { figure } from '../../src/spec';
+import { figure, toSceneResult } from '../../src';
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 1, height: 1 },
@@ -22,10 +21,13 @@ describe('toSceneResult runtime metadata', () => {
         type: z.literal('box'),
       }),
       expand: (_node, context) => ({
-        type: 'node',
-        position: [0, 0],
-        fill:
-          context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+        children: [
+          {
+            type: 'node',
+            position: [0, 0],
+            fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+          },
+        ],
       }),
     });
     const theme = { style: 'academic', mode: ThemeMode.Dark };
@@ -54,6 +56,8 @@ describe('toSceneResult runtime metadata', () => {
     const first = toSceneResult(scene, {});
     const second = toSceneResult(scene, {});
 
+    expect(first.compileResult).toBeUndefined();
+    expect(Object.hasOwn(first, 'compileResult')).toBe(true);
     expect(first.runtimeMeta).not.toBe(second.runtimeMeta);
     expect(first.runtimeMeta.layers).not.toBe(second.runtimeMeta.layers);
     expect(first.runtimeMeta.identityIndex).not.toBe(second.runtimeMeta.identityIndex);

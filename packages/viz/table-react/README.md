@@ -14,7 +14,7 @@ import { DetailTable } from '@retikz/table-react';
   id="scores"
   dataRef="scores"
   data={rows}
-  theme={{ style: 'neutral', mode: 'light' }}
+  theme={{ mode: 'light' }}
   tableThemeTokens={{ 'cell.content.color': '#1e3a8a' }}
   columns={[
     { id: 'name', field: 'name', header: 'Name', bodyLayout: { padding: 6, wrap: true } },
@@ -97,7 +97,7 @@ rendered Standard Legend composition and a final joined manifest are planned for
 this adapter exposes neither `legendLayout` nor a private Legend child in alpha.3.
 
 Applications can also provide Core definitions through `ThemeProvider` and Table definitions through
-`TableThemeProvider`. The package itself only guarantees `neutral`; additional visual personalities
+`TableThemeProvider`. The package baseline applies when `style` is omitted; additional visual personalities
 remain host-owned definitions.
 
 ## Install

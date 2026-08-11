@@ -6,7 +6,7 @@ import { NodeTextAlign } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'neutral'>;
+type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
 
 const styles = {
   academic: {

@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib';
 
-import type { PreviewThemeStyleSelection } from '../types';
 import type { PreviewThemeStyleValue } from '../theme';
+import type { PreviewThemeStyleSelection } from '../types';
 
 import { getPreviewThemeStyleIcon, PreviewThemeStyleLabelKeys, PreviewThemeStyleOptions } from '../theme';
 

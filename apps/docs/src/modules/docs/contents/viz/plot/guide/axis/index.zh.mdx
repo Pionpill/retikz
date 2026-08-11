@@ -61,7 +61,7 @@ import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 ### 刻度与网格来源
 
-Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomain` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。该字段的 guide 局部默认是 `false`，Theme 可以为已启用的 major grid 提供默认：Neutral 的 x / y Axis 默认为 `true`，其余内建风格为 `false`。Theme 端点 token 不会单独启用 grid，guide 显式 boolean 最终优先。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
+Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomain` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。该字段的 guide 局部默认是 `false`，Theme 可以为已启用的 major grid 提供默认：未声明 style 的默认 baseline 对 x / y Axis 为 `true`，本站注入的三个参考风格为 `false`。Theme 端点 token 不会单独启用 grid，guide 显式 boolean 最终优先。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
 
 <ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
 

@@ -39,7 +39,7 @@ Switch the backend with one prop — same JSX, same IR:
 ```
 
 `ThemeProvider` supplies an ambient sparse Core Theme and optional `themeStyles` definitions to
-descendant Layouts. The published packages only guarantee `neutral`; applications inject other
+descendant Layouts. Omitting `style` selects the package baseline; applications inject named
 style names through `defineThemeStyle` and the matching owner-local definitions they consume.
 
 ## Exports

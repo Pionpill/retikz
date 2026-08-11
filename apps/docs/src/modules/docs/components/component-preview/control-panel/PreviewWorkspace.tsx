@@ -15,6 +15,7 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 
 import type { PreviewPanelState } from '../preview-panel';
+import type { PreviewThemeStyleValue } from '../theme';
 import type {
   PreviewControlContract,
   PreviewControlsDefinition,
@@ -24,7 +25,6 @@ import type {
   PreviewThemeStyleSelection,
   RendererMode,
 } from '../types';
-import type { PreviewThemeStyleValue } from '../theme';
 
 import { ToolbarIconButton } from '../components';
 import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';

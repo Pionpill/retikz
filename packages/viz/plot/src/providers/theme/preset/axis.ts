@@ -1,6 +1,6 @@
-import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
+import type { ThemeModeValue } from '@retikz/core';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 
 import type { IRPlotAxisThemeTokenRules, IRPlotResolvedThemeTokens } from '../../../schemas';
 
@@ -65,18 +65,16 @@ type AxisTokenPreset = Readonly<
   >
 >;
 
-const styles: Record<BuiltinThemeStyleValue, AxisStylePreset> = {
-  [ThemeStyle.Neutral]: {
-    lineEnabled: true,
-    tickMark: { kind: 'line', length: 6 },
-    tickLabelFontSize: 12,
-    tickLabelGap: 4,
-    titleEnabled: true,
-    titleFontSize: 12,
-    titlePadding: 12,
-    gridEnabled: false,
-    gridIncludeDomain: false,
-  },
+const defaultStructure: AxisStylePreset = {
+  lineEnabled: true,
+  tickMark: { kind: 'line', length: 6 },
+  tickLabelFontSize: 12,
+  tickLabelGap: 4,
+  titleEnabled: true,
+  titleFontSize: 12,
+  titlePadding: 12,
+  gridEnabled: false,
+  gridIncludeDomain: false,
 };
 
 const modes: Record<ThemeModeValue, AxisModePreset> = {
@@ -95,8 +93,8 @@ const modes: Record<ThemeModeValue, AxisModePreset> = {
 };
 
 /** 读取内建主题的 Axis preset，并把 line tick 绑定到有效轴线颜色 */
-export const getAxisPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): AxisTokenPreset => {
-  const structure = styles[style];
+export const getAxisPreset = (mode: ThemeModeValue): AxisTokenPreset => {
+  const structure = defaultStructure;
   const paint = modes[mode];
   const gridStroke = 'currentColor';
   const tickMark =

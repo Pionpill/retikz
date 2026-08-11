@@ -1,30 +1,27 @@
 import type { ThemeModeValue } from '@retikz/core';
 
-import { NodeTextAlign, ThemeMode, ThemeStyle } from '@retikz/core';
+import { NodeTextAlign, ThemeMode } from '@retikz/core';
 
 import type { IRChartResolvedThemeTokens } from './types';
 
 import { ChartThemeToken } from './constants';
-import { defineChartThemeStyle } from './definition';
 import { ChartResolvedThemeTokensSchema } from './schema';
 
 const paint = {
   [ThemeMode.Light]: {
     canvas: '#FFFFFF',
-    slots: ['#09090B', '#3F3F46', '#52525B', '#71717A', '#71717A', '#71717A'],
+    slots: ['#09090B', '#3F3F46', '#71717A', '#71717A'],
   },
   [ThemeMode.Dark]: {
     canvas: '#09090B',
-    slots: ['#FAFAFA', '#D4D4D8', '#A1A1AA', '#A1A1AA', '#A1A1AA', '#A1A1AA'],
+    slots: ['#FAFAFA', '#D4D4D8', '#A1A1AA', '#A1A1AA'],
   },
 } as const;
 
 const typography = [
   [18, 600, 22],
   [13, 400, 18],
-  [12, 400, 17],
   [11, 400, 15],
-  [11, 500, 15],
   [11, 500, 15],
 ] as const;
 
@@ -44,13 +41,6 @@ const groups = [
     ChartThemeToken.ChartSubtitleAlign,
   ],
   [
-    ChartThemeToken.ChartCaptionForeground,
-    ChartThemeToken.ChartCaptionFontSize,
-    ChartThemeToken.ChartCaptionFontWeight,
-    ChartThemeToken.ChartCaptionLineHeight,
-    ChartThemeToken.ChartCaptionAlign,
-  ],
-  [
     ChartThemeToken.ChartNoteForeground,
     ChartThemeToken.ChartNoteFontSize,
     ChartThemeToken.ChartNoteFontWeight,
@@ -63,13 +53,6 @@ const groups = [
     ChartThemeToken.ChartSourceFontWeight,
     ChartThemeToken.ChartSourceLineHeight,
     ChartThemeToken.ChartSourceAlign,
-  ],
-  [
-    ChartThemeToken.ChartCreditForeground,
-    ChartThemeToken.ChartCreditFontSize,
-    ChartThemeToken.ChartCreditFontWeight,
-    ChartThemeToken.ChartCreditLineHeight,
-    ChartThemeToken.ChartCreditAlign,
   ],
 ] as const;
 
@@ -96,18 +79,7 @@ const createPreset = (mode: ThemeModeValue): IRChartResolvedThemeTokens =>
     [ChartThemeToken.ChartLegendEnabled]: true,
   });
 
-/** 读取唯一内建 Neutral Chart style/mode 的完整 token map */
-export const getChartThemePreset = (
-  _style: typeof ThemeStyle.Neutral,
-  mode: ThemeModeValue,
-): IRChartResolvedThemeTokens => {
+/** 读取默认 Chart baseline 在指定 mode 下的完整 token map */
+export const getDefaultChartThemePreset = (mode: ThemeModeValue): IRChartResolvedThemeTokens => {
   return structuredClone(createPreset(mode));
 };
-
-/** Chart 唯一内置 Neutral Theme style definition */
-export const BUILTIN_CHART_THEME_STYLES = [
-  defineChartThemeStyle({
-    name: ThemeStyle.Neutral,
-    resolve: theme => getChartThemePreset(ThemeStyle.Neutral, theme.mode),
-  }),
-];

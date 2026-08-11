@@ -1,10 +1,4 @@
-import type {
-  BuiltinThemeStyleValue,
-  CssColorValue,
-  NonEmptyReadonlyArray,
-  ResolvedThemeColors,
-  ThemeModeValue,
-} from '../../shared';
+import type { CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors, ThemeModeValue } from '../../shared';
 
 import { ThemeMode } from '../../shared';
 
@@ -25,7 +19,7 @@ const categoricalHues = [210, 30, 150, 330, 190, 10, 50, 270, 100, 240, 300, 350
 const tones = (...values: Array<readonly [saturation: number, lightness: number]>): ReadonlyArray<CategoricalTone> =>
   values.map(([saturation, lightness]) => ({ saturation, lightness }));
 
-/** Neutral 按公共 Hue 索引维护独立色调，并为明暗模式分别适配 */
+/** 默认 baseline 按公共 Hue 索引维护独立色调，并为明暗模式分别适配 */
 const categoricalTones: Readonly<Record<ThemeModeValue, ReadonlyArray<CategoricalTone>>> = {
   [ThemeMode.Light]: tones(
     [38, 48],
@@ -108,8 +102,8 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeModeValue, ResolvedThemeColors>> 
   ),
 });
 
-/** 解析唯一内建 Neutral style 的完整 shared colors */
-export const resolveCoreThemeColors = (_style: BuiltinThemeStyleValue, mode: ThemeModeValue): ResolvedThemeColors => {
+/** 解析默认 baseline 的完整 shared colors */
+export const resolveDefaultCoreThemeColors = (mode: ThemeModeValue): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
   return freezeColorView(preset.semantic, preset.categorical);
 };

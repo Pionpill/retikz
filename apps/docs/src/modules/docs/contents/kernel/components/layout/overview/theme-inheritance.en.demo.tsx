@@ -1,4 +1,4 @@
-import type { IRNode, ThemeModeValue } from '@retikz/core';
+import type { CompositeDependencyProvider, IRNode, ThemeModeValue } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -11,7 +11,7 @@ import { PreviewCoreThemeStyles, PreviewThemeStyle } from '@/modules/docs/compon
 type ThemeCardProps = { label: string };
 
 const cardFills = {
-  [PreviewThemeStyle.Neutral]: {
+  [PreviewThemeStyle.Default]: {
     [ThemeMode.Light]: '#e2e8f0',
     [ThemeMode.Dark]: '#334155',
   },
@@ -29,10 +29,11 @@ const cardFills = {
   },
 } as const;
 
-const isCardFillStyle = (style: string): style is keyof typeof cardFills => style in cardFills;
+const isCardFillStyle = (style: string | undefined): style is keyof typeof cardFills =>
+  style !== undefined && style in cardFills;
 
-const resolveCardFill = (style: string, mode: ThemeModeValue): string => {
-  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[PreviewThemeStyle.Neutral];
+const resolveCardFill = (style: string | undefined, mode: ThemeModeValue): string => {
+  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[PreviewThemeStyle.Default];
   return fills[mode];
 };
 
@@ -71,19 +72,22 @@ const themeCardComposite = defineComposite({
         stroke: 'none',
       }),
     );
-    return [card, ...swatches];
+    return { children: [card, ...swatches] };
   },
 });
 
-const makeComposites = () => [themeCardComposite];
+const ThemeCardProvider: CompositeDependencyProvider = {
+  key: { namespace: 'theme-demo', type: 'card' },
+  dependencies: [],
+  datasets: {},
+  makeDefinition: () => themeCardComposite,
+};
 
 const themeCardAdapter: EmbeddableTier2Adapter<ThemeCardProps> = {
   displayName: 'ThemeCard',
-  namespace: 'theme-demo',
   contribute: props => ({
     node: { namespace: 'theme-demo', type: 'card', label: props.label },
-    datasets: {},
-    makeComposites,
+    compositeDependencies: { roots: [ThemeCardProvider.key], providers: [ThemeCardProvider] },
   }),
 };
 

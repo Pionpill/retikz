@@ -53,7 +53,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       rendererMode: 'svg',
       animationMode: 'system',
       themeMode: 'inherit',
-      themeStyle: PreviewThemeStyle.Neutral,
+      themeStyle: PreviewThemeStyle.Default,
       controlPanelDefaultOpen: true,
       rangePlaybackDuration: 2000,
       setHideCode: value => set({ hideCode: value }),
@@ -71,6 +71,6 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       toggleRendererMode: () => set({ rendererMode: get().rendererMode === 'svg' ? 'canvas' : 'svg' }),
       toggleControlPanelDefaultOpen: () => set({ controlPanelDefaultOpen: !get().controlPanelDefaultOpen }),
     }),
-    { name: 'retikz-component-preview' },
+    { name: 'retikz-component-preview-v2' },
   ),
 );

@@ -4,14 +4,17 @@
 
 ## 包职责契约
 
-- **解决的问题**：在公开 Chart type 后提供无框架 authoring、SSR 与运行时接线
-- **拥有的契约**：未来的 plain Chart helper、Vanilla runtime contribution 与 SSR convenience
-- **不拥有的能力**：Chart recipe/resolver、Plot lowering、数据处理、跨 adapter dependency aggregation、dataset bridge、identity bypass、Standard/Flex layout、renderer
-- **输入与输出**：未来接收 Chart spec/plain input 与数据，输出 Chart IR 和宿主 runtime contribution；ADR-01 期间入口必须为空
+- **解决的问题**：提供基础 Chart、typed Chart 与有序 presentation 的无框架 authoring、SSR 和运行时接线
+- **拥有的契约**：`createChart`、typed `createXxxChart` helper、plain presentation records、Vanilla runtime contribution 与 SSR convenience
+- **不拥有的能力**：Chart recipe/resolver、Plot lowering、数据处理、跨 adapter dependency aggregation、dataset bridge、identity bypass、Standard Surface / Layout Flex、renderer
+- **输入与输出**：接收完整 PlotSpec 或 typed Chart plain input 与数据，输出 canonical IRChart 和宿主 runtime contribution
 - **缺口流向**：Chart 语义进入 `@retikz/chart`，Plot 语义进入 `@retikz/plot`，自动依赖聚合与 identity 能力进入 Kernel adapter owner
 
-## ADR-01 约束
+## 公开 authoring 约束
 
-- 不公开 `createChartSpec`、`chart`、helper、type 或 runtime adapter
-- 不注册或聚合 Chart、Plot、Standard definitions，不合并 datasets
-- 不调用 Plot lowering，不绕过宿主 identity 校验，不引入 Standard/Flex 行为
+- 基础 helper 与 typed helper 共享 title / subtitle / note / source shorthand 和有序 plain presentation records
+- plain record 的 text 只接受 string 或 JSON-safe Core TextBlock，不接受 React authoring object
+- plain records 的 position 只用于 top / bottom authoring normalization；canonical IR 只保留最终 children 顺序
+- 同类 preset 唯一并完整覆盖同名 shorthand；空内容、重复 preset 与非法 position fail-loud
+- adapter 只构造 framework-neutral authoring input 并复用 `@retikz/chart` normalizer；不自行排序、补默认、实现 Flex 或 lower Plot
+- 上游 dependency / surface / spatial gates 与产品实现完成前，包根继续保持当前关闭状态，不提前导出不可执行 API

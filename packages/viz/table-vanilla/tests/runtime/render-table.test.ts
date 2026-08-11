@@ -1,12 +1,12 @@
 import type { CellPresentationInput } from '@retikz/table';
 
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import {
   defineCellFormatter,
   defineCellPresentation,
   defineCellVisualScale,
   defineTableThemeStyle,
-  getTableThemePreset,
+  getDefaultTableThemePreset,
 } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -24,7 +24,7 @@ const cleanCoreTheme = defineThemeStyle({
 const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
   resolve: theme => ({
-    ...getTableThemePreset(ThemeStyle.Neutral, theme.mode),
+    ...getDefaultTableThemePreset(theme.mode),
     'cell.background.fill': null,
     'cell.content.color': null,
     'cell.content.font.family': null,
@@ -141,8 +141,8 @@ describe('renderTable', () => {
     });
   });
 
-  it('keeps the neutral light default distinct from explicit clean in SSR', () => {
-    const neutral = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
+  it('keeps the light baseline distinct from explicit clean in SSR', () => {
+    const baseline = renderTable(manualTable({ rows: [['Ada']] }), { artifacts: true });
     const clean = renderTable(manualTable({ rows: [['Ada']] }), {
       artifacts: true,
       theme: { style: 'clean', mode: 'light' },
@@ -150,8 +150,8 @@ describe('renderTable', () => {
       lowerOptions: { tableThemeStyles: [cleanTableTheme] },
     });
 
-    expect(neutral.manifest).toMatchObject({
-      style: { style: 'neutral', themeMode: 'light' },
+    expect(baseline.manifest).toMatchObject({
+      style: { themeMode: 'light' },
       cells: [{ appearance: { background: { fill: '#ffffff' }, content: { color: '#18181b' } } }],
     });
     expect(clean.manifest).toMatchObject({

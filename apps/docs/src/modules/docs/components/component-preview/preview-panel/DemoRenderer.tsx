@@ -3,8 +3,8 @@ import type { FC } from 'react';
 import { RendererModeProvider } from '@retikz/react';
 import { memo } from 'react';
 
-import type { PreviewThemeMode, RendererMode } from '../types';
 import type { PreviewThemeStyleValue } from '../theme';
+import type { PreviewThemeMode, RendererMode } from '../types';
 
 import { PreviewThemeProvider } from '../theme';
 

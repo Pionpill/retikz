@@ -3,13 +3,13 @@ title: Contract - Theme
 description: Query Plot canonical tokens, preset cascade, native theme, and inspection contracts.
 ---
 
-Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position, then selects the complete domain definition with the same name. Published packages only include Neutral; this site injects Academic, Vibrant, and Clean reference presets through the public Core and Plot definition contracts. `PlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
+Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position. When `style` is omitted, Plot uses its own mode-aware default baseline; an explicit `style` selects the complete domain definition with the same name. Published packages include no named styles; this site injects Academic, Vibrant, and Clean reference presets through the public Core and Plot definition contracts. `PlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
 The example writes a plot-area background and categorical palette through `PlotThemeToken`, then uses `plotThemeTokenRules` to enable grid lines for the y Axis only. React, Vanilla, and plain JSON pass the same tokens and rules to the Plot resolver without adapter-owned presets. The structured `plotArea.fill` field fills only the two-dimensional Plot area after axis, legend, and layout reserves are removed. One-dimensional lines and circles expose only a projection path, so they emit neither a fillable Plot area nor a grid layer across one.
 
-The site's Vibrant reference preset uses a light blue-gray Plot area in Light mode and a dark Plot area in Dark mode; Neutral, Academic, and Clean remain transparent by default. Explicit `plot.area.fill` or `plotTheme.plotArea.fill` values still override the preset through the normal cascade.
+The site's Vibrant reference preset uses a light blue-gray Plot area in Light mode and a dark Plot area in Dark mode; the default baseline, Academic, and Clean remain transparent. Explicit `plot.area.fill` or `plotTheme.plotArea.fill` values still override the preset through the normal cascade.
 
 ## Extensible styles
 
@@ -50,11 +50,11 @@ Core effective Theme
 | Legend          | `legend.title.foreground`, `legend.title.font.size`, `legend.title.font.weight`, `legend.label.foreground`, `legend.label.font.size`, `legend.swatch.size`, `legend.swatch.gap`, `legend.entry.gap`, `legend.title.gap`, `legend.ramp.length`, `legend.ramp.thickness`, `legend.symbol.size`, `legend.symbol.scale`, `legend.symbol.fit` |
 | Palette         | `plot.palette.categorical`, `plot.palette.series`, `plot.palette.sector`, `plot.palette.sequential`, `plot.palette.diverging`, `plot.palette.shape`                                                                                                                                                                                      |
 
-`axis.line.enabled` and `axis.grid.enabled` change visual defaults for existing axes only. Three grid paint tokens style enabled major grid lines, while `axis.grid.includeDomain` controls whether they include effective-domain endpoints. The endpoint token never creates or enables a grid by itself. Neutral enables it for existing x/y major grids; the site's other reference styles keep it disabled, and an explicit Axis guide boolean wins last. Themes never create axes, ticks, or minor grids; major/minor tick sources and separate styles remain local Axis guide semantics.
+`axis.line.enabled` and `axis.grid.enabled` change visual defaults for existing axes only. Three grid paint tokens style enabled major grid lines, while `axis.grid.includeDomain` controls whether they include effective-domain endpoints. The endpoint token never creates or enables a grid by itself. The default baseline enables it for existing x/y major grids; the site's three reference styles keep it disabled, and an explicit Axis guide boolean wins last. Themes never create axes, ticks, or minor grids; major/minor tick sources and separate styles remain local Axis guide semantics.
 
-`axis.title.enabled` controls whether title content authored on an existing Axis guide is rendered. Neutral, Academic, and Vibrant enable it by default, while Clean disables it. A global token, dimension rule, or structured `plotTheme.axis.title` style object can enable it again. The Axis guide `title` still supplies content and local style, but does not bypass the disabled state by itself.
+`axis.title.enabled` controls whether title content authored on an existing Axis guide is rendered. The default baseline, Academic, and Vibrant enable it by default, while Clean disables it. A global token, dimension rule, or structured `plotTheme.axis.title` style object can enable it again. The Axis guide `title` still supplies content and local style, but does not bypass the disabled state by itself.
 
-`axis.title.padding` controls the default distance from the tick-label band to the axis-title center. Neutral and all three site reference styles default to `12`. A dimension rule may override it for selected axes, followed by the higher-priority structured `plotTheme.axis.title.padding` and local Axis `title.padding` inputs.
+`axis.title.padding` controls the default distance from the tick-label band to the axis-title center. The default baseline and all three site reference styles default to `12`. A dimension rule may override it for selected axes, followed by the higher-priority structured `plotTheme.axis.title.padding` and local Axis `title.padding` inputs.
 
 `plotThemeTokenRules` uses `{ select: { dimension }, tokens }`. `dimension` accepts one non-empty open string or a non-empty unique array, so the same contract matches `x`, `y`, `radius`, `angle`, and custom Coordinate roles. Rules accept only `axis.line.*`, `axis.tick.*`, `axis.tickLabel.*`, `axis.title.*`, and `axis.grid.*`; explicit Axis guide visual fields win last, but title content does not bypass `axis.title.enabled: false`.
 
@@ -68,7 +68,7 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` uses the exact same 42-field contract with every field required. The built-in Neutral Light / Dark presets and the `tokens` returned by every injected definition must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
+`PlotResolvedThemeTokensSchema` uses the exact same 42-field contract with every field required. The default-baseline Light / Dark presets and the `tokens` returned by every injected definition must pass it, so sparse, resolved, and preset maps cannot drift into separate field lists.
 
 ## Inspection
 

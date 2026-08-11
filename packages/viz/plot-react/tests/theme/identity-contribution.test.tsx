@@ -2,8 +2,8 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type * as RetikzReact from '@retikz/react';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
-import { definePlotThemeStyle, getPlotThemePreset } from '@retikz/plot';
+import { ThemeMode } from '@retikz/core';
+import { definePlotThemeStyle, getDefaultPlotThemePreset } from '@retikz/plot';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -38,7 +38,7 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => ({ tokens: getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light) }),
+  resolve: () => ({ tokens: getDefaultPlotThemePreset(ThemeMode.Light) }),
 });
 
 describe('Plot React runtime style options', () => {
@@ -95,5 +95,25 @@ describe('Plot React runtime style options', () => {
 
     const contribution = adapter?.contribute({ spec, data });
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
+    expect(contribution).not.toHaveProperty('datasets');
+    expect(contribution).not.toHaveProperty('makeComposites');
+
+    const dependency = contribution?.compositeDependencies;
+    expect(dependency?.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(dependency?.providers).toHaveLength(1);
+    expect(dependency?.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(dependency?.providers[0]?.dependencies).toEqual([]);
+  });
+
+  it('embedded Plot contributions reuse the stable plot.plot maker', () => {
+    const adapter = Plot.embeddableAdapter;
+    expect(adapter).toBeDefined();
+
+    const first = adapter?.contribute({ spec, data });
+    const second = adapter?.contribute({ spec, data });
+
+    expect(first?.compositeDependencies.providers[0]?.makeDefinition).toBe(
+      second?.compositeDependencies.providers[0]?.makeDefinition,
+    );
   });
 });

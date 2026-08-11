@@ -17,8 +17,8 @@ export const vizV02: Release = {
         {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
-            zh: '42 个 `PlotThemeToken`、内置 Neutral light/dark preset、开放 style definition、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
-            en: 'Plot now owns 42 `PlotThemeToken` keys, the built-in Neutral light/dark preset, open style definitions, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
+            zh: '42 个 `PlotThemeToken`、随 mode 变化的默认 light/dark preset、开放 style definition、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',
+            en: 'Plot now owns 42 `PlotThemeToken` keys, its mode-aware default light/dark preset, open style definitions, Axis-scoped rules, a deterministic cascade, and native `IRPlotTheme` mapping.',
           },
         },
         {
@@ -40,12 +40,12 @@ export const vizV02: Release = {
           items: [
             {
               label: {
-                zh: 'BREAKING：发布包主题收敛为 Neutral',
-                en: 'BREAKING: published themes converge on Neutral',
+                zh: 'BREAKING：发布包主题改为 owner 默认 baseline',
+                en: 'BREAKING: published themes use owner default baselines',
               },
               content: {
-                zh: 'Core、Plot、Chart 与 Table 只内置 `neutral`；`academic`、`vibrant`、`clean` 改由文档站通过各 owner 的公开 definition / registry 注入，不增加跨 owner registry。应用自定义 style 继续为每个实际消费 owner 提供同名 definition。',
-                en: "Core, Plot, Chart, and Table now include only `neutral`. The docs site injects `academic`, `vibrant`, and `clean` through each owner's public definition and registry contracts without adding a cross-owner registry. Application-defined styles still provide same-named definitions for every consuming owner.",
+                zh: 'Core、Plot、Chart 与 Table 不再内置命名 style；省略 `style` 时各 owner 使用自己的默认基线。文档站通过各 owner 的公开 definition / registry 注入 `academic`、`vibrant`、`clean`，不增加跨 owner registry。应用自定义 style 继续为每个实际消费 owner 提供同名 definition。',
+                en: "Core, Plot, Chart, and Table no longer include named styles; omitting `style` selects each owner's default baseline. The docs site injects `academic`, `vibrant`, and `clean` through each owner's public definition and registry contracts without adding a cross-owner registry. Application-defined styles still provide same-named definitions for every consuming owner.",
               },
             },
             {
@@ -74,8 +74,8 @@ export const vizV02: Release = {
                 en: 'BREAKING: Axis grid moves to one theme contract',
               },
               content: {
-                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth`、`drawOpacity` 与 `includeDomain` 五个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。Neutral 与 Vibrant 默认开启 x/y grid，Clean 只开启 y grid，Academic 全部关闭；Neutral 的 x/y grid 还会覆盖 effective domain 端点。Axis guide 局部配置最终优先。一维坐标没有二维 Plot area，因此始终不输出 grid layer。',
-                en: 'Grid uses five flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, `drawOpacity`, and `includeDomain`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. Neutral and Vibrant enable x/y grids, Clean enables y-grid only, and Academic disables grids; Neutral x/y grids also include effective-domain endpoints. Local Axis guide configuration wins last. One-dimensional coordinates have no two-dimensional Plot area and therefore never emit a grid layer.',
+                zh: 'Grid 使用 `axis.grid.enabled`、`stroke`、`strokeWidth`、`drawOpacity` 与 `includeDomain` 五个扁平 token；Axis dimension 差异统一由 `plotThemeTokenRules` 表达，line、tick、tick label 与 title 也复用同一 selector。默认 baseline 与 Vibrant 默认开启 x/y grid，Clean 只开启 y grid，Academic 全部关闭；默认 baseline 的 x/y grid 还会覆盖 effective domain 端点。Axis guide 局部配置最终优先。一维坐标没有二维 Plot area，因此始终不输出 grid layer。',
+                en: 'Grid uses five flat tokens: `axis.grid.enabled`, `stroke`, `strokeWidth`, `drawOpacity`, and `includeDomain`. `plotThemeTokenRules` expresses Axis-dimension differences for grid, line, ticks, tick labels, and titles through one selector. The default baseline and Vibrant enable x/y grids, Clean enables y-grid only, and Academic disables grids; default-baseline x/y grids also include effective-domain endpoints. Local Axis guide configuration wins last. One-dimensional coordinates have no two-dimensional Plot area and therefore never emit a grid layer.',
               },
             },
             {
@@ -84,8 +84,8 @@ export const vizV02: Release = {
                 en: 'Axis major grids can include effective-domain endpoints',
               },
               content: {
-                zh: '`grid.includeDomain` 可在常规来源与密度解析后追加缺失的最终 scale domain 首尾位置，并按投影坐标去重；guide 局部默认关闭，不改变轴 tick，也不为次网格追加端点。`axis.grid.includeDomain` 将同一默认接入 Theme cascade，Neutral 的 x/y grid 默认开启，端点 token 本身不会创建 grid。',
-                en: '`grid.includeDomain` appends missing final scale-domain endpoints after normal source and density resolution and deduplicates by projected coordinate. Its guide-local default is disabled, and it changes neither axis ticks nor minor grids. `axis.grid.includeDomain` brings the same default into the Theme cascade: Neutral enables it for x/y grids, while the endpoint token never creates a grid by itself.',
+                zh: '`grid.includeDomain` 可在常规来源与密度解析后追加缺失的最终 scale domain 首尾位置，并按投影坐标去重；guide 局部默认关闭，不改变轴 tick，也不为次网格追加端点。`axis.grid.includeDomain` 将同一默认接入 Theme cascade，默认 baseline 的 x/y grid 默认开启，端点 token 本身不会创建 grid。',
+                en: '`grid.includeDomain` appends missing final scale-domain endpoints after normal source and density resolution and deduplicates by projected coordinate. Its guide-local default is disabled, and it changes neither axis ticks nor minor grids. `axis.grid.includeDomain` brings the same default into the Theme cascade: the default baseline enables it for x/y grids, while the endpoint token never creates a grid by itself.',
               },
             },
             {
@@ -94,8 +94,8 @@ export const vizV02: Release = {
                 en: 'Axis title visibility and spacing join theme tokens',
               },
               content: {
-                zh: '新增 `axis.title.enabled` 与 `axis.title.padding`。Neutral 与本站 Academic / Vibrant reference 默认显示已有 Axis title，Clean reference 默认隐藏；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可重新开启。四种预览风格的 title padding 均为 `12`。',
-                en: "Adds `axis.title.enabled` and `axis.title.padding`. Neutral and the site's Academic / Vibrant references show authored Axis titles by default, while the Clean reference hides them; global tokens, dimension rules, or structured `plotTheme.axis.title` can enable them again. Title padding remains `12` in all four preview styles.",
+                zh: '新增 `axis.title.enabled` 与 `axis.title.padding`。默认 baseline 与本站 Academic / Vibrant reference 默认显示已有 Axis title，Clean reference 默认隐藏；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可重新开启。四种预览风格的 title padding 均为 `12`。',
+                en: "Adds `axis.title.enabled` and `axis.title.padding`. The default baseline and the site's Academic / Vibrant references show authored Axis titles by default, while the Clean reference hides them; global tokens, dimension rules, or structured `plotTheme.axis.title` can enable them again. Title padding remains `12` in all four preview styles.",
               },
             },
             {
@@ -104,8 +104,8 @@ export const vizV02: Release = {
                 en: 'Vibrant Plot-area surface',
               },
               content: {
-                zh: '本站 Vibrant reference preset 在 Light 下使用 `#E5ECF6`，在 Dark 下使用 `#111111`；Neutral 与本站其它 reference 继续保持透明绘图区。',
-                en: "The site's Vibrant reference preset uses `#E5ECF6` in Light mode and `#111111` in Dark mode; Neutral and the site's other references keep transparent Plot areas.",
+                zh: '本站 Vibrant reference preset 在 Light 下使用 `#E5ECF6`，在 Dark 下使用 `#111111`；默认 baseline 与本站其它 reference 继续保持透明绘图区。',
+                en: "The site's Vibrant reference preset uses `#E5ECF6` in Light mode and `#111111` in Dark mode; the default baseline and the site's other references keep transparent Plot areas.",
               },
             },
             {

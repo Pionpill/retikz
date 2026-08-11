@@ -48,7 +48,7 @@ describe('Table layout manifest', () => {
     const result = compileTable(
       spec,
       { people: [{ name: 'Ada' }] },
-      { theme: { style: 'neutral', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(TableLayoutManifestSchema.parse(result.manifest)).toEqual(result.manifest);

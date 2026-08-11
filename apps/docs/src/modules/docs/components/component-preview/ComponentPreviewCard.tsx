@@ -6,6 +6,7 @@ import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
+import type { PreviewThemeStyleValue } from './theme';
 import type {
   AlignKey,
   ComponentRenderSource,
@@ -17,7 +18,6 @@ import type {
   PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
-import type { PreviewThemeStyleValue } from './theme';
 
 import { ComponentPreviewDialog } from './ComponentPreviewDialog';
 import { alignClass, sizeClass } from './constants';

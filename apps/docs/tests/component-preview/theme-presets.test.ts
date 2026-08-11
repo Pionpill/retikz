@@ -1,4 +1,5 @@
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import * as corePackage from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { PlotThemeToken } from '@retikz/plot';
 import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
@@ -14,9 +15,9 @@ import {
 } from '@/modules/docs/components/component-preview/theme';
 
 describe('docs-owned theme presets', () => {
-  it('发布包只公开 Neutral，docs 维持四个闭合选择项', () => {
-    expect(Object.values(ThemeStyle)).toEqual(['neutral']);
-    expect(PreviewThemeStyleOptions).toEqual(['neutral', 'academic', 'vibrant', 'clean']);
+  it('发布包不公开命名 ThemeStyle，docs 维持四个闭合选择项', () => {
+    expect('ThemeStyle' in corePackage).toBe(false);
+    expect(PreviewThemeStyleOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);
   });
 
   it('三个参考风格为四个 owner 提供同名 definition', () => {

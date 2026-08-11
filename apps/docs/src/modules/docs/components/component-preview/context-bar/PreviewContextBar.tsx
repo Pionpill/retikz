@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
 
-import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
 import type { PreviewThemeStyleValue } from '../theme';
+import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
 
 import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
 

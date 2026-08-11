@@ -215,7 +215,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
 
 Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按同名 `TableThemeStyleDefinition` 解析 owner-local baseline，再投影 Core shared `colors.categorical` 到 `data.categorical`，最后应用 TableSpec 的局部 sparse `tableThemeTokens`。因此 Table 不维护第二份 shared palette 输入，也不会把完整 token map 持久化进 Theme IR。
 
-发布包只预注册 `neutral` 的 Core 与 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
+发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
 
 ### TableThemeTokenOverridesSchema
 
@@ -279,7 +279,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
 
 <ZodSchema
   name="TableThemeTokenPresetMapSchema"
-  description="不包含 shared categorical projection 的完整内置 Neutral Table preset map。"
+  description="不包含 shared categorical projection 的完整默认 Table preset map。"
   descriptions={{
     'cell.background.fill': '普通 Cell box 的默认背景 paint；null 表示不填充。',
     'cell.background.fillOpacity': '普通 Cell 背景透明度；null 表示不设置。',
@@ -302,7 +302,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   }}
 />
 
-`neutral` 是发布包内置的默认 Core `style`；本站提供的 `academic` 偏出版 / booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个注入 definition 都必须提供完整 light/dark baseline；Table resolver 按 style baseline → shared categorical → local `tableThemeTokens` 级联，未知 key、非法值或缺失 definition 会报告具体路径并 fail-loud。解析后的 manifest 会保留 effective `style`、`themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 TableSpec 输入字段。
+省略 `style` 时使用发布包的默认 Core 基线；本站提供的 `academic` 偏出版 / booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个注入 definition 都必须提供完整 light/dark baseline；Table resolver 按默认或命名 style baseline → shared categorical → local `tableThemeTokens` 级联，未知 key、非法值或缺失 definition 会报告具体路径并 fail-loud。解析后的 manifest 仅在显式选择时保留 `style`，并保留 `themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 TableSpec 输入字段。
 
 ## 相关
 

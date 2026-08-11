@@ -1,8 +1,3 @@
-/** 无需额外 definition 即可使用的内置 Theme style */
-export const ThemeStyle = {
-  Neutral: 'neutral',
-} as const;
-
 /** Theme 明暗环境的闭合取值 */
 export const ThemeMode = {
   Light: 'light',

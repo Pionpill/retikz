@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { IRTableSpec, TableStructureOutput } from '@retikz/table';
 
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { Layout, ThemeProvider } from '@retikz/react';
 import {
   createDetailTableSpec,
@@ -10,7 +10,7 @@ import {
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
-  getTableThemePreset,
+  getDefaultTableThemePreset,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -32,7 +32,7 @@ const cleanCoreTheme = defineThemeStyle({
 const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
   resolve: theme => ({
-    ...getTableThemePreset(ThemeStyle.Neutral, theme.mode),
+    ...getDefaultTableThemePreset(theme.mode),
     'cell.background.fill': null,
     'cell.content.color': null,
     'cell.content.font.family': null,
@@ -138,7 +138,7 @@ describe('Table React components', () => {
   });
 
   it('uses the effective Core Theme to select a different Table preset', () => {
-    const neutral = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']] })} />);
+    const defaultTheme = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']] })} />);
     const clean = renderToStaticMarkup(
       <ThemeProvider theme={{ style: 'clean', mode: 'light' }} themeStyles={[cleanCoreTheme]}>
         <TableThemeProvider tableThemeStyles={[cleanTableTheme]}>
@@ -147,8 +147,8 @@ describe('Table React components', () => {
       </ThemeProvider>,
     );
 
-    expect(neutral).toContain('#ffffff');
-    expect(neutral).toContain('#18181b');
+    expect(defaultTheme).toContain('#ffffff');
+    expect(defaultTheme).toContain('#18181b');
     expect(clean).not.toContain('#18181b');
     expect(clean).not.toContain('#e4e4e7');
   });
@@ -236,9 +236,15 @@ describe('Table React components', () => {
     expect(tableContribution.node).toMatchObject({ id: 'generic' });
     expect(detailContribution.node).toMatchObject({ id: 'detail' });
     expect(manualContribution.node).toMatchObject({ id: 'manual' });
-    expect(Object.keys(detailContribution.datasets)).toContain('@@retikz/table/runtime/detail');
-    expect(tableContribution.makeComposites).toBe(detailContribution.makeComposites);
-    expect(detailContribution.makeComposites).toBe(manualContribution.makeComposites);
+    expect(Object.keys(detailContribution.compositeDependencies.providers[0]?.datasets ?? {})).toContain(
+      '@@retikz/table/runtime/detail',
+    );
+    expect(tableContribution.compositeDependencies.providers[0]?.makeDefinition).toBe(
+      detailContribution.compositeDependencies.providers[0]?.makeDefinition,
+    );
+    expect(detailContribution.compositeDependencies.providers[0]?.makeDefinition).toBe(
+      manualContribution.compositeDependencies.providers[0]?.makeDefinition,
+    );
   });
 
   it('renders all three components as embedded Layout children without calling their render functions', () => {
@@ -283,7 +289,7 @@ describe('Table React components', () => {
           <ManualTable id="same" rows={[[null]]} />
         </Layout>,
       ),
-    ).toThrow(/reference.*@@retikz\/table\/runtime\/same/i);
+    ).toThrow(/dataset.*@@retikz\/table\/runtime\/same.*conflicts by identity/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout>
@@ -353,7 +359,7 @@ describe('Table React components', () => {
       namespace: 'fixture',
       type: 'badge',
       schema,
-      expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
+      expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
     const spec = createManualTableSpec({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],

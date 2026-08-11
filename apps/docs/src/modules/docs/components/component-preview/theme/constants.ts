@@ -5,7 +5,7 @@ import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
 
 /** 文档站维护的闭合 Theme style 选项 */
 export const PreviewThemeStyle = {
-  Neutral: 'neutral',
+  Default: 'default',
   Academic: 'academic',
   Vibrant: 'vibrant',
   Clean: 'clean',
@@ -16,13 +16,13 @@ export type PreviewThemeStyleValue = (typeof PreviewThemeStyle)[keyof typeof Pre
 
 /** ComponentPreview 解析后的最小 Theme 选择器 */
 export type PreviewTheme = {
-  style: PreviewThemeStyleValue;
+  style?: Exclude<PreviewThemeStyleValue, typeof PreviewThemeStyle.Default>;
   mode: ThemeModeValue;
 };
 
 /** ComponentPreview 支持的 ThemeStyle 选项 */
 export const PreviewThemeStyleOptions = [
-  PreviewThemeStyle.Neutral,
+  PreviewThemeStyle.Default,
   PreviewThemeStyle.Academic,
   PreviewThemeStyle.Vibrant,
   PreviewThemeStyle.Clean,
@@ -30,7 +30,7 @@ export const PreviewThemeStyleOptions = [
 
 /** ThemeStyle 对应的文档站图标 */
 const previewThemeStyleIcons: Record<PreviewThemeStyleValue, LucideIcon> = {
-  [PreviewThemeStyle.Neutral]: Feather,
+  [PreviewThemeStyle.Default]: Feather,
   [PreviewThemeStyle.Academic]: GraduationCap,
   [PreviewThemeStyle.Vibrant]: Sparkles,
   [PreviewThemeStyle.Clean]: BrushCleaning,
@@ -38,7 +38,7 @@ const previewThemeStyleIcons: Record<PreviewThemeStyleValue, LucideIcon> = {
 
 /** ThemeStyle 对应的本地化文案 key */
 export const PreviewThemeStyleLabelKeys = {
-  [PreviewThemeStyle.Neutral]: 'preview.themeStyleNeutral',
+  [PreviewThemeStyle.Default]: 'preview.themeStyleDefault',
   [PreviewThemeStyle.Academic]: 'preview.themeStyleAcademic',
   [PreviewThemeStyle.Vibrant]: 'preview.themeStyleVibrant',
   [PreviewThemeStyle.Clean]: 'preview.themeStyleClean',
@@ -53,6 +53,6 @@ export const getPreviewThemeStyleIcon = (themeStyle: PreviewThemeStyleValue): Lu
 
 /** 根据 docs 偏好生成传给 Core 的 sparse Theme selector */
 export const resolvePreviewTheme = (themeStyle: PreviewThemeStyleValue, themeMode: ThemeModeValue): PreviewTheme => ({
-  style: themeStyle,
+  ...(themeStyle === PreviewThemeStyle.Default ? {} : { style: themeStyle }),
   mode: themeMode,
 });

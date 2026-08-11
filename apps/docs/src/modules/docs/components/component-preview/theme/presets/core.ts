@@ -4,7 +4,7 @@ import { defineThemeStyle } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';
 
-type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'neutral'>;
+type ReferenceStyle = Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>;
 type Tone = readonly [saturation: number, lightness: number];
 
 const hues = [210, 30, 150, 330, 190, 10, 50, 270, 100, 240, 300, 350, 75, 125, 170, 225] as const;

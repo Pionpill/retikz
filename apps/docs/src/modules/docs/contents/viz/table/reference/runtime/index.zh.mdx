@@ -209,7 +209,7 @@ Table 会检查 options / domain 的 JSON 形状、range / evaluator 的 Core CS
 
 ```ts
 const result = renderTable(spec, {
-  theme: { style: 'neutral', mode: 'light' },
+  theme: { mode: 'light' },
   data: { scores: rows },
   lowerOptions: { formatterDefinitions, presentationDefinitions, visualScaleDefinitions },
   compile: {
@@ -261,7 +261,7 @@ manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
 
-Table 的 Core preset 来自 host `theme.style` / `theme.mode`；local `tableThemeTokens` 在 TableSpec 层级覆盖它。宿主 CSS 继续使用 `containerStyle`，不进入 TableSpec。省略 Theme 时从 `neutral + light` 基线开始；resolved manifest 另行记录 effective `style`、`themeMode`、完整 token map 与来源。
+Table 的 Core preset 来自 host `theme.style` / `theme.mode`；local `tableThemeTokens` 在 TableSpec 层级覆盖它。宿主 CSS 继续使用 `containerStyle`，不进入 TableSpec。省略 `style` 时使用默认的 light 基线；resolved manifest 仅在显式选择时记录 `style`，并记录 `themeMode`、完整 token map 与来源。
 
 ## 相关
 

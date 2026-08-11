@@ -40,7 +40,7 @@ describe('ComponentPreview store controls panel preference', () => {
   });
 
   it('stores the global preview ThemeStyle', () => {
-    expect(useComponentPreviewStore.getState().themeStyle).toBe(PreviewThemeStyle.Neutral);
+    expect(useComponentPreviewStore.getState().themeStyle).toBe(PreviewThemeStyle.Default);
 
     useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Academic);
 
