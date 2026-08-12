@@ -28,7 +28,7 @@ schemas/     Zod schema 与 IR 类型真源
 contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契约、能力无关 helper
 providers/   内置 definition、BUILTIN_*、registry resolver
 compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
-parsers/     字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
+parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ```
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
@@ -62,7 +62,7 @@ parsers/     字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 - lookup 按 inside-out；同 frame 重复 id 发 warning 并 last-wins，跨 frame 同名是 shadowing。
 - scope 的相对定位、bbox synthetic layout、样式继承和 `resetStyle` 属 compile 语义；改动前读相关代码与测试，不把规则复制到 renderer。
 
-## Parsers
+## Parse
 
 - parser 必须是纯函数：input -> output，无副作用。
 - parser 输出 IR 节点或 IR 片段，不输出 React props 或 adapter 私有结构。
