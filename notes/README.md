@@ -44,6 +44,7 @@
 - [`capability-design.md`](./architecture/capability-design.md)：能力域、包角色、完备标准与能力性迭代门禁。
 - [`schema-design.md`](./architecture/schema-design.md)：schema / LLM 契约相关设计。
 - [`package-topology.md`](./architecture/package-topology.md)：领域目录、release group 与依赖策略。
+- [`package-responsibility-design.md`](./architecture/package-responsibility-design.md)：Core / Plot、Vanilla 与框架包的职责、依赖方向和 Input / IR 边界。
 - [`performance-design.md`](./architecture/performance-design.md)：增量执行、调度、retained patch 与 generation 总则。
 - [`interaction-design.md`](./architecture/interaction-design.md)：事件、behavior、presentation、intent 与交互边界。
 - [`editor-design.md`](./architecture/editor-design.md)：无 UI 图形编辑运行时、candidate transaction 与领域 editor adapter 边界。
