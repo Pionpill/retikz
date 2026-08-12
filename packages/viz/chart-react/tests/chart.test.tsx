@@ -12,8 +12,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { ChartHostProps } from '../src';
 
-import { getDefaultChartThemePreset } from '../../chart/src/style';
-import { Chart, ChartNote, ChartSource, ChartSubtitle, ChartTitle, ScatterChart } from '../src';
+import { getDefaultChartThemePreset } from '../../chart/src/base/style';
+import { Chart, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../src';
+import { ScatterChart } from '../src/point';
 
 const brandCoreTheme = defineThemeStyle({
   name: 'brand',

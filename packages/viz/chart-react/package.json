@@ -38,6 +38,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./point": {
+      "types": "./src/point/index.ts",
+      "default": "./src/point/index.ts"
     }
   },
   "publishConfig": {
@@ -49,6 +53,11 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./point": {
+        "types": "./dist/types/point/index.d.ts",
+        "import": "./dist/point/index.js",
+        "default": "./dist/point/index.js"
       }
     }
   },

@@ -3,7 +3,7 @@ import type { FC, ReactNode } from 'react';
 
 import { useMemo } from 'react';
 
-import { ChartThemeStylesContext, useChartThemeStyles } from './theme-context';
+import { ChartThemeStylesContext, useChartThemeStyles } from '../shared';
 
 /** Chart-owned ambient Theme definitions Provider props */
 export type ChartThemeProviderProps = {
