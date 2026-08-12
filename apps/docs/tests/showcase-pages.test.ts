@@ -26,6 +26,8 @@ const sharedApiContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/_includes/shared-api.${lang}.mdx`);
 const pointContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/plot/mark/point/index.${lang}.mdx`);
+const compositeConceptPath = (lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/kernel/concepts/design/composite/index.${lang}.mdx`);
 
 const compileOptions: CompileOptions = {
   outputFormat: 'function-body',
@@ -44,6 +46,15 @@ const showcaseMeta = (family: string, order: number) => ({
 });
 
 describe('collectShowcasePages', () => {
+  it.each(['zh', 'en'] as const)('Composite %s 概念页保持 MDX 可编译', async lang => {
+    const compiled = String(await compile(readFileSync(compositeConceptPath(lang), 'utf8'), compileOptions));
+
+    expect(compiled).toContain('resolveCompositeDependencies');
+    expect(compiled).toContain('CompileOptions.composites');
+    expect(compiled).toContain('spatialHandles');
+    expect(compiled).toContain('resolveSpatialHandle');
+  });
+
   it('按 family 与 order 提供稳定的 Showcase 页面关系', () => {
     const sections: Array<Section> = [
       {
