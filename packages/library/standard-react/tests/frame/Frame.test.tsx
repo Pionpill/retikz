@@ -1,5 +1,5 @@
 import { buildIRWithContributions, convertReactNodeToIR, Node, Path, Step } from '@retikz/react';
-import { createFrame } from '@retikz/standard';
+import { AxesProvider, createFrame, FrameProvider, GridProvider } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '../../src';
@@ -52,7 +52,8 @@ describe('<Frame>', () => {
         children: [{ type: 'node', position: [0, 0], text: 'A' }],
       }),
     );
-    expect(first.makeComposites).toBe(second.makeComposites);
+    expect(first.compositeDependencies.providers[0]).toBe(FrameProvider);
+    expect(second.compositeDependencies.providers[0]).toBe(FrameProvider);
   });
 
   it('preserves JSON-safe Node fields on FrameTitle and FrameDescription', () => {
@@ -160,10 +161,10 @@ describe('<Frame>', () => {
     );
 
     expect(result.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
-    expect(result.contributions.map(contribution => contribution.namespace)).toEqual([
-      'standard.grid',
-      'standard.axes',
-      'standard.frame',
+    expect(result.contributions.map(contribution => contribution.roots[0])).toEqual([
+      GridProvider.key,
+      AxesProvider.key,
+      FrameProvider.key,
     ]);
   });
 });

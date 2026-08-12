@@ -64,7 +64,7 @@ describe('Standard Vanilla definition loading', () => {
     expect(() => renderToSvgString(ir, { compile: { composites: [GridDefinition] } })).not.toThrow();
   });
 
-  it('leaves duplicate adapter and explicit definition registration fail-loud', () => {
+  it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
     expect(() =>
       renderToSvgString(
         {
@@ -77,6 +77,19 @@ describe('Standard Vanilla definition loading', () => {
           compile: { composites: [GridDefinition] },
         },
       ),
-    ).toThrow(/duplicate composite registration.*standard\.grid/i);
+    ).not.toThrow();
+    expect(() =>
+      renderToSvgString(
+        {
+          type: 'figure',
+          version: 1,
+          children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
+        },
+        {
+          adapters: [GridVanillaAdapter],
+          compile: { composites: [{ ...GridDefinition }] },
+        },
+      ),
+    ).toThrow(/definition conflict.*standard\.grid/i);
   });
 });
