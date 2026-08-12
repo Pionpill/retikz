@@ -1,60 +1,55 @@
-export type { ChartContributionSourceValue, IRChartInspection, IRChartInspectionMember } from './inspection';
-export { ChartContributionSource, ChartInspectionMemberSchema, ChartInspectionSchema } from './inspection';
+export type { IRBubbleChartSpec } from './families/scatter-points/bubble';
+export { BubbleChartSpecSchema } from './families/scatter-points/bubble';
+export type { IRConnectedScatterChartSpec } from './families/scatter-points/connected-scatter';
+export { ConnectedScatterChartSpecSchema } from './families/scatter-points/connected-scatter';
+export type { IRScatterChartSpec } from './families/scatter-points/scatter';
+export { ScatterChartSpecSchema } from './families/scatter-points/scatter';
+export type { IRChartInspection, IRChartInspectionMember } from './inspection';
+export { ChartInspectionMemberSchema, ChartInspectionSchema } from './inspection';
 export type {
-  ChartPresentationDefaultItemKeyValue,
-  ChartPresentationItemContentKindValue,
+  ChartAuthoringInput,
+  ChartPresentationAuthoringRecord,
+  ChartPresentationFlexItem,
+  ChartPresentationPositionValue,
   ChartPresentationPresetValue,
-  ChartPresentationResolvedContentKindValue,
+  ChartPresentationShorthand,
   IRChartPresentation,
-  IRChartPresentationChildContent,
-  IRChartPresentationChildItem,
-  IRChartPresentationInspection,
+  IRChartPresentationItemInspection as IRChartPresentationInspectionItem,
   IRChartPresentationItem,
-  IRChartPresentationItemContent,
   IRChartPresentationItemInspection,
-  IRChartPresentationLayout,
-  IRChartPresentationPlotContent,
   IRChartPresentationPlotItem,
-  IRChartPresentationPresetContent,
-  IRChartPresentationPresetItem,
-  IRChartPresentationStyledText,
-  IRChartPresentationText,
-  IRChartPresentationTextBlock,
 } from './presentation';
 export {
-  CHART_PRESENTATION_DEFAULT_ITEM_KEY_BY_PRESET,
-  ChartPresentationChildContentSchema,
-  ChartPresentationChildItemSchema,
-  ChartPresentationDefaultItemKey,
+  ChartPresentationAuthoringRecordSchema,
+  ChartPresentationFlexItemSchema,
   ChartPresentationInspectionSchema,
-  ChartPresentationItemContentKind,
-  ChartPresentationItemContentSchema,
   ChartPresentationItemInspectionSchema,
+  ChartPresentationItemKey,
   ChartPresentationItemSchema,
-  ChartPresentationLayoutSchema,
-  ChartPresentationPlotContentSchema,
   ChartPresentationPlotItemSchema,
+  ChartPresentationPosition,
   ChartPresentationPreset,
-  ChartPresentationPresetContentSchema,
-  ChartPresentationPresetItemSchema,
-  ChartPresentationResolvedContentKind,
   ChartPresentationSchema,
-  ChartPresentationStyledTextSchema,
-  ChartPresentationTextBlockSchema,
   ChartPresentationTextSchema,
+  createChart,
+  DEFAULT_CHART_DATA_REFERENCE,
+  normalizeChartPresentation,
 } from './presentation';
-export type { IRChartShared } from './schemas';
-export { ChartSharedSchema } from './schemas';
+export type { ChartResolution, ChartResolveOptions, TypedChartPresentationAuthoring } from './resolution';
+export { ChartDefinition, ChartProvider, ChartProviderKey, createChartProvider } from './resolution';
+export { resolveChartSpec } from './resolution';
+export type { ChartTypeValue, IRChart } from './schemas';
+export { CHART_COMPOSITE_TYPE, CHART_NAMESPACE, ChartSchema, ChartType } from './schemas';
+export type { IRChartSpec } from './schemas/internal';
+export { ChartSpecSchema } from './schemas/internal';
 export type {
   ChartThemeStyleDefinition,
   ChartThemeTokenValue,
   IRChartResolvedThemeTokens,
-  IRChartThemeSurface,
   IRChartThemeTokenOverrides,
 } from './style';
 export {
   ChartResolvedThemeTokensSchema,
-  ChartThemeSurfaceSchema,
   ChartThemeToken,
   ChartThemeTokenOverridesSchema,
   defineChartThemeStyle,

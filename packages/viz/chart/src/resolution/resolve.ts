@@ -14,7 +14,7 @@ import type { ChartThemeStyleDefinition } from '../style';
 import { ChartRecipeInvariantError } from '../families/shared';
 import { createChartInspection } from '../inspection';
 import { normalizeChartPresentation, resolveChartPresentation } from '../presentation';
-import { ChartSchema, CHART_NAMESPACE } from '../schemas';
+import { CHART_NAMESPACE, ChartSchema } from '../schemas';
 import { chartRecipeStyleContextOf, resolveChartStyle } from '../style';
 import { BUILTIN_CHART_RECIPES } from './catalog';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';

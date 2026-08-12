@@ -10,11 +10,16 @@ const base = {
 } as const;
 
 describe('Chart identity', () => {
-  it('从显式 Chart id 确定性派生 Scope 与 Plot id', () => {
+  it('从显式 Chart id 确定性派生 canonical Chart 与 Plot id', () => {
     const result = resolveChartSpec({ ...base, id: 'sales' });
 
     expect(result.plotSpec.id).toBe('sales/plot');
-    expect(result.node).toEqual({ type: 'scope', id: 'sales', children: [result.plotSpec] });
+    expect(result.chart).toEqual({
+      namespace: 'chart',
+      type: 'chart',
+      id: 'sales',
+      plot: result.plotSpec,
+    });
   });
 
   it('匿名 Chart 不生成计数 id', () => {
@@ -22,34 +27,34 @@ describe('Chart identity', () => {
     const second = resolveChartSpec(base);
 
     expect(first.plotSpec.id).toBeUndefined();
-    expect(first.node).toEqual(first.plotSpec);
-    expect(second.node).toEqual(first.node);
+    expect(first.chart).toEqual({ namespace: 'chart', type: 'chart', plot: first.plotSpec });
+    expect(second.chart).toEqual(first.chart);
   });
 
   it('presentation item key 不拼接 Chart id，匿名实例不生成 synthetic id', () => {
     const presentation = {
-      children: [
-        { key: 'badge', content: { kind: 'child', child: { type: 'scope', id: 'badge', children: [] } } },
-        { content: { kind: 'plot' } },
-        { content: { kind: 'preset', preset: 'title', text: 'Revenue' } },
+      presentation: [
+        { preset: 'subtitle', position: 'top', text: 'Quarterly' },
+        { preset: 'title', position: 'bottom', text: 'Revenue' },
       ],
     } as const;
-    const identified = resolveChartSpec({ ...base, id: 'sales', presentation });
-    const anonymous = resolveChartSpec({ ...base, presentation });
+    const identified = resolveChartSpec({ ...base, id: 'sales' }, undefined, {}, presentation);
+    const anonymous = resolveChartSpec(base, undefined, {}, presentation);
 
-    expect(identified.node).toMatchObject({
-      type: 'scope',
+    expect(identified.chart).toMatchObject({
+      namespace: 'chart',
+      type: 'chart',
       id: 'sales',
-      children: [
-        {
-          children: [{ key: 'badge' }, { key: 'chart.plot' }, { key: 'chart.presentation.title' }],
-        },
-      ],
+      presentation: {
+        children: [{ key: 'chart.presentation.subtitle' }, { key: 'chart.plot' }, { key: 'chart.presentation.title' }],
+      },
     });
-    expect(anonymous.node).not.toHaveProperty('id');
-    expect(JSON.stringify(anonymous.node)).not.toContain('sales');
-    expect(anonymous.node).toMatchObject({
-      children: [{ key: 'badge' }, { key: 'chart.plot' }, { key: 'chart.presentation.title' }],
+    expect(anonymous.chart).not.toHaveProperty('id');
+    expect(JSON.stringify(anonymous.chart)).not.toContain('sales');
+    expect(anonymous.chart).toMatchObject({
+      presentation: {
+        children: [{ key: 'chart.presentation.subtitle' }, { key: 'chart.plot' }, { key: 'chart.presentation.title' }],
+      },
     });
   });
 });

@@ -1,20 +1,19 @@
+import { PlotSpecSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { BubbleChartSpecSchema } from '../families/scatter-points/bubble';
-import { ConnectedScatterChartSpecSchema } from '../families/scatter-points/connected-scatter';
-import { ScatterChartSpecSchema } from '../families/scatter-points/scatter';
-import { omitUndefinedProperties } from '../shared';
+import { ChartPresentationSchema } from '../presentation/schema';
+import { ChartThemeTokenOverridesSchema } from '../style';
+import { CHART_COMPOSITE_TYPE, CHART_NAMESPACE } from './constants';
 
-type InternalChartSpec =
-  | z.infer<typeof ScatterChartSpecSchema>
-  | z.infer<typeof BubbleChartSpecSchema>
-  | z.infer<typeof ConnectedScatterChartSpecSchema>;
+/** 完整 PlotSpec 与 canonical presentation 组成的唯一 Chart composite */
+export const ChartSchema = z.strictObject({
+  namespace: z.literal(CHART_NAMESPACE),
+  type: z.literal(CHART_COMPOSITE_TYPE),
+  id: z.string().min(1).optional(),
+  chartThemeTokens: ChartThemeTokenOverridesSchema.optional(),
+  plot: PlotSpecSchema,
+  presentation: ChartPresentationSchema.optional(),
+});
 
-/** Chart owner 内建 variant 的封闭输入 union */
-export const ChartSpecSchema: z.ZodType<InternalChartSpec> = z
-  .discriminatedUnion('type', [ScatterChartSpecSchema, BubbleChartSpecSchema, ConnectedScatterChartSpecSchema])
-  .describe('Closed owner-private Chart variant union')
-  .overwrite(omitUndefinedProperties);
-
-/** Chart owner 内建 variant 的 JSON-safe 输入 */
-export type IRChartSpec = z.infer<typeof ChartSpecSchema>;
+/** 进入 Core composite dispatch 的 canonical Chart IR */
+export type IRChart = z.infer<typeof ChartSchema>;

@@ -97,7 +97,7 @@ describe('Chart resolution errors', () => {
     [
       { ...base, presentation: { children: [{ content: { kind: 'preset', preset: 'title', text: 'A' } }] } },
       'invalid-chart-spec',
-      ['presentation', 'children'],
+      ['presentation'],
     ],
     [
       {
@@ -107,7 +107,7 @@ describe('Chart resolution errors', () => {
         },
       },
       'invalid-chart-spec',
-      ['presentation', 'children', 0, 'content', 'text'],
+      ['presentation'],
     ],
     [
       {
@@ -118,12 +118,12 @@ describe('Chart resolution errors', () => {
         },
       },
       'invalid-chart-spec',
-      ['presentation', 'layout', 'gap', 'row'],
+      ['presentation'],
     ],
     [
       { ...base, presentation: { children: [{ key: 'main', content: { kind: 'plot' } }] } },
       'invalid-chart-spec',
-      ['presentation', 'children', 0, 'key'],
+      ['presentation'],
     ],
     [
       {

@@ -1,12 +1,10 @@
-import type { CompositeExpandContext, IRChild, IRJsonObject, JsonValue } from '@retikz/core';
+import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
 import type { ChartInspectionMemberKindValue } from '../../inspection';
-import type { CHART_NAMESPACE, IRChartShared } from '../../schemas';
-
-/** type owner 交给 resolution 的中立 Chart expansion callback */
-export type ChartExpand = (node: unknown, context?: CompositeExpandContext) => IRChild;
+import type { IRChartShared } from '../../schemas/common';
+import type { CHART_NAMESPACE } from '../../schemas/constants';
 
 /** 所有私有 Chart variant 共用的 namespace 与判别边界 */
 export type InternalChartSpecBound = IRChartShared & {

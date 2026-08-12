@@ -7,8 +7,8 @@ import type { IRChartShared } from '../schemas';
 import type { ChartThemeStyleDefinition } from './definition';
 import type { ResolvedChartThemeContext } from './resolved';
 
-import { ChartThemeToken } from './constants';
 import { getDefaultChartThemePreset } from './catalog';
+import { ChartThemeToken } from './constants';
 import { resolveChartThemeStyleRegistry } from './registry';
 import { ChartResolvedThemeTokensSchema, ChartThemeTokenOverridesSchema } from './schema';
 

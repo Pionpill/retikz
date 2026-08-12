@@ -11,7 +11,6 @@ import {
 } from '@retikz/plot';
 import { z } from 'zod';
 
-import { ChartPresentationSchema } from '../presentation';
 import { ChartThemeSurfaceSchema } from '../style';
 
 /** Chart variant 共享字段的未 refined shape */
@@ -19,7 +18,6 @@ export const ChartSharedBaseSchema = z
   .strictObject({
     id: z.string().min(1).optional().describe('Optional stable Chart identity and outer scope id'),
     data: DataReferenceSchema.describe('Single Plot data reference owned by this Chart'),
-    presentation: ChartPresentationSchema.optional().describe('Optional authored-order Chart presentation'),
     ...ChartThemeSurfaceSchema.shape,
     transform: z
       .array(TransformSchema)

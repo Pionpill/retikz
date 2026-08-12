@@ -47,4 +47,4 @@ families + schemas + presentation + style + inspection -> resolution
 - recipe 需要 palette 等 Plot 结果时只能调用 Plot 公开纯 resolver，不复制 Plot preset / merge，也不把 resolved Plot theme 物化回 PlotSpec
 - `presentation` 只接受唯一 Plot placeholder 与 title / subtitle / note / source TextBlock preset；authoring-only position 在 canonical IR 前消失，resolver 严格按 children 顺序投影到 Layout Flex，再用 Standard Surface 包装完整内容
 - canonical `IRChart` 保留整图 `id` 与 `chartThemeTokens`；Plot-owned theme 和 intrinsic contract 只保留在完整 PlotSpec。基础 Chart spec 模式保留显式 Plot id，DSL 模式只在 Chart id 存在时派生 `${chartId}/plot`，不得生成计数 id
-- 首个公开入口只能导出经 ADR 冻结的 typed ChartSpec、IRChart、单一 `ChartDefinition`、presentation / inspection / Chart style 数据契约与 framework-neutral helper；recipe、catalog、private resolver、逐类型 definition factory 与 fixture 不得泄漏
+- 首个公开入口只能导出经 ADR 冻结的 typed ChartSpec、IRChart、单一 `ChartDefinition`、presentation / inspection / Chart style 数据契约，以及 `resolveChartSpec` 这一条 framework-neutral typed authoring resolver；recipe、catalog、resolver 私有类型、逐类型 definition factory 与 fixture 不得泄漏

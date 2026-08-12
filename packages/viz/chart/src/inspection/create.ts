@@ -58,7 +58,7 @@ export const createChartInspection = (
     plot: { ...(plotSpec.id === undefined ? {} : { id: plotSpec.id }) },
     style: {
       chart: {
-        style: style.style,
+        ...(style.style === undefined ? {} : { style: style.style }),
         mode: style.mode,
         tokens: style.tokens,
         tokenSources: style.tokenSources,
