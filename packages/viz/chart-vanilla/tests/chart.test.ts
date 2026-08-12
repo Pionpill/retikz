@@ -7,8 +7,9 @@ import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotProviderKey } from
 import { SurfaceProvider } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultChartThemePreset } from '../../chart/src/style';
-import { createChart, createConnectedScatterChart, createScatterChart, renderChart } from '../src';
+import { getDefaultChartThemePreset } from '../../chart/src/base/style';
+import { createChart, renderChart } from '../src';
+import { createConnectedScatterChart, createScatterChart } from '../src/point';
 
 const plot: IRPlotSpec = {
   namespace: 'plot',
