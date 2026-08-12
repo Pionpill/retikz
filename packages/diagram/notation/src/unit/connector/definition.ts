@@ -1,4 +1,4 @@
-import type { ExpandCompositeDefinition, IRPathBase } from '@retikz/core';
+import type { CompositeExpandResult, ExpandCompositeDefinition } from '@retikz/core';
 
 import { defineComposite } from '@retikz/core';
 
@@ -8,12 +8,12 @@ import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
 import { ConnectorSchema } from './schema';
 
 /** 将一个 Connector 规范 IR 展开为同标识的 Core 描边 Path */
-const expandConnector = (connector: IRConnector): IRPathBase => {
+const expandConnector = (connector: IRConnector): CompositeExpandResult => {
   const { namespace: _namespace, type: _type, role: _role, ...path } = connector;
   void _namespace;
   void _type;
   void _role;
-  return { type: 'path', ...path };
+  return { children: [{ type: 'path', ...path }] };
 };
 
 /** Notation Connector 的轻量展开定义 */

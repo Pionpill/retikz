@@ -2,12 +2,11 @@ import type { LogicFrameInput, LogicFrameRegionInput, LogicFrameSectionInput } f
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createLogicFrame, LogicFrameDefinition } from '@retikz/notation';
+import { createLogicFrame, LogicFrameProvider } from '@retikz/notation';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { NotationLogicFrameReactNamespace } from '../shared';
 import { convertSingleChild, hasAuthoringChildren } from './authoring';
 
 /** LogicFrame 的 React 编写参数 */
@@ -36,8 +35,6 @@ export type LogicFrameSectionProps = Readonly<{
   /** Section marker 的单个 React child */
   children: ReactNode;
 }>;
-
-const makeLogicFrameComposites = () => [LogicFrameDefinition];
 
 const readMarkerChildren = (children: ReactNode): Pick<LogicFrameInput, 'header' | 'sections'> => {
   let header: LogicFrameRegionInput | undefined;
@@ -78,7 +75,6 @@ const readMarkerChildren = (children: ReactNode): Pick<LogicFrameInput, 'header'
 
 const logicFrameEmbeddableAdapter: EmbeddableTier2Adapter<LogicFrameProps> = {
   displayName: 'LogicFrame',
-  namespace: NotationLogicFrameReactNamespace,
   contribute: props => {
     const { children, header, sections, ...input } = props;
     const hasMarkerChildren = hasAuthoringChildren(children);
@@ -90,8 +86,7 @@ const logicFrameEmbeddableAdapter: EmbeddableTier2Adapter<LogicFrameProps> = {
       : readMarkerChildren(children);
     return {
       node: createLogicFrame({ ...input, ...markerInput }),
-      datasets: {},
-      makeComposites: makeLogicFrameComposites,
+      compositeDependencies: { roots: [LogicFrameProvider.key], providers: [LogicFrameProvider] },
     };
   },
 };
