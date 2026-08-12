@@ -353,6 +353,12 @@ importers:
       '@retikz/chart':
         specifier: workspace:*
         version: link:../../packages/viz/chart
+      '@retikz/chart-react':
+        specifier: workspace:*
+        version: link:../../packages/viz/chart-react
+      '@retikz/chart-vanilla':
+        specifier: workspace:*
+        version: link:../../packages/viz/chart-vanilla
       '@retikz/core':
         specifier: workspace:*
         version: link:../../packages/kernel/core

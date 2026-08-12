@@ -13,7 +13,7 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。未声�
 
 ## 可扩展 style
 
-用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 是完整基础 map，`tokenRules` 可选且只作用于 Axis；resolver 函数与解析结果不进入 `PlotSpec`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart 使用时，`createChartComposites({ chartThemeStyles, plotThemeStyles })` 还需要接收同名 Chart 与 Plot definitions。
+用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 是完整基础 map，`tokenRules` 可选且只作用于 Axis；resolver 函数与解析结果不进入 `PlotSpec`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart typed authoring 还要注入同名 Chart definition：React 配对使用 `ChartThemeProvider`，Vanilla 把 `chartThemeStyles` 与 `plotThemeStyles` 传给 typed factory。
 
 ## 级联与原子替换
 

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import type { FC } from 'react';
 
+import { ScatterChart } from '@retikz/chart-react';
 import { ThemeMode } from '@retikz/core';
 import { useTheme } from '@retikz/react';
 import { createRoot } from 'react-dom/client';
@@ -138,6 +139,19 @@ describe('ComponentPreview global theme', () => {
             dataRef="people"
             data={[{ name: 'Ada' }]}
             columns={[{ id: 'name', field: 'name' }]}
+          />
+        </PreviewThemeProvider>,
+      ),
+    ).not.toThrow();
+  });
+
+  it('makes the selected Chart ThemeStyle available to standalone Chart previews', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
+          <ScatterChart
+            data={[{ income: 12000, life: 74 }]}
+            encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
           />
         </PreviewThemeProvider>,
       ),

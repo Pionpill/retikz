@@ -13,7 +13,7 @@ The site's Vibrant reference preset uses a light blue-gray Plot area in Light mo
 
 ## Extensible styles
 
-Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `PlotSpec`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly.
+Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `PlotSpec`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring also needs the same-named Chart definition: pair `ChartThemeProvider` in React, or pass `chartThemeStyles` and `plotThemeStyles` to the Vanilla typed factory.
 
 ## Cascade and atomic replacement
 

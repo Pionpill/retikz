@@ -1,5 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
+import { ChartThemeProvider } from '@retikz/chart-react';
 import { PlotThemeProvider } from '@retikz/plot-react';
 import { ThemeProvider } from '@retikz/react';
 import { TableThemeProvider } from '@retikz/table-react';
@@ -26,9 +27,11 @@ export const PreviewThemeProvider: FC<PreviewThemeProviderProps> = props => {
   return (
     <PreviewThemeDefinitionsContext.Provider value={PreviewThemeDefinitionBundle}>
       <ThemeProvider theme={resolvedTheme} themeStyles={PreviewThemeDefinitionBundle.core}>
-        <PlotThemeProvider plotThemeStyles={PreviewThemeDefinitionBundle.plot}>
-          <TableThemeProvider tableThemeStyles={PreviewThemeDefinitionBundle.table}>{children}</TableThemeProvider>
-        </PlotThemeProvider>
+        <ChartThemeProvider chartThemeStyles={PreviewThemeDefinitionBundle.chart}>
+          <PlotThemeProvider plotThemeStyles={PreviewThemeDefinitionBundle.plot}>
+            <TableThemeProvider tableThemeStyles={PreviewThemeDefinitionBundle.table}>{children}</TableThemeProvider>
+          </PlotThemeProvider>
+        </ChartThemeProvider>
       </ThemeProvider>
     </PreviewThemeDefinitionsContext.Provider>
   );

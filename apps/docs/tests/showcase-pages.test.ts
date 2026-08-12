@@ -119,7 +119,7 @@ describe('collectShowcasePages', () => {
     });
   });
 
-  it('将 gate 前的 Scatter 页面保持为公开 Plot API 驱动的非契约概念预览', () => {
+  it('将 Scatter 页面说明为 Chart-native authoring，并保留独立的 Plot 扩展边界', () => {
     const chartSection = vizSection.find(section => section.id === 'chart');
     const pointsPage = chartSection?.pages.find(page => page.id === 'points');
     const scatterPage = pointsPage?.children?.find(page => page.id === 'scatter');
@@ -133,10 +133,12 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('基于公开 Plot API 的非契约概念预览');
-    expect(en).toContain('non-contract conceptual preview built with the public Plot API');
-    expect(zh).not.toMatch(/Chart 输入|Scatter 预设|recipe 保留|Chart 预设负责/);
-    expect(en).not.toMatch(/Chart input|Scatter preset|recipe reserves|Chart preset owns/);
+    expect(zh).toContain('`@retikz/chart-react`');
+    expect(en).toContain('`@retikz/chart-react`');
+    expect(zh).toContain('`ScatterChart`');
+    expect(en).toContain('`ScatterChart`');
+    expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');
+    expect(en).not.toContain('non-contract conceptual preview built with the public Plot API');
   });
 
   it('同一 family 的 order 冲突时明确失败', () => {
@@ -183,32 +185,8 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    [
-      'zh',
-      [
-        '## Point Mark',
-        '## Axis',
-        '## Legend',
-        '## Label',
-        '## Scale',
-        '## Transform',
-        '## Theme 与 Presentation',
-        '## Additional Marks',
-      ],
-    ],
-    [
-      'en',
-      [
-        '## Point Mark',
-        '## Axis',
-        '## Legend',
-        '## Label',
-        '## Scale',
-        '## Transform',
-        '## Theme and Presentation',
-        '## Additional Marks',
-      ],
-    ],
+    ['zh', ['## Chart authoring', '## Presentation', '## Plot extensions']],
+    ['en', ['## Chart authoring', '## Presentation', '## Plot extensions']],
   ] as const)('内联展开 %s Scatter 的独有与共享 API，并保持可编译', async (lang, expectedHeadings) => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
     expect(source).toContain('{/* @include viz/chart/shared-api */}');
@@ -219,10 +197,10 @@ describe('collectShowcasePages', () => {
 
     expect(ordered.every(index => index >= 0)).toBe(true);
     expect(ordered).toEqual([...ordered].sort((left, right) => left - right));
-    expect(expanded).toContain("`ScaleProps['type']`");
-    expect(expanded).toContain("'density'");
-    expect(expanded).toContain("'smooth'");
-    expect(expanded).not.toMatch(/MarkValueProp<|NodeShapeChannelValue|ExtensionChannelProp|CoreNodeChannelProps/);
+    expect(expanded).toContain('`IRChart`');
+    expect(expanded).toContain('`ChartProvider`');
+    expect(expanded).toContain('`ChartTitle`');
+    expect(expanded).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
 
     const compiled = String(await compile(expanded, compileOptions));
     expect(compiled).toContain('ShowcaseGallery');
@@ -230,15 +208,15 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    ['zh', ['## 尺寸与面积', '## Point Mark', '## Axis']],
-    ['en', ['## Size and Area', '## Point Mark', '## Axis']],
+    ['zh', ['## 尺寸与面积', '## Point Mark']],
+    ['en', ['## Size and Area', '## Point Mark']],
   ] as const)('%s Bubble 先说明尺寸语义，再复用共享 API', async (lang, expectedHeadings) => {
     const source = readFileSync(bubbleContentPath(lang), 'utf8');
     expect(source).toContain('{/* @include viz/chart/shared-api */}');
     expect(source).toContain('family: scatter-points');
     expect(source).toContain('usage: distribution');
     expect(source).toContain("files: ['bubble-basic', 'bubble-basic.data.ts']");
-    expect(source).toContain("size: 'xl'");
+    expect(source).toContain("size: 'xxl'");
     expect(source).not.toMatch(/BubbleChartSpec|BubbleChartRecipe|@retikz\/chart-react|@retikz\/chart-vanilla/);
 
     const expanded = await expandMdxIncludes(source, lang);
@@ -287,11 +265,16 @@ describe('collectShowcasePages', () => {
     }
   });
 
-  it.each(['zh', 'en'] as const)('%s 共享标签 API 使用真实默认值', lang => {
+  it.each(['zh', 'en'] as const)('%s 共享 API 只陈述当前 Chart 公开契约', lang => {
     const source = readFileSync(sharedApiContentPath(lang), 'utf8');
 
-    expect(source).toMatch(/\| `labelPosition`[^\n]+\| `top`\s+\|/);
-    expect(source).toMatch(/\| `labelKeepUpright`[^\n]+\| `false`\s+\|/);
+    expect(source).toContain('`IRChart`');
+    expect(source).toContain('`ChartProvider`');
+    expect(source).toContain('`ChartTitle`');
+    expect(source).toContain('`chartThemeStyles`');
+    expect(source).toContain('`plotThemeStyles`');
+    expect(source).toMatch(lang === 'zh' ? /静态 adapter/u : /static adapter/u);
+    expect(source).not.toMatch(/IRChartShared|createChartComposites/);
   });
 
   it.each([

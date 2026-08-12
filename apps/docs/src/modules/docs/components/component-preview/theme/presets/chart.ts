@@ -16,13 +16,11 @@ const styles = {
     typography: [
       [18, 600, 22],
       [13, 400, 18],
-      [12, 400, 17],
-      [11, 400, 15],
       [11, 400, 15],
       [11, 400, 15],
     ],
-    light: { canvas: '#FFFFFF', slots: ['#111827', '#374151', '#4B5563', '#6B7280', '#6B7280', '#6B7280'] },
-    dark: { canvas: '#0F172A', slots: ['#F9FAFB', '#D1D5DB', '#CBD5E1', '#94A3B8', '#94A3B8', '#94A3B8'] },
+    light: { canvas: '#FFFFFF', slots: ['#111827', '#374151', '#6B7280', '#6B7280'] },
+    dark: { canvas: '#0F172A', slots: ['#F9FAFB', '#D1D5DB', '#94A3B8', '#94A3B8'] },
   },
   vibrant: {
     padding: 16,
@@ -31,13 +29,11 @@ const styles = {
     typography: [
       [20, 700, 24],
       [14, 500, 19],
-      [12, 400, 17],
       [11, 400, 15],
       [11, 500, 15],
-      [11, 500, 15],
     ],
-    light: { canvas: '#F8FAFC', slots: ['#172B4D', '#425466', '#52616B', '#66788A', '#66788A', '#66788A'] },
-    dark: { canvas: '#111827', slots: ['#FFFFFF', '#E2E8F0', '#CBD5E1', '#94A3B8', '#94A3B8', '#94A3B8'] },
+    light: { canvas: '#F8FAFC', slots: ['#172B4D', '#425466', '#66788A', '#66788A'] },
+    dark: { canvas: '#111827', slots: ['#FFFFFF', '#E2E8F0', '#94A3B8', '#94A3B8'] },
   },
   clean: {
     padding: 20,
@@ -47,12 +43,10 @@ const styles = {
       [20, 700, 25],
       [13, 400, 18],
       [11, 400, 16],
-      [11, 400, 16],
-      [10, 500, 14],
       [10, 500, 14],
     ],
-    light: { canvas: 'none', slots: ['#24231F', '#514F49', '#66635C', '#77736A', '#8A877F', '#8A877F'] },
-    dark: { canvas: 'none', slots: ['#F2F0EA', '#D0CDC4', '#C0BDB4', '#A7A39A', '#8E8A82', '#8E8A82'] },
+    light: { canvas: 'none', slots: ['#24231F', '#514F49', '#77736A', '#8A877F'] },
+    dark: { canvas: 'none', slots: ['#F2F0EA', '#D0CDC4', '#A7A39A', '#8E8A82'] },
   },
 } as const;
 
@@ -72,13 +66,6 @@ const groups = [
     ChartThemeToken.ChartSubtitleAlign,
   ],
   [
-    ChartThemeToken.ChartCaptionForeground,
-    ChartThemeToken.ChartCaptionFontSize,
-    ChartThemeToken.ChartCaptionFontWeight,
-    ChartThemeToken.ChartCaptionLineHeight,
-    ChartThemeToken.ChartCaptionAlign,
-  ],
-  [
     ChartThemeToken.ChartNoteForeground,
     ChartThemeToken.ChartNoteFontSize,
     ChartThemeToken.ChartNoteFontWeight,
@@ -91,13 +78,6 @@ const groups = [
     ChartThemeToken.ChartSourceFontWeight,
     ChartThemeToken.ChartSourceLineHeight,
     ChartThemeToken.ChartSourceAlign,
-  ],
-  [
-    ChartThemeToken.ChartCreditForeground,
-    ChartThemeToken.ChartCreditFontSize,
-    ChartThemeToken.ChartCreditFontWeight,
-    ChartThemeToken.ChartCreditLineHeight,
-    ChartThemeToken.ChartCreditAlign,
   ],
 ] as const;
 

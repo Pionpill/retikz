@@ -1,128 +1,40 @@
-## Axis
+## Chart authoring
 
-`Axis` uses the complete Plot axis contract. In addition to choosing a dimension, it controls the axis line, tick glyphs, labels, grid, title, placement, and layer independently.
+`@retikz/chart` normalizes a complete Plot recipe and optional chart narrative metadata into `IRChart`. `IRChart` is the JSON-serializable canonical IR, and `ChartProvider` is its only composite provider. Applications normally author through the React or Vanilla adapters rather than assembling providers themselves.
 
-| Prop                                 | Type                                                | Default | Description                                                                               |
-| ------------------------------------ | --------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| `dimension`                          | `AxisProps['dimension']`                            | —       | Coordinate role to decorate; built-in 2D coordinates use `x` or `y`                       |
-| `scale`                              | `AxisProps['scale']`                                | —       | Position-scale shortcut for this dimension                                                |
-| `line`                               | `AxisProps['line']`                                 | Theme   | Axis visibility, color, width, opacity, extent, and endpoint arrows                       |
-| `ticks`                              | `AxisProps['ticks']`                                | Auto    | Tick source, count, interval, density, endpoint policy, and line/shape/custom-shape glyph |
-| `crossing`                           | `AxisProps['crossing']`                             | —       | Tick and label conflict policy at an axis crossing value                                  |
-| `tickLabels`                         | `AxisProps['tickLabels']`                           | Visible | Format, gap, rotation, anchor, font, and auto rotate/hide/bounds layout                   |
-| `grid`                               | `AxisProps['grid']`                                 | `false` | Major/minor tick sources, density, style, and composition-view targets                    |
-| `title`                              | `AxisProps['title']`                                | —       | Title text, placement, anchor, shift, font, and adaptive layout                           |
-| `placement`                          | `AxisProps['placement']`                            | `auto`  | Side, edge, or origin placement                                                           |
-| `coordinateView`                     | `AxisProps['coordinateView']`                       | —       | Named composition view binding                                                            |
-| `facetId` / `scaffoldId` / `trackId` | `AxisProps['facetId' \| 'scaffoldId' \| 'trackId']` | —       | Binding to the corresponding composition declaration                                      |
-| `layer`                              | `AxisProps['layer']`                                | —       | Semantic layer override for the axis scope                                                |
-| `id`                                 | `AxisProps['id']`                                   | —       | Stable axis handle                                                                        |
+| Entry                   | Use it when                                                                        | Result                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `Chart`                 | You already have a complete PlotSpec or need Plot JSX extensions in the chart body | Base Chart authoring                                               |
+| `ScatterChart`          | You compare two continuous fields with points                                      | Built-in Scatter recipe with Plot extension entry points           |
+| `BubbleChart`           | You encode a quantitative area in addition to two-dimensional position             | Built-in Bubble recipe with Plot extension entry points            |
+| `ConnectedScatterChart` | You trace one ordered series through two-dimensional space                         | Built-in Connected Scatter recipe with Plot extension entry points |
+| `resolveChartSpec`      | You need framework-neutral typed authoring or JSON integration                     | Resolves typed input to `IRChart` and a complete PlotSpec          |
 
-## Legend
+Import `Chart`, `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` from `@retikz/chart-react`. A typed Chart receives row-array `data`, recipe fields through `encoding`, and JSON-safe mark values such as `{ kind: 'constant', value: 10 }`. Additional axes, legends, marks, scales, or transforms continue to use Plot's public authoring capability.
 
-`Legend` explains a color, size, opacity, or shape channel directly. When multiple scales drive the same channel, `scale` is required to disambiguate the source; Plot fails loudly instead of guessing.
+## Presentation
 
-| Prop         | Type                        | Default     | Description                                             |
-| ------------ | --------------------------- | ----------- | ------------------------------------------------------- |
-| `channel`    | `LegendProps['channel']`    | —           | Non-position channel to explain                         |
-| `scale`      | `LegendProps['scale']`      | Auto        | Bind the only scale; required when the channel has many |
-| `title`      | `LegendProps['title']`      | —           | String, multiline text, or styled text block            |
-| `position`   | `LegendProps['position']`   | `'right'`   | Side whose reserved band contains the legend            |
-| `orient`     | `LegendProps['orient']`     | By position | Horizontal or vertical item flow                        |
-| `ticks`      | `LegendProps['ticks']`      | Auto        | Tick source for ramp or size legends                    |
-| `tickLabels` | `LegendProps['tickLabels']` | Visible     | Item/tick-label visibility and formatting               |
-| `style`      | `LegendProps['style']`      | Theme       | Local container, item, ramp, and text tokens            |
-| `layer`      | `LegendProps['layer']`      | —           | Semantic layer override for the legend scope            |
+`title`, `subtitle`, `source`, and `note` are Chart shorthands. Without markers, title and subtitle appear above the Plot, while note and source appear below it in their fixed shorthand order. Chart default tokens style them, and they share one Flex layout with the Plot.
 
-## Label
+| React marker    | Matching shorthand | Purpose                                                    |
+| --------------- | ------------------ | ---------------------------------------------------------- |
+| `ChartTitle`    | `title`            | Chart subject or observable conclusion                     |
+| `ChartSubtitle` | `subtitle`         | Scope, year, sample, units, or method                      |
+| `ChartSource`   | `source`           | Dataset and any transformation that affects interpretation |
+| `ChartNote`     | `note`             | Reading constraint, definition, or supporting note         |
 
-Datum labels are shared by position marks through `DatumLabelProps` and remain part of Plot drawing semantics. Complete-chart headings, notes, and sources use Chart presentation, with Standard laying them out around the Plot body.
+Place markers as direct children of `Chart` or `XxxChart`; transparent `Fragment` groups are allowed. A marker fully overrides the matching shorthand, and each preset can appear only once. Markers retain JSX order within their side of the Plot: `ChartSubtitle` followed by `ChartTitle` appears in that order above it, while `ChartSource` then `ChartNote` appears in that order below it.
 
-| Prop                              | Type                                                  | Default  | Description                                                     |
-| --------------------------------- | ----------------------------------------------------- | -------- | --------------------------------------------------------------- |
-| `label`                           | `DatumLabelProps['label']`                            | —        | Datum-label content field                                       |
-| `labelDisplayFormat`              | `DatumLabelProps['labelDisplayFormat']`               | —        | Display format for numeric or temporal fields                   |
-| `labelPosition`                   | `DatumLabelProps['labelPosition']`                    | `top`    | Label position relative to the host mark                        |
-| `labelDistance`                   | `DatumLabelProps['labelDistance']`                    | `12`     | Distance from the host boundary                                 |
-| `labelPin`                        | `DatumLabelProps['labelPin']`                         | `false`  | Leader-line visibility and style                                |
-| `labelTextColor` / `labelOpacity` | `DatumLabelProps['labelTextColor' \| 'labelOpacity']` | Theme    | Label color and opacity                                         |
-| `labelFont`                       | `DatumLabelProps['labelFont']`                        | Theme    | Datum-label font                                                |
-| `labelRotate`                     | `DatumLabelProps['labelRotate']`                      | `'none'` | Label rotation strategy or angle                                |
-| `labelKeepUpright`                | `DatumLabelProps['labelKeepUpright']`                 | `false`  | Keep text upright after rotation                                |
-| `resolveLabel`                    | `DatumLabelProps['resolveLabel']`                     | —        | Runtime-only custom content function; also requires a mark `id` |
+Marker children currently accept only strings, transparent `Fragment`, and Core `Text`. Multiple `Text` children create lines and may each supply font, fill, or opacity. `position="top"` and `position="bottom"` only normalize the authoring location around the Plot; canonical `IRChart` retains only the final presentation-child order.
 
-## Scale
+From `@retikz/chart-vanilla`, import `createChart`, `createScatterChart`, `createBubbleChart`, `createConnectedScatterChart`, and `renderChart`. The three typed factories accept the same shorthands as React. For custom order or position, provide ordered plain `presentation` records. A record's `text` is a string or JSON-safe Core TextBlock, never a React object.
 
-`Scale` requires both `dimension` and `type`. The `type` discriminator decides which remaining fields are legal; continuous, point, and band branches cannot be mixed. Non-position channels still resolve through mark bindings and the Plot scale registry.
+## Runtime styles
 
-| Prop        | Type                      | Default | Description                                     |
-| ----------- | ------------------------- | ------- | ----------------------------------------------- |
-| `dimension` | `ScaleProps['dimension']` | —       | The `x` or `y` position dimension               |
-| `type`      | `ScaleProps['type']`      | —       | Required discriminator selecting a branch below |
+A named style needs same-named definitions from Core, Chart, and Plot. The static adapter in `<Layout>` passes its resolved Core Theme and inherited Core definitions to an embedded Chart, so recipe defaults match standalone authoring. `themeStyles` configures only the Layout created by a standalone Chart; an embedded Chart's named Core definition belongs on its parent `<Layout>`. Pass Chart- and Plot-owned definitions directly through `chartThemeStyles` and `plotThemeStyles`; a standalone subtree may instead inject them through `ChartThemeProvider` and `PlotThemeProvider`. Vanilla passes `theme` and `themeStyles` when calling `createChart()` or a typed factory; the returned authoring result retains them, and `renderChart()` consumes that result in one compile. Pass Core definitions or other compile options through `renderChart()`'s `compile` option; it does not accept a `compileDriver` that could produce extra layers or diagnostics. The base `createChart()` path keeps Plot definitions in `lowerOptions.plotThemeStyles` so it reuses the complete Plot runtime-options contract.
 
-### Continuous scales
+## Plot extensions
 
-Use `linear`, `time`, `log`, `sqrt`, `symlog`, or `radial`.
+Chart owns closed recipes, chart narrative, and canonical composition. Plot continues to own coordinates, scales, axes, legends, marks, annotations, transforms, and interaction semantics. Therefore `Legend`, `Axis`, and additional marks can be typed Chart children alongside Chart markers, but they are not presentation items.
 
-| Prop              | Type                                                         | Default                     | Description                              |
-| ----------------- | ------------------------------------------------------------ | --------------------------- | ---------------------------------------- |
-| `domain`          | `ScaleProps['domain']`                                       | Data                        | Continuous numeric or temporal domain    |
-| `domainPadding`   | `Extract<ScaleProps, { type: 'linear' }>['domainPadding']`   | `0.05` for inferred domains | Continuous-domain padding                |
-| `singleValueSpan` | `Extract<ScaleProps, { type: 'linear' }>['singleValueSpan']` | By scale                    | Expansion span for a single-value domain |
-| `base`            | `Extract<ScaleProps, { type: 'log' }>['base']`               | `10`                        | Available only for `type="log"`          |
-| `constant`        | `Extract<ScaleProps, { type: 'symlog' }>['constant']`        | `1`                         | Available only for `type="symlog"`       |
-
-### Point scale
-
-| Prop                | Type                                                           | Default    | Description                       |
-| ------------------- | -------------------------------------------------------------- | ---------- | --------------------------------- |
-| `domain`            | `ScaleProps['domain']`                                         | Data order | Categorical domain                |
-| `padding` / `align` | `Extract<ScaleProps, { type: 'point' }>['padding' \| 'align']` | `0.5`      | Outer padding and range alignment |
-
-### Band scale
-
-| Prop                            | Type                                                                      | Default                | Description                          |
-| ------------------------------- | ------------------------------------------------------------------------- | ---------------------- | ------------------------------------ |
-| `domain`                        | `ScaleProps['domain']`                                                    | Data order             | Categorical domain                   |
-| `paddingInner` / `paddingOuter` | `Extract<ScaleProps, { type: 'band' }>['paddingInner' \| 'paddingOuter']` | `0.1` / `paddingInner` | Inner and outer band padding         |
-| `align`                         | `Extract<ScaleProps, { type: 'band' }>['align']`                          | `0.5`                  | Distribution of padding across range |
-
-## Transform
-
-`Transform` props are the public `IRPlotTransform` discriminated union. Multiple operations run in declaration order and the same array can be passed through `Plot.dataTransforms`; mark-local entries such as `PointMark.transform` affect only that mark's data view.
-
-| Entry                          | Type                                                                                                                                                                             | Default | Description                                                                                                                     |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `<Transform {...operation} />` | `TransformProps`                                                                                                                                                                 | —       | One complete transform operation                                                                                                |
-| `Plot.dataTransforms`          | `PlotDslProps['dataTransforms']`                                                                                                                                                 | `[]`    | Plot-level transform chain before mark collection                                                                               |
-| `mark.transform`               | `PointMarkProps['transform']`                                                                                                                                                    | `[]`    | Transform chain local to one mark                                                                                               |
-| Built-in `kind`                | `'sort'` \| `'summarize'` \| `'select'` \| `'annotate'` \| `'stack'` \| `'bin'` \| `'normalize'` \| `'derive-interval'` \| `'relate'` \| `'jitter'` \| `'density'` \| `'smooth'` | —       | Select a built-in operation and expose its branch fields                                                                        |
-| Custom `kind`                  | `string`                                                                                                                                                                         | —       | Any registered external transform kind that does not collide with reserved names; its definition validates the remaining fields |
-
-## Theme and Presentation
-
-Chart owns presentation defaults through `chartThemeTokens`; Core `style` and `mode` come from the hosting Scene or Scope. Chart does not shadow the host Theme with another style/mode field. It forwards the current Plot inputs without renaming their owner: `plotThemeTokens` and `plotTheme` remain Plot-owned.
-
-The Chart cascade is `Core effective Theme → Chart preset → local chartThemeTokens`. The Plot handoff then resolves `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded plotTheme → explicit Plot configuration`. `ChartThemeToken`, `ChartThemeTokenOverridesSchema`, and `ChartResolvedThemeTokensSchema` are public exports from `@retikz/chart`; Plot token schemas remain public exports from `@retikz/plot`.
-
-When `theme.style` is omitted, Chart uses its own mode-aware default baseline; published packages no longer include a named style. The site's Academic, Vibrant, and Clean references follow the same path as application styles: define them with `defineChartThemeStyle`, then inject them into the Chart composite through `createChartComposites({ chartThemeStyles, plotThemeStyles })`. For an explicit style, Core `themeStyles`, Plot `plotThemeStyles`, and Chart `chartThemeStyles` each need a resolver for the same `theme.style` name; a missing layer fails loudly, while functions and complete token maps never enter Chart IR.
-
-| Field              | Type                                 | Default | Description                                                                |
-| ------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------- |
-| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`    | Sparse Chart-owned presentation and recipe token overrides                 |
-| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`    | Sparse Plot-owned token overrides forwarded unchanged to the resolved Plot |
-| `plotTheme`        | `IRChartShared['plotTheme']`         | Theme   | Plot native theme forwarded unchanged                                      |
-| `presentation`     | `IRChartShared['presentation']`      | —       | Chart-owned copy, authored order, and Standard Flex layout                 |
-| `width` / `height` | `IRChartShared['width' \| 'height']` | —       | Resolved Plot intrinsic size                                               |
-
-## Additional Marks
-
-The main example uses one primary mark. Reference lines, trends, intervals, or relations can still use public Plot marks. Additional marks share the same data, scales, coordinate, transforms, labels, theme, and lowering pipeline.
-
-| Component       | Props                | Main use                                                | Shared capabilities                                                |
-| --------------- | -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `PathMark`      | `PathMarkProps`      | Lines, connected trajectories, and closed regions       | `transform`, `coordinateView`, `layer`, `channels`, and path style |
-| `IntervalMark`  | `IntervalMarkProps`  | Bars, histograms, intervals, sectors, and heatmaps      | Datum labels, transforms, channel styles, and composition views    |
-| `ReferenceMark` | `ReferenceMarkProps` | Threshold lines, tolerance bands, and reference regions | Line/band/region geometry, labels, path and fill style             |
-| `RelationMark`  | `RelationMarkProps`  | Source-to-target paths or ribbons                       | Relation geometry, labels, color, and extension channels           |
-| `PointMark`     | `PointMarkProps`     | Annotation points or a second point layer               | The same complete Point capabilities; must use a distinct `id`     |
+The adapter assembles `SurfaceProvider`, `FlexLayoutProvider`, the Plot provider, and `ChartProvider` into one contribution. Title, subtitle, Plot, source, and note can therefore lay out together while Plot preserves its own guide, lowering, and diagnostic path.

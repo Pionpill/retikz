@@ -1,9 +1,13 @@
+import type { ChartPresentationAuthoringRecord, IRChart } from '@retikz/chart';
+import type { CreateChartInput } from '@retikz/chart-vanilla';
 import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { IRTableSpec } from '@retikz/table';
 import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
 
+import { ChartSchema } from '@retikz/chart';
+import { createChart, renderChart } from '@retikz/chart-vanilla';
 import {
   FlexLayoutDefinition,
   FlexLayoutSchema,
@@ -82,6 +86,7 @@ import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 import type { PreviewIR } from '../utils/build-preview-ir';
 import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
+import { PreviewThemeDefinitionBundle } from '../theme/presets';
 import { collectPreviewDefinitions, formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
 
 type CompositeChild = IRChild & { namespace: string; type: string };
@@ -630,6 +635,95 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
+/** 从 canonical children 恢复仅用于 Vanilla helper 的 authored order 与 top/bottom 分区。 */
+const chartPresentationRecords = (chart: IRChart): Array<ChartPresentationAuthoringRecord> | undefined => {
+  const children = chart.presentation?.children;
+  if (children === undefined) return undefined;
+  const plotIndex = children.findIndex(item => item.kind === 'plot');
+  return children.flatMap((item, index) => {
+    if (item.kind === 'plot') return [];
+    const { kind: _kind, key: _key, ...record } = item;
+    void _kind;
+    void _key;
+    return [{ ...record, position: index < plotIndex ? ('top' as const) : ('bottom' as const) }];
+  });
+};
+
+/** 将 canonical Chart 还原为公开 Chart Vanilla authoring input。 */
+const chartAuthoringInput = (chart: IRChart, datasets: ExternalDatasets): CreateChartInput => {
+  const presentation = chartPresentationRecords(chart);
+  return {
+    plot: chart.plot,
+    datasets,
+    ...(chart.id === undefined ? {} : { id: chart.id }),
+    ...(chart.chartThemeTokens === undefined ? {} : { chartThemeTokens: chart.chartThemeTokens }),
+    ...(presentation === undefined ? {} : { presentation }),
+  };
+};
+
+const buildChartCode = (
+  chart: IRChart,
+  datasets: ExternalDatasets,
+  preview: PreviewIR,
+  options: BuildVanillaPreviewOptions,
+): string => {
+  const datasetImport = buildDatasetImportCode(datasets, options);
+  const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
+  const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
+  const dataExpression = datasetImport?.expression ?? 'datasets';
+  const { datasets: _datasets, ...authoring } = chartAuthoringInput(chart, datasets);
+  void _datasets;
+  const inputCode = formatVanillaValue({
+    ...authoring,
+    datasets: '__DATASETS__',
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    themeStyles: '__CORE_THEME_STYLES__',
+    chartThemeStyles: '__CHART_THEME_STYLES__',
+    lowerOptions: { plotThemeStyles: '__PLOT_THEME_STYLES__' },
+  })
+    .replace("'__DATASETS__'", dataExpression)
+    .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
+    .replace("'__CHART_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.chart')
+    .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
+  const size = outputSize(preview);
+  const renderOptions = {
+    ...(Object.keys(size).length === 0 ? {} : { output: size }),
+  };
+  const renderOptionsCode = Object.keys(renderOptions).length === 0 ? '' : `, ${formatVanillaValue(renderOptions)}`;
+  return `import { createChart, renderChart } from '@retikz/chart-vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = createChart(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+};
+
+const buildChartPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const chart = ChartSchema.parse(composite);
+  const datasets = findPlotDataset(preview, chart.plot);
+  if (datasets === null) {
+    return diagnostic(
+      `Cannot generate Vanilla preview: Chart dataset "${chart.plot.data.reference}" was not captured.`,
+    );
+  }
+  const size = outputSize(preview);
+  const rendered = renderChart(
+    createChart({
+      ...chartAuthoringInput(chart, datasets),
+      ...(options.theme === undefined ? {} : { theme: options.theme }),
+      themeStyles: PreviewThemeDefinitionBundle.core,
+      chartThemeStyles: PreviewThemeDefinitionBundle.chart,
+      lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
+    }),
+    {
+      ...(Object.keys(size).length === 0 ? {} : { output: size }),
+    },
+  );
+  return {
+    code: buildChartCode(chart, datasets, preview, options),
+    svg: rendered.svg,
+  };
+};
+
 const buildTableCode = (
   spec: IRTableSpec,
   datasets: ExternalDatasets,
@@ -688,7 +782,7 @@ const buildTablePreview = (
   };
 };
 
-/** 从统一的预览 IR 上下文生成 Core、Library、Notation、Plot 或 Table 的 Vanilla 源码与真实 SVG。 */
+/** 从统一的预览 IR 上下文生成 Core、Library、Notation、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG。 */
 export const buildVanillaPreview = (
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions = {},
@@ -707,6 +801,9 @@ export const buildVanillaPreview = (
     if (composites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
       return buildPlotPreview(preview, firstComposite, options);
     }
+    if (composites.length === 1 && firstComposite.namespace === 'chart' && firstComposite.type === 'chart') {
+      return buildChartPreview(preview, firstComposite, options);
+    }
     if (composites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
     }
@@ -716,6 +813,7 @@ export const buildVanillaPreview = (
         child.namespace !== 'layout' &&
         child.namespace !== 'notation' &&
         !(child.namespace === 'plot' && child.type === 'plot') &&
+        !(child.namespace === 'chart' && child.type === 'chart') &&
         !(child.namespace === 'table' && child.type === 'table'),
     );
     const child = unsupported ?? firstComposite;

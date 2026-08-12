@@ -1,6 +1,6 @@
 ---
 title: Scatter
-description: Compare two continuous variables directly, then explore scales and categorical encoding through examples.
+description: Compare two continuous variables directly, with Chart-native narrative metadata for scope, units, and source.
 family: scatter-points
 usage: distribution
 ---
@@ -9,98 +9,40 @@ usage: distribution
   examples={[
     {
       id: 'scatter-basic',
-      title: 'Position encoding',
-      description: 'Bind two continuous fields to x and y positions; adjust point size and opacity to observe overlap and density.',
+      title: 'Chart-native narrative metadata',
+      description: 'Use `ScatterChart` to compare urbanization and internet use, with title, subtitle, and source rendered inside the chart.',
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
         size: 'xxl',
-        caption: 'Bind two continuous fields through x and y; adjust point size and opacity to observe overlap and density.',
+        caption: 'The title identifies the comparison, the subtitle supplies year and percentage units, and the source names the World Bank indicators.',
       },
     },
     {
       id: 'scatter-fertility-work',
       title: 'Categorical encoding',
-      description: 'Switch one categorical field between color and shape, then observe how the legend follows the active channel.',
+      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, then observe how a category drives the legend.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         size: 'xxl',
-        caption: 'Map income group to color or shape; switch the encoding channel and the legend updates with it.',
+        caption: 'Switch income-group color or shape encoding; the legend follows the active Plot channel.',
       },
     },
     {
       id: 'scatter-income-life-expectancy',
-      title: 'Logarithmic scales',
-      description: 'Map a continuous field with a wide numeric range to a logarithmic axis, preserving readability in the lower range.',
+      title: 'Association and categorical color',
+      description: 'Compare GDP per capita and life expectancy in the Gapminder 2007 country cross-section, using continent color to reveal overlap and difference.',
       preview: {
         files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
         controls: { name: 'scatter-income-life-expectancy' },
         size: 'xxl',
-        caption: 'Use a logarithmic x scale; adjust point size and opacity to compare continuous values across magnitudes.',
+        caption: 'Subtitle, title, source, and note enter the chart in marker order; the right-hand legend explains continent color.',
       },
     },
   ]}
 >
-  This is a non-contract conceptual preview built with the public Plot API, not API documentation for `@retikz/chart`. The basic example only uses the `Plot`, `PointMark`, and `Axis` composition API exported from the `@retikz/plot-react` root; the other examples use `Legend` for color or shape encoding. Every chart uses a fixed `800 × 400` size.
-
-## Point Mark
-
-### Position and coordinate scope
-
-The main example binds two continuous variables through `PointMark.x` / `PointMark.y`, then lets Plot resolve their 2D positions through its coordinate and scale pipeline.
-
-| Prop                  | Type                                     | Default | Description                                            |
-| --------------------- | ---------------------------------------- | ------- | ------------------------------------------------------ |
-| `x` / `y`             | `PointMarkProps['x' \| 'y']`             | —       | Two-dimensional position fields; Scatter requires both |
-| `z`                   | `PointMarkProps['z']`                    | —       | Third position role for a custom coordinate            |
-| `xAxisId` / `yAxisId` | `PointMarkProps['xAxisId' \| 'yAxisId']` | —       | Authoring shortcuts for named-axis binding             |
-| `coordinateView`      | `PointMarkProps['coordinateView']`       | —       | Direct composition-view binding                        |
-| `facetId` / `trackId` | `PointMarkProps['facetId' \| 'trackId']` | —       | Facet or shared-track binding                          |
-
-### Visual encoding and glyph
-
-Strings may represent fields; use an explicit `{ kind: 'constant', value }` when a constant must be unambiguous. Field bindings continue through Plot scales, legends, channel definitions, and diagnostics.
-
-| Prop                                        | Type                                                            | Default         | Description                                                          |
-| ------------------------------------------- | --------------------------------------------------------------- | --------------- | -------------------------------------------------------------------- |
-| `color` / `textColor`                       | `PointMarkProps['color' \| 'textColor']`                        | Palette         | Glyph or text color                                                  |
-| `size`                                      | `PointMarkProps['size']`                                        | Built-in radius | Map a numeric field through a sqrt scale or provide the final radius |
-| `shape`                                     | `PointMarkProps['shape']`                                       | Circle          | Categorical or explicit shape                                        |
-| `fill` / `stroke`                           | `PointMarkProps['fill' \| 'stroke']`                            | Theme           | Fill and stroke paint                                                |
-| `strokeWidth`                               | `PointMarkProps['strokeWidth']`                                 | Theme           | Stroke width                                                         |
-| `fillOpacity` / `strokeOpacity` / `opacity` | `PointMarkProps['fillOpacity' \| 'strokeOpacity' \| 'opacity']` | `1`             | Layer-specific or whole-node opacity                                 |
-| `rotate`                                    | `PointMarkProps['rotate']`                                      | `0`             | Glyph rotation angle                                                 |
-| `minimumSize`                               | `PointMarkProps['minimumSize']`                                 | —               | Minimum visual size before the size channel                          |
-| `zIndex`                                    | `PointMarkProps['zIndex']`                                      | —               | Per-datum drawing-order hint                                         |
-
-### Node style
-
-| Prop                                    | Type                                                        | Default | Description                                     |
-| --------------------------------------- | ----------------------------------------------------------- | ------- | ----------------------------------------------- |
-| `align` / `lineHeight` / `maxTextWidth` | `PointMarkProps['align' \| 'lineHeight' \| 'maxTextWidth']` | Theme   | Text alignment, line height, and wrapping width |
-| `cornerRadius` / `scale`                | `PointMarkProps['cornerRadius' \| 'scale']`                 | Theme   | Corner radius and node scale                    |
-| `padding` / `margin`                    | `PointMarkProps['padding' \| 'margin']`                     | Theme   | Inner and outer spacing                         |
-| `dashed` / `dotted` / `dashPattern`     | `PointMarkProps['dashed' \| 'dotted' \| 'dashPattern']`     | `false` | Dashed stroke presets or a custom pattern       |
-| `font`                                  | `PointMarkProps['font']`                                    | Theme   | Datum-driven or constant font                   |
-| `boundary`                              | `PointMarkProps['boundary']`                                | Shape   | Node boundary strategy                          |
-| `shadow` / `blendMode`                  | `PointMarkProps['shadow' \| 'blendMode']`                   | —       | Shadow and blend mode                           |
-
-### Text, datum labels, and identity
-
-| Prop                                            | Type                                                                 | Default                | Description                                                     |
-| ----------------------------------------------- | -------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
-| `text` / `displayFormat`                        | `PointMarkProps['text' \| 'displayFormat']`                          | —                      | Turn the Point into a borderless text node and format its value |
-| `dx` / `dy`                                     | `PointMarkProps['dx' \| 'dy']`                                       | `0`                    | Text offset from the projected anchor                           |
-| `label` / `labelDisplayFormat`                  | `DatumLabelProps['label' \| 'labelDisplayFormat']`                   | —                      | Attach a separate datum label and format it                     |
-| `labelPosition` / `labelDistance` / `labelPin`  | `DatumLabelProps['labelPosition' \| 'labelDistance' \| 'labelPin']`  | `top` / `12` / `false` | Label position, distance, and leader line                       |
-| `labelTextColor` / `labelOpacity` / `labelFont` | `DatumLabelProps['labelTextColor' \| 'labelOpacity' \| 'labelFont']` | Theme                  | Label visual style                                              |
-| `labelRotate` / `labelKeepUpright`              | `DatumLabelProps['labelRotate' \| 'labelKeepUpright']`               | `'none'` / `false`     | Label rotation and upright policy                               |
-| `resolveLabel`                                  | `DatumLabelProps['resolveLabel']`                                    | —                      | Runtime-only custom label; requires an explicit `id`            |
-| `channels`                                      | `DatumLabelProps['channels']`                                        | `{}`                   | Field or constant bindings for registered extension channels    |
-| `transform`                                     | `PointMarkProps['transform']`                                        | `[]`                   | Data transforms local to this Point                             |
-| `layer`                                         | `PointMarkProps['layer']`                                            | —                      | Semantic layer for the Point scope                              |
-| `id` / `anchorId`                               | `PointMarkProps['id' \| 'anchorId']`                                 | Auto                   | Mark handle and stable per-datum node id                        |
+  The basic and income-life-expectancy examples use `ScatterChart` from `@retikz/chart-react`. Chart owns the title, subtitle, source, and note inside the chart. A color legend remains a Plot-owned guide extension, so it is authored with `Legend`. The fertility example intentionally stays on Plot authoring to focus on the connection between categorical channels and legends.
 
 {/* @include viz/chart/shared-api */}
 

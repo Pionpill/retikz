@@ -1,6 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
+import { ChartSource, ChartTitle, ScatterChart } from '@retikz/chart-react';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
@@ -62,6 +63,21 @@ const PlotDemo: FC = () => (
   <Plot data={plotRows} width={100} height={80}>
     <PointMark x="category" y="value" />
   </Plot>
+);
+
+const ChartDemo: FC = () => (
+  <ScatterChart
+    data={[
+      { income: 1000, life: 61 },
+      { income: 4000, life: 72 },
+    ]}
+    encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
+    width={320}
+    height={200}
+  >
+    <ChartTitle>Income and life expectancy</ChartTitle>
+    <ChartSource>World Bank</ChartSource>
+  </ScatterChart>
 );
 
 const EmbeddedTableDetailDemo: FC = () => (
@@ -166,6 +182,18 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Chart composite 自动生成 canonical authoring、dataset 与真实 Vanilla SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: ChartDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(vanilla?.files[0]?.code).toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("preset: 'title'");
+    expect(vanilla?.files[0]?.code).toContain("preset: 'source'");
+    expect(vanilla?.files[0]?.code).toContain('income: 1000');
+    expect(vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });
 
   it('为 Detail Table 自动生成 Table adapter、dataset 与真实 Vanilla SVG', () => {

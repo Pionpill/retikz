@@ -67,43 +67,13 @@ const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; heig
   return { width: chart.props.width, height: chart.props.height };
 };
 
-const canonicalAxisTitles = (source: PreviewSourceConfig): Array<string | undefined> => {
+const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unknown> => {
   const chart = source.canonicalRender?.();
-  if (!isValidElement<{ children?: ReactNode }>(chart)) {
+  if (!isValidElement<Record<string, unknown>>(chart)) {
     throw new Error('Chart preview must provide a canonical element');
   }
 
-  return Children.toArray(chart.props.children).flatMap(child =>
-    isValidElement<{ dimension?: string; title?: string }>(child) && child.props.dimension !== undefined
-      ? [child.props.title]
-      : [],
-  );
-};
-
-const canonicalAxisGrids = (source: PreviewSourceConfig): Array<unknown> => {
-  const chart = source.canonicalRender?.();
-  if (!isValidElement<{ children?: ReactNode }>(chart)) {
-    throw new Error('Chart preview must provide a canonical element');
-  }
-
-  return Children.toArray(chart.props.children).flatMap(child =>
-    isValidElement<{ dimension?: string; grid?: unknown }>(child) && child.props.dimension !== undefined
-      ? [child.props.grid]
-      : [],
-  );
-};
-
-const canonicalAxisScales = (source: PreviewSourceConfig): Array<unknown> => {
-  const chart = source.canonicalRender?.();
-  if (!isValidElement<{ children?: ReactNode }>(chart)) {
-    throw new Error('Chart preview must provide a canonical element');
-  }
-
-  return Children.toArray(chart.props.children).flatMap(child =>
-    isValidElement<{ dimension?: string; scale?: unknown }>(child) && child.props.dimension !== undefined
-      ? [child.props.scale]
-      : [],
-  );
+  return chart.props;
 };
 
 const canonicalLegends = (
@@ -159,11 +129,6 @@ describe('Viz Chart scatter controls', () => {
     expect(JSON.stringify(basicZh.controls)).not.toContain('colorByGroup');
   });
 
-  it('基础 Scatter 不显式覆盖 Axis grid 主题规则', () => {
-    expect(canonicalAxisGrids(basicZhPreviewSource)).toEqual([undefined, undefined]);
-    expect(canonicalAxisGrids(basicEnPreviewSource)).toEqual([undefined, undefined]);
-  });
-
   it('基础 Scatter 使用世界银行 2023 年的完整可连接国家截面', () => {
     expect(WORLD_BANK_SCATTER_YEAR).toBe(2023);
     expect(countryScatterData).toHaveLength(181);
@@ -181,9 +146,19 @@ describe('Viz Chart scatter controls', () => {
     ).toBe(true);
   });
 
-  it('基础 Scatter 使用默认线性比例尺且不添加颜色图例', () => {
-    expect(canonicalAxisScales(basicZhPreviewSource)).toEqual([undefined, undefined]);
-    expect(canonicalAxisScales(basicEnPreviewSource)).toEqual([undefined, undefined]);
+  it('基础 Scatter 将两个比例字段与受控 mark 常量交给 typed Chart', () => {
+    for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
+      expect(canonicalScatterProps(source)).toMatchObject({
+        encoding: {
+          x: { field: 'urbanPopulationShare' },
+          y: { field: 'internetUseShare' },
+        },
+        mark: {
+          size: { kind: 'constant', value: 10 },
+          opacity: { kind: 'constant', value: 0.82 },
+        },
+      });
+    }
     expect(canonicalLegends(basicZhPreviewSource)).toEqual([]);
     expect(canonicalLegends(basicEnPreviewSource)).toEqual([]);
     expect(basicZh.relatedApis).not.toContain('Legend.channel');
@@ -199,9 +174,20 @@ describe('Viz Chart scatter controls', () => {
     expect(incomeLifeExpectancyData.every(datum => datum.gdpPerCapita > 0)).toBe(true);
   });
 
-  it('收入与寿命示例的人均 GDP 使用对数比例尺', () => {
-    expect(canonicalAxisScales(incomeLifeExpectancyZhPreviewSource)).toEqual(['log', undefined]);
-    expect(canonicalAxisScales(incomeLifeExpectancyEnPreviewSource)).toEqual(['log', undefined]);
+  it('收入与寿命示例通过 typed color encoding 绑定大洲', () => {
+    for (const source of [incomeLifeExpectancyZhPreviewSource, incomeLifeExpectancyEnPreviewSource]) {
+      expect(canonicalScatterProps(source)).toMatchObject({
+        encoding: {
+          x: { field: 'gdpPerCapita' },
+          y: { field: 'lifeExpectancy' },
+          color: { field: 'continent' },
+        },
+        mark: {
+          size: { kind: 'constant', value: 10 },
+          opacity: { kind: 'constant', value: 0.82 },
+        },
+      });
+    }
   });
 
   it('收入与寿命示例使用本地化的大洲颜色图例', () => {
@@ -211,8 +197,6 @@ describe('Viz Chart scatter controls', () => {
     expect(canonicalLegends(incomeLifeExpectancyEnPreviewSource)).toEqual([
       { channel: 'color', title: 'Continent', position: 'right' },
     ]);
-    expect(incomeLifeExpectancyZh.relatedApis).toContain('Legend.channel');
-    expect(incomeLifeExpectancyEn.relatedApis).toContain('Legend.channel');
   });
 
   it('Bubble 只在两个定量字段尺寸编码之间切换，不提供固定尺寸', () => {
@@ -234,21 +218,16 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('双语 demo 使用本地化轴标题', () => {
-    expect(canonicalAxisTitles(basicZhPreviewSource)).toEqual(['城镇人口占比（%）', '互联网使用人口占比（%）']);
-    expect(canonicalAxisTitles(basicEnPreviewSource)).toEqual([
-      'Urban population (% of total)',
-      'Individuals using the Internet (% of population)',
-    ]);
-    expect(canonicalAxisTitles(incomeLifeExpectancyZhPreviewSource)).toEqual([
-      '人均 GDP（经通胀调整美元）',
-      '出生时预期寿命（年）',
-    ]);
-    expect(canonicalAxisTitles(incomeLifeExpectancyEnPreviewSource)).toEqual([
-      'GDP per capita (inflation-adjusted US$)',
-      'Life expectancy at birth (years)',
-    ]);
-    expect(canonicalAxisTitles(bubbleZhPreviewSource)).toEqual(['重量 (kg)', '效率 (km/L)']);
-    expect(canonicalAxisTitles(bubbleEnPreviewSource)).toEqual(['Weight (kg)', 'Efficiency (km/L)']);
+  it('双语 demo 在 Chart-native metadata 中说明字段单位与数据来源', () => {
+    expect(canonicalScatterProps(basicZhPreviewSource)).toMatchObject({
+      title: '城市化程度与互联网使用率',
+      subtitle: expect.stringContaining('人口占比（%）'),
+      source: expect.stringContaining('世界银行'),
+    });
+    expect(canonicalScatterProps(basicEnPreviewSource)).toMatchObject({
+      title: 'Urbanization and Internet use',
+      subtitle: expect.stringContaining('share of population (%)'),
+      source: expect.stringContaining('World Bank'),
+    });
   });
 });
