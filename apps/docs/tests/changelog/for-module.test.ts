@@ -34,6 +34,16 @@ describe('changelogForModule', () => {
     }
   });
 
+  it('Chart 更新日志只含三个 Chart 包', () => {
+    const releases = changelogForModule('viz', 'chart');
+    expect(releases).toHaveLength(1);
+    expect(releases[0]?.packages.map(block => block.pkg)).toEqual([
+      '@retikz/chart',
+      '@retikz/chart-react',
+      '@retikz/chart-vanilla',
+    ]);
+  });
+
   it('Data 更新日志只含 Data 包', () => {
     const releases = changelogForModule('viz', 'data');
     expect(releases).toHaveLength(1);

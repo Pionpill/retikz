@@ -175,6 +175,17 @@ export const vizSection: Array<Section> = [
           sourceOfTruth: 'architecture',
         },
       },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'chart.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
     ],
   },
   {
