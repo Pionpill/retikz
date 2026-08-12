@@ -1,7 +1,7 @@
 # 空间贴附与复用长期计划
 
-> **状态：长期计划，当前不实现。** 本文记录复杂复合可视化所需的底层能力，用于后续 core / plot 架构演进时对齐方向。
-> 关联：`packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/architecture/chart-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
+> **状态：长期计划；首个 rect handle / qualified selector 子集由 Core ADR-19 Proposed，attachment 仍未实现。** 本文记录复杂复合可视化所需的底层能力，用于后续 core / plot 架构演进时对齐方向。
+> 关联：[`Core ADR-19`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · `packages/viz/_notes/architecture/plot-design.md` · `packages/viz/_notes/architecture/chart-design.md` · `packages/viz/_notes/decisions/plot/v0/v0.1/alpha.14/09-composition-api-structure.md`。
 
 ---
 
@@ -137,6 +137,8 @@ core 需要在编译或布局结果中提供 renderer-agnostic 的空间句柄�
 - union：多个空间句柄合成的外包区域。
 - polar span：极坐标中的 angle span / radius span。
 
+Core ADR-19 只冻结第一条可实施纵切：Composite local rect declaration、qualified owner path、最终 world-space AABB、同 revision compile sidecar 与 closed selector。content box、band、union / intersection、polar span 和 attachment operation 继续属于本文的后续能力，不得提前混入首版 contract。
+
 这些句柄必须是 JSON-safe 的结构化数据，不能暴露 DOM、Canvas context 或 renderer 特有对象。
 
 core 的边界应机械：core 负责 handle 数据模型、索引、通用几何操作和 JSON envelope；plot 负责生成 view / viewGroup / panel / track / plotArea / contentBox 等 domain handle，并把其 role、facet key、track id 等语义写入 opaque domain payload。这样 core 不需要知道 facet、axis lane 或 sankey。
@@ -164,14 +166,14 @@ core 可以不提供最终用户 API，但需要提供稳定的底层能力：
 
 ### 4.3 语义元信息容器
 
-core 不应该理解 plot 语义，但应该允许 domain 包把语义信息挂到 Scene / layout metadata 上，并保证：
+core 不应该理解 plot 语义，但应该允许 domain 包把语义信息写入 spatial handle 的 JSON domain payload 或其它 owner 明确的 compile sidecar，并保证：
 
 - JSON 可序列化。
-- renderer 不解释也不丢失。
+- renderer 不解释；Runtime 与工具链把 sidecar 和 Scene 作为同一 revision 结果提交。
 - locator / selection / inspector 能按 metadata 找回源对象。
 - 同一图元可以同时携带空间 provenance 和数据 provenance。
 
-core 不解释 meta 内容，只保证它在编译与渲染链路中不丢失；后续还需要面向布局空间和选区查询把这一方向收敛成稳定契约。
+Core primitive / Scope `meta` 继续服务绘制对象自身的不透明 metadata，但不能成为 spatial handle index。Core 不解释 domain payload，只保证它在 compile / Runtime sidecar 中不丢失；renderer 无需携带或复制该 payload。
 
 长期上，meta 不应只是任意对象散落在 primitive 上。core 可以提供一个保守的 envelope：
 
@@ -235,7 +237,7 @@ plot 在生成 facet / track / overlay / attached view 时，应记录每个 vie
 
 需要明确三类 provenance 的边界：
 
-- 稳定 Scene / layout metadata：用于 locator、selection、inspector 和跨 renderer 工具链，形状必须长期稳定。
+- 稳定 compile / runtime sidecar：用于 locator、selection、inspector 和跨 renderer 工具链，形状必须长期稳定。
 - 编辑器 / LLM context：可以包含候选动作、用户意图、临时排名等运行时信息，不进入 renderer contract。
 - 生成历史 / derivation plan：解释某个 attachment 为什么被创建，用于撤销、重新生成和人机协作，不是渲染合法性的前提。
 
@@ -323,7 +325,7 @@ Chart type 可以隐式生成复杂 Plot composition。例如价格轨道、成�
 - 多个独立 Chart、Plot、Table 或其它内容的静态排列、对齐、union 与 attachment 属于 Standard + Core spatial handles
 - linked selection、filter、scroll、responsive state 与跨图数据流属于更高层 dashboard / workspace runtime
 
-因此 Chart 不拥有 dashboard IR，不复制 Plot composition，也不吸收 Standard layout。它只保证自己的外层区域可寻址，并让内部 Plot 空间在封装后仍可进入、选择、解释和复用。
+因此 Chart 不拥有 dashboard IR，不复制 Plot composition，也不吸收 Layout solver 或 Standard Surface lowering。它只保证自己的外层区域可寻址，并让内部 Plot 空间在封装后仍可进入、选择、解释和复用。
 
 ---
 
@@ -426,7 +428,7 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 - **反对把派生关系塞进 mark 私有字段。** 派生是 view / layout / data 的组合关系，不属于某个 mark。
 - **反对让 core 理解 plot 语义。** core 只提供空间、metadata、选择和查询的底座；facet / track / sankey / aggregate 仍属于 plot。
 - **反对继续把所有能力塞进 `arrangements`。** `arrangements` 表达基础拓扑，派生关系表达 view graph，两者职责不同。
-- **反对 renderer 专属布局句柄。** 句柄必须在 Scene / layout 层稳定存在，SVG / Canvas / SSR 行为一致。
+- **反对 renderer 专属布局句柄。** 句柄必须在与 Scene 同 revision 的 Core compile / Runtime sidecar 中稳定存在，SVG / Canvas / SSR 共享同一结果。
 - **反对让新图形与来源图强生命周期绑定。** 来源图可以生成建议和默认空间，但新图形应能通过显式空间独立保存、复制和复用。
 - **反对把完整 Scene 当作 LLM 上下文。** LLM 需要的是压缩后的空间句柄、语义 meta 和可执行动作，不是 renderer primitive 明细。
 - **反对把候选动作写死在 meta 里。** meta 描述事实，planner 结合 capability / action registry 生成候选动作。
@@ -448,7 +450,7 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 
 ### 阶段 2：handle / selector / provenance 契约
 
-在真正做 attachment 之前，先固定长期契约：handle registry schema、handle id 稳定性、qualified id / selector 语法、bbox / contentBox / band / union / polar span 的类型边界、错误诊断归属，以及哪些 provenance 进入稳定 Scene / layout metadata。
+Core ADR-19 已为首个 rect 子集固定 declaration、qualified owner path、显式 instance id / compile occurrence、closed selector、origin / final provenance 与 compile sidecar。阶段 2 的剩余范围是 contentBox、band、union / intersection、polar span、attachment operation、跨 revision identity 与对应诊断；这些延期能力仍属于 compile / runtime sidecar，不进入 Scene 或 renderer contract。
 
 ### 阶段 3：plot 输出 view / arrangement handle
 
@@ -484,15 +486,14 @@ LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个
 
 ## 10. 待决策
 
-- 空间句柄最终挂在 Scene 上，还是作为 compile metadata 与 Scene 并列返回。
-- 句柄 id 由用户显式命名、编译器稳定生成，还是两者结合。
 - attachment 属于 PlotSpec schema、core layout schema，还是编辑器 action / patch 层。
 - view group 的表达是否需要成为一等 IR，还是仅作为 composition normalization 的产物。
 - 派生数据 transform 是否复用现有 transform 管线，还是需要新增 derivation planner。
 - 产品选择态、locator、hit testing 与 provenance 的边界如何划分。
 - action schema、capability registry、candidate action ranking 是否属于 plot 包，还是编辑器 / AI 工具链。
 - 极坐标空间复用是否抽象成通用 span，还是由 coordinate definition 提供自定义 handle provider。
-- Chart 外层 namespace 与 Plot 内部 qualified selector 的精确结构，以及 selector delegation 的诊断 owner。
+- Chart facade 如何把自身 `within` owner path 与 Plot selector 组合，以及 facade / Core query 的诊断 owner。
+- 匿名 occurrence 在 authored reorder 后不稳定时，跨 revision identity 由领域显式 id、运行时映射还是更高层文档 identity 承担。
 
 ---
 
