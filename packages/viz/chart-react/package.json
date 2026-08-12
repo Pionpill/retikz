@@ -32,7 +32,13 @@
   },
   "dependencies": {
     "@retikz/chart": "workspace:*",
-    "@retikz/plot-react": "workspace:*"
+    "@retikz/core": "workspace:^",
+    "@retikz/data": "workspace:^",
+    "@retikz/layout": "workspace:^",
+    "@retikz/plot": "workspace:^",
+    "@retikz/plot-react": "workspace:^",
+    "@retikz/react": "workspace:^",
+    "@retikz/standard": "workspace:^"
   },
   "peerDependencies": {
     "react": ">=18",

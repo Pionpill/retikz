@@ -1,32 +1,53 @@
-import type { IRChild, IRFont, IRLineSpec, IRNode, IRScope } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
+import type {
+  ChartPresentationAuthoringRecord,
+  ChartPresentationFlexItem,
+  ChartPresentationPresetValue,
+  ChartThemeStyleDefinition,
+  ChartTypeValue,
+  IRBubbleChartSpec,
+  IRConnectedScatterChartSpec,
+  IRScatterChartSpec,
+} from '@retikz/chart';
+import type { IRChild, IRFont, IRLineSpec, IRNode, IRScope, ResolvedTheme, ThemeStyleDefinition } from '@retikz/core';
 import type { IRTextBlock } from '@retikz/core';
-import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
+import type { ExternalRow } from '@retikz/data';
+import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { PlotDslProps, PlotProps, PlotSpecProps } from '@retikz/plot-react';
+import type {
+  EmbeddableAuthoringContext,
+  EmbeddableContribution,
+  EmbeddableTier2Adapter,
+  LayoutProps,
+  ScopeProps,
+} from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { resolveCompositeDependencies } from '@retikz/core';
 import {
   ChartPresentationPreset,
   ChartProvider,
   ChartType,
   createChart,
+  createChartProvider,
   DEFAULT_CHART_DATA_REFERENCE,
   resolveChartSpec,
-  type ChartPresentationAuthoringRecord,
-  type ChartPresentationFlexItem,
-  type ChartPresentationPresetValue,
-  type ChartTypeValue,
-  type IRBubbleChartSpec,
-  type IRConnectedScatterChartSpec,
-  type IRScatterChartSpec,
 } from '@retikz/chart';
+import {
+  DEFAULT_RESOLVED_THEME,
+  resolveCompositeDependencies,
+  resolveTheme,
+  resolveThemeStyleRegistry,
+} from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { createPlotProvider } from '@retikz/plot';
-import { Layout, Text } from '@retikz/react';
-import { resolvePlotAuthoring, resolvePlotExtensionAuthoring } from '@retikz/plot-react';
+import { resolvePlotAuthoring, resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
+import { Layout, Text, useTheme, useThemeStyles } from '@retikz/react';
 import { SurfaceProvider } from '@retikz/standard';
 import { createElement, Fragment, isValidElement } from 'react';
+
+import { useChartThemeStyles } from './theme-context';
+
+export type { ChartThemeProviderProps } from './theme-provider';
+export { ChartThemeProvider } from './theme-provider';
 
 /** Chart 的四个 presentation shorthand */
 export type ChartPresentationProps = Readonly<{
@@ -40,8 +61,22 @@ export type ChartPresentationProps = Readonly<{
   source?: string;
 }>;
 
-/** Chart standalone 复用的 Layout host 字段 */
-export type ChartHostProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'style' | 'renderer' | 'themeStyles'>;
+/** Chart standalone 复用的 Layout host 字段。嵌入时 Core `themeStyles` 由父 Layout 提供 */
+export type ChartHostProps = Pick<
+  LayoutProps,
+  | 'width'
+  | 'height'
+  | 'className'
+  | 'style'
+  | 'renderer'
+  | 'themeStyles'
+  | 'runtime'
+  | 'animate'
+  | 'snapshotAt'
+  | 'animationRef'
+  | 'onArtifacts'
+  | 'onCompileResult'
+>;
 
 /** Chart 整图根的 Scope 字段 */
 export type ChartRootProps = Pick<ScopeProps, 'id' | 'transforms' | 'placement' | 'zIndex' | 'clip' | 'theme'> & {
@@ -51,8 +86,16 @@ export type ChartRootProps = Pick<ScopeProps, 'id' | 'transforms' | 'placement' 
   y?: number;
 };
 
+/** Chart 与 Plot 的 runtime-only Theme definition 输入 */
+export type ChartRuntimeThemeProps = {
+  /** Chart-owned Theme definition；与同名 Core、Plot definition 一起完成 style resolution */
+  chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
+  /** Plot-owned Theme definition；供 Chart 内部 Plot lowering 使用 */
+  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+};
+
 /** Chart 的 host、根和 presentation 公共字段 */
-export type ChartCommonProps = ChartHostProps & ChartRootProps & ChartPresentationProps;
+export type ChartCommonProps = ChartHostProps & ChartRootProps & ChartPresentationProps & ChartRuntimeThemeProps;
 
 /** 基础 Chart 的完整 PlotSpec authoring 入口 */
 export type ChartSpecProps = Omit<PlotSpecProps, keyof ChartCommonProps | 'children'> &
@@ -168,6 +211,10 @@ const textLinesOf = (children: ReactNode): Array<ChartTextLine> => {
   const lines: Array<ChartTextLine> = [];
   const append = (value: ReactNode): void => {
     if (value === null || value === undefined || typeof value === 'boolean') return;
+    if (Array.isArray(value)) {
+      value.forEach(append);
+      return;
+    }
     if (typeof value === 'string') {
       lines.push(value);
       return;
@@ -272,8 +319,8 @@ const hasPlotChild = (value: ReactNode): boolean => {
 
 const isSpecProps = (props: ChartProps): props is ChartSpecProps => 'spec' in props && props.spec !== undefined;
 
-const wrapChartScope = (chart: ReturnType<typeof createChart>, props: ChartRootProps): IRChild => {
-  const { id, x, y, transforms, placement, zIndex, clip, theme } = props;
+const wrapChartScope = (chart: ReturnType<typeof createChart>, props: Omit<ChartRootProps, 'id'>): IRChild => {
+  const { x, y, transforms, placement, zIndex, clip, theme } = props;
   const scopeTransforms =
     x !== undefined || y !== undefined
       ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<IRScope['transforms']>)
@@ -289,7 +336,6 @@ const wrapChartScope = (chart: ReturnType<typeof createChart>, props: ChartRootP
   }
   return {
     type: 'scope',
-    ...(id === undefined ? {} : { id }),
     ...(scopeTransforms === undefined ? {} : { transforms: scopeTransforms }),
     ...(placement === undefined ? {} : { placement }),
     ...(zIndex === undefined ? {} : { zIndex }),
@@ -307,6 +353,7 @@ export const resolveChartContribution = (props: ChartProps): EmbeddableContribut
     note,
     source,
     chartThemeTokens,
+    chartThemeStyles,
     id,
     x,
     y,
@@ -322,6 +369,12 @@ export const resolveChartContribution = (props: ChartProps): EmbeddableContribut
     style: _style,
     renderer: _renderer,
     themeStyles: _themeStyles,
+    runtime: _runtime,
+    animate: _animate,
+    snapshotAt: _snapshotAt,
+    animationRef: _animationRef,
+    onArtifacts: _onArtifacts,
+    onCompileResult: _onCompileResult,
     ...plotProps
   } = props;
   void _width;
@@ -330,6 +383,12 @@ export const resolveChartContribution = (props: ChartProps): EmbeddableContribut
   void _style;
   void _renderer;
   void _themeStyles;
+  void _runtime;
+  void _animate;
+  void _snapshotAt;
+  void _animationRef;
+  void _onArtifacts;
+  void _onCompileResult;
   const split = splitPresentationMarkers(children);
   if (isSpecProps(props) && hasPlotChild(split.plotChildren)) {
     throw new Error('chart react: Chart spec mode only accepts presentation markers as children');
@@ -355,11 +414,12 @@ export const resolveChartContribution = (props: ChartProps): EmbeddableContribut
     ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
   });
   const plotProvider = createPlotProvider(plot.datasets, plot.lowerOptions);
+  const chartProvider = createChartProvider(chartThemeStyles);
   return {
-    node: wrapChartScope(chart, { id, x, y, transforms, placement, zIndex, clip, theme }),
+    node: wrapChartScope(chart, { x, y, transforms, placement, zIndex, clip, theme }),
     compositeDependencies: {
       roots: [ChartProvider.key],
-      providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, ChartProvider],
+      providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, chartProvider],
     },
   };
 };
@@ -376,8 +436,37 @@ export type EmbeddableChartComponent<TProps> = FC<TProps> & {
 };
 
 const ChartComponent: FC<ChartProps> = props => {
-  const { width, height, className, style, renderer, themeStyles } = props;
-  const contribution = resolveChartContribution(props);
+  const {
+    width,
+    height,
+    className,
+    style,
+    renderer,
+    themeStyles,
+    runtime,
+    animate,
+    snapshotAt,
+    animationRef,
+    onArtifacts,
+    onCompileResult,
+  } = props;
+  const ambientChartThemeStyles = useChartThemeStyles();
+  const ambientPlotThemeStyles = usePlotThemeStyles();
+  const contribution = resolveChartContribution({
+    ...props,
+    chartThemeStyles:
+      ambientChartThemeStyles === undefined
+        ? props.chartThemeStyles
+        : props.chartThemeStyles === undefined
+          ? ambientChartThemeStyles
+          : [...ambientChartThemeStyles, ...props.chartThemeStyles],
+    plotThemeStyles:
+      ambientPlotThemeStyles === undefined
+        ? props.plotThemeStyles
+        : props.plotThemeStyles === undefined
+          ? ambientPlotThemeStyles
+          : [...ambientPlotThemeStyles, ...props.plotThemeStyles],
+  });
   const composites = resolveCompositeDependencies({ contributions: [contribution.compositeDependencies] });
   return createElement(Layout, {
     ir: { version: 1, type: 'scene', children: [contribution.node] },
@@ -388,6 +477,12 @@ const ChartComponent: FC<ChartProps> = props => {
     style,
     renderer,
     themeStyles,
+    runtime,
+    animate,
+    snapshotAt,
+    animationRef,
+    onArtifacts,
+    onCompileResult,
   });
 };
 
@@ -399,7 +494,34 @@ Chart.embeddableAdapter = chartEmbeddableAdapter;
 
 type AnyTypedChartProps = ScatterChartProps | BubbleChartProps | ConnectedScatterChartProps;
 
-const typedChartContribution = (type: ChartTypeValue, props: AnyTypedChartProps): EmbeddableContribution => {
+/** 解析 typed recipe 在当前 Chart 根上实际生效的 Core Theme */
+const resolveTypedChartTheme = (
+  inheritedTheme: ResolvedTheme,
+  theme: ChartRootProps['theme'] | undefined,
+  themeStyles: ReadonlyArray<ThemeStyleDefinition> | undefined,
+): ResolvedTheme => {
+  return resolveTheme(inheritedTheme, theme, 'chart-react Chart Theme', resolveThemeStyleRegistry(themeStyles));
+};
+
+const mergeCoreThemeStyles = (
+  inherited: ReadonlyArray<ThemeStyleDefinition> | undefined,
+  local: ReadonlyArray<ThemeStyleDefinition> | undefined,
+): ReadonlyArray<ThemeStyleDefinition> | undefined => {
+  if (inherited === undefined) return local;
+  if (local === undefined) return inherited;
+  return [...inherited, ...local];
+};
+
+const resolveEmbeddedTypedChartTheme = (
+  props: AnyTypedChartProps,
+  context: EmbeddableAuthoringContext | undefined,
+): ResolvedTheme => resolveTypedChartTheme(context?.theme ?? DEFAULT_RESOLVED_THEME, props.theme, context?.themeStyles);
+
+const typedChartContribution = (
+  type: ChartTypeValue,
+  props: AnyTypedChartProps,
+  effectiveTheme: ResolvedTheme | undefined = undefined,
+): EmbeddableContribution => {
   const {
     data,
     dataRef,
@@ -407,6 +529,8 @@ const typedChartContribution = (type: ChartTypeValue, props: AnyTypedChartProps)
     subtitle,
     note,
     source,
+    chartThemeStyles,
+    plotThemeStyles,
     id,
     x,
     y,
@@ -422,6 +546,12 @@ const typedChartContribution = (type: ChartTypeValue, props: AnyTypedChartProps)
     style: _style,
     renderer: _renderer,
     themeStyles: _themeStyles,
+    runtime: _runtime,
+    animate: _animate,
+    snapshotAt: _snapshotAt,
+    animationRef: _animationRef,
+    onArtifacts: _onArtifacts,
+    onCompileResult: _onCompileResult,
     transform,
     scales,
     coordinate,
@@ -433,8 +563,14 @@ const typedChartContribution = (type: ChartTypeValue, props: AnyTypedChartProps)
   void _className;
   void _style;
   void _renderer;
-  void _themeStyles;
+  void _runtime;
+  void _animate;
+  void _snapshotAt;
+  void _animationRef;
+  void _onArtifacts;
+  void _onCompileResult;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
+  const resolvedTheme = effectiveTheme ?? resolveTypedChartTheme(DEFAULT_RESOLVED_THEME, theme, _themeStyles);
   const split = splitPresentationMarkers(children);
   const extension = resolvePlotExtensionAuthoring(split.plotChildren, {
     data: { reference },
@@ -456,8 +592,8 @@ const typedChartContribution = (type: ChartTypeValue, props: AnyTypedChartProps)
       ...(_width === undefined ? {} : { width: _width }),
       ...(_height === undefined ? {} : { height: _height }),
     },
-    undefined,
-    {},
+    resolvedTheme,
+    { chartThemeStyles, plotThemeStyles },
     {
       ...(title === undefined ? {} : { title }),
       ...(subtitle === undefined ? {} : { subtitle }),
@@ -466,12 +602,19 @@ const typedChartContribution = (type: ChartTypeValue, props: AnyTypedChartProps)
       ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
     },
   );
-  const plotProvider = createPlotProvider({ [reference]: data }, { ...extension.runtime });
+  const plotProvider = createPlotProvider(
+    { [reference]: data },
+    {
+      ...extension.runtime,
+      ...(plotThemeStyles === undefined ? {} : { plotThemeStyles }),
+    },
+  );
+  const chartProvider = createChartProvider(chartThemeStyles);
   return {
-    node: wrapChartScope(resolution.chart, { id, x, y, transforms, placement, zIndex, clip, theme }),
+    node: wrapChartScope(resolution.chart, { x, y, transforms, placement, zIndex, clip, theme }),
     compositeDependencies: {
       roots: [ChartProvider.key],
-      providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, ChartProvider],
+      providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, chartProvider],
     },
   };
 };
@@ -482,11 +625,57 @@ const createTypedChartComponent = <TProps extends AnyTypedChartProps>(
 ): EmbeddableChartComponent<TProps> => {
   const adapter: EmbeddableTier2Adapter<TProps> = {
     displayName,
-    contribute: props => typedChartContribution(type, props),
+    contribute: (props, context) => typedChartContribution(type, props, resolveEmbeddedTypedChartTheme(props, context)),
   };
   const Component: FC<TProps> = props => {
-    const { width, height, className, style, renderer, themeStyles } = props;
-    const contribution = adapter.contribute(props);
+    const {
+      width,
+      height,
+      className,
+      style,
+      renderer,
+      themeStyles,
+      runtime,
+      animate,
+      snapshotAt,
+      animationRef,
+      onArtifacts,
+      onCompileResult,
+    } = props;
+    const ambientTheme = useTheme();
+    const ambientCoreThemeStyles = useThemeStyles();
+    const ambientChartThemeStyles = useChartThemeStyles();
+    const ambientPlotThemeStyles = usePlotThemeStyles();
+    const coreThemeStyles = mergeCoreThemeStyles(ambientCoreThemeStyles, themeStyles);
+    const contributionProps = {
+      ...props,
+      chartThemeStyles:
+        ambientChartThemeStyles === undefined
+          ? props.chartThemeStyles
+          : props.chartThemeStyles === undefined
+            ? ambientChartThemeStyles
+            : [...ambientChartThemeStyles, ...props.chartThemeStyles],
+      plotThemeStyles:
+        ambientPlotThemeStyles === undefined
+          ? props.plotThemeStyles
+          : props.plotThemeStyles === undefined
+            ? ambientPlotThemeStyles
+            : [...ambientPlotThemeStyles, ...props.plotThemeStyles],
+    };
+    const contribution = typedChartContribution(
+      type,
+      contributionProps,
+      resolveTypedChartTheme(
+        resolveTheme(
+          DEFAULT_RESOLVED_THEME,
+          ambientTheme,
+          'chart-react ambient Theme',
+          resolveThemeStyleRegistry(coreThemeStyles),
+        ),
+        props.theme,
+        coreThemeStyles,
+      ),
+    );
     const composites = resolveCompositeDependencies({ contributions: [contribution.compositeDependencies] });
     return createElement(Layout, {
       ir: { version: 1, type: 'scene', children: [contribution.node] },
@@ -497,6 +686,12 @@ const createTypedChartComponent = <TProps extends AnyTypedChartProps>(
       style,
       renderer,
       themeStyles,
+      runtime,
+      animate,
+      snapshotAt,
+      animationRef,
+      onArtifacts,
+      onCompileResult,
     });
   };
   const chart = Component as EmbeddableChartComponent<TProps>;

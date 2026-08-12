@@ -1207,8 +1207,11 @@ importers:
         specifier: workspace:^
         version: link:../../library/layout
       '@retikz/plot':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../plot
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1234,9 +1237,27 @@ importers:
       '@retikz/chart':
         specifier: workspace:*
         version: link:../chart
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
+      '@retikz/data':
+        specifier: workspace:^
+        version: link:../data
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
+      '@retikz/plot':
+        specifier: workspace:^
+        version: link:../plot
       '@retikz/plot-react':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../plot-react
+      '@retikz/react':
+        specifier: workspace:^
+        version: link:../../kernel/react
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1271,9 +1292,27 @@ importers:
       '@retikz/chart':
         specifier: workspace:*
         version: link:../chart
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
+      '@retikz/data':
+        specifier: workspace:^
+        version: link:../data
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
+      '@retikz/plot':
+        specifier: workspace:^
+        version: link:../plot
       '@retikz/plot-vanilla':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../plot-vanilla
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

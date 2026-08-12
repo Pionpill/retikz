@@ -32,7 +32,13 @@
   },
   "dependencies": {
     "@retikz/chart": "workspace:*",
-    "@retikz/plot-vanilla": "workspace:*"
+    "@retikz/core": "workspace:^",
+    "@retikz/data": "workspace:^",
+    "@retikz/layout": "workspace:^",
+    "@retikz/plot": "workspace:^",
+    "@retikz/plot-vanilla": "workspace:^",
+    "@retikz/standard": "workspace:^",
+    "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",
