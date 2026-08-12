@@ -1,21 +1,15 @@
 import type { IRChild } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 
+import { CompositeBaseSchema, defineComposite, defineThemeStyle, resolveDefaultCoreThemeColors } from '@retikz/core';
 import {
-  CompositeBaseSchema,
-  defineComposite,
-  defineThemeStyle,
-  resolveDefaultCoreThemeColors,
-  ThemeStyle,
-} from '@retikz/core';
-import {
-  getDefaultTableThemePreset,
   createDetailTableSpec,
   createManualTableSpec,
   defineCellFormatter,
   defineCellPresentation,
   defineTableStructure,
   defineTableThemeStyle,
+  getDefaultTableThemePreset,
 } from '@retikz/table';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
