@@ -3,9 +3,10 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { IRChart, IRChartPresentation } from '../src';
 
 import * as chart from '../src';
+import * as point from '../src/point';
 
 describe('@retikz/chart public surface', () => {
-  it('exports the canonical Chart contract, four presets, typed schemas, and one provider', () => {
+  it('exports the canonical base Chart contract, four presets, and one provider', () => {
     expect(chart.ChartPresentationPreset).toEqual({
       Title: 'title',
       Subtitle: 'subtitle',
@@ -15,11 +16,31 @@ describe('@retikz/chart public surface', () => {
     expect(chart.ChartProvider.key).toEqual({ namespace: 'chart', type: 'chart' });
     expect(chart).toHaveProperty('ChartDefinition');
     expect(chart).toHaveProperty('ChartSchema');
-    expect(chart).toHaveProperty('ScatterChartSpecSchema');
+    expect(chart).not.toHaveProperty('PointChartType');
+    expect(chart).not.toHaveProperty('PointChartSpecSchema');
+    expect(chart).not.toHaveProperty('ScatterChartSpecSchema');
+    expect(chart).not.toHaveProperty('BubbleChartSpecSchema');
+    expect(chart).not.toHaveProperty('ConnectedScatterChartSpecSchema');
+    expect(chart).not.toHaveProperty('resolvePointChartSpec');
     expect(chart).not.toHaveProperty('ScatterChartDefinition');
     expect(chart).not.toHaveProperty('createChartComposites');
     expect(chart).not.toHaveProperty('ChartCaption');
     expect(chart).not.toHaveProperty('ChartCredit');
+  });
+
+  it('exports the Point family together with the base Chart contract from its subpath', () => {
+    expect(point.ChartSchema).toBe(chart.ChartSchema);
+    expect(point.ChartDefinition).toBe(chart.ChartDefinition);
+    expect(point.PointChartType).toEqual({
+      Scatter: 'scatter',
+      Bubble: 'bubble',
+      ConnectedScatter: 'connected-scatter',
+    });
+    expect(point).toHaveProperty('PointChartSpecSchema');
+    expect(point).toHaveProperty('ScatterChartSpecSchema');
+    expect(point).toHaveProperty('BubbleChartSpecSchema');
+    expect(point).toHaveProperty('ConnectedScatterChartSpecSchema');
+    expect(point).toHaveProperty('resolvePointChartSpec');
   });
 
   it('keeps canonical IR JSON-safe', () => {

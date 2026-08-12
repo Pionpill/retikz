@@ -17,38 +17,36 @@ const sourceFilesUnder = async (directory: string): Promise<Array<string>> => {
 };
 
 describe('Chart semantic source layout', () => {
-  it('removes the former technical owner directories', async () => {
+  it('uses the base, shared, and Point family owners without legacy routes', async () => {
     const paths = (await sourceFilesUnder(sourceRoot)).map(path => relative(sourceRoot, path).replaceAll('\\', '/'));
 
-    expect(paths.some(path => path.startsWith('pipeline/') || path.startsWith('providers/'))).toBe(false);
-    expect(paths.some(path => path.startsWith('internal/'))).toBe(false);
-  });
-
-  it('keeps lower shared and family owners independent from higher resolution owners', async () => {
-    const sharedFiles = await sourceFilesUnder(join(sourceRoot, 'shared'));
-    const familyFiles = await sourceFilesUnder(join(sourceRoot, 'families'));
-    const contents = await Promise.all([...sharedFiles, ...familyFiles].map(path => readFile(path, 'utf8')));
-
-    expect(contents.some(content => /from ['"].*\/(presentation|style|resolution)/.test(content))).toBe(false);
-  });
-
-  it('keeps family owners independent from resolution', async () => {
-    const files = await sourceFilesUnder(sourceRoot);
-    const catalogImports = await Promise.all(
-      files.map(async path => ({ path: relative(sourceRoot, path), content: await readFile(path, 'utf8') })),
-    );
-
+    expect(paths.some(path => path.startsWith('base/'))).toBe(true);
+    expect(paths.some(path => path.startsWith('shared/'))).toBe(true);
+    expect(paths.some(path => path.startsWith('point/'))).toBe(true);
+    expect(paths.some(path => path.startsWith('families/') || path.startsWith('resolution/'))).toBe(false);
     expect(
-      catalogImports
-        .filter(({ path }) => path.startsWith('families/'))
-        .some(({ content }) => content.includes('/resolution')),
+      paths.some(path => path.startsWith('schemas/') || path.startsWith('presentation/') || path.startsWith('style/')),
     ).toBe(false);
   });
 
-  it('keeps Chart-wide schema aggregation on semantic owner barrels', async () => {
-    const schemaFiles = [join(sourceRoot, 'schemas/chart.ts'), join(sourceRoot, 'schemas/internal.ts')];
-    const contents = await Promise.all(schemaFiles.map(path => readFile(path, 'utf8')));
+  it('keeps base independent from the Point family', async () => {
+    const baseFiles = await sourceFilesUnder(join(sourceRoot, 'base'));
+    const contents = await Promise.all(baseFiles.map(path => readFile(path, 'utf8')));
 
-    expect(contents.some(content => /families\/.*\/schema/.test(content))).toBe(false);
+    expect(contents.some(content => /from ['"].*\/point(?:\/|['"])/.test(content))).toBe(false);
+  });
+
+  it('keeps shared independent from base and Point owners', async () => {
+    const sharedFiles = await sourceFilesUnder(join(sourceRoot, 'shared'));
+    const contents = await Promise.all(sharedFiles.map(path => readFile(path, 'utf8')));
+
+    expect(contents.some(content => /from ['"].*\/(base|point)(?:\/|['"])/.test(content))).toBe(false);
+  });
+
+  it('lets the Point family consume base and shared through their owner barrels', async () => {
+    const pointFiles = await sourceFilesUnder(join(sourceRoot, 'point'));
+    const contents = await Promise.all(pointFiles.map(path => readFile(path, 'utf8')));
+
+    expect(contents.some(content => /from ['"].*\/(base|shared)(?:\/|['"])/.test(content))).toBe(true);
   });
 });

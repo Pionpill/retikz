@@ -13,6 +13,10 @@ type PackageManifest = {
   peerDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   files?: Array<string>;
+  exports?: Record<string, { types: string; default: string }>;
+  publishConfig?: {
+    exports?: Record<string, { types: string; import: string; default: string }>;
+  };
 };
 
 const readManifest = async (relativeUrl: string): Promise<PackageManifest> =>
@@ -88,6 +92,22 @@ describe('published Chart release-group boundaries', () => {
     expect(manifest.files).toEqual(['LICENSE', 'README.md', 'dist/**/*']);
     expect(manifest.peerDependencies).toBeUndefined();
     expect(manifest.devDependencies).toEqual(commonDevDependencies);
+    expect(manifest.exports).toEqual({
+      '.': { types: './src/index.ts', default: './src/index.ts' },
+      './point': { types: './src/point/index.ts', default: './src/point/index.ts' },
+    });
+    expect(manifest.publishConfig?.exports).toEqual({
+      '.': {
+        types: './dist/types/index.d.ts',
+        import: './dist/index.js',
+        default: './dist/index.js',
+      },
+      './point': {
+        types: './dist/types/point/index.d.ts',
+        import: './dist/point/index.js',
+        default: './dist/point/index.js',
+      },
+    });
   });
 
   it.each([
