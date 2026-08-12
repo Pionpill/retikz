@@ -82,9 +82,10 @@ type RemovedStageTypes = [
 ];
 
 describe('@retikz/table public API', () => {
-  it('exports the alpha.2 compile, schema, and manifest surface without pipeline stages', () => {
+  it('exports the runtime contribution, compile, schema, and manifest surface without pipeline stages', () => {
     expect(Table).toHaveProperty('createTableRuntimeContribution');
-    expect(Table).toHaveProperty('makeTableRuntimeComposites');
+    expect(Table).toHaveProperty('createTableProvider');
+    expect(Table).not.toHaveProperty('makeTableRuntimeComposites');
     expect(Table).toHaveProperty('lowerTables');
     expect(Table).toHaveProperty('compileTable');
     expect(Table).not.toHaveProperty('lowerTableWithArtifacts');

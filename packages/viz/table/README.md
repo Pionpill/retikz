@@ -44,11 +44,12 @@ from the same layout transaction as the Scene.
 - Plot content may enter a Cell through Core composition, but this package does not depend on
   `@retikz/plot`.
 
-Adapter authors can use `createTableRuntimeContribution()` and `makeTableRuntimeComposites()` to
-merge runtime datasets, formatter/structure/presentation/visual-scale definitions, and composites
-with the same identity-based conflict rules as the built-in React and Vanilla adapters. The
-contribution stores detached frozen containers while leaving caller-owned definition objects
-unchanged. This extension contract is runtime-only and does not enter Table IR.
+Adapter authors can use `createTableRuntimeContribution()` to produce a Core
+`CompositeDependencyContribution`. It carries the Table provider, runtime datasets,
+formatter/structure/presentation/visual-scale definitions, and nested composite providers through
+the same identity-based conflict rules as the built-in React and Vanilla adapters. The contribution
+stores detached frozen containers while leaving caller-owned definition objects unchanged. This
+extension contract is runtime-only and does not enter Table IR.
 
 Each visual-scale Definition returns one runtime resolution with `of`, `legendForm`, `domain`,
 `range`, and optional `edges`. Table validates its JSON/color shape and repeated-input determinism;

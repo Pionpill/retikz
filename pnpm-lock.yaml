@@ -1502,6 +1502,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
       '@types/d3-format':
         specifier: 'catalog:'
         version: 3.0.4

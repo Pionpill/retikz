@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.4 Roadmap
 
-> 状态：Layout owner 迁移已完成；ADR-01 Surface Proposed，当前 alpha.4 重新打开。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md)
+> 状态：Layout owner 迁移已完成；ADR-01 Surface Accepted，当前 alpha.4 继续收敛 Surface 的实现与跨领域消费证据。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md)
 
 ## 目标
 
@@ -12,7 +12,7 @@
 
 | ADR                                                                             | 状态     | 主题                       | 交付                                                                    |
 | ------------------------------------------------------------------------------- | -------- | -------------------------- | ----------------------------------------------------------------------- |
-| [ADR-01](./01-arbitrary-child-surface.md)                                       | Proposed | 任意 child Surface         | 冻结单 child box、appearance、Scope、layout、Definition 与 spatial 边界 |
+| [ADR-01](./01-arbitrary-child-surface.md)                                       | Accepted | 任意 child Surface         | 冻结单 child box、appearance、Scope、layout、Definition 与 spatial 边界 |
 | [Layout ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) | Accepted | Layout package family 迁移 | 冻结现行布局 owner、canonical namespace、公共入口与兼容性               |
 
 ## 已完成迁移边界
@@ -28,7 +28,7 @@
 
 - Core ADR-18 冻结跨 namespace Composite provider graph，确保 Surface 及其任意 child definitions 在 React、Vanilla 与直接工具链中统一装配
 - Core ADR-19 冻结 qualified spatial handle sidecar，确保 Surface 包裹后 descendant identity、geometry 与 provenance 不丢失
-- 两项 Core ADR 与本 milestone ADR-01 分别完成 Architecture Gate 和人工确认后，才能进入实现计划与测试契约
+- 两项 Core ADR 与本 milestone ADR-01 均已完成 Architecture Gate、Plan Gate 与人工确认，Surface 按冻结的实现计划与测试契约推进
 
 ## Surface 交付边界
 
@@ -57,6 +57,6 @@
 ## 当前进度与执行顺序
 
 1. Layout owner 迁移已经完成，现行代码版本为 `0.1.0-alpha.4`
-2. ADR-01 Surface 已形成 Proposed 长期设计，等待 Architecture Gate PASS 与人工确认
-3. Gate 与人工确认后，为 Core provider graph、spatial sidecar 与 Surface 分别建立 ignored test contract / implementation plan
-4. 先实现 Core gates，再实现 Standard Surface，由 Chart / Table 至少两个真实 consumer 证明通用性并同步双语 docs 与 release notes
+2. ADR-01 Surface 已 Accepted，单 child box、appearance、Scope、layout、Definition 与 spatial 边界已经冻结
+3. Core provider graph 与 qualified spatial sidecar 已作为 Surface 的跨 namespace definition 与空间查询基础；Surface 的测试契约与实现计划保留在 ignored plan mirror
+4. Surface 在 Standard、React、Vanilla、文档与 Table consumer 中闭环；Chart 的独立实现计划负责补足第二个真实 consumer，再评估 alpha.4 完成状态与 release notes
