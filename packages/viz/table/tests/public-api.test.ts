@@ -118,7 +118,8 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableThemeTokenBorderSchema');
     expect(Table).toHaveProperty('TableThemeTokenOverridesSchema');
     expect(Table).toHaveProperty('TableThemeTokenMapSchema');
-    expect(Table).toHaveProperty('BUILTIN_TABLE_THEME_TOKENS');
+    expect(Table).toHaveProperty('getDefaultTableThemePreset');
+    expect(Table).not.toHaveProperty('BUILTIN_TABLE_THEME_TOKENS');
     expect(Table).not.toHaveProperty('TableStyle');
     expect(Table).not.toHaveProperty('TableThemeMode');
     expect(Table).not.toHaveProperty('TableStyleTokenShape');
