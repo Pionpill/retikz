@@ -1167,7 +1167,7 @@ const guidedSpec = (guides: Array<unknown>): IRPlotSpec =>
 
 const expandOf = (spec: IRPlotSpec): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, { width: 480, height: 300 });
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 describe('lowerPlots guide orchestration (contract)', () => {

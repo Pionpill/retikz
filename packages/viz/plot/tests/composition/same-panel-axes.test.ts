@@ -92,7 +92,7 @@ const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
 
 const expandOf = (spec: IRPlotSpec): IRScope => {
   const [definition] = lowerPlots({ weather: rows }, { width: 480, height: 300, provenance: true });
-  return definition.expand(spec) as IRScope;
+  return definition.expand(spec).children[0] as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

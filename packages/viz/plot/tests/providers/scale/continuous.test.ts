@@ -1,4 +1,4 @@
-﻿import type { IRPath, IRScope, IRStep } from '@retikz/core';
+import type { IRPath, IRScope, IRStep } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -19,7 +19,7 @@ const expandOf = (
   options: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 取得第一个 mark 图层 Scope，也就是外层 plot Scope 的第一个子 Scope */

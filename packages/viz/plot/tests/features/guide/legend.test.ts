@@ -26,7 +26,7 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 子节点谓词 */
