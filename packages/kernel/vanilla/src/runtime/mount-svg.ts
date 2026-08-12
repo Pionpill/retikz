@@ -1,4 +1,4 @@
-import type { CompileArtifact, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { AnimationControls } from '@retikz/render/animation';
 
 import {
@@ -66,14 +66,16 @@ const mountStaticSvg = (
   let animationControls: AnimationControls | undefined;
   let currentScene: Scene;
   let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+  let currentCompileResult: CompileResult | undefined;
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
   // 存活水合的解绑句柄：view.dispose 时统一解绑（未手动 dispose 的水合也随 view 卸载干净）
   const liveHydrationDisposers = new Set<() => void>();
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, artifacts, layers, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, compileResult, layers, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentArtifacts = artifacts;
+    currentCompileResult = compileResult;
     currentRuntimeMeta = runtimeMeta;
     const doc = buildSvgFrameDocument(
       { primary: scene, layers },
@@ -151,6 +153,9 @@ const mountStaticSvg = (
     get artifacts() {
       return currentArtifacts;
     },
+    get compileResult() {
+      return currentCompileResult;
+    },
   };
 };
 
@@ -195,6 +200,9 @@ const mountRetainedSvg = (
     },
     get artifacts() {
       return runtime.artifacts();
+    },
+    get compileResult() {
+      return runtime.compileResult();
     },
   };
 };

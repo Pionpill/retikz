@@ -18,10 +18,9 @@ describe('React authored sites', () => {
     const embeddedAuthoring = Object.freeze({ role: 'embedded' });
     const adapter: EmbeddableTier2Adapter = {
       displayName: 'Embedded',
-      namespace: 'fixture',
       contribute: () => ({
         node: { namespace: 'fixture', type: 'embedded' },
-        datasets: {},
+        compositeDependencies: { roots: [], providers: [] },
         authoringSites: [
           {
             kind: 'path',
@@ -30,7 +29,6 @@ describe('React authored sites', () => {
             props: { authoring: { role: 'nested' } },
           },
         ],
-        makeComposites: () => [],
       }),
     };
     const SceneElement = (): null => null;

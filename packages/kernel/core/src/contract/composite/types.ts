@@ -5,6 +5,7 @@ import type { ZodType } from 'zod';
 import type { IRChild, IRClipSpec, IRScopeProps, JsonValue } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { Transform } from '../scene';
+import type { SpatialHandleDeclaration } from '../spatial-handle';
 import type {
   LayoutAlignmentGuideDimension,
   LayoutAlignmentGuideName,
@@ -172,10 +173,12 @@ export type LayoutCompositeCompileContext = Readonly<{
    * @description props 沿普通 Scope orchestration 消费；replay child 仍只通过 replay wrapper 接收布局提交变换与裁剪
    * @param props 完整 authored Scope props
    * @param children 普通 IR child 或当前 callback 创建的 opaque child
+   * @param spatialHandles 附着到该 Scope 局部坐标并在最终可达 output tree 中发布的空间声明
    */
   scope: (
     props: CompositeCompileScopeProps,
     children: ReadonlyArray<IRChild | CompositeCompileChild>,
+    spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
   ) => CompositeCompileChild;
 }>;
 
@@ -183,6 +186,14 @@ export type LayoutCompositeCompileContext = Readonly<{
 export type CompositeExpandContext = Readonly<{
   /** 当前 composite 位置完整、只读的有效 Theme */
   theme: ResolvedTheme;
+}>;
+
+/** 无布局 Composite 的结构化展开结果 */
+export type CompositeExpandResult = Readonly<{
+  /** 继续进入 Core traversal 的普通 IR children */
+  children: ReadonlyArray<IRChild>;
+  /** 当前 composite allocation coordinate 中声明的局部空间区域 */
+  spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
 }>;
 
 /** layout-aware composite 的最终输出 */
@@ -227,7 +238,7 @@ export type CompositeDefinition<
 } & (
   | {
       /** 把该 composite 节点按当前位置上下文展开为下一层 IR */
-      expand: (node: TNode, context: CompositeExpandContext) => IRChild | Array<IRChild>;
+      expand: (node: TNode, context: CompositeExpandContext) => CompositeExpandResult;
       compile?: never;
       artifactSchema?: never;
     }
@@ -254,7 +265,7 @@ export type AnyExpandCompositeDefinition = {
   namespace: string;
   type: string;
   schema: ZodType;
-  expand: (node: never, context: CompositeExpandContext) => IRChild | Array<IRChild>;
+  expand: (node: never, context: CompositeExpandContext) => CompositeExpandResult;
   compile?: never;
   artifactSchema?: never;
 };

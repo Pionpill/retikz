@@ -1,4 +1,5 @@
 import type {
+  CompositeDependencyContribution,
   IRArrowMark,
   IRChild,
   IRLineSpec,
@@ -17,7 +18,15 @@ import type {
 } from '@retikz/core';
 import type { ReactElement, ReactNode } from 'react';
 
-import { AxisLineTargetSchema, CURRENT_IR_VERSION, parsePathThickness, parseTargetSugar, PathKind } from '@retikz/core';
+import {
+  AxisLineTargetSchema,
+  CURRENT_IR_VERSION,
+  parsePathThickness,
+  parseTargetSugar,
+  PathKind,
+  resolveTheme,
+  resolveThemeStyleRegistry,
+} from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { CoordinateProps } from '../components';
@@ -27,7 +36,7 @@ import type { ScopeProps } from '../components';
 import type { StepProps } from '../components';
 import type { TextProps } from '../components';
 import type {
-  EmbeddableContributionRecord,
+  EmbeddableAuthoringContext,
   EmbeddableTier2Adapter,
   LayoutAuthoringSite,
   ScopeStyleProps,
@@ -591,10 +600,11 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
  * @description contributions 在整棵树共享同一数组、跨 scope 平铺收集；embeddables 为显式注入的适配器列表（逃生舱 / 测试）
  */
 type BuildContext = {
-  contributions: Array<EmbeddableContributionRecord>;
+  contributions: Array<CompositeDependencyContribution>;
   authoringSites: Array<LayoutAuthoringSite>;
   sourcePath: string;
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
+  embeddableContext?: EmbeddableAuthoringContext;
 };
 
 /** 读取当前父容器中一个 IR child 的 authored source path */
@@ -625,6 +635,19 @@ const buildScopeFromProps = (
   const nestedContext: BuildContext = {
     ...ctx,
     sourcePath: scopeSourcePath,
+    ...(ctx.embeddableContext === undefined || props.theme === undefined
+      ? {}
+      : {
+          embeddableContext: {
+            ...ctx.embeddableContext,
+            theme: resolveTheme(
+              ctx.embeddableContext.theme,
+              props.theme,
+              `React Scope Theme at ${scopeSourcePath}`,
+              resolveThemeStyleRegistry(ctx.embeddableContext.themeStyles),
+            ),
+          },
+        }),
   };
   const scope: IRScope = {
     type: 'scope',
@@ -705,7 +728,7 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
         // resolveEmbeddableAdapter 在「标记但缺 adapter」时 fail-loud throw（即便 ctx 缺省的公开 buildIR 路径也会抛）
         const adapter = resolveEmbeddableAdapter(child.type, getDisplayName(child), ctx?.embeddables);
         if (adapter) {
-          const contribution = adapter.contribute(child.props);
+          const contribution = adapter.contribute(child.props, ctx?.embeddableContext);
           const outputIndex = out.length;
           out.push(contribution.node);
           if (ctx !== undefined) {
@@ -731,11 +754,7 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
               ctx.authoringSites.push(createLayoutAuthoringSite({ ...site, sourcePath })),
             );
           }
-          ctx?.contributions.push({
-            namespace: adapter.namespace,
-            datasets: contribution.datasets,
-            makeComposites: contribution.makeComposites,
-          });
+          ctx?.contributions.push(contribution.compositeDependencies);
           return;
         }
         const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
@@ -788,18 +807,19 @@ export const wrapRootScope = (children: ReactNode, style: ScopeStyleProps): Reac
 
 /**
  * buildIR + 收集可嵌入 Tier2 贡献（Layout 用）；公开 buildIR 丢弃 contributions、签名不变
- * @description 在递归扫描期透传共享累加上下文，可嵌入子组件经 adapter 贡献 IR 节点同时把 datasets / composites 工厂平铺收集到 contributions
+ * @description 在递归扫描期透传共享累加上下文，可嵌入子组件经 adapter 贡献 IR 节点并把 Core provider graph contribution 原样平铺收集
  */
 export const buildIRWithContributions = (
   children: ReactNode,
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
   sceneSite?: Readonly<{ elementType: unknown; props: Readonly<Record<string, unknown>> }>,
+  embeddableContext?: EmbeddableAuthoringContext,
 ): {
   ir: IRScene;
-  contributions: Array<EmbeddableContributionRecord>;
+  contributions: Array<CompositeDependencyContribution>;
   authoringSites: ReadonlyArray<LayoutAuthoringSite>;
 } => {
-  const contributions: Array<EmbeddableContributionRecord> = [];
+  const contributions: Array<CompositeDependencyContribution> = [];
   const authoringSites: Array<LayoutAuthoringSite> = [];
   if (sceneSite !== undefined) {
     authoringSites.push(
@@ -816,6 +836,7 @@ export const buildIRWithContributions = (
     authoringSites,
     sourcePath: '',
     embeddables,
+    embeddableContext,
   });
   return {
     ir: { version: CURRENT_IR_VERSION, type: 'scene', children: sceneChildren },

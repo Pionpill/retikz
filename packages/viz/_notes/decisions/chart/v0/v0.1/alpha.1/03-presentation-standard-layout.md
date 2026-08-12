@@ -1,6 +1,6 @@
 # ADR-03：Chart authoring、canonical result 与有序 presentation
 
-- 状态：Proposed（替代本 ADR 先前的开放 presentation 草案；公开运行时仍受 Standard ADR-01 Surface、Core ADR-18 provider graph 与 Core ADR-19 spatial handles 门控）
+- 状态：Accepted（2026-08-12；替代本 ADR 先前的开放 presentation 草案）
 - 决策日期：2026-08-11
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-02](./02-style-palette.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · [Standard Surface ADR-01](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/01-arbitrary-child-surface.md)
 - 替代：本 ADR 先前的六 preset / 任意 child 草案，以及 ADR-02 中 caption / credit 作为首版公开 presentation token 的承诺；ADR-02 继续拥有四类保留 preset 的 token、merge 与 Plot theme 转发边界
@@ -216,6 +216,10 @@ Vanilla `presentation` 是 marker 的 plain-data 对等输入，保持数组 aut
 
 React adapter 先把 marker 转为 framework-neutral presentation authoring records；React 与 Vanilla 随后调用 `@retikz/chart` 拥有的同一个纯 normalizer，生成等价 `IRChart`。任何入口都不得拥有其它入口无法序列化的顺序、文本或样式语义。手写 canonical JSON 直接以 Plot placeholder 前后的数组位置表达顺序，不消费 `position`。
 
+Vanilla `create*` 返回的 authoring result 固定包含 `chart`、完整 dependency `contribution`，以及创建时显式传入的可选根 `theme` 与 `themeStyles`。其中只有 `chart` 是 JSON-safe canonical IR；Theme style definition 是运行时定义，既不能写入 IR，也不能由依赖 contribution 表达。将它们作为 result 的显式值成员，使结果经对象复制、缓存或跨 helper 转交后仍保留同一个可观察 Theme 输入，不依赖 WeakMap 或其它 object-identity sidecar。
+
+`renderChart(result, options)` 接受 Vanilla render options，但排除 adapter 注入与 `compileDriver`。后者可以产生额外只读 layers、diagnostics 与提交语义，而本 API 固定只返回一次 Core `compileResult` 及其 primary Scene 的 SVG，不能静默丢弃这些产物。需要 compile driver 时，作者直接使用完整 Vanilla authored-IR 入口。`renderChart` 把 result 的 contribution 与调用方显式的 composite definitions 合并一次，并在同一次 Core compile 中依次消费 result 与调用方给出的 Theme styles；不得为 SVG 再次 compile。
+
 ## Inspection、identity 与空间语义
 
 Chart inspection 至少区分裸 Plot 与 Flex presentation，并按 canonical children 顺序提供 item records：
@@ -248,6 +252,7 @@ Chart 拥有整个 Chart、主 Plot item 和四类实际存在的 presentation i
 - canonical presentation 恰好一个 Plot、每种 preset 最多一次、固定 key 且 authored order 保持不变
 - 无 presentation 产生裸 Plot content；显式 presentation 产生 Layout FlexLayout content；两者最终都进入 Standard Surface
 - adapter 不提供 DOM-only title、CSS-only layout、renderer-only text 或静默忽略路径
+- standalone Chart 的 Core `themeStyles` 配置其自行创建的 Layout；嵌入式 Chart 只消费父 Layout 传下来的 Core Theme definitions，子级不得私自登记 Core style
 - Chart 包裹前后，主 Plot 的 semantic identity、domain payload、provenance、locator 与 lineage 保持连续
 
 该契约在 `0.x` 直接替代先前开放六 preset、重复 preset、任意 `IRChild`、`ChartPlot` 与 `ChartItem` 的草案，并把 caption / credit token 从首版公开 Chart theme contract 移除；不提供兼容别名、migration、fallback 或新旧双轨。
@@ -256,7 +261,7 @@ Chart 拥有整个 Chart、主 Plot item 和四类实际存在的 presentation i
 
 - `@retikz/chart` 拥有 typed ChartSpec、包含整图 identity / Chart token handoff 的完整 `IRChart` schema、四类 preset、共享 authoring normalizer、Chart inspection、单一 `ChartDefinition` 与到 Layout Flex / Standard Surface 输入的确定性转换
 - `@retikz/chart-react` 拥有基础 / typed JSX component、direct-child marker 识别、Core `Text` authoring 转换和 React runtime 接线
-- `@retikz/chart-vanilla` 拥有基础 / typed plain helper、SSR convenience 和 Vanilla runtime 接线
+- `@retikz/chart-vanilla` 拥有基础 / typed plain helper、显式 Theme value handoff、SSR convenience 和 Vanilla runtime 接线
 - Plot 拥有完整 Plot authoring、PlotSpec、Axis、Legend、Mark、Scale、Coordinate、Annotation、definition / registry 与 lowering
 - Layout 拥有 `layout.flexLayout` schema、默认、测量、排列与 solver
 - Standard 只拥有 `standard.surface` 的背景、padding、border / corner radius、overflow 与任意 child 包装，不拥有或转发 FlexLayout
@@ -292,7 +297,7 @@ Chart 三包使用独立 `chart` release group 并保持 `0.1.0-alpha.1` lockste
 
 ## 测试策略摘要
 
-需要 schema / parser 证明 `IRChart`、唯一 Plot、preset 唯一、固定 key、TextBlock、JSON-safe 和 strict unknown-field；shared normalizer 证明 shorthand 默认顺序、marker 覆盖、top / bottom authored order 与 React / Vanilla 等价；presentation resolution 证明 canonical 数组顺序与 Layout Flex children 完全一致且不改写 Plot；compile / renderer 证明 Standard Surface 下 SVG 与 Canvas 的上下布局一致；inspection / spatial evidence 证明 Chart 外层 identity 与 Plot 内部 provenance / locator / lineage 连续；release topology 验证合法的显式 Chart→Plot 直接边，拒绝未知、重复、self、cycle、未消费声明与未声明真实跨 feature 边，并保持组内 `workspace:*`、跨组 `workspace:^`；文档和 browser evidence 证明真实数据示例由 Chart 自身渲染 title、subtitle 与 source。
+需要 schema / parser 证明 `IRChart`、唯一 Plot、preset 唯一、固定 key、TextBlock、JSON-safe 和 strict unknown-field；shared normalizer 证明 shorthand 默认顺序、marker 覆盖、top / bottom authored order 与 React / Vanilla 等价；presentation resolution 证明 canonical 数组顺序与 Layout Flex children 完全一致且不改写 Plot；compile / renderer 证明 Standard Surface 下 SVG 与 Canvas 的上下布局一致，并证明 Vanilla result 经 value copy 后仍在一次 compile 中保留根 Theme 与 style definitions；inspection / spatial evidence 证明 Chart 外层 identity 与 Plot 内部 provenance / locator / lineage 连续；release topology 验证合法的显式 Chart→Plot 直接边，拒绝未知、重复、self、cycle、未消费声明与未声明真实跨 feature 边，并保持组内 `workspace:*`、跨组 `workspace:^`；文档和 browser evidence 证明真实数据示例由 Chart 自身渲染 title、subtitle 与 source。
 
 关键反例包括重复 marker / preset、非直接 child、空文本、非法 React element、零个或多个 Plot placeholder、resolver 根据 preset 重排、DOM-only title、adapter-only 默认值与 Chart 包裹后 Plot identity 丢失。详细 case、文件、命令和证据映射进入 ignored test contract，不写入本 ADR。
 
@@ -303,3 +308,11 @@ Chart 三包使用独立 `chart` release group 并保持 `0.1.0-alpha.1` lockste
 - accessibility description 到宿主 DOM / renderer 的具体映射
 - Standard surface、Kernel contribution aggregation 或 Core qualified selector 的具体 API 与实现
 - 具体 Scatter / Bubble recipe 字段和其它 Canonical Type
+
+## 最终实现摘要与遗留边界
+
+基础 `Chart` 与已实现的 typed Chart 现在在完整 PlotSpec 形成后汇合为唯一 canonical `IRChart`，并由单一 `chart.chart` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body。React marker、Vanilla plain record 与手写 JSON 共享同一 presentation normalizer；`position` 只参与 authoring，最终 children 顺序是唯一的 canonical 真源。Chart 的 `title`、`subtitle`、`source`、`note` 均在图内渲染，且 marker 可整体覆盖同名 shorthand。
+
+该契约已覆盖 schema、normalizer、adapter、renderer-neutral Scene、SVG、Canvas、inspection、spatial continuity、发布产物与双语真实数据文档的验证层。完整 Chart 的常规运行时依赖 provider graph 将 Chart、Plot、Flex 与 Surface definition 聚合进同一次 compile，并由 Flex / Surface 完成测量、排列与包装；这条渲染链不读取 qualified spatial handle。后者只为 Chart 封装后仍可由外部 selector 定位 Plot 内部空间、进行 inspection 或后续 attachment 提供独立的空间透明能力。本 ADR 不扩大这些底座的职责。
+
+遗留范围保持不变：caption、credit、任意 presentation child、inline TextRun、宿主工具栏与响应式状态不属于首版；尚未通过各自 capability gate 的 Regression、Ranged Dot 与 Strip 也不因此获得实现或公开入口。

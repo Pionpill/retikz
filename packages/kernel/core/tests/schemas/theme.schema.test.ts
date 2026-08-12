@@ -14,8 +14,9 @@ describe('Theme schema', () => {
     }>();
     expectTypeOf<ResolvedTheme>().toMatchTypeOf<
       Readonly<{
-        style: string;
+        style?: string;
         mode: ThemeModeValue;
+        colors: unknown;
       }>
     >();
   });

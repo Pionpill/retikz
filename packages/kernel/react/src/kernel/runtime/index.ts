@@ -16,5 +16,6 @@ export type {
 } from './runtime-options';
 export { LayoutRuntimeMode } from './runtime-options';
 export { ThemeContext, useTheme } from './theme-context';
+export { useThemeStyles } from './theme-styles-context';
 export type { ThemeProviderProps } from './ThemeProvider';
 export { ThemeProvider } from './ThemeProvider';
