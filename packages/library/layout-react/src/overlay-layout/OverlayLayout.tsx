@@ -2,11 +2,11 @@ import type { OverlayLayoutInput } from '@retikz/layout';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createOverlayLayout, LayoutItemKind } from '@retikz/layout';
+import { createOverlayLayout, LayoutItemKind, OverlayLayoutProvider } from '@retikz/layout';
 
 import type { LayoutEmbeddableComponent } from '../shared';
 
-import { LayoutReactNamespace, makeReactLayoutComposites, resolveReactLayoutItems } from '../shared';
+import { resolveReactLayoutItems } from '../shared';
 
 /** Overlay 布局的 React 属性 */
 export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
@@ -19,16 +19,17 @@ export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
 
 const overlayLayoutEmbeddableAdapter: EmbeddableTier2Adapter<OverlayLayoutProps> = {
   displayName: 'OverlayLayout',
-  namespace: LayoutReactNamespace,
   contribute: props => {
     const { authoring, children, ...input } = props;
     void authoring;
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Overlay);
     return {
       node: createOverlayLayout({ ...input, children: resolved.items }),
-      datasets: {},
+      compositeDependencies: {
+        roots: [OverlayLayoutProvider.key, ...resolved.compositeDependencies.roots],
+        providers: [OverlayLayoutProvider, ...resolved.compositeDependencies.providers],
+      },
       authoringSites: resolved.authoringSites,
-      makeComposites: makeReactLayoutComposites,
     };
   },
 };
