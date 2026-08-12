@@ -15,6 +15,8 @@ alpha.1 证明基础 Chart 与 type-first Chart 可以在不裁剪 Plot 能力�
 5. 按 `scatter` / `bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 顺序逐 type 建立闭环；Scatter 与 Bubble 是共享 Point 能力但保留独立身份的平级 Canonical Type
 6. 保持手写 JSON、React JSX、Vanilla helper 的完整 PlotSpec、canonical `IRChart` 与最终组合结果等价
 
+当前 public surface 按 family 拆分：三个包的根入口只公开基础 Chart 能力，`@retikz/chart/point`、`@retikz/chart-react/point` 与 `@retikz/chart-vanilla/point` 公开 Point typed contract，并同时包含各自 base export。该文件结构与导入面重组不新增 Chart 类型、IR 或解析行为。
+
 alpha.1 不在任何中间 ADR 后发包。基础设施允许内部 fragment 与 resolver 先落地，但公开 `ChartSpecSchema`、`IRChart` 与基础 / typed adapters 只能随着 ADR-04 的 `scatter` / `bubble` variants 原子出现，禁止 schema 接受尚未实现的 type。
 
 ## 2. 固定链路

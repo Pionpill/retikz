@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartNote, ChartSource, ChartSubtitle, ChartTitle, ScatterChart } from '@retikz/chart-react';
+import { ChartNote, ChartSource, ChartSubtitle, ChartTitle, ScatterChart } from '@retikz/chart-react/point';
 import { Legend } from '@retikz/plot-react';
 import { Text } from '@retikz/react';
 

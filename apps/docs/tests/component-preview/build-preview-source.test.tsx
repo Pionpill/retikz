@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { ChartSource, ChartTitle, ScatterChart } from '@retikz/chart-react';
+import { ChartSource, ChartTitle, ScatterChart } from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';

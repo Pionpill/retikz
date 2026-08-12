@@ -342,11 +342,11 @@ Chart 的隐式配方不能成为不可观察黑盒。长期需要满足：
 
 Chart 家族按模块发布：
 
-- `@retikz/chart`：schema、类型配方、lowering 与框架无关 helper
-- `@retikz/chart-react`：基础 `<Chart>`、typed `<XxxChart>`、四类文本 marker 与 runtime 接线
-- `@retikz/chart-vanilla`：基础 / typed plain helper、SSR 与 framework-neutral runtime
+- `@retikz/chart`：根入口提供 base schema、presentation、style 与框架无关 helper；typed recipe 按 family subpath 提供
+- `@retikz/chart-react`：根入口提供基础 `<Chart>`、四类文本 marker 与 runtime 接线；typed `<XxxChart>` 按 family subpath 提供
+- `@retikz/chart-vanilla`：根入口提供基础 plain helper、SSR 与 framework-neutral runtime；typed plain helper 按 family subpath 提供
 
-三条入口共享同一 canonical `IRChart`、presentation normalizer 与执行主链。React 使用包级扁平导出的 `ChartTitle`、`ChartSubtitle`、`ChartNote`、`ChartSource` 声明直接子 marker，Vanilla 使用等价的有序 plain records；两者的 `position` 都在归一后消失。首版 marker 内容只接受字符串、Fragment 与现有整行 `Text` authoring，并归一为 Core TextBlock；普通 DOM child、任意 drawable presentation child 或 DOM-only 外壳不进入 Chart IR。Chart、Plot 与 Standard 的 datasets、definitions 与 inspection 必须由 Kernel adapter 的通用 contribution 聚合机制保真转交，Chart adapter 不建立私有旁路。
+三条入口共享同一 canonical `IRChart`、presentation normalizer 与执行主链。根入口只包含所有 family 共用的 base API；每个 family subpath re-export base 并追加该 family 的 typed contract，例如 `@retikz/chart/point`、`@retikz/chart-react/point` 和 `@retikz/chart-vanilla/point`。React 使用 base entry 导出的 `ChartTitle`、`ChartSubtitle`、`ChartNote`、`ChartSource` 声明直接子 marker，Vanilla 使用等价的有序 plain records；两者的 `position` 都在归一后消失。首版 marker 内容只接受字符串、Fragment 与现有整行 `Text` authoring，并归一为 Core TextBlock；普通 DOM child、任意 drawable presentation child 或 DOM-only 外壳不进入 Chart IR。Chart、Plot 与 Standard 的 datasets、definitions 与 inspection 必须由 Kernel adapter 的通用 contribution 聚合机制保真转交，Chart adapter 不建立私有旁路。
 
 ## 12. 缺口流向
 

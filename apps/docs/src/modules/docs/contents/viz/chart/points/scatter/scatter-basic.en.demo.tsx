@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react';
+import { ScatterChart } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react';
+import { ScatterChart } from '@retikz/chart-react/point';
 import { readFileSync } from 'node:fs';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -30,6 +30,9 @@ describe('Chart-native Scatter presentation', () => {
 
       expect(content).toContain('ConnectedScatterChart');
       expect(content).toContain('createConnectedScatterChart');
+      expect(content).toContain('@retikz/chart/point');
+      expect(content).toContain('@retikz/chart-react/point');
+      expect(content).toContain('@retikz/chart-vanilla/point');
     }
   });
 

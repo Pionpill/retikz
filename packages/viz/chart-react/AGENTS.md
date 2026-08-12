@@ -12,7 +12,7 @@
 
 ## 公开 authoring 约束
 
-- 包级扁平导出基础 `<Chart>`、typed `<XxxChart>`、`ChartTitle`、`ChartSubtitle`、`ChartNote` 与 `ChartSource`；不提供 namespace 或兼容别名
+- 根 `@retikz/chart-react` 只导出基础 `<Chart>`、`ChartTitle`、`ChartSubtitle`、`ChartNote`、`ChartSource` 与 Chart Theme provider。typed `<XxxChart>` 只从 family subpath 导出，例如 `@retikz/chart-react/point`；family subpath 同时 re-export 全部基础 API，不提供旧根入口兼容别名
 - marker 必须是直接 child，Fragment 可透明展开；同类 marker 唯一并完整覆盖同名 shorthand
 - marker children 首版只接受字符串、Fragment 与现有整行 `Text` authoring，不接受 DOM、任意 ReactNode 或 drawable presentation child
 - spec 模式只把 presentation marker 作为额外 children 并保留显式 Plot id；DSL 模式把 marker 与 Plot declaration 分类，Plot runtime options 继续走正式 adapter contribution，不进入 canonical IR

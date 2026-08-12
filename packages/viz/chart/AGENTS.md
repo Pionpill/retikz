@@ -12,33 +12,27 @@
 
 ## 源码 owner 与依赖方向
 
-Chart 是 Tier 3 的横向类型封装，不以 `schemas/providers/pipeline` 作为主要导航轴。源码按语义 owner 组织：
+Chart 是 Tier 3 的横向类型封装。包根只公开所有 Chart family 共用的基础能力；每个 family 从自己的 subpath 同时公开 base 与该 family 的 typed API。源码按语义 owner 组织：
 
 ```text
-shared/       Chart-wide 基础词汇、JSON helper 与无状态 ID 工具
-schemas/      Chart-wide ChartSpec contract、公共 schema fragments 与封闭 union
-families/     正式 Chart family 与 family/type-specific schema、recipe、invariant
-presentation/ canonical IRChart presentation、四类 preset、authoring normalizer、Layout Flex / Standard Surface 投影与 inspection
-style/        Chart canvas / presentation / recipe token、preset、resolver 与 inspection；不定义 Plot token
-inspection/   中立 contribution/member records 到公开 inspection 的投影
-resolution/   closed catalog、dispatch、通用 merge/validation、错误归一化与 owner 接线
-internal/     仅供测试路径使用的 private fixture，不属于正式 family 或 public surface
+base/          Chart 共用的 canonical IR、presentation、style、provider 与 inspection
+shared/        Chart-wide 基础词汇、JSON helper 与无状态 ID 工具
+point/         Point family 的 schema、recipe、catalog、merge 与 resolution
 ```
 
-正式 family 使用 roadmap 的语义分类：`scatter-points`、`line-area`、`bar-column`。`point`、`path`、`interval` 是 Plot Mark 骨架，不是 Chart family。当前已实现的 `scatter`、`bubble`、`connected-scatter` 位于 `families/scatter-points/`，其中 `scatter` 与 `bubble` 是平级 Canonical Type。
+当前 `point` 是首个已实现 family，拥有 `scatter`、`bubble` 与 `connected-scatter` 三个平级 Canonical Type。后续 `bar`、`line` 等 family 只在实际类型可用时创建；不保留空目录或兼容入口。
 
 允许的主要方向为：
 
 ```text
-shared -> schemas / presentation / style / inspection / families/shared
-schemas + families/shared -> families/<family>/<type>
-style -> presentation -> Layout + Standard
-families + schemas + presentation + style + inspection -> resolution
+shared -> base / point
+base -> point
 ```
 
-- 根 `shared` 不得依赖 presentation、style 或 resolution；当前 `schemas/shared.ts` 组合了高层 ChartSpec 字段，迁移后归 `schemas/common.ts`
-- type owner 拥有自己的 schema、recipe 与 invariant，不得导入 resolution；typed recipe 在 Core compile 前由共享 resolver 归一为 canonical `IRChart`
-- `resolution` 只聚合 recipe、dispatch、通用 merge/validation、错误归一化与 composite 接线，不复制 type recipe、Plot lowering 或 inspection provenance
+- `shared` 不得依赖 `base` 或任一 family
+- `base` 不得依赖任一 family；根 `@retikz/chart` 只 re-export `base`
+- family 通过 `../base` 与 `../shared` owner barrel 消费共用能力；family subpath re-export base 加自身 typed API
+- type owner 拥有自己的 schema、recipe 与 invariant；typed recipe 在 Core compile 前由 family pipeline 归一为 canonical `IRChart`
 - 唯一 `chart.chart` dependency provider 直接、按序依赖 `standard.surface`、`layout.flexLayout`、`plot.plot` 三个完整 key；不得发布逐类型 Core provider、按 adapter 拆分、动态发现或用单 namespace maker 补依赖
 - `inspection` 只消费中立的 final member/contribution 输入，不依赖 `MergedChartMember` 等 resolver 私有类型，也不通过 Plot 数组下标猜来源
 - `style` 只解析 Core effective Theme 下的 Chart-owned token；省略 `style` 时使用随 `mode` 变化的 Chart 默认 token baseline，显式 `ChartThemeStyleDefinition` 经 Chart registry 生成完整 Chart token baseline，`chartThemeTokens` 只覆盖 Chart key；`plotThemeTokens` / `colors` / native `plotTheme` 与 `plotThemeStyles` 原样转发到 Plot；Core style / mode 只来自宿主 Theme
@@ -47,4 +41,4 @@ families + schemas + presentation + style + inspection -> resolution
 - recipe 需要 palette 等 Plot 结果时只能调用 Plot 公开纯 resolver，不复制 Plot preset / merge，也不把 resolved Plot theme 物化回 PlotSpec
 - `presentation` 只接受唯一 Plot placeholder 与 title / subtitle / note / source TextBlock preset；authoring-only position 在 canonical IR 前消失，resolver 严格按 children 顺序投影到 Layout Flex，再用 Standard Surface 包装完整内容
 - canonical `IRChart` 保留整图 `id` 与 `chartThemeTokens`；Plot-owned theme 和 intrinsic contract 只保留在完整 PlotSpec。基础 Chart spec 模式保留显式 Plot id，DSL 模式只在 Chart id 存在时派生 `${chartId}/plot`，不得生成计数 id
-- 首个公开入口只能导出经 ADR 冻结的 typed ChartSpec、IRChart、单一 `ChartDefinition`、presentation / inspection / Chart style 数据契约，以及 `resolveChartSpec` 这一条 framework-neutral typed authoring resolver；recipe、catalog、resolver 私有类型、逐类型 definition factory 与 fixture 不得泄漏
+- 根入口只导出 `IRChart`、单一 `ChartDefinition`、presentation / inspection / Chart style 和基础 authoring 契约；family typed schema、type 常量与 framework-neutral resolver 只从对应 family subpath 导出。recipe、catalog、resolver 私有类型、逐类型 definition factory 与 fixture 不得泄漏

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react';
+import { ScatterChart } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
 import { useTheme } from '@retikz/react';
 import { createRoot } from 'react-dom/client';

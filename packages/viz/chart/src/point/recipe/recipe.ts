@@ -2,8 +2,7 @@ import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
-import type { IRChartShared } from '../../base/schemas/common';
-import type { CHART_NAMESPACE } from '../../base/schemas/constants';
+import type { CHART_NAMESPACE, IRChartShared } from '../../base/schemas';
 import type { ChartInspectionMemberKindValue } from '../../shared';
 
 /** 所有私有 Chart variant 共用的 namespace 与判别边界 */

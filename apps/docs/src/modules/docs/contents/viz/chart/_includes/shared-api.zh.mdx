@@ -2,15 +2,17 @@
 
 `@retikz/chart` 将完整 Plot 配方与可选的图表叙事信息归一为 `IRChart`。`IRChart` 是 JSON 可序列化的 canonical IR；`ChartProvider` 是它唯一的 composite provider。应用通常通过 React 或 Vanilla adapter authoring，不需要自行组装 provider。
 
-| 入口                    | 适用场景                                          | 结果                                           |
-| ----------------------- | ------------------------------------------------- | ---------------------------------------------- |
-| `Chart`                 | 已有完整 PlotSpec，或需要以 Plot JSX 扩展图表主体 | 基础 Chart authoring                           |
-| `ScatterChart`          | 两个连续字段的散点比较                            | 内置 Scatter recipe 与 Plot 扩展入口           |
-| `BubbleChart`           | 在二维位置外再编码一个定量面积                    | 内置 Bubble recipe 与 Plot 扩展入口            |
-| `ConnectedScatterChart` | 以连线观察同一序列在二维空间中的演变              | 内置 Connected Scatter recipe 与 Plot 扩展入口 |
-| `resolveChartSpec`      | framework-neutral 的 typed authoring 或 JSON 集成 | 将 typed 输入解析为 `IRChart` 与完整 PlotSpec  |
+| 入口                    | 适用场景                                                | 结果                                                |
+| ----------------------- | ------------------------------------------------------- | --------------------------------------------------- |
+| `Chart`                 | 已有完整 PlotSpec，或需要以 Plot JSX 扩展图表主体       | 基础 Chart authoring                                |
+| `ScatterChart`          | 两个连续字段的散点比较                                  | 内置 Scatter recipe 与 Plot 扩展入口                |
+| `BubbleChart`           | 在二维位置外再编码一个定量面积                          | 内置 Bubble recipe 与 Plot 扩展入口                 |
+| `ConnectedScatterChart` | 以连线观察同一序列在二维空间中的演变                    | 内置 Connected Scatter recipe 与 Plot 扩展入口      |
+| `resolvePointChartSpec` | framework-neutral 的 Point typed authoring 或 JSON 集成 | 将 Point typed 输入解析为 `IRChart` 与完整 PlotSpec |
 
-React 从 `@retikz/chart-react` 导入 `Chart`、`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`。typed Chart 的 `data` 是行数组，`encoding` 描述 recipe 需要的字段；`mark` 使用 JSON-safe mark value，例如 `{ kind: 'constant', value: 10 }`。额外的轴、图例、mark、scale 或 transform 仍沿用 Plot 的公开 authoring 能力。
+根入口只保留所有 Chart family 共用的基础能力：React 从 `@retikz/chart-react` 导入 `Chart` 和 presentation marker，Vanilla 从 `@retikz/chart-vanilla` 导入 `createChart` 与 `renderChart`。Point family 的 typed API 从对应 `/point` 入口导入：`@retikz/chart/point` 提供 schema 与 `resolvePointChartSpec`，`@retikz/chart-react/point` 提供 `ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`，`@retikz/chart-vanilla/point` 提供 `createScatterChart`、`createBubbleChart` 与 `createConnectedScatterChart`。每个 `/point` 入口也包含其基础入口导出。
+
+typed Chart 的 `data` 是行数组，`encoding` 描述 recipe 需要的字段；`mark` 使用 JSON-safe mark value，例如 `{ kind: 'constant', value: 10 }`。额外的轴、图例、mark、scale 或 transform 仍沿用 Plot 的公开 authoring 能力。
 
 ## Presentation
 
@@ -27,7 +29,7 @@ React 从 `@retikz/chart-react` 导入 `Chart`、`ScatterChart`、`BubbleChart` 
 
 marker 的 children 目前只接受字符串、透明 `Fragment` 和 Core `Text`。多个 `Text` 可形成多行，并可分别提供字体、填充色或透明度。`position="top"` 与 `position="bottom"` 只在 authoring 期决定它位于 Plot 的哪一侧；canonical `IRChart` 只保留最终的 presentation children 顺序。
 
-Vanilla 从 `@retikz/chart-vanilla` 导入 `createChart`、`createScatterChart`、`createBubbleChart`、`createConnectedScatterChart` 和 `renderChart`。三个 typed factory 接受与 React 相同的 shorthand；需要自定义位置或顺序时，传入按顺序排列的 plain `presentation` records。record 的 `text` 是字符串或 JSON-safe Core TextBlock，不能传入 React 对象。
+三个 typed factory 接受与 React 相同的 shorthand；需要自定义位置或顺序时，传入按顺序排列的 plain `presentation` records。record 的 `text` 是字符串或 JSON-safe Core TextBlock，不能传入 React 对象。
 
 ## Runtime styles
 

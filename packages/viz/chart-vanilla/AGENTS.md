@@ -12,6 +12,7 @@
 
 ## 公开 authoring 约束
 
+- 根 `@retikz/chart-vanilla` 只导出基础 `createChart` 与 `renderChart`。typed `createXxxChart` helper 只从 family subpath 导出，例如 `@retikz/chart-vanilla/point`；family subpath 同时 re-export 全部基础 API，不提供旧根入口兼容别名
 - 基础 helper 与 typed helper 共享 title / subtitle / note / source shorthand 和有序 plain presentation records
 - plain record 的 text 只接受 string 或 JSON-safe Core TextBlock，不接受 React authoring object
 - plain records 的 position 只用于 top / bottom authoring normalization；canonical IR 只保留最终 children 顺序

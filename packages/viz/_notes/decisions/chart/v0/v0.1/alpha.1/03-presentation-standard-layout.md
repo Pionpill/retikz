@@ -115,7 +115,7 @@ source
 
 ## React headless marker
 
-React 包级扁平导出四个 headless marker：
+React base entry 包级导出四个 headless marker；所有 family subpath 也 re-export 它们：
 
 ```tsx
 <ChartTitle />
@@ -259,9 +259,9 @@ Chart 拥有整个 Chart、主 Plot item 和四类实际存在的 presentation i
 
 ## 功能与包边界
 
-- `@retikz/chart` 拥有 typed ChartSpec、包含整图 identity / Chart token handoff 的完整 `IRChart` schema、四类 preset、共享 authoring normalizer、Chart inspection、单一 `ChartDefinition` 与到 Layout Flex / Standard Surface 输入的确定性转换
-- `@retikz/chart-react` 拥有基础 / typed JSX component、direct-child marker 识别、Core `Text` authoring 转换和 React runtime 接线
-- `@retikz/chart-vanilla` 拥有基础 / typed plain helper、显式 Theme value handoff、SSR convenience 和 Vanilla runtime 接线
+- `@retikz/chart` 根入口拥有并导出基础 Chart contract、包含整图 identity / Chart token handoff 的完整 `IRChart` schema、四类 preset、共享 authoring normalizer、Chart inspection、单一 `ChartDefinition` 与到 Layout Flex / Standard Surface 输入的确定性转换。typed ChartSpec 与 resolver 随 family 从 `@retikz/chart/<family>` 导出
+- `@retikz/chart-react` 根入口拥有基础 `<Chart>`、direct-child marker 识别、Core `Text` authoring 转换和 React runtime 接线。typed JSX component 随 family 从 `@retikz/chart-react/<family>` 导出
+- `@retikz/chart-vanilla` 根入口拥有基础 plain helper、显式 Theme value handoff、SSR convenience 和 Vanilla runtime 接线。typed plain helper 随 family 从 `@retikz/chart-vanilla/<family>` 导出
 - Plot 拥有完整 Plot authoring、PlotSpec、Axis、Legend、Mark、Scale、Coordinate、Annotation、definition / registry 与 lowering
 - Layout 拥有 `layout.flexLayout` schema、默认、测量、排列与 solver
 - Standard 只拥有 `standard.surface` 的背景、padding、border / corner radius、overflow 与任意 child 包装，不拥有或转发 FlexLayout
@@ -269,6 +269,8 @@ Chart 拥有整个 Chart、主 Plot item 和四类实际存在的 presentation i
 - Kernel adapter owner 拥有 Chart、Plot 与 Standard contribution、dataset、definition、inspection 和 runtime sidecar 的通用聚合
 
 adapter 不得复制 Chart normalizer、Plot builder、Layout solver、Standard Surface lowering、Core Text/Node schema 或 renderer 行为。
+
+三个根入口只导出当前与未来 family 共用的基础 API：`@retikz/chart` 导出 `IRChart`、`ChartSchema`、`ChartDefinition`、presentation / inspection / Chart style 数据契约；`@retikz/chart-react` 导出基础 `Chart`、四个 marker 与 `ChartThemeProvider`；`@retikz/chart-vanilla` 导出 `createChart` 与 `renderChart`。Point typed contract 通过 `@retikz/chart/point` 的 `resolvePointChartSpec`、`@retikz/chart-react/point` 的 `ScatterChart` / `BubbleChart` / `ConnectedScatterChart` 与 `@retikz/chart-vanilla/point` 的三个 typed factory 提供。每个 family subpath 同时 re-export 其基础入口，不保留 root typed export 兼容别名。
 
 Chart 三包使用独立 `chart` release group 并保持 `0.1.0-alpha.1` lockstep。该组是 `viz` feature，但其 Tier 3 包边界要求直接消费 `plot` feature group；因此 release-group 真源必须用显式 `dependsOn: ['plot']` 声明这条有向组依赖。`dependsOn` 表达直接、非传递的跨 feature 发布组依赖：目标组必须存在且在数组中唯一，禁止 self-edge，完整发布组图必须无环；每条声明必须由源组至少一个包到目标组包的真实 workspace dependency 支撑，反之任一真实跨 feature 依赖也必须有源组的直接声明。校验器不按 Chart 名称开白名单，不全局放宽同领域或跨领域 feature 互依；未知、重复、自环、循环、未消费声明和未声明真实边全部 fail-loud。同组依赖使用 `workspace:*`，Chart 到 Plot 及其它组的依赖使用 `workspace:^`。机器真源、可读 package-topology 与发布流程规则必须同步。
 

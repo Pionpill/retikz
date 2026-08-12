@@ -48,5 +48,6 @@ describe('Chart semantic source layout', () => {
     const contents = await Promise.all(pointFiles.map(path => readFile(path, 'utf8')));
 
     expect(contents.some(content => /from ['"].*\/(base|shared)(?:\/|['"])/.test(content))).toBe(true);
+    expect(contents.some(content => /from ['"].*\/(base|shared)\/[^'"/]+\//.test(content))).toBe(false);
   });
 });

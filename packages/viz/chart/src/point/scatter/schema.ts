@@ -1,8 +1,7 @@
 import { ChannelSchema, OpacityChannelSchema, ShapeChannelSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { CHART_NAMESPACE } from '../../base/schemas';
-import { assertChartSpatialRoot, ChartSharedBaseSchema } from '../../base/schemas/common';
+import { CHART_NAMESPACE, assertChartSpatialRoot, ChartSharedBaseSchema } from '../../base/schemas';
 import { omitUndefinedProperties } from '../../shared';
 import { PointChartType } from '../constants';
 import { ScatterPointPatchSchema, StrictColorChannelSchema, StrictSizeChannelSchema } from '../shared';

@@ -1,5 +1,16 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
+
+type PackageExport = {
+  types: string;
+  default: string;
+};
+
+type PublishedPackageExport = {
+  types: string;
+  import: string;
+  default: string;
+};
 
 type PackageManifest = {
   private?: boolean;
@@ -13,9 +24,9 @@ type PackageManifest = {
   peerDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   files?: Array<string>;
-  exports?: Record<string, { types: string; default: string }>;
+  exports?: Record<string, PackageExport>;
   publishConfig?: {
-    exports?: Record<string, { types: string; import: string; default: string }>;
+    exports?: Record<string, PublishedPackageExport>;
   };
 };
 
@@ -30,9 +41,41 @@ const commonDevDependencies = {
   vitest: 'catalog:',
 };
 
-const packageImportsOf = async (relativeUrl: string): Promise<Array<string>> => {
-  const source = await readFile(new URL(relativeUrl, import.meta.url), 'utf8');
-  return [...new Set([...source.matchAll(/from ['"](@retikz\/[^'"]+)['"]/g)].map(([, packageName]) => packageName))];
+const sourceFilesOf = async (directoryUrl: URL): Promise<Array<URL>> => {
+  const entries = await readdir(directoryUrl, { withFileTypes: true });
+  const nestedFiles = await Promise.all(
+    entries.map(async entry => {
+      const entryUrl = new URL(entry.name, directoryUrl);
+      if (entry.isDirectory()) return sourceFilesOf(new URL(`${entry.name}/`, directoryUrl));
+      return entry.isFile() && /\.tsx?$/.test(entry.name) ? [entryUrl] : [];
+    }),
+  );
+
+  return nestedFiles.flat();
+};
+
+const packageImportsOf = async (relativeDirectoryUrl: string): Promise<Array<string>> => {
+  const sourceFiles = await sourceFilesOf(new URL(relativeDirectoryUrl, import.meta.url));
+  const sources = await Promise.all(sourceFiles.map(sourceFile => readFile(sourceFile, 'utf8')));
+
+  return [
+    ...new Set(
+      sources.flatMap(source =>
+        [...source.matchAll(/from ['"](@retikz\/[^'"]+)['"]/g)].map(([, packageName]) =>
+          packageName.split('/').slice(0, 2).join('/'),
+        ),
+      ),
+    ),
+  ];
+};
+
+const publicProviderExportPattern =
+  /export\s*(?:\{[^}]*\b(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)\b|const\s+(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)|\*\s+from\s+['"]@retikz\/(?:standard|layout|plot|chart)(?:\/[^'"]+)?['"])/;
+
+const publicSourceOf = async (relativeDirectoryUrl: string): Promise<string> => {
+  const sourceFiles = await sourceFilesOf(new URL(relativeDirectoryUrl, import.meta.url));
+  const sources = await Promise.all(sourceFiles.map(sourceFile => readFile(sourceFile, 'utf8')));
+  return sources.join('\n');
 };
 
 const publishablePackageExpectations = {
@@ -52,7 +95,8 @@ const publishablePackageExpectations = {
   },
   react: {
     manifest: '../../chart-react/package.json',
-    source: '../../chart-react/src/index.ts',
+    entrySource: '../../chart-react/src/index.ts',
+    sourceDirectory: '../../chart-react/src/',
     retikz: { domain: 'viz', layer: 'adapter', publishable: true, releaseGroup: 'chart' },
     dependencies: {
       '@retikz/chart': 'workspace:*',
@@ -67,7 +111,8 @@ const publishablePackageExpectations = {
   },
   vanilla: {
     manifest: '../../chart-vanilla/package.json',
-    source: '../../chart-vanilla/src/index.ts',
+    entrySource: '../../chart-vanilla/src/index.ts',
+    sourceDirectory: '../../chart-vanilla/src/',
     retikz: { domain: 'viz', layer: 'adapter', publishable: true, releaseGroup: 'chart' },
     dependencies: {
       '@retikz/chart': 'workspace:*',
@@ -115,16 +160,28 @@ describe('published Chart release-group boundaries', () => {
     ['Vanilla', publishablePackageExpectations.vanilla],
   ])('declares every %s adapter source import without re-exporting foreign providers', async (_name, expectation) => {
     const manifest = await readManifest(expectation.manifest);
-    const source = await readFile(new URL(expectation.source, import.meta.url), 'utf8');
-    const importedPackages = await packageImportsOf(expectation.source);
+    const importedPackages = await packageImportsOf(expectation.sourceDirectory);
+    const publicSource = await publicSourceOf(expectation.sourceDirectory);
 
     expect(manifest.private).toBeUndefined();
     expect(manifest.retikz).toEqual(expectation.retikz);
     expect(manifest.dependencies).toEqual(expectation.dependencies);
     expect(manifest.files).toEqual(['LICENSE', 'README.md', 'dist/**/*']);
     expect(Object.keys(expectation.dependencies).sort()).toEqual(importedPackages.sort());
-    expect(source).not.toMatch(
-      /export\s*(?:\{[^}]*\b(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider)\b|const\s+(?:SurfaceProvider|FlexLayoutProvider|ChartProvider|PlotProvider))/,
-    );
+    expect(publicSource).not.toMatch(publicProviderExportPattern);
+  });
+
+  it.each([
+    ['React', publishablePackageExpectations.react, './src/point/index.ts', './dist/point/index.js'],
+    ['Vanilla', publishablePackageExpectations.vanilla, './src/point/index.ts', './dist/point/index.js'],
+  ])('publishes the %s Point family subpath', async (_name, expectation, sourcePath, distPath) => {
+    const manifest = await readManifest(expectation.manifest);
+
+    expect(manifest.exports?.['./point']).toEqual({ types: sourcePath, default: sourcePath });
+    expect(manifest.publishConfig?.exports?.['./point']).toEqual({
+      types: './dist/types/point/index.d.ts',
+      import: distPath,
+      default: distPath,
+    });
   });
 });
