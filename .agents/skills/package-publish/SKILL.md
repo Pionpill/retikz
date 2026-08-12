@@ -25,6 +25,7 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 | kernel   | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> runtime -> core -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
 | data     | `@retikz/data`                                                                                                         | data                                                         | `data-v<version>`     |
 | plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                           | plot -> plot-react -> plot-vanilla                           | `plot-v<version>`     |
+| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                        | chart -> chart-react -> chart-vanilla                        | `chart-v<version>`    |
 | table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                        | table -> table-react -> table-vanilla                        | `table-v<version>`    |
 | standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                               | standard -> standard-react -> standard-vanilla               | `standard-v<version>` |
 
@@ -35,7 +36,7 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 ## Git tag 规范
 
 - 规范格式统一为 `<release-group>-v<version>`，其中 release group 必须是 `scripts/release-groups.config.mjs` 的键；tag 与 npm 发布组一一对应，不用 domain、目录名或单个包名代替。
-- Kernel、Plot 分别使用 `kernel-v<version>`、`plot-v<version>`。`chart-v<version>` 只有在配置中正式新增 `chart` 发布组且 `pnpm run check:release-groups` 通过后才能启用；当前不得先创建 chart tag。
+- Kernel、Plot、Chart 分别使用 `kernel-v<version>`、`plot-v<version>`、`chart-v<version>`。只有配置中存在对应 release group 且 `pnpm run check:release-groups` 通过后才能创建该组 tag。
 - 历史 Kernel 裸 `v<version>` tag 保持原样，不得迁移或补打同版本前缀 tag；新版本从本规范生效后改用 `kernel-v<version>`。
 - 必须创建 annotated tag：`git tag -a <release-group>-v<version> -m "<release-group> <version>"`，不得创建 lightweight tag。
 - tag 只指向已提交且工作树干净的发布提交；创建前确认组内版本、npm registry 连续性，以及本地和远端均不存在同名 tag。
@@ -197,7 +198,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 ## 快速清单
 
 - [ ] 目标版本、发布组、dist-tag、`<release-group>-v<version>` git tag 已确认。
-- [ ] release group 存在于 `scripts/release-groups.config.mjs`；未配置的 chart 等组没有提前创建 tag。
+- [ ] release group 存在于 `scripts/release-groups.config.mjs`；未配置的发布组没有提前创建 tag。
 - [ ] 已按 npm registry 校验版本连续性。
 - [ ] `scripts/release-groups.config.mjs`、`package.json` 的 `retikz` 元信息和目标发布组一致。
 - [ ] 发布组内包版本全部等于目标版本。

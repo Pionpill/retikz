@@ -1,15 +1,34 @@
 {
   "name": "@retikz/chart-vanilla",
   "version": "0.1.0-alpha.1",
-  "private": true,
   "retikz": {
     "domain": "viz",
     "layer": "adapter",
-    "publishable": false
+    "publishable": true,
+    "releaseGroup": "chart"
   },
+  "description": "Plain authoring, SSR, and runtime bindings for @retikz/chart.",
   "type": "module",
   "engines": {
     "node": ">=24"
+  },
+  "author": "Pionpill",
+  "homepage": "https://pionpill.github.io/retikz/",
+  "keywords": [
+    "tikz",
+    "chart",
+    "plot",
+    "ssr",
+    "visualization"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pionpill/retikz.git",
+    "directory": "packages/viz/chart-vanilla"
+  },
+  "bugs": {
+    "url": "https://github.com/Pionpill/retikz/issues"
   },
   "sideEffects": false,
   "main": "./src/index.ts",
@@ -21,6 +40,23 @@
       "default": "./src/index.ts"
     }
   },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/types/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/**/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
