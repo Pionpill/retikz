@@ -1,12 +1,13 @@
 import type { StrokeDashPattern } from '../../schemas';
 
-/** dashed 预设：4 user units 实线 + 2 user units 间隙循环 */
+/** 虚线预设 */
 const DASHED_PATTERN: StrokeDashPattern = [4, 2];
-/** dotted 预设：1 user unit 短线 + 2 user units 间隙 */
+
+/** 点线预设 */
 const DOTTED_PATTERN: StrokeDashPattern = [1, 2];
 
-/** 虚线字段优先级：显式 dashPattern > dashed 预设 > dotted 预设 */
-export const resolveDashPattern = (
+/** 将描边虚线简写按显式数组、虚线预设、点线预设的优先级归一化 */
+export const normalizeDashPattern = (
   dashPattern: StrokeDashPattern | undefined,
   dashed: boolean | undefined,
   dotted: boolean | undefined,

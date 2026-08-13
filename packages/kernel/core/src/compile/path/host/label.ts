@@ -1,5 +1,6 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
-import type { GeometryLabelSideValue, IRPosition, IRStepLabel } from '../../../schemas';
+import type { CanonicalGeometryLabel } from '../../../normalize/path';
+import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import type { CompileWarningCodeValue } from '../../warning';
@@ -15,10 +16,8 @@ import {
   toAlphabeticBaselineY,
 } from '../../text';
 
-/** 边标注默认行高与偏移量 */
+/** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
-const LABEL_SIDE_OFFSET = 4;
-type LabelSide = GeometryLabelSideValue | 'center';
 
 /** 边标注公式上下文 */
 export type LabelTexContext = {
@@ -48,33 +47,12 @@ export type EmitLabelPrimitiveContext = {
   placement?: LabelPlacementContext;
 };
 
-/** keyword → t 数值映射 */
-const KEYWORD_TO_T: Record<string, number> = {
-  'at-start': 0,
-  'very-near-start': 0.125,
-  'near-start': 0.25,
-  midway: 0.5,
-  'near-end': 0.75,
-  'very-near-end': 0.875,
-  'at-end': 1,
-};
-
-/**
- * label.position → 段参数 t∈[0,1]
- * @description 数值原样返回；keyword 走 KEYWORD_TO_T 映射
- */
-export const tForLabelPosition = (pos: IRStepLabel['position']): number => {
-  if (typeof pos === 'number') return pos;
-  if (typeof pos === 'string' && pos in KEYWORD_TO_T) return KEYWORD_TO_T[pos];
-  return 0.5;
-};
-
 /**
  * step.label + 段采样 → 单行 primitive
  * @description 返回 label primitive 及其 bbox 外接点
  */
 export const emitLabelPrimitive = (
-  label: IRStepLabel,
+  label: CanonicalGeometryLabel,
   sample: SegmentSample,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
@@ -95,10 +73,9 @@ export const emitLabelPrimitive = (
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
   const font: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
-  const side: LabelSide =
-    label.side === undefined ? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top') : label.side;
+  const side = label.side;
   const sloped = label.sloped === true;
-  const sideDistance = label.distance ?? LABEL_SIDE_OFFSET;
+  const sideDistance = label.distance;
   const boundaryOffset = placementCtx?.boundaryOffset ?? 0;
   const sideOffset =
     label.placement === 'inside' ? Math.max(0, boundaryOffset - sideDistance) : boundaryOffset + sideDistance;

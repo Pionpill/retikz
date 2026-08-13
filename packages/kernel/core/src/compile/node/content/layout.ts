@@ -1,5 +1,4 @@
 import type { TextLine } from '../../../contract';
-import type { IRLineSpec } from '../../../schemas';
 import type { FontSpec, LaidLine, LineLayoutContext, TextMeasurer } from '../../text';
 import type { NodeTextLayoutContext } from '../types';
 
@@ -53,8 +52,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
     maxTextWidth,
     minimumTextWidth = false,
   } = input;
-  const rawLines: Array<IRLineSpec> | undefined =
-    node.text === undefined ? undefined : typeof node.text === 'string' ? [node.text] : node.text;
+  const rawLines = node.text;
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<TextLine> | undefined;
