@@ -1,7 +1,18 @@
-import type { AnyCompositeDefinition, CompileObservationOwner, IRChild } from '@retikz/core';
+import type {
+  CompileObservationOwner,
+  CompositeDependencyContribution,
+  IRChild,
+  ResolvedTheme,
+  ThemeStyleDefinition,
+} from '@retikz/core';
 
-/** 嵌入组件可附带的外部数据集表：引用键到任意载荷 */
-export type EmbeddableDatasets = Record<string, unknown>;
+/** 嵌入式 Tier 2 authoring 时所在位置已经生效的 Core Theme 上下文 */
+export type EmbeddableAuthoringContext = Readonly<{
+  /** 当前 Layout 或 Scope 叠加后的有效 Theme */
+  theme: ResolvedTheme;
+  /** 当前 Layout 继承到此位置的 Core Theme style definitions */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+}>;
 
 /**
  * 嵌入贡献内部的领域中立声明位置
@@ -21,26 +32,16 @@ export type EmbeddableAuthoringSite = Readonly<{
 /** 一个可嵌入 Tier2 子组件对图形声明的贡献内容 */
 export type EmbeddableContribution = {
   node: IRChild;
-  datasets: EmbeddableDatasets;
+  /** 此 authored node 要求的 Core Composite provider graph contribution */
+  compositeDependencies: CompositeDependencyContribution;
   /** 贡献节点内部按声明顺序收集的领域中立位置 */
   authoringSites?: ReadonlyArray<EmbeddableAuthoringSite>;
-  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
-  makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
 };
 
 /** 可嵌入 Tier2 适配器，用于让高层领域组件接入 `<Layout>` */
 export type EmbeddableTier2Adapter<TProps = Record<string, unknown>> = {
   displayName: string;
-  namespace: string;
-  contribute: (props: TProps) => EmbeddableContribution;
-};
-
-/** 单个可嵌入组件贡献记录，用于后续按命名空间合并数据集 */
-export type EmbeddableContributionRecord = {
-  namespace: string;
-  datasets: EmbeddableDatasets;
-  /** 使用同一 namespace 的贡献必须稳定复用同一个函数引用 */
-  makeComposites: (mergedDatasets: EmbeddableDatasets) => Array<AnyCompositeDefinition>;
+  contribute: (props: TProps, context?: EmbeddableAuthoringContext) => EmbeddableContribution;
 };
 
 /** 组件类型上可读取的可嵌入静态属性形状 */

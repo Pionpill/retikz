@@ -1,4 +1,4 @@
-import type { IRChild, JsonValue } from '@retikz/core';
+import type { JsonValue } from '@retikz/core';
 import type {
   DataLineageOptions,
   DataLineageRun,
@@ -261,9 +261,6 @@ const sourceIdentityOfMeta = (meta: Record<string, unknown>): DataSourceIdentity
     : undefined;
 };
 
-/** 把 expand 结果统一成 children 数组 */
-const childrenOf = (child: IRChild | Array<IRChild>): Array<IRChild> => (Array.isArray(child) ? child : [child]);
-
 /** 用 plot spec 与数据集生成 runtime-only lineage artifact */
 const buildPlotLineage = (
   spec: IRPlotSpec,
@@ -332,7 +329,7 @@ export const lowerPlotWithLineage = (
   options: PlotLineageLowerOptions = {},
 ): PlotLineageLowerResult => {
   const [definition] = lowerPlots(datasets, options);
-  const children = childrenOf(definition.expand(spec));
+  const children = definition.expand(spec).children;
   return { children, lineage: buildPlotLineage(spec, datasets, options) };
 };
 

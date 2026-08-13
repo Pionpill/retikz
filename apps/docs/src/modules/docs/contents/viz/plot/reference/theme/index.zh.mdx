@@ -3,17 +3,17 @@ title: 契约 - 主题
 description: 查询 Plot canonical token、preset 级联、原生主题与 inspection 契约。
 ---
 
-Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`，选择同名的完整领域 preset。`PlotSpec` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、Axis 是否存在、minor tick source 或 mark 结构。
+Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。未声明 `style` 时，Plot 使用自身随 `mode` 变化的默认 baseline；显式 `style` 才选择同名的完整领域 definition。发布包不内置命名 style；本站通过公开 Core / Plot definitions 注入 Academic、Vibrant、Clean 三个参考 preset。`PlotSpec` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、Axis 是否存在、minor tick source 或 mark 结构。
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
 示例通过 `PlotThemeToken` 写入绘图区背景和 categorical palette，再用 `plotThemeTokenRules` 只开启 y Axis 的 grid。结构化 theme 中对应的绘图区字段是 `plotArea.fill`；它只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。一维直线与一维圆周只有投影路径，不生成可填充的 Plot area，也不输出跨绘图区的 grid layer。React、Vanilla 和 plain JSON 都把同一 token 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
 
-内建 Vibrant preset 在 Light 下使用浅蓝灰绘图区，在 Dark 下使用深色绘图区；Neutral、Academic 与 Clean 默认保持透明。显式 `plot.area.fill` 或 `plotTheme.plotArea.fill` 仍按正常级联覆盖 preset。
+本站参考 Vibrant preset 在 Light 下使用浅蓝灰绘图区，在 Dark 下使用深色绘图区；默认 baseline、Academic 与 Clean 保持透明。显式 `plot.area.fill` 或 `plotTheme.plotArea.fill` 仍按正常级联覆盖 preset。
 
 ## 可扩展 style
 
-用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`。`tokens` 是完整基础 map，`tokenRules` 可选且只作用于 Axis；resolver 函数与解析结果不进入 `PlotSpec`。在同一图中还要把同名 Core definition 传给 `themeStyles`，否则 Core 或 Plot 任一层都会 fail-loud。Chart 使用时，`createChartComposites({ chartThemeStyles, plotThemeStyles })` 还需要接收同名 Chart 与 Plot definitions。
+用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 是完整基础 map，`tokenRules` 可选且只作用于 Axis；resolver 函数与解析结果不进入 `PlotSpec`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart typed authoring 还要注入同名 Chart definition：React 配对使用 `ChartThemeProvider`，Vanilla 把 `chartThemeStyles` 与 `plotThemeStyles` 传给 typed factory。
 
 ## 级联与原子替换
 
@@ -36,7 +36,7 @@ Core effective Theme
 
 ## Canonical token
 
-`PlotThemeToken` 公开 41 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
+`PlotThemeToken` 公开 42 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
 
 | 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,15 +46,15 @@ Core effective Theme
 | Axis tick       | `axis.tick.mark`                                                                                                                                                                                                                                                                                                                         |
 | Axis tick label | `axis.tickLabel.enabled`、`axis.tickLabel.foreground`、`axis.tickLabel.font.size`、`axis.tickLabel.gap`                                                                                                                                                                                                                                  |
 | Axis title      | `axis.title.enabled`、`axis.title.foreground`、`axis.title.font.size`、`axis.title.font.weight`、`axis.title.padding`                                                                                                                                                                                                                    |
-| Axis grid       | `axis.grid.enabled`、`axis.grid.stroke`、`axis.grid.strokeWidth`、`axis.grid.drawOpacity`                                                                                                                                                                                                                                                |
+| Axis grid       | `axis.grid.enabled`、`axis.grid.stroke`、`axis.grid.strokeWidth`、`axis.grid.drawOpacity`、`axis.grid.includeDomain`                                                                                                                                                                                                                     |
 | Legend          | `legend.title.foreground`、`legend.title.font.size`、`legend.title.font.weight`、`legend.label.foreground`、`legend.label.font.size`、`legend.swatch.size`、`legend.swatch.gap`、`legend.entry.gap`、`legend.title.gap`、`legend.ramp.length`、`legend.ramp.thickness`、`legend.symbol.size`、`legend.symbol.scale`、`legend.symbol.fit` |
-| Palette         | `plot.palette.categorical`、`plot.palette.series`、`plot.palette.sector`、`plot.palette.sequential`、`plot.palette.diverging`                                                                                                                                                                                                            |
+| Palette         | `plot.palette.categorical`、`plot.palette.series`、`plot.palette.sector`、`plot.palette.sequential`、`plot.palette.diverging`、`plot.palette.shape`                                                                                                                                                                                      |
 
-`axis.line.enabled` 与 `axis.grid.enabled` 只决定已有 Axis 的视觉默认；三个 grid paint token 设置启用后的 major grid 线条。Theme 不创建 Axis、tick 或 minor grid，major/minor tick source 与独立样式仍由 Axis guide 局部配置负责。
+`axis.line.enabled` 与 `axis.grid.enabled` 只决定已有 Axis 的视觉默认；三个 grid paint token 设置启用后的 major grid 线条，`axis.grid.includeDomain` 决定它是否补齐 effective domain 首尾位置。端点 token 不会单独创建或启用 grid。默认 baseline 让已有 x / y major grid 包含端点，本站三个参考风格保持关闭；Axis guide 的显式 boolean 最终优先。Theme 不创建 Axis、tick 或 minor grid，major/minor tick source 与独立样式仍由 Axis guide 局部配置负责。
 
-`axis.title.enabled` 控制已有 Axis guide 提供的 title 是否渲染。Neutral、Academic 与 Vibrant 默认开启，Clean 默认关闭；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 样式对象可以重新开启。Axis guide 的 `title` 仍提供内容和局部样式，但不会自动越过关闭状态。
+`axis.title.enabled` 控制已有 Axis guide 提供的 title 是否渲染。默认 baseline、Academic 与 Vibrant 默认开启，Clean 默认关闭；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 样式对象可以重新开启。Axis guide 的 `title` 仍提供内容和局部样式，但不会自动越过关闭状态。
 
-`axis.title.padding` 控制 tick label 带到轴标题中心的默认距离，四种内建风格均为 `12`。它可以通过 dimension rule 精确覆盖；结构化 `plotTheme.axis.title.padding` 和单个 Axis 的 `title.padding` 依次拥有更高优先级。
+`axis.title.padding` 控制 tick label 带到轴标题中心的默认距离，默认 baseline 与本站三个参考风格均为 `12`。它可以通过 dimension rule 精确覆盖；结构化 `plotTheme.axis.title.padding` 和单个 Axis 的 `title.padding` 依次拥有更高优先级。
 
 `plotThemeTokenRules` 使用 `{ select: { dimension }, tokens }`。`dimension` 接受一个非空开放字符串，或一个非空、无重复项的数组，因此同一契约可匹配 `x`、`y`、`radius`、`angle` 与自定义 Coordinate role。rule 只允许 `axis.line.*`、`axis.tick.*`、`axis.tickLabel.*`、`axis.title.*` 和 `axis.grid.*`；Axis guide 自身的显式视觉配置最终优先，但 title 内容不会自动覆盖 `axis.title.enabled: false`。
 
@@ -90,6 +90,7 @@ Core effective Theme
     'axis.grid.stroke': 'major grid 的描边 paint。',
     'axis.grid.strokeWidth': 'major grid 的描边宽度。',
     'axis.grid.drawOpacity': 'major grid 的绘制不透明度。',
+    'axis.grid.includeDomain': '已启用的 major grid 是否包含 effective scale domain 首尾位置。',
     'legend.title.foreground': '图例标题前景色。',
     'legend.title.font.size': '图例标题字号。',
     'legend.title.font.weight': '图例标题字重。',
@@ -106,6 +107,7 @@ Core effective Theme
     'legend.symbol.fit': '图例 symbol 在 box 内的适配方式。',
     'plot.palette.categorical': '分类比例尺使用的非空有序调色板。',
     'plot.palette.series': 'mark 与 series 使用的非空有序调色板。',
+    'plot.palette.shape': 'shape 分类通道使用的非空有序形状数组，元素为 shape 名或结构化 shape 引用。',
     'plot.palette.sector': 'sector mark 使用的非空有序调色板。',
     'plot.palette.sequential': '顺序连续色方案名。',
     'plot.palette.diverging': '发散连续色方案名。',
@@ -114,7 +116,7 @@ Core effective Theme
 
 ## PlotResolvedThemeTokensSchema
 
-`PlotResolvedThemeTokensSchema` 使用完全相同的 41 个字段契约，但每个字段都必需。八套内置 preset 与 `resolvePlotTheme()` 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
+`PlotResolvedThemeTokensSchema` 使用完全相同的 42 个字段契约，但每个字段都必需。默认 baseline 的 Light / Dark preset 与所有注入 definition 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
 
 ## Inspection
 
@@ -177,7 +179,7 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
     'title.align': '多行轴标题对齐。',
     'title.lineHeight': '轴标题行高，单位为用户坐标。',
     'title.maxTextWidth': '轴标题换行前的最大行宽。',
-    grid: '所有已有 Axis 共用的 major grid 开关与线条样式；dimension 差异由 plotThemeTokenRules 表达。',
+    grid: '所有已有 Axis 共用的 major grid 开关、线条样式与 domain 端点默认；dimension 差异由 plotThemeTokenRules 表达。',
   }}
 />
 
@@ -195,4 +197,4 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
   }}
 />
 
-`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title rotate 等 canonical token 之外的合法字段；这些字段保留在最终 `plotTheme` 中，不会伪造不存在的 token source。`axis.title.enabled` / `axis.title.padding` 分别与结构化 `axis.title` 的 `false | style` 和 `axis.title.padding` 双向映射，并保留正式 token source。
+`PlotThemeSchema` 是级联后进入 guide、scale 与 lowering 的正式原生结构。它可以表达 tick label rotate / layout、axis title rotate 等 canonical token 之外的合法字段；这些字段保留在最终 `plotTheme` 中，不会伪造不存在的 token source。`axis.title.enabled` / `axis.title.padding` 分别与结构化 `axis.title` 的 `false | style` 和 `axis.title.padding` 双向映射；`axis.grid.includeDomain` 也与同名 canonical token 双向映射，三者都保留正式 token source。

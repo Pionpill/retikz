@@ -1,4 +1,4 @@
-import type { CompileArtifact, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { StaticRenderFrame } from '@retikz/render/runtime';
@@ -27,6 +27,8 @@ export type StaticHostProps = Readonly<{
   frame: StaticRenderFrame;
   /** 当前完整编译产生的 artifacts */
   artifacts: ReadonlyArray<CompileArtifact>;
+  /** 当前完整 Core compile result */
+  compileResult: CompileResult;
   /** 当前 hydration handler 注册表 */
   handlers: HydrationHandlers;
   /** SVG CSS 宽度或 Canvas CSS user-space 宽度 */
@@ -51,6 +53,8 @@ export type StaticHostProps = Readonly<{
   idPrefix: string;
   /** 完整编译 commit 后的 artifacts 通知出口 */
   onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  /** 完整编译成功提交后的 result 通知出口 */
+  onCompileResult?: (result: CompileResult) => void;
   /** 当前完整 frame 成功提交后的领域中立 driver 通知 */
   onCompileCommit?: () => void;
 }>;
@@ -105,6 +109,7 @@ export const StaticHost: FC<StaticHostProps> = props => {
     backend,
     frame,
     artifacts,
+    compileResult,
     handlers,
     width,
     height,
@@ -117,6 +122,7 @@ export const StaticHost: FC<StaticHostProps> = props => {
     animationRef,
     idPrefix,
     onArtifacts,
+    onCompileResult,
     onCompileCommit,
   } = props;
   const scene = frame.primary;
@@ -139,13 +145,24 @@ export const StaticHost: FC<StaticHostProps> = props => {
   );
   const setRoot = useSvgRootBinding(handlers, scene, hasAnimations, publishAnimation);
   const onArtifactsRef = useRef(onArtifacts);
+  const onCompileResultRef = useRef(onCompileResult);
 
   useEffect(() => {
     onArtifactsRef.current = onArtifacts;
-  }, [onArtifacts]);
+    onCompileResultRef.current = onCompileResult;
+  }, [onArtifacts, onCompileResult]);
   useEffect(() => {
     onArtifactsRef.current?.(artifacts);
   }, [artifacts]);
+  useEffect(() => {
+    try {
+      onCompileResultRef.current?.(compileResult);
+    } catch (cause) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[retikz] <Layout> onCompileResult callback failed', cause);
+      }
+    }
+  }, [compileResult]);
   useEffect(() => {
     try {
       onCompileCommit?.();

@@ -42,18 +42,20 @@ const barChart = defineComposite({
         stroke: 'none',
       };
     });
-    return [
-      {
-        type: 'node' as const,
-        position: [((node.data.length - 1) * step) / 2, 0] as [number, number],
-        shape: 'rectangle',
-        minimumSize: { width: span, height: 1.5 },
-        padding: 0,
-        fill: 'gray',
-        stroke: 'none',
-      },
-      ...bars,
-    ];
+    return {
+      children: [
+        {
+          type: 'node' as const,
+          position: [((node.data.length - 1) * step) / 2, 0] as [number, number],
+          shape: 'rectangle',
+          minimumSize: { width: span, height: 1.5 },
+          padding: 0,
+          fill: 'gray',
+          stroke: 'none',
+        },
+        ...bars,
+      ],
+    };
   },
 });
 

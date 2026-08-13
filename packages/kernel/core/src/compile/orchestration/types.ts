@@ -15,6 +15,7 @@ import type {
   LayoutProposal,
   ScenePrimitive,
   SceneResource,
+  SpatialHandleDeclaration,
   Transform,
 } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
@@ -27,6 +28,7 @@ import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../typ
 import type { CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive, PathPlaceholder, PrimitiveZIndexTable } from './primitive';
+import type { PendingSpatialHandle } from './spatial-handle';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = {
@@ -80,6 +82,8 @@ export type TraversalResult = {
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 本次 traversal 最终逻辑树的 compile observation entries */
   compileObservations: Array<PendingCompileObservation>;
+  /** world-space 物化前的 qualified spatial handle records */
+  spatialHandles: Array<PendingSpatialHandle>;
   /** 顶层 child 向父布局暴露的无歧义 alignment guides */
   alignmentGuides?: ReadonlyArray<LayoutAlignmentGuide>;
 };
@@ -129,6 +133,8 @@ export type CompositeReplayTransaction = {
   artifacts: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 仅在 replay 时发布的 compile observation entries */
   compileObservations: Array<PendingCompileObservation>;
+  /** probe 内仅在 replay commit 时发布的 spatial handle records */
+  spatialHandles: Array<PendingSpatialHandle>;
   /** probe 时的有效样式语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
   styleFingerprint: string;
   /** probe 时的有效 Theme 语义指纹，用于判断 replay 是否需要在新 Scope 中重新物化 */
@@ -150,6 +156,7 @@ export type CompositeRuntimeOutputChild =
       kind: 'scope';
       props: CompositeCompileScopeProps;
       children: ReadonlyArray<IRChild | CompositeCompileChild>;
+      spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
     }>;
 
 /** 单个 layout-aware composite callback 的 runtime owner */
@@ -208,6 +215,8 @@ export type TraversalCompileOptions = {
   identityTracker?: RuntimeTopologyTracker;
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
+  /** 当前 traversal 根的 composite owner path */
+  spatialOwnerPath?: ReadonlyArray<import('../../contract').SpatialHandleOwner>;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
   /** 向辅助编译边界暴露最接近失败点的 child IR path */
@@ -301,6 +310,10 @@ export type TraversalFrame = {
   artifactSink: Array<CompositeCompileArtifact | NodeLayoutCompileArtifact>;
   /** 最终逻辑树 compile observation 输出容器 */
   compileObservationSink: Array<PendingCompileObservation>;
+  /** 最终 traversal 的 spatial handle 输出容器 */
+  spatialHandleSink: Array<PendingSpatialHandle>;
+  /** 当前 child 所在的外层 composite owner path */
+  spatialOwnerPath: ReadonlyArray<import('../../contract').SpatialHandleOwner>;
   /** 当前 frame 的稳定或 candidate-local semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
 };

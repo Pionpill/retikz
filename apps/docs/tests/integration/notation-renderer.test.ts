@@ -97,7 +97,6 @@ const lower = (adapter: AnyVanillaTier2Adapter, embed: { id: string; kind: strin
   adapter.lower(embed.props as never, {
     id: embed.id,
     kind: embed.kind,
-    namespace: adapter.namespace,
     layerId: 'main',
     identityPath: ['main', embed.id],
   }).node;

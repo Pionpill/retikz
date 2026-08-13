@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../../src/contract';
-import type { IRBoundary, IRNodeTarget, IRScene } from '../../../src/schemas';
+import type { IRBoundary, IRNode, IRNodeTarget, IRScene } from '../../../src/schemas';
 import type { Rect } from '../../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../../src/compile/compile';
@@ -9,6 +9,7 @@ import { NamespaceStack } from '../../../src/compile/namespace';
 import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
+import { normalizeNode } from '../../../src/normalize/node';
 import { BUILTIN_SHAPES, star } from '../../../src/providers/shape';
 import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
 import { NodeSchema } from '../../../src/schemas/node';
@@ -56,17 +57,21 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
   ascent: 0,
 });
 
+/** 供边界单元测试直接消费 Source IR 的 Node 布局边界 */
+const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
+  layoutNode(normalizeNode(node), { measureText, namespaceStack, shapes: BUILTIN_SHAPES });
+
 describe('boundary-aware boundary/canonical', () => {
   it("boundaryPointOf 'rectangle' boundary hits AABB edge, 'shape' hits star outline", () => {
     const namespaceStack = new NamespaceStack();
-    const starLayout = layoutNode(
+    const starLayout = layoutBoundaryNode(
       {
         type: 'node',
         id: 'star1',
         shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
         position: [0, 0],
       },
-      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+      namespaceStack,
     );
     // 对角线方向：星形轮廓凹入（凹角内径），AABB 矩形则在外接框边缘——两者一定不同
     const toward: [number, number] = [100, 100];
@@ -78,14 +83,14 @@ describe('boundary-aware boundary/canonical', () => {
 
   it("boundaryPointOf 缺省参数等价于 'shape'", () => {
     const namespaceStack = new NamespaceStack();
-    const layout = layoutNode(
+    const layout = layoutBoundaryNode(
       {
         type: 'node',
         id: 'rect1',
         shape: 'rectangle',
         position: [0, 0],
       },
-      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+      namespaceStack,
     );
     const toward: [number, number] = [100, 0];
     // 缺省与显式 'shape' 结果相同
@@ -94,14 +99,14 @@ describe('boundary-aware boundary/canonical', () => {
 
   it('sector canonical top via AABB (不再 throw)', () => {
     const namespaceStack = new NamespaceStack();
-    const sectorLayout = layoutNode(
+    const sectorLayout = layoutBoundaryNode(
       {
         type: 'node',
         id: 'sec1',
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
         position: [0, 0],
       },
-      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+      namespaceStack,
     );
     // 改前：sector.anchor 不认识 canonical 名，抛 Unknown anchor
     // 改后：canonical 名上提为 AABB，不再 throw，返回 AABB 上的点
@@ -114,14 +119,14 @@ describe('boundary-aware boundary/canonical', () => {
 
   it("anchorOf sector 专属 anchor 'apex' 仍返回形状自身值，不受 boundary 影响", () => {
     const namespaceStack = new NamespaceStack();
-    const sectorLayout = layoutNode(
+    const sectorLayout = layoutBoundaryNode(
       {
         type: 'node',
         id: 'sec2',
         shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
         position: [0, 0],
       },
-      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+      namespaceStack,
     );
     // apex 是 sector 专属命名 anchor，不是 rect 方位名，始终走视觉形状
     expect(() => anchorOf(sectorLayout, 'apex')).not.toThrow();
@@ -133,14 +138,14 @@ describe('boundary-aware boundary/canonical', () => {
 
   it('angleBoundaryOf 缺省与显式 shape 等价', () => {
     const namespaceStack = new NamespaceStack();
-    const layout = layoutNode(
+    const layout = layoutBoundaryNode(
       {
         type: 'node',
         id: 'r1',
         shape: 'rectangle',
         position: [0, 0],
       },
-      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+      namespaceStack,
     );
     expect(angleBoundaryOf(layout, 0)).toEqual(angleBoundaryOf(layout, 0, 'shape'));
     expect(angleBoundaryOf(layout, 90)).toEqual(angleBoundaryOf(layout, 90, 'shape'));
@@ -148,7 +153,7 @@ describe('boundary-aware boundary/canonical', () => {
 
   it('tight boundary 在 fit / gap 后应用 margin，自动端点与标准/数字 anchor 一致', () => {
     const namespaceStack = new NamespaceStack();
-    const layout = layoutNode(
+    const layout = layoutBoundaryNode(
       {
         type: 'node',
         id: 'star-margin',
@@ -157,7 +162,7 @@ describe('boundary-aware boundary/canonical', () => {
         margin: 8,
         position: [0, 0],
       },
-      { measureText, namespaceStack, shapes: BUILTIN_SHAPES },
+      namespaceStack,
     );
     const boundary = { type: 'circle', params: { fit: 'tight', gap: 2 } } as const;
     const automatic = boundaryPointOf(layout, [100, 0], boundary);

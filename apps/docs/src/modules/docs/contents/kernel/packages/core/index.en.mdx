@@ -7,9 +7,9 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 ## Theme environment
 
-Core exports `ThemeStyle`, `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from `neutral + light`, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand` and layout-aware `compile`.
+Core exports `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from the default light baseline, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand` and layout-aware `compile`.
 
-`ThemeStyle` provides the built-in styles. Define a custom style with `defineThemeStyle` and inject it through compile `themeStyles`. Its resolver generates shared colors during resolution, so functions and complete token maps never enter IR, snapshots, or JSON. An unregistered name fails loudly.
+Published packages do not provide named styles. Define a custom style with `defineThemeStyle` and inject it through compile `themeStyles`. Its resolver generates shared colors during resolution, so functions and complete token maps never enter IR, snapshots, or JSON. An unregistered name fails loudly.
 
 Core only propagates selectors and creates a detached, frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
 

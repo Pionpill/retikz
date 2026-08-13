@@ -34,7 +34,9 @@ const stableComposite = defineComposite({
     namespace: z.literal('fixture'),
     type: z.literal('stable'),
   }),
-  expand: () => ({ type: 'node', id: 'stable-composite', position: [0, 0], shape: 'rectangle' }),
+  expand: () => ({
+    children: [{ type: 'node', id: 'stable-composite', position: [0, 0], shape: 'rectangle' }],
+  }),
 });
 
 const compositeSource: IRScene = {

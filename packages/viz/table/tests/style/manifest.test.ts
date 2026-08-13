@@ -26,7 +26,6 @@ describe('Table style and encoding manifest seed', () => {
     );
 
     expect(result.manifest.style).toMatchObject({
-      style: 'neutral',
       themeMode: 'light',
       tokens: { 'cell.content.color': '#123456' },
     });
@@ -64,10 +63,14 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'provenance',
+        tableThemeTokens: {
+          'table.border.top': { kind: 'line', stroke: '#f5f5f5', width: 1.2 },
+          'table.border.bottom': { kind: 'line', stroke: '#f5f5f5', width: 1.2 },
+        },
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
-      { theme: { style: 'academic', mode: 'dark' }, compile: { padding: 0 } },
+      { theme: { mode: 'dark' }, compile: { padding: 0 } },
     );
     const repeatedSources = structuredClone(result.manifest);
     Object.assign(repeatedSources.style, {
@@ -96,10 +99,11 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'grid-provenance',
+        tableThemeTokens: { 'table.border.horizontal': { kind: 'line', stroke: '#ffffff', width: 1 } },
         structure: { kind: 'manual', rows: [[1], [2]] },
       },
       {},
-      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongGridToken = structuredClone(gridResult.manifest);
     const gridWinner = wrongGridToken.borders
@@ -117,11 +121,12 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'header-provenance',
+        tableThemeTokens: { 'columnHeader.border.bottom': { kind: 'line', stroke: '#ffffff', width: 1 } },
         data: { reference: 'rows' },
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
-      { theme: { style: 'vibrant', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const wrongHeaderCell = structuredClone(headerResult.manifest);
     const headerWinner = wrongHeaderCell.borders

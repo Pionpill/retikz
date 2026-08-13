@@ -1,21 +1,16 @@
 import type { GridInput } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createGrid, GridDefinition } from '@retikz/standard';
+import { createGrid, GridProvider } from '@retikz/standard';
 
 import { StandardGridVanillaNamespace } from './constants';
-
-/** 当前 Figure 内局部贡献 GridDefinition 的稳定 maker */
-const makeGridComposites = () => [GridDefinition];
 
 /** Standard Grid 的 Vanilla Tier 2 adapter */
 export const GridVanillaAdapter: VanillaTier2Adapter<GridInput> = {
   kind: StandardGridVanillaNamespace,
-  namespace: StandardGridVanillaNamespace,
   lower: props => ({
     node: createGrid(props),
-    datasets: {},
-    makeComposites: makeGridComposites,
+    compositeDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
   }),
 };
 

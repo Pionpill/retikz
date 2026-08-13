@@ -1,6 +1,6 @@
 import type { IRScene, IRTheme } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -8,6 +8,16 @@ import { z } from 'zod';
 import type { EmbeddableTier2Adapter } from '../../../src';
 
 import { Layout, ThemeProvider } from '../../../src/kernel';
+
+const testThemeStyles = ['academic', 'vibrant', 'clean'].map(name =>
+  defineThemeStyle({
+    name,
+    resolve: () => ({
+      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+      categorical: ['#112233'],
+    }),
+  }),
+);
 
 const themedBox = defineComposite({
   namespace: 'theme-test',
@@ -17,22 +27,34 @@ const themedBox = defineComposite({
     type: z.literal('box'),
   }),
   expand: (_node, context) => ({
-    type: 'node',
-    position: [0, 0],
-    minimumSize: 20,
-    padding: 0,
-    fill: context.theme.style === ThemeStyle.Academic && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+    children: [
+      {
+        type: 'node',
+        position: [0, 0],
+        minimumSize: 20,
+        padding: 0,
+        fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+      },
+    ],
   }),
 });
 
-const makeThemedBoxComposites = () => [themedBox];
+const makeThemedBoxDefinition = () => themedBox;
 const themedBoxAdapter: EmbeddableTier2Adapter = {
   displayName: 'ThemedBox',
-  namespace: 'theme-test',
   contribute: () => ({
     node: { namespace: 'theme-test', type: 'box' },
-    datasets: {},
-    makeComposites: makeThemedBoxComposites,
+    compositeDependencies: {
+      roots: [{ namespace: 'theme-test', type: 'box' }],
+      providers: [
+        {
+          key: { namespace: 'theme-test', type: 'box' },
+          dependencies: [],
+          datasets: {},
+          makeDefinition: makeThemedBoxDefinition,
+        },
+      ],
+    },
   }),
 };
 const ThemedBox = Object.assign(() => null, {
@@ -43,7 +65,7 @@ const ThemedBox = Object.assign(() => null, {
 const input: IRScene = {
   type: 'scene',
   version: 1,
-  theme: { style: ThemeStyle.Academic, mode: ThemeMode.Light },
+  theme: { style: 'academic', mode: ThemeMode.Light },
   children: [{ namespace: 'theme-test', type: 'box' }],
 };
 
@@ -56,51 +78,58 @@ const themeProbe = defineComposite({
   }),
   expand: (_node, context) => {
     const styleColor =
-      context.theme.style === ThemeStyle.Clean
+      context.theme.style === 'clean'
         ? '#layout-style'
-        : context.theme.style === ThemeStyle.Vibrant
+        : context.theme.style === 'vibrant'
           ? '#ir-style'
-          : context.theme.style === ThemeStyle.Academic
+          : context.theme.style === 'academic'
             ? '#provider-style'
             : '#default-style';
-    return [
-      {
-        type: 'node',
-        id: 'style',
-        position: [0, 0],
-        minimumSize: 20,
-        padding: 0,
-        fill: styleColor,
-      },
-      {
-        type: 'node',
-        id: 'palette',
-        position: [30, 0],
-        minimumSize: 20,
-        padding: 0,
-        fill: context.theme.colors.categorical[0],
-      },
-      {
-        type: 'node',
-        id: 'error',
-        position: [60, 0],
-        minimumSize: 20,
-        padding: 0,
-        stroke: context.theme.colors.semantic.error,
-        strokeWidth: 2,
-      },
-    ];
+    return {
+      children: [
+        {
+          type: 'node',
+          id: 'style',
+          position: [0, 0],
+          minimumSize: 20,
+          padding: 0,
+          fill: styleColor,
+        },
+        {
+          type: 'node',
+          id: 'palette',
+          position: [30, 0],
+          minimumSize: 20,
+          padding: 0,
+          fill: context.theme.colors.categorical[0],
+        },
+        {
+          type: 'node',
+          id: 'error',
+          position: [60, 0],
+          minimumSize: 20,
+          padding: 0,
+          stroke: context.theme.colors.semantic.error,
+          strokeWidth: 2,
+        },
+      ],
+    };
   },
 });
 
 describe('<Layout theme>', () => {
   class ThemeInstance {
-    style = ThemeStyle.Academic;
+    style = 'academic';
   }
 
   it('children模式把宿主Theme写入根Scene供Composite读取', () => {
     const markup = renderToStaticMarkup(
-      <Layout theme={{ style: ThemeStyle.Academic, mode: ThemeMode.Dark }} width={100} height={100}>
+      <Layout
+        theme={{ style: 'academic', mode: ThemeMode.Dark }}
+        themeStyles={testThemeStyles}
+        width={100}
+        height={100}
+      >
         <ThemedBox />
       </Layout>,
     );
@@ -114,7 +143,14 @@ describe('<Layout theme>', () => {
     const themeBefore = structuredClone(theme);
 
     const markup = renderToStaticMarkup(
-      <Layout ir={input} theme={theme} composites={[themedBox]} width={100} height={100} />,
+      <Layout
+        ir={input}
+        theme={theme}
+        composites={[themedBox]}
+        themeStyles={testThemeStyles}
+        width={100}
+        height={100}
+      />,
     );
 
     expect(markup).toContain('#123456');
@@ -126,7 +162,14 @@ describe('<Layout theme>', () => {
     const theme: IRTheme = { style: undefined, mode: ThemeMode.Dark };
 
     const markup = renderToStaticMarkup(
-      <Layout ir={input} theme={theme} composites={[themedBox]} width={100} height={100} />,
+      <Layout
+        ir={input}
+        theme={theme}
+        composites={[themedBox]}
+        themeStyles={testThemeStyles}
+        width={100}
+        height={100}
+      />,
     );
 
     expect(markup).toContain('#123456');
@@ -135,8 +178,9 @@ describe('<Layout theme>', () => {
   it('省略宿主 prop 时保留持久化 IR Theme', () => {
     const markup = renderToStaticMarkup(
       <Layout
-        ir={{ ...input, theme: { style: ThemeStyle.Academic, mode: ThemeMode.Dark } }}
+        ir={{ ...input, theme: { style: 'academic', mode: ThemeMode.Dark } }}
         composites={[themedBox]}
+        themeStyles={testThemeStyles}
         width={100}
         height={100}
       />,
@@ -153,7 +197,8 @@ describe('<Layout theme>', () => {
           version: 1,
           children: [{ type: 'node', position: [0, 0], minimumSize: 20, fill: '#fedcba' }],
         }}
-        theme={{ style: ThemeStyle.Vibrant, mode: ThemeMode.Dark }}
+        theme={{ style: 'vibrant', mode: ThemeMode.Dark }}
+        themeStyles={testThemeStyles}
         width={100}
         height={100}
       />,
@@ -164,15 +209,15 @@ describe('<Layout theme>', () => {
 
   it('ambient Theme 按 Provider → IR → Layout 顺序覆盖 selector', () => {
     const markup = renderToStaticMarkup(
-      <ThemeProvider theme={{ style: ThemeStyle.Academic }}>
+      <ThemeProvider theme={{ style: 'academic' }} themeStyles={testThemeStyles}>
         <Layout
           ir={{
             type: 'scene',
             version: 1,
-            theme: { style: ThemeStyle.Vibrant },
+            theme: { style: 'vibrant' },
             children: [{ namespace: 'theme-test', type: 'probe' }],
           }}
-          theme={{ style: ThemeStyle.Clean }}
+          theme={{ style: 'clean' }}
           composites={[themeProbe]}
           width={100}
           height={100}
@@ -185,7 +230,7 @@ describe('<Layout theme>', () => {
 
   it('嵌套 ThemeProvider 对 selector 按字段继承', () => {
     const markup = renderToStaticMarkup(
-      <ThemeProvider theme={{ style: ThemeStyle.Academic }}>
+      <ThemeProvider theme={{ style: 'academic' }} themeStyles={testThemeStyles}>
         <ThemeProvider theme={{ mode: ThemeMode.Dark }}>
           <Layout width={100} height={100}>
             <ThemedBox />
@@ -200,7 +245,7 @@ describe('<Layout theme>', () => {
   it.each([
     ['Date', new Date()],
     ['class instance', new ThemeInstance()],
-    ['inherited field', Object.create({ style: ThemeStyle.Academic })],
+    ['inherited field', Object.create({ style: 'academic' })],
   ])('宿主 overlay不清洗持久化 IR中的伪造 %s Theme', (_label, persistedTheme) => {
     expect(() =>
       renderToStaticMarkup(
@@ -221,7 +266,7 @@ describe('<Layout theme>', () => {
       enumerable: true,
       get: () => {
         accessorReads += 1;
-        return ThemeStyle.Academic;
+        return 'academic';
       },
     });
 
@@ -239,7 +284,7 @@ describe('<Layout theme>', () => {
   });
 
   it('宿主overlay不吞掉自有__proto__未知字段', () => {
-    const persistedTheme = { style: ThemeStyle.Academic };
+    const persistedTheme = { style: 'academic' };
     Object.defineProperty(persistedTheme, '__proto__', { value: 'persisted', enumerable: true });
 
     expect(() =>

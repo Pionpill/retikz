@@ -47,7 +47,7 @@ Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-示例通过 standalone 根 `theme` 或 embedded 外层 `<Layout theme>` 选择 Core `academic/light` 环境，再用 `tableThemeTokens` 做当前 spec 的局部覆盖；`containerStyle` 仍只控制 standalone 宿主 CSS。`legend: false` 表示这条编码只改变 Cell 外观，不请求 Legend descriptor。
+示例由本站预览 Provider 注入同名 Core / Table Academic definitions，再通过 standalone 根 `theme` 或 embedded 外层 `<Layout theme>` 选择 `academic/light` 环境；`tableThemeTokens` 继续只做当前 spec 的局部覆盖，`containerStyle` 只控制 standalone 宿主 CSS。`legend: false` 表示这条编码只改变 Cell 外观，不请求 Legend descriptor。
 
 <ComponentAlert
   type="tip"

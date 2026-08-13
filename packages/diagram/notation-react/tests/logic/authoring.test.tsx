@@ -1,3 +1,10 @@
+import {
+  ConnectorProvider,
+  DecisionProvider,
+  JunctionProvider,
+  StageProvider,
+  TerminalProvider,
+} from '@retikz/notation';
 import { buildIRWithContributions, Step, Text } from '@retikz/react';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -31,8 +38,8 @@ describe('Notation React semantic unit authoring', () => {
       id: 'terminal',
       text: 'Start',
     });
-    expect(stage.contributions[0]?.makeComposites({})).toEqual([expect.objectContaining({ type: 'stage' })]);
-    expect(terminal.contributions[0]?.makeComposites({})).toEqual([expect.objectContaining({ type: 'terminal' })]);
+    expect(stage.contributions[0]).toEqual({ roots: [StageProvider.key], providers: [StageProvider] });
+    expect(terminal.contributions[0]).toEqual({ roots: [TerminalProvider.key], providers: [TerminalProvider] });
   });
 
   it('contributes the matching Definition for every semantic unit', () => {
@@ -49,9 +56,9 @@ describe('Notation React semantic unit authoring', () => {
       { namespace: 'notation', type: 'decision', id: 'decision' },
       { namespace: 'notation', type: 'junction', id: 'junction' },
     ]);
-    expect(result.contributions.flatMap(contribution => contribution.makeComposites({}))).toMatchObject([
-      { namespace: 'notation', type: 'decision' },
-      { namespace: 'notation', type: 'junction' },
+    expect(result.contributions.map(contribution => contribution.roots[0])).toEqual([
+      DecisionProvider.key,
+      JunctionProvider.key,
     ]);
   });
 });
@@ -77,9 +84,7 @@ describe('Notation React Connector authoring', () => {
         { type: 'step', kind: 'fold', via: '-|-', to: { id: 'target' } },
       ],
     });
-    expect(result.contributions[0]?.makeComposites({})).toEqual([
-      expect.objectContaining({ namespace: 'notation', type: 'connector' }),
-    ]);
+    expect(result.contributions[0]).toEqual({ roots: [ConnectorProvider.key], providers: [ConnectorProvider] });
   });
 
   it('supports Draw way input and rejects mixing it with Step children', () => {

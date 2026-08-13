@@ -5,9 +5,9 @@
 ## 包职责契约
 
 - **解决的问题**：为所有上层 DSL、Tier 2 能力和 renderer 提供后端中立、可序列化、可扩展的二维绘图表达与确定性编译
-- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、纯 parser、IR / composite lowering、`compileToScene`、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
+- **拥有的契约**：Core IR / Zod schema、Drawing definitions / registries、Composite dependency provider graph、纯 parser、IR / composite lowering、`compileToScene`、qualified spatial handle sidecar、Scene / Scope Theme selector、Core style definition / registry 与 shared colors、Scene / manifest 语义与绘图诊断
 - **不拥有的能力**：通用计算几何算法、SVG / Canvas 执行、React / Vanilla authoring、数据处理与可视化语法、TeX 引擎或应用交互状态
-- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 `themeStyles`），输出 renderer-agnostic Scene、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
+- **输入与输出**：接收 JSON-safe Core IR、compile options 与运行时 definitions（包括 `themeStyles`），输出 renderer-agnostic Scene、artifact / spatial sidecar、manifest 和 diagnostics；不直接输出 DOM、SVG 字符串或 Canvas 像素
 - **缺口流向**：通用纯几何下沉 `@retikz/math`；后端实现进入 `@retikz/render`；authoring / runtime 接线上移 adapter；数据可视化与领域 theme token / preset / style definition 具体值进入对应 viz 能力域；可选公式集成进入 `@retikz/tex`
 
 新增或改变图形能力前，先按 [`core-drawing-complete.md`](../_notes/architecture/core-drawing-complete.md) 确认 Drawing Complete 的能力面、主责 / 协作包和端到端闭环。
@@ -19,6 +19,8 @@
 - 运行时依赖只允许 `@retikz/foundation`、`@retikz/runtime`、`@retikz/math` 与 `zod`；新增依赖必须先说明理由。
 - 任何可能进入 IR 的数据都必须 JSON 可序列化，禁止函数、ref、closure、class 实例。
 - `compileToScene` 必须保持纯函数：相同 IR + options 产生相同 Scene；禁止 `Math.random()`、`Date.now()`、module-level mutable state。
+- Composite provider graph 只解析当前调用显式提供的 roots / providers；不得做动态 import、包发现、全局注册或 adapter 专用 conflict fallback。
+- qualified spatial handle index 与 Scene 同 revision 生成，但不得进入 Scene、renderer descriptor、DOM attribute 或 Canvas 私有表。
 
 ## 目录分层
 
@@ -28,7 +30,8 @@ schemas/     Zod schema 与 IR 类型真源
 contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契约、能力无关 helper
 providers/   内置 definition、BUILTIN_*、registry resolver
 compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
-parsers/     字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
+parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
+normalize/   Source IR 的紧凑写法、领域默认与值形态规范化，输出 Canonical 内部形态
 ```
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
@@ -46,11 +49,13 @@ parsers/     字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 - `PathPrim.commands` 与 `GroupPrim.transforms` 必须是结构化数组，不输出 SVG `d` / `transform` 字符串。
 - `circlePath` / `ellipsePath` 可在 IR 编译为结构化 `ellipseArc`；后端自行映射为原生 API。
 - 文本在 Scene 编译完成时必须已有度量结果；度量函数通过 `CompileOptions.measureText` 注入，缺省走 fallback。
+- Composite 声明的 local spatial bounds 只由 Core 根据最终 Scope / placement / replay transform 发布 world-space sidecar；renderer 不做二次变换或语义推断。
 
 ## Registry 与 Shape
 
 - 扩展能力按 `contract/<能力>` + `providers/<能力>` 分层：contract 放 author-facing 类型和 define helper；providers 放内置实现和 registry 合并。
 - 内置 definition 不享有特殊入口。有效表应由内置表与 options 自定义表合并，冲突通过 warning 或明确策略处理。
+- 跨 namespace Composite 传递依赖按完整 `namespace + type` key 进入 Core provider graph；React / Vanilla 只收集 contribution，不各自实现拓扑、dataset 合并或 definition 去重。
 - `node.shape` 在 IR 中永远是字符串名；`ShapeDefinition` 不进 IR，经 `CompileOptions.shapes` 注入。schema 只校验字符串形状，未注册名在 compile 期处理。
 - Shape 几何方法围绕外接 `Rect` 工作；`emit` 接轴对齐 rect，rotate 由外层 `GroupPrim` 统一施加。
 - 改内置 shape 几何或 emit 时，优先跑 shape baseline snapshot 和相关 compile 测试。
@@ -62,7 +67,7 @@ parsers/     字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 - lookup 按 inside-out；同 frame 重复 id 发 warning 并 last-wins，跨 frame 同名是 shadowing。
 - scope 的相对定位、bbox synthetic layout、样式继承和 `resetStyle` 属 compile 语义；改动前读相关代码与测试，不把规则复制到 renderer。
 
-## Parsers
+## Parse
 
 - parser 必须是纯函数：input -> output，无副作用。
 - parser 输出 IR 节点或 IR 片段，不输出 React props 或 adapter 私有结构。

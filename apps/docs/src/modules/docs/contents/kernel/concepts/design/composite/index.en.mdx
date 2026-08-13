@@ -48,9 +48,40 @@ The compiler looks up `${namespace}.${type}`, validates the node, and calls the 
 
 ## Theme context
 
-Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style, mode, colors }` value. Core starts at `neutral + light`, then inherits selectors through Scene → outer Scope → inner Scope and generates `colors` with the current style resolver. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
+Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style?, mode, colors }` value. Core starts at its default light baseline, then inherits selectors through Scene → outer Scope → inner Scope and generates `colors` from the default palette or the current style resolver. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
 
 The composite maps shared `colors` and the domain tokens, palettes, or defaults produced by its style resolver into already-materialized IR. Core does not interpret Tier 2 tokens or own Plot, Chart, or Table tokens; neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed. A custom style must be injected into both Core and every Tier 2 resolver that consumes it; a missing registry entry fails loudly.
+
+## Spatial transparency and qualified handles
+
+Some composites must expose a domain-meaningful region after nested Scopes, layout replay, and transforms, in addition to generating visible primitives. `expand` therefore always returns a structured result, and a layout-aware `compile` can declare local rectangles in the same result:
+
+```ts
+return {
+  children: [{ type: 'node', position: [0, 0], text: 'Card' }],
+  spatialHandles: [
+    {
+      key: 'body',
+      role: 'card',
+      bounds: { x: -40, y: -20, width: 80, height: 40 },
+      tags: ['content'],
+      payload: { itemId: 'card-a' },
+    },
+  ],
+};
+```
+
+The declared `bounds` use the current composite allocation coordinate. After final traversal, Scope transforms, and replay settlement, Core projects them to world-space rectangular AABBs and publishes them in `CompileResult.spatialHandles`. `ownerPath` preserves every outer-to-inner composite `namespace`, `type`, explicit `id`, and occurrence.
+
+| Layer                   | What it stores                                          | What it never enters                  |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------- |
+| callback declaration    | owner-local `key` / `role` / local rectangle            | IR schema or Scene                    |
+| qualified compile index | `ownerPath` / world AABB / origin and final occurrences | SVG attributes or Canvas draw state   |
+| query                   | exact owner, ancestor path, key, role, and all tags     | renderer DOM lookup or geometry tests |
+
+`selectSpatialHandles()` returns zero or more entries, while `resolveSpatialHandle()` requires exactly one. An underspecified cross-owner query reports a miss or ambiguity instead of guessing the “nearest” node. The index is still present and empty when no declaration exists.
+
+`lowerIRToKernel()` cannot settle world geometry. It still lowers absent or empty declarations, but a non-empty `spatialHandles` array fails synchronously and directs the caller to `compileToScene()`. This prevents local rectangles from being silently discarded or presented as settled spatial results.
 
 ## Layout-aware compile
 
@@ -213,8 +244,55 @@ Ordinary users only place a supported domain component inside `<Layout>`. Its pa
 
 If you are implementing a domain adapter, injecting `composites` / `embeddables`, or debugging dataset aggregation and host behavior, go directly to [Layout: Higher-Level Capabilities and Host Integration](/kernel/components/layout/overview#higher-level-capabilities-and-host-integration) and [Runtime Extensions](/kernel/reference/runtime/extensions). This concept page intentionally omits React static-walk and aggregation internals.
 
+## Provider roots and transitive dependencies
+
+An embedded adapter does not assemble a Definition array itself. It returns the high-level `node` and uses `CompositeDependencyContribution` to declare the `roots` required by that node plus the `providers` already imported into the current program. Each provider owns one complete `namespace + type` key, ordered direct dependencies, runtime-only datasets, and one stable `makeDefinition` function.
+
+<ComponentPreview files="embeddable-flow" size="xl" hideCode />
+
+Core computes the reachable closure from the roots, then materializes every Definition once in dependency-first, first-reachable order. This third-party `third.card` depends on Standard Frame. Both use the same graph; there is no built-in allowlist:
+
+```ts
+import type { CompositeDependencyProvider } from '@retikz/core';
+
+import { resolveCompositeDependencies } from '@retikz/core';
+import { FrameProvider } from '@retikz/standard';
+
+const CardProvider = {
+  key: { namespace: 'third', type: 'card' },
+  dependencies: [FrameProvider.key],
+  datasets: {},
+  makeDefinition: () => CardDefinition,
+} satisfies CompositeDependencyProvider;
+
+const composites = resolveCompositeDependencies({
+  contributions: [
+    {
+      roots: [CardProvider.key],
+      providers: [CardProvider, FrameProvider],
+    },
+  ],
+});
+```
+
+`datasets` merge by provider key and reference before maker execution; they never enter IR, Scene, or manifests. A repeated reference deduplicates only when its value is the same by `Object.is`. Conflicting maker references, ordered dependencies, or dataset identities fail before any maker runs. Missing dependencies and cycles also report the complete key chain during preflight.
+
+The provider graph assembles which Definitions reusable modules require. `CompileOptions.composites` remains the final Definition array consumed by Core: direct-IR authors may pass a complete array explicitly, while React, Vanilla, and other toolchains resolve contributions first. Provider results come first and explicit Definitions append afterward; a repeated key deduplicates only the same Definition object, while a different object fails loudly.
+
 <SourceLinks
   sources={[
+    {
+      label: 'Provider graph contract and runtime-only datasets',
+      path: 'packages/kernel/core/src/contract/composite/dependency-provider.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: 'Reachable closure, topology, and conflict preflight',
+      path: 'packages/kernel/core/src/contract/composite/resolve-dependencies.ts',
+      startLine: 69,
+      endLine: 209,
+    },
     {
       label: 'Validate the definition key against schema literals',
       path: 'packages/kernel/core/src/contract/composite/define.ts',
@@ -226,6 +304,18 @@ If you are implementing a domain adapter, injecting `composites` / `embeddables`
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
       endLine: 214,
+    },
+    {
+      label: 'Spatial declaration, qualified owner, and selector contracts',
+      path: 'packages/kernel/core/src/contract/spatial-handle/types.ts',
+      startLine: 7,
+      endLine: 85,
+    },
+    {
+      label: 'Exact spatial-handle selection and unique resolution',
+      path: 'packages/kernel/core/src/contract/spatial-handle/query.ts',
+      startLine: 48,
+      endLine: 65,
     },
     {
       label: 'Validate and freeze proposals and resolve slots',

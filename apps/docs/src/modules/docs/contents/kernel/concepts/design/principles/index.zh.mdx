@@ -40,7 +40,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 | `schemas/`   | Zod schema 与 IR 类型真源；字段 `.describe()`               | provider 函数与后端行为      |
 | `contract/`  | `XxxDefinition`、`defineXxx`、Scene 输出契约                | 内置实现与 registry 合并     |
 | `providers/` | 内置 Definition、`BUILTIN_*`、registry resolver 与查找诊断  | 新建平行 IR 或 renderer 语义 |
-| `parsers/`   | 把字符串、DSL shorthand 与 Sugar 纯函数归一为 IR 节点或片段 | 读取 registry、布局或运行时  |
+| `parse/`     | 把字符串、DSL shorthand 与 Sugar 纯函数归一为 IR 节点或片段 | 读取 registry、布局或运行时  |
 | `compile/`   | lowering、布局、命名空间、引用、资源与 IR → Scene 编排      | DOM、SVG / Canvas 后端执行   |
 
 `schemas/` 是 IR 的唯一数据准则：TypeScript 类型由 schema 推导，英文 `.describe()` 会进入 JSON Schema，供 LLM Tool Use、外部工具与文档消费。外部 JSON 应先在输入边界显式经过 `SceneSchema` 校验；`compileToScene` 消费规范化后的 `IRScene`，不替代这道输入校验。

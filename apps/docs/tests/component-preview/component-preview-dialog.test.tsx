@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import { ThemeStyle } from '@retikz/core';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -26,6 +24,7 @@ import type {
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import { ComponentPreviewDialog } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
+import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -99,7 +98,6 @@ describe('ComponentPreviewDialog', () => {
       themeMode: PreviewThemeMode;
       onThemeModeChange: (themeMode: PreviewThemeMode) => void;
       enableThemeSwitch?: boolean;
-      themeStyle?: ThemeStyleValue;
       themeStyleSelection?: PreviewThemeStyleSelection;
       onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
       controlPanelOpen: boolean;
@@ -125,8 +123,7 @@ describe('ComponentPreviewDialog', () => {
         themeMode="inherit"
         onThemeModeChange={() => undefined}
         enableThemeSwitch
-        themeStyle={ThemeStyle.Academic}
-        themeStyleSelection="inherit"
+        themeStyleSelection={PreviewThemeStyle.Academic}
         onThemeStyleChange={() => undefined}
         controlPanelOpen
         onControlPanelOpenChange={() => undefined}
@@ -137,6 +134,30 @@ describe('ComponentPreviewDialog', () => {
     expect(markup).toContain('aria-label="Theme style"');
     expect(markup).toContain('lucide-graduation-cap');
     expect(markup.indexOf('Preview theme dark')).toBeLessThan(markup.indexOf('aria-label="Theme style"'));
+  });
+
+  it('Core style 缺省时仍显示默认风格切换按钮', () => {
+    const markup = renderToStaticMarkup(
+      <ComponentPreviewDialog
+        name="default-theme-dialog"
+        Component={Demo}
+        align="center"
+        initialSize="md"
+        controlState={controlState}
+        showContextBar
+        themeMode="inherit"
+        onThemeModeChange={() => undefined}
+        enableThemeSwitch
+        themeStyleSelection={PreviewThemeStyle.Default}
+        onThemeStyleChange={() => undefined}
+        controlPanelOpen
+        onControlPanelOpenChange={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Theme style"');
+    expect(markup).toContain('lucide-feather');
   });
 
   it('按规定顺序渲染 header，并用弹窗 runtime 求值动作插槽', () => {

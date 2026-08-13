@@ -12,6 +12,7 @@ import {
   TableComposite,
   TableLayoutManifestSchema,
 } from '../../src';
+import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
 const manualSpec = (id?: string): IRTableSpec => ({
   namespace: TABLE_NAMESPACE,
@@ -68,11 +69,14 @@ describe('Table layout-aware lowering', () => {
       namespace: 'fixture',
       type: 'badge',
       schema: BadgeSchema,
-      expand: node => ({ type: 'node' as const, position: [0, 0] as [number, number], text: node.label }),
+      expand: node => ({
+        children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: node.label }],
+      }),
     });
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
@@ -89,6 +93,7 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTableSpec = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -103,7 +108,7 @@ describe('Table layout-aware lowering', () => {
         rowGap: 3,
       },
     };
-    const result = compileTable(spec, {}, { theme: { style: 'clean', mode: 'light' }, compile: { padding: 0 } });
+    const result = compileTable(spec, {}, { theme: { mode: 'light' }, compile: { padding: 0 } });
 
     expect(result.manifest.allocationBounds).toEqual({ x: 0, y: 0, width: 310, height: 63 });
     expect(result.manifest.visualOverflowBounds).toEqual({ x: 0, y: 0, width: 0, height: 0 });

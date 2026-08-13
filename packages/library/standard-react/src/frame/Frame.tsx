@@ -3,12 +3,10 @@ import type { FrameInput, IRFrame, IRFrameDescription, IRFrameTitle } from '@ret
 import type { FC, ReactNode } from 'react';
 
 import { convertReactNodeToIR, Node } from '@retikz/react';
-import { createFrame, FrameDefinition, FrameDescriptionSchema, FrameTitleSchema } from '@retikz/standard';
+import { createFrame, FrameDescriptionSchema, FrameProvider, FrameTitleSchema } from '@retikz/standard';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
-
-import { StandardFrameReactNamespace } from '../shared';
 
 /** React Frame 组件接受的 Standard authoring 输入 */
 export type FrameProps = Omit<FrameInput, 'children' | 'title' | 'description'> & {
@@ -29,9 +27,6 @@ type FrameParts = {
   title?: IRFrameTitle;
   description?: IRFrameDescription;
 };
-
-/** 当前 Layout 内贡献 Standard FrameDefinition 的稳定 maker */
-const makeFrameComposites = () => [FrameDefinition];
 
 /** 将 React children 转为 Frame 支持的直接 Core Node */
 const convertFrameChildren = (children: ReactNode): Array<FrameNode> => {
@@ -89,7 +84,6 @@ const readFrameParts = (children: ReactNode): FrameParts => {
 
 const frameEmbeddableAdapter: EmbeddableTier2Adapter<FrameProps> = {
   displayName: 'Frame',
-  namespace: StandardFrameReactNamespace,
   contribute: props => {
     if ('title' in props || 'description' in props) {
       throw new Error('React Frame headers must use direct FrameTitle and FrameDescription children.');
@@ -103,8 +97,7 @@ const frameEmbeddableAdapter: EmbeddableTier2Adapter<FrameProps> = {
         ...(parts.description !== undefined ? { description: parts.description } : {}),
         children: convertFrameChildren(parts.body),
       }),
-      datasets: {},
-      makeComposites: makeFrameComposites,
+      compositeDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
     };
   },
 };

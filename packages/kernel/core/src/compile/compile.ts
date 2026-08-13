@@ -17,6 +17,7 @@ import {
   filterAnimations,
   orderCompileWarnings,
 } from './orchestration';
+import { materializeSpatialHandleIndex } from './orchestration/spatial-handle';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
 import { formatCompileWarning } from './warning';
 
@@ -84,7 +85,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   const { loweredIr, layoutPadding, round, onWarn, paint, clip } = context;
   const identityTracker =
     execution.candidateRevision === undefined ? undefined : createRuntimeTopologyTracker(execution.candidateRevision);
-  const { primitives, layoutBounds, artifacts, compileObservations } = compileChildrenToPrimitives(
+  const { primitives, layoutBounds, artifacts, compileObservations, spatialHandles } = compileChildrenToPrimitives(
     loweredIr.children,
     context,
     {
@@ -104,6 +105,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     ...(rootAnimations !== undefined ? { animations: rootAnimations } : {}),
   };
   const observerOutputs = dispatchCompileObservations(compileObservations, observation, context);
+  const spatialHandleIndex = materializeSpatialHandleIndex(spatialHandles, round);
   if (context.trace !== undefined) {
     context.trace.reporter.report({
       phase: PerformanceTracePhase.Compile,
@@ -118,6 +120,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
     result: Object.freeze({
       scene,
       artifacts: Object.freeze(artifacts),
+      spatialHandles: spatialHandleIndex,
     }) as CompileResult<CompositeArtifactOf<TComposites[number]>>,
     diagnostics: Object.freeze(orderCompileWarnings(diagnostics)),
     observerOutputs,

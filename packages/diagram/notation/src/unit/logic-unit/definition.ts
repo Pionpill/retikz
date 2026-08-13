@@ -1,4 +1,4 @@
-import type { ExpandCompositeDefinition, IRNode } from '@retikz/core';
+import type { CompositeExpandResult, ExpandCompositeDefinition, IRNode } from '@retikz/core';
 
 import { defineComposite } from '@retikz/core';
 
@@ -8,11 +8,11 @@ import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
 import { DecisionSchema, JunctionSchema, StageSchema, TerminalSchema } from './schema';
 
 /** 把一个Notation基础单元展开为固定形状的同标识Core Node */
-const expandSemanticNode = (node: LogicSemanticNode, shape: NonNullable<IRNode['shape']>): IRNode => {
+const expandSemanticNode = (node: LogicSemanticNode, shape: NonNullable<IRNode['shape']>): CompositeExpandResult => {
   const { namespace: _namespace, type: _type, ...input } = node;
   void _namespace;
   void _type;
-  return { type: 'node', ...input, shape };
+  return { children: [{ type: 'node', ...input, shape }] };
 };
 
 /** Notation Terminal的轻量展开定义 */

@@ -16,9 +16,8 @@ import {
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
   NaturalLayoutProposal,
-  resolveCoreThemeColors,
+  resolveDefaultCoreThemeColors,
   ThemeMode,
-  ThemeStyle,
 } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
 import { z } from 'zod';
@@ -398,11 +397,11 @@ export const resolvePresentedTableTransaction = (
   const manifestTheme =
     input.theme ??
     ({
-      style: ThemeStyle.Clean,
       mode: ThemeMode.Light,
       tokens: {},
-      colors: resolveCoreThemeColors(ThemeStyle.Clean, ThemeMode.Light),
+      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const);
+  const manifestStyle = 'style' in manifestTheme ? manifestTheme.style : undefined;
   const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
 
   const intrinsic = presented.cells.map(cell =>
@@ -628,7 +627,7 @@ export const resolvePresentedTableTransaction = (
   return deepFreeze({
     children: [root],
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
-      style: manifestTheme.style,
+      ...(manifestStyle === undefined ? {} : { style: manifestStyle }),
       themeMode: manifestTheme.mode,
       tableThemeTokens,
       presented,

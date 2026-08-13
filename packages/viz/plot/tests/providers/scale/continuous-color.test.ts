@@ -17,7 +17,7 @@ const expandOf = (
   options: LowerPlotsOptions = {},
 ): IRScope => {
   const [def] = lowerPlots(datasets, { ...cartOpts, ...options });
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */

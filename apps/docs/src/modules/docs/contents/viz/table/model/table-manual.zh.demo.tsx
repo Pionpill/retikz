@@ -1,7 +1,8 @@
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
-import { ManualTable } from '@retikz/table-react';
+
+import { PreviewManualTable as ManualTable } from '@/modules/docs/components/component-preview/theme';
 
 import { manualRows } from './table-manual.zh.data';
 

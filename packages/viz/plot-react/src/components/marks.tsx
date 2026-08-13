@@ -275,7 +275,7 @@ export type PointMarkProps = MarkTransformProps &
     size?: FieldName | number | IRPlotPointSizeStyle;
     /** 不透明度：字符串按字段解析，数字为常量糖 */
     opacity?: MarkValueProp<number> | IRPlotPointOpacityStyle;
-    /** 形状字段（分类）：→ shape 通道，按类别映射到 glyph 调色板（circle/rectangle/diamond）；连续/时间字段报错 */
+    /** 形状字段（分类）：→ shape 通道，按类别映射到 plotTheme shape palette；连续/时间字段报错 */
     shape?: FieldName | NodeShapeChannelValue | IRPlotPointShapeStyle;
     /** 文本内容字段名：给定则该 point 下沉为无边框带文本的 Node（吸收旧 text mark），否则散点 glyph */
     text?: FieldName;

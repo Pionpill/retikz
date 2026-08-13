@@ -1,6 +1,6 @@
 ---
 title: 散点图
-description: 用散点比较两个连续变量，并通过颜色补充分类信息。
+description: 用散点直接比较两个连续变量，并以 Chart 原生叙事信息说明数据范围、单位与来源。
 family: scatter-points
 usage: distribution
 ---
@@ -9,77 +9,40 @@ usage: distribution
   examples={[
     {
       id: 'scatter-basic',
-      title: '基础散点',
-      description: '比较两个连续变量，并用颜色区分类别。',
+      title: 'Chart 原生叙事信息',
+      description: '用 `ScatterChart` 比较城市化与互联网使用率，并把标题、副标题和来源作为图表内容渲染。',
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
-        enableThemeSwitch: true,
-        size: 'xl',
-        caption: '调整点大小、透明度与分组颜色，观察数据位置保持不变。',
+        size: 'xxl',
+        caption: '标题说明比较对象，副标题给出年份和百分比单位，来源说明所用世界银行指标。',
+      },
+    },
+    {
+      id: 'scatter-fertility-work',
+      title: '分类编码',
+      description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并观察分类通道如何驱动图例。',
+      preview: {
+        files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
+        controls: { name: 'scatter-fertility-work' },
+        size: 'xxl',
+        caption: '切换收入组的颜色或形状编码；图例随 Plot 的有效通道同步变化。',
+      },
+    },
+    {
+      id: 'scatter-income-life-expectancy',
+      title: '关联与分类颜色',
+      description: '用 Gapminder 2007 国家截面比较人均收入与预期寿命，并用大洲颜色识别重叠和差异。',
+      preview: {
+        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
+        controls: { name: 'scatter-income-life-expectancy' },
+        size: 'xxl',
+        caption: '副标题、标题、来源和注记按 marker 出现顺序进入图表；右侧图例解释大洲颜色。',
       },
     },
   ]}
 >
-  这是基于公开 Plot API 的非契约概念预览，不是 `@retikz/chart` 的 API 文档。页面只使用 `@retikz/plot-react` 根入口公开的 `Plot`、`PointMark` 与 `Axis` 组合 API，图表尺寸固定为 `800 × 400`。
-
-## Point Mark
-
-### 位置与坐标作用域
-
-主示例通过 `PointMark.x` / `PointMark.y` 绑定两个连续变量，并由 Plot 的坐标与 scale 管线解析二维位置。
-
-| 属性                  | 类型                                     | 默认值 | 描述                               |
-| --------------------- | ---------------------------------------- | ------ | ---------------------------------- |
-| `x` / `y`             | `PointMarkProps['x' \| 'y']`             | —      | 二维位置字段；Scatter 必须同时提供 |
-| `z`                   | `PointMarkProps['z']`                    | —      | 自定义坐标系的第三位置 role        |
-| `xAxisId` / `yAxisId` | `PointMarkProps['xAxisId' \| 'yAxisId']` | —      | 绑定命名轴的 authoring 快捷方式    |
-| `coordinateView`      | `PointMarkProps['coordinateView']`       | —      | 直接绑定组合坐标视图               |
-| `facetId` / `trackId` | `PointMarkProps['facetId' \| 'trackId']` | —      | 绑定分面或共享轨道                 |
-
-### 视觉编码与 glyph
-
-字符串既可表示字段，也可通过显式 `{ kind: 'constant', value }` 固定常量。字段绑定会继续使用 Plot 的 scale、legend、channel definition 与诊断。
-
-| 属性                                        | 类型                                                            | 默认值   | 描述                                                 |
-| ------------------------------------------- | --------------------------------------------------------------- | -------- | ---------------------------------------------------- |
-| `color` / `textColor`                       | `PointMarkProps['color' \| 'textColor']`                        | palette  | glyph 或文本颜色                                     |
-| `size`                                      | `PointMarkProps['size']`                                        | 内置半径 | 数值字段经 sqrt scale 映射为半径，也可直接给最终半径 |
-| `shape`                                     | `PointMarkProps['shape']`                                       | circle   | 分类形状或显式 shape                                 |
-| `fill` / `stroke`                           | `PointMarkProps['fill' \| 'stroke']`                            | 主题值   | 填充与描边 paint                                     |
-| `strokeWidth`                               | `PointMarkProps['strokeWidth']`                                 | 主题值   | 描边宽度                                             |
-| `fillOpacity` / `strokeOpacity` / `opacity` | `PointMarkProps['fillOpacity' \| 'strokeOpacity' \| 'opacity']` | `1`      | 分层或整体透明度                                     |
-| `rotate`                                    | `PointMarkProps['rotate']`                                      | `0`      | glyph 旋转角度                                       |
-| `minimumSize`                               | `PointMarkProps['minimumSize']`                                 | —        | size 通道之前的最小视觉尺寸                          |
-| `zIndex`                                    | `PointMarkProps['zIndex']`                                      | —        | datum 绘制顺序提示                                   |
-
-### Node 样式
-
-| 属性                                    | 类型                                                        | 默认值  | 描述                     |
-| --------------------------------------- | ----------------------------------------------------------- | ------- | ------------------------ |
-| `align` / `lineHeight` / `maxTextWidth` | `PointMarkProps['align' \| 'lineHeight' \| 'maxTextWidth']` | 主题值  | 文本对齐、行高与换行宽度 |
-| `cornerRadius` / `scale`                | `PointMarkProps['cornerRadius' \| 'scale']`                 | 主题值  | 圆角与节点缩放           |
-| `padding` / `margin`                    | `PointMarkProps['padding' \| 'margin']`                     | 主题值  | 内外边距                 |
-| `dashed` / `dotted` / `dashPattern`     | `PointMarkProps['dashed' \| 'dotted' \| 'dashPattern']`     | `false` | 描边虚线与自定义间隔     |
-| `font`                                  | `PointMarkProps['font']`                                    | 主题值  | datum 驱动或固定字体     |
-| `boundary`                              | `PointMarkProps['boundary']`                                | shape   | 节点边界策略             |
-| `shadow` / `blendMode`                  | `PointMarkProps['shadow' \| 'blendMode']`                   | —       | 阴影与混合模式           |
-
-### 文本、datum 标签与 identity
-
-| 属性                                            | 类型                                                                 | 默认值                 | 描述                                        |
-| ----------------------------------------------- | -------------------------------------------------------------------- | ---------------------- | ------------------------------------------- |
-| `text` / `displayFormat`                        | `PointMarkProps['text' \| 'displayFormat']`                          | —                      | 把 Point 转为无边框文本节点，并格式化字段值 |
-| `dx` / `dy`                                     | `PointMarkProps['dx' \| 'dy']`                                       | `0`                    | 文本相对投影锚点的微调                      |
-| `label` / `labelDisplayFormat`                  | `DatumLabelProps['label' \| 'labelDisplayFormat']`                   | —                      | 挂载独立 datum 标签及其格式                 |
-| `labelPosition` / `labelDistance` / `labelPin`  | `DatumLabelProps['labelPosition' \| 'labelDistance' \| 'labelPin']`  | `top` / `12` / `false` | 标签位置、距离与引线                        |
-| `labelTextColor` / `labelOpacity` / `labelFont` | `DatumLabelProps['labelTextColor' \| 'labelOpacity' \| 'labelFont']` | 主题值                 | 标签视觉样式                                |
-| `labelRotate` / `labelKeepUpright`              | `DatumLabelProps['labelRotate' \| 'labelKeepUpright']`               | `'none'` / `false`     | 标签旋转与正向保持                          |
-| `resolveLabel`                                  | `DatumLabelProps['resolveLabel']`                                    | —                      | runtime-only 自定义标签；需显式 `id`        |
-| `channels`                                      | `DatumLabelProps['channels']`                                        | `{}`                   | 注册扩展 channel 的字段或常量绑定           |
-| `transform`                                     | `PointMarkProps['transform']`                                        | `[]`                   | 只作用于当前 Point 的数据变换               |
-| `layer`                                         | `PointMarkProps['layer']`                                            | —                      | Point scope 的语义图层                      |
-| `id` / `anchorId`                               | `PointMarkProps['id' \| 'anchorId']`                                 | 自动                   | mark 句柄与逐 datum 稳定节点 id             |
+  本页的基础与收入-寿命示例使用 `@retikz/chart-react/point` 的 `ScatterChart`。Chart 在图内处理标题、副标题、来源和注记；颜色图例仍是 Plot 的 guide 扩展，因此由 `Legend` 负责。生育率示例保留 Plot authoring，用来专门观察分类通道与图例的关系。
 
 {/* @include viz/chart/shared-api */}
 

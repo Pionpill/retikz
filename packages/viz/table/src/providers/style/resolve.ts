@@ -1,4 +1,4 @@
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle, ThemeTokenSource } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
 
 import type { TableThemeStyleDefinition } from '../../contract';
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
@@ -6,12 +6,12 @@ import type { ResolvedTableThemeTokens, TableThemeContext } from './types';
 
 import { TableThemeTokenKeySchema, TableThemeTokenMapSchema, TableThemeTokenOverridesSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
+import { getDefaultTableThemePreset } from './presets';
 import { resolveTableThemeStyleRegistry } from './registry';
 
 const defaultTheme: TableThemeContext = {
-  style: ThemeStyle.Neutral,
   mode: ThemeMode.Light,
-  colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+  colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
 
 /** 解析 preset、shared categorical、inherited 与 local Table token cascade */
@@ -21,12 +21,13 @@ export const resolveTableThemeTokens = (
   tableThemeStyles: ReadonlyArray<TableThemeStyleDefinition> | undefined = undefined,
 ): ResolvedTableThemeTokens => {
   const parsedLocal = TableThemeTokenOverridesSchema.parse(structuredClone(local));
+  const style = effectiveTheme.style;
   const styles = resolveTableThemeStyleRegistry(tableThemeStyles);
-  const definition = styles.get(effectiveTheme.style);
-  if (definition === undefined) {
-    throw new Error(`Table theme style '${effectiveTheme.style}' is not registered.`);
-  }
-  const baseline = definition.resolve(effectiveTheme);
+  const definition = style === undefined ? undefined : styles.get(style);
+  if (style !== undefined && definition === undefined)
+    throw new Error(`Table theme style '${style}' is not registered.`);
+  const baseline =
+    definition === undefined ? getDefaultTableThemePreset(effectiveTheme.mode) : definition.resolve(effectiveTheme);
   const sharedCategorical = [...effectiveTheme.colors.categorical];
   const tokens = TableThemeTokenMapSchema.parse({
     ...structuredClone(baseline),
@@ -51,7 +52,10 @@ export const resolveTableThemeTokens = (
         key,
         {
           kind: ThemeTokenSource.Local,
-          path: `$style/${effectiveTheme.style}/${effectiveTheme.mode}/${key}`,
+          path:
+            style === undefined
+              ? `$default/${effectiveTheme.mode}/${key}`
+              : `$style/${style}/${effectiveTheme.mode}/${key}`,
         },
       ];
     }),

@@ -7,9 +7,9 @@ type MutablePlotTokens = { -readonly [K in keyof IRPlotResolvedThemeTokens]: IRP
 const matchesDimension = (dimension: string | ReadonlyArray<string>, candidate: string): boolean =>
   typeof dimension === 'string' ? dimension === candidate : dimension.includes(candidate);
 
-const isStyleRulePath = (path: string): boolean => path.startsWith('$style/');
+const isBaselineRulePath = (path: string): boolean => path.startsWith('$default/') || path.startsWith('$style/');
 const isNativeTokenSource = (path: string): boolean => path.startsWith('$spec/plotTheme/');
-const isStyleTokenSource = (path: string): boolean => path.startsWith('$style/');
+const isBaselineTokenSource = (path: string): boolean => path.startsWith('$default/') || path.startsWith('$style/');
 
 /** 为一个已有 Axis dimension 解析 rule-adjusted token */
 export const resolvePlotAxisThemeTokens = (
@@ -25,8 +25,8 @@ export const resolvePlotAxisThemeTokens = (
       const canonicalToken = token as PlotThemeTokenValue;
       const globalSource = sourceByToken.get(canonicalToken);
       if (globalSource === undefined) continue;
-      if (isStyleRulePath(source.path) && !isStyleTokenSource(globalSource)) continue;
-      if (!isStyleRulePath(source.path) && isNativeTokenSource(globalSource)) continue;
+      if (isBaselineRulePath(source.path) && !isBaselineTokenSource(globalSource)) continue;
+      if (!isBaselineRulePath(source.path) && isNativeTokenSource(globalSource)) continue;
       (tokens as Record<string, unknown>)[canonicalToken] = structuredClone(value);
     }
   }

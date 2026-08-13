@@ -1,21 +1,16 @@
 import type { LegendInput } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createLegend, LegendDefinition } from '@retikz/standard';
+import { createLegend, LegendProvider } from '@retikz/standard';
 
 import { StandardLegendVanillaNamespace } from './constants';
-
-/** 当前 Figure 内局部贡献 LegendDefinition 的稳定 maker */
-const makeLegendComposites = () => [LegendDefinition];
 
 /** Standard Legend 的 Vanilla Tier 2 adapter */
 export const LegendVanillaAdapter: VanillaTier2Adapter<LegendInput> = {
   kind: StandardLegendVanillaNamespace,
-  namespace: StandardLegendVanillaNamespace,
   lower: props => ({
     node: createLegend(props),
-    datasets: {},
-    makeComposites: makeLegendComposites,
+    compositeDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
   }),
 };
 

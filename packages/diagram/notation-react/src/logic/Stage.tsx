@@ -2,27 +2,22 @@ import type { StageInput } from '@retikz/notation';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createStage, StageDefinition } from '@retikz/notation';
+import { createStage, StageProvider } from '@retikz/notation';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { NotationStageReactNamespace } from '../shared';
 import { resolveSemanticNodeInput } from './authoring';
 
 /** Stage React 编写参数 */
 export type StageProps = StageInput & Readonly<{ children?: ReactNode }>;
 
-const makeStageComposites = () => [StageDefinition];
-
 const stageEmbeddableAdapter: EmbeddableTier2Adapter<StageProps> = {
   displayName: 'Stage',
-  namespace: NotationStageReactNamespace,
   contribute: props => {
     const { children, ...input } = props;
     return {
       node: createStage(resolveSemanticNodeInput(children, input)),
-      datasets: {},
-      makeComposites: makeStageComposites,
+      compositeDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
     };
   },
 };

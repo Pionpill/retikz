@@ -1,4 +1,4 @@
-﻿import type { IRScope } from '@retikz/core';
+import type { IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -65,7 +65,7 @@ const parsedCompositionSpec = (): IRPlotSpec => parsePlotSpec(compositionSpec);
 
 const expandOf = (spec: IRPlotSpec): IRScope => {
   const [definition] = lowerPlots({ sales: rows }, { width: 480, height: 300 });
-  return definition.expand(spec) as IRScope;
+  return definition.expand(spec).children[0] as IRScope;
 };
 
 describe('coordinate composition registry schema', () => {

@@ -1,14 +1,19 @@
-import { defineThemeStyle, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { defineThemeStyle, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { BUILTIN_TABLE_THEME_TOKENS, compileTable, defineTableThemeStyle, resolveTableThemeTokens } from '../../src';
+import {
+  compileTable,
+  defineTableThemeStyle,
+  getDefaultTableThemePreset,
+  resolveTableThemeTokens,
+} from '../../src';
 
 describe('Table theme token resolution', () => {
-  it('defaults to neutral light and records local/inherited winners', () => {
+  it('defaults to the light baseline and records local/inherited winners', () => {
     const resolved = resolveTableThemeTokens();
 
-    expect(resolved.tokens).toMatchObject(BUILTIN_TABLE_THEME_TOKENS.neutral.light);
-    expect(resolved.tokens['data.categorical']).toEqual(resolveCoreThemeColors('neutral', 'light').categorical);
+    expect(resolved.tokens).toMatchObject(getDefaultTableThemePreset(ThemeMode.Light));
+    expect(resolved.tokens['data.categorical']).toEqual(resolveDefaultCoreThemeColors(ThemeMode.Light).categorical);
     expect(Object.values(resolved.sources).map(source => source.kind)).toEqual([
       ...Array.from({ length: 17 }, () => 'local'),
       'inherit',
@@ -23,9 +28,8 @@ describe('Table theme token resolution', () => {
     const border = { kind: 'line' as const, stroke: 'purple', width: 3 };
     const resolved = resolveTableThemeTokens(
       {
-        style: 'neutral',
         mode: 'light',
-        colors: resolveCoreThemeColors('neutral', 'light'),
+        colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
       },
       {
         'columnHeader.content.color': '#123456',
@@ -53,14 +57,14 @@ describe('Table theme token resolution', () => {
     const brand = defineTableThemeStyle({
       name: 'brand',
       resolve: theme => ({
-        ...structuredClone(BUILTIN_TABLE_THEME_TOKENS.neutral[theme.mode]),
+        ...getDefaultTableThemePreset(theme.mode),
         'cell.content.color': theme.mode === ThemeMode.Light ? '#123456' : '#abcdef',
       }),
     });
     const theme = {
       style: 'brand',
       mode: ThemeMode.Light,
-      colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const;
 
     const resolved = resolveTableThemeTokens(theme, {}, [brand]);
@@ -74,18 +78,17 @@ describe('Table theme token resolution', () => {
     expect(() =>
       resolveTableThemeTokens(
         {
-          style: ThemeStyle.Neutral,
           mode: ThemeMode.Light,
-          colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
         },
         {},
-        [defineTableThemeStyle({ name: ThemeStyle.Neutral, resolve: brand.resolve })],
+        [brand, defineTableThemeStyle({ name: 'brand', resolve: brand.resolve })],
       ),
     ).toThrow(/already registered/i);
 
     const coreBrand = defineThemeStyle({
       name: 'brand',
-      resolve: ({ mode }) => resolveCoreThemeColors(ThemeStyle.Neutral, mode),
+      resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
     });
     const result = compileTable(
       { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [['x']] } },

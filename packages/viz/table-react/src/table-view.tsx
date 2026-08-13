@@ -9,6 +9,8 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import type { ReactTableRuntime } from './table-runtime';
 
+import { useTableThemeStyles } from './theme-context';
+
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
   artifact.kind === 'composite' &&
   artifact.namespace === TABLE_NAMESPACE &&
@@ -37,13 +39,19 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     tableThemeStyles,
     visualScaleDefinitions,
   } = lowerOptions;
+  const ambientTableThemeStyles = useTableThemeStyles();
+  const effectiveTableThemeStyles = useMemo(() => {
+    if (ambientTableThemeStyles === undefined) return tableThemeStyles;
+    if (tableThemeStyles === undefined) return ambientTableThemeStyles;
+    return [...ambientTableThemeStyles, ...tableThemeStyles];
+  }, [ambientTableThemeStyles, tableThemeStyles]);
   const tableDefinitions = useMemo(
     () =>
       lowerTables(stableDatasets, {
         formatterDefinitions,
         presentationDefinitions,
         structureDefinitions,
-        tableThemeStyles,
+        tableThemeStyles: effectiveTableThemeStyles,
         visualScaleDefinitions,
       }),
     [
@@ -51,7 +59,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       presentationDefinitions,
       stableDatasets,
       structureDefinitions,
-      tableThemeStyles,
+      effectiveTableThemeStyles,
       visualScaleDefinitions,
     ],
   );

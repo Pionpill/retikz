@@ -383,7 +383,7 @@ describe('layout-aware composite transactions and artifacts', () => {
         namespace: z.literal('test'),
         type: z.literal('expand'),
       }),
-      expand: () => ({ namespace: 'test', type: 'layoutArtifact' }),
+      expand: () => ({ children: [{ namespace: 'test', type: 'layoutArtifact' }] }),
     });
 
     const result = compileToScene(scene([{ namespace: 'test', type: 'expand' }]), {

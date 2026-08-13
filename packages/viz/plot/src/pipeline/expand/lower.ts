@@ -1,7 +1,7 @@
 import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope, ResolvedTheme } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
-import { categoricalColorAt, defineComposite, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { categoricalColorAt, defineComposite, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { applyTransforms, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
@@ -759,16 +759,18 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
       namespace: PLOT_NAMESPACE,
       type: 'plot',
       schema: PlotSpecSchema,
-      expand: (node: IRPlotSpec, context?) =>
-        expandPlot(
-          node,
-          datasets,
-          options,
-          context?.theme ?? {
-            style: ThemeStyle.Neutral,
-            mode: ThemeMode.Light,
-            colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
-          },
-        ),
+      expand: (node: IRPlotSpec, context?) => ({
+        children: [
+          expandPlot(
+            node,
+            datasets,
+            options,
+            context?.theme ?? {
+              mode: ThemeMode.Light,
+              colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+            },
+          ),
+        ],
+      }),
     }),
   ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, typeof PLOT_NAMESPACE, 'plot'>>;

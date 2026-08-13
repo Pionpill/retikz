@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileOptions, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
@@ -165,6 +165,8 @@ export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = 
   readonly runtimeMeta: VanillaRuntimeMeta;
   /** 当前输入同次 compile 产出的 immutable artifacts；Scene 输入固定为空数组 */
   readonly artifacts: ReadonlyArray<CompileArtifact>;
+  /** authored input 的当前 committed 完整 compile result；Scene 输入为 undefined */
+  readonly compileResult: CompileResult | undefined;
 }>;
 
 /** IR / plain spec SVG retained view */

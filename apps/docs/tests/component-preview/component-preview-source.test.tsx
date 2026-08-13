@@ -159,6 +159,17 @@ describe('ComponentPreview Vanilla source', () => {
     expect(componentPreviewExports).not.toHaveProperty(['Component', 'Render'].join(''));
   });
 
+  it('viz 文档按内容路由自动开启单预览主题切换', async () => {
+    const vizProps = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+    const kernelProps = await renderPreview(
+      ['kernel', 'components', 'node', 'overview'],
+      <ComponentPreview files="node-styled" />,
+    );
+
+    expect(vizProps.enableThemeSwitch).toBe(true);
+    expect(kernelProps.enableThemeSwitch).toBe(false);
+  });
+
   it('Tier 2 Plot composite 自动生成 Vanilla 源码与真实 SVG', async () => {
     const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
 

@@ -85,7 +85,11 @@ describe('Layout compile driver', () => {
 
     expect(session.observers).toEqual([]);
     const output = session.resolve({
-      result: { scene: { primitives: [], layout: { x: 0, y: 0, width: 0, height: 0 } }, artifacts: [] },
+      result: {
+        scene: { primitives: [], layout: { x: 0, y: 0, width: 0, height: 0 } },
+        artifacts: [],
+        spatialHandles: { entries: [] },
+      },
       diagnostics: [],
       observerOutputs: [],
     });

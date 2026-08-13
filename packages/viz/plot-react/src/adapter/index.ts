@@ -1,4 +1,5 @@
-export { buildPlotSpec, decorateDefaultGuides, resolveLabelOf } from './build-plot-spec';
+export type { ResolvedPlotExtensionAuthoring } from './build-plot-spec';
+export { buildPlotSpec, decorateDefaultGuides, resolveLabelOf, resolvePlotExtensionAuthoring } from './build-plot-spec';
 export { collectPlotDeclarations } from './collector';
 export type {
   BuildPlotSpecOptions,

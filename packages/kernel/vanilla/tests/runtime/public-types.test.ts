@@ -1,4 +1,4 @@
-import type { Scene } from '@retikz/core';
+import type { CompileResult, Scene } from '@retikz/core';
 
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
@@ -14,6 +14,7 @@ import type {
   RetainedCanvasView,
   RetainedSvgUpdateOptions,
   RetainedSvgView,
+  SceneResult,
   StaticMountCanvasOptions,
   StaticMountOptions,
   StaticMountUnifiedOptions,
@@ -23,6 +24,7 @@ import type {
   VanillaFigureSpec,
   VanillaPathSpec,
   VanillaRuntimeOptions,
+  VanillaViewState,
   VanillaScopeSpec,
   VanillaViewModeValue,
 } from '../../src';
@@ -48,6 +50,13 @@ const assertStaticMountRejectsRetainedRuntime = (): void => {
 void assertStaticMountRejectsRetainedRuntime;
 
 describe('Vanilla retained 公开类型', () => {
+  it('SceneResult 与 live view 始终拥有 compileResult 字段', () => {
+    expectTypeOf<SceneResult>().toHaveProperty('compileResult').toEqualTypeOf<CompileResult | undefined>();
+    expectTypeOf<VanillaViewState<SVGSVGElement>>()
+      .toHaveProperty('compileResult')
+      .toEqualTypeOf<CompileResult | undefined>();
+  });
+
   it('基础 authoring 与 runtime 不再暴露 inspection 字段', () => {
     expectTypeOf<HasKey<CommonOptions, 'inspect'>>().toEqualTypeOf<false>();
     expectTypeOf<HasKey<VanillaFigureSpec, 'inspect'>>().toEqualTypeOf<false>();

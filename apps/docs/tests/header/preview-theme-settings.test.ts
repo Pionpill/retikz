@@ -1,33 +1,30 @@
-import { ThemeStyle } from '@retikz/core';
 import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
-import { isPreviewThemeStyleDocument } from '../../src/app/header/preview-theme-settings';
 import {
   getPreviewThemeStyleIcon,
+  isPreviewThemeStyleDocument,
+  PreviewThemeStyle,
   PreviewThemeStyleOptions,
 } from '../../src/modules/docs/components/component-preview/theme';
 
 describe('preview theme settings icons', () => {
   it('maps each ThemeStyle to its semantic icon', () => {
-    expect(getPreviewThemeStyleIcon(ThemeStyle.Neutral)).toBe(Feather);
-    expect(getPreviewThemeStyleIcon(ThemeStyle.Academic)).toBe(GraduationCap);
-    expect(getPreviewThemeStyleIcon(ThemeStyle.Vibrant)).toBe(Sparkles);
-    expect(getPreviewThemeStyleIcon(ThemeStyle.Clean)).toBe(BrushCleaning);
+    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Default)).toBe(Feather);
+    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Academic)).toBe(GraduationCap);
+    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Vibrant)).toBe(Sparkles);
+    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Clean)).toBe(BrushCleaning);
   });
 
-  it('exposes four flat style options only for viz table, chart, and plot docs', () => {
+  it('exposes four flat style options for every viz document', () => {
     expect(PreviewThemeStyleOptions).toEqual([
-      ThemeStyle.Neutral,
-      ThemeStyle.Academic,
-      ThemeStyle.Vibrant,
-      ThemeStyle.Clean,
+      PreviewThemeStyle.Default,
+      PreviewThemeStyle.Academic,
+      PreviewThemeStyle.Vibrant,
+      PreviewThemeStyle.Clean,
     ]);
-    expect(isPreviewThemeStyleDocument('viz', 'table')).toBe(true);
-    expect(isPreviewThemeStyleDocument('viz', 'chart')).toBe(true);
-    expect(isPreviewThemeStyleDocument('viz', 'plot')).toBe(true);
-    expect(isPreviewThemeStyleDocument('kernel', 'table')).toBe(false);
-    expect(isPreviewThemeStyleDocument('viz', 'standard')).toBe(false);
-    expect(isPreviewThemeStyleDocument(undefined, null)).toBe(false);
+    expect(isPreviewThemeStyleDocument('viz')).toBe(true);
+    expect(isPreviewThemeStyleDocument('kernel')).toBe(false);
+    expect(isPreviewThemeStyleDocument(undefined)).toBe(false);
   });
 });

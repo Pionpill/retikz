@@ -1,9 +1,13 @@
+import type { ChartPresentationAuthoringRecord, IRChart } from '@retikz/chart';
+import type { CreateChartInput } from '@retikz/chart-vanilla';
 import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { IRTableSpec } from '@retikz/table';
 import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
 
+import { ChartSchema } from '@retikz/chart';
+import { createChart, renderChart } from '@retikz/chart-vanilla';
 import {
   FlexLayoutDefinition,
   FlexLayoutSchema,
@@ -59,6 +63,8 @@ import {
   GridSchema,
   LegendDefinition,
   LegendSchema,
+  SurfaceDefinition,
+  SurfaceSchema,
 } from '@retikz/standard';
 import {
   axes,
@@ -69,6 +75,9 @@ import {
   GridVanillaAdapter,
   legend,
   LegendVanillaAdapter,
+  surface,
+  surfaceChild,
+  SurfaceVanillaAdapter,
 } from '@retikz/standard-vanilla';
 import { TableSpecSchema, TableStructureKind } from '@retikz/table';
 import { createTableAdapter, embedTable } from '@retikz/table-vanilla';
@@ -77,6 +86,7 @@ import { figure, renderToSvgString, scope } from '@retikz/vanilla';
 import type { PreviewIR } from '../utils/build-preview-ir';
 import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
+import { PreviewThemeDefinitionBundle } from '../theme/presets';
 import { collectPreviewDefinitions, formatVanillaValue, irToVanillaCode } from '../utils/ir-to-vanilla-code';
 
 type CompositeChild = IRChild & { namespace: string; type: string };
@@ -126,7 +136,7 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
   };
 };
 
-type StandardKind = 'grid' | 'axes' | 'frame' | 'legend';
+type StandardKind = 'grid' | 'axes' | 'frame' | 'surface' | 'legend';
 
 type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
@@ -152,6 +162,8 @@ const libraryCanonicalId = (kind: LibraryKind, embedId: string): string => {
   switch (kind) {
     case 'frame':
       return `${embedId}/frame`;
+    case 'surface':
+      return `${embedId}/surface`;
     default:
       return embedId;
   }
@@ -236,7 +248,7 @@ const registerPreviewIds = (
       const authoredId = (child as { id?: unknown }).id;
       if (child.namespace === 'standard' && typeof authoredId === 'string') {
         const kind = child.type as StandardKind;
-        if (['grid', 'axes', 'frame', 'legend'].includes(kind)) {
+        if (['grid', 'axes', 'frame', 'surface', 'legend'].includes(kind)) {
           // Reserve deterministic IDs before converting child targets.
           nextLibraryId(kind, libraryState, authoredId);
           libraryState.counts[kind] -= 1;
@@ -293,6 +305,19 @@ const convertStandardChild = (child: CompositeChild, state: LibraryConversionSta
       void _namespace;
       void _type;
       return legend(nextLibraryId('legend', state, childId), input);
+    }
+    case 'surface': {
+      const { namespace: _namespace, type: _type, id: _id, child: nested, ...input } = SurfaceSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      if ('namespace' in nested) {
+        throw new Error('Surface Vanilla preview currently requires a Core child.');
+      }
+      return surface(nextLibraryId('surface', state, childId), {
+        ...input,
+        child: surfaceChild(nested),
+      });
     }
     default:
       throw new Error(`Unsupported Standard composite "${child.namespace}.${child.type}".`);
@@ -402,6 +427,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyVanil
   ...(state.adapters.has('grid') ? [GridVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('axes') ? [AxesVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('frame') ? [FrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
+  ...(state.adapters.has('surface') ? [SurfaceVanillaAdapter as AnyVanillaTier2Adapter] : []),
   ...(state.adapters.has('legend') ? [LegendVanillaAdapter as AnyVanillaTier2Adapter] : []),
 ];
 
@@ -424,6 +450,7 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  SurfaceDefinition,
   LegendDefinition,
 } as const;
 
@@ -449,6 +476,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
       grid: 0,
       axes: 0,
       frame: 0,
+      surface: 0,
       flexLayout: 0,
       gridLayout: 0,
       overlayLayout: 0,
@@ -480,7 +508,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     preview.ir.children,
     new Set(
       Array.from(libraryState.adapters).filter((kind): kind is StandardKind =>
-        ['grid', 'axes', 'frame', 'legend'].includes(kind),
+        ['grid', 'axes', 'frame', 'surface', 'legend'].includes(kind),
       ),
     ),
     new Set(
@@ -510,20 +538,32 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   };
 };
 
-const findPlotDataset = (preview: PreviewIR, spec: IRPlotSpec): ExternalDatasets | null => {
+/** 从已收集的 provider graph contribution 中读取一个 owner dataset */
+const findProviderDataset = (
+  preview: PreviewIR,
+  namespace: string,
+  reference: string,
+  label: string,
+): ExternalDatasets | null => {
   let dataset: unknown;
   let found = false;
   for (const contribution of preview.contributions) {
-    if (contribution.namespace !== 'plot' || !Object.hasOwn(contribution.datasets, spec.data.reference)) continue;
-    const candidate = contribution.datasets[spec.data.reference];
-    if (found && dataset !== candidate) {
-      throw new Error(`Plot dataset reference "${spec.data.reference}" resolves to different values.`);
+    for (const provider of contribution.providers) {
+      if (provider.key.namespace !== namespace || !Object.hasOwn(provider.datasets, reference)) continue;
+      const candidate = provider.datasets[reference];
+      if (found && dataset !== candidate) {
+        throw new Error(`${label} dataset reference "${reference}" resolves to different values.`);
+      }
+      dataset = candidate;
+      found = true;
     }
-    dataset = candidate;
-    found = true;
   }
-  return found ? ({ [spec.data.reference]: dataset } as ExternalDatasets) : null;
+  return found ? ({ [reference]: dataset } as ExternalDatasets) : null;
 };
+
+/** 读取 Plot provider-local dataset */
+const findPlotDataset = (preview: PreviewIR, spec: IRPlotSpec): ExternalDatasets | null =>
+  findProviderDataset(preview, 'plot', spec.data.reference, 'Plot');
 
 const buildPlotCode = (spec: IRPlotSpec, datasets: ExternalDatasets, preview: PreviewIR): string => {
   const size = outputSize(preview);
@@ -553,18 +593,7 @@ const buildPlotPreview = (
 
 const findTableDatasets = (preview: PreviewIR, spec: IRTableSpec): ExternalDatasets | null => {
   if (spec.data === undefined) return {};
-  let dataset: unknown;
-  let found = false;
-  for (const contribution of preview.contributions) {
-    if (contribution.namespace !== 'table' || !Object.hasOwn(contribution.datasets, spec.data.reference)) continue;
-    const candidate = contribution.datasets[spec.data.reference];
-    if (found && dataset !== candidate) {
-      throw new Error(`Table dataset reference "${spec.data.reference}" resolves to different values.`);
-    }
-    dataset = candidate;
-    found = true;
-  }
-  return found ? ({ [spec.data.reference]: dataset } as ExternalDatasets) : null;
+  return findProviderDataset(preview, 'table', spec.data.reference, 'Table');
 };
 
 type DatasetImportCode = {
@@ -604,6 +633,95 @@ const buildDatasetImportCode = (
     })
     .join(', ')} }`;
   return { imports, expression };
+};
+
+/** 从 canonical children 恢复仅用于 Vanilla helper 的 authored order 与 top/bottom 分区。 */
+const chartPresentationRecords = (chart: IRChart): Array<ChartPresentationAuthoringRecord> | undefined => {
+  const children = chart.presentation?.children;
+  if (children === undefined) return undefined;
+  const plotIndex = children.findIndex(item => item.kind === 'plot');
+  return children.flatMap((item, index) => {
+    if (item.kind === 'plot') return [];
+    const { kind: _kind, key: _key, ...record } = item;
+    void _kind;
+    void _key;
+    return [{ ...record, position: index < plotIndex ? ('top' as const) : ('bottom' as const) }];
+  });
+};
+
+/** 将 canonical Chart 还原为公开 Chart Vanilla authoring input。 */
+const chartAuthoringInput = (chart: IRChart, datasets: ExternalDatasets): CreateChartInput => {
+  const presentation = chartPresentationRecords(chart);
+  return {
+    plot: chart.plot,
+    datasets,
+    ...(chart.id === undefined ? {} : { id: chart.id }),
+    ...(chart.chartThemeTokens === undefined ? {} : { chartThemeTokens: chart.chartThemeTokens }),
+    ...(presentation === undefined ? {} : { presentation }),
+  };
+};
+
+const buildChartCode = (
+  chart: IRChart,
+  datasets: ExternalDatasets,
+  preview: PreviewIR,
+  options: BuildVanillaPreviewOptions,
+): string => {
+  const datasetImport = buildDatasetImportCode(datasets, options);
+  const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
+  const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
+  const dataExpression = datasetImport?.expression ?? 'datasets';
+  const { datasets: _datasets, ...authoring } = chartAuthoringInput(chart, datasets);
+  void _datasets;
+  const inputCode = formatVanillaValue({
+    ...authoring,
+    datasets: '__DATASETS__',
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    themeStyles: '__CORE_THEME_STYLES__',
+    chartThemeStyles: '__CHART_THEME_STYLES__',
+    lowerOptions: { plotThemeStyles: '__PLOT_THEME_STYLES__' },
+  })
+    .replace("'__DATASETS__'", dataExpression)
+    .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
+    .replace("'__CHART_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.chart')
+    .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
+  const size = outputSize(preview);
+  const renderOptions = {
+    ...(Object.keys(size).length === 0 ? {} : { output: size }),
+  };
+  const renderOptionsCode = Object.keys(renderOptions).length === 0 ? '' : `, ${formatVanillaValue(renderOptions)}`;
+  return `import { createChart, renderChart } from '@retikz/chart-vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = createChart(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+};
+
+const buildChartPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const chart = ChartSchema.parse(composite);
+  const datasets = findPlotDataset(preview, chart.plot);
+  if (datasets === null) {
+    return diagnostic(
+      `Cannot generate Vanilla preview: Chart dataset "${chart.plot.data.reference}" was not captured.`,
+    );
+  }
+  const size = outputSize(preview);
+  const rendered = renderChart(
+    createChart({
+      ...chartAuthoringInput(chart, datasets),
+      ...(options.theme === undefined ? {} : { theme: options.theme }),
+      themeStyles: PreviewThemeDefinitionBundle.core,
+      chartThemeStyles: PreviewThemeDefinitionBundle.chart,
+      lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
+    }),
+    {
+      ...(Object.keys(size).length === 0 ? {} : { output: size }),
+    },
+  );
+  return {
+    code: buildChartCode(chart, datasets, preview, options),
+    svg: rendered.svg,
+  };
 };
 
 const buildTableCode = (
@@ -664,7 +782,7 @@ const buildTablePreview = (
   };
 };
 
-/** 从统一的预览 IR 上下文生成 Core、Library、Notation、Plot 或 Table 的 Vanilla 源码与真实 SVG。 */
+/** 从统一的预览 IR 上下文生成 Core、Library、Notation、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG。 */
 export const buildVanillaPreview = (
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions = {},
@@ -683,6 +801,9 @@ export const buildVanillaPreview = (
     if (composites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
       return buildPlotPreview(preview, firstComposite, options);
     }
+    if (composites.length === 1 && firstComposite.namespace === 'chart' && firstComposite.type === 'chart') {
+      return buildChartPreview(preview, firstComposite, options);
+    }
     if (composites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
     }
@@ -692,6 +813,7 @@ export const buildVanillaPreview = (
         child.namespace !== 'layout' &&
         child.namespace !== 'notation' &&
         !(child.namespace === 'plot' && child.type === 'plot') &&
+        !(child.namespace === 'chart' && child.type === 'chart') &&
         !(child.namespace === 'table' && child.type === 'table'),
     );
     const child = unsupported ?? firstComposite;

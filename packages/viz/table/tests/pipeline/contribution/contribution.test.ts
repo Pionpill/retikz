@@ -5,8 +5,8 @@ import {
   CompositeBaseSchema,
   defineComposite,
   defineThemeStyle,
-  resolveCoreThemeColors,
-  ThemeStyle,
+  resolveCompositeDependencies,
+  resolveDefaultCoreThemeColors,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -14,14 +14,13 @@ import { z } from 'zod';
 import type { LowerTablesOptions, TableStructureOutput } from '../../../src';
 
 import {
-  BUILTIN_TABLE_THEME_TOKENS,
   createTableRuntimeContribution,
   defineCellFormatter,
   defineCellPresentation,
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
-  makeTableRuntimeComposites,
+  getDefaultTableThemePreset,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -73,7 +72,7 @@ const visualScaleOf = (name: string) =>
 const themeStyleOf = (name: string) =>
   defineTableThemeStyle({
     name,
-    resolve: theme => structuredClone(BUILTIN_TABLE_THEME_TOKENS.neutral[theme.mode]),
+    resolve: theme => getDefaultTableThemePreset(theme.mode),
   });
 
 const compositeOf = (namespace: string, type: string): AnyCompositeDefinition => {
@@ -82,12 +81,15 @@ const compositeOf = (namespace: string, type: string): AnyCompositeDefinition =>
     namespace,
     type,
     schema,
-    expand: () => ({ type: 'scope', children: [] }),
+    expand: () => ({ children: [{ type: 'scope', children: [] }] }),
   });
 };
 
-const mergeContributions = (...contributions: Array<ReturnType<typeof createTableRuntimeContribution>>) =>
-  Object.assign({}, ...contributions.map(contribution => contribution.datasets));
+const definitionsOf = (...contributions: Array<ReturnType<typeof createTableRuntimeContribution>>) =>
+  resolveCompositeDependencies({ contributions });
+
+const tableProviderOf = (contribution: ReturnType<typeof createTableRuntimeContribution>) =>
+  contribution.providers.find(provider => provider.key.namespace === TABLE_NAMESPACE && provider.key.type === 'table');
 
 describe('Table runtime contribution', () => {
   it('uses a stable maker reference and an encoded runtime reference while preserving dataset identities', () => {
@@ -98,10 +100,13 @@ describe('Table runtime contribution', () => {
     });
     const another = createTableRuntimeContribution({ reference: 'panel/b' });
 
-    expect(contribution.makeComposites).toBe(makeTableRuntimeComposites);
-    expect(another.makeComposites).toBe(makeTableRuntimeComposites);
-    expect(contribution.datasets.sales).toBe(rows);
-    expect(Object.keys(contribution.datasets)).toEqual(['sales', '@@retikz/table/runtime/panel%2Fa%20b']);
+    const provider = tableProviderOf(contribution);
+    const anotherProvider = tableProviderOf(another);
+    expect(provider?.makeDefinition).toBe(anotherProvider?.makeDefinition);
+    expect(contribution.roots).toEqual([{ namespace: TABLE_NAMESPACE, type: TableComposite.Table }]);
+    expect(provider?.dependencies).toEqual([]);
+    expect(provider?.datasets.sales).toBe(rows);
+    expect(Object.keys(provider?.datasets ?? {})).toEqual(['sales', '@@retikz/table/runtime/panel%2Fa%20b']);
   });
 
   it.each(['', '  ', '\u2003', '\ufeff'])('rejects blank references with the Table prefix (%j)', reference => {
@@ -124,8 +129,8 @@ describe('Table runtime contribution', () => {
     const replacementCharacter = '\ufffd';
     const highContribution = createTableRuntimeContribution({ reference: highSurrogate });
     const replacementContribution = createTableRuntimeContribution({ reference: replacementCharacter });
-    const highReference = Object.keys(highContribution.datasets)[0];
-    const replacementReference = Object.keys(replacementContribution.datasets)[0];
+    const highReference = Object.keys(tableProviderOf(highContribution)?.datasets ?? {})[0];
+    const replacementReference = Object.keys(tableProviderOf(replacementContribution)?.datasets ?? {})[0];
 
     expect(highReference).toBe('@@retikz/table/runtime/%uD800');
     expect(replacementReference).toBe('@@retikz/table/runtime/%EF%BF%BD');
@@ -140,7 +145,7 @@ describe('Table runtime contribution', () => {
       data: { people: rows },
       composites: [extra],
     });
-    const definitions = contribution.makeComposites(contribution.datasets);
+    const definitions = definitionsOf(contribution);
 
     expect(definitions.map(definition => `${definition.namespace}.${definition.type}`)).toEqual([
       `${TABLE_NAMESPACE}.${TableComposite.Table}`,
@@ -188,11 +193,11 @@ describe('Table runtime contribution', () => {
         ],
       },
       {
-        composites: contribution.makeComposites(contribution.datasets),
+        composites: definitionsOf(contribution),
         themeStyles: [
           defineThemeStyle({
             name: 'brand',
-            resolve: ({ mode }) => resolveCoreThemeColors(ThemeStyle.Neutral, mode),
+            resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
           }),
         ],
       },
@@ -242,8 +247,8 @@ describe('Table runtime contribution', () => {
       composites: [compositeA, compositeB],
     });
 
-    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
-    expect(makeTableRuntimeComposites(mergeContributions(first, second)).slice(1)).toEqual([compositeA, compositeB]);
+    expect(() => definitionsOf(first, second)).not.toThrow();
+    expect(definitionsOf(first, second).slice(1)).toEqual([compositeA, compositeB]);
   });
 
   it.each([
@@ -266,7 +271,7 @@ describe('Table runtime contribution', () => {
       const first = createTableRuntimeContribution({ reference: 'first', lowerOptions: firstOptions });
       const second = createTableRuntimeContribution({ reference: 'second', lowerOptions: secondOptions });
 
-      expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).toThrow(/conflict/i);
+      expect(() => definitionsOf(first, second)).toThrow(/conflict/i);
     },
   );
 
@@ -280,7 +285,7 @@ describe('Table runtime contribution', () => {
       composites: [compositeOf('fixture', 'same')],
     });
 
-    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).toThrow(/composite.*conflict/i);
+    expect(() => definitionsOf(first, second)).toThrow(/dataset.*conflict.*identity/i);
   });
 
   it('requires future non-definition lower options to share the same object identity', () => {
@@ -290,8 +295,8 @@ describe('Table runtime contribution', () => {
     const second = createTableRuntimeContribution({ reference: 'second', lowerOptions: optionsOf(shared) });
     const conflict = createTableRuntimeContribution({ reference: 'conflict', lowerOptions: optionsOf({}) });
 
-    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
-    expect(() => makeTableRuntimeComposites(mergeContributions(first, conflict))).toThrow(/lower option.*futureMode/i);
+    expect(() => definitionsOf(first, second)).not.toThrow();
+    expect(() => definitionsOf(first, conflict)).toThrow(/lower option.*futureMode/i);
   });
 
   it('defensively copies formatter definition arrays when creating a contribution', () => {
@@ -305,7 +310,7 @@ describe('Table runtime contribution', () => {
       lowerOptions: { formatterDefinitions: [formatterOf('late')] },
     });
 
-    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
+    expect(() => definitionsOf(first, second)).not.toThrow();
   });
 
   it('defensively copies visual scale definition arrays when creating a contribution', () => {
@@ -319,7 +324,7 @@ describe('Table runtime contribution', () => {
       lowerOptions: { visualScaleDefinitions: [visualScaleOf('late')] },
     });
 
-    expect(() => makeTableRuntimeComposites(mergeContributions(first, second))).not.toThrow();
+    expect(() => definitionsOf(first, second)).not.toThrow();
   });
 
   it('freezes copied runtime containers without cloning or freezing caller definitions', () => {
@@ -350,9 +355,8 @@ describe('Table runtime contribution', () => {
       },
       composites,
     });
-    const envelope = contribution.datasets['@@retikz/table/runtime/frozen'] as Readonly<{
+    const envelope = tableProviderOf(contribution)?.datasets['@@retikz/table/runtime/frozen'] as Readonly<{
       lowerOptions: LowerTablesOptions;
-      composites: ReadonlyArray<AnyCompositeDefinition>;
     }>;
 
     structureDefinitions.push(structureOf('late-structure'));
@@ -369,19 +373,17 @@ describe('Table runtime contribution', () => {
     expect(Object.isFrozen(envelope.lowerOptions.presentationDefinitions)).toBe(true);
     expect(Object.isFrozen(envelope.lowerOptions.visualScaleDefinitions)).toBe(true);
     expect(Object.isFrozen(envelope.lowerOptions.tableThemeStyles)).toBe(true);
-    expect(Object.isFrozen(envelope.composites)).toBe(true);
     expect(envelope.lowerOptions.structureDefinitions).toEqual([structure]);
     expect(envelope.lowerOptions.formatterDefinitions).toEqual([formatter]);
     expect(envelope.lowerOptions.presentationDefinitions).toEqual([presentation]);
     expect(envelope.lowerOptions.visualScaleDefinitions).toEqual([visualScale]);
     expect(envelope.lowerOptions.tableThemeStyles).toEqual([themeStyle]);
-    expect(envelope.composites).toEqual([composite]);
     expect(envelope.lowerOptions.structureDefinitions?.[0]).toBe(structure);
     expect(envelope.lowerOptions.formatterDefinitions?.[0]).toBe(formatter);
     expect(envelope.lowerOptions.presentationDefinitions?.[0]).toBe(presentation);
     expect(envelope.lowerOptions.visualScaleDefinitions?.[0]).toBe(visualScale);
     expect(envelope.lowerOptions.tableThemeStyles?.[0]).toBe(themeStyle);
-    expect(envelope.composites[0]).toBe(composite);
+    expect(definitionsOf(contribution).slice(1)).toEqual([composite]);
     expect(
       [structure, formatter, presentation, visualScale, themeStyle, composite].map(value => Object.isFrozen(value)),
     ).toEqual(originalFrozenStates);

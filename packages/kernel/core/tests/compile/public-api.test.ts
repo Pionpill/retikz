@@ -32,10 +32,11 @@ describe('core public compile exports', () => {
   it('keeps root runtime compile exports available', () => {
     expect(core.compileToScene).toBeDefined();
     expect(core.computeLayout).toBeDefined();
+    expect(core.resolveCompositeDependencies).toBeDefined();
     expect(core.CompileWarningCode).toBeDefined();
     expect(core.lowerIRToKernel).toBeDefined();
     expect(core.ThemeSchema).toBeDefined();
-    expect(core.ThemeStyle).toBeDefined();
+    expect('ThemeStyle' in core).toBe(false);
     expect(core.ThemeMode).toBeDefined();
     expect(core.ThemeTokenSource).toEqual({
       Inherit: 'inherit',

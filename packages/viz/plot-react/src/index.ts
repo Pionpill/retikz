@@ -6,7 +6,8 @@ export type {
   MarkTransformShortcutDefinition,
   ResolveLabelMap,
 } from './adapter';
-export { buildPlotSpec, resolveLabelOf } from './adapter';
+export type { ResolvedPlotExtensionAuthoring } from './adapter';
+export { buildPlotSpec, resolveLabelOf, resolvePlotExtensionAuthoring } from './adapter';
 export type {
   AxisProps,
   DatumLabelProps,
@@ -42,4 +43,8 @@ export {
 } from './components';
 export type { PlotDslProps, PlotLineageProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';
 export { Plot } from './Plot';
-export { resolvePlotLineage } from './plot-runtime';
+export type { ResolvedPlotAuthoring, ResolvePlotAuthoringOptions } from './plot-runtime';
+export { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
+export { usePlotThemeStyles } from './theme-context';
+export type { PlotThemeProviderProps } from './theme-provider';
+export { PlotThemeProvider } from './theme-provider';

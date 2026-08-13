@@ -28,7 +28,7 @@ const panelComposite = defineComposite({
   namespace: 'demo',
   type: 'panel',
   schema: PanelSchema,
-  expand: panel => ({ type: 'node', id: panel.id, position: [0, 0], text: panel.id }),
+  expand: panel => ({ children: [{ type: 'node', id: panel.id, position: [0, 0], text: panel.id }] }),
 });
 
 /** demo.path → 带 steps 的 Tier 1 path */
@@ -37,11 +37,15 @@ const pathComposite = defineComposite({
   type: 'path',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('path') }),
   expand: () => ({
-    type: 'path',
-    stroke: '#123456',
     children: [
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'line', to: [10, 20] },
+      {
+        type: 'path',
+        stroke: '#123456',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 20] },
+        ],
+      },
     ],
   }),
 });
@@ -51,7 +55,7 @@ const loopComposite = defineComposite({
   namespace: 'demo',
   type: 'loop',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('loop') }),
-  expand: () => ({ namespace: 'demo', type: 'loop' }),
+  expand: () => ({ children: [{ namespace: 'demo', type: 'loop' }] }),
 });
 
 /** 把 ReactNode 收成 ReactElement 数组，过滤掉 null/string 等非 element 项 */
@@ -65,7 +69,7 @@ describe('convertIRToReactNode', () => {
     const ir: IRScene = {
       version: CURRENT_IR_VERSION,
       type: 'scene',
-      theme: { style: 'clean', mode: 'dark' },
+      theme: { mode: 'dark' },
       children: [
         {
           type: 'scope',

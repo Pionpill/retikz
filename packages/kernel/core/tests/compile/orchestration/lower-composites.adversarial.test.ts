@@ -20,7 +20,9 @@ const labeledBox = defineComposite({
     type: z.literal('labeledBox'),
     text: z.string(),
   }),
-  expand: node => ({ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }),
+  expand: node => ({
+    children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
+  }),
 });
 
 describe('lowerComposites — adversarial', () => {
@@ -29,13 +31,13 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'x',
       type: 'y',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
-      expand: () => [],
+      expand: () => ({ children: [] }),
     });
     const dupB = defineComposite({
       namespace: 'x',
       type: 'y',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
-      expand: () => [],
+      expand: () => ({ children: [] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
     expect(() => compileToScene(ir, { composites: [dupA, dupB] }).scene).toThrow(
@@ -48,13 +50,13 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'standard',
       type: 'userExtensionA',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('userExtensionA') }),
-      expand: () => ({ type: 'node', id: 'first', position: [0, 0], text: 'first' }),
+      expand: () => ({ children: [{ type: 'node', id: 'first', position: [0, 0], text: 'first' }] }),
     });
     const second = defineComposite({
       namespace: 'standard',
       type: 'userExtensionB',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('userExtensionB') }),
-      expand: () => ({ type: 'node', id: 'second', position: [20, 0], text: 'second' }),
+      expand: () => ({ children: [{ type: 'node', id: 'second', position: [20, 0], text: 'second' }] }),
     });
     const ir: IRScene = {
       version: 1,
@@ -74,7 +76,7 @@ describe('lowerComposites — adversarial', () => {
         namespace: 'invalid',
         type: 'invalid',
         schema: z.string(),
-        expand: () => [],
+        expand: () => ({ children: [] }),
       }),
     ).toThrow(/ZodObject/);
   });
@@ -85,7 +87,7 @@ describe('lowerComposites — adversarial', () => {
         namespace: 'm',
         type: 'a',
         schema: z.object({ namespace: z.string(), type: z.string() }),
-        expand: () => [],
+        expand: () => ({ children: [] }),
       }),
     ).toThrow(/literal/);
   });
@@ -95,13 +97,13 @@ describe('lowerComposites — adversarial', () => {
       namespace: 'm',
       type: 'a',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('a') }),
-      expand: () => ({ namespace: 'm', type: 'b' }),
+      expand: () => ({ children: [{ namespace: 'm', type: 'b' }] }),
     });
     const bDef = defineComposite({
       namespace: 'm',
       type: 'b',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('b') }),
-      expand: () => ({ namespace: 'm', type: 'a' }),
+      expand: () => ({ children: [{ namespace: 'm', type: 'a' }] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
     expect(() => compileToScene(ir, { composites: [aDef, bDef] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
@@ -148,15 +150,17 @@ describe('lowerComposites — adversarial', () => {
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'text')).toHaveLength(0); // 节点被跳过
   });
 
-  it('expand-mixed-tier1-and-tier2: expand 返回 [tier1, tier2] 混合 → tier2 继续展开、tier1 原样', () => {
+  it('expand-mixed-tier1-and-tier2: children 含 tier1 与 tier2 → tier2 继续展开、tier1 原样', () => {
     const mixed = defineComposite({
       namespace: 'mix',
       type: 'pair',
       schema: CompositeBaseSchema.extend({ namespace: z.literal('mix'), type: z.literal('pair') }),
-      expand: () => [
-        { type: 'node', id: 'kept', position: [0, 0], text: 'kept' },
-        { namespace: 'example', type: 'labeledBox', text: 'inner' },
-      ],
+      expand: () => ({
+        children: [
+          { type: 'node', id: 'kept', position: [0, 0], text: 'kept' },
+          { namespace: 'example', type: 'labeledBox', text: 'inner' },
+        ],
+      }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'mix', type: 'pair' }] };
     const scene = compileToScene(ir, { composites: [mixed, labeledBox] }).scene;

@@ -95,7 +95,6 @@ describe('Standard Legend renderer boundary', () => {
       LegendVanillaAdapter.lower(embed.props, {
         id: embed.id,
         kind: embed.kind,
-        namespace: LegendVanillaAdapter.namespace,
         layerId: 'main',
         identityPath: ['main', embed.id],
       }).node,

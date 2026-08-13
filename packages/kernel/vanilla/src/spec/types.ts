@@ -1,6 +1,7 @@
 import type {
   AnyCompositeDefinition,
   CompileOptions,
+  CompositeDependencyContribution,
   IRChild,
   IRPath,
   IRScene,
@@ -92,8 +93,6 @@ export type VanillaEmbedContext = {
   id: string;
   /** 当前嵌入节点类型 */
   kind: string;
-  /** 当前适配器命名空间 */
-  namespace: string;
   /** 所在分层 id */
   layerId: string;
   /** 从分层到当前节点的身份路径 */
@@ -104,18 +103,14 @@ export type VanillaEmbedContext = {
 export type VanillaTier2Contribution = {
   /** 放入核心 IR 的组合定义或 Tier1 子节点 */
   node: IRChild;
-  /** 由引用键索引的外部数据集表；不进入 IR */
-  datasets: Record<string, unknown>;
-  /** 合并同命名空间数据集后生成组合定义；同命名空间贡献必须稳定复用同一个函数引用 */
-  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
+  /** 此 authored node 要求的 Core Composite provider graph contribution */
+  compositeDependencies: CompositeDependencyContribution;
 };
 
 /** Vanilla Tier2 适配器 */
 export type VanillaTier2Adapter<TProps = unknown> = {
   /** `embed(kind, ...)` 的匹配键 */
   kind: string;
-  /** 组合定义命名空间，也是贡献合并分组键 */
-  namespace: string;
   /** 把嵌入节点属性静态下沉成核心 IR 贡献 */
   lower: (props: TProps, context: VanillaEmbedContext) => VanillaTier2Contribution;
 };

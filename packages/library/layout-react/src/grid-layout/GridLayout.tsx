@@ -2,11 +2,11 @@ import type { GridLayoutInput } from '@retikz/layout';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createGridLayout, LayoutItemKind } from '@retikz/layout';
+import { createGridLayout, GridLayoutProvider, LayoutItemKind } from '@retikz/layout';
 
 import type { LayoutEmbeddableComponent } from '../shared';
 
-import { LayoutReactNamespace, makeReactLayoutComposites, resolveReactLayoutItems } from '../shared';
+import { resolveReactLayoutItems } from '../shared';
 
 /** Grid 布局的 React 属性 */
 export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
@@ -19,16 +19,17 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
 
 const gridLayoutEmbeddableAdapter: EmbeddableTier2Adapter<GridLayoutProps> = {
   displayName: 'GridLayout',
-  namespace: LayoutReactNamespace,
   contribute: props => {
     const { authoring, children, ...input } = props;
     void authoring;
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Grid);
     return {
       node: createGridLayout({ ...input, children: resolved.items }),
-      datasets: {},
+      compositeDependencies: {
+        roots: [GridLayoutProvider.key, ...resolved.compositeDependencies.roots],
+        providers: [GridLayoutProvider, ...resolved.compositeDependencies.providers],
+      },
       authoringSites: resolved.authoringSites,
-      makeComposites: makeReactLayoutComposites,
     };
   },
 };

@@ -162,7 +162,7 @@ alpha.1 / alpha.2 已落定；alpha.3 当前代码已经形成以下候选基线
 - `SemanticTableModel` 纵向写入链路，以及 formatter / presentation 等统一 Definition / registry 消费方式
 - fixed / auto / fraction / minmax 轨道、矩形 span、真实 `IRChild` intrinsic / constrained measurement、fit / overflow / clip 与 Border Graph
 - layout-aware composite 同次 compile、typed manifest / occurrence，以及 React / Vanilla 共享 runtime contribution 与 artifact contract
-- formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset 与闭合 `tableThemeTokens` 沿同一 canonical pipeline 消费；Core inherited namespace 与 shared categorical projection 已接入，外围 composition 与 artifact join 由 alpha.6 收口
+- formatter / presentation、selector / rule、条件视觉 encoding、内置 Neutral、开放 style definition 与闭合 `tableThemeTokens` 沿同一 canonical pipeline 消费；Core inherited namespace 与 shared categorical projection 已接入，外围 composition 与 artifact join 由 alpha.6 收口
 
 尚未闭环的能力继续由 ADR 处理：
 

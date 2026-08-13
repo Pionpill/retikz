@@ -22,6 +22,7 @@ describe('@retikz/vanilla 入口边界', () => {
       'embed',
       'VanillaLayerCache',
       'VanillaViewMode',
+      'toSceneResult',
     ] as const) {
       expect(vanilla[name]).toBeDefined();
     }

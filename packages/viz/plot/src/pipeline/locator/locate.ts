@@ -248,8 +248,7 @@ export const createPlotLocator = (
       datumProvenance: true,
     });
     const expanded = definition.expand(spec);
-    const roots = Array.isArray(expanded) ? expanded : [expanded];
-    renderEntriesCache = roots.flatMap(child => collectRenderDatumEntries(child));
+    renderEntriesCache = expanded.children.flatMap(child => collectRenderDatumEntries(child));
     return renderEntriesCache;
   };
 

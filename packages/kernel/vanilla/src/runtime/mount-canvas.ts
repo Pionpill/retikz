@@ -1,4 +1,4 @@
-import type { CompileArtifact, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
 import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import type { HydrationController } from '@retikz/render/hydration';
@@ -85,6 +85,7 @@ const mountStaticCanvas = (
   let currentScene: Scene;
   let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
+  let currentCompileResult: CompileResult | undefined;
   let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
@@ -165,10 +166,11 @@ const mountStaticCanvas = (
   };
 
   const renderInto = (next: RenderInput): void => {
-    const { scene, artifacts, layers, runtimeMeta } = toSceneResult(next, options);
+    const { scene, artifacts, compileResult, layers, runtimeMeta } = toSceneResult(next, options);
     currentScene = scene;
     currentLayers = layers;
     currentArtifacts = artifacts;
+    currentCompileResult = compileResult;
     currentRuntimeMeta = runtimeMeta;
     const hasNominalSize =
       typeof output.width === 'number' &&
@@ -344,6 +346,9 @@ const mountStaticCanvas = (
     get artifacts() {
       return currentArtifacts;
     },
+    get compileResult() {
+      return currentCompileResult;
+    },
   };
 };
 
@@ -403,6 +408,9 @@ const mountRetainedCanvas = (
     },
     get artifacts() {
       return runtime.artifacts();
+    },
+    get compileResult() {
+      return runtime.compileResult();
     },
   };
 };
