@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import type { IRScene } from '@retikz/core';
+
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -9,9 +11,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRScene } from '@retikz/core';
-
-import { mountSvg, toSceneResult } from '../../src';
+import { toSceneResult } from '../../src';
+import { mountSvg } from '../../src/dom';
 
 const card = defineComposite({
   namespace: 'third',

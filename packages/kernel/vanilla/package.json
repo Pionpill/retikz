@@ -38,6 +38,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./dom": {
+      "types": "./src/dom/index.ts",
+      "default": "./src/dom/index.ts"
     }
   },
   "publishConfig": {
@@ -49,6 +53,11 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./dom": {
+        "types": "./dist/types/dom/index.d.ts",
+        "import": "./dist/dom/index.js",
+        "default": "./dist/dom/index.js"
       }
     }
   },

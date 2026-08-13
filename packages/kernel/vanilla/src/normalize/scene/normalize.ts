@@ -46,10 +46,7 @@ type AdapterOutputContext = NormalizeContext & {
 
 /** 判断输入是否为 Scene Input */
 export const isInputScene = (input: unknown): input is InputScene =>
-  typeof input === 'object' &&
-  input !== null &&
-  (input as { type?: unknown }).type !== 'figure' &&
-  ('children' in input || 'layers' in input);
+  typeof input === 'object' && input !== null && (input as { version?: unknown }).version !== 1;
 
 /** 从 children 简写或显式 layers 取得稳定排序的 Layer 栈 */
 const asLayerStack = (scene: InputScene): Array<InputLayer> => {
@@ -170,31 +167,37 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
 
   const identity = readIdentity(input);
   registerIdentity(identity, ctx.parentId, identity === undefined ? ctx.path : [...ctx.path, identity], ctx);
-  if (isInputNode(input)) return normalizeNode(input);
   if (isInputPath(input)) {
     ctx.authoringSites.push(
       Object.freeze({ kind: 'path', sourcePath: `${ctx.sourcePath}.path`, type: 'path', authoring: input.authoring }),
     );
     return normalizePath(input);
   }
-  if (!isInputScope(input)) return input;
-
-  ctx.authoringSites.push(
-    Object.freeze({ kind: 'scope', sourcePath: `${ctx.sourcePath}.scope`, type: 'scope', authoring: input.authoring }),
-  );
-  const scopeParentId = identity ?? ctx.parentId;
-  const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
-  const nestedContext: NormalizeContext = {
-    ...ctx,
-    parentId: scopeParentId,
-    path: scopePath,
-    sourcePath: `${ctx.sourcePath}.scope`,
-  };
-  return normalizeScopeWithChildren(input, children =>
-    children.map((child, index) =>
-      normalizeChild(child, { ...nestedContext, sourcePath: childSourcePath(nestedContext, index) }),
-    ),
-  );
+  if (isInputScope(input)) {
+    ctx.authoringSites.push(
+      Object.freeze({
+        kind: 'scope',
+        sourcePath: `${ctx.sourcePath}.scope`,
+        type: 'scope',
+        authoring: input.authoring,
+      }),
+    );
+    const scopeParentId = identity ?? ctx.parentId;
+    const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
+    const nestedContext: NormalizeContext = {
+      ...ctx,
+      parentId: scopeParentId,
+      path: scopePath,
+      sourcePath: `${ctx.sourcePath}.scope`,
+    };
+    return normalizeScopeWithChildren(input, children =>
+      children.map((child, index) =>
+        normalizeChild(child, { ...nestedContext, sourcePath: childSourcePath(nestedContext, index) }),
+      ),
+    );
+  }
+  if (isInputNode(input)) return normalizeNode(input);
+  return input;
 };
 
 /** 将 InputScene 一次性归一为唯一 Source IR、contribution 与 runtime metadata */

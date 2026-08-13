@@ -23,7 +23,7 @@ import {
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
 
-import type { VanillaRuntimeMeta } from '../spec';
+import type { InputRuntimeMeta } from '../normalize';
 import type {
   CanvasView,
   HydrateOptions,
@@ -38,13 +38,13 @@ import type {
   StaticMountCanvasOptions,
   StaticRawCanvasView,
   VanillaRetainedRuntimeOptions,
-} from './types';
+} from '../runtime/types';
 
-import { DEFAULT_ID_PREFIX, VanillaViewMode } from './constants';
-import { createVanillaRetainedSession } from './retained-session';
-import { captureVanillaRuntimeOptions } from './runtime-options';
-import { assertStaticMountRuntimeExcluded } from './static-mount-options';
-import { createEmptyRuntimeMeta, toSceneResult } from './to-scene';
+import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
+import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
+import { assertStaticMountRuntimeExcluded } from '../runtime/static-mount-options';
+import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
+import { createRetainedProcessingController } from './retained';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */
 const resolveDevicePixelRatio = (override: number | undefined): number => {
@@ -86,7 +86,7 @@ const mountStaticCanvas = (
   let currentLayers: ReadonlyArray<RenderReadonlyLayer> = Object.freeze([]);
   let currentArtifacts: ReadonlyArray<CompileArtifact> = Object.freeze([]);
   let currentCompileResult: CompileResult | undefined;
-  let currentRuntimeMeta: VanillaRuntimeMeta = createEmptyRuntimeMeta();
+  let currentRuntimeMeta: InputRuntimeMeta = createEmptyRuntimeMeta();
 
   // 存活的水合：onEvent 触发的 handler 表按「绑定时的 scene」合成（新增 / 移除的 onEvent track 决定注册哪些
   // listener），update 换图后必须按新 scene 重建、否则陈旧；view.dispose 时统一解绑全部未手动 dispose 的水合。
@@ -352,7 +352,7 @@ const mountStaticCanvas = (
   };
 };
 
-/** 把 IR / plain spec 挂成 retained Canvas Runtime session */
+/** 把 IR / InputScene 挂成 retained Canvas Runtime session */
 const mountRetainedCanvas = (
   container: Element,
   input: RetainedRenderInput,
@@ -368,7 +368,7 @@ const mountRetainedCanvas = (
   if (output.width !== undefined) canvas.style.width = `${output.width}px`;
   if (output.height !== undefined) canvas.style.height = `${output.height}px`;
   canvas.style.objectFit = 'contain';
-  const runtime = createVanillaRetainedSession({
+  const processing = createRetainedProcessingController({
     backend: 'canvas',
     host: canvas,
     input,
@@ -379,7 +379,7 @@ const mountRetainedCanvas = (
   });
   container.appendChild(canvas);
   const clientToScene = (clientX: number, clientY: number): ScenePoint => {
-    const { layout } = runtime.scene();
+    const { layout } = processing.result().scene;
     const rect = canvas.getBoundingClientRect();
     const scale = Math.min(rect.width / layout.width, rect.height / layout.height);
     const offsetX = (rect.width - layout.width * scale) / 2;
@@ -392,25 +392,25 @@ const mountRetainedCanvas = (
   return {
     mode: VanillaViewMode.Retained,
     root: canvas,
-    update: (next, updateOptions) => runtime.update(next, updateOptions),
-    hydrate: hydrateOptions => runtime.hydrate(hydrateOptions),
-    diagnostics: () => runtime.diagnostics(),
+    update: (next, updateOptions) => processing.update(next, updateOptions),
+    hydrate: hydrateOptions => processing.hydrate(hydrateOptions),
+    diagnostics: () => processing.diagnostics(),
     clientToScene,
     dispose: () => {
-      runtime.dispose();
+      processing.dispose();
       canvas.remove();
     },
     get animation() {
-      return runtime.read().animation;
+      return processing.read().animation;
     },
     get runtimeMeta() {
-      return runtime.runtimeMeta();
+      return processing.result().runtimeMeta;
     },
     get artifacts() {
-      return runtime.artifacts();
+      return processing.result().artifacts;
     },
     get compileResult() {
-      return runtime.compileResult();
+      return processing.result().compileResult;
     },
   };
 };

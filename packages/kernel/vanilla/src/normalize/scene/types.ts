@@ -38,17 +38,32 @@ export type InputChild =
   | AnyInputEmbed
   | Exclude<IRChild, IRCoordinate>;
 
-/** 作者侧 Scene 输入 */
-export type InputScene = Omit<IRScene, 'type' | 'version' | 'children'> & {
+/** 作者侧 Scene 输入的公共字段 */
+type InputSceneBase = Omit<IRScene, 'type' | 'version' | 'children'> & {
   type?: 'scene';
-  version?: 1;
+  version?: never;
   id?: string;
   theme?: IRScene['theme'];
   viewBox?: IRViewBox;
   animations?: IRScene['animations'];
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
-} & ({ children: ReadonlyArray<InputChild>; layers?: never } | { layers: ReadonlyArray<InputLayer>; children?: never });
+};
+
+/** 使用 children 简写的作者侧 Scene 输入 */
+export type InputSceneChildren = InputSceneBase & {
+  children: ReadonlyArray<InputChild>;
+  layers?: never;
+};
+
+/** 使用 Layer 列表的作者侧 Scene 输入 */
+export type InputSceneLayers = InputSceneBase & {
+  layers: ReadonlyArray<InputLayer>;
+  children?: never;
+};
+
+/** 作者侧 Scene 输入 */
+export type InputScene = InputSceneChildren | InputSceneLayers;
 
 /** 归一化时报告给 processing driver 的作者来源类别 */
 export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'embeddable';
