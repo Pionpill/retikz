@@ -6,7 +6,7 @@ import { isEmbeddableMarked, resolveEmbeddableAdapter } from '../../../src';
 
 const makeContribution = (): EmbeddableContribution => ({
   node: { type: 'node', id: 'n', position: [0, 0] },
-  compositeDependencies: { roots: [], providers: [] },
+  providerDependencies: { roots: [], providers: [] },
 });
 
 const makeAdapter = (displayName: string): EmbeddableTier2Adapter => ({

@@ -39,11 +39,11 @@ const makeAdapter = (
   kind: 'fixture-box',
   lower: props => ({
     node: { namespace: 'fixture', type: 'box', text: props.text },
-    compositeDependencies: {
-      roots: [{ namespace: 'fixture', type: 'box' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
       providers: [
         {
-          key: { namespace: 'fixture', type: 'box' },
+          key: { capability: 'composite', namespace: 'fixture', type: 'box' },
           dependencies: [],
           datasets: { shared: props.data },
           makeDefinition,
@@ -82,7 +82,7 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'vanilla-theme',
       lower: props => ({
         node: { namespace: 'vanilla-theme', type: 'box', label: props.label },
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -90,7 +90,7 @@ describe('@retikz/vanilla plain spec', () => {
       adapters: [adapter],
     });
 
-    expect(normalized.composites).toEqual([]);
+    expect(normalized.providerDefinitions.composites).toBeUndefined();
     expect(normalized).not.toHaveProperty('themeTokenDefinitions');
   });
 
@@ -394,8 +394,8 @@ describe('@retikz/vanilla plain spec', () => {
   });
 
   it('third-party provider 可依赖跨 namespace provider 且按依赖顺序物化', () => {
-    const frameKey = { namespace: 'standard', type: 'frame' } as const;
-    const cardKey = { namespace: 'third', type: 'card' } as const;
+    const frameKey = { capability: 'composite', namespace: 'standard', type: 'frame' } as const;
+    const cardKey = { capability: 'composite', namespace: 'third', type: 'card' } as const;
     const calls: Array<string> = [];
     const frame = defineComposite({
       ...frameKey,
@@ -419,7 +419,7 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'third-card',
       lower: () => ({
         node: { namespace: 'third', type: 'card' },
-        compositeDependencies: {
+        providerDependencies: {
           roots: [cardKey],
           providers: [
             { key: cardKey, dependencies: [frameKey], datasets: {}, makeDefinition: cardMaker },
@@ -432,12 +432,12 @@ describe('@retikz/vanilla plain spec', () => {
     const normalized = normalizeFigureSpec(figure([embed('third-card', 'card', {})]), { adapters: [adapter] });
 
     expect(calls).toEqual(['standard.frame', 'third.card']);
-    expect(normalized.composites).toEqual([frame, card]);
+    expect(normalized.providerDefinitions.composites).toEqual([frame, card]);
   });
 
   it('forwards Core missing dependency, cycle, and final explicit-definition diagnostics', () => {
-    const cardKey = { namespace: 'third', type: 'card' } as const;
-    const frameKey = { namespace: 'standard', type: 'frame' } as const;
+    const cardKey = { capability: 'composite', namespace: 'third', type: 'card' } as const;
+    const frameKey = { capability: 'composite', namespace: 'standard', type: 'frame' } as const;
     const card = defineComposite({
       ...cardKey,
       schema: CompositeBaseSchema.extend({ namespace: z.literal('third'), type: z.literal('card') }),
@@ -459,7 +459,7 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'third-card',
       lower: () => ({
         node: { namespace: 'third', type: 'card' },
-        compositeDependencies: {
+        providerDependencies: {
           roots: [cardKey],
           providers: [
             { key: cardKey, dependencies: [frameKey], datasets: {}, makeDefinition: cardMaker },
@@ -473,10 +473,10 @@ describe('@retikz/vanilla plain spec', () => {
     const spec = figure([embed('third-card', 'card', {})]);
 
     expect(() => normalizeFigureSpec(spec, { adapters: [adapterOf(false, false)] })).toThrow(
-      /missing dependency provider.*third\.card -> standard\.frame/i,
+      /missing dependency provider.*composite:third\.card -> composite:standard\.frame/i,
     );
     expect(() => normalizeFigureSpec(spec, { adapters: [adapterOf(true, true)] })).toThrow(
-      /provider cycle.*third\.card -> standard\.frame -> third\.card/i,
+      /provider cycle.*composite:third\.card -> composite:standard\.frame -> composite:third\.card/i,
     );
     expect(() =>
       normalizeFigureSpec(spec, { adapters: [adapterOf(true, false)], composites: [conflictingCard] }),
@@ -492,11 +492,11 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'special-reference',
       lower: props => ({
         node: { namespace: 'fixture', type: 'box', text: props.text },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'box' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'box' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'box' },
               dependencies: [],
               datasets: Object.fromEntries([
                 ['__proto__', props.data],
@@ -535,7 +535,7 @@ describe('@retikz/vanilla plain spec', () => {
           id: 'chart/root',
           children: [node('chart/label', { position: [0, 0], text: props.label })],
         },
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -561,7 +561,7 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'independent-output',
       lower: props => ({
         node: node('external', { position: [0, 0], text: props.text }),
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -583,7 +583,7 @@ describe('@retikz/vanilla plain spec', () => {
           id: 'chart',
           children: [node('label', { position: [0, 0], text: props.text })],
         },
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -602,7 +602,7 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'duplicate-output',
       lower: props => ({
         node: node('external', { position: [0, 0], text: props.text }),
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
     const spec = figure({
@@ -643,11 +643,11 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'first',
       lower: props => ({
         node: { namespace: 'fixture', type: 'box', text: props.text },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'box' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'box' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'box' },
               dependencies: [],
               datasets: {},
               makeDefinition: firstMaker,
@@ -660,11 +660,11 @@ describe('@retikz/vanilla plain spec', () => {
       kind: 'second',
       lower: props => ({
         node: { namespace: 'fixture', type: 'box', text: props.text },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'box' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'box' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'box' },
               dependencies: [],
               datasets: {},
               makeDefinition: secondMaker,

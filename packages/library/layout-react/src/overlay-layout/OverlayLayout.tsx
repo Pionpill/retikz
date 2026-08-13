@@ -25,9 +25,9 @@ const overlayLayoutEmbeddableAdapter: EmbeddableTier2Adapter<OverlayLayoutProps>
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Overlay);
     return {
       node: createOverlayLayout({ ...input, children: resolved.items }),
-      compositeDependencies: {
-        roots: [OverlayLayoutProvider.key, ...resolved.compositeDependencies.roots],
-        providers: [OverlayLayoutProvider, ...resolved.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [OverlayLayoutProvider.key, ...resolved.providerDependencies.roots],
+        providers: [OverlayLayoutProvider, ...resolved.providerDependencies.providers],
       },
       authoringSites: resolved.authoringSites,
     };

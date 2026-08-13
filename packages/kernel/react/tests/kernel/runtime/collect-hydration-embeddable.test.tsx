@@ -24,7 +24,7 @@ const makeAdapter = (displayName: string): EmbeddableTier2Adapter => ({
   displayName,
   contribute: () => ({
     node: { type: 'node', id: 'a', position: [0, 0] },
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 });
 

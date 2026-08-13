@@ -1,9 +1,30 @@
+import { defineArrow } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout } from '../../../src/kernel';
 import { Path } from '../../../src/kernel';
 import { Step } from '../../../src/kernel';
+
+const TestOpenArrowDefinition = defineArrow({
+  name: 'testOpen',
+  hollow: true,
+  lineContactX: 1,
+  tipX: 9,
+  emit: context => [
+    {
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [1, 1] },
+        { kind: 'line', to: [9, 5] },
+        { kind: 'line', to: [1, 9] },
+        { kind: 'close' },
+      ],
+      stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+      strokeWidth: context.lineWidth,
+    },
+  ],
+});
 
 /**
  * 多 `<Layout>` 实例的 marker id 隔离
@@ -61,8 +82,8 @@ describe('多 Layout 实例 marker id 隔离', () => {
             <Step kind="line" to={[80, 0]} />
           </Path>
         </Layout>
-        <Layout width={100} height={100}>
-          <Path arrow="->" arrowDetail={{ shape: 'open' }}>
+        <Layout width={100} height={100} arrows={[TestOpenArrowDefinition]}>
+          <Path arrow="->" arrowDetail={{ shape: 'testOpen' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />
           </Path>

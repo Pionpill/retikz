@@ -1,6 +1,6 @@
 import type {
   CompileObservationOwner,
-  CompositeDependencyContribution,
+  CoreProviderContribution,
   IRChild,
   ResolvedTheme,
   ThemeStyleDefinition,
@@ -32,8 +32,8 @@ export type EmbeddableAuthoringSite = Readonly<{
 /** 一个可嵌入 Tier2 子组件对图形声明的贡献内容 */
 export type EmbeddableContribution = {
   node: IRChild;
-  /** 此 authored node 要求的 Core Composite provider graph contribution */
-  compositeDependencies: CompositeDependencyContribution;
+  /** 此 authored node 要求的 Core provider graph contribution */
+  providerDependencies: CoreProviderContribution;
   /** 贡献节点内部按声明顺序收集的领域中立位置 */
   authoringSites?: ReadonlyArray<EmbeddableAuthoringSite>;
 };

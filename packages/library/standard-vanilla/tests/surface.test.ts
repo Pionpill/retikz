@@ -25,7 +25,7 @@ describe('surface()', () => {
         child: { type: 'node', position: [0, 0], text: 'A' },
       }),
     );
-    expect(contribution.compositeDependencies).toEqual({
+    expect(contribution.providerDependencies).toEqual({
       roots: [SurfaceProvider.key],
       providers: [SurfaceProvider],
     });
@@ -40,12 +40,12 @@ describe('surface()', () => {
       identityPath: ['main', childEmbed.id],
     });
     const contribution = SurfaceVanillaAdapter.lower(
-      { child: surfaceChild(childContribution.node, childContribution.compositeDependencies) },
+      { child: surfaceChild(childContribution.node, childContribution.providerDependencies) },
       context,
     );
 
-    expect(contribution.compositeDependencies.roots).toEqual([SurfaceProvider.key, FrameProvider.key]);
-    expect(contribution.compositeDependencies.providers).toEqual([SurfaceProvider, FrameProvider]);
+    expect(contribution.providerDependencies.roots).toEqual([SurfaceProvider.key, FrameProvider.key]);
+    expect(contribution.providerDependencies.providers).toEqual([SurfaceProvider, FrameProvider]);
   });
 
   it('normalizes through the public Vanilla embed without leaking runtime child metadata into IR', () => {
@@ -66,6 +66,6 @@ describe('surface()', () => {
         child: { type: 'node', position: [0, 0] },
       }),
     );
-    expect(JSON.stringify(result.ir)).not.toContain('compositeDependencies');
+    expect(JSON.stringify(result.ir)).not.toContain('providerDependencies');
   });
 });

@@ -10,7 +10,7 @@ export const AxesVanillaAdapter: VanillaTier2Adapter<AxesInput> = {
   kind: StandardAxesVanillaNamespace,
   lower: props => ({
     node: createAxes(props),
-    compositeDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
+    providerDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
   }),
 };
 

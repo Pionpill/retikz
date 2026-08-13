@@ -98,11 +98,17 @@ describe('Plot React runtime style options', () => {
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');
 
-    const dependency = contribution?.compositeDependencies;
-    expect(dependency?.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(dependency?.providers).toHaveLength(1);
-    expect(dependency?.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
-    expect(dependency?.providers[0]?.dependencies).toEqual([]);
+    const dependency = contribution?.providerDependencies;
+    expect(dependency?.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(dependency?.providers.map(provider => provider.key)).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+    ]);
+    expect(dependency?.providers[2]?.dependencies).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+    ]);
   });
 
   it('embedded Plot contributions reuse the stable plot.plot maker', () => {
@@ -112,8 +118,8 @@ describe('Plot React runtime style options', () => {
     const first = adapter?.contribute({ spec, data });
     const second = adapter?.contribute({ spec, data });
 
-    expect(first?.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      second?.compositeDependencies.providers[0]?.makeDefinition,
+    expect(first?.providerDependencies.providers[2]?.makeDefinition).toBe(
+      second?.providerDependencies.providers[2]?.makeDefinition,
     );
   });
 });

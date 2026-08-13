@@ -39,8 +39,8 @@ describe('<Axes>', () => {
     const second = Axes.embeddableAdapter.contribute(input);
 
     expect(first.node).toEqual(createAxes(input));
-    expect(first.compositeDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
-    expect(second.compositeDependencies.providers[0]).toBe(AxesProvider);
+    expect(first.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
+    expect(second.providerDependencies.providers[0]).toBe(AxesProvider);
     expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
   });
 

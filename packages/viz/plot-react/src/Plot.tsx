@@ -10,8 +10,8 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { resolveCompositeDependencies } from '@retikz/core';
-import { createPlotProvider, lowerPlotWithLineage } from '@retikz/plot';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { createPlotProviderContribution, lowerPlotWithLineage } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { useEffect, useMemo, useRef } from 'react';
 
@@ -125,10 +125,10 @@ const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   displayName: 'Plot',
   contribute: props => {
     const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, { embedded: true });
-    const provider = createPlotProvider(datasets, lowerOptions);
+    const providerDependencies = createPlotProviderContribution(datasets, lowerOptions);
     return {
       node: wrapPanelScope(spec, props),
-      compositeDependencies: { roots: [provider.key], providers: [provider] },
+      providerDependencies,
     };
   },
 };
@@ -153,9 +153,8 @@ export const Plot: EmbeddablePlotComponent = props => {
   }, [ambientPlotThemeStyles, props]);
   const notifiedLineageKey = useRef<string>();
   const { spec, datasets, lowerOptions } = resolvePlotAuthoring(effectiveProps);
-  const provider = createPlotProvider(datasets, lowerOptions);
-  const composites = resolveCompositeDependencies({
-    contributions: [{ roots: [provider.key], providers: [provider] }],
+  const providerDefinitions = resolveCoreProviderDependencies({
+    contributions: [createPlotProviderContribution(datasets, lowerOptions)],
   });
   const lineage =
     onLineage === undefined || props.lineage === false
@@ -177,7 +176,7 @@ export const Plot: EmbeddablePlotComponent = props => {
   return (
     <Layout
       ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
-      composites={composites}
+      {...providerDefinitions}
       width={width}
       height={height}
       className={className}

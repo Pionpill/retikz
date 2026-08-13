@@ -25,9 +25,9 @@ const gridLayoutEmbeddableAdapter: EmbeddableTier2Adapter<GridLayoutProps> = {
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Grid);
     return {
       node: createGridLayout({ ...input, children: resolved.items }),
-      compositeDependencies: {
-        roots: [GridLayoutProvider.key, ...resolved.compositeDependencies.roots],
-        providers: [GridLayoutProvider, ...resolved.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [GridLayoutProvider.key, ...resolved.providerDependencies.roots],
+        providers: [GridLayoutProvider, ...resolved.providerDependencies.providers],
       },
       authoringSites: resolved.authoringSites,
     };

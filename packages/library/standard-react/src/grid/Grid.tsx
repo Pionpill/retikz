@@ -13,7 +13,7 @@ const gridEmbeddableAdapter: EmbeddableTier2Adapter<GridProps> = {
   displayName: 'Grid',
   contribute: props => ({
     node: createGrid(props),
-    compositeDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
+    providerDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
   }),
 };
 

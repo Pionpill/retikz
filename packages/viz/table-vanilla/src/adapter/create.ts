@@ -22,6 +22,6 @@ export const createTableAdapter = (): VanillaTier2Adapter<TableEmbedProps> => ({
       lowerOptions: props.lowerOptions,
       composites: props.composites,
     });
-    return { node, compositeDependencies: contribution };
+    return { node, providerDependencies: contribution };
   },
 });

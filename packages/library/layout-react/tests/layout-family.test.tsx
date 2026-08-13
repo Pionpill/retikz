@@ -32,7 +32,7 @@ Foreign.embeddableAdapter = {
   displayName: 'Foreign',
   contribute: props => ({
     node: { type: 'node', id: props.id, position: [0, 0] },
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 };
 
@@ -115,13 +115,13 @@ describe('Layout React layout family', () => {
     const grid = GridLayout.embeddableAdapter.contribute({ columns: [{ kind: 'fixed', value: 10 }] });
     const overlay = OverlayLayout.embeddableAdapter.contribute({});
 
-    expect(flex.compositeDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
-    expect(grid.compositeDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
-    expect(overlay.compositeDependencies).toEqual({
+    expect(flex.providerDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
+    expect(grid.providerDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(overlay.providerDependencies).toEqual({
       roots: [OverlayLayoutProvider.key],
       providers: [OverlayLayoutProvider],
     });
-    expect(FlexLayout.embeddableAdapter.contribute({}).compositeDependencies.providers[0]).toBe(FlexLayoutProvider);
+    expect(FlexLayout.embeddableAdapter.contribute({}).providerDependencies.providers[0]).toBe(FlexLayoutProvider);
   });
 
   it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {

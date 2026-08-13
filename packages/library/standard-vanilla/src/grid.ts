@@ -10,7 +10,7 @@ export const GridVanillaAdapter: VanillaTier2Adapter<GridInput> = {
   kind: StandardGridVanillaNamespace,
   lower: props => ({
     node: createGrid(props),
-    compositeDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
+    providerDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
   }),
 };
 

@@ -17,7 +17,7 @@ const junctionEmbeddableAdapter: EmbeddableTier2Adapter<JunctionProps> = {
     const { children, ...input } = props;
     return {
       node: createJunction(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
+      providerDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
     };
   },
 };

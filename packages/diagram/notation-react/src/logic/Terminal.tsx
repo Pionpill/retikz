@@ -17,7 +17,7 @@ const terminalEmbeddableAdapter: EmbeddableTier2Adapter<TerminalProps> = {
     const { children, ...input } = props;
     return {
       node: createTerminal(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
+      providerDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
     };
   },
 };

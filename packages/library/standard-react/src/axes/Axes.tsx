@@ -13,7 +13,7 @@ const axesEmbeddableAdapter: EmbeddableTier2Adapter<AxesProps> = {
   displayName: 'Axes',
   contribute: props => ({
     node: createAxes(props),
-    compositeDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
+    providerDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
   }),
 };
 

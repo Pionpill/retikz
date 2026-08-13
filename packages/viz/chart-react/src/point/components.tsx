@@ -18,12 +18,12 @@ import {
 } from '@retikz/chart/point';
 import {
   DEFAULT_RESOLVED_THEME,
-  resolveCompositeDependencies,
+  resolveCoreProviderDependencies,
   resolveTheme,
   resolveThemeStyleRegistry,
 } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
-import { createPlotProvider } from '@retikz/plot';
+import { createPlotProviderContribution } from '@retikz/plot';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout, useTheme, useThemeStyles } from '@retikz/react';
 import { SurfaceProvider } from '@retikz/standard';
@@ -184,7 +184,7 @@ const typedChartContribution = (
       ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
     },
   );
-  const plotProvider = createPlotProvider(
+  const plotContribution = createPlotProviderContribution(
     { [reference]: data },
     {
       ...extension.runtime,
@@ -194,9 +194,9 @@ const typedChartContribution = (
   const chartProvider = createChartProvider(chartThemeStyles);
   return {
     node: wrapChartScope(resolution.chart, { x, y, transforms, placement, zIndex, clip, theme }),
-    compositeDependencies: {
+    providerDependencies: {
       roots: [ChartProvider.key],
-      providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, chartProvider],
+      providers: [SurfaceProvider, FlexLayoutProvider, ...plotContribution.providers, chartProvider],
     },
   };
 };
@@ -258,10 +258,10 @@ const createTypedChartComponent = <TProps extends AnyTypedPointChartProps>(
         coreThemeStyles,
       ),
     );
-    const composites = resolveCompositeDependencies({ contributions: [contribution.compositeDependencies] });
+    const providerDefinitions = resolveCoreProviderDependencies({ contributions: [contribution.providerDependencies] });
     return createElement(Layout, {
       ir: { version: 1, type: 'scene', children: [contribution.node] },
-      composites,
+      ...providerDefinitions,
       width,
       height,
       className,

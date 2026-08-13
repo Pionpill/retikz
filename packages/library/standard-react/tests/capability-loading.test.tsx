@@ -53,7 +53,7 @@ describe('Standard React definition loading', () => {
             sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />}
           />
         ),
-      }).compositeDependencies,
+      }).providerDependencies,
     ).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 

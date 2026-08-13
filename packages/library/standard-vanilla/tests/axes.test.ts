@@ -45,7 +45,7 @@ describe('axes()', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes', id: 'plane' });
     expect(contribution.node).toEqual(createAxes(input));
-    expect(contribution.compositeDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
     expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
   });
 
@@ -62,7 +62,7 @@ describe('axes()', () => {
       { adapters: [GridVanillaAdapter, AxesVanillaAdapter] },
     );
 
-    expect(figure.composites).toHaveLength(2);
+    expect(figure.providerDefinitions.composites).toHaveLength(2);
     expect(figure.ir.children.map(child => child.type)).toEqual(['grid', 'axes']);
   });
 });

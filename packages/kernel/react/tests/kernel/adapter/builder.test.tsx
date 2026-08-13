@@ -1,6 +1,7 @@
-import { compileToScene, NodeTextColor, ThemeMode } from '@retikz/core';
+import { compileToScene, definePathGenerator, NodeTextColor, TargetSchema, ThemeMode } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import { Coordinate } from '../../../src/kernel';
 import { Node } from '../../../src/kernel';
@@ -11,6 +12,16 @@ import { Text } from '../../../src/kernel';
 import { buildIR } from '../../../src/kernel/adapter';
 import { Draw } from '../../../src/sugar';
 import { EdgeLabel } from '../../../src/sugar';
+
+const TestParabolaPathGeneratorDefinition = definePathGenerator({
+  name: 'testParabola',
+  paramsSchema: z.strictObject({ control: TargetSchema }),
+  targetParams: ['control'],
+  generate: ({ to, resolvedTargets }) => {
+    if (to === undefined) throw new Error('path generator "testParabola" requires step.to.');
+    return [{ kind: 'quad', control: resolvedTargets.control, to }];
+  },
+});
 
 describe('buildIR', () => {
   it('<Scope theme> 透传为可继承 IRScope Theme', () => {
@@ -621,7 +632,7 @@ after`;
     ]);
   });
 
-  it('<Step kind="generator" name="parabola"> 使用 JSON Target params 可编译', () => {
+  it('<Step kind="generator"> 使用注入的 Definition 与 JSON Target params 可编译', () => {
     const ir = buildIR(
       <>
         <Coordinate id="A" position={[0, 0]} />
@@ -629,11 +640,11 @@ after`;
         <Coordinate id="C" position={[80, -70]} />
         <Path>
           <Step kind="move" to="A" />
-          <Step kind="generator" name="parabola" to="B" params={{ control: { id: 'C' } }} />
+          <Step kind="generator" name="testParabola" to="B" params={{ control: { id: 'C' } }} />
         </Path>
       </>,
     );
-    expect(() => compileToScene(ir).scene).not.toThrow();
+    expect(() => compileToScene(ir, { pathGenerators: [TestParabolaPathGeneratorDefinition] }).scene).not.toThrow();
   });
 
   it('<Draw way={[..., { bend }, ...]}> 等价于 Kernel bend step（含 / 不含 angle 两种）', () => {

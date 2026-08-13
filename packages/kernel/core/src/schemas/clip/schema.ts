@@ -1,7 +1,7 @@
 import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import type { IRClipSpec, IRCompoundClipSpec } from './types';
+import type { IRClipSpec } from './types';
 
 import { JsonObjectSchema } from '../json';
 import { PathCommandSchema } from '../path-command';
@@ -56,17 +56,7 @@ export const PathClipSchema = z
   })
   .describe('Path clip region.');
 
-export const CompoundClipSchema: z.ZodType<IRCompoundClipSpec> = z.lazy(() =>
-  z
-    .strictObject({
-      kind: z.literal('compound').describe('Discriminator for compound clip regions.'),
-      children: z.array(ClipSpecSchema).min(1).describe('Child clip regions combined into one clip path.'),
-      fillRule: ClipFillRuleSchema.optional().describe('Fill rule for the accumulated compound clip path.'),
-    })
-    .describe('Compound clip region.'),
-);
-
-const RESERVED_CLIP_KINDS = new Set(['rect', 'circle', 'ellipse', 'polygon', 'path', 'compound']);
+const RESERVED_CLIP_KINDS = new Set(['rect', 'circle', 'ellipse', 'polygon', 'path']);
 
 const CustomClipSpecSchema = z
   .intersection(
@@ -94,10 +84,9 @@ export const ClipSpecSchema: z.ZodType<IRClipSpec> = z
       EllipseClipSchema,
       PolygonClipSchema,
       PathClipSchema,
-      CompoundClipSchema,
       CustomClipSpecSchema,
     ]),
   )
   .describe(
-    'Clip region for `Scope.clip`: built-in rect/circle/ellipse/polygon/path/compound, or a custom JSON object registered by kind.',
+    'Clip region for `Scope.clip`: built-in rect/circle/ellipse/polygon/path, or a JSON-safe custom object registered by kind.',
   );

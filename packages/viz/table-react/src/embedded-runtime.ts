@@ -25,7 +25,7 @@ const createEmbeddableAdapter = <TProps extends TableProps | DetailTableProps | 
       lowerOptions: runtime.lowerOptions,
       composites: runtime.composites,
     });
-    return { node: runtime.spec, compositeDependencies: contribution };
+    return { node: runtime.spec, providerDependencies: contribution };
   },
 });
 

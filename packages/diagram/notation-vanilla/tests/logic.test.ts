@@ -85,7 +85,7 @@ describe('Notation Vanilla semantic authoring', () => {
     }[type];
 
     expect(contribution.node).toMatchObject({ namespace: 'notation', type, id });
-    expect(contribution.compositeDependencies).toEqual({ roots: [provider.key], providers: [provider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [provider.key], providers: [provider] });
     expect(provider.makeDefinition({})).toMatchObject({ namespace: 'notation', type });
   });
 });

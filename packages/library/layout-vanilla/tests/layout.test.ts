@@ -39,9 +39,9 @@ describe('Layout Vanilla family', () => {
     );
     const overlay = OverlayLayoutVanillaAdapter.lower({}, contextFor('layout.overlayLayout'));
 
-    expect(flex.compositeDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
-    expect(grid.compositeDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
-    expect(overlay.compositeDependencies).toEqual({
+    expect(flex.providerDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
+    expect(grid.providerDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(overlay.providerDependencies).toEqual({
       roots: [OverlayLayoutProvider.key],
       providers: [OverlayLayoutProvider],
     });
@@ -72,7 +72,11 @@ describe('Layout Vanilla family', () => {
     ]);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['flexLayout', 'gridLayout', 'overlayLayout']);
     expect(normalized.ir.children[0]).toMatchObject({ gap: { column: 4, row: 8 } });
-    expect(normalized.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]);
+    expect(normalized.providerDefinitions.composites).toEqual([
+      FlexLayoutDefinition,
+      GridLayoutDefinition,
+      OverlayLayoutDefinition,
+    ]);
   });
 
   it('exports a shallow-frozen family adapter array in container order', () => {
@@ -134,7 +138,7 @@ describe('Layout Vanilla family', () => {
         },
       ],
     });
-    expect(normalized.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition]);
+    expect(normalized.providerDefinitions.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition]);
     expect(
       renderToSvgString(figure, {
         adapters: LayoutVanillaAdapters,

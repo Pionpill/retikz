@@ -13,8 +13,8 @@ import {
   PlotThemeToken,
   PlotThemeTokenOverridesSchema,
 } from '../../schemas';
-import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 import { getDefaultPlotThemePreset } from './catalog';
+import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
 import { getAxisTokenRules } from './preset';
 import { resolvePlotThemeStyleRegistry } from './registry';
 

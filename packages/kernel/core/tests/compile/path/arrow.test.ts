@@ -122,8 +122,8 @@ describe('compile path: arrow 箭头', () => {
     expect(last.arrowEnd?.shape).toBe('stealth');
   });
 
-  it('arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape', () => {
-    for (const shape of ['normal', 'open', 'stealth', 'openStealth', 'diamond', 'circle'] as const) {
+  it('Core 内置 arrowDetail.shape 透传到 PathPrim 作为 arrowEnd / arrowStart 的 shape', () => {
+    for (const shape of ['normal', 'stealth'] as const) {
       const ir: IRScene = {
         version: 1,
         type: 'scene',
@@ -143,53 +143,11 @@ describe('compile path: arrow 箭头', () => {
     }
   });
 
-  it('open shape 让 path 末端向内缩 5.25×strokeWidth（line 端点接在 back stroke 外缘）', () => {
-    // 默认 length=6, scale=1, lineWidth=1.5：shrink = (8 + 1.5/2) × 6 / 10 = 5.25 path 单位
-    // 线段 (0,0) → (100,0)，shrink 后变 (0,0) → (94.75, 0)；line 端点不再贯穿 back outline
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          marks: arrowMarks('->', { shape: 'open' }),
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [100, 0] },
-          ],
-        },
-      ],
-    };
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([94.75, 0])]);
-  });
-
-  it('strokeWidth 翻倍时 shrink 也翻倍（5.25 × strokeWidth）', () => {
-    const ir: IRScene = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          marks: arrowMarks('->', { shape: 'open' }),
-          strokeWidth: 2,
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [100, 0] },
-          ],
-        },
-      ],
-    };
-    // shrink = 5.25 × 2 = 10.5 → (100 - 10.5, 0) = (89.5, 0)
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([89.5, 0])]);
-  });
-
   it.each([
     ['normal', 94], // shrink = length × scale = 6
-    ['diamond', 94],
-    ['circle', 94],
     ['stealth', 95.8], // shrink = 0.7 × length × scale = 4.2（V tip x=3，line 嵌进凹口）
   ] as const)(
-    '实心 shape %s 也 shrink（line 端点接在 arrow 尾部，低 opacity 下不透出 line）',
+    'Core 内置实心 shape %s 会缩短路径端点，避免线条透出 marker',
     (shape, expectedEndX) => {
       const ir: IRScene = {
         version: 1,

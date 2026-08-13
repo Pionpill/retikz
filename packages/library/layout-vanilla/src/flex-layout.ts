@@ -11,7 +11,7 @@ export const FlexLayoutVanillaAdapter: VanillaTier2Adapter<FlexLayoutInput> = {
   kind: FlexLayoutEmbedKind,
   lower: props => ({
     node: createFlexLayout(props),
-    compositeDependencies: { roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] },
+    providerDependencies: { roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] },
   }),
 };
 

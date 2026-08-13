@@ -7,7 +7,8 @@ import type {
   CompileArtifact,
   CompileArtifactOptions,
   CompileResult,
-  CompositeDependencyContribution,
+  CoreProviderContribution,
+  CoreProviderDefinitions,
   CoreProgramOptions,
   IRAnimationTrack,
   IRScene,
@@ -26,7 +27,7 @@ import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 
 import {
   DEFAULT_RESOLVED_THEME,
-  resolveCompositeDependencies,
+  resolveCoreProviderDependencies,
   resolveTheme,
   resolveThemeStyleRegistry,
   ThemeSchema,
@@ -92,6 +93,21 @@ const canonicalizeDefinitionArray = <TDefinition extends object>(
   current.value ??= Object.freeze([...definitions]);
   return current.value as ReadonlyArray<TDefinition>;
 };
+
+/** 按 capability 复用相同有序 identity 的 provider definition 容器 */
+const canonicalizeProviderDefinitions = (definitions: CoreProviderDefinitions): CoreProviderDefinitions =>
+  Object.freeze({
+    ...(definitions.shapes === undefined ? {} : { shapes: canonicalizeDefinitionArray(definitions.shapes) }),
+    ...(definitions.boundaries === undefined ? {} : { boundaries: canonicalizeDefinitionArray(definitions.boundaries) }),
+    ...(definitions.clips === undefined ? {} : { clips: canonicalizeDefinitionArray(definitions.clips) }),
+    ...(definitions.arrows === undefined ? {} : { arrows: canonicalizeDefinitionArray(definitions.arrows) }),
+    ...(definitions.patterns === undefined ? {} : { patterns: canonicalizeDefinitionArray(definitions.patterns) }),
+    ...(definitions.pathGenerators === undefined
+      ? {}
+      : { pathGenerators: canonicalizeDefinitionArray(definitions.pathGenerators) }),
+    ...(definitions.pathKinds === undefined ? {} : { pathKinds: canonicalizeDefinitionArray(definitions.pathKinds) }),
+    ...(definitions.composites === undefined ? {} : { composites: canonicalizeDefinitionArray(definitions.composites) }),
+  });
 const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
   warnedMessages.add(message);
@@ -422,7 +438,7 @@ export const Layout: FC<LayoutProps> = props => {
       irFromProp !== undefined
         ? {
             ir: irFromProp,
-            contributions: [] as Array<CompositeDependencyContribution>,
+            contributions: [] as Array<CoreProviderContribution>,
             authoringSites: Object.freeze([
               Object.freeze({
                 kind: 'scene' as const,
@@ -456,12 +472,36 @@ export const Layout: FC<LayoutProps> = props => {
       withViewBox.animations !== undefined ? [...withViewBox.animations, ...rootAnimations] : rootAnimations;
     return { ...withViewBox, animations };
   }, [ambientTheme, built, irFromProp, theme, viewBox, rootAnimations]);
-  // Core 统一解析可嵌入 provider graph，并把用户显式 composites 作为最终 definitions 追加
-  const aggregatedComposites = useMemo(() => {
-    return canonicalizeDefinitionArray(
-      resolveCompositeDependencies({ contributions: built.contributions, composites: stableComposites }),
-    );
-  }, [built.contributions, stableComposites]);
+  // Core 统一解析可嵌入 provider graph，并把用户显式 definitions 作为最终 definitions 追加
+  const aggregatedProviders = useMemo(
+    () =>
+      canonicalizeProviderDefinitions(
+        resolveCoreProviderDependencies({
+          contributions: built.contributions,
+          definitions: {
+            shapes: stableShapes,
+            boundaries: stableBoundaries,
+            clips: stableClips,
+            arrows: stableArrows,
+            patterns: stablePatterns,
+            pathGenerators: stablePathGenerators,
+            pathKinds: stablePathKinds,
+            composites: stableComposites,
+          },
+        }),
+      ),
+    [
+      built.contributions,
+      stableShapes,
+      stableBoundaries,
+      stableClips,
+      stableArrows,
+      stablePatterns,
+      stablePathGenerators,
+      stablePathKinds,
+      stableComposites,
+    ],
+  );
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
@@ -473,15 +513,15 @@ export const Layout: FC<LayoutProps> = props => {
       measureText,
       nodeDistance,
       fontSize,
-      shapes: stableShapes,
-      boundaries: stableBoundaries,
-      clips: stableClips,
-      arrows: stableArrows,
-      patterns: stablePatterns,
-      pathGenerators: stablePathGenerators,
-      pathKinds: stablePathKinds,
+      shapes: aggregatedProviders.shapes,
+      boundaries: aggregatedProviders.boundaries,
+      clips: aggregatedProviders.clips,
+      arrows: aggregatedProviders.arrows,
+      patterns: aggregatedProviders.patterns,
+      pathGenerators: aggregatedProviders.pathGenerators,
+      pathKinds: aggregatedProviders.pathKinds,
       ribbonWidthProfiles: stableRibbonWidthProfiles,
-      composites: aggregatedComposites,
+      composites: aggregatedProviders.composites,
       themeStyles: stableThemeStyles,
       lowerTex,
       artifacts: compileArtifacts,
@@ -490,15 +530,15 @@ export const Layout: FC<LayoutProps> = props => {
       measureText,
       nodeDistance,
       fontSize,
-      stableShapes,
-      stableBoundaries,
-      stableClips,
-      stableArrows,
-      stablePatterns,
-      stablePathGenerators,
-      stablePathKinds,
+      aggregatedProviders.shapes,
+      aggregatedProviders.boundaries,
+      aggregatedProviders.clips,
+      aggregatedProviders.arrows,
+      aggregatedProviders.patterns,
+      aggregatedProviders.pathGenerators,
+      aggregatedProviders.pathKinds,
+      aggregatedProviders.composites,
       stableRibbonWidthProfiles,
-      aggregatedComposites,
       stableThemeStyles,
       lowerTex,
       compileArtifacts,

@@ -36,7 +36,7 @@ describe('grid()', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid', id: 'paper' });
     expect(contribution.node).toMatchObject({ namespace: 'standard', type: 'grid' });
-    expect(contribution.compositeDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
     expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
   });
 
@@ -53,7 +53,7 @@ describe('grid()', () => {
       { adapters: [GridVanillaAdapter] },
     );
 
-    expect(figure.composites).toHaveLength(1);
+    expect(figure.providerDefinitions.composites).toHaveLength(1);
   });
 
   it('accepts a center-form Cartesian position through the shared Grid input', () => {

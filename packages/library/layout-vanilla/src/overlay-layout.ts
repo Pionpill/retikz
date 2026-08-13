@@ -11,7 +11,7 @@ export const OverlayLayoutVanillaAdapter: VanillaTier2Adapter<OverlayLayoutInput
   kind: OverlayLayoutEmbedKind,
   lower: props => ({
     node: createOverlayLayout(props),
-    compositeDependencies: { roots: [OverlayLayoutProvider.key], providers: [OverlayLayoutProvider] },
+    providerDependencies: { roots: [OverlayLayoutProvider.key], providers: [OverlayLayoutProvider] },
   }),
 };
 

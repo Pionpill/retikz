@@ -49,7 +49,7 @@ describe('Standard Vanilla definition loading', () => {
   it('normalizes all current embeds with the all-adapters preset', () => {
     const normalized = normalizeFigureSpec(figure, { adapters: StandardVanillaAdapters });
 
-    expect(normalized.composites).toHaveLength(5);
+    expect(normalized.providerDefinitions.composites).toHaveLength(5);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame', 'surface', 'legend']);
   });
 

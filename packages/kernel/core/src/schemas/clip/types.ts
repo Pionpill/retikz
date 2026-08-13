@@ -26,16 +26,6 @@ export type IRPolygonClipSpec = z.infer<typeof PolygonClipSchema>;
 /** 路径裁切 IR 类型 */
 export type IRPathClipSpec = z.infer<typeof PathClipSchema>;
 
-/**
- * 复合裁切 IR 类型
- * @description `CompoundClipSchema` 递归引用 `ClipSpecSchema`，这里手写递归节点，避免 `z.infer` 形成循环类型
- */
-export type IRCompoundClipSpec = {
-  kind: 'compound';
-  children: Array<IRClipSpec>;
-  fillRule?: IRClipFillRule;
-};
-
 /** 自定义裁切 IR 类型：`kind` 对应 compile options 中注册的 clip provider */
 export type IRCustomClipSpec = IRJsonObject & { kind: string };
 
@@ -46,5 +36,4 @@ export type IRClipSpec =
   | IREllipseClipSpec
   | IRPolygonClipSpec
   | IRPathClipSpec
-  | IRCompoundClipSpec
   | IRCustomClipSpec;

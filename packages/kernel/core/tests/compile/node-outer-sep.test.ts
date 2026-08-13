@@ -130,34 +130,6 @@ describe('margin：不外扩护栏 + 校验', () => {
     expect(e0).toEqual([0, -15]);
   });
 
-  it('named-anchor-no-margin：star 的 tip-0 在 margin>0 下仍落视觉尖端（不外扩）', () => {
-    const mk = (margin: number): IRScene => ({
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'A',
-          position: [0, 0],
-          shape: { type: 'star', params: { points: 5, innerRadius: 5, outerRadius: 10 } },
-          margin,
-        },
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: { id: 'A', anchor: 'tip-0' } },
-            { type: 'step', kind: 'line', to: [100, 0] },
-          ],
-        },
-      ],
-    });
-    const tipOf = (margin: number) => {
-      const p = compileToScene(mk(margin)).scene.primitives.find(x => x.type === 'path');
-      return p?.type === 'path' ? p.commands[0] : undefined;
-    };
-    expect(tipOf(10)).toEqual(tipOf(0));
-  });
-
   it('label-no-margin：label 附着点恒走视觉 shape（不被 margin 双偏移）', () => {
     const mk = (margin: number): IRScene => ({
       version: 1,

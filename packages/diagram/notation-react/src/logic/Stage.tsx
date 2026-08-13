@@ -17,7 +17,7 @@ const stageEmbeddableAdapter: EmbeddableTier2Adapter<StageProps> = {
     const { children, ...input } = props;
     return {
       node: createStage(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
+      providerDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
     };
   },
 };

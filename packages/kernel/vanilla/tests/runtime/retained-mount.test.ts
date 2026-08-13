@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
+import type { AnyCompositeDefinition, ArrowDefinition, IRScene } from '@retikz/core';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
@@ -8,7 +8,13 @@ import type {
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCoreThemeColors } from '@retikz/core';
+import {
+  compileToScene,
+  CompositeBaseSchema,
+  defineArrow,
+  defineComposite,
+  resolveDefaultCoreThemeColors,
+} from '@retikz/core';
 import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -24,7 +30,7 @@ import type {
 } from '../../src';
 
 import { mount, mountCanvas, mountSvg, VanillaLayerCache } from '../../src';
-import { createRetainedCompositeDefinitions } from '../../src/runtime/retained-composites';
+import { createRetainedProviderDefinitions } from '../../src/runtime/retained-providers';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -150,11 +156,11 @@ const datasetAdapter: VanillaTier2Adapter<{ color: string }> = {
   kind: 'fixture-dataset',
   lower: props => ({
     node: { namespace: 'fixture', type: 'datasetBox' },
-    compositeDependencies: {
-      roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
       providers: [
         {
-          key: { namespace: 'fixture', type: 'datasetBox' },
+          key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
           dependencies: [],
           datasets: { color: props.color },
           makeDefinition: makeDatasetDefinition,
@@ -295,9 +301,9 @@ describe('@retikz/vanilla retained mount', () => {
   it('composite candidate rollback 后稳定代理恢复旧 callback', () => {
     const initial = makeDatasetDefinition({ color: '#ef4444' });
     const candidate = makeDatasetDefinition({ color: '#22c55e' });
-    const retained = createRetainedCompositeDefinitions([initial]);
-    const delegate = retained.definitions[0];
-    if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
+    const retained = createRetainedProviderDefinitions({ composites: [initial] });
+    const delegate = retained.definitions.composites?.[0];
+    if (delegate === undefined || typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const node = { namespace: 'fixture', type: 'datasetBox' } as never;
     const context = {
       theme: {
@@ -307,11 +313,39 @@ describe('@retikz/vanilla retained mount', () => {
       },
     } as const;
 
-    const prepared = retained.prepare([candidate]);
+    const prepared = retained.prepare({ composites: [candidate] });
     expect(delegate.expand(node, context).children[0]).toMatchObject({ fill: '#22c55e' });
     prepared.rollback();
 
     expect(delegate.expand(node, context).children[0]).toMatchObject({ fill: '#ef4444' });
+  });
+
+  it('provider definitions candidate rollback 后稳定代理恢复旧普通 provider callback', () => {
+    const initialEmit = vi.fn(() => []);
+    const candidateEmit = vi.fn(() => []);
+    const initial: ArrowDefinition = defineArrow({ name: 'fixture', lineContactX: 0, emit: initialEmit });
+    const candidate: ArrowDefinition = defineArrow({ name: 'fixture', lineContactX: 0, emit: candidateEmit });
+    const retained = createRetainedProviderDefinitions({ arrows: [initial] });
+    const delegate = retained.definitions.arrows?.[0];
+    if (delegate === undefined) throw new Error('expected arrow delegate');
+
+    const prepared = retained.prepare({ arrows: [candidate] });
+    delegate.emit({
+      stroke: { kind: 'contextStroke' },
+      fill: { kind: 'contextStroke' },
+      lineWidth: 1,
+      round: value => value,
+    });
+    expect(candidateEmit).toHaveBeenCalledTimes(1);
+    prepared.rollback();
+
+    delegate.emit({
+      stroke: { kind: 'contextStroke' },
+      fill: { kind: 'contextStroke' },
+      lineWidth: 1,
+      round: value => value,
+    });
+    expect(initialEmit).toHaveBeenCalledTimes(1);
   });
 
   it('retained expand delegate透明转发 Core Theme context', () => {
@@ -334,9 +368,9 @@ describe('@retikz/vanilla retained mount', () => {
       schema,
       expand: initialExpand,
     });
-    const retained = createRetainedCompositeDefinitions([initial]);
-    const delegate = retained.definitions[0];
-    if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
+    const retained = createRetainedProviderDefinitions({ composites: [initial] });
+    const delegate = retained.definitions.composites?.[0];
+    if (delegate === undefined || typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const context = {
       theme: {
         mode: 'dark',
@@ -394,11 +428,11 @@ describe('@retikz/vanilla retained mount', () => {
       kind: 'fixture-cached-dataset',
       lower: props => ({
         node: { namespace: 'fixture', type: 'datasetBox' },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'datasetBox' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
               dependencies: [],
               datasets: { color: props.color },
               makeDefinition,
@@ -466,13 +500,13 @@ describe('@retikz/vanilla retained mount', () => {
       schema: firstSchema,
       compile: () => ({ children: [] }),
     });
-    const retained = createRetainedCompositeDefinitions([first, second]);
+    const retained = createRetainedProviderDefinitions({ composites: [first, second] });
     const invalid = expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid });
 
-    expect(() => retained.prepare([first])).toThrow(invalid);
-    expect(() => retained.prepare([second, first])).toThrow(invalid);
-    expect(() => retained.prepare([sameKeyNewSchema, second])).toThrow(invalid);
-    expect(() => retained.prepare([sameKeyCompileBranch, second])).toThrow(invalid);
+    expect(() => retained.prepare({ composites: [first] })).toThrow(invalid);
+    expect(() => retained.prepare({ composites: [second, first] })).toThrow(invalid);
+    expect(() => retained.prepare({ composites: [sameKeyNewSchema, second] })).toThrow(invalid);
+    expect(() => retained.prepare({ composites: [sameKeyCompileBranch, second] })).toThrow(invalid);
   });
 
   it('layout-aware composite artifactSchema identity 变化时 fail-loud', () => {
@@ -494,9 +528,9 @@ describe('@retikz/vanilla retained mount', () => {
       artifactSchema: z.strictObject({ value: z.literal('candidate') }),
       compile: () => ({ children: [], artifact: { value: 'candidate' } }),
     });
-    const retained = createRetainedCompositeDefinitions([initial]);
+    const retained = createRetainedProviderDefinitions({ composites: [initial] });
 
-    expect(() => retained.prepare([candidate])).toThrow(
+    expect(() => retained.prepare({ composites: [candidate] })).toThrow(
       expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
@@ -518,11 +552,11 @@ describe('@retikz/vanilla retained mount', () => {
 
     adapter.lower = () => ({
       node: { namespace: 'fixture', type: 'datasetBox' },
-      compositeDependencies: {
-        roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+      providerDependencies: {
+        roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
         providers: [
           {
-            key: { namespace: 'fixture', type: 'datasetBox' },
+            key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
             dependencies: [],
             datasets: { color: '#22c55e' },
             makeDefinition: makeDatasetDefinition,

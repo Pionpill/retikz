@@ -10,7 +10,7 @@ import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
 import { createChart as createCanonicalChart } from '@retikz/chart';
-import { compileToScene, resolveCompositeDependencies } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
 
 import type { ChartAuthoringResult } from '../shared';
@@ -79,9 +79,9 @@ export const renderChart = (input: ChartAuthoringResult, options: RenderChartOpt
     themeStyles: explicitThemeStyles,
     ...compileOptionsWithoutDefinitions
   } = compileOptions ?? {};
-  const composites = resolveCompositeDependencies({
+  const providerDefinitions = resolveCoreProviderDependencies({
     contributions: [input.contribution],
-    ...(explicitComposites === undefined ? {} : { composites: explicitComposites }),
+    ...(explicitComposites === undefined ? {} : { definitions: { composites: explicitComposites } }),
   });
   const themeStyles =
     input.themeStyles === undefined
@@ -98,7 +98,7 @@ export const renderChart = (input: ChartAuthoringResult, options: RenderChartOpt
     },
     {
       ...compileOptionsWithoutDefinitions,
-      composites,
+      ...providerDefinitions,
       ...(themeStyles === undefined ? {} : { themeStyles }),
     },
   );

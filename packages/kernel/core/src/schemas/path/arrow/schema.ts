@@ -2,12 +2,11 @@ import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundatio
 import { z } from 'zod';
 
 import { CssColorSchema, OpacitySchema } from '../../style';
-import { BuiltinArrowShape } from './constants';
-
 export const ArrowEndDetailSchema = z
   .strictObject({
     shape: z
-      .union([z.enum(BuiltinArrowShape), z.string().min(1)])
+      .string()
+      .min(1)
       .optional()
       .describe('Arrow shape provider name. Built-ins and registered custom names are accepted.'),
     scale: PositiveNumberSchema.optional().describe(

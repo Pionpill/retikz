@@ -65,7 +65,7 @@ export const LogicFrameVanillaAdapter: VanillaTier2Adapter<LogicFrameVanillaInpu
   kind: NotationLogicFrameVanillaNamespace,
   lower: (props, context) => ({
     node: createLogicFrame({ ...props, id: `${context.id}/logicFrame` }),
-    compositeDependencies: { roots: [LogicFrameProvider.key], providers: [LogicFrameProvider] },
+    providerDependencies: { roots: [LogicFrameProvider.key], providers: [LogicFrameProvider] },
   }),
 };
 
@@ -82,7 +82,7 @@ export const TerminalVanillaAdapter: VanillaTier2Adapter<TerminalVanillaInput> =
   kind: NotationTerminalVanillaNamespace,
   lower: (props, context) => ({
     node: createTerminal({ ...props, id: context.id }),
-    compositeDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
+    providerDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
   }),
 };
 
@@ -99,7 +99,7 @@ export const StageVanillaAdapter: VanillaTier2Adapter<StageVanillaInput> = {
   kind: NotationStageVanillaNamespace,
   lower: (props, context) => ({
     node: createStage({ ...props, id: context.id }),
-    compositeDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
+    providerDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
   }),
 };
 
@@ -116,7 +116,7 @@ export const DecisionVanillaAdapter: VanillaTier2Adapter<DecisionVanillaInput> =
   kind: NotationDecisionVanillaNamespace,
   lower: (props, context) => ({
     node: createDecision({ ...props, id: context.id }),
-    compositeDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
+    providerDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
   }),
 };
 
@@ -133,7 +133,7 @@ export const JunctionVanillaAdapter: VanillaTier2Adapter<JunctionVanillaInput> =
   kind: NotationJunctionVanillaNamespace,
   lower: (props, context) => ({
     node: createJunction({ ...props, id: context.id }),
-    compositeDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
+    providerDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
   }),
 };
 
@@ -150,7 +150,7 @@ export const ConnectorVanillaAdapter: VanillaTier2Adapter<ConnectorVanillaInput>
   kind: NotationConnectorVanillaNamespace,
   lower: (props, context) => ({
     node: createEmbeddedConnector(context.id, props),
-    compositeDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
+    providerDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
   }),
 };
 

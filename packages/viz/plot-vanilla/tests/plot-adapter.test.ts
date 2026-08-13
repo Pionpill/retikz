@@ -47,10 +47,13 @@ describe('Plot Vanilla Tier2 adapter', () => {
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
 
     expect(result.spec).toEqual(spec);
-    expect(result.contribution.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(result.contribution.providers).toHaveLength(1);
-    expect(result.contribution.providers[0]).toMatchObject({ key: provider.key, dependencies: [] });
-    expect(result.contribution.providers[0]?.makeDefinition).toBe(provider.makeDefinition);
+    expect(result.contribution.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(result.contribution.providers.map(candidate => candidate.key)).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+      provider.key,
+    ]);
+    expect(result.contribution.providers[2]?.makeDefinition).toBe(provider.makeDefinition);
   });
 
   it('经 figure/layer runtime 渲染 Plot embed', () => {
@@ -72,7 +75,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
   it('保持 lineage 在 PlotSpec、Core IR 与 Scene meta 之外', () => {
     const plotFigure = figure([embedPlot('sales-panel', salesSpec('sales'))]);
     const normalized = normalizeFigureSpec(plotFigure, { adapters: [createPlotAdapter(datasets)] });
-    const scene = compileToScene(normalized.ir, { composites: normalized.composites }).scene;
+    const scene = compileToScene(normalized.ir, normalized.providerDefinitions).scene;
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
     expect(JSON.stringify(scene)).not.toContain('lineage');
@@ -97,12 +100,18 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.compositeDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(first.compositeDependencies.providers).toHaveLength(1);
-    expect(first.compositeDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
-    expect(first.compositeDependencies.providers[0]?.dependencies).toEqual([]);
-    expect(first.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      second.compositeDependencies.providers[0]?.makeDefinition,
+    expect(first.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(first.providerDependencies.providers.map(provider => provider.key)).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+    ]);
+    expect(first.providerDependencies.providers[2]?.dependencies).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+    ]);
+    expect(first.providerDependencies.providers[2]?.makeDefinition).toBe(
+      second.providerDependencies.providers[2]?.makeDefinition,
     );
   });
 

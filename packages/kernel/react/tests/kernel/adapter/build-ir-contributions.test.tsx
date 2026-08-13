@@ -28,15 +28,15 @@ const makeFixture = (options: { marked?: boolean; withAdapter?: boolean } = {}) 
   const { marked = true, withAdapter = true } = options;
   const state = { bodyCalled: false };
   const displayName = 'DemoFixture';
-  const compositeDependencies = {
-    roots: [{ namespace: 'demo', type: 'panel' }],
+  const providerDependencies = {
+    roots: [{ capability: 'composite' as const, namespace: 'demo', type: 'panel' }],
     providers: [],
   } as const;
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
     contribute: props => ({
       node: { type: 'node', id: props.id, position: [0, 0] },
-      compositeDependencies,
+      providerDependencies,
     }),
   };
   const Fixture: EmbeddableFixture = () => {
@@ -46,21 +46,21 @@ const makeFixture = (options: { marked?: boolean; withAdapter?: boolean } = {}) 
   Fixture.displayName = displayName;
   if (marked) Fixture.isTier2Embeddable = true;
   if (withAdapter) Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
-  return { Fixture, adapter, compositeDependencies, state };
+  return { Fixture, adapter, providerDependencies, state };
 };
 
 describe('buildIRWithContributions', () => {
   it('单个可嵌入子组件 → 贡献节点入 IR、记录入 contributions、fixture body 不被调用', () => {
-    const { Fixture, compositeDependencies, state } = makeFixture();
+    const { Fixture, providerDependencies, state } = makeFixture();
     const result = buildIRWithContributions(<Fixture id="a" data={{ value: 1 }} />);
     expect(result.ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'a' })]);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0]).toBe(compositeDependencies);
+    expect(result.contributions[0]).toBe(providerDependencies);
     expect(state.bodyCalled).toBe(false);
   });
 
   it('嵌套在 <Scope> 内的可嵌入子组件 → 贡献节点入该 scope.children，记录仍平铺进 contributions', () => {
-    const { Fixture, compositeDependencies, state } = makeFixture();
+    const { Fixture, providerDependencies, state } = makeFixture();
     const result = buildIRWithContributions(
       <Scope>
         <Fixture id="b" data={{ value: 2 }} />
@@ -71,7 +71,7 @@ describe('buildIRWithContributions', () => {
     if (scope.type !== 'scope') throw new Error('expected scope');
     expect(scope.children).toEqual([expect.objectContaining({ type: 'node', id: 'b' })]);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0]).toBe(compositeDependencies);
+    expect(result.contributions[0]).toBe(providerDependencies);
     expect(state.bodyCalled).toBe(false);
   });
 
@@ -82,7 +82,7 @@ describe('buildIRWithContributions', () => {
       receivedMode = context?.theme.mode;
       return {
         node: { type: 'node', id: 'themed', position: [0, 0] },
-        compositeDependencies: { roots: [], providers: [] },
+        providerDependencies: { roots: [], providers: [] },
       };
     };
     Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
@@ -106,7 +106,7 @@ describe('buildIRWithContributions', () => {
       receivedMode = context?.theme.mode;
       return {
         node: { type: 'node', id: 'layout-themed', position: [0, 0] },
-        compositeDependencies: { roots: [], providers: [] },
+        providerDependencies: { roots: [], providers: [] },
       };
     };
     Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
@@ -141,7 +141,7 @@ describe('buildIRWithContributions', () => {
       displayName,
       contribute: props => ({
         node: { type: 'node', id: props.id, position: [0, 0] },
-        compositeDependencies: { roots: [], providers: [] },
+        providerDependencies: { roots: [], providers: [] },
       }),
     };
     const result = buildIRWithContributions(<Plain id="d" data={{ value: 4 }} />, [adapter as EmbeddableTier2Adapter]);

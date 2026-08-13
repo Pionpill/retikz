@@ -81,7 +81,7 @@ const legendEmbeddableAdapter: EmbeddableTier2Adapter<LegendProps> = {
     }
     return {
       node: props.kind === LegendContentKind.Items ? createItemsLegend(props) : createRampLegend(props),
-      compositeDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
+      providerDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
     };
   },
 };

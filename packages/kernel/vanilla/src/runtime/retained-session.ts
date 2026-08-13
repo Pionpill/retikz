@@ -53,7 +53,11 @@ import {
   defaultVanillaCompileDriver,
   resolveVanillaCompileOutput,
 } from './compile-driver';
-import { createRetainedCompositeDefinitions, VanillaCompositeRevisionOwnerDefinition } from './retained-composites';
+import {
+  captureCoreProviderDefinitions,
+  createRetainedProviderDefinitions,
+  VanillaProviderRevisionOwnerDefinition,
+} from './retained-providers';
 import { captureRetainedUpdateOptions } from './retained-update-options';
 import { createEmptyRuntimeMeta } from './to-scene';
 import { validateVanillaCoreSource } from './validate-source';
@@ -77,29 +81,10 @@ const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, n
   },
 });
 
-/** 捕获 mount-lifetime composite definition record，保留 schema 与 callback identity */
-const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyCompositeDefinition =>
-  Object.freeze(
-    typeof definition.expand === 'function'
-      ? {
-          namespace: definition.namespace,
-          type: definition.type,
-          schema: definition.schema,
-          expand: definition.expand,
-        }
-      : {
-          namespace: definition.namespace,
-          type: definition.type,
-          schema: definition.schema,
-          compile: definition.compile,
-          ...(definition.artifactSchema === undefined ? {} : { artifactSchema: definition.artifactSchema }),
-        },
-  ) as AnyCompositeDefinition;
-
 /** 捕获 retained session 会在后续 normalization 继续读取的 mount options */
 const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
   const adapters = options.adapters?.map(adapter => Object.freeze({ kind: adapter.kind, lower: adapter.lower }));
-  const composites = options.compile?.composites?.map(captureCompositeDefinition);
+  const providerDefinitions = captureCoreProviderDefinitions(options.compile);
   return Object.freeze({
     ...options,
     ...(adapters === undefined ? {} : { adapters: Object.freeze(adapters) }),
@@ -108,7 +93,7 @@ const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): Retai
       : {
           compile: Object.freeze({
             ...options.compile,
-            ...(composites === undefined ? {} : { composites: Object.freeze(composites) }),
+            ...providerDefinitions,
           }),
         }),
   });
@@ -149,7 +134,7 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
   if (isVanillaFigureSpec(input)) {
     const normalized = normalizeFigureSpec(input, {
       adapters: options.adapters,
-      composites: coreOptions.composites,
+      ...coreOptions,
     });
     return Object.freeze({
       source: validateVanillaCoreSource(normalized.ir),
@@ -157,7 +142,7 @@ export const prepareRetainedInput = (input: RetainedRenderInput, options: Common
       authoringSites: normalized.authoringSites,
       coreOptions: {
         ...coreOptions,
-        composites: normalized.composites,
+        ...normalized.providerDefinitions,
       },
     });
   }
@@ -306,11 +291,11 @@ const createVanillaRetainedSessionImplementation = (
 
   /** 一组使用固定 Core Program options 的 Vanilla retained 执行资源 */
   type ActiveRetainedSession = {
-    compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
+    providerDefinitions: ReturnType<typeof createRetainedProviderDefinitions>;
     coreProgram: ReturnType<typeof createCoreProgram>;
     participant: ReturnType<typeof createRetainedRenderParticipant>;
     session: RuntimeSession;
-    compositeRevision: number;
+    providerRevision: number;
     compileDriverRevision: number;
     compileSession: VanillaCompileDriverSession;
     driverInput: VanillaCompileDriverInput;
@@ -322,7 +307,7 @@ const createVanillaRetainedSessionImplementation = (
     prepared: PreparedRetainedInput,
     config: RenderRuntimeConfigInput,
   ): ActiveRetainedSession => {
-    const compositeDefinitions = createRetainedCompositeDefinitions(prepared.coreOptions.composites);
+    const providerDefinitions = createRetainedProviderDefinitions(captureCoreProviderDefinitions(prepared.coreOptions));
     const driverInput: VanillaCompileDriverInput = Object.freeze({
       instance: compileDriverInstance,
       source: prepared.source,
@@ -331,10 +316,10 @@ const createVanillaRetainedSessionImplementation = (
     });
     const compileSession = createVanillaCompileDriverSession(compileDriver, driverInput);
     const coreProgram = createCoreProgram(
-      { ...prepared.coreOptions, composites: compositeDefinitions.definitions },
+      { ...prepared.coreOptions, ...providerDefinitions.definitions },
       {
         invalidationOwners: [
-          VanillaCompositeRevisionOwnerDefinition,
+          VanillaProviderRevisionOwnerDefinition,
           ...(hasCustomCompileDriver ? [VanillaCompileDriverRevisionOwnerDefinition] : []),
         ],
         observers: compileSession.observers,
@@ -344,7 +329,7 @@ const createVanillaRetainedSessionImplementation = (
       builtins: [
         CoreOwnerDefinition,
         RenderRuntimeOwnerDefinition,
-        VanillaCompositeRevisionOwnerDefinition,
+        VanillaProviderRevisionOwnerDefinition,
         VanillaCompileDriverRevisionOwnerDefinition,
       ],
     });
@@ -379,18 +364,18 @@ const createVanillaRetainedSessionImplementation = (
       initialSnapshots: [
         createRuntimeOwnerInput(CoreOwnerDefinition, prepared.source),
         createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, config),
-        createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
+        createRuntimeOwnerInput(VanillaProviderRevisionOwnerDefinition, 0),
         createRuntimeOwnerInput(VanillaCompileDriverRevisionOwnerDefinition, 0),
       ],
     });
     const coreOutput = session.artifact(coreProgram).value.output;
     commitVanillaCompileOutput(compileSession, resolveVanillaCompileOutput(compileSession, coreOutput));
     return {
-      compositeDefinitions,
+      providerDefinitions,
       coreProgram,
       participant,
       session,
-      compositeRevision: 0,
+      providerRevision: 0,
       compileDriverRevision: 0,
       compileSession,
       driverInput,
@@ -428,7 +413,7 @@ const createVanillaRetainedSessionImplementation = (
         authoringSites: prepared.authoringSites,
         coreOptions: prepared.coreOptions,
       });
-      const preparedDefinitions = active.compositeDefinitions.prepare(prepared.coreOptions.composites);
+      const preparedDefinitions = active.providerDefinitions.prepare(prepared.coreOptions);
       const previousDriverInput = active.driverInput;
       /** 恢复失败 transaction 前的 driver runtime input，再重新抛出原始失败 */
       const rollbackDriverInput = (cause: unknown): never => {
@@ -462,18 +447,16 @@ const createVanillaRetainedSessionImplementation = (
           }),
         );
       }
-      const nextCompositeRevision = preparedDefinitions.changed
-        ? active.compositeRevision + 1
-        : active.compositeRevision;
+      const nextProviderRevision = preparedDefinitions.changed ? active.providerRevision + 1 : active.providerRevision;
       const nextCompileDriverRevision = hasCustomCompileDriver
         ? active.compileDriverRevision + 1
         : active.compileDriverRevision;
-      if (!Number.isSafeInteger(nextCompositeRevision)) {
+      if (!Number.isSafeInteger(nextProviderRevision)) {
         return rollbackDriverInput(
           new RetainedRenderError({
             code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
-            cause: nextCompositeRevision,
-            message: 'Vanilla retained composite revision overflow',
+            cause: nextProviderRevision,
+            message: 'Vanilla retained provider revision overflow',
           }),
         );
       }
@@ -496,7 +479,7 @@ const createVanillaRetainedSessionImplementation = (
               createRenderConfig(nextState, handlerContributions, canvasSize),
             ),
             ...(preparedDefinitions.changed
-              ? [createRuntimeOwnerUpdate(VanillaCompositeRevisionOwnerDefinition, nextCompositeRevision)]
+              ? [createRuntimeOwnerUpdate(VanillaProviderRevisionOwnerDefinition, nextProviderRevision)]
               : []),
             ...(hasCustomCompileDriver
               ? [createRuntimeOwnerUpdate(VanillaCompileDriverRevisionOwnerDefinition, nextCompileDriverRevision)]
@@ -507,7 +490,7 @@ const createVanillaRetainedSessionImplementation = (
         return rollbackDriverInput(cause);
       }
       preparedDefinitions.commit();
-      active.compositeRevision = nextCompositeRevision;
+      active.providerRevision = nextProviderRevision;
       active.compileDriverRevision = nextCompileDriverRevision;
       active.driverInput = nextDriverInput;
       const coreOutput = active.session.artifact(active.coreProgram).value.output;

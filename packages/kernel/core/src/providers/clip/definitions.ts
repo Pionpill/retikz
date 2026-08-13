@@ -1,7 +1,6 @@
 import type { ClipDefinition } from '../../contract';
 import type {
   IRCircleClipSpec,
-  IRCompoundClipSpec,
   IREllipseClipSpec,
   IRPathClipSpec,
   IRPolygonClipSpec,
@@ -11,7 +10,6 @@ import type {
 import { defineClip } from '../../contract';
 import {
   CircleClipSchema,
-  CompoundClipSchema,
   EllipseClipSchema,
   PathClipSchema,
   PolygonClipSchema,
@@ -20,7 +18,7 @@ import {
 import { defineKeyedProviderArray } from '../registry/index';
 
 /** 内置 clip provider 名称 */
-export type BuiltinClipProviderName = 'rect' | 'circle' | 'ellipse' | 'polygon' | 'path' | 'compound';
+export type BuiltinClipProviderName = 'rect' | 'circle' | 'ellipse' | 'polygon' | 'path';
 
 const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName => {
   switch (definition.kind) {
@@ -29,7 +27,6 @@ const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName =
     case 'ellipse':
     case 'polygon':
     case 'path':
-    case 'compound':
       return definition.kind;
     default:
       throw new Error(`Unknown builtin clip provider kind '${definition.kind}'.`);
@@ -71,19 +68,8 @@ const pathClip = defineClip<IRPathClipSpec>({
   resolve: spec => ({ kind: 'path', commands: spec.commands, fillRule: spec.fillRule }),
 });
 
-/** 复合 clip provider：递归解析 children 后组合为 Scene compound clip */
-const compoundClip = defineClip<IRCompoundClipSpec>({
-  kind: 'compound',
-  schema: CompoundClipSchema,
-  resolve: (spec, context) => ({
-    kind: 'compound',
-    children: spec.children.map(child => context.resolve(child)),
-    fillRule: spec.fillRule,
-  }),
-});
-
 /** 内置 clip provider 注册项，按 `kind` 同时提供属性索引 */
 export const BUILTIN_CLIPS = defineKeyedProviderArray<ClipDefinition, BuiltinClipProviderName>(
-  [rectClip, circleClip, ellipseClip, polygonClip, pathClip, compoundClip],
+  [rectClip, circleClip, ellipseClip, polygonClip, pathClip],
   keyOfBuiltinClip,
 );

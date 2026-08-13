@@ -57,7 +57,7 @@ describe('frame()', () => {
       { adapters: [GridVanillaAdapter, AxesVanillaAdapter, FrameVanillaAdapter] },
     );
 
-    expect(figure.composites).toHaveLength(3);
+    expect(figure.providerDefinitions.composites).toHaveLength(3);
     expect(figure.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
     expect(figure.ir.children[2]).toEqual(createFrame({ id: 'definition-contract/frame', ...input }));
   });

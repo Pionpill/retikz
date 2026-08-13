@@ -11,7 +11,7 @@ export const GridLayoutVanillaAdapter: VanillaTier2Adapter<GridLayoutInput> = {
   kind: GridLayoutEmbedKind,
   lower: props => ({
     node: createGridLayout(props),
-    compositeDependencies: { roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] },
+    providerDependencies: { roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] },
   }),
 };
 

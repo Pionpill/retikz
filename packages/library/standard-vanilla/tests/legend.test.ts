@@ -36,7 +36,7 @@ describe('legend()', () => {
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.legend', id: 'status' });
     expect(contribution.node).toEqual(createLegend(input));
     expect(contribution.node).toMatchObject({ contentAlign: 'end' });
-    expect(contribution.compositeDependencies).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 
   it('renders the same SVG as direct canonical IR in the same compile environment', () => {

@@ -21,7 +21,7 @@ describe('<Surface>', () => {
         child: { type: 'node', position: [0, 0], text: 'A' },
       }),
     );
-    expect(contribution.compositeDependencies).toEqual({
+    expect(contribution.providerDependencies).toEqual({
       roots: [SurfaceProvider.key],
       providers: [SurfaceProvider],
     });

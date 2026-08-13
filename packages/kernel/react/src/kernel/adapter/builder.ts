@@ -1,5 +1,5 @@
 import type {
-  CompositeDependencyContribution,
+  CoreProviderContribution,
   IRArrowMark,
   IRChild,
   IRLineSpec,
@@ -600,7 +600,7 @@ const buildCoordinateFromProps = (props: CoordinateProps): IRChild => ({
  * @description contributions 在整棵树共享同一数组、跨 scope 平铺收集；embeddables 为显式注入的适配器列表（逃生舱 / 测试）
  */
 type BuildContext = {
-  contributions: Array<CompositeDependencyContribution>;
+  contributions: Array<CoreProviderContribution>;
   authoringSites: Array<LayoutAuthoringSite>;
   sourcePath: string;
   embeddables?: ReadonlyArray<EmbeddableTier2Adapter>;
@@ -754,7 +754,7 @@ const readSceneChildren = (children: ReactNode, ctx?: BuildContext): Array<IRChi
               ctx.authoringSites.push(createLayoutAuthoringSite({ ...site, sourcePath })),
             );
           }
-          ctx?.contributions.push(contribution.compositeDependencies);
+          ctx?.contributions.push(contribution.providerDependencies);
           return;
         }
         const expanded = (child.type as (p: unknown) => ReactNode)(child.props);
@@ -816,10 +816,10 @@ export const buildIRWithContributions = (
   embeddableContext?: EmbeddableAuthoringContext,
 ): {
   ir: IRScene;
-  contributions: Array<CompositeDependencyContribution>;
+  contributions: Array<CoreProviderContribution>;
   authoringSites: ReadonlyArray<LayoutAuthoringSite>;
 } => {
-  const contributions: Array<CompositeDependencyContribution> = [];
+  const contributions: Array<CoreProviderContribution> = [];
   const authoringSites: Array<LayoutAuthoringSite> = [];
   if (sceneSite !== undefined) {
     authoringSites.push(

@@ -25,9 +25,9 @@ const flexLayoutEmbeddableAdapter: EmbeddableTier2Adapter<FlexLayoutProps> = {
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Flex);
     return {
       node: createFlexLayout({ ...input, children: resolved.items }),
-      compositeDependencies: {
-        roots: [FlexLayoutProvider.key, ...resolved.compositeDependencies.roots],
-        providers: [FlexLayoutProvider, ...resolved.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [FlexLayoutProvider.key, ...resolved.providerDependencies.roots],
+        providers: [FlexLayoutProvider, ...resolved.providerDependencies.providers],
       },
       authoringSites: resolved.authoringSites,
     };

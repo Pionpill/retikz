@@ -28,7 +28,7 @@ const surfaceEmbeddableAdapter: EmbeddableTier2Adapter<SurfaceProps> = {
         ...input,
         child: built.ir.children[0],
       }),
-      compositeDependencies: {
+      providerDependencies: {
         roots: [SurfaceProvider.key, ...built.contributions.flatMap(contribution => contribution.roots)],
         providers: [SurfaceProvider, ...built.contributions.flatMap(contribution => contribution.providers)],
       },

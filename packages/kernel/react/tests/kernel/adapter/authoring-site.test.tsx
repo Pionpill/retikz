@@ -20,7 +20,7 @@ describe('React authored sites', () => {
       displayName: 'Embedded',
       contribute: () => ({
         node: { namespace: 'fixture', type: 'embedded' },
-        compositeDependencies: { roots: [], providers: [] },
+        providerDependencies: { roots: [], providers: [] },
         authoringSites: [
           {
             kind: 'path',

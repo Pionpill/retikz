@@ -88,8 +88,8 @@ describe('provider registry contract', () => {
     expect(providers.beta).toEqual({ kind: 'beta', value: 2 });
   });
 
-  it('indexes_builtin_clips_by_kind', () => {
+  it('indexes_retained_builtin_clips_by_kind', () => {
     expect(BUILTIN_CLIPS.rect.kind).toBe('rect');
-    expect(BUILTIN_CLIPS.compound.kind).toBe('compound');
+    expect(BUILTIN_CLIPS.path.kind).toBe('path');
   });
 });

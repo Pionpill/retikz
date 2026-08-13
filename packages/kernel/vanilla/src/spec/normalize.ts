@@ -1,6 +1,6 @@
-import type { CompositeDependencyContribution, IRChild, IRScene, IRScope } from '@retikz/core';
+import type { CoreProviderContribution, IRChild, IRScene, IRScope } from '@retikz/core';
 
-import { resolveCompositeDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 
 import type { VanillaAuthoringSite } from './authoring-site';
 import type {
@@ -32,7 +32,7 @@ type NormalizeContext = {
   /** 调用方注入的 Tier2 适配器列表 */
   adapters: VanillaNormalizeOptions['adapters'];
   /** 递归过程中原样收集的 Core provider graph contributions */
-  contributions: Array<CompositeDependencyContribution>;
+  contributions: Array<CoreProviderContribution>;
   /** 全图公开身份标识索引，用于去重和后续 patch 定位 */
   identityIndex: Map<string, Array<string>>;
   /** 全图父子身份关系索引，用于后续失效边界推导 */
@@ -140,7 +140,7 @@ const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild 
     layerId: ctx.layerId,
     identityPath: [...ctx.path, embed.id],
   });
-  ctx.contributions.push(contribution.compositeDependencies);
+  ctx.contributions.push(contribution.providerDependencies);
   validateAdapterOutputIdentities(
     contribution.node,
     {
@@ -224,7 +224,7 @@ export const normalizeFigureSpec = (
     throw new Error('vanilla spec figure cannot contain both children and layers.');
   }
   const layers = asLayerStack(figure);
-  const contributions: Array<CompositeDependencyContribution> = [];
+  const contributions: Array<CoreProviderContribution> = [];
   const identityIndex = new Map<string, Array<string>>();
   const parentIndex = new Map<string, string>();
   const layerMetas: Array<VanillaLayerMeta> = [];
@@ -291,7 +291,19 @@ export const normalizeFigureSpec = (
 
   return {
     ir,
-    composites: [...resolveCompositeDependencies({ contributions, composites: options.composites })],
+    providerDefinitions: resolveCoreProviderDependencies({
+      contributions,
+      definitions: {
+        shapes: options.shapes,
+        boundaries: options.boundaries,
+        clips: options.clips,
+        arrows: options.arrows,
+        patterns: options.patterns,
+        pathGenerators: options.pathGenerators,
+        pathKinds: options.pathKinds,
+        composites: options.composites,
+      },
+    }),
     runtimeMeta,
     authoringSites: Object.freeze(authoringSites),
   };

@@ -26,7 +26,7 @@ export const FrameVanillaAdapter: VanillaTier2Adapter<FrameVanillaInput> = {
   kind: StandardFrameVanillaNamespace,
   lower: (props, context) => ({
     node: createFrame({ ...props, id: `${context.id}/frame` }),
-    compositeDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
+    providerDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
   }),
 };
 

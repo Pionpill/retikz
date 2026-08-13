@@ -158,13 +158,13 @@ describe('ClipSpecSchema 退化 / 非法形态拒绝', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('compound clip 未知字段拒绝', () => {
+  it('compound 作为开放的自定义 clip spec 通过 Core schema', () => {
     const parsed = ClipSpecSchema.safeParse({
       kind: 'compound',
       children: [{ kind: 'circle', cx: 0, cy: 0, r: 10 }],
-      extra: 'ignored before strict',
+      extra: 'preserved for the registered provider schema',
     });
-    expect(parsed.success).toBe(false);
+    expect(parsed.success).toBe(true);
   });
 
   it('custom kind 接受 JSON-safe 对象，具体语义由 compile 的 clips provider 校验', () => {

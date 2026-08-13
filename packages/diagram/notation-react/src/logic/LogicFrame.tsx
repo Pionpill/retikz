@@ -86,7 +86,7 @@ const logicFrameEmbeddableAdapter: EmbeddableTier2Adapter<LogicFrameProps> = {
       : readMarkerChildren(children);
     return {
       node: createLogicFrame({ ...input, ...markerInput }),
-      compositeDependencies: { roots: [LogicFrameProvider.key], providers: [LogicFrameProvider] },
+      providerDependencies: { roots: [LogicFrameProvider.key], providers: [LogicFrameProvider] },
     };
   },
 };

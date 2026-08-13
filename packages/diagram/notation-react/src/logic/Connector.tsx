@@ -28,7 +28,7 @@ const connectorEmbeddableAdapter: EmbeddableTier2Adapter<ConnectorProps> = {
       : { ...pathInput, way: way as ConnectorWay };
     return {
       node: createConnector(input),
-      compositeDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
+      providerDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
     };
   },
 };

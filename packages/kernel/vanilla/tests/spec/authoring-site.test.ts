@@ -15,7 +15,7 @@ describe('Vanilla authored sites', () => {
       kind: 'fixture-embedded',
       lower: () => ({
         node: { namespace: 'fixture', type: 'embedded' },
-        compositeDependencies: { roots: [], providers: [] },
+        providerDependencies: { roots: [], providers: [] },
       }),
     };
 

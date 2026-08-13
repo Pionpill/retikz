@@ -37,6 +37,22 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./shape": {
+      "types": "./src/shape/index.ts",
+      "default": "./src/shape/index.ts"
+    },
+    "./arrow": {
+      "types": "./src/arrow/index.ts",
+      "default": "./src/arrow/index.ts"
+    },
+    "./clip": {
+      "types": "./src/clip/index.ts",
+      "default": "./src/clip/index.ts"
+    },
+    "./path-generator": {
+      "types": "./src/path-generator/index.ts",
+      "default": "./src/path-generator/index.ts"
     }
   },
   "publishConfig": {
@@ -48,6 +64,26 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./shape": {
+        "types": "./dist/types/shape/index.d.ts",
+        "import": "./dist/shape/index.js",
+        "default": "./dist/shape/index.js"
+      },
+      "./arrow": {
+        "types": "./dist/types/arrow/index.d.ts",
+        "import": "./dist/arrow/index.js",
+        "default": "./dist/arrow/index.js"
+      },
+      "./clip": {
+        "types": "./dist/types/clip/index.d.ts",
+        "import": "./dist/clip/index.js",
+        "default": "./dist/clip/index.js"
+      },
+      "./path-generator": {
+        "types": "./dist/types/path-generator/index.d.ts",
+        "import": "./dist/path-generator/index.js",
+        "default": "./dist/path-generator/index.js"
       }
     }
   },

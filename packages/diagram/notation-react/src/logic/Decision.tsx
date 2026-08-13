@@ -17,7 +17,7 @@ const decisionEmbeddableAdapter: EmbeddableTier2Adapter<DecisionProps> = {
     const { children, ...input } = props;
     return {
       node: createDecision(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
+      providerDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
     };
   },
 };

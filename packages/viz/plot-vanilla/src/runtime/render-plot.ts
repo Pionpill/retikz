@@ -8,8 +8,8 @@ import type {
   PlotLineageRun,
 } from '@retikz/plot';
 
-import { compileToScene } from '@retikz/core';
-import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { createPlotProviderContribution, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
@@ -61,6 +61,9 @@ const renderPlotImpl = (
   options: RenderPlotOptions | RenderPlotLineageOptions = {},
 ): string | RenderPlotLineageResult => {
   const validated = PlotSpecSchema.parse(spec);
+  const providerDefinitions = resolveCoreProviderDependencies({
+    contributions: [createPlotProviderContribution(data, options)],
+  });
   const scene = compileToScene(
     {
       version: 1,
@@ -68,7 +71,7 @@ const renderPlotImpl = (
       ...(options.theme !== undefined ? { theme: options.theme } : {}),
       children: [validated],
     },
-    { composites: lowerPlots(data, options), themeStyles: options.themeStyles },
+    { ...providerDefinitions, themeStyles: options.themeStyles },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;

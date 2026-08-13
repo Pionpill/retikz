@@ -1,7 +1,12 @@
 import type { IRPlotSpec } from '@retikz/plot';
 
 import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
-import { compileToScene, DEFAULT_RESOLVED_THEME, defineThemeStyle, resolveCompositeDependencies } from '@retikz/core';
+import {
+  compileToScene,
+  DEFAULT_RESOLVED_THEME,
+  defineThemeStyle,
+  resolveCoreProviderDependencies,
+} from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { getDefaultPlotThemePreset, PlotProviderKey } from '@retikz/plot';
 import { definePlotThemeStyle } from '@retikz/plot';
@@ -94,10 +99,12 @@ describe('<Chart>', () => {
         ],
       },
     });
-    expect(contribution.compositeDependencies.roots).toEqual([ChartProvider.key]);
-    expect(contribution.compositeDependencies.providers.map(provider => provider.key)).toEqual([
+    expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
+    expect(contribution.providerDependencies.providers.map(provider => provider.key)).toEqual([
       SurfaceProvider.key,
       FlexLayoutProvider.key,
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
       PlotProviderKey,
       ChartProvider.key,
     ]);
@@ -157,7 +164,7 @@ describe('<Chart>', () => {
       plot: { data: { reference: 'chart.data' } },
       presentation: { children: [{ preset: 'title' }, { key: 'chart.plot' }] },
     });
-    expect(contribution.compositeDependencies.roots).toEqual([ChartProvider.key]);
+    expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
   });
 
   it('accepts every shared Layout host prop without leaking it into the embedded Chart recipe', () => {
@@ -240,7 +247,7 @@ describe('<Chart>', () => {
       x: 10,
     });
     const warnings: Array<{ code: string }> = [];
-    const composites = resolveCompositeDependencies({ contributions: [contribution.compositeDependencies] });
+    const providerDefinitions = resolveCoreProviderDependencies({ contributions: [contribution.providerDependencies] });
 
     expect(contribution.node).toMatchObject({
       type: 'scope',
@@ -251,7 +258,7 @@ describe('<Chart>', () => {
 
     compileToScene(
       { version: 1, type: 'scene', children: [contribution.node] },
-      { composites, onWarn: warning => warnings.push(warning) },
+      { ...providerDefinitions, onWarn: warning => warnings.push(warning) },
     );
     expect(warnings.filter(warning => warning.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
   });

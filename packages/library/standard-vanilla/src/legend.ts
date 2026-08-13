@@ -10,7 +10,7 @@ export const LegendVanillaAdapter: VanillaTier2Adapter<LegendInput> = {
   kind: StandardLegendVanillaNamespace,
   lower: props => ({
     node: createLegend(props),
-    compositeDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
+    providerDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
   }),
 };
 

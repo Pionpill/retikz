@@ -59,13 +59,13 @@ export const prepareVanillaCompileInput = (
   if (isVanillaFigureSpec(input)) {
     const normalized = normalizeFigureSpec(input, {
       adapters: options.adapters,
-      composites: options.compile?.composites,
+      ...options.compile,
     });
     return Object.freeze({
       source: validateVanillaCoreSource(normalized.ir),
       coreOptions: Object.freeze({
         ...options.compile,
-        composites: normalized.composites,
+        ...normalized.providerDefinitions,
       }),
       authoringSites: normalized.authoringSites,
       runtimeMeta: normalized.runtimeMeta,

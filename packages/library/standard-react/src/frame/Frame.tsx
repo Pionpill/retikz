@@ -97,7 +97,7 @@ const frameEmbeddableAdapter: EmbeddableTier2Adapter<FrameProps> = {
         ...(parts.description !== undefined ? { description: parts.description } : {}),
         children: convertFrameChildren(parts.body),
       }),
-      compositeDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
+      providerDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
     };
   },
 };

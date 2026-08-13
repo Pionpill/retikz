@@ -3,9 +3,9 @@ import type { EmbeddableContribution, EmbeddableTier2Adapter } from '@retikz/rea
 import type { FC, ReactNode } from 'react';
 
 import { ChartProvider, createChart, createChartProvider } from '@retikz/chart';
-import { resolveCompositeDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
-import { createPlotProvider } from '@retikz/plot';
+import { createPlotProviderContribution } from '@retikz/plot';
 import { resolvePlotAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { SurfaceProvider } from '@retikz/standard';
@@ -119,13 +119,13 @@ export const resolveChartContribution = (props: ChartProps): EmbeddableContribut
     ...(source === undefined ? {} : { source }),
     ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
   });
-  const plotProvider = createPlotProvider(plot.datasets, plot.lowerOptions);
+  const plotContribution = createPlotProviderContribution(plot.datasets, plot.lowerOptions);
   const chartProvider = createChartProvider(chartThemeStyles);
   return {
     node: wrapChartScope(chart, { x, y, transforms, placement, zIndex, clip, theme }),
-    compositeDependencies: {
+    providerDependencies: {
       roots: [ChartProvider.key],
-      providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, chartProvider],
+      providers: [SurfaceProvider, FlexLayoutProvider, ...plotContribution.providers, chartProvider],
     },
   };
 };
@@ -167,10 +167,10 @@ const ChartComponent: FC<ChartProps> = props => {
           ? ambientPlotThemeStyles
           : [...ambientPlotThemeStyles, ...props.plotThemeStyles],
   });
-  const composites = resolveCompositeDependencies({ contributions: [contribution.compositeDependencies] });
+  const providerDefinitions = resolveCoreProviderDependencies({ contributions: [contribution.providerDependencies] });
   return createElement(Layout, {
     ir: { version: 1, type: 'scene', children: [contribution.node] },
-    composites,
+    ...providerDefinitions,
     width,
     height,
     className,

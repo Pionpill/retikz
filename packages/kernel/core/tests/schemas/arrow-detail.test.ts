@@ -9,16 +9,7 @@ import { ArrowDetailSchema, ArrowEndDetailSchema, BuiltinArrowShape, PathSchema 
 describe('ArrowDetailSchema：字段合法 / optional', () => {
   it('内置箭头形状常量使用 BuiltinArrowShape 命名', () => {
     expect(BuiltinArrowShape.Stealth).toBe('stealth');
-    expect(Object.values(BuiltinArrowShape)).toEqual([
-      'normal',
-      'open',
-      'stealth',
-      'openStealth',
-      'diamond',
-      'openDiamond',
-      'circle',
-      'openCircle',
-    ]);
+    expect(Object.values(BuiltinArrowShape)).toEqual(['normal', 'stealth']);
   });
 
   it('空对象合法', () => {

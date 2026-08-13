@@ -425,8 +425,8 @@ describe('ATTACK 9: out/in bend + rotate + marks 三合一 + arrow', () => {
           marks: [
             ...arrowMarks('<->'),
             { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
-            { pos: 0.5, mark: { kind: 'arrow', shape: 'diamond' } },
-            { pos: 1, mark: { kind: 'arrow', shape: 'open' } },
+            { pos: 0.5, mark: { kind: 'arrow', shape: 'normal' } },
+            { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
           ],
         },
       ),

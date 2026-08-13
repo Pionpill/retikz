@@ -29,8 +29,8 @@ describe('<Grid>', () => {
     });
 
     expect(first.node).toMatchObject({ namespace: 'standard', type: 'grid' });
-    expect(first.compositeDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
-    expect(second.compositeDependencies.providers[0]).toBe(GridProvider);
+    expect(first.providerDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
+    expect(second.providerDependencies.providers[0]).toBe(GridProvider);
     expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
   });
 

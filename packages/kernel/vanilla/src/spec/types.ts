@@ -1,7 +1,6 @@
 import type {
-  AnyCompositeDefinition,
   CompileOptions,
-  CompositeDependencyContribution,
+  CoreProviderContribution,
   IRChild,
   IRPath,
   IRScene,
@@ -103,8 +102,8 @@ export type VanillaEmbedContext = {
 export type VanillaTier2Contribution = {
   /** 放入核心 IR 的组合定义或 Tier1 子节点 */
   node: IRChild;
-  /** 此 authored node 要求的 Core Composite provider graph contribution */
-  compositeDependencies: CompositeDependencyContribution;
+  /** 此 authored node 要求的 Core provider graph contribution */
+  providerDependencies: CoreProviderContribution;
 };
 
 /** Vanilla Tier2 适配器 */
@@ -150,8 +149,11 @@ export type VanillaRuntimeMeta = Readonly<{
 export type VanillaNormalizedFigure = {
   /** 可交给核心编译的 IR */
   ir: IRScene;
-  /** 适配器贡献聚合出的组合定义 */
-  composites: Array<AnyCompositeDefinition>;
+  /** 适配器贡献聚合出的完整 Core provider definitions */
+  providerDefinitions: Pick<
+    CompileOptions,
+    'shapes' | 'boundaries' | 'clips' | 'arrows' | 'patterns' | 'pathGenerators' | 'pathKinds' | 'composites'
+  >;
   /** 运行时元数据，不进入核心 IR */
   runtimeMeta: VanillaRuntimeMeta;
   /** 按 authored 顺序收集的领域中立运行时 sites */
@@ -162,4 +164,7 @@ export type VanillaNormalizedFigure = {
 export type VanillaNormalizeOptions = {
   /** 可嵌入 Tier2 适配器列表 */
   adapters?: ReadonlyArray<AnyVanillaTier2Adapter>;
-} & Pick<CompileOptions, 'composites'>;
+} & Pick<
+  CompileOptions,
+  'shapes' | 'boundaries' | 'clips' | 'arrows' | 'patterns' | 'pathGenerators' | 'pathKinds' | 'composites'
+>;
