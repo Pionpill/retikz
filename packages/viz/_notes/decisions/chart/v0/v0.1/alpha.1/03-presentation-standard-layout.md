@@ -1,196 +1,320 @@
-# ADR-03：Chart presentation 与 Standard FlexLayout
+# ADR-03：Chart authoring、canonical result 与有序 presentation
 
-- 状态：Proposed（等待 ADR-02 Accept；完整公开入口仍受 Standard surface、Kernel 嵌套 contribution 聚合与 Core spatial transparency 门控）
-- 决策日期：2026-08-01
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-02](./02-style-palette.md) · [Chart 总设计 §9](../../../../../architecture/chart-design.md)
+- 状态：Accepted（2026-08-12；替代本 ADR 先前的开放 presentation 草案）
+- 决策日期：2026-08-11
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-02](./02-style-palette.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · [Standard Surface ADR-01](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/01-arbitrary-child-surface.md)
+- 替代：本 ADR 先前的六 preset / 任意 child 草案，以及 ADR-02 中 caption / credit 作为首版公开 presentation token 的承诺；ADR-02 继续拥有四类保留 preset 的 token、merge 与 Plot theme 转发边界
 
 ## 背景与目标
 
-Plot 负责图本体及 axis、legend、datum / mark label 等可视化语义。一个可独立绘制的 Chart 还需要标题、说明、来源、徽记或其它 renderer-neutral 内容，而且作者需要决定这些内容相对 Plot 的顺序、伸缩和对齐方式。
+Chart 需要同时服务两类作者：需要完整 Grammar-of-Graphics 表达的作者，希望在 Plot 外直接增加标题、说明与来源；需要传统图表类型的作者，希望通过 `ScatterChart`、`BubbleChart` 等 typed component 获得完整 recipe。两者最终都应形成同一个可序列化、可检查、可由 SVG / Canvas 等 renderer 执行的 Chart 结果。
 
-Chart 不应把这类需求冻结成固定槽位树，也不应复制通用布局系统。Chart 只拥有 Plot body 的占位语义和一组可选文本 preset；有序组合、item 约束、测量与排列全部复用 Standard FlexLayout，任意自定义内容复用 Core `IRChild`。最终结果必须在 JSON、React、Vanilla、SSR、SVG 与 Canvas 中保持等价，普通 DOM `ReactNode` 不进入 Chart IR。
+现有长期设计已经把 Chart-level presentation 与 Plot guide / label 分开，并确定用 Layout `layout.flexLayout` 组合 Plot、再由 Standard `standard.surface` 包装完整内容。本 ADR 进一步冻结首个公开 authoring surface、完整 canonical Chart 结果、React / Vanilla 归一规则和 presentation 顺序语义，避免 adapter 用 DOM 外壳补标题，也避免把 typed ChartSpec、完整 PlotSpec 和 presentation 分散成互不等价的执行入口。
 
-## 核心决策：开放的 Flex children 与唯一 Plot 占位
+## 核心决策：基础 Chart 与 typed Chart 同构
 
-`presentation` 是一个按 authored order 排列的 Standard Flex authoring surface：
-
-```ts
-type ChartPresentation = {
-  layout?: Omit<FlexLayoutInput, 'children'>;
-  children: Array<ChartPresentationItem>;
-};
-
-type ChartPresentationFlexItem = Omit<FlexLayoutItemInput, 'kind' | 'key' | 'child'>;
-
-type ChartPresentationTextBlock = IRTextBlock; // additionally constrained by the non-empty contract below
-
-type ChartPresentationText =
-  | ChartPresentationTextBlock
-  | {
-      text: ChartPresentationTextBlock;
-      font?: IRFont;
-      textColor?: IRNode['textColor'];
-      align?: IRNode['align'];
-      lineHeight?: IRNode['lineHeight'];
-      maxTextWidth?: IRNode['maxTextWidth'];
-    };
-
-type ChartPresentationItem =
-  | (ChartPresentationFlexItem & {
-      key?: 'chart.plot';
-      content: { kind: 'plot' };
-    })
-  | (ChartPresentationFlexItem & {
-      key?: string;
-      content: {
-        kind: 'preset';
-        preset: 'title' | 'subtitle' | 'caption' | 'note' | 'source' | 'credit';
-        text: ChartPresentationText;
-      };
-    })
-  | (ChartPresentationFlexItem & {
-      key: string;
-      content: { kind: 'child'; child: IRChild };
-    });
-```
-
-`layout` 与 item 的 margin、basis、grow、shrink、min、max、alignSelf 等字段沿用 Standard 的公开 Flex 契约；Chart 不建立近似字段或私有 solver。`kind: 'plot'` 表示当前 Chart recipe 解析出的完整 PlotSpec，必须在 `children` 中恰好出现一次。`kind: 'child'` 接受任意 JSON-safe Core child，包括已注册的 Tier 2 composite；它不受“恰好一个主 Plot 占位”的限制。
-
-`children` 的顺序就是最终 Flex paint 与排列顺序，Chart 不做 canonical 重排。作者可以把 preset 或自定义 child 放在 Plot 前后任意位置，也可以完全不用文本 preset。存在 `presentation` 时，即使只有 Plot 占位也生成 FlexLayout；没有 `presentation` 时直接保留裸 PlotSpec，不生成空容器。
-
-`ChartPresentationTextBlock` 是 Core `IRTextBlock` 的 non-empty refinement：至少包含一个长度大于零的 plain text、styled-line text、mixed-run text 或 TeX leaf；空字符串、空 block 和所有 leaf 都为空的 block 非法。styled wrapper 只开放上方列出的 Core Node text-style leaves，不接受布局、形状、事件或 renderer 字段。
-
-## Preset、identity 与默认布局
-
-`title`、`subtitle`、`caption`、`note`、`source`、`credit` 是便捷内容 preset，不是保留槽位。preset 把 `ChartPresentationText` 映射为 renderer-neutral Core text child，并消费 ADR-02 对应 token；作者可以重复使用同一 preset、改用自定义 child，或为任意 item 设置独立 Flex 参数。
-
-Plot item 的 container-local key 固定为 `chart.plot`；省略时自动补齐，显式写入其它值 fail-loud。preset item 缺省 key 为 `chart.presentation.<preset>`，也可以显式改成其它 non-empty key；因此重复使用同一 preset 时必须为重复项提供不同 key。custom child 必须显式提供 key。所有默认补齐完成后，item key 在当前 presentation 内必须唯一。
-
-Chart 的默认 Flex preset 是 column、no-wrap、start distribution，并把 ADR-02 `chart.gap` 用作默认 `rowGap`；其余缺省值沿用 Standard。`presentation.layout` 按字段覆盖该 preset，并开放 Standard 的完整 container 配置，包括 direction、wrap、physical gaps、distribution、alignment、size、padding 与 overflow。`chart.padding` 仍属于完整 Chart surface，不与 Flex container padding 混为一谈。
-
-文本 cascade 复用 Core 的继承语义，不新增 Chart 文本模型：`chart.font.family` 与 preset 对应的 foreground、font size / weight、line height、align token 形成 wrapper defaults；preset-local styled text 只覆盖明确写入的 leaf，TextBlock 内 line / run 已写入的 leaf 最终优先。custom child 完全保留自身样式，不消费 preset token。
-
-## Headless authoring 契约
-
-React 入口采用包级扁平导出的 headless components，组件只声明 Chart IR，不渲染 DOM。公开组件是 `Chart`、`ChartPlot`、`ChartItem`、`ChartTitle`、`ChartSubtitle`、`ChartCaption`、`ChartNote`、`ChartSource` 与 `ChartCredit`；不提供 `Chart.Xxx` namespace 或兼容别名：
+公开 React authoring 提供两层同构组件：
 
 ```tsx
-<Chart spec={chartSpec} layout={{ direction: 'column', rowGap: 8 }}>
-  <ChartTitle>Revenue</ChartTitle>
-  <ChartItem itemKey="badge" grow={0}>
-    <Node position={[0, 0]}>Draft</Node>
-  </ChartItem>
-  <ChartPlot />
-  <ChartCaption>Quarterly revenue</ChartCaption>
-</Chart>
+<Chart>{/* 完整 Plot authoring surface */}</Chart>
+
+<ScatterChart />
+<BubbleChart />
 ```
 
-三类 presentation marker 共享 Standard Flex item 的 `margin`、`basis`、`grow`、`shrink`、`min`、`max` 与 `alignSelf` 字段，并统一使用非 React-special 的 `itemKey` 映射 canonical JSON `key`：
+基础 `Chart` 直接承载完整 Plot authoring surface，再增加 Chart-owned presentation。它不接受 `type`，也不嵌套一个显式 `Plot` child；它的 Plot props 与 Plot authoring children 经过 Plot adapter 的正式构造链形成完整 PlotSpec。
+
+每个 `XxxChart` 先把稀疏、type-first 输入解析为完整 PlotSpec，再进入与基础 `Chart` 相同的 canonical Chart、presentation、inspection 和 runtime 主链。typed Chart 的核心 recipe 继续不可撤销；需要脱离该 recipe 自由组合时使用基础 `Chart`。
+
+不提供 `<Chart type="scatter">`，也不让基础 `Chart` 成为第二个 recipe dispatcher。`Chart` 与 `XxxChart` 的差异只发生在完整 PlotSpec 生成之前。
+
+## Canonical `IRChart`
+
+typed ChartSpec 保存稀疏高层意图；`IRChart` 保存已经完成 Plot recipe resolution 和 presentation authoring normalization 的完整执行输入。两者职责不同，不进入同一个 `type` 判别 union：
 
 ```ts
-type ChartPresentationFlexProps = ChartPresentationFlexItem & {
-  itemKey?: string;
+type IRChart = {
+  namespace: 'chart';
+  type: 'chart';
+  id?: string;
+  chartThemeTokens?: IRChartThemeTokenOverrides;
+  plot: IRPlotSpec;
+  presentation?: IRChartPresentation;
 };
 
-type ChartPlotProps = ChartPresentationFlexProps & {
-  itemKey?: 'chart.plot';
+type IRChartPresentation = {
+  children: Array<IRChartPresentationItem>;
 };
 
-type ChartPresetProps = ChartPresentationFlexProps &
-  ({ text: ChartPresentationText; children?: never } | { text?: never; children: ChartTextAuthoring });
+type ChartPresentationPreset = 'title' | 'subtitle' | 'note' | 'source';
 
-type ChartItemProps = Omit<ChartPresentationFlexProps, 'itemKey'> & {
-  itemKey: string;
-} & ({ ir: IRChild; children?: never } | { ir?: never; children: ReactDrawableAuthoring });
+type IRChartPresentationItem =
+  | (ChartPresentationFlexItem & {
+      kind: 'plot';
+      key: 'chart.plot';
+    })
+  | {
+      [P in ChartPresentationPreset]: ChartPresentationFlexItem & {
+        kind: 'preset';
+        key: `chart.presentation.${P}`;
+        preset: P;
+        text: IRTextBlock;
+        font?: IRFont;
+        textColor?: IRNode['textColor'];
+        align?: IRNode['align'];
+        lineHeight?: IRNode['lineHeight'];
+        maxTextWidth?: IRNode['maxTextWidth'];
+      };
+    }[ChartPresentationPreset];
 ```
 
-`ChartPlot` 声明唯一主 Plot 占位；其 `itemKey` 省略时补为 `chart.plot`，显式值只能是 `chart.plot`。六个 `Chart<Preset>` 文本组件声明对应 preset，均接受完整 Flex item props；`text` 直接接受 JSON-safe `ChartPresentationText`，JSX `children` 则只接受与 Core Node text authoring 等价的字符串、数字、Text line 与透明组织节点，并归一化为同一 non-empty `ChartPresentationTextBlock`，两种输入互斥。重复 preset 使用各自的 `itemKey`，不能依赖 React `key` 形成 Chart identity。
+`ChartPresentationFlexItem` 只复用 Layout Flex item 的 `margin`、`basis`、`grow`、`shrink`、`min`、`max` 与 `alignSelf`。Chart 不复制 Flex solver，也不公开近似的 container layout 配置。presentation 使用 `direction=column`、`wrap=nowrap`、`justifyContent=start`、`alignContent=start`，并以 Chart theme 的 gap 作为默认 row gap；`alignItems` 与其余行为沿用 Layout 默认值。
 
-`ChartItem` 接受完整 Flex item props、必需的 `itemKey`，以及一个 renderer-neutral drawable child或等价的显式 `ir: IRChild`；两种 child 输入互斥。Fragment、数组等只可透明组织 `Chart` 的直接 presentation child 或单个 item 内的 drawable authoring；DOM element、函数、事件回调、零个或多个 `IRChild` 结果均 fail-loud。
+`presentation.children` 必须恰好包含一个 Plot item，每个 preset 最多出现一次，key 由 kind / preset 固定。数组顺序是 canonical 顺序和唯一真源。IR resolver 必须按数组出现顺序逐项映射为 Layout Flex children，禁止根据 preset、语义名称或默认位置二次排序。
 
-`Chart` 展平透明 Fragment / array 后，只把 `ChartPlot`、六个 `Chart<Preset>` component 与 `ChartItem` 识别为 presentation child；其它已支持的 Plot authoring child 继续进入 ChartCommon 的 Plot extension normalizer，不参与 presentation 顺序或 item key 校验。无法归入这两条正式语义链的 child fail-loud，不做 DOM 渲染或启发式分类。
+缺少 `presentation` 时直接使用裸 Plot，不生成空 FlexLayout。显式 `presentation` 即使只含 Plot item 也形成 FlexLayout，使手写 JSON 对“是否存在 presentation container”的选择保持可观察。
 
-`Chart` 只允许一个 presentation authoring 真源。若 `spec` 已包含 `presentation`，`Chart` 不得再声明 `layout` 或任何 headless presentation child；若 `Chart` 声明了 `layout` 或 headless presentation child，则 `spec` 必须省略 `presentation`。两套输入同时出现时 fail-loud，不做覆盖、合并或隐式排序。React authoring 最终先归一化为同一个 canonical `ChartPresentation`，再进入与 Vanilla builder、手写 JSON 相同的 schema 与 resolution 主链。
+`IRChart.id` 是包含 presentation 与 Plot body 的整图 identity；`chartThemeTokens` 保留 Chart canvas、padding、gap 与四类 preset 的 Chart-owned 稀疏覆盖。Plot-owned theme、intrinsic size、data、model、transform、scale、coordinate / composition、mark、guide 与 meta 全部保留在完整 `IRChart.plot` 中，不在 Chart 根重复。
 
-嵌套的 Plot、Standard 或自定义 Tier 2 JSX 必须通过 Kernel adapter 的通用 contribution / dependency 聚合进入宿主，保留自己的 datasets、definitions、inspection roots 与适用的 runtime sidecar。Chart React 不得丢弃 foreign contribution、提前 lower child、复制 definition，或为本组件私造旁路。Vanilla authoring 直接接受 JSON-safe `ChartPresentation`，或使用只返回上述三类 canonical item 的 typed constructor；最终输入与输出都必须通过同一 Chart schema，helper 不得增加 callback、runtime object、隐式顺序或 React 独有语义。某一入口不得拥有其它入口无法序列化的 presentation 语义。
+`IRChart`、`IRChartPresentation` 和各 item 类型全部由 strict Zod schema 推导；IR 不接受函数、ReactNode、class、renderer object 或显式 `undefined`。`IRChart.plot` 必须通过 PlotSpec schema。
 
-该聚合能力必须由独立、已 Accepted 的 Kernel adapter owner ADR 先行冻结并实现。Chart 依赖的长期结果包括：显式声明 composite dependencies；Chart dataset 进入 Plot 的正式 dataset group；等价 definition 确定性去重、冲突 definition fail-loud；nested inspection 与适用的 handler / runtime sidecar 保真转交；compile 前完成 owner-qualified dependency preflight；React 与 Vanilla 同构。该 gate 解除前，Chart schema 与 framework-neutral presentation mapping 可以实现，但 Chart headless component runtime 入口保持关闭。
+`IRChart` 是 Chart 唯一进入 Core composite dispatch 的根，完整 key 固定为 `chart.chart`，并由单一 `ChartDefinition` 下沉到 Standard Surface。`scatter`、`bubble` 等 typed ChartSpec 是 `@retikz/chart` 的封闭 authoring recipe 输入，不是 `IRChild`、CompositeDefinition 或 dependency provider；它们必须在 Core compile 前由共享 Chart resolver 归一为 `IRChart`。基础 Chart 则从完整 Plot authoring 直接构造同一 `IRChart`。两条入口在形成 `IRChart` 后不再保留逐类型 compile 分支。
 
-## Inspection 与空间语义
+### 基础 Chart 根与 Plot body
 
-ADR-03 扩展 Chart inspection，最小公开形态为：
+基础 Chart 的“完整 Plot authoring surface”指形成 PlotSpec 所需的 data、model、transform、scale、coordinate / composition、mark、guide、Plot theme 与 intrinsic size 不被裁剪，Plot runtime options 也由 adapter contribution 原样转交正式 Plot runtime；它不表示把宿主字段或 runtime callback 写入 JSON-safe `IRChart.plot`。
+
+Chart root 的 renderer host、外层 placement / transform / clip / theme 与 `id` 作用于包含 presentation 的整图。spec 模式保留传入 `PlotSpec.id`，并只允许 presentation marker 作为额外 children；DSL 模式把直接 children 分为 presentation marker 与 Plot declaration，再将全部 Plot declaration 交给 Plot adapter 的正式 builder。DSL 模式存在 Chart `id` 时，内部 Plot body 使用 `${chartId}/plot`；没有 Chart `id` 时不生成全局、计数或其它隐式 id。
+
+## Presentation shorthand 与默认位置
+
+基础 `Chart` 和所有 `XxxChart` 共同提供：
 
 ```ts
-type ChartPresentationItemInspection = {
+type ChartPresentationShorthandProps = {
+  title?: string;
+  subtitle?: string;
+  note?: string;
+  source?: string;
+};
+```
+
+shorthand 不自动添加 `Source:`、`Note:` 或其它语言前缀。只有作者提供内容时才生成对应 presentation item。
+
+shorthand 没有排序配置，使用固定默认位置：
+
+```text
+title
+subtitle
+Plot
+note
+source
+```
+
+这些默认位置只属于 authoring normalization，不进入 canonical IR 的 `position` 字段。
+
+## React headless marker
+
+React base entry 包级导出四个 headless marker；所有 family subpath 也 re-export 它们：
+
+```tsx
+<ChartTitle />
+<ChartSubtitle />
+<ChartNote />
+<ChartSource />
+```
+
+标准拼写是 `ChartSubtitle`。不提供 `Chart.Subtitle` namespace、兼容别名、`ChartCaption`、`ChartCredit`、`ChartPlot` 或 `ChartItem`。
+
+共享 marker props 为：
+
+```ts
+type ChartPresentationMarkerProps = ChartPresentationFlexItem & {
+  children: ChartTextAuthoring;
+  position?: 'top' | 'bottom';
+  font?: IRFont;
+  textColor?: IRNode['textColor'];
+  align?: IRNode['align'];
+  lineHeight?: IRNode['lineHeight'];
+  maxTextWidth?: IRNode['maxTextWidth'];
+};
+```
+
+`ChartTitle` / `ChartSubtitle` 的 `position` 默认是 `top`；`ChartNote` / `ChartSource` 默认是 `bottom`。`position` 只决定 authoring normalization 时放到 Plot placeholder 前还是后，不进入 canonical `IRChart`。
+
+marker 必须是 `Chart` / `XxxChart` 展平透明 Fragment 后的直接 child。每类 marker 最多一个；重复 marker fail-loud。无法识别为 marker 的直接 child 继续由基础 Chart 的 Plot authoring 或 typed Chart 的正式 Plot-extension normalizer 消费；无法进入任一正式链路的 child fail-loud。
+
+同名 marker 完整覆盖同名 shorthand，不做字段级合并。归一顺序固定为：
+
+```text
+显式 top markers（JSX authored order）
+剩余 top shorthand（title -> subtitle）
+Plot
+显式 bottom markers（JSX authored order）
+剩余 bottom shorthand（note -> source）
+```
+
+例如显式 `ChartSubtitle`、`ChartTitle`、`ChartSource`、`ChartNote` 会形成 `subtitle -> title -> Plot -> source -> note`，resolver 不得再次按 preset 排序。
+
+## Text authoring 与样式
+
+marker children 首版只接受字符串、透明 Fragment 和现有 Core React `Text` marker。`Text` 保持现有整行语义；多个 `Text` 形成多行 TextBlock。普通 DOM element、数字、函数、事件 callback、任意 React component 和零个有效文本结果均 fail-loud。
+
+React adapter 只负责把该 authoring 归一为 JSON-safe Core `TextBlock`。首版不增加 inline `TextRun`，也不改变现有 `Text` 的整行语义。空字符串、空 TextBlock 和所有 text / TeX leaf 都为空的内容非法；普通空白仍按 Core 文本内容处理。
+
+文本样式优先级为：
+
+```text
+Chart theme preset defaults
+< marker block-level text props
+< Text line-level authored leaves
+```
+
+Chart 只把 preset 与 block-level text leaves 映射为 Core text Node 输入；文字测量、换行、line / run 继承与 renderer 输出继续由 Core 拥有。marker 不公开 Node 的 shape、position、label、边框、事件或 renderer surface。
+
+## Vanilla authoring parity
+
+Vanilla 提供基础与 typed convenience helper：
+
+```ts
+type ChartPresentationAuthoringRecord = ChartPresentationFlexItem & {
+  preset: ChartPresentationPreset;
+  position?: 'top' | 'bottom';
+  text: string | IRTextBlock;
+  font?: IRFont;
+  textColor?: IRNode['textColor'];
+  align?: IRNode['align'];
+  lineHeight?: IRNode['lineHeight'];
+  maxTextWidth?: IRNode['maxTextWidth'];
+};
+```
+
+Vanilla 不接受 React Fragment / `Text` element；多行或逐行样式直接使用 JSON-safe `IRTextBlock`。
+
+```ts
+createChart({
+  plot: plotSpec,
+  title: '属性标题',
+  presentation: [
+    { preset: 'subtitle', position: 'top', text: '副标题' },
+    { preset: 'source', position: 'bottom', text: 'UCI Auto MPG' },
+  ],
+});
+
+createScatterChart({
+  data: 'auto-mpg',
+  encoding: {
+    x: { field: 'weight' },
+    y: { field: 'mpg' },
+  },
+  title: '车辆重量与燃油效率',
+  presentation: [{ preset: 'source', position: 'bottom', text: 'UCI Auto MPG' }],
+});
+```
+
+Vanilla `presentation` 是 marker 的 plain-data 对等输入，保持数组 authored order，preset 同样唯一，并与 shorthand 使用相同覆盖和剩余项规则。Vanilla convenience input 中的 `position` 也只属于 authoring sugar。
+
+React adapter 先把 marker 转为 framework-neutral presentation authoring records；React 与 Vanilla 随后调用 `@retikz/chart` 拥有的同一个纯 normalizer，生成等价 `IRChart`。任何入口都不得拥有其它入口无法序列化的顺序、文本或样式语义。手写 canonical JSON 直接以 Plot placeholder 前后的数组位置表达顺序，不消费 `position`。
+
+Vanilla `create*` 返回的 authoring result 固定包含 `chart`、完整 dependency `contribution`，以及创建时显式传入的可选根 `theme` 与 `themeStyles`。其中只有 `chart` 是 JSON-safe canonical IR；Theme style definition 是运行时定义，既不能写入 IR，也不能由依赖 contribution 表达。将它们作为 result 的显式值成员，使结果经对象复制、缓存或跨 helper 转交后仍保留同一个可观察 Theme 输入，不依赖 WeakMap 或其它 object-identity sidecar。
+
+`renderChart(result, options)` 接受 Vanilla render options，但排除 adapter 注入与 `compileDriver`。后者可以产生额外只读 layers、diagnostics 与提交语义，而本 API 固定只返回一次 Core `compileResult` 及其 primary Scene 的 SVG，不能静默丢弃这些产物。需要 compile driver 时，作者直接使用完整 Vanilla authored-IR 入口。`renderChart` 把 result 的 contribution 与调用方显式的 composite definitions 合并一次，并在同一次 Core compile 中依次消费 result 与调用方给出的 Theme styles；不得为 SVG 再次 compile。
+
+## Inspection、identity 与空间语义
+
+Chart inspection 至少区分裸 Plot 与 Flex presentation，并按 canonical children 顺序提供 item records：
+
+```ts
+type IRChartPresentationItemInspection = {
   key: string;
-  contentKind: 'plot' | 'preset' | 'child';
-  preset?: 'title' | 'subtitle' | 'caption' | 'note' | 'source' | 'credit';
+  kind: 'plot' | 'preset';
+  preset?: 'title' | 'subtitle' | 'note' | 'source';
   sourcePath: string;
 };
-
-type ChartPresentationInspection = {
-  contentKind: 'plot' | 'flex-layout';
-  items: Array<ChartPresentationItemInspection>;
-};
 ```
 
-`items` 始终按最终直接内容的 authored order 排列并包含主 Plot。没有 `presentation` 时，inspection 是 bare `plot`，且只含 `{ key: 'chart.plot', contentKind: 'plot', sourcePath: '$resolved/plot' }`；显式 presentation 时为 `flex-layout`，每条 `sourcePath` 固定指向 canonical `$spec/presentation/children/<index>`。JSON、React 与 Vanilla 都先归一化为同一 children 数组，因此产生相同 source path。preset record 必须写 `preset`；Plot 与 custom child record 不写。inspection 不复制 custom child、PlotSpec、Flex geometry、surface geometry或子能力已有的 provenance / lineage。
+显式 presentation 的 `sourcePath` 指向 canonical `presentation.children/<index>`；inspection 不重排、不复制 TextBlock 或 PlotSpec。裸 Plot inspection 只记录主 Plot。
 
-Chart 只拥有整个 Chart、唯一主 Plot item及其 presentation item 的外层 identity。item key 是当前 Chart occurrence 内的 container-local identity，不替换、重命名或遮蔽 PlotSpec / custom child 自己的 id、namespace、inspection 或 locator。Chart 有显式 id 时，未来 qualified selector 以 Chart id 与 item key 组成稳定外层定位；Chart 无 id 时，item key 只在当前 compile occurrence 内稳定，不承诺跨 sibling Chart 或跨重新排列的全局选择。Standard probe / replay 可以改变最终 geometry，但不能改变 item 顺序与 key，也不能丢失 Plot body 或 nested Tier 2 child 已有的 identity、inspection、provenance、locator 与 lineage。公开空间访问继续等待 Core qualified selector；Chart 不复制 Plot 或 Core 的 handle registry。
+Chart 拥有整个 Chart、主 Plot item 和四类实际存在的 presentation item 的外层 identity。固定 item key 不替换 PlotSpec 自己的 id、namespace、inspection、locator 或 provenance。Layout 布局可以改变最终 geometry，但不得改变 canonical item 顺序、key 或吞掉 Plot 内部 handle。
 
-## 行为、失败语义与兼容性
+完整公开运行时仍依赖 Core qualified selector 与 Kernel cross-namespace dependency aggregation。缺失依赖、selector target 不存在或 namespace 越界必须 fail-loud，Chart 不复制 Plot handle registry 或建立 adapter 私有 identity。
 
-- `presentation.children` 必须非空，并且恰好包含一个主 Plot 占位
-- authored order、显式 Flex 参数和自定义 child 必须原样进入 Standard Flex 输入
-- 默认 key 补齐后重复 key、非法 Plot key、空 custom key、未知字段或非法 Standard Flex 值 fail-loud
-- preset text 必须包含至少一个非空 plain / styled line 或 mixed run；custom child 的有效性沿用 Core / 对应 composite schema
-- 缺省 presentation 产生裸 Plot；显式 presentation 产生 FlexLayout，不因只有 Plot item而被省略
-- style token 只作用于 preset child；preset-local style 只覆盖 authored leaf；custom child 样式不被 Chart 改写
-- React、Vanilla 与手写 JSON 使用同一 schema 与 resolution 主链；adapter 不提供 DOM-only title、CSS-only layout 或 renderer-only child
-- `Chart` 的 `spec.presentation` 与 headless presentation children 互斥；同时存在时 fail-loud
+唯一 `chart.chart` dependency provider 必须直接、按序声明 `standard.surface`、`layout.flexLayout`、`plot.plot` 三个完整 key。最终 IR 仍按实际结构嵌套为 `chart.chart -> standard.surface -> layout.flexLayout? -> plot.plot`；provider dependency graph 表达 definition 闭包，不替代 IR 的父子结构。Chart package 不发布 `chart.scatter`、`chart.bubble` 等逐类型 Core providers。
+
+## 行为与失败语义
+
+- 基础 `Chart` 接受完整 Plot authoring，但拒绝 `type` prop 和显式嵌套 `Plot`
+- Chart root 的 identity 与宿主外壳作用于整图；spec 模式保留 PlotSpec identity，DSL 模式只在显式 Chart id 存在时派生稳定 Plot body id
+- typed `XxxChart` 必须先产生通过 PlotSpec schema 的完整 PlotSpec，并保持 type 核心 recipe
+- 同名 marker 完整覆盖 shorthand；未覆盖 shorthand 进入其固定默认位置
+- marker 同类重复、非直接 child、空内容、非法 element 或非法 Text authoring 均 fail-loud
+- Vanilla explicit presentation 中重复 preset、空内容和非法 position 均 fail-loud
+- canonical presentation 恰好一个 Plot、每种 preset 最多一次、固定 key 且 authored order 保持不变
+- 无 presentation 产生裸 Plot content；显式 presentation 产生 Layout FlexLayout content；两者最终都进入 Standard Surface
+- adapter 不提供 DOM-only title、CSS-only layout、renderer-only text 或静默忽略路径
+- standalone Chart 的 Core `themeStyles` 配置其自行创建的 Layout；嵌入式 Chart 只消费父 Layout 传下来的 Core Theme definitions，子级不得私自登记 Core style
 - Chart 包裹前后，主 Plot 的 semantic identity、domain payload、provenance、locator 与 lineage 保持连续
 
-该契约在 `0.x` 阶段替换此前固定六槽位草案，不提供兼容别名或 canonical 重排桥接。
+该契约在 `0.x` 直接替代先前开放六 preset、重复 preset、任意 `IRChild`、`ChartPlot` 与 `ChartItem` 的草案，并把 caption / credit token 从首版公开 Chart theme contract 移除；不提供兼容别名、migration、fallback 或新旧双轨。
 
 ## 功能与包边界
 
-- Chart 拥有主 Plot 占位、文本 preset 语义、style token 映射、item source inspection 与到 Standard 输入的确定性转换
-- Standard 拥有 FlexLayout schema、item 行为、测量、排列以及可包装任意 child 的 renderer-neutral surface / background / padding
-- Core 拥有 `IRChild`、TextBlock、文本测量、layout replay 与 spatial handle / selector 基础
-- Kernel React / Vanilla adapter owner 通过独立 ADR 拥有跨 namespace contribution、dataset、definition、inspection 与 runtime sidecar 聚合
-- Plot body 始终是完整 PlotSpec；Chart 不接管 Plot guide、label、composition、trace 或 nested Plot 的依赖
-- Chart React / Vanilla 只把 authoring 归一化为同一 Chart IR 并接入宿主 runtime，不拥有 presentation 默认与布局算法
+- `@retikz/chart` 根入口拥有并导出基础 Chart contract、包含整图 identity / Chart token handoff 的完整 `IRChart` schema、四类 preset、共享 authoring normalizer、Chart inspection、单一 `ChartDefinition` 与到 Layout Flex / Standard Surface 输入的确定性转换。typed ChartSpec 与 resolver 随 family 从 `@retikz/chart/<family>` 导出
+- `@retikz/chart-react` 根入口拥有基础 `<Chart>`、direct-child marker 识别、Core `Text` authoring 转换和 React runtime 接线。typed JSX component 随 family 从 `@retikz/chart-react/<family>` 导出
+- `@retikz/chart-vanilla` 根入口拥有基础 plain helper、显式 Theme value handoff、SSR convenience 和 Vanilla runtime 接线。typed plain helper 随 family 从 `@retikz/chart-vanilla/<family>` 导出
+- Plot 拥有完整 Plot authoring、PlotSpec、Axis、Legend、Mark、Scale、Coordinate、Annotation、definition / registry 与 lowering
+- Layout 拥有 `layout.flexLayout` schema、默认、测量、排列与 solver
+- Standard 只拥有 `standard.surface` 的背景、padding、border / corner radius、overflow 与任意 child 包装，不拥有或转发 FlexLayout
+- Core 拥有 Node、TextBlock、文字测量、Scene、identity 与 renderer-neutral spatial 基础
+- Kernel adapter owner 拥有 Chart、Plot 与 Standard contribution、dataset、definition、inspection 和 runtime sidecar 的通用聚合
 
-完整 host 必须正式组装 Chart、Plot、FlexLayout、surface 及所有 nested child 声明的 definitions。缺少已 Accepted 的 Kernel contribution dependency ADR、surface 或 spatial selector capability 时必须 fail-loud 或保持对应公开入口关闭，不允许用 DOM / renderer 特判补洞。
+adapter 不得复制 Chart normalizer、Plot builder、Layout solver、Standard Surface lowering、Core Text/Node schema 或 renderer 行为。
+
+三个根入口只导出当前与未来 family 共用的基础 API：`@retikz/chart` 导出 `IRChart`、`ChartSchema`、`ChartDefinition`、presentation / inspection / Chart style 数据契约；`@retikz/chart-react` 导出基础 `Chart`、四个 marker 与 `ChartThemeProvider`；`@retikz/chart-vanilla` 导出 `createChart` 与 `renderChart`。Point typed contract 通过 `@retikz/chart/point` 的 `resolvePointChartSpec`、`@retikz/chart-react/point` 的 `ScatterChart` / `BubbleChart` / `ConnectedScatterChart` 与 `@retikz/chart-vanilla/point` 的三个 typed factory 提供。每个 family subpath 同时 re-export 其基础入口，不保留 root typed export 兼容别名。
+
+Chart 三包使用独立 `chart` release group 并保持 `0.1.0-alpha.1` lockstep。该组是 `viz` feature，但其 Tier 3 包边界要求直接消费 `plot` feature group；因此 release-group 真源必须用显式 `dependsOn: ['plot']` 声明这条有向组依赖。`dependsOn` 表达直接、非传递的跨 feature 发布组依赖：目标组必须存在且在数组中唯一，禁止 self-edge，完整发布组图必须无环；每条声明必须由源组至少一个包到目标组包的真实 workspace dependency 支撑，反之任一真实跨 feature 依赖也必须有源组的直接声明。校验器不按 Chart 名称开白名单，不全局放宽同领域或跨领域 feature 互依；未知、重复、自环、循环、未消费声明和未声明真实边全部 fail-loud。同组依赖使用 `workspace:*`，Chart 到 Plot 及其它组的依赖使用 `workspace:^`。机器真源、可读 package-topology 与发布流程规则必须同步。
 
 ## 能力完备性与架构验证
 
-- 所属能力域与问题：Chart-level presentation 属于 Visualization 上层封装；通用组合属于 Drawing Complete 的 Standard 能力
-- 归属结论：主 Plot 占位和文本 preset 归 Chart；任意 child、Flex 布局、surface、adapter 聚合与空间底座分别复用其 owner
-- 内部表达：Chart presentation 可确定性转换为现有 Standard FlexLayout，不新增 layout IR、solver、文字测量或 renderer 语义
-- 外部扩展：开放点是现有 `IRChild` 与 Tier 2 definition / registry 链路；preset 是闭合语义，不新增 Chart registry
-- 下游闭环：Chart presentation -> Standard Flex composition -> Plot / nested composite lowering -> Core IR / Scene -> renderer
-- adapter 等价：React flat components、Vanilla builder 与 JSON 共享 Chart schema；foreign Tier 2 contribution 等待独立 Kernel owner ADR 提供通用保真聚合
-- 不支持边界：DOM ReactNode、宿主 UI 状态、renderer object 与缺少 definition 的 composite 不进入或不绕过正式主链
-- 依赖结论：Chart 组合现有 Core / Standard 能力并允许 owner-local mapping；通用嵌套 contribution 先下沉到独立 Kernel owner ADR，完成前保持 headless component runtime gate
+- 所属能力与问题：Chart authoring / presentation 属于 Visualization 上层封装；Plot 表达由 Visualization Complete 拥有；Flex 复用 Layout，Surface 复用 Standard，Text / Scene 复用 Core
+- 归属结论：基础与 typed Chart 只在 PlotSpec 生成前分流，之后共用唯一 `chart.chart` canonical `IRChart`、`ChartDefinition` 和执行主链
+- 内部表达：完整 PlotSpec、固定 Plot placeholder 与四类 TextBlock preset 可确定性转换为现有 Layout FlexLayout，再进入 Standard Surface；不新增 layout solver、文字模型或 renderer 语义
+- 外部扩展：Chart type 仍是封闭目录，不适用 Chart registry；基础 Chart 与 typed Chart 的扩展全部复用 Plot 的正式 authoring 和 definition / registry
+- adapter 等价：React marker 与 Vanilla plain records 共享 framework-neutral normalizer；canonical JSON 不携带宿主对象或 authoring-only position
+- 下游闭环：`IRChart -> standard.surface<layout.flexLayout?<plot.plot>> -> Standard / Layout / Plot lowering -> Core IR / Scene + spatial sidecar -> renderer / tooling`；无 presentation 时 Surface 直接包含 Plot
+- 不支持边界：任意 presentation child、DOM content、宿主 UI、renderer object 与 inline TextRun 不进入首版契约
+- 依赖结论：本 ADR 组合现有 Chart / Plot / Layout / Standard / Core 能力；通用 contribution、surface 与 spatial gaps 继续由其 owner 先行闭环，不能用 adapter 特判绕过
+- 发布拓扑：Chart 保持独立 feature release group，通过真源中的显式有向 `dependsOn` 消费 Plot；不并入 Plot 组、不把 Plot 改称 foundation，也不允许未声明的 feature 互依
 
 ## 被否决方案
 
-- 固定 title -> subtitle -> Plot -> caption -> note -> source -> credit：无法表达任意顺序、重复 preset 和自定义内容
-- 把 presentation 写入 PlotSpec：会扩张 Plot 的长期职责
-- 让用户直接传任意 ReactNode 或用 DOM / CSS 外壳布局：会破坏 JSON、Vanilla、SSR、SVG 与 Canvas parity
-- Chart 自建 layout IR、box solver、文字测量或 surface composite：会复制 Standard / Core 能力
-- Chart React 丢弃或私自合并 nested Tier 2 contribution：会让自定义 child 只能视觉嵌入而无法携带正式依赖和 inspection
+- 只提供 typed `XxxChart`：无法让完整 Plot 作者复用 Chart-native presentation，迫使其回到外部 DOM 外壳
+- `<Chart type="scatter">`：把基础 Plot wrapper 与封闭 recipe dispatcher 混为一个宽 union，削弱 typed component 的可发现性和类型约束
+- 固定语义排序：无法表达 `subtitle -> title` 或 `source -> note`，并会让 JSX / Vanilla authored order 在 canonical IR 中丢失
+- 在 canonical IR 保留 `position`：会同时存在 position 和数组顺序两个真源，并迫使 resolver 决定冲突优先级
+- 开放六 preset、重复 preset 与任意 `IRChild`：首版扩大 identity、依赖聚合和文档表面，却没有当前已确认消费者
+- 暴露 `ChartPlot` / `ChartItem`：让用户手工维护本可由完整 Chart 结果保证的唯一 Plot placeholder 和通用 item wrapper
+- 允许普通 ReactNode 或 DOM / CSS 外壳：破坏 Vanilla、SSR、SVG、Canvas 和 JSON parity
+- 把 title / subtitle / note / source 写入 PlotSpec：扩张 Plot 的长期职责并混淆 Plot label 边界
 
 ## 测试策略摘要
 
-需要 schema、Flex 契约复用、默认与 authored order、唯一 Plot / key 不变量、preset cascade、custom IRChild、inspection、递归 composite 以及 trace / lineage 连续性证据。关键不变量是 Chart 不重排 children、不改写 custom child、只用 Standard 执行布局。
+需要 schema / parser 证明 `IRChart`、唯一 Plot、preset 唯一、固定 key、TextBlock、JSON-safe 和 strict unknown-field；shared normalizer 证明 shorthand 默认顺序、marker 覆盖、top / bottom authored order 与 React / Vanilla 等价；presentation resolution 证明 canonical 数组顺序与 Layout Flex children 完全一致且不改写 Plot；compile / renderer 证明 Standard Surface 下 SVG 与 Canvas 的上下布局一致，并证明 Vanilla result 经 value copy 后仍在一次 compile 中保留根 Theme 与 style definitions；inspection / spatial evidence 证明 Chart 外层 identity 与 Plot 内部 provenance / locator / lineage 连续；release topology 验证合法的显式 Chart→Plot 直接边，拒绝未知、重复、self、cycle、未消费声明与未声明真实跨 feature 边，并保持组内 `workspace:*`、跨组 `workspace:^`；文档和 browser evidence 证明真实数据示例由 Chart 自身渲染 title、subtitle 与 source。
 
-公开入口启用前仍需补齐 nested contribution、spatial transparency、React / Vanilla / JSON parity 与 renderer parity 证据，证明三种 authoring 入口生成等价 canonical tree，并且任意 nested Tier 2 child 沿正式 definition 与 dataset 主链执行。
+关键反例包括重复 marker / preset、非直接 child、空文本、非法 React element、零个或多个 Plot placeholder、resolver 根据 preset 重排、DOM-only title、adapter-only 默认值与 Chart 包裹后 Plot identity 丢失。详细 case、文件、命令和证据映射进入 ignored test contract，不写入本 ADR。
 
 ## 不在本 ADR 范围
 
-- toolbar、export、fullscreen、loading 与 dashboard linked state
-- 普通 DOM content、事件 callback 与宿主交互组件
+- caption、credit、任意 presentation child、重复 preset、inline TextRun 与完整 Node authoring
+- toolbar、export、fullscreen、loading、responsive state 与 dashboard linked state
 - accessibility description 到宿主 DOM / renderer 的具体映射
-- Standard surface 或 Core qualified selector 的具体 API 与实现
+- Standard surface、Kernel contribution aggregation 或 Core qualified selector 的具体 API 与实现
+- 具体 Scatter / Bubble recipe 字段和其它 Canonical Type
+
+## 最终实现摘要与遗留边界
+
+基础 `Chart` 与已实现的 typed Chart 现在在完整 PlotSpec 形成后汇合为唯一 canonical `IRChart`，并由单一 `chart.chart` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body。React marker、Vanilla plain record 与手写 JSON 共享同一 presentation normalizer；`position` 只参与 authoring，最终 children 顺序是唯一的 canonical 真源。Chart 的 `title`、`subtitle`、`source`、`note` 均在图内渲染，且 marker 可整体覆盖同名 shorthand。
+
+该契约已覆盖 schema、normalizer、adapter、renderer-neutral Scene、SVG、Canvas、inspection、spatial continuity、发布产物与双语真实数据文档的验证层。完整 Chart 的常规运行时依赖 provider graph 将 Chart、Plot、Flex 与 Surface definition 聚合进同一次 compile，并由 Flex / Surface 完成测量、排列与包装；这条渲染链不读取 qualified spatial handle。后者只为 Chart 封装后仍可由外部 selector 定位 Plot 内部空间、进行 inspection 或后续 attachment 提供独立的空间透明能力。本 ADR 不扩大这些底座的职责。
+
+遗留范围保持不变：caption、credit、任意 presentation child、inline TextRun、宿主工具栏与响应式状态不属于首版；尚未通过各自 capability gate 的 Regression、Ranged Dot 与 Strip 也不因此获得实现或公开入口。

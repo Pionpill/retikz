@@ -2,8 +2,8 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type * as RetikzReact from '@retikz/react';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
-import { definePlotThemeStyle, getPlotThemePreset } from '@retikz/plot';
+import { ThemeMode } from '@retikz/core';
+import { definePlotThemeStyle, getDefaultPlotThemePreset } from '@retikz/plot';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -20,7 +20,7 @@ vi.mock('@retikz/react', async importOriginal => {
   };
 });
 
-import { Plot } from '../../src';
+import { Plot, PlotThemeProvider } from '../../src';
 
 const spec: IRPlotSpec = {
   namespace: 'plot',
@@ -38,7 +38,7 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => ({ tokens: getPlotThemePreset(ThemeStyle.Neutral, ThemeMode.Light) }),
+  resolve: () => ({ tokens: getDefaultPlotThemePreset(ThemeMode.Light) }),
 });
 
 describe('Plot React runtime style options', () => {
@@ -64,11 +64,56 @@ describe('Plot React runtime style options', () => {
     ).not.toThrow();
   });
 
+  it('standalone Plot consumes ambient Plot style definitions', () => {
+    capturedLayouts.length = 0;
+
+    renderToStaticMarkup(
+      <PlotThemeProvider plotThemeStyles={[plotThemeStyle]}>
+        <Plot spec={spec} data={data} />
+      </PlotThemeProvider>,
+    );
+
+    const layout = capturedLayouts.at(-1);
+    const composites = layout?.composites as Array<{ expand: (node: IRPlotSpec, context: unknown) => unknown }>;
+    expect(() =>
+      composites[0].expand(spec, {
+        theme: {
+          style: 'brand',
+          mode: 'light',
+          colors: {
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            categorical: ['#2563eb'],
+          },
+        },
+      }),
+    ).not.toThrow();
+  });
+
   it('embedded Plot adapter keeps runtime style definitions out of the contribution payload', () => {
     const adapter = Plot.embeddableAdapter;
     expect(adapter).toBeDefined();
 
     const contribution = adapter?.contribute({ spec, data });
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
+    expect(contribution).not.toHaveProperty('datasets');
+    expect(contribution).not.toHaveProperty('makeComposites');
+
+    const dependency = contribution?.compositeDependencies;
+    expect(dependency?.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(dependency?.providers).toHaveLength(1);
+    expect(dependency?.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(dependency?.providers[0]?.dependencies).toEqual([]);
+  });
+
+  it('embedded Plot contributions reuse the stable plot.plot maker', () => {
+    const adapter = Plot.embeddableAdapter;
+    expect(adapter).toBeDefined();
+
+    const first = adapter?.contribute({ spec, data });
+    const second = adapter?.contribute({ spec, data });
+
+    expect(first?.compositeDependencies.providers[0]?.makeDefinition).toBe(
+      second?.compositeDependencies.providers[0]?.makeDefinition,
+    );
   });
 });

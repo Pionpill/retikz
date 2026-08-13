@@ -1,4 +1,4 @@
-﻿import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -22,7 +22,7 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };

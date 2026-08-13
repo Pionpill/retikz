@@ -7,14 +7,13 @@ import type {
 import type { EmbeddableContribution } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
 
-import { FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition } from '@retikz/layout';
+import { FlexLayoutProvider, GridLayoutProvider, OverlayLayoutProvider } from '@retikz/layout';
 import { buildIRWithContributions } from '@retikz/react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { LayoutItemProps } from '../layout-item';
 
 import { LayoutItem } from '../layout-item';
-import { LayoutReactNamespace } from './constants';
 
 type LayoutItemInputByKind = Readonly<{
   flex: FlexLayoutItemInput;
@@ -25,12 +24,12 @@ type LayoutItemInputByKind = Readonly<{
 /** 布局项目内部转发给外层贡献的声明位置 */
 type NestedAuthoringSite = NonNullable<EmbeddableContribution['authoringSites']>[number];
 
-/** 为每次 React family contribution 返回可变的布局 definition 副本 */
-export const makeReactLayoutComposites = (): ReturnType<EmbeddableContribution['makeComposites']> => [
-  FlexLayoutDefinition,
-  GridLayoutDefinition,
-  OverlayLayoutDefinition,
-];
+type CompositeDependencyContribution = EmbeddableContribution['compositeDependencies'];
+
+const LAYOUT_PROVIDERS = new Set([FlexLayoutProvider, GridLayoutProvider, OverlayLayoutProvider]);
+
+const isLayoutProviderKey = (key: CompositeDependencyContribution['roots'][number]): boolean =>
+  [...LAYOUT_PROVIDERS].some(provider => provider.key.namespace === key.namespace && provider.key.type === key.type);
 
 /** 透明展开 Fragment 和数组，同时保留需要由 container 验证的直属节点 */
 const flattenLayoutChildren = (children: ReactNode): Array<ReactNode> => {
@@ -54,9 +53,10 @@ const validateNestedLayoutContributions = (
 ): void => {
   const foreign = contributions.some(
     contribution =>
-      contribution.namespace !== LayoutReactNamespace ||
-      contribution.makeComposites !== makeReactLayoutComposites ||
-      Object.keys(contribution.datasets).length > 0,
+      contribution.roots.length === 0 ||
+      contribution.providers.length === 0 ||
+      contribution.roots.some(root => !isLayoutProviderKey(root)) ||
+      contribution.providers.some(provider => !LAYOUT_PROVIDERS.has(provider)),
   );
   if (foreign) throw new Error('Layout LayoutItem cannot forward foreign Tier 2 contributions');
 };
@@ -69,11 +69,19 @@ const resolveLayoutItemChild = (
   child: LayoutItemInputByKind[LayoutItemKindValue]['child'];
   /** 子元素内部按声明顺序收集的位置 */
   authoringSites: ReadonlyArray<NestedAuthoringSite>;
+  /** 子元素按 authored 顺序携带的 Layout provider graph contributions */
+  compositeDependencies: CompositeDependencyContribution;
 }> => {
   const hasIR = props.ir !== undefined;
   const hasChildren = props.children !== undefined;
   if (hasIR === hasChildren) throw new Error('Layout LayoutItem requires exactly one of children or ir');
-  if (hasIR) return Object.freeze({ child: props.ir, authoringSites: Object.freeze([]) });
+  if (hasIR) {
+    return Object.freeze({
+      child: props.ir,
+      authoringSites: Object.freeze([]),
+      compositeDependencies: Object.freeze({ roots: Object.freeze([]), providers: Object.freeze([]) }),
+    });
+  }
   const built = buildIRWithContributions(props.children);
   if (built.ir.children.length !== 1) {
     throw new Error('Layout LayoutItem React child must produce exactly one IRChild');
@@ -89,6 +97,10 @@ const resolveLayoutItemChild = (
           return Object.freeze(site) as NestedAuthoringSite;
         }),
     ),
+    compositeDependencies: Object.freeze({
+      roots: Object.freeze(built.contributions.flatMap(contribution => contribution.roots)),
+      providers: Object.freeze(built.contributions.flatMap(contribution => contribution.providers)),
+    }),
   });
 };
 
@@ -101,8 +113,12 @@ export const resolveReactLayoutItems = <TKind extends LayoutItemKindValue>(
   items: Array<LayoutItemInputByKind[TKind]>;
   /** 所有项目内部按声明顺序收集的位置 */
   authoringSites: ReadonlyArray<NestedAuthoringSite>;
+  /** 所有项目内部按声明顺序转发的 Layout provider graph contribution */
+  compositeDependencies: CompositeDependencyContribution;
 }> => {
   const authoringSites: Array<NestedAuthoringSite> = [];
+  const roots: Array<CompositeDependencyContribution['roots'][number]> = [];
+  const providers: Array<CompositeDependencyContribution['providers'][number]> = [];
   const items = flattenLayoutChildren(children).map(child => {
     if (!isValidElement(child) || child.type !== LayoutItem) {
       throw new Error('Layout layout container direct children must be LayoutItem');
@@ -116,7 +132,13 @@ export const resolveReactLayoutItems = <TKind extends LayoutItemKindValue>(
     void ir;
     const resolved = resolveLayoutItemChild(props);
     authoringSites.push(...resolved.authoringSites);
+    roots.push(...resolved.compositeDependencies.roots);
+    providers.push(...resolved.compositeDependencies.providers);
     return { ...item, key: itemKey, child: resolved.child } as LayoutItemInputByKind[TKind];
   });
-  return Object.freeze({ items, authoringSites: Object.freeze(authoringSites) });
+  return Object.freeze({
+    items,
+    authoringSites: Object.freeze(authoringSites),
+    compositeDependencies: Object.freeze({ roots: Object.freeze(roots), providers: Object.freeze(providers) }),
+  });
 };

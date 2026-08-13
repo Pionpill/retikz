@@ -1,12 +1,9 @@
 import type { ValueOf } from '@retikz/foundation';
 
-import type { ThemeMode, ThemeStyle, ThemeTokenSource } from './constants';
+import type { ThemeMode, ThemeTokenSource } from './constants';
 
 /** 可由 Theme IR 持久化的开放视觉人格名称 */
 export type ThemeStyleValue = string;
-
-/** Core 内置视觉人格名称 */
-export type BuiltinThemeStyleValue = ValueOf<typeof ThemeStyle>;
 
 export type ThemeModeValue = ValueOf<typeof ThemeMode>;
 
@@ -34,7 +31,7 @@ export type ResolvedThemeColors = Readonly<{
 /** 编译当前位置完整、只读的有效 Theme */
 export type ResolvedTheme = Readonly<{
   /** 当前视觉人格 */
-  style: ThemeStyleValue;
+  style?: ThemeStyleValue;
   /** 当前明暗环境 */
   mode: ThemeModeValue;
   /** 由 selector 派生的 shared color view */

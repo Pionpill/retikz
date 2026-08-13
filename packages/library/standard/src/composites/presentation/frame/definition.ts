@@ -13,5 +13,5 @@ export const FrameDefinition: ExpandCompositeDefinition<IRFrame, typeof STANDARD
   namespace: STANDARD_NAMESPACE,
   type: 'frame',
   schema: FrameSchema,
-  expand: lowerFrame,
+  expand: frame => ({ children: [lowerFrame(frame)] }),
 });

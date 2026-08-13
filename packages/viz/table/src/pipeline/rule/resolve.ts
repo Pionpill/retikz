@@ -88,7 +88,7 @@ const themeTokenSourceOf = (key: AppearanceStyleTokenKey, options: ResolveTableC
     kind: TableCellPlanSourceKind.StyleToken,
     tokenKey: key,
     tokenSource: options.tableThemeTokens?.sources[key].kind ?? ThemeTokenSource.Local,
-    tokenPath: options.tableThemeTokens?.sources[key].path ?? `$style/neutral/light/${key}`,
+    tokenPath: options.tableThemeTokens?.sources[key].path ?? `$default/light/${key}`,
   });
 
 /** 把 style border token 物化为固定低优先级 Cell candidate */

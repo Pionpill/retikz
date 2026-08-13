@@ -3,7 +3,13 @@ import type { ReactNode } from 'react';
 
 import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide, PlotSpecSchema } from '@retikz/plot';
 
-import type { BuildPlotSpecOptions, ResolveLabelMap } from './contracts';
+import type {
+  BuildPlotSpecOptions,
+  PlotAuthoringContext,
+  PlotAuthoringRuntime,
+  PlotMemberFragment,
+  ResolveLabelMap,
+} from './contracts';
 
 import { collectPlotDeclarations } from './collector';
 import { normalizePlotDeclarations } from './normalize';
@@ -27,6 +33,25 @@ const resolveLabelBySpec = new WeakMap<IRPlotSpec, ResolveLabelMap>();
 
 /** 取某 PlotSpec 经 buildPlotSpec 收集的 resolveLabel 运行时表 */
 export const resolveLabelOf = (spec: IRPlotSpec): ResolveLabelMap | undefined => resolveLabelBySpec.get(spec);
+
+/** Chart typed extension 的 Plot-owned declaration 归一化结果 */
+export type ResolvedPlotExtensionAuthoring = Readonly<{
+  /** JSON-safe Plot member fragment */
+  fragment: PlotMemberFragment;
+  /** 不进入 IR 的 Plot runtime sidecar */
+  runtime: PlotAuthoringRuntime;
+}>;
+
+/**
+ * 将 Chart typed children 交给 Plot 的正式 collector 和 normalizer
+ * @description 保留 React Fragment 路径、来源冲突诊断和 runtime sidecar。Chart 只消费返回值，不复制 Plot authoring 规则
+ */
+export const resolvePlotExtensionAuthoring = (
+  children: ReactNode,
+  context: Omit<PlotAuthoringContext, 'mode'>,
+): ResolvedPlotExtensionAuthoring => {
+  return normalizePlotDeclarations(collectPlotDeclarations(children), { ...context, mode: 'chart-extension' });
+};
 
 /**
  * 把 React Plot children 构造成 schema-valid 的 PlotSpec

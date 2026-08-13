@@ -1,6 +1,6 @@
 import type { LegendInput } from '@retikz/standard';
 
-import { createLegend, LegendContentKind, LegendDefinition } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -29,7 +29,6 @@ describe('legend()', () => {
     const contribution = LegendVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: LegendVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
@@ -37,7 +36,7 @@ describe('legend()', () => {
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.legend', id: 'status' });
     expect(contribution.node).toEqual(createLegend(input));
     expect(contribution.node).toMatchObject({ contentAlign: 'end' });
-    expect(contribution.makeComposites({})).toEqual([LegendDefinition]);
+    expect(contribution.compositeDependencies).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 
   it('renders the same SVG as direct canonical IR in the same compile environment', () => {
@@ -45,7 +44,6 @@ describe('legend()', () => {
     const contribution = LegendVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: LegendVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
@@ -56,11 +54,11 @@ describe('legend()', () => {
     );
     const vanillaOutput = renderToSvgString(
       { type: 'scene', version: 1, children: [contribution.node] },
-      { compile: { composites: contribution.makeComposites({}) } },
+      { compile: { composites: [LegendDefinition] } },
     );
 
     expect(contribution.node).toEqual(direct);
-    expect(contribution.makeComposites({})).toEqual([LegendDefinition]);
+    expect(LegendProvider.makeDefinition({})).toBe(LegendDefinition);
     expect(vanillaOutput).toBe(directOutput);
   });
 });

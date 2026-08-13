@@ -75,6 +75,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@retikz/standard": "workspace:^",
     "@types/d3-format": "catalog:",
     "@types/d3-scale": "catalog:",
     "@types/node": "catalog:",

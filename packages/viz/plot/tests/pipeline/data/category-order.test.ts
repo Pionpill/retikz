@@ -1,6 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +11,7 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
-const sharedCategorical = resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light).categorical;
+const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 /** 下沉一个 plot spec，取外层 plot scope */
 const expandOf = (
@@ -20,7 +20,7 @@ const expandOf = (
   options: LowerPlotsOptions = opts,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 取第一个 mark 图层 scope */

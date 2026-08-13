@@ -17,7 +17,7 @@ const expandOf = (
   options: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const firstLayer = (

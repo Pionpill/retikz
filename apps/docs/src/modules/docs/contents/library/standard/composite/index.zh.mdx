@@ -1,11 +1,25 @@
 ---
 title: 展现
-description: Standard 提供可选、可动态加载、以横向能力扩展 Core 的 Tier 2 组件。
+description: Standard 提供可按 rooted provider 装配的通用 Tier 2 展现组件，并统一下沉为 Core 图元。
 ---
 
-Standard 不向 Core 增加默认图元或渲染语义。每个组件拥有自己的 JSON-safe 高层 IR，并经已加载的 composite definition 下沉为 Core 图元。
+Standard 不向 Core 增加默认图元或渲染语义。Grid、Axes、Frame、Surface 与 Legend 各自拥有 JSON-safe 高层 IR、exact-key provider 和唯一 Definition；React / Vanilla adapter 只 root 当前 authored capability，Core 再解析可达依赖。
 
-## 展现
+直接 IR 宿主仍可把完整 Definition 数组传给 `CompileOptions.composites`。需要跨 owner 组合时使用 provider graph，不从 child IR 猜测包或 definition。
+
+## 职责一览
+
+| 主题   | 职责                                           | 何时查阅                                         |
+| ------ | ---------------------------------------------- | ------------------------------------------------ |
+| 网格   | 生成规则笛卡尔网格、主线与边框                 | 需要背景参考线或规则格点                         |
+| 坐标轴 | 组合轴线、箭头、刻度、轴名与可选网格           | 需要独立于 Plot 的通用二维参考平面               |
+| 分组框 | 按直接 Node 内容计算边界，并放置标题与说明     | 需要用可测量边框组织一组绘图节点                 |
+| 表面   | 为任意单个 child 提供 padding、外观与 overflow | Chart、Table 或自定义 composite 需要通用单盒外壳 |
+| 图例   | 排列已解析的离散样本、连续变化与语义说明       | Plot、Table 或其它领域已完成 scale / label 解析  |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
 <LinkedCard href="/library/standard/composite/grid">
   <span className="font-semibold">网格</span>
@@ -22,7 +36,18 @@ Standard 不向 Core 增加默认图元或渲染语义。每个组件拥有自�
   <span className="mt-1 text-center text-sm text-muted-foreground">自动包围 Node 内容的边框、间距与标签</span>
 </LinkedCard>
 
+<LinkedCard href="/library/standard/composite/surface">
+  <span className="font-semibold">表面</span>
+  <span className="mt-1 text-center text-sm text-muted-foreground">
+    为任意单个 child 提供内边距、背景、边框、圆角与 overflow
+  </span>
+</LinkedCard>
+
 <LinkedCard href="/library/standard/composite/legend">
   <span className="font-semibold">图例</span>
   <span className="mt-1 text-center text-sm text-muted-foreground">已解析离散样本、连续变化与含义的通用排列</span>
 </LinkedCard>
+
+</div>
+
+Provider、直接 Definition 与错误边界见 [Provider 与 Definition 装载](/library/standard/extension/capability-loading)。

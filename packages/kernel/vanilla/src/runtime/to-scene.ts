@@ -1,4 +1,4 @@
-import type { CompileArtifact, CompileOptions, IRScene, Scene } from '@retikz/core';
+import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
@@ -37,6 +37,8 @@ export type SceneResult = {
   scene: Scene;
   /** 主编译产出的 artifacts */
   artifacts: ReadonlyArray<CompileArtifact>;
+  /** authored input 的完整 Core compile result；预编译 Scene 输入为 undefined */
+  compileResult: CompileResult | undefined;
   /** 与主 Scene 同 revision 的后置只读图层 */
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** 可选编译驱动产出的诊断 */
@@ -91,6 +93,7 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
     return {
       scene: input,
       artifacts: EMPTY_ARTIFACTS,
+      compileResult: undefined,
       layers: EMPTY_READONLY_LAYERS,
       diagnostics: EMPTY_DIAGNOSTICS,
       runtimeMeta: createEmptyRuntimeMeta(),
@@ -109,6 +112,7 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
   return {
     scene: output.primary.scene,
     artifacts: output.primary.artifacts,
+    compileResult: output.primary,
     layers: output.layers,
     diagnostics: output.diagnostics,
     runtimeMeta: prepared.runtimeMeta,

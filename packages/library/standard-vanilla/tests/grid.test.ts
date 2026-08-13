@@ -1,4 +1,4 @@
-import { createGrid } from '@retikz/standard';
+import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
 import { normalizeFigureSpec } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,6 @@ describe('grid()', () => {
     const contribution = GridVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: GridVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
@@ -31,14 +30,14 @@ describe('grid()', () => {
     const contribution = GridVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: GridVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid', id: 'paper' });
     expect(contribution.node).toMatchObject({ namespace: 'standard', type: 'grid' });
-    expect(contribution.makeComposites({})).toHaveLength(1);
+    expect(contribution.compositeDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
+    expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
   });
 
   it('merges multiple Grid embeds through one stable definition maker', () => {
@@ -66,7 +65,6 @@ describe('grid()', () => {
     const contribution = GridVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: GridVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
@@ -87,7 +85,6 @@ describe('grid()', () => {
     const contribution = GridVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: GridVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });

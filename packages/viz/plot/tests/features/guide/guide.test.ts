@@ -13,9 +13,9 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
-const fakeScale = (coordinate: (value: number) => number): PositionScale => ({
+const fakeScale = (coordinate: (value: number) => number, domain: ReadonlyArray<number> = [0, 1]): PositionScale => ({
   coordinate: value => coordinate(value as number),
-  domain: () => [0, 1],
+  domain: () => domain,
   bandwidth: 0,
   ticks: () => ({ values: [], labels: [] }),
   range: () => [0, 0],
@@ -362,6 +362,137 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['0', '1', '2', '3']);
   });
 
+  it('axis_grid_domain_endpoints_are_opt_in', () => {
+    const endpointCtx: GuideContext = {
+      ...ctx,
+      projectX: fakeScale(value => 40 + value * 40, [-1, 3]),
+      xTicks: { values: [0, 2], labels: ['0', '2'] },
+    };
+    const withoutEndpoints = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, endpointCtx);
+    const explicitlyDisabled = lowerGuide(
+      { type: 'axis', dimension: 'x', grid: { includeDomain: false } },
+      endpointCtx,
+    );
+
+    expect(((withoutEndpoints.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+    expect(((explicitlyDisabled.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+  });
+
+  it('axis_grid_appends_missing_effective_domain_endpoints_after_explicit_source', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [0, 2] }, includeDomain: true },
+      },
+      { ...ctx, projectX: fakeScale(value => 40 + value * 40, [-1, 3]) },
+    );
+    const steps = ((gridLayer as IRScope).children[0] as IRPath).children;
+
+    expect(steps).toHaveLength(8);
+    expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: [40, 10] });
+    expect(steps[2]).toEqual({ type: 'step', kind: 'move', to: [120, 10] });
+    expect(steps[4]).toEqual({ type: 'step', kind: 'move', to: [0, 10] });
+    expect(steps[6]).toEqual({ type: 'step', kind: 'move', to: [160, 10] });
+  });
+
+  it('axis_grid_appends_domain_endpoints_after_density_without_changing_axis_ticks', () => {
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { density: { kind: 'sample', maxCount: 2 }, includeDomain: true },
+      },
+      {
+        ...ctx,
+        projectX: fakeScale(value => 40 + value * 40, [0, 5]),
+        xTicks: { values: [1, 2, 3, 4], labels: ['1', '2', '3', '4'] },
+      },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(8);
+    expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['1', '2', '3', '4']);
+  });
+
+  it('axis_grid_domain_endpoints_dedupe_by_finite_projected_coordinate', () => {
+    const existingEndpoint = lowerGuide(
+      { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
+      {
+        ...ctx,
+        projectX: fakeScale(value => 40 + value * 40, [0, 2]),
+        xTicks: { values: [0, 1, 2], labels: ['0', '1', '2'] },
+      },
+    );
+    const coincidentEndpoints = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [] }, includeDomain: true },
+      },
+      { ...ctx, projectX: fakeScale(() => 40, [0, 10]) },
+    );
+    const nonFiniteEndpoint = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [5] }, includeDomain: true },
+      },
+      {
+        ...ctx,
+        projectX: fakeScale(value => (value === 0 ? Number.NaN : 40 + value * 40), [0, 10]),
+      },
+    );
+
+    expect(((existingEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
+    expect(((coincidentEndpoints.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(2);
+    expect(((nonFiniteEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+  });
+
+  it('axis_grid_domain_endpoints_use_band_position_without_becoming_plot_area_borders', () => {
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { includeDomain: true, bandPosition: 0 },
+      },
+      {
+        ...ctx,
+        projectX: fakeBandScale({ A: 100, B: 200 }, 20),
+        xTicks: { values: ['A'], labels: ['A'] },
+      },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(4);
+    expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
+    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [190, 10] });
+  });
+
+  it('axis_grid_domain_endpoints_do_not_change_minor_grid_candidates', () => {
+    const { axisLayer, gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: {
+          ticks: { values: [1] },
+          includeDomain: true,
+          minor: { ticks: { values: [0.5, 1.5] } },
+        },
+      },
+      {
+        ...ctx,
+        projectX: fakeScale(value => 40 + value * 40, [0, 2]),
+        xTicks: { values: [1], labels: ['1'] },
+      },
+    );
+    const [majorGrid, minorGrid] = (gridLayer as IRScope).children as Array<IRPath>;
+
+    expect(majorGrid.children).toHaveLength(6);
+    expect(minorGrid.children).toHaveLength(4);
+    expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['1']);
+  });
+
   it('axis_grid_minor_uses_second_path_and_skips_major_overlap', () => {
     const { gridLayer } = lowerGuide(
       {
@@ -461,6 +592,48 @@ describe('lowerGuide (contract)', () => {
     expect(majorGrid.children.every(step => step.kind !== 'arc')).toBe(true);
     expect(minorGrid.children).toHaveLength(2);
     expect(minorGrid.dashPattern).toEqual([2, 2]);
+  });
+
+  it('polar_angular_grid_dedupes_cyclic_domain_endpoints', () => {
+    const angularScale = fakeScale(value => value % 360, [0, 360]);
+    const { gridLayer } = lowerGuide(
+      {
+        type: 'axis',
+        dimension: 'x',
+        grid: { ticks: { values: [90] }, includeDomain: true },
+      },
+      {
+        ...ctx,
+        frame: {
+          type: 'polar2D',
+          roles: ['x', 'y'],
+          center: [100, 100],
+          innerRadius: 20,
+          outerRadius: 80,
+          startAngle: 0,
+          endAngle: 360,
+          continuousAngle: true,
+          primary: angularScale,
+          secondary: fakeScale(value => value),
+          roleScales: { x: angularScale, y: fakeScale(value => value) },
+          project: () => null,
+          projectRoles: () => null,
+          projectPolar: () => null,
+          projectCell: () => ({
+            kind: 'sector',
+            center: [100, 100],
+            innerRadius: 0,
+            outerRadius: 1,
+            startAngle: 0,
+            endAngle: 1,
+          }),
+        },
+        angularTicks: { values: [], labels: [] },
+      },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(4);
   });
 
   it('tick_pixels_match_projector', () => {
@@ -994,7 +1167,7 @@ const guidedSpec = (guides: Array<unknown>): IRPlotSpec =>
 
 const expandOf = (spec: IRPlotSpec): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, { width: 480, height: 300 });
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 describe('lowerPlots guide orchestration (contract)', () => {
@@ -1005,12 +1178,13 @@ describe('lowerPlots guide orchestration (contract)', () => {
         { type: 'axis', dimension: 'y', grid: true },
       ]),
     );
-    // children = [y 网格层, mark 层, x 轴层, y 轴层]
-    expect(outer.children).toHaveLength(4);
-    // 第一个是网格层（带 strokeOpacity）
+    // children = [x 网格层, y 网格层, mark 层, x 轴层, y 轴层]
+    expect(outer.children).toHaveLength(5);
+    // 前两个是网格层（带 strokeOpacity）
     expect(((outer.children[0] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
+    expect(((outer.children[1] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
     // 最后一个是轴层（纯文字 nodeDefault）
-    expect((outer.children[3] as IRScope).nodeDefault?.stroke).toBe('none');
+    expect((outer.children[4] as IRScope).nodeDefault?.stroke).toBe('none');
   });
 
   it('compile_with_guides_scene', () => {
@@ -1058,7 +1232,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     expect((axisLine[1] as { to: [number, number] }).to[0]).toBe(200);
   });
 
-  it('grid_uses_density_sampled_visible_tick_set', () => {
+  it('grid_uses_density_sampled_visible_tick_set_then_appends_theme_endpoints', () => {
     const outer = expandOf(
       guidedSpec([
         {
@@ -1072,6 +1246,6 @@ describe('lowerPlots guide orchestration (contract)', () => {
     const gridLayer = outer.children[0] as IRScope;
     const gridPath = gridLayer.children[0] as IRPath;
 
-    expect(gridPath.children).toHaveLength(6);
+    expect(gridPath.children).toHaveLength(10);
   });
 });

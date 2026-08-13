@@ -90,6 +90,7 @@ describe('<Plot spec data> 薄包装', () => {
         tokens: {
           'axis.grid.enabled': true,
           'axis.grid.stroke': '#ff00ff',
+          'axis.grid.includeDomain': true,
         },
       },
     ];

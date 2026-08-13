@@ -211,7 +211,7 @@ retained `update()` 只接受与后端匹配的 closed plain-data options：SVG 
 
 `figure({ children })` 会生成默认 layer。需要明确绘制顺序、稳定 layer id 或未来失效提示时，再用 `layers` 分层。`zIndex` 只决定 layer stack 排序，相同值保持声明顺序；`cache` 只进入 runtime metadata，不进入 Core IR。alpha.2 会把它折叠为 retained config hint，但 SVG / Canvas renderer 尚不消费该字段，也不会据此启用 auto / static / dynamic layer 复用。
 
-Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 Core IR child、datasets 和 composite definitions。
+Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它只按 `kind` 找到注入的 adapter，把 props 静态 lower 成 Core IR child 与 rooted composite provider contribution。
 
 adapter 的根输出可以复用 embed id，表示 authoring 与 canonical IR 中的同一个语义元素；复杂 adapter 也可以输出其它唯一 id。Vanilla 通过 `identityIndex` 与 `parentIndex` 记录真实层级，不要求 id 使用 `embedId/...` 字符串前缀；整个 figure 内的公开 identity 仍必须唯一。
 
@@ -223,11 +223,9 @@ type BadgeProps = { label: string };
 
 const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
   kind: 'badge',
-  namespace: 'badge',
   lower: (props, context) => ({
     node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
-    datasets: {},
-    makeComposites: () => [],
+    compositeDependencies: { roots: [], providers: [] },
   }),
 };
 

@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { CSSProperties, FC } from 'react';
 
 import {
@@ -79,7 +78,6 @@ export type ComponentPreviewDialogProps = {
   /** 是否显示单预览 ThemeStyle 切换器。 */
   enableThemeSwitch?: boolean;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: ThemeStyleValue;
   /** 当前单预览 ThemeStyle 选择。 */
   themeStyleSelection?: PreviewThemeStyleSelection;
   /** 更新当前单预览 ThemeStyle 选择。 */
@@ -158,7 +156,6 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     themeMode,
     onThemeModeChange,
     enableThemeSwitch = false,
-    themeStyle,
     themeStyleSelection = 'inherit',
     onThemeStyleChange,
     controlPanelOpen,
@@ -204,7 +201,6 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       controlState={controlState}
       showContextBar={showContextBar}
       themeMode={themeMode}
-      themeStyle={themeStyle}
       onThemeModeChange={onThemeModeChange}
       enableThemeSwitch={enableThemeSwitch}
       themeStyleSelection={themeStyleSelection}

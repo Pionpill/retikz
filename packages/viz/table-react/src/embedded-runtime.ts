@@ -1,6 +1,6 @@
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 
-import { createTableRuntimeContribution, TABLE_NAMESPACE } from '@retikz/table';
+import { createTableRuntimeContribution } from '@retikz/table';
 
 import type { DetailTableProps } from './DetailTable';
 import type { ManualTableProps } from './ManualTable';
@@ -15,7 +15,6 @@ const createEmbeddableAdapter = <TProps extends TableProps | DetailTableProps | 
   kind: ReactTableRuntimeKindValue,
 ): EmbeddableTier2Adapter<TProps> => ({
   displayName,
-  namespace: TABLE_NAMESPACE,
   contribute: props => {
     const runtime = resolveReactTableRuntime(kind, props, { embedded: true });
     const reference = runtime.spec.id;
@@ -26,7 +25,7 @@ const createEmbeddableAdapter = <TProps extends TableProps | DetailTableProps | 
       lowerOptions: runtime.lowerOptions,
       composites: runtime.composites,
     });
-    return { node: runtime.spec, ...contribution };
+    return { node: runtime.spec, compositeDependencies: contribution };
   },
 });
 

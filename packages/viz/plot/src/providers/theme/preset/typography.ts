@@ -1,6 +1,6 @@
-import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
+import type { ThemeModeValue } from '@retikz/core';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
@@ -23,12 +23,7 @@ type TypographyTokenPreset = Readonly<
   >
 >;
 
-const styles: Record<BuiltinThemeStyleValue, TypographyStylePreset> = {
-  [ThemeStyle.Neutral]: { fontFamily: 'sans-serif', fontSize: 12 },
-  [ThemeStyle.Academic]: { fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif', fontSize: 12 },
-  [ThemeStyle.Vibrant]: { fontFamily: 'Inter, Segoe UI, Arial, sans-serif', fontSize: 13 },
-  [ThemeStyle.Clean]: { fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif', fontSize: 12 },
-};
+const defaultStructure: TypographyStylePreset = { fontFamily: 'sans-serif', fontSize: 12 };
 
 const modes: Record<ThemeModeValue, TypographyModePreset> = {
   [ThemeMode.Light]: { foreground: 'currentColor' },
@@ -36,8 +31,8 @@ const modes: Record<ThemeModeValue, TypographyModePreset> = {
 };
 
 /** 读取内建主题的 Plot typography token slice */
-export const getTypographyPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): TypographyTokenPreset => {
-  const structure = styles[style];
+export const getTypographyPreset = (mode: ThemeModeValue): TypographyTokenPreset => {
+  const structure = defaultStructure;
   const paint = modes[mode];
   return {
     [PlotThemeToken.PlotTypographyForeground]: paint.foreground,

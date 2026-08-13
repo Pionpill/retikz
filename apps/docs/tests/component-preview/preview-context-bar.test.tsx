@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import { ThemeStyle } from '@retikz/core';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -11,6 +10,7 @@ import {
   PreviewContextBar,
   PreviewThemeBoundary,
 } from '../../src/modules/docs/components/component-preview/context-bar';
+import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 
 beforeAll(async () => {
   await i18n.changeLanguage('zh');
@@ -42,7 +42,7 @@ describe('PreviewContextBar', () => {
         themeMode="inherit"
         onThemeModeChange={() => undefined}
         enableThemeSwitch
-        themeStyle={ThemeStyle.Academic}
+        themeStyle={PreviewThemeStyle.Academic}
         themeStyleSelection="inherit"
         onThemeStyleChange={() => undefined}
       />,
@@ -63,7 +63,7 @@ describe('PreviewContextBar', () => {
           themeMode="inherit"
           onThemeModeChange={() => undefined}
           enableThemeSwitch
-          themeStyle={ThemeStyle.Academic}
+          themeStyle={PreviewThemeStyle.Academic}
           themeStyleSelection="inherit"
           onThemeStyleChange={() => undefined}
         />,
@@ -89,7 +89,7 @@ describe('PreviewContextBar', () => {
           themeMode="inherit"
           onThemeModeChange={() => undefined}
           enableThemeSwitch
-          themeStyle={ThemeStyle.Academic}
+          themeStyle={PreviewThemeStyle.Academic}
           themeStyleSelection="inherit"
           onThemeStyleChange={() => undefined}
         />,

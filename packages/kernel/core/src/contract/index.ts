@@ -13,4 +13,5 @@ export * from './runtime';
 export * from './scene';
 export * from './scene-patch';
 export * from './shape';
+export * from './spatial-handle';
 export * from './theme-style';

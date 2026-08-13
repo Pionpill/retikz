@@ -1,11 +1,25 @@
 ---
 title: Presentation
-description: Standard provides optional, dynamically loaded Tier 2 capabilities that extend Core horizontally.
+description: Standard provides general Tier 2 presentation composites assembled through rooted providers and lowered uniformly into Core primitives.
 ---
 
-Standard does not add default primitives or renderer semantics to Core. Each component owns JSON-safe high-level IR and lowers through a loaded composite definition into Core primitives.
+Standard adds no default primitives or renderer semantics to Core. Grid, Axes, Frame, Surface, and Legend each own JSON-safe high-level IR, one exact-key provider, and one Definition. React and Vanilla adapters only root the authored capability; Core resolves its reachable dependencies.
 
-## Presentation
+Direct-IR hosts may still pass a complete Definition array through `CompileOptions.composites`. Cross-owner composition uses the provider graph instead of guessing packages or definitions from child IR.
+
+## Responsibilities
+
+| Topic   | Responsibility                                                            | Reach for it when                                              |
+| ------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Grid    | Produces regular Cartesian grids, major lines, and borders                | A figure needs background references or regular points         |
+| Axes    | Combines axis lines, arrows, ticks, labels, and optional grid             | A domain-neutral two-dimensional reference plane is needed     |
+| Frame   | Measures direct Node content and places a title and description around it | A measurable border should organize drawing nodes              |
+| Surface | Adds padding, appearance, and overflow to one arbitrary child             | Chart, Table, or a custom composite needs a reusable box shell |
+| Legend  | Arranges resolved discrete samples, continuous variation, and meaning     | Plot, Table, or another domain has resolved scales and labels  |
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
 <LinkedCard href="/library/standard/composite/grid">
   <span className="font-semibold">Grid</span>
@@ -28,9 +42,20 @@ Standard does not add default primitives or renderer semantics to Core. Each com
   </span>
 </LinkedCard>
 
+<LinkedCard href="/library/standard/composite/surface">
+  <span className="font-semibold">Surface</span>
+  <span className="mt-1 text-center text-sm text-muted-foreground">
+    Padding, background, border, radius, and overflow for one arbitrary child
+  </span>
+</LinkedCard>
+
 <LinkedCard href="/library/standard/composite/legend">
   <span className="font-semibold">Legend</span>
   <span className="mt-1 text-center text-sm text-muted-foreground">
     Generic arrangement for resolved discrete samples, continuous variation, and meaning
   </span>
 </LinkedCard>
+
+</div>
+
+See [Provider and Definition Loading](/library/standard/extension/capability-loading) for provider roots, direct Definitions, and failure boundaries.

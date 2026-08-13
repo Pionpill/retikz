@@ -48,9 +48,40 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 
 ## Theme 上下文
 
-`expand(node, context)` 与布局感知 `compile(node, context)` 都能读取冻结的 `context.theme`。它始终是完整的 `{ style, mode, colors }`：Core 从 `neutral + light` 开始，按 Scene → 外层 Scope → 内层 Scope 逐字段继承 selector，再由当前 style resolver 生成 `colors`。`colors` 是 detached/frozen 的 Core shared view，固定提供 `semantic.error/success/warning` 与非空 `categorical` palette，不是 Core 图元的隐式样式。
+`expand(node, context)` 与布局感知 `compile(node, context)` 都能读取冻结的 `context.theme`。它始终是完整的 `{ style?, mode, colors }`：Core 从默认 light 基线开始，按 Scene → 外层 Scope → 内层 Scope 逐字段继承 selector，再由默认 palette 或当前 style resolver 生成 `colors`。`colors` 是 detached/frozen 的 Core shared view，固定提供 `semantic.error/success/warning` 与非空 `categorical` palette，不是 Core 图元的隐式样式。
 
 Composite 负责把 shared `colors` 与自己 style resolver 生成的领域 token、palette 或其它默认映射为已经物化的正式 IR。Core 不解释 Tier 2 token，也不拥有 Plot、Chart、Table 的具体 token；Core primitive 与 renderer 也不解释 Theme。普通输出 Scope 与 `context.scope({ theme }, children)` 可以建立更内层环境；replay child 则保留 probe 时已经解析的 Theme，不会在提交位置被重新解释。自定义 style 必须同时注入 Core 与实际消费它的 Tier 2 resolver；任一 registry 缺失该名称都会 fail-loud。
+
+## 空间透明与 qualified handle
+
+有些 composite 不只生成可见图元，还要让外层工具在嵌套 Scope、布局 replay 与变换之后找到一个有领域含义的区域。`expand` 因而统一返回结构化结果；布局感知 `compile` 也可在同一结果中声明局部矩形：
+
+```ts
+return {
+  children: [{ type: 'node', position: [0, 0], text: 'Card' }],
+  spatialHandles: [
+    {
+      key: 'body',
+      role: 'card',
+      bounds: { x: -40, y: -20, width: 80, height: 40 },
+      tags: ['content'],
+      payload: { itemId: 'card-a' },
+    },
+  ],
+};
+```
+
+声明中的 `bounds` 位于当前 composite allocation coordinate。Core 在最终 traversal、Scope transform 与 replay settle 后，把它投影成 world-space 矩形 AABB，并在 `CompileResult.spatialHandles` 发布；`ownerPath` 按外到内保留每层 composite 的 `namespace`、`type`、显式 `id` 与 occurrence。
+
+| 层次                    | 保存什么                                   | 不进入什么                       |
+| ----------------------- | ------------------------------------------ | -------------------------------- |
+| callback declaration    | owner-local `key` / `role` / 局部矩形      | IR schema、Scene                 |
+| qualified compile index | `ownerPath` / world AABB / origin 与 final | SVG 属性、Canvas draw state      |
+| query                   | 精确 owner、祖先路径、key、role、全部 tags | renderer DOM 查询、几何 contains |
+
+`selectSpatialHandles()` 返回零到多项，`resolveSpatialHandle()` 要求恰好一项；跨 owner 查询不充分时会明确报告 miss 或 ambiguity，不猜“最近”的节点。没有声明时 index 仍存在且为空。
+
+`lowerIRToKernel()` 无法结算 world geometry：无声明或空声明仍可下沉，遇到非空 `spatialHandles` 会同步失败并要求改用 `compileToScene()`。这避免把局部矩形静默丢弃，或冒充已经结算的空间结果。
 
 ## 布局感知编译
 
@@ -213,8 +244,55 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
 
 如果你在实现 domain adapter、注入 `composites` / `embeddables`，或排查 datasets 汇总与宿主行为，请直接查 [Layout 高级能力与宿主接入](/kernel/components/layout/overview#高级能力与宿主接入)和[扩展运行时](/kernel/reference/runtime/extensions)，概念页不展开 React 静态遍历与聚合细节。
 
+## Provider roots 与传递依赖
+
+嵌入式 adapter 不直接拼 Definition 数组。它返回高层 `node`，并用 `CompositeDependencyContribution` 声明当前节点实际需要的 `roots` 与本次程序已经导入的 `providers`。每个 provider 只拥有一个完整 `namespace + type` key、直接依赖、runtime-only datasets 和一个稳定 `makeDefinition` 函数。
+
+<ComponentPreview files="embeddable-flow" size="xl" hideCode />
+
+Core 从 roots 计算可达闭包，按依赖优先、首次可达顺序物化每个 Definition 一次。下面的第三方 `third.card` 依赖 Standard Frame；两者进入同一张图，没有内置白名单：
+
+```ts
+import type { CompositeDependencyProvider } from '@retikz/core';
+
+import { resolveCompositeDependencies } from '@retikz/core';
+import { FrameProvider } from '@retikz/standard';
+
+const CardProvider = {
+  key: { namespace: 'third', type: 'card' },
+  dependencies: [FrameProvider.key],
+  datasets: {},
+  makeDefinition: () => CardDefinition,
+} satisfies CompositeDependencyProvider;
+
+const composites = resolveCompositeDependencies({
+  contributions: [
+    {
+      roots: [CardProvider.key],
+      providers: [CardProvider, FrameProvider],
+    },
+  ],
+});
+```
+
+`datasets` 只在 maker 调用前按 provider key 与 reference 合并，不进入 IR、Scene 或 manifest。同 reference 只有 `Object.is` 同源才能去重；provider maker、依赖顺序或 dataset identity 冲突都会在任何 maker 执行前失败。缺失依赖与环也在预检阶段报出完整 key 链。
+
+Provider graph 负责从可复用模块装配“需要哪些 Definition”。`CompileOptions.composites` 仍是 Core 编译器最终读取的 Definition 数组：直接 IR 作者可以显式传完整数组；React、Vanilla 或其它工具链则先用 resolver 生成数组。Provider 结果先写入，显式 Definition 后追加；同 key 只允许同一个 Definition 对象去重，不同对象 fail-loud。
+
 <SourceLinks
   sources={[
+    {
+      label: 'Provider graph contract 与 runtime-only datasets',
+      path: 'packages/kernel/core/src/contract/composite/dependency-provider.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: '可达闭包、拓扑顺序与冲突预检',
+      path: 'packages/kernel/core/src/contract/composite/resolve-dependencies.ts',
+      startLine: 69,
+      endLine: 209,
+    },
     {
       label: '校验 definition key 与 schema literal',
       path: 'packages/kernel/core/src/contract/composite/define.ts',
@@ -226,6 +304,18 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
       path: 'packages/kernel/core/src/contract/composite/types.ts',
       startLine: 20,
       endLine: 214,
+    },
+    {
+      label: 'Spatial declaration、qualified owner 与 selector 合同',
+      path: 'packages/kernel/core/src/contract/spatial-handle/types.ts',
+      startLine: 7,
+      endLine: 85,
+    },
+    {
+      label: 'Spatial handle 精确选择与唯一解析',
+      path: 'packages/kernel/core/src/contract/spatial-handle/query.ts',
+      startLine: 48,
+      endLine: 65,
     },
     {
       label: 'proposal 校验、冻结与 slot 求值',

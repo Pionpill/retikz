@@ -17,7 +17,7 @@ import { deepFreeze } from '../../shared';
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
 export type BuildTableManifestContext = Readonly<{
   /** 当前有效 Core Theme 的 style */
-  style: ThemeStyleValue;
+  style?: ThemeStyleValue;
   /** 当前有效 Core Theme 的 mode */
   themeMode: ThemeModeValue;
   /** 同次 resolved tokens */
@@ -102,7 +102,7 @@ export const buildTableLayoutManifest = (
         atoms: edge.atoms,
       })),
       style: {
-        style: manifestContext.style,
+        ...(manifestContext.style === undefined ? {} : { style: manifestContext.style }),
         themeMode: manifestContext.themeMode,
         tokens: manifestContext.tableThemeTokens.tokens,
         sources: TableThemeTokenKeySchema.options.map(key => ({

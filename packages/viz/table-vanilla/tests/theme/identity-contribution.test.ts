@@ -8,7 +8,6 @@ import { createTableAdapter } from '../../src';
 const contextOf = (id: string): VanillaEmbedContext => ({
   id,
   kind: 'table',
-  namespace: 'table',
   layerId: 'content',
   identityPath: ['content', id],
 });
@@ -18,5 +17,8 @@ describe('Table Vanilla runtime style contract', () => {
     const spec = createManualTableSpec({ rows: [[null]] });
     const contribution = createTableAdapter().lower({ spec }, contextOf('panel'));
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
+    expect(contribution).not.toHaveProperty('datasets');
+    expect(contribution).not.toHaveProperty('makeComposites');
+    expect(contribution.compositeDependencies.roots).toEqual([{ namespace: 'table', type: 'table' }]);
   });
 });

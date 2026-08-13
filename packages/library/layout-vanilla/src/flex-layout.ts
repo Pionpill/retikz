@@ -1,10 +1,7 @@
 import type { FlexLayoutInput } from '@retikz/layout';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createFlexLayout } from '@retikz/layout';
-
-import { LayoutVanillaNamespace } from './constants';
-import { makeVanillaLayoutComposites } from './layout-family';
+import { createFlexLayout, FlexLayoutProvider } from '@retikz/layout';
 
 /** Vanilla Flex 布局嵌入项的稳定类别 */
 const FlexLayoutEmbedKind = 'layout.flexLayout';
@@ -12,11 +9,9 @@ const FlexLayoutEmbedKind = 'layout.flexLayout';
 /** Layout Flex 布局的 Vanilla 适配器 */
 export const FlexLayoutVanillaAdapter: VanillaTier2Adapter<FlexLayoutInput> = {
   kind: FlexLayoutEmbedKind,
-  namespace: LayoutVanillaNamespace,
   lower: props => ({
     node: createFlexLayout(props),
-    datasets: {},
-    makeComposites: makeVanillaLayoutComposites,
+    compositeDependencies: { roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] },
   }),
 };
 

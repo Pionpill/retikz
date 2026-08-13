@@ -1,8 +1,9 @@
 import type { FC } from 'react';
 
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
+import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { POINT_COORDINATE_1D_CONTROL_IDS, previewControlContract } from './point-coordinate-1d.controls';

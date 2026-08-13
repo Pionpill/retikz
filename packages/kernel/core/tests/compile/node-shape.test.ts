@@ -68,6 +68,30 @@ describe('Node shape multimorphism', () => {
     expect(cmds.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
   });
 
+  it("shape='cross' emit 十二顶点闭合 PathPrim", () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'A', shape: 'cross', position: [0, 0], minimumSize: 18, padding: 0 }],
+    };
+    const path = findByType(compileToScene(ir).scene.primitives, 'path');
+    expect(path?.commands.map(command => command.kind)).toEqual([
+      'move',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'line',
+      'close',
+    ]);
+  });
+
   it("rectangle 默认 = 显式传 'rectangle'（向后兼容）", () => {
     const ir1: IRScene = {
       version: 1,

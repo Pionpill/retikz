@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-03
 - 接受日期：2026-08-03
-- Superseded-by：关于 Theme 只携带 `style` / `mode`、领域 token 只能留在领域 spec 的边界，已由 [ADR-13：Theme Token Namespace Context 与共享颜色](./13-theme-token-namespace-context.md) supersede；本 ADR 其余 Scene / Scope 继承与 Composite context 历史正文保持不变
+- Superseded-by：关于 Theme 只携带 `style` / `mode`、领域 token 只能留在领域 spec 的边界，已由 [ADR-13：Theme Token Namespace Context 与共享颜色](./13-theme-token-namespace-context.md) supersede；关于仅内置 Neutral 与开放 runtime style definition 的边界，已由 [ADR-15：轻量主题解析](./15-lightweight-theme-resolution.md) supersede；本 ADR 其余 Scene / Scope 继承与 Composite context 历史正文保持不变
 - 关联：[alpha.2 roadmap](./roadmap.md) · [通用视觉主题设计](../../../../../../../notes/architecture/visual-theme-design.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
 ## 背景与目标

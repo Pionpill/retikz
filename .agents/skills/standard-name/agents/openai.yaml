@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Retikz 命名'
+  short_description: 'Retikz 源码命名规范'
+  default_prompt: '使用 $standard-name 为 Retikz 目录、文件和符号选择规范名称。'

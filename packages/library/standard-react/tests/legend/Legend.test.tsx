@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { convertReactNodeToIR, Layout, Node, Path, Step } from '@retikz/react';
-import { createLegend, LegendContentKind, LegendDefinition } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard';
 import { forwardRef, Fragment, memo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -145,8 +145,12 @@ describe('<Legend>', () => {
         },
       }),
     );
-    expect(contribute(itemsProps).makeComposites({})).toEqual([LegendDefinition]);
-    expect(contribute(rampProps).makeComposites({})).toEqual([LegendDefinition]);
+    expect(contribute(itemsProps).compositeDependencies).toEqual({
+      roots: [LegendProvider.key],
+      providers: [LegendProvider],
+    });
+    expect(contribute(rampProps).compositeDependencies.providers[0]).toBe(LegendProvider);
+    expect(LegendProvider.makeDefinition({})).toBe(LegendDefinition);
   });
 
   it('preserves authored marker order through arrays and Fragments', () => {

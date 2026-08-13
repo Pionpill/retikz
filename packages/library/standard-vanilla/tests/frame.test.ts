@@ -35,7 +35,6 @@ describe('frame()', () => {
     const contribution = FrameVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: FrameVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });

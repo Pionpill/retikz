@@ -1,9 +1,12 @@
 import {
   createGridLayout,
   FlexLayoutDefinition,
+  FlexLayoutProvider,
   GridLayoutDefinition,
+  GridLayoutProvider,
   LayoutItemKind,
   OverlayLayoutDefinition,
+  OverlayLayoutProvider,
 } from '@retikz/layout';
 import {
   flexLayout,
@@ -23,13 +26,12 @@ const nestedGrid = createGridLayout({ columns: [{ kind: 'fixed', value: 10 }] })
 const contextFor = (kind: string) => ({
   id: kind,
   kind,
-  namespace: 'layout.layout',
   layerId: 'root',
   identityPath: ['root', kind],
 });
 
 describe('Layout Vanilla family', () => {
-  it('uses one namespace and one stable mutable-copy composite maker', () => {
+  it('roots only the authored capability and publishes one stable exact-key provider', () => {
     const flex = FlexLayoutVanillaAdapter.lower({}, contextFor('layout.flexLayout'));
     const grid = GridLayoutVanillaAdapter.lower(
       { columns: [{ kind: 'fixed', value: 10 }] },
@@ -37,16 +39,15 @@ describe('Layout Vanilla family', () => {
     );
     const overlay = OverlayLayoutVanillaAdapter.lower({}, contextFor('layout.overlayLayout'));
 
-    expect([
-      FlexLayoutVanillaAdapter.namespace,
-      GridLayoutVanillaAdapter.namespace,
-      OverlayLayoutVanillaAdapter.namespace,
-    ]).toEqual(['layout.layout', 'layout.layout', 'layout.layout']);
-    expect(flex.makeComposites).toBe(grid.makeComposites);
-    expect(grid.makeComposites).toBe(overlay.makeComposites);
-    expect(flex.makeComposites({})).toEqual([FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]);
-    expect(flex.makeComposites({})).not.toBe(flex.makeComposites({}));
-    expect(Object.isFrozen(flex.makeComposites({}))).toBe(false);
+    expect(flex.compositeDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
+    expect(grid.compositeDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(overlay.compositeDependencies).toEqual({
+      roots: [OverlayLayoutProvider.key],
+      providers: [OverlayLayoutProvider],
+    });
+    expect(FlexLayoutProvider.makeDefinition({})).toBe(FlexLayoutDefinition);
+    expect(GridLayoutProvider.makeDefinition({})).toBe(GridLayoutDefinition);
+    expect(OverlayLayoutProvider.makeDefinition({})).toBe(OverlayLayoutDefinition);
   });
 
   it('builds exact embed specs and normalizes the family definitions once', () => {
@@ -117,7 +118,10 @@ describe('Layout Vanilla family', () => {
         }),
       ],
     };
-    const normalized = normalizeFigureSpec(figure, { adapters: LayoutVanillaAdapters });
+    const normalized = normalizeFigureSpec(figure, {
+      adapters: LayoutVanillaAdapters,
+      composites: [GridLayoutDefinition],
+    });
 
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'layout',
@@ -130,7 +134,12 @@ describe('Layout Vanilla family', () => {
         },
       ],
     });
-    expect(normalized.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]);
-    expect(renderToSvgString(figure, { adapters: LayoutVanillaAdapters })).toMatch(/^<svg/);
+    expect(normalized.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition]);
+    expect(
+      renderToSvgString(figure, {
+        adapters: LayoutVanillaAdapters,
+        compile: { composites: [GridLayoutDefinition] },
+      }),
+    ).toMatch(/^<svg/);
   });
 });

@@ -1,174 +1,70 @@
-import type { ThemeModeValue, ThemeStyleValue, ThemeTokenSourceValue } from '@retikz/core';
-
-import { ThemeMode, ThemeStyle } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-// @ts-expect-error Chart resolver 结果必须保持 owner-private
-import type { ChartResolution } from '../src';
-// @ts-expect-error presentation content resolver 结果必须保持 owner-private
-import type { ResolvedChartPresentation } from '../src';
-// @ts-expect-error recipe 基础类型必须保持 owner-private
-import type { InternalChartSpecBound } from '../src';
-// @ts-expect-error 通用 style 取值类型由 Core 所有
-import type { ChartStyleValue } from '../src';
-// @ts-expect-error 通用 mode 取值类型由 Core 所有
-import type { ChartThemeModeValue } from '../src';
-// @ts-expect-error Theme token 来源取值由 Core 所有
-import type { ChartThemeTokenSourceValue } from '../src';
-import type {
-  ChartContributionSourceValue,
-  ChartPresentationDefaultItemKeyValue,
-  ChartPresentationItemContentKindValue,
-  ChartPresentationPresetValue,
-  ChartPresentationResolvedContentKindValue,
-  ChartThemeStyleDefinition,
-  ChartThemeTokenValue,
-  IRChartInspection,
-  IRChartInspectionMember,
-  IRChartPresentation,
-  IRChartPresentationChildContent,
-  IRChartPresentationChildItem,
-  IRChartPresentationInspection,
-  IRChartPresentationItem,
-  IRChartPresentationItemContent,
-  IRChartPresentationItemInspection,
-  IRChartPresentationLayout,
-  IRChartPresentationPlotContent,
-  IRChartPresentationPlotItem,
-  IRChartPresentationPresetContent,
-  IRChartPresentationPresetItem,
-  IRChartPresentationStyledText,
-  IRChartPresentationText,
-  IRChartPresentationTextBlock,
-  IRChartResolvedThemeTokens,
-  IRChartShared,
-  IRChartThemeSurface,
-  IRChartThemeTokenOverrides,
-} from '../src';
+import type { IRChart, IRChartPresentation } from '../src';
 
 import * as chart from '../src';
+import * as point from '../src/point';
 
-describe('@retikz/chart package root', () => {
-  it('拒绝 owner-private 类型从包根导入', () => {
-    expectTypeOf<ChartResolution>();
-    expectTypeOf<ResolvedChartPresentation>();
-    expectTypeOf<InternalChartSpecBound>();
-    expectTypeOf<ChartStyleValue>();
-    expectTypeOf<ChartThemeModeValue>();
-    expectTypeOf<ChartThemeTokenSourceValue>();
+describe('@retikz/chart public surface', () => {
+  it('exports the canonical base Chart contract, four presets, and one provider', () => {
+    expect(chart.ChartPresentationPreset).toEqual({
+      Title: 'title',
+      Subtitle: 'subtitle',
+      Note: 'note',
+      Source: 'source',
+    });
+    expect(chart.ChartProvider.key).toEqual({ namespace: 'chart', type: 'chart' });
+    expect(chart).toHaveProperty('ChartDefinition');
+    expect(chart).toHaveProperty('ChartSchema');
+    expect(chart).not.toHaveProperty('PointChartType');
+    expect(chart).not.toHaveProperty('PointChartSpecSchema');
+    expect(chart).not.toHaveProperty('ScatterChartSpecSchema');
+    expect(chart).not.toHaveProperty('BubbleChartSpecSchema');
+    expect(chart).not.toHaveProperty('ConnectedScatterChartSpecSchema');
+    expect(chart).not.toHaveProperty('resolvePointChartSpec');
+    expect(chart).not.toHaveProperty('ScatterChartDefinition');
+    expect(chart).not.toHaveProperty('createChartComposites');
+    expect(chart).not.toHaveProperty('ChartCaption');
+    expect(chart).not.toHaveProperty('ChartCredit');
   });
 
-  it('只暴露 shared、presentation、inspection 与 theme 数据契约', () => {
-    expect(Object.keys(chart).sort()).toEqual([
-      'CHART_PRESENTATION_DEFAULT_ITEM_KEY_BY_PRESET',
-      'ChartContributionSource',
-      'ChartInspectionMemberSchema',
-      'ChartInspectionSchema',
-      'ChartPresentationChildContentSchema',
-      'ChartPresentationChildItemSchema',
-      'ChartPresentationDefaultItemKey',
-      'ChartPresentationInspectionSchema',
-      'ChartPresentationItemContentKind',
-      'ChartPresentationItemContentSchema',
-      'ChartPresentationItemInspectionSchema',
-      'ChartPresentationItemSchema',
-      'ChartPresentationLayoutSchema',
-      'ChartPresentationPlotContentSchema',
-      'ChartPresentationPlotItemSchema',
-      'ChartPresentationPreset',
-      'ChartPresentationPresetContentSchema',
-      'ChartPresentationPresetItemSchema',
-      'ChartPresentationResolvedContentKind',
-      'ChartPresentationSchema',
-      'ChartPresentationStyledTextSchema',
-      'ChartPresentationTextBlockSchema',
-      'ChartPresentationTextSchema',
-      'ChartResolvedThemeTokensSchema',
-      'ChartSharedSchema',
-      'ChartThemeSurfaceSchema',
-      'ChartThemeToken',
-      'ChartThemeTokenOverridesSchema',
-      'defineChartThemeStyle',
-    ]);
-    expect(chart).not.toHaveProperty('ChartThemeTokenSource');
-    expect(chart).not.toHaveProperty('ChartStyle');
-    expect(chart).not.toHaveProperty('ChartThemeMode');
-    expect(ThemeStyle).toEqual({ Neutral: 'neutral', Academic: 'academic', Vibrant: 'vibrant', Clean: 'clean' });
-    expect(ThemeMode).toEqual({ Light: 'light', Dark: 'dark' });
-    expect(chart.ChartPresentationDefaultItemKey.Plot).toBe('chart.plot');
-    expect(chart.ChartPresentationPreset).toHaveProperty('Title', 'title');
+  it('exports the Point family together with the base Chart contract from its subpath', () => {
+    expect(point.ChartSchema).toBe(chart.ChartSchema);
+    expect(point.ChartDefinition).toBe(chart.ChartDefinition);
+    expect(point.PointChartType).toEqual({
+      Scatter: 'scatter',
+      Bubble: 'bubble',
+      ConnectedScatter: 'connected-scatter',
+    });
+    expect(point).toHaveProperty('PointChartSpecSchema');
+    expect(point).toHaveProperty('ScatterChartSpecSchema');
+    expect(point).toHaveProperty('BubbleChartSpecSchema');
+    expect(point).toHaveProperty('ConnectedScatterChartSpecSchema');
+    expect(point).toHaveProperty('resolvePointChartSpec');
   });
 
-  it('公开 schema 派生 presentation union 而不公开 resolver 或 recipe', () => {
-    const style: ThemeStyleValue = ThemeStyle.Neutral;
-    const mode: ThemeModeValue = ThemeMode.Dark;
-    const token: ChartThemeTokenValue = 'chart.axis.enabled';
-    const tokenSource: ThemeTokenSourceValue = 'local';
-    const overrides: IRChartThemeTokenOverrides = { [token]: false };
-    const surface: IRChartThemeSurface = {
-      chartThemeTokens: overrides,
-      plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
-    };
-    const shared: IRChartShared = { data: { reference: 'rows' }, ...surface };
-    const preset: ChartPresentationPresetValue = 'title';
-    const itemContentKind: ChartPresentationItemContentKindValue = 'preset';
-    const resolvedContentKind: ChartPresentationResolvedContentKindValue = 'flex-layout';
-    const plotKey: ChartPresentationDefaultItemKeyValue = 'chart.plot';
-    const textBlock: IRChartPresentationTextBlock = 'Revenue';
-    const styledText: IRChartPresentationStyledText = { text: textBlock, font: { size: 20 } };
-    const text: IRChartPresentationText = styledText;
-    const plotContent: IRChartPresentationPlotContent = { kind: 'plot' };
-    const presetContent: IRChartPresentationPresetContent = { kind: 'preset', preset, text };
-    const childContent: IRChartPresentationChildContent = {
-      kind: 'child',
-      child: { type: 'scope', children: [] },
-    };
-    const content: IRChartPresentationItemContent = presetContent;
-    const plotItem: IRChartPresentationPlotItem = { content: plotContent };
-    const presetItem: IRChartPresentationPresetItem = { content: presetContent };
-    const childItem: IRChartPresentationChildItem = { key: 'badge', content: childContent };
-    const item: IRChartPresentationItem = presetItem;
-    const presentationLayout: IRChartPresentationLayout = { gap: { column: 0, row: 8 }, alignItems: 'start' };
+  it('keeps canonical IR JSON-safe', () => {
     const presentation: IRChartPresentation = {
-      layout: presentationLayout,
-      children: [presetItem, plotItem, childItem],
+      children: [
+        { kind: 'preset', key: 'chart.presentation.title', preset: 'title', text: 'Title' },
+        { kind: 'plot', key: 'chart.plot' },
+      ],
     };
-    const itemInspection: IRChartPresentationItemInspection = {
-      key: 'chart.presentation.title',
-      contentKind: itemContentKind,
-      preset,
-      sourcePath: '$spec/presentation/children/0',
-    };
-    const presentationInspection: IRChartPresentationInspection = {
-      contentKind: resolvedContentKind,
-      items: [itemInspection, { key: plotKey, contentKind: 'plot', sourcePath: '$spec/presentation/children/1' }],
-    };
-    const source: ChartContributionSourceValue = 'type-default';
-    const chartThemeStyle: ChartThemeStyleDefinition = {
-      name: 'brand',
-      resolve: () => chart.ChartResolvedThemeTokensSchema.parse({}),
-    };
-    const member: IRChartInspectionMember = {
-      target: 'mark.main',
-      kind: 'mark',
-      core: true,
-      value: { type: 'point' },
-      sources: [{ kind: source, path: '$recipe/scatter/mark.main' }],
-    };
-    expectTypeOf<IRChartResolvedThemeTokens>().toMatchTypeOf<IRChartInspection['style']['chart']['tokens']>();
-    expectTypeOf<IRChartInspectionMember>().toMatchTypeOf<typeof member>();
-
-    expect({
-      shared,
-      member,
-      style,
-      mode,
-      tokenSource,
+    const value: IRChart = chart.ChartSchema.parse({
+      namespace: 'chart',
+      type: 'chart',
+      plot: {
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'rows' },
+        scales: [{ type: 'linear', name: 'x' }],
+        coordinate: { type: 'cartesian1D', x: 'x' },
+        marks: [{ type: 'point', encoding: { x: { field: 'value', scale: 'x' } } }],
+      },
       presentation,
-      presentationInspection,
-      content,
-      item,
-      chartThemeStyle,
-    }).toBeDefined();
+    });
+
+    expectTypeOf(value).toMatchTypeOf<IRChart>();
+    expect(JSON.parse(JSON.stringify(value))).toEqual(value);
   });
 });

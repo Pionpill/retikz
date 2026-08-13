@@ -47,6 +47,8 @@ type ChartThemeStyleDefinition = Readonly<{
 
 `ThemeStyleDefinition` 是 Core 的公开 runtime contract。内置 style 与自定义 style 经同一 registry 查找；Core compile 入口通过 `themeStyles` 接收自定义 definition。Core resolver 用 effective selector 查找 definition，并将其结果作为 compile-local、只读的 shared colors。
 
+发布包只内置 `neutral`。`ThemeStyle` 只列出发布包保证无需额外注册即可使用的名称；`ThemeStyleValue` 继续是开放的非空字符串，因此应用可以通过同一 definition / registry 链路提供任意命名 style。Academic、Vibrant、Clean 是文档站用于展示扩展能力的应用级 preset，不属于 Core、Plot、Chart 或 Table 的默认产物，也不进入这些包的内置集合。
+
 Plot、Chart、Table 分别拥有自己的 token vocabulary 和 style definition contract。它们的 resolver 以同一个 effective `style` 名称、`mode` 与 Core shared colors 为输入，返回本 owner 的完整 token map；各领域入口通过 owner-local options 接收自定义 definition。内置 style 同样经各自 owner registry 提供。
 
 所有领域 resolver 都消费完整 `ResolvedTheme`，不以 `style + mode` 重新查找或复制 Core 色表。直接调用 Plot 或 Chart resolver 的使用者必须提供由 Core 同一 registry 解析的完整 effective Theme；内置默认入口可以使用 `neutral + light` 的完整值。
@@ -80,7 +82,7 @@ type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：未声明 Theme 时使用内置 `neutral + light`，并由内置 Core、Plot、Chart、Table definitions 生成各自默认值
+- 默认行为：未声明 Theme 时使用唯一内置的 `neutral + light`，并由内置 Core、Plot、Chart、Table definitions 生成各自默认值
 - 继承行为：Scene、外层 Scope、内层 Scope 依次覆盖显式 selector；内层未声明字段继续继承。style 变更会重新解析 Core shared colors
 - 直接解析行为：Core compile、Plot lowering、Chart resolution 与 Table resolution 使用相同的 effective Theme 形态。自定义 style 的直接领域解析必须先通过 Core style registry 取得完整 `ResolvedTheme`，不得以局部 fallback 色表模拟
 - Definition 行为：内置与自定义 definition 使用同一 `define`、registry、查找和消费链路。自定义 name 可以新增；与内置或另一自定义 definition 重名时 fail-loud，不支持覆盖内置默认值
@@ -92,9 +94,9 @@ type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
 
 - 所属能力域与解决的问题：Drawing Complete 的可继承视觉环境与 shared colors，以及 Visualization Complete / Chart 封装中的领域视觉默认值扩展。解决自定义 style 无法贯通 Core 与 Tier 2 的问题，同时避免把 token map 持久化回 IR
 - 主责包与协作包：`@retikz/core` 拥有 selector IR、继承、Core style contract / registry、shared colors 与来源原子；`@retikz/plot`、`@retikz/chart`、`@retikz/table` 各自拥有 style contract / registry、领域 token cascade 与消费入口；React / Vanilla 只负责等价 authoring / runtime 接线；Render 只执行物化 Scene
-- 拥有：每个 owner 的 definition、内置集合、registry、resolver、diagnostic 与完整默认值。Core 额外拥有 `style` / `mode` 与 shared semantic / categorical color contract
+- 拥有：每个 owner 的 definition contract、仅含 `neutral` 的内置集合、registry、resolver、diagnostic 与 Neutral 完整默认值。Core 额外拥有 `style` / `mode` 与 shared semantic / categorical color contract
 - 不拥有：Core 不拥有领域 token key、完整领域 token map、领域 preset 或领域 registry；Plot 不拥有 Chart token；Chart 不拥有 Plot token / preset / merge；adapter 与 renderer 不拥有平行 resolver
-- 外部扩展与下游闭环：自定义 style 在 Core 和每个实际消费它的领域 owner 中注册同名 definition。Core composite context 提供 resolved Theme；Plot / Chart / Table 将解析后的正式输入下沉既有 Core / Standard 链路。未来 owner 若需消费开放 style，必须新增其 owner-local definition 与同样的注册闭环，不复用既有领域 token contract
+- 外部扩展与下游闭环：自定义 style 在 Core 和每个实际消费它的领域 owner 中注册同名 definition。应用级 preset 负责组合这些 owner-local definitions，但不建立跨 owner definition 或 registry；Core composite context 提供 resolved Theme，Plot / Chart / Table 将解析后的正式输入下沉既有 Core / Standard 链路。未来 owner 若需消费开放 style，必须新增其 owner-local definition 与同样的注册闭环，不复用既有领域 token contract
 - 不支持边界：不支持通过 Scope 下发任意 token key、以一个 Core definition 携带领域 token、未注册领域时的 neutral fallback、Definition 覆盖内置 style、动态 mode 注册、远程 Theme loader、Theme lineage、交互状态和动画 token
 
 ## 架构验证
@@ -112,6 +114,8 @@ type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
 - 仅开放 Core `ThemeStyleDefinition`：Plot / Chart / Table 仍会在闭合 preset 查找处断链，或被迫回退到不匹配的内置视觉默认值
 - 把 Plot / Chart / Table token resolver 放入 Core definition：会让 Core 反向依赖领域 vocabulary，并把独立 owner 的发布和演进耦合在一个定义中
 - 缺少领域 definition 时回退 neutral：配置遗漏会静默产生混合视觉人格，不能表达用户为该 style 定义的领域 token
+- 把 Academic、Vibrant、Clean 留在发布包内置集合：展示型 preset 会让每个视觉 owner 的默认产物、测试与维护矩阵持续扩张，并把应用选择错误地升级为所有使用者的基础能力
+- 由 Core 提供跨 owner preset bundle：会让 Core 反向依赖领域 definition，并破坏 owner-local registry 边界；应用只能组合 definitions，不能定义新的统一 resolver
 - 让 Zod schema 在 parse 时生成 token：schema 应只定义 JSON 输入合法性，不能读取 registry、领域 preset 或 runtime context
 
 ## 测试策略摘要

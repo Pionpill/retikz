@@ -160,10 +160,10 @@ const scopeChildrenOf = (child: IRChild): Array<IRScope> => {
 describe('plot lineage runtime', () => {
   it('keeps lowerPlots shape unchanged when lineage API is not used', () => {
     const [definition] = lowerPlots(datasets, { width: 480, height: 300 });
-    const child = definition.expand(pointSpec());
+    const result = definition.expand(pointSpec());
 
-    expect(Array.isArray(child)).toBe(false);
-    expect(scopeChildrenOf(child).some(scope => scope.meta?.source === 'plot')).toBe(false);
+    expect(result.children).toHaveLength(1);
+    expect(scopeChildrenOf(result.children[0]).some(scope => scope.meta?.source === 'plot')).toBe(false);
   });
 
   it('records minimal mark lineage without writing full lineage into scene meta', () => {

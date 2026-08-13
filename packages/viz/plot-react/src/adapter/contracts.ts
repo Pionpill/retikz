@@ -145,6 +145,8 @@ export type PlotAuthoringContext = {
   composition?: PlotDeclarationSource<PlotComposition>;
   /** 显式 guide 集合来源 */
   guides?: PlotDeclarationSource<ReadonlyArray<IRPlotGuide>>;
+  /** 显式 mark 集合来源 */
+  marks?: PlotDeclarationSource<ReadonlyArray<IRPlotMarkOperation>>;
   /** 根级数据变换 */
   dataTransforms?: Array<IRPlotTransform>;
   /** mark 作者侧变换简写 */

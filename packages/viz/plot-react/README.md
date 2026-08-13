@@ -14,6 +14,10 @@ Runtime plot mark lineage can be collected through `<Plot lineage={...} onLineag
 `resolvePlotLineage(props)` helper. Lineage is returned to the host only; it is not written into
 PlotSpec or Scene metadata.
 
+`PlotThemeProvider` injects Plot-owned style definitions into a standalone React subtree. Pair it
+with `@retikz/react` `ThemeProvider` for same-named Core definitions. When `style` is omitted,
+the published packages use their default baseline; additional visual personalities remain host-owned definitions.
+
 ## Install
 
 ```bash

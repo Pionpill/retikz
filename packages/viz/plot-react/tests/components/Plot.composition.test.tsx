@@ -1,5 +1,6 @@
 import type { IRPlotSpec } from '@retikz/plot';
 
+import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -24,6 +25,21 @@ const geometry = (svg: string) => {
 };
 
 describe('<Plot data>{marks} 组合 DSL', () => {
+  it('多个嵌入 Plot 通过 provider graph 合并数据并各自渲染', () => {
+    const svg = renderToStaticMarkup(
+      <Layout width={480} height={300}>
+        <Plot id="revenue-a" data={rows} width={220} height={140}>
+          <PointMark x="month" y="revenue" />
+        </Plot>
+        <Plot id="revenue-b" data={rows} x={240} width={220} height={140}>
+          <PointMark x="month" y="revenue" />
+        </Plot>
+      </Layout>,
+    );
+
+    expect(svg.match(/<ellipse/g)).toHaveLength(6);
+  });
+
   it('端到端渲出 path（折线）+ ellipse（散点）', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>

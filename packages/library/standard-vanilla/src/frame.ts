@@ -7,15 +7,12 @@ import type {
 } from '@retikz/standard';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createFrame, FrameDefinition, FrameDescriptionSchema, FrameTitleSchema } from '@retikz/standard';
+import { createFrame, FrameDescriptionSchema, FrameProvider, FrameTitleSchema } from '@retikz/standard';
 
 import { StandardFrameVanillaNamespace } from './constants';
 
 /** Vanilla Frame 输入由 embed id 派生持久化 Scope id */
 export type FrameVanillaInput = Omit<FrameInput, 'id'>;
-
-/** 当前 Figure 内局部贡献 FrameDefinition 的稳定 maker */
-const makeFrameComposites = () => [FrameDefinition];
 
 /** 创建 JSON-safe 的 Frame 主标题输入 */
 export const frameTitle = (input: FrameTitleInput): IRFrameTitle => FrameTitleSchema.parse(input);
@@ -27,11 +24,9 @@ export const frameDescription = (input: FrameDescriptionInput): IRFrameDescripti
 /** Standard Frame 的 Vanilla Tier 2 adapter */
 export const FrameVanillaAdapter: VanillaTier2Adapter<FrameVanillaInput> = {
   kind: StandardFrameVanillaNamespace,
-  namespace: StandardFrameVanillaNamespace,
   lower: (props, context) => ({
     node: createFrame({ ...props, id: `${context.id}/frame` }),
-    datasets: {},
-    makeComposites: makeFrameComposites,
+    compositeDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
   }),
 };
 

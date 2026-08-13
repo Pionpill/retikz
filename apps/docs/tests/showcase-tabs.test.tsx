@@ -105,6 +105,20 @@ describe('<ShowcaseTabs>', () => {
     expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?tab=api');
   });
 
+  it('切换 Tab 时保留 example，并在回到 Examples 时删除默认 tab 参数', () => {
+    const container = renderTabs('/viz/chart/points/scatter?example=scatter-income-life-expectancy');
+
+    clickTab(container, 'API');
+    expect(container.querySelector('[data-location]')?.textContent).toBe(
+      '/viz/chart/points/scatter?example=scatter-income-life-expectancy&tab=api',
+    );
+
+    clickTab(container, 'Examples');
+    expect(container.querySelector('[data-location]')?.textContent).toBe(
+      '/viz/chart/points/scatter?example=scatter-income-life-expectancy',
+    );
+  });
+
   it('刷新带 api 参数的 URL 时恢复 API，非法值回退到 Examples', () => {
     const apiContainer = renderTabs('/viz/chart/points/scatter?tab=api');
     expect(apiContainer.textContent).toContain('API body');

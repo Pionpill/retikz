@@ -50,7 +50,9 @@ export const ShowcaseTabs: FC<ShowcaseTabsProps> = props => {
 
   const handleTabChange = (value: string): void => {
     const next = new URLSearchParams(searchParams);
-    next.set('tab', normalizeShowcaseTab(value));
+    const normalized = normalizeShowcaseTab(value);
+    if (normalized === 'examples') next.delete('tab');
+    else next.set('tab', normalized);
     setSearchParams(next, { replace: true });
   };
 
