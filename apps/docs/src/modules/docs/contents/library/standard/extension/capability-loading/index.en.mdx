@@ -1,9 +1,9 @@
 ---
-title: Direct Definition Loading
-description: Inject the Standard Definitions needed by a figure through Core CompileOptions.composites without a Standard bundle, preset, or global registry
+title: Provider and Definition Loading
+description: Assemble Standard capabilities through rooted providers in React and Vanilla while preserving CompileOptions.composites as the final direct-IR input
 ---
 
-Persisted Standard IR contains only JSON-safe data. Definitions contain functions, so the host injects them explicitly at compile time through Core's `CompileOptions.composites`:
+Persisted Standard IR contains only JSON-safe data. Definitions contain functions, so they must be assembled before compilation. Reusable authoring modules contribute rooted providers; direct-IR hosts that already own a complete Definition set continue using Core's `CompileOptions.composites`:
 
 ```ts
 import { compileToScene } from '@retikz/core';
@@ -14,13 +14,13 @@ const scene = compileToScene(persistedIR, {
 });
 ```
 
-Standard no longer provides `StandardCapabilityModule`, `StandardBundle`, `createStandardBundle()`, `*Module`, `StandardAllPreset`, or `StandardLayoutPreset`. Select the Definitions used by the current figure and pass the array directly to Core's single registry
+Standard provides no bundle, preset, global registry, or built-in allowlist. `GridProvider`, `AxesProvider`, `FrameProvider`, `SurfaceProvider`, and `LegendProvider` each generate one exact-key Definition. The Core resolver computes the transitive closure from actual roots, and the result still enters Core's single composite registry
 
 ## Scope
 
-This path is for server-side compilation, file restoration, LLM-generated IR, and tooling that needs a controlled dependency set. It answers which Definitions are available during compilation; it does not provide dynamic import, runtime package splitting, renderer settings, layout policy, or host lifecycle state
+The provider path serves React / Vanilla adapters, cross-namespace third-party composites, and toolchains that reuse dependency assembly. The direct-Definition path serves server-side compilation, file restoration, LLM-generated IR, and hosts that already know the complete dependency set. Both answer which Definitions are available during compilation; neither provides dynamic import, runtime package splitting, renderer settings, layout policy, or host lifecycle state
 
-React JSX and Vanilla embeds remain authoring surfaces owned by their adapters. They contribute the same Definitions for the content they author, while direct IR hosts provide `composites` explicitly
+React JSX and Vanilla embeds remain authoring surfaces owned by their adapters. They contribute equivalent `CompositeDependencyContribution` values, while direct-IR hosts provide complete `composites` explicitly without dependency guessing
 
 ## Define a capability
 
@@ -33,7 +33,27 @@ const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260,
 const compileOptions = { composites: [GridDefinition] };
 ```
 
-Third-party composites use Core's `defineComposite()` in the same way, then pass their Definition alongside the required Standard Definitions. `namespace` and `type` form the Core lookup key; persisted JSON contains the discriminator and data, not the Definition
+Third-party composites use Core's `defineComposite()` in the same way, then declare required Standard provider keys in their own provider:
+
+```ts
+import type { CompositeDependencyProvider } from '@retikz/core';
+
+import { resolveCompositeDependencies } from '@retikz/core';
+import { FrameProvider } from '@retikz/standard';
+
+const CardProvider = {
+  key: { namespace: 'third', type: 'card' },
+  dependencies: [FrameProvider.key],
+  datasets: {},
+  makeDefinition: () => CardDefinition,
+} satisfies CompositeDependencyProvider;
+
+const composites = resolveCompositeDependencies({
+  contributions: [{ roots: [CardProvider.key], providers: [CardProvider, FrameProvider] }],
+});
+```
+
+`namespace` and `type` form the Core lookup key; persisted JSON contains the discriminator and data, not the Definition. Providers do not perform dynamic imports, so callers still import and carry every required provider explicitly
 
 ## Inject into a host
 
@@ -50,11 +70,11 @@ If a Definition is missing, Core retains its `COMPOSITE_NOT_REGISTERED` diagnost
 
 ### React JSX
 
-`<Grid>`, `<Axes>`, `<Frame>`, and `<Legend>` contribute Standard Definitions through static adapters. Layout containers enter the same Core registry through `@retikz/layout-react`; Standard neither creates a second registry nor forwards Layout adapters
+`<Grid>`, `<Axes>`, `<Frame>`, `<Surface>`, and `<Legend>` set their own provider as a root through static adapters. `<Surface>` then appends the contribution of its one Tier 2 child, preserving authored provider order. Layout containers contribute their providers from `@retikz/layout-react`. `<Layout>` only collects contributions and calls the Core resolver; it creates no second registry
 
 ### Vanilla
 
-Vanilla builders continue to use adapters for authoring. Pass only the adapters used by the current figure, or use `StandardVanillaAdapters` as the adapter convenience array:
+Vanilla builders continue to use adapters for authoring. Pass only the adapters used by the current figure, or use `StandardVanillaAdapters` as the adapter convenience array. The adapters contribute a rooted provider graph that enters the same Core resolver as React:
 
 ```ts
 import { GridDefinition } from '@retikz/standard';
@@ -69,40 +89,42 @@ const svg = renderToSvgString(persistedIR, {
 
 ## Execution model
 
-1. The host selects the Definitions needed by the current figure from `@retikz/standard`
-2. The host places the Definition array in Core `CompileOptions.composites`
-3. Core builds the composite registry for this compilation from `namespace` and `type`
-4. Core validates IR, expands Definitions, and produces Scene, diagnostics, and applicable typed artifacts
+1. An adapter or toolchain roots the provider key for the authored capability and carries available providers
+2. The Core resolver preflights missing dependencies, cycles, and maker / dependency / dataset identity conflicts
+3. The resolver emits Definitions in dependency-first order, followed by host-authored explicit `composites`
+4. Core builds the single composite registry for this compilation from `namespace` and `type`
+5. Core validates IR, expands Definitions, and produces Scene, diagnostics, and applicable typed artifacts
 
 <SourceLinks
   sources={[
     {
-      label: 'Grid Definition and public composite contract',
-      path: 'packages/library/standard/src/composites/presentation/grid/definition.ts',
+      label: 'Grid exact-key provider',
+      path: 'packages/library/standard/src/composites/presentation/grid/provider.ts',
     },
   ]}
 />
 
 ## Errors and limits
 
-| Situation                                                            | Result                                                                             |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| IR references a Standard composite whose Definition was not injected | Core emits `COMPOSITE_NOT_REGISTERED` with an explicit diagnostic                  |
-| The same Definition appears twice in the array                       | Standard does not silently deduplicate it; Core reports the duplicate registration |
-| Different objects use the same `namespace` / `type`                  | Core reports `duplicate composite registration`                                    |
-| A Definition is placed in persisted JSON                             | Not allowed; JSON contains schema-defined data only                                |
-| Direct IR and JSX / an embed inject the same provider key            | Core fails loudly; Standard adds no overwrite priority                             |
+| Situation                                                              | Result                                                                    |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| A root or transitive dependency has no provider                        | The resolver reports the complete dependency chain before maker / compile |
+| One provider key has different makers or ordered dependencies          | The resolver fails loudly; there is no first- or last-wins policy         |
+| One provider key repeats a dataset reference with a different identity | Only `Object.is`-identical values deduplicate; otherwise resolution fails |
+| A provider result and explicit `composites` use the same key           | The same Definition object deduplicates; a different object fails loudly  |
+| Direct IR omits a required Standard Definition                         | Core emits `COMPOSITE_NOT_REGISTERED` with an explicit diagnostic         |
+| A Definition is placed in persisted JSON                               | Not allowed; JSON contains schema-defined data only                       |
 
 ## API reference
 
-| Export                                                | Package                    | Responsibility                                              |
-| ----------------------------------------------------- | -------------------------- | ----------------------------------------------------------- |
-| `GridDefinition`, `AxesDefinition`, `FrameDefinition` | `@retikz/standard`         | Core Definitions for the presentation composites            |
-| `LegendDefinition`                                    | `@retikz/standard`         | Legend Definition and artifact contract                     |
-| `GridSchema`, `createGrid()`, and peers               | `@retikz/standard`         | Validate and construct JSON-safe Standard input             |
-| `StandardVanillaAdapters`                             | `@retikz/standard-vanilla` | Convenience array for the current Standard Vanilla adapters |
+| Export                                                                                         | Package                    | Responsibility                                              |
+| ---------------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------- |
+| `GridProvider`, `AxesProvider`, `FrameProvider`, `SurfaceProvider`, `LegendProvider`           | `@retikz/standard`         | Rooted providers shared by React, Vanilla, and toolchains   |
+| `GridDefinition`, `AxesDefinition`, `FrameDefinition`, `SurfaceDefinition`, `LegendDefinition` | `@retikz/standard`         | Final Core Definitions for direct-IR hosts                  |
+| `GridSchema`, `createGrid()`, and peers                                                        | `@retikz/standard`         | Validate and construct JSON-safe Standard input             |
+| `StandardVanillaAdapters`                                                                      | `@retikz/standard-vanilla` | Convenience array for the current Standard Vanilla adapters |
 
-All three Standard packages still expose only their root entry. Definitions are named exports, so consumers' bundlers can tree-shake by reference. On-demand use means selecting Definitions for compilation; it is not runtime dynamic loading
+All three Standard packages still expose only their root entry. Providers and Definitions are named exports, so consumers' bundlers can tree-shake by reference. On-demand use means the reachable closure of current contributions; it is not runtime dynamic loading
 
 ## Related
 

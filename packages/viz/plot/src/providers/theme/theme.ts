@@ -1,4 +1,4 @@
-import type { IRNode, IRPath } from '@retikz/core';
+import type { IRNode, IRPath, IRShapeValue } from '@retikz/core';
 
 import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotResolvedThemeTokens, IRPlotTheme } from '../../schemas';
 
@@ -30,6 +30,8 @@ export type ResolvedPlotPalette = {
   sequential: string;
   /** 发散色阶默认 scheme */
   diverging: string;
+  /** 分类 shape 通道默认形状 */
+  shape: Array<IRShapeValue>;
 };
 
 /** Plot legend 解析后的视觉 token */
@@ -259,7 +261,7 @@ const mergeAxisGrid = (
 
 /**
  * 合并 axis guide 的主题 token。
- * @description 只合并 line/tick line/tick label/title/grid 的视觉字段；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
+ * @description 合并 line/tick line/tick label/title 的视觉字段，以及 grid 视觉与 domain endpoint 默认；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
  */
 export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
   ...guide,

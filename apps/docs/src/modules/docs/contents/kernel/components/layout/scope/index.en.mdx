@@ -108,7 +108,7 @@ The base `<Scope>` has no inspection prop. The example uses the optional `Layout
 
 `<Scope theme>` writes sparse `style` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. During compilation, Core regenerates shared colors through the current style registry; an unregistered style fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
 
-Theme and style defaults are independent channels. `resetStyle` does not reset Theme, and Theme does not fill Node or Path colors. To return to the baseline, set `{ style: ThemeStyle.Neutral, mode: ThemeMode.Light }` explicitly.
+Theme and style defaults are independent channels. `resetStyle` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
 
 ### Style defaults
 

@@ -28,7 +28,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 ## 动态规则
 
 - 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
-- 改文件分层、依赖方向、shared / schemas / contract / providers / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-pipeline-compile` / `standard-tier2-reuse`。
+- 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-normalize` / `standard-pipeline-compile` / `standard-tier2-reuse`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权 Sol / Luna 分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
@@ -150,15 +150,14 @@ Control: <human-directed|llm-autonomous>
 
 ## 代码风格
 
-- TypeScript ESM；组件 PascalCase、hook `useXxx`、其余 camelCase。
+- TypeScript ESM；目录、文件、符号、enum、registry 和组件命名统一遵循 `standard-name`。
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
-- JSON、持久化配置和其他类型不明确的外部输入只在 parser / schema / adapter 入口完成一次解析、校验和归一化，内部只传递明确类型；运行时只保留必要的入口校验、TypeScript 无法表达的真实业务不变量和查找失败诊断。
-- 组件 / 类文件可 PascalCase；其他文件和目录用 kebab-case；目录通常用只 re-export 的 `index.ts`。
+- JSON、持久化配置和其他类型不明确的外部输入只在 parse / schema 入口完成一次解析和校验；adapter 只将已类型化的 `InputXxx` 调度至 Vanilla `normalizeXxx`。不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的校验；内部只传递明确类型，运行时只保留必要的入口校验、schema 未覆盖且 TypeScript 无法表达的真实业务不变量和查找失败诊断。
 - barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。
 - 尽量避免 import / export `as` 重命名；命名冲突优先在定义源头改成准确名称，或由 owner barrel 调整公共面。
 - 数组类型写 `Array<T>`，不用 `T[]`；函数优先箭头形式，确需 hoisting / class 方法时例外。
-- enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；value object 用单数 PascalCase，成员 key 用大驼峰，派生类型加 `Value` 后缀。
+- enum 用 const object enum：`as const` 对象 + `ValueOf` 派生类型；具体命名遵循 `standard-name`。
 - JSDoc 默认必须写：导出类型、接口、函数、组件、重要内部 helper、public props 和复杂对象字段都要注释；纯推断 / 重命名别名（如 `ValueOf`、`z.infer`、re-export 收窄）可省略。
 - 注释和 JSDoc 默认用中文；Zod `.describe(...)` 仍用英文描述契约。
 - 中文注释和 JSDoc 的末句不写句号；多句内容只保留句间句号。
@@ -169,9 +168,9 @@ Control: <human-directed|llm-autonomous>
 ## IR / Schema / 分层
 
 - IR 必须 100% JSON 可序列化，禁止函数、ReactNode、class 实例。
-- Zod schema 是单一真源，TS 类型用 `z.infer`；schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
+- 只有可持久化 IR 使用 Zod schema：`XxxSchema` 是运行时真源，`IRXxx` 用 `z.infer` 派生；Input、Canonical、compile 消费态只写 TypeScript 类型，schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
-- 由 IR schema object 推导出的公开数据类型命名为 `IRXxx`；由 const object enum + `ValueOf` 推导出的取值 union 命名为 `XxxValue`；Definition / registry 类型命名为 `XxxDefinition`。
+- `IRXxx`、`InputXxx`、`CanonicalXxx`、Definition、enum 和阶段函数的命名及目录归属遵循 `standard-name`；Core / Plot 的 `CanonicalXxx` 由 `compile/<domain>/resolve.ts` 产出并从 domain `normalize/` 引入。
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`。
 - 新增 DSL / IR 能力前先归类：Kernel 进 core IR；Sugar 不进 IR，编译期展开为 Kernel；Tier 2 拥有高层 IR，并经 lowering 下沉到 core。
 - Sugar 必须与手写 Kernel IR 等价，并配等价性测试。子组遇到 core 表达不了的通用能力，先抽象补 core，不要在子组造平行机制。

@@ -1,4 +1,4 @@
-﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeRef, JsonValue } from '@retikz/core';
+﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue, JsonValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
 import {
@@ -24,7 +24,6 @@ import type {
 import type {
   IRPlotLinearScale,
   IRPlotMarkOperation,
-  IRPlotOrdinalScale,
   IRPlotSpec,
   IRPlotSqrtScale,
   ScaledMarkValueType,
@@ -32,7 +31,8 @@ import type {
 
 import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
 import { PlotScale } from '../../../schemas';
-import { resolveLinearScale, resolveOrdinalScale, resolveSqrtScale } from '../../scale';
+import { resolveLinearScale, resolveSqrtScale } from '../../scale';
+import { PLOT_SHAPE_PALETTE } from '../../theme';
 import { makeMarkValueResolver } from '../shared';
 
 /** opacity 通道连续映射的最小不透明度（range 下界，避免最小值全透明不可见）；契约常量，测试 import 断言 */
@@ -47,9 +47,6 @@ export const STROKE_WIDTH_MAX = 4;
 export const SIZE_MIN_RADIUS = 2;
 /** size 通道自动半径映射的默认最大值 */
 export const SIZE_MAX_RADIUS = 20;
-
-/** shape 通道默认 glyph 调色板（直用 core 内置 shape 名，无 plot-only 别名）；循环复用 */
-export const PLOT_SHAPE_PALETTE = ['circle', 'rectangle', 'diamond'] as const;
 
 /** 数值 Node 通道 resolver 的 range、clamp 与整数化选项 */
 export type NumericNodeResolverOptions = {
@@ -287,16 +284,16 @@ export const resolveSizeChannel = (
 };
 
 /**
- * shape 通道解析：行 → shape 名
- * @description 读取 mark 上结构化的 shape 字段。常量 value 直用（core / 注册 shape 名）；categorical 字段经 ordinal 映射到
- *   `PLOT_SHAPE_PALETTE`（复用 ordinal 数学：调色板换成 glyph 名，循环复用）。非 categorical 字段 fail-loud（形状是分类编码）。
+ * shape 通道解析：行 → shape 值
+ * @description 读取 mark 上结构化的 shape 字段。常量 value 直用；categorical 字段按 domain 索引从有效 shape palette
+ *   循环取值。非 categorical 字段 fail-loud（形状是分类编码）
  */
 export const resolveShapeChannel = (
   ctx: NodeChannelContext,
 ): ((mark: IRPlotMarkOperation) => ChannelResolution<JsonValue> | undefined) => {
   const { rows, fieldTypes } = ctx;
   return (mark: IRPlotMarkOperation): ChannelResolution<JsonValue> | undefined => {
-    const channel = pickStyleChannel<string | IRShapeRef>(mark, 'shape');
+    const channel = pickStyleChannel<IRShapeValue>(mark, 'shape');
     if (!channel) return undefined;
     if (channel.kind === 'constant') {
       const shape = channel.value;
@@ -310,18 +307,13 @@ export const resolveShapeChannel = (
     }
     const values = rows.map(row => resolveFieldPath(row, field));
     const domain = inferCategoryDomain(values);
-    // 复用 ordinal scale：调色板 = glyph 名（非颜色），category → glyph[index % len]（与旧手写映射等价）
-    const def: IRPlotOrdinalScale = {
-      type: PlotScale.Ordinal,
-      name: `__shape_${field}`,
-      range: [...PLOT_SHAPE_PALETTE],
-    };
-    const ordinal = resolveOrdinalScale(def, values);
-    const shapes = domain.map(category => ordinal(category));
+    const palette = ctx.palette?.shape ?? PLOT_SHAPE_PALETTE;
+    const shapes = domain.map((_, index) => structuredClone(palette[index % palette.length]));
+    const shapeByCategory = new Map(domain.map((category, index) => [category, shapes[index]] as const));
     return {
       resolver: row => {
         const value = resolveFieldPath(row, field);
-        return typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined;
+        return typeof value === 'string' || typeof value === 'number' ? shapeByCategory.get(value) : undefined;
       },
       // shape legend：每类别一形状 swatch，domain = 类别序、range = 对应形状名
       descriptor: { channel: 'shape', scaleType: PlotScale.Ordinal, domain, range: shapes, field, fieldType },
@@ -605,7 +597,7 @@ const shapeNodeChannel: NodeChannelDefinition<JsonValue> = defineNodeChannel<Jso
   legend: 'symbol',
   resolve: resolveShapeChannel,
   deliver: (node, value, context) => {
-    if (context.nodeKind === 'pointGlyph') node.shape = value as string | IRShapeRef;
+    if (context.nodeKind === 'pointGlyph') node.shape = value as IRShapeValue;
   },
 });
 

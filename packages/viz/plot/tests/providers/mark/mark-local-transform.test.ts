@@ -1,4 +1,4 @@
-﻿import type { IRScope } from '@retikz/core';
+import type { IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 import { defineTransform } from '@retikz/data';
@@ -28,7 +28,7 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>

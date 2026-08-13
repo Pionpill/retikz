@@ -1,9 +1,10 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
 import { ArrowUpRight, Languages, Moon, MoreHorizontal, Sun } from 'lucide-react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import type { PreviewThemeStyleValue } from '@/modules/docs/components/component-preview/theme';
 
 import { GitHubIcon } from '@/components/icons';
 import { Shortcut } from '@/components/shared';
@@ -29,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib';
 import {
   getPreviewThemeStyleIcon,
+  isPreviewThemeStyleDocument,
   PreviewThemeStyleLabelKeys,
   PreviewThemeStyleOptions,
 } from '@/modules/docs/components/component-preview/theme';
@@ -38,16 +40,18 @@ import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/mod
 import { useLayoutStore } from '@/store';
 
 import { DocDifficultyFilter, DocDifficultyMenuSub } from './DocDifficultyFilter';
-import { isPreviewThemeStyleDocument } from './preview-theme-settings';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
 const triggerClass = cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-7 cursor-pointer rounded-sm');
 const rangePlaybackDurationOptions = [500, 1000, 2000, 3000, 5000] as const;
 type PreviewThemeSettingsItemsProps = {
-  themeStyle: ThemeStyleValue;
-  setThemeStyle: (value: ThemeStyleValue) => void;
+  themeStyle: PreviewThemeStyleValue;
+  setThemeStyle: (value: PreviewThemeStyleValue) => void;
 };
+
+const isPreviewThemeStyle = (value: string): value is PreviewThemeStyleValue =>
+  PreviewThemeStyleOptions.some(option => option === value);
 
 /** 主题设置的扁平选项，桌面入口与移动端菜单共用 */
 const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
@@ -58,7 +62,7 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
     <DropdownMenuRadioGroup
       value={themeStyle}
       onValueChange={value => {
-        if (PreviewThemeStyleOptions.some(option => option === value)) {
+        if (isPreviewThemeStyle(value)) {
           setThemeStyle(value);
         }
       }}
@@ -109,7 +113,7 @@ export const HeaderActions: FC = () => {
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
-  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId, docLocation?.sectionId);
+  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId);
 
   return (
     <TooltipProvider delayDuration={150}>

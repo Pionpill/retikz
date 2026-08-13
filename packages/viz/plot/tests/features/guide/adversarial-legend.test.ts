@@ -24,7 +24,7 @@ const expandOf = (
   options: LowerPlotsOptions = { width: 480, height: 300 },
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

@@ -12,7 +12,6 @@ import { createTableAdapter, embedTable } from '../../src';
 const contextOf = (id: string): VanillaEmbedContext => ({
   id,
   kind: 'table',
-  namespace: 'table',
   layerId: 'content',
   identityPath: ['content', id],
 });
@@ -66,14 +65,21 @@ describe('Table Vanilla adapter', () => {
     expect(lowered.tableThemeTokens).toEqual(spec.tableThemeTokens);
   });
 
-  it('returns the shared stable composite maker for every lower call', () => {
+  it('returns table.table roots and the shared stable provider maker for every lower call', () => {
     const adapter = createTableAdapter();
     const spec = createManualTableSpec({ rows: [[null]] });
     const first = adapter.lower({ spec }, contextOf('first'));
     const second = adapter.lower({ spec }, contextOf('second'));
 
-    expect(first.makeComposites).toBe(second.makeComposites);
-    expect(Object.keys(first.datasets)).toContain('@@retikz/table/runtime/first');
+    expect(first).not.toHaveProperty('datasets');
+    expect(first).not.toHaveProperty('makeComposites');
+    expect(first.compositeDependencies.roots).toEqual([{ namespace: 'table', type: 'table' }]);
+    expect(first.compositeDependencies.providers[0]?.makeDefinition).toBe(
+      second.compositeDependencies.providers[0]?.makeDefinition,
+    );
+    expect(Object.keys(first.compositeDependencies.providers[0]?.datasets ?? {})).toContain(
+      '@@retikz/table/runtime/first',
+    );
   });
 
   it('enters figure/layer SSR and reads each embed runtime data', () => {
@@ -108,7 +114,7 @@ describe('Table Vanilla adapter', () => {
       namespace: 'fixture',
       type: 'badge',
       schema,
-      expand: node => ({ type: 'node', position: [0, 0], text: node.label }),
+      expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
     const spec = createManualTableSpec({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],

@@ -39,7 +39,7 @@ Neutral 比 Clean 保留更完整的常规结构；比 Academic 更少论文与�
 - 本 skill 只定义跨包视觉意图，不维护 package token、preset 数值或局部组件规则。
 - Core 拥有 `ThemeStyle.Neutral`、Theme 继承、registry 与 shared semantic / categorical colors。
 - 每个领域 package 只把公共意图映射到自己拥有的 token；不得复制其它 owner 的 preset 或建立主题特判。
-- adapter 与 docs 只传递标准 selector 和显式覆盖，不创建平行 Theme 实现。
+- adapter 只传递标准 selector 和 definitions；docs 可通过公开 owner definitions 组合额外参考 style，但不创建跨 owner registry。
 - 处理 `@retikz/plot` 时，必须同时读取 [Neutral Plot Theme](../../../packages/viz/_notes/theme/plot/neutral.md)。
 
 ## 实施与验收

@@ -13,5 +13,5 @@ export const AxesDefinition: ExpandCompositeDefinition<IRAxes, typeof STANDARD_N
   namespace: STANDARD_NAMESPACE,
   type: 'axes',
   schema: AxesSchema,
-  expand: lowerAxes,
+  expand: axes => ({ children: [lowerAxes(axes)] }),
 });

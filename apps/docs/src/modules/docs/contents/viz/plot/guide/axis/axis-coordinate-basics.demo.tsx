@@ -1,8 +1,9 @@
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { Axis, PathMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
+import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { axisCoordinateBasicsControls, previewControlContract } from './axis-coordinate-basics.controls';

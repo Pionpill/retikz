@@ -2,19 +2,18 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { vehicleScatterData } from './scatter-basic.data';
+import { countryScatterData, WORLD_BANK_SCATTER_YEAR } from './scatter-basic.data';
 
 /** 基础 Scatter playground 的稳定控件 id */
 export const SCATTER_BASIC_CONTROL_IDS = {
   pointSize: 'pointSize',
   pointOpacity: 'pointOpacity',
-  colorByGroup: 'colorByGroup',
 } as const;
 
 /** 基础 Scatter 的中文控制面板 */
 export const scatterBasicControls = definePreviewControls({
   presentation: 'panel',
-  title: '散点图',
+  title: '基础散点',
   sections: [
     {
       label: '数据',
@@ -23,14 +22,12 @@ export const scatterBasicControls = definePreviewControls({
         {
           kind: 'table',
           id: 'rows',
-          label: '车辆样本',
-          rows: vehicleScatterData,
+          label: `${WORLD_BANK_SCATTER_YEAR} 年国家样本`,
+          rows: countryScatterData,
           columns: [
-            { key: 'model', label: '车型' },
-            { key: 'weight', label: '重量' },
-            { key: 'efficiency', label: '效率' },
-            { key: 'power', label: '功率' },
-            { key: 'group', label: '分组' },
+            { key: 'country', label: '国家或地区' },
+            { key: 'urbanPopulationShare', label: '城镇人口占比' },
+            { key: 'internetUseShare', label: '互联网使用人口占比' },
           ],
         },
       ],
@@ -56,12 +53,6 @@ export const scatterBasicControls = definePreviewControls({
           max: 1,
           step: 0.02,
         },
-        {
-          kind: 'switch',
-          id: SCATTER_BASIC_CONTROL_IDS.colorByGroup,
-          label: '按分组着色',
-          defaultValue: true,
-        },
       ],
     },
   ],
@@ -73,7 +64,6 @@ export const previewControlContract = {
   canonicalValues: {
     [SCATTER_BASIC_CONTROL_IDS.pointSize]: 10,
     [SCATTER_BASIC_CONTROL_IDS.pointOpacity]: 0.82,
-    [SCATTER_BASIC_CONTROL_IDS.colorByGroup]: true,
   },
-  relatedApis: ['PointMark.size', 'PointMark.opacity', 'PointMark.color'],
+  relatedApis: ['PointMark.x', 'PointMark.y', 'PointMark.size', 'PointMark.opacity'],
 } satisfies PreviewControlContract;

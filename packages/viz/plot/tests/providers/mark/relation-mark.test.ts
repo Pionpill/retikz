@@ -40,7 +40,7 @@ const expandOf = (
   options: LowerPlotsOptions = opts,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const markLayer = (root: IRScope, index: number): IRScope => root.children[index] as IRScope;

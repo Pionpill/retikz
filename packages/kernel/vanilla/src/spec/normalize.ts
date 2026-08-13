@@ -1,4 +1,6 @@
-import type { AnyCompositeDefinition, IRChild, IRScene, IRScope } from '@retikz/core';
+import type { CompositeDependencyContribution, IRChild, IRScene, IRScope } from '@retikz/core';
+
+import { resolveCompositeDependencies } from '@retikz/core';
 
 import type { VanillaAuthoringSite } from './authoring-site';
 import type {
@@ -19,16 +21,6 @@ import { DEFAULT_LAYER_ID, VanillaLayerCache } from './constants';
 import { createRuntimeMetaSnapshot } from './runtime-meta';
 import { cloneThemeInput } from './theme-input';
 
-/** 单个嵌入节点贡献的待聚合记录 */
-type ContributionRecord = {
-  /** 适配器命名空间，用来把同类贡献合并到同一 composite 生成器 */
-  namespace: string;
-  /** 该嵌入节点带来的外部数据集表 */
-  datasets: Record<string, unknown>;
-  /** 命名空间级 composite 生成器；同一命名空间必须保持同一个函数引用 */
-  makeComposites: (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
-};
-
 /** 规范化递归过程共享的上下文 */
 type NormalizeContext = {
   /** 当前所在分层 id */
@@ -39,8 +31,8 @@ type NormalizeContext = {
   path: Array<string>;
   /** 调用方注入的 Tier2 适配器列表 */
   adapters: VanillaNormalizeOptions['adapters'];
-  /** 递归过程中收集到的 Tier2 数据与 composite 贡献 */
-  contributions: Array<ContributionRecord>;
+  /** 递归过程中原样收集的 Core provider graph contributions */
+  contributions: Array<CompositeDependencyContribution>;
   /** 全图公开身份标识索引，用于去重和后续 patch 定位 */
   identityIndex: Map<string, Array<string>>;
   /** 全图父子身份关系索引，用于后续失效边界推导 */
@@ -112,35 +104,6 @@ const readIdentity = (child: object): string | undefined =>
 const childSourcePath = (context: NormalizeContext, index: number): string =>
   context.sourcePath.length === 0 ? `children[${index}]` : `${context.sourcePath}.children[${index}]`;
 
-/** 按命名空间合并 Tier2 数据集，再生成 core composite definitions */
-const aggregateComposites = (contributions: ReadonlyArray<ContributionRecord>): Array<AnyCompositeDefinition> => {
-  const groups = new Map<
-    string,
-    { merged: Map<string, unknown>; maker: (merged: Record<string, unknown>) => Array<AnyCompositeDefinition> }
-  >();
-  for (const contribution of contributions) {
-    let group = groups.get(contribution.namespace);
-    if (!group) {
-      group = { merged: new Map(), maker: contribution.makeComposites };
-      groups.set(contribution.namespace, group);
-    } else if (group.maker !== contribution.makeComposites) {
-      throw new Error(`vanilla spec namespace "${contribution.namespace}" received multiple makeComposites functions.`);
-    }
-    for (const [reference, value] of Object.entries(contribution.datasets)) {
-      // 同一 namespace 下同名 reference 必须指向同一对象；否则 composite 生成器无法判断该用哪份数据。
-      if (group.merged.has(reference) && group.merged.get(reference) !== value) {
-        throw new Error(
-          `vanilla spec dataset reference conflict in namespace "${contribution.namespace}" for "${reference}".`,
-        );
-      }
-      group.merged.set(reference, value);
-    }
-  }
-  const out: Array<AnyCompositeDefinition> = [];
-  for (const group of groups.values()) out.push(...group.maker(Object.fromEntries(group.merged)));
-  return out;
-};
-
 /** 注册 adapter 输出的公开身份标识，根输出与 embed 同 id 时复用已注册 identity */
 const registerAdapterOutputIdentity = (
   id: string | undefined,
@@ -174,15 +137,10 @@ const lowerEmbed = (embed: AnyVanillaEmbedSpec, ctx: NormalizeContext): IRChild 
   const contribution: VanillaTier2Contribution = adapter.lower(embed.props as never, {
     id: embed.id,
     kind: embed.kind,
-    namespace: adapter.namespace,
     layerId: ctx.layerId,
     identityPath: [...ctx.path, embed.id],
   });
-  ctx.contributions.push({
-    namespace: adapter.namespace,
-    datasets: contribution.datasets,
-    makeComposites: contribution.makeComposites,
-  });
+  ctx.contributions.push(contribution.compositeDependencies);
   validateAdapterOutputIdentities(
     contribution.node,
     {
@@ -266,7 +224,7 @@ export const normalizeFigureSpec = (
     throw new Error('vanilla spec figure cannot contain both children and layers.');
   }
   const layers = asLayerStack(figure);
-  const contributions: Array<ContributionRecord> = [];
+  const contributions: Array<CompositeDependencyContribution> = [];
   const identityIndex = new Map<string, Array<string>>();
   const parentIndex = new Map<string, string>();
   const layerMetas: Array<VanillaLayerMeta> = [];
@@ -333,7 +291,7 @@ export const normalizeFigureSpec = (
 
   return {
     ir,
-    composites: [...aggregateComposites(contributions), ...(options.composites ?? [])],
+    composites: [...resolveCompositeDependencies({ contributions, composites: options.composites })],
     runtimeMeta,
     authoringSites: Object.freeze(authoringSites),
   };

@@ -1,8 +1,9 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { Axis, PathMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
+import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { LINE_COLOR_CONTROL_ID, previewControlContract } from './line-color-split.controls';

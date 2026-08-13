@@ -1,10 +1,7 @@
 import type { OverlayLayoutInput } from '@retikz/layout';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createOverlayLayout } from '@retikz/layout';
-
-import { LayoutVanillaNamespace } from './constants';
-import { makeVanillaLayoutComposites } from './layout-family';
+import { createOverlayLayout, OverlayLayoutProvider } from '@retikz/layout';
 
 /** Vanilla Overlay 布局嵌入项的稳定类别 */
 const OverlayLayoutEmbedKind = 'layout.overlayLayout';
@@ -12,11 +9,9 @@ const OverlayLayoutEmbedKind = 'layout.overlayLayout';
 /** Layout Overlay 布局的 Vanilla 适配器 */
 export const OverlayLayoutVanillaAdapter: VanillaTier2Adapter<OverlayLayoutInput> = {
   kind: OverlayLayoutEmbedKind,
-  namespace: LayoutVanillaNamespace,
   lower: props => ({
     node: createOverlayLayout(props),
-    datasets: {},
-    makeComposites: makeVanillaLayoutComposites,
+    compositeDependencies: { roots: [OverlayLayoutProvider.key], providers: [OverlayLayoutProvider] },
   }),
 };
 

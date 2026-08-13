@@ -1,4 +1,4 @@
-﻿import type { IRNode, IRScope } from '@retikz/core';
+import type { IRNode, IRScope } from '@retikz/core';
 import type { DataFieldTypeValue } from '@retikz/data';
 
 import { DataFieldType, defineTransform } from '@retikz/data';
@@ -40,7 +40,7 @@ const expandOf = (
   options: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const firstLayer = (

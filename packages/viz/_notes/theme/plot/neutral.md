@@ -17,7 +17,7 @@
 | Surface    | Light 优先透明或纯中性表面以兼容宿主；Dark 使用深中性表面，不增加卡片或阴影                         |
 | Typography | 使用熟悉的系统无衬线 fallback；基础文字、label、axis title 与 legend 保持常规尺寸和有限层级         |
 | Axis       | 默认保留 axis line 与 line tick，提供完整、熟悉的尺度参照                                           |
-| Grid       | 使用低对比、细线和必要密度；Dark 同步提高可见性但不压过 marks                                       |
+| Grid       | x / y 轴默认使用低对比细线并覆盖 effective domain 端点；Dark 同步提高可见性但不压过 marks           |
 | Legend     | title、label、swatch、symbol 与间距采用均衡默认值，不刻意压缩或放大                                 |
 | Palette    | categorical / series / sector 消费有效颜色；sequential 使用通用感知均匀方案，diverging 保持明确中点 |
 

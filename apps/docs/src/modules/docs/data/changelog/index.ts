@@ -41,6 +41,9 @@ const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'layout' | 'diagram
 /** Data 分组更新日志包含的包 */
 const DATA_PACKAGES = new Set<PackageId>(['@retikz/data']);
 
+/** Chart 分组更新日志包含的三个 lockstep 包 */
+const CHART_PACKAGES = new Set<PackageId>(['@retikz/chart', '@retikz/chart-react', '@retikz/chart-vanilla']);
+
 /** Table 分组更新日志包含的三个 lockstep 包 */
 const TABLE_PACKAGES = new Set<PackageId>(['@retikz/table', '@retikz/table-react', '@retikz/table-vanilla']);
 
@@ -66,6 +69,7 @@ const LIBRARY_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
 /** Viz 文档分区到更新日志包集合 */
 const VIZ_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
   ['data', DATA_PACKAGES],
+  ['chart', CHART_PACKAGES],
   ['table', TABLE_PACKAGES],
   ['plot', PLOT_PACKAGES],
 ]);

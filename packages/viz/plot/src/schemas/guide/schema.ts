@@ -693,6 +693,10 @@ const AxisGridSourceShape = {
   density: AxisTickDensitySchema.optional().describe(
     'Visible grid tick density strategy; omit = all candidate grid ticks',
   ),
+  includeDomain: z
+    .boolean()
+    .optional()
+    .describe('Whether to append missing effective scale-domain endpoints after grid source and density; omit = false'),
   bandPosition: NormalizedFractionSchema.optional().describe(
     'Position inside a band scale used by grid lines; omit = 0.5',
   ),

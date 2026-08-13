@@ -1,6 +1,6 @@
-﻿import type { IRNode, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
 
-import { compileToScene, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
@@ -55,7 +55,7 @@ const expandOf = (
   options?: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
@@ -92,7 +92,7 @@ const nodeHeight = (node: IRNode): number => {
 };
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
-const sharedCategorical = resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light).categorical;
+const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 describe('lowerPlots (contract)', () => {
   // Happy path
@@ -530,7 +530,7 @@ describe('lowerPlots interval/bar (contract)', () => {
       },
       opts,
     );
-    const xAxis = outer.children[1] as IRScope;
+    const xAxis = outer.children[outer.children.length - 1] as IRScope;
     const labels = xAxis.children.filter((child): child is IRNode => (child as IRNode).text !== undefined);
     expect(labels.map(label => label.text)).toEqual(['Norway', 'France', 'Germany']);
     const xs = labels.map(label => (label.position as [number, number])[0]);

@@ -11,7 +11,7 @@ description: Use when changing retikz shared layer code, dependency-free vocabul
 
 ## 放什么
 
-- 跨层复用的纯函数：`normalizeXxx()`、`parseXxx()`、`isXxx()`。
+- 跨层复用且不含领域语义的纯函数：`parseXxx()`、`isXxx()`、原子值转换。Vanilla authoring `normalizeXxx` 与 Core / Plot `resolveXxx` 都留在各自 owner，不因同名而上移。
 - 不属于单个 IR schema 的通用 vocabulary：anchor / side 等。
 - 无状态映射、索引和查表数据。
 - 通用类型工具：`ValueOf`、`AssertEqual` 等。
@@ -27,7 +27,7 @@ description: Use when changing retikz shared layer code, dependency-free vocabul
 ## Vocabulary
 
 - const object enum 用单数 PascalCase，成员 key 用 PascalCase，值保持用户 / IR 使用的字符串。
-- 派生类型命名 `XxxValue`；兼容多风格输入时命名 `XxxInput`。
+- 派生类型命名 `XxxValue`。`InputXxx` 专指 Vanilla authoring API，不在 shared 建立平行领域契约。
 - 消费 shared vocabulary 时使用枚举成员，不写裸字符串。
 - 避免无意义别名，例如不要把 `WebSide` 原样包成 `NodeLabelBoundarySide`。
 

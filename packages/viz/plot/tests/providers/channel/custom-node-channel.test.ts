@@ -1,4 +1,4 @@
-﻿import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -177,7 +177,7 @@ const firstLayer = (
   options: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return (def.expand(spec) as IRScope).children[0] as IRScope;
+  return (def.expand(spec).children[0] as IRScope).children[0] as IRScope;
 };
 
 const expandOf = (
@@ -186,7 +186,7 @@ const expandOf = (
   options: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 describe('custom node channel registry', () => {

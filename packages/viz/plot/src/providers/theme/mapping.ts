@@ -68,6 +68,7 @@ export const plotAxisThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPl
         stroke: tokens[PlotThemeToken.AxisGridStroke],
         strokeWidth: tokens[PlotThemeToken.AxisGridStrokeWidth],
         drawOpacity: tokens[PlotThemeToken.AxisGridDrawOpacity],
+        includeDomain: tokens[PlotThemeToken.AxisGridIncludeDomain],
       }
     : false,
 });
@@ -112,6 +113,7 @@ export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTh
       sector: tokens[PlotThemeToken.PlotPaletteSector],
       sequential: tokens[PlotThemeToken.PlotPaletteSequential],
       diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
+      shape: tokens[PlotThemeToken.PlotPaletteShape],
     },
   });
 
@@ -243,6 +245,13 @@ export const applyPlotThemeToTokens = (
         if (has(authoredAxis.grid, 'drawOpacity')) {
           set(PlotThemeToken.AxisGridDrawOpacity, axis.grid.drawOpacity!, '$spec/plotTheme/axis/grid/drawOpacity');
         }
+        if (has(authoredAxis.grid, 'includeDomain')) {
+          set(
+            PlotThemeToken.AxisGridIncludeDomain,
+            axis.grid.includeDomain!,
+            '$spec/plotTheme/axis/grid/includeDomain',
+          );
+        }
       }
     }
   }
@@ -300,6 +309,7 @@ export const applyPlotThemeToTokens = (
       [PlotThemeToken.PlotPaletteSector, 'sector'],
       [PlotThemeToken.PlotPaletteSequential, 'sequential'],
       [PlotThemeToken.PlotPaletteDiverging, 'diverging'],
+      [PlotThemeToken.PlotPaletteShape, 'shape'],
     ] as const;
     for (const [token, field] of paletteTokens) {
       if (has(authoredPalette, field)) set(token, palette[field]!, `$spec/plotTheme/palette/${field}`);

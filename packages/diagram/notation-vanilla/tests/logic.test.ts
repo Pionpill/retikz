@@ -1,5 +1,12 @@
 import type { VanillaEmbedContext, VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
+import {
+  ConnectorProvider,
+  DecisionProvider,
+  JunctionProvider,
+  StageProvider,
+  TerminalProvider,
+} from '@retikz/notation';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -19,7 +26,6 @@ const lower = <TProps>(spec: VanillaEmbedSpec<TProps>, adapter: VanillaTier2Adap
   adapter.lower(spec.props, {
     id: spec.id,
     kind: spec.kind,
-    namespace: adapter.namespace,
     layerId: 'layer',
     identityPath: ['layer', spec.id],
   } satisfies VanillaEmbedContext);
@@ -68,10 +74,18 @@ describe('Notation Vanilla semantic authoring', () => {
       id: 'connector',
       lower: () => lower(connector('connector', { way: ['terminal', 'stage'] }), ConnectorVanillaAdapter),
     },
-  ])('lowers $type to same-id semantic IR and contributes its Definition', ({ type, id, lower: runLower }) => {
+  ] as const)('lowers $type to same-id semantic IR and contributes its Definition', ({ type, id, lower: runLower }) => {
     const contribution = runLower();
+    const provider = {
+      terminal: TerminalProvider,
+      stage: StageProvider,
+      decision: DecisionProvider,
+      junction: JunctionProvider,
+      connector: ConnectorProvider,
+    }[type];
 
     expect(contribution.node).toMatchObject({ namespace: 'notation', type, id });
-    expect(contribution.makeComposites({})).toEqual([expect.objectContaining({ namespace: 'notation', type })]);
+    expect(contribution.compositeDependencies).toEqual({ roots: [provider.key], providers: [provider] });
+    expect(provider.makeDefinition({})).toMatchObject({ namespace: 'notation', type });
   });
 });

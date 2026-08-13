@@ -22,6 +22,7 @@ description: Use when planning a retikz architecture direction, version roadmap,
 
 - 根 `AGENTS.md` 的设计原则、IR / Schema / 分层规则。
 - 能力性迭代读取 `notes/architecture/capability-design.md` 和所属能力域 completeness 文档。
+- 涉及 Core / Plot、Vanilla、框架 adapter、authoring Input、Source IR 规范化或 DOM 子入口时，读取 `notes/architecture/package-responsibility-design.md`。
 - 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取适用 `standard-*` skill。
 - 对应分组的 `_notes/decisions/_template.md` 与当前 milestone `roadmap.md`。
 

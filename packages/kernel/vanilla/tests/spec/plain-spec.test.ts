@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, NodeTextColor, ThemeMode } from '@retikz/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -19,23 +19,37 @@ const boxComposite = defineComposite({
     text: z.string(),
   }),
   expand: composite => ({
-    type: 'node',
-    id: `fixture-${composite.text}`,
-    position: [0, 0],
-    shape: 'rectangle',
-    text: composite.text,
+    children: [
+      {
+        type: 'node',
+        id: `fixture-${composite.text}`,
+        position: [0, 0],
+        shape: 'rectangle',
+        text: composite.text,
+      },
+    ],
   }),
 });
 
+const EMPTY_COMPOSITE_DEPENDENCIES = Object.freeze({ roots: [], providers: [] });
+
 const makeAdapter = (
-  makeComposites = vi.fn(() => [boxComposite]),
+  makeDefinition = vi.fn(() => boxComposite),
 ): VanillaTier2Adapter<{ text: string; data: object }> => ({
   kind: 'fixture-box',
-  namespace: 'fixture',
   lower: props => ({
     node: { namespace: 'fixture', type: 'box', text: props.text },
-    datasets: { shared: props.data },
-    makeComposites,
+    compositeDependencies: {
+      roots: [{ namespace: 'fixture', type: 'box' }],
+      providers: [
+        {
+          key: { namespace: 'fixture', type: 'box' },
+          dependencies: [],
+          datasets: { shared: props.data },
+          makeDefinition,
+        },
+      ],
+    },
   }),
 });
 
@@ -60,18 +74,15 @@ const createCanvasContext = (): CanvasRenderingContext2D => {
 
 describe('@retikz/vanilla plain spec', () => {
   class ThemeInstance {
-    style = ThemeStyle.Academic;
+    style = 'academic';
   }
 
   it('embed adapter 只贡献 composite 数据，不再携带 Theme token registry', () => {
-    const makeComposites = () => [];
     const adapter: VanillaTier2Adapter<{ label: string }> = {
       kind: 'vanilla-theme',
-      namespace: 'vanilla-theme',
       lower: props => ({
         node: { namespace: 'vanilla-theme', type: 'box', label: props.label },
-        datasets: {},
-        makeComposites,
+        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -84,7 +95,7 @@ describe('@retikz/vanilla plain spec', () => {
   });
 
   it('figure helper 与 Scope 原样写入同一 Core Theme IR', () => {
-    const rootTheme = { style: ThemeStyle.Academic, mode: ThemeMode.Dark };
+    const rootTheme = { style: 'academic', mode: ThemeMode.Dark };
     const spec = figure({
       theme: rootTheme,
       children: [scope({ theme: { mode: ThemeMode.Light } }, [node('inside', { position: [0, 0] })])],
@@ -141,7 +152,7 @@ describe('@retikz/vanilla plain spec', () => {
     ['figure helper class', figure({ theme: new ThemeInstance(), children: [] }), /scene\.theme/i],
     [
       'Scope helper inherited field',
-      figure({ children: [scope({ theme: Object.create({ style: ThemeStyle.Academic }) as never }, [])] }),
+      figure({ children: [scope({ theme: Object.create({ style: 'academic' }) as never }, [])] }),
       /children\[0\]\.scope\.theme/i,
     ],
   ])('伪造的 %s Theme输入保留到 Core并严格拒绝', (_label, spec, expected) => {
@@ -158,7 +169,7 @@ describe('@retikz/vanilla plain spec', () => {
         return ThemeMode.Dark;
       },
     });
-    const hiddenTheme = { style: ThemeStyle.Academic };
+    const hiddenTheme = { style: 'academic' };
     Object.defineProperty(hiddenTheme, 'palette', { value: 'paper', enumerable: false });
 
     expect(() => renderToSvgString(figure({ theme: accessorTheme, children: [] }))).toThrow(/scene\.theme/i);
@@ -169,7 +180,7 @@ describe('@retikz/vanilla plain spec', () => {
   });
 
   it('Theme helper不吞掉自有__proto__未知字段', () => {
-    const rootTheme = { style: ThemeStyle.Academic };
+    const rootTheme = { style: 'academic' };
     Object.defineProperty(rootTheme, '__proto__', { value: 'root', enumerable: true });
     const localTheme = { mode: ThemeMode.Dark };
     Object.defineProperty(localTheme, '__proto__', { value: 'scope', enumerable: true });
@@ -361,10 +372,10 @@ describe('@retikz/vanilla plain spec', () => {
     expect(JSON.stringify(normalized.ir)).not.toContain('static');
   });
 
-  it('embed-adapter-lowers：adapter contribution 按 namespace 合并并只调一次 makeComposites', () => {
+  it('embed-adapter-lowers：adapter contribution 按 qualified provider key 合并并只调一次 maker', () => {
     const sharedData = { rows: [1] };
-    const makeComposites = vi.fn(() => [boxComposite]);
-    const adapter = makeAdapter(makeComposites);
+    const makeDefinition = vi.fn(() => boxComposite);
+    const adapter = makeAdapter(makeDefinition);
     const svg = renderToSvgString(
       figure({
         layers: [
@@ -377,26 +388,124 @@ describe('@retikz/vanilla plain spec', () => {
       { adapters: [adapter] },
     );
 
-    expect(makeComposites).toHaveBeenCalledTimes(1);
-    expect(makeComposites).toHaveBeenCalledWith({ shared: sharedData });
+    expect(makeDefinition).toHaveBeenCalledTimes(1);
+    expect(makeDefinition).toHaveBeenCalledWith({ shared: sharedData });
     expect(svg).toContain('<rect');
+  });
+
+  it('third-party provider 可依赖跨 namespace provider 且按依赖顺序物化', () => {
+    const frameKey = { namespace: 'standard', type: 'frame' } as const;
+    const cardKey = { namespace: 'third', type: 'card' } as const;
+    const calls: Array<string> = [];
+    const frame = defineComposite({
+      ...frameKey,
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('frame') }),
+      expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+    });
+    const card = defineComposite({
+      ...cardKey,
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('third'), type: z.literal('card') }),
+      expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+    });
+    const frameMaker = vi.fn(() => {
+      calls.push('standard.frame');
+      return frame;
+    });
+    const cardMaker = vi.fn(() => {
+      calls.push('third.card');
+      return card;
+    });
+    const adapter: VanillaTier2Adapter<Record<string, never>> = {
+      kind: 'third-card',
+      lower: () => ({
+        node: { namespace: 'third', type: 'card' },
+        compositeDependencies: {
+          roots: [cardKey],
+          providers: [
+            { key: cardKey, dependencies: [frameKey], datasets: {}, makeDefinition: cardMaker },
+            { key: frameKey, dependencies: [], datasets: {}, makeDefinition: frameMaker },
+          ],
+        },
+      }),
+    };
+
+    const normalized = normalizeFigureSpec(figure([embed('third-card', 'card', {})]), { adapters: [adapter] });
+
+    expect(calls).toEqual(['standard.frame', 'third.card']);
+    expect(normalized.composites).toEqual([frame, card]);
+  });
+
+  it('forwards Core missing dependency, cycle, and final explicit-definition diagnostics', () => {
+    const cardKey = { namespace: 'third', type: 'card' } as const;
+    const frameKey = { namespace: 'standard', type: 'frame' } as const;
+    const card = defineComposite({
+      ...cardKey,
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('third'), type: z.literal('card') }),
+      expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+    });
+    const conflictingCard = defineComposite({
+      ...cardKey,
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('third'), type: z.literal('card') }),
+      expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+    });
+    const frame = defineComposite({
+      ...frameKey,
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('frame') }),
+      expand: () => ({ children: [{ type: 'scope', children: [] }] }),
+    });
+    const cardMaker = vi.fn(() => card);
+    const frameMaker = vi.fn(() => frame);
+    const adapterOf = (includeFrame: boolean, cyclic: boolean): VanillaTier2Adapter<Record<string, never>> => ({
+      kind: 'third-card',
+      lower: () => ({
+        node: { namespace: 'third', type: 'card' },
+        compositeDependencies: {
+          roots: [cardKey],
+          providers: [
+            { key: cardKey, dependencies: [frameKey], datasets: {}, makeDefinition: cardMaker },
+            ...(includeFrame
+              ? [{ key: frameKey, dependencies: cyclic ? [cardKey] : [], datasets: {}, makeDefinition: frameMaker }]
+              : []),
+          ],
+        },
+      }),
+    });
+    const spec = figure([embed('third-card', 'card', {})]);
+
+    expect(() => normalizeFigureSpec(spec, { adapters: [adapterOf(false, false)] })).toThrow(
+      /missing dependency provider.*third\.card -> standard\.frame/i,
+    );
+    expect(() => normalizeFigureSpec(spec, { adapters: [adapterOf(true, true)] })).toThrow(
+      /provider cycle.*third\.card -> standard\.frame -> third\.card/i,
+    );
+    expect(() =>
+      normalizeFigureSpec(spec, { adapters: [adapterOf(true, false)], composites: [conflictingCard] }),
+    ).toThrow(/definition conflict.*third\.card/i);
   });
 
   it('embed-special-reference：特殊原型键同引用复用并作为 own property 传给 maker', () => {
     const sharedData = { rows: [1] };
-    const makeComposites = vi.fn<(mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>>(() => [
-      boxComposite,
-    ]);
+    const makeDefinition = vi.fn<(mergedDatasets: Readonly<Record<string, unknown>>) => AnyCompositeDefinition>(
+      () => boxComposite,
+    );
     const adapter: VanillaTier2Adapter<{ text: string; data: object }> = {
       kind: 'special-reference',
-      namespace: 'fixture',
       lower: props => ({
         node: { namespace: 'fixture', type: 'box', text: props.text },
-        datasets: Object.fromEntries([
-          ['__proto__', props.data],
-          ['toString', props.data],
-        ]),
-        makeComposites,
+        compositeDependencies: {
+          roots: [{ namespace: 'fixture', type: 'box' }],
+          providers: [
+            {
+              key: { namespace: 'fixture', type: 'box' },
+              dependencies: [],
+              datasets: Object.fromEntries([
+                ['__proto__', props.data],
+                ['toString', props.data],
+              ]),
+              makeDefinition,
+            },
+          ],
+        },
       }),
     };
     const spec = figure({
@@ -410,7 +519,7 @@ describe('@retikz/vanilla plain spec', () => {
 
     normalizeFigureSpec(spec, { adapters: [adapter] });
 
-    const merged = makeComposites.mock.calls[0][0];
+    const merged = makeDefinition.mock.calls[0][0];
     expect(Object.hasOwn(merged, '__proto__')).toBe(true);
     expect(Object.hasOwn(merged, 'toString')).toBe(true);
     expect(merged.__proto__).toBe(sharedData);
@@ -420,15 +529,13 @@ describe('@retikz/vanilla plain spec', () => {
   it('embed-output-derived-identities：adapter 输出可使用派生 identity 并进入 identityIndex', () => {
     const adapter: VanillaTier2Adapter<{ label: string }> = {
       kind: 'named-output',
-      namespace: 'fixture',
       lower: props => ({
         node: {
           type: 'scope',
           id: 'chart/root',
           children: [node('chart/label', { position: [0, 0], text: props.label })],
         },
-        datasets: {},
-        makeComposites: () => [],
+        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -452,11 +559,9 @@ describe('@retikz/vanilla plain spec', () => {
   it('embed-output-independent-identity：adapter 输出可使用不从 embed id 派生的唯一 identity', () => {
     const adapter: VanillaTier2Adapter<{ text: string }> = {
       kind: 'independent-output',
-      namespace: 'fixture',
       lower: props => ({
         node: node('external', { position: [0, 0], text: props.text }),
-        datasets: {},
-        makeComposites: () => [],
+        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -472,15 +577,13 @@ describe('@retikz/vanilla plain spec', () => {
   it('embed-output-reuses-root-identity：adapter 根输出可复用 embed identity', () => {
     const adapter: VanillaTier2Adapter<{ text: string }> = {
       kind: 'same-output',
-      namespace: 'fixture',
       lower: props => ({
         node: {
           type: 'scope',
           id: 'chart',
           children: [node('label', { position: [0, 0], text: props.text })],
         },
-        datasets: {},
-        makeComposites: () => [],
+        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -497,11 +600,9 @@ describe('@retikz/vanilla plain spec', () => {
   it('embed-output-duplicate-identity-throws：adapter 输出仍不能占用已有 identity', () => {
     const adapter: VanillaTier2Adapter<{ text: string }> = {
       kind: 'duplicate-output',
-      namespace: 'fixture',
       lower: props => ({
         node: node('external', { position: [0, 0], text: props.text }),
-        datasets: {},
-        makeComposites: () => [],
+        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
     const spec = figure({
@@ -521,7 +622,7 @@ describe('@retikz/vanilla plain spec', () => {
     expect(() => normalizeFigureSpec(spec)).toThrow(/adapter/i);
   });
 
-  it('conflicting-dataset-reference-throws：同 namespace 同 reference 异对象抛错', () => {
+  it('conflicting-dataset-reference-throws：同 provider key 同 reference 异对象抛错', () => {
     const adapter = makeAdapter();
     const spec = figure({
       layers: [
@@ -532,33 +633,51 @@ describe('@retikz/vanilla plain spec', () => {
       ],
     });
 
-    expect(() => normalizeFigureSpec(spec, { adapters: [adapter] })).toThrow(/reference conflict/i);
+    expect(() => normalizeFigureSpec(spec, { adapters: [adapter] })).toThrow(/dataset.*conflicts by identity/i);
   });
 
-  it('conflicting-namespace-maker-throws：同 namespace 使用不同 makeComposites 会抛错', () => {
+  it('conflicting-provider-maker-throws：同 provider key 使用不同 maker 会抛错', () => {
+    const firstMaker = () => boxComposite;
+    const secondMaker = () => boxComposite;
     const first: VanillaTier2Adapter<{ text: string }> = {
       kind: 'first',
-      namespace: 'fixture',
       lower: props => ({
         node: { namespace: 'fixture', type: 'box', text: props.text },
-        datasets: {},
-        makeComposites: () => [boxComposite],
+        compositeDependencies: {
+          roots: [{ namespace: 'fixture', type: 'box' }],
+          providers: [
+            {
+              key: { namespace: 'fixture', type: 'box' },
+              dependencies: [],
+              datasets: {},
+              makeDefinition: firstMaker,
+            },
+          ],
+        },
       }),
     };
     const second: VanillaTier2Adapter<{ text: string }> = {
       kind: 'second',
-      namespace: 'fixture',
       lower: props => ({
         node: { namespace: 'fixture', type: 'box', text: props.text },
-        datasets: {},
-        makeComposites: () => [boxComposite],
+        compositeDependencies: {
+          roots: [{ namespace: 'fixture', type: 'box' }],
+          providers: [
+            {
+              key: { namespace: 'fixture', type: 'box' },
+              dependencies: [],
+              datasets: {},
+              makeDefinition: secondMaker,
+            },
+          ],
+        },
       }),
     };
     const spec = figure({
       layers: [layer('chart', [embed('first', 'a', { text: 'A' }), embed('second', 'b', { text: 'B' })])],
     });
 
-    expect(() => normalizeFigureSpec(spec, { adapters: [first, second] })).toThrow(/multiple makeComposites/i);
+    expect(() => normalizeFigureSpec(spec, { adapters: [first, second] })).toThrow(/conflicting maker references/i);
   });
 
   it('duplicate-identity-throws：重复公开 identity 抛错并包含 id', () => {

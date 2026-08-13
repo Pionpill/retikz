@@ -161,9 +161,9 @@ Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它�
 
 | 内容                             | Highcharts                         | ECharts                                               | Recharts                          | retikz Chart 结论                                                              |
 | -------------------------------- | ---------------------------------- | ----------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------ |
-| title / subtitle                 | Chart 一级配置                     | title text / subtext component                        | 通常由宿主元素组合                | 可选 Chart presentation，Standard 布局                                         |
-| caption / note / source / credit | caption / credits 直接进入完整图表 | 可借 title subtext / graphic 表达，但缺少稳定统一语义 | 通常由宿主组合                    | 提供固定语义槽位候选，不开放任意 graphic                                       |
-| background / border / padding    | chart options                      | 全局 background + component box style                 | wrapper / SVG props               | Chart 配置整图语义，复用 Standard Frame / Box 能力                             |
+| title / subtitle                 | Chart 一级配置                     | title text / subtext component                        | 通常由宿主元素组合                | 固定 Chart presentation preset，由 Layout 排列                                 |
+| caption / note / source / credit | caption / credits 直接进入完整图表 | 可借 title subtext / graphic 表达，但缺少稳定统一语义 | 通常由宿主组合                    | 首版固定支持 note / source，不开放 caption / credit 或任意 graphic             |
+| background / border / padding    | chart options                      | 全局 background + component box style                 | wrapper / SVG props               | Chart 配置整图语义，复用 Standard Surface                                      |
 | legend                           | series / point 领域内容            | 独立 legend component                                 | `<Legend>`                        | Plot 解析领域语义，Standard 呈现，不复制进 Chart presentation                  |
 | axis / datum label、annotation   | plotOptions / annotations          | axisLabel、series label、markLine / markArea          | LabelList、Reference\*            | 与数据 / coordinate 强绑定，继续属于 Plot                                      |
 | tooltip                          | hover runtime                      | tooltip component / runtime                           | `<Tooltip>`                       | Plot 拥有 locator 与领域语义，adapter 承担运行时 UI                            |

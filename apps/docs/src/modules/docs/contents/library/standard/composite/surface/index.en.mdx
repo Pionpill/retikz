@@ -1,0 +1,94 @@
+---
+title: Surface
+description: Wrap one arbitrary child with JSON-safe padding, background, border, radius, and overflow, then lower it to ordinary Core Scope and Path output.
+---
+
+`Surface` is Standard's single-box presentation container. It measures one Core or registered Tier 2 child, adds padding and optional appearance, and keeps the result renderer-neutral. Chart, Table, and other domains can reuse this boundary without rebuilding a canvas shell in adapters or renderers.
+
+## Usage
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { Surface } from '@retikz/standard-react';
+```
+
+```tsx
+<Layout width={320} height={180}>
+  <Surface padding={16} background={{ fill: '#f8fafc' }} border={{ stroke: '#64748b' }}>
+    <Node position={[0, 0]} text="Content" />
+  </Surface>
+</Layout>
+```
+
+| Path           | Public entry                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------- |
+| React          | `Surface` from `@retikz/standard-react`                                                              |
+| Vanilla        | `surface`, `surfaceChild`, and `SurfaceVanillaAdapter` from `@retikz/standard-vanilla`               |
+| IR / persisted | `SurfaceSchema`, `IRSurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard` |
+
+## Examples
+
+### Basic surface
+
+`Surface` accepts exactly one direct child that lowers to IR. That child may be a Core `Scope` containing several primitives. Padding participates in layout, while background, content, and border use fixed layers.
+
+<ComponentPreview files="surface-basic" size="sm" />
+
+### Overflow and rounded clipping
+
+`overflow="visible"` preserves visual overflow; `overflow="clip"` clips only the content layer, not the background or border. The radius drives both the boundary Path and content clip and is clamped to half the shorter side.
+
+<ComponentPreview files="surface-overflow" size="sm" />
+
+## How it works
+
+`SurfaceDefinition` translates the parent proposal for the padded content, probes the single child, replays it, and emits a background Path, content Scope, and border Path. The overflow clip belongs only to the content Scope; an authored Core `clip` on Surface still covers the complete outer group.
+
+```text
+standard.surface → SurfaceDefinition → Core Scope(Path + child replay + Path)
+```
+
+Persisted `standard.surface` IR without `SurfaceDefinition` produces `COMPOSITE_NOT_REGISTERED`. React and Vanilla contribute `SurfaceProvider`; nested Tier 2 providers follow it in authored order and enter the same Core resolver.
+
+The authored outer Scope also publishes a qualified handle whose key is `surface`. It inherits settled placement and transforms. Descendant handles preserve their key, role, tags, and payload and only gain the real owner path.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Surface schema and defaults',
+      path: 'packages/library/standard/src/composites/presentation/surface/schema.ts',
+    },
+    {
+      label: 'Surface layout and lowering',
+      path: 'packages/library/standard/src/composites/presentation/surface/pipeline.ts',
+    },
+    { label: 'Surface provider', path: 'packages/library/standard/src/composites/presentation/surface/provider.ts' },
+  ]}
+/>
+
+## API Reference
+
+### SurfaceSchema
+
+| Property        | Type                              | Default   | Meaning                                                              |
+| --------------- | --------------------------------- | --------- | -------------------------------------------------------------------- |
+| `child`         | `IRChild`                         | —         | The one Core or registered Tier 2 child                              |
+| `padding?`      | `number \| IRBoxSpacing`          | `0`       | Non-negative padding normalized to top/right/bottom/left             |
+| `overflow?`     | `'visible' \| 'clip'`             | `visible` | Child visual-overflow policy                                         |
+| `background?`   | `{ fill; fillOpacity? }`          | —         | Fill covering the complete allocation box                            |
+| `border?`       | `IRStandardPathStrokeStyle`       | —         | Stroke drawn along the allocation boundary                           |
+| `cornerRadius?` | `number`                          | `0`       | Non-negative radius, effectively capped at half the short side       |
+| Scope props     | `Omit<IRScope, 'type\|children'>` | —         | Core Scope behavior for the complete background/content/border group |
+
+`IRSurfaceSchema` validates normalized persisted output, where four-sided padding, `overflow`, and `cornerRadius` are required canonical fields. A finite range or exact proposal smaller than axis padding fails synchronously before the child is probed; Surface does not fall back to intrinsic sizing.
+
+### React and Vanilla
+
+React `SurfaceProps` replaces IR `child` with `children` and requires exactly one resulting IR child. Vanilla uses `surfaceChild(node, compositeDependencies?)` to carry a nested Tier 2 provider contribution explicitly. That runtime metadata never enters IR or Scene.
+
+## Related
+
+- [Scope](/kernel/components/layout/scope): the authored outer group emitted by Surface
+- [Tier 2 Composite](/kernel/concepts/design/composite): Definition and provider-graph mechanics
+- [Provider loading](/library/standard/extension/capability-loading): React, Vanilla, and direct-IR loading
+- [Frame](/library/standard/composite/frame): the specialized Node grouping and header composite

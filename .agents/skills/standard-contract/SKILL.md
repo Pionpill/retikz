@@ -18,14 +18,7 @@ description: Use when changing retikz contract layer code, XxxDefinition types, 
 
 ## 组织与命名
 
-| 形态                              | 规则                                          |
-| --------------------------------- | --------------------------------------------- |
-| `contract/<capability>/types.ts`  | definition、input、context、抽象协议类型      |
-| `contract/<capability>/define.ts` | `defineXxx()` 和必要的作者侧规范化            |
-| `contract/<capability>/index.ts`  | barrel 导出                                   |
-| `XxxDefinition`                   | registry 存储和消费的能力契约，不代表 IR 节点 |
-| `XxxDefinitionInput`              | 仅当作者侧输入不同于存储契约时使用            |
-| `AnyXxxDefinition`                | 擦除泛型后的异构 definition，不表示任意 JSON  |
+目录、文件和符号名以 `standard-name` 为唯一真源。`XxxDefinitionInput` 只在 Definition 作者侧输入不同于存储契约时定义，不能与 Vanilla 的 `InputXxx` 混用；擦除泛型的异构 definition 不是任意 JSON。
 
 `defineXxx()` 即使暂时只是 typed identity，也保留为稳定 contract hook；不要写成 `@todo`。
 

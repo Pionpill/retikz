@@ -1,11 +1,11 @@
 ---
 name: theme-vibrant
-description: Use when designing, implementing, reviewing, or documenting Retikz ThemeStyle.Vibrant in any package, especially for screen-first hierarchy, vivid categorical colors, tinted surfaces, controlled visual energy, package ownership, or explicit color overrides.
+description: Use when designing, implementing, reviewing, or documenting Retikz Vibrant reference theme in any host or package, especially for screen-first hierarchy, vivid categorical colors, tinted surfaces, controlled visual energy, package ownership, or explicit color overrides.
 ---
 
 # Vibrant Theme
 
-`ThemeStyle.Vibrant` 表达面向屏幕、鲜明、具有展示张力的视觉语言。它通过高区分度数据颜色、更强内容层级和适度有色表面建立能量，但不等于提高所有元素的饱和度，也不允许装饰压过内容。
+`vibrant` 是 docs 维护的参考 style，表达面向屏幕、鲜明、具有展示张力的视觉语言。它通过高区分度数据颜色、更强内容层级和适度有色表面建立能量，但不等于提高所有元素的饱和度，也不允许装饰压过内容。
 
 ## 参考与使用边界
 
@@ -29,7 +29,7 @@ Vibrant 比 Neutral 更鲜明、更强调表面与主要层级；比 Academic �
 ## 颜色与 ThemeMode
 
 - `ResolvedThemeColors` 与 owner 的显式颜色配置继续决定最终颜色。Vibrant 不调色、重排、补全或按 mode 改写显式输入。
-- 内置 fallback 应高区分度、有节奏且避免相邻类别过近；不能复制参考项目 colorway 的精确色值作为唯一答案。
+- docs reference fallback 应高区分度、有节奏且避免相邻类别过近；不能复制参考项目 colorway 的精确色值作为唯一答案。
 - 高色度优先用于内容和有明确语义的强调；文字、辅助结构与大面积表面使用受控色度。
 - semantic colors 只表达成功、警告和错误，不与普通类别色交换角色。
 - Light 可使用浅 tint、深前景和清楚分隔；Dark 使用深 panel、浅前景与适配后的辅助结构。两者保持类别索引和信息层级。
@@ -37,9 +37,9 @@ Vibrant 比 Neutral 更鲜明、更强调表面与主要层级；比 Academic �
 ## Package 所有权
 
 - 本 skill 只定义跨包视觉意图，不维护 package token、preset 数值或局部组件规则。
-- Core 拥有 `ThemeStyle.Vibrant`、Theme 继承、registry 与 shared semantic / categorical colors。
+- Core 拥有开放 style selector、Theme 继承、registry 与内置 Neutral；docs 通过公开 definition 维护 Vibrant 的 shared semantic / categorical colors。
 - 每个领域 package 只把公共意图映射到自己拥有的 token；不得复制其它 owner 的 preset 或建立主题特判。
-- adapter 与 docs 只传递标准 selector 和显式覆盖，不创建平行 Theme 实现。
+- adapter 只传递标准 selector 和 definitions；docs 通过各 owner 的公开 definition / registry 组合参考实现，不创建跨 owner registry。
 - 处理 `@retikz/plot` 时，必须同时读取 [Vibrant Plot Theme](../../../packages/viz/_notes/theme/plot/vibrant.md)。
 
 ## 实施与验收

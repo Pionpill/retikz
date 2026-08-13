@@ -3,3 +3,4 @@ export * from './frame';
 export * from './grid';
 export * from './legend';
 export * from './preset';
+export * from './surface';

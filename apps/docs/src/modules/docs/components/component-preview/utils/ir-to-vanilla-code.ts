@@ -287,11 +287,12 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
-const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame', 'legend'];
+const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame', 'surface', 'surfaceChild', 'legend'];
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridVanillaAdapter',
   'AxesVanillaAdapter',
   'FrameVanillaAdapter',
+  'SurfaceVanillaAdapter',
   'LegendVanillaAdapter',
 ];
 const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
@@ -322,6 +323,7 @@ export type StandardPreviewDefinitionName =
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
+  | 'SurfaceDefinition'
   | 'LegendDefinition';
 
 /** docs 预览能够显式注入的 Layout definition 名 */
@@ -340,6 +342,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
+  surface: 'SurfaceDefinition',
   legend: 'LegendDefinition',
 };
 
@@ -360,6 +363,7 @@ const NOTATION_DEFINITION_BY_KIND: Readonly<Record<string, NotationPreviewDefini
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
   const record = child as unknown as Record<string, unknown>;
+  if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
     child.namespace === 'layout' &&
     (child.type === 'flexLayout' || child.type === 'gridLayout' || child.type === 'overlayLayout')
@@ -469,7 +473,9 @@ export const collectLayoutPreviewDefinitions = (
 ): Array<LayoutPreviewDefinitionName> => collectPreviewDefinitions(children, new Set(), adapterKinds, new Set()).layout;
 
 const standardCanonicalId = (kind: string, embedId: string): string => {
-  return kind === 'frame' ? `${embedId}/frame` : embedId;
+  if (kind === 'frame') return `${embedId}/frame`;
+  if (kind === 'surface') return `${embedId}/surface`;
+  return embedId;
 };
 
 const notationCanonicalId = (kind: string, embedId: string): string =>
@@ -573,6 +579,16 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardHelpers.add(record.type);
   ctx.standardAdapters.add(adapterName);
   const generatedId = `preview-${record.type}-${count}`;
+  if (record.type === 'surface') {
+    const surface = record as typeof record & { child: IRChild };
+    if ('namespace' in surface.child) {
+      throw new Error('Cannot generate Vanilla Surface code for a nested Tier 2 child.');
+    }
+    ctx.standardHelpers.add('surfaceChild');
+    const input = stripKeys(record, ['namespace', 'type', 'id', 'child']);
+    const surfaceChildCode = childCode(surface.child, indent + 1, ctx);
+    return `surface(${formatString(generatedId)}, ${formatObject({ ...input, child: '__SURFACE_CHILD__' }, indent).replace("'__SURFACE_CHILD__'", `surfaceChild(${surfaceChildCode})`)})`;
+  }
   const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };

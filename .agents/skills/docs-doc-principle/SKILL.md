@@ -18,6 +18,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 概念页：[`docs-doc-concept`](../docs-doc-concept/SKILL.md)
    - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
 3. 仅在命中条件时继续加载：
+   - Showcase / 成品型功能展示：[`docs-doc-showcase`](../docs-doc-showcase/SKILL.md)
    - 带 controls：[`docs-doc-control`](../docs-doc-control/SKILL.md)
    - 使用 `<ComponentPreview>` 的源码视图、多文件或数据文件：[`references/component-preview.md`](references/component-preview.md)
    - 位置、引用、边界或教学辅助线 demo：[`references/demo-visual-language.md`](references/demo-visual-language.md)

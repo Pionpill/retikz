@@ -1,6 +1,6 @@
-import type { BuiltinThemeStyleValue, IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 
-import { compileToScene, resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPlotAxisGuide, IRPlotSpec } from '../../src/schemas';
@@ -23,7 +23,7 @@ const ROWS = [
 
 const expandOf = (spec: IRPlotSpec): IRScope => {
   const [def] = lowerPlots({ d: ROWS }, { width: 480, height: 300 });
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const baseSpec = (override: Partial<IRPlotSpec> = {}): IRPlotSpec =>
@@ -102,12 +102,12 @@ const hasMinimumSize = (node: IRNode, width: number, height: number): boolean =>
 const resolveAxis = (
   input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
   guide: IRPlotAxisGuide,
-  style: BuiltinThemeStyleValue = ThemeStyle.Neutral,
+  style: string | undefined = undefined,
 ): IRPlotAxisGuide => {
   const effectiveTheme = {
-    style,
+    ...(style === undefined ? {} : { style }),
     mode: ThemeMode.Light,
-    colors: resolveCoreThemeColors(style, ThemeMode.Light),
+    colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
   };
   const resolution = resolvePlotTheme(effectiveTheme, input);
   const guideTheme = resolvePlotGuideTheme(resolution.plotTheme, resolution.palette);
@@ -256,12 +256,12 @@ describe('plot theme schema and lowering', () => {
       {
         version: 1,
         type: 'scene',
-        theme: { style: ThemeStyle.Academic, mode: ThemeMode.Dark },
+        theme: { mode: ThemeMode.Dark },
         children: [
           baseSpec({ id: 'scene-theme-plot' }),
           {
             type: 'scope',
-            theme: { style: ThemeStyle.Vibrant, mode: ThemeMode.Light },
+            theme: { mode: ThemeMode.Light },
             children: [baseSpec({ id: 'scope-theme-plot' })],
           },
         ],
@@ -270,8 +270,8 @@ describe('plot theme schema and lowering', () => {
     ).scene;
     const fills = primitiveFillsOf(scene.primitives);
 
-    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Academic, ThemeMode.Dark).categorical[0]);
-    expect(fills).toContain(resolveCoreThemeColors(ThemeStyle.Vibrant, ThemeMode.Light).categorical[0]);
+    expect(fills).toContain(resolveDefaultCoreThemeColors(ThemeMode.Dark).categorical[0]);
+    expect(fills).toContain(resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0]);
   });
 
   it('theme_palette_categorical_drives_ordinal_scale', () => {
@@ -393,6 +393,7 @@ describe('plot theme schema and lowering', () => {
       plotThemeTokens: {
         [PlotThemeToken.AxisGridEnabled]: false,
         [PlotThemeToken.AxisGridStroke]: '#94a3b8',
+        [PlotThemeToken.AxisGridIncludeDomain]: false,
       },
       plotThemeTokenRules: [
         {
@@ -400,10 +401,13 @@ describe('plot theme schema and lowering', () => {
           tokens: {
             [PlotThemeToken.AxisGridEnabled]: true,
             [PlotThemeToken.AxisGridStroke]: '#2563eb',
+            [PlotThemeToken.AxisGridIncludeDomain]: true,
           },
         },
       ],
-      plotTheme: { axis: { grid: { stroke: '#f97316', dashPattern: [4, 2] } } },
+      plotTheme: {
+        axis: { grid: { stroke: '#f97316', dashPattern: [4, 2], includeDomain: false } },
+      },
     } satisfies Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>;
 
     const y = resolveAxis(input, {
@@ -418,22 +422,42 @@ describe('plot theme schema and lowering', () => {
       drawOpacity: 0.15,
       dashPattern: [4, 2],
       dashOffset: 1,
+      includeDomain: false,
     });
+
+    expect(
+      resolveAxis(input, {
+        type: 'axis',
+        dimension: 'y',
+        grid: { includeDomain: true },
+      }).grid,
+    ).toMatchObject({ includeDomain: true });
+    expect(resolveAxis(input, { type: 'axis', dimension: 'y', grid: false }).grid).toBe(false);
+  });
+
+  it('endpoint token 不创建 grid，disabled Theme 下的 grid shorthand 不恢复休眠默认', () => {
+    const disabled = {
+      plotThemeTokens: {
+        [PlotThemeToken.AxisGridEnabled]: false,
+        [PlotThemeToken.AxisGridIncludeDomain]: true,
+      },
+    } satisfies Pick<IRPlotSpec, 'plotThemeTokens'>;
+
+    expect(resolveAxis(disabled, { type: 'axis', dimension: 'x' }).grid).toBe(false);
+    expect(resolveAxis(disabled, { type: 'axis', dimension: 'x', grid: true }).grid).toBe(true);
   });
 
   it('内建 style 只通过 rule 改变已有 Axis grid，且不会创建 minor grid', () => {
-    const cases: Array<{ style: BuiltinThemeStyleValue; dimensions: Array<string> }> = [
-      { style: ThemeStyle.Neutral, dimensions: ['y'] },
-      { style: ThemeStyle.Academic, dimensions: [] },
-      { style: ThemeStyle.Vibrant, dimensions: ['x', 'y'] },
-      { style: ThemeStyle.Clean, dimensions: ['y'] },
-    ];
+    const cases: Array<{ dimensions: Array<string> }> = [{ dimensions: ['x', 'y'] }];
 
-    for (const { style, dimensions } of cases) {
+    for (const { dimensions } of cases) {
       for (const dimension of ['x', 'y']) {
-        const grid = resolveAxis({}, { type: 'axis', dimension }, style).grid;
+        const grid = resolveAxis({}, { type: 'axis', dimension }).grid;
         if (dimensions.some(candidate => candidate === dimension)) {
-          expect(grid).toMatchObject({ stroke: style === ThemeStyle.Vibrant ? '#FFFFFF' : 'currentColor' });
+          expect(grid).toMatchObject({
+            stroke: 'currentColor',
+            includeDomain: true,
+          });
         } else {
           expect(grid).toBe(false);
         }
@@ -445,39 +469,6 @@ describe('plot theme schema and lowering', () => {
       stroke: 'currentColor',
       minor: localMinor,
     });
-  });
-
-  it('Clean 默认不绘制 x/y Axis line 与 tick mark', () => {
-    const x = resolveAxis({}, { type: 'axis', dimension: 'x' }, ThemeStyle.Clean);
-    const y = resolveAxis({}, { type: 'axis', dimension: 'y' }, ThemeStyle.Clean);
-
-    expect(x.line).toBe(false);
-    expect(y.line).toBe(false);
-    expect(x.ticks?.mark).toBe(false);
-    expect(y.ticks?.mark).toBe(false);
-  });
-
-  it('Clean 默认隐藏 Axis title，显式 token、dimension rule 与 native theme 可以覆盖', () => {
-    const guide = { type: 'axis', dimension: 'x', title: 'Revenue' } as const;
-
-    expect(resolveAxis({}, guide, ThemeStyle.Clean).title).toBeUndefined();
-    expect(resolveAxis({}, guide, ThemeStyle.Neutral).title).toMatchObject({ text: 'Revenue' });
-    expect(
-      resolveAxis({ plotThemeTokens: { [PlotThemeToken.AxisTitleEnabled]: true } }, guide, ThemeStyle.Clean).title,
-    ).toMatchObject({ text: 'Revenue' });
-    expect(
-      resolveAxis(
-        {
-          plotThemeTokenRules: [{ select: { dimension: 'x' }, tokens: { [PlotThemeToken.AxisTitleEnabled]: true } }],
-        },
-        guide,
-        ThemeStyle.Clean,
-      ).title,
-    ).toMatchObject({ text: 'Revenue' });
-    expect(resolveAxis({ plotTheme: { axis: { title: false } } }, guide).title).toBeUndefined();
-    expect(
-      resolveAxis({ plotTheme: { axis: { title: { textColor: '#2563eb' } } } }, guide, ThemeStyle.Clean).title,
-    ).toMatchObject({ text: 'Revenue', textColor: '#2563eb' });
   });
 
   it('typography_supplies_axis_text_defaults_beneath_axis_and_guide_styles', () => {

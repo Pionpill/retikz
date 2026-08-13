@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTargetSugar } from '../../src/parsers/target-sugar';
+import { parseTargetSugar } from '../../src/parse/target-sugar';
 
 describe('parseTargetSugar', () => {
   it("'+1,0' 解析为 relative", () => {

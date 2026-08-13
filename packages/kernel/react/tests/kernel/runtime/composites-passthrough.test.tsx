@@ -20,7 +20,9 @@ const labeledBox = defineComposite({
     type: z.literal('labeledBox'),
     text: z.string(),
   }),
-  expand: node => ({ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }),
+  expand: node => ({
+    children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
+  }),
 });
 
 const ir: IRScene = {

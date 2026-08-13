@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope, JsonValue } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue, JsonValue } from '@retikz/core';
 import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow, IRDataScalarValue } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
 
@@ -16,6 +16,8 @@ export type ChannelPaletteContext = {
   sequential: string;
   /** 发散色阶默认 scheme */
   diverging: string;
+  /** 分类 shape 通道默认形状 */
+  shape: ReadonlyArray<IRShapeValue>;
 };
 
 /**
@@ -147,7 +149,7 @@ export type ScaleDescriptor = {
   /** 域：连续 = [min, max]、分类 = 类别序、离散化 = 边界 / 类别 */
   domain: ReadonlyArray<IRDataScalarValue>;
   /** 值域：色串 / 半径 / 不透明度 / shape 名 */
-  range: ReadonlyArray<IRDataScalarValue>;
+  range: ReadonlyArray<JsonValue>;
   /** 绑定字段名；常量通道无字段 */
   field?: string;
   /** 绑定字段类型；常量 / 类型未知时省略 */
@@ -173,7 +175,7 @@ export type ChannelResolution<T> = {
 export type ChannelOutputSpace =
   | { outputKind: 'color' }
   | { outputKind: 'number'; range: readonly [number, number]; clamp?: boolean }
-  | { outputKind: 'symbol'; palette: ReadonlyArray<string> }
+  | { outputKind: 'symbol'; palette: ReadonlyArray<IRShapeValue> }
   | { outputKind: 'boolean' }
   | { outputKind: 'array' }
   | { outputKind: 'object' }

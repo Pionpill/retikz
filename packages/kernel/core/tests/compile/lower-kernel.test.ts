@@ -16,7 +16,7 @@ const panelComposite = defineComposite({
   namespace: 'demo',
   type: 'panel',
   schema: PanelSchema,
-  expand: panel => ({ type: 'node', id: panel.id, position: [0, 0], text: panel.id }),
+  expand: panel => ({ children: [{ type: 'node', id: panel.id, position: [0, 0], text: panel.id }] }),
 });
 
 /** demo.wrapper → 继续展开为 demo.panel，验证 fixpoint */
@@ -28,7 +28,7 @@ const wrapperComposite = defineComposite({
     type: z.literal('wrapper'),
     id: z.string(),
   }),
-  expand: wrapper => ({ namespace: 'demo', type: 'panel', id: wrapper.id }),
+  expand: wrapper => ({ children: [{ namespace: 'demo', type: 'panel', id: wrapper.id }] }),
 });
 
 /** demo.loop → 自身，用于深度守卫 */
@@ -36,7 +36,7 @@ const loopComposite = defineComposite({
   namespace: 'demo',
   type: 'loop',
   schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('loop') }),
-  expand: () => ({ namespace: 'demo', type: 'loop' }),
+  expand: () => ({ children: [{ namespace: 'demo', type: 'loop' }] }),
 });
 
 /** demo.batch → 零个或多个节点，验证 flatMap 语义 */
@@ -48,7 +48,9 @@ const batchComposite = defineComposite({
     type: z.literal('batch'),
     ids: z.array(z.string()),
   }),
-  expand: batch => batch.ids.map(id => ({ type: 'node' as const, id, position: [0, 0] as [number, number] })),
+  expand: batch => ({
+    children: batch.ids.map(id => ({ type: 'node' as const, id, position: [0, 0] as [number, number] })),
+  }),
 });
 
 /** Unicode provider key 也应按原值参与注册与诊断 */
@@ -59,10 +61,47 @@ const unicodeComposite = defineComposite({
     namespace: z.literal('示例'),
     type: z.literal('面板'),
   }),
-  expand: () => ({ type: 'node', id: 'unicode', position: [0, 0] }),
+  expand: () => ({ children: [{ type: 'node', id: 'unicode', position: [0, 0] }] }),
 });
 
 describe('lowerIRToKernel', () => {
+  it('fails loudly when structured expansion declares a non-empty spatial handle sidecar', () => {
+    const spatial = defineComposite({
+      namespace: 'demo',
+      type: 'spatial',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('spatial') }),
+      expand: () => ({
+        children: [],
+        spatialHandles: [{ key: 'body', role: 'demo', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
+      }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'demo', type: 'spatial' }],
+    };
+
+    expect(() => lowerIRToKernel(ir, { composites: [spatial] })).toThrow(
+      /demo\.spatial.*children\[0\].*compileToScene/i,
+    );
+  });
+
+  it('continues to lower an explicitly empty spatial handle declaration array', () => {
+    const emptySpatial = defineComposite({
+      namespace: 'demo',
+      type: 'emptySpatial',
+      schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('emptySpatial') }),
+      expand: () => ({ children: [], spatialHandles: [] }),
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ namespace: 'demo', type: 'emptySpatial' }],
+    };
+
+    expect(lowerIRToKernel(ir, { composites: [emptySpatial] }).children).toEqual([]);
+  });
+
   it('returns an empty LoweredIRScene for an empty scene', () => {
     const options: LowerIRToKernelOptions = {};
     const lowered: LoweredIRScene = lowerIRToKernel({ version: 1, type: 'scene', children: [] }, options);

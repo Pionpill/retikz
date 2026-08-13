@@ -1,11 +1,12 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { AnimationMode } from '@retikz/react';
 
-import { ThemeStyle } from '@retikz/core';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import type { PreviewThemeStyleValue } from '@/modules/docs/components/component-preview/theme';
 import type { PreviewThemeMode } from '@/modules/docs/components/component-preview/types';
+
+import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
 
 /** ComponentPreview 全局开关 */
 export type ComponentPreviewState = {
@@ -17,7 +18,7 @@ export type ComponentPreviewState = {
   /** 新预览实例使用的局部主题默认值 */
   themeMode: PreviewThemeMode;
   /** 所有 ComponentPreview 的 Core ThemeStyle */
-  themeStyle: ThemeStyleValue;
+  themeStyle: PreviewThemeStyleValue;
   /** 新预览实例是否默认打开属性面板 */
   controlPanelDefaultOpen: boolean;
   /** 未单独配置时，range 从最小值播放到最大值的默认时长（毫秒） */
@@ -30,7 +31,7 @@ export type ComponentPreviewState = {
   /** 设置新预览实例的局部主题默认值 */
   setThemeMode: (value: PreviewThemeMode) => void;
   /** 设置所有 ComponentPreview 的 Core ThemeStyle */
-  setThemeStyle: (value: ThemeStyleValue) => void;
+  setThemeStyle: (value: PreviewThemeStyleValue) => void;
   /** 设置新预览实例的属性面板默认状态 */
   setControlPanelDefaultOpen: (value: boolean) => void;
   /** 设置未单独配置时的 range 默认播放时长 */
@@ -52,7 +53,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       rendererMode: 'svg',
       animationMode: 'system',
       themeMode: 'inherit',
-      themeStyle: ThemeStyle.Neutral,
+      themeStyle: PreviewThemeStyle.Default,
       controlPanelDefaultOpen: true,
       rangePlaybackDuration: 2000,
       setHideCode: value => set({ hideCode: value }),
@@ -70,6 +71,6 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       toggleRendererMode: () => set({ rendererMode: get().rendererMode === 'svg' ? 'canvas' : 'svg' }),
       toggleControlPanelDefaultOpen: () => set({ controlPanelDefaultOpen: !get().controlPanelDefaultOpen }),
     }),
-    { name: 'retikz-component-preview' },
+    { name: 'retikz-component-preview-v2' },
   ),
 );

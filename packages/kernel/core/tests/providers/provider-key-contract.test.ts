@@ -121,7 +121,7 @@ describe('provider key contract', () => {
       namespace: 'demo',
       type: 'badge',
       schema,
-      expand: () => ({ type: 'node', id: 'badge', position: [0, 0], text: 'B' }),
+      expand: () => ({ children: [{ type: 'node', id: 'badge', position: [0, 0], text: 'B' }] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'demo', type: 'badge' }] };
 
@@ -139,7 +139,7 @@ describe('provider key contract', () => {
         namespace: 'declared',
         type: 'badge',
         schema,
-        expand: () => [],
+        expand: () => ({ children: [] }),
       }),
     ).toThrow(/namespace.*declared.*actual/s);
   });
@@ -153,7 +153,7 @@ describe('provider key contract', () => {
           namespace: z.literal(namespace),
           type: z.literal('badge'),
         }),
-        expand: () => [],
+        expand: () => ({ children: [] }),
       }),
     ).toThrowError('defineComposite: schema.namespace must be a non-empty z.literal string.');
   });
@@ -167,7 +167,7 @@ describe('provider key contract', () => {
           namespace: z.literal('demo'),
           type: z.literal(type),
         }),
-        expand: () => [],
+        expand: () => ({ children: [] }),
       }),
     ).toThrowError('defineComposite: schema.type must be a non-empty z.literal string.');
   });
@@ -192,9 +192,13 @@ describe('provider key contract', () => {
       type: 'badge',
       schema,
       expand: node => ({
-        type: 'node',
-        position: [0, 0],
-        text: node.variant === 'text' ? node.text : String(node.count),
+        children: [
+          {
+            type: 'node',
+            position: [0, 0],
+            text: node.variant === 'text' ? node.text : String(node.count),
+          },
+        ],
       }),
     });
     const ir: IRScene = {
@@ -216,7 +220,7 @@ describe('provider key contract', () => {
       variant: z.literal('base'),
     });
     const definitionOf = (schema: z.ZodType) =>
-      defineComposite({ namespace: 'demo', type: 'badge', schema, expand: () => [] });
+      defineComposite({ namespace: 'demo', type: 'badge', schema, expand: () => ({ children: [] }) });
 
     expect(() => definitionOf(z.union([base, z.string()]))).toThrow(/union option 1.*ZodObject/i);
     expect(() =>

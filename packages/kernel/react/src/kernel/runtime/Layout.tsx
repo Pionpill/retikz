@@ -6,6 +6,8 @@ import type {
   ClipDefinition,
   CompileArtifact,
   CompileArtifactOptions,
+  CompileResult,
+  CompositeDependencyContribution,
   CoreProgramOptions,
   IRAnimationTrack,
   IRScene,
@@ -22,11 +24,17 @@ import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } fro
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 
-import { ThemeSchema } from '@retikz/core';
+import {
+  DEFAULT_RESOLVED_THEME,
+  resolveCompositeDependencies,
+  resolveTheme,
+  resolveThemeStyleRegistry,
+  ThemeSchema,
+} from '@retikz/core';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
 import { useCallback, useId, useMemo } from 'react';
 
-import type { EmbeddableContributionRecord, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
+import type { EmbeddableAuthoringContext, EmbeddableTier2Adapter, ScopeStyleProps } from '../protocol';
 import type { LayoutCompileDriver, LayoutCompileDriverInput } from '../protocol';
 import type { LayoutRuntimeOptions } from './runtime-options';
 
@@ -40,6 +48,7 @@ import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
 import { mergeThemeOverlays, useTheme } from './theme-context';
+import { mergeThemeStyleDefinitions, useThemeStyles } from './theme-styles-context';
 
 const styleFontFamily = (style: CSSProperties | undefined): string | undefined => {
   const fontFamily = style?.fontFamily;
@@ -58,7 +67,6 @@ const validatePersistedTheme = (theme: IRScene['theme'] | undefined): IRScene['t
 
 /** 同一条诊断消息进程内只 `console.warn` 一次，避免组件重复 render 时刷屏 */
 const warnedMessages = new Set<string>();
-const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
 
 type DefinitionArrayNode = {
   children: WeakMap<object, DefinitionArrayNode>;
@@ -97,52 +105,6 @@ const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: str
       ...font,
       family: typeof font.family === 'string' && font.family.trim().length > 0 ? font.family : defaultFontFamily,
     });
-};
-
-/**
- * 按 namespace 分组合并可嵌入贡献，产出 composite 定义列表
- * @description 同 namespace 的 datasets 合并成一份（同一 reference 出现多次必须是同一对象引用，否则 fail-loud），
- *   每组调一次 makeComposites(mergedDatasets)，组间 concat。不同 namespace 的 reference 天然不互相干扰
- */
-const aggregateEmbeddableComposites = (
-  contributions: ReadonlyArray<EmbeddableContributionRecord>,
-): Array<AnyCompositeDefinition> => {
-  // 按 namespace 分组（保持首次出现顺序）：merged 合并 datasets，同组必须复用同一个 maker。
-  const order: Array<string> = [];
-  const groups = new Map<
-    string,
-    {
-      merged: Map<string, unknown>;
-      maker: (merged: Record<string, unknown>) => Array<AnyCompositeDefinition>;
-    }
-  >();
-  for (const contribution of contributions) {
-    const { namespace, datasets, makeComposites } = contribution;
-    let group = groups.get(namespace);
-    if (group === undefined) {
-      group = { merged: new Map(), maker: makeComposites };
-      groups.set(namespace, group);
-      order.push(namespace);
-    } else if (group.maker !== makeComposites) {
-      throw new Error(`[retikz] <Layout>: namespace "${namespace}" received multiple makeComposites functions.`);
-    }
-    for (const [ref, value] of Object.entries(datasets)) {
-      // 同 namespace 内同一 reference 复用必须指向同一对象引用，否则共享语义崩坏——fail-loud
-      if (group.merged.has(ref) && group.merged.get(ref) !== value) {
-        throw new Error(
-          `[retikz] <Layout>: 数据集 reference "${ref}" 在同一 namespace "${namespace}" 的多个可嵌入贡献中指向不同对象引用——共享同源数据请复用同一 data 对象。`,
-        );
-      }
-      group.merged.set(ref, value);
-    }
-  }
-  const out: Array<AnyCompositeDefinition> = [];
-  for (const namespace of order) {
-    const group = groups.get(namespace);
-    if (group === undefined) continue;
-    out.push(...group.maker(Object.fromEntries(group.merged)));
-  }
-  return out;
 };
 
 /**
@@ -307,6 +269,8 @@ export type LayoutProps = ScopeStyleProps & {
    * @description 接收 Core 同次 compile 返回的 immutable artifact 数组，不在 render 阶段触发用户副作用
    */
   onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  /** 完整 Core compile result 的 commit 后通知，含同 revision spatial handle index */
+  onCompileResult?: (result: CompileResult) => void;
   /**
    * 可选：显式注入的可嵌入 Tier2 适配器列表（逃生舱）
    * @description 主路径是子组件静态属性（Component.isTier2Embeddable + embeddableAdapter）自动识别；
@@ -355,6 +319,7 @@ export const Layout: FC<LayoutProps> = props => {
     lowerTex,
     artifacts,
     onArtifacts,
+    onCompileResult,
     embeddables,
     handlers,
     runtime,
@@ -369,7 +334,12 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
   const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
   const stableComposites = canonicalizeDefinitionArray(composites);
-  const stableThemeStyles = canonicalizeDefinitionArray(themeStyles);
+  const ambientThemeStyles = useThemeStyles();
+  const mergedThemeStyles = useMemo(
+    () => mergeThemeStyleDefinitions(ambientThemeStyles, themeStyles),
+    [ambientThemeStyles, themeStyles],
+  );
+  const stableThemeStyles = canonicalizeDefinitionArray(mergedThemeStyles);
   const stableEmbeddables = canonicalizeDefinitionArray(embeddables);
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
@@ -422,6 +392,18 @@ export const Layout: FC<LayoutProps> = props => {
     ],
   );
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
+  const embeddableContext = useMemo<EmbeddableAuthoringContext>(() => {
+    const embeddedTheme = mergeThemeOverlays(ambientTheme, undefined, theme);
+    return {
+      theme: resolveTheme(
+        DEFAULT_RESOLVED_THEME,
+        embeddedTheme,
+        'React Layout embedded authoring Theme',
+        resolveThemeStyleRegistry(stableThemeStyles),
+      ),
+      ...(stableThemeStyles === undefined ? {} : { themeStyles: stableThemeStyles }),
+    };
+  }, [ambientTheme, theme, stableThemeStyles]);
 
   // ir prop 已是完整 IR，再叠根样式语义不清——dev 警告 + 忽略样式（prod 静默兼容）
   // 在 render 体内直接 warn（React 官方诊断惯例，且 SSR / 静态渲染也能命中——effect 在那里不跑）；
@@ -440,7 +422,7 @@ export const Layout: FC<LayoutProps> = props => {
       irFromProp !== undefined
         ? {
             ir: irFromProp,
-            contributions: [] as Array<EmbeddableContributionRecord>,
+            contributions: [] as Array<CompositeDependencyContribution>,
             authoringSites: Object.freeze([
               Object.freeze({
                 kind: 'scene' as const,
@@ -450,11 +432,16 @@ export const Layout: FC<LayoutProps> = props => {
               }),
             ]),
           }
-        : buildIRWithContributions(wrapRootScope(children, scopeStyle), stableEmbeddables, {
-            elementType: Layout,
-            props: Object.freeze(authoring === undefined ? {} : { authoring }),
-          }),
-    [irFromProp, children, scopeStyle, stableEmbeddables, authoring],
+        : buildIRWithContributions(
+            wrapRootScope(children, scopeStyle),
+            stableEmbeddables,
+            {
+              elementType: Layout,
+              props: Object.freeze(authoring === undefined ? {} : { authoring }),
+            },
+            embeddableContext,
+          ),
+    [irFromProp, children, scopeStyle, stableEmbeddables, authoring, embeddableContext],
   );
   const ir = useMemo(() => {
     const base = built.ir;
@@ -469,11 +456,11 @@ export const Layout: FC<LayoutProps> = props => {
       withViewBox.animations !== undefined ? [...withViewBox.animations, ...rootAnimations] : rootAnimations;
     return { ...withViewBox, animations };
   }, [ambientTheme, built, irFromProp, theme, viewBox, rootAnimations]);
-  // 可嵌入贡献按 namespace 聚合成 composite 定义，再拼接用户显式 composites（用户优先级后置、可覆盖语义由 compile 决定）
+  // Core 统一解析可嵌入 provider graph，并把用户显式 composites 作为最终 definitions 追加
   const aggregatedComposites = useMemo(() => {
-    const fromEmbeddables = aggregateEmbeddableComposites(built.contributions);
-    if (fromEmbeddables.length === 0) return stableComposites ?? EMPTY_COMPOSITES;
-    return stableComposites !== undefined ? [...fromEmbeddables, ...stableComposites] : fromEmbeddables;
+    return canonicalizeDefinitionArray(
+      resolveCompositeDependencies({ contributions: built.contributions, composites: stableComposites }),
+    );
   }, [built.contributions, stableComposites]);
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
@@ -558,6 +545,7 @@ export const Layout: FC<LayoutProps> = props => {
         backend={renderer}
         frame={frame}
         artifacts={compiledLayout.primary.artifacts}
+        compileResult={compiledLayout.primary}
         handlers={resolvedHandlers}
         width={width}
         height={height}
@@ -570,6 +558,7 @@ export const Layout: FC<LayoutProps> = props => {
         animationProperties={animationProperties}
         idPrefix={resolvedIdPrefix}
         onArtifacts={onArtifacts}
+        onCompileResult={onCompileResult}
         onCompileCommit={publishCompileOutput}
       />
     );
@@ -598,6 +587,7 @@ export const Layout: FC<LayoutProps> = props => {
       updateStrategy={resolvedRuntime.updateStrategy}
       onDiagnostic={resolvedRuntime.onDiagnostic}
       onArtifacts={onArtifacts}
+      onCompileResult={onCompileResult}
     />
   );
 };

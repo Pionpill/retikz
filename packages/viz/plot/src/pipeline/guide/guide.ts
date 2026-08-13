@@ -1,4 +1,5 @@
 import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type { IRShapeValue } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
@@ -665,7 +666,7 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
 
 type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
 type AxisMinorGridToken = Exclude<NonNullable<AxisGridToken['minor']>, false>;
-type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'bandPosition'>;
+type AxisGridTickOptions = Pick<AxisGridToken, 'ticks' | 'density' | 'includeDomain' | 'bandPosition'>;
 
 const axisGridTokenOf = (guide: IRPlotAxisGuide): AxisGridToken | undefined =>
   typeof guide.grid === 'object' ? guide.grid : undefined;
@@ -682,6 +683,33 @@ const gridCoordinateOf = (scale: PositionScale, value: IRDataScalarValue, bandPo
   return coordinate + ((bandPosition ?? 0.5) - 0.5) * scale.bandwidth;
 };
 
+/** 在保留既有顺序的前提下，按最终投影位置追加缺失的 scale domain 首尾值 */
+const appendMissingDomainEndpoints = (
+  scale: PositionScale,
+  ticks: TickSet,
+  coordinate: (value: IRDataScalarValue) => number,
+): TickSet => {
+  const domain = scale.domain();
+  if (domain.length === 0) return ticks;
+
+  const values = [...ticks.values];
+  const labels = [...ticks.labels];
+  const projectedCoordinates = values.map(coordinate).filter(value => Number.isFinite(value));
+  const endpoints = domain.length === 1 ? [domain[0]] : [domain[0], domain[domain.length - 1]];
+
+  endpoints.forEach(endpoint => {
+    const projected = coordinate(endpoint);
+    if (!Number.isFinite(projected)) return;
+    if (projectedCoordinates.some(existing => Math.abs(existing - projected) <= 1e-6)) return;
+
+    values.push(endpoint);
+    labels.push(String(endpoint));
+    projectedCoordinates.push(projected);
+  });
+
+  return { values, labels };
+};
+
 const resolveAxisGridTicks = (
   scale: PositionScale,
   fallbackTicks: TickSet,
@@ -689,8 +717,12 @@ const resolveAxisGridTicks = (
   coordinate: (value: IRDataScalarValue) => number,
 ): TickSet => {
   const candidateTicks = options?.ticks === undefined ? fallbackTicks : resolveGuideTicks(scale, options.ticks);
-  if (options?.density === undefined) return candidateTicks;
-  return resolveVisibleGuideTicks(candidateTicks, { density: options.density }, coordinate);
+  const visibleTicks =
+    options?.density === undefined
+      ? candidateTicks
+      : resolveVisibleGuideTicks(candidateTicks, { density: options.density }, coordinate);
+  if (options?.includeDomain !== true) return visibleTicks;
+  return appendMissingDomainEndpoints(scale, visibleTicks, coordinate);
 };
 
 const filterOverlappingGridTicks = (
@@ -1564,7 +1596,7 @@ export type LegendEntry = {
   /** 色块填充色（color / 分箱 swatch） */
   color?: string;
   /** glyph 形状名（shape swatch） */
-  shape?: string;
+  shape?: IRShapeValue;
   /** glyph 视觉盒尺寸（shape swatch） */
   symbolSize?: number;
   /** size 梯度符号半径（px） */

@@ -1,11 +1,11 @@
 ---
 name: theme-clean
-description: Use when designing, implementing, reviewing, or documenting Retikz ThemeStyle.Clean in any package, especially for flat surfaces, restrained typography, quiet supporting structure, color independence, light/dark behavior, package ownership, or explicit overrides.
+description: Use when designing, implementing, reviewing, or documenting Retikz Clean reference theme in any host or package, especially for flat surfaces, restrained typography, quiet supporting structure, color independence, light/dark behavior, package ownership, or explicit overrides.
 ---
 
 # Clean Theme
 
-`ThemeStyle.Clean` 表达扁平、克制、以内容为中心的编辑式视觉语言。它不是简单地删除所有线条或缩小所有尺寸，而是降低容器与辅助元素的存在感，让内容、标题和关键标注成为稳定的第一层级。
+`clean` 是 docs 维护的参考 style，表达扁平、克制、以内容为中心的编辑式视觉语言。它不是简单地删除所有线条或缩小所有尺寸，而是降低容器与辅助元素的存在感，让内容、标题和关键标注成为稳定的第一层级。
 
 ## 参考与使用边界
 
@@ -31,9 +31,9 @@ Clean 必须在去掉阴影、渐变和装饰后仍然完整可读。减少视�
 
 - `ResolvedThemeColors` 与 owner 的显式颜色配置继续决定最终颜色；Clean 不覆盖高优先级输入。
 - Clean 的默认分类 palette 不要求以黑白或中性色开头，首项优先使用清楚、克制的分类色。
-- 内置 categorical palette 使用低于 Neutral / Vibrant 的色度，但不能收敛成难以区分的灰褐色；前八项在常用图元尺寸和透明度下保持清楚区分。
+- docs reference categorical palette 使用低于 Neutral / Vibrant 的色度，但不能收敛成难以区分的灰褐色；前八项在常用图元尺寸和透明度下保持清楚区分。
 - 通过逐 Hue 明度补偿建立节奏：Light 避免颜色整体过暗发闷，Dark 避免全部落在同一高明度；相邻分类不明显时先扩大明度差，再最小幅增加饱和度。
-- 在真实图元、常用透明度和 Light / Dark 表面上验证 palette，不只比较大色块 swatch；内置 fallback 不把参考项目的 Mono 或彩色预设硬编码为唯一答案。
+- 在真实图元、常用透明度和 Light / Dark 表面上验证 palette，不只比较大色块 swatch；docs reference fallback 不把参考项目的 Mono 或彩色预设硬编码为唯一答案。
 - semantic colors 只表达成功、警告和错误，不作为普通装饰色使用。
 - Light 使用近纸面表面与深前景；Dark 使用深墨表面与浅前景。两者保持同一信息层级，不改变数据语义。
 - 去掉色相后，主要内容、辅助结构和弱化内容仍应通过明度、字重、线型与位置区分。
@@ -41,9 +41,9 @@ Clean 必须在去掉阴影、渐变和装饰后仍然完整可读。减少视�
 ## Package 所有权
 
 - 本 skill 只定义跨包视觉意图，不维护 package token、preset 数值或局部组件规则。
-- Core 拥有 `ThemeStyle.Clean`、Theme 继承、registry 与 shared semantic / categorical colors。
+- Core 拥有开放 style selector、Theme 继承、registry 与内置 Neutral；docs 通过公开 definition 维护 Clean 的 shared semantic / categorical colors。
 - 每个领域 package 只把公共意图映射到自己拥有的 token；不得复制其它 owner 的 preset 或建立主题特判。
-- adapter 与 docs 只传递标准 selector 和显式覆盖，不创建平行 Theme 实现。
+- adapter 只传递标准 selector 和 definitions；docs 通过各 owner 的公开 definition / registry 组合参考实现，不创建跨 owner registry。
 - 处理 `@retikz/plot` 时，必须同时读取 [Clean Plot Theme](../../../packages/viz/_notes/theme/plot/clean.md)。
 
 ## 实施与验收

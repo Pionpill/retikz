@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
-import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema } from './style';
+import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema, PlotShapePaletteSchema } from './style';
 import { PlotAxisThemeTokenRuleSchema } from './token-rule';
 
 const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/plotTheme'] as const;
@@ -47,13 +47,14 @@ export const ResolvedPlotPaletteSchema = z
     sector: PlotColorPaletteSchema.describe('Resolved sector palette'),
     sequential: z.string().min(1).describe('Resolved sequential scheme name'),
     diverging: z.string().min(1).describe('Resolved diverging scheme name'),
+    shape: PlotShapePaletteSchema.describe('Resolved categorical shape palette'),
   })
   .describe('Complete Plot palette after the domain theme cascade');
 
 /** Plot-owned theme resolution 与 inspection 契约 */
 export const PlotThemeResolutionSchema = z
   .strictObject({
-    style: z.string().min(1).describe('Effective Theme style selecting the Plot style definition'),
+    style: z.string().min(1).optional().describe('Optional Theme style selecting a host-injected Plot definition'),
     mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
     tokens: PlotResolvedThemeTokensSchema.describe('Complete resolved Plot theme token map'),
     tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
@@ -83,9 +84,13 @@ export const PlotThemeResolutionSchema = z
         source.kind === ThemeTokenSource.Inherit &&
         PLOT_INHERITED_COLOR_TOKENS.has(source.token) &&
         source.path === '$theme/colors/categorical';
+      const baselinePath =
+        resolution.style === undefined
+          ? `$default/${resolution.mode}/${source.token}`
+          : `$style/${resolution.style}/${resolution.mode}/${source.token}`;
       const local =
         source.kind === ThemeTokenSource.Local &&
-        (source.path === `$style/${resolution.style}/${resolution.mode}/${source.token}` ||
+        (source.path === baselinePath ||
           source.path === `$spec/plotThemeTokens/${source.token}` ||
           source.path.startsWith('$spec/plotTheme/'));
       if (!inherited && !local) {
@@ -97,7 +102,10 @@ export const PlotThemeResolutionSchema = z
       }
     });
     resolution.tokenRules.forEach((source, index) => {
-      const stylePath = `$style/${resolution.style}/${resolution.mode}/tokenRules/`;
+      const stylePath =
+        resolution.style === undefined
+          ? `$default/${resolution.mode}/tokenRules/`
+          : `$style/${resolution.style}/${resolution.mode}/tokenRules/`;
       const localPath = '$spec/plotThemeTokenRules/';
       const validPath =
         source.path === `${stylePath}${index}` ||

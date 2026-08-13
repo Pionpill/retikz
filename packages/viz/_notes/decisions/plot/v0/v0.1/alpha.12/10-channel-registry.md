@@ -29,6 +29,7 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 - 原计划放宽 `ChannelScaleResolution.of`，后续撤回。
 - size / opacity / shape 走已泛型的 `ChannelResolution<T>`。
 - `ChannelScaleResolution` 继续保持 color-string 语义。
+- shape 通道消费非空 `Array<string | IRShapeRef>` palette，分类按 authored 顺序循环映射；mark 与 shape legend 共享同一 resolved shape，不把结构化引用字符串化。
 
 ## 影响
 

@@ -1,6 +1,6 @@
 import type { AxesInput } from '@retikz/standard';
 
-import { createAxes } from '@retikz/standard';
+import { AxesDefinition, AxesProvider, createAxes } from '@retikz/standard';
 import { normalizeFigureSpec } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -27,7 +27,6 @@ describe('axes()', () => {
     const contribution = AxesVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: AxesVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
@@ -40,13 +39,14 @@ describe('axes()', () => {
     const contribution = AxesVanillaAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
-      namespace: AxesVanillaAdapter.namespace,
       layerId: 'main',
       identityPath: ['main', embed.id],
     });
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes', id: 'plane' });
     expect(contribution.node).toEqual(createAxes(input));
+    expect(contribution.compositeDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
+    expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
   });
 
   it('coexists with Grid and contributes both definitions once', () => {

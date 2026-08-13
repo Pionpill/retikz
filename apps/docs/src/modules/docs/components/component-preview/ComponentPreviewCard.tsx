@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { useCallback, useRef, useState } from 'react';
@@ -59,7 +58,6 @@ export type ComponentPreviewCardProps = {
   /** 是否显示单预览 ThemeStyle 切换器。 */
   enableThemeSwitch?: boolean;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: ThemeStyleValue;
   /** 当前单预览 ThemeStyle 选择。 */
   themeStyleSelection?: PreviewThemeStyleSelection;
   /** 更新当前单预览 ThemeStyle 选择。 */
@@ -85,7 +83,6 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     controlSlots,
     dialogActions,
     enableThemeSwitch = false,
-    themeStyle,
     themeStyleSelection = 'inherit',
     onThemeStyleChange,
     caption,
@@ -174,7 +171,6 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           controlDensity="compact"
           onControlPanelOpenChange={setLocalControlPanelOpen}
           workspaceClassName={sizeClass[previewState.size]}
-          themeStyle={themeStyle}
           enableThemeSwitch={enableThemeSwitch}
           themeStyleSelection={themeStyleSelection}
           onThemeStyleChange={onThemeStyleChange}
@@ -219,7 +215,6 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             controlSlots={controlSlots}
             dialogActions={dialogActions}
             enableThemeSwitch={enableThemeSwitch}
-            themeStyle={themeStyle}
             themeStyleSelection={themeStyleSelection}
             onThemeStyleChange={onThemeStyleChange}
             showAskAi={showAskAi}
