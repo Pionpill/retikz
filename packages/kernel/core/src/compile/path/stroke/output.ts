@@ -1,5 +1,6 @@
 import type { GroupPrim, ScenePrimitive } from '../../../contract';
-import type { IRPathBase, IRPosition } from '../../../schemas';
+import type { CanonicalPath } from '../../../normalize/path';
+import type { IRPosition } from '../../../schemas';
 import type { PathPrimitiveEmitResult } from '../types';
 
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
@@ -7,7 +8,7 @@ import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './t
 /** path emit 最终输出包装输入 */
 export type WrapPathPrimitiveOutputInput = {
   /** 原始 IR path，用于读取 transform 与水合元数据 */
-  path: IRPathBase;
+  path: CanonicalPath;
   /** 主体 primitive；无整体 transform 时 id/meta/animations 会落在这里 */
   primitive: ScenePrimitive;
   /** 主体、label、mark primitives */

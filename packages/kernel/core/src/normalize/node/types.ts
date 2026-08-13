@@ -1,9 +1,47 @@
 import type { BoundsInsets } from '@retikz/math';
 
-import type { IRNode } from '../../schemas';
+import type {
+  IRLineSpec,
+  IRNode,
+  IRNodeLabel,
+  IRNodeLabelBoundaryPosition,
+  NodeLabelPlacementValue,
+  NodeLabelPositionValue,
+  NodeTextAlignValue,
+  StrokeDashPattern,
+} from '../../schemas';
+import type { CanonicalDropShadow } from '../shadow';
 
-/** 展开 Node 盒模型与缩放简写后的完整内部形态 */
-export type CanonicalNode = Omit<IRNode, 'padding' | 'margin' | 'minimumSize' | 'scale'> & {
+/** 已补齐边界比例的节点标签位置 */
+export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPosition, 'fraction'> & {
+  /** 边界上的归一化位置 */
+  fraction: number;
+};
+
+/** 展开静态位置与放置默认值后的节点标签 */
+export type CanonicalNodeLabel = Omit<IRNodeLabel, 'position' | 'placement'> & {
+  /** 标签附着位置 */
+  position: NodeLabelPositionValue | number | CanonicalNodeLabelBoundaryPosition;
+  /** 标签相对附着点的放置方向 */
+  placement: NodeLabelPlacementValue;
+};
+
+/** 展开 Node 紧凑写法与静态默认值后的完整内部形态 */
+export type CanonicalNode = Omit<
+  IRNode,
+  | 'padding'
+  | 'margin'
+  | 'minimumSize'
+  | 'scale'
+  | 'text'
+  | 'label'
+  | 'align'
+  | 'rotate'
+  | 'dashed'
+  | 'dotted'
+  | 'dashPattern'
+  | 'shadow'
+> & {
   /** 完整内边距 */
   padding: BoundsInsets;
   /** 完整外边距 */
@@ -22,4 +60,16 @@ export type CanonicalNode = Omit<IRNode, 'padding' | 'margin' | 'minimumSize' | 
     /** y 轴缩放 */
     y: number;
   };
+  /** 多行正文 */
+  text?: Array<IRLineSpec>;
+  /** 已按数组形态展开的附属标签 */
+  label?: Array<CanonicalNodeLabel>;
+  /** 正文对齐 */
+  align: NodeTextAlignValue;
+  /** 节点旋转角度 */
+  rotate: number;
+  /** 已解析的边框虚线样式 */
+  dashPattern?: StrokeDashPattern;
+  /** 已展开预设与静态默认值的投影 */
+  shadow?: CanonicalDropShadow;
 };

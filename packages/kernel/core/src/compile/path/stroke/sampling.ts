@@ -1,9 +1,10 @@
 import type { ScenePrimitive } from '../../../contract';
-import type { IRPathBase, IRPosition, IRStep } from '../../../schemas';
+import type { CanonicalStep } from '../../../normalize/path';
+import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { LowerTex, TextMeasurer } from '../../text';
 
-import { emitLabelPrimitive, tForLabelPosition } from '../host';
+import { emitLabelPrimitive } from '../host';
 
 /** stroke step 的几何采样函数 */
 export type StrokeSegmentSampler = (t: number) => SegmentSample;
@@ -17,7 +18,7 @@ export type StrokeSamplingCollector = {
   /** 登记不需要 label 处理的绘制段采样器 */
   addSampler: (sampleAt: StrokeSegmentSampler) => void;
   /** 登记采样器并按需编译 step label */
-  collect: (step: IRStep, sampleAt: StrokeSegmentSampler) => void;
+  collect: (step: CanonicalStep, sampleAt: StrokeSegmentSampler) => void;
 };
 
 /** 创建 stroke sampling collector 所需的上下文 */
@@ -58,11 +59,11 @@ export const createStrokeSamplingCollector = ({
     segmentSamplers.push(sampleAt);
   };
 
-  const collect = (step: IRStep, sampleAt: StrokeSegmentSampler): void => {
+  const collect = (step: CanonicalStep, sampleAt: StrokeSegmentSampler): void => {
     addSampler(sampleAt);
     if (step.kind === 'move' || step.kind === 'cycle' || !('label' in step) || !step.label) return;
 
-    const sample = sampleAt(tForLabelPosition(step.label.position));
+    const sample = sampleAt(step.label.position);
     const result = emitLabelPrimitive(step.label, sample, {
       measureText,
       round,

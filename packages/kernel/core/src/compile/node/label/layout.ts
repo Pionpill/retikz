@@ -1,9 +1,9 @@
-import type { IRLabelDefault, IRNodeLabel } from '../../../schemas';
+import type { IRLabelDefault } from '../../../schemas';
 import type { FontSpec, TextMeasurer } from '../../text';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 
 import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
-import { normalizeLabelPosition, resolveNodeLabelGeometry } from './geometry';
+import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
@@ -38,8 +38,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     fontWeight,
     fontStyle,
   } = input;
-  const rawLabels: Array<IRNodeLabel> | undefined =
-    node.label === undefined ? undefined : Array.isArray(node.label) ? node.label : [node.label];
+  const rawLabels = node.label;
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
@@ -89,8 +88,8 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     return {
       text: plainText,
       laid,
-      position: normalizeLabelPosition(lab.position),
-      placement: lab.placement ?? 'outside',
+      position: lab.position,
+      placement: lab.placement,
       distance: lab.distance ?? labelDistance,
       textColor: labTextColor,
       opacity: labOpacity,
