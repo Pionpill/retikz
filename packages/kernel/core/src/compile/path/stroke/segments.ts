@@ -1,7 +1,8 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { IRPosition, IRStep } from '../../../schemas';
+import type { CanonicalStep } from '../../../normalize/path';
+import type { IRPosition } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';
@@ -18,7 +19,10 @@ import {
 import { clipForTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
-export type StrokeSegmentStep = Extract<IRStep, { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }>;
+export type StrokeSegmentStep = Extract<
+  CanonicalStep,
+  { kind: 'line' | 'axis-line' | 'curve' | 'cubic' | 'bend' | 'fold' }
+>;
 
 /** 普通 segment step 降级所需的共享上下文 */
 export type LowerSegmentStepContext = {
@@ -39,7 +43,7 @@ export type LowerSegmentStepContext = {
 };
 
 /** 判断 step 是否属于普通 segment family */
-export const isStrokeSegmentStep = (step: IRStep): step is StrokeSegmentStep =>
+export const isStrokeSegmentStep = (step: CanonicalStep): step is StrokeSegmentStep =>
   step.kind === 'line' ||
   step.kind === 'axis-line' ||
   step.kind === 'curve' ||
@@ -124,7 +128,10 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
   }
 
   const fromReference = penOverride ?? previous.anchor;
-  const corners = foldCornersOf(fromReference, currentAnchor, step.via, 'fraction' in step ? step.fraction : undefined);
+  const corners =
+    step.via === '-|-' || step.via === '|-|'
+      ? foldCornersOf(fromReference, currentAnchor, step.via, step.fraction)
+      : foldCornersOf(fromReference, currentAnchor, step.via);
   if (corners.length === 1) {
     const corner = corners[0];
     const fromClip = penOverride ?? clipForTarget(previous.step.to, corner, targetContext);

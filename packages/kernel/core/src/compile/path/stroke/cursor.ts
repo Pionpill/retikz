@@ -1,5 +1,6 @@
 import type { Transform } from '../../../contract';
-import type { IRPosition, IRStep, IRTarget } from '../../../schemas';
+import type { CanonicalStep } from '../../../normalize/path';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 
 import { CompileWarningCode } from '../../constants';
@@ -8,7 +9,7 @@ import { localPointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
 export type StrokeTargetStep = Exclude<
-  IRStep,
+  CanonicalStep,
   | { kind: 'cycle' }
   | { kind: 'arc' }
   | { kind: 'circlePath' }
@@ -53,7 +54,7 @@ export type StrokeCursor = {
 /** 创建 stroke cursor 所需的目标解析上下文 */
 export type CreateStrokeCursorInput = {
   /** 已归一化的 path steps */
-  steps: Array<IRStep>;
+  steps: Array<CanonicalStep>;
   /** id 查询栈 */
   namespaceStack: NamespaceStack;
   /** 当前 scope 的累积变换链 */
@@ -63,7 +64,7 @@ export type CreateStrokeCursorInput = {
 };
 
 /** 判断 step 是否具有普通 `to` 目标 */
-export const isStrokeTargetStep = (step: IRStep): step is StrokeTargetStep =>
+export const isStrokeTargetStep = (step: CanonicalStep): step is StrokeTargetStep =>
   step.kind !== 'cycle' &&
   step.kind !== 'arc' &&
   step.kind !== 'circlePath' &&

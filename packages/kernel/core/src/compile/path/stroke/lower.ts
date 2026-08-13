@@ -1,7 +1,8 @@
 ﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
 import type { PathCommand, PathGeneratorDefinition } from '../../../contract';
-import type { IRPosition, IRStep } from '../../../schemas';
+import type { CanonicalStep } from '../../../normalize/path';
+import type { IRPosition } from '../../../schemas';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';
 import { JsonObjectSchema } from '../../../schemas';
@@ -115,7 +116,7 @@ const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
 };
 
 export const lowerGeneratorStepToCommands = (args: {
-  step: Extract<IRStep, { kind: 'generator' }>;
+  step: Extract<CanonicalStep, { kind: 'generator' }>;
   generators?: ReadonlyMap<string, PathGeneratorDefinition>;
   from: IRPosition;
   to?: IRPosition;

@@ -1,12 +1,11 @@
 ﻿import type { RibbonWidthProfileDefinition } from '../../../contract';
-import type { IRPathRibbonOptions, IRRibbonSampling, IRRibbonWidth } from '../../../schemas';
+import type { CanonicalRibbonSampling, CanonicalRibbonWidth } from '../../../normalize/path';
 import type { RibbonLike } from './types';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';
 import { JsonObjectSchema } from '../../../schemas';
 import { parseProviderPayload } from '../../provider-payload';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
-import { DEFAULT_RIBBON_SAMPLES } from './types';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
@@ -37,7 +36,7 @@ export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => 
  * @description number 走常量宽度；stops 先按 offset 排序再插值；profile 查运行时注册表并校验 params JSON-safe
  */
 export const widthFunction = (
-  width: IRRibbonWidth,
+  width: CanonicalRibbonWidth,
   profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
   totalLength: number,
   irPath = 'ribbon.width',
@@ -47,8 +46,8 @@ export const widthFunction = (
   }
 
   if (width.kind === 'stops') {
-    const stops = [...width.stops].sort((a, b) => a.offset - b.offset);
-    const mode = width.interpolation ?? 'linear';
+    const stops = width.stops;
+    const mode = width.interpolation;
     return offset => {
       if (offset <= stops[0].offset) return assertFiniteWidth(stops[0].value, 'first stop');
       for (let i = 1; i < stops.length; i += 1) {
@@ -124,12 +123,12 @@ export const centerlineWidthFunction = (
       irPath === undefined ? undefined : `${irPath}.ribbon.width`,
     );
   }
-  const startWidth = ribbon.start?.width;
-  const endWidth = ribbon.end?.width;
+  const startWidth = ribbon.start.width;
+  const endWidth = ribbon.end.width;
   if (startWidth === undefined || endWidth === undefined) {
     throw new Error('Centerline ribbon requires either top-level `width` or both `start.width` and `end.width`.');
   }
-  const mode = ribbon.interpolation ?? 'linear';
+  const mode = ribbon.interpolation;
   return offset =>
     assertFiniteWidth(
       interpolate({ from: startWidth, to: endWidth, t: offset, mode }),
@@ -146,21 +145,14 @@ export const centerlineWidthRequiresSampling = (ribbon: RibbonLike): boolean =>
  * @description samples 是旧快捷入口；sampling 是新对象入口，二者互斥。adaptive 按总长 / tolerance 估算并受 maxSamples 限制
  */
 export const resolveSampleCount = (
-  samples: IRPathRibbonOptions['samples'],
-  sampling: IRRibbonSampling | undefined,
+  sampling: CanonicalRibbonSampling | undefined,
   totalLength: number,
 ): number | undefined => {
-  if (samples !== undefined && sampling !== undefined) {
-    throw new Error('Ribbon cannot use both `samples` and `sampling`.');
-  }
   if (sampling?.kind === 'fixed') return sampling.samples;
   if (sampling?.kind === 'adaptive') {
-    const maxSamples = sampling.maxSamples ?? 512;
-    return Math.max(2, Math.min(maxSamples, Math.ceil(totalLength / sampling.tolerance) + 1));
+    return Math.max(2, Math.min(sampling.maxSamples, Math.ceil(totalLength / sampling.tolerance) + 1));
   }
-  if (samples === true) return DEFAULT_RIBBON_SAMPLES;
-  if (samples === false || samples === undefined) return undefined;
-  return samples;
+  return undefined;
 };
 
 /** 校验采样点数量，避免过少无法形成轮廓或过多造成异常开销 */

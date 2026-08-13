@@ -1,6 +1,7 @@
 ﻿import type { BoundsInsets } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
+import type { CanonicalNode, CanonicalNodeLabel } from '../../normalize';
 import type { ProviderCollection } from '../../providers/registry/index';
 import type {
   BlendModeValue,
@@ -8,11 +9,7 @@ import type {
   IRBoundary,
   IRFont,
   IRJsonObject,
-  IRNode,
-  IRNodeLabelBoundaryPosition,
   IRPaintSpec,
-  NodeLabelPlacementValue,
-  NodeLabelPositionValue,
   ResolvedDropShadow,
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
@@ -25,7 +22,7 @@ export type NodeFontWeight = NonNullable<IRFont['weight']>;
 /** 节点正文与附属 label 共享的文本布局上下文 */
 export type NodeTextLayoutContext = {
   /** 待布局节点 */
-  node: IRNode;
+  node: CanonicalNode;
   /** 文本度量函数 */
   measureText: TextMeasurer;
   /** TeX 降级上下文 */
@@ -174,9 +171,9 @@ export type MeasuredNodeLabel = {
   /** 含公式时的混排行布局 */
   laid?: LaidLine;
   /** 8 方向枚举、center、数字角度，或 box-like boundary 上的归一位置 */
-  position: NodeLabelPositionValue | number | IRNodeLabelBoundaryPosition;
+  position: CanonicalNodeLabel['position'];
   /** label 相对附着点向外或向内偏移 */
-  placement: NodeLabelPlacementValue;
+  placement: CanonicalNodeLabel['placement'];
   /** Node border 到 label 视觉盒的净距 */
   distance: number;
   /**

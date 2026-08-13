@@ -24,7 +24,6 @@ import {
 } from '../probe-failure';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
-import { resolveDashPattern, resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
 import { layoutNodeContent } from './content/layout';
@@ -183,7 +182,7 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
     left: marginSpacing.left * sx,
   };
   const lineHeight = (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
-  const align = node.align ?? 'middle';
+  const align = node.align;
 
   // 折行阈值受 x 缩放。
   const explicitMaxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
@@ -257,7 +256,7 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
       return { halfWidth, halfHeight };
     });
   };
-  const rotateDeg = node.rotate ?? 0;
+  const rotateDeg = node.rotate;
   const allocationWidthOf = (halfWidth: number, halfHeight: number): number => {
     const outerWidth = 2 * Math.max(halfWidth, minHalfW) + margin.left + margin.right;
     const outerHeight = 2 * Math.max(halfHeight, minHalfH) + margin.top + margin.bottom;
@@ -379,12 +378,12 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
     stroke: node.stroke,
     strokeOpacity: node.strokeOpacity,
     strokeWidth: node.strokeWidth,
-    dashPattern: resolveDashPattern(node.dashPattern, node.dashed, node.dotted),
+    dashPattern: node.dashPattern,
     dashOffset: node.dashOffset,
     cornerRadius: node.cornerRadius,
     textColor: node.textColor,
     opacity: node.opacity,
-    shadow: resolveShadow(node.shadow),
+    shadow: node.shadow,
     blendMode: node.blendMode,
     boundary: node.boundary,
     meta: node.meta,
