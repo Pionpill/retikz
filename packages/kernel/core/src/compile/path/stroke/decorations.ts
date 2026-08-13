@@ -1,4 +1,5 @@
 import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../../contract';
+import type { CanonicalPath } from '../../../normalize/path';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { ResolvedPathBaseProps } from '../host';
@@ -37,7 +38,7 @@ export type ResolvePathEndpointDecorationsContext = {
  * @description pos=0 / pos=1 的首个 mark 会成为端点箭头；其余 mark 保持为 inline mark
  */
 export const resolvePathEndpointDecorations = (
-  path: IRPathBase,
+  path: Pick<CanonicalPath, 'marks'>,
   context: ResolvePathEndpointDecorationsContext,
 ): ResolvedPathEndpointDecorations => {
   const { resolvedArrows, round } = context;

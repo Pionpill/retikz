@@ -1,19 +1,20 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { IRPosition, IRStep, IRTarget } from '../../../schemas';
+import type { CanonicalStep } from '../../../normalize/path';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { localPointOfTarget } from './target';
 
 export const normalizePathSteps = (
-  steps: ReadonlyArray<IRStep>,
+  steps: ReadonlyArray<CanonicalStep>,
   namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
-): Array<IRStep> => {
+): Array<CanonicalStep> => {
   let prevEnd: IRPosition | null = null;
-  const out: Array<IRStep> = [];
+  const out: Array<CanonicalStep> = [];
 
   for (const step of steps) {
     if (step.kind === 'cycle') {

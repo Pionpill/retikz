@@ -146,7 +146,6 @@ describe('compile source structure', () => {
       'labelCenter',
       'labelExtentPoints',
       'layoutNode',
-      'normalizeLabelPosition',
       'outerRectOf',
       'parseStaticCssColor',
       'resolveBoundary',

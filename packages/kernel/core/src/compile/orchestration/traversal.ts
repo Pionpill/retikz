@@ -61,6 +61,7 @@ import type {
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import { normalizeNode } from '../../normalize';
+import { normalizeShadow } from '../../normalize';
 import { providerDefinitionOf } from '../../providers/registry/index';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -106,7 +107,7 @@ import {
   withProviderOutputValidationBoundary,
 } from '../scene-primitive';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
-import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle, resolveShadow } from '../style';
+import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle } from '../style';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
 import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { filterAnimations } from './animation';
@@ -427,7 +428,7 @@ export const compileChildrenToPrimitives = (
           if (result !== null) {
             pendingPath.boundsSink.push({
               points: [...result.boundsPoints],
-              shadow: resolveShadow(pendingPath.path.shadow),
+              shadow: normalizeShadow(pendingPath.path.shadow),
             });
             pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
           }
