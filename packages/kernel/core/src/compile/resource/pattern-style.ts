@@ -1,8 +1,8 @@
 import type { ResolvedPatternLineStyle, ResolvedPatternLineStyleCycle } from '../../contract';
 import type { IRPatternLineStyle, IRPatternPaintSpec } from '../../schemas';
 
+import { normalizeDashPattern } from '../../normalize';
 import { PatternLineStyleCycleSchema, PatternLineStyleSchema } from '../../schemas';
-import { resolveDashPattern } from '../style';
 
 /** Pattern compile 消费的完整线型上下文 */
 export type ResolvedPatternStyleContext = {
@@ -58,7 +58,7 @@ export const resolvePatternLineStyle = (
   if (override.lineCap !== undefined) resolved.lineCap = override.lineCap;
   if (override.lineJoin !== undefined) resolved.lineJoin = override.lineJoin;
   if (hasOwn(override, 'dashPattern') || hasOwn(override, 'dashed') || hasOwn(override, 'dotted')) {
-    const dashPattern = resolveDashPattern(override.dashPattern, override.dashed, override.dotted);
+    const dashPattern = normalizeDashPattern(override.dashPattern, override.dashed, override.dotted);
     if (dashPattern === undefined) {
       delete resolved.dashPattern;
     } else {

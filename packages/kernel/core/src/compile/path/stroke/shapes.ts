@@ -1,7 +1,8 @@
 import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
 import type { PathGeneratorDefinition, Transform } from '../../../contract';
-import type { IRPosition, IRStep, IRTarget } from '../../../schemas';
+import type { CanonicalStep } from '../../../normalize/path';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
@@ -24,7 +25,7 @@ import { lowerGeneratorStepToCommands } from './lower';
 
 /** 自包含或高阶几何 path step */
 export type StrokeShapeStep = Extract<
-  IRStep,
+  CanonicalStep,
   { kind: 'generator' | 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
 >;
 
@@ -51,7 +52,7 @@ export type LowerShapeStepContext = {
 };
 
 /** 判断 step 是否属于 shape family */
-export const isStrokeShapeStep = (step: IRStep): step is StrokeShapeStep =>
+export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep =>
   step.kind === 'generator' ||
   step.kind === 'cycle' ||
   step.kind === 'rectangle' ||
@@ -426,7 +427,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
 
   const fromClip = usedOverride ?? clipForTarget(previous.step.to, resolvedPoints[0], { namespaceStack, scopeChain });
   if (!fromClip) return false;
-  const segments = curve.catmullRomToCubic([fromClip, ...resolvedPoints], step.tension ?? 1);
+  const segments = curve.catmullRomToCubic([fromClip, ...resolvedPoints], step.tension);
   startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(previous.step.to));
   for (const segment of segments) {
     emitCubic({ control1: segment.control1, control2: segment.control2, to: segment.to });

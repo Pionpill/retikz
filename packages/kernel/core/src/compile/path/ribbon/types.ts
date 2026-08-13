@@ -1,7 +1,8 @@
 ﻿import type { Vector2 } from '@retikz/math';
 
 import type { RibbonWidthProfileDefinition } from '../../../contract';
-import type { IRPathBase, IRPathRibbonOptions, IRPosition } from '../../../schemas';
+import type { CanonicalPath, CanonicalRibbonOptions } from '../../../normalize/path';
+import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { PathEmitOptions } from '../types';
 
@@ -9,7 +10,7 @@ import type { PathEmitOptions } from '../types';
  * ribbon 编译期归一化后的输入
  * @description Path 顶层通用字段与 `path.ribbon` 选项合并后供 ribbon lowering 使用；只在 compile 内部流转
  */
-export type RibbonLike = Omit<IRPathBase, 'kind' | 'kindOptions' | 'ribbon'> & IRPathRibbonOptions;
+export type RibbonLike = Omit<CanonicalPath, 'kind' | 'kindOptions' | 'ribbon'> & CanonicalRibbonOptions;
 
 /** 动态宽度 / boundary ribbon 的采样点数量 */
 export const DEFAULT_RIBBON_SAMPLES = 64;

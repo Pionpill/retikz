@@ -1,8 +1,6 @@
-import type { IRPathBase } from '../../../schemas';
+import type { CanonicalPath } from '../../../normalize/path';
 import type { PaintResolver } from '../../resource';
 import type { PathBaseProps } from '../stroke';
-
-import { resolveShadow } from '../../style';
 
 /** 已解析默认值后的 PathPrim 公共样式属性 */
 export type ResolvedPathBaseProps = PathBaseProps & {
@@ -20,7 +18,10 @@ export type ResolvePathBasePropsContext = {
  * 解析 PathPrim 公共样式属性
  * @description 只处理 path 自身样式与默认值，不处理几何命令、箭头、marks 或整体 transform
  */
-export const resolvePathBaseProps = (path: IRPathBase, context: ResolvePathBasePropsContext): ResolvedPathBaseProps => {
+export const resolvePathBaseProps = (
+  path: CanonicalPath,
+  context: ResolvePathBasePropsContext,
+): ResolvedPathBaseProps => {
   const { resolvePaint } = context;
   return {
     stroke: resolvePaint(path.stroke) ?? 'currentColor',
@@ -35,7 +36,7 @@ export const resolvePathBaseProps = (path: IRPathBase, context: ResolvePathBaseP
     opacity: path.opacity,
     fillOpacity: path.fillOpacity,
     strokeOpacity: path.strokeOpacity,
-    shadow: resolveShadow(path.shadow),
+    shadow: path.shadow,
     blendMode: path.blendMode,
   };
 };
