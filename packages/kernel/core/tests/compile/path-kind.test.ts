@@ -122,6 +122,57 @@ describe('Path kind registry', () => {
     expect(prim.stroke).toBe('gold');
   });
 
+  it('keeps Source shorthand visible to custom providers before emitStroke canonicalizes it', () => {
+    let observedPosition: unknown;
+    const sourceStroke = definePathKind({
+      schema: z.object({ kind: z.literal('source-stroke') }),
+      compile: context => {
+        const line = context.path.children?.[1];
+        observedPosition = line && 'label' in line ? line.label?.position : undefined;
+        return context.emitStroke();
+      },
+    });
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'path',
+          kind: 'source-stroke',
+          children: [steps[0], { ...steps[1], label: { text: 'end', position: 'at-end' } }],
+        },
+      ] as IRScene['children']),
+      { pathKinds: [sourceStroke], padding: 0 },
+    ).scene;
+    const label = flatten(compiled.primitives).find(primitive => primitive.type === 'text');
+
+    expect(observedPosition).toBe('at-end');
+    expect(label).toMatchObject({ type: 'text', x: 100 });
+  });
+
+  it('keeps Ribbon shorthand visible to custom providers before emitRibbon canonicalizes it', () => {
+    let observedSamples: unknown;
+    const sourceRibbon = definePathKind({
+      schema: z.object({ kind: z.literal('source-ribbon') }),
+      compile: context => {
+        observedSamples = context.path.ribbon?.samples;
+        return context.emitRibbon();
+      },
+    });
+    const [prim] = pathPrims(
+      scene([
+        {
+          type: 'path',
+          kind: 'source-ribbon',
+          ribbon: { width: 10, samples: true },
+          children: steps,
+        },
+      ] as IRScene['children']),
+      { pathKinds: [sourceRibbon] },
+    );
+
+    expect(observedSamples).toBe(true);
+    expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
+  });
+
   it('keeps the no-Inspector emitStroke result free of inspection-only subject data', () => {
     const observed: Array<ReadonlyArray<string>> = [];
     const plain = definePathKind({

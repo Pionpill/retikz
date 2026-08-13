@@ -1,12 +1,15 @@
-import type { IRDropShadow, ResolvedDropShadow, ShadowPresetValue } from '../../schemas';
+import type { IRDropShadow, ShadowPresetValue } from '../../schemas';
+import type { CanonicalDropShadow } from './types';
 
 import { SHADOW_PRESETS } from '../../schemas';
 
-/** shadow color 缺省（半透明黑）；preset 与显式 color 均未给时兜底 */
+/** 投影缺省颜色 */
 const DEFAULT_SHADOW_COLOR = 'rgba(0,0,0,0.5)';
 
-/** 把 IR shadow 展开为 renderer 可直接消费的投影对象 */
-export const resolveShadow = (shadow: ShadowPresetValue | IRDropShadow | undefined): ResolvedDropShadow | undefined => {
+/** 将投影预设与显式覆盖展开为完整内部形态 */
+export const normalizeShadow = (
+  shadow: ShadowPresetValue | IRDropShadow | undefined,
+): CanonicalDropShadow | undefined => {
   if (shadow === undefined) return undefined;
 
   if (typeof shadow === 'string') {
@@ -16,7 +19,6 @@ export const resolveShadow = (shadow: ShadowPresetValue | IRDropShadow | undefin
 
   const { preset, ...explicit } = shadow;
   const base = preset ? SHADOW_PRESETS[preset] : undefined;
-  // explicit 来自 zod parse 后的对象：未给的 optional 字段缺席（非 undefined），逐项覆盖 preset 基底
   const merged: Omit<IRDropShadow, 'preset'> = { ...(base ?? {}), ...explicit };
 
   if (merged.offsetX === undefined || merged.offsetY === undefined) return undefined;

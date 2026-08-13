@@ -3,7 +3,8 @@ import type { Vector2 } from '@retikz/math';
 import { point, vector2 } from '@retikz/math';
 
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
-import type { IRPath, IRPosition, IRRibbonDirection, IRStep } from '../../../schemas';
+import type { CanonicalStep, CanonicalStepWithoutLabel } from '../../../normalize/path';
+import type { IRPosition, IRRibbonDirection } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { NamespaceStack } from '../../namespace';
 import type { TextMeasurer } from '../../text';
@@ -18,14 +19,15 @@ import {
   polar,
   quadSegmentSample,
 } from '../../../shared/geometry';
-import { emitPathPrimitive } from '../stroke';
+import { emitCanonicalPath } from '../stroke';
 
 const LENGTH_SUBDIVISIONS = 16;
 
 /** 去掉 step.label，让中心线复用 path emit 时不会额外产出 label primitive */
-export const stripStepLabel = (step: IRStep): IRStep => {
-  const next = { ...step } as IRStep;
-  if ('label' in next) delete next.label;
+export const stripStepLabel = (step: CanonicalStep): CanonicalStepWithoutLabel => {
+  if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
+  const next = { ...step };
+  delete next.label;
   return next;
 };
 
@@ -317,7 +319,7 @@ export const sampleAtDistance = (
 };
 
 export type EmittedPathFromStepsInput = {
-  steps: ReadonlyArray<IRStep>;
+  steps: ReadonlyArray<CanonicalStep>;
   source: string;
   namespaceStack: NamespaceStack;
   round: (n: number) => number;
@@ -337,11 +339,11 @@ export const emittedPathFromSteps = ({
   measureText,
   options,
 }: EmittedPathFromStepsInput): PathPrim => {
-  const path: IRPath = {
+  const path = {
     type: 'path',
     children: steps.map(stripStepLabel),
-  };
-  const emitted = emitPathPrimitive(path, { namespaceStack, round, measureText, options });
+  } as const;
+  const emitted = emitCanonicalPath(path, { namespaceStack, round, measureText, options });
   if (emitted === null) {
     throw new Error(`Ribbon ${source} path was skipped unexpectedly.`);
   }
@@ -356,7 +358,7 @@ export type SegmentsFromStepsInput = EmittedPathFromStepsInput & {
 };
 
 /**
- * 从一组 IRStep 生成 ribbon 中心线段与总长度
+ * 从一组 CanonicalStep 生成 ribbon 中心线段与总长度
  * @description boundary 模式的 upper/lower 和 centerline 模式的 children 都走这里，保证 path 解析口径一致
  */
 export const segmentsFromSteps = ({

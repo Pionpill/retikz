@@ -2,29 +2,16 @@ import type { Position } from '@retikz/math';
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
-import type { IRNodeLabel, IRNodeLabelBoundaryPosition } from '../../../schemas';
+import type { CanonicalNodeLabelBoundaryPosition } from '../../../normalize';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout } from '../types';
 
 import { AnchorUnitVectorByAnchor } from '../../../shared';
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../../shared/geometry';
 import { anchorOf, angleBoundaryOf } from '../anchors';
 
-const isLabelBoundaryPosition = (position: MeasuredNodeLabel['position']): position is IRNodeLabelBoundaryPosition =>
-  typeof position === 'object';
-
-const normalizeLabelBoundaryPosition = (position: IRNodeLabelBoundaryPosition): IRNodeLabelBoundaryPosition => ({
-  ...position,
-  boundary: position.boundary,
-});
-
-export const normalizeLabelPosition = (position: IRNodeLabel['position'] | undefined): NodeLabelLayout['position'] => {
-  if (position === undefined) return 'top';
-  if (typeof position !== 'string') {
-    return typeof position === 'object' ? normalizeLabelBoundaryPosition(position) : position;
-  }
-  if (position === 'center') return position;
-  return position;
-};
+const isLabelBoundaryPosition = (
+  position: MeasuredNodeLabel['position'],
+): position is CanonicalNodeLabelBoundaryPosition => typeof position === 'object';
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
   if (layout.shapeName !== 'rectangle') {
@@ -34,9 +21,9 @@ const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
   }
 };
 
-const labelBoundaryPoint = (layout: NodeLayout, position: IRNodeLabelBoundaryPosition): Position => {
+const labelBoundaryPoint = (layout: NodeLayout, position: CanonicalNodeLabelBoundaryPosition): Position => {
   ensureBoxLikeLabelBoundary(layout);
-  const fraction = position.fraction ?? 0.5;
+  const fraction = position.fraction;
   const left = layout.rect.x - layout.rect.width / 2;
   const right = layout.rect.x + layout.rect.width / 2;
   const top = layout.rect.y - layout.rect.height / 2;
@@ -47,7 +34,7 @@ const labelBoundaryPoint = (layout: NodeLayout, position: IRNodeLabelBoundaryPos
   return [left, top + layout.rect.height * fraction];
 };
 
-const labelBoundaryDirection = (position: IRNodeLabelBoundaryPosition): Position => {
+const labelBoundaryDirection = (position: CanonicalNodeLabelBoundaryPosition): Position => {
   if (position.boundary === 'top') return [0, -1];
   if (position.boundary === 'right') return [1, 0];
   if (position.boundary === 'bottom') return [0, 1];

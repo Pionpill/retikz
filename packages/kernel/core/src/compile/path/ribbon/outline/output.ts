@@ -3,8 +3,6 @@ import type { IRPosition } from '../../../../schemas';
 import type { PaintResolver } from '../../../resource';
 import type { RibbonLike } from '../types';
 
-import { resolveShadow } from '../../../style';
-
 /**
  * 将闭合轮廓命令写成最终 PathPrim
  * @description 仅当用户显式请求 stroke / strokeWidth 时写描边字段
@@ -21,7 +19,7 @@ export const styledPrimitiveFromOutline = (
     fill: resolvePaint(ribbon.fill) ?? 'currentColor',
     fillOpacity: ribbon.fillOpacity,
     opacity: ribbon.opacity,
-    shadow: resolveShadow(ribbon.shadow),
+    shadow: ribbon.shadow,
     blendMode: ribbon.blendMode,
   };
   if (outlineRequested) {
