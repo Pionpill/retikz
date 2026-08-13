@@ -1,12 +1,14 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
-import type { IRAxisLineStep, IRPathBase, IRPosition, IRTarget } from '../../../schemas';
+import type { CanonicalPath, CanonicalStep } from '../../../normalize/path';
+import type { IRPathBase, IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
+import { normalizePath } from '../../../normalize/path';
 import { resolveArrowRegistry } from '../../../providers';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
@@ -42,11 +44,12 @@ export type EmitPathPrimitiveContext = {
  * IR Path → PathPrim
  * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning
  */
-export const emitPathPrimitive = (
-  path: IRPathBase,
+const emitCanonicalPathPrimitive = (
+  canonicalPath: CanonicalPath,
   context: EmitPathPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
   const { namespaceStack, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
+  const path = canonicalPath;
   const irPath = pathEmitOptions.irPath ?? 'path';
   const warn = (code: string, message: string, subPath = ''): void => {
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
@@ -55,11 +58,13 @@ export const emitPathPrimitive = (
   // paint 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化为 undefined
   const resolvePaint: PaintResolver =
     pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
-  if (path.children === undefined) {
+  const canonicalChildren = canonicalPath.children;
+  if (canonicalChildren === undefined) {
     throw new Error('Stroke path requires `children` steps.');
   }
   // 先把 relative/relativeAccumulate 解析为当前 scope 局部坐标，后续算法可统一按非 relative target 处理
-  const steps = normalizePathSteps(path.children, namespaceStack, scopeChain);
+  const canonicalSteps = canonicalChildren;
+  const steps = normalizePathSteps(canonicalSteps, namespaceStack, scopeChain);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
   // 其余 step 需"起点 + 至少一段绘制"故最少 2 段
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
@@ -92,7 +97,7 @@ export const emitPathPrimitive = (
     cursor.advance(i);
 
     let step = steps[i];
-    const originalStep = path.children[i];
+    const originalStep = canonicalSteps[i];
     currentStepKind = step.kind;
 
     if (
@@ -245,7 +250,7 @@ export const emitPathPrimitive = (
       if (!isFinitePoint(projected)) {
         throw new Error('Axis-line produced a non-finite projected endpoint.');
       }
-      const projectedStep: IRAxisLineStep = { ...step, to: projected };
+      const projectedStep: Extract<CanonicalStep, { kind: 'axis-line' }> = { ...step, to: projected };
       cursor.setTargetAt(i, projectedStep, projected);
       step = projectedStep;
       cursor.relativeBaseline = projected;
@@ -289,7 +294,7 @@ export const emitPathPrimitive = (
     }
   }
 
-  const baseProps = resolvePathBaseProps(path, { resolvePaint });
+  const baseProps = resolvePathBaseProps(canonicalPath, { resolvePaint });
   const strokeWidth = baseProps.strokeWidth;
   const resolvedArrows = pathEmitOptions.resolvedArrows ?? resolveArrowRegistry();
   const { arrows, inlineMarks } = resolvePathEndpointDecorations(path, { resolvedArrows, round });
@@ -337,3 +342,21 @@ export const emitPathPrimitive = (
   const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...marks.primitives];
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
+
+/**
+ * 将源 IR 路径输出为路径图元
+ * @description 内置输出器入口统一执行一次规范化
+ */
+export const emitPathPrimitive = (
+  path: IRPathBase,
+  context: EmitPathPrimitiveContext,
+): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(normalizePath(path), context);
+
+/**
+ * 将规范化路径输出为路径图元
+ * @description 仅供流带等 Core 内部规范化消费方复用描边输出器
+ */
+export const emitCanonicalPath = (
+  path: CanonicalPath,
+  context: EmitPathPrimitiveContext,
+): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(path, context);

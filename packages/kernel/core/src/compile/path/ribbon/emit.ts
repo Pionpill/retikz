@@ -6,7 +6,8 @@ import type { TextMeasurer } from '../../text';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { RibbonEmitOptions, RibbonLike } from './types';
 
-import { emitLabelPrimitive, tForLabelPosition } from '../host';
+import { normalizePath } from '../../../normalize/path';
+import { emitLabelPrimitive } from '../host';
 import {
   commandsToSegmentInputs,
   directionToTangent,
@@ -53,10 +54,12 @@ export const emitRibbonPrimitive = (
   context: EmitRibbonPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
   const { namespaceStack, round, measureText, options = {} } = context;
-  if (path.ribbon === undefined) {
+  const canonicalPath = normalizePath(path);
+  if (canonicalPath.ribbon === undefined) {
     throw new Error('Ribbon path requires a `ribbon` options object.');
   }
-  const ribbon: RibbonLike = { ...path, ...path.ribbon };
+  const { ribbon: ribbonOptions, ...canonicalBase } = canonicalPath;
+  const ribbon: RibbonLike = { ...canonicalBase, ...ribbonOptions };
   const resolvePaint: PaintResolver =
     options.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
   if (ribbon.mode === 'boundary') {
@@ -84,8 +87,7 @@ export const emitRibbonPrimitive = (
       options,
     });
     const samples = assertSampleCount(
-      resolveSampleCount(ribbon.samples, ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)) ??
-        DEFAULT_RIBBON_SAMPLES,
+      resolveSampleCount(ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)) ?? DEFAULT_RIBBON_SAMPLES,
     );
     const outline = boundaryOutlineCommands({
       upper: upper.segments,
@@ -125,13 +127,13 @@ export const emitRibbonPrimitive = (
   const endPoint = sampleAtDistance(rawSegments, rawTotalLength, rawTotalLength).point;
   const connectionTangent = normalizeVector([endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]], 'connection');
   const endpointTangents = {
-    start: directionToTangent(ribbon.start?.direction, connectionTangent, 'start'),
-    end: directionToTangent(ribbon.end?.direction, connectionTangent, 'end'),
+    start: directionToTangent(ribbon.start.direction, connectionTangent, 'start'),
+    end: directionToTangent(ribbon.end.direction, connectionTangent, 'end'),
   };
   // 若端点显式给 direction，重建首尾段采样器，让横截面在端点处服从该方向。
   const segments = segmentInputsToSegments(segmentInputs, {
-    start: ribbon.start?.direction === undefined ? undefined : endpointTangents.start,
-    end: ribbon.end?.direction === undefined ? undefined : endpointTangents.end,
+    start: ribbon.start.direction === undefined ? undefined : endpointTangents.start,
+    end: ribbon.end.direction === undefined ? undefined : endpointTangents.end,
   });
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
@@ -143,7 +145,7 @@ export const emitRibbonPrimitive = (
     totalLength,
     options.irPath,
   );
-  const samples = resolveSampleCount(ribbon.samples, ribbon.sampling, totalLength);
+  const samples = resolveSampleCount(ribbon.sampling, totalLength);
   const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
   // 静态宽度优先解析型轮廓，必要时回退采样。
   const outline =
@@ -155,12 +157,12 @@ export const emitRibbonPrimitive = (
           widthAt,
           endpointTangents,
           endpointTangentOverrides: {
-            start: ribbon.start?.direction === undefined ? undefined : endpointTangents.start,
-            end: ribbon.end?.direction === undefined ? undefined : endpointTangents.end,
+            start: ribbon.start.direction === undefined ? undefined : endpointTangents.start,
+            end: ribbon.end.direction === undefined ? undefined : endpointTangents.end,
           },
-          align: ribbon.align ?? 'center',
-          startEndpointCap: ribbon.start?.cap ?? 'butt',
-          endEndpointCap: ribbon.end?.cap ?? 'butt',
+          align: ribbon.align,
+          startEndpointCap: ribbon.start.cap,
+          endEndpointCap: ribbon.end.cap,
           namespaceStack,
           round,
         }) ??
@@ -170,9 +172,9 @@ export const emitRibbonPrimitive = (
           sampleCount: DEFAULT_RIBBON_SAMPLES,
           widthAt,
           endpointTangents,
-          align: ribbon.align ?? 'center',
-          startEndpointCap: ribbon.start?.cap ?? 'butt',
-          endEndpointCap: ribbon.end?.cap ?? 'butt',
+          align: ribbon.align,
+          startEndpointCap: ribbon.start.cap,
+          endEndpointCap: ribbon.end.cap,
           namespaceStack,
           round,
         }))
@@ -182,19 +184,18 @@ export const emitRibbonPrimitive = (
           sampleCount: assertSampleCount(sampleCount),
           widthAt,
           endpointTangents,
-          align: ribbon.align ?? 'center',
-          startEndpointCap: ribbon.start?.cap ?? 'butt',
-          endEndpointCap: ribbon.end?.cap ?? 'butt',
+          align: ribbon.align,
+          startEndpointCap: ribbon.start.cap,
+          endEndpointCap: ribbon.end.cap,
           namespaceStack,
           round,
         });
 
   const labelPrimitives: Array<ScenePrimitive> = [];
   const labelBoundsPoints: Array<IRPosition> = [];
-  const labels = ribbon.label === undefined ? [] : Array.isArray(ribbon.label) ? ribbon.label : [ribbon.label];
-  for (const label of labels) {
+  for (const label of ribbon.label ?? []) {
     // ribbon label 以中心线采样点为锚点，boundaryOffset 用当前宽度的一半把 outside/inside 放到带状区域边缘。
-    const t = tForLabelPosition(label.position);
+    const t = label.position;
     const sample = sampleAtDistance(segments, totalLength, t * totalLength);
     const offset = t * totalLength;
     const normalizedOffset = totalLength === 0 ? 0 : offset / totalLength;
@@ -203,7 +204,7 @@ export const emitRibbonPrimitive = (
       offset: normalizedOffset,
       widthAt,
       endpointTangents,
-      align: ribbon.align ?? 'center',
+      align: ribbon.align,
       round,
     });
     const result = emitLabelPrimitive(label, sample, {
