@@ -1,6 +1,6 @@
 import type { IRCoordinate, IRNode, IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
 
-import { parsePathThickness, parseWay } from '@retikz/core';
+import { parseWay, THICKNESS_TO_WIDTH } from '@retikz/core';
 
 import type {
   VanillaChildSpec,
@@ -81,7 +81,11 @@ export const path: PathFn = (
     ...(named ? { id: idOrConfig } : {}),
     children: parseWay(way),
     ...restConfig,
-    ...parsePathThickness(config),
+    ...(config.strokeWidth === undefined
+      ? config.thickness === undefined
+        ? {}
+        : { strokeWidth: THICKNESS_TO_WIDTH[config.thickness] }
+      : { strokeWidth: config.strokeWidth }),
   };
 };
 

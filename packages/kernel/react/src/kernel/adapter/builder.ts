@@ -5,27 +5,25 @@ import type {
   IRLineSpec,
   IRNode,
   IRNodeLabel,
-  IRNodeLabelInput,
   IRPathBase,
   IRScene,
   IRScope,
   IRStep,
   IRStepLabel,
-  IRStepLabelInput,
   IRTarget,
   IRTransform,
-  IRTransformInput,
 } from '@retikz/core';
+import type { InputNodeLabel, InputStepLabel, InputTransform } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
 import {
   AxisLineTargetSchema,
   CURRENT_IR_VERSION,
-  parsePathThickness,
   parseTargetSugar,
   PathKind,
   resolveTheme,
   resolveThemeStyleRegistry,
+  THICKNESS_TO_WIDTH,
 } from '@retikz/core';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
@@ -60,9 +58,9 @@ import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS, SCOPE_STYLE_FIELDS
 // NODE_FIELDS / PATH_FIELDS / pickDefined 抽到 fields.ts 与 unbuilder 共享
 
 type EdgeLabelElementProps = {
-  position?: IRStepLabelInput['position'];
-  side?: IRStepLabelInput['side'];
-  sloped?: IRStepLabelInput['sloped'];
+  position?: InputStepLabel['position'];
+  side?: InputStepLabel['side'];
+  sloped?: InputStepLabel['sloped'];
   children?: unknown;
 };
 
@@ -212,9 +210,7 @@ const readNodeText = (props: NodeProps): IRNode['text'] => {
 const normalizePositionInput = <T extends NodeProps['position'] | CoordinateProps['position']>(position: T): T =>
   position;
 
-const normalizeNodeLabelPositionInput = (
-  position: IRNodeLabelInput['position'],
-): IRNodeLabel['position'] | undefined => {
+const normalizeNodeLabelPositionInput = (position: InputNodeLabel['position']): IRNodeLabel['position'] | undefined => {
   if (position === undefined) return undefined;
   if (typeof position !== 'string') {
     return position;
@@ -223,7 +219,7 @@ const normalizeNodeLabelPositionInput = (
   return position;
 };
 
-const normalizeNodeLabelInput = (label: IRNodeLabelInput): IRNodeLabel => {
+const normalizeNodeLabelInput = (label: InputNodeLabel): IRNodeLabel => {
   const { position: rawPosition, ...rest } = label;
   const out: IRNodeLabel = { ...rest, text: label.text };
   const position = normalizeNodeLabelPositionInput(rawPosition);
@@ -236,14 +232,14 @@ const normalizeNodeLabelsInput = (label: NodeProps['label']): IRNode['label'] =>
   return Array.isArray(label) ? label.map(normalizeNodeLabelInput) : normalizeNodeLabelInput(label);
 };
 
-const normalizeStepLabelInput = (label: IRStepLabelInput): IRStepLabel => {
+const normalizeStepLabelInput = (label: InputStepLabel): IRStepLabel => {
   const { side: rawSide, ...rest } = label;
   const out: IRStepLabel = { ...rest, text: label.text };
   if (rawSide !== undefined) out.side = rawSide;
   return out;
 };
 
-const normalizeTransformInput = (transform: IRTransformInput): IRTransform => {
+const normalizeTransformInput = (transform: InputTransform): IRTransform => {
   return transform;
 };
 
@@ -345,7 +341,7 @@ const readEdgeLabel = (children: ReactNode): IRStepLabel | undefined => {
 };
 
 /** Step kinds 中可挂 label 的子集（move / cycle 除外） */
-type LabelableStepProps = Extract<StepProps, { label?: IRStepLabelInput; children?: ReactNode }>;
+type LabelableStepProps = Extract<StepProps, { label?: InputStepLabel; children?: ReactNode }>;
 
 /**
  * 解析 Step 的 label 来源
@@ -663,7 +659,11 @@ const buildPathFromProps = (props: PathProps): IRChild => {
   const path: IRChild = {
     type: 'path',
     ...pickDefined(props, PATH_FIELDS),
-    ...parsePathThickness(props),
+    ...(props.strokeWidth === undefined
+      ? props.thickness === undefined
+        ? {}
+        : { strokeWidth: THICKNESS_TO_WIDTH[props.thickness] }
+      : { strokeWidth: props.strokeWidth }),
   };
   const marks = buildPathMarksFromProps(props);
   if (marks !== undefined) path.marks = marks;

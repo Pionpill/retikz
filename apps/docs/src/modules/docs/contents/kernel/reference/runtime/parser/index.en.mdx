@@ -7,12 +7,12 @@ The parsing helpers exported by `@retikz/core` narrow author-facing Sugar into s
 
 ## Public export overview
 
-| Capability              | Public exports                                                                        | Purpose                                                                       |
-| ----------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Paths and targets       | `parseWay` / `parseTargetSugar` / `parseNodeTarget`                                   | Convert Draw ways and string shorthand into IR                                |
-| Anchor and side aliases | `parseAnchorAlias` / `parseSideAlias` / `SupportedAnchorSugarNames`                   | Normalize compass and TikZ-style names                                        |
-| Semantic thickness      | `parsePathThickness` / `PathThickness` / `PathThicknessSchema` / `THICKNESS_TO_WIDTH` | Convert a thickness preset into numeric `strokeWidth`                         |
-| Animation presets       | `fadeIn` / `drawOn` / `scaleIn` and related helpers                                   | Build animation tracks; see [Animation](/kernel/components/effects/animation) |
+| Capability                    | Public exports                                                      | Purpose                                                                       |
+| ----------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Paths and targets             | `parseWay` / `parseTargetSugar` / `parseNodeTarget`                 | Convert Draw ways and string shorthand into IR                                |
+| Anchor and side aliases       | `parseAnchorAlias` / `parseSideAlias` / `SupportedAnchorSugarNames` | Normalize compass and TikZ-style names                                        |
+| Semantic thickness vocabulary | `PathThickness` / `THICKNESS_TO_WIDTH`                              | Provide stable thickness presets and their numeric mapping                    |
+| Animation presets             | `fadeIn` / `drawOn` / `scaleIn` and related helpers                 | Build animation tracks; see [Animation](/kernel/components/effects/animation) |
 
 ## Core path helpers
 
@@ -30,7 +30,7 @@ The parsing helpers exported by `@retikz/core` narrow author-facing Sugar into s
 
 ## Semantic thickness
 
-`parsePathThickness({ strokeWidth, thickness })` preserves an explicit `strokeWidth`. It maps `thickness` only when the numeric width is absent. If both are absent, it returns an empty object so downstream defaults remain in control.
+`PathThickness` and `THICKNESS_TO_WIDTH` are stable Core value vocabulary. The `thickness` authoring shorthand is resolved by `@retikz/vanilla` path normalization: an explicit `strokeWidth` wins, and the preset maps to the IR field only when the numeric width is absent.
 
 | `PathThickness` | `strokeWidth` |
 | --------------- | ------------- |

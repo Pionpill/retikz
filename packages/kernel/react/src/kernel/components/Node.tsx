@@ -1,7 +1,6 @@
 import type {
   IRAnchorPosition,
   IRAtPosition,
-  IRAtPositionInput,
   IRAxisScale,
   IRBetweenPosition,
   IRBoundary,
@@ -10,12 +9,12 @@ import type {
   IRFont,
   IRLineSpec,
   IRNode,
-  IRNodeLabelInput,
   IROffsetPosition,
   IRPosition,
   NodeTextAlignValue,
   PolarPosition,
 } from '@retikz/core';
+import type { InputAtPosition, InputNodeLabel } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../protocol';
@@ -41,7 +40,7 @@ export type NodeProps = HydrationEventProps & {
     | IRPosition
     | PolarPosition
     | IRAtPosition
-    | IRAtPositionInput
+    | InputAtPosition
     | IROffsetPosition
     | IRBetweenPosition
     | IRAnchorPosition;
@@ -112,7 +111,7 @@ export type NodeProps = HydrationEventProps & {
    * 节点附属标签——TikZ `[label=top:foo]` 同义
    * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'top'，distance 缺省 12
    */
-  label?: IRNodeLabelInput | Array<IRNodeLabelInput>;
+  label?: InputNodeLabel | Array<InputNodeLabel>;
   /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层（同 scope / 顶层）子节点间生效 */
   zIndex?: IRNode['zIndex'];
 };

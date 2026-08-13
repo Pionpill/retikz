@@ -1,7 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { SideValue } from '../../../shared';
 import type {
   BendDirection,
   FoldStepVia,
@@ -35,18 +34,8 @@ import type {
 /** Shared path-like geometry label IR type. */
 export type IRGeometryLabel = z.infer<typeof GeometryLabelSchema>;
 
-export type GeometryLabelSideValue = SideValue;
-
-export type GeometryLabelSideInput = GeometryLabelSideValue;
-
-export type IRGeometryLabelInput = Omit<IRGeometryLabel, 'side'> & {
-  side?: GeometryLabelSideInput;
-};
-
 /** Path step label IR type. */
 export type IRStepLabel = IRGeometryLabel;
-
-export type IRStepLabelInput = IRGeometryLabelInput;
 
 /** 椭圆半径对象，供 arc / ellipsePath step 复用 */
 export type IRStepAnisotropicRadius = z.infer<typeof StepAnisotropicRadiusSchema>;

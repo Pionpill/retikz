@@ -7,12 +7,12 @@ description: 查询 adapter 可复用的路径、目标点、锚点、线宽与�
 
 ## 公开导出概览
 
-| 能力             | 公开导出                                                                              | 用途                                                             |
-| ---------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| 路径与目标点     | `parseWay` / `parseTargetSugar` / `parseNodeTarget`                                   | 把 Draw way 和字符串 shorthand 转成 IR                           |
-| 锚点与方向别名   | `parseAnchorAlias` / `parseSideAlias` / `SupportedAnchorSugarNames`                   | 归一化 compass / TikZ 风格命名                                   |
-| 语义线宽         | `parsePathThickness` / `PathThickness` / `PathThicknessSchema` / `THICKNESS_TO_WIDTH` | 把线宽 preset 转成数值 `strokeWidth`                             |
-| 动画 preset 工具 | `fadeIn` / `drawOn` / `scaleIn` 等                                                    | 生成动画 track；详见[动画](/kernel/components/effects/animation) |
+| 能力             | 公开导出                                                            | 用途                                                             |
+| ---------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 路径与目标点     | `parseWay` / `parseTargetSugar` / `parseNodeTarget`                 | 把 Draw way 和字符串 shorthand 转成 IR                           |
+| 锚点与方向别名   | `parseAnchorAlias` / `parseSideAlias` / `SupportedAnchorSugarNames` | 归一化 compass / TikZ 风格命名                                   |
+| 语义线宽词汇     | `PathThickness` / `THICKNESS_TO_WIDTH`                              | 提供稳定的线宽 preset 与数值映射                                 |
+| 动画 preset 工具 | `fadeIn` / `drawOn` / `scaleIn` 等                                  | 生成动画 track；详见[动画](/kernel/components/effects/animation) |
 
 ## 路径解析核心函数
 
@@ -30,7 +30,7 @@ description: 查询 adapter 可复用的路径、目标点、锚点、线宽与�
 
 ## 语义线宽
 
-`parsePathThickness({ strokeWidth, thickness })` 优先保留显式 `strokeWidth`；只有数值线宽缺省时才把 `thickness` 映射为 IR 的 `strokeWidth`。两者都缺省时返回空对象，让下游使用默认值。
+`PathThickness` 与 `THICKNESS_TO_WIDTH` 是 Core 的稳定值词汇。作者侧 `thickness` 简写由 `@retikz/vanilla` 的路径归一化处理：显式 `strokeWidth` 优先，只有数值线宽缺省时才映射为 IR 的 `strokeWidth`。
 
 | `PathThickness` | `strokeWidth` |
 | --------------- | ------------- |

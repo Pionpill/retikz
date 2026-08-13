@@ -247,7 +247,7 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
 | `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                 |
-| `transforms`     | `Array<IRTransformInput>`               | —             | Seven local transforms; the last acts first                                                                        |
+| `transforms`     | `Array<InputTransform>`                 | —             | Seven local transforms; the last acts first                                                                        |
 | `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                               |
 | `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |
 | `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                      |

@@ -2,7 +2,7 @@
 import type { PathThicknessValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
-import { DropShadowSchema, JsonValueSchema, parsePathThickness, PathScaleSchema, PathThickness } from '@retikz/core';
+import { DropShadowSchema, JsonValueSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -253,8 +253,7 @@ const directPathChannels = {
     { outputKind: 'symbol', palette: [...thicknessValues] },
     pathThicknessValue,
     (path, value) => {
-      const parsed = parsePathThickness({ strokeWidth: path.strokeWidth, thickness: value });
-      if (parsed.strokeWidth !== undefined) path.strokeWidth = parsed.strokeWidth;
+      if (path.strokeWidth === undefined) path.strokeWidth = THICKNESS_TO_WIDTH[value];
     },
   ),
   dashPattern: defineSimplePathChannel<Array<number>>(
