@@ -225,7 +225,7 @@ const TableThemeTokenSourceRecordSchema = z.strictObject({
 
 const TableManifestStyleSchema = z
   .strictObject({
-    style: z.string().min(1).describe('Effective Core Theme style selecting the Table style definition.'),
+    style: z.string().min(1).optional().describe('Optional Core Theme style selecting a host-injected Table definition.'),
     themeMode: z.enum(ThemeMode).describe('Effective Core Theme mode selecting the Table style baseline.'),
     tokens: TableThemeTokenMapSchema.describe('Complete resolved Table theme token map.'),
     sources: z
@@ -244,7 +244,11 @@ const TableManifestStyleSchema = z
         });
         return;
       }
-      const localPaths = [`$style/${style.style}/${style.themeMode}/${key}`, `$spec/tableThemeTokens/${key}`];
+      const baselinePath =
+        style.style === undefined
+          ? `$default/${style.themeMode}/${key}`
+          : `$style/${style.style}/${style.themeMode}/${key}`;
+      const localPaths = [baselinePath, `$spec/tableThemeTokens/${key}`];
       const valid =
         key === 'data.categorical'
           ? (source.source === ThemeTokenSource.Inherit && source.path === '$theme/colors/categorical') ||

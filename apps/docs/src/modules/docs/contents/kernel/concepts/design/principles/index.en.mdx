@@ -40,7 +40,7 @@ The folders under `@retikz/core/src` are separated by contracts and execution st
 | `schemas/`   | Zod schemas and IR type source of truth; field `.describe()` text      | Provider functions or backend behavior     |
 | `contract/`  | `XxxDefinition`, `defineXxx`, and Scene output contracts               | Built-in implementations or registry merge |
 | `providers/` | Built-in Definitions, `BUILTIN_*`, registry resolvers, lookup errors   | Parallel IR or renderer semantics          |
-| `parsers/`   | Pure normalization from strings, DSL shorthand, and Sugar to IR pieces | Registries, layout, or runtime             |
+| `parse/`     | Pure normalization from strings, DSL shorthand, and Sugar to IR pieces | Registries, layout, or runtime             |
 | `compile/`   | Lowering, layout, namespaces, references, resources, IR → Scene        | DOM, SVG / Canvas backend execution        |
 
 `schemas/` is the single data authority for IR. TypeScript types derive from schemas, and English `.describe()` text enters JSON Schema for LLM tool use, external tooling, and documentation. External JSON should be parsed explicitly with `SceneSchema` at the input boundary; `compileToScene` consumes canonical `IRScene` and does not replace that validation boundary.

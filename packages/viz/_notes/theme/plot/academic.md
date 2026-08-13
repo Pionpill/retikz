@@ -4,7 +4,7 @@
 
 ## 实现真源
 
-- [`catalog.ts`](../../../plot/src/providers/theme/catalog.ts)：内置 Academic Light / Dark 的完整 token preset
+- [`presets/plot.ts`](../../../../../apps/docs/src/modules/docs/components/component-preview/theme/presets/plot.ts)：docs 参考 Academic Light / Dark 的完整 token definition
 - [`resolve.ts`](../../../plot/src/providers/theme/resolve.ts)：preset、shared colors 与显式覆盖的级联
 - [`mapping.ts`](../../../plot/src/providers/theme/mapping.ts)：canonical token 与原生 `plotTheme` 的双向映射
 
@@ -21,16 +21,16 @@
 | Legend     | title、label、swatch、symbol 和间距紧凑但可辨，无装饰容器                                             |
 | Palette    | categorical / series / sector 消费有效颜色；sequential 优先灰度韧性较好的方案，diverging 保持稳定中点 |
 
-当前内置 sequential / diverging 方向分别使用 `Cividis` 与 `RdBu`；它们是 Plot preset 选择，不属于公共 Academic skill。
+当前 docs reference sequential / diverging 方向分别使用 `Cividis` 与 `RdBu`；它们是宿主 Plot definition 的选择，不属于公共 Academic skill。
 
 ## 边界与覆盖
 
 - Plot 不拥有 LaTeX、期刊栏宽、导出 DPI 或字体资源，只维护 renderer-neutral Plot token。
 - 内建 Plot preset 从 Core 注入 categorical / series / sector；Plot 只维护 sequential / diverging 与领域颜色角色。
 - Plot style definition 显式提供的 palette 高于 Core baseline，之后仍可由 `plotThemeTokens` 与结构化 `plotTheme` 覆盖。
-- 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于内置 Academic；不得调色、重排或替换用户输入。
+- 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于 docs Academic definition；不得调色、重排或替换用户输入。
 - 颜色不足以支持灰度辨识时，复用 mark / encoding 已有线型、形状或标注能力，不在 Theme 中创造新编码。
-- mark、guide 与 lowering 消费解析后的有效主题，不增加 `ThemeStyle.Academic` 分支。
+- mark、guide 与 lowering 消费解析后的有效主题，不增加 `style === 'academic'` 分支。
 
 ## 验收
 

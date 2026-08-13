@@ -7,21 +7,24 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 
 ## Functions
 
-| API                           | Signature                                                              | Purpose                                                                                      |
-| ----------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | Main entry; returns `scene` and immutable `artifacts` together                               |
-| `observeCompileToScene`       | `(ir, options, observers) => ObservedCompileResult`                    | Creates explicit observation sessions and returns primary plus definition-ordered outputs    |
-| `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
-| `computeLayout`               | `(points, padding, round) => Layout`                                   | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
-| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | Normalizes a uniform or side-specific value into complete four-side spacing                  |
-| `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | Default text measurer; approximate but runnable, useful as a no-DOM fallback                 |
-| `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | Formats a structured warning into the standard readable message                              |
-| `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | Formats an artifact occurrence locator                                                       |
-| `isNodeLayoutCompileArtifact` | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact` | Narrows an opt-in Node-layout artifact                                                       |
+| API                            | Signature                                                                                               | Purpose                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `compileToScene`               | `(ir: IRScene, options?: CompileOptions) => CompileResult`                                              | Main entry; returns `scene` and immutable `artifacts` together                                        |
+| `observeCompileToScene`        | `(ir, options, observers) => ObservedCompileResult`                                                     | Creates explicit observation sessions and returns primary plus definition-ordered outputs             |
+| `lowerIRToKernel`              | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`                                     | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                             |
+| `resolveCompositeDependencies` | `(options: ResolveCompositeDependenciesOptions) => ReadonlyArray<AnyCompositeDefinition>`               | Resolves a rooted provider graph into the ordered Definitions accepted by `CompileOptions.composites` |
+| `selectSpatialHandles`         | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => ReadonlyArray<QualifiedSpatialHandle>` | Precisely filters zero or more qualified spatial handles                                              |
+| `resolveSpatialHandle`         | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => QualifiedSpatialHandle`                | Requires exactly one match and throws on a miss or ambiguity                                          |
+| `computeLayout`                | `(points, padding, round) => Layout`                                                                    | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene`          |
+| `resolveBoxSpacing`            | `(value, fallback) => BoundsInsets`                                                                     | Normalizes a uniform or side-specific value into complete four-side spacing                           |
+| `fallbackMeasurer`             | `(text, font) => TextMetrics`                                                                           | Default text measurer; approximate but runnable, useful as a no-DOM fallback                          |
+| `formatCompileWarning`         | `(warning: CompileWarning) => string`                                                                   | Formats a structured warning into the standard readable message                                       |
+| `formatCompileOccurrence`      | `(locator: CompileOccurrenceLocator) => string`                                                         | Formats an artifact occurrence locator                                                                |
+| `isNodeLayoutCompileArtifact`  | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact`                                  | Narrows an opt-in Node-layout artifact                                                                |
 
 `compileToScene` traverses and registers nodes and coordinates in the current scope before filling deferred path slots. A path can therefore reference a target declared later in that scope. Output is then stably sorted by ascending `zIndex`; only primitives with the same `zIndex` retain declaration order.
 
-`lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws. A layout-aware composite with a `compile` branch also throws explicitly because standalone lowering has no text measurement, providers, reference environment, or parent constraint. Full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips an unregistered node. Both paths throw on a nesting limit or cycle.
+`lowerIRToKernel` performs no layout or Scene emission; it only consumes `composites` and `maxCompositeDepth`. An unregistered composite throws. A layout-aware composite with a `compile` branch also throws explicitly because standalone lowering has no text measurement, providers, reference environment, or parent constraint. A non-empty `spatialHandles` result also fails synchronously and directs the caller to `compileToScene()` for settled world geometry; absent or empty declarations remain valid. Full `compileToScene` emits `COMPOSITE_NOT_REGISTERED` and skips an unregistered node. Both paths throw on a nesting limit or cycle.
 
 ### Box Spacing Normalization
 
@@ -87,9 +90,26 @@ The two `CompositeDefinition` branches are mutually exclusive:
 - `expand(node, context)` performs structural expansion in the current Theme context;
 - `compile(node, context)` evaluates real child content through `context.proposal` and `layoutChild(child, proposal)` in the complete compile environment.
 
-Both branches read the complete, frozen `ResolvedTheme` at their position from `context.theme`. Resolution is fixed as `neutral + light` → Scene → outer Scope → inner Scope, with each layer overriding only explicit `style`, `mode`, or namespace/token keys. `ResolvedTheme` also carries recursively frozen `tokens` and a detached/frozen shared `colors` view; `colors.semantic` always exposes error/success/warning, while `colors.categorical` is non-empty, may repeat values, and is consumed with a stable modulo index. `lowerIRToKernel()` uses the same resolver for `expand`, while a layout-aware definition still fails before its callback. Theme only lets a composite materialize domain-owned defaults; the final Scene and renderers neither carry nor interpret it.
+`expand` accepts only `{ children, spatialHandles? }`, not a bare child or child-array shorthand. A layout-aware `compile` result may provide the same `spatialHandles` declaration array; both branches share callback-bound validation.
+
+Both branches read the complete, frozen `ResolvedTheme` at their position from `context.theme`. Resolution is fixed as the default light baseline → Scene → outer Scope → inner Scope, with each layer overriding only explicit `style`, `mode`, or namespace/token keys. `ResolvedTheme` also carries recursively frozen `tokens` and a detached/frozen shared `colors` view; `colors.semantic` always exposes error/success/warning, while `colors.categorical` is non-empty, may repeat values, and is consumed with a stable modulo index. `lowerIRToKernel()` uses the same resolver for `expand`, while a layout-aware definition still fails before its callback. Theme only lets a composite materialize domain-owned defaults; the final Scene and renderers neither carry nor interpret it.
 
 A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact` from the same `compile` call. The schema governs both public `CompileResult.artifacts` and final Composite owner outputs consumed by explicit observers; the Composite itself contains no Inspector definition.
+
+### Provider graph assembly
+
+The provider graph is a pure pre-compile assembly protocol, not a second composite registry. React, Vanilla, and reusable domain toolchains collect `CompositeDependencyContribution` values, call `resolveCompositeDependencies()` for an ordered Definition array, then pass that array to the existing `CompileOptions.composites` input.
+
+| Public contract                       | Key fields / result                                 | Responsibility                                                     |
+| ------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
+| `CompositeProviderKey`                | `namespace`, `type`                                 | Unambiguously identifies one final Composite Definition            |
+| `CompositeDependencyProvider`         | `key`, `dependencies`, `datasets`, `makeDefinition` | Declares one Definition, direct dependencies, and runtime data     |
+| `CompositeDependencyContribution`     | `roots`, `providers`                                | Declares roots required by an authored node and imported providers |
+| `ResolveCompositeDependenciesOptions` | `contributions`, `composites?`                      | Merges provider results with final explicit Definitions            |
+
+The resolver completes full preflight before running a maker. Repeated provider keys require the same maker reference and ordered dependencies. A repeated dataset reference under one provider key deduplicates only when its value is identical by `Object.is`. Missing providers and cycles report the complete chain. Output is dependency-first with first-reachable tie-breaking, and each maker runs once.
+
+`options.composites` is the final explicit-Definition channel, not a private sidecar for nested adapters. Provider results come first; explicit Definitions append in authored order. The same object at the same key deduplicates, while a different object fails immediately. Authors calling `compileToScene()` with a complete Definition array may skip the provider graph and continue passing `CompileOptions.composites` directly.
 
 `LayoutProposal` contains exactly `x` and `y`; each axis is a `LayoutAxisProposal`:
 
@@ -220,10 +240,11 @@ For an auto-contrast warning, `path` is the current Node locator and `message` i
 
 `compileToScene` returns a `CompileResult`:
 
-| Field       | Type                             | Notes                                                                |
-| ----------- | -------------------------------- | -------------------------------------------------------------------- |
-| `scene`     | `Scene`                          | The laid-out scene consumed by renderers                             |
-| `artifacts` | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene` |
+| Field            | Type                             | Notes                                                                                           |
+| ---------------- | -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `scene`          | `Scene`                          | The laid-out scene consumed by renderers                                                        |
+| `artifacts`      | `ReadonlyArray<CompileArtifact>` | Immutable typed artifacts from the same canonical compile as `scene`                            |
+| `spatialHandles` | `SpatialHandleIndex`             | Same-revision qualified world-space index; frozen with empty `entries` when nothing is declared |
 
 `observeCompileToScene()` returns `{ primary, observerOutputs }`. `primary` is equivalent to ordinary `compileToScene()` for the same IR and options. `observerOutputs` follows the input definition order, and each item carries the stable `key` plus that session's completed value.
 
@@ -238,6 +259,14 @@ Its `scene` contains:
 
 A custom renderer must consume `resources` and `animations`, otherwise gradients / clipping / camera animations are lost. If there are no bbox candidate points, `computeLayout` returns a `100×100` fallback layout.
 
+### Spatial handle sidecar
+
+Each `QualifiedSpatialHandle` contains the declaring owner's `key` / `role`, a world-space rectangular AABB, stable authored-order tags, optional JSON payload, `originOccurrence` / `finalOccurrence`, and an outer-to-inner `ownerPath`. An explicit composite `id` becomes `instanceId`; an anonymous owner is distinguished only by its current compile occurrence and receives no generated counter id.
+
+Every selector field is exact. `owner` matches only the declaring owner. `within` matches an ordered continuous subpath of its ancestors. `tags` requires every requested tag. Because `key` is unique only within one owner occurrence, a cross-owner query should add `within`, `owner.instanceId`, or an occurrence.
+
+The spatial index is a tooling sidecar, not part of Scene. SVG, Canvas, and SSR renderers receive only `scene`; they never read, copy, or transform `spatialHandles`. React `<Layout onCompileResult>` publishes the complete `CompileResult` after a successful static or retained commit. Vanilla exposes the current result through authored-input `SceneResult.compileResult` and live-view `compileResult`; passing a precompiled Scene produces `undefined`. A failed revision keeps the previous committed result, and a throwing user callback does not roll back a successful commit.
+
 <SourceLinks
   sources={[
     {
@@ -251,6 +280,30 @@ A custom renderer must consume `resources` and `animations`, otherwise gradients
       path: 'packages/kernel/core/src/compile/types.ts',
       startLine: 70,
       endLine: 128,
+    },
+    {
+      label: 'Spatial declaration, qualified output, and selector contracts',
+      path: 'packages/kernel/core/src/contract/spatial-handle/types.ts',
+      startLine: 7,
+      endLine: 85,
+    },
+    {
+      label: 'Exact spatial-handle selection and unique resolution',
+      path: 'packages/kernel/core/src/contract/spatial-handle/query.ts',
+      startLine: 48,
+      endLine: 65,
+    },
+    {
+      label: 'React full compile-result exit',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 263,
+      endLine: 268,
+    },
+    {
+      label: 'Vanilla SceneResult and authored / Scene input branches',
+      path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
+      startLine: 35,
+      endLine: 116,
     },
     {
       label: 'Observer, owner-output, and isolated-fragment contracts',

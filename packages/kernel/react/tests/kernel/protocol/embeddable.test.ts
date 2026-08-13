@@ -6,13 +6,11 @@ import { isEmbeddableMarked, resolveEmbeddableAdapter } from '../../../src';
 
 const makeContribution = (): EmbeddableContribution => ({
   node: { type: 'node', id: 'n', position: [0, 0] },
-  datasets: {},
-  makeComposites: () => [],
+  compositeDependencies: { roots: [], providers: [] },
 });
 
 const makeAdapter = (displayName: string): EmbeddableTier2Adapter => ({
   displayName,
-  namespace: 'x',
   contribute: () => makeContribution(),
 });
 

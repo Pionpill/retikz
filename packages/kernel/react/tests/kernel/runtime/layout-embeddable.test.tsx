@@ -1,294 +1,223 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
-import type { Mock } from 'vitest';
+import type { AnyCompositeDefinition, CompositeDependencyProvider, CompositeProviderKey } from '@retikz/core';
+import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { type FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type { EmbeddableTier2Adapter } from '../../../src';
 
-import { Node } from '../../../src';
-import { Layout } from '../../../src/kernel';
-
-/**
- * <Layout> 可嵌入 Tier2 聚合：按 namespace 合并 datasets、产 composite、喂 compile
- * @description 可嵌入子组件经 adapter 静态贡献 IR composite 节点 + datasets + makeComposites；
- *   Layout 按 namespace 合并 datasets（同 ref 异引用 fail-loud）、每组调一次 makeComposites、与显式 composites 拼接喂 compileToScene
- */
+import { Layout, Node } from '../../../src';
 
 type FixtureProps = { id: string; data: unknown };
-type MakeComposites = (mergedDatasets: Record<string, unknown>) => Array<AnyCompositeDefinition>;
-type MakeCompositesMock = Mock<MakeComposites>;
+type DefinitionMaker = CompositeDependencyProvider['makeDefinition'];
 
-/** 可嵌入 fixture 组件类型：函数组件 + 可嵌入静态标记 */
 type EmbeddableFixture = FC<FixtureProps> & {
   isTier2Embeddable?: boolean;
   embeddableAdapter?: EmbeddableTier2Adapter;
 };
 
-/**
- * 为某 namespace 造一个 composite 定义：节点带 panelId 字段，展开成一个可识别的 Tier1 <Node>
- * @description schema extend CompositeBaseSchema，namespace / type 为 literal；expand 产出 id=`panel-${panelId}` 的 node，
- *   渲染后 SVG 含 data-retikz-id="panel-..." 供断言
- */
-const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
+const definitionOf = (key: CompositeProviderKey): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({
-    namespace: z.literal(namespace),
-    type: z.literal('panel'),
+    namespace: z.literal(key.namespace),
+    type: z.literal(key.type),
     panelId: z.string(),
   });
   return defineComposite({
-    namespace,
-    type: 'panel',
+    namespace: key.namespace,
+    type: key.type,
     schema,
-    expand: node => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
+    expand: node => ({
+      children: [{ type: 'node', id: `${key.namespace}-${node.panelId}`, position: [0, 0], text: node.panelId }],
+    }),
   });
 };
 
-/**
- * 造一个 hook-free 可嵌入 fixture：贡献一个 namespace.panel composite 节点 + 一份 datasets，
- *   makeComposites 用 spy 包裹便于断言调用次数
- */
-const makeFixture = (
-  options: {
-    namespace?: string;
-    displayName?: string;
-    datasets?: Record<string, unknown>;
-    marked?: boolean;
-    makeComposites?: MakeCompositesMock;
-  } = {},
-): { Fixture: EmbeddableFixture; makeComposites: MakeCompositesMock } => {
-  const {
-    namespace = 'demo',
-    displayName = 'DemoFixture',
-    datasets,
-    marked = true,
-    makeComposites: suppliedMake,
-  } = options;
-  const makeComposites: MakeCompositesMock = suppliedMake ?? vi.fn(() => [makePanelComposite(namespace)]);
+const providerOf = (
+  key: CompositeProviderKey,
+  makeDefinition: DefinitionMaker,
+  datasets: Readonly<Record<string, unknown>> = {},
+  dependencies: ReadonlyArray<CompositeProviderKey> = [],
+): CompositeDependencyProvider => ({ key, dependencies, datasets, makeDefinition });
+
+const makeFixture = (options: {
+  displayName: string;
+  key: CompositeProviderKey;
+  makeDefinition: DefinitionMaker;
+  datasets?: Readonly<Record<string, unknown>>;
+  dependencies?: ReadonlyArray<CompositeProviderKey>;
+  extraProviders?: ReadonlyArray<CompositeDependencyProvider>;
+  roots?: ReadonlyArray<CompositeProviderKey>;
+}): EmbeddableFixture => {
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
-    displayName,
-    namespace,
+    displayName: options.displayName,
     contribute: props => ({
-      node: { namespace, type: 'panel', panelId: props.id },
-      datasets: datasets ?? { [props.id]: props.data },
-      makeComposites,
+      node: { namespace: options.key.namespace, type: options.key.type, panelId: props.id },
+      compositeDependencies: {
+        roots: options.roots ?? [options.key],
+        providers: [
+          providerOf(options.key, options.makeDefinition, options.datasets, options.dependencies),
+          ...(options.extraProviders ?? []),
+        ],
+      },
     }),
   };
   const Fixture: EmbeddableFixture = () => null;
-  Fixture.displayName = displayName;
-  if (marked) {
-    Fixture.isTier2Embeddable = true;
-    Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
-  }
-  return { Fixture, makeComposites };
+  Fixture.displayName = options.displayName;
+  Fixture.isTier2Embeddable = true;
+  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+  return Fixture;
 };
 
-describe('<Layout> 可嵌入 Tier2 聚合', () => {
-  it('同 namespace 两个可嵌入子组件 → datasets 合并、makeComposites 只调一次（含 a + b）、两面板都渲染', () => {
-    const dataA = { a: [1, 2] };
-    const dataB = { b: [3, 4] };
-    const sharedMake = vi.fn(() => [makePanelComposite('demo')]);
-    const mkAdapter = (
-      displayName: string,
-      datasets: Record<string, unknown>,
-    ): EmbeddableTier2Adapter<FixtureProps> => ({
-      displayName,
-      namespace: 'demo',
-      contribute: props => ({
-        node: { namespace: 'demo', type: 'panel', panelId: props.id },
-        datasets,
-        makeComposites: sharedMake,
-      }),
+describe('<Layout> Composite provider graph', () => {
+  it('merges same-key datasets by identity and materializes one provider definition for multiple instances', () => {
+    const key = { namespace: 'demo', type: 'panel' } as const;
+    const dataA = { rows: [1, 2] };
+    const dataB = { rows: [3, 4] };
+    const makeDefinition = vi.fn((datasets: Readonly<Record<string, unknown>>) => {
+      expect(datasets).toEqual({ a: dataA, b: dataB });
+      return definitionOf(key);
     });
-    const First: EmbeddableFixture = () => null;
-    First.displayName = 'First';
-    First.isTier2Embeddable = true;
-    First.embeddableAdapter = mkAdapter('First', dataA) as EmbeddableTier2Adapter;
-    const Second: EmbeddableFixture = () => null;
-    Second.displayName = 'Second';
-    Second.isTier2Embeddable = true;
-    Second.embeddableAdapter = mkAdapter('Second', dataB) as EmbeddableTier2Adapter;
+    const First = makeFixture({ displayName: 'First', key, makeDefinition, datasets: { a: dataA } });
+    const Second = makeFixture({ displayName: 'Second', key, makeDefinition, datasets: { b: dataB } });
 
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
-        <First id="one" data={null} />
-        <Second id="two" data={null} />
+        <First id="one" data={dataA} />
+        <Second id="two" data={dataB} />
       </Layout>,
     );
 
-    expect(sharedMake).toHaveBeenCalledTimes(1);
-    expect(sharedMake).toHaveBeenCalledWith(expect.objectContaining({ a: [1, 2], b: [3, 4] }));
-    expect(svg).toContain('data-retikz-id="panel-one"');
-    expect(svg).toContain('data-retikz-id="panel-two"');
+    expect(makeDefinition).toHaveBeenCalledTimes(1);
+    expect(svg).toContain('data-retikz-id="demo-one"');
+    expect(svg).toContain('data-retikz-id="demo-two"');
   });
 
-  it('特殊原型键 dataset reference：同引用复用并作为 own property 传给 maker', () => {
-    const shared = { rows: [1, 2] };
-    const datasets = Object.fromEntries([
-      ['__proto__', shared],
-      ['toString', shared],
-    ]);
-    const { Fixture, makeComposites } = makeFixture({ datasets });
-
-    renderToStaticMarkup(
-      <Layout width={100} height={100}>
-        <Fixture id="one" data={null} />
-        <Fixture id="two" data={null} />
-      </Layout>,
-    );
-
-    const merged = makeComposites.mock.calls[0][0];
-    expect(Object.hasOwn(merged, '__proto__')).toBe(true);
-    expect(Object.hasOwn(merged, 'toString')).toBe(true);
-    expect(merged.__proto__).toBe(shared);
-    expect(merged.toString).toBe(shared);
-  });
-
-  it('同 namespace 使用不同 makeComposites → render fail-loud', () => {
-    const first = makeFixture({ namespace: 'demo', displayName: 'FirstMaker' });
-    const second = makeFixture({ namespace: 'demo', displayName: 'SecondMaker' });
-
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout width={100} height={100}>
-          <first.Fixture id="first" data={null} />
-          <second.Fixture id="second" data={null} />
-        </Layout>,
-      ),
-    ).toThrow(/demo.*multiple makeComposites/i);
-  });
-
-  it('不同 namespace 两个可嵌入子组件 → 每个 namespace 的 makeComposites 各调一次、两结果都生效', () => {
-    const fixA = makeFixture({ namespace: 'alpha', displayName: 'Alpha' });
-    const fixB = makeFixture({ namespace: 'beta', displayName: 'Beta' });
+  it('resolves cross-namespace dependencies before their authored root', () => {
+    const frameKey = { namespace: 'standard', type: 'frame' } as const;
+    const cardKey = { namespace: 'third', type: 'card' } as const;
+    const calls: Array<string> = [];
+    const frameMaker = vi.fn(() => {
+      calls.push('standard.frame');
+      return definitionOf(frameKey);
+    });
+    const cardMaker = vi.fn(() => {
+      calls.push('third.card');
+      return definitionOf(cardKey);
+    });
+    const Card = makeFixture({
+      displayName: 'Card',
+      key: cardKey,
+      makeDefinition: cardMaker,
+      dependencies: [frameKey],
+      extraProviders: [providerOf(frameKey, frameMaker)],
+    });
 
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
-        <fixA.Fixture id="p" data={{ v: 1 }} />
-        <fixB.Fixture id="q" data={{ v: 2 }} />
+        <Card id="one" data={null} />
       </Layout>,
     );
 
-    expect(fixA.makeComposites).toHaveBeenCalledTimes(1);
-    expect(fixB.makeComposites).toHaveBeenCalledTimes(1);
-    expect(svg).toContain('data-retikz-id="panel-p"');
-    expect(svg).toContain('data-retikz-id="panel-q"');
+    expect(calls).toEqual(['standard.frame', 'third.card']);
+    expect(svg).toContain('data-retikz-id="third-one"');
   });
 
-  it('显式 composites prop 与可嵌入贡献并存 → 用户 composite 定义与可嵌入 composite 都展开', () => {
-    // demo fixture 自带 makeComposites（贡献 demo.panel 定义）
-    const { Fixture } = makeFixture({ namespace: 'demo', displayName: 'DemoFixture' });
-    // user fixture 只贡献 user.panel composite 节点，makeComposites 返回空——其定义由显式 composites prop 提供
-    const userSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('user'),
-      type: z.literal('panel'),
-      panelId: z.string(),
-    });
-    const userComposite = defineComposite({
-      namespace: 'user',
-      type: 'panel',
-      schema: userSchema,
-      expand: node => ({ type: 'node', id: `user-${node.panelId}`, position: [2, 2], text: node.panelId }),
-    });
+  it('uses explicit Layout composites only as final definitions after provider materialization', () => {
+    const demoKey = { namespace: 'demo', type: 'panel' } as const;
+    const userKey = { namespace: 'user', type: 'panel' } as const;
+    const demoMaker = vi.fn(() => definitionOf(demoKey));
+    const Demo = makeFixture({ displayName: 'Demo', key: demoKey, makeDefinition: demoMaker });
     const userAdapter: EmbeddableTier2Adapter<FixtureProps> = {
-      displayName: 'UserFixture',
-      namespace: 'user',
+      displayName: 'User',
       contribute: props => ({
-        node: { namespace: 'user', type: 'panel', panelId: props.id },
-        datasets: {},
-        makeComposites: () => [],
+        node: { namespace: userKey.namespace, type: userKey.type, panelId: props.id },
+        compositeDependencies: { roots: [], providers: [] },
       }),
     };
-    const UserFixture: EmbeddableFixture = () => null;
-    UserFixture.displayName = 'UserFixture';
-    UserFixture.isTier2Embeddable = true;
-    UserFixture.embeddableAdapter = userAdapter as EmbeddableTier2Adapter;
+    const User: EmbeddableFixture = () => null;
+    User.displayName = 'User';
+    User.isTier2Embeddable = true;
+    User.embeddableAdapter = userAdapter as EmbeddableTier2Adapter;
 
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} composites={[userComposite]}>
-        <Fixture id="emb" data={{ v: 1 }} />
-        <UserFixture id="manual" data={null} />
+      <Layout width={100} height={100} composites={[definitionOf(userKey)]}>
+        <Demo id="embedded" data={null} />
+        <User id="manual" data={null} />
       </Layout>,
     );
 
-    expect(svg).toContain('data-retikz-id="panel-emb"');
+    expect(demoMaker).toHaveBeenCalledTimes(1);
+    expect(svg).toContain('data-retikz-id="demo-embedded"');
     expect(svg).toContain('data-retikz-id="user-manual"');
   });
 
-  it('同 namespace 同 reference 不同对象引用 → render 抛错（fail-loud）', () => {
-    const makeComposites = vi.fn(() => [makePanelComposite('demo')]);
-    const fixA = makeFixture({
-      namespace: 'demo',
-      displayName: 'A',
-      datasets: { shared: { x: 1 } },
-      makeComposites,
-    });
-    const fixB = makeFixture({
-      namespace: 'demo',
-      displayName: 'B',
-      datasets: { shared: { x: 1 } },
-      makeComposites,
+  it('forwards Core missing-provider, cycle, dataset, and explicit-definition conflict diagnostics', () => {
+    const key = { namespace: 'demo', type: 'panel' } as const;
+    const dependency = { namespace: 'standard', type: 'frame' } as const;
+    const makeDefinition = vi.fn(() => definitionOf(key));
+    const Missing = makeFixture({
+      displayName: 'Missing',
+      key,
+      makeDefinition,
+      dependencies: [dependency],
     });
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>
-          <fixA.Fixture id="a" data={null} />
-          <fixB.Fixture id="b" data={null} />
+          <Missing id="missing" data={null} />
         </Layout>,
       ),
-    ).toThrow(/reference "shared"/);
-  });
+    ).toThrow(/missing dependency provider.*demo\.panel -> standard\.frame/i);
+    expect(makeDefinition).not.toHaveBeenCalled();
 
-  it('同 namespace 同 reference 同对象引用 → 不抛、正常渲染', () => {
-    const shared = { x: 1 };
-    const makeComposites = vi.fn(() => [makePanelComposite('demo')]);
-    const fixA = makeFixture({ namespace: 'demo', displayName: 'A', datasets: { shared }, makeComposites });
-    const fixB = makeFixture({ namespace: 'demo', displayName: 'B', datasets: { shared }, makeComposites });
+    const dependencyMaker = vi.fn(() => definitionOf(dependency));
+    const Cyclic = makeFixture({
+      displayName: 'Cyclic',
+      key,
+      makeDefinition,
+      dependencies: [dependency],
+      extraProviders: [providerOf(dependency, dependencyMaker, {}, [key])],
+    });
     expect(() =>
       renderToStaticMarkup(
         <Layout width={100} height={100}>
-          <fixA.Fixture id="a" data={null} />
-          <fixB.Fixture id="b" data={null} />
+          <Cyclic id="cycle" data={null} />
         </Layout>,
       ),
-    ).not.toThrow();
+    ).toThrow(/provider cycle.*demo\.panel -> standard\.frame -> demo\.panel/i);
+    expect(makeDefinition).not.toHaveBeenCalled();
+    expect(dependencyMaker).not.toHaveBeenCalled();
+
+    const First = makeFixture({ displayName: 'FirstDataset', key, makeDefinition, datasets: { shared: { x: 1 } } });
+    const Second = makeFixture({ displayName: 'SecondDataset', key, makeDefinition, datasets: { shared: { x: 1 } } });
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout width={100} height={100}>
+          <First id="a" data={null} />
+          <Second id="b" data={null} />
+        </Layout>,
+      ),
+    ).toThrow(/demo\.panel.*dataset.*shared/i);
+
+    const Valid = makeFixture({ displayName: 'Valid', key, makeDefinition });
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout width={100} height={100} composites={[definitionOf(key)]}>
+          <Valid id="conflict" data={null} />
+        </Layout>,
+      ),
+    ).toThrow(/definition conflict.*demo\.panel/i);
   });
 
-  it('零可嵌入子组件（纯 Kernel）→ 输出与不带本特性时一致（kernel 节点照常渲染）', () => {
+  it('keeps a pure Kernel Layout unchanged when no contribution exists', () => {
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
         <Node id="plain" position={[0, 0]} text="hi" />
       </Layout>,
     );
+
     expect(svg).toContain('data-retikz-id="plain"');
-    expect(svg).toContain('<svg');
-  });
-
-  it('<Layout embeddables={[adapter]}> 注入未标记 fixture → 仍嵌入 + 聚合渲染', () => {
-    const displayName = 'UnmarkedFixture';
-    const makeComposites = vi.fn(() => [makePanelComposite('demo')]);
-    const Plain: FC<FixtureProps> = () => null;
-    Plain.displayName = displayName;
-    const adapter: EmbeddableTier2Adapter<FixtureProps> = {
-      displayName,
-      namespace: 'demo',
-      contribute: props => ({
-        node: { namespace: 'demo', type: 'panel', panelId: props.id },
-        datasets: { [props.id]: props.data },
-        makeComposites,
-      }),
-    };
-
-    const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} embeddables={[adapter as EmbeddableTier2Adapter]}>
-        <Plain id="z" data={{ v: 9 }} />
-      </Layout>,
-    );
-
-    expect(makeComposites).toHaveBeenCalledTimes(1);
-    expect(svg).toContain('data-retikz-id="panel-z"');
   });
 });

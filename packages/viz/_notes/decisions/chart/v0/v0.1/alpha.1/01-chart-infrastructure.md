@@ -1,8 +1,8 @@
 # ADR-01：Chart 基础设施与封闭 recipe 主链
 
-- 状态：Accepted（公开入口仍受上游 capability gate 阻塞）
+- 状态：Accepted（typed recipe 基础继续有效；基础 Chart、canonical IRChart、单一 `chart.chart` composite root 与公开 authoring 边界由 ADR-03 后续决策替代）
 - 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-03](./03-presentation-standard-layout.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md)
 
 ## 背景与目标
 
@@ -16,7 +16,7 @@ Chart type 是官方维护的封闭目录，不提供 `defineChart`、Chart regi
 
 每个 recipe 负责声明该 type 的完整 Plot 配方、不可撤销的核心成员、可调整的表现性默认和稳定语义目标；统一 resolver 负责应用覆盖与扩展、复验核心不变量、生成最终 PlotSpec、结构化诊断和 inspection。不同 type 不得各自发明 merge、错误或 adapter 语义。
 
-ADR-04 加入首批 `scatter` / `bubble` Canonical Types 且上游 gates 满足时，才原子公开 ChartSpec、type definitions 与 React / Vanilla authoring。在此之前不得公开没有 Canonical Type 的空 Chart surface。
+ADR-04 加入首批 `scatter` / `bubble` Canonical Types 且上游 gates 满足时，才原子公开 ChartSpec type variants、单一 Chart composite definition 与 React / Vanilla authoring。在此之前不得公开没有 Canonical Type 的空 Chart surface。
 
 ## 基础数据结构与公开契约
 
@@ -50,7 +50,7 @@ React 支持 spec 与 DSL authoring，Vanilla 支持 spec factory 与 runtime。
 - Kernel / Core 拥有 composite dependency assembly、Scene 编译和 renderer-neutral spatial handle / selector 基础
 - chart-react / chart-vanilla 只拥有 authoring、依赖注入与 runtime 接线，不拥有 defaults 或平行 IR
 
-每个公开 Chart type 形成独立静态 composite definition。Chart definition bundle 只包含 Chart-owned definitions；宿主负责沿正式依赖协议组装 Chart、Plot 与 Standard definitions，并让它们共享同一 datasets 与 Plot lowering options。缺失或冲突依赖必须在 compile 前 fail-loud。
+`scatter`、`bubble` 等公开 Chart type 只形成封闭 ChartSpec variant 与静态 recipe，并在 Core compile 前统一归一为 canonical `IRChart`。Chart 只发布完整 key 为 `chart.chart` 的单一静态 composite definition，不发布逐类型 Core definitions。宿主负责沿正式依赖协议组装 Chart、Plot、Layout 与 Standard definitions，并让它们共享同一 datasets 与 Plot lowering options。缺失或冲突依赖必须在 compile 前 fail-loud。
 
 公开 Chart 还必须保持空间透明：Chart 可以增加外层 identity，但 Plot 的 view、track、facet、plotArea、axis、series、datum 等内部 handle 与 provenance / locator / lineage 不得被吞掉、复制或重命名；qualified selector 必须能从 Chart 进入 Plot body 后继续委托给 Plot / Core。
 

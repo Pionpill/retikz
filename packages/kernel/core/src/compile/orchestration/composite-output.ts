@@ -1,6 +1,7 @@
 import { ZodError } from 'zod';
 
 import type {
+  CompositeExpandResult,
   CompositeCompileChild,
   CompositeCompileScopeProps,
   CompositeReplayWrapper,
@@ -12,9 +13,28 @@ import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOu
 import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { CompositeContractError } from '../probe-failure';
+import { validateSpatialHandleDeclarations } from '../../contract';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 
+/** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */
+export const validateCompositeSpatialHandles = (owner: string, value: unknown) => {
+  try {
+    return validateSpatialHandleDeclarations(owner, value);
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message : String(cause);
+    throw new CompositeContractError(detail, { cause });
+  }
+};
+
 const builtinChildTypes = new Set(['node', 'path', 'coordinate', 'scope']);
+
+/** 判断当前 expand owner 直接生成的普通 IR 区域是否引入空间 Scope */
+const containsGeneratedSpatialScope = (children: ReadonlyArray<IRChild>): boolean =>
+  children.some(child => {
+    if ('namespace' in child || child.type !== 'scope') return false;
+    if (child.placement !== undefined || (child.transforms?.length ?? 0) > 0) return true;
+    return containsGeneratedSpatialScope(child.children);
+  });
 
 /** 从 Scope schema 失败中提取可读的 Theme 字段路径 */
 const readThemeIssuePath = (error: unknown): string | undefined => {
@@ -54,11 +74,31 @@ export const snapshotCompositeOutputChild = (owner: string, value: unknown, inde
 export const snapshotCompositeLayoutChild = (owner: string, value: unknown, index: number): IRChild =>
   snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
-/** 校验、脱离并冻结 Expand Composite 返回的普通 IR children */
-export const validateExpandCompositeOutput = (owner: string, produced: unknown): ReadonlyArray<IRChild> =>
+/** 校验、脱离并冻结 Expand Composite 的结构化返回值 */
+export const validateExpandCompositeOutput = (owner: string, produced: unknown): CompositeExpandResult =>
   withProviderOutputValidationBoundary(owner, () => {
-    const values = Array.isArray(produced) ? Array.from(produced.entries(), ([, value]) => value) : [produced];
-    return values.map((value, index) => snapshotCompositeOutputChild(owner, value, index));
+    if (produced === null || typeof produced !== 'object' || Array.isArray(produced)) {
+      throw new CompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
+    }
+    const raw = produced as Record<string, unknown>;
+    const unsupported = Object.keys(raw).filter(field => !['children', 'spatialHandles'].includes(field));
+    if (unsupported.length > 0) {
+      throw new CompositeContractError(`${owner} returned unsupported expand result field '${unsupported[0]}'.`);
+    }
+    if (!Array.isArray(raw.children)) {
+      throw new CompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
+    }
+    const children = Object.freeze(
+      raw.children.map((value, index) => snapshotCompositeOutputChild(owner, value, index)),
+    );
+    const spatialHandles =
+      raw.spatialHandles === undefined ? undefined : validateCompositeSpatialHandles(owner, raw.spatialHandles);
+    if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children)) {
+      throw new CompositeContractError(
+        `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with placement or transforms; use layout-aware Scope attachment.`,
+      );
+    }
+    return Object.freeze({ children, ...(spatialHandles === undefined ? {} : { spatialHandles }) });
   });
 
 /** 以普通 Scope props schema 校验并脱离完整 authored Scope props */
@@ -201,6 +241,7 @@ export const createCompositeScopeChild = (
   owner: CompositeCompileOwner,
   props: unknown,
   children: unknown,
+  spatialHandles?: unknown,
 ): CompositeCompileChild =>
   withProviderOutputValidationBoundary(owner.label, () => {
     if (!Array.isArray(children)) {
@@ -224,6 +265,9 @@ export const createCompositeScopeChild = (
       kind: 'scope',
       props: cloneScopeProps(props, owner),
       children: clonedChildren,
+      ...(spatialHandles === undefined
+        ? {}
+        : { spatialHandles: validateCompositeSpatialHandles(owner.label, spatialHandles) }),
     };
     const handle = Object.freeze({}) as CompositeCompileChild;
     session.outputChildren.set(handle, { owner, child, used: false });

@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
 
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
 
 import type { ComponentPreviewProps } from '../component-preview';
 
@@ -30,13 +30,33 @@ export type ShowcaseGalleryProps = {
 export const ShowcaseGallery: FC<ShowcaseGalleryProps> = props => {
   const { examples, children } = props;
   const { t } = useTranslation();
-  const [selectedId, setSelectedId] = useState(examples[0].id);
-  const selected = examples.find(example => example.id === selectedId) ?? examples[0];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selected = examples.find(example => example.id === searchParams.get('example')) ?? examples[0];
   const availableExamples = examples.filter(example => example.id !== selected.id);
+
+  const handleExampleChange = (id: string): void => {
+    const next = new URLSearchParams(searchParams);
+    if (id === examples[0].id) next.delete('example');
+    else next.set('example', id);
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <>
-      <div aria-label={selected.title}>
+      <header data-slot="showcase-featured-copy" className="mb-4">
+        <h2
+          id="showcase-featured-title"
+          data-slot="showcase-featured-title"
+          className="text-lg font-semibold tracking-tight"
+        >
+          {selected.title}
+        </h2>
+        <p data-slot="showcase-featured-description" className="mt-3 leading-relaxed">
+          {selected.description}
+        </p>
+      </header>
+
+      <div aria-labelledby="showcase-featured-title">
         <ComponentPreview key={selected.id} {...selected.preview} />
       </div>
 
@@ -53,7 +73,7 @@ export const ShowcaseGallery: FC<ShowcaseGalleryProps> = props => {
                   key={example.id}
                   type="button"
                   data-slot="showcase-example"
-                  onClick={() => setSelectedId(example.id)}
+                  onClick={() => handleExampleChange(example.id)}
                   className="flex h-[250px] flex-col overflow-hidden rounded-xl border bg-transparent text-left transition-[border-color,box-shadow] hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <ComponentPreviewThumbnail

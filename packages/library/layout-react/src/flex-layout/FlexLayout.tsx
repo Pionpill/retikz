@@ -2,11 +2,11 @@ import type { FlexLayoutInput } from '@retikz/layout';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createFlexLayout, LayoutItemKind } from '@retikz/layout';
+import { createFlexLayout, FlexLayoutProvider, LayoutItemKind } from '@retikz/layout';
 
 import type { LayoutEmbeddableComponent } from '../shared';
 
-import { LayoutReactNamespace, makeReactLayoutComposites, resolveReactLayoutItems } from '../shared';
+import { resolveReactLayoutItems } from '../shared';
 
 /** Flex 布局的 React 属性 */
 export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
@@ -19,16 +19,17 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
 
 const flexLayoutEmbeddableAdapter: EmbeddableTier2Adapter<FlexLayoutProps> = {
   displayName: 'FlexLayout',
-  namespace: LayoutReactNamespace,
   contribute: props => {
     const { authoring, children, ...input } = props;
     void authoring;
     const resolved = resolveReactLayoutItems(children, LayoutItemKind.Flex);
     return {
       node: createFlexLayout({ ...input, children: resolved.items }),
-      datasets: {},
+      compositeDependencies: {
+        roots: [FlexLayoutProvider.key, ...resolved.compositeDependencies.roots],
+        providers: [FlexLayoutProvider, ...resolved.compositeDependencies.providers],
+      },
       authoringSites: resolved.authoringSites,
-      makeComposites: makeReactLayoutComposites,
     };
   },
 };

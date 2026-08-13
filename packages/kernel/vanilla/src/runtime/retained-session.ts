@@ -1,6 +1,7 @@
 import type {
   AnyCompositeDefinition,
   CompileArtifact,
+  CompileResult,
   CoreProgramOptions,
   CoreProgramOutput,
   IRScene,
@@ -97,9 +98,7 @@ const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyComp
 
 /** 捕获 retained session 会在后续 normalization 继续读取的 mount options */
 const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
-  const adapters = options.adapters?.map(adapter =>
-    Object.freeze({ kind: adapter.kind, namespace: adapter.namespace, lower: adapter.lower }),
-  );
+  const adapters = options.adapters?.map(adapter => Object.freeze({ kind: adapter.kind, lower: adapter.lower }));
   const composites = options.compile?.composites?.map(captureCompositeDefinition);
   return Object.freeze({
     ...options,
@@ -206,6 +205,8 @@ export type RetainedSessionController<
   scene: () => Scene;
   /** 读取当前 committed compile artifacts */
   artifacts: () => ReadonlyArray<CompileArtifact>;
+  /** 读取当前 committed 完整 compile result */
+  compileResult: () => CompileResult;
   /** 读取当前 committed runtime metadata */
   runtimeMeta: () => VanillaRuntimeMeta;
 }>;
@@ -554,6 +555,7 @@ const createVanillaRetainedSessionImplementation = (
     read: () => active.participant.read(active.session),
     scene: () => active.participant.read(active.session).frame.primary.scene as Scene,
     artifacts: () => active.session.artifact(active.coreProgram).value.output.result.artifacts,
+    compileResult: () => active.session.artifact(active.coreProgram).value.output.result,
     runtimeMeta: () => state.runtimeMeta,
   });
 };

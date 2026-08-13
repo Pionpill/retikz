@@ -57,11 +57,6 @@ export const assertChartExtensionCollection = (
   collection: PlotDeclarationCollection,
   context: PlotAuthoringContext,
 ): void => {
-  const runtimeSource = collection.runtimeSources.at(0);
-  if (runtimeSource !== undefined) {
-    throw new PlotDeclarationError(PlotDeclarationErrorCode.NonSerializableExtension, runtimeSource.path);
-  }
-
   for (const declaration of collection.declarations) {
     if (declaration.kind === 'unsupported') {
       const code =
@@ -83,6 +78,13 @@ export const assertChartExtensionCollection = (
   const compositionDeclaration = firstDeclarationOf(collection, new Set<PlotDeclarationKind>(['facet', 'scaffold']));
   if (context.composition !== undefined && compositionDeclaration !== undefined) {
     throwDuplicateDeclarationSource(compositionDeclaration, context.composition.path);
+  }
+  const markDeclaration = firstDeclarationOf(
+    collection,
+    new Set<PlotDeclarationKind>(['path-mark', 'point-mark', 'interval-mark', 'reference-mark', 'relation-mark']),
+  );
+  if (context.marks !== undefined && markDeclaration !== undefined) {
+    throwDuplicateDeclarationSource(markDeclaration, context.marks.path);
   }
   if (context.coordinate !== undefined && context.composition !== undefined) {
     throw new PlotDeclarationError(
@@ -132,8 +134,9 @@ export const normalizeChartExtension = (
           ...collected.guides.filter(guide => guide.type === PlotGuide.Legend),
         ]
       : context.guides.value.map(guide => ({ ...guide }));
+  const marks = context.marks?.value ?? collected.marks;
   const normalized = normalizePlotBindings({
-    marks: collected.marks,
+    marks,
     guides: declaredGuides,
     scales,
     coordinate: chartExtensionCoordinateOf(context.coordinate),
@@ -151,8 +154,10 @@ export const normalizeChartExtension = (
       : normalized.coordinate !== undefined
         ? { coordinate: normalized.coordinate }
         : {}),
-    ...(collected.marks.length > 0 ? { marks: normalized.marks } : {}),
+    ...(marks.length > 0 ? { marks: normalized.marks } : {}),
     ...(ownsGuides ? { guides: normalized.guides } : {}),
   };
-  return { fragment, runtime: {} };
+  const runtime: PlotAuthoringRuntime =
+    Object.keys(collected.resolveLabels).length === 0 ? {} : { resolveLabel: collected.resolveLabels };
+  return { fragment, runtime };
 };

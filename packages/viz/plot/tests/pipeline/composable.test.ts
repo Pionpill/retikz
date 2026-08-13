@@ -32,7 +32,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
 
 const expandOf = (spec: IRPlotSpec, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const nodeWidth = (node: IRNode): number => {

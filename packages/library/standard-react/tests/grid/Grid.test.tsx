@@ -1,4 +1,4 @@
-import { createGrid } from '@retikz/standard';
+import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
 import { Grid } from '../../src';
@@ -18,7 +18,7 @@ describe('<Grid>', () => {
     });
   });
 
-  it('contributes the same Standard Grid IR and a stable local definition maker', () => {
+  it('contributes the same Standard Grid IR and a stable exact-key provider', () => {
     const first = Grid.embeddableAdapter.contribute({
       bounds: { start: [0, 0], end: [20, 10] },
       line: { spacing: 10 },
@@ -29,8 +29,9 @@ describe('<Grid>', () => {
     });
 
     expect(first.node).toMatchObject({ namespace: 'standard', type: 'grid' });
-    expect(first.makeComposites).toBe(second.makeComposites);
-    expect(first.makeComposites({})).toHaveLength(1);
+    expect(first.compositeDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
+    expect(second.compositeDependencies.providers[0]).toBe(GridProvider);
+    expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
   });
 
   it('accepts a center-form Cartesian position through the shared Grid input', () => {

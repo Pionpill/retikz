@@ -22,22 +22,6 @@ import type { CompileWarningCodeValue } from '../warning';
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 export type NodeFontWeight = NonNullable<IRFont['weight']>;
 
-/** 节点各轴缩放因子 */
-export type AxisScale = {
-  /** x 轴缩放 */
-  x: number;
-  /** y 轴缩放 */
-  y: number;
-};
-
-/** 节点盒尺寸 */
-export type BoxSize = {
-  /** 宽度 */
-  width: number;
-  /** 高度 */
-  height: number;
-};
-
 /** 节点正文与附属 label 共享的文本布局上下文 */
 export type NodeTextLayoutContext = {
   /** 待布局节点 */

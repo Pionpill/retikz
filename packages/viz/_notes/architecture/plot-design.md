@@ -48,11 +48,11 @@ Data + Transform + Channel(Encoding):
 
 边界原则：
 
-> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 收敛为 `ChartSpec`，解析完整 PlotSpec，并通过 Standard 组合可选单图展示外壳。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
+> viz 组解决的是「有了数据之后如何可视化」。数据语义归共享 `@retikz/data`；底层可视化表达至少分为 plot 与 table：plot 负责 GoG 图形语法（含 layout transform），table 负责表格型展示，geo 作为地图类边界待决策；chart 是 plot 之上的 Tier 3 新手友好封装，负责把 type/config/preset 收敛为 `ChartSpec`，解析完整 PlotSpec，并通过 Layout 组合可选单图 presentation、再由 Standard Surface 包装完整结果。几何由 packing / layout 算法（词云、力导向 network、treemap）决定的结构化可视化不设独立 `@retikz/struct` 包，而是作为 plot 的 layout transform：先把结构数据转成位置、尺寸、路由等派生字段，之后统一走 plot 的 channel / scale / coordinate / mark / guide / lowering。
 
 Plot 拥有 guide 的领域解析，但不独占已经去除数据与坐标语义的通用呈现。以 Legend 为例，Plot 负责 channel / scale 绑定、domain / ticks、formatter、theme mapping、guide resolve、provenance / locator 与交互意图；解析后的 title、entries、swatch / ramp / symbol、内部布局与 lowering 交给 `@retikz/standard`。依赖保持 `plot -> standard -> core / math`，Standard 不反向读取 Plot IR。
 
-长期 label 边界也按语义而不是文字外观划分：axis title、tick label、datum / mark label 与数据锚定 annotation 继续属于 Plot；chart-level title、subtitle、caption、note、source、credit 属于 Chart 的可选 presentation，并由 Standard 布局 / 绘制。当前 Plot schema 中对应后者的 label role 是迁移候选，不构成 Plot 长期 ownership 的依据。
+长期 label 边界也按语义而不是文字外观划分：axis title、tick label、datum / mark label 与数据锚定 annotation 继续属于 Plot；chart-level title、subtitle、caption、note、source、credit 属于 Chart 的可选 presentation，由 Layout 排列并由 Standard Surface 包装。当前 Plot schema 中对应后者的 label role 是迁移候选，不构成 Plot 长期 ownership 的依据。
 
 ## 3. 核心概念
 
@@ -484,7 +484,7 @@ viz domain（data / plot / chart / table / geo 及其绑定包）留在主 monor
 
 Plot 的「可被组合」不只指整图 bbox。view、arrangement、facet panel、track、plotArea、axis region、series 与按需 datum 都应形成稳定、renderer-neutral 的 domain handle / provenance。Core 提供 handle 模型、索引与 qualified selector 基础；Plot 负责生成这些领域 handle 并解释其语义。
 
-当 Plot 被 Chart 包裹时，这些内部 identity 仍属于 Plot。Chart 可以在外层增加整图、frame、header、body、footer namespace，并让 Standard 布局改变最终全局 geometry，但不能重命名、扁平化或丢弃 Plot handle。外部工具应能先定位 Chart，再通过 qualified selector 进入 Plot body，继续选择某个 track、facet panel 或 plotArea；Chart 只转发 / 委托查询，不复制 Plot handle registry。
+当 Plot 被 Chart 包裹时，这些内部 identity 仍属于 Plot。Chart 可以在外层增加整图、surface、header、body、footer namespace，并让 Layout 改变最终全局 geometry，但不能重命名、扁平化或丢弃 Plot handle。外部工具应能先定位 Chart，再通过 qualified selector 进入 Plot body，继续选择某个 track、facet panel 或 plotArea；Chart 只转发 / 委托查询，不复制 Plot handle registry。
 
 推荐模型：
 

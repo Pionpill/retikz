@@ -13,5 +13,5 @@ export const GridDefinition: ExpandCompositeDefinition<IRGrid, typeof STANDARD_N
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   schema: GridSchema,
-  expand: lowerGrid,
+  expand: grid => ({ children: [lowerGrid(grid)] }),
 });

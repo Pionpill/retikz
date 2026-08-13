@@ -1,36 +1,39 @@
-import type { IRNode, ThemeModeValue } from '@retikz/core';
+import type { CompositeDependencyProvider, IRNode, ThemeModeValue } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
-import { CompositeBaseSchema, defineComposite, ThemeMode, ThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
 import { Layout, Scope } from '@retikz/react';
 import { z } from 'zod';
+
+import { PreviewCoreThemeStyles, PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
 
 type ThemeCardProps = { label: string };
 
 const cardFills = {
-  [ThemeStyle.Neutral]: {
+  [PreviewThemeStyle.Default]: {
     [ThemeMode.Light]: '#e2e8f0',
     [ThemeMode.Dark]: '#334155',
   },
-  [ThemeStyle.Academic]: {
+  [PreviewThemeStyle.Academic]: {
     [ThemeMode.Light]: '#dbeafe',
     [ThemeMode.Dark]: '#1e3a8a',
   },
-  [ThemeStyle.Vibrant]: {
+  [PreviewThemeStyle.Vibrant]: {
     [ThemeMode.Light]: '#fae8ff',
     [ThemeMode.Dark]: '#701a75',
   },
-  [ThemeStyle.Clean]: {
+  [PreviewThemeStyle.Clean]: {
     [ThemeMode.Light]: '#f8fafc',
     [ThemeMode.Dark]: '#0f172a',
   },
 } as const;
 
-const isCardFillStyle = (style: string): style is keyof typeof cardFills => style in cardFills;
+const isCardFillStyle = (style: string | undefined): style is keyof typeof cardFills =>
+  style !== undefined && style in cardFills;
 
-const resolveCardFill = (style: string, mode: ThemeModeValue): string => {
-  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[ThemeStyle.Neutral];
+const resolveCardFill = (style: string | undefined, mode: ThemeModeValue): string => {
+  const fills = isCardFillStyle(style) ? cardFills[style] : cardFills[PreviewThemeStyle.Default];
   return fills[mode];
 };
 
@@ -69,19 +72,22 @@ const themeCardComposite = defineComposite({
         stroke: 'none',
       }),
     );
-    return [card, ...swatches];
+    return { children: [card, ...swatches] };
   },
 });
 
-const makeComposites = () => [themeCardComposite];
+const ThemeCardProvider: CompositeDependencyProvider = {
+  key: { namespace: 'theme-demo', type: 'card' },
+  dependencies: [],
+  datasets: {},
+  makeDefinition: () => themeCardComposite,
+};
 
 const themeCardAdapter: EmbeddableTier2Adapter<ThemeCardProps> = {
   displayName: 'ThemeCard',
-  namespace: 'theme-demo',
   contribute: props => ({
     node: { namespace: 'theme-demo', type: 'card', label: props.label },
-    datasets: {},
-    makeComposites,
+    compositeDependencies: { roots: [ThemeCardProvider.key], providers: [ThemeCardProvider] },
   }),
 };
 
@@ -96,9 +102,9 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 });
 
 const Demo: FC = () => (
-  <Layout theme={{ style: ThemeStyle.Academic }} width={650} height={120}>
+  <Layout theme={{ style: PreviewThemeStyle.Academic }} themeStyles={PreviewCoreThemeStyles} width={650} height={120}>
     <ThemeCard label="根：学术 / 浅色" />
-    <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: ThemeStyle.Vibrant }}>
+    <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: PreviewThemeStyle.Vibrant }}>
       <ThemeCard label="局部：活力 / 浅色" />
     </Scope>
     <Scope

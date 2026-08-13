@@ -26,7 +26,7 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 子节点谓词 */
@@ -304,6 +304,17 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     // 3 类 → 3 个 glyph swatch；调色板 circle/rectangle/diamond，至少含一个非 rectangle（证实用了编码形状）
     expect(shapes.length).toBe(3);
     expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
+  });
+
+  it('shape_legend_preserves_structured_shape_refs_from_plot_theme', () => {
+    const pentagon = { type: 'polygon', params: { sides: 5, rotate: -90 } } as const;
+    const spec = PlotSpecSchema.parse({
+      ...shapeLegendSpec(),
+      plotTheme: { palette: { shape: [pentagon, 'cross', 'circle'] } },
+    });
+    const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
+    expect(legend).toBeDefined();
+    expect(swatchNodesOf(legend as IRScope).map(node => node.shape)).toEqual([pentagon, 'cross', 'circle']);
   });
 
   it('shape_legend_glyphs_default_to_no_stroke', () => {

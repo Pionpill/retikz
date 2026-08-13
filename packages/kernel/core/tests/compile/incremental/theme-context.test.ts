@@ -18,7 +18,6 @@ import {
   createCoreProgram,
   defineComposite,
   ThemeMode,
-  ThemeStyle,
 } from '../../../src';
 
 const themedComposite = defineComposite({
@@ -29,10 +28,14 @@ const themedComposite = defineComposite({
     type: z.literal('box'),
   }),
   expand: (_node, context) => ({
-    type: 'node',
-    id: 'box',
-    position: [0, 0],
-    fill: context.theme.mode === ThemeMode.Dark ? '#111111' : '#eeeeee',
+    children: [
+      {
+        type: 'node',
+        id: 'box',
+        position: [0, 0],
+        fill: context.theme.mode === ThemeMode.Dark ? '#111111' : '#eeeeee',
+      },
+    ],
   }),
 });
 
@@ -73,7 +76,6 @@ describe('Theme retained invalidation', () => {
     const initial: IRScene = {
       type: 'scene',
       version: 1,
-      theme: { style: ThemeStyle.Academic },
       children: [
         {
           type: 'scope',

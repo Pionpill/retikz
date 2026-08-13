@@ -5,7 +5,14 @@ description: Use when changing retikz package file layout, dependency direction,
 
 # Standard Structure
 
-retikz 模块按“shared → schemas → contract → providers → pipeline/compile”分层；core 另有 `parsers/` 作为 Sugar / DSL 到 IR 的必要入口。本 skill 只做总纲和路由；不要一次加载所有子 skill。
+retikz 核心能力包按“shared → schemas → contract → providers → pipeline/compile”分层；Core / Plot domain `normalize/` 持有 Canonical 类型与 Source IR 到 Canonical 的规范化逻辑，`compile/<domain>/resolve.ts` 准备 context 并调度它。Vanilla / Plot Vanilla 的 `normalize/` 把 authoring Input 组装为 Source IR；Core / Tier 2 的 `parse/` 处理 unknown、序列化数据或 DSL 到 Source IR。本 skill 只做总纲和路由；目录、文件和符号名遵循 `standard-name`。
+
+## 包职能与数据边界
+
+- 核心能力包（Core、Plot 等 domain owner）拥有 Source IR schema、domain normalizer 的 `CanonicalXxx` 与 `IRXxx -> CanonicalXxx` 的 `normalizeXxx`、registry 消费、lowering / compile 和 Scene 语义。不得维护框架通用 Input、DOM 或框架生命周期
+- API 基础包（Vanilla、Plot Vanilla）拥有 TypeScript-only `InputXxx -> IRXxx` 的 `normalizeXxx`、共享 session / retained runtime 与 SSR 接线；不得重写 domain schema、resolve、lowering 或 Scene 语义
+- 框架包（React、Plot React）把 JSX / props / lifecycle 调度为对应 Vanilla `InputXxx`；不得直接重建 Core / Plot IR builder、session 或 renderer 编排
+- Vanilla / Plot Vanilla 的 `normalizeXxx` 只处理 `InputXxx -> IRXxx`；Core / Plot 的同名 `normalizeXxx` 只处理 `IRXxx -> CanonicalXxx`。`resolveXxx` 留在 compile，负责 context 解析与 normalizer 调度。只有完全脱离领域且被多层复用的原子值转换才能进入 `shared`；`parseXxx` 只处理 `unknown` 边界
 
 ## 入口类型
 
@@ -14,20 +21,22 @@ retikz 模块按“shared → schemas → contract → providers → pipeline/co
 ## 类型信任与校验边界
 
 - 内部调度按 TypeScript 类型契约设计，消费方通过明确的类型调用；不为纯 JavaScript 调度额外维护类型校验和错误分支，纯 JavaScript 调用由第三方自行负责校验
-- JSON、持久化配置和其他类型不明确的数据，只在 parser / schema / adapter 入口完成一次解析、校验和归一化；进入内部实现后必须使用明确的数据类型，不以 `unknown` 或未收窄的宽联合继续传递
-- 优先让 TypeScript 表达类型约束，避免重复的 `typeof`、对象结构检查和对应的 `throw`；只保留入口校验以及 TypeScript 无法表达的真实业务不变量或查找失败诊断
+- JSON、持久化配置和其他类型不明确的数据，只在 parse / schema 边界完成一次 parse / 校验；Vanilla / adapter 的 `normalizeXxx` 只把已类型化的 `InputXxx` 组装为 Source IR，Core / Plot domain `normalizeXxx` 再唯一产出 Canonical。进入内部实现后必须使用明确的数据类型，不以 `unknown` 或未收窄的宽联合继续传递
+- 优先让 TypeScript 表达类型约束，避免重复的 `typeof`、对象结构检查和对应的 `throw`；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的约束。只保留入口校验、schema 未覆盖且 TypeScript 无法表达的真实业务不变量或查找失败诊断
 - 只在对象会暴露给外部，或会通过公开 API 返回给外部时使用 `Object.freeze`；纯内部使用的中间对象不做多余冻结，复制与明确的所有权边界已经足够时不要额外防御
 
 ## 按需加载
 
-| 改动内容                                                                  | 读取                                           |
-| ------------------------------------------------------------------------- | ---------------------------------------------- |
-| `shared/`、通用词汇、纯函数、无状态映射、工具类型                         | `standard-shared`                              |
-| `schemas/`、Zod schema、IR 类型、`.describe(...)`、`.superRefine(...)`    | `standard-schema`                              |
-| `contract/`、`XxxDefinition`、`defineXxx()`、作者侧 API、context          | `standard-contract`                            |
-| `providers/`、内置 definition、registry resolver、`BUILTIN_*`、保留名诊断 | `standard-providers`                           |
-| `pipeline/` / `compile/`、lowering、registry 消费、options、`ResolvedXxx` | `standard-pipeline-compile`                    |
-| `parsers/`、字符串 / DSL / Sugar shorthand 解析为 IR 节点或片段           | 本 skill；若改变 IR 形态再读 `standard-schema` |
+| 改动内容                                                                            | 读取                                           |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `shared/`、通用词汇、纯函数、无状态映射、工具类型                                   | `standard-shared`                              |
+| `schemas/`、Zod schema、IR 类型、`.describe(...)`、`.superRefine(...)`              | `standard-schema`                              |
+| Vanilla / Core / Plot `normalize/`、Input / Source IR 规范化、Canonical、领域值转换 | `standard-normalize`                           |
+| `contract/`、`XxxDefinition`、`defineXxx()`、作者侧 API、context                    | `standard-contract`                            |
+| `providers/`、内置 definition、registry resolver、`BUILTIN_*`、保留名诊断           | `standard-providers`                           |
+| `pipeline/` / `compile/`、`resolve.ts`、context / registry 解析、lowering、options  | `standard-pipeline-compile`                    |
+| `parse/`、unknown / 字符串 / DSL 解析为 Source IR 节点或片段                        | 本 skill；若改变 IR 形态再读 `standard-schema` |
+| 目录、文件、类型、函数、enum、registry 或组件命名                                   | `standard-name`                                |
 
 define-registry 能力通常跨多层：先读本总纲判断 scope，再只加载本次会改到的层级 skill。
 
@@ -37,10 +46,12 @@ define-registry 能力通常跨多层：先读本总纲判断 scope，再只加�
 
 ```text
 shared <- schemas <- contract <- providers <- pipeline/compile
-shared/schemas <- parsers
+shared/schemas <- parse
+shared/schemas <- Vanilla normalize
+schemas <- Core / Plot normalize <- compile
 ```
 
-右侧消费左侧；左侧不反向读取右侧。`parsers/` 是入 IR 前的纯函数旁路，只依赖 `shared` / `schemas`，输出 IR 节点或片段，供 adapter / Sugar 复用；不得依赖 `compile`、`providers` 或运行时 registry。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`，字符串 / DSL shorthand 归 `parsers`。
+右侧消费左侧；左侧不反向读取右侧。`parse/` 是 unknown、字符串或 DSL 入 Source IR 的纯函数旁路，只依赖 `shared` / `schemas`，输出 `IRXxx` 节点或片段；不得依赖 `compile`、`providers` 或运行时 registry。Vanilla `normalize/` 只依赖公开 `shared` / `schemas`，把 `InputXxx` 组装为 `IRXxx`；不得定义 Core / Plot schema、Canonical 或 compile 规则。Core / Plot `normalize/<domain>/` 从 schema IR 类型派生 `CanonicalXxx`，并把 `IRXxx` 与窄 `NormalizeContext` 规范化为 Canonical；`compile/<domain>/resolve.ts` 准备 context 并调度该 normalizer。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，Canonical 类型与逻辑回 domain `normalize/`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`。
 
 ## 原子契约与组合
 
@@ -66,25 +77,6 @@ shared/schemas <- parsers
 
 涉及算法选择、时间复杂度或空间复杂度时，用 `@remarks` 备注复杂度，不放进主 `@description`。
 
-## 文件命名
-
-- `packages/**` 下 `*.ts` / `*.js` / `*.tsx` 的 kebab-case 文件名通常组合 1–2 个语义词，确需时可用 3 个，禁止超过 3 个；`.test` / `.demo` / `.data` / 语言标记等工具后缀不计入词数。
-
-## 共性文件
-
-| 文件           | 职责                                                        |
-| -------------- | ----------------------------------------------------------- |
-| `constants.ts` | 稳定常量、const object enum、关键字集合、查表数据           |
-| `types.ts`     | 导出类型、由 constants / schema 派生的类型                  |
-| `utils.ts`     | 纯函数 helper；不得承载状态和层级副作用                     |
-| `define.ts`    | 作者侧 define helper；contract 层常见                       |
-| `registry.ts`  | registry 合并、按 key 查找、重复 key 诊断；providers 层常见 |
-| `index.ts`     | barrel 导出；不写业务逻辑                                   |
-
-简单能力可合并文件；一旦职责混杂，按上表拆开。
-
-只有一个调用点、且没有独立契约或测试边界的短小 helper 保留在消费文件内；形成稳定概念、独立测试边界或多个消费方后再抽成文件或子域。
-
 ## React DSL 目录范式
 
 `@retikz/react` 的 DSL 代码按 owner 拆分：
@@ -93,17 +85,16 @@ shared/schemas <- parsers
 kernel/
   components/  Kernel DSL 标记组件
   protocol/    displayName、水合事件、embeddable 等跨 owner 共享协议
-  adapter/     JSX ↔ IR 转换逻辑：builder / unbuilder / 字段表
+  adapter/     JSX props ↔ Vanilla `InputXxx` 转换逻辑：字段表与调度
   runtime/     Layout 运行时、hydration 收集、renderer mode 接线
 sugar/         同步展开为 Kernel 的 Sugar 组件，可再按 path / shapes 分组
 render/        React 宿主渲染接线，可再按 svg / canvas / text 分组
 ```
 
-- 用户可用 React 组件文件用 `PascalCase.tsx`；非组件纯逻辑用 `kebab-case.ts`。
-- 内部 helper 用语义名，不用 `_xxx.ts`；例如 `fields.ts`、`display-names.ts`、`shape-helpers.ts`。
+- 组件、helper 与子目录命名遵循 `standard-name`。
 - 每个 owner 目录放 `index.ts` barrel，只导出当前 owner 的稳定 API。
 - `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
-- `kernel/adapter` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime` 或 `sugar`。
+- `kernel/adapter` 可以依赖 `kernel/components`、`kernel/protocol` 与 Vanilla `InputXxx` 合约，负责把 React props 构建为 Vanilla Input；不得依赖 `kernel/runtime` 或 `sugar`，也不得直接实现 Core Source IR builder 或绕过 Vanilla `normalizeXxx`。
 - `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 `render`；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`；`render` 不依赖 `kernel/runtime`。
 
 ## 导入导出

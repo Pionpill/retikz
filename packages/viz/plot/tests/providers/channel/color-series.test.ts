@@ -1,6 +1,6 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
-import { resolveCoreThemeColors, ThemeMode, ThemeStyle } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -10,11 +10,11 @@ import { lowerPlots } from '../../../src/pipeline/expand';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
-const sharedCategorical = resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light).categorical;
+const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>

@@ -25,7 +25,7 @@ import { usePreviewResources } from './hooks';
 import { buildConfiguredControlSlots } from './preview-panel';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
-import { usePreviewTheme } from './theme';
+import { isPreviewThemeStyleDocument, usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
@@ -45,8 +45,6 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
-  /** 是否允许当前预览单独切换四种内置 ThemeStyle。 */
-  enableThemeSwitch?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
   caption?: ReactNode;
 };
@@ -62,7 +60,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     size = 'md',
     previewClassName,
     hideCode = false,
-    enableThemeSwitch = false,
     caption,
   } = props;
   const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
@@ -71,10 +68,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
-  const previewTheme = usePreviewTheme(themeStyleSelection === 'inherit' ? undefined : themeStyleSelection);
+  const previewTheme = usePreviewTheme(themeStyleSelection);
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
+  const enableThemeSwitch = isPreviewThemeStyleDocument(segments?.[0]);
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
   const resourceRequest = useMemo(
@@ -227,7 +225,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}
-      themeStyle={previewTheme.style}
       themeStyleSelection={themeStyleSelection}
       onThemeStyleChange={setThemeStyleSelection}
       caption={caption}

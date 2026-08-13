@@ -1,4 +1,9 @@
-import type { AnyCompositeDefinition, CompositeExpandContext, ThemeStyleDefinition } from '../../contract';
+import type {
+  AnyCompositeDefinition,
+  CompositeExpandContext,
+  CompositeExpandResult,
+  ThemeStyleDefinition,
+} from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
@@ -27,7 +32,7 @@ type LowerOptions = {
 
 type CallableExpandDefinition = {
   schema: AnyCompositeDefinition['schema'];
-  expand: (node: unknown, context: CompositeExpandContext) => IRChild | Array<IRChild>;
+  expand: (node: unknown, context: CompositeExpandContext) => CompositeExpandResult;
 };
 
 /** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
@@ -86,8 +91,13 @@ const lowerCompositeTree = (
         value: child,
       });
       const produced = callable.expand(parsed, Object.freeze({ theme }));
-      const list = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced);
-      return expandList(list, depth + 1, `${path}::expand`, theme);
+      const result = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced);
+      if ((result.spatialHandles?.length ?? 0) > 0) {
+        throw new Error(
+          `lowerIRToKernel: composite '${key}' at ${path} declared spatial handles; use compileToScene() to obtain settled world-space geometry.`,
+        );
+      }
+      return expandList(result.children, depth + 1, `${path}::expand`, theme);
     }
     if (child.type === 'scope') {
       const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`, themeStyles);

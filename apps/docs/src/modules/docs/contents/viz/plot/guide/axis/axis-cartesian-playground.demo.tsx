@@ -43,7 +43,8 @@ const buildGrid = (values: AxisCartesianPlaygroundValues) => {
     : undefined;
 
   return {
-    ticks: { interval: { kind: 'number' as const, step: Number(values.gridStep) } },
+    ticks: { interval: { kind: 'number' as const, step: Number(values.gridStep), anchor: 0 } },
+    includeDomain: values.includeDomain,
     stroke: '#94a3b8',
     drawOpacity: values.gridOpacity,
     lineCap: 'round' as const,

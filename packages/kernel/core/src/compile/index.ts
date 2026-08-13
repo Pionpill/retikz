@@ -3,6 +3,7 @@ export { compileToScene, observeCompileToScene } from './compile';
 export { CompileWarningCode } from './constants';
 export * from './incremental';
 export * from './lower';
+export { DEFAULT_RESOLVED_THEME, resolveTheme } from './orchestration/theme';
 export { computeLayout } from './scene';
 export type {
   FontSpec,

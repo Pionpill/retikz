@@ -2,11 +2,10 @@ import type { ConnectorInput } from '@retikz/notation';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { ConnectorDefinition, createConnector } from '@retikz/notation';
+import { ConnectorProvider, createConnector } from '@retikz/notation';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { NotationConnectorReactNamespace } from '../shared';
 import { hasAuthoringChildren, resolveConnectorSteps } from './authoring';
 
 type ConnectorBaseProps = Omit<ConnectorInput, 'children' | 'way'>;
@@ -16,11 +15,8 @@ type ConnectorWay = Exclude<ConnectorInput['way'], undefined>;
 export type ConnectorProps = ConnectorBaseProps &
   Readonly<{ children?: ReactNode; way?: never } | { children?: never; way: ConnectorWay }>;
 
-const makeConnectorComposites = () => [ConnectorDefinition];
-
 const connectorEmbeddableAdapter: EmbeddableTier2Adapter<ConnectorProps> = {
   displayName: 'Connector',
-  namespace: NotationConnectorReactNamespace,
   contribute: props => {
     const { children, way, ...pathInput } = props;
     const hasChildren = hasAuthoringChildren(children);
@@ -30,7 +26,10 @@ const connectorEmbeddableAdapter: EmbeddableTier2Adapter<ConnectorProps> = {
     const input: ConnectorInput = hasChildren
       ? { ...pathInput, children: resolveConnectorSteps(children) }
       : { ...pathInput, way: way as ConnectorWay };
-    return { node: createConnector(input), datasets: {}, makeComposites: makeConnectorComposites };
+    return {
+      node: createConnector(input),
+      compositeDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
+    };
   },
 };
 

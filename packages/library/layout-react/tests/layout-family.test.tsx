@@ -7,9 +7,12 @@ import {
   createGridLayout,
   createOverlayLayout,
   FlexLayoutDefinition,
+  FlexLayoutProvider,
   GridLayoutDefinition,
+  GridLayoutProvider,
   LayoutItemKind,
   OverlayLayoutDefinition,
+  OverlayLayoutProvider,
 } from '@retikz/layout';
 import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/layout-react';
 import { buildIRWithContributions, Node } from '@retikz/react';
@@ -27,11 +30,9 @@ Foreign.displayName = 'Foreign';
 Foreign.isTier2Embeddable = true;
 Foreign.embeddableAdapter = {
   displayName: 'Foreign',
-  namespace: 'example.foreign',
   contribute: props => ({
     node: { type: 'node', id: props.id, position: [0, 0] },
-    datasets: {},
-    makeComposites: () => [],
+    compositeDependencies: { roots: [], providers: [] },
   }),
 };
 
@@ -87,13 +88,15 @@ describe('Layout React layout family', () => {
       }),
     ]);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0].namespace).toBe('layout.layout');
-    expect(result.contributions[0].makeComposites({})).toEqual([
-      FlexLayoutDefinition,
-      GridLayoutDefinition,
-      OverlayLayoutDefinition,
+    expect(result.contributions[0]?.roots).toEqual([
+      FlexLayoutProvider.key,
+      GridLayoutProvider.key,
+      OverlayLayoutProvider.key,
     ]);
-    expect(result.contributions[0].makeComposites({})).not.toBe(result.contributions[0].makeComposites({}));
+    expect(result.contributions[0]?.providers).toEqual([FlexLayoutProvider, GridLayoutProvider, OverlayLayoutProvider]);
+    expect(FlexLayoutProvider.makeDefinition({})).toBe(FlexLayoutDefinition);
+    expect(GridLayoutProvider.makeDefinition({})).toBe(GridLayoutDefinition);
+    expect(OverlayLayoutProvider.makeDefinition({})).toBe(OverlayLayoutDefinition);
   });
 
   it('uses itemKey instead of the reserved React key and accepts explicit IR as the sole child source', () => {
@@ -107,16 +110,18 @@ describe('Layout React layout family', () => {
     });
   });
 
-  it('shares one maker across all three container adapters', () => {
+  it('roots only the authored container and reuses its stable single-key provider', () => {
     const flex = FlexLayout.embeddableAdapter.contribute({});
     const grid = GridLayout.embeddableAdapter.contribute({ columns: [{ kind: 'fixed', value: 10 }] });
     const overlay = OverlayLayout.embeddableAdapter.contribute({});
 
-    expect(FlexLayout.embeddableAdapter.namespace).toBe('layout.layout');
-    expect(GridLayout.embeddableAdapter.namespace).toBe('layout.layout');
-    expect(OverlayLayout.embeddableAdapter.namespace).toBe('layout.layout');
-    expect(flex.makeComposites).toBe(grid.makeComposites);
-    expect(grid.makeComposites).toBe(overlay.makeComposites);
+    expect(flex.compositeDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
+    expect(grid.compositeDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(overlay.compositeDependencies).toEqual({
+      roots: [OverlayLayoutProvider.key],
+      providers: [OverlayLayoutProvider],
+    });
+    expect(FlexLayout.embeddableAdapter.contribute({}).compositeDependencies.providers[0]).toBe(FlexLayoutProvider);
   });
 
   it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {

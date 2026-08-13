@@ -24,7 +24,7 @@ type DotMark = z.infer<typeof DotMarkSchema>;
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 自定义 mark：记录被分派调用 + 读取的行数，返回一个可识别的空 layer scope */

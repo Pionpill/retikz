@@ -603,7 +603,7 @@ describe('Table Border Graph', () => {
               styleToken: {
                 key: 'table.border.top' as const,
                 source: 'local' as const,
-                path: '$style/neutral/light/table.border.top',
+                path: '$default/light/table.border.top',
               },
             },
           },

@@ -4,7 +4,7 @@
 
 ## 实现真源
 
-- [`catalog.ts`](../../../plot/src/providers/theme/catalog.ts)：内置 Clean Light / Dark 的完整 token preset
+- [`presets/plot.ts`](../../../../../apps/docs/src/modules/docs/components/component-preview/theme/presets/plot.ts)：docs 参考 Clean Light / Dark 的完整 token definition
 - [`resolve.ts`](../../../plot/src/providers/theme/resolve.ts)：preset、shared colors 与显式覆盖的级联
 - [`mapping.ts`](../../../plot/src/providers/theme/mapping.ts)：canonical token 与原生 `plotTheme` 的双向映射
 
@@ -21,17 +21,17 @@
 | Legend     | title、label、swatch、symbol、ramp 与间距保持紧凑，仍满足辨认和交互尺寸                       |
 | Palette    | categorical / series / sector 默认映射 Core effective palette；不在 Plot 复制 Clean 分类色值  |
 
-当前内置 sequential / diverging 方向分别使用 `Cividis` 与 `RdBu`；它们是 Plot preset 选择，不属于公共 Clean skill。
+当前 docs reference sequential / diverging 方向分别使用 `Cividis` 与 `RdBu`；它们是宿主 Plot definition 的选择，不属于公共 Clean skill。
 
 ## 边界与覆盖
 
 - mark 颜色优先消费 effective palette，不在 mark、guide 或 lowering 中写 Clean 专属色值。
 - 内建 Plot preset 从 Core 注入 categorical / series / sector；Plot 只维护 sequential / diverging 与领域颜色角色。
 - Plot style definition 显式提供的 palette 高于 Core baseline，之后仍可由 `plotThemeTokens` 与结构化 `plotTheme` 覆盖。
-- 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于内置 Clean；不得为维持“简洁”删除用户设置。
+- 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于 docs Clean definition；不得为维持“简洁”删除用户设置。
 - `axis.title.enabled` 的 Clean 基础值为 `false`；全局 token、dimension rule 或结构化 `plotTheme.axis.title` 可以重新开启，Axis guide 的 title 继续只负责内容与局部样式。
 - Plot 只维护自己的 surface、typography、label、Axis、Legend 和 palette，不修改 Chart canvas 或 docs shell。
-- 实现不得通过 `ThemeStyle.Clean` 特判绕开 definition、registry、resolve 与 mapping 路径。
+- 实现不得通过 `style === 'clean'` 特判绕开 definition、registry、resolve 与 mapping 路径。
 
 ## 验收
 

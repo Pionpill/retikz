@@ -13,7 +13,7 @@ import {
   ScaleSchema,
   TransformSchema,
 } from '@retikz/plot';
-import { LegendArtifactSchema, LegendSchema } from '@retikz/standard';
+import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard';
 import { TableSpecSchema } from '@retikz/table';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -46,6 +46,10 @@ describe('SCHEMA_REGISTRY', () => {
         schema: LegendArtifactSchema,
         url: '/library/standard/composite/legend#legendartifactschema',
       },
+      SurfaceSchema: {
+        schema: SurfaceSchema,
+        url: '/library/standard/composite/surface#surfaceschema',
+      },
       LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
       DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/logic-unit' },
       ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
@@ -72,6 +76,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/composite/legend#legendschema');
     expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/composite/legend#legendartifactschema');
+    expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/composite/surface#surfaceschema');
   });
 
   it('documents the Layout Inspector spacing schema on the Layout runtime reference page', () => {

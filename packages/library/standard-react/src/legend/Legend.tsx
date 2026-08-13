@@ -2,11 +2,10 @@ import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { LegendInput } from '@retikz/standard';
 import type { FC, ReactNode } from 'react';
 
-import { createLegend, LegendContentKind, LegendDefinition } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendProvider } from '@retikz/standard';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
-import { StandardLegendReactNamespace } from '../shared';
 import { convertLegendItemsChildren, convertLegendRampChildren } from './convert-children';
 
 type LegendItemsContentInput = Extract<LegendInput['content'], { kind: 'items' }>;
@@ -35,9 +34,6 @@ export type LegendRampFormProps = LegendSharedProps &
 
 /** React Legend 的两个显式无头 authoring form */
 export type LegendProps = LegendItemsFormProps | LegendRampFormProps;
-
-/** 当前 Layout 内贡献 Standard LegendDefinition 的稳定 maker */
-const makeLegendComposites = () => [LegendDefinition];
 
 /** 将 items form 的提升字段与 marker tree 组装为 Standard LegendInput */
 const createItemsLegend = (props: LegendItemsFormProps) => {
@@ -77,7 +73,6 @@ const createRampLegend = (props: LegendRampFormProps) => {
 
 const legendEmbeddableAdapter: EmbeddableTier2Adapter<LegendProps> = {
   displayName: 'Legend',
-  namespace: StandardLegendReactNamespace,
   contribute: props => {
     if ('content' in props || 'title' in props || !('kind' in props)) {
       throw new Error(
@@ -86,8 +81,7 @@ const legendEmbeddableAdapter: EmbeddableTier2Adapter<LegendProps> = {
     }
     return {
       node: props.kind === LegendContentKind.Items ? createItemsLegend(props) : createRampLegend(props),
-      datasets: {},
-      makeComposites: makeLegendComposites,
+      compositeDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
     };
   },
 };

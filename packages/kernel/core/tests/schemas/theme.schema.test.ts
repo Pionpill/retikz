@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRTheme, ResolvedTheme, ThemeModeValue, ThemeStyleValue } from '../../src';
 
-import { SceneSchema, ScopeSchema, ThemeMode, ThemeSchema, ThemeStyle } from '../../src';
+import { SceneSchema, ScopeSchema, ThemeMode, ThemeSchema } from '../../src';
 
 describe('Theme schema', () => {
   it('只公开 selector 词汇和派生类型', () => {
@@ -14,15 +14,16 @@ describe('Theme schema', () => {
     }>();
     expectTypeOf<ResolvedTheme>().toMatchTypeOf<
       Readonly<{
-        style: string;
+        style?: string;
         mode: ThemeModeValue;
+        colors: unknown;
       }>
     >();
   });
 
   it('接受 JSON-safe selector 并保持 round-trip', () => {
     const parsed = ThemeSchema.parse({
-      style: ThemeStyle.Academic,
+      style: 'academic',
       mode: ThemeMode.Dark,
     });
 
@@ -37,14 +38,14 @@ describe('Theme schema', () => {
     expect(ThemeSchema.safeParse({ style: 'paper' }).success).toBe(true);
     expect(ThemeSchema.safeParse({ style: '' }).success).toBe(false);
     expect(ThemeSchema.safeParse({ mode: 'system' }).success).toBe(false);
-    expect(ThemeSchema.safeParse({ palettePreset: ThemeStyle.Vibrant }).success).toBe(false);
+    expect(ThemeSchema.safeParse({ palettePreset: 'vibrant' }).success).toBe(false);
   });
 
   it('Scene 与 Scope 复用闭合 Theme schema', () => {
     const scene = SceneSchema.parse({
       type: 'scene',
       version: 1,
-      theme: { style: ThemeStyle.Clean, mode: ThemeMode.Dark },
+      theme: { style: 'clean', mode: ThemeMode.Dark },
       children: [{ type: 'scope', theme: { mode: ThemeMode.Light }, children: [] }],
     });
 

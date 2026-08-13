@@ -286,19 +286,80 @@ function validateDependencyPolicy({ manifest, packageToGroup, releaseGroupsConfi
         `${manifest.name} depends on ${dependency.name} with ${dependency.range}; expected ${expectedRange} in ${dependency.field}`,
       );
     }
+  }
 
-    if (
-      sourceGroupName !== targetGroupName &&
-      sourceGroup.kind === 'feature' &&
-      targetGroup.kind === 'feature' &&
-      targetGroup.domain !== 'library'
-    ) {
-      diagnostics.push(
-        `${manifest.name} cannot depend on feature group ${targetGroupName} from feature group ${sourceGroupName}`,
-      );
+  return diagnostics;
+}
+
+function validateFeatureDependencyGraph({ releaseGroupsConfig, packageRecords, packageToGroup }) {
+  const diagnostics = [];
+  const declaredEdges = new Map();
+  for (const [groupName, group] of Object.entries(releaseGroupsConfig)) {
+    const dependsOn = group.dependsOn ?? [];
+    if (!Array.isArray(dependsOn)) {
+      diagnostics.push(`${groupName} dependsOn must be an array`);
+      continue;
+    }
+    const seen = new Set();
+    for (const target of dependsOn) {
+      if (typeof target !== 'string' || !Object.hasOwn(releaseGroupsConfig, target)) {
+        diagnostics.push(`${groupName} dependsOn references unknown group ${String(target)}`);
+        continue;
+      }
+      if (target === groupName) diagnostics.push(`${groupName} dependsOn must not reference itself`);
+      if (seen.has(target)) diagnostics.push(`${groupName} dependsOn must not contain duplicate group ${target}`);
+      seen.add(target);
+    }
+    declaredEdges.set(groupName, seen);
+  }
+
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = groupName => {
+    if (visiting.has(groupName)) {
+      diagnostics.push(`release group dependsOn contains a cycle at ${groupName}`);
+      return;
+    }
+    if (visited.has(groupName)) return;
+    visiting.add(groupName);
+    for (const target of declaredEdges.get(groupName) ?? []) visit(target);
+    visiting.delete(groupName);
+    visited.add(groupName);
+  };
+  for (const groupName of Object.keys(releaseGroupsConfig)) visit(groupName);
+
+  const realEdges = new Map();
+  for (const { manifest } of packageRecords) {
+    const sourceGroupName = packageToGroup.get(manifest.name);
+    if (sourceGroupName === undefined) continue;
+    for (const dependency of getWorkspaceDependencies(manifest)) {
+      const targetGroupName = packageToGroup.get(dependency.name);
+      if (targetGroupName === undefined || targetGroupName === sourceGroupName) continue;
+      const sourceGroup = releaseGroupsConfig[sourceGroupName];
+      const targetGroup = releaseGroupsConfig[targetGroupName];
+      if (sourceGroup.kind !== 'feature' || targetGroup.kind !== 'feature' || targetGroup.domain === 'library') {
+        continue;
+      }
+      const targets = realEdges.get(sourceGroupName) ?? new Set();
+      targets.add(targetGroupName);
+      realEdges.set(sourceGroupName, targets);
     }
   }
 
+  for (const [source, targets] of realEdges) {
+    for (const target of targets) {
+      if (!(declaredEdges.get(source) ?? new Set()).has(target)) {
+        diagnostics.push(`${source} has an undeclared feature dependency on ${target}`);
+      }
+    }
+  }
+  for (const [source, targets] of declaredEdges) {
+    for (const target of targets) {
+      if (!(realEdges.get(source) ?? new Set()).has(target)) {
+        diagnostics.push(`${source} dependsOn ${target} but no package consumes that feature group`);
+      }
+    }
+  }
   return diagnostics;
 }
 
@@ -365,6 +426,14 @@ export function validateReleaseGroupPackages({ releaseGroups: releaseGroupsConfi
       ...validateEsmPublishContract(record.manifest),
     );
   }
+
+  diagnostics.push(
+    ...validateFeatureDependencyGraph({
+      releaseGroupsConfig,
+      packageRecords,
+      packageToGroup,
+    }),
+  );
 
   diagnostics.push(...validateGroupVersions({ packageRecords, packageToGroup }));
 

@@ -1,4 +1,4 @@
-import { compileToScene, NodeTextColor, ThemeMode, ThemeStyle } from '@retikz/core';
+import { compileToScene, NodeTextColor, ThemeMode } from '@retikz/core';
 import { Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,7 @@ import { EdgeLabel } from '../../../src/sugar';
 describe('buildIR', () => {
   it('<Scope theme> 透传为可继承 IRScope Theme', () => {
     const ir = buildIR(
-      <Scope theme={{ style: ThemeStyle.Academic, mode: ThemeMode.Dark }}>
+      <Scope theme={{ style: 'academic', mode: ThemeMode.Dark }}>
         <Node id="inside" position={[0, 0]} />
       </Scope>,
     );

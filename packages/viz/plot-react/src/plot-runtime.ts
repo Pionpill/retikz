@@ -8,11 +8,23 @@ import type { PlotProps } from './Plot';
 
 import { buildPlotSpec, resolveLabelOf } from './adapter';
 
-type PlotRuntime = {
+/** `Plot` props 的完整 authoring 结果 */
+export type ResolvedPlotAuthoring = Readonly<{
+  /** 完整并通过 schema 校验的 PlotSpec */
   spec: IRPlotSpec;
+  /** runtime-only dataset table */
   datasets: ExternalDatasets;
+  /** Plot lowering runtime options */
   lowerOptions: LowerPlotsOptions;
-};
+}>;
+
+/** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
+export type ResolvePlotAuthoringOptions = Readonly<{
+  /** 是否为 Tier 2 embedded authoring */
+  embedded?: boolean;
+  /** DSL 缺省时使用的稳定数据引用 */
+  defaultDataReference?: string;
+}>;
 
 /** 组合 DSL 内部固定的数据集名（用户不可见） */
 const DSL_DATA_REF = '__plot';
@@ -131,9 +143,13 @@ const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
 };
 
 /** 解析 `<Plot>` props 为下沉运行时输入。 */
-export const resolvePlotRuntime = (props: PlotProps, options: { embedded?: boolean } = {}): PlotRuntime => {
+export const resolvePlotAuthoring = (
+  props: PlotProps,
+  options: ResolvePlotAuthoringOptions = {},
+): ResolvedPlotAuthoring => {
   const dataRef = !props.spec
     ? (props.dataRef ??
+      options.defaultDataReference ??
       (options.embedded && props.id !== undefined
         ? props.id
         : options.embedded
@@ -188,7 +204,7 @@ export const resolvePlotLineage = (
   options: { embedded?: boolean } = {},
 ): PlotLineageRun | undefined => {
   if (props.lineage === false) return undefined;
-  const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, options);
+  const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, options);
   return lowerPlotWithLineage(spec, datasets, {
     ...lowerOptions,
     lineage: props.lineage ?? {},

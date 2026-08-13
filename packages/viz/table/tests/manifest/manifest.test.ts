@@ -10,6 +10,7 @@ import {
   TableComposite,
   TableLayoutManifestSchema,
 } from '../../src';
+import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
 /** 断言 JSON 风格对象图的每一层都已冻结 */
 const expectDeepFrozen = (value: unknown): void => {
@@ -24,6 +25,7 @@ describe('Table layout manifest', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       data: { reference: 'people' },
       structure: {
         kind: 'detail',
@@ -46,7 +48,7 @@ describe('Table layout manifest', () => {
     const result = compileTable(
       spec,
       { people: [{ name: 'Ada' }] },
-      { theme: { style: 'clean', mode: 'light' }, compile: { padding: 0 } },
+      { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
 
     expect(TableLayoutManifestSchema.parse(result.manifest)).toEqual(result.manifest);

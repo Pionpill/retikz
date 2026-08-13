@@ -30,7 +30,7 @@ const contentNode = (id: string, fill: string, text = id): IRChild => ({
 });
 
 describe('Presented Table layout transaction', () => {
-  it('does not claim neutral token seeds when token resolution is omitted', () => {
+  it('does not claim a named style when token resolution is omitted', () => {
     const semantic = normalizeTableStructure({ kind: 'manual', rows: [['plain']] });
     const presented = presentTable(formatDefaultTable(semantic));
     let transaction: ResolvedTableTransaction | undefined;
@@ -57,7 +57,7 @@ describe('Presented Table layout transaction', () => {
     );
 
     expect(transaction?.manifest).toMatchObject({
-      style: { style: 'clean', themeMode: 'light' },
+      style: { themeMode: 'light' },
       cells: [{ appearance: {} }],
       borders: [],
     });

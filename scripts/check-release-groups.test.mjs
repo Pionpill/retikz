@@ -478,19 +478,6 @@ test('cross-group workspace:* dependency is reported', () => {
   );
 });
 
-test('feature release groups cannot depend on other feature release groups', () => {
-  const packages = structuredClone(basePackages);
-  packages.find(({ manifest }) => manifest.name === '@retikz/plot').manifest.dependencies['@retikz/table'] =
-    'workspace:^';
-
-  const diagnostics = validateReleaseGroupPackages({
-    releaseGroups: baseGroups,
-    packageRecords: packages,
-  });
-
-  assert.ok(diagnostics.some(diagnostic => diagnostic.includes('@retikz/plot cannot depend on feature group table')));
-});
-
 test('viz feature release groups can depend on library feature release groups', () => {
   const packages = structuredClone(basePackages);
   packages.find(({ manifest }) => manifest.name === '@retikz/plot').manifest.dependencies['@retikz/standard'] =
@@ -502,6 +489,102 @@ test('viz feature release groups can depend on library feature release groups', 
   });
 
   assert.deepEqual(diagnostics, []);
+});
+
+const chartGroup = dependsOn => ({
+  domain: 'viz',
+  kind: 'feature',
+  ...(dependsOn === undefined ? {} : { dependsOn }),
+  packages: ['@retikz/chart'],
+});
+
+const chartPackage = dependencies => ({
+  path: 'packages/viz/chart/package.json',
+  manifest: {
+    ...createRootPublishContract(),
+    name: '@retikz/chart',
+    version: '0.1.0-alpha.1',
+    retikz: {
+      domain: 'viz',
+      releaseGroup: 'chart',
+      publishable: true,
+    },
+    ...(dependencies === undefined ? {} : { dependencies }),
+  },
+});
+
+const withChartTopology = ({ dependsOn, dependencies } = {}) => ({
+  releaseGroups: { ...baseGroups, chart: chartGroup(dependsOn) },
+  packageRecords: [...structuredClone(basePackages), chartPackage(dependencies)],
+});
+
+test('an explicit Chart-to-Plot feature dependency is valid when a package consumes Plot', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({
+    dependsOn: ['plot'],
+    dependencies: { '@retikz/plot': 'workspace:^' },
+  });
+
+  assert.deepEqual(validateReleaseGroupPackages({ releaseGroups, packageRecords }), []);
+});
+
+test('an explicit feature dependency must name an existing release group', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({ dependsOn: ['missing'] });
+  const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
+
+  assert.ok(diagnostics.some(diagnostic => diagnostic.includes('chart dependsOn references unknown group missing')));
+});
+
+test('an explicit feature dependency must not repeat a release group', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({
+    dependsOn: ['plot', 'plot'],
+    dependencies: { '@retikz/plot': 'workspace:^' },
+  });
+  const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
+
+  assert.ok(
+    diagnostics.some(diagnostic => diagnostic.includes('chart dependsOn must not contain duplicate group plot')),
+  );
+});
+
+test('an explicit feature dependency must not target its own release group', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({ dependsOn: ['chart'] });
+  const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
+
+  assert.ok(diagnostics.some(diagnostic => diagnostic.includes('chart dependsOn must not reference itself')));
+});
+
+test('the explicit feature dependency graph must be acyclic', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({
+    dependsOn: ['plot'],
+    dependencies: { '@retikz/plot': 'workspace:^' },
+  });
+  releaseGroups.plot.dependsOn = ['chart'];
+  packageRecords.find(({ manifest }) => manifest.name === '@retikz/plot').manifest.dependencies['@retikz/chart'] =
+    'workspace:^';
+
+  const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
+
+  assert.ok(diagnostics.some(diagnostic => diagnostic.includes('release group dependsOn contains a cycle')));
+});
+
+test('an explicit feature dependency must be backed by a real package dependency', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({ dependsOn: ['plot'] });
+  const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
+
+  assert.ok(
+    diagnostics.some(diagnostic =>
+      diagnostic.includes('chart dependsOn plot but no package consumes that feature group'),
+    ),
+  );
+});
+
+test('a real feature dependency must be declared directly by its release group', () => {
+  const { releaseGroups, packageRecords } = withChartTopology({
+    dependencies: { '@retikz/plot': 'workspace:^' },
+  });
+  const diagnostics = validateReleaseGroupPackages({ releaseGroups, packageRecords });
+
+  assert.ok(diagnostics.some(diagnostic => diagnostic.includes('chart has an undeclared feature dependency on plot')));
 });
 
 test('Foundation belongs to the kernel release group with its Zod-only publish contract', async () => {

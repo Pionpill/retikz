@@ -1,4 +1,4 @@
-﻿import type { IRChild, IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -51,7 +51,7 @@ const expandOf = (
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
   const [definition] = lowerPlots(datasets, { width: options.width ?? 480, height: options.height ?? 300 });
-  return definition.expand(spec) as IRScope;
+  return definition.expand(spec).children[0] as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

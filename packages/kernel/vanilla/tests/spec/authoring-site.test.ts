@@ -13,11 +13,9 @@ describe('Vanilla authored sites', () => {
     const embeddedAuthoring = Object.freeze({ role: 'embedded' });
     const adapter: VanillaTier2Adapter<Record<string, never>> = {
       kind: 'fixture-embedded',
-      namespace: 'fixture',
       lower: () => ({
         node: { namespace: 'fixture', type: 'embedded' },
-        datasets: {},
-        makeComposites: () => [],
+        compositeDependencies: { roots: [], providers: [] },
       }),
     };
 

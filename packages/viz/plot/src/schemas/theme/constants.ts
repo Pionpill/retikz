@@ -24,6 +24,7 @@ export const PlotThemeToken = {
   AxisGridStroke: 'axis.grid.stroke',
   AxisGridStrokeWidth: 'axis.grid.strokeWidth',
   AxisGridDrawOpacity: 'axis.grid.drawOpacity',
+  AxisGridIncludeDomain: 'axis.grid.includeDomain',
   LegendTitleForeground: 'legend.title.foreground',
   LegendTitleFontSize: 'legend.title.font.size',
   LegendTitleFontWeight: 'legend.title.font.weight',
@@ -43,6 +44,7 @@ export const PlotThemeToken = {
   PlotPaletteSector: 'plot.palette.sector',
   PlotPaletteSequential: 'plot.palette.sequential',
   PlotPaletteDiverging: 'plot.palette.diverging',
+  PlotPaletteShape: 'plot.palette.shape',
 } as const;
 
 /** Plot 主题 token key 取值 */

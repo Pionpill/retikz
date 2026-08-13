@@ -62,11 +62,11 @@ const PlotThemeToken = {
 
 Axis title 是否显示使用 `AxisTitleEnabled: 'axis.title.enabled'`。该 token 只控制已经在 Axis guide 上提供的 title 内容是否进入 lowering，不创建 title，也不改变文本、placement 或 layout 语义。
 
-Neutral、Academic 与 Vibrant 的基础值为开启，Clean 的基础值为关闭。全局 token 与 dimension rule 可以重新开启 Clean 的全部或指定 Axis title；原生 `plotTheme.axis.title` 使用 `false | ThemeAxisTitleStyle`，`false` 关闭、样式对象开启并提供视觉默认值。Axis guide 的 `title` 继续提供内容和最高优先级的局部样式，但内容本身不会越过 `axis.title.enabled: false` 自动重新开启标题。
+Neutral 以及 docs Academic / Vibrant reference definitions 的基础值为开启，docs Clean reference definition 的基础值为关闭。全局 token 与 dimension rule 可以重新开启 Clean 的全部或指定 Axis title；原生 `plotTheme.axis.title` 使用 `false | ThemeAxisTitleStyle`，`false` 关闭、样式对象开启并提供视觉默认值。Axis guide 的 `title` 继续提供内容和最高优先级的局部样式，但内容本身不会越过 `axis.title.enabled: false` 自动重新开启标题。
 
 ## 决策：Axis Title Padding 使用基础叶子 Token
 
-Axis title 与 tick label 带之间的距离使用 `AxisTitlePadding: 'axis.title.padding'`。该 token 是非负用户坐标值，四种内建 style 的基础值统一为 `12`，并映射到原生 `plotTheme.axis.title.padding`。
+Axis title 与 tick label 带之间的距离使用 `AxisTitlePadding: 'axis.title.padding'`。该 token 是非负用户坐标值，Neutral 与 docs 三个 reference definitions 的基础值统一为 `12`，并映射到原生 `plotTheme.axis.title.padding`。
 
 它与其他 Axis token 共用同一 dimension rule，因此可以只调整某个 Axis 的 title spacing。原生 `plotTheme.axis.title.padding` 继续高于全局 token 与命中的 rule，单个 Axis guide 的 `title.padding` 最终优先；title placement、orientation、rotate、anchor、shift 与 layout 不进入 canonical token。
 
@@ -90,12 +90,12 @@ type PlotThemeStyleDefinition = Readonly<{
 
 内建 style 的 Axis grid 规则为：
 
-| Style    | 基础值 | 规则                 |
-| -------- | ------ | -------------------- |
-| Neutral  | 关闭   | y dimension 开启     |
-| Academic | 关闭   | 无                   |
-| Vibrant  | 关闭   | x / y dimension 开启 |
-| Clean    | 关闭   | y dimension 开启     |
+| Style              | 基础值 | 规则                 |
+| ------------------ | ------ | -------------------- |
+| Neutral            | 关闭   | y dimension 开启     |
+| Academic reference | 关闭   | 无                   |
+| Vibrant reference  | 关闭   | x / y dimension 开启 |
+| Clean reference    | 关闭   | y dimension 开启     |
 
 Clean 还通过同一 rule 只为 x dimension 开启 `axis.line.enabled`；基础 `axis.tick.mark` 保持关闭，因此 x Axis 只有轴线与 label，不绘制 tick mark，y Axis line 继续关闭。
 

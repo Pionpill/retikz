@@ -7,21 +7,24 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ## 函数
 
-| API                           | Signature                                                              | 用途                                                                |
-| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `compileToScene`              | `(ir: IRScene, options?: CompileOptions) => CompileResult`             | 主编译入口；同次返回 `scene` 与 immutable `artifacts`               |
-| `observeCompileToScene`       | `(ir, options, observers) => ObservedCompileResult`                    | 显式创建观测会话，返回主结果与按 definition 排序的 observer outputs |
-| `lowerIRToKernel`             | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`    | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR              |
-| `computeLayout`               | `(points, padding, round) => Layout`                                   | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用        |
-| `resolveBoxSpacing`           | `(value, fallback) => BoundsInsets`                                    | 把统一值或按边覆盖值归一化为完整四边间距                            |
-| `fallbackMeasurer`            | `(text, font) => TextMetrics`                                          | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                   |
-| `formatCompileWarning`        | `(warning: CompileWarning) => string`                                  | 把结构化 warning 格式化为统一的可读消息                             |
-| `formatCompileOccurrence`     | `(locator: CompileOccurrenceLocator) => string`                        | 格式化 artifact 的 occurrence locator                               |
-| `isNodeLayoutCompileArtifact` | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact` | 缩窄 opt-in Node layout artifact                                    |
+| API                            | Signature                                                                                               | 用途                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `compileToScene`               | `(ir: IRScene, options?: CompileOptions) => CompileResult`                                              | 主编译入口；同次返回 `scene` 与 immutable `artifacts`                                    |
+| `observeCompileToScene`        | `(ir, options, observers) => ObservedCompileResult`                                                     | 显式创建观测会话，返回主结果与按 definition 排序的 observer outputs                      |
+| `lowerIRToKernel`              | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`                                     | 只递归展开 composite，返回不含 Tier 2 节点的 Kernel IR                                   |
+| `resolveCompositeDependencies` | `(options: ResolveCompositeDependenciesOptions) => ReadonlyArray<AnyCompositeDefinition>`               | 解析 rooted provider graph，返回可直接写入 `CompileOptions.composites` 的有序 Definition |
+| `selectSpatialHandles`         | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => ReadonlyArray<QualifiedSpatialHandle>` | 精确筛选零到多个 qualified spatial handles                                               |
+| `resolveSpatialHandle`         | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => QualifiedSpatialHandle`                | 要求 selector 恰好命中一个 handle；miss / ambiguity 时抛错                               |
+| `computeLayout`                | `(points, padding, round) => Layout`                                                                    | 从 bbox 候选点计算场景边界；通常由 `compileToScene` 内部调用                             |
+| `resolveBoxSpacing`            | `(value, fallback) => BoundsInsets`                                                                     | 把统一值或按边覆盖值归一化为完整四边间距                                                 |
+| `fallbackMeasurer`             | `(text, font) => TextMetrics`                                                                           | 默认文字度量；不准但可运行，适合无 DOM 环境的兜底                                        |
+| `formatCompileWarning`         | `(warning: CompileWarning) => string`                                                                   | 把结构化 warning 格式化为统一的可读消息                                                  |
+| `formatCompileOccurrence`      | `(locator: CompileOccurrenceLocator) => string`                                                         | 格式化 artifact 的 occurrence locator                                                    |
+| `isNodeLayoutCompileArtifact`  | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact`                                  | 缩窄 opt-in Node layout artifact                                                         |
 
 `compileToScene` 先遍历并注册当前作用域内的 node / coordinate，再回填延迟发出的 path，因此路径可以引用同一作用域中写在它后面的目标。输出随后按 `zIndex` 升序稳定排序；只有 `zIndex` 相同的图元才保持声明顺序。
 
-`lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；遇到带 `compile` 分支的 layout-aware composite 也会明确报错，因为独立 lowering 没有文字测量、provider、引用环境和父级约束。完整 `compileToScene` 对未注册 composite 发出 `COMPOSITE_NOT_REGISTERED` 并跳过；两条路径遇到嵌套超限或环都会抛错。
+`lowerIRToKernel` 不做布局或 Scene 发出，只消费 `composites` 与 `maxCompositeDepth`。未注册 composite 会直接抛错；遇到带 `compile` 分支的 layout-aware composite 也会明确报错，因为独立 lowering 没有文字测量、provider、引用环境和父级约束。`expand` 返回非空 `spatialHandles` 时也会同步失败，并提示改用 `compileToScene()` 获取结算后的 world geometry；无声明或空声明不受影响。完整 `compileToScene` 对未注册 composite 发出 `COMPOSITE_NOT_REGISTERED` 并跳过；两条路径遇到嵌套超限或环都会抛错。
 
 ### 盒间距归一化
 
@@ -87,9 +90,26 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 - `expand(node, context)` 在当前 Theme 上下文中做结构展开；
 - `compile(node, context)` 通过 `context.proposal` 与 `layoutChild(child, proposal)` 在完整 compile 环境中求值真实子内容。
 
-两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为 `neutral + light` → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式 `style`、`mode` 或 namespace/token key。`ResolvedTheme` 还提供递归冻结的 `tokens` 与 detached/frozen 的 `colors` shared view；`colors.semantic` 固定提供 error/success/warning，`colors.categorical` 始终非空，重复值按稳定 index 取余消费。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
+`expand` 只接受 `{ children, spatialHandles? }`，不接受裸 child 或 child array shorthand。布局感知 `compile` 的结果也可提供同一 `spatialHandles` declaration 数组；两条路径共用相同的 callback-bound 校验。
+
+两个分支都从 `context.theme` 读取当前位置完整、冻结的 `ResolvedTheme`。解析顺序固定为默认 light 基线 → Scene → 外层 Scope → 内层 Scope，每层只覆盖显式 `style`、`mode` 或 namespace/token key。`ResolvedTheme` 还提供递归冻结的 `tokens` 与 detached/frozen 的 `colors` shared view；`colors.semantic` 固定提供 error/success/warning，`colors.categorical` 始终非空，重复值按稳定 index 取余消费。`lowerIRToKernel()` 对 `expand` 使用同一解析器；layout-aware definition 仍在 callback 前 fail-loud。Theme 只供 Composite 物化自己的领域默认，最终 Scene 与 renderer 不携带或解释 Theme。
 
 带 `artifactSchema` 的 layout-aware definition 可以在同一次 `compile` 返回 JSON-safe `artifact`。该 schema 既约束公开 `CompileResult.artifacts`，也是显式 observer 读取最终 Composite 所属者产物的契约；Composite 本身不包含 Inspector 定义。
+
+### Provider graph 装配
+
+Provider graph 是编译前的纯装配协议，不是第二套 composite registry。React、Vanilla 和可复用 domain 工具收集 `CompositeDependencyContribution`，调用 `resolveCompositeDependencies()` 得到有序 Definition 数组，再把结果交给现有 `CompileOptions.composites`。
+
+| 公开契约                              | 关键字段 / 结果                                     | 职责                                                      |
+| ------------------------------------- | --------------------------------------------------- | --------------------------------------------------------- |
+| `CompositeProviderKey`                | `namespace`、`type`                                 | 无歧义标识一个最终 Composite Definition                   |
+| `CompositeDependencyProvider`         | `key`、`dependencies`、`datasets`、`makeDefinition` | 声明一个 Definition、直接依赖与 runtime-only 数据         |
+| `CompositeDependencyContribution`     | `roots`、`providers`                                | 声明当前 authored node 需要的根能力与已导入 provider 集合 |
+| `ResolveCompositeDependenciesOptions` | `contributions`、`composites?`                      | 把 provider 结果与最终显式 Definition 合并                |
+
+解析器先完成完整预检，再执行 maker：同 key 的 maker 引用与有序 dependencies 必须一致；同 provider key、同 dataset reference 只有 `Object.is` 同源才可去重；缺失 provider 和 cycle 会报告完整链。输出按 dependency-first、首次可达顺序排列，每个 maker 只执行一次。
+
+`options.composites` 是最终显式 Definition 通道，不是嵌套 adapter 的私有 sidecar。Provider 结果先加入，显式 Definition 保留 authored order 后追加；同 key 同对象去重，同 key 不同对象立即失败。直接调用 `compileToScene()` 的作者如果已经拥有完整 Definition 数组，可以跳过 provider graph，继续直接传 `CompileOptions.composites`。
 
 `LayoutProposal` 必须恰好包含 `x` 与 `y`；每条轴使用 `LayoutAxisProposal`：
 
@@ -220,10 +240,11 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 `compileToScene` 返回 `CompileResult`：
 
-| Field       | Type                             | 说明                                                                 |
-| ----------- | -------------------------------- | -------------------------------------------------------------------- |
-| `scene`     | `Scene`                          | 已布局、可直接交给 renderer 的场景                                   |
-| `artifacts` | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts |
+| Field            | Type                             | 说明                                                                     |
+| ---------------- | -------------------------------- | ------------------------------------------------------------------------ |
+| `scene`          | `Scene`                          | 已布局、可直接交给 renderer 的场景                                       |
+| `artifacts`      | `ReadonlyArray<CompileArtifact>` | 与 `scene` 同一次 canonical compile 产生的 immutable typed artifacts     |
+| `spatialHandles` | `SpatialHandleIndex`             | 同 revision 的 qualified world-space index；无声明时为冻结的空 `entries` |
 
 `observeCompileToScene()` 返回 `{ primary, observerOutputs }`。`primary` 与同一 IR/options 下的普通 `compileToScene()` 等价；`observerOutputs` 按传入 definitions 的顺序排列，每项包含稳定 `key` 与该 session 的完成值。
 
@@ -238,6 +259,14 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
 
 自定义 renderer 必须消费 `resources` 与 `animations`，否则会丢渐变 / 裁剪 / 镜头动画。如果没有任何 bbox 候选点，`computeLayout` 返回 `100×100` 的兜底 layout。
 
+### Spatial handle sidecar
+
+每个 `QualifiedSpatialHandle` 都包含声明者的 `key` / `role`、world-space rect AABB、稳定 authored-order tags、可选 JSON payload、`originOccurrence` / `finalOccurrence`，以及从外到内的 `ownerPath`。显式 composite `id` 进入 owner 的 `instanceId`；匿名 owner 只由当前 compile occurrence 区分，不会获得自动计数 id。
+
+selector 字段全部精确匹配。`owner` 只匹配声明者；`within` 按顺序匹配其祖先路径中的连续子路径；`tags` 要求结果包含给出的全部标签。`key` 只在一个 owner occurrence 内唯一，跨 owner 查询应补足 `within`、`owner.instanceId` 或 occurrence。
+
+空间索引是工具链 sidecar，不属于 Scene。SVG / Canvas / SSR renderer 只接收 `scene`，不会读取、复制或变换 `spatialHandles`。React `<Layout onCompileResult>` 在 static / retained 成功 commit 后发布完整 `CompileResult`；Vanilla 的 authored-input `SceneResult.compileResult` 与 live view `compileResult` 暴露当前结果，直接传入预编译 Scene 时为 `undefined`。失败 revision 保留上一个已提交结果；用户 callback 抛错不会回滚成功 commit。
+
 <SourceLinks
   sources={[
     {
@@ -251,6 +280,30 @@ Node label 会把一次测量阶段得到的 `width` / `height` / `ascent` / `de
       path: 'packages/kernel/core/src/compile/types.ts',
       startLine: 70,
       endLine: 128,
+    },
+    {
+      label: 'Spatial declaration、qualified output 与 selector 合同',
+      path: 'packages/kernel/core/src/contract/spatial-handle/types.ts',
+      startLine: 7,
+      endLine: 85,
+    },
+    {
+      label: 'Spatial handle 精确选择与唯一解析',
+      path: 'packages/kernel/core/src/contract/spatial-handle/query.ts',
+      startLine: 48,
+      endLine: 65,
+    },
+    {
+      label: 'React 完整 compile result 出口',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 263,
+      endLine: 268,
+    },
+    {
+      label: 'Vanilla SceneResult 与 authored / Scene 输入分支',
+      path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
+      startLine: 35,
+      endLine: 116,
     },
     {
       label: 'observer、所属者产物与隔离片段合同',

@@ -22,11 +22,9 @@ type EmbeddableType<TProps> = FC<TProps> & {
 /** 标准 adapter：静态贡献一个占位 node，不解释 datasets / composites */
 const makeAdapter = (displayName: string): EmbeddableTier2Adapter => ({
   displayName,
-  namespace: 'demo',
   contribute: () => ({
     node: { type: 'node', id: 'a', position: [0, 0] },
-    datasets: {},
-    makeComposites: () => [],
+    compositeDependencies: { roots: [], providers: [] },
   }),
 });
 

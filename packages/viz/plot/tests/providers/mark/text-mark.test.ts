@@ -26,7 +26,7 @@ const expandOf = (
   options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 /** 收集 scope 树内所有 node */

@@ -8,7 +8,7 @@ import type {
 } from '@retikz/render/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
-import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreThemeColors } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCoreThemeColors } from '@retikz/core';
 import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -128,28 +128,39 @@ const datasetCompositeSchema = CompositeBaseSchema.extend({
   type: z.literal('datasetBox'),
 });
 
-const makeDatasetComposites = (datasets: Record<string, unknown>): Array<AnyCompositeDefinition> => [
+const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
   defineComposite({
     namespace: 'fixture',
     type: 'datasetBox',
     schema: datasetCompositeSchema,
     expand: () => ({
-      type: 'node',
-      id: 'dataset-box',
-      position: [0, 0],
-      shape: 'rectangle',
-      fill: z.string().parse(datasets.color),
+      children: [
+        {
+          type: 'node',
+          id: 'dataset-box',
+          position: [0, 0],
+          shape: 'rectangle',
+          fill: z.string().parse(datasets.color),
+        },
+      ],
     }),
-  }),
-];
+  });
 
 const datasetAdapter: VanillaTier2Adapter<{ color: string }> = {
   kind: 'fixture-dataset',
-  namespace: 'fixture',
   lower: props => ({
     node: { namespace: 'fixture', type: 'datasetBox' },
-    datasets: { color: props.color },
-    makeComposites: makeDatasetComposites,
+    compositeDependencies: {
+      roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+      providers: [
+        {
+          key: { namespace: 'fixture', type: 'datasetBox' },
+          dependencies: [],
+          datasets: { color: props.color },
+          makeDefinition: makeDatasetDefinition,
+        },
+      ],
+    },
   }),
 };
 
@@ -282,26 +293,25 @@ describe('@retikz/vanilla retained mount', () => {
   });
 
   it('composite candidate rollback 后稳定代理恢复旧 callback', () => {
-    const initial = makeDatasetComposites({ color: '#ef4444' })[0];
-    const candidate = makeDatasetComposites({ color: '#22c55e' })[0];
+    const initial = makeDatasetDefinition({ color: '#ef4444' });
+    const candidate = makeDatasetDefinition({ color: '#22c55e' });
     const retained = createRetainedCompositeDefinitions([initial]);
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const node = { namespace: 'fixture', type: 'datasetBox' } as never;
     const context = {
       theme: {
-        style: 'neutral',
         mode: 'light',
         tokens: {},
-        colors: resolveCoreThemeColors('neutral', 'light'),
+        colors: resolveDefaultCoreThemeColors('light'),
       },
     } as const;
 
     const prepared = retained.prepare([candidate]);
-    expect(delegate.expand(node, context)).toMatchObject({ fill: '#22c55e' });
+    expect(delegate.expand(node, context).children[0]).toMatchObject({ fill: '#22c55e' });
     prepared.rollback();
 
-    expect(delegate.expand(node, context)).toMatchObject({ fill: '#ef4444' });
+    expect(delegate.expand(node, context).children[0]).toMatchObject({ fill: '#ef4444' });
   });
 
   it('retained expand delegate透明转发 Core Theme context', () => {
@@ -310,9 +320,13 @@ describe('@retikz/vanilla retained mount', () => {
       type: z.literal('themeDelegate'),
     });
     const initialExpand = vi.fn((_node, context) => ({
-      type: 'node' as const,
-      position: [0, 0] as [number, number],
-      fill: context.theme.mode === 'dark' ? '#111111' : '#eeeeee',
+      children: [
+        {
+          type: 'node' as const,
+          position: [0, 0] as [number, number],
+          fill: context.theme.mode === 'dark' ? '#111111' : '#eeeeee',
+        },
+      ],
     }));
     const initial = defineComposite({
       namespace: 'fixture',
@@ -325,33 +339,40 @@ describe('@retikz/vanilla retained mount', () => {
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const context = {
       theme: {
-        style: 'academic',
         mode: 'dark',
         tokens: {},
-        colors: resolveCoreThemeColors('academic', 'dark'),
+        colors: resolveDefaultCoreThemeColors('dark'),
       },
     } as const;
 
     expect(delegate.expand({ namespace: 'fixture', type: 'themeDelegate' } as never, context)).toMatchObject({
-      fill: '#111111',
+      children: [expect.objectContaining({ fill: '#111111' })],
     });
     expect(initialExpand).toHaveBeenCalledWith(expect.any(Object), context);
   });
 
   it('renderer transaction 失败后 session 恢复旧 composite callback', () => {
-    const redExpand = vi.fn((): IRScene['children'][number] => ({
-      type: 'node',
-      id: 'dataset-box',
-      position: [0, 0],
-      shape: 'rectangle',
-      fill: '#ef4444',
+    const redExpand = vi.fn(() => ({
+      children: [
+        {
+          type: 'node' as const,
+          id: 'dataset-box',
+          position: [0, 0] as [number, number],
+          shape: 'rectangle',
+          fill: '#ef4444',
+        },
+      ],
     }));
-    const greenExpand = vi.fn((): IRScene['children'][number] => ({
-      type: 'node',
-      id: 'dataset-box',
-      position: [0, 0],
-      shape: 'rectangle',
-      fill: '#22c55e',
+    const greenExpand = vi.fn(() => ({
+      children: [
+        {
+          type: 'node' as const,
+          id: 'dataset-box',
+          position: [0, 0] as [number, number],
+          shape: 'rectangle',
+          fill: '#22c55e',
+        },
+      ],
     }));
     const definitions = {
       '#ef4444': defineComposite({
@@ -367,16 +388,23 @@ describe('@retikz/vanilla retained mount', () => {
         expand: greenExpand,
       }),
     } as const;
-    const makeComposites = (datasets: Record<string, unknown>): Array<AnyCompositeDefinition> => [
-      definitions[z.enum(['#ef4444', '#22c55e']).parse(datasets.color)],
-    ];
+    const makeDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
+      definitions[z.enum(['#ef4444', '#22c55e']).parse(datasets.color)];
     const adapter: VanillaTier2Adapter<{ color: string }> = {
       kind: 'fixture-cached-dataset',
-      namespace: 'fixture',
       lower: props => ({
         node: { namespace: 'fixture', type: 'datasetBox' },
-        datasets: { color: props.color },
-        makeComposites,
+        compositeDependencies: {
+          roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+          providers: [
+            {
+              key: { namespace: 'fixture', type: 'datasetBox' },
+              dependencies: [],
+              datasets: { color: props.color },
+              makeDefinition,
+            },
+          ],
+        },
       }),
     };
     const figure = (color: '#ef4444' | '#22c55e'): VanillaFigureSpec => ({
@@ -415,13 +443,13 @@ describe('@retikz/vanilla retained mount', () => {
       namespace: 'fixture',
       type: 'first',
       schema: firstSchema,
-      expand: () => ({ type: 'coordinate', id: 'first', position: [0, 0] }),
+      expand: () => ({ children: [{ type: 'coordinate', id: 'first', position: [0, 0] }] }),
     });
     const second = defineComposite({
       namespace: 'fixture',
       type: 'second',
       schema: secondSchema,
-      expand: () => ({ type: 'coordinate', id: 'second', position: [1, 1] }),
+      expand: () => ({ children: [{ type: 'coordinate', id: 'second', position: [1, 1] }] }),
     });
     const sameKeyNewSchema = defineComposite({
       namespace: 'fixture',
@@ -430,7 +458,7 @@ describe('@retikz/vanilla retained mount', () => {
         namespace: z.literal('fixture'),
         type: z.literal('first'),
       }),
-      expand: () => ({ type: 'coordinate', id: 'first', position: [2, 2] }),
+      expand: () => ({ children: [{ type: 'coordinate', id: 'first', position: [2, 2] }] }),
     });
     const sameKeyCompileBranch = defineComposite({
       namespace: 'fixture',
@@ -490,8 +518,17 @@ describe('@retikz/vanilla retained mount', () => {
 
     adapter.lower = () => ({
       node: { namespace: 'fixture', type: 'datasetBox' },
-      datasets: { color: '#22c55e' },
-      makeComposites: makeDatasetComposites,
+      compositeDependencies: {
+        roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+        providers: [
+          {
+            key: { namespace: 'fixture', type: 'datasetBox' },
+            dependencies: [],
+            datasets: { color: '#22c55e' },
+            makeDefinition: makeDatasetDefinition,
+          },
+        ],
+      },
     });
     view.update(datasetFigure('#ef4444'));
 
@@ -508,11 +545,15 @@ describe('@retikz/vanilla retained mount', () => {
       type: 'fixedComposite',
       schema,
       expand: () => ({
-        type: 'node',
-        id: 'fixed-composite',
-        position: [0, 0],
-        shape: 'rectangle',
-        fill: '#ef4444',
+        children: [
+          {
+            type: 'node',
+            id: 'fixed-composite',
+            position: [0, 0],
+            shape: 'rectangle',
+            fill: '#ef4444',
+          },
+        ],
       }),
     });
     const initial: IRScene = {
@@ -523,12 +564,16 @@ describe('@retikz/vanilla retained mount', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, initial, { compile: { composites: [composite] } });
 
-    (composite as { expand: () => IRScene['children'][number] }).expand = () => ({
-      type: 'node',
-      id: 'fixed-composite',
-      position: [0, 0],
-      shape: 'rectangle',
-      fill: '#22c55e',
+    (composite as unknown as { expand: () => { children: IRScene['children'] } }).expand = () => ({
+      children: [
+        {
+          type: 'node',
+          id: 'fixed-composite',
+          position: [0, 0],
+          shape: 'rectangle',
+          fill: '#22c55e',
+        },
+      ],
     });
     view.update({
       ...initial,
@@ -611,11 +656,15 @@ describe('@retikz/vanilla retained mount', () => {
   });
 
   it('SVG 与 Canvas retained initial mount 各只编译一次', () => {
-    const expand = vi.fn((): IRScene['children'][number] => ({
-      type: 'node',
-      id: 'compiled-once',
-      position: [0, 0],
-      shape: 'rectangle',
+    const expand = vi.fn(() => ({
+      children: [
+        {
+          type: 'node' as const,
+          id: 'compiled-once',
+          position: [0, 0] as [number, number],
+          shape: 'rectangle',
+        },
+      ],
     }));
     const composite = defineComposite({
       namespace: 'fixture',

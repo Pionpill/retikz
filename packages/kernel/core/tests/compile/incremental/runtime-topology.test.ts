@@ -322,11 +322,13 @@ describe('Core canonical Runtime topology', () => {
         namespace: z.literal('test'),
         type: z.literal('generatedBoundary'),
       }),
-      expand: () => [
-        { type: 'node', id: 'duplicate', position: [0, 0] },
-        { type: 'node', id: 'duplicate', position: [20, 0] },
-        { type: 'node', position: [40, 0] },
-      ],
+      expand: () => ({
+        children: [
+          { type: 'node', id: 'duplicate', position: [0, 0] },
+          { type: 'node', id: 'duplicate', position: [20, 0] },
+          { type: 'node', position: [40, 0] },
+        ],
+      }),
     });
     const compiled = compileCoreSnapshot(
       {
@@ -355,7 +357,7 @@ describe('Core canonical Runtime topology', () => {
         namespace: z.literal('test'),
         type: z.literal('generatedDuplicate'),
       }),
-      expand: () => ({ type: 'node', id: 'duplicate', position: [20, 0] }),
+      expand: () => ({ children: [{ type: 'node', id: 'duplicate', position: [20, 0] }] }),
     });
     const compiled = compileCoreSnapshot(
       {
@@ -629,16 +631,18 @@ describe('Core compile warning collection', () => {
         namespace: z.literal('test'),
         type: z.literal('warningOrder'),
       }),
-      expand: () => [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: { id: 'missing' } },
-            { type: 'step', kind: 'line', to: [10, 0] },
-          ],
-        },
-        { namespace: 'missing', type: 'composite' },
-      ],
+      expand: () => ({
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: { id: 'missing' } },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
+          },
+          { namespace: 'missing', type: 'composite' },
+        ],
+      }),
     });
     const warnings: Array<CompileWarning> = [];
 

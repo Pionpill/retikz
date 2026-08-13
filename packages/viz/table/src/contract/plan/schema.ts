@@ -21,6 +21,7 @@ const TableThemeTokenKeySchema = z.enum([
 /** 判断 Cell appearance token path 是否与其 local key 对应 */
 const isLocalAppearanceTokenPath = (key: string, path: string): boolean => {
   if (path === `$spec/tableThemeTokens/${key}`) return true;
+  if (path === `$default/light/${key}` || path === `$default/dark/${key}`) return true;
   const prefix = '$style/';
   const suffix = `/${key}`;
   if (!path.startsWith(prefix) || !path.endsWith(suffix)) return false;

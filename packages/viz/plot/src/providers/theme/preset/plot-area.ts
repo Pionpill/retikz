@@ -1,6 +1,6 @@
-import type { BuiltinThemeStyleValue, ThemeModeValue } from '@retikz/core';
+import type { ThemeModeValue } from '@retikz/core';
 
-import { ThemeMode, ThemeStyle } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 
 import type { IRPlotResolvedThemeTokens } from '../../../schemas';
 
@@ -15,17 +15,7 @@ const transparentModes: Record<ThemeModeValue, PlotAreaFill> = {
   [ThemeMode.Dark]: 'none',
 };
 
-const styles: Record<BuiltinThemeStyleValue, Record<ThemeModeValue, PlotAreaFill>> = {
-  [ThemeStyle.Neutral]: transparentModes,
-  [ThemeStyle.Academic]: transparentModes,
-  [ThemeStyle.Vibrant]: {
-    [ThemeMode.Light]: '#E5ECF6',
-    [ThemeMode.Dark]: '#111111',
-  },
-  [ThemeStyle.Clean]: transparentModes,
-};
-
 /** 读取内建主题的 Plot area token slice */
-export const getPlotAreaPreset = (style: BuiltinThemeStyleValue, mode: ThemeModeValue): PlotAreaTokenPreset => ({
-  [PlotThemeToken.PlotAreaFill]: styles[style][mode],
+export const getPlotAreaPreset = (mode: ThemeModeValue): PlotAreaTokenPreset => ({
+  [PlotThemeToken.PlotAreaFill]: transparentModes[mode],
 });

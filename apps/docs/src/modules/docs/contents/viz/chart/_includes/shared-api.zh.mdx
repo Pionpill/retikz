@@ -1,128 +1,42 @@
-## Axis
+## Chart authoring
 
-`Axis` 直接使用 Plot 的完整轴契约。除选择维度外，可以独立控制轴线、tick 图元、标签、网格、标题、放置位置和图层。
+`@retikz/chart` 将完整 Plot 配方与可选的图表叙事信息归一为 `IRChart`。`IRChart` 是 JSON 可序列化的 canonical IR；`ChartProvider` 是它唯一的 composite provider。应用通常通过 React 或 Vanilla adapter authoring，不需要自行组装 provider。
 
-| 属性                                 | 类型                                                | 默认值  | 描述                                                                 |
-| ------------------------------------ | --------------------------------------------------- | ------- | -------------------------------------------------------------------- |
-| `dimension`                          | `AxisProps['dimension']`                            | —       | 需要装饰的坐标 role；内置二维坐标使用 `x` 或 `y`                     |
-| `scale`                              | `AxisProps['scale']`                                | —       | 当前维度的位置 scale 快捷配置                                        |
-| `line`                               | `AxisProps['line']`                                 | 主题值  | 轴线的显示、颜色、宽度、透明度、范围和端点箭头                       |
-| `ticks`                              | `AxisProps['ticks']`                                | 自动    | tick 来源、数量、间隔、密度、端点策略与 line/shape/custom-shape 图元 |
-| `crossing`                           | `AxisProps['crossing']`                             | —       | 轴交叉值处的 tick 与标签冲突策略                                     |
-| `tickLabels`                         | `AxisProps['tickLabels']`                           | 显示    | 格式、间距、旋转、锚点、字体与自动旋转/隐藏/边界布局                 |
-| `grid`                               | `AxisProps['grid']`                                 | `false` | 主/次网格的 tick 来源、密度、样式与组合视图目标                      |
-| `title`                              | `AxisProps['title']`                                | —       | 标题文本、位置、锚点、偏移、字体与自适应布局                         |
-| `placement`                          | `AxisProps['placement']`                            | `auto`  | side、edge 或 origin 放置策略                                        |
-| `coordinateView`                     | `AxisProps['coordinateView']`                       | —       | 绑定命名组合视图                                                     |
-| `facetId` / `scaffoldId` / `trackId` | `AxisProps['facetId' \| 'scaffoldId' \| 'trackId']` | —       | 绑定对应的组合布局声明                                               |
-| `layer`                              | `AxisProps['layer']`                                | —       | 轴 scope 的语义图层覆盖                                              |
-| `id`                                 | `AxisProps['id']`                                   | —       | 稳定的轴句柄                                                         |
+| 入口                    | 适用场景                                                | 结果                                                |
+| ----------------------- | ------------------------------------------------------- | --------------------------------------------------- |
+| `Chart`                 | 已有完整 PlotSpec，或需要以 Plot JSX 扩展图表主体       | 基础 Chart authoring                                |
+| `ScatterChart`          | 两个连续字段的散点比较                                  | 内置 Scatter recipe 与 Plot 扩展入口                |
+| `BubbleChart`           | 在二维位置外再编码一个定量面积                          | 内置 Bubble recipe 与 Plot 扩展入口                 |
+| `ConnectedScatterChart` | 以连线观察同一序列在二维空间中的演变                    | 内置 Connected Scatter recipe 与 Plot 扩展入口      |
+| `resolvePointChartSpec` | framework-neutral 的 Point typed authoring 或 JSON 集成 | 将 Point typed 输入解析为 `IRChart` 与完整 PlotSpec |
 
-## Legend
+根入口只保留所有 Chart family 共用的基础能力：React 从 `@retikz/chart-react` 导入 `Chart` 和 presentation marker，Vanilla 从 `@retikz/chart-vanilla` 导入 `createChart` 与 `renderChart`。Point family 的 typed API 从对应 `/point` 入口导入：`@retikz/chart/point` 提供 schema 与 `resolvePointChartSpec`，`@retikz/chart-react/point` 提供 `ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`，`@retikz/chart-vanilla/point` 提供 `createScatterChart`、`createBubbleChart` 与 `createConnectedScatterChart`。每个 `/point` 入口也包含其基础入口导出。
 
-`Legend` 直接解释颜色、尺寸、透明度或形状通道。多个 scale 驱动同一通道时必须用 `scale` 消歧；否则 Plot 会明确报错，不会猜测图例来源。
+typed Chart 的 `data` 是行数组，`encoding` 描述 recipe 需要的字段；`mark` 使用 JSON-safe mark value，例如 `{ kind: 'constant', value: 10 }`。额外的轴、图例、mark、scale 或 transform 仍沿用 Plot 的公开 authoring 能力。
 
-| 属性         | 类型                        | 默认值    | 描述                                          |
-| ------------ | --------------------------- | --------- | --------------------------------------------- |
-| `channel`    | `LegendProps['channel']`    | —         | 要解释的非位置通道                            |
-| `scale`      | `LegendProps['scale']`      | 自动      | 绑定唯一 scale；同通道多 scale 时必须显式提供 |
-| `title`      | `LegendProps['title']`      | —         | 字符串、多行文本或 styled text block          |
-| `position`   | `LegendProps['position']`   | `'right'` | 图例预留带所在边                              |
-| `orient`     | `LegendProps['orient']`     | 按位置    | 条目横向或纵向排布                            |
-| `ticks`      | `LegendProps['ticks']`      | 自动      | ramp 或 size 图例的刻度来源                   |
-| `tickLabels` | `LegendProps['tickLabels']` | 显示      | 条目/刻度标签开关与格式                       |
-| `style`      | `LegendProps['style']`      | 主题值    | 图例本地容器、条目、ramp 与文字 token         |
-| `layer`      | `LegendProps['layer']`      | —         | 图例 scope 的语义图层覆盖                     |
+## Presentation
 
-## Label
+`title`、`subtitle`、`source` 和 `note` 是 Chart 的 shorthand。未使用 marker 时，标题和副标题出现在 Plot 上方，注记和来源出现在 Plot 下方；同一侧的 shorthand 采用固定默认顺序。它们由 Chart 默认 token 提供样式，并与 Plot 一起进入同一个 Flex 布局。
 
-datum 标签由各位置 mark 共用 `DatumLabelProps`，并继续属于 Plot 绘图语义。整图标题、说明和来源使用 Chart presentation，由 Standard 在 Plot body 外完成布局。
+| React marker    | 对应 shorthand | 作用                         |
+| --------------- | -------------- | ---------------------------- |
+| `ChartTitle`    | `title`        | 图表主题或可观察结论         |
+| `ChartSubtitle` | `subtitle`     | 范围、年份、样本、单位或方法 |
+| `ChartSource`   | `source`       | 数据集与会影响理解的数据处理 |
+| `ChartNote`     | `note`         | 读图限制、口径提示或补充说明 |
 
-| 属性                              | 类型                                                  | 默认值   | 描述                                                    |
-| --------------------------------- | ----------------------------------------------------- | -------- | ------------------------------------------------------- |
-| `label`                           | `DatumLabelProps['label']`                            | —        | datum 标签内容字段                                      |
-| `labelDisplayFormat`              | `DatumLabelProps['labelDisplayFormat']`               | —        | 数值或时间字段的显示格式                                |
-| `labelPosition`                   | `DatumLabelProps['labelPosition']`                    | `top`    | 标签相对宿主图元的位置                                  |
-| `labelDistance`                   | `DatumLabelProps['labelDistance']`                    | `12`     | 标签与宿主边界的距离                                    |
-| `labelPin`                        | `DatumLabelProps['labelPin']`                         | `false`  | 是否绘制引线及其样式                                    |
-| `labelTextColor` / `labelOpacity` | `DatumLabelProps['labelTextColor' \| 'labelOpacity']` | 主题值   | 标签颜色与透明度                                        |
-| `labelFont`                       | `DatumLabelProps['labelFont']`                        | 主题值   | datum 标签字体                                          |
-| `labelRotate`                     | `DatumLabelProps['labelRotate']`                      | `'none'` | 标签旋转策略或角度                                      |
-| `labelKeepUpright`                | `DatumLabelProps['labelKeepUpright']`                 | `false`  | 旋转后是否保持文字正向                                  |
-| `resolveLabel`                    | `DatumLabelProps['resolveLabel']`                     | —        | runtime-only 的完全自定义内容函数；需同时提供 mark `id` |
+把 marker 作为 `Chart` 或 `XxxChart` 的直接 child；透明 `Fragment` 可用于分组。一个 marker 覆盖同名 shorthand，且每种 preset 最多出现一次。marker 按 JSX 出现顺序布局：例如上方的 `ChartSubtitle` 再 `ChartTitle` 会先显示副标题，图后依次写 `ChartSource`、`ChartNote` 则会按来源、注记显示。
 
-## Scale
+marker 的 children 目前只接受字符串、透明 `Fragment` 和 Core `Text`。多个 `Text` 可形成多行，并可分别提供字体、填充色或透明度。`position="top"` 与 `position="bottom"` 只在 authoring 期决定它位于 Plot 的哪一侧；canonical `IRChart` 只保留最终的 presentation children 顺序。
 
-`Scale` 要求同时提供 `dimension` 与 `type`。`type` 决定后续可用字段；连续、point 与 band 分支不能混用。颜色、尺寸、透明度和形状等非位置通道仍由 mark 字段绑定与 Plot scale registry 解析。
+三个 typed factory 接受与 React 相同的 shorthand；需要自定义位置或顺序时，传入按顺序排列的 plain `presentation` records。record 的 `text` 是字符串或 JSON-safe Core TextBlock，不能传入 React 对象。
 
-| 属性        | 类型                      | 默认值 | 描述                               |
-| ----------- | ------------------------- | ------ | ---------------------------------- |
-| `dimension` | `ScaleProps['dimension']` | —      | 要配置的 `x` 或 `y` 位置维度       |
-| `type`      | `ScaleProps['type']`      | —      | 必填判别字段，选择下面一种配置分支 |
+## Runtime styles
 
-### 连续 scale
+命名 style 必须同时由 Core、Chart 与 Plot 提供同名 definition。`<Layout>` 的静态 adapter 会把当前已解析的 Core Theme 与继承的 Core definitions 传给嵌入 Chart，因此 standalone 与 embedded 的 recipe 默认值一致。`themeStyles` 只配置 standalone Chart 自行创建的 Layout；嵌入 Chart 的命名 Core definition 必须放在父 `<Layout>`。Chart 与 Plot owner definition 可用 `chartThemeStyles`、`plotThemeStyles` 直接传给 Chart；standalone 子树也可用 `ChartThemeProvider` 与 `PlotThemeProvider` 注入。Vanilla 在 `createChart()` 或 typed factory 时一并传入 `theme` 与 `themeStyles`；它们会随返回的 authoring result 保留，`renderChart()` 在一次 compile 中消费该结果。需要补充 Core definitions 或其它编译选项时，传入 `renderChart()` 的 `compile`；它不接受会产生额外 layers 或 diagnostics 的 `compileDriver`。基础 `createChart()` 的 Plot definition 仍放在 `lowerOptions.plotThemeStyles`，以复用完整 Plot runtime options。
 
-适用于 `linear`、`time`、`log`、`sqrt`、`symlog` 与 `radial`。
+## Plot extensions
 
-| 属性              | 类型                                                         | 默认值                | 描述                    |
-| ----------------- | ------------------------------------------------------------ | --------------------- | ----------------------- |
-| `domain`          | `ScaleProps['domain']`                                       | 数据推断              | 连续数值或时间 domain   |
-| `domainPadding`   | `Extract<ScaleProps, { type: 'linear' }>['domainPadding']`   | 推断 domain 为 `0.05` | 连续 domain 留白        |
-| `singleValueSpan` | `Extract<ScaleProps, { type: 'linear' }>['singleValueSpan']` | 按 scale              | 单值 domain 的展开跨度  |
-| `base`            | `Extract<ScaleProps, { type: 'log' }>['base']`               | `10`                  | 仅 `type="log"` 可用    |
-| `constant`        | `Extract<ScaleProps, { type: 'symlog' }>['constant']`        | `1`                   | 仅 `type="symlog"` 可用 |
+Chart 负责封闭 recipe、图表叙事和 canonical composition；Plot 继续负责坐标、比例尺、轴、legend、mark、annotation、transform 和交互语义。因此 `Legend`、`Axis` 或附加 mark 可以与 Chart marker 一起作为 typed Chart children 使用，但它们不是 presentation item。
 
-### Point scale
-
-| 属性                | 类型                                                           | 默认值   | 描述                       |
-| ------------------- | -------------------------------------------------------------- | -------- | -------------------------- |
-| `domain`            | `ScaleProps['domain']`                                         | 数据顺序 | 分类 domain                |
-| `padding` / `align` | `Extract<ScaleProps, { type: 'point' }>['padding' \| 'align']` | `0.5`    | 首尾留白比例与范围对齐方式 |
-
-### Band scale
-
-| 属性                            | 类型                                                                      | 默认值                    | 描述                     |
-| ------------------------------- | ------------------------------------------------------------------------- | ------------------------- | ------------------------ |
-| `domain`                        | `ScaleProps['domain']`                                                    | 数据顺序                  | 分类 domain              |
-| `paddingInner` / `paddingOuter` | `Extract<ScaleProps, { type: 'band' }>['paddingInner' \| 'paddingOuter']` | `0.1` / 同 `paddingInner` | band 内部与首尾留白      |
-| `align`                         | `Extract<ScaleProps, { type: 'band' }>['align']`                          | `0.5`                     | 首尾留白在范围两端的分配 |
-
-## Transform
-
-`Transform` 的 props 就是公开的 `IRPlotTransform` 判别联合。多个 transform 按声明顺序执行，也可通过 `Plot.dataTransforms` 传入同一数组；`PointMark.transform` 等 mark-local 入口只作用于对应图层的数据视图。
-
-| 入口                           | 类型                                                                                                                                                                             | 默认值 | 描述                                                                                |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
-| `<Transform {...operation} />` | `TransformProps`                                                                                                                                                                 | —      | 声明一个完整 transform operation                                                    |
-| `Plot.dataTransforms`          | `PlotDslProps['dataTransforms']`                                                                                                                                                 | `[]`   | 在 mark 收集前执行的整图 transform 链                                               |
-| `mark.transform`               | `PointMarkProps['transform']`                                                                                                                                                    | `[]`   | 只作用于当前 mark 的 transform 链                                                   |
-| 内置 `kind`                    | `'sort'` \| `'summarize'` \| `'select'` \| `'annotate'` \| `'stack'` \| `'bin'` \| `'normalize'` \| `'derive-interval'` \| `'relate'` \| `'jitter'` \| `'density'` \| `'smooth'` | —      | 选择内置 operation，并开放该分支字段                                                |
-| 自定义 `kind`                  | `string`                                                                                                                                                                         | —      | 可使用已注册且不与保留名称冲突的外部 transform kind；其余字段由对应 definition 校验 |
-
-## Theme 与 Presentation
-
-Chart 通过 `chartThemeTokens` 拥有 presentation 默认值；Core `style` 与 `mode` 来自宿主 Scene 或 Scope。Chart 不用另一个 style/mode 字段遮蔽宿主 Theme，也没有 Chart spec-local Theme。它按 owner 原名转发当前 Plot 输入：`plotThemeTokens` 与 `plotTheme` 仍属于 Plot。
-
-Chart 级联为 `Core effective Theme → Chart preset → local chartThemeTokens`。随后交给 Plot 的链路为 `Core effective Theme → Plot preset → forwarded plotThemeTokens → forwarded plotTheme → 显式 Plot 配置`。`ChartThemeToken`、`ChartThemeTokenOverridesSchema` 与 `ChartResolvedThemeTokensSchema` 都是 `@retikz/chart` 的公开导出；Plot token schema 仍从 `@retikz/plot` 导出。
-
-自定义 style 用 `defineChartThemeStyle` 定义，并通过 `createChartComposites({ chartThemeStyles, plotThemeStyles })` 注入 Chart composite。它与 Core 的 `themeStyles`、Plot 的 `plotThemeStyles` 必须为同一个 `theme.style` 名称分别提供 resolver；任一层缺失都会 fail-loud，函数和完整 token map 不进入 Chart IR。
-
-| 字段               | 类型                                 | 默认值 | 描述                                                   |
-| ------------------ | ------------------------------------ | ------ | ------------------------------------------------------ |
-| `chartThemeTokens` | `IRChartShared['chartThemeTokens']`  | `{}`   | Chart owner 的稀疏 presentation 与 recipe token 覆盖   |
-| `plotThemeTokens`  | `IRChartShared['plotThemeTokens']`   | `{}`   | 原样转发给 resolved Plot 的 Plot owner 稀疏 token 覆盖 |
-| `plotTheme`        | `IRChartShared['plotTheme']`         | 主题   | 原样转发的 Plot 原生 theme                             |
-| `presentation`     | `IRChartShared['presentation']`      | —      | Chart-owned 文案、顺序与 Standard Flex 布局            |
-| `width` / `height` | `IRChartShared['width' \| 'height']` | —      | resolved Plot intrinsic 尺寸                           |
-
-## Additional Marks
-
-本页主示例使用一个主要 mark；需要参考线、趋势、区间或关系时，可以继续组合 Plot 的公开 mark。附加 mark 使用同一数据、scale、coordinate、transform、label、theme 与 lowering 管线。
-
-| 组件            | Props                | 主要用途                           | 共享能力                                                     |
-| --------------- | -------------------- | ---------------------------------- | ------------------------------------------------------------ |
-| `PathMark`      | `PathMarkProps`      | 折线、连接轨迹、闭合区域           | `transform`、`coordinateView`、`layer`、`channels`、路径样式 |
-| `IntervalMark`  | `IntervalMarkProps`  | 柱、直方、区间、饼环、heatmap      | datum label、transform、通道样式、组合视图                   |
-| `ReferenceMark` | `ReferenceMarkProps` | 阈值线、容差带、参考区域           | line/band/region、标签、路径与填充样式                       |
-| `RelationMark`  | `RelationMarkProps`  | source 到 target 的 path 或 ribbon | 关系几何、标签、颜色与扩展通道                               |
-| `PointMark`     | `PointMarkProps`     | 追加注释点或第二组点               | 与主 Point 相同的完整能力；必须使用不同 `id`                 |
+adapter 会把 `SurfaceProvider`、`FlexLayoutProvider`、Plot provider 与 `ChartProvider` 作为一次 contribution 组装。这样标题、副标题、Plot、来源和注记能共同布局，同时 Plot 仍保留自己的 guide、lowering 与诊断路径。

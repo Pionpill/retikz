@@ -102,7 +102,7 @@ const expandOf = (spec: IRPlotSpec): IRScope => {
     { weather: weatherRows },
     { width: 480, height: 300, provenance: true, datumProvenance: true },
   );
-  return definition.expand(spec) as IRScope;
+  return definition.expand(spec).children[0] as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

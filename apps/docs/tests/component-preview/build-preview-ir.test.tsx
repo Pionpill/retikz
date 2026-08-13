@@ -1,3 +1,4 @@
+import type { CompositeDependencyContribution } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -8,15 +9,26 @@ import { describe, expect, it } from 'vitest';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
-const makeHookedComposites = () => [];
+const hookedProviderKey = { namespace: 'hooked', type: 'demo' };
+const hookedCompositeDependencies = {
+  roots: [hookedProviderKey],
+  providers: [
+    {
+      key: hookedProviderKey,
+      dependencies: [],
+      datasets: hookedDatasets,
+      makeDefinition: () => {
+        throw new Error('Preview IR collection must not materialize providers');
+      },
+    },
+  ],
+} satisfies CompositeDependencyContribution;
 
 const hookedEmbeddableAdapter: EmbeddableTier2Adapter = {
   displayName: 'HookedEmbeddable',
-  namespace: 'hooked',
   contribute: () => ({
     node: { namespace: 'hooked', type: 'demo' },
-    datasets: hookedDatasets,
-    makeComposites: makeHookedComposites,
+    compositeDependencies: hookedCompositeDependencies,
   }),
 };
 
@@ -39,12 +51,6 @@ describe('buildPreviewIR', () => {
     const preview = buildPreviewIR(HookedEmbeddableDemo);
 
     expect(preview.ir.children).toEqual([{ namespace: 'hooked', type: 'demo' }]);
-    expect(preview.contributions).toEqual([
-      {
-        namespace: 'hooked',
-        datasets: hookedDatasets,
-        makeComposites: makeHookedComposites,
-      },
-    ]);
+    expect(preview.contributions).toEqual([hookedCompositeDependencies]);
   });
 });

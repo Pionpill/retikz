@@ -48,7 +48,9 @@ const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
     namespace,
     type: 'panel',
     schema,
-    expand: node => ({ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }),
+    expand: node => ({
+      children: [{ type: 'node', id: `panel-${node.panelId}`, position: [0, 0], text: node.panelId }],
+    }),
   });
 };
 
@@ -59,13 +61,23 @@ const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
  */
 const makeThrowingFixture = (options: { namespace?: string; displayName?: string } = {}): EmbeddableFixture => {
   const { namespace = 'demo', displayName = 'ThrowingPanel' } = options;
+  const panelComposite = makePanelComposite(namespace);
+  const makePanelDefinition = () => panelComposite;
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
-    namespace,
     contribute: props => ({
       node: { namespace, type: 'panel', panelId: props.id },
-      datasets: { [props.id]: props.data },
-      makeComposites: () => [makePanelComposite(namespace)],
+      compositeDependencies: {
+        roots: [{ namespace, type: 'panel' }],
+        providers: [
+          {
+            key: { namespace, type: 'panel' },
+            dependencies: [],
+            datasets: { [props.id]: props.data },
+            makeDefinition: makePanelDefinition,
+          },
+        ],
+      },
     }),
   };
   const Fixture: EmbeddableFixture = () => {
@@ -136,7 +148,7 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
     // 再钉一遍：buildIRWithContributions 确实静态产出了该可嵌入的贡献（adapter 被读、函数体没被调）
     const { contributions } = buildIRWithContributions(element);
     expect(contributions).toHaveLength(1);
-    expect(contributions[0]?.namespace).toBe('demo');
+    expect(contributions[0]?.roots[0]).toEqual({ namespace: 'demo', type: 'panel' });
   });
 
   it('模拟语言切换：同一 <Layout> 子树以变更后的无关 prop（locale 文案）重渲染，仍不抛、输出稳定', () => {
