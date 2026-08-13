@@ -29,6 +29,7 @@ contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契�
 providers/   内置 definition、BUILTIN_*、registry resolver
 compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
 parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
+normalize/   Source IR 的紧凑写法、领域默认与值形态规范化，输出 Canonical 内部形态
 ```
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
