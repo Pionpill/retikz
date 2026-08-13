@@ -1,18 +1,20 @@
 ---
 name: standard-pipeline-compile
-description: Use when changing retikz pipeline or compile code, lowering, registry consumption, compile options, plot expand stages, core compileToScene behavior, ResolvedXxx types, warnings, or IR-to-primitive/Kernel-IR orchestration.
+description: Use when changing retikz pipeline or compile code, lowering, registry consumption, compile options, plot expand stages, core compileToScene behavior, CanonicalXxx or effective-context types, warnings, or IR-to-primitive/Kernel-IR orchestration.
 ---
 
 # Standard Pipeline Compile
 
-`pipeline/` 和 `compile/` 是编排与消费层。它们接收 IR 和 options，解析 registry，执行 lowering / emit，输出 Kernel IR 或 Scene primitive；不要在这里发明 schema 或 provider 的平行规则。
+`pipeline/` 和 `compile/` 是编排与消费层。公开编译入口接收已类型化的 Source IR 后，`resolveXxx` 先准备 registry、引用、host、data 等 context 并调度 Core / Plot `normalizeXxx` 转为 Canonical，再执行 lowering / emit，输出 Kernel IR 或 Scene primitive；不要在这里发明 schema 或 provider 的平行规则。
+
+`compileToScene` 继续是 Core 唯一的公开编译入口，接收 `IRScene`；不新增同义的 `compileIRToScene`。`InputXxx -> IRXxx` 的 authoring normalize 属于 Vanilla，`unknown -> IRXxx` 的 parse 属于 parse / schema 边界。
 
 ## 分工
 
 - `pipeline/`：Tier 2 到 Kernel IR 的 lowering 编排，例如 plot 的 data / scale / coordinate / transform / mark / guide 阶段。
 - `compile/`：Kernel IR 到 Scene primitive 的确定性编译，例如 core 的 registry options、坐标、路径、节点、样式继承、命名空间和 warning。
 
-具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`，字符串 / DSL / Sugar shorthand 到 IR 的 eager 解析回 `parsers`。
+具体规则回到拥有概念的层：schema 形态回 `schemas`，能力协议回 `contract`，内置实现回 `providers`，通用纯函数回 `shared`，unknown、字符串或 DSL 到 IR 的 eager 解析回 `parse/`。
 
 ## 确定性
 
@@ -33,14 +35,12 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 
 ## 命名
 
-- `ResolvedXxx` 表示已归一化、查表、默认值处理、资源引用或扩展展开后的消费形态；原始 schema 输入仍叫 `IRXxx`。
-- warning code 用 const object enum + `XxxValue` 派生；message 写当前契约，不写内部调试故事。
-- lowering stage helper 用动词短语命名：`resolveXxx`、`lowerXxx`、`emitXxx`、`collectXxx`。
+目录、文件和符号名以 `standard-name` 为唯一真源。`CanonicalXxx` 定义在 Core / Plot `normalize/<domain>/types.ts`，由 domain `normalizeXxx` 产出；`resolveXxx` 准备 context 并调度它。若 context 产生独立概念，使用其领域语义名而不是泛用 `ResolvedXxx`。warning code 仍用 const object enum + `XxxValue` 派生，message 写当前契约。
 
 ### Compile 函数动词
 
 - `createXxx` 创建 context、cache、资源表或 synthetic 结构；不查 provider，不注册。
-- `resolveXxx` 把 IR / options 解析成编译期消费值；可查 registry、套默认值、parse、warn / throw；不产出 primitive。
+- `resolveXxx` 解析 registry、引用、host、data 等编译 context，并调度 domain `normalizeXxx`；不复制 IR shorthand 展开、领域默认、semantic validation 或领域值转换，不 parse、不产出 primitive。
 - `resolveXxxRegistry` 只用于 provider registry 合并。
 - `lowerXxx` 把高层语义降成低层 IR、命令或 transform；不产出 primitive / resource。
 - `layoutXxx` 度量或计算 layout 数据；可调用 `resolveXxx`；不写 namespace，不产出 primitive。
@@ -48,7 +48,7 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - `collectXxx` 只收集派生数据；最多追加到显式传入的 collection。
 - `registerXxx` 写 namespace、registry 或 cache；有写入副作用才用。
 - `lookupXxx` 只读查表；可 fail loud，不写入。
-- `normalizeXxx` 纯规范化输入；不查 registry / namespace，不 warn。
+- `normalizeXxx` 在 Vanilla / Plot Vanilla 把 `InputXxx` 组装为 `IRXxx`，在 Core / Plot domain `normalize/` 把 `IRXxx` 加 `NormalizeContext` 规范化为 `CanonicalXxx`；compile 只调度，不定义同义实现。
 - `filterXxx` 过滤非法项；可 warn，不改写合法项。
 - `computeXxx` 纯计算；不 lookup、不 warn、不 mutation。
 - `formatXxx` 只格式化字符串。
@@ -59,7 +59,7 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - `compile.ts` 只放 `CompileOptions`、`compileToScene` 和顶层编排；domain 细节下沉到对应目录。
 - 目录级 `index.ts` 只做稳定入口导出，不承载业务逻辑；默认 `export *`，需要保兼容面或避免冲突时才精选导出。
 - 大型 domain 按 `types.ts` / `resolve.ts` / `lower.ts` / `layout.ts` / `emit.ts` / `decorations.ts` / `output.ts` 拆分；缺哪个阶段就省略对应文件，不为了模板机械建空文件。
-- `types.ts` 只放 compile / pipeline 消费态类型；`resolve.ts` 可查 registry、套默认值、warn/throw；`lower.ts` 输出低层 IR / command / geometry input；`layout.ts` 度量或计算中间模型；`emit.ts` 输出 primitive / resource；`decorations.ts` 输出附属 primitive；`output.ts` 做 group wrapping、bounds result、transform 等输出包装。
+- `compile/<domain>/types.ts` 只放 compile / pipeline 私有消费态类型；`CanonicalXxx` 与 `NormalizeContext` 属于领域规范化结果，定义在 `normalize/<domain>/types.ts`，由 `resolve.ts` 构造 context 并调度 normalizer。`resolve.ts` 可查 registry、解析 context、warn/throw；`lower.ts` 输出低层 IR / command / geometry input；`layout.ts` 度量或计算中间模型；`emit.ts` 输出 primitive / resource；`decorations.ts` 输出附属 primitive；`output.ts` 做 group wrapping、bounds result、transform 等输出包装。
 - `orchestration/` 放跨 domain 编排：context、composite lowering、traversal、primitive sink、diagnostics、bounds、运行时 types；不要放 node/path/text 的具体 emit 细节。
 - `node/` 根保留 `types.ts`、`layout.ts`、`emit.ts`、`anchors.ts`、`boundary.ts`、`box.ts`、`shape.ts`、`synthetic.ts`；正文文本下沉到 `node/content/`，node label 下沉到 `node/label/`。
 - `path/` 根保留 `types.ts` 和 `index.ts`；不要保留仅转发的 `emit.ts` shim。共享宿主语义放 `path/host/`，普通 stroke path 放 `path/stroke/`，ribbon 放 `path/ribbon/`。
@@ -75,7 +75,7 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 - 内置项如何工作 → `providers`。
 - 用户如何定义能力 → `contract`。
 - IR 字段是否合法 → `schemas`；只有跨字段运行时上下文规则留在 pipeline / compile。
-- 字符串 / DSL / Sugar shorthand 解析成 IR 节点或片段 → `parsers`；compile 只保留 Scene 编译期间必须消费的内部解析。
+- `unknown`、字符串或序列化 DSL 解析成 Source IR → `parse`；框架 authoring Input 由 Vanilla `normalizeXxx` 构建。Core / Plot domain normalizer 负责 Source IR → Canonical；compile 不重复 parse 或复制 normalizer，只保留 context 解析与 Scene 编译期间必须消费的内部解析。
 
 ## 改代码前检查
 
@@ -83,4 +83,4 @@ description: Use when changing retikz pipeline or compile code, lowering, regist
 2. registry 是否只通过 resolver 消费？
 3. 是否保持确定性和无全局可变输出状态？
 4. 新 option 名是否符合 core 复数名或 plot `xxxDefinitions` 规则？
-5. `ResolvedXxx` 是否真的不是原始 IR 输入？
+5. `CanonicalXxx` 是否定义在领域 `normalize/<domain>/types.ts`、由 domain `normalizeXxx` 唯一产生，且 `resolveXxx` 只准备 context 并调度它？

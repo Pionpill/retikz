@@ -1,13 +1,14 @@
 ﻿import type { BoundaryDefinition, LayoutAxisProposal, ShapeDefinition, Transform } from '../../contract';
+import type { CanonicalNode } from '../../normalize';
 import type { ProviderCollection } from '../../providers/registry/index';
-import type { IRAnchorPosition, IRLabelDefault, IRNode, IRPosition } from '../../schemas';
+import type { IRAnchorPosition, IRLabelDefault, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
 import type { TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
-import { LayoutAxisProposalKind, LayoutIntrinsicMode, resolveBoxSpacing } from '../../contract';
+import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { CenterAnchor } from '../../shared';
@@ -26,18 +27,16 @@ import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '
 import { resolveDashPattern, resolveShadow } from '../style';
 import { resolveFontSize } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
-import { resolveAxisScale, resolveBoxSize } from './box';
 import { layoutNodeContent } from './content/layout';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import { resolveNodeShape } from './shape';
 
-const DEFAULT_PADDING = 8;
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
 
 /** 判断 Node.position 是否为锚点对锚点定位 */
-const isAnchorPosition = (position: IRNode['position']): position is IRAnchorPosition =>
+const isAnchorPosition = (position: CanonicalNode['position']): position is IRAnchorPosition =>
   !Array.isArray(position) && 'kind' in position;
 
 /** 把全局位移反投影为当前 Scope 的局部位移 */
@@ -57,7 +56,7 @@ const localDeltaOf = (
 
 /** 根据 target 与 self anchor 平移完整 provisional layout */
 const placeAnchorPositionedLayout = (
-  node: IRNode,
+  node: CanonicalNode,
   position: IRAnchorPosition,
   provisional: NodeLayout,
   namespaceStack: NamespaceStack,
@@ -139,7 +138,7 @@ export type LayoutNodeContext = {
   allocationWidthProposal?: LayoutAxisProposal;
 };
 
-export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout => {
+export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): NodeLayout => {
   const {
     measureText,
     namespaceStack,
@@ -158,7 +157,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   } = context;
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
-  const { x: sx, y: sy } = resolveAxisScale(node.scale, 1);
+  const { x: sx, y: sy } = node.scale;
   const fontScale = Math.min(sx, sy);
   const { shapeName, shapeDef, shapeParams } = resolveNodeShape({ node, shapes, scaleX: sx, scaleY: sy, irPath });
 
@@ -171,12 +170,12 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
   const fontWeight = node.font?.weight;
   const fontStyle = node.font?.style;
   // spacing 受 node scale 影响。
-  const padding = resolveBoxSpacing(node.padding, DEFAULT_PADDING);
+  const padding = node.padding;
   const paddingLeft = padding.left * sx;
   const paddingRight = padding.right * sx;
   const paddingTop = padding.top * sy;
   const paddingBottom = padding.bottom * sy;
-  const marginSpacing = resolveBoxSpacing(node.margin, 0);
+  const marginSpacing = node.margin;
   const margin = {
     top: marginSpacing.top * sy,
     right: marginSpacing.right * sx,
@@ -217,7 +216,7 @@ export const layoutNode = (node: IRNode, context: LayoutNodeContext): NodeLayout
     });
 
   // minimumSize 作用于外接边界，且随 scale 缩放。
-  const minimumSize = resolveBoxSize(node.minimumSize, 0);
+  const minimumSize = node.minimumSize;
   const minHalfW = (minimumSize.width * sx) / 2;
   const minHalfH = (minimumSize.height * sy) / 2;
   const circumscribeContent = (textWidth: number, textHeight: number) => {

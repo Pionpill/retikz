@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseNodeTarget } from '../../src/parsers/node-target';
+import { parseNodeTarget } from '../../src/parse/node-target';
 
 describe('parseNodeTarget node 模式（无 .）', () => {
   it('简单 id → { id }', () => {

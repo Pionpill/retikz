@@ -6,14 +6,14 @@ import { Draw, Layout, Node } from '@retikz/react';
 const Demo: FC = () => (
   <Layout width={760} height={290} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
-      id="parsers"
+      id="parse"
       position={[-270, 30]}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
       cornerRadius={4}
       font={{ size: 13 }}
-      text={[{ text: 'parsers/', font: { size: 14, weight: 'bold' } }, 'sugar → IR']}
+      text={[{ text: 'parse/', font: { size: 14, weight: 'bold' } }, 'sugar → IR']}
     />
     <Node
       id="ir"
@@ -91,7 +91,7 @@ const Demo: FC = () => (
       text={[{ text: 'providers/', font: { size: 14, weight: 'bold' } }, 'built-ins + registry']}
     />
 
-    <Draw way={['parsers', 'ir']} arrow="->" />
+    <Draw way={['parse', 'ir']} arrow="->" />
     <Draw way={['ir', 'compile']} arrow="->" />
     <Draw way={['compile', 'scene']} arrow="->" />
 

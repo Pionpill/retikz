@@ -61,7 +61,7 @@ Retikz 的底层契约会同时被完整 IR、Standard composite、Plot / Chart 
 
 ### 3.1 Schema 是数据契约真源
 
-IR 和 JSON-safe authoring 数据的 schema 负责：
+只有 IR 的 schema 负责：
 
 - 字段名称、形状和 JSON 可序列化边界
 - 字段级约束、未知字段拒绝和默认语义
@@ -75,7 +75,7 @@ IR 和 JSON-safe authoring 数据的 schema 负责：
 ```text
 稳定语义原子 schema
   -> owner 组合 / 收窄 schema
-  -> 完整 IR / authoring schema
+  -> 完整 Source IR schema
   -> provider / contract / pipeline 消费
   -> Core IR、Standard input、Scene 或 manifest
 ```
@@ -86,9 +86,10 @@ IR 和 JSON-safe authoring 数据的 schema 负责：
 
 公共 type 按其语义来源区分：
 
-- `IRXxx`：从 JSON-safe IR schema 推导的持久化或解析后数据类型
+- `IRXxx`：从 JSON-safe IR schema 推导的持久化数据类型；只有 IR 定义 Zod schema，schema 名用 `XxxSchema`，不加 `IR` 前缀
 - `XxxValue`：从 const object enum 或权威闭合 schema 派生的取值类型
-- `XxxInput`：只有 authoring 输入与存储形态确实不同才定义
+- `InputXxx`：由 Vanilla 定义的 TypeScript authoring 输入；只有它确实不同于 Source IR 时才定义，不作为持久化 schema
+- `CanonicalXxx`：由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的内部完整类型；定义在 Core / Plot domain `normalize/<domain>/types.ts`，由 domain `normalizeXxx` 产出，compile `resolveXxx` 只准备 context 并调度它；不设 schema、不持久化
 - `XxxDefinition` / `XxxContext`：属于 contract 层的扩展协议类型，不替代 IR schema
 
 当上层只需要底层原子的同义子集时，应复用权威 schema 的命名组合或受控 `.pick()` / `.omit()` / `.extend()` 结果，并从该组合继续派生 type。不能在上层重新写一个看起来相同的 type，再让 schema、type 和 lowering 分别演进。

@@ -60,6 +60,7 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
+import { normalizeNode } from '../../normalize';
 import { providerDefinitionOf } from '../../providers/registry/index';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -455,10 +456,11 @@ export const compileChildrenToPrimitives = (
     const warn = (code: CompileWarningCodeValue, message: string): void =>
       runtime.context.onWarn({ code, message, path: nodeIrPath });
     const resolvedNode = resolveNodeTextColor(effectiveNode, labelDefault, warn);
+    const canonicalNode = normalizeNode(resolvedNode);
     const layout = layoutNode(
       {
-        ...resolvedNode,
-        animations: filterAnimations(resolvedNode.animations, {
+        ...canonicalNode,
+        animations: filterAnimations(canonicalNode.animations, {
           target: 'element',
           onWarn: runtime.context.onWarn,
           irPath: nodeIrPath,
