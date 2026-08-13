@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Monitor, Moon, Sun } from 'lucide-react';
@@ -8,8 +7,10 @@ import { useTranslation } from 'react-i18next';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
 
+import type { PreviewThemeStyleValue } from '../theme';
 import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
 
+import { PreviewThemeStyle } from '../theme';
 import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
 
 export type PreviewContextBarProps = {
@@ -20,7 +21,7 @@ export type PreviewContextBarProps = {
   /** 是否显示单预览 ThemeStyle 切换器。 */
   enableThemeSwitch?: boolean;
   /** 当前预览实际生效的 ThemeStyle。 */
-  themeStyle?: ThemeStyleValue;
+  themeStyle?: PreviewThemeStyleValue;
   /** 当前单预览 ThemeStyle 选择。 */
   themeStyleSelection?: PreviewThemeStyleSelection;
   /** 更新当前单预览 ThemeStyle 选择。 */
@@ -39,6 +40,7 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
   } = props;
   const { t } = useTranslation();
   const [themeStyleMenuOpen, setThemeStyleMenuOpen] = useState(false);
+  const effectiveThemeStyle = themeStyle ?? PreviewThemeStyle.Default;
 
   return (
     <div
@@ -73,10 +75,10 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
             <span>{t('preview.themeDark')}</span>
           </ToggleGroupItem>
         </ToggleGroup>
-        {enableThemeSwitch && themeStyle && onThemeStyleChange ? (
+        {enableThemeSwitch && onThemeStyleChange ? (
           <ThemeStyleSwitchButton
             selection={themeStyleSelection}
-            effectiveStyle={themeStyle}
+            effectiveStyle={effectiveThemeStyle}
             onSelectionChange={onThemeStyleChange}
             onOpenChange={setThemeStyleMenuOpen}
             className="size-8 border border-input bg-background shadow-xs"

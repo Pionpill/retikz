@@ -1467,8 +1467,12 @@ describe('layout-aware composite constraints and bounds', () => {
         type: z.literal('singleRectangleExpand'),
       }),
       expand: () => ({
-        type: 'path',
-        children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] }],
+        children: [
+          {
+            type: 'path',
+            children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] }],
+          },
+        ],
       }),
     });
 
@@ -1502,13 +1506,18 @@ describe('layout-aware composite constraints and bounds', () => {
         }),
         expand: () =>
           variant === 'invalidChild'
-            ? ({ type: 'bogus' } as IRChild)
-            : new Proxy([{ type: 'coordinate' as const, id: 'point', position: [0, 0] as [number, number] }], {
-                get: (target, property, receiver) => {
-                  if (property === 'entries') throw new Error('hostile expand output iteration');
-                  return Reflect.get(target, property, receiver);
-                },
-              }),
+            ? ({ children: [{ type: 'bogus' } as IRChild] } as never)
+            : ({
+                children: new Proxy(
+                  [{ type: 'coordinate' as const, id: 'point', position: [0, 0] as [number, number] }],
+                  {
+                    get: (target, property, receiver) => {
+                      if (property === 'map') throw new Error('hostile expand output iteration');
+                      return Reflect.get(target, property, receiver);
+                    },
+                  },
+                ),
+              } as never),
       });
       const parent = defineComposite({
         namespace: 'test',
@@ -3259,17 +3268,19 @@ describe('layout-aware composite replay ownership', () => {
         namespace: z.literal('test'),
         type: z.literal('multipleRoots'),
       }),
-      expand: () => [
-        {
-          type: 'path' as const,
-          zIndex: 1,
-          children: [
-            { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
-            { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
-          ],
-        },
-        { type: 'node' as const, position: [0, 0] as [number, number], zIndex: 10 },
-      ],
+      expand: () => ({
+        children: [
+          {
+            type: 'path' as const,
+            zIndex: 1,
+            children: [
+              { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+              { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
+            ],
+          },
+          { type: 'node' as const, position: [0, 0] as [number, number], zIndex: 10 },
+        ],
+      }),
     });
     const parent = defineComposite({
       namespace: 'test',
@@ -3472,7 +3483,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
         namespace: 'test',
         type: 'invalidBranch',
         schema,
-        expand: () => [],
+        expand: () => ({ children: [] }),
         compile: () => ({ children: [] }),
       } as never),
     ).toThrow(/exactly one of expand or compile/i);
@@ -3644,7 +3655,7 @@ describe('layout-aware composite artifacts and lowering errors', () => {
         namespace: z.literal('test'),
         type: z.literal('expandToLayout'),
       }),
-      expand: () => ({ namespace: 'test', type: 'layoutOnly' }),
+      expand: () => ({ children: [{ namespace: 'test', type: 'layoutOnly' }] }),
     });
 
     expect(() =>

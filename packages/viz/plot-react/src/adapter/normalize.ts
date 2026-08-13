@@ -42,15 +42,14 @@ export const normalizePlotDeclarations = (
     if (declaration.kind === 'unsupported') continue;
     applyDeclaration(declaration, collected, styleContext);
   }
-  if (context.mode === 'chart-extension') {
-    return normalizeChartExtension(collection, context, collected);
-  }
   for (const source of collection.runtimeSources) {
     if (source.markId === undefined) {
       throw new Error('buildPlotSpec: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
     }
     collected.resolveLabels[source.markId] = source.resolveLabel;
   }
-
+  if (context.mode === 'chart-extension') {
+    return normalizeChartExtension(collection, context, collected);
+  }
   return normalizePlotRoot(context, collected);
 };

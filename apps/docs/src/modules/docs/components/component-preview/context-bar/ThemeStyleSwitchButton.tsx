@@ -1,4 +1,3 @@
-import type { ThemeStyleValue } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Globe2 } from 'lucide-react';
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib';
 
+import type { PreviewThemeStyleValue } from '../theme';
 import type { PreviewThemeStyleSelection } from '../types';
 
 import { getPreviewThemeStyleIcon, PreviewThemeStyleLabelKeys, PreviewThemeStyleOptions } from '../theme';
@@ -24,7 +24,7 @@ export type ThemeStyleSwitchButtonProps = {
   /** 当前局部选择；inherit 表示跟随全局。 */
   selection: PreviewThemeStyleSelection;
   /** 当前实际生效的 ThemeStyle。 */
-  effectiveStyle: ThemeStyleValue;
+  effectiveStyle: PreviewThemeStyleValue;
   /** 更新当前局部选择。 */
   onSelectionChange: (selection: PreviewThemeStyleSelection) => void;
   /** 下拉打开状态变化。 */

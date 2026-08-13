@@ -1,10 +1,7 @@
 import type { GridLayoutInput } from '@retikz/layout';
 import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
 
-import { createGridLayout } from '@retikz/layout';
-
-import { LayoutVanillaNamespace } from './constants';
-import { makeVanillaLayoutComposites } from './layout-family';
+import { createGridLayout, GridLayoutProvider } from '@retikz/layout';
 
 /** Vanilla Grid 布局嵌入项的稳定类别 */
 const GridLayoutEmbedKind = 'layout.gridLayout';
@@ -12,11 +9,9 @@ const GridLayoutEmbedKind = 'layout.gridLayout';
 /** Layout Grid 布局的 Vanilla 适配器 */
 export const GridLayoutVanillaAdapter: VanillaTier2Adapter<GridLayoutInput> = {
   kind: GridLayoutEmbedKind,
-  namespace: LayoutVanillaNamespace,
   lower: props => ({
     node: createGridLayout(props),
-    datasets: {},
-    makeComposites: makeVanillaLayoutComposites,
+    compositeDependencies: { roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] },
   }),
 };
 

@@ -1,4 +1,5 @@
 import type { IRScope } from '@retikz/core';
+import type { IRShapeValue, JsonValue } from '@retikz/core';
 import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow } from '@retikz/data';
 
 import { DataFieldType } from '@retikz/data';
@@ -61,10 +62,8 @@ export const collectChannelDescriptors = (
 };
 
 /** 判断两个 descriptor 数组字段是否逐项一致 */
-const descriptorValuesEqual = (
-  left: ReadonlyArray<ScaleDescriptor['domain'][number]>,
-  right: ReadonlyArray<ScaleDescriptor['domain'][number]>,
-): boolean => left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
+const descriptorValuesEqual = (left: ReadonlyArray<JsonValue>, right: ReadonlyArray<JsonValue>): boolean =>
+  left.length === right.length && left.every((value, index) => Object.is(value, right[index]));
 
 /**
  * 校验同一 size scale identity 的重复 descriptor 是否等价
@@ -431,7 +430,7 @@ export const buildLegendLayers = (
       }
       const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
         label: showLabels ? String(category) : '',
-        shape: String(descriptor.range[index]),
+        shape: descriptor.range[index] as IRShapeValue,
         symbolSize: style.symbolSize,
         color: 'currentColor',
       }));

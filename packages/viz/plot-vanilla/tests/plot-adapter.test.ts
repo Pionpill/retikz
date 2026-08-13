@@ -6,12 +6,11 @@ import { embed, figure, layer, normalizeFigureSpec, renderToSvgString } from '@r
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
-import { createPlotAdapter, embedPlot, plot } from '../src';
+import { createPlotAdapter, createPlotProvider, embedPlot, plot, resolvePlotContribution } from '../src';
 
 const contextOf = (id: string): VanillaEmbedContext => ({
   id,
   kind: 'plot',
-  namespace: 'plot',
   layerId: 'chart',
   identityPath: ['chart', id],
 });
@@ -42,6 +41,18 @@ const datasets = {
 };
 
 describe('Plot Vanilla Tier2 adapter', () => {
+  it('exposes one Plot-owned contribution builder for complete PlotSpec inputs', () => {
+    const spec = salesSpec('sales');
+    const result = resolvePlotContribution({ spec, datasets, lowerOptions: { width: 360, height: 200 } });
+    const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
+
+    expect(result.spec).toEqual(spec);
+    expect(result.contribution.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(result.contribution.providers).toHaveLength(1);
+    expect(result.contribution.providers[0]).toMatchObject({ key: provider.key, dependencies: [] });
+    expect(result.contribution.providers[0]?.makeDefinition).toBe(provider.makeDefinition);
+  });
+
   it('经 figure/layer runtime 渲染 Plot embed', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
@@ -78,15 +89,21 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(anonymous.id).toBeUndefined();
   });
 
-  it('同一 adapter 的多个 lower 复用 datasets 与稳定 composite maker', () => {
+  it('同一 adapter 的多个 lower 贡献 plot.plot root 并复用稳定 provider maker', () => {
     const adapter = createPlotAdapter(datasets);
     const spec = salesSpec();
     const first = adapter.lower({ spec }, contextOf('first'));
     const second = adapter.lower({ spec }, contextOf('second'));
 
-    expect(first.datasets).toBe(datasets);
-    expect(second.datasets).toBe(datasets);
-    expect(first.makeComposites).toBe(second.makeComposites);
+    expect(first).not.toHaveProperty('datasets');
+    expect(first).not.toHaveProperty('makeComposites');
+    expect(first.compositeDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(first.compositeDependencies.providers).toHaveLength(1);
+    expect(first.compositeDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(first.compositeDependencies.providers[0]?.dependencies).toEqual([]);
+    expect(first.compositeDependencies.providers[0]?.makeDefinition).toBe(
+      second.compositeDependencies.providers[0]?.makeDefinition,
+    );
   });
 
   it('缺失 dataset reference 时 fail-loud', () => {

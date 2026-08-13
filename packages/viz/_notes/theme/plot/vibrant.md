@@ -4,7 +4,7 @@
 
 ## 实现真源
 
-- [`catalog.ts`](../../../plot/src/providers/theme/catalog.ts)：内置 Vibrant Light / Dark 的完整 token preset
+- [`presets/plot.ts`](../../../../../apps/docs/src/modules/docs/components/component-preview/theme/presets/plot.ts)：docs 参考 Vibrant Light / Dark 的完整 token definition
 - [`resolve.ts`](../../../plot/src/providers/theme/resolve.ts)：preset、shared colors 与显式覆盖的级联
 - [`mapping.ts`](../../../plot/src/providers/theme/mapping.ts)：canonical token 与原生 `plotTheme` 的双向映射
 
@@ -21,7 +21,7 @@
 | Legend     | swatch、symbol、ramp 与项目间距略大，支持快速扫描多个系列                                                    |
 | Palette    | categorical / series / sector 使用高区分度颜色；sequential 与 diverging 可更鲜明但必须保持数值顺序和中点语义 |
 
-当前内置 sequential / diverging 方向分别使用 `Turbo` 与 `Spectral`；它们是 Plot preset 选择，不属于公共 Vibrant skill。
+当前 docs reference sequential / diverging 方向分别使用 `Turbo` 与 `Spectral`；它们是宿主 Plot definition 的选择，不属于公共 Vibrant skill。
 
 ## 边界与覆盖
 
@@ -29,9 +29,9 @@
 - Grid 只属于二维 Plot area；一维直线与一维圆周不生成 grid layer，即使 theme rule 或 Axis guide 显式开启 grid。
 - 内建 Plot preset 从 Core 注入 categorical / series / sector；Plot 只维护 sequential / diverging 与领域颜色角色。
 - Plot style definition 显式提供的 palette 高于 Core baseline，之后仍可由 `plotThemeTokens` 与结构化 `plotTheme` 覆盖。
-- 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于内置 Vibrant；不得按 mode 调色、重排、补全或替换用户颜色。
+- 显式 `plotThemeTokens`、`colors` shorthand 与结构化 `plotTheme` 继续高于 docs Vibrant definition；不得按 mode 调色、重排、补全或替换用户颜色。
 - Plot 不拥有 hover、selection 或 Chart presentation；Theme 不创造新的交互语义或 mark 渐变。
-- mark、guide 与 lowering 消费解析后的有效主题，不增加 `ThemeStyle.Vibrant` 分支。
+- mark、guide 与 lowering 消费解析后的有效主题，不增加 `style === 'vibrant'` 分支。
 
 ## 验收
 

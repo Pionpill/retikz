@@ -36,7 +36,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 
 ## 当前状态
 
-`0.1.0-alpha.3` 已在 alpha.2 二维约束布局基线上实现 formatter / presentation、selector / rule、条件视觉 encoding、四种 style preset、闭合 `tableThemeTokens` 与同次 resolution 的 Legend descriptor / manifest seed。Core `theme.style` / `theme.mode` 选择 Table style baseline，shared categorical colors 投影到 Table visual scale；该版本在 descriptor seed 处闭环，Table body 的 JSON-safe composition boundary、Standard Legend / Flex 外围组合、occurrence-safe artifact join 及最终 adapter / SSR / docs 链路进入 alpha.6。
+`0.1.0-alpha.3` 已在 alpha.2 二维约束布局基线上实现 formatter / presentation、selector / rule、条件视觉 encoding、随 mode 变化的默认 baseline 与开放 style definition、闭合 `tableThemeTokens` 与同次 resolution 的 Legend descriptor / manifest seed。省略 Core `theme.style` 时使用默认 Table baseline；显式 `theme.style` 与 `theme.mode` 选择已注入的 Table style baseline，shared categorical colors 投影到 Table visual scale；该版本在 descriptor seed 处闭环，Table body 的 JSON-safe composition boundary、Standard Legend / Flex 外围组合、occurrence-safe artifact join 及最终 adapter / SSR / docs 链路进入 alpha.6。
 
 ## 验证
 

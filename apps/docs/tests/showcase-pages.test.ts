@@ -1,7 +1,7 @@
 import type { CompileOptions } from '@mdx-js/mdx';
 
 import { compile } from '@mdx-js/mdx';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
@@ -18,12 +18,16 @@ import { expandMdxIncludes } from '@/modules/docs/lib';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/index.${lang}.mdx`);
+const scatterExamplePath = (filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/${filename}`);
 const bubbleContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
 const sharedApiContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/_includes/shared-api.${lang}.mdx`);
 const pointContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/plot/mark/point/index.${lang}.mdx`);
+const compositeConceptPath = (lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/kernel/concepts/design/composite/index.${lang}.mdx`);
 
 const compileOptions: CompileOptions = {
   outputFormat: 'function-body',
@@ -42,6 +46,15 @@ const showcaseMeta = (family: string, order: number) => ({
 });
 
 describe('collectShowcasePages', () => {
+  it.each(['zh', 'en'] as const)('Composite %s 概念页保持 MDX 可编译', async lang => {
+    const compiled = String(await compile(readFileSync(compositeConceptPath(lang), 'utf8'), compileOptions));
+
+    expect(compiled).toContain('resolveCompositeDependencies');
+    expect(compiled).toContain('CompileOptions.composites');
+    expect(compiled).toContain('spatialHandles');
+    expect(compiled).toContain('resolveSpatialHandle');
+  });
+
   it('按 family 与 order 提供稳定的 Showcase 页面关系', () => {
     const sections: Array<Section> = [
       {
@@ -117,7 +130,7 @@ describe('collectShowcasePages', () => {
     });
   });
 
-  it('将 gate 前的 Scatter 页面保持为公开 Plot API 驱动的非契约概念预览', () => {
+  it('将 Scatter 页面说明为 Chart-native authoring，并保留独立的 Plot 扩展边界', () => {
     const chartSection = vizSection.find(section => section.id === 'chart');
     const pointsPage = chartSection?.pages.find(page => page.id === 'points');
     const scatterPage = pointsPage?.children?.find(page => page.id === 'scatter');
@@ -131,10 +144,12 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('基于公开 Plot API 的非契约概念预览');
-    expect(en).toContain('non-contract conceptual preview built with the public Plot API');
-    expect(zh).not.toMatch(/Chart 输入|Scatter 预设|recipe 保留|Chart 预设负责/);
-    expect(en).not.toMatch(/Chart input|Scatter preset|recipe reserves|Chart preset owns/);
+    expect(zh).toContain('`@retikz/chart-react`');
+    expect(en).toContain('`@retikz/chart-react`');
+    expect(zh).toContain('`ScatterChart`');
+    expect(en).toContain('`ScatterChart`');
+    expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');
+    expect(en).not.toContain('non-contract conceptual preview built with the public Plot API');
   });
 
   it('同一 family 的 order 冲突时明确失败', () => {
@@ -181,32 +196,8 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    [
-      'zh',
-      [
-        '## Point Mark',
-        '## Axis',
-        '## Legend',
-        '## Label',
-        '## Scale',
-        '## Transform',
-        '## Theme 与 Layout',
-        '## Additional Marks',
-      ],
-    ],
-    [
-      'en',
-      [
-        '## Point Mark',
-        '## Axis',
-        '## Legend',
-        '## Label',
-        '## Scale',
-        '## Transform',
-        '## Theme and Layout',
-        '## Additional Marks',
-      ],
-    ],
+    ['zh', ['## Chart authoring', '## Presentation', '## Plot extensions']],
+    ['en', ['## Chart authoring', '## Presentation', '## Plot extensions']],
   ] as const)('内联展开 %s Scatter 的独有与共享 API，并保持可编译', async (lang, expectedHeadings) => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
     expect(source).toContain('{/* @include viz/chart/shared-api */}');
@@ -217,10 +208,10 @@ describe('collectShowcasePages', () => {
 
     expect(ordered.every(index => index >= 0)).toBe(true);
     expect(ordered).toEqual([...ordered].sort((left, right) => left - right));
-    expect(expanded).toContain("`ScaleProps['type']`");
-    expect(expanded).toContain("'density'");
-    expect(expanded).toContain("'smooth'");
-    expect(expanded).not.toMatch(/MarkValueProp<|NodeShapeChannelValue|ExtensionChannelProp|CoreNodeChannelProps/);
+    expect(expanded).toContain('`IRChart`');
+    expect(expanded).toContain('`ChartProvider`');
+    expect(expanded).toContain('`ChartTitle`');
+    expect(expanded).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
 
     const compiled = String(await compile(expanded, compileOptions));
     expect(compiled).toContain('ShowcaseGallery');
@@ -228,15 +219,15 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    ['zh', ['## 尺寸与面积', '## Point Mark', '## Axis']],
-    ['en', ['## Size and Area', '## Point Mark', '## Axis']],
+    ['zh', ['## 尺寸与面积', '## Point Mark']],
+    ['en', ['## Size and Area', '## Point Mark']],
   ] as const)('%s Bubble 先说明尺寸语义，再复用共享 API', async (lang, expectedHeadings) => {
     const source = readFileSync(bubbleContentPath(lang), 'utf8');
     expect(source).toContain('{/* @include viz/chart/shared-api */}');
     expect(source).toContain('family: scatter-points');
     expect(source).toContain('usage: distribution');
     expect(source).toContain("files: ['bubble-basic', 'bubble-basic.data.ts']");
-    expect(source).toContain("size: 'xl'");
+    expect(source).toContain("size: 'xxl'");
     expect(source).not.toMatch(/BubbleChartSpec|BubbleChartRecipe|@retikz\/chart-react|@retikz\/chart-vanilla/);
 
     const expanded = await expandMdxIncludes(source, lang);
@@ -252,18 +243,49 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 不再把 Bubble 当成同类型示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并保留两个真实数据使用示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
     expect(source).not.toMatch(/scatter-bubble|Bubble encoding|气泡编码/);
     expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);
+    expect(source.match(/id: 'scatter-income-life-expectancy'/g)).toHaveLength(1);
+    expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
+    expect(source).toContain("files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts']");
+    expect(source).toContain("controls: { name: 'scatter-income-life-expectancy' }");
   });
 
-  it.each(['zh', 'en'] as const)('%s 共享标签 API 使用真实默认值', lang => {
+  it('Scatter 生育率与女性劳动参与率示例提供完整的双语 preview 文件', () => {
+    for (const filename of [
+      'scatter-fertility-work.data.ts',
+      'scatter-fertility-work.zh.demo.tsx',
+      'scatter-fertility-work.en.demo.tsx',
+    ]) {
+      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it('Scatter 收入与寿命使用示例提供完整的双语 preview 文件', () => {
+    for (const filename of [
+      'scatter-income-life-expectancy.data.ts',
+      'scatter-income-life-expectancy.controls.ts',
+      'scatter-income-life-expectancy.en.controls.ts',
+      'scatter-income-life-expectancy.zh.demo.tsx',
+      'scatter-income-life-expectancy.en.demo.tsx',
+    ]) {
+      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it.each(['zh', 'en'] as const)('%s 共享 API 只陈述当前 Chart 公开契约', lang => {
     const source = readFileSync(sharedApiContentPath(lang), 'utf8');
 
-    expect(source).toMatch(/\| `labelPosition`[^\n]+\| `top`\s+\|/);
-    expect(source).toMatch(/\| `labelKeepUpright`[^\n]+\| `false`\s+\|/);
+    expect(source).toContain('`IRChart`');
+    expect(source).toContain('`ChartProvider`');
+    expect(source).toContain('`ChartTitle`');
+    expect(source).toContain('`chartThemeStyles`');
+    expect(source).toContain('`plotThemeStyles`');
+    expect(source).toMatch(lang === 'zh' ? /静态 adapter/u : /static adapter/u);
+    expect(source).not.toMatch(/IRChartShared|createChartComposites/);
   });
 
   it.each([

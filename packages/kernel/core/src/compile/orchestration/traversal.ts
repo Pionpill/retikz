@@ -21,6 +21,7 @@ import type {
   PathKindCompileResult,
   ScenePrimitive,
   SceneResource,
+  SpatialHandleOwner,
   Transform,
 } from '../../contract';
 import type {
@@ -134,6 +135,7 @@ import {
   stableSortByZIndex,
 } from './primitive';
 import { createRuntimeTopologyTracker } from './runtime-topology';
+import { replayPendingSpatialHandle } from './spatial-handle';
 import { resolveTheme } from './theme';
 import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
 
@@ -888,6 +890,7 @@ export const compileChildrenToPrimitives = (
     const scopeObservations: TraversalFrame['observationSink'] = [];
     const scopeArtifacts: TraversalFrame['artifactSink'] = [];
     const scopeCompileObservations: TraversalFrame['compileObservationSink'] = [];
+    const scopeSpatialHandles: TraversalFrame['spatialHandleSink'] = [];
     let scopeTransforms: Array<Transform> = [];
     try {
       const scopeFrame: TraversalFrame = {
@@ -906,6 +909,8 @@ export const compileChildrenToPrimitives = (
         observationSink: scopeObservations,
         artifactSink: scopeArtifacts,
         compileObservationSink: scopeCompileObservations,
+        spatialHandleSink: scopeSpatialHandles,
+        spatialOwnerPath: frame.spatialOwnerPath,
         ...(semanticOwner === undefined ? {} : { semanticOwner }),
       };
       if (compileNested === undefined) {
@@ -938,6 +943,10 @@ export const compileChildrenToPrimitives = (
       frame.artifactSink.push(...scopeArtifacts);
       for (const observation of scopeCompileObservations) {
         observation.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
+      }
+      for (const spatialHandle of scopeSpatialHandles) {
+        spatialHandle.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
+        frame.spatialHandleSink.push(spatialHandle);
       }
       for (const pendingPath of scopePendingPaths) {
         pendingPath.scopeChain.splice(frame.scopeChain.length, 0, ...postTransforms);
@@ -1293,6 +1302,20 @@ export const compileChildrenToPrimitives = (
         }),
       );
     }
+    for (const pending of transaction.spatialHandles) {
+      const spatialHandle = replayPendingSpatialHandle(pending, occurrence, outputIndex, transaction.originOccurrence);
+      if (authoredPreliminary !== undefined && authoredPreliminary.length > 0) {
+        spatialHandle.scopeChain.splice(
+          frame.scopeChain.length - authoredPreliminary.length,
+          0,
+          ...authoredPreliminary,
+        );
+      }
+      if (transforms !== undefined && transforms.length > 0) {
+        spatialHandle.scopeChain.splice(frame.scopeChain.length, 0, ...transforms);
+      }
+      frame.spatialHandleSink.push(spatialHandle);
+    }
     for (const observation of transaction.compileObservations) {
       if (authoredPreliminary !== undefined && authoredPreliminary.length > 0) {
         observation.scopeChain.splice(frame.scopeChain.length - authoredPreliminary.length, 0, ...authoredPreliminary);
@@ -1328,6 +1351,7 @@ export const compileChildrenToPrimitives = (
   ): PreparedCompositeOutputs => {
     const preparedOutputs = new Map<object, PreparedRuntimeOutput>();
     const preparedReplays = new Map<CompositeReplay, PreparedReplay>();
+    const reachableSpatialHandleKeys = new Set<string>();
     const entriesToConsume: Array<{ used: boolean }> = [];
     const transactionsToConsume: Array<CompositeReplayTransaction> = [];
     const visitHandle = (handle: unknown): void => {
@@ -1353,6 +1377,14 @@ export const compileChildrenToPrimitives = (
       }
       entriesToConsume.push(entry);
       if (entry.child.kind === 'scope') {
+        for (const declaration of entry.child.spatialHandles ?? []) {
+          if (reachableSpatialHandleKeys.has(declaration.key)) {
+            throw new CompositeContractError(
+              `${owner.label} declared duplicate spatial handle key '${declaration.key}' across reachable runtime Scopes.`,
+            );
+          }
+          reachableSpatialHandleKeys.add(declaration.key);
+        }
         const scopeClipShape =
           entry.child.props.clip === undefined ? undefined : runtime.context.clip.resolve(entry.child.props.clip);
         preparedOutputs.set(handle, {
@@ -1417,6 +1449,7 @@ export const compileChildrenToPrimitives = (
     index: number,
     frame: TraversalFrame,
     parentOccurrence: CompileOccurrenceLocator,
+    ownerOccurrence: CompileOccurrenceLocator,
     scopeSegment: 'output' | 'scopeChild',
     compositeDepth: number,
     owner: CompositeCompileOwner,
@@ -1455,6 +1488,15 @@ export const compileChildrenToPrimitives = (
       compositeDepth,
       scopeSemanticOwner,
       (scopeFrame, scopePreliminaryTransforms) => {
+        for (const declaration of output.spatialHandles ?? []) {
+          scopeFrame.spatialHandleSink.push({
+            ownerPath: scopeFrame.spatialOwnerPath,
+            declaration,
+            finalOccurrence: freezeOccurrence(ownerOccurrence),
+            originOccurrence: freezeOccurrence(ownerOccurrence),
+            scopeChain: [...scopeFrame.scopeChain],
+          });
+        }
         for (const [childIndex, child] of output.children.entries()) {
           if (!isCompositeOutputHandle(child)) {
             const childOccurrence: CompileOccurrenceLocator = {
@@ -1483,6 +1525,7 @@ export const compileChildrenToPrimitives = (
             childIndex,
             scopeFrame,
             scopeOccurrence,
+            ownerOccurrence,
             'scopeChild',
             compositeDepth,
             owner,
@@ -1535,17 +1578,38 @@ export const compileChildrenToPrimitives = (
       schema: definition.schema,
       value: child,
     });
+    const parsedId = (parsed as Record<string, unknown>).id;
+    const spatialOwner: SpatialHandleOwner = Object.freeze({
+      namespace: child.namespace,
+      type: child.type,
+      ...(typeof parsedId === 'string' ? { instanceId: parsedId } : {}),
+      occurrence: freezeOccurrence(occurrence),
+    });
+    const spatialOwnerPath = Object.freeze([...frame.spatialOwnerPath, spatialOwner]);
     if (definition.expand !== undefined) {
       const callable = definition as unknown as {
-        expand: (node: unknown, context: Readonly<{ theme: TraversalFrame['theme'] }>) => IRChild | Array<IRChild>;
+        expand: (
+          node: unknown,
+          context: Readonly<{ theme: TraversalFrame['theme'] }>,
+        ) => import('../../contract').CompositeExpandResult;
       };
       const produced = callable.expand(parsed, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
-      for (const [outputIndex, output] of expanded.entries()) {
+      for (const declaration of expanded.spatialHandles ?? []) {
+        frame.spatialHandleSink.push({
+          ownerPath: spatialOwnerPath,
+          declaration,
+          finalOccurrence: freezeOccurrence(occurrence),
+          originOccurrence: freezeOccurrence(occurrence),
+          scopeChain: [...frame.scopeChain],
+        });
+      }
+      const expandedFrame: TraversalFrame = { ...frame, spatialOwnerPath };
+      for (const [outputIndex, output] of expanded.children.entries()) {
         compileChild(
           output,
           outputIndex,
-          frame,
+          expandedFrame,
           {
             sourcePath: occurrence.sourcePath,
             expansionPath: [...occurrence.expansionPath, { kind: 'expand', index: outputIndex }],
@@ -1640,6 +1704,7 @@ export const compileChildrenToPrimitives = (
         probe: true,
         proposal: clonedProposal,
         session: runtime.context.session,
+        spatialOwnerPath,
         ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
         observeWarningOccurrence: current => {
           probeWarningOccurrence = current ?? probeOccurrence;
@@ -1677,6 +1742,7 @@ export const compileChildrenToPrimitives = (
         warnings,
         artifacts: laid.artifacts,
         compileObservations: laid.compileObservations,
+        spatialHandles: laid.spatialHandles,
         styleFingerprint: replayStyleFingerprint(probeStyleStack),
         themeFingerprint: replayThemeFingerprint(probeTheme),
         ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
@@ -1732,7 +1798,8 @@ export const compileChildrenToPrimitives = (
         replay: (layoutResult, wrapper) =>
           createCompositeReplayChild(runtime.context.session, owner, layoutResult, wrapper),
         raise: failure => raiseLayoutChildFailure(runtime.context.session.failures, owner, failure),
-        scope: (props, children) => createCompositeScopeChild(runtime.context.session, owner, props, children),
+        scope: (props, children, spatialHandles) =>
+          createCompositeScopeChild(runtime.context.session, owner, props, children, spatialHandles),
       });
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
@@ -1759,6 +1826,9 @@ export const compileChildrenToPrimitives = (
       const resultAllocationBounds = result.allocationBounds;
       const resultAlignmentGuides = result.alignmentGuides;
       const resultArtifact = result.artifact;
+      if ('spatialHandles' in callbackResult) {
+        throw new CompositeContractError(`${owner.label} returned unsupported compile result field 'spatialHandles'.`);
+      }
       if (!Array.isArray(resultChildren)) {
         throw new CompositeContractError(
           `${owner.label} returned an invalid compile result; children must be an array.`,
@@ -1776,7 +1846,6 @@ export const compileChildrenToPrimitives = (
         resultAlignmentGuides === undefined
           ? undefined
           : cloneAlignmentGuides(resultAlignmentGuides, `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`);
-
       let compositeArtifact: CompositeCompileArtifact | undefined;
       if (resultArtifact !== undefined) {
         if (callable.artifactSchema === undefined) {
@@ -1826,6 +1895,7 @@ export const compileChildrenToPrimitives = (
     const outputFrame: TraversalFrame = {
       ...frame,
       alignmentGuideSink: [],
+      spatialOwnerPath,
       ...(explicitAllocation === undefined ? {} : { allocationBoundary: {} }),
     };
     const preparedOutputs = preflightCompositeOutputs(children, owner);
@@ -1856,6 +1926,7 @@ export const compileChildrenToPrimitives = (
           })(),
         outputIndex,
         outputFrame,
+        occurrence,
         occurrence,
         'output',
         compositeDepth + 1,
@@ -1954,6 +2025,7 @@ export const compileChildrenToPrimitives = (
   const rootLayouts: TraversalFrame['layoutSink'] = [];
   const rootArtifacts: TraversalFrame['artifactSink'] = [];
   const rootCompileObservations: TraversalFrame['compileObservationSink'] = [];
+  const rootSpatialHandles: TraversalFrame['spatialHandleSink'] = [];
   const rootAlignmentGuides: TraversalFrame['alignmentGuideSink'] = [];
   compileChildren(
     rootChildren,
@@ -1973,6 +2045,8 @@ export const compileChildrenToPrimitives = (
       observationSink: rootObservations,
       artifactSink: rootArtifacts,
       compileObservationSink: rootCompileObservations,
+      spatialHandleSink: rootSpatialHandles,
+      spatialOwnerPath: options.spatialOwnerPath ?? [],
       ...(options.semanticOwner === undefined && runtime.state.identityTracker === undefined
         ? {}
         : { semanticOwner: options.semanticOwner ?? runtime.state.identityTracker?.root }),
@@ -2024,6 +2098,7 @@ export const compileChildrenToPrimitives = (
     observations: rootObservations,
     artifacts: orderCompileArtifacts(rootArtifacts),
     compileObservations: rootCompileObservations,
+    spatialHandles: rootSpatialHandles,
     ...(alignmentGuides === undefined ? {} : { alignmentGuides }),
   };
 };

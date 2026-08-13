@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { createGrid, GridDefinition, LegendContentKind, LegendDefinition } from '@retikz/standard';
+import { createGrid, GridDefinition, LegendContentKind, LegendProvider } from '@retikz/standard';
 import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -45,18 +45,16 @@ describe('Standard React definition loading', () => {
       ),
     ).not.toThrow();
     expect(
-      Legend.embeddableAdapter
-        .contribute({
-          kind: LegendContentKind.Items,
-          children: (
-            <LegendItem
-              itemKey="grid"
-              sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />}
-            />
-          ),
-        })
-        .makeComposites({}),
-    ).toEqual([LegendDefinition]);
+      Legend.embeddableAdapter.contribute({
+        kind: LegendContentKind.Items,
+        children: (
+          <LegendItem
+            itemKey="grid"
+            sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />}
+          />
+        ),
+      }).compositeDependencies,
+    ).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 
   it('compiles direct Standard IR with explicit definitions', () => {
@@ -71,13 +69,20 @@ describe('Standard React definition loading', () => {
     expect(svg).toContain('<path');
   });
 
-  it('leaves duplicate JSX and explicit definition registration fail-loud', () => {
+  it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout composites={[GridDefinition]} width={120} height={80}>
           <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         </Layout>,
       ),
-    ).toThrow(/duplicate composite registration.*standard\.grid/i);
+    ).not.toThrow();
+    expect(() =>
+      renderToStaticMarkup(
+        <Layout composites={[{ ...GridDefinition }]} width={120} height={80}>
+          <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
+        </Layout>,
+      ),
+    ).toThrow(/definition conflict.*standard\.grid/i);
   });
 });

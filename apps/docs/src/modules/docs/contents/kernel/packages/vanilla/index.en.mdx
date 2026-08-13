@@ -211,7 +211,7 @@ Retained `update()` accepts only backend-matched closed plain-data options. SVG 
 
 `figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR. Alpha.2 folds it into a retained-config hint, but the SVG and Canvas renderers do not consume it yet and do not enable auto, static, or dynamic layer reuse from it.
 
-Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child, datasets, and composite definitions.
+Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child and a rooted composite provider contribution.
 
 An adapter root may reuse the embed id when authoring and canonical IR represent the same semantic element; a complex adapter may also emit other unique ids. Vanilla records actual ownership through `identityIndex` and `parentIndex` instead of requiring an `embedId/...` string prefix. Public identities must still be unique across the figure.
 
@@ -223,11 +223,9 @@ type BadgeProps = { label: string };
 
 const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
   kind: 'badge',
-  namespace: 'badge',
   lower: (props, context) => ({
     node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
-    datasets: {},
-    makeComposites: () => [],
+    compositeDependencies: { roots: [], providers: [] },
   }),
 };
 

@@ -113,7 +113,7 @@ describe('changelog data', () => {
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
-  it.each(['data', 'table', 'plot'] as const)('当前 Viz %s 分区注册独立更新日志详情路由', sectionId => {
+  it.each(['data', 'chart', 'table', 'plot'] as const)('当前 Viz %s 分区注册独立更新日志详情路由', sectionId => {
     const section = vizSection.find(entry => entry.id === sectionId);
     const changelogPage = section?.pages.find(page => page.id === 'changelog');
     const currentRelease = changelogForModule('viz', sectionId)[0];

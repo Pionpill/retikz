@@ -1,12 +1,19 @@
+import type { ExternalRow } from '@retikz/data';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 import type { ReactNode } from 'react';
 
 import { isRetikzError, RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotAuthoringContext, PlotComposition, PlotDeclarationPath } from '../../../src/adapter';
+import type {
+  PlotAuthoringContext,
+  PlotComposition,
+  PlotDeclarationPath,
+  PlotDeclarationSource,
+} from '../../../src/adapter';
 
-import { collectPlotDeclarations, normalizePlotDeclarations, PlotDeclarationError } from '../../../src/adapter';
+import { resolvePlotExtensionAuthoring } from '../../../src';
+import { PlotDeclarationError } from '../../../src/adapter';
 import { Axis, Facet, Legend, PointMark, Scale, Transform } from '../../../src/components';
 import { Plot } from '../../../src/Plot';
 
@@ -19,8 +26,8 @@ const extensionContext = (overrides: Partial<PlotAuthoringContext> = {}): PlotAu
 const normalizeExtension = (
   children: ReactNode,
   overrides: Partial<PlotAuthoringContext> = {},
-): ReturnType<typeof normalizePlotDeclarations> =>
-  normalizePlotDeclarations(collectPlotDeclarations(children), extensionContext(overrides));
+): ReturnType<typeof resolvePlotExtensionAuthoring> =>
+  resolvePlotExtensionAuthoring(children, extensionContext(overrides));
 
 const expectDeclarationError = (
   run: () => unknown,
@@ -131,18 +138,37 @@ describe('Plot chart-extension declaration normalization', () => {
     });
   });
 
+  it('preserves Plot runtime sidecars without serializing them into the member fragment', () => {
+    const resolveLabel = (row: ExternalRow): string => String(row.label);
+    const result = normalizeExtension(<PointMark id="labelled" x="x" y="y" resolveLabel={resolveLabel} />);
+
+    expect(result.fragment).toEqual({
+      marks: [{ type: 'point', id: 'labelled', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    });
+    expect(result.runtime).toEqual({ resolveLabel: { labelled: resolveLabel } });
+    expect(JSON.stringify(result.fragment)).not.toContain('resolveLabel');
+  });
+
+  it('rejects duplicate JSX and typed mark sources with their original paths', () => {
+    const marks: PlotDeclarationSource<ReadonlyArray<NonNullable<PlotAuthoringContext['marks']>['value'][number]>> = {
+      value: [{ type: 'point', encoding: { x: { field: 'amount' }, y: { field: 'margin' } } }],
+      path: ['props', 'marks'],
+    };
+
+    expectDeclarationError(
+      () => normalizeExtension(<PointMark x="amount" y="margin" />, { marks }),
+      'duplicate-declaration-source',
+      ['children', 0],
+      ['props', 'marks'],
+    );
+  });
+
   it.each([
     {
       name: 'raw function child',
       children: (() => 'runtime') as unknown as ReactNode,
       code: 'non-serializable-extension' as const,
       path: ['children', 0] as const,
-    },
-    {
-      name: 'mark resolveLabel callback',
-      children: <PointMark id="point" x="x" y="y" resolveLabel={row => String(row.x)} />,
-      code: 'non-serializable-extension' as const,
-      path: ['children', 0, 'props', 'resolveLabel'] as const,
     },
     {
       name: 'nested Plot',

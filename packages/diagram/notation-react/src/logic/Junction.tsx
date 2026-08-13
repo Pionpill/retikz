@@ -2,27 +2,22 @@ import type { JunctionInput } from '@retikz/notation';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createJunction, JunctionDefinition } from '@retikz/notation';
+import { createJunction, JunctionProvider } from '@retikz/notation';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { NotationJunctionReactNamespace } from '../shared';
 import { resolveSemanticNodeInput } from './authoring';
 
 /** Junction React 编写参数 */
 export type JunctionProps = JunctionInput & Readonly<{ children?: ReactNode }>;
 
-const makeJunctionComposites = () => [JunctionDefinition];
-
 const junctionEmbeddableAdapter: EmbeddableTier2Adapter<JunctionProps> = {
   displayName: 'Junction',
-  namespace: NotationJunctionReactNamespace,
   contribute: props => {
     const { children, ...input } = props;
     return {
       node: createJunction(resolveSemanticNodeInput(children, input)),
-      datasets: {},
-      makeComposites: makeJunctionComposites,
+      compositeDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
     };
   },
 };

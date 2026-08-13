@@ -1,15 +1,14 @@
 import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 
-import { resolveCoreThemeColors } from '../../providers/theme';
+import { resolveDefaultCoreThemeColors } from '../../providers/theme';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
-import { ThemeMode, ThemeStyle } from '../../shared';
+import { ThemeMode } from '../../shared';
 
 /** Core compile 的冻结 Theme 基线 */
 export const DEFAULT_RESOLVED_THEME: ResolvedTheme = Object.freeze({
-  style: ThemeStyle.Neutral,
   mode: ThemeMode.Light,
-  colors: resolveCoreThemeColors(ThemeStyle.Neutral, ThemeMode.Light),
+  colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 });
 
 /**
@@ -26,6 +25,8 @@ export const resolveTheme = (
   const style = sparse.style ?? parent.style;
   const mode = sparse.mode ?? parent.mode;
   if (style === parent.style && mode === parent.mode) return parent;
+
+  if (style === undefined) return Object.freeze({ mode, colors: resolveDefaultCoreThemeColors(mode) });
 
   const definition = styles.get(style);
   if (definition === undefined) throw new Error(`Theme style '${style}' is not registered at ${path}.`);

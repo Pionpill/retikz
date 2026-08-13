@@ -14,6 +14,8 @@ import {
   PlotThemeTokenOverridesSchema,
 } from '../../schemas';
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
+import { getDefaultPlotThemePreset } from './catalog';
+import { getAxisTokenRules } from './preset';
 import { resolvePlotThemeStyleRegistry } from './registry';
 
 /** 按 Plot style、Plot token 与 native Plot theme 顺序解析主题 */
@@ -24,12 +26,16 @@ export const resolvePlotTheme = (
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;
   const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
-  const definition = styles.get(style);
-  if (definition === undefined) throw new Error(`Plot theme style '${style}' is not registered.`);
+  const definition = style === undefined ? undefined : styles.get(style);
+  if (style !== undefined && definition === undefined)
+    throw new Error(`Plot theme style '${style}' is not registered.`);
   const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
   const localTokenRules = PlotAxisThemeTokenRulesSchema.parse(input.plotThemeTokenRules ?? []);
   const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
-  const styleResolution = definition.resolve(effectiveTheme);
+  const styleResolution =
+    definition === undefined
+      ? { tokens: getDefaultPlotThemePreset(mode, effectiveTheme.colors.categorical), tokenRules: getAxisTokenRules() }
+      : definition.resolve(effectiveTheme);
   const baseline = PlotResolvedThemeTokensSchema.parse(styleResolution.tokens);
   const styleTokenRules = PlotAxisThemeTokenRulesSchema.parse(styleResolution.tokenRules ?? []);
   const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
@@ -55,7 +61,7 @@ export const resolvePlotTheme = (
     return {
       token,
       kind: ThemeTokenSource.Local,
-      path: `$style/${style}/${mode}/${token}`,
+      path: style === undefined ? `$default/${mode}/${token}` : `$style/${style}/${mode}/${token}`,
     };
   });
   const palette = {
@@ -64,6 +70,7 @@ export const resolvePlotTheme = (
     sector: [...tokens[PlotThemeToken.PlotPaletteSector]],
     sequential: tokens[PlotThemeToken.PlotPaletteSequential],
     diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
+    shape: structuredClone(tokens[PlotThemeToken.PlotPaletteShape]),
   };
   const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] =
     authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }];
@@ -71,7 +78,8 @@ export const resolvePlotTheme = (
     ...styleTokenRules.map((rule, index) => ({
       rule,
       kind: ThemeTokenSource.Local,
-      path: `$style/${style}/${mode}/tokenRules/${index}`,
+      path:
+        style === undefined ? `$default/${mode}/tokenRules/${index}` : `$style/${style}/${mode}/tokenRules/${index}`,
     })),
     ...localTokenRules.map((rule, index) => ({
       rule,
@@ -80,7 +88,7 @@ export const resolvePlotTheme = (
     })),
   ];
   return PlotThemeResolutionSchema.parse({
-    style,
+    ...(style === undefined ? {} : { style }),
     mode,
     tokens,
     tokenSources,

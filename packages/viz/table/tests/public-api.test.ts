@@ -82,9 +82,10 @@ type RemovedStageTypes = [
 ];
 
 describe('@retikz/table public API', () => {
-  it('exports the alpha.2 compile, schema, and manifest surface without pipeline stages', () => {
+  it('exports the runtime contribution, compile, schema, and manifest surface without pipeline stages', () => {
     expect(Table).toHaveProperty('createTableRuntimeContribution');
-    expect(Table).toHaveProperty('makeTableRuntimeComposites');
+    expect(Table).toHaveProperty('createTableProvider');
+    expect(Table).not.toHaveProperty('makeTableRuntimeComposites');
     expect(Table).toHaveProperty('lowerTables');
     expect(Table).toHaveProperty('compileTable');
     expect(Table).not.toHaveProperty('lowerTableWithArtifacts');
@@ -117,7 +118,8 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableThemeTokenBorderSchema');
     expect(Table).toHaveProperty('TableThemeTokenOverridesSchema');
     expect(Table).toHaveProperty('TableThemeTokenMapSchema');
-    expect(Table).toHaveProperty('BUILTIN_TABLE_THEME_TOKENS');
+    expect(Table).toHaveProperty('getDefaultTableThemePreset');
+    expect(Table).not.toHaveProperty('BUILTIN_TABLE_THEME_TOKENS');
     expect(Table).not.toHaveProperty('TableStyle');
     expect(Table).not.toHaveProperty('TableThemeMode');
     expect(Table).not.toHaveProperty('TableStyleTokenShape');

@@ -16,6 +16,7 @@ export const librarySection: Array<Section> = [
           { id: 'grid', label: 'library.standardGrid', difficulty: DocDifficulty.Beginner },
           { id: 'axes', label: 'library.standardAxes', difficulty: DocDifficulty.Advanced },
           { id: 'frame', label: 'library.standardFrame', difficulty: DocDifficulty.Advanced },
+          { id: 'surface', label: 'library.standardSurface', difficulty: DocDifficulty.Advanced },
           { id: 'legend', label: 'library.standardLegend', difficulty: DocDifficulty.Advanced },
         ],
       },

@@ -1,4 +1,4 @@
-﻿import type { IRNode, IRScope } from '@retikz/core';
+import type { IRNode, IRScope } from '@retikz/core';
 
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
@@ -88,7 +88,7 @@ const expandOf = (
   options: LowerPlotsOptions,
 ): IRScope => {
   const [def] = lowerPlots(datasets, options);
-  return def.expand(spec) as IRScope;
+  return def.expand(spec).children[0] as IRScope;
 };
 
 describe('scale registry（contract spec）', () => {

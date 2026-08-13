@@ -56,6 +56,7 @@ describe('GuideSchema contract', () => {
       grid: {
         ticks: { interval: { kind: 'number', step: 10 } },
         density: { kind: 'sample', maxCount: 4 },
+        includeDomain: true,
         bandPosition: 0,
         lineCap: 'round',
         minor: {
@@ -69,6 +70,16 @@ describe('GuideSchema contract', () => {
     };
 
     expect(AxisGuideSchema.parse(guide)).toEqual(guide);
+  });
+
+  it('axis_grid_domain_endpoint_policy_accepts_boolean_and_roundtrips', () => {
+    const guide = {
+      type: 'axis',
+      dimension: 'x',
+      grid: { includeDomain: false },
+    };
+
+    expect(AxisGuideSchema.parse(JSON.parse(JSON.stringify(guide)))).toEqual(guide);
   });
 
   // 边界
@@ -108,6 +119,20 @@ describe('GuideSchema contract', () => {
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { bandPosition: 1.1 } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: true } })).toThrow();
     expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { minor: {} } })).toThrow();
+  });
+
+  it('axis_grid_domain_endpoint_policy_rejects_non_boolean_and_minor_usage', () => {
+    expect(() => AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { includeDomain: 'yes' } })).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({
+        type: 'axis',
+        dimension: 'x',
+        grid: { minor: { ticks: { values: [0.5] }, includeDomain: true } },
+      }),
+    ).toThrow();
+    expect(() =>
+      AxisGuideSchema.parse({ type: 'axis', dimension: 'x', grid: { includeDomain: true, endpoint: true } }),
+    ).toThrow();
   });
 
   it('legend_symbol_layout_rejects_invalid_values', () => {
@@ -455,7 +480,7 @@ describe('GuideSchema contract', () => {
     ).toThrow();
   });
 
-  it('theme_axis_grid_accepts_line_cap_but_rejects_semantic_grid_fields', () => {
+  it('theme_axis_grid_accepts_line_cap_and_domain_endpoints_but_rejects_guide_only_fields', () => {
     expect(() =>
       PlotSpecSchema.parse({
         namespace: 'plot',
@@ -467,13 +492,16 @@ describe('GuideSchema contract', () => {
         ],
         coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
         marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
-        plotTheme: { axis: { grid: { stroke: '#ddd', lineCap: 'round' } } },
+        plotTheme: {
+          axis: { grid: { stroke: '#ddd', lineCap: 'round', includeDomain: true } },
+        },
       }),
     ).not.toThrow();
 
     for (const grid of [
       { ticks: { count: 4 } },
       { density: { kind: 'sample', maxCount: 4 } },
+      { includeDomain: 'yes' },
       { minor: { ticks: { values: [1] } } },
       { bandPosition: 0.5 },
       { applyTo: 'all' },

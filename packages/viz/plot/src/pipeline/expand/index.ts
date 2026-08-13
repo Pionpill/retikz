@@ -2,6 +2,7 @@ export { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from './compositi
 export { prepareRows, validateFieldMaps } from './data';
 export { resolveFrame } from './frame';
 export { lowerPlots } from './lower';
+export { createPlotProvider, PlotProviderKey } from './provider';
 export type {
   CoordinateFrameResolution,
   CoordinateScopeRegistry,

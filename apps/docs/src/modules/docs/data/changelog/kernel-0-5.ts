@@ -211,8 +211,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '可继承 Theme 环境', en: 'Inherited Theme environment' },
           content: {
-            zh: '`IRScene.theme` 与 `IRScope.theme` 以 `neutral + light` 为基线逐字段继承；无布局与布局感知 Composite 都收到完整只读 Theme，并由领域 owner 自行映射 token。Core 图元、最终 Scene 与 SVG / Canvas renderer 不解释 Theme。',
-            en: '`IRScene.theme` and `IRScope.theme` inherit per field from a `neutral + light` baseline. Both expand and layout-aware composites receive the complete readonly Theme and let the domain owner map its own tokens. Core primitives, the final Scene, and SVG / Canvas renderers do not interpret Theme.',
+            zh: '`IRScene.theme` 与 `IRScope.theme` 以默认 light 基线逐字段继承；无布局与布局感知 Composite 都收到完整只读 Theme，并由领域 owner 自行映射 token。Core 图元、最终 Scene 与 SVG / Canvas renderer 不解释 Theme。',
+            en: '`IRScene.theme` and `IRScope.theme` inherit per field from the default light baseline. Both expand and layout-aware composites receive the complete readonly Theme and let the domain owner map its own tokens. Core primitives, the final Scene, and SVG / Canvas renderers do not interpret Theme.',
           },
         },
       ],
@@ -245,8 +245,15 @@ export const kernelV05: Release = {
                 en: 'BREAKING: Lightweight Theme selectors and shared colors',
               },
               content: {
-                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver；自定义 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
-                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. `defineThemeStyle` and `themeStyles` register Core runtime resolvers; each consuming owner such as Plot or Chart must provide a same-named resolver, and a missing entry fails loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+                zh: '`Theme` 现在只持久化稀疏 `style / mode`；`ResolvedTheme` 在解析期提供 detached/frozen 的 `colors.semantic` 与非空 `colors.categorical`。省略 `style` 时使用默认基线；`defineThemeStyle` 与 `themeStyles` 注册 Core runtime resolver，应用 style 必须由实际消费的 Plot、Chart 等 owner 提供同名 resolver，缺失项会 fail-loud。函数与完整 token map 不进入 IR、snapshot 或 JSON。',
+                en: '`Theme` now persists only sparse `style / mode`; `ResolvedTheme` provides a detached, frozen `colors.semantic` view and non-empty `colors.categorical` palette during resolution. Omitting `style` selects the default baseline; `defineThemeStyle` and `themeStyles` register Core runtime resolvers, and each application style must provide a same-named resolver for every consuming owner such as Plot or Chart. Missing entries fail loudly. Functions and complete token maps never enter IR, snapshots, or JSON.',
+              },
+            },
+            {
+              label: { zh: '内建 shared colors 调整', en: 'Built-in shared color refinement' },
+              content: {
+                zh: 'Core 默认 baseline 以 D3 Tableau10 为参考；本站注入的 Academic、Clean 与 Vibrant reference definitions 分别参考 Vega Category10 / Seaborn deep、D3 Set2 与 D3 Observable10。四种预览选择重新平衡固定 16 项 categorical palette 的色度与明度；Light / Dark semantic colors 同步调整，并固定 error 红、success 绿、warning 黄。Hue 索引、显式 palette 与覆盖级联保持不变。',
+                en: 'The Core default baseline references D3 Tableau10. The site-injected Academic, Clean, and Vibrant reference definitions draw from Vega Category10 / Seaborn deep, D3 Set2, and D3 Observable10. All four preview choices rebalance chroma and lightness across the fixed 16-color categorical palette. Light / Dark semantic colors move with them while keeping error red, success green, and warning yellow. Hue indices, explicit palettes, and the override cascade remain unchanged.',
               },
             },
             {

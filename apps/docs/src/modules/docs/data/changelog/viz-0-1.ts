@@ -175,6 +175,108 @@ export const vizV01: Release = {
       ],
     },
     {
+      pkg: '@retikz/chart',
+      stableDate: null,
+      version: 'v0.1',
+      description: {
+        zh: 'Tier 3 Chart 封装层：以完整 PlotSpec 为数据与图形主链，在其外组合整图 presentation，并保持 renderer-neutral 的 canonical Chart 结果。',
+        en: 'The Tier 3 Chart wrapper: it keeps complete PlotSpec as the data-and-graphics path, composes whole-chart presentation around it, and preserves a renderer-neutral canonical Chart result.',
+      },
+      highlights: [
+        {
+          label: { zh: '单一 Chart 主链', en: 'One canonical Chart path' },
+          content: {
+            zh: '基础 Chart 与已实现 typed Chart 在完整 PlotSpec 后汇合为 `IRChart`，由单一 `chart.chart` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body；不再存在 DOM-only 标题或按 adapter 分叉的执行路径。',
+            en: 'Base Chart and implemented typed Charts converge on `IRChart` after producing a complete PlotSpec. One `chart.chart` provider composes Standard Surface, optional Flex presentation, and the sole Plot body; there is no DOM-only title or adapter-specific execution path.',
+          },
+        },
+        {
+          label: { zh: '有序图内说明', en: 'Ordered in-chart presentation' },
+          content: {
+            zh: '`title`、`subtitle`、`source` 与 `note` 使用默认样式直接进入图内；React headless marker 与 Vanilla plain record 可按作者出现顺序排在 Plot 上下，且整体覆盖同名 shorthand。',
+            en: '`title`, `subtitle`, `source`, and `note` render inside the chart with default styling. React headless markers and Vanilla plain records can appear above or below the Plot in authored order and override a same-preset shorthand as a whole.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-08-12',
+          summary: {
+            zh: '首次公开基础 Chart 与有序 presentation，并以 Standard Surface 包装完整图表内容。',
+            en: 'First public base Chart and ordered presentation, wrapped as complete chart content by Standard Surface.',
+          },
+          items: [
+            {
+              label: { zh: '图内 title、subtitle、source、note', en: 'In-chart title, subtitle, source, and note' },
+              content: {
+                zh: '四类唯一 preset 支持默认属性与 JSON-safe canonical result；没有 presentation 时 Surface 直接包裹 Plot，有 presentation 时按 authored order 经 Flex 布局后再包裹。',
+                en: 'The four unique presets support default props and a JSON-safe canonical result. Without presentation Surface wraps Plot directly; with presentation it wraps authored-order Flex layout.',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      pkg: '@retikz/chart-react',
+      stableDate: null,
+      version: 'v0.1',
+      description: {
+        zh: 'Chart 的 React authoring 与 runtime 绑定：提供基础 Chart、typed Chart 与受限的 headless presentation marker。',
+        en: 'React authoring and runtime bindings for Chart: base Chart, typed Charts, and constrained headless presentation markers.',
+      },
+      highlights: [
+        {
+          label: { zh: '基础与 typed JSX authoring', en: 'Base and typed JSX authoring' },
+          content: {
+            zh: '`Chart` 保留完整 Plot authoring；`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart` 先生成各自 recipe 的完整 PlotSpec，再进入同一 Chart 主链。',
+            en: '`Chart` preserves complete Plot authoring. `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` first create each recipe’s complete PlotSpec, then enter the same Chart path.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-08-12',
+          summary: {
+            zh: 'React adapter 提供图内 presentation marker、基础 Chart 与首批 point-family Chart 入口。',
+            en: 'The React adapter adds in-chart presentation markers, base Chart, and the first point-family Chart entries.',
+          },
+          items: [],
+        },
+      ],
+    },
+    {
+      pkg: '@retikz/chart-vanilla',
+      stableDate: null,
+      version: 'v0.1',
+      description: {
+        zh: 'Chart 的 plain authoring、SSR 与运行时绑定：以显式值保留 Theme 输入，并从同一个 compile result 生成输出。',
+        en: 'Plain authoring, SSR, and runtime bindings for Chart: Theme inputs remain explicit values and output comes from one compile result.',
+      },
+      highlights: [
+        {
+          label: { zh: 'Plain-data 与单次编译', en: 'Plain data and one compile' },
+          content: {
+            zh: '`createChart` 及 typed helpers 返回 canonical Chart 与完整 contribution；`renderChart` 在一次 Core compile 中合并可用 Theme、composite 与 compile 输入，并返回生成 SVG 的同一 compile result。',
+            en: '`createChart` and typed helpers return canonical Chart plus its complete contribution. `renderChart` merges applicable Theme, composites, and compile input in one Core compile, returning the same compile result that produces its SVG.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-08-12',
+          summary: {
+            zh: 'Vanilla adapter 提供与 JSX 等价的 plain authoring、SSR 与 runtime Chart 入口。',
+            en: 'The Vanilla adapter provides JSX-equivalent plain authoring, SSR, and runtime Chart entry points.',
+          },
+          items: [],
+        },
+      ],
+    },
+    {
       pkg: '@retikz/plot',
       stableDate: '2026-08-03',
       version: 'v0.1',

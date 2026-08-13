@@ -111,9 +111,9 @@ Scatter 默认 size legend 以应用 `mark` 投影后的最终有效 Point size 
 - `mark` 完整复用 Point 的非核心公开字段与非核心 encoding；不能携带 type、identity、transform、view ownership，也不能在 nested encoding 中改写核心 x / y。Bubble 还拒绝 nested encoding 中名为 `size` 的 role 及会替换 glyph 的 `text` mode；这些字段必须 fail-loud，color、channels、datum label 与其它兼容自定义 role 继续沿 Plot schema 接受
 - 缺 x / y、非法视觉值、非二维 coordinate、缺失自定义 definition、保留 identity 冲突或核心配方破坏均 fail-loud
 - 公开时首次形成包含 `scatter` 与 `bubble` 的 ChartSpec discriminated union；JSON、React、Vanilla 分别保留两个 type，并生成等价 ChartSpec、PlotSpec 与最终 composition
-- React 以包级扁平 named exports 提供平级的 `ScatterChart` 与 `BubbleChart`，Vanilla 提供平级的 `scatterChart` 与 `bubbleChart`；四个入口分别生成 `type: 'scatter'` 与 `type: 'bubble'`，不得把 Bubble 在 adapter 层改写成 Scatter。两种 type root 复用同一套 Chart presentation children 与 runtime 接线，不建立 type-specific host
+- React 从 `@retikz/chart-react/point` 提供平级的 `ScatterChart` 与 `BubbleChart`，Vanilla 从 `@retikz/chart-vanilla/point` 提供平级的 `createScatterChart` 与 `createBubbleChart`；四个入口分别生成 `type: 'scatter'` 与 `type: 'bubble'`，不得把 Bubble 在 adapter 层改写成 Scatter。Point subpath 同时 re-export 基础 Chart API，两种 type root 复用同一套 Chart presentation children 与 runtime 接线，不建立 type-specific host
 
-框架无关的 variant authoring input 分别是 `Omit<ScatterChartSpec, 'namespace' | 'type'>` 与 `Omit<BubbleChartSpec, 'namespace' | 'type'>`。Vanilla `scatterChart(input)` / `bubbleChart(input)` 接受对应 input，并确定性补齐 `namespace: 'chart'` 与各自 `type` 后返回完整 variant。React `ScatterChart` / `BubbleChart` 是平级的完整 headless Chart root：`spec` 接受对应 variant input，presentation `layout` 与 children 完整复用 ADR-03 的 `Chart` root 契约；组件只补齐判别值，再委托同一 canonical normalizer。泛型 `<Chart spec={completeChartSpec}>` 仍接受已经包含 `namespace` / `type` 的完整 ChartSpec。两种写法生成同一 canonical variant，variant root 不能嵌套进另一个 `Chart` root。
+框架无关的 variant authoring input 分别是 `Omit<ScatterChartSpec, 'namespace' | 'type'>` 与 `Omit<BubbleChartSpec, 'namespace' | 'type'>`。Vanilla `createScatterChart(input)` / `createBubbleChart(input)` 接受对应 input，并确定性补齐 `namespace: 'chart'` 与各自 `type` 后返回完整 canonical Chart result。React `ScatterChart` / `BubbleChart` 是平级的完整 headless Chart root：presentation 与 children 完整复用 ADR-03 的 `Chart` root 契约；组件只补齐判别值，再委托同一 canonical normalizer。两种写法生成同一 canonical variant，variant root 不能嵌套进另一个 `Chart` root。
 
 ## Plot size / legend dependency contract
 

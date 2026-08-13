@@ -2,6 +2,7 @@ import type { InspectionCompileResult } from '@retikz/inspect';
 
 import { createInspectorRegistry } from '@retikz/inspect';
 import { createInspectionLayoutDriver } from '@retikz/inspect/react';
+import { FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition } from '@retikz/layout';
 import { FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR } from '@retikz/layout/inspect';
 import { buildIRWithContributions, compileLayoutWithDriver, Node } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -9,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 
 import { FlexLayout, LayoutItem } from '../../src';
 import { InspectFlexLayout, InspectGridLayout, LayoutInspectLayout, LayoutInspectScope } from '../../src/inspect';
-import { makeReactLayoutComposites } from '../../src/shared';
 
 describe('@retikz/layout-react/inspect', () => {
   it('通过可选 wrapper 输出 FlexLayout 只读辅助图层', () => {
@@ -82,7 +82,7 @@ describe('@retikz/layout-react/inspect', () => {
       instance: {},
       source: built.ir,
       authoringSites: built.authoringSites,
-      coreOptions: { composites: makeReactLayoutComposites(), padding: 0 },
+      coreOptions: { composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition], padding: 0 },
     } as const;
     const session = driver.create(driverInput);
     const observer = session.observers[0].createSession();
@@ -122,7 +122,7 @@ describe('@retikz/layout-react/inspect', () => {
       instance: {},
       source: built.ir,
       authoringSites: built.authoringSites,
-      coreOptions: { composites: makeReactLayoutComposites(), padding: 0 },
+      coreOptions: { composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition], padding: 0 },
     });
 
     expect(() => session.observers[0]?.createSession()).toThrow(/nested Scope/i);

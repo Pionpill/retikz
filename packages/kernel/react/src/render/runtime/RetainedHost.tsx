@@ -1,6 +1,7 @@
 import type {
   AnyCompositeDefinition,
   CompileArtifact,
+  CompileResult,
   CoreProgramOptions,
   CoreProgramOutput,
   IRScene,
@@ -82,6 +83,8 @@ export type RetainedHostProps = Readonly<{
   onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
   /** committed compile artifacts 通知出口 */
   onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  /** committed 完整 compile result 通知出口 */
+  onCompileResult?: (result: CompileResult) => void;
 }>;
 
 type ActiveRuntime = {
@@ -182,6 +185,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
     updateStrategy,
     onDiagnostic,
     onArtifacts,
+    onCompileResult,
   } = props;
   const hostRef = useRef<SVGSVGElement | HTMLCanvasElement | null>(null);
   const runtimeRef = useRef<ActiveRuntime | undefined>(undefined);
@@ -192,6 +196,7 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
   const previousAnimationRef = useRef<Ref<AnimationControls | null> | undefined>(undefined);
   const onDiagnosticRef = useRef(onDiagnostic);
   const onArtifactsRef = useRef(onArtifacts);
+  const onCompileResultRef = useRef(onCompileResult);
 
   const config = useMemo<RenderRuntimeConfigInput>(
     () => ({
@@ -237,7 +242,8 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
     animationRefTarget.current = animationRef;
     onDiagnosticRef.current = onDiagnostic;
     onArtifactsRef.current = onArtifacts;
-  }, [source, config, animationRef, onDiagnostic, onArtifacts]);
+    onCompileResultRef.current = onCompileResult;
+  }, [source, config, animationRef, onDiagnostic, onArtifacts, onCompileResult]);
 
   const publishCommitted = useCallback(
     (active: ActiveRuntime, forceArtifacts: boolean): void => {
@@ -264,6 +270,14 @@ export const RetainedHost: FC<RetainedHostProps> = props => {
       }
       if (active.coreOutput !== coreOutput) {
         active.coreOutput = coreOutput;
+        const callback = onCompileResultRef.current;
+        if (callback !== undefined) {
+          try {
+            callback(compileOutput.primary);
+          } catch (cause) {
+            warnCallbackFailure('onCompileResult', cause);
+          }
+        }
         try {
           compileSession.commit?.(compileOutput);
         } catch (cause) {

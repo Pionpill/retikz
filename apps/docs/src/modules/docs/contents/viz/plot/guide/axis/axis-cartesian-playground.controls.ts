@@ -88,6 +88,7 @@ export const axisCartesianPlaygroundControls = definePreviewControls({
           ],
         },
         { kind: 'range', id: 'gridOpacity', label: '主网格透明度', defaultValue: 0.45, min: 0.15, max: 1, step: 0.05 },
+        { kind: 'switch', id: 'includeDomain', label: '包含值域端点', defaultValue: false },
         { kind: 'switch', id: 'showMinor', label: '显示次网格', defaultValue: true },
         {
           kind: 'select',
@@ -197,6 +198,7 @@ export const previewControlContract = {
     markKind: 'line',
     gridStep: '10',
     gridOpacity: 0.45,
+    includeDomain: false,
     showMinor: true,
     minorStep: '2.5',
     rotation: 'auto',
@@ -212,6 +214,7 @@ export const previewControlContract = {
     'Axis.ticks.density',
     'Axis.ticks.mark',
     'Axis.grid',
+    'Axis.grid.includeDomain',
     'Axis.grid.minor',
     'Axis.tickLabels.layout',
     'Axis.placement',

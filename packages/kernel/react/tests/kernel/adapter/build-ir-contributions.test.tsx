@@ -1,11 +1,13 @@
 import type { FC } from 'react';
 
+import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { EmbeddableTier2Adapter } from '../../../src';
 
-import { Node } from '../../../src/kernel';
+import { Layout, Node } from '../../../src';
 import { Scope } from '../../../src/kernel';
 import { buildIR, buildIRWithContributions } from '../../../src/kernel/adapter';
 
@@ -20,19 +22,21 @@ type EmbeddableFixture = FC<FixtureProps> & {
 /**
  * 构造一个 hook-free 的可嵌入 fixture
  * @description fixture body 被调用时翻转闭包 flag（应保持 false——可嵌入路径不调用组件本身）；
- *   adapter.contribute 据 props 产出 IR 节点 + datasets，供测试断言
+ *   adapter.contribute 据 props 产出 IR 节点 + Core dependency contribution，供测试断言
  */
 const makeFixture = (options: { marked?: boolean; withAdapter?: boolean } = {}) => {
   const { marked = true, withAdapter = true } = options;
   const state = { bodyCalled: false };
   const displayName = 'DemoFixture';
+  const compositeDependencies = {
+    roots: [{ namespace: 'demo', type: 'panel' }],
+    providers: [],
+  } as const;
   const adapter: EmbeddableTier2Adapter<FixtureProps> = {
     displayName,
-    namespace: 'demo',
     contribute: props => ({
       node: { type: 'node', id: props.id, position: [0, 0] },
-      datasets: { [props.id]: props.data },
-      makeComposites: () => [],
+      compositeDependencies,
     }),
   };
   const Fixture: EmbeddableFixture = () => {
@@ -42,22 +46,21 @@ const makeFixture = (options: { marked?: boolean; withAdapter?: boolean } = {}) 
   Fixture.displayName = displayName;
   if (marked) Fixture.isTier2Embeddable = true;
   if (withAdapter) Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
-  return { Fixture, adapter, state };
+  return { Fixture, adapter, compositeDependencies, state };
 };
 
 describe('buildIRWithContributions', () => {
   it('单个可嵌入子组件 → 贡献节点入 IR、记录入 contributions、fixture body 不被调用', () => {
-    const { Fixture, state } = makeFixture();
+    const { Fixture, compositeDependencies, state } = makeFixture();
     const result = buildIRWithContributions(<Fixture id="a" data={{ value: 1 }} />);
     expect(result.ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'a' })]);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0]).toMatchObject({ namespace: 'demo' });
-    expect(result.contributions[0].datasets).toHaveProperty('a');
+    expect(result.contributions[0]).toBe(compositeDependencies);
     expect(state.bodyCalled).toBe(false);
   });
 
   it('嵌套在 <Scope> 内的可嵌入子组件 → 贡献节点入该 scope.children，记录仍平铺进 contributions', () => {
-    const { Fixture, state } = makeFixture();
+    const { Fixture, compositeDependencies, state } = makeFixture();
     const result = buildIRWithContributions(
       <Scope>
         <Fixture id="b" data={{ value: 2 }} />
@@ -68,8 +71,53 @@ describe('buildIRWithContributions', () => {
     if (scope.type !== 'scope') throw new Error('expected scope');
     expect(scope.children).toEqual([expect.objectContaining({ type: 'node', id: 'b' })]);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0]).toMatchObject({ namespace: 'demo' });
+    expect(result.contributions[0]).toBe(compositeDependencies);
     expect(state.bodyCalled).toBe(false);
+  });
+
+  it('将父 Scope 的 effective Theme 传给嵌入 adapter', () => {
+    let receivedMode: string | undefined;
+    const { Fixture, adapter } = makeFixture();
+    adapter.contribute = (_props, context?: { theme: { mode: string } }) => {
+      receivedMode = context?.theme.mode;
+      return {
+        node: { type: 'node', id: 'themed', position: [0, 0] },
+        compositeDependencies: { roots: [], providers: [] },
+      };
+    };
+    Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+
+    buildIRWithContributions(
+      <Scope theme={{ mode: 'dark' }}>
+        <Fixture id="themed" data={null} />
+      </Scope>,
+      undefined,
+      undefined,
+      { theme: DEFAULT_RESOLVED_THEME },
+    );
+
+    expect(receivedMode).toBe('dark');
+  });
+
+  it('将父 Layout 的 effective Theme 传给嵌入 adapter', () => {
+    let receivedMode: string | undefined;
+    const { Fixture, adapter } = makeFixture();
+    adapter.contribute = (_props, context?: { theme: { mode: string } }) => {
+      receivedMode = context?.theme.mode;
+      return {
+        node: { type: 'node', id: 'layout-themed', position: [0, 0] },
+        compositeDependencies: { roots: [], providers: [] },
+      };
+    };
+    Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+
+    renderToStaticMarkup(
+      <Layout theme={{ mode: 'dark' }}>
+        <Fixture id="layout-themed" data={null} />
+      </Layout>,
+    );
+
+    expect(receivedMode).toBe('dark');
   });
 
   it('标记 isTier2Embeddable 但缺 embeddableAdapter → fail-loud throw', () => {
@@ -91,17 +139,15 @@ describe('buildIRWithContributions', () => {
     Plain.displayName = displayName;
     const adapter: EmbeddableTier2Adapter<FixtureProps> = {
       displayName,
-      namespace: 'demo',
       contribute: props => ({
         node: { type: 'node', id: props.id, position: [0, 0] },
-        datasets: { [props.id]: props.data },
-        makeComposites: () => [],
+        compositeDependencies: { roots: [], providers: [] },
       }),
     };
     const result = buildIRWithContributions(<Plain id="d" data={{ value: 4 }} />, [adapter as EmbeddableTier2Adapter]);
     expect(result.ir.children).toEqual([expect.objectContaining({ type: 'node', id: 'd' })]);
     expect(result.contributions).toHaveLength(1);
-    expect(result.contributions[0]).toMatchObject({ namespace: 'demo' });
+    expect(result.contributions[0]).toEqual({ roots: [], providers: [] });
   });
 });
 

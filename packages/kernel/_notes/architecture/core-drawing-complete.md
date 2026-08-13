@@ -20,7 +20,7 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 | -------------- | ----------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------- |
 | 计算底座       | `@retikz/math`                      | 零依赖纯几何、向量、仿射、求交和曲线计算                                               | IR、Scene、layout 语义                |
 | 执行底座       | `@retikz/runtime`                   | identity、ownership、program、transaction、revision 与 trace；协调 Core 等领域 program | Core IR、Scene、几何、renderer        |
-| 主责包         | `@retikz/core`                      | Core IR、definition / registry、compile、Scene 与 headless manifest                    | DOM、renderer 实例、框架状态          |
+| 主责包         | `@retikz/core`                      | Core IR、definition / registry、compile、Scene、Composite assembly 与 headless sidecar | DOM、renderer 实例、框架状态          |
 | Scene 执行包   | `@retikz/render`                    | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                      | 新图形 IR、上层领域语义               |
 | authoring 宿主 | `@retikz/react` / `@retikz/vanilla` | 构造 IR、注入 compile / runtime options、持有宿主生命周期并暴露等价入口                | 平行 IR、adapter 私有图形能力         |
 | 上层消费方     | plot / table / standard 等 Tier 2   | lowering 到 Core IR，复用 Core contract；按需把领域 program 装配到 `@retikz/runtime`   | Core 的通用图形、几何和 renderer 语义 |
@@ -32,6 +32,7 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 ```text
 Core IR / schema
   -> contract / definition
+  -> contribution / dependency provider graph assembly
   -> provider / registry
   -> Theme selector context / style registry resolution
   -> compile / lowering
@@ -43,18 +44,24 @@ Core IR / schema
 
 ## 4. 能力面
 
-| 能力面                | 目标                                                                                                                                         | 主责交界                                                                                                                                     | 不属于 Drawing Complete                        |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Primitive / Scene     | 定义后端中立的最小可渲染图元                                                                                                                 | core 定义，render 执行                                                                                                                       | SVG-only / Canvas-only 快捷 API                |
-| Geometry              | 提供纯函数几何计算和图形构造基础                                                                                                             | math 提供通用计算，core 赋予图形语义                                                                                                         | 单一 domain layout、DOM 测量                   |
-| Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                                                                                                     | core                                                                                                                                         | plot scale、geo projection                     |
-| Transform             | 表达结构化图形空间变换                                                                                                                       | core 定义，render 执行                                                                                                                       | 数据 transform、runtime 状态机                 |
-| Constraint / Layout   | 承载跨图形通用定位和约束                                                                                                                     | core；纯算法可下沉 math                                                                                                                      | flow / graph / table 领域布局                  |
+| 能力面                | 目标                                                                                                                       | 主责交界                                                                                                                  | 不属于 Drawing Complete                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Primitive / Scene     | 定义后端中立的最小可渲染图元                                                                                               | core 定义，render 执行                                                                                                    | SVG-only / Canvas-only 快捷 API                |
+| Geometry              | 提供纯函数几何计算和图形构造基础                                                                                           | math 提供通用计算，core 赋予图形语义                                                                                      | 单一 domain layout、DOM 测量                   |
+| Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                                                                                   | core                                                                                                                      | plot scale、geo projection                     |
+| Transform             | 表达结构化图形空间变换                                                                                                     | core 定义，render 执行                                                                                                    | 数据 transform、runtime 状态机                 |
+| Constraint / Layout   | 承载跨图形通用定位和约束                                                                                                   | core；纯算法可下沉 math                                                                                                   | flow / graph / table 领域布局                  |
 | Style / Resource      | 表达 paint、marker、pattern、clip、effect，并为 Composite 提供可持久化的 Scene / Scope Theme selector 环境与 shared colors | core 定义 Theme IR、继承、style registry、shared colors 与 `InspectionAppearance`，领域 owner 物化默认，render 实现或诊断 | 领域 token vocabulary、preset 具体值与私有效果 |
-| Composition           | 用 scope、group、zIndex、meta 组合复杂图形                                                                                                   | core                                                                                                                                         | 上层私有节点树、不可持久化组合                 |
-| Interaction Readiness | 提供 target、hit area、role、intent、provenance 与查询 manifest                                                                              | core 定义 headless 契约，adapter / runtime 消费                                                                                              | UI、selection 状态机、DOM handler、键盘策略    |
+| Composition           | 用 scope、group、zIndex、meta 组合复杂图形                                                                                 | core                                                                                                                      | 上层私有节点树、不可持久化组合                 |
+| Capability Assembly   | 让嵌套 Tier 2 通过完整 composite key、roots 与显式依赖形成确定性 definition 闭包                                           | core 定义 provider graph 与 resolver，adapter 收集，领域 owner 发布 provider                                              | 动态 import、package discovery、全局注册       |
+| Spatial Transparency  | 让 Composite 声明语义空间并在最终 transform 后发布 qualified、renderer-neutral 查询 sidecar                                | core 定义 declaration、owner path、world geometry、index 与 selector；领域 owner 定义 role / payload                      | renderer hit-test、DOM identity、领域查询词汇  |
+| Interaction Readiness | 提供 target、hit area、role、intent、provenance 与查询 manifest                                                            | core 定义 headless 契约，adapter / runtime 消费                                                                           | UI、selection 状态机、DOM handler、键盘策略    |
 
 Interaction Readiness 是横切闭环条件，不把 Drawing Complete 扩张成交互运行时。静态图形可以没有交互 intent；一旦声明交互语义，就必须可追踪、可定位且不依赖 adapter 从 primitive 反推。
+
+Composite assembly 与 composite registry 是相邻但不同的契约：registry 负责 compile dispatch，provider graph 负责从显式 roots 解析跨 namespace 的传递 definition / dataset 闭包。两者都由 Core 解释，React、Vanilla 与领域包不得建立内置白名单、私有 bundle 或不同的冲突规则。
+
+Spatial sidecar 与 Scene 也是相邻但不同的产物：Scene 只承载 renderer execution；qualified handles 与 Scene、artifacts、diagnostics provenance 在同一 compile revision 生成和提交，但由 Core query / tooling 消费。外层 Composite 只能为 descendant owner path 增加前缀，不能复制、重命名或丢弃内部 handle。
 
 Core shared colors 是跨包 value contract，不是领域 palette。Core Inspector 对 occurrence 使用 active `palette.categorical` 的稳定取余并从 `semantic.warning` 生成 warning appearance；Standard 只消费 Core 生成的 `InspectionAppearance`，不读取 token bag、维护 categorical array 或重新实现颜色分配。
 
@@ -82,6 +89,8 @@ Core shared colors 是跨包 value contract，不是领域 palette。Core Inspec
 - 自定义能力无法通过现有 contract / registry 接入。
 - renderer 之间需要共享新的后端中立意图。
 - 缺口会迫使上层私造平行 IR、Scene 或 target / provenance。
+- 嵌套 Tier 2 的 definitions / datasets 需要跨 namespace 传递时，必须使用 Core assembly contract；不能让 adapter 通过 module-level registration 或 namespace maker 猜测闭包。
+- 声明语义空间时，local key、role 与 domain payload 由领域 owner 保留，Core 只负责 qualified owner、最终 world transform、索引与闭合 selector；不得从 renderer primitive 反推。
 
 ### 5.3 是否形成闭环
 
@@ -111,6 +120,8 @@ docs / notes 可解释
 - math / core / render / adapter 的责任切分：
 - 是否需要新 IR / contract / registry：
 - Scene / manifest 如何承载：
+- Composite assembly 与跨 namespace 依赖如何闭环：
+- qualified spatial handle、owner path 与 Scene 边界是否适用：
 - renderer 实现或诊断降级：
 - React / Vanilla 如何等价暴露：
 - Interaction Readiness 是否适用：

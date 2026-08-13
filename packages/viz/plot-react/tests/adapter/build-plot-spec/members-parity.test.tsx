@@ -8,7 +8,7 @@ import { Axis, Legend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 import { Transform } from '../../../src/components/transform';
-import { resolvePlotRuntime } from '../../../src/plot-runtime';
+import { resolvePlotAuthoring } from '../../../src/plot-runtime';
 
 describe('Plot member extraction characterization', () => {
   it('preserves mixed members, automatic bindings, shortcuts, and runtime callbacks', () => {
@@ -161,7 +161,7 @@ describe('Plot member extraction characterization', () => {
   });
 
   it('keeps row-derived style fields runtime-only when no model is declared', () => {
-    const runtime = resolvePlotRuntime({
+    const runtime = resolvePlotAuthoring({
       data: [
         { x: 1, y: 2, category: 'north' },
         { x: 2, y: 3, category: 'south' },

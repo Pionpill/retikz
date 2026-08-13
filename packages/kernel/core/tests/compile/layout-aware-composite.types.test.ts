@@ -12,6 +12,7 @@ import type {
   CompositeCompileArtifact,
   CompositeCompileChild,
   CompositeCompileScopeProps,
+  CompositeExpandResult,
   CompositeExpandContext,
   CompositeReplayWrapper,
   IRChild,
@@ -27,6 +28,7 @@ import type {
   LayoutProposal,
   NodeLayoutCompileArtifact,
   ResolvedTheme,
+  SpatialHandleDeclaration,
 } from '../../src';
 
 import {
@@ -116,7 +118,12 @@ const wrapped = defineComposite({
     } satisfies CompositeCompileScopeProps;
     const parsedScopeProps = ScopePropsSchema.parse(scopeProps);
     expectTypeOf(parsedScopeProps).toEqualTypeOf<IRScopeProps>();
-    const wrapper = context.scope(scopeProps, [placed]);
+    const scopeHandle = {
+      key: 'cell',
+      role: 'cell',
+      bounds: { x: 0, y: 0, width: 20, height: 10 },
+    } satisfies SpatialHandleDeclaration;
+    const wrapper = context.scope(scopeProps, [placed], [scopeHandle]);
 
     expectTypeOf(wrapper).toEqualTypeOf<CompositeCompileChild>();
     expectTypeOf(context.theme).toEqualTypeOf<ResolvedTheme>();
@@ -185,6 +192,49 @@ const wrapped = defineComposite({
 });
 
 describe('layout-aware composite type contracts', () => {
+  it('keeps expand declarations result-level and layout declarations Scope-bound', () => {
+    const handle = {
+      key: 'surface',
+      role: 'surface',
+      bounds: { x: 0, y: 0, width: 120, height: 80 },
+      tags: ['content'],
+      payload: { section: 1 },
+    } satisfies SpatialHandleDeclaration;
+    const expanded = {
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+      spatialHandles: [handle],
+    } satisfies CompositeExpandResult;
+    const compiled: LayoutCompositeCompileResult = {
+      children: [],
+      // @ts-expect-error layout-aware declaration 必须绑定 runtime Scope
+      spatialHandles: [handle],
+    };
+
+    expectTypeOf(expanded.children).toMatchTypeOf<ReadonlyArray<IRChild>>();
+    void compiled;
+
+    defineComposite({
+      namespace: 'test',
+      type: 'structured',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('structured'),
+      }),
+      expand: () => expanded,
+    });
+
+    defineComposite({
+      namespace: 'test',
+      type: 'legacy-array',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('legacy-array'),
+      }),
+      // @ts-expect-error expand 不再接受 child array shorthand
+      expand: () => [],
+    });
+  });
+
   it('公开 expand 与 layout-aware 的完整只读 Theme context', () => {
     const expandContext = {} as CompositeExpandContext;
     expectTypeOf(expandContext.theme).toEqualTypeOf<ResolvedTheme>();

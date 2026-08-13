@@ -5,6 +5,7 @@ import {
   FontWeightSchema,
   OpacitySchema,
   PaintValueSchema,
+  ShapeValueSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
 import { z } from 'zod';
@@ -26,6 +27,12 @@ import { PlotThemeToken } from './constants';
 
 /** Plot 数据颜色使用的非空有序 CSS color palette */
 export const PlotColorPaletteSchema = z.array(CssColorSchema).min(1).describe('Non-empty ordered Plot color palette.');
+
+/** Plot shape 分类通道使用的非空有序 shape palette */
+export const PlotShapePaletteSchema = z
+  .array(ShapeValueSchema)
+  .min(1)
+  .describe('Non-empty ordered Plot shape palette.');
 
 /** Plot 主题 token 的唯一字段契约 */
 export const PlotThemeTokenFieldShape = {
@@ -53,6 +60,9 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.AxisGridStroke]: PaintValueSchema.describe('Axis grid stroke paint'),
   [PlotThemeToken.AxisGridStrokeWidth]: StrokeWidthSchema.describe('Axis grid stroke width'),
   [PlotThemeToken.AxisGridDrawOpacity]: OpacitySchema.describe('Axis grid draw opacity'),
+  [PlotThemeToken.AxisGridIncludeDomain]: z
+    .boolean()
+    .describe('Whether enabled major axis grids include effective domain endpoints'),
   [PlotThemeToken.LegendTitleForeground]: CssColorSchema.describe('Legend title foreground color'),
   [PlotThemeToken.LegendTitleFontSize]: FontSizeSchema.describe('Legend title font size'),
   [PlotThemeToken.LegendTitleFontWeight]: FontWeightSchema.describe('Legend title font weight'),
@@ -72,6 +82,7 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.PlotPaletteSector]: PlotColorPaletteSchema.describe('Sector mark palette'),
   [PlotThemeToken.PlotPaletteSequential]: ColorSchemeNameSchema.describe('Sequential color scheme name'),
   [PlotThemeToken.PlotPaletteDiverging]: ColorSchemeNameSchema.describe('Diverging color scheme name'),
+  [PlotThemeToken.PlotPaletteShape]: PlotShapePaletteSchema.describe('Categorical shape palette'),
 } as const;
 
 /** Axis rule 可覆盖的 canonical token 字段契约 */
@@ -94,6 +105,7 @@ export const PlotAxisThemeTokenFieldShape = {
   [PlotThemeToken.AxisGridStroke]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStroke],
   [PlotThemeToken.AxisGridStrokeWidth]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridStrokeWidth],
   [PlotThemeToken.AxisGridDrawOpacity]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridDrawOpacity],
+  [PlotThemeToken.AxisGridIncludeDomain]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridIncludeDomain],
 } as const;
 
 const rejectExplicitUndefined = (

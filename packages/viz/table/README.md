@@ -15,15 +15,16 @@ are derived by Table. Scalar entries are value shorthands, `null` leaves a coord
 `{ value: null }` stores a real null Cell. Both helpers return plain, JSON-safe precise specs while
 sharing structure normalization, presentation, layout, and lowering.
 
-Table first resolves one deterministic Cell plan: the Core host Theme selects a built-in preset,
+Table first resolves one deterministic Cell plan: the Core host Theme selects a same-named style definition,
 shared categorical colors project into the Table data channel, and local `tableThemeTokens` provides
 a sparse Table token overlay. Cell-local formatter/presentation/appearance, ordered visual
 encodings, and ordered root rules then contribute in increasing priority. Value Cells run the
 winning formatter and presentation with that final appearance.
-The built-in `neutral`, `academic`, `vibrant`, and `clean` presets provide complete light/dark token
-maps. `theme.style` / `theme.mode` select the preset, while `tableThemeTokens` is the local TableSpec
-overlay. Unknown token keys fail loudly. Content Cells already own renderable children and therefore
-bypass formatter and presentation dispatch.
+The default baseline provides complete light/dark token maps when `style` is omitted. Named styles use the
+same public Core and Table definition registries; `theme.style` / `theme.mode` select the matching
+definitions, while `tableThemeTokens` is the local TableSpec overlay. Unknown token keys fail
+loudly. Content Cells already own renderable children and therefore bypass formatter and
+presentation dispatch.
 
 `compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. `tableThemeTokens` stays
 in the JSON-safe TableSpec and is resolved by the Table owner. The resolved `TableLayoutManifest`
@@ -43,11 +44,12 @@ from the same layout transaction as the Scene.
 - Plot content may enter a Cell through Core composition, but this package does not depend on
   `@retikz/plot`.
 
-Adapter authors can use `createTableRuntimeContribution()` and `makeTableRuntimeComposites()` to
-merge runtime datasets, formatter/structure/presentation/visual-scale definitions, and composites
-with the same identity-based conflict rules as the built-in React and Vanilla adapters. The
-contribution stores detached frozen containers while leaving caller-owned definition objects
-unchanged. This extension contract is runtime-only and does not enter Table IR.
+Adapter authors can use `createTableRuntimeContribution()` to produce a Core
+`CompositeDependencyContribution`. It carries the Table provider, runtime datasets,
+formatter/structure/presentation/visual-scale definitions, and nested composite providers through
+the same identity-based conflict rules as the built-in React and Vanilla adapters. The contribution
+stores detached frozen containers while leaving caller-owned definition objects unchanged. This
+extension contract is runtime-only and does not enter Table IR.
 
 Each visual-scale Definition returns one runtime resolution with `of`, `legendForm`, `domain`,
 `range`, and optional `edges`. Table validates its JSON/color shape and repeated-input determinism;

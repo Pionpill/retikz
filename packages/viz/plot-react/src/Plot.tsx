@@ -10,14 +10,15 @@ import type {
 import type { EmbeddableContribution, EmbeddableTier2Adapter, LayoutProps, ScopeProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { lowerPlots, lowerPlotWithLineage, PLOT_NAMESPACE } from '@retikz/plot';
+import { resolveCompositeDependencies } from '@retikz/core';
+import { createPlotProvider, lowerPlotWithLineage } from '@retikz/plot';
 import { Layout } from '@retikz/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import type { CoordinateInput, MarkTransformShortcutDefinition } from './adapter';
 
-import { makeEmbeddedPlotComposites, withEmbeddedPlotRuntime } from './embedded-runtime';
-import { resolvePlotRuntime } from './plot-runtime';
+import { resolvePlotAuthoring } from './plot-runtime';
+import { usePlotThemeStyles } from './theme-context';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 core scope 属性 */
 export type PlotPanelProps = Pick<ScopeProps, 'transforms' | 'zIndex' | 'clip' | 'theme'> & {
@@ -122,13 +123,12 @@ const wrapPanelScope = (node: IRPlotSpec, props: PlotPanelProps): EmbeddableCont
 
 const plotEmbeddableAdapter: EmbeddableTier2Adapter<PlotProps> = {
   displayName: 'Plot',
-  namespace: PLOT_NAMESPACE,
   contribute: props => {
-    const { spec, datasets, lowerOptions } = resolvePlotRuntime(props, { embedded: true });
+    const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, { embedded: true });
+    const provider = createPlotProvider(datasets, lowerOptions);
     return {
       node: wrapPanelScope(spec, props),
-      datasets: withEmbeddedPlotRuntime(datasets, lowerOptions),
-      makeComposites: makeEmbeddedPlotComposites,
+      compositeDependencies: { roots: [provider.key], providers: [provider] },
     };
   },
 };
@@ -145,8 +145,18 @@ type EmbeddablePlotComponent = FC<PlotProps> & {
  */
 export const Plot: EmbeddablePlotComponent = props => {
   const { width, height, className, style, renderer, themeStyles, onLineage } = props;
+  const ambientPlotThemeStyles = usePlotThemeStyles();
+  const effectiveProps = useMemo(() => {
+    if (ambientPlotThemeStyles === undefined) return props;
+    if (props.plotThemeStyles === undefined) return { ...props, plotThemeStyles: ambientPlotThemeStyles };
+    return { ...props, plotThemeStyles: [...ambientPlotThemeStyles, ...props.plotThemeStyles] };
+  }, [ambientPlotThemeStyles, props]);
   const notifiedLineageKey = useRef<string>();
-  const { spec, datasets, lowerOptions } = resolvePlotRuntime(props);
+  const { spec, datasets, lowerOptions } = resolvePlotAuthoring(effectiveProps);
+  const provider = createPlotProvider(datasets, lowerOptions);
+  const composites = resolveCompositeDependencies({
+    contributions: [{ roots: [provider.key], providers: [provider] }],
+  });
   const lineage =
     onLineage === undefined || props.lineage === false
       ? undefined
@@ -167,7 +177,7 @@ export const Plot: EmbeddablePlotComponent = props => {
   return (
     <Layout
       ir={{ version: 1, type: 'scene', children: [wrapPanelScope(spec, props)] }}
-      composites={lowerPlots(datasets, lowerOptions)}
+      composites={composites}
       width={width}
       height={height}
       className={className}

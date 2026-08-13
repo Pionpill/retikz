@@ -12,14 +12,14 @@
 
 ## 包家族
 
-| 包                         | 解决的问题                      | 拥有                                                                         | 不拥有                                           |
-| -------------------------- | ------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------ |
-| `@retikz/standard`         | 横向补充宿主无关的通用绘图能力  | 官方 definition / factory、简单 Tier 2 composite、lowering 与按需 Definition | 排版 solver / artifact、Core 契约、领域解析      |
-| `@retikz/standard-react`   | 用 React 使用 Standard 能力     | JSX sugar、props → Standard 输入、React runtime 接线                         | Standard schema、lowering、registry 与 Core 语义 |
-| `@retikz/standard-vanilla` | 用无框架 API 使用 Standard 能力 | builder、SSR / mount 编排、Vanilla runtime 接线                              | Standard schema、lowering、registry 与 Core 语义 |
-| `@retikz/layout`           | 提供宿主无关的领域无关排版布局  | Layout schema / Definition、solver、composition、artifact 与 inspection      | 算法布局、GraphModel、renderer、领域解析         |
-| `@retikz/layout-react`     | 用 React 使用 Layout 能力       | JSX authoring 与 React runtime 接线                                          | Layout schema、solver、artifact 与 Core 语义     |
-| `@retikz/layout-vanilla`   | 用无框架 API 使用 Layout 能力   | builder、SSR / mount authoring 与 runtime 接线                               | Layout schema、solver、artifact 与 Core 语义     |
+| 包                         | 解决的问题                      | 拥有                                                                                             | 不拥有                                           |
+| -------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `@retikz/standard`         | 横向补充宿主无关的通用绘图能力  | 官方 definition / factory、简单 Tier 2 composite、任意 child Surface、lowering 与按需 Definition | 排版 solver / artifact、Core 契约、领域解析      |
+| `@retikz/standard-react`   | 用 React 使用 Standard 能力     | JSX sugar、props → Standard 输入、React runtime 接线                                             | Standard schema、lowering、registry 与 Core 语义 |
+| `@retikz/standard-vanilla` | 用无框架 API 使用 Standard 能力 | builder、SSR / mount 编排、Vanilla runtime 接线                                                  | Standard schema、lowering、registry 与 Core 语义 |
+| `@retikz/layout`           | 提供宿主无关的领域无关排版布局  | Layout schema / Definition、solver、composition、artifact 与 inspection                          | 算法布局、GraphModel、renderer、领域解析         |
+| `@retikz/layout-react`     | 用 React 使用 Layout 能力       | JSX authoring 与 React runtime 接线                                                              | Layout schema、solver、artifact 与 Core 语义     |
+| `@retikz/layout-vanilla`   | 用无框架 API 使用 Layout 能力   | builder、SSR / mount authoring 与 runtime 接线                                                   | Layout schema、solver、artifact 与 Core 语义     |
 
 Standard 与 Layout 分别使用独立 release group `standard`、`layout`，不与 kernel / viz 或彼此 lockstep；领域包按兼容版本单向依赖实际使用的 capability。
 
@@ -36,4 +36,4 @@ Standard 与 Layout 分别使用独立 release group `standard`、`layout`，不
 
 ## 当前状态
 
-Standard 与 Layout 三包均已实现，并分别使用独立 release group。Layout v0.1 alpha.1 已接管排版布局长期契约；Standard 不再拥有或转发 Layout API，也不得新增双 namespace 兼容层。
+Standard 与 Layout 三包均已实现，并分别使用独立 release group。Layout v0.1 alpha.1 已接管排版布局长期契约；Standard 不再拥有或转发 Layout API，也不得新增双 namespace 兼容层。Standard 当前 v0.1 alpha.4 源码已按 Accepted ADR 提供任意 child Surface；其发布仍随 Standard release group 的独立流程决定。

@@ -1,26 +1,8 @@
-import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
-
-import type {
-  AnyCellFormatterDefinition,
-  AnyCellPresentationDefinition,
-  AnyCellVisualScaleDefinition,
-  AnyTableStructureDefinition,
-  TableThemeStyleDefinition,
-} from '../../contract';
 import type { LowerTablesOptions } from '../types';
 import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
 
-import { extractTableStructureKind } from '../../providers';
 import { assertTableNonEmptyString } from '../../shared';
-import { lowerTables } from '../resolve';
-
-const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
-const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
-const FORMATTER_DEFINITIONS_KEY = 'formatterDefinitions';
-const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
-const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
-const TABLE_THEME_STYLES_KEY = 'tableThemeStyles';
+import { createTableNestedDefinitionProvider, createTableProvider } from './provider';
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
 const encodeRuntimeReference = (reference: string): string =>
@@ -32,125 +14,24 @@ const encodeRuntimeReference = (reference: string): string =>
       : encodeURIComponent(character);
   }).join('');
 
-/** Table runtime-only envelope；只在宿主聚合阶段存在 */
-type TableRuntimeEnvelope = Readonly<{
-  [TableRuntimeEnvelopeMarker]: true;
-  lowerOptions: LowerTablesOptions;
-  composites: ReadonlyArray<AnyCompositeDefinition>;
-}>;
-
-/** 判断聚合值是否为本模块创建的 runtime envelope */
-const runtimeEnvelopeOf = (value: unknown): TableRuntimeEnvelope | undefined => {
-  if (value === null || typeof value !== 'object') return undefined;
-  const envelope = value as Partial<TableRuntimeEnvelope>;
-  return envelope[TableRuntimeEnvelopeMarker] === true ? (envelope as TableRuntimeEnvelope) : undefined;
-};
-
-/** 按稳定 key 合并对象列表；同 key 只接受同一对象引用 */
-const mergeByIdentity = <T>(
-  values: ReadonlyArray<ReadonlyArray<T> | undefined>,
-  keyOf: (value: T) => string,
-  label: string,
-): Array<T> => {
-  const merged = new Map<string, T>();
-  for (const entries of values) {
-    for (const value of entries ?? []) {
-      const key = keyOf(value);
-      const current = merged.get(key);
-      if (current !== undefined && !Object.is(current, value)) {
-        throw new Error(`table: runtime contribution ${label} conflict for "${key}"`);
-      }
-      if (current === undefined) merged.set(key, value);
-    }
-  }
-  return [...merged.values()];
-};
-
-/** 合并当前与未来的非 definition lowering options */
-const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>): Record<string, unknown> => {
-  const merged: Record<string, unknown> = {};
-  for (const options of optionSets) {
-    for (const [key, value] of Object.entries(options as Record<string, unknown>)) {
-      if (
-        value === undefined ||
-        key === STRUCTURE_DEFINITIONS_KEY ||
-        key === FORMATTER_DEFINITIONS_KEY ||
-        key === PRESENTATION_DEFINITIONS_KEY ||
-        key === VISUAL_SCALE_DEFINITIONS_KEY ||
-        key === TABLE_THEME_STYLES_KEY
-      )
-        continue;
-      if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
-        throw new Error(`table: runtime contribution lower option "${key}" conflict`);
-      }
-      merged[key] = value;
-    }
-  }
-  return merged;
-};
-
-/** 合并多个 Table envelope 的 lowering options */
-const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): LowerTablesOptions => {
-  const optionSets = envelopes.map(envelope => envelope.lowerOptions);
-  const structureDefinitions = mergeByIdentity<AnyTableStructureDefinition>(
-    optionSets.map(options => options.structureDefinitions),
-    extractTableStructureKind,
-    'structure definition',
-  );
-  const presentationDefinitions = mergeByIdentity<AnyCellPresentationDefinition>(
-    optionSets.map(options => options.presentationDefinitions),
-    definition => definition.name,
-    'presentation definition',
-  );
-  const formatterDefinitions = mergeByIdentity<AnyCellFormatterDefinition>(
-    optionSets.map(options => options.formatterDefinitions),
-    definition => definition.name,
-    'formatter definition',
-  );
-  const visualScaleDefinitions = mergeByIdentity<AnyCellVisualScaleDefinition>(
-    optionSets.map(options => options.visualScaleDefinitions),
-    definition => definition.name,
-    'visual scale definition',
-  );
-  const tableThemeStyles = mergeByIdentity<TableThemeStyleDefinition>(
-    optionSets.map(options => options.tableThemeStyles),
-    definition => definition.name,
-    'theme style definition',
-  );
-  return {
-    ...mergeSharedLowerOptions(optionSets),
-    ...(structureDefinitions.length === 0 ? {} : { structureDefinitions }),
-    ...(formatterDefinitions.length === 0 ? {} : { formatterDefinitions }),
-    ...(presentationDefinitions.length === 0 ? {} : { presentationDefinitions }),
-    ...(visualScaleDefinitions.length === 0 ? {} : { visualScaleDefinitions }),
-    ...(tableThemeStyles.length === 0 ? {} : { tableThemeStyles }),
-  };
-};
-
-/** 按 namespace/type 合并额外 composites */
-const mergeExtraComposites = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Array<AnyCompositeDefinition> =>
-  mergeByIdentity(
-    envelopes.map(envelope => envelope.composites),
-    definition => `${definition.namespace}.${definition.type}`,
-    'composite',
-  );
-
-/**
- * 聚合 Table runtime envelopes 并生成 Table 与额外 composite definitions
- * @description 该函数引用稳定，供同一宿主内的多个 Table contribution 共享
- */
-export const makeTableRuntimeComposites = (mergedDatasets: Record<string, unknown>): Array<AnyCompositeDefinition> => {
-  const envelopes: Array<TableRuntimeEnvelope> = [];
-  const datasetEntries: Array<[string, unknown]> = [];
-  for (const [reference, value] of Object.entries(mergedDatasets)) {
-    const envelope = runtimeEnvelopeOf(value);
-    if (envelope === undefined) datasetEntries.push([reference, value]);
-    else envelopes.push(envelope);
-  }
-
-  const datasets = Object.fromEntries(datasetEntries) as ExternalDatasets;
-  return [...lowerTables(datasets, mergeLowerOptions(envelopes)), ...mergeExtraComposites(envelopes)];
-};
+/** 防御性复制 Table lowering definitions 的外层数组 */
+const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
+  Object.freeze({
+    ...input,
+    ...(input.structureDefinitions === undefined
+      ? {}
+      : { structureDefinitions: Object.freeze([...input.structureDefinitions]) }),
+    ...(input.presentationDefinitions === undefined
+      ? {}
+      : { presentationDefinitions: Object.freeze([...input.presentationDefinitions]) }),
+    ...(input.formatterDefinitions === undefined
+      ? {}
+      : { formatterDefinitions: Object.freeze([...input.formatterDefinitions]) }),
+    ...(input.visualScaleDefinitions === undefined
+      ? {}
+      : { visualScaleDefinitions: Object.freeze([...input.visualScaleDefinitions]) }),
+    ...(input.tableThemeStyles === undefined ? {} : { tableThemeStyles: Object.freeze([...input.tableThemeStyles]) }),
+  });
 
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
@@ -161,31 +42,10 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
     throw new Error(`table: runtime contribution dataset conflict for reserved reference "${runtimeReference}"`);
   }
 
-  const lowerOptions: LowerTablesOptions = Object.freeze({
-    ...(input.lowerOptions ?? {}),
-    ...(input.lowerOptions?.structureDefinitions === undefined
-      ? {}
-      : { structureDefinitions: Object.freeze([...input.lowerOptions.structureDefinitions]) }),
-    ...(input.lowerOptions?.presentationDefinitions === undefined
-      ? {}
-      : { presentationDefinitions: Object.freeze([...input.lowerOptions.presentationDefinitions]) }),
-    ...(input.lowerOptions?.formatterDefinitions === undefined
-      ? {}
-      : { formatterDefinitions: Object.freeze([...input.lowerOptions.formatterDefinitions]) }),
-    ...(input.lowerOptions?.visualScaleDefinitions === undefined
-      ? {}
-      : { visualScaleDefinitions: Object.freeze([...input.lowerOptions.visualScaleDefinitions]) }),
-    ...(input.lowerOptions?.tableThemeStyles === undefined
-      ? {}
-      : { tableThemeStyles: Object.freeze([...input.lowerOptions.tableThemeStyles]) }),
-  });
-  const envelope: TableRuntimeEnvelope = Object.freeze({
-    [TableRuntimeEnvelopeMarker]: true,
-    lowerOptions,
-    composites: Object.freeze([...(input.composites ?? [])]),
-  });
+  const tableProvider = createTableProvider(data, runtimeReference, snapshotLowerOptions(input.lowerOptions ?? {}));
+  const nestedProviders = [...(input.composites ?? [])].map(createTableNestedDefinitionProvider);
   return {
-    datasets: Object.fromEntries([...Object.entries(data), [runtimeReference, envelope]]),
-    makeComposites: makeTableRuntimeComposites,
+    roots: Object.freeze([tableProvider.key, ...nestedProviders.map(provider => provider.key)]),
+    providers: Object.freeze([tableProvider, ...nestedProviders]),
   };
 };

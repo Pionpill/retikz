@@ -69,6 +69,8 @@ Core shared `palette.categorical` 是一套当前生效的非空 active CSS colo
 
 Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `options.colorSchemes` 继续由 Plot 拥有，不读取或改写 shared categorical array。显式 scale range、scheme、channel 或 mark config 按 Plot 的正式优先级覆盖主题 palette。
 
+Plot 同时拥有独立于颜色的非空 shape palette。内建 `plot.palette.shape` 提供八项有序默认值，`plotThemeTokens['plot.palette.shape']` 与 `plotTheme.palette.shape` 可用 `Array<string | IRShapeRef>` 覆盖；该 palette 不投影 Core shared colors，按相同 cascade 解析并由 shape channel 与 legend 同源消费。
+
 ## 失败语义、兼容性与入口等价
 
 - Plot token 与 native input 必须是 plain JSON-safe data
@@ -81,7 +83,7 @@ Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `o
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Visualization Complete 的 Theme / Palette 与 Plot lowering，解决 Plot token 无法沿 Core Scope 继承和 shared categorical 多重真源问题
-- `@retikz/plot` 拥有 Plot token vocabulary、四种 style × 两种 mode 的 Plot preset、resolver、shared color projection 与显式领域 palette 覆盖、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
+- `@retikz/plot` 拥有 Plot token vocabulary、内置 Neutral × 两种 mode 的 preset、开放 style definition / registry、resolver、shared color projection 与显式领域 palette 覆盖、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
 - `@retikz/core` 拥有 selector 继承、Core style registry、Core shared colors、`ThemeTokenSource` 与 `InspectionAppearance`；不解释 Plot token 语义
 - `@retikz/chart` 拥有 Chart token 与 recipe；只转发或贡献 Plot 输入，并在需要默认 series color 时读取 Plot resolver 的最终 palette
 - `@retikz/standard` 只消费 Plot 已解析的领域无关 presentation / layout 输入与 Core `InspectionAppearance`，不读取 Plot token

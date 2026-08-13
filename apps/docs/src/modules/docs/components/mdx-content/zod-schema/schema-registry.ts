@@ -39,7 +39,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
       zh: {
         description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖；tokens 按 owner namespace 由 registry 校验',
         descriptions: {
-          style: '视觉人格：neutral、academic、vibrant 或 clean；省略时继承外层值',
+          style: '显式视觉人格名称；省略时继承外层值，根级省略时使用 owner 默认 baseline',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
         },
       },
@@ -513,6 +513,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'LegendArtifact',
     url: '/library/standard/composite/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
+  },
+  SurfaceSchema: {
+    schema: StandardIR.SurfaceSchema,
+    label: 'Surface',
+    url: '/library/standard/composite/surface#surfaceschema',
   },
 
   LogicFrameSchema: {

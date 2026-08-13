@@ -33,5 +33,8 @@ describe('Table React runtime style contract', () => {
   it('embedded Table adapter keeps removed theme token definitions out of the contribution payload', () => {
     const contribution = Table.embeddableAdapter.contribute({ spec });
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
+    expect(contribution).not.toHaveProperty('datasets');
+    expect(contribution).not.toHaveProperty('makeComposites');
+    expect(contribution.compositeDependencies.roots).toEqual([{ namespace: 'table', type: 'table' }]);
   });
 });

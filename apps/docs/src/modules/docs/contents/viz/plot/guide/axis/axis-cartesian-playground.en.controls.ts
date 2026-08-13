@@ -96,6 +96,7 @@ export const axisCartesianPlaygroundControls = definePreviewControls({
           max: 1,
           step: 0.05,
         },
+        { kind: 'switch', id: 'includeDomain', label: 'Include domain endpoints', defaultValue: false },
         { kind: 'switch', id: 'showMinor', label: 'Show minor grid', defaultValue: true },
         {
           kind: 'select',
@@ -205,6 +206,7 @@ export const previewControlContract = {
     markKind: 'line',
     gridStep: '10',
     gridOpacity: 0.45,
+    includeDomain: false,
     showMinor: true,
     minorStep: '2.5',
     rotation: 'auto',
@@ -220,6 +222,7 @@ export const previewControlContract = {
     'Axis.ticks.density',
     'Axis.ticks.mark',
     'Axis.grid',
+    'Axis.grid.includeDomain',
     'Axis.grid.minor',
     'Axis.tickLabels.layout',
     'Axis.placement',

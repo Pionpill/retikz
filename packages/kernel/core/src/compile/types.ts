@@ -14,6 +14,7 @@ import type {
   RibbonWidthProfileDefinition,
   Scene,
   ShapeDefinition,
+  SpatialHandleIndex,
 } from '../contract';
 import type { ThemeStyleDefinition } from '../contract';
 import type { IRCoordinate, IRNode, IRPathBase, IRScene, IRScope, JsonValue } from '../schemas';
@@ -104,6 +105,8 @@ export type CompileArtifactOptions = Readonly<{
 export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
   scene: Scene;
   artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
+  /** 与 Scene / artifacts 同 revision 的 renderer-neutral world-space 空间索引 */
+  spatialHandles: SpatialHandleIndex;
 }>;
 
 /** 显式 observed compile 的主结果与 observer outputs */
