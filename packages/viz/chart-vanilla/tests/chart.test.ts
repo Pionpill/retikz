@@ -5,6 +5,7 @@ import { defineThemeStyle } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotProviderKey } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard';
+import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import { getDefaultChartThemePreset } from '../../chart/src/base/style';
@@ -65,6 +66,7 @@ describe('Chart Vanilla authoring', () => {
     expect(result.contribution.roots).toEqual([ChartProvider.key]);
     expect(result.contribution.providers.map(provider => provider.key)).toEqual([
       SurfaceProvider.key,
+      PathClipProvider.key,
       FlexLayoutProvider.key,
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },

@@ -2,6 +2,7 @@ import type { SurfaceInput } from '@retikz/standard';
 import type { InputChild, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { createSurface, SurfaceProvider } from '@retikz/standard';
+import { PathClipProvider } from '@retikz/standard/clip';
 
 import { StandardSurfaceEmbedKind } from './constants';
 
@@ -41,7 +42,7 @@ export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
       }),
       providerDependencies: {
         roots: [SurfaceProvider.key, ...normalized.providerDependencies.roots],
-        providers: [SurfaceProvider, ...normalized.providerDependencies.providers],
+        providers: [SurfaceProvider, PathClipProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };
