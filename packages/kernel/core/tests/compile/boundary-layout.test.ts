@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
 import { resolveAnchor } from '../../src/compile/reference';
-import { resolveNode } from '../../src/resolve/node';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
+import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
+import { resolveNode } from '../../src/resolve/node';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
   width: 10,
@@ -19,6 +20,8 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     styleFrames: [],
     shapes,
     boundaries,
+    patterns: resolvePatternRegistry(),
+    round: value => value,
     irPath: 'node',
     warn: () => {},
   });

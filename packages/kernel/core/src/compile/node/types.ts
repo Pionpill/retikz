@@ -2,6 +2,7 @@
 
 import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve/node';
+import type { PaintResolutionInput } from '../../resolve/resource';
 import type {
   BlendModeValue,
   IRAnimationTrack,
@@ -129,6 +130,8 @@ export type NodeLayout = {
    * @default 'transparent'
    */
   fill?: string | IRPaintSpec;
+  /** 已由 resolve/resource 解析的 fill */
+  fillResolution?: PaintResolutionInput;
   /**
    * 填充透明度 0~1
    * @default 1
@@ -139,6 +142,8 @@ export type NodeLayout = {
    * @default 'currentColor'
    */
   stroke?: string | IRPaintSpec;
+  /** 已由 resolve/resource 解析的 stroke */
+  strokeResolution?: PaintResolutionInput;
   /**
    * 描边透明度
    * @default 1

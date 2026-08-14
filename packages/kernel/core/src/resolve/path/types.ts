@@ -2,6 +2,7 @@ import type {
   AnyPathKindDefinition,
   ArrowDefinition,
   PathGeneratorDefinition,
+  PatternDefinition,
   RibbonWidthProfileDefinition,
   Transform,
 } from '../../contract';
@@ -19,6 +20,7 @@ import type {
   ResolvedDropShadow,
 } from '../../schemas';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
+import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
 
 /** 展开位置、方向与距离默认值后的路径几何标签 */
@@ -209,6 +211,10 @@ export type PathResolveContext = Readonly<{
   arrows: ReadonlyMap<string, ArrowDefinition>;
   /** ribbon width profile registry */
   ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
+  /** pattern paint provider registry */
+  patterns: ReadonlyMap<string, PatternDefinition>;
+  /** paint resource dimensions rounding */
+  round: (value: number) => number;
   /** 当前 path 的 IR locator，用于 provider payload 诊断 */
   irPath?: string;
 }>;
@@ -237,6 +243,8 @@ export type PathResolution = Readonly<{
   scopeChain: ReadonlyArray<Transform>;
   /** 已绑定的 path kind provider 与 options */
   kind: PathKindResolution;
+  /** 已完成 paint provider selection 和 pattern style shaping */
+  paint: Readonly<{ fill?: PaintResolutionInput; stroke?: PaintResolutionInput }>;
 }>;
 
 /** stroke emitter 消费的、已绑定 secondary provider 的 path resolution */

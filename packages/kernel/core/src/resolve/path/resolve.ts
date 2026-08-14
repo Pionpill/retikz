@@ -35,6 +35,7 @@ import {
   isRelativeAccumulateTargetLike,
   isRelativeTargetLike,
 } from '../../shared';
+import { resolvePaint } from '../resource';
 import { resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
 import { resolvePathKind } from './provider';
@@ -296,10 +297,21 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
     ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
     ...(resolvedRibbon === undefined ? {} : { ribbon: resolvedRibbon }),
   };
+  const paintContext = {
+    patterns: context.patterns,
+    round: context.round,
+    irPath,
+  };
+  const fill = resolvePaint(resolvedPath.fill, paintContext);
+  const stroke = resolvePaint(resolvedPath.stroke, paintContext);
   return {
     path: resolvedPath,
     targets,
     scopeChain,
     kind,
+    paint: {
+      ...(fill === undefined ? {} : { fill }),
+      ...(stroke === undefined ? {} : { stroke }),
+    },
   };
 };

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRNode, IRScene } from '../../src/schemas';
 import type { StyleResolveFrame } from '../../src/resolve/style';
+import type { IRNode, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { resolveBoundaryRegistry } from '../../src/providers/boundary';
+import { resolvePatternRegistry } from '../../src/providers/pattern';
+import { resolveShapeRegistry } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
 import { createStyleResolveFrame } from '../../src/resolve/style';
-import { resolveBoundaryRegistry } from '../../src/providers/boundary';
-import { resolveShapeRegistry } from '../../src/providers/shape';
 
 const node = (overrides: Partial<IRNode> = {}): IRNode => ({
   type: 'node',
@@ -26,6 +27,8 @@ const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> =
     styleFrames,
     shapes: resolveShapeRegistry(),
     boundaries: resolveBoundaryRegistry(),
+    patterns: resolvePatternRegistry(),
+    round: value => value,
     irPath: 'node',
     warn: () => {},
   });

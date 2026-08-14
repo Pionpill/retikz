@@ -6,9 +6,10 @@ import { NamespaceStack } from '../../../src/compile/namespace';
 import { angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
-import { resolveNode } from '../../../src/resolve/node';
 import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
+import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
+import { resolveNode } from '../../../src/resolve/node';
 import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
 import { NodeSchema } from '../../../src/schemas/node';
 import { NodeTargetSchema } from '../../../src/schemas/path/target';
@@ -63,6 +64,8 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       styleFrames: [],
       shapes: BUILTIN_SHAPES,
       boundaries,
+      patterns: resolvePatternRegistry(),
+      round: value => value,
       irPath: 'node',
       warn: () => {},
     });

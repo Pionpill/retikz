@@ -143,7 +143,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     pathGenerators: resolvePathGeneratorRegistry(options.pathGenerators),
     pathKinds: resolvePathKindRegistry(options.pathKinds),
     ribbonWidthProfiles: resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles),
-    paint: createPaintRegistry(patterns, round),
-    clip: createClipRegistry(round, clips),
+    paint: createPaintRegistry(round),
+    clip: createClipRegistry(round),
   };
 };

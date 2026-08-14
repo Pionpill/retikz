@@ -79,6 +79,7 @@ import {
   resolveStrokePathProviders,
 } from '../../resolve/path';
 import { parseProviderPayload } from '../../resolve/provider-payload';
+import { resolveClip as resolveClipValue } from '../../resolve/resource';
 import { createStyleResolveFrame } from '../../resolve/style';
 import { resolveTheme } from '../../resolve/theme';
 import { ScopeBoundingShape } from '../../schemas';
@@ -207,6 +208,7 @@ export const compileChildrenToPrimitives = (
       rootFontSize: context.rootFontSize,
       shapes: context.shapes,
       boundaries: context.boundaries,
+      clips: context.clips,
       patterns: context.patterns,
       arrows: context.arrows,
       pathGenerators: context.pathGenerators,
@@ -371,6 +373,8 @@ export const compileChildrenToPrimitives = (
             pathGenerators: runtime.context.pathGenerators,
             arrows: runtime.context.arrows,
             ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+            patterns: runtime.context.patterns,
+            round: runtime.context.round,
             irPath,
           });
     const emitStroke = ((nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
@@ -380,6 +384,8 @@ export const compileChildrenToPrimitives = (
         pathGenerators: runtime.context.pathGenerators,
         arrows: runtime.context.arrows,
         ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+        patterns: runtime.context.patterns,
+        round: runtime.context.round,
         irPath,
       });
       const emittedTargetView = pathTargetViewOf(emittedResolution.targets, targetWarn);
@@ -406,6 +412,8 @@ export const compileChildrenToPrimitives = (
           pathGenerators: runtime.context.pathGenerators,
           arrows: runtime.context.arrows,
           ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+          patterns: runtime.context.patterns,
+          round: runtime.context.round,
           irPath,
         });
         return emitRibbonPrimitive(emittedResolution, {
@@ -476,6 +484,8 @@ export const compileChildrenToPrimitives = (
             pathGenerators: runtime.context.pathGenerators,
             arrows: runtime.context.arrows,
             ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+            patterns: runtime.context.patterns,
+            round: runtime.context.round,
             irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
@@ -526,6 +536,8 @@ export const compileChildrenToPrimitives = (
       styleFrames: styleStack,
       shapes: runtime.context.shapes,
       boundaries: runtime.context.boundaries,
+      patterns: runtime.context.patterns,
+      round: runtime.context.round,
       irPath: nodeIrPath,
       warn,
     });
@@ -912,7 +924,9 @@ export const compileChildrenToPrimitives = (
     if (resolvedClipShape !== undefined) {
       group.clipRef = runtime.context.clip.importResolved(resolvedClipShape);
     } else if (child.clip !== undefined) {
-      group.clipRef = runtime.context.clip.register(child.clip);
+      group.clipRef = runtime.context.clip.register(
+        resolveClipValue(child.clip, { clips: runtime.context.clips, irPath: `${scopeIrPath}.clip` }),
+      );
     }
     primitiveSink.push(group);
     if (semanticOwner !== undefined) runtime.state.identityTracker?.recordPrimitives([group], semanticOwner, 'scope');
@@ -1455,7 +1469,11 @@ export const compileChildrenToPrimitives = (
           reachableSpatialHandleKeys.add(declaration.key);
         }
         const scopeClipShape =
-          entry.child.props.clip === undefined ? undefined : runtime.context.clip.resolve(entry.child.props.clip);
+          entry.child.props.clip === undefined
+            ? undefined
+            : runtime.context.clip.resolve(
+                resolveClipValue(entry.child.props.clip, { clips: runtime.context.clips, irPath: 'clip' }),
+              );
         preparedOutputs.set(handle, {
           output: entry.child,
           ...(scopeClipShape === undefined ? {} : { scopeClipShape }),
@@ -1486,7 +1504,11 @@ export const compileChildrenToPrimitives = (
         );
       }
       const wrapperClipShape =
-        entry.child.wrapper?.clip === undefined ? undefined : runtime.context.clip.resolve(entry.child.wrapper.clip);
+        entry.child.wrapper?.clip === undefined
+          ? undefined
+          : runtime.context.clip.resolve(
+              resolveClipValue(entry.child.wrapper.clip, { clips: runtime.context.clips, irPath: 'clip' }),
+            );
       validateReplayResourceRefs(transaction);
       preparedReplays.set(entry.child.replay, {
         transaction,
@@ -1731,8 +1753,8 @@ export const compileChildrenToPrimitives = (
         }
         warnings.push(warning);
       };
-      const paint = createPaintRegistry(context.patterns, context.round);
-      const clip = createClipRegistry(context.round, context.clips);
+      const paint = createPaintRegistry(context.round);
+      const clip = createClipRegistry(context.round);
       const probeIdentityTracker =
         runtime.state.identityTracker === undefined
           ? undefined

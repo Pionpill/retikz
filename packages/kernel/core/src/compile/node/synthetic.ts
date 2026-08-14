@@ -9,9 +9,9 @@ import type { NodeLayout } from './types';
 import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
 import { BUILTIN_SHAPES } from '../../providers/shape';
 import { resolveNode } from '../../resolve/node';
-import { applyTransformChain } from '../transform';
-import { fallbackMeasurer } from '../text';
 import { NamespaceStack } from '../namespace';
+import { fallbackMeasurer } from '../text';
+import { applyTransformChain } from '../transform';
 import { layoutNode } from './layout';
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */
@@ -82,6 +82,8 @@ const resolveSyntheticLayout = (
     styleFrames: [],
     shapes,
     boundaries,
+    patterns: new Map(),
+    round: value => value,
     irPath: `synthetic.${input.id}`,
     warn: () => {},
   });

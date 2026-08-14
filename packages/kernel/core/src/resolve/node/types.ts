@@ -1,6 +1,6 @@
 import type { BoundsInsets } from '@retikz/math';
 
-import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
+import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRBoundary,
@@ -15,8 +15,9 @@ import type {
   ResolvedDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
-import type { EffectiveLabelDefault, StyleResolveFrame } from '../style';
 import type { Rect } from '../../shared/geometry';
+import type { PaintResolutionInput } from '../resource';
+import type { StyleResolveFrame } from '../style';
 
 /** 已补齐边界比例的节点标签位置 */
 export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPosition, 'fraction'> & {
@@ -136,6 +137,8 @@ export type NodeResolution = {
   shape: ShapeResolution;
   /** 节点默认连接面引用 */
   boundary: BoundaryReferenceResolution;
+  /** 已按有效 pattern registry 解析的节点 paint */
+  paint: Readonly<{ fill?: PaintResolutionInput; stroke?: PaintResolutionInput }>;
 };
 
 /** Node resolve 阶段需要的样式、provider 与诊断上下文 */
@@ -146,6 +149,10 @@ export type NodeResolveContext = {
   shapes: ProviderCollection<ShapeDefinition>;
   /** boundary provider 注册表 */
   boundaries: ProviderCollection<BoundaryDefinition>;
+  /** 当前有效 pattern provider registry */
+  patterns: ReadonlyMap<string, PatternDefinition>;
+  /** 资源尺寸圆整规则 */
+  round: (value: number) => number;
   /** 当前节点的 IR 路径 */
   irPath: string;
   /** compile warning 分发函数 */

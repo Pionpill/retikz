@@ -1,5 +1,5 @@
 import type { CanonicalPath } from '../../../resolve/path';
-import type { PaintResolver } from '../../resource';
+import type { PaintInput, PaintResolver } from '../../resource';
 import type { PathBaseProps } from '../stroke';
 
 /** 已解析默认值后的 PathPrim 公共样式属性 */
@@ -12,6 +12,8 @@ export type ResolvedPathBaseProps = PathBaseProps & {
 export type ResolvePathBasePropsContext = {
   /** PaintSpec 解析器；直调 emit 时通常只透传字符串 */
   resolvePaint: PaintResolver;
+  /** resolve 阶段已绑定的 paint */
+  paint?: Readonly<{ fill?: PaintInput; stroke?: PaintInput }>;
 };
 
 /**
@@ -23,11 +25,13 @@ export const resolvePathBaseProps = (
   context: ResolvePathBasePropsContext,
 ): ResolvedPathBaseProps => {
   const { resolvePaint } = context;
+  const stroke = context.paint?.stroke ?? (typeof path.stroke === 'string' ? path.stroke : undefined);
+  const fill = context.paint?.fill ?? (typeof path.fill === 'string' ? path.fill : undefined);
   return {
-    stroke: resolvePaint(path.stroke) ?? 'currentColor',
+    stroke: resolvePaint(stroke) ?? 'currentColor',
     strokeWidth: path.strokeWidth ?? 1,
     // path.fill 缺省 'none'（仅描边）；纯色 / PaintSpec gradient 经 resolvePaint → PaintValue
-    fill: resolvePaint(path.fill) ?? 'none',
+    fill: resolvePaint(fill) ?? 'none',
     fillRule: path.fillRule,
     dashPattern: path.dashPattern,
     dashOffset: path.dashOffset,

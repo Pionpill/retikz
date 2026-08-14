@@ -290,7 +290,7 @@ const emitCanonicalPathPrimitive = (
     }
   }
 
-  const baseProps = resolvePathBaseProps(canonicalPath, { resolvePaint });
+  const baseProps = resolvePathBaseProps(canonicalPath, { resolvePaint, paint: resolution.paint });
   const strokeWidth = baseProps.strokeWidth;
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
     arrowResolutions: resolution.arrows,

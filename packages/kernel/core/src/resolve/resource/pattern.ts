@@ -1,20 +1,9 @@
 import type { ResolvedPatternLineStyle, ResolvedPatternLineStyleCycle } from '../../contract';
 import type { IRPatternLineStyle, IRPatternPaintSpec } from '../../schemas';
+import type { PatternStyleResolution } from './types';
 
-import { resolveDashPattern } from '../../resolve/style';
 import { PatternLineStyleCycleSchema, PatternLineStyleSchema } from '../../schemas';
-
-/** Pattern compile 消费的完整线型上下文 */
-export type ResolvedPatternStyleContext = {
-  /** 顶层字段解析出的基础线型 */
-  base: ResolvedPatternLineStyle;
-  /** 已继承基础字段的横向线型 */
-  horizontalStyle?: ResolvedPatternLineStyle;
-  /** 已继承基础字段的纵向线型 */
-  verticalStyle?: ResolvedPatternLineStyle;
-  /** 已展开稀疏 override 的完整周期 */
-  lineStyleCycle?: ResolvedPatternLineStyleCycle;
-};
+import { resolveDashPattern } from '../style';
 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
@@ -32,7 +21,7 @@ const lineStyleInputOf = (spec: IRPatternPaintSpec): Record<string, unknown> => 
 const invalidPathOf = (prefix: string | undefined, path: ReadonlyArray<PropertyKey>): string =>
   [prefix, ...path].filter((part): part is PropertyKey => part !== undefined).join('.');
 
-/** 校验单层 Pattern 线型，并把首个问题转换为稳定字段路径 */
+/** 在 resolve 边界校验单层 Pattern 线型，并保留稳定字段路径诊断 */
 const parseLineStyle = (shape: string, input: unknown, prefix?: string): IRPatternLineStyle => {
   const parsed = PatternLineStyleSchema.safeParse(input);
   if (parsed.success) return parsed.data;
@@ -40,10 +29,7 @@ const parseLineStyle = (shape: string, input: unknown, prefix?: string): IRPatte
   throw new Error(`Pattern '${shape}' has an invalid ${path || 'line style'}.`);
 };
 
-/**
- * 在基础线型上应用局部覆盖
- * @description 普通字段按字段继承；override 出现任一 dash selector 时独立解析 dash，没有显式数组且 preset 均不为 true 时清除继承 dash
- */
+/** 在基础线型上应用局部 override，并按 selector 优先级展开 dash */
 export const resolvePatternLineStyle = (
   base: ResolvedPatternLineStyle,
   override: IRPatternLineStyle,
@@ -59,23 +45,22 @@ export const resolvePatternLineStyle = (
   if (override.lineJoin !== undefined) resolved.lineJoin = override.lineJoin;
   if (hasOwn(override, 'dashPattern') || hasOwn(override, 'dashed') || hasOwn(override, 'dotted')) {
     const dashPattern = resolveDashPattern(override.dashPattern, override.dashed, override.dotted);
-    if (dashPattern === undefined) {
-      delete resolved.dashPattern;
-    } else {
-      resolved.dashPattern = [...dashPattern];
-    }
+    if (dashPattern === undefined) delete resolved.dashPattern;
+    else resolved.dashPattern = [...dashPattern];
   }
   return resolved;
 };
 
-/** 校验并解析 Pattern 顶层、方向与周期线型 */
-export const resolvePatternStyleContext = (
-  spec: IRPatternPaintSpec,
-  defaultColor: string,
-): ResolvedPatternStyleContext => {
+/** 解析 Pattern 顶层、方向和周期线型 */
+export const resolvePatternStyle = (spec: IRPatternPaintSpec, defaultColor: string): PatternStyleResolution => {
   const baseInput = parseLineStyle(spec.shape, lineStyleInputOf(spec));
   const base = resolvePatternLineStyle({ color: defaultColor }, baseInput);
-  const resolved: ResolvedPatternStyleContext = { base };
+  const resolved: {
+    base: ResolvedPatternLineStyle;
+    horizontalStyle?: ResolvedPatternLineStyle;
+    verticalStyle?: ResolvedPatternLineStyle;
+    lineStyleCycle?: ResolvedPatternLineStyleCycle;
+  } = { base };
 
   if (spec.horizontalStyle !== undefined) {
     resolved.horizontalStyle = resolvePatternLineStyle(
@@ -104,6 +89,5 @@ export const resolvePatternStyleContext = (
       }),
     };
   }
-
   return resolved;
 };

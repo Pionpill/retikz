@@ -10,6 +10,7 @@ import {
   resolveArrowRegistry,
   resolvePathGeneratorRegistry,
   resolvePathKindRegistry,
+  resolvePatternRegistry,
   resolveRibbonWidthProfileRegistry,
 } from '../../src';
 import { resolvePath, resolveRibbonPathProviders, resolveStrokePathProviders } from '../../src/resolve/path';
@@ -18,13 +19,17 @@ type BuiltinProviderContext = Omit<
   Partial<PathResolveContext>,
   'pathKinds' | 'pathGenerators' | 'arrows' | 'ribbonWidthProfiles'
 > &
-  Partial<Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'ribbonWidthProfiles'>>;
+  Partial<
+    Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'ribbonWidthProfiles' | 'patterns' | 'round'>
+  >;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
   pathKinds: resolvePathKindRegistry(),
   pathGenerators: resolvePathGeneratorRegistry(),
   arrows: resolveArrowRegistry(),
   ribbonWidthProfiles: resolveRibbonWidthProfileRegistry(),
+  patterns: resolvePatternRegistry(),
+  round: value => value,
   ...context,
 });
 

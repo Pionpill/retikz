@@ -1,13 +1,14 @@
 import type { BoundsInsets } from '@retikz/math';
 
-import type { IRBoxSize, IRBoxSpacing, IRNode, IRNodeLabel, IRAxisScale } from '../../schemas';
+import type { IRAxisScale, IRBoxSize, IRBoxSpacing, IRNode, IRNodeLabel } from '../../schemas';
+import type { CanonicalNode, CanonicalNodeLabel, NodeResolution, NodeResolveContext } from './types';
 
+import { resolvePaint } from '../resource';
 import { resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
 import { resolveDashPattern, resolveDropShadow } from '../style';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
 import { resolveNodeTextColor } from './text-color';
-import type { CanonicalNode, CanonicalNodeLabel, NodeResolution, NodeResolveContext } from './types';
 
 /** Node 缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;
@@ -153,5 +154,19 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     boundaryRegistry: context.boundaries,
     irPath: context.irPath,
   });
-  return { irPath: context.irPath, node, shape, boundary };
+  const fill = resolvePaint(node.fill, {
+    patterns: context.patterns,
+    round: context.round,
+    irPath: context.irPath,
+  });
+  const stroke = resolvePaint(node.stroke, {
+    patterns: context.patterns,
+    round: context.round,
+    irPath: context.irPath,
+  });
+  const paint = {
+    ...(fill === undefined ? {} : { fill }),
+    ...(stroke === undefined ? {} : { stroke }),
+  };
+  return { irPath: context.irPath, node, shape, boundary, paint };
 };

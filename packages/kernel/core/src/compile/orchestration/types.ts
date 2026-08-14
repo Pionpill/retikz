@@ -254,6 +254,7 @@ export type TraversalContext = Pick<
   | 'shapes'
   | 'boundaries'
   | 'patterns'
+  | 'clips'
   | 'arrows'
   | 'pathGenerators'
   | 'pathKinds'

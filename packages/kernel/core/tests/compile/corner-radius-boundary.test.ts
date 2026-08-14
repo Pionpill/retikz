@@ -5,9 +5,10 @@ import type { ContourSegment } from '../../src/shared/geometry/path';
 
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
-import { resolveNode } from '../../src/resolve/node';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
+import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import { resolveNode } from '../../src/resolve/node';
 import { filletContour } from '../../src/shared/geometry/path';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({
@@ -23,6 +24,8 @@ const layoutSquare = (node: IRNode) => {
     styleFrames: [],
     shapes: BUILTIN_SHAPES,
     boundaries,
+    patterns: resolvePatternRegistry(),
+    round: value => value,
     irPath: 'node',
     warn: () => {},
   });
