@@ -40,12 +40,12 @@ from the same layout transaction as the Scene.
 
 - `@retikz/data` owns shared data models and transforms.
 - `@retikz/table-react` provides `Table`, `DetailTable`, and `ManualTable` React entries.
-- `@retikz/table-vanilla` provides plain spec helpers, a Tier 2 embed adapter, and one-shot SSR.
+- `@retikz/table-vanilla` provides Input helpers, an InputEmbed adapter, and one-shot SSR.
 - Plot content may enter a Cell through Core composition, but this package does not depend on
   `@retikz/plot`.
 
 Adapter authors can use `createTableRuntimeContribution()` to produce a Core
-`CompositeDependencyContribution`. It carries the Table provider, runtime datasets,
+`CoreProviderContribution`. It carries the Table provider, runtime datasets,
 formatter/structure/presentation/visual-scale definitions, and nested composite providers through
 the same identity-based conflict rules as the built-in React and Vanilla adapters. The contribution
 stores detached frozen containers while leaving caller-owned definition objects unchanged. This

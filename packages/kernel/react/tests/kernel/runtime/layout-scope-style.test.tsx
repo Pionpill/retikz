@@ -6,7 +6,7 @@
  *   - 边界：无样式 prop 时 IR 形态逐字节不变（不包空 scope）/ 空 children / 单通道只进该通道
  *   - 错误路径：与 `ir` prop 并用 → dev warn + 样式忽略 / 非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错
  *   - 交互：内层 `<Scope>` 覆盖 / 图元显式属性胜出 / 内层 `<Scope resetStyle>` 屏障切断继承
- *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ buildIR 出 IR 形态；compileToScene 出已解析 primitive 样式
+ *   断言层：wrapRootScope（Layout 实际调用的合成函数）+ Vanilla normalize 出 IR 形态；compileToScene 出已解析 primitive 样式
  */
 import type { IRScene } from '@retikz/core';
 import type { EllipsePrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
@@ -21,7 +21,8 @@ import type { ScopeStyleProps } from '../../../src/kernel/protocol';
 
 import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../../src';
 import { Path } from '../../../src/kernel';
-import { buildIR, wrapRootScope } from '../../../src/kernel/adapter';
+import { wrapRootScope } from '../../../src/kernel/adapter';
+import { normalizeReactInput } from '../../helpers/normalize-input';
 
 // --- helpers ---------------------------------------------------------------
 
@@ -35,8 +36,9 @@ const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   return out;
 };
 
-/** 复刻 Layout 的 IR 构造：wrapRootScope（按需包合成根 Scope）→ buildIR */
-const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene => buildIR(wrapRootScope(children, style));
+/** 复刻 Layout 的 IR 构造：wrapRootScope（按需包合成根 Scope）→ Vanilla normalize */
+const layoutIR = (style: ScopeStyleProps, children: ReactNode): IRScene =>
+  normalizeReactInput(wrapRootScope(children, style));
 
 /** Layout 流水线编译后的全部叶子 primitive */
 const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePrimitive> =>
@@ -136,7 +138,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
 // ===========================================================================
 
 describe('边界：无样式 / 空 children / 单通道', () => {
-  it('layout_no_style_prop_ir_unchanged：不带样式 prop → IR 与 buildIR(children) 逐字段一致（不包空 scope）', () => {
+  it('layout_no_style_prop_ir_unchanged：不带样式 prop → IR 与 Vanilla normalize(children) 逐字段一致（不包空 scope）', () => {
     const children = (
       <>
         <Node id="A" position={[0, 0]}>
@@ -148,7 +150,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       </>
     );
     const wrapped = layoutIR({}, children);
-    const plain = buildIR(children);
+    const plain = normalizeReactInput(children);
     expect(wrapped).toEqual(plain);
     // 顶层不应出现合成 scope
     expect(wrapped.children.every(c => c.type !== 'scope')).toBe(true);
@@ -169,7 +171,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     );
     // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
     const emptyDefaults = layoutIR({ nodeDefault: {}, pathDefault: {}, labelDefault: {}, arrowDefault: {} }, children);
-    expect(emptyDefaults).toEqual(buildIR(children));
+    expect(emptyDefaults).toEqual(normalizeReactInput(children));
     expect(emptyDefaults.children.every(c => c.type !== 'scope')).toBe(true);
     // 但标量 falsy-defined 值（strokeWidth=0）是有意义样式 → 仍包 scope
     const zeroWidth = layoutIR({ strokeWidth: 0 }, children);
@@ -220,7 +222,7 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
         A
       </Node>,
     );
-    // Layout / buildIR 原样透传，不在自己这层 sanitize
+    // Layout / Vanilla Input 原样透传，不在自己这层 sanitize
     expect(badIr.children[0]).toMatchObject({ type: 'scope', nodeDefault: { fill: 42 } });
     // 既有 IRScope schema 校验路径拒掉
     expect(SceneSchema.safeParse(badIr).success).toBe(false);
@@ -292,7 +294,7 @@ describe('等价性：合成根 scope 与手写根 <Scope> 同 IR', () => {
       </>
     );
     const synthetic = layoutIR({ stroke: 'currentColor', nodeDefault: { fill: 'none' } }, children);
-    const manual = buildIR(
+    const manual = normalizeReactInput(
       <Scope stroke="currentColor" nodeDefault={{ fill: 'none' }}>
         {children}
       </Scope>,

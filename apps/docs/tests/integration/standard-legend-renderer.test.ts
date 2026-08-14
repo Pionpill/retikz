@@ -1,13 +1,14 @@
 import type { IRChild, Scene } from '@retikz/core';
-import type { LegendInput } from '@retikz/standard';
+import type { InputLegend } from '@retikz/standard-vanilla';
 
 import { compileToScene } from '@retikz/core';
-import { Node } from '@retikz/react';
+import { createInputScene, Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { createLegend, LegendContentKind, LegendDefinition, LegendSchema } from '@retikz/standard';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
-import { legend, LegendVanillaAdapter } from '@retikz/standard-vanilla';
+import { legend, LegendInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -72,10 +73,10 @@ describe('Standard Legend renderer boundary', () => {
         kind: LegendContentKind.Items,
         items: [{ key: 'line', sample: { type: 'node', position: [0, 0], text: 'A' } }],
       },
-    } satisfies LegendInput;
+    } satisfies InputLegend;
     const direct = createLegend(input);
-    const react = LegendSchema.parse(
-      Legend.embeddableAdapter.contribute({
+    const reactInput = createInputScene(
+      createElement(Legend, {
         kind: LegendContentKind.Items,
         contentAlign: 'end',
         size: { x: { kind: 'fixed', value: 120 } },
@@ -88,16 +89,12 @@ describe('Standard Legend renderer boundary', () => {
             sample: createElement(Node, { position: [0, 0], text: 'A' }),
           }),
         ),
-      }).node,
+      }),
     );
-    const embed = legend('legend', input);
+    const react = LegendSchema.parse(normalizeScene(reactInput.scene, { adapters: reactInput.adapters }).ir.children[0]);
+    const vanillaInput = scene({ children: [legend('legend', input)] });
     const vanilla = LegendSchema.parse(
-      LegendVanillaAdapter.lower(embed.props, {
-        id: embed.id,
-        kind: embed.kind,
-        layerId: 'main',
-        identityPath: ['main', embed.id],
-      }).node,
+      normalizeScene(vanillaInput, { adapters: [LegendInputEmbedAdapter] }).ir.children[0],
     );
     const compile = (node: IRChild) =>
       compileToScene({ type: 'scene', version: 1, children: [node] }, { composites: [LegendDefinition], padding: 0 });

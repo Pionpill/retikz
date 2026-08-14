@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: An AI-native general-purpose drawing library — describe figures with React components or Vanilla plain specs, with JSON IR connecting generation, persistence, and rendering.
+description: An AI-native general-purpose drawing library — describe figures with React components or Vanilla InputScene data, with JSON IR connecting generation, persistence, and rendering.
 ---
 
 retikz is a general-purpose drawing library for browsers and Node.js. You describe the objects in a figure, then compose them through names, positions, and path relationships. Higher-level modules such as `@retikz/plot` reuse the same drawing semantics.
@@ -54,7 +54,7 @@ retikz's naming, path actions, and anchor model are direct tributes to LaTeX's T
 
 IR ↔ TikZ source conversion belongs to a future codec direction: the goal is to edit in the browser and still fit into a LaTeX workflow, or migrate existing TikZ figures from `.tex` files into retikz IR / React.
 
-You do not need to know TikZ to use retikz. retikz borrows naming vocabulary (node / path / anchor / step), while figures can be described with React components or Vanilla plain specs.
+You do not need to know TikZ to use retikz. retikz borrows naming vocabulary (node / path / anchor / step), while figures can be described with React components or a Vanilla `InputScene`.
 
 </Comparison>
 

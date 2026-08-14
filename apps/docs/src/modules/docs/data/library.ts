@@ -25,9 +25,42 @@ export const librarySection: Array<Section> = [
         label: 'library.standardExtension',
         children: [
           {
+            id: 'shape',
+            label: 'library.standardExtensionShape',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'standard.shape',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'arrow',
+            label: 'library.standardExtensionArrow',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'standard.arrow',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'clip',
+            label: 'library.standardExtensionClip',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'standard.clip',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
             id: 'capability-loading',
             label: 'library.standardCapabilityLoading',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',

@@ -1,11 +1,14 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { EmbeddableTier2Adapter, LayoutProps } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
+import type { InputTable } from '@retikz/table-vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { tableEmbeddableAdapter } from './embedded-runtime';
-import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+
+import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
 /** Table standalone 入口复用的 Kernel Layout 宿主 props */
@@ -60,9 +63,10 @@ export type TableProps = TableCommonProps & {
 };
 
 /** 带静态 Tier 2 adapter 的 Table React 组件 */
-export type EmbeddableTableComponent<TProps> = FC<TProps> & {
+export type InputEmbeddableTableComponent<TProps> = FC<TProps> & {
   isTier2Embeddable: true;
-  embeddableAdapter: EmbeddableTier2Adapter<TProps>;
+  inputEmbedAdapter: InputEmbedAdapter<InputTable>;
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputTable;
 };
 
 const TableComponent: FC<TableProps> = props => (
@@ -70,7 +74,8 @@ const TableComponent: FC<TableProps> = props => (
 );
 
 /** 渲染任意合法 Table spec 的通用 React 入口 */
-export const Table = TableComponent as EmbeddableTableComponent<TableProps>;
+export const Table = TableComponent as InputEmbeddableTableComponent<TableProps>;
 Table.displayName = 'Table';
 Table.isTier2Embeddable = true;
-Table.embeddableAdapter = tableEmbeddableAdapter;
+Table.inputEmbedAdapter = TableInputEmbedAdapter;
+Table.createInputEmbedProps = props => createReactTableInput(ReactTableRuntimeKind.Table, props as TableProps);

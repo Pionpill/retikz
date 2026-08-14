@@ -5,7 +5,7 @@ import type { PreviewThemeStyleValue } from './theme';
 /** 预览区平移 / 缩放状态。 */
 export type Transform = { x: number; y: number; scale: number };
 
-/** 源码视图切换：React 源码 / IR JSON / Vanilla plain spec 代码。 */
+/** 源码视图切换：React 源码 / IR JSON / Vanilla Input 代码 */
 export type SourceView = 'react' | 'ir' | 'vanilla';
 
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */

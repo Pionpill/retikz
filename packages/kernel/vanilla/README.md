@@ -1,8 +1,8 @@
 # @retikz/vanilla
 
-Framework-free runtime + SSR entry for [retikz](https://pionpill.github.io/retikz/). No JSX, no UI framework — mount a diagram to the DOM, render it to an SVG string on the server, or compose one with a plain spec.
+Framework-neutral authoring, processing, and SSR APIs for [retikz](https://pionpill.github.io/retikz/). The root entry is DOM-free; browser mounting is available only from `@retikz/vanilla/dom`.
 
-retikz 的无框架 runtime / SSR 入口：不依赖任何 UI 框架。`renderToSvgString` 走服务端 / 构建期（零 DOM）产 SVG 字符串；`mount` / `mountSvg` / `mountCanvas` 在浏览器把图形挂到 DOM；standalone `hydrate` 绑定 SSR / 已有 SVG 的事件，Canvas 通过 `mountCanvas` 返回的 view 水合；plain spec helper（`figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed`）产同一份 core IR。组合 `@retikz/render` 内核，不自维护第二套渲染逻辑。
+`InputScene` and `normalizeScene()` are the framework-neutral authoring path. They produce one Core Source IR and ordered Tier 2 contributions; processing resolves those contributions and compiles the Scene. `@retikz/vanilla` does not define Core IR, lowering semantics, or renderer algorithms.
 
 ## Install
 
@@ -11,30 +11,16 @@ pnpm add @retikz/vanilla @retikz/core @retikz/render
 ```
 
 This package is ESM-only and requires Node.js 24 or newer.
-本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
-## Render IR / Scene
-
-```ts
-import { renderToSvgString, mountSvg, mountCanvas } from '@retikz/vanilla';
-
-// server / build time — no DOM
-const svg = renderToSvgString(ir);
-
-// browser
-mountSvg(document.querySelector('#diagram')!, ir);
-mountCanvas(document.querySelector('#canvas-diagram')!, ir, { output: { width: 640, height: 360 } });
-```
-
-## Plain spec
+## Authoring and SSR
 
 ```ts
-import { figure, layer, mount, node, path, renderToSvgString, VanillaLayerCache } from '@retikz/vanilla';
+import { InputLayerCache, layer, node, path, renderToSvgString, scene } from '@retikz/vanilla';
 
-const spec = figure({
+const input = scene({
   id: 'flow',
   layers: [
-    layer('main', { cache: VanillaLayerCache.Static }, [
+    layer('main', { cache: InputLayerCache.Static }, [
       node('a', { position: [0, 0], text: 'A' }),
       node('b', { position: [120, 0], text: 'B' }),
       path('edge', { way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
@@ -42,17 +28,26 @@ const spec = figure({
   ],
 });
 
-const svg = renderToSvgString(spec);
-mount(document.querySelector('#diagram')!, spec);
+const svg = renderToSvgString(input, { output: { width: 640, height: 360 } });
+```
+
+## Browser mounting
+
+```ts
+import { mount } from '@retikz/vanilla/dom';
+
+const view = mount(document.querySelector('#diagram')!, input);
+view.update(input);
+view.dispose();
 ```
 
 ## Exports
 
-- Runtime: `renderToSvgString`, `mount`, `mountSvg`, `mountCanvas`, `hydrate` (SSR / existing SVG only; use `CanvasView.hydrate` for Canvas)
-- Views: `VanillaView` from `mountSvg` exposes `root`, `update`, `hydrate`, `dispose`, and `animation`; `CanvasView` from `mountCanvas` also exposes `clientToScene`; use `VanillaViewMode` to discriminate retained and static views
-- Plain spec: `figure` / `layer` / `node` / `path` / `coordinate` / `scope` / `embed`, plus `VanillaTier2Adapter` for explicit Tier 2 embedding
+- Root: `InputXxx`, `scene`, `layer`, `node`, `path`, `scope`, `embed`, `normalizeScene`, processing APIs, and `renderToSvgString`
+- DOM sub-entry: `@retikz/vanilla/dom` exports `mount`, `mountSvg`, `mountCanvas`, and `hydrate`
+- Tier 2 packages contribute through `InputEmbedAdapter`; callers provide adapters to the Vanilla processing or render options
 
-Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`. Render helpers use explicit subpaths: hydration from `@retikz/render/hydration`, animation from `@retikz/render/animation`, and retained runtime contracts from `@retikz/render/runtime`.
+Core IR helpers, animation preset factories, and extension registrars such as `DrawWay`, `fadeIn`, `defineArrow`, and `definePathKind` should be imported from `@retikz/core`.
 
 ## Docs
 

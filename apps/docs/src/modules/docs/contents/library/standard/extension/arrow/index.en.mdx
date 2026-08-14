@@ -1,0 +1,74 @@
+---
+title: Arrow Extensions
+description: Import diamond arrows on demand from @retikz/standard/arrow, then pass their Definitions through the React or Vanilla compile entry point.
+---
+
+Arrow extensions build on Core's basic arrows and add more optional content:
+
+| Package          | Provided content                                                   |
+| ---------------- | ------------------------------------------------------------------ |
+| `core`           | `normal`, `open`, `stealth`, `openStealth`, `circle`, `openCircle` |
+| `standard/arrow` | `diamond`, `openDiamond`                                           |
+
+## Usage
+
+This page supports two import styles:
+
+- Import specific Definitions on demand, such as `DiamondArrowDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
+- Use the complete official extension set through `StandardArrowDefinitions`, which includes every Standard Definition from this subpath; use `StandardArrowProviders` when assembling a provider graph
+
+Both styles explicitly assemble capabilities for the current figure. Importing the package does not register arrows globally.
+
+### React usage
+
+Import the Standard Definitions a figure actually uses from `@retikz/standard/arrow` and pass them to the React `Layout` `arrows` prop. Core arrows need no extra injection; the subpath import does not register Standard arrows globally.
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
+
+<Layout arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}>
+  <Draw
+    way={[
+      [0, 0],
+      [160, 0],
+    ]}
+    arrow="->"
+    arrowDetail={{ end: { shape: 'openDiamond' } }}
+  />
+</Layout>;
+```
+
+### Vanilla usage
+
+With `@retikz/vanilla`, put the same Definition in `compile.arrows`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition],
+  },
+});
+```
+
+Path IR stores only an arrow name and JSON-safe configuration. If the name has no built-in or injected Definition, Core fails explicitly at lookup and lists the available entries instead of substituting a default arrow.
+
+## Examples
+
+The overview places two peer-level single-direction arrows side by side in each row: a solid marker on the left and its hollow counterpart on the right, so you can compare shapes without changing the path.
+
+<ComponentPreview files="arrow-gallery" size="xs" />
+
+### Diamond arrows
+
+`diamond` and `openDiamond` provide filled and hollow diamond endpoints for aggregation, convergence, or relationships that should be distinct from ordinary triangular arrows.
+
+<ComponentPreview files="diamond-arrows" size="sm" />
+
+## Related
+
+- [Capability Loading](/library/standard/extension/capability-loading): boundary between direct injection and the provider graph
+- [Extensions](/library/standard/extension): browse the other optional capabilities

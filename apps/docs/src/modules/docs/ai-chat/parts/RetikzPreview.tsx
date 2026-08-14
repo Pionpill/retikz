@@ -2,7 +2,8 @@ import type { IRScene } from '@retikz/core';
 import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
 
 import { SceneSchema } from '@retikz/core';
-import { convertReactNodeToIR, Layout } from '@retikz/react';
+import { createInputScene, Layout } from '@retikz/react';
+import { normalizeScene } from '@retikz/vanilla';
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { cloneElement, Component as ReactComponent, isValidElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -74,7 +75,8 @@ const resolveTsx = (source: string): Resolved => {
   const Component: FC = () => enriched;
   let irJson: string;
   try {
-    irJson = formatIR(convertReactNodeToIR(element.props.children));
+    const input = createInputScene(element.props.children);
+    irJson = formatIR(normalizeScene(input.scene, { adapters: input.adapters }).ir);
   } catch (err) {
     irJson = `// Failed to compute IR: ${err instanceof Error ? err.message : String(err)}`;
   }

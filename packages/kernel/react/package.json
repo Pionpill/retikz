@@ -74,7 +74,8 @@
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
     "@retikz/render": "workspace:*",
-    "@retikz/runtime": "workspace:*"
+    "@retikz/runtime": "workspace:*",
+    "@retikz/vanilla": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

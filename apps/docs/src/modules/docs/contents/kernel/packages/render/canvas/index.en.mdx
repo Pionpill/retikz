@@ -26,18 +26,18 @@ import { Layout, Node } from '@retikz/react';
 **Vanilla (browser)** — `mountCanvas` mounts the figure as a `<canvas>`; its view adds canvas-side hydration and coordinate mapping on top of what `mountSvg` returns:
 
 ```ts
-import { mountCanvas } from '@retikz/vanilla';
+import { mountCanvas } from '@retikz/vanilla/dom';
 
 const view = mountCanvas(container, ir);
-// view.root is the <canvas>; view.update(next) repaints; view.dispose() unmounts
+// view.root is the <canvas>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
 ```
 
 The two entries have different input contracts:
 
-| Entry                 | Accepted input                                  | Output     |
-| --------------------- | ----------------------------------------------- | ---------- |
-| React `<Layout>`      | JSX `children`<br />or `IRScene`                | `<canvas>` |
-| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />or `VanillaFigureSpec` | `<canvas>` |
+| Entry                 | Accepted input                           | Output     |
+| --------------------- | ---------------------------------------- | ---------- |
+| React `<Layout>`      | JSX `children`<br />or `IRScene`         | `<canvas>` |
+| Vanilla `mountCanvas` | `Scene` / `IRScene`<br />or `InputScene` | `<canvas>` |
 
 `devicePixelRatio` defaults to `globalThis.devicePixelRatio` (falling back to 1), preserving enough bitmap resolution for high-DPI screens.
 

@@ -52,4 +52,9 @@ export type {
   RuntimeSessionUpdate,
   RuntimeSnapshot,
 } from './transaction';
-export { createRuntimeChangeSet, createRuntimeOwnerInput, createRuntimeOwnerUpdate } from './transaction';
+export {
+  createRuntimeChangeSet,
+  createRuntimeOwnerInput,
+  createRuntimeOwnerUpdate,
+  createRuntimeRevision,
+} from './transaction';

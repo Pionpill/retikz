@@ -31,12 +31,12 @@ import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
 </Layout>
 ```
 
-JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Vanilla 使用 `overlayLayout()` 与 `OverlayLayoutVanillaAdapter`。
+JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Vanilla 使用 `overlayLayout()` 与 `OverlayLayoutInputEmbedAdapter`。
 
 | 场景        | 公开入口                                                                                                       |
 | ----------- | -------------------------------------------------------------------------------------------------------------- |
 | React       | `OverlayLayout`、`LayoutItem`（`@retikz/layout-react`）                                                        |
-| Vanilla     | `overlayLayout`、`OverlayLayoutVanillaAdapter`（`@retikz/layout-vanilla`）                                     |
+| Vanilla     | `overlayLayout`、`OverlayLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                                  |
 | 可选检查    | `InspectOverlayLayout`（`@retikz/layout-react/inspect`）、`inspectOverlayLayout`（Vanilla）                    |
 | IR / 持久化 | `OverlayLayoutSchema`、`createOverlayLayout`、`IROverlayLayout`、`OverlayLayoutDefinition`（`@retikz/layout`） |
 

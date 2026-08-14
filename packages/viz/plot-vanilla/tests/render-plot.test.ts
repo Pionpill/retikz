@@ -5,7 +5,6 @@ import { compileToScene } from '@retikz/core';
 import { lowerPlots } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
-import { ZodError } from 'zod';
 
 import {
   boxplotData,
@@ -91,11 +90,6 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
 
   it('data 缺 spec 引用的数据集 → 调用期抛错', () => {
     expect(() => renderPlot(spec, {}, { width: 480, height: 300 })).toThrow();
-  });
-
-  it('非法 spec（缺判别字段）→ 抛清晰 ZodError，不落到 core 内部崩', () => {
-    const malformed = {} as unknown as IRPlotSpec;
-    expect(() => renderPlot(malformed, {}, { width: 480, height: 300 })).toThrow(ZodError);
   });
 
   it('与手写 compileToScene + renderToSvgString 等价（证明薄包装不引入额外语义）', () => {

@@ -5,7 +5,13 @@ import pkg from './package.json' with { type: 'json' };
 export default defineRetikzLibraryConfig({
   packageRoot: __dirname,
   manifest: pkg,
-  entry: ['src/index.ts'],
+  entry: [
+    'src/index.ts',
+    'src/shape/index.ts',
+    'src/arrow/index.ts',
+    'src/clip/index.ts',
+    'src/path-generator/index.ts',
+  ],
   test: {
     environment: 'node',
     experimental: {

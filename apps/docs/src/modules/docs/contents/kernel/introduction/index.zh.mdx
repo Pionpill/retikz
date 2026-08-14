@@ -1,6 +1,6 @@
 ---
 title: 简介
-description: AI 原生的通用绘图库——用 React 组件或 Vanilla plain spec 描述图形，以 JSON IR 连接生成、持久化与渲染。
+description: AI 原生的通用绘图库——用 React 组件或 Vanilla InputScene 描述图形，以 JSON IR 连接生成、持久化与渲染。
 ---
 
 retikz 是一套面向浏览器与 Node.js 的通用绘图库。你可以先描述图里有哪些对象，再用命名、定位和路径关系把它们组合起来；`@retikz/plot` 等上层模块也复用同一套绘图语义。
@@ -54,7 +54,7 @@ retikz 的命名 / 路径动作 / anchor 体系直接致敬 LaTeX 的 TikZ 包�
 
 IR ↔ TikZ 源码转换属于后续 codec 方向：目标是在浏览器里编辑后能进入 LaTeX 工作流，或把已有 `.tex` 中的 TikZ 图迁移到 retikz 的 IR / React 表达里。
 
-不需要先懂 TikZ 才能使用 retikz。retikz 借用的是命名词汇（node / path / anchor / step），可以使用 React 组件或 Vanilla plain spec 描述图形。
+不需要先懂 TikZ 才能使用 retikz。retikz 借用的是命名词汇（node / path / anchor / step），可以使用 React 组件或 Vanilla `InputScene` 描述图形。
 
 </Comparison>
 

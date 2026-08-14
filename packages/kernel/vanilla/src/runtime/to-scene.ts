@@ -3,21 +3,14 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
-import type { VanillaAuthoringSite, VanillaRuntimeMeta } from '../spec';
+import type { InputAuthoringSite, InputRuntimeMeta } from '../normalize';
 import type { CommonOptions, RenderInput } from './types';
 
-import { isVanillaFigureSpec, normalizeFigureSpec } from '../spec';
-import { createEmptyRuntimeMetaSnapshot } from '../spec/internal';
-import {
-  commitVanillaCompileOutput,
-  compileVanillaWithDriver,
-  createVanillaCompileDriverSession,
-  defaultVanillaCompileDriver,
-} from './compile-driver';
-import { validateVanillaCoreSource } from './validate-source';
+import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
+import { prepareProcessingInput, processToStaticInputResult } from '../processing';
 
-/** 为非 plain spec 输入创建独立的空 runtime metadata */
-export const createEmptyRuntimeMeta = (): VanillaRuntimeMeta => createEmptyRuntimeMetaSnapshot();
+/** 为非 InputScene 输入创建独立的空 runtime metadata */
+export const createEmptyRuntimeMeta = (): InputRuntimeMeta => createEmptyInputRuntimeMetaSnapshot();
 
 /** 一份未编译输入归一后的领域中立编译材料 */
 export type PreparedVanillaCompileInput = Readonly<{
@@ -25,10 +18,10 @@ export type PreparedVanillaCompileInput = Readonly<{
   source: IRScene;
   /** 本次编译使用的 Core options */
   coreOptions: CompileOptions;
-  /** plain spec normalizer 报告的 authored sites */
-  authoringSites: ReadonlyArray<VanillaAuthoringSite>;
-  /** plain spec 运行时元数据 */
-  runtimeMeta: VanillaRuntimeMeta;
+  /** InputScene normalizer 报告的 authored sites */
+  authoringSites: ReadonlyArray<InputAuthoringSite>;
+  /** InputScene 运行时元数据 */
+  runtimeMeta: InputRuntimeMeta;
 }>;
 
 /** Render input 归一结果 */
@@ -43,52 +36,37 @@ export type SceneResult = {
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** 可选编译驱动产出的诊断 */
   diagnostics: ReadonlyArray<unknown>;
-  /** plain spec 运行时元数据 */
-  runtimeMeta: VanillaRuntimeMeta;
+  /** InputScene 运行时元数据 */
+  runtimeMeta: InputRuntimeMeta;
 };
 
 const EMPTY_ARTIFACTS: ReadonlyArray<CompileArtifact> = Object.freeze([]);
-const EMPTY_AUTHORING_SITES: ReadonlyArray<VanillaAuthoringSite> = Object.freeze([]);
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 
-/** 把 IR 或 plain spec 归一成通用编译驱动输入 */
+/** 把 IR 或 InputScene 归一成通用编译驱动输入 */
 export const prepareVanillaCompileInput = (
   input: Exclude<RenderInput, Scene>,
   options: CommonOptions,
 ): PreparedVanillaCompileInput => {
-  if (isVanillaFigureSpec(input)) {
-    const normalized = normalizeFigureSpec(input, {
-      adapters: options.adapters,
-      composites: options.compile?.composites,
-    });
-    return Object.freeze({
-      source: validateVanillaCoreSource(normalized.ir),
-      coreOptions: Object.freeze({
-        ...options.compile,
-        composites: normalized.composites,
-      }),
-      authoringSites: normalized.authoringSites,
-      runtimeMeta: normalized.runtimeMeta,
-    });
-  }
+  const prepared = prepareProcessingInput(input, options);
   return Object.freeze({
-    source: validateVanillaCoreSource(input),
-    coreOptions: Object.freeze({ ...(options.compile ?? {}) }),
-    authoringSites: EMPTY_AUTHORING_SITES,
-    runtimeMeta: createEmptyRuntimeMeta(),
+    source: prepared.source,
+    coreOptions: prepared.coreOptions,
+    authoringSites: prepared.authoringSites,
+    runtimeMeta: prepared.runtimeMeta,
   });
 };
 
 /**
  * 入参归一成 `Scene`
- * @description 已是 `Scene`（有 `primitives`）直接用；plain spec 先规范化成 IR；
- *   否则当 `IRScene` 经 `compileToScene` 编译。`options.compile` 原样透传（`measureText` 缺省时 core 回退
+ * @description 已是 `Scene`（有 `primitives`）直接用；InputScene 先规范化成 IR；
+ *   否则当 `IRScene` 经 `compileToScene` 编译。`InputScene` 会先进入 processing 归一与 resolver。`options.compile` 原样透传（`measureText` 缺省时 core 回退
  *   `fallbackMeasurer`，Node 下确定可跑）
  */
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
   if ('primitives' in input) {
     if (options.compileDriver !== undefined) {
-      throw new Error('Vanilla compile drivers require authored IR or a plain figure spec');
+      throw new Error('Vanilla compile drivers require authored IR or an InputScene');
     }
     return {
       scene: input,
@@ -99,24 +77,13 @@ export const toSceneResult = (input: RenderInput, options: CommonOptions): Scene
       runtimeMeta: createEmptyRuntimeMeta(),
     };
   }
-  const prepared = prepareVanillaCompileInput(input, options);
-  const driverInput = Object.freeze({
-    instance: Object.freeze({}),
-    source: prepared.source,
-    authoringSites: prepared.authoringSites,
-    coreOptions: prepared.coreOptions,
-  });
-  const session = createVanillaCompileDriverSession(options.compileDriver ?? defaultVanillaCompileDriver, driverInput);
-  const output = compileVanillaWithDriver(driverInput, session);
-  commitVanillaCompileOutput(session, output);
+  const result = processToStaticInputResult(input, options);
   return {
-    scene: output.primary.scene,
-    artifacts: output.primary.artifacts,
-    compileResult: output.primary,
-    layers: output.layers,
-    diagnostics: output.diagnostics,
-    runtimeMeta: prepared.runtimeMeta,
+    scene: result.scene,
+    artifacts: result.artifacts,
+    compileResult: result.compileResult,
+    layers: result.layers,
+    diagnostics: result.diagnostics,
+    runtimeMeta: result.runtimeMeta,
   };
 };
-
-export const toScene = (input: RenderInput, options: CommonOptions): Scene => toSceneResult(input, options).scene;

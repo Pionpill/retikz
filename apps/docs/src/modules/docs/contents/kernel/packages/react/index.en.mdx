@@ -1,11 +1,11 @@
 ---
 title: '@retikz/react'
-description: Author Kernel and Sugar components in JSX, then connect the generated Core IR to a retained or static Runtime and stable SVG or Canvas host.
+description: Author Kernel and Sugar components in JSX, construct a Vanilla InputScene, and present retained or static processing results through a React SVG or Canvas host.
 ---
 
-`@retikz/react` is the primary entry for React applications. You declare figures with JSX components such as `<Layout>`, `<Node>`, `<Path>`, `<Scope>`, and `<Draw>`; its adapter turns props and children into `@retikz/core` IR, then `<Layout>` compiles a Scene and connects it to an SVG or Canvas host.
+`@retikz/react` is the primary entry for React applications. You declare figures with JSX components such as `<Layout>`, `<Node>`, `<Path>`, `<Scope>`, and `<Draw>`; its collector turns props and children into an `@retikz/vanilla` `InputScene`, then `<Layout>` hosts the processed SVG or Canvas result.
 
-It owns React authoring and lifecycle wiring rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; backend execution and cross-backend runtime belong to `@retikz/render`.
+It owns React authoring and result hosting rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; Input normalization, composite dependency resolution, the Core Program, and retained processing state belong to `@retikz/vanilla`.
 
 ## Install and usage
 
@@ -39,15 +39,15 @@ export const Diagram = () => (
 
 ### JSX reduces authoring overhead
 
-You can construct `@retikz/core` IR directly, but figures commonly contain nested, reusable, and compositional structures. JSX expresses those relationships as a component tree, keeping declarations such as `<Layout>`, `<Scope>`, `<Node>`, and `<Path>` close to the figure hierarchy while reducing the boilerplate of assembling Core IR by hand.
+You can construct `@retikz/core` IR directly, but figures commonly contain nested, reusable, and compositional structures. JSX expresses those relationships as a component tree, keeping declarations such as `<Layout>`, `<Scope>`, `<Node>`, and `<Path>` close to the figure hierarchy while reducing the boilerplate of assembling authoring input by hand.
 
-retikz treats React as its officially supported first-class framework: the component API, documentation, examples, and adapter behavior in `@retikz/react` are maintained alongside the Kernel. React is the authoring layer here; the framework-neutral `@retikz/core` still owns the data contract and compilation semantics.
+retikz treats React as its officially supported first-class framework: the component API, documentation, examples, and adapter behavior in `@retikz/react` are maintained alongside the Kernel. React is the authoring and result-host layer here; framework-neutral `@retikz/core` and shared `@retikz/vanilla` processing still own the data contract and compilation semantics.
 
 ### Why other adapters are not official packages
 
-This does not mean Core can only integrate with React. Any framework can reuse the retikz Kernel by converting its component or template structure into the same Core IR and connecting `compileToScene` to the renderer lifecycle.
+This does not mean Core can only integrate with React. Any framework can reuse the retikz Kernel by converting its component or template structure into the same `InputScene` and passing it to `@retikz/vanilla` processing.
 
-`@retikz/react` also serves as the implementation reference for other framework adapters, demonstrating the complete boundaries for component-tree-to-IR conversion, host capability injection, and renderer lifecycle wiring. The official project focuses its maintenance resources on React and does not develop, release, or maintain packages for Vue, Svelte, or other frameworks; the community can implement those adapters independently against the same boundaries.
+`@retikz/react` also serves as the implementation reference for other framework adapters, demonstrating the complete boundaries for component-tree-to-`InputScene` conversion, host capability injection, and processing-result wiring. The official project focuses its maintenance resources on React and does not develop, release, or maintain packages for Vue, Svelte, or other frameworks; the community can implement those adapters independently against the same boundaries.
 
 ## Components do not render DOM directly
 
@@ -55,11 +55,11 @@ This does not mean Core can only integrate with React. Any framework can reuse t
 
 Marker components are not used because React is incapable of drawing. They keep drawing semantics in one source of truth. If `<Node>` and `<Path>` each implemented their own DOM, browser layout, and geometry rules, the React DSL would gradually become a second system beside Core IR, and the same figure could produce different results in React, Vanilla, or another adapter.
 
-JSX therefore organizes declarations while the builder converges them into framework-neutral Core IR. The intermediate path creates no extra DOM and does not make CSS layout an implicit input to compilation. Persistence, transport, SSR, and other framework adapters can continue through the same IR → Scene pipeline.
+JSX therefore organizes declarations while the collector converges them into a framework-neutral `InputScene`. The intermediate path creates no extra DOM and does not make CSS layout an implicit input to compilation. Shared processing then normalizes Input to Core IR that persistence, transport, and other framework adapters can reuse.
 
-React still operates where it adds value. It declares a stable `<svg>` / `<canvas>` host shell and connects React commit, refs, and unmounting to the selected Runtime host. The default retained path gives a `@retikz/render` participant exclusive ownership of SVG descendants or the Canvas bitmap, while the static path directly materializes the complete Scene. Both paths prevent React reconciliation and the renderer from rewriting the same subtree. Drawing semantics are thin in this layer, not host integration.
+React still operates where it adds value. It subscribes to the read-only Vanilla processing result and connects React commit, refs, and unmounting to a stable `<svg>` / `<canvas>` host. The retained controller and static processing are managed by Vanilla; React only maps the completed Scene to that host. Drawing semantics are thin in this layer, not host integration.
 
-Kernel components such as `<Node>`, `<Path>`, and `<Scope>` are **IR markers**, not DOM components. They return `null` and expose only a stable `displayName` that tells the React builder which primitive they represent. A `<Node>` therefore does not produce an intermediate `<div>` or acquire a second browser-layout model.
+Kernel components such as `<Node>`, `<Path>`, and `<Scope>` are **Input markers**, not DOM components. They return `null` and expose only a stable `displayName` that tells the React collector which primitive they represent. A `<Node>` therefore does not produce an intermediate `<div>` or acquire a second browser-layout model.
 
 ```tsx
 export const Node: FC<NodeProps> = () => null;
@@ -83,7 +83,7 @@ return (
 );
 ```
 
-`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `buildIRWithContributions` finally assembles an ordinary JSON `IRScene`.
+`readSceneChildren` walks children synchronously: it recognizes Kernel markers, unwraps fragments, and directly invokes function Sugar before recursing into the result. This does not pass through the React DOM renderer, so Kernel and Sugar must be hook-free, side-effect-free function components. `createInputScene()` produces the single `InputScene` plus collected `InputEmbedAdapter` values for Vanilla normalization.
 
 <SourceLinks
   sources={[
@@ -94,45 +94,43 @@ return (
       endLine: 118,
     },
     {
-      label: 'Draw expanding to Path / Step',
+      label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 61,
-      endLine: 155,
+      startLine: 50,
+      endLine: 54,
     },
   ]}
 />
 
 ### Retained update boundaries
 
-Marker components avoid intermediate DOM and duplicated drawing semantics, but JSX → IR still reruns when children references change. Today, every `ir` or Core-options change also calls `compileToScene` during React render to produce an SSR-safe seed; in the default retained mode, the Runtime Session compiles the same input again after the client commit for its transaction. Retained updates reduce backend commit cost, not this render-time full compile.
+Marker components avoid intermediate DOM and duplicated drawing semantics, but JSX → Input still reruns when children references change. `<Layout>` prepares a static fallback during React render; after the client commit, the default retained mode creates a Vanilla processing controller and sends later Input or `ir` sources through it. The controller publishes only complete successful revisions, so React continues to host the prior successful result on failure.
 
-Frequently updated large figures can keep stable IR and Core options outside the component or in `useMemo`, then pass the IR prop to skip the builder and let the seed-compile memo hit.
+Frequently updated large figures can keep stable IR, children, and Core options outside the component or in `useMemo`, avoiding needless Input or processing-controller recreation. Passing the IR prop skips the JSX collector but still uses Vanilla processing for the subsequent compile.
 
-In retained mode, `Layout` creates a Runtime Session after the client commit and updates the complete IR Snapshot plus renderer configuration in one transaction. When Core can prove an update locally safe it publishes a local Scene Patch; other valid changes use a `replaceScene` fallback while preserving full-oracle equivalence. The SVG / Canvas retained participant isolates candidate state during prepare, then publishes DOM / bitmap, events, animation handles, artifacts, and optional readonly layers together only after the transaction succeeds.
+In retained mode, the Vanilla controller owns the Core Program, runtime session, and update strategy; static mode prepares one lifecycle-free processing result. React subscribes to the controller's read-only result, then uses `ProcessingResultHost` to present its same-revision Scene, artifacts, readonly layers, and event wiring.
 
-On unmount, the Session cleans up in reverse order on a best-effort basis, then retries failed renderer cleanup once after logical resources retire. Successful entries never rerun. Persistent failure only enters Runtime diagnostics and does not block React from completing the unmount.
-
-Definition arrays are canonicalized by ordered element identity, so recreating an equivalent container such as `[shape]` does not rebuild the Session. Changing a Definition itself, the renderer backend, `idPrefix`, or `runtime.rendererFactory` does rebuild it. Concurrent scheduling and progressive materialization remain outside the current public contract.
+Definition arrays are canonicalized by ordered element identity, so recreating an equivalent container such as `[shape]` does not rebuild the processing controller. Changing a Definition itself, the renderer backend, `idPrefix`, or processing options remounts it. Concurrent scheduling and progressive materialization remain outside the current public contract.
 
 <SourceLinks
   sources={[
     {
       label: 'Layout Definition-container canonicalization',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 48,
-      endLine: 73,
+      startLine: 106,
+      endLine: 129,
     },
     {
-      label: 'Retained Session creation and initial publish',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 244,
-      endLine: 294,
+      label: 'React static fallback and retained-processing subscription',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 233,
+      endLine: 298,
     },
     {
-      label: 'Retained Session update transaction',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 305,
-      endLine: 323,
+      label: 'Vanilla retained controller creating the Core Program and Runtime',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 96,
+      endLine: 151,
     },
   ]}
 />
@@ -153,7 +151,7 @@ Definition arrays are canonicalized by ordered element identity, so recreating a
 | `retained + full` | Skips Program `update()` for affected work and runs fully | Retains the same Runtime state and transaction guarantees as auto; it is not a low-memory mode      |
 | `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, transaction, or rollback; less resident state, more update work |
 
-`mode: 'static'` cannot be combined with `updateStrategy`, `rendererFactory`, or `onDiagnostic`. The `LayoutRuntimeOptions` TypeScript union rejects those combinations, and JavaScript calls fail before a host is created. If static compilation fails before host writes, no new picture is published. Errors after materialization, animation, or hydration begins propagate without a guarantee that the old host state is restored.
+`mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`. The `LayoutRuntimeOptions` TypeScript union rejects those combinations, and JavaScript calls fail before a host is created. If static compilation fails before host writes, no new picture is published. Errors after materialization, animation, or hydration begins propagate without a guarantee that the old host state is restored.
 
 Changing `updateStrategy` between `auto` and `full` on a retained host disposes the old Session and creates a new one from the current complete input. The host element keeps its identity, while the revision restarts from initial. Changing `mode` releases and replaces the complete host. Choose `retained + full`, not `static`, when you want to keep transactions, diagnostics, and rollback while excluding incremental updates.
 
@@ -166,59 +164,60 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
       endLine: 48,
     },
     {
-      label: 'Static / retained host dispatch',
+      label: 'React dispatching static or retained processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 539,
-      endLine: 584,
+      startLine: 233,
+      endLine: 298,
     },
     {
-      label: 'Retained Session recreation on strategy changes',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 238,
-      endLine: 306,
+      label: 'Vanilla retained controller Core Program and update strategy',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 96,
+      endLine: 176,
     },
   ]}
 />
 
 ## From JSX to Scene
 
-`<Layout>` first calls the React builder to adapt JSX into Core IR. Whenever the input or Core options change, the render phase uses `compileToScene` for an SSR-safe seed; after the client commit, the same Core options create or update the Core Program. In the figure, blue nodes belong to `@retikz/react` authoring / adaptation, while orange nodes are the data contracts and compiler owned by `@retikz/core`.
+`<Layout>` first calls the React collector to adapt JSX into Vanilla Input. Whenever the input or Core options change, React only prepares a static fallback; after the client commit, Vanilla processing creates or updates the Core Program. In the figure, blue nodes belong to `@retikz/react` authoring / hosting, green nodes are shared `@retikz/vanilla` processing, and orange nodes are the data contracts and compiler owned by `@retikz/core`.
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| Stage                      | Owner           | Responsibility                                                                                 |
-| -------------------------- | --------------- | ---------------------------------------------------------------------------------------------- |
-| Kernel / Sugar JSX         | `@retikz/react` | Collect props and children; expand Sugar into Kernel first                                     |
-| `buildIRWithContributions` | `@retikz/react` | Walk the component tree, produce `IRScene`, collect embeddable Tier 2 input                    |
-| `IRScene`                  | `@retikz/core`  | JSON-serializable drawing contract with no React element, hook, or DOM                         |
-| `compileToScene`           | `@retikz/core`  | Process composites; resolve registries, references, geometry, layout, resources, and animation |
-| `CompileResult`            | `@retikz/core`  | Return a backend-neutral `scene` and typed `artifacts` from the same compile                   |
+| Stage                | Owner             | Responsibility                                                                                 |
+| -------------------- | ----------------- | ---------------------------------------------------------------------------------------------- |
+| Kernel / Sugar JSX   | `@retikz/react`   | Collect props and children; expand Sugar into Kernel first                                     |
+| `createInputScene()` | `@retikz/react`   | Walk the component tree, produce `InputScene`, and collect Tier 2 `InputEmbedAdapter`          |
+| `normalizeScene()`   | `@retikz/vanilla` | Normalize typed Input to `IRScene`, lower embeds, and aggregate composite dependencies         |
+| `IRScene`            | `@retikz/core`    | JSON-serializable drawing contract with no React element, hook, or DOM                         |
+| `compileToScene`     | `@retikz/core`    | Process composites; resolve registries, references, geometry, layout, resources, and animation |
+| `ProcessingResult`   | `@retikz/vanilla` | Return same-revision Scene, artifacts, readonly layers, and runtime metadata                   |
 
-`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX builder. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
+`Layout` injects host capabilities such as text measurement, Definition registries, and the TeX lowerer as processing compile options, but those options do not put React into IR or Scene. Passing the `ir` prop skips the JSX collector. The `artifacts` prop requests opt-in outputs, while `onArtifacts` receives immutable same-compile artifacts after the selected host publishes; notification does not trigger another compile.
 
-The base package provides only a domain-neutral `LayoutCompileDriver` and opaque authoring sites. The default driver runs an ordinary Core compile with no observers or readonly layers. Optional `@retikz/inspect/react` wrappers—`InspectLayout`, `InspectScope`, and `InspectPath`—interpret runtime selection and connect inspection observers to the same static or retained host. Selection never enters `IRScene`, `IRScope`, or `IRPath`.
+The base package provides only a domain-neutral `VanillaCompileDriver` and opaque authoring sites. The default driver is run by Vanilla processing for an ordinary Core compile with no observers or readonly layers. Optional `@retikz/inspect/react` wrappers—`InspectLayout`, `InspectScope`, and `InspectPath`—interpret runtime selection and connect inspection observers to the same static or retained processing. Selection never enters `IRScene`, `IRScope`, or `IRPath`.
 
-A `LayoutCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. A static host materializes the complete frame directly, while a retained host commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect) for the complete setup.
+A `VanillaCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. Static processing materializes the complete frame directly, while retained processing commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect) for the complete setup.
 
 <SourceLinks
   sources={[
     {
-      label: 'React builder traversing children',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 585,
-      endLine: 650,
+      label: 'React collecting JSX into an InputScene and adapters',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 451,
+      endLine: 510,
     },
     {
-      label: 'React children to IRScene',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 685,
-      endLine: 701,
+      label: 'Vanilla normalizing Input and merging composite dependencies',
+      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
+      startLine: 50,
+      endLine: 73,
     },
     {
-      label: 'Layout wiring builder to compile',
+      label: 'Layout constructing the processing source and options',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 442,
-      endLine: 522,
+      startLine: 410,
+      endLine: 486,
     },
     {
       label: 'Core IR to Scene compiler',
@@ -231,47 +230,47 @@ A `LayoutCompileDriver` may inject observers for the same compile, then resolve 
 
 ## After Scene
 
-Scene no longer contains React component semantics. In the default retained mode, `@retikz/render` executes Snapshots / Patches against a target backend, while `@retikz/react` adds only React host lifecycle and Session wiring:
+Scene no longer contains React component semantics. Vanilla processing obtains the result for a retained or static revision, while `@retikz/react` only subscribes to and hosts that result through React:
 
-| Target | `@retikz/render`                                                        | `@retikz/react`                                           |
-| ------ | ----------------------------------------------------------------------- | --------------------------------------------------------- |
-| SVG    | Retained renderer owns descendants and applies a Patch or full fallback | Declares a stable `<svg>` shell, then adopts the SSR seed |
-| Canvas | Retained renderer updates dirty regions or uses a full fallback         | Declares a stable `<canvas>` shell and fixes DPR at mount |
+| Target | `@retikz/vanilla`                                                 | `@retikz/react`                                                 |
+| ------ | ----------------------------------------------------------------- | --------------------------------------------------------------- |
+| SVG    | Manages the processing controller, Core Program, and Scene result | Maps the result with `ProcessingResultHost` and binds hydration |
+| Canvas | Manages the processing controller, Core Program, and Scene result | Maps the result with `ProcessingResultHost` to a Canvas host    |
 
 Event handlers are functions and cannot enter JSON IR. In children mode, React separately runs `collectHydrationHandlers` to collect functions by primitive id, then binds them after rendering through SVG location or Canvas hit-testing. With the `ir` prop, the `handlers` prop supplies this runtime side channel instead.
 
 <SourceLinks
   sources={[
     {
-      label: 'Layout retained-host wiring',
+      label: 'Layout passing source and options to Vanilla processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 562,
-      endLine: 584,
+      startLine: 410,
+      endLine: 486,
     },
     {
-      label: 'Retained host shell declaration',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 329,
-      endLine: 356,
+      label: 'React mapping a processing result to SVG or Canvas',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 100,
+      endLine: 177,
     },
     {
       label: 'JSX handler runtime side channel',
       path: 'packages/kernel/react/src/kernel/runtime/collect-hydration-handlers.ts',
-      startLine: 53,
-      endLine: 105,
+      startLine: 51,
+      endLine: 87,
     },
   ]}
 />
 
 ## Responsibility boundaries
 
-| Capability              | What `@retikz/react` owns                                      | Source of truth        |
-| ----------------------- | -------------------------------------------------------------- | ---------------------- |
-| JSX DSL                 | Kernel components construct IR; Sugar expands into Kernel      | `@retikz/core` IR      |
-| Compilation host        | Collect children / IR, inject options, connect React lifecycle | `@retikz/core` compile |
-| Rendering & interaction | Select SVG / Canvas, collect events, connect the host          | `@retikz/render`       |
+| Capability              | What `@retikz/react` owns                                             | Source of truth                    |
+| ----------------------- | --------------------------------------------------------------------- | ---------------------------------- |
+| JSX DSL                 | Kernel components construct Input; Sugar expands into Kernel          | `@retikz/vanilla` Input / Core IR  |
+| Compilation host        | Collect children / IR, inject options, subscribe to processing result | `@retikz/vanilla` processing       |
+| Rendering & interaction | Select SVG / Canvas, collect events, connect the React host           | `@retikz/render` output capability |
 
-`@retikz/react` does not include framework-free plain specs. Use [`@retikz/vanilla`](/kernel/packages/vanilla) outside React, for SSR strings, or for direct DOM mounting.
+`@retikz/react` does not include framework-neutral Input helpers or DOM mounting. Use [`@retikz/vanilla`](/kernel/packages/vanilla) outside React, for SSR strings, or for direct DOM mounting.
 
 ## Continue reading
 

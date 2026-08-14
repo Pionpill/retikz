@@ -150,14 +150,14 @@ For a custom engine, implement `MathJaxSvgEngine` and call `createLowerTex(engin
 
 ### Vanilla
 
-Vanilla places the same lowerer under `compile.lowerTex`; plain specs, Core IR, and Scene retain their existing entry behavior:
+Vanilla places the same lowerer under `compile.lowerTex`; InputScene, Core IR, and Scene retain their existing entry behavior:
 
 ```ts
-import { figure, node, renderToSvgString } from '@retikz/vanilla';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
-const spec = figure({
+const spec = scene({
   children: [node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
 });
 

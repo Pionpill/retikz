@@ -1,11 +1,12 @@
-import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
+﻿import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 
 import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { MountOptions, RenderToStringOptions } from '../../src';
+import type { RenderToStringOptions } from '../../src';
+import type { MountOptions } from '../../src/dom';
 
 import { renderToSvgString } from '../../src';
 

@@ -86,7 +86,7 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 ### Clipping and stacking
 
-`clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. Switch among all six built-in regions in the panel, then register a [Custom Clip](/kernel/components/layout/custom-clip) when those are insufficient.
+`clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. The panel shows five Core basic regions plus the `compound` clip injected from Standard; register a [Custom Clip](/kernel/components/layout/custom-clip) when a domain needs another kind.
 
 <ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 
@@ -247,7 +247,7 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
 | `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                 |
-| `transforms`     | `Array<IRTransformInput>`               | —             | Seven local transforms; the last acts first                                                                        |
+| `transforms`     | `Array<InputTransform>`                 | —             | Seven local transforms; the last acts first                                                                        |
 | `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                               |
 | `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |
 | `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                      |

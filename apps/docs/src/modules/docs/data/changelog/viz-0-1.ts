@@ -329,8 +329,8 @@ export const vizV01: Release = {
             {
               label: { zh: '共享 plain authoring', en: 'Shared plain authoring' },
               content: {
-                zh: '`createPlotSpec()` 与 `normalizePlotBindings()` 统一 React / Vanilla 的 axis、facet、scaffold 和 track binding，展开 authoring-only 字段后返回 schema-valid `IRPlotSpec`；核心错误统一使用 `plot authoring:`。',
-                en: '`createPlotSpec()` and `normalizePlotBindings()` unify React and Vanilla axis, facet, scaffold, and track bindings, expand authoring-only fields, and return schema-valid `IRPlotSpec` values with shared `plot authoring:` diagnostics.',
+                zh: 'Plot Vanilla 的 `normalizePlot()` 统一 React / Vanilla 的 axis、facet、scaffold 和 track binding，展开 authoring-only 字段后返回 `IRPlotSpec`；已类型化输入不重复 schema 校验，未知外部数据继续由 Plot schema 或 parser 校验。',
+                en: 'Plot Vanilla `normalizePlot()` unifies React and Vanilla axis, facet, scaffold, and track bindings, expands authoring-only fields, and returns `IRPlotSpec`; typed input is not schema-parsed again, while unknown external data remains validated by the Plot schema or parser.',
               },
             },
             {
@@ -611,16 +611,16 @@ export const vizV01: Release = {
           version: 'beta.2',
           date: '2026-07-27',
           summary: {
-            zh: 'React `<Plot>` 复用共享 authoring normalization，补齐 spec layout 透传，并让空 mark 的组合 DSL 也走完整 IRPlotSpec 校验。',
-            en: 'React `<Plot>` reuses shared authoring normalization, forwards spec layout, and sends empty-mark composition DSL output through full IRPlotSpec validation.',
+            zh: 'React `<Plot>` 复用 Plot Vanilla authoring normalization，并补齐 spec layout 透传。',
+            en: 'React `<Plot>` reuses Plot Vanilla authoring normalization and forwards spec layout.',
           },
           items: [
             esmOnlyChangeItem,
             {
               label: { zh: 'React / Vanilla binding parity', en: 'React / Vanilla binding parity' },
               content: {
-                zh: 'React JSX 继续负责组件收集与 style sugar，但 axis / facet / scaffold / track binding 改由 `@retikz/plot` 的共享 normalization 处理；公开 JSX props 不变，冲突输入与 Vanilla 获得同一核心诊断。',
-                en: 'React JSX still collects components and style sugar, while shared normalization in `@retikz/plot` now handles axis, facet, scaffold, and track bindings. Public JSX props stay unchanged, and conflicts receive the same core diagnostics as Vanilla.',
+                zh: 'React JSX 继续负责组件收集与 style sugar，但 axis / facet / scaffold / track binding 由 `@retikz/plot-vanilla` 的共享 normalization 处理；公开 JSX props 不变，冲突输入与 Vanilla 获得同一核心诊断。',
+                en: 'React JSX still collects components and style sugar, while shared normalization in `@retikz/plot-vanilla` handles axis, facet, scaffold, and track bindings. Public JSX props stay unchanged, and conflicts receive the same core diagnostics as Vanilla.',
               },
             },
             {
@@ -638,10 +638,13 @@ export const vizV01: Release = {
               },
             },
             {
-              label: { zh: '空图层也执行 schema 校验', en: 'Empty mark lists are schema-validated' },
+              label: {
+                zh: 'BREAKING：typed authoring 不再重复 schema 校验',
+                en: 'BREAKING: Typed authoring no longer re-parses schema',
+              },
               content: {
-                zh: '组合 DSL 即使没有 mark，也会解析完整 `PlotSpecSchema` 并返回 `IRPlotSpec`；布局、guide、label 等字段错误不会再因为空 mark 被跳过。',
-                en: 'Composition DSL output now parses the full `PlotSpecSchema` into `IRPlotSpec` even when no marks are present, so layout, guide, label, and related field errors are no longer skipped.',
+                zh: 'React 与 Vanilla 的已类型化 authoring input 只归一为 `IRPlotSpec`，不在 adapter 重复调用 `PlotSpecSchema`；来自 JSON、文件或其它未知边界的配置仍应在 Plot schema 或 parser 入口校验。',
+                en: 'Typed React and Vanilla authoring input is only normalized into `IRPlotSpec` and does not call `PlotSpecSchema` again in an adapter; configuration from JSON, files, or another unknown boundary must still be validated at the Plot schema or parser entry.',
               },
             },
           ],
@@ -834,8 +837,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'plain authoring 与 Tier 2', en: 'Plain authoring and Tier 2' },
           content: {
-            zh: '`plot()` 返回无方法的 canonical IRPlotSpec；`embedPlot()` + `createPlotAdapter()` 复用 Kernel Vanilla figure / layer 与统一 runtime。',
-            en: '`plot()` returns a method-free canonical IRPlotSpec; `embedPlot()` + `createPlotAdapter()` reuse Kernel Vanilla figures / layers and the shared runtime.',
+            zh: '`plot()` 返回无方法的 `IRPlotSpec`；`embedPlot()` 与 `PlotInputEmbedAdapter` 将 Plot authoring 输入交给 Kernel Vanilla processing 统一下沉为场景。',
+            en: '`plot()` returns a method-free `IRPlotSpec`; `embedPlot()` and `PlotInputEmbedAdapter` hand Plot authoring input to Kernel Vanilla processing for unified Scene lowering.',
           },
         },
         {
@@ -882,8 +885,8 @@ export const vizV01: Release = {
             {
               label: { zh: '共享规范化与 Tier 2 嵌入', en: 'Shared normalization and Tier 2 embedding' },
               content: {
-                zh: '`plot()` 与 React DSL 共享 `@retikz/plot` 的 axis / facet / scaffold binding normalization；`embedPlot()` + `createPlotAdapter()` 可把同一 IRPlotSpec 放入 Kernel Vanilla figure / layer，datasets 仍留在运行时。',
-                en: '`plot()` and the React DSL share axis / facet / scaffold binding normalization in `@retikz/plot`. `embedPlot()` + `createPlotAdapter()` place the same IRPlotSpec inside Kernel Vanilla figures / layers while datasets remain runtime-only.',
+                zh: '`plot()` 与 React DSL 都通过 `@retikz/plot-vanilla` 的 authoring normalization 生成同一 `IRPlotSpec`；`embedPlot()` 与 `PlotInputEmbedAdapter` 由 Kernel Vanilla processing 处理嵌入，datasets 仍留在运行时。',
+                en: '`plot()` and the React DSL both use `@retikz/plot-vanilla` authoring normalization to produce the same `IRPlotSpec`. `embedPlot()` and `PlotInputEmbedAdapter` are handled by Kernel Vanilla processing while datasets remain runtime-only.',
               },
             },
           ],
@@ -1357,8 +1360,8 @@ export const vizV01: Release = {
         {
           label: { zh: '复用 Kernel runtime', en: 'Kernel runtime reuse' },
           content: {
-            zh: '`embedTable()` + `createTableAdapter()` 接入标准 figure/layer 与 `mount().update()`；`renderTable()` 提供无 DOM SSR 和可选 manifest。',
-            en: '`embedTable()` + `createTableAdapter()` enter standard figures/layers and `mount().update()`; `renderTable()` provides DOM-free SSR with an optional manifest.',
+            zh: '`embedTable()` 与 `TableInputEmbedAdapter` 将 Table authoring 输入接入 Kernel Vanilla processing；`renderTable()` 提供无 DOM SSR 和可选 manifest。',
+            en: '`embedTable()` and `TableInputEmbedAdapter` connect Table authoring input to Kernel Vanilla processing; `renderTable()` provides DOM-free SSR with an optional manifest.',
           },
         },
       ],

@@ -16,6 +16,7 @@ import type {
   ScenePrimitive,
   SceneResource,
   SpatialHandleDeclaration,
+  SpatialHandleOwner,
   Transform,
 } from '../../contract';
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
@@ -216,7 +217,7 @@ export type TraversalCompileOptions = {
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
   /** 当前 traversal 根的 composite owner path */
-  spatialOwnerPath?: ReadonlyArray<import('../../contract').SpatialHandleOwner>;
+  spatialOwnerPath?: ReadonlyArray<SpatialHandleOwner>;
   /** 向隔离 namespace callback 暴露当前 warning occurrence */
   observeWarningOccurrence?: (occurrence: CompileOccurrenceLocator | undefined) => void;
   /** 向辅助编译边界暴露最接近失败点的 child IR path */
@@ -313,7 +314,7 @@ export type TraversalFrame = {
   /** 最终 traversal 的 spatial handle 输出容器 */
   spatialHandleSink: Array<PendingSpatialHandle>;
   /** 当前 child 所在的外层 composite owner path */
-  spatialOwnerPath: ReadonlyArray<import('../../contract').SpatialHandleOwner>;
+  spatialOwnerPath: ReadonlyArray<SpatialHandleOwner>;
   /** 当前 frame 的稳定或 candidate-local semantic owner */
   semanticOwner?: RuntimeSemanticOwner;
 };

@@ -1,17 +1,17 @@
-/** Notation Vanilla LogicFrame adapter namespace */
-export const NotationLogicFrameVanillaNamespace = 'notation.logicFrame';
+/** Notation LogicFrame embed 的稳定 kind */
+export const NotationLogicFrameEmbedKind = 'notation.logicFrame';
 
-/** Notation Vanilla Terminal adapter namespace */
-export const NotationTerminalVanillaNamespace = 'notation.terminal';
+/** Notation Terminal embed 的稳定 kind */
+export const NotationTerminalEmbedKind = 'notation.terminal';
 
-/** Notation Vanilla Stage adapter namespace */
-export const NotationStageVanillaNamespace = 'notation.stage';
+/** Notation Stage embed 的稳定 kind */
+export const NotationStageEmbedKind = 'notation.stage';
 
-/** Notation Vanilla Decision adapter namespace */
-export const NotationDecisionVanillaNamespace = 'notation.decision';
+/** Notation Decision embed 的稳定 kind */
+export const NotationDecisionEmbedKind = 'notation.decision';
 
-/** Notation Vanilla Junction adapter namespace */
-export const NotationJunctionVanillaNamespace = 'notation.junction';
+/** Notation Junction embed 的稳定 kind */
+export const NotationJunctionEmbedKind = 'notation.junction';
 
-/** Notation Vanilla Connector adapter namespace */
-export const NotationConnectorVanillaNamespace = 'notation.connector';
+/** Notation Connector embed 的稳定 kind */
+export const NotationConnectorEmbedKind = 'notation.connector';

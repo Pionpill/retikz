@@ -1,15 +1,15 @@
-import type { IRStepLabelInput } from '@retikz/core';
+import type { InputStepLabel } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { TIKZ_EDGE_LABEL } from '../../kernel/protocol';
 
 export type EdgeLabelProps = {
   /** 段上位置（TikZ `midway` / `near start` / `near end`），缺省 'midway' */
-  position?: IRStepLabelInput['position'];
+  position?: InputStepLabel['position'];
   /** 相对段方向 / 视觉方位的偏移侧，缺省 'top' */
-  side?: IRStepLabelInput['side'];
+  side?: InputStepLabel['side'];
   /** 是否沿采样点切线旋转标签 */
-  sloped?: IRStepLabelInput['sloped'];
+  sloped?: InputStepLabel['sloped'];
   /** 标签文字内容；必须是字符串 */
   children: string;
 };

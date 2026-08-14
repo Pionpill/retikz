@@ -49,16 +49,19 @@ playground 中两条虚线圆分别是内、外半径。调整星角数量、`in
 
 ## 作为 Node 形状
 
-当你要的是一个星形**节点**（可被连线引用、当图标 glyph）而不是一条线时，给 `<Node>` 设 `shape={{ type:'star', params }}`。尺寸由半径参数定、**不依赖文字内容**。
+当你要的是一个星形**节点**（可被连线引用、当图标 glyph）而不是一条线时，给 `<Node>` 设 `shape={{ type:'star', params }}`。尺寸由半径参数定、**不依赖文字内容**。Node 版本是 Standard 的可选 shape；Sugar `<Star>` 仍由 Kernel React 提供。使用 Node 版本时，要在当前 `<Layout>` 显式注入 `StarShapeDefinition`。
 
 ### 用法
 
 ```tsx
-import { Node } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
+import { StarShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
+<Layout shapes={[StarShapeDefinition]}>
+  <Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
+</Layout>
 ```
 
 ### 例子
@@ -117,9 +120,9 @@ playground 固定目标星形在原点。调整 `cornerRadius` 会同时磨圆�
     },
     {
       label: 'Node star 的局部几何计算',
-      path: 'packages/kernel/core/src/providers/shape/star.ts',
-      startLine: 55,
-      endLine: 80,
+      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      startLine: 56,
+      endLine: 72,
     },
   ]}
 />
@@ -144,9 +147,9 @@ Sugar 把 `rotate` 直接烘焙进顶点坐标，再输出 `move + line × (2p -
     },
     {
       label: 'Node star 的边界、anchor 与 Scene 输出',
-      path: 'packages/kernel/core/src/providers/shape/star.ts',
-      startLine: 97,
-      endLine: 134,
+      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      startLine: 80,
+      endLine: 120,
     },
   ]}
 />

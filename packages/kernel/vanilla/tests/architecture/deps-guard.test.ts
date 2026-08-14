@@ -21,7 +21,7 @@ describe('@retikz/vanilla 架构守卫', () => {
   });
 
   it('no-renderer-core-duplication：经 @retikz/render/svg builder，不自写 Scene→SVG', () => {
-    const mountSrc = readSrc('runtime/mount-svg.ts');
+    const mountSrc = readSrc('dom/mount-svg.ts');
     const strSrc = readSrc('runtime/render-svg.ts');
     expect(mountSrc).toMatch(/from ['"]@retikz\/render\/svg['"]/);
     expect(mountSrc).toMatch(/buildSvgFrameDocument/);
@@ -30,11 +30,18 @@ describe('@retikz/vanilla 架构守卫', () => {
     expect(mountSrc + strSrc).not.toMatch(/['"]stroke-width['"]/);
   });
 
+  it('participant-stays-private：根 processing 与 DOM materializer 不把 transaction participant 暴露为公共扩展点', () => {
+    const root = readSrc('processing/index.ts') + readSrc('processing/types.ts');
+    const dom = readSrc('dom/retained.ts');
+    expect(root).not.toMatch(/ProcessingTransactionParticipant|createDomProcessingController|updateParticipant/);
+    expect(dom).toMatch(/processing\/internal/);
+  });
+
   it('ssr-import-no-dom：无 document 的 Node 下 import + renderToSvgString 不炸', async () => {
     expect(typeof document).toBe('undefined'); // 确认在无 DOM 的 node 环境
     const mod = await import('../../src/index');
     expect(typeof mod.renderToSvgString).toBe('function');
-    expect(typeof mod.mountSvg).toBe('function');
+    expect('mountSvg' in mod).toBe(false);
     const scene = { layout: { x: 0, y: 0, width: 10, height: 10 }, primitives: [] };
     expect(() => mod.renderToSvgString(scene as never)).not.toThrow();
   }, 15_000);

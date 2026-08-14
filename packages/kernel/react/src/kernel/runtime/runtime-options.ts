@@ -1,5 +1,4 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 
 import { RuntimeUpdateStrategy } from '@retikz/runtime';
@@ -25,9 +24,7 @@ export type LayoutRetainedRuntimeOptions = Readonly<{
    * @default RuntimeUpdateStrategy.Auto
    */
   updateStrategy?: RuntimeUpdateStrategyValue;
-  /** 可选第三方 retained renderer factory；缺省使用内置实现 */
-  rendererFactory?: RetainedRendererFactory;
-  /** 按 Runtime queue 顺序接收成功提交或失败 transaction 的 diagnostic */
+  /** 按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断 */
   onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
 }>;
 
@@ -37,9 +34,7 @@ export type LayoutStaticRuntimeOptions = Readonly<{
   mode: typeof LayoutRuntimeMode.Static;
   /** static 不支持 Program 更新策略 */
   updateStrategy?: never;
-  /** static 不支持 retained renderer factory */
-  rendererFactory?: never;
-  /** static 不产生 Runtime diagnostic */
+  /** static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 */
   onDiagnostic?: never;
 }>;
 
@@ -69,17 +64,11 @@ export const captureLayoutRuntimeOptions = (runtime: LayoutRuntimeOptions | unde
     if (prototype !== Object.prototype && prototype !== null) return invalidRuntimeOptions(runtime);
     const mode = readRuntimeOption(candidate, 'mode') ?? LayoutRuntimeMode.Retained;
     const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(candidate, 'updateStrategy');
-    const rendererFactoryDescriptor = Object.getOwnPropertyDescriptor(candidate, 'rendererFactory');
     const onDiagnosticDescriptor = Object.getOwnPropertyDescriptor(candidate, 'onDiagnostic');
     const updateStrategy = readRuntimeOption(candidate, 'updateStrategy');
-    const rendererFactory = readRuntimeOption(candidate, 'rendererFactory');
     const onDiagnostic = readRuntimeOption(candidate, 'onDiagnostic');
     if (mode === LayoutRuntimeMode.Static) {
-      if (
-        updateStrategyDescriptor !== undefined ||
-        rendererFactoryDescriptor !== undefined ||
-        onDiagnosticDescriptor !== undefined
-      ) {
+      if (updateStrategyDescriptor !== undefined || onDiagnosticDescriptor !== undefined) {
         return invalidRuntimeOptions(runtime);
       }
       return Object.freeze({ mode });
@@ -89,7 +78,6 @@ export const captureLayoutRuntimeOptions = (runtime: LayoutRuntimeOptions | unde
       (updateStrategy !== undefined &&
         updateStrategy !== RuntimeUpdateStrategy.Auto &&
         updateStrategy !== RuntimeUpdateStrategy.Full) ||
-      (rendererFactory !== undefined && typeof rendererFactory !== 'function') ||
       (onDiagnostic !== undefined && typeof onDiagnostic !== 'function')
     ) {
       return invalidRuntimeOptions(runtime);
@@ -97,7 +85,6 @@ export const captureLayoutRuntimeOptions = (runtime: LayoutRuntimeOptions | unde
     return Object.freeze({
       mode,
       ...(updateStrategy === undefined ? {} : { updateStrategy }),
-      ...(rendererFactory === undefined ? {} : { rendererFactory }),
       ...(onDiagnostic === undefined ? {} : { onDiagnostic }),
     }) as LayoutRetainedRuntimeOptions;
   } catch (cause) {

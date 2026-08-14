@@ -49,8 +49,8 @@ describe('collectShowcasePages', () => {
   it.each(['zh', 'en'] as const)('Composite %s 概念页保持 MDX 可编译', async lang => {
     const compiled = String(await compile(readFileSync(compositeConceptPath(lang), 'utf8'), compileOptions));
 
-    expect(compiled).toContain('resolveCompositeDependencies');
-    expect(compiled).toContain('CompileOptions.composites');
+    expect(compiled).toContain('resolveCoreProviderDependencies');
+    expect(compiled).toContain('CoreProviderContribution');
     expect(compiled).toContain('spatialHandles');
     expect(compiled).toContain('resolveSpatialHandle');
   });
@@ -144,8 +144,8 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('`@retikz/chart-react`');
-    expect(en).toContain('`@retikz/chart-react`');
+    expect(zh).toContain('`@retikz/chart-react/point`');
+    expect(en).toContain('`@retikz/chart-react/point`');
     expect(zh).toContain('`ScatterChart`');
     expect(en).toContain('`ScatterChart`');
     expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');

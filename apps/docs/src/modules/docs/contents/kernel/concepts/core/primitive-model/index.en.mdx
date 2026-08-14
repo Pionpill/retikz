@@ -63,11 +63,11 @@ Shape is not just a CSS-like border radius. It is a geometry definition: given i
 | Shape family          | Size source                               | Examples                                     |
 | --------------------- | ----------------------------------------- | -------------------------------------------- |
 | Text-container shapes | Text + padding, then a bounding-box floor | rectangle, circle, ellipse, polygon, diamond |
-| Param-driven shapes   | Shape params define the geometry          | sector, arc, star                            |
+| Param-driven shapes   | Shape params define the geometry          | sector, star                                 |
 
 <ComponentPreview files="shapes" size="md" hideCode />
 
-The gray block is the content box and the dashed rectangle is the inner frame; these five text-container shapes share one inner frame, and each circumscribes it: rectangle is the inner frame, the rest wrap it more loosely (circle / diamond are presets of ellipse / polygon). Param-driven shapes (sector / arc / star) take their geometry from params and don't follow this inner-frame logic.
+The gray block is the content box and the dashed rectangle is the inner frame; these five text-container shapes share one inner frame, and each circumscribes it: rectangle is the inner frame, the rest wrap it more loosely (circle / diamond are presets of ellipse / polygon). Param-driven shapes (sector / star) take their geometry from params and don't follow this inner-frame logic; equal Sector radii can express an open arc.
 
 Text-container shapes behave like buttons or DOM boxes: longer text makes the node grow. Param-driven shapes behave more like geometric glyphs: radius, angle, and point count already define the size, and text is attached to that geometry.
 
@@ -138,7 +138,7 @@ Complete names, per-shape semantic points, and boundary exceptions live on the N
 
 ## Try it yourself
 
-First edit the content and add a line break, then switch among rectangle, circle, ellipse, diamond, polygon, star, sector, and arc to see one Node adopt different visual shapes. The first five derive their outer size from the content and inner frame; star, sector, and arc instead use representative geometry parameters supplied by the demo and place the text over that fixed geometry.
+First edit the content and add a line break, then switch among rectangle, circle, ellipse, diamond, polygon, star, and sector to see one Node adopt different visual shapes. The first five derive their outer size from the content and inner frame; star and sector instead use representative geometry parameters supplied by the demo and place the text over that fixed geometry. The last two are optional Standard shapes; this demo injects them explicitly through `<Layout shapes>`, and ordinary use likewise imports their matching Definitions from `@retikz/standard/shape`. Sector uses equal inner and outer radii for its open-arc state.
 
 Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real connector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/overview), and [Shapes](/kernel/components/shapes) pages for the complete APIs.
 
@@ -170,9 +170,9 @@ Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `
     },
     {
       label: 'Build a tight connection envelope from star vertices',
-      path: 'packages/kernel/core/src/providers/shape/star.ts',
-      startLine: 127,
-      endLine: 127,
+      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      startLine: 103,
+      endLine: 103,
     },
     {
       label: 'Compute Node layout from content, padding, and minimumSize',

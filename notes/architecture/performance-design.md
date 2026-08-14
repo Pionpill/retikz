@@ -156,7 +156,8 @@ Generation log 可以保留批次 ChangeSet、基础 revision 和恢复 checkpoi
 - **`@retikz/core`**：Core IR / contribution 的增量编译语义，输出 Scene Snapshot / Patch。
 - **`@retikz/runtime`**：session、调度、取消、revision 校验和原子提交；只协调通过通用契约注入的 program，不静态识别或依赖 Data、Plot、Table。当前同步 transaction、owner / program registry 与 trace 已落地，后续 cooperative scheduler 在同一包内扩展。
 - **`@retikz/render`**：Scene Patch、retained view、空间索引、命中与 presentation materialization。
-- **`@retikz/react` / `@retikz/vanilla`**：创建并持有 runtime session，接入宿主调度与生命周期。
+- **`@retikz/vanilla`**：创建并持有 framework-neutral runtime session，统一发布 revision-bound readonly processing result，并提供无 DOM 的处理入口。
+- **`@retikz/react` 等框架包**：通过 Vanilla 输入与处理 API 接入框架调度、生命周期和宿主桥接；不得创建或持有平行 runtime session。
 - **Data、Plot、Table 等 Tier 2**：领域 key、依赖、ChangeSet、增量 lowering 和 provenance。
 
 Signal 可以作为包内脏标记、派生缓存和细粒度订阅的实现工具，但跨包仍传播显式 ChangeSet、Patch、revision、identity 与 ownership。

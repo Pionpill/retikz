@@ -11,6 +11,7 @@ import type {
 import type { RuntimeCommitParticipant, RuntimePreparedCommit, RuntimeSession } from '@retikz/runtime';
 
 import {
+  createRuntimeRevision,
   defineRuntimeCommitParticipant,
   PerformanceTraceOutcome,
   PerformanceTracePhase,
@@ -50,11 +51,29 @@ export type RetainedRenderParticipantHandle = Readonly<{
   participant: RuntimeCommitParticipant<RetainedRendererRead>;
   /** 通过 Runtime session gate 读取 committed renderer state */
   read: (session: RuntimeSession) => RetainedRendererRead;
+  /** 在 topology 重建时保持同一 renderer 的私有交接租约 */
+  lease: RetainedRenderParticipantLease;
 }>;
+
+declare const RetainedRenderParticipantLeaseBrand: unique symbol;
+
+/** 在新的 Runtime session 接管前保持 retained renderer 所有权的私有租约 */
+export type RetainedRenderParticipantLease = Readonly<{
+  [RetainedRenderParticipantLeaseBrand]: true;
+}>;
+
+type RetainedRenderParticipantLeaseState = {
+  renderer: RetainedRenderer;
+  owner: object | undefined;
+};
+
+const retainedRenderParticipantLeases = new WeakMap<object, RetainedRenderParticipantLeaseState>();
 
 type RetainedRenderParticipantOptionsBase<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** Adapter 注入的 renderer factory */
   rendererFactory: RetainedRendererFactory;
+  /** 接管同一宿主上已提交 renderer 的内部租约 */
+  rendererLease?: RetainedRenderParticipantLease;
   /** 同一 session 使用的 Core Program */
   coreProgram: CoreProgramDefinition<TComposites>;
   /**
@@ -348,6 +367,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   const backend = Reflect.get(candidate, 'backend');
   const host = Reflect.get(candidate, 'host');
   const rendererFactory = Reflect.get(candidate, 'rendererFactory');
+  const rendererLease = Reflect.get(candidate, 'rendererLease');
   const immutableOptions = Reflect.get(candidate, 'immutableOptions');
   const mountMode = Reflect.get(candidate, 'mountMode');
   const coreProgram = Reflect.get(candidate, 'coreProgram');
@@ -363,6 +383,10 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   if (
     !validHost ||
     typeof rendererFactory !== 'function' ||
+    (rendererLease !== undefined &&
+      (typeof rendererLease !== 'object' ||
+        rendererLease === null ||
+        !retainedRenderParticipantLeases.has(rendererLease))) ||
     immutableBackend !== backend ||
     typeof idPrefix !== 'string' ||
     idPrefix.length === 0 ||
@@ -387,6 +411,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
       backend,
       host: host as HTMLCanvasElement,
       rendererFactory,
+      ...(rendererLease === undefined ? {} : { rendererLease: rendererLease as RetainedRenderParticipantLease }),
       immutableOptions: Object.freeze({
         backend,
         idPrefix,
@@ -407,6 +432,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     backend,
     host: host as SVGSVGElement,
     rendererFactory,
+    ...(rendererLease === undefined ? {} : { rendererLease: rendererLease as RetainedRenderParticipantLease }),
     immutableOptions: Object.freeze({ backend, idPrefix }),
     coreProgram: coreProgram as CoreProgramDefinition<TComposites>,
     ...(resolveReadonlyLayers === undefined
@@ -437,24 +463,32 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   options: CreateRetainedRenderParticipantOptions<TComposites>,
 ): RetainedRenderParticipantHandle => {
   const captured = captureOptions(options);
+  const owner = Object.freeze({});
+  const previousLease = captured.rendererLease;
+  const leaseState =
+    previousLease === undefined ? undefined : retainedRenderParticipantLeases.get(previousLease);
   let renderer: RetainedRenderer;
-  try {
-    if (captured.backend === 'svg') {
-      renderer = captured.rendererFactory({
-        backend: 'svg',
-        host: captured.host,
-        immutableOptions: captured.immutableOptions,
-      });
-    } else {
-      renderer = captured.rendererFactory({
-        backend: 'canvas',
-        host: captured.host,
-        immutableOptions: captured.immutableOptions,
-      });
+  if (leaseState !== undefined) {
+    renderer = leaseState.renderer;
+  } else {
+    try {
+      if (captured.backend === 'svg') {
+        renderer = captured.rendererFactory({
+          backend: 'svg',
+          host: captured.host,
+          immutableOptions: captured.immutableOptions,
+        });
+      } else {
+        renderer = captured.rendererFactory({
+          backend: 'canvas',
+          host: captured.host,
+          immutableOptions: captured.immutableOptions,
+        });
+      }
+    } catch (cause) {
+      if (isRetainedRenderError(cause)) throw cause;
+      throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause });
     }
-  } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause });
   }
   const validRenderer =
     isRetainedRenderer(renderer) && renderer.backend === captured.backend && renderer.host === captured.host;
@@ -476,7 +510,45 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   if (executor === undefined) {
     throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: renderer });
   }
-  let committedFrame: RenderFrameSnapshot | undefined;
+  const lease =
+    previousLease ??
+    (() => {
+      const next = Object.freeze({}) as RetainedRenderParticipantLease;
+      retainedRenderParticipantLeases.set(next, { renderer, owner });
+      return next;
+    })();
+  const currentLeaseState = retainedRenderParticipantLeases.get(lease);
+  if (currentLeaseState === undefined) {
+    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: lease });
+  }
+  const previousFrame =
+    previousLease === undefined
+      ? undefined
+      : (() => {
+          const frame = executor.read().frame;
+          validateSceneRuntimeSnapshot(frame.primary);
+          return Object.freeze({ primary: frame.primary, layers: validateReadonlyLayers(frame.layers) });
+        })();
+  const revisionOffset = previousFrame === undefined ? 0 : Number(previousFrame.primary.revision) + 1;
+  const rebaseRevision = (revision: SceneRuntimeSnapshot['revision']): SceneRuntimeSnapshot['revision'] =>
+    revisionOffset === 0 ? revision : createRuntimeRevision(Number(revision) + revisionOffset);
+  const rebaseSnapshot = (snapshot: SceneRuntimeSnapshot): SceneRuntimeSnapshot =>
+    revisionOffset === 0 ? snapshot : Object.freeze({ ...snapshot, revision: rebaseRevision(snapshot.revision) });
+  const rebasePatch = (patch: ScenePatch): ScenePatch =>
+    revisionOffset === 0
+      ? patch
+      : Object.freeze({
+          baseRevision: rebaseRevision(patch.baseRevision),
+          nextRevision: rebaseRevision(patch.nextRevision),
+          operations: Object.freeze(
+            patch.operations.map(operation =>
+              operation.kind === 'replaceScene'
+                ? Object.freeze({ ...operation, snapshot: rebaseSnapshot(operation.snapshot) })
+                : operation,
+            ),
+          ),
+        });
+  let committedFrame: RenderFrameSnapshot | undefined = previousFrame;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
   const resolveReadonlyLayers = (output: CoreProgramOutput<TComposites>): ReadonlyArray<RenderReadonlyLayer> =>
     validateReadonlyLayers(captured.resolveReadonlyLayers?.(output) ?? EMPTY_READONLY_LAYERS);
@@ -506,7 +578,10 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeOwnerDefinition).value;
       if (candidate.phase === RuntimeProgramPhase.Initial) {
         validateSceneRuntimeSnapshot(core.snapshot);
-        const frame = Object.freeze({ primary: core.snapshot, layers: resolveReadonlyLayers(core.output) });
+        const frame = Object.freeze({
+          primary: rebaseSnapshot(core.snapshot),
+          layers: resolveReadonlyLayers(core.output),
+        });
         if (
           captured.backend === 'svg' &&
           captured.expectedInitialFrame !== undefined &&
@@ -519,14 +594,26 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInitialFrameMismatch });
         }
         assertReadonlyLayersSupported(frame);
-        const rendererToken = callRendererPrepare(() =>
-          executor.prepareMount(frame, config, captured.mountMode ?? 'create'),
-        );
+        const rendererToken =
+          previousFrame === undefined
+            ? callRendererPrepare(() => executor.prepareMount(frame, config, captured.mountMode ?? 'create'))
+            : (() => {
+                const patch = Object.freeze({
+                  baseRevision: previousFrame.primary.revision,
+                  nextRevision: frame.primary.revision,
+                  operations: Object.freeze([
+                    Object.freeze({ kind: 'replaceScene' as const, snapshot: frame.primary }),
+                  ]),
+                });
+                validateScenePatch(previousFrame.primary, patch, frame.primary);
+                return callRendererPrepare(() => executor.prepare(patch, frame, config));
+              })();
         const previous = committedFrame;
         return Object.freeze({
           commit: () => {
             rendererToken.commit();
             committedFrame = frame;
+            currentLeaseState.owner = owner;
             const count = countPrimitives(core.snapshot.scene.primitives);
             context.trace.report({
               phase: PerformanceTracePhase.Commit,
@@ -549,15 +636,15 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       }
       const hasCandidateCoreSnapshot = core.snapshot.revision === candidate.candidateRevision;
       const next = hasCandidateCoreSnapshot
-        ? core.snapshot
-        : createConfigOnlySnapshot(committedFrame.primary, candidate.candidateRevision);
+        ? rebaseSnapshot(core.snapshot)
+        : createConfigOnlySnapshot(committedFrame.primary, rebaseRevision(candidate.candidateRevision));
       const nextFrame = Object.freeze({
         primary: next,
         layers: resolveReadonlyLayers(core.output),
       });
       const patch =
         hasCandidateCoreSnapshot && core.patch !== undefined
-          ? core.patch
+          ? rebasePatch(core.patch)
           : createConfigOnlyPatch(committedFrame.primary, next);
       validateScenePatch(committedFrame.primary, patch, next);
       const fallback = !supportsPatch(renderer, patch, committedFrame.primary);
@@ -599,12 +686,16 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     },
     read: () => normalizeRendererRead(executor.read(), committedFrame, animationControlsCache),
     dispose: () => {
-      executor.dispose();
+      if (currentLeaseState.owner === owner) {
+        executor.dispose();
+        currentLeaseState.owner = undefined;
+      }
       committedFrame = undefined;
     },
   });
   return Object.freeze({
     participant,
     read: session => session.participant(participant),
+    lease,
   });
 };

@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -10,7 +11,12 @@ export const previewControls = arrowAppearanceControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={182} viewBox={{ x: -40, y: -100, width: 440, height: 200 }}>
+    <Layout
+      width={400}
+      height={182}
+      viewBox={{ x: -40, y: -100, width: 440, height: 200 }}
+      arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
+    >
       <Node id="A" position={[0, 0]} stroke="gray" dashed>
         a
       </Node>

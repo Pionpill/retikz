@@ -20,6 +20,14 @@ const canonicalScatterChartOf = (source: PreviewSourceConfig): ReactElement => {
   return chart;
 };
 
+const scatterContributionOf = (chart: ReactElement) =>
+  ScatterChart.inputEmbedAdapter.lower(ScatterChart.createInputEmbedProps(chart.props), {
+    id: 'chart',
+    kind: ScatterChart.inputEmbedAdapter.kind,
+    layerId: 'main',
+    identityPath: ['main', 'chart'],
+  });
+
 describe('Chart-native Scatter presentation', () => {
   it('documents the complete public typed Chart family for React and Vanilla in both languages', () => {
     for (const locale of ['zh', 'en']) {
@@ -41,7 +49,7 @@ describe('Chart-native Scatter presentation', () => {
       const chart = canonicalScatterChartOf(source);
 
       expect(chart.type).toBe(ScatterChart);
-      const contribution = ScatterChart.embeddableAdapter.contribute(chart.props);
+      const contribution = scatterContributionOf(chart);
       expect(contribution.node).toMatchObject({
         namespace: 'chart',
         type: 'chart',
@@ -63,7 +71,7 @@ describe('Chart-native Scatter presentation', () => {
       const chart = canonicalScatterChartOf(source);
 
       expect(chart.type).toBe(ScatterChart);
-      const contribution = ScatterChart.embeddableAdapter.contribute(chart.props);
+      const contribution = scatterContributionOf(chart);
       expect(contribution.node).toMatchObject({
         namespace: 'chart',
         type: 'chart',

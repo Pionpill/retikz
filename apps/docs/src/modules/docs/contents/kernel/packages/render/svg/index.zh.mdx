@@ -28,10 +28,10 @@ import { Layout, Node } from '@retikz/react';
 **Vanilla（浏览器）**——`mountSvg` 把图挂成 DOM，返回的 view 里 `root` 是 `<svg>` 元素、`dispose` 卸载：
 
 ```ts
-import { mountSvg } from '@retikz/vanilla';
+import { mountSvg } from '@retikz/vanilla/dom';
 
 const view = mountSvg(container, ir);
-// view.root 是 <svg>；view.update(next) 整图重渲染；view.dispose() 卸载
+// view.root 是 <svg>；view.update(next) 走所选 static 或 retained processing；view.dispose() 卸载
 ```
 
 **Vanilla（SSR / 构建期）**——`renderToSvgString` 直接产 HTML 字符串，不碰 DOM，可在 Node 里跑：
@@ -44,11 +44,11 @@ const svg = renderToSvgString(ir); // '<svg ...>...</svg>'，可直接放进 HTM
 
 三个入口的输入能力不同：
 
-| 入口                | 接收的输入                                      | 输出       |
-| ------------------- | ----------------------------------------------- | ---------- |
-| React `<Layout>`    | JSX `children`<br />或 `IRScene`                | SVG DOM    |
-| Vanilla `mountSvg`  | `Scene` / `IRScene`<br />或 `VanillaFigureSpec` | SVG DOM    |
-| `renderToSvgString` | `Scene` / `IRScene`<br />或 `VanillaFigureSpec` | SVG 字符串 |
+| 入口                | 接收的输入                               | 输出       |
+| ------------------- | ---------------------------------------- | ---------- |
+| React `<Layout>`    | JSX `children`<br />或 `IRScene`         | SVG DOM    |
+| Vanilla `mountSvg`  | `Scene` / `IRScene`<br />或 `InputScene` | SVG DOM    |
+| `renderToSvgString` | `Scene` / `IRScene`<br />或 `InputScene` | SVG 字符串 |
 
 ## 给 SVG 图加交互
 

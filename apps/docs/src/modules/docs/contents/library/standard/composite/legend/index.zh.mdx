@@ -38,7 +38,7 @@ React 通过 `LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick` 组合
 | 场景        | 公开入口                                                                                      |
 | ----------- | --------------------------------------------------------------------------------------------- |
 | React       | `Legend`、`LegendTitle`、`LegendItem`、`LegendRamp`、`LegendTick`（`@retikz/standard-react`） |
-| Vanilla     | `legend()`、`LegendVanillaAdapter`（`@retikz/standard-vanilla`）                              |
+| Vanilla     | `legend()`、`LegendInputEmbedAdapter`（`@retikz/standard-vanilla`）                           |
 | IR / 持久化 | `LegendSchema`、`createLegend()`、`LegendDefinition`（`@retikz/standard`）                    |
 
 包族定位和三种使用入口见 [Standard](/library/standard)。领域包负责生成已经解析好的样本；Standard Legend 只拥有通用呈现语义与 Legend 类型化产物，具体排版复用 Layout 的公共组合能力
@@ -170,8 +170,8 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
 | `LegendItem`           | `@retikz/standard-react`   | 声明离散样本、稳定 key 与可选标签                               | —      |
 | `LegendRamp`           | `@retikz/standard-react`   | 声明连续样本 slot                                               | —      |
 | `LegendTick`           | `@retikz/standard-react`   | 声明归一化刻度与可选标签                                        | —      |
-| `legend(id, input)`    | `@retikz/standard-vanilla` | 创建由 `LegendVanillaAdapter` 消费的 Vanilla embed              | —      |
-| `LegendVanillaAdapter` | `@retikz/standard-vanilla` | 经 `createLegend()` 下沉 embed，并向当前 Figure 贡献 Definition | —      |
+| `legend(id, input)`    | `@retikz/standard-vanilla` | 创建由 `LegendInputEmbedAdapter` 消费的 Vanilla embed           | —      |
+| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla` | 经 `createLegend()` 下沉 embed，并向当前 Scene 贡献 Definition  | —      |
 | `createLegend(input)`  | `@retikz/standard`         | 校验 input、应用默认值并补固定 discriminator                    | —      |
 | `LegendDefinition`     | `@retikz/standard`         | 按需注入 Legend composite 的 Core Definition                    | —      |
 

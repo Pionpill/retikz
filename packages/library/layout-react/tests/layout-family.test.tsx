@@ -1,6 +1,6 @@
 import type { LayoutItemProps } from '@retikz/layout-react';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
-import type { FC } from 'react';
+import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
+import type { FC, ReactNode } from 'react';
 
 import {
   createFlexLayout,
@@ -15,44 +15,49 @@ import {
   OverlayLayoutProvider,
 } from '@retikz/layout';
 import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/layout-react';
-import { buildIRWithContributions, Node } from '@retikz/react';
+import { createInputScene, Node } from '@retikz/react';
+import { normalizeScene } from '@retikz/vanilla';
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 type ForeignProps = Readonly<{ id: string }>;
 type ForeignComponent = FC<ForeignProps> & {
   isTier2Embeddable: true;
-  embeddableAdapter: EmbeddableTier2Adapter<ForeignProps>;
+  inputEmbedAdapter: AnyInputEmbedAdapter;
 };
 
 const Foreign = (() => null) as unknown as ForeignComponent;
 Foreign.displayName = 'Foreign';
 Foreign.isTier2Embeddable = true;
-Foreign.embeddableAdapter = {
-  displayName: 'Foreign',
-  contribute: props => ({
-    node: { type: 'node', id: props.id, position: [0, 0] },
-    compositeDependencies: { roots: [], providers: [] },
+Foreign.inputEmbedAdapter = {
+  kind: 'test.foreign',
+  lower: props => ({
+    node: { type: 'node', id: (props as ForeignProps).id, position: [0, 0] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 };
 
+/** 以 React 真实 authoring 路径归一化 Layout family JSX */
+const normalizeReactInput = (children: ReactNode) => {
+  const input = createInputScene(children);
+  return normalizeScene(input.scene, { adapters: input.adapters });
+};
+
 describe('Layout React layout family', () => {
-  it('converts nested Flex/Grid/Overlay JSX and folds definitions into one family contribution', () => {
-    const result = buildIRWithContributions(
+  it('converts nested Flex/Grid/Overlay JSX and forwards one ordered Layout contribution', () => {
+    const result = normalizeReactInput(
       <FlexLayout direction="row" gap={{ column: 4, row: 8 }}>
-        <>
-          <LayoutItem kind="flex" itemKey="grid" grow={1}>
-            <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
-              <LayoutItem kind="grid" itemKey="overlay">
-                <OverlayLayout>
-                  <LayoutItem kind="overlay" itemKey="leaf">
-                    <Node id="leaf" position={[0, 0]} />
-                  </LayoutItem>
-                </OverlayLayout>
-              </LayoutItem>
-            </GridLayout>
-          </LayoutItem>
-        </>
+        <LayoutItem kind="flex" itemKey="grid" grow={1}>
+          <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
+            <LayoutItem kind="grid" itemKey="overlay">
+              <OverlayLayout>
+                <LayoutItem kind="overlay" itemKey="leaf">
+                  <Node id="leaf" position={[0, 0]} />
+                </LayoutItem>
+              </OverlayLayout>
+            </LayoutItem>
+          </GridLayout>
+        </LayoutItem>
       </FlexLayout>,
     );
 
@@ -100,62 +105,68 @@ describe('Layout React layout family', () => {
   });
 
   it('uses itemKey instead of the reserved React key and accepts explicit IR as the sole child source', () => {
-    const contribution = FlexLayout.embeddableAdapter.contribute({
-      children: <LayoutItem key="react-key" kind="flex" itemKey="ir-key" ir={{ type: 'node', position: [1, 2] }} />,
-    });
+    const result = normalizeReactInput(
+      <FlexLayout>
+        <LayoutItem key="react-key" kind="flex" itemKey="ir-key" ir={{ type: 'node', position: [1, 2] }} />
+      </FlexLayout>,
+    );
 
-    expect(contribution.node).toMatchObject({
+    expect(result.ir.children[0]).toMatchObject({
       type: 'flexLayout',
       children: [{ kind: 'flex', key: 'ir-key', child: { type: 'node', position: [1, 2] } }],
     });
   });
 
   it('roots only the authored container and reuses its stable single-key provider', () => {
-    const flex = FlexLayout.embeddableAdapter.contribute({});
-    const grid = GridLayout.embeddableAdapter.contribute({ columns: [{ kind: 'fixed', value: 10 }] });
-    const overlay = OverlayLayout.embeddableAdapter.contribute({});
+    const flex = normalizeReactInput(<FlexLayout />);
+    const grid = normalizeReactInput(<GridLayout columns={[{ kind: 'fixed', value: 10 }]} />);
+    const overlay = normalizeReactInput(<OverlayLayout />);
 
-    expect(flex.compositeDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
-    expect(grid.compositeDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
-    expect(overlay.compositeDependencies).toEqual({
+    expect(flex.contributions[0]).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
+    expect(grid.contributions[0]).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
+    expect(overlay.contributions[0]).toEqual({
       roots: [OverlayLayoutProvider.key],
       providers: [OverlayLayoutProvider],
     });
-    expect(FlexLayout.embeddableAdapter.contribute({}).compositeDependencies.providers[0]).toBe(FlexLayoutProvider);
+    expect(normalizeReactInput(<FlexLayout />).contributions[0]?.providers[0]).toBe(FlexLayoutProvider);
   });
 
   it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {
     const empty = { kind: 'flex', itemKey: 'empty' } as unknown as LayoutItemProps;
 
     expect(() =>
-      buildIRWithContributions(<LayoutItem kind="flex" itemKey="loose" ir={{ type: 'node', position: [0, 0] }} />),
+      normalizeReactInput(<LayoutItem kind="flex" itemKey="loose" ir={{ type: 'node', position: [0, 0] }} />),
     ).toThrow(/direct child of FlexLayout, GridLayout, or OverlayLayout/i);
-    expect(() => FlexLayout.embeddableAdapter.contribute({ children: <Node position={[0, 0]} /> })).toThrow(
-      /direct children must be LayoutItem/i,
-    );
     expect(() =>
-      FlexLayout.embeddableAdapter.contribute({
-        children: <LayoutItem kind="grid" itemKey="wrong" ir={{ type: 'node', position: [0, 0] }} />,
-      }),
+      normalizeReactInput(
+        <FlexLayout>
+          <Node position={[0, 0]} />
+        </FlexLayout>,
+      ),
+    ).toThrow(/direct children must be LayoutItem/i);
+    expect(() =>
+      normalizeReactInput(
+        <FlexLayout>
+          <LayoutItem kind="grid" itemKey="wrong" ir={{ type: 'node', position: [0, 0] }} />
+        </FlexLayout>,
+      ),
     ).toThrow(/expects LayoutItem kind "flex"/i);
     expect(() =>
-      FlexLayout.embeddableAdapter.contribute({
-        children: (
+      normalizeReactInput(
+        <FlexLayout>
           <LayoutItem kind="flex" itemKey="many">
             <Node position={[0, 0]} />
             <Node position={[1, 1]} />
           </LayoutItem>
-        ),
-      }),
-    ).toThrow(/exactly one IRChild/i);
-    expect(() =>
-      FlexLayout.embeddableAdapter.contribute({
-        children: createElement(LayoutItem, empty),
-      }),
-    ).toThrow(/exactly one of children or ir/i);
+        </FlexLayout>,
+      ),
+    ).toThrow(/exactly one authoring child/i);
+    expect(() => normalizeReactInput(<FlexLayout>{createElement(LayoutItem, empty)}</FlexLayout>)).toThrow(
+      /exactly one of children or ir/i,
+    );
   });
 
-  it('rejects ambiguous child sources and foreign Tier 2 contributions', () => {
+  it('rejects ambiguous child sources and forwards foreign Tier 2 child input through Vanilla', () => {
     const ambiguous = {
       kind: 'flex',
       itemKey: 'ambiguous',
@@ -163,17 +174,20 @@ describe('Layout React layout family', () => {
       children: <Node position={[0, 0]} />,
     } as unknown as LayoutItemProps;
 
-    expect(() => FlexLayout.embeddableAdapter.contribute({ children: createElement(LayoutItem, ambiguous) })).toThrow(
+    expect(() => normalizeReactInput(<FlexLayout>{createElement(LayoutItem, ambiguous)}</FlexLayout>)).toThrow(
       /exactly one of children or ir/i,
     );
-    expect(() =>
-      FlexLayout.embeddableAdapter.contribute({
-        children: (
-          <LayoutItem kind="flex" itemKey="foreign">
-            <Foreign id="foreign" />
-          </LayoutItem>
-        ),
-      }),
-    ).toThrow('LayoutItem cannot forward foreign Tier 2 contributions');
+    const result = normalizeReactInput(
+      <FlexLayout>
+        <LayoutItem kind="flex" itemKey="foreign">
+          <Foreign id="foreign" />
+        </LayoutItem>
+      </FlexLayout>,
+    );
+
+    expect(result.ir.children[0]).toMatchObject({
+      type: 'flexLayout',
+      children: [{ kind: 'flex', key: 'foreign', child: { type: 'node', id: 'foreign', position: [0, 0] } }],
+    });
   });
 });

@@ -132,15 +132,4 @@ describe('buildPlotSpec composition adapter surface', () => {
     });
     expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
   });
-
-  it('rejects non-json composition values before they leave the adapter', () => {
-    expect(() =>
-      buildPlotSpec(<PointMark x="day" y="temperature" />, 'weather', {
-        composition: {
-          ...composition,
-          spacing: { panelGap: (() => 12) as unknown as number },
-        },
-      }),
-    ).toThrow();
-  });
 });

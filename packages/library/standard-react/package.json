@@ -69,7 +69,9 @@
   },
   "dependencies": {
     "@retikz/react": "workspace:^",
-    "@retikz/standard": "workspace:*"
+    "@retikz/standard": "workspace:*",
+    "@retikz/standard-vanilla": "workspace:^",
+    "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

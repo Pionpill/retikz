@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Composite assembly、Spatial handles 与基础原子
 
-- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～19 Proposed，ADR-13 Superseded，alpha.2 仍为 authored Scope output、轻量 Theme、Composite assembly 与 spatial transparency 重新打开
+- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～20 Proposed，ADR-13 Superseded，alpha.2 仍为 authored Scope output、轻量 Theme、Composite assembly、spatial transparency 与统一 authoring / processing 链路重新打开
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md)
 
@@ -25,6 +25,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 本 milestone 另登记 ADR-18 跨 namespace Composite dependency provider graph。Core 以完整 `namespace + type` key、显式 roots、传递依赖、dataset 同源合并与稳定拓扑解析定义闭包；React 与 Vanilla 只收集 contribution 并调用同一个纯 resolver，不再各自按单 namespace 拼接 definitions。
 
 本 milestone 另登记 ADR-19 qualified spatial handle sidecar。Composite 在自身局部坐标声明语义矩形，Core 在最终 Scope / replay transform 收敛后发布带 owner path、origin / final occurrence 与 closed selector 的 world-space index；Scene 与 renderer 保持纯执行边界。
+
+本 milestone 另登记 ADR-20 Vanilla 统一 Authoring 与框架无关处理。Vanilla 作为所有框架的唯一 typed Input-to-IR、Composite contribution 消费与 framework-neutral processing owner；React 直接依赖 Vanilla，只保留 JSX、生命周期与宿主桥接；Core 只保留 Source IR、Canonical normalize 与 compile / Scene。
 
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
@@ -51,6 +53,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-17](./17-foundation-schema-primitives.md)        | Accepted   | Foundation 基础 Schema 原子            | 冻结唯一 Zod 依赖、基础 string / number schema、旧 owner 迁移与领域组合边界                         |
 | [ADR-18](./18-composite-dependency-provider-graph.md) | Proposed   | Composite dependency provider graph    | 冻结完整 key、roots、传递依赖、dataset 合并、稳定拓扑与跨 adapter 同构                              |
 | [ADR-19](./19-qualified-spatial-handles.md)           | Proposed   | Qualified spatial handle sidecar       | 冻结结构化 Composite 输出、owner path、world rect index、selector 与 Scene 边界                     |
+| [ADR-20](./20-vanilla-authoring-normalization.md)     | Proposed   | Vanilla authoring 与处理链             | 收敛 Core Input 与 framework-neutral processing 至 Vanilla，React 依赖 Vanilla 并只保留 JSX / 生命周期 / 宿主桥接 |
 
 ## 当前进度
 
@@ -71,6 +74,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-17 已完成六个 Foundation 标量 schema、Core / Notation 旧 owner 移除、跨 Kernel / Standard / Viz 同义叶子迁移、对抗复验、发布产物验证与双语文档，并于 2026-08-09 获人工接受。
 - ADR-18 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 React / Vanilla contribution 或 Core resolver。
 - ADR-19 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 Composite callback、CompileResult、Plot handles 或 renderer。
+- ADR-20 已完成 Proposed 设计与 Architecture Gate，等待人工确认；未授权修改 Core、Vanilla、React 或下游 adapter。
 
 ## 执行批次
 
@@ -94,6 +98,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 16   | ADR-17 | 多个独立包已证明同义基础 string / number Zod 约束重复                            | Foundation 成为唯一原子 schema 真源，完整 owner schema 与既有行为保持稳定                    |
 | 17   | ADR-18 | Chart、Plot、Standard 与第三方嵌套能力已证明单 namespace adapter 聚合不足        | provider graph、稳定拓扑、dataset / definition 冲突与 React / Vanilla parity 稳定            |
 | 18   | ADR-19 | 外层 Composite 必须保持 Plot / Table 等 descendant 的空间 identity 与 provenance | structured output、qualified owner path、world rect sidecar 与 closed selector 稳定          |
+| 19   | ADR-20 | Core / Vanilla / React 包边界已冻结                                                | 统一 Input-to-IR、处理主链与跨入口等价性可验证                                                   |
 
 批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
@@ -113,6 +118,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 12. Foundation 只以 Zod 为生产依赖并拥有无领域、非变换的 string / number schema 原子；完整对象、IR、默认值、领域 refinement、错误包装与 Diagnostic 留在对应 owner。
 13. Composite 传递依赖只通过 Core provider graph 解析；完整 key、显式 roots、dataset 同源冲突与 dependency-first 稳定拓扑在 React、Vanilla 与直接工具链中使用同一语义。
 14. 语义空间 handle 由声明 owner 保留 local key / role / payload，Core 只增加 qualified owner path 并发布同 revision world-space sidecar；Scene、renderer 与外层 Composite 不复制或重命名 descendant handles。
+15. Framework authoring Input 只经 Vanilla 归一为 Source IR；React 与未来框架包不直接重建 Core IR。
 
 ## Milestone 验收
 

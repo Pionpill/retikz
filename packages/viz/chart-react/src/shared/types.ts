@@ -1,7 +1,6 @@
 import type { ChartThemeStyleDefinition } from '@retikz/chart';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { LayoutProps, ScopeProps } from '@retikz/react';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
 /** Chart 的四个 presentation shorthand */
@@ -52,8 +51,9 @@ export type ChartRuntimeThemeProps = {
 /** Chart 的 host、根和 presentation 公共字段 */
 export type ChartCommonProps = ChartHostProps & ChartRootProps & ChartPresentationProps & ChartRuntimeThemeProps;
 
-/** 可嵌入 Chart React component 的静态契约 */
-export type EmbeddableChartComponent<TProps> = FC<TProps> & {
+/** 可嵌入 Chart React component 的静态 Vanilla Input 契约 */
+export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = FC<TProps> & {
   isTier2Embeddable: true;
-  embeddableAdapter: EmbeddableTier2Adapter<TProps>;
+  inputEmbedAdapter: TAdapter;
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };

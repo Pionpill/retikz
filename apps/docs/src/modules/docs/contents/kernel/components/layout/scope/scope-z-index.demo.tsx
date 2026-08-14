@@ -4,7 +4,7 @@ import { Layout, Node, Scope } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,scopeZIndexControls } from './scope-z-index.controls';
+import { previewControlContract, scopeZIndexControls } from './scope-z-index.controls';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeZIndexControls;

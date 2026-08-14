@@ -2,12 +2,13 @@ import type { IRClipSpec } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node, Scope } from '@retikz/react';
+import { CompoundClipDefinition } from '@retikz/standard/clip';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,scopeClipControls } from './scope-clip.controls';
+import { previewControlContract, scopeClipControls } from './scope-clip.controls';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeClipControls;
@@ -56,7 +57,12 @@ const CLIP_BY_KIND: Record<ScopeClipValues['clipKind'], IRClipSpec> = {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={220} height={84} viewBox={{ x: -110, y: -60, width: 220, height: 120 }}>
+    <Layout
+      width={220}
+      height={84}
+      viewBox={{ x: -110, y: -60, width: 220, height: 120 }}
+      clips={[CompoundClipDefinition]}
+    >
       <Scope clip={CLIP_BY_KIND[values.clipKind]}>
         <Node
           id="grid"
@@ -75,7 +81,7 @@ export const previewSource = controlledPreview.source;
 
 /**
  * Scope clip 类型 playground
- * @description 面板切换六种内置 clip spec，同一块网格内容只露出当前 Scope 局部裁剪区内的部分
+ * @description 面板切换五种 Core 基础 clip 和一种 Standard 组合 clip，同一块网格内容只露出当前 Scope 局部裁剪区内的部分
  */
 const Demo: FC = controlledPreview.Component;
 

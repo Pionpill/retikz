@@ -84,7 +84,9 @@
   },
   "dependencies": {
     "@retikz/layout": "workspace:*",
-    "@retikz/react": "workspace:^"
+    "@retikz/layout-vanilla": "workspace:^",
+    "@retikz/react": "workspace:^",
+    "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {
     "@retikz/inspect": "workspace:*",

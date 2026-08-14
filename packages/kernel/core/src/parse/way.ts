@@ -17,10 +17,10 @@ import type {
   IRStep,
   IRStepAnisotropicRadius,
   IRStepLabel,
-  IRStepLabelInput,
   IRStepRadius,
   IRTarget,
 } from '../schemas';
+import type { Side } from '../shared';
 
 import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
 import { parseSideAlias } from './anchor-alias';
@@ -105,8 +105,12 @@ export type WayCircleOp = { circle: { radius: number } };
 /** 整椭圆算子（infix），以上一项为圆心、给定 x/y 半径画整椭圆，pen 留圆心 */
 export type WayEllipseOp = { ellipse: { radius: IRStepAnisotropicRadius } };
 
-/** 边标注 sugar 形态：字符串=`{text:s}`，对象=IR `step.label` 字面一致 */
-export type WayLabel = IRStepLabelInput | string;
+/** 边标注 parser grammar：字符串=`{text:s}`，对象接收可写入 IR 的 canonical side */
+export type WayLabel =
+  | (Omit<IRStepLabel, 'side'> & {
+      side?: (typeof Side)[keyof typeof Side];
+    })
+  | string;
 
 /**
  * 边标注 prefix 算子（infix），修饰下一段

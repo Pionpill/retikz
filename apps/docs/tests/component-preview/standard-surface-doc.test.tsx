@@ -36,7 +36,7 @@ describe('Standard Surface documentation', () => {
         'IRSurfaceSchema',
         'SurfaceDefinition',
         'SurfaceProvider',
-        'SurfaceVanillaAdapter',
+        'SurfaceInputEmbedAdapter',
         'surfaceChild',
         'surface-basic',
         'surface-overflow',

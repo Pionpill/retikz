@@ -6,7 +6,7 @@ const shapeOptions = [
   { label: 'Solid triangle', value: 'normal' },
   { label: 'Hollow triangle', value: 'open' },
   { label: 'Solid stealth', value: 'stealth' },
-  { label: 'Hollow stealth', value: 'openStealth' },
+  { label: 'Hollow stealth (Core)', value: 'openStealth' },
   { label: 'Solid diamond', value: 'diamond' },
   { label: 'Hollow diamond', value: 'openDiamond' },
   { label: 'Solid circle', value: 'circle' },

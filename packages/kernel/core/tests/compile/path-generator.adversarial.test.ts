@@ -423,13 +423,13 @@ describe('[ADV] 未注册 / 名称边角', () => {
     expect(err?.message).toMatch(/missing-generator/);
   });
 
-  it('empty_generators_table：未注册名 available 显示内置 parabola', () => {
+  it('empty_generators_table：未注册名表明 Core 没有默认 generator', () => {
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'sin', params: {} },
     ]);
     const err = catchCompile(ir, {});
-    expect(err?.message).toContain("Unknown path generator 'sin'; available: parabola");
+    expect(err?.message).toContain("Unknown path generator 'sin'; available: (none registered)");
   });
 
   it('name_case_mismatch：大小写敏感', () => {

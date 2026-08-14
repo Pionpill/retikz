@@ -5,13 +5,14 @@ import type {
   IRTableSpec,
   ManualTableSpecInput,
 } from '@retikz/table';
-import type { VanillaEmbedSpec } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
 import { createDetailTableSpec, createManualTableSpec, TABLE_NAMESPACE } from '@retikz/table';
 import { embed } from '@retikz/vanilla';
 
-import type { TableEmbedProps } from './types';
+import type { InputTable, InputTableSpec } from '../normalize/table';
 
+import { inputTableFromSpec } from '../normalize/table';
 import { assertTableVanillaNonEmptyString } from '../shared';
 
 /** 从 plain detail 输入构造 Table spec */
@@ -24,8 +25,9 @@ export const manualTable = (input: ManualTableSpecInput): IRManualTableSpec => c
 export const embedTable = (
   id: string,
   spec: IRTableSpec,
-  options: Omit<TableEmbedProps, 'spec'> = {},
-): VanillaEmbedSpec<TableEmbedProps> => {
+  options: Omit<InputTable, 'table'> = {},
+): InputEmbed<InputTable> => {
   assertTableVanillaNonEmptyString(id, 'table vanilla: embed id must be non-empty');
-  return embed(TABLE_NAMESPACE, id, { spec, ...options });
+  const table: InputTableSpec = inputTableFromSpec(spec);
+  return embed(TABLE_NAMESPACE, id, { table, ...options });
 };

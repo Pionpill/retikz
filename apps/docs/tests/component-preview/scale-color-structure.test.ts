@@ -87,7 +87,7 @@ describe('颜色比例尺文档结构', () => {
 
   it('自动 color scale 的 SourceLink 指向真实派生分支', () => {
     for (const page of [chinesePage, englishPage]) {
-      expect(page).toContain("path: 'packages/viz/plot-react/src/adapter/scale-coordinate.ts'");
+      expect(page).toContain("path: 'packages/viz/plot-vanilla/src/normalize/plot/scale-coordinate.ts'");
       expect(page).toContain('startLine: 22');
       expect(page).toContain('endLine: 33');
       expect(page).not.toContain('startLine: 1657');

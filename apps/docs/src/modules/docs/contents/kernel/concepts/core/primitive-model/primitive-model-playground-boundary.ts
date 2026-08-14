@@ -1,18 +1,10 @@
 import type { ConnectionEnvelopeKind, IRJsonObject, IRNode, Rect, ShapeDefinition } from '@retikz/core';
 
-import {
-  arc,
-  boundsConnectionEnvelope,
-  defineShape,
-  ellipseShape,
-  polygon,
-  rectangle,
-  sector,
-  star,
-} from '@retikz/core';
+import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
+import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
 import { z } from 'zod';
 
-const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector', 'arc']);
+const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector']);
 const boundaryChoiceSchema = z.enum(['shape', 'circle', 'rectangle', 'ellipse']);
 const boundaryFitSchema = z.enum(['tight', 'bounds']);
 
@@ -44,14 +36,12 @@ const visualShapeOf = (shape: ShapeChoice): ResolvedVisualShape => {
     case 'polygon':
       return { definition: polygon, params: { sides: 6, rotate: 30 } };
     case 'star':
-      return { definition: star, params: { points: 5, innerRadius: 22, outerRadius: 50 } };
+      return { definition: StarShapeDefinition, params: { points: 5, innerRadius: 22, outerRadius: 50 } };
     case 'sector':
       return {
-        definition: sector,
+        definition: SectorShapeDefinition,
         params: { innerRadius: 14, outerRadius: 48, startAngle: 25, endAngle: 300 },
       };
-    case 'arc':
-      return { definition: arc, params: { radius: 48, startAngle: 25, endAngle: 300 } };
   }
 };
 
@@ -69,8 +59,6 @@ export const nodeShapeOf = (shape: ShapeChoice): IRNode['shape'] => {
       return { type: 'star', params: { points: 5, innerRadius: 22, outerRadius: 50 } };
     case 'sector':
       return { type: 'sector', params: { innerRadius: 14, outerRadius: 48, startAngle: 25, endAngle: 300 } };
-    case 'arc':
-      return { type: 'arc', params: { radius: 48, startAngle: 25, endAngle: 300 } };
   }
 };
 
