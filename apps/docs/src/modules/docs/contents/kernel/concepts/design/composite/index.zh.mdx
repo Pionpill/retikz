@@ -220,7 +220,7 @@ export const CardDefinition = defineComposite({
 const inspectorRegistry = createInspectorRegistry([CardInspector]);
 ```
 
-`inspect()` 返回普通 `IRChild` 或稠密只读数组，不声明 `outputSchema`。Core 只发布最终 occurrence 的已校验 artifact；`@retikz/inspect` 再校验 `subjectSchema`，并在独立环境中编译辅助输出，默认不递归触发观察者。选择与注册不进入 Composite Definition，详见 [`@retikz/inspect`](/kernel/packages/inspect)。
+`inspect()` 返回普通 `IRChild` 或稠密只读数组，不声明 `outputSchema`。Core 只发布最终 occurrence 的已校验 artifact；`@retikz/inspect` 再校验 `subjectSchema`，并在独立环境中编译辅助输出，默认不递归触发观察者。选择与注册不进入 Composite Definition，详见 [`@retikz/inspect`](/kernel/packages/extension/inspect)。
 
 `lowerIRToKernel()` 只支持可独立执行的 `expand` 分支。它遇到布局感知 composite 会明确报错，因为正确结果依赖完整 compile 环境。
 

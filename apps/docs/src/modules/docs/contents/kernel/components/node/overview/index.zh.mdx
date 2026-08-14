@@ -318,7 +318,7 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 | ----------- | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`        | `string`                  | —      | 唯一标识；被 `<Path>` / `<Draw>` 用来引用                                                                                                                                                                 |
 | `meta`      | `Record<string, JSON 值>` | —      | provenance 元数据：随该节点原样透传到渲染产物，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象 |
-| `on<Event>` | `NodeProps['onClick']`    | —      | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                           |
+| `on<Event>` | `NodeProps['onClick']`    | —      | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/render-hydration)                                                                                    |
 
 其余 props 按职责列在下方四个 API 主题；每个小节都能独立查阅对应默认值和示例。
 

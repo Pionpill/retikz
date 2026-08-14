@@ -6,11 +6,10 @@ import { useLocation, useNavigate } from 'react-router';
 import { Separator } from '@/components/ui/separator';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
-import { DocDifficultyDot } from '@/modules/docs/components';
 
 import type { SidebarCategoryData } from './types';
 
-import { AppSidebarMenuItem } from './AppSidebarMenuItem';
+import { AppSidebarModuleList } from './AppSidebarModuleList';
 
 export type AppSidebarMenuProps = {
   /** 分组化的菜单数据 */
@@ -21,14 +20,9 @@ export type AppSidebarMenuProps = {
   onNavigate?: () => void;
 };
 
-const leafBase =
-  'group flex w-full cursor-pointer items-center rounded-md px-3 py-1.5 text-[13px] transition-colors text-foreground/85 hover:text-foreground hover:bg-accent/40';
-
-const leafActive = 'text-foreground font-semibold bg-accent';
-
 /**
  * 侧栏主菜单：渲染若干分组（section）
- * @description 一级 module 无 children 即叶子链接，有 children 交给 AppSidebarMenuItem（Collapsible）；一级始终铺开不做 Plus/Minus 折叠；分组间 Separator 分隔
+ * @description 一级 module 无 children 即叶子链接，有 children 交给 AppSidebarMenuItem（Collapsible）；一级始终铺开不做 Plus/Minus 折叠
  */
 export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
   const { categories, moduleId, onNavigate } = props;
@@ -67,50 +61,13 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
                   ) : (
                     <h4 className="mb-1.5 px-3 text-xs font-medium text-muted-foreground">{category.label}</h4>
                   ))}
-                <ul className="flex flex-col gap-0.5">
-                  {category.modules.map(module => {
-                    const ModuleIcon = module.Icon;
-                    const modulePath = category.ungrouped
-                      ? `/${moduleId}/${module.value}`
-                      : `/${moduleId}/${category.value}/${module.value}`;
-                    const hasChildren = Boolean(module.children?.length);
-
-                    if (!hasChildren) {
-                      const isActive = pathname.toLowerCase() === modulePath.toLowerCase();
-                      return (
-                        <li key={module.value}>
-                          <button
-                            type="button"
-                            className={cn(leafBase, isActive && leafActive)}
-                            onClick={e => {
-                              e.preventDefault();
-                              navigate(modulePath);
-                              onNavigate?.();
-                            }}
-                          >
-                            {ModuleIcon && <ModuleIcon className="mr-1.5 size-3.5 shrink-0" />}
-                            <span className="min-w-0 flex-1 truncate text-left">{module.label}</span>
-                            <DocDifficultyDot difficulty={module.difficulty} />
-                          </button>
-                        </li>
-                      );
-                    }
-
-                    return (
-                      <AppSidebarMenuItem
-                        key={module.value}
-                        item={{
-                          value: module.value,
-                          label: module.label,
-                          Icon: module.Icon,
-                          children: module.children,
-                        }}
-                        path={modulePath.toLowerCase()}
-                        onNavigate={onNavigate}
-                      />
-                    );
-                  })}
-                </ul>
+                <AppSidebarModuleList
+                  modules={category.modules}
+                  moduleId={moduleId}
+                  categoryValue={category.value}
+                  ungrouped={category.ungrouped}
+                  onNavigate={onNavigate}
+                />
               </section>
             </Fragment>
           );
