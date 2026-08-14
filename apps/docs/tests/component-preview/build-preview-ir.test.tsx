@@ -1,4 +1,4 @@
-import type { CompositeDependencyContribution } from '@retikz/core';
+import type { CoreProviderContribution } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
-const hookedProviderKey = { namespace: 'hooked', type: 'demo' };
+const hookedProviderKey = { capability: 'composite' as const, namespace: 'hooked', type: 'demo' };
 const hookedCompositeDependencies = {
   roots: [hookedProviderKey],
   providers: [
@@ -22,13 +22,13 @@ const hookedCompositeDependencies = {
       },
     },
   ],
-} satisfies CompositeDependencyContribution;
+} satisfies CoreProviderContribution;
 
 const hookedEmbeddableAdapter: InputEmbedAdapter = {
   kind: 'hooked.demo',
   lower: () => ({
     node: { namespace: 'hooked', type: 'demo' },
-    compositeDependencies: hookedCompositeDependencies,
+    providerDependencies: hookedCompositeDependencies,
   }),
 };
 

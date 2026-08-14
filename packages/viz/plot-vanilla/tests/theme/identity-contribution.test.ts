@@ -70,7 +70,13 @@ describe('Plot Vanilla runtime style options', () => {
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');
-    expect(contribution.compositeDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(contribution.compositeDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(contribution.providerDependencies.roots).toEqual([
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+    ]);
+    expect(contribution.providerDependencies.providers[2]?.key).toEqual({
+      capability: 'composite',
+      namespace: 'plot',
+      type: 'plot',
+    });
   });
 });

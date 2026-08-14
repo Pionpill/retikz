@@ -4,7 +4,7 @@ import { Circle, Layout, Star } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,starPlaygroundControls } from './star-playground.controls';
+import { previewControlContract, starPlaygroundControls } from './star-playground.controls';
 
 export const previewControls = starPlaygroundControls;
 

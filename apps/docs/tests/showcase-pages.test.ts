@@ -49,8 +49,8 @@ describe('collectShowcasePages', () => {
   it.each(['zh', 'en'] as const)('Composite %s 概念页保持 MDX 可编译', async lang => {
     const compiled = String(await compile(readFileSync(compositeConceptPath(lang), 'utf8'), compileOptions));
 
-    expect(compiled).toContain('resolveCompositeDependencies');
-    expect(compiled).toContain('CompileOptions.composites');
+    expect(compiled).toContain('resolveCoreProviderDependencies');
+    expect(compiled).toContain('CoreProviderContribution');
     expect(compiled).toContain('spatialHandles');
     expect(compiled).toContain('resolveSpatialHandle');
   });

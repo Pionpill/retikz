@@ -26,18 +26,18 @@ import { Draw } from '@retikz/react';
 
 ### Direction, shape, and appearance
 
-One panel combines the `arrow` direction, all eight built-in shapes, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 6.
+One panel combines the `arrow` direction, six Core basic arrows, two optional Standard arrows, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. The panel explicitly injects the Standard Definitions it uses. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 6.
 
 <ComponentPreview files="arrow-appearance" size="md" />
 
-Built-in shapes come in solid and hollow pairs:
+Core provides six basic arrows by default, including hollow triangle, hollow stealth, and the circle pair. The remaining solid / hollow diamond pair comes from [`@retikz/standard/arrow`](/library/standard/extension/arrow); using a Standard name requires injecting its Definition through the current `<Layout arrows>` or `CompileOptions.arrows`:
 
-| Solid                      | Hollow                            | Typical use                         |
-| -------------------------- | --------------------------------- | ----------------------------------- |
-| `'normal'` filled triangle | `'open'` hollow triangle          | Basic triangle / UML generalization |
-| `'stealth'` sharp barb     | `'openStealth'` hollow sharp barb | Default arrow, modern flow charts   |
-| `'diamond'` filled diamond | `'openDiamond'` hollow diamond    | UML composition / aggregation       |
-| `'circle'` filled dot      | `'openCircle'` hollow dot         | Connection dot / open endpoint      |
+| Solid                               | Hollow                                  | Typical use                         |
+| ----------------------------------- | --------------------------------------- | ----------------------------------- |
+| `'normal'` Core filled triangle     | `'open'` Core hollow triangle           | Basic triangle / UML generalization |
+| `'stealth'` Core sharp barb         | `'openStealth'` Core hollow sharp barb  | Default arrow, modern flow charts   |
+| `'diamond'` Standard filled diamond | `'openDiamond'` Standard hollow diamond | UML composition / aggregation       |
+| `'circle'` Core filled dot          | `'openCircle'` Core hollow dot          | Connection dot / open endpoint      |
 
 > Multi-node paths (e.g. a → b → c) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes.
 
@@ -65,7 +65,7 @@ Solid lines show the main endpoint-arrow resolution path. Dashed lines show the 
 
 <ComponentPreview files="arrow-compile-flow" size="sm" hideCode />
 
-Explicit element fields win over the path master color and Scope arrow defaults. Any remaining size fields fall back to defaults from the selected arrow definition. `shape` looks up a built-in or custom `ArrowDefinition`, which compile materializes into renderer-agnostic marker geometry. An unregistered name fails explicitly instead of silently falling back to the default shape.
+Explicit element fields win over the path master color and Scope arrow defaults. Any remaining size fields fall back to defaults from the selected arrow definition. `shape` looks up a Core basic, explicitly injected Standard, or custom `ArrowDefinition`, which compile materializes into renderer-agnostic marker geometry. An unregistered name fails explicitly instead of silently falling back to the default shape.
 
 <SourceLinks
   sources={[
@@ -153,21 +153,22 @@ A multi-node path can become several subpaths during compile, but the start arro
 
 `arrowDetail` carries 8 visual fields + optional `start` / `end` sub-objects. The `start` / `end` sub-objects use the same field set (non-recursive) and merge field-by-field into the top-level defaults:
 
-| Field       | Type                                                    | Default                      | Description                                                                                                               |
-| ----------- | ------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string`      | `'stealth'`                  | Arrow tip shape; one of the 8 built-ins or a custom arrow name registered via `<Layout arrows>` / `CompileOptions.arrows` |
-| `scale`     | `number > 0`                                            | `1`                          | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15)                     |
-| `length`    | `number ≥ 0`                                            | `6`                          | Arrow length along the path direction (user units)                                                                        |
-| `width`     | `number ≥ 0`                                            | `6`                          | Arrow width perpendicular to the path (user units)                                                                        |
-| `color`     | `string`                                                | —                            | Stroke color override; default inherits the path stroke color                                                             |
-| `fill`      | `string`                                                | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped)                                         |
-| `opacity`   | `number ∈ [0, 1]`                                       | —                            | Arrow-only opacity; default inherits path opacity                                                                         |
-| `lineWidth` | `number ≥ 0`                                            | `1.5`                        | Stroke width for hollow shapes; ignored on solid shapes                                                                   |
-| `start`     | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`)                                     |
-| `end`       | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`)                                         |
+| Field       | Type                                                    | Default                      | Description                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string`      | `'stealth'`                  | Core basic arrows are `normal` / `open` / `stealth` / `openStealth` / `circle` / `openCircle`; optional Standard and custom names register through `<Layout arrows>` / `CompileOptions.arrows` |
+| `scale`     | `number > 0`                                            | `1`                          | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15)                                                                                 |
+| `length`    | `number ≥ 0`                                            | `6`                          | Arrow length along the path direction (user units)                                                                                                                                    |
+| `width`     | `number ≥ 0`                                            | `6`                          | Arrow width perpendicular to the path (user units)                                                                                                                                    |
+| `color`     | `string`                                                | —                            | Stroke color override; default inherits the path stroke color                                                                                                                         |
+| `fill`      | `string`                                                | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped)                                                                                                     |
+| `opacity`   | `number ∈ [0, 1]`                                       | —                            | Arrow-only opacity; default inherits path opacity                                                                                                                                     |
+| `lineWidth` | `number ≥ 0`                                            | `1.5`                        | Stroke width for hollow shapes; ignored on solid shapes                                                                                                                               |
+| `start`     | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`)                                                                                                 |
+| `end`       | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`)                                                                                                     |
 
 ## Related
 
 - [Draw](/kernel/components/draw/overview): Sugar for everyday connections
 - [Path](/kernel/components/draw/path): Low-level path container with the same `arrow` / `arrowDetail` behavior
+- [Arrow Extensions](/library/standard/extension/arrow): Assemble official optional arrows on demand
 - [Custom arrows](/kernel/components/draw/custom-arrow): Register project-specific arrow shapes

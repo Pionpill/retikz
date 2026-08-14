@@ -18,6 +18,7 @@ describe('compile source structure', () => {
     expect(Object.keys(compile).sort()).toEqual([
       'CORE_PROGRAM_ID',
       'CompileWarningCode',
+      'DEFAULT_RESOLVED_THEME',
       'compileToScene',
       'computeLayout',
       'createCoreProgram',
@@ -27,6 +28,7 @@ describe('compile source structure', () => {
       'isNodeLayoutCompileArtifact',
       'lowerIRToKernel',
       'observeCompileToScene',
+      'resolveTheme',
     ]);
   });
 

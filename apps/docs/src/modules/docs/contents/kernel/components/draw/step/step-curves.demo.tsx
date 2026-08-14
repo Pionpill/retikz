@@ -6,7 +6,7 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,stepCurvesControls } from './step-curves.controls';
+import { previewControlContract, stepCurvesControls } from './step-curves.controls';
 
 export const previewControls = stepCurvesControls;
 

@@ -154,11 +154,11 @@ describe('<Legend>', () => {
         },
       }),
     );
-    expect(contribute(itemsProps).compositeDependencies).toEqual({
+    expect(contribute(itemsProps).providerDependencies).toEqual({
       roots: [LegendProvider.key],
       providers: [LegendProvider],
     });
-    expect(contribute(rampProps).compositeDependencies.providers[0]).toBe(LegendProvider);
+    expect(contribute(rampProps).providerDependencies.providers[0]).toBe(LegendProvider);
     expect(LegendProvider.makeDefinition({})).toBe(LegendDefinition);
   });
 

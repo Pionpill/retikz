@@ -26,6 +26,6 @@ export const TableInputEmbedAdapter: InputEmbedAdapter<InputTable> = {
       lowerOptions: props.lowerOptions,
       composites: props.composites,
     });
-    return { node, compositeDependencies: contribution };
+    return { node, providerDependencies: contribution };
   },
 };

@@ -2,6 +2,7 @@ import type { IRBoundary } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node } from '@retikz/react';
+import { StarShapeDefinition } from '@retikz/standard/shape';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -32,6 +33,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       height={220}
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
       nodeDefault={{ stroke: 'gray', dashed: true }}
+      shapes={[StarShapeDefinition]}
     >
       <Node
         id="star"

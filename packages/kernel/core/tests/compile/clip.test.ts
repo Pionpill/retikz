@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { ClipResource, GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
 import { compileToScene } from '../../src/compile/compile';
+import { defineClip } from '../../src';
+
+const polygonClip = defineClip({
+  kind: 'polygon',
+  schema: z.strictObject({
+    kind: z.literal('polygon'),
+    points: z.array(z.tuple([z.number(), z.number()])).min(3),
+  }),
+  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+});
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -90,7 +101,7 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
     const clips = clipResources(compiled.resources);
     expect(clips).toHaveLength(1);
     expect(clips[0].shape).toMatchObject({

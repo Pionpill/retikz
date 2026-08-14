@@ -1,4 +1,4 @@
-import type { AnyPathKindDefinition, CompositeDependencyContribution, IRScene } from '@retikz/core';
+import type { AnyPathKindDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
 
 import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
@@ -56,7 +56,7 @@ const LAYOUT_OWN_PROPS = new Set([
 /** ComponentPreview 派生出的 IR 渲染信息。 */
 export type PreviewIR = {
   ir: IRScene;
-  contributions: Array<CompositeDependencyContribution>;
+  contributions: Array<CoreProviderContribution>;
   width?: number | string;
   height?: number | string;
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
@@ -84,7 +84,7 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
         })()
       : {
           ir: props.ir,
-          contributions: [] as Array<CompositeDependencyContribution>,
+          contributions: [] as Array<CoreProviderContribution>,
         };
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;

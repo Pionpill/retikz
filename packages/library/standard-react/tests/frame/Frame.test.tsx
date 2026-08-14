@@ -73,8 +73,8 @@ describe('<Frame>', () => {
         children: [{ type: 'node', position: [0, 0], text: 'A' }],
       }),
     );
-    expect(first.compositeDependencies.providers[0]).toBe(FrameProvider);
-    expect(second.compositeDependencies.providers[0]).toBe(FrameProvider);
+    expect(first.providerDependencies.providers[0]).toBe(FrameProvider);
+    expect(second.providerDependencies.providers[0]).toBe(FrameProvider);
   });
 
   it('preserves JSON-safe Node fields on FrameTitle and FrameDescription', () => {

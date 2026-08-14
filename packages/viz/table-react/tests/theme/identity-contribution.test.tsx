@@ -44,6 +44,6 @@ describe('Table React runtime style contract', () => {
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');
-    expect(contribution.compositeDependencies.roots).toEqual([{ namespace: 'table', type: 'table' }]);
+    expect(contribution.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'table', type: 'table' }]);
   });
 });

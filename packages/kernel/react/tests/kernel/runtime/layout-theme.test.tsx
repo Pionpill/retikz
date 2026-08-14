@@ -43,11 +43,11 @@ const themedBoxAdapter: InputEmbedAdapter = {
   kind: 'ThemedBox',
   lower: () => ({
     node: { namespace: 'theme-test', type: 'box' },
-    compositeDependencies: {
-      roots: [{ namespace: 'theme-test', type: 'box' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'theme-test', type: 'box' }],
       providers: [
         {
-          key: { namespace: 'theme-test', type: 'box' },
+          key: { capability: 'composite', namespace: 'theme-test', type: 'box' },
           dependencies: [],
           datasets: {},
           makeDefinition: makeThemedBoxDefinition,

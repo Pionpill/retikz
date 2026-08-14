@@ -51,7 +51,7 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
 
 `anchor` 省略时，连线朝另一个端点自动贴边；标准命名 anchor（如 `top` / `right`）按 `boundary` 解析。`center` 会直接连到节点中心。形状专属 anchor 仍属于视觉 `shape`，具体名称见对应形状页。
 
-`shape` 有两种写法：无必填参数的形状可用裸字符串；`polygon` / `sector` / `arc` / `star` 等带参形状必须写成 `{ type, params }`。按尺寸来源，它们又分为包住「文字 + padding」的文本容器形状，以及由半径 / 角度决定尺寸的几何形状。
+`shape` 有两种写法：无必填参数的形状可用裸字符串；`polygon` / `sector` / `star` 等带参形状必须写成 `{ type, params }`。Core 默认提供 `rectangle` / `ellipse` / `polygon`，并把 `circle` / `diamond` 作为基础 preset；`sector` / `star` 等可选 Node shape 需先通过 `<Layout shapes>` 或 `CompileOptions.shapes` 注入。按尺寸来源，它们又分为包住「文字 + padding」的文本容器形状，以及由半径 / 角度决定尺寸的几何形状。Sector 的 `innerRadius === outerRadius` 状态就是开放弧。
 
 每种形状的参数和专属 anchor 见对应页面：
 
@@ -59,7 +59,7 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
 | ----------------- | ------------------------------------------ | ------------------------------------------------------------ |
 | rectangle         | 默认 / `'rectangle'`                       | [Rectangle](/kernel/components/shapes/rectangle)             |
 | circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/shapes/circle-ellipse) |
-| sector / arc      | `{ type:'sector' \| 'arc', params }`       | [Arc / Sector](/kernel/components/shapes/arc-sector)         |
+| sector            | `{ type:'sector', params }`                | [Arc / Sector](/kernel/components/shapes/arc-sector)         |
 | polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon)                 |
 | star              | `{ type:'star', params }`                  | [Star](/kernel/components/shapes/star)                       |
 
@@ -246,7 +246,7 @@ import { NodeTextColor } from '@retikz/core';
 
 因此，`margin` 会外推连接端点与标准 border anchor，并扩大节点布局占位，却不会重画视觉形状。形状专属锚点与边上比例点保持在原轮廓上；某个 shape 没实现标准方位锚点时，core 会回退到它的外接矩形。
 
-规则连接面先按 `fit` 求矩形，再应用 `gap`；自动端点、数字角度和标准命名 anchor 会共享这一结果。内置 ellipse / polygon / star / contour 提供 shape-aware `tight` 包络；rectangle 的 `tight` 与 `bounds` 一致，arc / sector 本版也按 bounds 处理。自定义 shape 若未实现 `connectionEnvelope`，`tight` 会安全回退到 bounds，并产生一次结构化 warning。
+规则连接面先按 `fit` 求矩形，再应用 `gap`；自动端点、数字角度和标准命名 anchor 会共享这一结果。Core 的 ellipse / polygon，以及已注入的 star / contour，都会提供 shape-aware `tight` 包络；rectangle 的 `tight` 与 `bounds` 一致，已注入的 Sector 按 bounds 处理。自定义 shape 若未实现 `connectionEnvelope`，`tight` 会安全回退到 bounds，并产生一次结构化 warning。
 
 <SourceLinks
   sources={[
@@ -332,7 +332,7 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 
 | 属性           | 类型                                                                                                                                                                                       | 默认值        | 描述                                                                                                                                                                                                                                                                                                                                                                                       |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `shape`        | <ApiValues name="BuiltinShape" /> \| `string` \| `IRShapeRef`                                                                                                                              | `'rectangle'` | 节点形状：裸字符串仅限无必填参数的形状（`rectangle` / `circle` / `ellipse` / `diamond` / 无参注册名）；`polygon` / `sector` / `arc` / `star` 等带必填参数的形状必须用 `{ type, params }`（裸字符串会编译期抛错）；内置见上，或经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                                                          |
+| `shape`        | <ApiValues name="BuiltinShape" /> \| `string` \| `IRShapeRef`                                                                                                                              | `'rectangle'` | 节点形状：Core 内置值是 `rectangle` / `circle` / `ellipse` / `diamond`，其中后两者分别是 ellipse / polygon 的 preset；`polygon` 或任意带必填参数的已注册形状（如 Standard `sector` / `star`）必须用 `{ type, params }`（裸字符串会编译期抛错）。可选与自定义形状经 `<Layout shapes>` / `CompileOptions.shapes` 注册                                                                        |
 | `boundary`     | `IRBoundary`                                                                                                                                                                               | `'shape'`     | 连接面：边在此节点如何贴边、标准方位锚点如何解析，独立于视觉 `shape`。内置规则面参数为 `{ fit?: 'tight' \| 'bounds', gap?: number }`，默认 `{ fit:'tight', gap:0 }`；`gap` 有符号且必须有限，负值允许穿过视觉形状但不推荐，最终半轴必须大于 0。其它值先查自定义连接面，再 fallback 到已注册 shape 边界。不改节点占位；形状专属锚点与边上比例点仍走视觉形状。单条边可用端点 `boundary` 覆盖 |
 | `rotate`       | `number`                                                                                                                                                                                   | `0`           | 绕中心旋转角度（度，正值顺时针）                                                                                                                                                                                                                                                                                                                                                           |
 | `padding`      | `number` \| `IRBoxSpacing`<br />- `default?: number`<br />- `x?: number`<br />- `y?: number`<br />- `left?: number`<br />- `right?: number`<br />- `top?: number`<br />- `bottom?: number` | `8`           | 内容到边框的内边距<br />- 四边 fallback<br />- 左右 fallback<br />- 上下 fallback<br />- 左边<br />- 右边<br />- 上边<br />- 下边；边字段优先于轴字段，再优先于 `default`                                                                                                                                                                                                                  |

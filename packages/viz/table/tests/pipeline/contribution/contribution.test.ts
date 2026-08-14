@@ -5,7 +5,7 @@ import {
   CompositeBaseSchema,
   defineComposite,
   defineThemeStyle,
-  resolveCompositeDependencies,
+  resolveCoreProviderDependencies,
   resolveDefaultCoreThemeColors,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -86,10 +86,15 @@ const compositeOf = (namespace: string, type: string): AnyCompositeDefinition =>
 };
 
 const definitionsOf = (...contributions: Array<ReturnType<typeof createTableRuntimeContribution>>) =>
-  resolveCompositeDependencies({ contributions });
+  resolveCoreProviderDependencies({ contributions });
 
 const tableProviderOf = (contribution: ReturnType<typeof createTableRuntimeContribution>) =>
-  contribution.providers.find(provider => provider.key.namespace === TABLE_NAMESPACE && provider.key.type === 'table');
+  contribution.providers.find(
+    provider =>
+      provider.key.capability === 'composite' &&
+      provider.key.namespace === TABLE_NAMESPACE &&
+      provider.key.type === 'table',
+  );
 
 describe('Table runtime contribution', () => {
   it('uses a stable maker reference and an encoded runtime reference while preserving dataset identities', () => {
@@ -103,7 +108,9 @@ describe('Table runtime contribution', () => {
     const provider = tableProviderOf(contribution);
     const anotherProvider = tableProviderOf(another);
     expect(provider?.makeDefinition).toBe(anotherProvider?.makeDefinition);
-    expect(contribution.roots).toEqual([{ namespace: TABLE_NAMESPACE, type: TableComposite.Table }]);
+    expect(contribution.roots).toEqual([
+      { capability: 'composite', namespace: TABLE_NAMESPACE, type: TableComposite.Table },
+    ]);
     expect(provider?.dependencies).toEqual([]);
     expect(provider?.datasets.sales).toBe(rows);
     expect(Object.keys(provider?.datasets ?? {})).toEqual(['sales', '@@retikz/table/runtime/panel%2Fa%20b']);
@@ -147,7 +154,7 @@ describe('Table runtime contribution', () => {
     });
     const definitions = definitionsOf(contribution);
 
-    expect(definitions.map(definition => `${definition.namespace}.${definition.type}`)).toEqual([
+    expect(definitions.composites?.map(definition => `${definition.namespace}.${definition.type}`)).toEqual([
       `${TABLE_NAMESPACE}.${TableComposite.Table}`,
       'fixture.badge',
     ]);
@@ -168,7 +175,7 @@ describe('Table runtime contribution', () => {
           },
         ],
       },
-      { composites: definitions },
+      definitions,
     );
     expect(JSON.stringify(result.scene)).toContain('Ada');
   });
@@ -193,7 +200,7 @@ describe('Table runtime contribution', () => {
         ],
       },
       {
-        composites: definitionsOf(contribution),
+        ...definitionsOf(contribution),
         themeStyles: [
           defineThemeStyle({
             name: 'brand',
@@ -248,7 +255,7 @@ describe('Table runtime contribution', () => {
     });
 
     expect(() => definitionsOf(first, second)).not.toThrow();
-    expect(definitionsOf(first, second).slice(1)).toEqual([compositeA, compositeB]);
+    expect(definitionsOf(first, second).composites?.slice(1)).toEqual([compositeA, compositeB]);
   });
 
   it.each([
@@ -383,7 +390,7 @@ describe('Table runtime contribution', () => {
     expect(envelope.lowerOptions.presentationDefinitions?.[0]).toBe(presentation);
     expect(envelope.lowerOptions.visualScaleDefinitions?.[0]).toBe(visualScale);
     expect(envelope.lowerOptions.tableThemeStyles?.[0]).toBe(themeStyle);
-    expect(definitionsOf(contribution).slice(1)).toEqual([composite]);
+    expect(definitionsOf(contribution).composites?.slice(1)).toEqual([composite]);
     expect(
       [structure, formatter, presentation, visualScale, themeStyle, composite].map(value => Object.isFrozen(value)),
     ).toEqual(originalFrozenStates);

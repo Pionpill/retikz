@@ -10,7 +10,7 @@ export const GridInputEmbedAdapter: InputEmbedAdapter<GridInput> = {
   kind: StandardGridEmbedKind,
   lower: props => ({
     node: createGrid(props),
-    compositeDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
+    providerDependencies: { roots: [GridProvider.key], providers: [GridProvider] },
   }),
 };
 

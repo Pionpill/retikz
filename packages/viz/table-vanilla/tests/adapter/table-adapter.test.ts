@@ -75,11 +75,11 @@ describe('Table Vanilla adapter', () => {
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.compositeDependencies.roots).toEqual([{ namespace: 'table', type: 'table' }]);
-    expect(first.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      second.compositeDependencies.providers[0]?.makeDefinition,
+    expect(first.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'table', type: 'table' }]);
+    expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
+      second.providerDependencies.providers[0]?.makeDefinition,
     );
-    expect(Object.keys(first.compositeDependencies.providers[0]?.datasets ?? {})).toContain(
+    expect(Object.keys(first.providerDependencies.providers[0]?.datasets ?? {})).toContain(
       '@@retikz/table/runtime/first',
     );
   });

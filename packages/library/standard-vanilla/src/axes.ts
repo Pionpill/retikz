@@ -10,7 +10,7 @@ export const AxesInputEmbedAdapter: InputEmbedAdapter<AxesInput> = {
   kind: StandardAxesEmbedKind,
   lower: props => ({
     node: createAxes(props),
-    compositeDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
+    providerDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
   }),
 };
 

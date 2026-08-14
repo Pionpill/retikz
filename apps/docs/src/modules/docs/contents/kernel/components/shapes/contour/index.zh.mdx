@@ -3,7 +3,7 @@ title: Contour
 description: 任意闭合顶点环作为节点形状——给一圈点就得到一个可连接、可圆角、自动居中的轮廓节点。
 ---
 
-`contour` 是一个吃**任意闭合顶点环**的内置 Node 形状：给一圈点（`params.points`），节点边界就是这圈点连成的闭合轮廓。它和 `polygon` / `star` 走同一条轮廓引擎，区别只是顶点来源——`polygon` 由边数推导正多边形，`contour` 直接取你给的点。完整定义见 [形状](/kernel/components/shapes)。
+`contour` 是一个吃**任意闭合顶点环**的可选 Standard Node 形状：给一圈点（`params.points`），节点边界就是这圈点连成的闭合轮廓。它和 `polygon` / `star` 走同一条轮廓引擎，区别只是顶点来源——`polygon` 由边数推导正多边形，`contour` 直接取你给的点。完整定义见 [形状](/kernel/components/shapes)。使用时要从 `@retikz/standard/shape` 导入 `ContourShapeDefinition`，并注入当前 `<Layout>`。
 
 它和其它形状不同的一点：**只作为 Node 形状**，没有对应的 Sugar 画线组件。要画一条任意闭合轮廓线，直接用 [`<Path>`](/kernel/components/draw/path) 的 `line` step；`contour` 解决的是另一件事——让这块任意轮廓**仍是一个可连接的节点**（能被别的线按 id 连过来、取边界交点）。
 
@@ -14,25 +14,28 @@ description: 任意闭合顶点环作为节点形状——给一圈点就得到�
 ### 用法
 
 ```tsx
-import { Node } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
+import { ContourShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Node
-  shape={{
-    type: 'contour',
-    params: {
-      points: [
-        [-30, 44],
-        [30, 30],
-        [30, -44],
-        [-30, -44],
-      ],
-      cornerRadius: 8,
-    },
-  }}
-  fill="steelblue"
-/>
+<Layout shapes={[ContourShapeDefinition]}>
+  <Node
+    shape={{
+      type: 'contour',
+      params: {
+        points: [
+          [-30, 44],
+          [30, 30],
+          [30, -44],
+          [-30, -44],
+        ],
+        cornerRadius: 8,
+      },
+    }}
+    fill="steelblue"
+  />
+</Layout>
 ```
 
 ### 例子
@@ -77,9 +80,9 @@ core 先求 `points` 的 AABB 中心 `c`，再把每个顶点改写为 `pᵢ - c
   sources={[
     {
       label: '顶点 AABB 居中与轮廓生成',
-      path: 'packages/kernel/core/src/providers/shape/contour.ts',
-      startLine: 31,
-      endLine: 73,
+      path: 'packages/library/standard/src/shape/definitions/contour.ts',
+      startLine: 43,
+      endLine: 83,
     },
   ]}
 />
@@ -98,9 +101,9 @@ core 先求 `points` 的 AABB 中心 `c`，再把每个顶点改写为 `pᵢ - c
   sources={[
     {
       label: '轮廓求交与命名 anchor 声明',
-      path: 'packages/kernel/core/src/providers/shape/contour.ts',
-      startLine: 61,
-      endLine: 68,
+      path: 'packages/library/standard/src/shape/definitions/contour.ts',
+      startLine: 63,
+      endLine: 71,
     },
     {
       label: '自动连接端点解析',

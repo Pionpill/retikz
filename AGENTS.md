@@ -15,7 +15,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - 上层包的底层机制优先复用 `@retikz/foundation`、`@retikz/math`、`@retikz/core` 的公开能力；实现前先检索项目内已有 capability、类型、工具和模式，确认不能满足需求并说明理由后才能自建。移除领域词汇后仍成立、被多个官方 Tier 2 包复用的通用绘图组件进入 `@retikz/standard`。Plot、Table 等领域包可以单向依赖 Standard 的公开 capability，但 Standard 不得反向依赖领域包；React / Vanilla / Docs demo 仍通过 adapter、sugar、composite、lowering、renderer 扩展表达力，不要绕开基础包另造平行 IR、平行渲染语义或平行几何底座。
 - 当前需求明确需要扩展的公开能力，优先建立统一的 Definition / registry / capability contract，再实现内置能力。内置与自定义应复用同一套注册、解析和消费逻辑，不要拆成“内置白名单 + 扩展补丁接口”。
-- 新增或改变公开能力、IR / schema、扩展契约、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力前，先读 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档，并在 ADR 中完成能力归属、包边界与闭环检查。纯 bugfix、文案和行为等价重构只需确认不改变能力边界。
+- 新增或改变公开能力、IR / schema、扩展契约、pipeline / lowering、Scene / manifest、跨包职责或 adapter 独有能力前，先读 `notes/architecture/capability-design.md` 和所属能力域的 completeness 文档，并在 ADR 设计阶段完成能力归属、包边界与闭环检查，结论写入同步镜像 plan。纯 bugfix、文案和行为等价重构只需确认不改变能力边界。
 - 上述设计还必须用 `test-contract` 把行为、可观察结果、不变量、反例与最低测试层写入 ignored 测试契约矩阵；覆盖率不能代替该矩阵。
 - 包不是功能收纳桶。每个发布包必须在就近 `AGENTS.md` 明确解决的问题、拥有的契约、不拥有的能力、输入与输出及缺口流向；新增能力只有在直接服务包使命、符合输入输出边界并能形成完整闭环时才能进入。实现方便、当前代码位置或单个消费方需求不能决定长期所有权。
 - 选择能完整满足当前需求的最简单方案；只在当前契约或已验证复用需求要求时抽象，不做预防性抽象，不增加没有当前消费者的配置层、扩展点或间接层。

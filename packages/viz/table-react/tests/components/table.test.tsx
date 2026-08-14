@@ -256,14 +256,14 @@ describe('Table React components', () => {
     expect(tableContribution.node).toMatchObject({ id: 'generic' });
     expect(detailContribution.node).toMatchObject({ id: 'detail' });
     expect(manualContribution.node).toMatchObject({ id: 'manual' });
-    expect(Object.keys(detailContribution.compositeDependencies.providers[0]?.datasets ?? {})).toContain(
+    expect(Object.keys(detailContribution.providerDependencies.providers[0]?.datasets ?? {})).toContain(
       '@@retikz/table/runtime/detail',
     );
-    expect(tableContribution.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      detailContribution.compositeDependencies.providers[0]?.makeDefinition,
+    expect(tableContribution.providerDependencies.providers[0]?.makeDefinition).toBe(
+      detailContribution.providerDependencies.providers[0]?.makeDefinition,
     );
-    expect(detailContribution.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      manualContribution.compositeDependencies.providers[0]?.makeDefinition,
+    expect(detailContribution.providerDependencies.providers[0]?.makeDefinition).toBe(
+      manualContribution.providerDependencies.providers[0]?.makeDefinition,
     );
   });
 

@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
+import { StarShapeDefinition } from '@retikz/standard/shape';
 
 /**
  * margin 对不同 boundary 形状的作用
@@ -11,7 +12,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 const M = 18;
 
 const Demo: FC = () => (
-  <Layout width={520} height={200}>
+  <Layout width={520} height={200} shapes={[StarShapeDefinition]}>
     {/* 椭圆：rect 驱动，margin 外扩 → 端点退开 margin */}
     <Node
       id="ell"

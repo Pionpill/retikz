@@ -623,7 +623,7 @@ describe('Table React composition root integration', () => {
         columns: [{ id: 'name', field: 'name' }],
       }),
     );
-    const tableProvider = contribution.compositeDependencies.providers[0];
+    const tableProvider = contribution.providerDependencies.providers[0];
     expect(tableProvider.datasets).toMatchObject({ people: [{ name: 'Grace' }] });
     expect(Object.keys(tableProvider.datasets)).toContain('@@retikz/table/runtime/detail-runtime-reference');
     expect(renderToStaticMarkup(<DetailTable {...props} />)).toContain('Grace');

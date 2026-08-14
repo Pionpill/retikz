@@ -35,16 +35,13 @@ export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
 /** 节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签 */
 export type IRNode = z.infer<typeof NodeSchema>;
 
-/**
- * 内置 4 shape 名联合
- * @description `BUILTIN_SHAPES` 的 Record key（保穷尽性约束，不随 `NodeShape` 开放而退化为 `string`）
- */
+/** 内置形状名联合，含由 Core 提供者参数化得到的 `circle` / `diamond` 预设 */
 export type BuiltinShapeValue = ValueOf<typeof BuiltinShape>;
 
 /**
  * 节点形状名：开放字符串
  * @description 内置 `BuiltinShapeValue`，或经 `CompileOptions.shapes` 注册的扩展 shape 名；
- *   `& {}` 让 IDE 仍对内置 4 名自动补全，同时接受任意非空字符串
+ *   `& {}` 让 IDE 仍对内置名称自动补全，同时接受任意非空字符串
  */
 export type NodeShape = BuiltinShapeValue | (string & {});
 

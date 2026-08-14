@@ -6,7 +6,8 @@
 > - 编号在 milestone 内从 `01` 重新开始，slug 用 kebab-case；各 viz family 独立演进。
 > - 本模板对应 [`develop-design`](../../../../../../../../.agents/skills/develop-design/SKILL.md)；结构变化时同步更新。
 > - ADR 从 Proposed 起就是长期功能与架构文档，不写施工细节，也不在 Accepted / 发布前再做“压缩”。
-> - 进入实现后，将 `decisions` 替换为 `plans`、文件名变为目录，在 ignored 镜像路径维护 `PLAN.md`、`TEST_CONTRACT.md`、必要的 `TASK_STATE.md` 与 `REVIEW.md`。
+> - 起 ADR 时同步在 ignored 镜像路径创建简略 `PLAN.md`；人工确认 ADR 后再细化 plan，并创建 `TEST_CONTRACT.md`、必要的 `TASK_STATE.md` 与 `REVIEW.md`。
+> - 简略 plan 记录目标 / 非目标、功能与包边界、能力完备性、同类设计、被否决方案、测试策略和待细化项。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
@@ -39,33 +40,3 @@
 - 失败与诊断：
 - 兼容性 / breaking：
 - React / Vanilla 等价性：
-
-## 功能与包边界
-
-- 所属能力域与解决的问题：
-- 主责包与协作包：
-- 拥有：
-- 不拥有：
-- 外部扩展与下游闭环：
-- 不支持边界：
-
-## 架构验证
-
-- 是否可由现有能力组合：
-- Data / Plot / Table / Chart / Standard / Core 责任切分：
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：
-- pipeline / lowering / renderer / diagnostics 如何闭环：
-- provenance / lineage / locator 是否适用：
-- 结论：组合 / 扩展当前域 / 下沉 / 上移 / 不支持或延期
-
-## 被否决方案
-
-- <方案>：<否决理由>
-
-## 测试策略摘要
-
-<只写需要 schema、pipeline、adapter parity、renderer、docs 等哪些证据层及关键不变量，不写 case、路径、命令或数量；详细矩阵进入镜像 plan 的 TEST_CONTRACT.md>
-
-## 不在本 ADR 范围
-
-- <明确延期或不支持的相邻能力>
