@@ -5,14 +5,19 @@ description: Import optional node shapes on demand from @retikz/standard/shape, 
 
 Shape extensions build on Core's basic shapes and add more optional content:
 
-| Package          | Provided content                                       |
-| ---------------- | ------------------------------------------------------ |
-| `core`           | `rectangle`, `ellipse`, `polygon`; `circle`, `diamond` |
-| `standard/shape` | `cross`, `sector`, `star`, `contour`                   |
-
-A Sector with `innerRadius === outerRadius` represents an open arc.
+| Package          | Provided content                     |
+| ---------------- | ------------------------------------ |
+| `core`           | `rectangle`, `ellipse`, `polygon`    |
+| `standard/shape` | `cross`, `sector`, `star`, `contour` |
 
 ## Usage
+
+This page supports two import styles:
+
+- Import specific Definitions on demand, such as `CrossShapeDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
+- Use the complete official extension set through `StandardShapeDefinitions`, which includes every Standard Definition from this subpath; use `StandardShapeProviders` when assembling a provider graph
+
+Both styles explicitly assemble capabilities for the current figure. Importing the package does not register shapes globally.
 
 ### React usage
 
@@ -65,25 +70,9 @@ Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A sca
 | `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | Horizontal and vertical arm widths; scalar applies to both |
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | Four arm heights with axis and default fallbacks           |
 
-### Open arc
-
-`sector` uses equal `innerRadius` and `outerRadius` for a connectable open arc. It suits arc-shaped glyphs in flow and relation diagrams; the angle range controls its opening.
-
-<ComponentPreview files="sector-open-example" size="sm" />
-
-#### API
-
-Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. Set `innerRadius` equal to `outerRadius` for an open arc; the `params` object has type `SectorShapeParams`:
-
-| Field                         | Type     | Description            |
-| ----------------------------- | -------- | ---------------------- |
-| `innerRadius` / `outerRadius` | `number` | Equal positive radius  |
-| `startAngle`                  | `number` | Start angle in degrees |
-| `endAngle`                    | `number` | End angle in degrees   |
-
 ### Sector
 
-`sector` combines inner/outer radii with an angle range to form a pie slice, ring wedge, or open arc. `cornerRadius` rounds radial corners only for positive-thickness sectors. It suits angle ranges, ring progress, and sector state nodes.
+`sector` combines inner/outer radii with an angle range to form a pie slice, ring wedge, or open arc. Set `innerRadius` equal to `outerRadius` to get a connectable open arc; `cornerRadius` rounds radial corners only for positive-thickness sectors. It suits angle ranges, ring progress, and sector state nodes.
 
 <ComponentPreview files="sector-example" size="md" />
 

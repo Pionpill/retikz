@@ -12,6 +12,13 @@ Arrow extensions build on Core's basic arrows and add more optional content:
 
 ## Usage
 
+This page supports two import styles:
+
+- Import specific Definitions on demand, such as `DiamondArrowDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
+- Use the complete official extension set through `StandardArrowDefinitions`, which includes every Standard Definition from this subpath; use `StandardArrowProviders` when assembling a provider graph
+
+Both styles explicitly assemble capabilities for the current figure. Importing the package does not register arrows globally.
+
 ### React usage
 
 Import the Standard Definitions a figure actually uses from `@retikz/standard/arrow` and pass them to the React `Layout` `arrows` prop. Core arrows need no extra injection; the subpath import does not register Standard arrows globally.

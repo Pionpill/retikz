@@ -3,8 +3,8 @@ import type { ClipDefinition, ClipResolveContext, ClipShape } from '@retikz/core
 import { defineClip } from '@retikz/core';
 
 import type { CompoundClipSpec, StandardPathClipSpec, StandardPolygonClipSpec } from './schema';
-import { PathClipSchema, PolygonClipSchema } from './schema';
 
+import { PathClipSchema, PolygonClipSchema } from './schema';
 import { CompoundClipSchema } from './schema';
 
 /** 判断开放 clip 规格是否为递归 Compound Clip */

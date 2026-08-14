@@ -12,7 +12,6 @@ The Standard extension layer answers which optional official drawing Definitions
 | Shapes             | Supply optional node outlines                                 | A figure needs an outline beyond Core's basic shapes     |
 | Arrows             | Supply optional path endpoint markers                         | A figure needs a marker beyond Core's basic solid arrows |
 | Clips              | Supply optional recursive compound clipping                   | One clipping region combines child clips                 |
-| Path generators    | Supply optional step-expansion rules                          | A path needs a rule such as a parabola                   |
 | Capability loading | Explain Definition, provider-graph, and host responsibilities | Integrating React, Vanilla, or a custom toolchain        |
 
 ## Chapters
@@ -34,12 +33,6 @@ The Standard extension layer answers which optional official drawing Definitions
     <span className="font-semibold">Clips</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Import compound clipping from `/clip` and inject `clips`
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/standard/extension/path-generator">
-    <span className="font-semibold">Path Generators</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Import generators from `/path-generator` and inject `pathGenerators`
     </span>
   </LinkedCard>
   <LinkedCard href="/library/standard/extension/capability-loading">

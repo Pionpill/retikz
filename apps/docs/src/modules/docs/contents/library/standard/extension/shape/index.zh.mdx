@@ -5,14 +5,19 @@ description: 从 @retikz/standard/shape 按需引入可选节点形状，并分�
 
 形状扩展在 Core 提供的基础形状之上，补充了更多可选内容：
 
-| 包名             | 提供内容                                                                                               |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形；`circle` — 圆形与 `diamond` — 菱形是基础预设 |
-| `standard/shape` | `cross` — 十字形、`sector` — 扇形、`star` — 星形、`contour` — 任意轮廓                                 |
-
-Sector 的 `innerRadius === outerRadius` 状态表示开放弧。
+| 包名             | 提供内容                                                               |
+| ---------------- | ---------------------------------------------------------------------- |
+| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形               |
+| `standard/shape` | `cross` — 十字形、`sector` — 扇形、`star` — 星形、`contour` — 任意轮廓 |
 
 ## 用法
+
+本页支持两种导入方式：
+
+- 按需导入特定 Definition，例如 `CrossShapeDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
+- 整体使用官方扩展，例如 `StandardShapeDefinitions`，一次包含本子入口提供的全部 Standard Definition；组装 provider graph 时，对应使用 `StandardShapeProviders`
+
+两种方式都只是当前图的显式装配，不会因为 import 自动全局注册形状。
 
 ### React 用法
 
@@ -65,25 +70,9 @@ const svg = renderToSvgString(input, {
 | `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | 水平臂与垂直臂宽度；数字同时应用于两个轴向 |
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | 四个方向高度，并支持轴向和 default 回退    |
 
-### 开放弧
-
-`sector` 使用相等的 `innerRadius` 与 `outerRadius` 表示一段可连接的开放弧。它适合在流程或关系图中作为弧形 glyph；改变角度范围即可控制开口。
-
-<ComponentPreview files="sector-open-example" size="sm" />
-
-#### API
-
-节点使用 `shape={{ type: 'sector', params }}`，并注入 `SectorShapeDefinition`。将 `innerRadius` 与 `outerRadius` 设为相同的正数即可得到开放弧；`params` 类型为 `SectorShapeParams`：
-
-| 字段                          | 类型     | 说明               |
-| ----------------------------- | -------- | ------------------ |
-| `innerRadius` / `outerRadius` | `number` | 相同的正数半径     |
-| `startAngle`                  | `number` | 起始角度，单位为度 |
-| `endAngle`                    | `number` | 结束角度，单位为度 |
-
 ### 扇形
 
-`sector` 用内外半径和角度范围构成实心扇片、环楔或开放弧，`cornerRadius` 可把正厚度 Sector 的径向转角变圆。它适合角度范围、环形进度和扇区状态节点。
+`sector` 用内外半径和角度范围构成实心扇片、环楔或开放弧，`cornerRadius` 可把正厚度 Sector 的径向转角变圆。将 `innerRadius` 与 `outerRadius` 设为相同的正数即可退化为可连接的开放弧；它适合角度范围、环形进度和扇区状态节点。
 
 <ComponentPreview files="sector-example" size="md" />
 

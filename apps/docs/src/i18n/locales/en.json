@@ -127,7 +127,7 @@
   },
   "library": {
     "label": "Library",
-    "standard": "Standard · Extensions",
+    "standard": "Standard",
     "standardComposite": "Presentation",
     "standardGrid": "Grid",
     "standardAxes": "Axes",
@@ -138,7 +138,6 @@
     "standardExtensionShape": "Shapes",
     "standardExtensionArrow": "Arrows",
     "standardExtensionClip": "Clips",
-    "standardExtensionPathGenerator": "Path Generators",
     "standardCapabilityLoading": "Capability Loading",
     "layout": "Layout",
     "flexLayout": "FlexLayout",

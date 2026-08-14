@@ -1,61 +1,106 @@
 ---
 title: 能力装载
-description: 通过直接 CompileOptions 注入或 adapter 的 provider graph 装配 Standard 可选能力，同时始终复用 Core 的 registry 与 compile。
+description: 先选择按需导入或完整集合的 Standard Definition，再了解 React、Vanilla 与 provider graph 如何把它们交给 Core 编译。
 ---
 
-持久化 IR 只保存 JSON-safe 数据，Definition 中包含运行时逻辑，必须在编译前装配。本页区分两条明确路径：直接 IR 宿主传入完整 Definition 集合；React、Vanilla 和 Tier 2 authoring 由 adapter 声明 provider contribution，再由 Core 解析本次所需的闭包。
+Standard 扩展不会自动注册。使用形状、箭头或裁剪时，先从对应子入口导入 Definition，再传给 React `Layout` 或 Vanilla 的编译入口。
 
-Standard 不提供全局注册、preset、bundle 或隐式全集。可选 shape、arrow、clip 与 path generator 仅从各自的 `@retikz/standard/<capability>` 子入口导入；`@retikz/standard` 根入口只保留 composites，不聚合这些 Definition。
+## 如何使用
 
-## 直接 Definition 注入
+有两种导入方式。图形只需要少量能力时按需导入；希望一次使用官方扩展包的全部内容时，使用对应的 `StandardXxxDefinitions` 集合。
 
-直接编译、恢复持久化 IR 或已经掌握完整依赖集合的宿主，应把每个 Definition 放入对应的 Core compile option：
+### 方式一：按需导入具体 Definition
 
-```ts
-import { compileToScene } from '@retikz/core';
+只导入当前图真正使用的 Definition，并传入对应的 compile option：
+
+```tsx
+import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
-import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-const result = compileToScene(scene, {
-  shapes: [CrossShapeDefinition],
-  arrows: [DiamondArrowDefinition],
-  clips: [CompoundClipDefinition],
-  pathGenerators: [ParabolaPathGeneratorDefinition],
+<Layout shapes={[CrossShapeDefinition]} arrows={[DiamondArrowDefinition]} clips={[CompoundClipDefinition]}>
+  {/* 图形内容 */}
+</Layout>;
+```
+
+Vanilla 使用同一组 Definition：
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { DiamondArrowDefinition } from '@retikz/standard/arrow';
+import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    shapes: [CrossShapeDefinition],
+    arrows: [DiamondArrowDefinition],
+    clips: [CompoundClipDefinition],
+  },
 });
 ```
 
-React 的 `<Layout>` 也暴露相同的 `shapes`、`arrows`、`clips` 和 `pathGenerators` 入口。调用方仅传入当前图真正使用的项；这不是动态 import，也不改变其他编译调用的 registry。
+### 方式二：使用官方完整 Definition 集合
 
-## adapter 的 provider graph
+如果当前图可以直接使用某个官方扩展包的全部内容，可以导入集合：
 
-React、Vanilla 和第一方 Tier 2 在 authoring 阶段可声明 `CoreProviderContribution`。一个 contribution 由实际需要的 roots 和静态携带的 providers 组成；普通 provider key 使用 `capability + name`，composite key 使用 `namespace + type`。
+```tsx
+import { Layout } from '@retikz/react';
+import { StandardArrowDefinitions } from '@retikz/standard/arrow';
+import { StandardClipDefinitions } from '@retikz/standard/clip';
+import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-Core 的 `resolveCoreProviderDependencies()` 统一处理 roots、传递依赖和与显式 definitions 的合并，然后产生 `shapes`、`arrows`、`clips`、`pathGenerators`、`composites` 等普通 compile options。Standard 子入口只提供静态 Definition 或 provider；它不实现合并、去重、lookup 或第二套 registry。
+<Layout shapes={StandardShapeDefinitions} arrows={StandardArrowDefinitions} clips={StandardClipDefinitions}>
+  {/* 图形内容 */}
+</Layout>;
+```
 
-## 执行与持久化边界
+Vanilla 只需要把同样的集合传给 `compile`：
 
-1. 直接宿主显式传入 Definition，或 adapter 为已创作的能力声明 contribution
-2. Core 在 compile 前解析本次 roots 的 dependency-first 闭包，并检查缺失、循环和冲突
-3. Core 将结果与宿主的显式 definitions 合并到对应 compile options
-4. Core 使用唯一 registry 校验 IR、查找 Definition 并生成 Scene 与诊断
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { StandardArrowDefinitions } from '@retikz/standard/arrow';
+import { StandardClipDefinitions } from '@retikz/standard/clip';
+import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-provider、maker 和 dataset 只存在于 authoring 与编译装配阶段。它们不得进入 IR、Scene、artifact、manifest 或持久化 JSON。
+const svg = renderToSvgString(input, {
+  compile: {
+    shapes: StandardShapeDefinitions,
+    arrows: StandardArrowDefinitions,
+    clips: StandardClipDefinitions,
+  },
+});
+```
 
-## 错误与限制
+| 方式                     | 适合场景                                |
+| ------------------------ | --------------------------------------- |
+| 具体 Definition          | 只装载当前图使用的能力                  |
+| `StandardXxxDefinitions` | 快速使用对应官方扩展包的全部 Definition |
 
-| 情况                                        | 结果                                                   |
-| ------------------------------------------- | ------------------------------------------------------ |
-| root 或传递依赖缺少 provider                | Core resolver 在 maker 与 compile 前报告完整依赖链     |
-| 同一 provider key 的 maker 或有序依赖不同   | Core resolver 明确失败，不采用 first-wins 或 last-wins |
-| provider 结果与显式 Definition 使用相同 key | 相同 Definition 对象可去重；不同对象明确失败           |
-| IR 引用未装配的可选能力                     | 对应 Core registry lookup 明确失败并报告可用项         |
-| 将 Definition 或 provider 写入持久化 JSON   | 不允许；JSON 只保存 schema 定义的数据                  |
+如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips` 数组。
+
+## 内部编译逻辑
+
+两种 Definition 导入方式最后都会进入 Core 的同一条编译路径：
+
+<ComponentPreview files="capability-loading-flow" hideCode size="xs" />
+
+图中左侧的单个 Definition 和完整集合只是两种装载入口；它们会汇入同一条 Core 编译路径。provider graph 负责在编译前组织 Definition，IR 只在消费阶段按名称查找已经装载的能力。
+
+- 直接传入 Definition 时，Core 将它们放入对应的 `shapes`、`arrows` 或 `clips` registry
+- 使用 Provider 时，adapter 先收集 `CoreProviderContribution`，Core 的 `resolveCoreProviderDependencies()` 解析依赖，再把结果按能力分组为普通 compile options
+- Standard 只提供 Definition 和 Provider，不维护全局注册表，也不创建第二套 lookup 规则
+
+## 持久化与限制
+
+IR 只保存图形数据，例如节点的 `shape: 'cross'` 或路径中的箭头名称。Definition、Provider 和 maker 属于运行时装配内容，不会写入 IR、Scene 或持久化 JSON。
+
+导入 Standard 子入口也不会自动影响其他编译调用。每次编译都应显式传入当前图需要的 Definition 或集合；如果 IR 引用了未装载的能力，Core 会在 registry lookup 时报告错误。重复注册同一个 key 或 provider key 时，Core 也会明确拒绝冲突。
 
 ## 相关
 
 - [形状](/library/standard/extension/shape)：可选节点形状
 - [箭头](/library/standard/extension/arrow)：可选端点标记
 - [裁剪](/library/standard/extension/clip)：递归组合裁剪
-- [路径生成器](/library/standard/extension/path-generator)：可选 step 规则
+- [Core 编译参考](/kernel/reference/runtime/compile)：查看 CompileOptions 与 provider graph 的完整契约

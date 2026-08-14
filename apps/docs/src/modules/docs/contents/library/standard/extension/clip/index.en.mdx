@@ -12,6 +12,13 @@ Clip extensions build on Core's basic clips and add more optional content:
 
 ## Usage
 
+This page supports two import styles:
+
+- Import specific Definitions on demand, such as `CompoundClipDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
+- Use the complete official extension set through `StandardClipDefinitions`, which includes every Standard Definition from this subpath; use `StandardClipProviders` when assembling a provider graph
+
+Both styles explicitly assemble capabilities for the current figure. Importing the package does not register clips globally.
+
 ### React usage
 
 Import the clip Definitions you need from `@retikz/standard/clip`, pass them to the React `Layout` `clips` prop, and place the clip spec on a `Scope`.
@@ -67,7 +74,7 @@ The preview lays out two content regions horizontally. Each side uses a selectab
 
 `compound` recursively combines other registered clip specs through `children`. The example above uses two independently selectable child regions and suits cases where basic clips need to form one combined region.
 
-This subpath currently provides `PolygonClipDefinition`, `PathClipDefinition`, `CompoundClipDefinition`, and their parameter types; the `@retikz/standard` root does not forward them.
+This subpath provides the individual Definitions, `StandardClipDefinitions`, `StandardClipProviders`, and their parameter types; the `@retikz/standard` root does not forward them.
 
 #### API
 

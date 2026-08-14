@@ -49,10 +49,6 @@
     "./clip": {
       "types": "./src/clip/index.ts",
       "default": "./src/clip/index.ts"
-    },
-    "./path-generator": {
-      "types": "./src/path-generator/index.ts",
-      "default": "./src/path-generator/index.ts"
     }
   },
   "publishConfig": {
@@ -79,11 +75,6 @@
         "types": "./dist/types/clip/index.d.ts",
         "import": "./dist/clip/index.js",
         "default": "./dist/clip/index.js"
-      },
-      "./path-generator": {
-        "types": "./dist/types/path-generator/index.d.ts",
-        "import": "./dist/path-generator/index.js",
-        "default": "./dist/path-generator/index.js"
       }
     }
   },

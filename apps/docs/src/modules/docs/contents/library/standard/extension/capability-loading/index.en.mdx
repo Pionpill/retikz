@@ -1,61 +1,106 @@
 ---
 title: Capability Loading
-description: Assemble optional Standard capabilities through direct CompileOptions injection or an adapter provider graph while always reusing Core's registry and compile path.
+description: Choose between individual or complete Standard Definition imports first, then learn how React, Vanilla, and the provider graph pass them into Core compilation.
 ---
 
-Persisted IR contains JSON-safe data only. Definitions contain runtime logic and must be assembled before compilation. This page separates two explicit paths: direct-IR hosts provide a complete Definition set, while React, Vanilla, and Tier 2 authoring declare provider contributions that Core resolves for the current invocation.
+Standard extensions are not registered automatically. When a figure uses a shape, arrow, or clip, import Definitions from the matching subpath and pass them to React `Layout` or the Vanilla compilation entry.
 
-Standard provides no global registration, preset, bundle, or implicit full set. Optional shapes, arrows, clips, and path generators are imported only from their `@retikz/standard/<capability>` subpaths; the `@retikz/standard` root keeps composites only and does not aggregate these Definitions.
+## How to use
 
-## Direct Definition injection
+There are two import styles. Import individual Definitions when the figure needs only a few capabilities; use the matching `StandardXxxDefinitions` collection when you want the complete official extension set for a capability family.
 
-Hosts that compile directly, restore persisted IR, or already know the complete dependency set place each Definition in its matching Core compile option:
+### Style one: import individual Definitions
 
-```ts
-import { compileToScene } from '@retikz/core';
+Import only the Definitions used by the current figure and pass them to the matching compile options:
+
+```tsx
+import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
-import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-const result = compileToScene(scene, {
-  shapes: [CrossShapeDefinition],
-  arrows: [DiamondArrowDefinition],
-  clips: [CompoundClipDefinition],
-  pathGenerators: [ParabolaPathGeneratorDefinition],
+<Layout shapes={[CrossShapeDefinition]} arrows={[DiamondArrowDefinition]} clips={[CompoundClipDefinition]}>
+  {/* Figure content */}
+</Layout>;
+```
+
+Vanilla uses the same Definitions:
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { DiamondArrowDefinition } from '@retikz/standard/arrow';
+import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    shapes: [CrossShapeDefinition],
+    arrows: [DiamondArrowDefinition],
+    clips: [CompoundClipDefinition],
+  },
 });
 ```
 
-React's `<Layout>` exposes the same `shapes`, `arrows`, `clips`, and `pathGenerators` entry points. Provide only what the current figure uses; this is neither a dynamic import nor a change to another compilation's registry.
+### Style two: use the complete official Definition collections
 
-## Adapter provider graph
+When the figure can use every official extension in a capability family, import its collection:
 
-React, Vanilla, and first-party Tier 2 packages can declare `CoreProviderContribution` during authoring. A contribution contains the required roots and its statically carried providers. A regular provider key uses `capability + name`; a composite key uses `namespace + type`.
+```tsx
+import { Layout } from '@retikz/react';
+import { StandardArrowDefinitions } from '@retikz/standard/arrow';
+import { StandardClipDefinitions } from '@retikz/standard/clip';
+import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-Core's `resolveCoreProviderDependencies()` handles roots, transitive dependencies, and merging with explicit definitions, then produces ordinary compile options such as `shapes`, `arrows`, `clips`, `pathGenerators`, and `composites`. A Standard subpath supplies only static Definitions or providers; it does not implement merging, deduplication, lookup, or a second registry.
+<Layout shapes={StandardShapeDefinitions} arrows={StandardArrowDefinitions} clips={StandardClipDefinitions}>
+  {/* Figure content */}
+</Layout>;
+```
 
-## Execution and persistence boundary
+Vanilla passes the same collections to `compile`:
 
-1. A direct host supplies Definitions, or an adapter declares contributions for authored capabilities
-2. Before compilation, Core resolves the dependency-first closure of the current roots and checks missing entries, cycles, and conflicts
-3. Core merges the result and the host's explicit Definitions into their matching compile options
-4. Core uses one registry to validate IR, find Definitions, and produce Scene output and diagnostics
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { StandardArrowDefinitions } from '@retikz/standard/arrow';
+import { StandardClipDefinitions } from '@retikz/standard/clip';
+import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-Providers, makers, and datasets exist only during authoring and compile assembly. They must not enter IR, Scene, artifacts, manifests, or persisted JSON.
+const svg = renderToSvgString(input, {
+  compile: {
+    shapes: StandardShapeDefinitions,
+    arrows: StandardArrowDefinitions,
+    clips: StandardClipDefinitions,
+  },
+});
+```
 
-## Errors and limits
+| Style                    | Use it when                                     |
+| ------------------------ | ----------------------------------------------- |
+| Individual Definition    | The figure uses only selected capabilities      |
+| `StandardXxxDefinitions` | The figure can use every Definition in a family |
 
-| Situation                                                          | Result                                                                          |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| A root or transitive dependency lacks a provider                   | The Core resolver reports the complete dependency chain before maker or compile |
-| The same provider key has different makers or ordered dependencies | The Core resolver fails explicitly; there is no first-wins or last-wins rule    |
-| A provider result and explicit Definition use the same key         | The same Definition object deduplicates; different objects fail explicitly      |
-| IR refers to an unassembled optional capability                    | Its Core registry lookup fails explicitly and reports available entries         |
-| A Definition or provider is placed in persisted JSON               | Not allowed; JSON contains schema-defined data only                             |
+When an adapter assembles a provider graph before compilation, use the matching `StandardShapeProviders`, `StandardArrowProviders`, or `StandardClipProviders`. Providers assemble Definitions; they do not replace the `shapes`, `arrows`, or `clips` arrays accepted by `Layout` or `compile`.
+
+## How compilation works internally
+
+Both Definition styles end up in the same Core compilation path:
+
+<ComponentPreview files="capability-loading-flow" hideCode size="xs" />
+
+The individual Definition and complete collection on the left are simply two assembly inputs; both converge on the same Core compilation path. The provider graph organizes Definitions before compilation, while the IR only looks up already assembled capabilities by name during consumption.
+
+- With direct Definitions, Core places them in the corresponding `shapes`, `arrows`, or `clips` registry
+- With Providers, an adapter collects `CoreProviderContribution`; Core's `resolveCoreProviderDependencies()` resolves dependencies and groups the results into ordinary compile options
+- Standard supplies Definitions and Providers only. It does not maintain a global registry or a second lookup rule
+
+## Persistence and limits
+
+IR stores figure data such as a node's `shape: 'cross'` or an arrow name on a path. Definitions, Providers, and makers are runtime assembly values; they never enter IR, Scene, or persisted JSON.
+
+Importing a Standard subpath also has no effect on other compilations. Each compilation should explicitly receive the Definitions or collections it needs. If the IR refers to an unloaded capability, Core reports an error during registry lookup. Conflicting duplicate Definition or provider keys are also rejected explicitly.
 
 ## Related
 
 - [Shapes](/library/standard/extension/shape): optional node outlines
 - [Arrows](/library/standard/extension/arrow): optional endpoint markers
 - [Clips](/library/standard/extension/clip): recursive compound clipping
-- [Path Generators](/library/standard/extension/path-generator): optional step rules
+- [Core compile reference](/kernel/reference/runtime/compile): full `CompileOptions` and provider-graph contracts

@@ -4,7 +4,6 @@ import { compileToScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
-import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 import { renderToSvgString, toSceneResult } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -30,19 +29,6 @@ const source: IRScene = {
         { type: 'step', kind: 'line', to: [120, 0] },
       ],
     },
-    {
-      type: 'path',
-      children: [
-        { type: 'step', kind: 'move', to: [60, 40] },
-        {
-          type: 'step',
-          kind: 'generator',
-          name: 'parabola',
-          to: [120, 40],
-          params: { control: [90, 8] },
-        },
-      ],
-    },
   ],
 };
 
@@ -50,7 +36,6 @@ const definitions = {
   shapes: [CrossShapeDefinition],
   arrows: [DiamondArrowDefinition],
   clips: [CompoundClipDefinition],
-  pathGenerators: [ParabolaPathGeneratorDefinition],
 } as const;
 
 describe('Standard provider entry integration', () => {

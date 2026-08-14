@@ -51,19 +51,9 @@ React 通过 `<Layout pathGenerators>` 注入；直接调用 core 时使用 `Com
 </Layout>
 ```
 
-`parabola` 是 Standard 提供的可选生成器。它用 `params.control` 解析一个控制点，再生成二次贝塞尔命令；使用时从 `@retikz/standard/path-generator` 导入 Definition 并传给当前 `<Layout>`：
-
-```tsx
-import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
-
-<Layout pathGenerators={[ParabolaPathGeneratorDefinition]}>{/* generator Step */}</Layout>;
-```
-
-<ComponentPreview files="path-generator-parabola" size="xs" />
-
 ## 执行机制
 
-Core 默认不携带路径生成器。宿主注入的 Standard 或自定义生成器先进入同一个 registry，再按 Step 的 `name` 查找。compile 依次校验参数、解析声明过的目标字段、调用 `generate`，最后检查每条输出命令是否完整且坐标有限。
+Core 默认不携带路径生成器。宿主注入的自定义生成器进入 registry，再按 Step 的 `name` 查找。compile 依次校验参数、解析声明过的目标字段、调用 `generate`，最后检查每条输出命令是否完整且坐标有限。
 
 | 阶段     | 输入                        | 结果                            |
 | -------- | --------------------------- | ------------------------------- |

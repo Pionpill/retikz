@@ -5,12 +5,19 @@ description: 从 @retikz/standard/arrow 按需引入菱形箭头，并分别在 
 
 箭头扩展在 Core 提供的基础箭头之上，补充了更多可选内容：
 
-| 包名             | 提供内容                                                                                                                     |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `core`           | `normal` / `open` — 实心与空心三角、`stealth` / `openStealth` — 实心与空心 Stealth、`circle` / `openCircle` — 实心与空心圆点 |
-| `standard/arrow` | `diamond` / `openDiamond` — 实心与空心菱形                                                                                   |
+| 包名             | 提供内容                                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`           | `normal` — 实心三角、`open` — 空心三角、`stealth` — 实心 Stealth、`openStealth` — 空心 Stealth、`circle` — 实心圆点、`openCircle` — 空心圆点 |
+| `standard/arrow` | `diamond` — 实心菱形、`openDiamond` — 空心菱形                                                                                               |
 
 ## 用法
+
+本页支持两种导入方式：
+
+- 按需导入特定 Definition，例如 `DiamondArrowDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
+- 整体使用官方扩展，例如 `StandardArrowDefinitions`，一次包含本子入口提供的全部 Standard Definition；组装 provider graph 时，对应使用 `StandardArrowProviders`
+
+两种方式都只是当前图的显式装配，不会因为 import 自动全局注册箭头。
 
 ### React 用法
 

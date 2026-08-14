@@ -27,7 +27,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'shape',
             label: 'library.standardExtensionShape',
-            difficulty: DocDifficulty.Advanced,
+            difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -38,7 +38,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'arrow',
             label: 'library.standardExtensionArrow',
-            difficulty: DocDifficulty.Advanced,
+            difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -49,7 +49,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'clip',
             label: 'library.standardExtensionClip',
-            difficulty: DocDifficulty.Advanced,
+            difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
@@ -58,20 +58,9 @@ export const librarySection: Array<Section> = [
             },
           },
           {
-            id: 'path-generator',
-            label: 'library.standardExtensionPathGenerator',
-            difficulty: DocDifficulty.Advanced,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'standard.path-generator',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
             id: 'capability-loading',
             label: 'library.standardCapabilityLoading',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',
