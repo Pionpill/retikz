@@ -17,7 +17,11 @@ type OptionalGlobals = {
   matchMedia?: (query: string) => { matches: boolean } | null;
   performance?: { now?: () => number };
 };
-const env = globalThis as unknown as OptionalGlobals;
+/**
+ * 读取当前运行时全局，避免在测试或嵌入宿主替换 `matchMedia` / rAF 后保留模块加载时的旧引用
+ * @description 浏览器生产环境中 `globalThis` 恒定；延迟读取仅让 SSR 降级与测试 stub 保持同一语义
+ */
+const environment = (): OptionalGlobals => globalThis;
 
 /** 播放控制句柄（manual trigger / runtime 暴露给调用方） */
 export type AnimationControls = {
@@ -35,7 +39,7 @@ export type AnimationControls = {
   readonly running: boolean;
 };
 
-const now = (): number => env.performance?.now?.() ?? 0;
+const now = (): number => environment().performance?.now?.() ?? 0;
 
 /** rAF 时钟选项 */
 export type ClockOptions = {
@@ -61,8 +65,7 @@ type ClockFrameRegistration = {
  *   per-track delay 在 evaluateTrack 内偏移，天然支持错峰
  */
 export const createClock = (options: ClockOptions): AnimationControls => {
-  const raf = env.requestAnimationFrame;
-  const caf = env.cancelAnimationFrame;
+  const { requestAnimationFrame: raf, cancelAnimationFrame: caf } = environment();
   const finite = options.durationMs != null && Number.isFinite(options.durationMs);
   const end = options.durationMs as number;
   let running = false;
@@ -198,7 +201,7 @@ export const createClock = (options: ClockOptions): AnimationControls => {
 
 /** 读 `prefers-reduced-motion: reduce`；无 matchMedia（SSR）→ false */
 export const prefersReducedMotion = (): boolean =>
-  env.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+  environment().matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
 
 /**
  * 把作者动画开关与系统减少动态效果偏好解析为最终播放状态

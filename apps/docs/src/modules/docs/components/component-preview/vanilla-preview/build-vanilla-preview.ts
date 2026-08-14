@@ -4,7 +4,7 @@ import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type { IRTableSpec } from '@retikz/table';
-import type { AnyVanillaTier2Adapter, VanillaChildSpec } from '@retikz/vanilla';
+import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
 import { ChartSchema } from '@retikz/chart';
 import { createChart, renderChart } from '@retikz/chart-vanilla';
@@ -18,11 +18,11 @@ import {
 } from '@retikz/layout';
 import {
   flexLayout,
-  FlexLayoutVanillaAdapter,
+  FlexLayoutInputEmbedAdapter,
   gridLayout,
-  GridLayoutVanillaAdapter,
+  GridLayoutInputEmbedAdapter,
   overlayLayout,
-  OverlayLayoutVanillaAdapter,
+  OverlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
 import {
   ConnectorDefinition,
@@ -40,17 +40,17 @@ import {
 } from '@retikz/notation';
 import {
   connector,
-  ConnectorVanillaAdapter,
+  ConnectorInputEmbedAdapter,
   decision,
-  DecisionVanillaAdapter,
+  DecisionInputEmbedAdapter,
   junction,
-  JunctionVanillaAdapter,
+  JunctionInputEmbedAdapter,
   logicFrame,
-  LogicFrameVanillaAdapter,
+  LogicFrameInputEmbedAdapter,
   stage,
-  StageVanillaAdapter,
+  StageInputEmbedAdapter,
   terminal,
-  TerminalVanillaAdapter,
+  TerminalInputEmbedAdapter,
 } from '@retikz/notation-vanilla';
 import { PlotSpecSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
@@ -68,20 +68,20 @@ import {
 } from '@retikz/standard';
 import {
   axes,
-  AxesVanillaAdapter,
+  AxesInputEmbedAdapter,
   frame,
-  FrameVanillaAdapter,
+  FrameInputEmbedAdapter,
   grid,
-  GridVanillaAdapter,
+  GridInputEmbedAdapter,
   legend,
-  LegendVanillaAdapter,
+  LegendInputEmbedAdapter,
   surface,
   surfaceChild,
-  SurfaceVanillaAdapter,
+  SurfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla';
 import { TableSpecSchema, TableStructureKind } from '@retikz/table';
-import { createTableAdapter, embedTable } from '@retikz/table-vanilla';
-import { figure, renderToSvgString, scope } from '@retikz/vanilla';
+import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { renderToSvgString, scene, scope } from '@retikz/vanilla';
 
 import type { PreviewIR } from '../utils/build-preview-ir';
 import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
@@ -114,7 +114,7 @@ const outputSize = (preview: PreviewIR): { width?: number; height?: number } => 
 const diagnostic = (message: string): VanillaPreviewArtifact => ({ code: `// ${message}` });
 
 /** 把纯 Core IR child 转为不含运行时 authoring 的 Vanilla spec */
-const convertCoreChild = (child: IRChild): VanillaChildSpec => {
+const convertCoreChild = (child: IRChild): InputChild => {
   if ('namespace' in child) throw new Error(`Unexpected Tier 2 composite "${child.namespace}.${child.type}".`);
   if (child.type !== 'scope') return child;
   return {
@@ -124,7 +124,7 @@ const convertCoreChild = (child: IRChild): VanillaChildSpec => {
 };
 
 const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
-  const input = figure({
+  const input = scene({
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
@@ -278,7 +278,11 @@ const registerPreviewIds = (
   children.forEach(visit);
 };
 
-const convertStandardChild = (child: CompositeChild, state: LibraryConversionState): VanillaChildSpec => {
+const convertStandardChild = (
+  child: CompositeChild,
+  state: LibraryConversionState,
+  notationState: NotationConversionState,
+): InputChild => {
   const childId = (child as { id?: string }).id;
   switch (child.type) {
     case 'grid': {
@@ -301,22 +305,41 @@ const convertStandardChild = (child: CompositeChild, state: LibraryConversionSta
       return frame(nextLibraryId('frame', state, childId), input);
     }
     case 'legend': {
-      const { namespace: _namespace, type: _type, ...input } = LegendSchema.parse(child);
+      const { namespace: _namespace, type: _type, title, content, ...input } = LegendSchema.parse(child);
       void _namespace;
       void _type;
-      return legend(nextLibraryId('legend', state, childId), input);
+      const normalizedContent =
+        content.kind === 'items'
+          ? {
+              ...content,
+              items: content.items.map(item => ({
+                ...item,
+                sample: convertPreviewChild(item.sample, state, notationState),
+                ...(item.label === undefined ? {} : { label: convertPreviewChild(item.label, state, notationState) }),
+              })),
+            }
+          : {
+              ...content,
+              sample: convertPreviewChild(content.sample, state, notationState),
+              ticks: content.ticks.map(tick => ({
+                ...tick,
+                ...(tick.label === undefined ? {} : { label: convertPreviewChild(tick.label, state, notationState) }),
+              })),
+            };
+      return legend(nextLibraryId('legend', state, childId), {
+        ...input,
+        ...(title === undefined ? {} : { title: convertPreviewChild(title, state, notationState) }),
+        content: normalizedContent,
+      });
     }
     case 'surface': {
       const { namespace: _namespace, type: _type, id: _id, child: nested, ...input } = SurfaceSchema.parse(child);
       void _namespace;
       void _type;
       void _id;
-      if ('namespace' in nested) {
-        throw new Error('Surface Vanilla preview currently requires a Core child.');
-      }
       return surface(nextLibraryId('surface', state, childId), {
         ...input,
-        child: surfaceChild(nested),
+        child: surfaceChild(convertPreviewChild(nested, state, notationState)),
       });
     }
     default:
@@ -324,33 +347,55 @@ const convertStandardChild = (child: CompositeChild, state: LibraryConversionSta
   }
 };
 
-const convertLayoutChild = (child: CompositeChild, state: LibraryConversionState): VanillaChildSpec => {
+const convertLayoutChild = (
+  child: CompositeChild,
+  state: LibraryConversionState,
+  notationState: NotationConversionState,
+): InputChild => {
   const childId = (child as { id?: string }).id;
   switch (child.type) {
     case 'flexLayout': {
-      const { namespace: _namespace, type: _type, ...input } = FlexLayoutSchema.parse(child);
+      const { namespace: _namespace, type: _type, children, ...input } = FlexLayoutSchema.parse(child);
       void _namespace;
       void _type;
-      return flexLayout(nextLibraryId('flexLayout', state, childId), input);
+      return flexLayout(nextLibraryId('flexLayout', state, childId), {
+        ...input,
+        children: children.map(item => ({
+          ...item,
+          child: convertPreviewChild(item.child, state, notationState),
+        })),
+      });
     }
     case 'gridLayout': {
-      const { namespace: _namespace, type: _type, ...input } = GridLayoutSchema.parse(child);
+      const { namespace: _namespace, type: _type, children, ...input } = GridLayoutSchema.parse(child);
       void _namespace;
       void _type;
-      return gridLayout(nextLibraryId('gridLayout', state, childId), input);
+      return gridLayout(nextLibraryId('gridLayout', state, childId), {
+        ...input,
+        children: children.map(item => ({
+          ...item,
+          child: convertPreviewChild(item.child, state, notationState),
+        })),
+      });
     }
     case 'overlayLayout': {
-      const { namespace: _namespace, type: _type, ...input } = OverlayLayoutSchema.parse(child);
+      const { namespace: _namespace, type: _type, children, ...input } = OverlayLayoutSchema.parse(child);
       void _namespace;
       void _type;
-      return overlayLayout(nextLibraryId('overlayLayout', state, childId), input);
+      return overlayLayout(nextLibraryId('overlayLayout', state, childId), {
+        ...input,
+        children: children.map(item => ({
+          ...item,
+          child: convertPreviewChild(item.child, state, notationState),
+        })),
+      });
     }
     default:
       throw new Error(`Unsupported Layout composite "${child.namespace}.${child.type}".`);
   }
 };
 
-const convertNotationChild = (child: CompositeChild, state: NotationConversionState): VanillaChildSpec => {
+const convertNotationChild = (child: CompositeChild, state: NotationConversionState): InputChild => {
   const childId = (child as { id?: string }).id;
   switch (child.type) {
     case 'logicFrame': {
@@ -407,10 +452,10 @@ const convertPreviewChild = (
   child: IRChild,
   libraryState: LibraryConversionState,
   notationState: NotationConversionState,
-): VanillaChildSpec => {
+): InputChild => {
   if (isComposite(child)) {
-    if (child.namespace === 'standard') return convertStandardChild(child, libraryState);
-    if (child.namespace === 'layout') return convertLayoutChild(child, libraryState);
+    if (child.namespace === 'standard') return convertStandardChild(child, libraryState, notationState);
+    if (child.namespace === 'layout') return convertLayoutChild(child, libraryState, notationState);
     if (child.namespace === 'notation') return convertNotationChild(child, notationState);
     throw new Error(`Unsupported composite "${child.namespace}.${child.type}".`);
   }
@@ -423,27 +468,27 @@ const convertPreviewChild = (
   );
 };
 
-const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyVanillaTier2Adapter> => [
-  ...(state.adapters.has('grid') ? [GridVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('axes') ? [AxesVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('frame') ? [FrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('surface') ? [SurfaceVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('legend') ? [LegendVanillaAdapter as AnyVanillaTier2Adapter] : []),
+const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
+  ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
 
-const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyVanillaTier2Adapter> => [
-  ...(state.adapters.has('flexLayout') ? [FlexLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('gridLayout') ? [GridLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('overlayLayout') ? [OverlayLayoutVanillaAdapter as AnyVanillaTier2Adapter] : []),
+const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
+  ...(state.adapters.has('flexLayout') ? [FlexLayoutInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('gridLayout') ? [GridLayoutInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('overlayLayout') ? [OverlayLayoutInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
 
-const notationAdapters = (state: NotationConversionState): ReadonlyArray<AnyVanillaTier2Adapter> => [
-  ...(state.adapters.has('logicFrame') ? [LogicFrameVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('terminal') ? [TerminalVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('stage') ? [StageVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('decision') ? [DecisionVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('junction') ? [JunctionVanillaAdapter as AnyVanillaTier2Adapter] : []),
-  ...(state.adapters.has('connector') ? [ConnectorVanillaAdapter as AnyVanillaTier2Adapter] : []),
+const notationAdapters = (state: NotationConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
+  ...(state.adapters.has('logicFrame') ? [LogicFrameInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('terminal') ? [TerminalInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('stage') ? [StageInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('decision') ? [DecisionInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('junction') ? [JunctionInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('connector') ? [ConnectorInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
 
 const standardDefinitionByName = {
@@ -498,7 +543,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ids,
   };
   registerPreviewIds(preview.ir.children, libraryState, notationState);
-  const input = figure({
+  const input = scene({
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
@@ -549,7 +594,12 @@ const findProviderDataset = (
   let found = false;
   for (const contribution of preview.contributions) {
     for (const provider of contribution.providers) {
-      if (provider.key.namespace !== namespace || !Object.hasOwn(provider.datasets, reference)) continue;
+      if (
+        provider.key.capability !== 'composite' ||
+        provider.key.namespace !== namespace ||
+        !Object.hasOwn(provider.datasets, reference)
+      )
+        continue;
       const candidate = provider.datasets[reference];
       if (found && dataset !== candidate) {
         throw new Error(`${label} dataset reference "${reference}" resolves to different values.`);
@@ -747,8 +797,8 @@ const buildTableCode = (
     adapters: '__ADAPTERS__',
     ...(Object.keys(size).length > 0 ? { output: size } : {}),
   };
-  const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[createTableAdapter()]');
-  return `import { createTableAdapter, embedTable } from '@retikz/table-vanilla';\nimport { figure, renderToSvgString } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = figure(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
+  const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[TableInputEmbedAdapter]');
+  return `import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
 };
 
 const buildTablePreview = (
@@ -767,7 +817,7 @@ const buildTablePreview = (
     return diagnostic(`Cannot generate Vanilla preview: Table dataset "${spec.data.reference}" was not captured.`);
   }
   const resolvedDatasets = datasets ?? {};
-  const input = figure({
+  const input = scene({
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
@@ -777,7 +827,7 @@ const buildTablePreview = (
   });
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
-    svg: renderToSvgString(input, { adapters: [createTableAdapter()], output: outputSize(preview) }),
+    svg: renderToSvgString(input, { adapters: [TableInputEmbedAdapter], output: outputSize(preview) }),
     replacePreviewRender: false,
   };
 };

@@ -32,7 +32,7 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 | 场景        | 公开入口                                                                                                            |
 | ----------- | ------------------------------------------------------------------------------------------------------------------- |
 | React       | `Frame`、`FrameTitle`、`FrameDescription`（`@retikz/standard-react`）                                               |
-| Vanilla     | `frame`、`frameTitle`、`frameDescription`、`FrameVanillaAdapter`（`@retikz/standard-vanilla`）                      |
+| Vanilla     | `frame`、`frameTitle`、`frameDescription`、`FrameInputEmbedAdapter`（`@retikz/standard-vanilla`）                   |
 | IR / 持久化 | `FrameSchema`、`FrameTitleSchema`、`FrameDescriptionSchema`、`createFrame`、`FrameDefinition`（`@retikz/standard`） |
 
 包族定位和三种使用入口见 [Standard](/library/standard)。本页只展开 Frame 自身的组合、样式与 lowering 语义。
@@ -153,10 +153,10 @@ Frame 还接受 Core `ScopeProps` 的其余公开字段，包括级联 graphic s
 
 ### Vanilla：`frame()`
 
-| 属性    | 类型                | 默认值 | 描述                                                                  |
-| ------- | ------------------- | ------ | --------------------------------------------------------------------- |
-| `id`    | `string`            | —      | embed 标识；外层 Scope id 派生为 `${id}/frame`                        |
-| `input` | `FrameVanillaInput` | —      | 等同于没有 `id` 的 `FrameInput`，包括 `title`、`description` 与内容区 |
+| 属性    | 类型         | 默认值 | 描述                                                                    |
+| ------- | ------------ | ------ | ----------------------------------------------------------------------- |
+| `id`    | `string`     | —      | embed 标识；外层 Scope id 派生为 `${id}/frame`                          |
+| `input` | `InputFrame` | —      | 支持可选 `id` 的 Vanilla 编写输入，包括 `title`、`description` 与内容区 |
 
 `frameTitle(input)` 与 `frameDescription(input)` 分别校验并返回 `IRFrameTitle` 与 `IRFrameDescription`，供 `frame()` 的 JSON-safe input 复用。
 

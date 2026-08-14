@@ -1,25 +1,23 @@
 import type { JunctionInput } from '@retikz/notation';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputJunction } from '@retikz/notation-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createJunction, JunctionProvider } from '@retikz/notation';
+import { JunctionInputEmbedAdapter } from '@retikz/notation-vanilla';
+import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { resolveSemanticNodeInput } from './authoring';
+import { collectSemanticNodeInput } from './authoring';
 
 /** Junction React 编写参数 */
 export type JunctionProps = JunctionInput & Readonly<{ children?: ReactNode }>;
 
-const junctionEmbeddableAdapter: EmbeddableTier2Adapter<JunctionProps> = {
-  displayName: 'Junction',
-  contribute: props => {
-    const { children, ...input } = props;
-    return {
-      node: createJunction(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
-    };
-  },
+/** 将 React 文字 children 组装为 Notation Vanilla Input */
+const createJunctionInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { children, ...input } = props as JunctionProps;
+  const collected = collectSemanticNodeInput(children, input, context.id);
+  return withInputEmbedAdapters(collected.input satisfies InputJunction, collected.adapters);
 };
 
 const JunctionComponent: FC<JunctionProps> = () => null;
@@ -29,4 +27,5 @@ export const Junction = JunctionComponent as NotationEmbeddableComponent<Junctio
 
 Junction.displayName = 'Junction';
 Junction.isTier2Embeddable = true;
-Junction.embeddableAdapter = junctionEmbeddableAdapter;
+Junction.inputEmbedAdapter = JunctionInputEmbedAdapter;
+Junction.createInputEmbedProps = createJunctionInput;

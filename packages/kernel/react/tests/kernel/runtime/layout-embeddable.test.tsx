@@ -1,4 +1,5 @@
-import type { AnyCompositeDefinition, CompositeDependencyProvider, CompositeProviderKey } from '@retikz/core';
+import type { AnyCompositeDefinition, CoreDependencyProvider, CompositeCoreProviderKey } from '@retikz/core';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -6,19 +7,17 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { EmbeddableTier2Adapter } from '../../../src';
-
 import { Layout, Node } from '../../../src';
 
 type FixtureProps = { id: string; data: unknown };
-type DefinitionMaker = CompositeDependencyProvider['makeDefinition'];
+type DefinitionMaker = CoreDependencyProvider['makeDefinition'];
 
 type EmbeddableFixture = FC<FixtureProps> & {
   isTier2Embeddable?: boolean;
-  embeddableAdapter?: EmbeddableTier2Adapter;
+  inputEmbedAdapter?: InputEmbedAdapter<FixtureProps>;
 };
 
-const definitionOf = (key: CompositeProviderKey): AnyCompositeDefinition => {
+const definitionOf = (key: CompositeCoreProviderKey): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({
     namespace: z.literal(key.namespace),
     type: z.literal(key.type),
@@ -35,26 +34,26 @@ const definitionOf = (key: CompositeProviderKey): AnyCompositeDefinition => {
 };
 
 const providerOf = (
-  key: CompositeProviderKey,
+  key: CompositeCoreProviderKey,
   makeDefinition: DefinitionMaker,
   datasets: Readonly<Record<string, unknown>> = {},
-  dependencies: ReadonlyArray<CompositeProviderKey> = [],
-): CompositeDependencyProvider => ({ key, dependencies, datasets, makeDefinition });
+  dependencies: ReadonlyArray<CompositeCoreProviderKey> = [],
+): CoreDependencyProvider => ({ key, dependencies, datasets, makeDefinition });
 
 const makeFixture = (options: {
   displayName: string;
-  key: CompositeProviderKey;
+  key: CompositeCoreProviderKey;
   makeDefinition: DefinitionMaker;
   datasets?: Readonly<Record<string, unknown>>;
-  dependencies?: ReadonlyArray<CompositeProviderKey>;
-  extraProviders?: ReadonlyArray<CompositeDependencyProvider>;
-  roots?: ReadonlyArray<CompositeProviderKey>;
+  dependencies?: ReadonlyArray<CompositeCoreProviderKey>;
+  extraProviders?: ReadonlyArray<CoreDependencyProvider>;
+  roots?: ReadonlyArray<CompositeCoreProviderKey>;
 }): EmbeddableFixture => {
-  const adapter: EmbeddableTier2Adapter<FixtureProps> = {
-    displayName: options.displayName,
-    contribute: props => ({
+  const adapter: InputEmbedAdapter<FixtureProps> = {
+    kind: options.displayName,
+    lower: props => ({
       node: { namespace: options.key.namespace, type: options.key.type, panelId: props.id },
-      compositeDependencies: {
+      providerDependencies: {
         roots: options.roots ?? [options.key],
         providers: [
           providerOf(options.key, options.makeDefinition, options.datasets, options.dependencies),
@@ -66,13 +65,13 @@ const makeFixture = (options: {
   const Fixture: EmbeddableFixture = () => null;
   Fixture.displayName = options.displayName;
   Fixture.isTier2Embeddable = true;
-  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+  Fixture.inputEmbedAdapter = adapter;
   return Fixture;
 };
 
 describe('<Layout> Composite provider graph', () => {
   it('merges same-key datasets by identity and materializes one provider definition for multiple instances', () => {
-    const key = { namespace: 'demo', type: 'panel' } as const;
+    const key = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
     const dataA = { rows: [1, 2] };
     const dataB = { rows: [3, 4] };
     const makeDefinition = vi.fn((datasets: Readonly<Record<string, unknown>>) => {
@@ -95,8 +94,8 @@ describe('<Layout> Composite provider graph', () => {
   });
 
   it('resolves cross-namespace dependencies before their authored root', () => {
-    const frameKey = { namespace: 'standard', type: 'frame' } as const;
-    const cardKey = { namespace: 'third', type: 'card' } as const;
+    const frameKey = { capability: 'composite' as const, namespace: 'standard', type: 'frame' } as const;
+    const cardKey = { capability: 'composite' as const, namespace: 'third', type: 'card' } as const;
     const calls: Array<string> = [];
     const frameMaker = vi.fn(() => {
       calls.push('standard.frame');
@@ -125,21 +124,21 @@ describe('<Layout> Composite provider graph', () => {
   });
 
   it('uses explicit Layout composites only as final definitions after provider materialization', () => {
-    const demoKey = { namespace: 'demo', type: 'panel' } as const;
-    const userKey = { namespace: 'user', type: 'panel' } as const;
+    const demoKey = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
+    const userKey = { capability: 'composite' as const, namespace: 'user', type: 'panel' } as const;
     const demoMaker = vi.fn(() => definitionOf(demoKey));
     const Demo = makeFixture({ displayName: 'Demo', key: demoKey, makeDefinition: demoMaker });
-    const userAdapter: EmbeddableTier2Adapter<FixtureProps> = {
-      displayName: 'User',
-      contribute: props => ({
+    const userAdapter: InputEmbedAdapter<FixtureProps> = {
+      kind: 'User',
+      lower: props => ({
         node: { namespace: userKey.namespace, type: userKey.type, panelId: props.id },
-        compositeDependencies: { roots: [], providers: [] },
+        providerDependencies: { roots: [], providers: [] },
       }),
     };
     const User: EmbeddableFixture = () => null;
     User.displayName = 'User';
     User.isTier2Embeddable = true;
-    User.embeddableAdapter = userAdapter as EmbeddableTier2Adapter;
+    User.inputEmbedAdapter = userAdapter;
 
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100} composites={[definitionOf(userKey)]}>
@@ -154,8 +153,8 @@ describe('<Layout> Composite provider graph', () => {
   });
 
   it('forwards Core missing-provider, cycle, dataset, and explicit-definition conflict diagnostics', () => {
-    const key = { namespace: 'demo', type: 'panel' } as const;
-    const dependency = { namespace: 'standard', type: 'frame' } as const;
+    const key = { capability: 'composite' as const, namespace: 'demo', type: 'panel' } as const;
+    const dependency = { capability: 'composite' as const, namespace: 'standard', type: 'frame' } as const;
     const makeDefinition = vi.fn(() => definitionOf(key));
     const Missing = makeFixture({
       displayName: 'Missing',

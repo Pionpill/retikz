@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompositeDependencyProvider, CompositeProviderKey } from '@retikz/core';
+import type { AnyCompositeDefinition, CoreDependencyProvider, CompositeCoreProviderKey } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import type {
@@ -29,7 +29,8 @@ type TableRuntimeEnvelope = Readonly<{
 }>;
 
 /** Table Composite provider 的公开完整 key */
-export const TableProviderKey: CompositeProviderKey = Object.freeze({
+export const TableProviderKey: CompositeCoreProviderKey = Object.freeze({
+  capability: 'composite',
   namespace: TABLE_NAMESPACE,
   type: TableComposite.Table,
 });
@@ -123,7 +124,7 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
 };
 
 /** 聚合 Table runtime envelopes 并生成唯一 table.table definition */
-const makeTableDefinition: CompositeDependencyProvider['makeDefinition'] = mergedDatasets => {
+const makeTableDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
   const envelopes: Array<TableRuntimeEnvelope> = [];
   const datasetEntries: Array<[string, unknown]> = [];
   for (const [reference, value] of Object.entries(mergedDatasets)) {
@@ -137,7 +138,7 @@ const makeTableDefinition: CompositeDependencyProvider['makeDefinition'] = merge
 };
 
 /** 从 reserved provider-local dataset entry 返回 exact nested definition */
-const makeNestedDefinition: CompositeDependencyProvider['makeDefinition'] = datasets =>
+const makeNestedDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
   datasets[NestedDefinitionReference] as AnyCompositeDefinition;
 
 /** 创建只生成 table.table 的稳定 runtime provider */
@@ -145,7 +146,7 @@ export const createTableProvider = (
   data: ExternalDatasets,
   runtimeReference: string,
   lowerOptions: LowerTablesOptions,
-): CompositeDependencyProvider => {
+): CoreDependencyProvider => {
   const envelope: TableRuntimeEnvelope = Object.freeze({
     [TableRuntimeEnvelopeMarker]: true,
     lowerOptions,
@@ -159,9 +160,9 @@ export const createTableProvider = (
 };
 
 /** 把一个 Cell nested definition 转成 exact-key provider */
-export const createTableNestedDefinitionProvider = (definition: AnyCompositeDefinition): CompositeDependencyProvider =>
+export const createTableNestedDefinitionProvider = (definition: AnyCompositeDefinition): CoreDependencyProvider =>
   Object.freeze({
-    key: Object.freeze({ namespace: definition.namespace, type: definition.type }),
+    key: Object.freeze({ capability: 'composite', namespace: definition.namespace, type: definition.type }),
     dependencies: Object.freeze([]),
     datasets: Object.freeze({ [NestedDefinitionReference]: definition }),
     makeDefinition: makeNestedDefinition,

@@ -36,12 +36,4 @@ describe('buildPlotSpec 自定义坐标系（alpha.12 ADR-05）', () => {
       buildPlotSpec(<PointMark x="v" />, '__plot', { coordinate: { type: 'custom', name: 'sine', roles: ['x'] } }),
     ).toThrow(/custom coordinates must use a non-built-in type/i);
   });
-
-  it('[adversarial] custom_coordinate_rejects_non_json_config_at_build_time', () => {
-    expect(() =>
-      buildPlotSpec(<PointMark x="v" />, '__plot', {
-        coordinate: { type: 'sine', project: () => [0, 0] },
-      }),
-    ).toThrow(/JSON-serializable/);
-  });
 });

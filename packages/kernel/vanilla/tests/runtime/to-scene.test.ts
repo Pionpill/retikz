@@ -4,7 +4,7 @@ import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } fro
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { figure, toSceneResult } from '../../src';
+import { scene as inputScene, toSceneResult } from '../../src';
 
 const scene: Scene = {
   layout: { x: 0, y: 0, width: 1, height: 1 },
@@ -39,7 +39,7 @@ describe('toSceneResult runtime metadata', () => {
       }),
     });
     const child = { namespace: 'theme-test', type: 'box' } as const;
-    const vanilla = toSceneResult(figure({ theme, children: [child] }), {
+    const vanilla = toSceneResult(inputScene({ theme, children: [child] }), {
       compile: { composites: [definition], themeStyles: [themeStyle] },
     });
     const direct = toSceneResult(
@@ -93,6 +93,6 @@ describe('toSceneResult runtime metadata', () => {
           create: () => ({ observers: [], resolve: output => output as never }),
         },
       }),
-    ).toThrow('Vanilla compile drivers require authored IR or a plain figure spec');
+    ).toThrow('Vanilla compile drivers require authored IR or an InputScene');
   });
 });

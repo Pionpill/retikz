@@ -4,7 +4,7 @@ import { Layout, Node } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,shadowPlaygroundControls } from './shadow-playground.controls';
+import { previewControlContract, shadowPlaygroundControls } from './shadow-playground.controls';
 
 export const previewControls = shadowPlaygroundControls;
 

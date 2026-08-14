@@ -4,10 +4,10 @@ import type {
   IRGeneratorStep,
   IRJsonObject,
   IRStepAnisotropicRadius,
-  IRStepLabelInput,
   IRStepRadius,
   IRTarget,
 } from '@retikz/core';
+import type { InputStepLabel } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { TIKZ_STEP } from '../protocol';
@@ -33,7 +33,7 @@ export type LineStepProps = {
   /** 直线终点 */
   to: DslTarget;
   /** 边标注，等价于 sugar `<EdgeLabel>` child */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态：`<Step><EdgeLabel>...</EdgeLabel></Step>`；其它 children 静默忽略 */
   children?: ReactNode;
 };
@@ -47,7 +47,7 @@ export type AxisLineStepProps = {
   /** 投影目标，仅支持笛卡尔坐标、NodeTarget 或对应字符串 shorthand */
   to: IRAxisLineTarget | string;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -59,7 +59,7 @@ type FoldStepBaseProps = {
   /** 折角终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -100,7 +100,7 @@ export type CurveStepProps = {
   /** 曲线终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -116,7 +116,7 @@ export type CubicStepProps = {
   /** 曲线终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -142,7 +142,7 @@ export type BendStepProps = {
   /** 终点 */
   to: DslTarget;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -160,7 +160,7 @@ export type ArcStepProps = {
   /** 显式圆心；缺省取游标（上一 step anchor） */
   center?: DslTarget;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -178,7 +178,7 @@ export type CirclePathStepProps = {
   /** 闭合模式：无角度=closed（整圆）；带角度=chord（弦，默认）/ sector（连回中心）/ open（纯弧） */
   closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -197,7 +197,7 @@ export type EllipsePathStepProps = {
   /** 闭合模式：无角度=closed（整椭圆）；带角度=chord（默认）/ sector（连回中心）/ open */
   closed?: 'closed' | 'chord' | 'open' | 'sector';
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -227,7 +227,7 @@ export type SmoothStepProps = {
   /** 切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓 */
   tension?: number;
   /** 边标注，沿生成 cubic 按贝塞尔参数定位 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };
@@ -243,7 +243,7 @@ export type GeneratorStepProps = {
   /** JSON-safe 参数对象；目标引用需写在 generator 的 `targetParams` 顶层 key 上 */
   params: IRJsonObject;
   /** 边标注 */
-  label?: IRStepLabelInput;
+  label?: InputStepLabel;
   /** sugar 形态 */
   children?: ReactNode;
 };

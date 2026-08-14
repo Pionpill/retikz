@@ -7,7 +7,7 @@ import {
   ArcSectorNodeConnectionVisibleWhen,
 } from './node-connection-playground.controls';
 
-/** Arc and Sector node-connection controls in English */
+/** Open-arc and Sector node-connection controls in English */
 export const nodeConnectionPlaygroundControls = definePreviewControls({
   presentation: 'panel',
   title: 'Connection position',
@@ -21,8 +21,8 @@ export const nodeConnectionPlaygroundControls = definePreviewControls({
           label: 'shape',
           defaultValue: 'sector',
           options: [
-            { value: 'sector', label: 'Sector' },
-            { value: 'arc', label: 'Arc' },
+            { value: 'sector', label: 'Sector / ring wedge' },
+            { value: 'open-arc', label: 'Open arc' },
           ],
         },
         {
@@ -44,7 +44,7 @@ export const nodeConnectionPlaygroundControls = definePreviewControls({
             { value: 'auto', label: 'Auto clip' },
             { value: 'center', label: 'center' },
             { value: 'start', label: 'Start side' },
-            { value: 'midpoint', label: 'Arc midpoint' },
+            { value: 'midpoint', label: 'Outer arc midpoint' },
             { value: 'inner-midpoint', label: 'Inner arc midpoint' },
             { value: 'end', label: 'End side' },
           ],
@@ -77,12 +77,16 @@ export const nodeConnectionPlaygroundControls = definePreviewControls({
   ],
 });
 
-/** Arc and Sector node-connection stable state, presets, and API coverage */
+/** Open-arc and Sector node-connection stable state, presets, and API coverage */
 export const previewControlContract = {
   controls: nodeConnectionPlaygroundControls,
   canonicalValues: { shape: 'sector', cornerRadius: 12, sourceAngle: 155, sourceDistance: 125, anchor: 'auto' },
   presets: [
-    { id: 'arc-auto', label: 'Arc with auto clip', values: { shape: 'arc', sourceAngle: 145, anchor: 'auto' } },
+    {
+      id: 'open-arc-auto',
+      label: 'Open arc with auto clip',
+      values: { shape: 'open-arc', sourceAngle: 145, anchor: 'auto' },
+    },
     { id: 'sector-sharp', label: 'Sharp sector', values: { shape: 'sector', cornerRadius: 0, anchor: 'auto' } },
     { id: 'sector-midpoint', label: 'Sector arc midpoint', values: { shape: 'sector', anchor: 'midpoint' } },
     {
@@ -90,7 +94,7 @@ export const previewControlContract = {
       label: 'Sector inner arc midpoint',
       values: { shape: 'sector', anchor: 'inner-midpoint' },
     },
-    { id: 'arc-end', label: 'Arc end', values: { shape: 'arc', anchor: 'end' } },
+    { id: 'open-arc-end', label: 'Open arc end', values: { shape: 'open-arc', anchor: 'end' } },
   ],
   relatedApis: ['Node.shape', 'Node.shape.params.cornerRadius', 'Node.position', 'Draw.way', 'IRNodeTarget.anchor'],
 } satisfies PreviewControlContract;

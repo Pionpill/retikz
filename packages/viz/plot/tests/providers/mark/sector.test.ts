@@ -1,5 +1,6 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
+import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -215,11 +216,11 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     }
   });
 
-  it('rose_compiles_to_scene', async () => {
+  it('rose_compiles_to_scene_with_the_explicit_standard_sector_definition', async () => {
     const { compileToScene } = await import('@retikz/core');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [roseSpec()] },
-      { composites: lowerPlots({ sales: SALES }, opts) },
+      { composites: lowerPlots({ sales: SALES }, opts), shapes: [SectorShapeDefinition] },
     ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
@@ -332,11 +333,11 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     expect(sectorNodes(layer)).toHaveLength(3);
   });
 
-  it('pie_compiles_to_scene', async () => {
+  it('pie_compiles_to_scene_with_the_explicit_standard_sector_definition', async () => {
     const { compileToScene } = await import('@retikz/core');
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [pieSpec()] },
-      { composites: lowerPlots({ share: SHARE }, opts) },
+      { composites: lowerPlots({ share: SHARE }, opts), shapes: [SectorShapeDefinition] },
     ).scene;
     expect(scene.primitives.length).toBeGreaterThan(0);
   });

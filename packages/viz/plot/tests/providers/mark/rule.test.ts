@@ -1,6 +1,7 @@
 import type { IRNode, IRScope, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
+import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -501,7 +502,7 @@ describe('rule polar', () => {
     expect(shape.params.startAngle).toBe(0);
     expect(shape.params.endAngle).toBe(360);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] }).scene;
+    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] }, { shapes: [SectorShapeDefinition] }).scene;
     const filledRing = flattenPrimitives(scene.primitives).find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && p.fill === '#fde68a',
     );
@@ -630,7 +631,7 @@ describe('rule polar', () => {
         },
       ],
     };
-    expect(() => compileToScene(scene).scene).not.toThrow();
+    expect(() => compileToScene(scene, { shapes: [SectorShapeDefinition] }).scene).not.toThrow();
   });
 });
 

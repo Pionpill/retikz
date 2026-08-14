@@ -226,7 +226,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     expect(r.kind).toBe('object');
     if (r.kind !== 'object') throw new Error('expected object');
     expect(r.description).toMatch(/JSON-serializable Theme/);
-    expect(r.fields.map(field => field.name)).toEqual(['style', 'mode', 'tokens']);
+    expect(r.fields.map(field => field.name)).toEqual(['style', 'mode']);
   });
 
   it('prefers a field wrapper description over the referenced schema description', async () => {

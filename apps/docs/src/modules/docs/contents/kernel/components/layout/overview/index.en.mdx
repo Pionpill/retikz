@@ -1,11 +1,11 @@
 ---
 title: Layout
-description: The React drawing entry that connects JSX or Core IR to a retained Runtime Session and incrementally updates a stable SVG or Canvas host.
+description: The React drawing entry that collects JSX as a Vanilla InputScene or accepts Core IR, then presents retained or static processing results through an SVG or Canvas host.
 ---
 
 `<Layout>` is the top-level runtime entry for a React drawing tree. Every Kernel / Sugar component enters the same graphics pipeline through it.
 
-It converges two input modes: children are converted to Core IR by the React adapter, while `ir` adopts an existing IR. A retained Runtime Session then lets `@retikz/core` publish Scene Snapshots / Patches and `@retikz/render` update SVG or Canvas.
+It converges two input modes: the React collector turns children into an `InputScene`, while `ir` adopts existing IR. Both enter `@retikz/vanilla` processing, which normalizes, compiles, and manages retained state before React presents the result as SVG or Canvas.
 
 `<Layout>` owns React-side construction, capability injection, and host wiring. It does not own IR / Scene semantics, geometry rules, or automatic layout algorithms. Core expresses generic positioning and constraints; plot and table layouts belong to their respective higher-level capabilities.
 
@@ -35,7 +35,7 @@ Place Kernel / Sugar components directly in children; there is no additional fix
 
 ### JSX Input
 
-For everyday authoring, pass children directly. `<Layout>` converts the component tree to Core IR and connects it to the remaining compile and render stages.
+For everyday authoring, pass children directly. `<Layout>` collects the component tree as an `InputScene`, then connects it to Vanilla processing, compilation, and rendering.
 
 <ComponentPreview files="layout-basic" size="sm" />
 
@@ -126,39 +126,39 @@ This section zooms in on React wiring, viewport, and host-policy decisions owned
 
 ### How Responsibilities Close the Loop
 
-`<Layout>` converts JSX children to Core IR or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. Whenever `ir` or Core options change, the render phase performs one complete compile for an SSR-safe Scene seed. After React commits, `runtime.mode` selects either a retained Session or a Session-free static host.
+`<Layout>` converts JSX children to an `InputScene` or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. The React render phase prepares a static fallback; after React commits, `runtime.mode` selects a Vanilla retained processing controller or controller-free static processing.
 
-The retained path commits input and renderer configuration through a Core Program and Render participant in one transaction, then publishes Scene, DOM / bitmap, events, animation handles, and artifacts together. The static path directly materializes the complete current Scene without creating Snapshots, diffs, transactions, or rollback.
+The retained path uses a Vanilla controller to commit Input / IR and processing configuration in one transaction, then publishes same-revision Scene, artifacts, readonly layers, and runtime metadata. React only subscribes to that readonly result and wires SVG / Canvas, events, and animation. The static path only prepares and materializes the current Scene, without a retained controller, Snapshot, diff, transaction, or rollback.
 
 <ComponentPreview files="layout-input-flow" size="sm" hideCode />
 
-Semantic ownership does not drift with the entry point: React declares only a stable `<svg>` / `<canvas>` host shell, while the Render participant exclusively owns SVG descendants or the Canvas bitmap. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision. A successful rollback guarantees only that the host returns to the previous committed revision before the error propagates through React; it does not keep the current React subtree usable. The caller should recover through an Error Boundary and remount `<Layout>`. If rollback itself fails, the Session also becomes broken.
+Semantic ownership does not drift with the entry point: React declares only a stable SVG / Canvas result host; Vanilla processing owns Input normalization, the Core Program, and retained transactions. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision, so React continues to present the prior successful result; callers should let an Error Boundary handle synchronous render failures.
 
 <SourceLinks
   sources={[
     {
-      label: 'React input and Core options wiring',
+      label: 'React input and processing-options wiring',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 442,
-      endLine: 522,
+      startLine: 410,
+      endLine: 486,
     },
     {
-      label: 'Create and clean up the React retained Session',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 244,
-      endLine: 303,
+      label: 'React static fallback and retained-processing subscription',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 233,
+      endLine: 298,
     },
     {
-      label: 'React retained update and error propagation',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 305,
-      endLine: 323,
+      label: 'Vanilla retained controller Core Program and Runtime',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 96,
+      endLine: 176,
     },
     {
-      label: 'Declare the SVG and Canvas host shells',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 329,
-      endLine: 356,
+      label: 'React mapping a processing result to SVG or Canvas',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 100,
+      endLine: 177,
     },
     {
       label: 'Core IR to Scene compilation',
@@ -173,10 +173,10 @@ Semantic ownership does not drift with the entry point: React declares only a st
       endLine: 48,
     },
     {
-      label: 'Static and retained host dispatch',
+      label: 'Static and retained-processing dispatch',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 539,
-      endLine: 584,
+      startLine: 233,
+      endLine: 298,
     },
   ]}
 />
@@ -189,7 +189,7 @@ Semantic ownership does not drift with the entry point: React declares only a st
 | `retained + full` | Skips Program `update()` for affected work and runs fully | Holds the same Session state as auto; not a low-memory mode                                |
 | `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, or rollback; materialization may fail without rollback |
 
-`static` cannot be combined with `updateStrategy`, `rendererFactory`, or `onDiagnostic`. Changing `updateStrategy` on a retained host preserves the host element and rebuilds the Session, while changing `mode` releases and replaces the complete host.
+`static` cannot be combined with `updateStrategy` or `onDiagnostic`. Changing `updateStrategy` in retained processing rebuilds the controller, while changing `mode` switches to the other processing path.
 
 ### How the viewport is chosen
 
@@ -204,8 +204,8 @@ If a figure is clipped or has too much empty space, inspect **View Code → IR**
     {
       label: 'viewBox injection into IR',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 465,
-      endLine: 475,
+      startLine: 422,
+      endLine: 435,
     },
     {
       label: 'explicit versus automatic layout',
@@ -235,14 +235,14 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
     {
       label: 'renderer and animation mode resolution',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 396,
-      endLine: 416,
+      startLine: 368,
+      endLine: 375,
     },
     {
-      label: 'retained-host backend and snapshot configuration',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 119,
-      endLine: 180,
+      label: 'processing-result SVG / Canvas and snapshot configuration',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 100,
+      endLine: 177,
     },
     {
       label: 'system motion fallback',
@@ -297,7 +297,6 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)                |
 | `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite) |
 | `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                                        |
-| `embeddables`         | `Array`<br />`<EmbeddableTier2Adapter>`               | —       | Explicit Tier 2 adapter injection; static component markers are primary                         |
 
 ### Whole-Figure Defaults
 
@@ -310,18 +309,17 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 
 ### Rendering and Host Runtime
 
-| Prop                      | Type                                              | Default           | Description                                                                      |
-| ------------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------- |
-| `renderer`                | `'svg'` \| `'canvas'`                             | `'svg'`           | Output backend; falls back to the nearest `RendererModeProvider`                 |
-| `className`               | `string`                                          | —                 | Forwarded to the SVG / Canvas root                                               |
-| `style`                   | `CSSProperties`                                   | —                 | Forwarded to the SVG / Canvas root                                               |
-| `idPrefix`                | `string`                                          | —                 | Overrides resource ids for multi-instance or SSR hydration stability             |
-| `handlers`                | `LayoutProps['handlers']`                         | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
-| `runtime`                 | `LayoutRuntimeOptions`                            | `retained + auto` | Selects a retained / static host and auto / full Program update strategy         |
-| `runtime.mode`            | `LayoutRuntimeModeValue`                          | `'retained'`      | Retained creates a Session; static materializes fully without rollback           |
-| `runtime.updateStrategy`  | `LayoutRetainedRuntimeOptions['updateStrategy']`  | `'auto'`          | Uses retained automatic incremental / fallback dispatch or forces full execution |
-| `runtime.rendererFactory` | `LayoutRetainedRuntimeOptions['rendererFactory']` | built-in factory  | Retained only; injects a third-party renderer with the same contract             |
-| `runtime.onDiagnostic`    | `LayoutRetainedRuntimeOptions['onDiagnostic']`    | —                 | Retained only; receives diagnostics in Runtime queue order                       |
+| Prop                     | Type                                             | Default           | Description                                                                       |
+| ------------------------ | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
+| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | Output backend; falls back to the nearest `RendererModeProvider`                  |
+| `className`              | `string`                                         | —                 | Forwarded to the SVG / Canvas root                                                |
+| `style`                  | `CSSProperties`                                  | —                 | Forwarded to the SVG / Canvas root                                                |
+| `idPrefix`               | `string`                                         | —                 | Overrides resource ids for multi-instance or SSR hydration stability              |
+| `handlers`               | `LayoutProps['handlers']`                        | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration)  |
+| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | Selects retained / static processing and an auto / full Program update strategy   |
+| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | Retained creates a Vanilla controller; static materializes fully without rollback |
+| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | Uses retained automatic incremental / fallback dispatch or forces full execution  |
+| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | Retained only; receives diagnostics in Runtime queue order                        |
 
 `runtime.mode: 'static'` is mutually exclusive with the other three runtime fields. Exceptions from a retained `onDiagnostic` callback are isolated and do not change the Runtime commit or failure result.
 
@@ -329,7 +327,7 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 
 - `RendererModeProvider` / `RendererModeProviderProps`: supplies a default `mode: 'svg' | 'canvas'` to a subtree; `useRendererMode` reads the nearest value, while `RendererModeContext` is the low-level bridge
 - `AnimationModeProvider` / `AnimationModeProviderProps`: controls a subtree with `mode: 'system' | 'enabled' | 'disabled'`; `useAnimationMode` reads the nearest value, while `AnimationModeContext` is the low-level bridge
-- `collectHydrationHandlers(children, embeddables?)`: collects `on<Event>` handlers by element `id`; ordinary `<Layout>` children mode calls it automatically, so only custom hydration hosts need it directly
+- `collectHydrationHandlers(children)`: collects `on<Event>` handlers by element `id`; ordinary `<Layout>` children mode calls it automatically, so only custom hydration hosts need it directly
 
 ### Animation
 

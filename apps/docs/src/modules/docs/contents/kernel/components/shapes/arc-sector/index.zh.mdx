@@ -3,7 +3,7 @@ title: Arc / Sector
 description: 弧和扇形——既能画一条 Path（Sugar），也能作为节点的扇形 / 弧形边界。
 ---
 
-弧和扇形都围绕「角度范围」工作，有两副面孔：用 `<Arc>` / `<Sector>` 画一段角度片段（Sugar），或用 `shape={{ type:'sector', params }}` 让节点带上扇形 / 弧形边界。完整定义见 [形状](/kernel/components/shapes)。要画一段弧 / 扇形线，用 Sugar；要一个可连接的扇形 / 弧形图元，用 `<Node shape>`。
+弧和扇形都围绕「角度范围」工作：用 `<Arc>` / `<Sector>` 画一段角度片段（Sugar），或用 `shape={{ type: 'sector', params }}` 让节点拥有扇形、环楔或开放弧边界。Node 只保留一个 `sector` 定义；当 `innerRadius === outerRadius` 时自动退化为开放弧。完整定义见[形状](/kernel/components/shapes)。
 
 ## 作为 Path 图形（Sugar）
 
@@ -113,42 +113,43 @@ Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法�
 
 ## 作为 Node 形状
 
-当你要的是一个扇形 / 弧形的**节点**（可被连线引用、可当图标 glyph）而不是一条线时，给 `<Node>` 设 `shape={{ type, params }}`。这类形状尺寸由 `params` 里的半径 / 角度定，**不依赖文字内容**。
+当你要的是一个扇形 / 弧形的**节点**（可被连线引用、可当图标 glyph）而不是一条线时，给 `<Node>` 设 `shape={{ type, params }}`。这类形状尺寸由 `params` 里的半径 / 角度定，**不依赖文字内容**。Node 版本是 Standard 的可选 shape；Sugar `<Arc>` / `<Sector>` 仍由 Kernel React 提供。使用 Node 版本时，要在当前 `<Layout>` 显式注入相应 Definition。
 
 ### 用法
 
 ```tsx
-import { Node } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
+import { SectorShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
-<Node shape={{ type: 'arc', params: { radius: 40, startAngle: 0, endAngle: 90 } }} />
+<Layout shapes={[SectorShapeDefinition]}>
+  <Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
+  <Node shape={{ type: 'sector', params: { innerRadius: 40, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
+</Layout>
 ```
 
 ### 例子
 
-在 playground 中切换 Arc / Sector：Arc 是单半径弧，Sector 是环楔。选择 Sector 时可调整 `cornerRadius`，比较硬角与圆角后的连接边界；再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随当前曲线或轮廓。`弧中点` 对应 Sector 的外弧中点，`内弧中点` 在 Sector 下对应 `inner-arc-mid`，切到 Arc 时安全回退到 `arc-mid`。
+在 playground 中切换开放弧与环楔：开放弧使用同一个 Sector definition，并将 `innerRadius` 设为 `outerRadius`。选择环楔时可调整 `cornerRadius`，比较硬角与圆角后的连接边界；再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随当前弧线或轮廓。命名 anchor 始终使用 Sector 的 `outer-arc-mid`、`inner-arc-mid`、`start-edge-mid` 与 `end-edge-mid`。
 
 <ComponentPreview files="node-connection-playground" size="sm" />
 
-除节点的中心与 8 个方位 anchor（`center` / `top` …）外，这两个形状还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
+除节点的中心与 8 个方位 anchor（`center` / `top` …）外，Sector 还提供按几何命名的 anchor，可用 `{ id, anchor }` 精确连线：
 
 - **sector**：`outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
-- **arc**：`arc-mid` / `start` / `end` / `center`
 
 Node 的形状、尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
 
 ### API 参考
 
-| `shape`                      | params                                                                      | 边界 / 用途                                |
-| ---------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
-| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | 环楔（可连接，`innerRadius:0` 为实心扇片） |
-| `{ type: 'arc', params }`    | `radius` / `startAngle` / `endAngle` / `close?`                             | 弧形 glyph（可连接）                       |
+| `shape`                      | params                                                                      | 边界 / 用途                                                                    |
+| ---------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | 扇形或环楔；`innerRadius:0` 为实心扇片，`innerRadius === outerRadius` 为开放弧 |
 
-sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` = 硬角，逐角夹紧；`apex` / `*-arc-mid` 等命名锚点不随它移动。
+sector 的 `cornerRadius`（用户单位）只对正厚度 Sector 生效，用于给环楔四角倒角；省略 / `0` = 硬角，逐角夹紧。`innerRadius === outerRadius` 时输出开放弧，不闭合也不填充。`apex` / `*-arc-mid` 等命名锚点不随它移动。
 
-> Node sector 约束：`outerRadius` 必须 > `innerRadius`（`innerRadius:0` 为实心扇片），违反编译期 refine 报错。
+> Node sector 约束：`outerRadius` 必须 >= `innerRadius`。两者相等时为开放弧，`innerRadius:0` 仍为实心扇片；只有 `innerRadius > outerRadius` 会在编译期 refine 报错。
 
 ## 技术原理
 
@@ -220,29 +221,17 @@ sector 的 `cornerRadius`（用户单位）给环楔四角倒角，省略 / `0` 
 
 <ComponentPreview files="arc-sector-node-geometry" size="sm" hideCode />
 
-Arc 是没有内部面积的曲线。普通连线会把目标方向投影成弧上的角度；若方向落在缺口中，连接点夹到更近的起点或终点。Sector 是闭合轮廓，连线从填充区域内部朝目标发射射线，命中内弧、外弧、径向边或圆角后的真实轮廓。
+Sector 的正厚度状态是闭合轮廓；连线从填充区域内部朝目标发射射线，命中内弧、外弧、径向边或圆角后的真实轮廓。零厚度状态是开放弧，连线会将目标方向投影到弧线上，并在缺口中夹到更近的端点。
 
 因此 `cornerRadius` 会同时改变 Sector 的可见轮廓与自动连接点，但不会移动精确 AABB 和 `apex` / `outer-arc-mid` 等命名 anchor。要固定语义位置就显式选 anchor；要让连线自动贴合当前轮廓就使用普通节点引用。
 
 <SourceLinks
   sources={[
     {
-      label: 'Arc 的范围、anchor 与曲线连接点',
-      path: 'packages/kernel/core/src/providers/shape/arc.ts',
-      startLine: 38,
-      endLine: 122,
-    },
-    {
-      label: 'Sector 的范围、质心与连接射线起点',
-      path: 'packages/kernel/core/src/providers/shape/sector-geometry.ts',
-      startLine: 37,
-      endLine: 89,
-    },
-    {
-      label: 'Sector 的轮廓、anchor 与 Scene 输出',
-      path: 'packages/kernel/core/src/providers/shape/sector.ts',
-      startLine: 79,
-      endLine: 145,
+      label: 'Sector 的几何、轮廓、anchor 与 Scene 输出',
+      path: 'packages/library/standard/src/shape/definitions/sector.ts',
+      startLine: 25,
+      endLine: 235,
     },
   ]}
 />

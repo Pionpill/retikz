@@ -100,16 +100,12 @@ const renderWithGrids = (Component: FC, xGridVisible: boolean, yGridVisible: boo
     </PreviewControlStateContext.Provider>,
   );
 
-const currentColorPathData = (markup: string): Set<string> =>
-  new Set(
-    (markup.match(/<path\b[^>]*>/g) ?? [])
-      .filter(tag => tag.includes('stroke="currentColor"'))
-      .flatMap(tag => tag.match(/\bd="([^"]+)"/)?.[1] ?? []),
-  );
+const pathData = (markup: string): Set<string> =>
+  new Set((markup.match(/<path\b[^>]*>/g) ?? []).flatMap(tag => tag.match(/\bd="([^"]+)"/)?.[1] ?? []));
 
 const addedPathData = (markup: string, baseline: string): Array<string> => {
-  const baselinePaths = currentColorPathData(baseline);
-  return [...currentColorPathData(markup)].filter(path => !baselinePaths.has(path));
+  const baselinePaths = pathData(baseline);
+  return [...pathData(markup)].filter(path => !baselinePaths.has(path));
 };
 
 const isVerticalGridPath = (path: string): boolean => {
@@ -248,7 +244,6 @@ describe('coordinate composition grids', () => {
     const baseline = renderWithGrids(Component, false, false);
     const xGridPaths = addedPathData(renderWithGrids(Component, true, false), baseline);
     const yGridPaths = addedPathData(renderWithGrids(Component, false, true), baseline);
-
     expect(xGridPaths.length).toBeGreaterThan(0);
     expect(yGridPaths.length).toBeGreaterThan(0);
     expect(xGridPaths.filter(path => yGridPaths.includes(path))).toEqual([]);

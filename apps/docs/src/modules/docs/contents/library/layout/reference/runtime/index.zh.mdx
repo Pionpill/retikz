@@ -13,7 +13,7 @@ description: 查询 Layout 布局 Definition、Core 测量与回放，以及 Rea
 | -------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
 | 单一定义 | `FlexLayoutDefinition`、`GridLayoutDefinition`、`OverlayLayoutDefinition` | 只向 Core 注册一个布局复合组件                    |
 | React    | `FlexLayout`、`GridLayout`、`OverlayLayout`、`LayoutItem`                 | 从组件树生成规范 IR，并向外层 `<Layout>` 贡献定义 |
-| Vanilla  | `LayoutVanillaAdapters`                                                   | 让 Figure、挂载与 SSR 入口识别三种布局嵌入项      |
+| Vanilla  | `LayoutInputEmbedAdapters`                                                | 让 Scene、挂载与 SSR 入口识别三种布局嵌入项       |
 
 将一个或多个布局 Definition 直接放入 `CompileOptions.composites`。React 与 Vanilla 适配器生成相同的 Layout IR，并贡献所需的 Definition；adapter 便利数组不成为 Core compile preset
 
@@ -63,7 +63,7 @@ React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 De
 
 ## Vanilla
 
-`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 返回 `VanillaEmbedSpec`。Figure、挂载或 SSR 宿主需要传入对应适配器；完整布局家族使用 `LayoutVanillaAdapters`。
+`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 返回 `InputEmbed`。Scene、挂载或 SSR 宿主需要传入对应 adapter；完整布局家族使用 `LayoutInputEmbedAdapters`。
 
 每个适配器调用与 React 相同的 `createXxxLayout()` 工厂生成规范 IR，并贡献该布局家族所需的 Definition。Vanilla 因而与直接 Core 编译、React 入口共享同一套 schema、Definition、求解器和产物语义
 

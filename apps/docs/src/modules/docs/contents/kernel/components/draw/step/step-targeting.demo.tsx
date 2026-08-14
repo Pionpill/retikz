@@ -6,7 +6,7 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,stepTargetingControls } from './step-targeting.controls';
+import { previewControlContract, stepTargetingControls } from './step-targeting.controls';
 
 export const previewControls = stepTargetingControls;
 

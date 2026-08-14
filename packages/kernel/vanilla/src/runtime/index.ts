@@ -1,11 +1,4 @@
 export * from './compile-driver';
-export type { VanillaViewModeValue } from './constants';
-export { VanillaViewMode } from './constants';
-export * from './hydrate';
-export * from './mount';
-export * from './mount-canvas';
-export * from './mount-svg';
 export * from './render-svg';
 export type { SceneResult } from './to-scene';
 export { toSceneResult } from './to-scene';
-export * from './types';

@@ -31,12 +31,12 @@ import { GridLayout, LayoutItem } from '@retikz/layout-react';
 </Layout>
 ```
 
-JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutVanillaAdapter`。完整布局家族可在 `composites` 中传入三个 layout Definition，或使用 `LayoutVanillaAdapters` 装载 Vanilla embed
+JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutInputEmbedAdapter`。完整布局家族可在 `composites` 中传入三个 layout Definition，或使用 `LayoutInputEmbedAdapters` 装载 Vanilla embed
 
 | 场景        | 公开入口                                                                                           |
 | ----------- | -------------------------------------------------------------------------------------------------- |
 | React       | `GridLayout`、`LayoutItem`（`@retikz/layout-react`）                                               |
-| Vanilla     | `gridLayout`、`GridLayoutVanillaAdapter`（`@retikz/layout-vanilla`）                               |
+| Vanilla     | `gridLayout`、`GridLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                            |
 | 可选检查    | `InspectGridLayout`（`@retikz/layout-react/inspect`）、`inspectGridLayout`（Vanilla）              |
 | IR / 持久化 | `GridLayoutSchema`、`createGridLayout`、`IRGridLayout`、`GridLayoutDefinition`（`@retikz/layout`） |
 

@@ -14,7 +14,7 @@ export type TableDetailColumnInput = Omit<IRTableDetailColumn, 'header'> & {
   header?: IRTableCellPayload | string;
 };
 
-/** detail Table 的 framework-neutral plain spec 输入 */
+/** detail Table 的 framework-neutral 作者输入 */
 export type DetailTableSpecInput = Omit<IRDetailTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
   /** 运行时外部 dataset reference */
   dataRef: string;
@@ -26,6 +26,6 @@ export type DetailTableSpecInput = Omit<IRDetailTableSpec, 'namespace' | 'type' 
   header?: boolean;
 };
 
-/** manual Table 的 framework-neutral plain spec 输入 */
+/** manual Table 的 framework-neutral 作者输入 */
 export type ManualTableSpecInput = Omit<IRManualTableSpec, 'namespace' | 'type' | 'data' | 'structure'> &
   Omit<IRManualTableStructure, 'kind'>;

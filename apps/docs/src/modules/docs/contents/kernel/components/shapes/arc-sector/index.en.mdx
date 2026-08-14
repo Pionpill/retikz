@@ -3,7 +3,7 @@ title: Arc / Sector
 description: Arcs and sectors — draw a Path with sugar, or use them as a node's sector / arc boundary.
 ---
 
-Arcs and sectors are both angle-based, with two faces: draw an angle span with `<Arc>` / `<Sector>` (sugar), or bound a node with `shape={{ type:'sector', params }}`. See [Shapes](/kernel/components/shapes) for the full definition. Reach for sugar to draw an arc / sector line, and for `<Node shape>` to get a connectable sector / arc element.
+Arcs and sectors are both angle-based: draw an angle span with `<Arc>` / `<Sector>` (sugar), or give a node a sector, ring-wedge, or open-arc boundary with `shape={{ type: 'sector', params }}`. Node shapes keep one `sector` definition; `innerRadius === outerRadius` automatically becomes an open arc. See [Shapes](/kernel/components/shapes) for the full definition.
 
 ## As a Path shape (sugar)
 
@@ -113,42 +113,43 @@ Shared props (forwarded to the underlying `<Path>`):
 
 ## As a node shape
 
-When you need a sector / arc **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type, params }}` on `<Node>`. These shapes are sized by the radii / angles in `params`, **independent of any text content**.
+When you need a sector / arc **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type, params }}` on `<Node>`. These shapes are sized by the radii / angles in `params`, **independent of any text content**. The Node variants are optional Standard shapes, while sugar `<Arc>` / `<Sector>` remain Kernel React components. Inject the matching Definition into the current `<Layout>` before using the Node variants.
 
 ### Usage
 
 ```tsx
-import { Node } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
+import { SectorShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
-<Node shape={{ type: 'arc', params: { radius: 40, startAngle: 0, endAngle: 90 } }} />
+<Layout shapes={[SectorShapeDefinition]}>
+  <Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
+  <Node shape={{ type: 'sector', params: { innerRadius: 40, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
+</Layout>
 ```
 
 ### Examples
 
-Switch between Arc and Sector in the playground: Arc is a single-radius curve, while Sector is a ring wedge. When Sector is selected, adjust `cornerRadius` to compare sharp and rounded connection boundaries; then move the source with the orbit angle and distance to see automatic clipping follow the current curve or contour. `Arc midpoint` targets the Sector's outer arc, while `Inner arc midpoint` targets `inner-arc-mid` for Sector and safely falls back to `arc-mid` for Arc.
+Switch between an open-arc Sector and a ring-wedge Sector in the playground. The open state sets `innerRadius === outerRadius`; the ring-wedge state also lets you adjust `cornerRadius` to compare sharp and rounded connection boundaries. Move the source with the orbit angle and distance to see automatic clipping follow the current curve or contour. All named targets use Sector anchors such as `outer-arc-mid`, `inner-arc-mid`, `start-edge-mid`, and `end-edge-mid`.
 
 <ComponentPreview files="node-connection-playground" size="sm" />
 
-Besides the node's center plus 8 directional anchors (`center` / `top` …), these shapes provide geometry-named anchors for precise connections via `{ id, anchor }`:
+Besides the node's center plus 8 directional anchors (`center` / `top` …), Sector provides geometry-named anchors for precise connections via `{ id, anchor }`:
 
 - **sector**: `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
-- **arc**: `arc-mid` / `start` / `end` / `center`
 
 See [Node geometry](/kernel/components/node/overview) for Node shapes, sizes, boundaries, and anchors.
 
 ### API Reference
 
-| `shape`                      | params                                                                      | Boundary / use                                             |
-| ---------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | Ring wedge (connectable; `innerRadius:0` is a solid slice) |
-| `{ type: 'arc', params }`    | `radius` / `startAngle` / `endAngle` / `close?`                             | Arc glyph (connectable)                                    |
+| `shape`                      | params                                                                      | Boundary / use                                                             |
+| ---------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `{ type: 'sector', params }` | `innerRadius` / `outerRadius` / `startAngle` / `endAngle` / `cornerRadius?` | Sector or ring wedge; `innerRadius:0` is solid and equality is an open arc |
 
-The sector's `cornerRadius` (user units) rounds the four wedge corners; omitted / `0` = sharp corners, clamped per corner. Named anchors such as `apex` / `*-arc-mid` do not move with it.
+The sector's `cornerRadius` (user units) applies only to positive-thickness sectors and rounds the four wedge corners; omitted / `0` = sharp corners, clamped per corner. When `innerRadius === outerRadius`, the result is an open, unfilled arc. Named anchors such as `apex` / `*-arc-mid` do not move with it.
 
-> Node sector constraint: `outerRadius` must be > `innerRadius` (`innerRadius:0` is a solid slice); a compile-time refine throws otherwise.
+> Node sector constraint: `outerRadius` must be >= `innerRadius`. Equality produces an open arc, `innerRadius:0` remains a solid slice, and only `innerRadius > outerRadius` fails the compile-time refine.
 
 ## How it works
 
@@ -220,29 +221,17 @@ Stroke, fill, arrows, and whole-shape transforms all live on the outer `<Path>`;
 
 <ComponentPreview files="arc-sector-node-geometry" size="sm" hideCode />
 
-Arc has no interior area. An automatic connection projects the target direction onto the curve; if that direction falls in the gap, the point clamps to the nearer endpoint. Sector is a closed contour. Its connection ray starts inside the filled region and hits the real inner arc, outer arc, radial edge, or rounded contour.
+Positive-thickness Sector is a closed contour. Its connection ray starts inside the filled region and hits the real inner arc, outer arc, radial edge, or rounded contour. A zero-thickness Sector is an open arc: automatic connection projects the target direction onto the arc and clamps to the nearer endpoint when the direction falls in the gap.
 
 As a result, `cornerRadius` changes both the visible Sector contour and automatic connection points, but it does not move the exact AABB or named anchors such as `apex` and `outer-arc-mid`. Choose an explicit anchor for a stable semantic location; use an ordinary node reference when the connection should follow the current contour.
 
 <SourceLinks
   sources={[
     {
-      label: 'Arc bounds, anchors, and curve connection points',
-      path: 'packages/kernel/core/src/providers/shape/arc.ts',
-      startLine: 38,
-      endLine: 122,
-    },
-    {
-      label: 'Sector bounds, centroid, and connection-ray origin',
-      path: 'packages/kernel/core/src/providers/shape/sector-geometry.ts',
-      startLine: 37,
-      endLine: 89,
-    },
-    {
-      label: 'Sector contour, anchors, and Scene output',
-      path: 'packages/kernel/core/src/providers/shape/sector.ts',
-      startLine: 79,
-      endLine: 145,
+      label: 'Sector geometry, contour, anchors, and Scene output',
+      path: 'packages/library/standard/src/shape/definitions/sector.ts',
+      startLine: 25,
+      endLine: 235,
     },
   ]}
 />

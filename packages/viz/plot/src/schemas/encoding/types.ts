@@ -1,4 +1,4 @@
-import type { IRGeometryLabelInput, IRNodeLabelInput } from '@retikz/core';
+import type { IRGeometryLabel, IRNodeLabel } from '@retikz/core';
 import type { z } from 'zod';
 
 import type {
@@ -53,7 +53,7 @@ export type IRPlotMarkLabelContent = z.infer<typeof MarkLabelContentSchema>;
 export type IRPlotMarkNodeLabel = z.infer<typeof MarkNodeLabelSchema>;
 
 /** Host datum label input using content instead of core text. */
-export type MarkNodeLabelInput = Omit<IRNodeLabelInput, 'text'> & {
+export type MarkNodeLabelInput = Omit<IRNodeLabel, 'text'> & {
   content: IRPlotMarkLabelContent;
 };
 
@@ -61,7 +61,7 @@ export type MarkNodeLabelInput = Omit<IRNodeLabelInput, 'text'> & {
 export type IRPlotMarkGeometryLabel = z.infer<typeof MarkGeometryLabelSchema>;
 
 /** Host geometry label input using content instead of core text. */
-export type MarkGeometryLabelInput = Omit<IRGeometryLabelInput, 'text'> & {
+export type MarkGeometryLabelInput = Omit<IRGeometryLabel, 'text'> & {
   content: IRPlotMarkLabelContent;
 };
 

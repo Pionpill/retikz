@@ -4,7 +4,8 @@ import type { IRScene, Scene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { mountSvg, renderToSvgString } from '../../src';
+import { renderToSvgString } from '../../src';
+import { mountSvg } from '../../src/dom';
 
 /**
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）

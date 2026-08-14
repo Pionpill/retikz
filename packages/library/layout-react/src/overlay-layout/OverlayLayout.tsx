@@ -1,12 +1,15 @@
 import type { OverlayLayoutInput } from '@retikz/layout';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputOverlayLayout } from '@retikz/layout-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createOverlayLayout, LayoutItemKind, OverlayLayoutProvider } from '@retikz/layout';
+import { LayoutItemKind } from '@retikz/layout';
+import { OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
 
-import { resolveReactLayoutItems } from '../shared';
+import { createInputLayoutItems } from '../shared';
 
 /** Overlay 布局的 React 属性 */
 export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
@@ -17,21 +20,15 @@ export type OverlayLayoutProps = Omit<OverlayLayoutInput, 'children'> &
     children?: ReactNode;
   }>;
 
-const overlayLayoutEmbeddableAdapter: EmbeddableTier2Adapter<OverlayLayoutProps> = {
-  displayName: 'OverlayLayout',
-  contribute: props => {
-    const { authoring, children, ...input } = props;
-    void authoring;
-    const resolved = resolveReactLayoutItems(children, LayoutItemKind.Overlay);
-    return {
-      node: createOverlayLayout({ ...input, children: resolved.items }),
-      compositeDependencies: {
-        roots: [OverlayLayoutProvider.key, ...resolved.compositeDependencies.roots],
-        providers: [OverlayLayoutProvider, ...resolved.compositeDependencies.providers],
-      },
-      authoringSites: resolved.authoringSites,
-    };
-  },
+/** 将 React LayoutItem children 组装为 Vanilla OverlayLayout 输入 */
+const createOverlayLayoutInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { authoring: _authoring, children, ...input } = props as OverlayLayoutProps;
+  void _authoring;
+  const collected = createInputLayoutItems(children, LayoutItemKind.Overlay, context);
+  return withInputEmbedAdapters(
+    { ...input, children: collected.items } satisfies InputOverlayLayout,
+    collected.adapters,
+  );
 };
 
 const OverlayLayoutComponent: FC<OverlayLayoutProps> = () => null;
@@ -41,4 +38,5 @@ export const OverlayLayout = OverlayLayoutComponent as LayoutEmbeddableComponent
 
 OverlayLayout.displayName = 'OverlayLayout';
 OverlayLayout.isTier2Embeddable = true;
-OverlayLayout.embeddableAdapter = overlayLayoutEmbeddableAdapter;
+OverlayLayout.inputEmbedAdapter = OverlayLayoutInputEmbedAdapter;
+OverlayLayout.createInputEmbedProps = createOverlayLayoutInput;

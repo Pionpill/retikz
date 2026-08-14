@@ -32,7 +32,8 @@ describe('core public compile exports', () => {
   it('keeps root runtime compile exports available', () => {
     expect(core.compileToScene).toBeDefined();
     expect(core.computeLayout).toBeDefined();
-    expect(core.resolveCompositeDependencies).toBeDefined();
+    expect(core.resolveCoreProviderDependencies).toBeDefined();
+    expect('resolveCompositeDependencies' in core).toBe(false);
     expect(core.CompileWarningCode).toBeDefined();
     expect(core.lowerIRToKernel).toBeDefined();
     expect(core.ThemeSchema).toBeDefined();

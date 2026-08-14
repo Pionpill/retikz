@@ -242,30 +242,30 @@ PGFPlots sits above TikZ primitives; similarly, `@retikz/plot` uses composites t
 
 Ordinary users only place a supported domain component inside `<Layout>`. Its package contributes the high-level node and composite definition, and `<Layout>` sends both through the same core lowering path without teaching core about that domain.
 
-If you are implementing a domain adapter, injecting `composites` / `embeddables`, or debugging dataset aggregation and host behavior, go directly to [Layout: Higher-Level Capabilities and Host Integration](/kernel/components/layout/overview#higher-level-capabilities-and-host-integration) and [Runtime Extensions](/kernel/reference/runtime/extensions). This concept page intentionally omits React static-walk and aggregation internals.
+If you are implementing a domain InputEmbedAdapter, registering `adapters`, or debugging dataset aggregation and host behavior, go directly to [Layout: Higher-Level Capabilities and Host Integration](/kernel/components/layout/overview#higher-level-capabilities-and-host-integration) and [Runtime Extensions](/kernel/reference/runtime/extensions). This concept page intentionally omits React Input collection and Vanilla-processing aggregation internals.
 
 ## Provider roots and transitive dependencies
 
-An embedded adapter does not assemble a Definition array itself. It returns the high-level `node` and uses `CompositeDependencyContribution` to declare the `roots` required by that node plus the `providers` already imported into the current program. Each provider owns one complete `namespace + type` key, ordered direct dependencies, runtime-only datasets, and one stable `makeDefinition` function.
+An embedded adapter does not assemble a Definition array itself. It returns the high-level `node` and uses `CoreProviderContribution` to declare the `roots` required by that node plus the `providers` already imported into the current program. A regular provider key uses `capability + name`; a composite key uses `capability: 'composite' + namespace + type`. Each provider also declares ordered direct dependencies, runtime-only datasets, and one stable `makeDefinition` function.
 
 <ComponentPreview files="embeddable-flow" size="xl" hideCode />
 
 Core computes the reachable closure from the roots, then materializes every Definition once in dependency-first, first-reachable order. This third-party `third.card` depends on Standard Frame. Both use the same graph; there is no built-in allowlist:
 
 ```ts
-import type { CompositeDependencyProvider } from '@retikz/core';
+import type { CoreDependencyProvider } from '@retikz/core';
 
-import { resolveCompositeDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { FrameProvider } from '@retikz/standard';
 
 const CardProvider = {
-  key: { namespace: 'third', type: 'card' },
+  key: { capability: 'composite', namespace: 'third', type: 'card' },
   dependencies: [FrameProvider.key],
   datasets: {},
   makeDefinition: () => CardDefinition,
-} satisfies CompositeDependencyProvider;
+} satisfies CoreDependencyProvider;
 
-const composites = resolveCompositeDependencies({
+const definitions = resolveCoreProviderDependencies({
   contributions: [
     {
       roots: [CardProvider.key],
@@ -277,19 +277,19 @@ const composites = resolveCompositeDependencies({
 
 `datasets` merge by provider key and reference before maker execution; they never enter IR, Scene, or manifests. A repeated reference deduplicates only when its value is the same by `Object.is`. Conflicting maker references, ordered dependencies, or dataset identities fail before any maker runs. Missing dependencies and cycles also report the complete key chain during preflight.
 
-The provider graph assembles which Definitions reusable modules require. `CompileOptions.composites` remains the final Definition array consumed by Core: direct-IR authors may pass a complete array explicitly, while React, Vanilla, and other toolchains resolve contributions first. Provider results come first and explicit Definitions append afterward; a repeated key deduplicates only the same Definition object, while a different object fails loudly.
+The provider graph assembles which Definitions reusable modules require. `resolveCoreProviderDependencies()` returns options grouped by Core capability: direct-IR authors may pass complete Definition collections explicitly, while React, Vanilla, and other toolchains resolve contributions first. Provider results come first and explicit Definitions append afterward; a repeated key deduplicates only the same Definition object, while a different object fails loudly.
 
 <SourceLinks
   sources={[
     {
       label: 'Provider graph contract and runtime-only datasets',
-      path: 'packages/kernel/core/src/contract/composite/dependency-provider.ts',
+      path: 'packages/kernel/core/src/contract/provider/dependency-provider.ts',
       startLine: 1,
       endLine: 37,
     },
     {
       label: 'Reachable closure, topology, and conflict preflight',
-      path: 'packages/kernel/core/src/contract/composite/resolve-dependencies.ts',
+      path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts',
       startLine: 69,
       endLine: 209,
     },

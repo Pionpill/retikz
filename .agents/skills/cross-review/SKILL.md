@@ -60,7 +60,7 @@ subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent �
 
 | 范围                      | 固定方式                                                      |
 | ------------------------- | ------------------------------------------------------------- |
-| ADR / architecture design | 文件路径 + HEAD + 本轮内容 hash / diff                        |
+| ADR / architecture design | ADR + 同步简略 plan 路径、HEAD、本轮内容 hash / diff          |
 | implementation plan       | ADR、`PLAN.md`、`TEST_CONTRACT.md` + HEAD + 工作区摘要        |
 | commit / range / staged   | commit SHA、`A..B`、staged diff                               |
 | 版本代码（tag / 分支）    | tag / branch + 目标相对 base 的 diff                          |
@@ -70,7 +70,7 @@ subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent �
 
 ## 文档评审方向
 
-评审 ADR 时只检查长期内容：核心决策、基础数据结构 / 公开契约、功能边界、兼容性、被否决方案和架构完备性。不得要求 ADR 增加具体文件、私有命名、业务逻辑步骤、测试 case、命令、commit 切分或 review 过程。
+评审 ADR 时只检查长期内容：背景与目标、核心决策、基础数据结构 / 公开契约、行为、失败语义和兼容性。功能与包边界、能力完备性、同类设计、被否决方案、测试策略和非目标改为检查同步简略 plan，不得要求写回 ADR。具体文件、私有命名、业务逻辑步骤、测试 case、命令、commit 切分或 review 过程只在 plan 细化后按 Plan Gate 检查。
 
 评审 implementation plan 时检查：
 

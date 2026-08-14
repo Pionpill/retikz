@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { parsePathThickness, PathSchema, THICKNESS_TO_WIDTH } from '../../src';
+import { PathSchema, THICKNESS_TO_WIDTH } from '../../src';
 
-describe('parsePathThickness', () => {
+describe('Path thickness vocabulary', () => {
   it.each([
     ['ultraThin', 0.25],
     ['veryThin', 0.5],
@@ -13,15 +13,6 @@ describe('parsePathThickness', () => {
     ['ultraThick', 4],
   ] as const)('thickness=%s -> strokeWidth=%s', (thickness, strokeWidth) => {
     expect(THICKNESS_TO_WIDTH[thickness]).toBe(strokeWidth);
-    expect(parsePathThickness({ thickness })).toEqual({ strokeWidth });
-  });
-
-  it('显式 strokeWidth 优先于 thickness', () => {
-    expect(parsePathThickness({ thickness: 'thick', strokeWidth: 7 })).toEqual({ strokeWidth: 7 });
-  });
-
-  it('缺省时不写 strokeWidth，让 compile 使用默认值', () => {
-    expect(parsePathThickness({})).toEqual({});
   });
 
   it('PathSchema 不接受 raw thickness 字段', () => {

@@ -1,25 +1,23 @@
 import type { TerminalInput } from '@retikz/notation';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputTerminal } from '@retikz/notation-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createTerminal, TerminalProvider } from '@retikz/notation';
+import { TerminalInputEmbedAdapter } from '@retikz/notation-vanilla';
+import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { resolveSemanticNodeInput } from './authoring';
+import { collectSemanticNodeInput } from './authoring';
 
 /** Terminal React 编写参数 */
 export type TerminalProps = TerminalInput & Readonly<{ children?: ReactNode }>;
 
-const terminalEmbeddableAdapter: EmbeddableTier2Adapter<TerminalProps> = {
-  displayName: 'Terminal',
-  contribute: props => {
-    const { children, ...input } = props;
-    return {
-      node: createTerminal(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
-    };
-  },
+/** 将 React 文字 children 组装为 Notation Vanilla Input */
+const createTerminalInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { children, ...input } = props as TerminalProps;
+  const collected = collectSemanticNodeInput(children, input, context.id);
+  return withInputEmbedAdapters(collected.input satisfies InputTerminal, collected.adapters);
 };
 
 const TerminalComponent: FC<TerminalProps> = () => null;
@@ -29,4 +27,5 @@ export const Terminal = TerminalComponent as NotationEmbeddableComponent<Termina
 
 Terminal.displayName = 'Terminal';
 Terminal.isTier2Embeddable = true;
-Terminal.embeddableAdapter = terminalEmbeddableAdapter;
+Terminal.inputEmbedAdapter = TerminalInputEmbedAdapter;
+Terminal.createInputEmbedProps = createTerminalInput;

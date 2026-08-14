@@ -11,12 +11,12 @@ description: 注册新的箭头端点几何，让 Draw、Path 端点与沿线 ma
 
 ## 适用边界
 
-内置八种箭头已经覆盖实心 / 空心三角、倒钩、菱形与圆点。只有端点轮廓本身不够用时才注册新 definition。
+Core 默认提供 `normal`、`open`、`stealth`、`openStealth`、`circle` 与 `openCircle` 六种基础箭头；实心 / 空心菱形由 [箭头扩展](/library/standard/extension/arrow) 按需提供。只有 Core 与已装配 Standard 造型都不够用时，才注册新的 definition。
 
 | 需求                           | 选择                                              |
 | ------------------------------ | ------------------------------------------------- |
 | 调整现有箭头尺寸、颜色或透明度 | `arrowDetail`                                     |
-| 起末端使用不同内置造型         | `arrowDetail.start` / `end`                       |
+| 起末端使用不同已注册造型       | `arrowDetail.start` / `end`                       |
 | 增加新的端点轮廓               | 自定义箭头                                        |
 | 改变整条关系线的输出           | [自定义路径](/kernel/components/draw/custom-path) |
 
@@ -58,7 +58,7 @@ definition 不进入 IR。相同的 shape 字符串可以由 React、Vanilla 或
 
 ## 执行机制
 
-内置八种箭头与自定义 definitions 先进入同一个 registry。compile 合并路径默认值、`arrowDetail` 与单端覆盖，再按 shape 查找 definition；随后根据尺寸、线宽与接触点缩短路径，并调用 `emit` 生成 marker 几何。
+Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都进入同一个 registry。compile 合并路径默认值、`arrowDetail` 与单端覆盖，再按 shape 查找 definition；随后根据尺寸、线宽与接触点缩短路径，并调用 `emit` 生成 marker 几何。
 
 `emit` 收到的 `fill` / `stroke` 是 `MarkerFill`。未显式指定颜色时，它们使用 `{ kind: 'contextStroke' }`，让同一个 definition 跟随每条 Path 的描边色，而不是在注册时冻结颜色。
 
@@ -73,7 +73,7 @@ definition 不进入 IR。相同的 shape 字符串可以由 React、Vanilla 或
       endLine: 59,
     },
     {
-      label: '内置与自定义箭头 registry',
+      label: 'Core 基础与注入箭头的统一 registry',
       path: 'packages/kernel/core/src/providers/arrow/registry.ts',
       startLine: 6,
       endLine: 13,
@@ -95,15 +95,15 @@ definition 不进入 IR。相同的 shape 字符串可以由 React、Vanilla 或
 
 ## 错误与限制
 
-| 情况                                 | 结果                                            |
-| ------------------------------------ | ----------------------------------------------- |
-| 名称为空                             | registry 拒绝非空 key 约束                      |
-| 与内置或另一自定义箭头重名           | registry 合并时报重复注册                       |
-| `arrowDetail.shape` 未注册           | 编译列出可用名称与 `options.arrows` 注入提示    |
-| `baseSize`、接触点或尺寸非法         | 编译拒绝无效 marker 尺寸                        |
-| `emit` 产出未知 primitive 或无限坐标 | marker 校验拒绝，不让坏几何进入 Scene           |
-| marker 内递归箭头、clip 或文本       | `MarkerPrimitive` 窄契约拒绝                    |
-| Path 使用 IRPaintSpec 描边           | marker 无法继承资源 paint；需显式给纯色箭头颜色 |
+| 情况                                       | 结果                                            |
+| ------------------------------------------ | ----------------------------------------------- |
+| 名称为空                                   | registry 拒绝非空 key 约束                      |
+| 与已注册的 Core、Standard 或自定义箭头重名 | registry 合并时报重复注册                       |
+| `arrowDetail.shape` 未注册                 | 编译列出可用名称与 `options.arrows` 注入提示    |
+| `baseSize`、接触点或尺寸非法               | 编译拒绝无效 marker 尺寸                        |
+| `emit` 产出未知 primitive 或无限坐标       | marker 校验拒绝，不让坏几何进入 Scene           |
+| marker 内递归箭头、clip 或文本             | `MarkerPrimitive` 窄契约拒绝                    |
+| Path 使用 IRPaintSpec 描边                 | marker 无法继承资源 paint；需显式给纯色箭头颜色 |
 
 MarkerPrimitive 只允许 `path`、`ellipse`、`rect` 与可递归包含这些图元的 `group`。不要返回 SVG `<marker>`、Canvas 对象、文本布局或外部 paint resource 引用。
 

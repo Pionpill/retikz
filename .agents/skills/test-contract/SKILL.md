@@ -20,14 +20,14 @@ description: Use when a retikz ADR or beta TODO changes data structures, public 
 
 ## 输入与产物
 
-Alpha 读取长期 ADR 与镜像 `PLAN.md`；Beta 读取 TODO / plan。再读取公开类型或 schema、相关实现边界、已有测试与 docs 页面。把详细矩阵写入与 ADR / TODO 同构的 ignored plan：
+Alpha 在 ADR 人工确认且获准进入实现准备后，读取长期 ADR 与已同步创建的镜像 `PLAN.md`；Beta 读取 TODO / plan。再读取公开类型或 schema、相关实现边界、已有测试与 docs 页面。把详细矩阵写入与 ADR / TODO 同构的 ignored plan：
 
 ```text
 packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
 -> packages/viz/_notes/plans/chart/v0/v0.1/alpha.1/01-example/TEST_CONTRACT.md
 ```
 
-长期 ADR 只保留稳定测试策略摘要和关键不变量，不保留逐项 case、文件索引、路径、命令或执行清单。`TEST_CONTRACT.md` 与其它 plan 文件默认不 stage、不 commit。
+测试策略摘要和关键证据层保留在 `PLAN.md`；长期 ADR 不保留测试策略、逐项 case、文件索引、路径、命令或执行清单。`TEST_CONTRACT.md` 与其它 plan 文件默认不 stage、不 commit。
 
 每行必须使用行为名称，而不是 ADR 编号、内部函数名或历史阶段名：
 
@@ -49,7 +49,7 @@ packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
 
 ## 工作流
 
-1. 从 ADR / TODO 逐条抽取用户可观察行为、默认值、失败语义、跨包边界和非目标，并核对 `PLAN.md` 没有重定义它们。
+1. 从 ADR / TODO 抽取用户可观察行为、默认值与失败语义；从 `PLAN.md` 读取跨包边界、非目标和测试策略，并核对 plan 没有重定义 ADR 契约。
 2. 为每条行为写一个不变量和至少一个能推翻它的反例；无法写反例时，回到设计澄清。
 3. 指定最低测试层、需要的 adapter / renderer / docs 上层证据，以及现有测试能否复用。
 4. 实现前将矩阵交给 `develop-implement`；实现后为每行填写正式测试证据、验证命令或页面路径，以及已覆盖 / 接受风险状态。

@@ -3,17 +3,15 @@ import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
 import type {
-  IRDetailTableSpec,
-  IRManualTableSpec,
-  IRTableSpec,
   LowerTablesOptions,
   ManualTableSpecInput,
   TableDetailColumnInput,
   TableLayoutManifest,
 } from '@retikz/table';
+import type { InputDetailTable, InputManualTable, InputTable, InputTableSpec } from '@retikz/table-vanilla';
 
 import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
-import { createDetailTableSpec, createManualTableSpec, TableSpecSchema } from '@retikz/table';
+import { inputTableFromSpec, InputTableKind } from '@retikz/table-vanilla';
 
 import type { DetailTableProps } from './DetailTable';
 import type { ManualTableProps } from './ManualTable';
@@ -87,8 +85,8 @@ const assertTableReactNonEmptyString = (value: string, message: string): void =>
 
 /** 三个 React Table 组件共享的规范化运行时输入 */
 export type ReactTableRuntime = Readonly<{
-  /** 已通过 Table schema 的根 spec */
-  spec: IRTableSpec;
+  /** 尚待 Table Vanilla 归一化的根 authoring 输入 */
+  table: InputTableSpec;
   /** Table lowering 消费的外部 datasets */
   datasets: ExternalDatasets;
   /** 保留原始引用的 dataset 输入，用于 standalone compile memo */
@@ -189,34 +187,40 @@ const manualStructureOf = (props: ManualTableProps): Pick<ManualTableSpecInput, 
 };
 
 /** 从 detail React props 提取 framework-neutral authoring 输入 */
-const detailSpecOf = (props: DetailTableProps): IRDetailTableSpec => {
+const detailTableOf = (props: DetailTableProps): InputDetailTable => {
   const columns = detailColumnsOf(props);
-  return createDetailTableSpec({
-    ...(props.id === undefined ? {} : { id: props.id }),
-    dataRef: props.dataRef,
-    ...(props.model === undefined ? {} : { model: props.model }),
-    columns,
-    ...(props.header === undefined ? {} : { header: props.header }),
-    ...(props.layout === undefined ? {} : { layout: props.layout }),
-    ...(props.meta === undefined ? {} : { meta: props.meta }),
-    ...(props.rules === undefined ? {} : { rules: props.rules }),
-    ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-    ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
-  });
+  return {
+    kind: InputTableKind.Detail,
+    input: {
+      ...(props.id === undefined ? {} : { id: props.id }),
+      dataRef: props.dataRef,
+      ...(props.model === undefined ? {} : { model: props.model }),
+      columns,
+      ...(props.header === undefined ? {} : { header: props.header }),
+      ...(props.layout === undefined ? {} : { layout: props.layout }),
+      ...(props.meta === undefined ? {} : { meta: props.meta }),
+      ...(props.rules === undefined ? {} : { rules: props.rules }),
+      ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
+      ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
+    },
+  };
 };
 
 /** 从 manual React props 提取 framework-neutral authoring 输入 */
-const manualSpecOf = (props: ManualTableProps): IRManualTableSpec => {
+const manualTableOf = (props: ManualTableProps): InputManualTable => {
   const structure = manualStructureOf(props);
-  return createManualTableSpec({
-    ...(props.id === undefined ? {} : { id: props.id }),
-    ...structure,
-    ...(props.layout === undefined ? {} : { layout: props.layout }),
-    ...(props.meta === undefined ? {} : { meta: props.meta }),
-    ...(props.rules === undefined ? {} : { rules: props.rules }),
-    ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-    ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
-  });
+  return {
+    kind: InputTableKind.Manual,
+    input: {
+      ...(props.id === undefined ? {} : { id: props.id }),
+      ...structure,
+      ...(props.layout === undefined ? {} : { layout: props.layout }),
+      ...(props.meta === undefined ? {} : { meta: props.meta }),
+      ...(props.rules === undefined ? {} : { rules: props.rules }),
+      ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
+      ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
+    },
+  };
 };
 
 /** 解析三种 React Table props 为同一 standalone / embedded runtime 输入 */
@@ -226,32 +230,32 @@ export const resolveReactTableRuntime = (
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
   validateHostStyleMigration(props);
-  let spec: IRTableSpec;
+  let table: InputTableSpec;
   let datasets: ExternalDatasets;
   let datasetSource: ExternalDatasets | Array<ExternalRow>;
   let datasetReference: string | undefined;
   if (kind === ReactTableRuntimeKind.Table) {
     const tableProps = props as TableProps;
-    spec = TableSpecSchema.parse(tableProps.spec);
+    table = inputTableFromSpec(tableProps.spec);
     datasets = tableProps.data ?? EMPTY_DATASETS;
     datasetSource = datasets;
   } else if (kind === ReactTableRuntimeKind.Detail) {
     const detailProps = props as DetailTableProps;
-    const detailSpec = detailSpecOf(detailProps);
-    spec = detailSpec;
-    datasets = { [detailSpec.data.reference]: detailProps.data };
+    const detailTable = detailTableOf(detailProps);
+    table = detailTable;
+    datasets = { [detailTable.input.dataRef]: detailProps.data };
     datasetSource = detailProps.data;
-    datasetReference = detailSpec.data.reference;
+    datasetReference = detailTable.input.dataRef;
   } else {
     const manualProps = props as ManualTableProps;
-    spec = manualSpecOf(manualProps);
+    table = manualTableOf(manualProps);
     datasets = EMPTY_DATASETS;
     datasetSource = EMPTY_DATASETS;
   }
 
   if (options.embedded) {
-    if (spec.id === undefined) throw new Error(`table react: embedded ${kind} Table spec id must be non-empty`);
-    assertTableReactNonEmptyString(spec.id, `table react: embedded ${kind} Table spec id must be non-empty`);
+    if (table.input.id === undefined) throw new Error(`table react: embedded ${kind} Table spec id must be non-empty`);
+    assertTableReactNonEmptyString(table.input.id, `table react: embedded ${kind} Table spec id must be non-empty`);
     const unsupportedProps = unsupportedEmbeddedPropsOf(props);
     if (unsupportedProps.length > 0) {
       throw new Error(
@@ -261,7 +265,7 @@ export const resolveReactTableRuntime = (
   }
 
   return {
-    spec,
+    table,
     datasets,
     datasetSource,
     ...(datasetReference === undefined ? {} : { datasetReference }),
@@ -269,5 +273,17 @@ export const resolveReactTableRuntime = (
     composites: props.composites ?? EMPTY_COMPOSITES,
     onManifest: props.onManifest,
     display: hostPropsOf(props),
+  };
+};
+
+/** 将 React Table props 转换为唯一的 Table Vanilla 输入 */
+export const createReactTableInput = (kind: ReactTableRuntimeKindValue, props: AnyTableProps): InputTable => {
+  const runtime = resolveReactTableRuntime(kind, props, { embedded: true });
+  return {
+    table: runtime.table,
+    data: runtime.datasets,
+    lowerOptions: runtime.lowerOptions,
+    composites: runtime.composites,
+    preserveRootIdentity: true,
   };
 };

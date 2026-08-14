@@ -2,6 +2,7 @@ import type { IRNodeTarget } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
+import { StarShapeDefinition } from '@retikz/standard/shape';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -33,7 +34,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const sourcePosition = sourcePositionOf(values.sourceAngle, values.sourceDistance);
 
   return (
-    <Layout width={400} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
+    <Layout
+      width={400}
+      height={430}
+      viewBox={{ x: -215, y: -215, width: 430, height: 430 }}
+      shapes={[StarShapeDefinition]}
+    >
       <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-2} />
       <Node
         id="target"

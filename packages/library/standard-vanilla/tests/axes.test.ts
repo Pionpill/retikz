@@ -1,10 +1,10 @@
 import type { AxesInput } from '@retikz/standard';
 
 import { AxesDefinition, AxesProvider, createAxes } from '@retikz/standard';
-import { normalizeFigureSpec } from '@retikz/vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { axes, AxesVanillaAdapter, grid, GridVanillaAdapter } from '../src';
+import { axes, AxesInputEmbedAdapter, grid, GridInputEmbedAdapter } from '../src';
 
 const input: AxesInput = {
   origin: { position: [100, 80], label: '0' },
@@ -24,7 +24,7 @@ const input: AxesInput = {
 describe('axes()', () => {
   it('keeps an authored root id distinct from the Vanilla embed id', () => {
     const embed = axes('host-occurrence', { ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
-    const contribution = AxesVanillaAdapter.lower(embed.props, {
+    const contribution = AxesInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
       layerId: 'main',
@@ -36,7 +36,7 @@ describe('axes()', () => {
 
   it('creates an embed that contributes canonical Axes IR', () => {
     const embed = axes('plane', input);
-    const contribution = AxesVanillaAdapter.lower(embed.props, {
+    const contribution = AxesInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
       layerId: 'main',
@@ -45,24 +45,22 @@ describe('axes()', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes', id: 'plane' });
     expect(contribution.node).toEqual(createAxes(input));
-    expect(contribution.compositeDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
     expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
   });
 
   it('coexists with Grid and contributes both definitions once', () => {
-    const figure = normalizeFigureSpec(
-      {
-        type: 'figure',
-        version: 1,
+    const result = normalizeScene(
+      scene({
         children: [
           grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }),
           axes('plane', input),
         ],
-      },
-      { adapters: [GridVanillaAdapter, AxesVanillaAdapter] },
+      }),
+      { adapters: [GridInputEmbedAdapter, AxesInputEmbedAdapter] },
     );
 
-    expect(figure.composites).toHaveLength(2);
-    expect(figure.ir.children.map(child => child.type)).toEqual(['grid', 'axes']);
+    expect(result.contributions).toHaveLength(2);
+    expect(result.ir.children.map(child => child.type)).toEqual(['grid', 'axes']);
   });
 });

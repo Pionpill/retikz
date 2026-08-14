@@ -1,10 +1,11 @@
 import type { ManualTableSpecInput } from '@retikz/table';
 import type { FC, ReactNode } from 'react';
 
-import type { EmbeddableTableComponent, TableCommonProps } from './Table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 
-import { manualTableEmbeddableAdapter } from './embedded-runtime';
-import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
+import type { InputEmbeddableTableComponent, TableCommonProps } from './Table';
+
+import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
 type ManualTableRootProps = TableCommonProps & Omit<ManualTableSpecInput, 'rowKinds' | 'rows'>;
@@ -35,7 +36,9 @@ const ManualTableComponent: FC<ManualTableProps> = props => (
 );
 
 /** 从矩形 rows 或 Row/Cell markers 构造并渲染 manual Table */
-export const ManualTable = ManualTableComponent as EmbeddableTableComponent<ManualTableProps>;
+export const ManualTable = ManualTableComponent as InputEmbeddableTableComponent<ManualTableProps>;
 ManualTable.displayName = 'ManualTable';
 ManualTable.isTier2Embeddable = true;
-ManualTable.embeddableAdapter = manualTableEmbeddableAdapter;
+ManualTable.inputEmbedAdapter = TableInputEmbedAdapter;
+ManualTable.createInputEmbedProps = props =>
+  createReactTableInput(ReactTableRuntimeKind.Manual, props as ManualTableProps);

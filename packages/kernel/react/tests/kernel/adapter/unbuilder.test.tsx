@@ -1,4 +1,4 @@
-import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
+﻿import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
@@ -6,10 +6,10 @@ import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { buildIR } from '../../../src/kernel/adapter';
 import { convertIRToReactNode } from '../../../src/kernel/adapter';
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../../src/kernel/protocol';
 import { Draw } from '../../../src/sugar';
+import { normalizeReactInput } from '../../helpers/normalize-input';
 
 const emptyScene: IRScene = {
   version: CURRENT_IR_VERSION,
@@ -79,7 +79,7 @@ describe('convertIRToReactNode', () => {
       ],
     };
 
-    expect(buildIR(convertIRToReactNode(ir))).toEqual({
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual({
       version: CURRENT_IR_VERSION,
       type: 'scene',
       children: ir.children,
@@ -105,7 +105,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(input))).toEqual(input);
+    expect(normalizeReactInput(convertIRToReactNode(input))).toEqual(input);
   });
 
   it('空 scene → 空数组', () => {
@@ -155,7 +155,7 @@ describe('convertIRToReactNode', () => {
 
     const [element] = toElements(convertIRToReactNode(ir));
     expect(element.props.position).toEqual(position);
-    expect(buildIR(element)).toEqual(ir);
+    expect(normalizeReactInput(element)).toEqual(ir);
   });
 
   it('IR Node 上 undefined 字段不写进 element props', () => {
@@ -214,7 +214,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    const back = buildIR(convertIRToReactNode(ir));
+    const back = normalizeReactInput(convertIRToReactNode(ir));
     expect(back).toEqual(ir);
   });
 
@@ -241,7 +241,7 @@ describe('convertIRToReactNode', () => {
     };
     const [ribbonEl] = toElements(convertIRToReactNode(ir));
     expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_PATH);
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('Boundary Ribbon round-trip：IR → React → IR 等价', () => {
@@ -269,12 +269,12 @@ describe('convertIRToReactNode', () => {
     };
     const [ribbonEl] = toElements(convertIRToReactNode(ir));
     expect((ribbonEl.type as { displayName?: string }).displayName).toBe(TIKZ_PATH);
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('Sugar 降级：<Draw> → IR → React 还原成 <Path>，二次 round-trip IR 稳定', () => {
-    const ir1 = buildIR(<Draw way={['A', [10, 0]]} stroke="red" />);
-    const ir2 = buildIR(convertIRToReactNode(ir1));
+    const ir1 = normalizeReactInput(<Draw way={['A', [10, 0]]} stroke="red" />);
+    const ir2 = normalizeReactInput(convertIRToReactNode(ir1));
     expect(ir2).toEqual(ir1);
 
     const [pathEl] = toElements(convertIRToReactNode(ir1));
@@ -296,7 +296,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    const back = buildIR(convertIRToReactNode(ir));
+    const back = normalizeReactInput(convertIRToReactNode(ir));
     expect(back).toEqual(ir);
   });
 
@@ -317,7 +317,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    const back = buildIR(convertIRToReactNode(ir));
+    const back = normalizeReactInput(convertIRToReactNode(ir));
     expect(back).toEqual(ir);
   });
 
@@ -342,7 +342,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    const back = buildIR(convertIRToReactNode(ir));
+    const back = normalizeReactInput(convertIRToReactNode(ir));
     expect(back).toEqual(ir);
   });
 
@@ -353,7 +353,7 @@ describe('convertIRToReactNode', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'A', shape, position: [0, 0], text: 'A' }],
       };
-      const back = buildIR(convertIRToReactNode(ir));
+      const back = normalizeReactInput(convertIRToReactNode(ir));
       expect(back).toEqual(ir);
     }
   });
@@ -382,7 +382,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      const back = buildIR(convertIRToReactNode(ir));
+      const back = normalizeReactInput(convertIRToReactNode(ir));
       expect(back).toEqual(ir);
     }
   });
@@ -403,7 +403,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    const back = buildIR(convertIRToReactNode(ir));
+    const back = normalizeReactInput(convertIRToReactNode(ir));
     expect(back).toEqual(ir);
   });
 
@@ -421,7 +421,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('cubic step round-trip：control1 / control2 字段透传保留', () => {
@@ -438,7 +438,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('bend step round-trip：bendDirection 必填、bendAngle 可选', () => {
@@ -455,7 +455,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(irWithAngle))).toEqual(irWithAngle);
+    expect(normalizeReactInput(convertIRToReactNode(irWithAngle))).toEqual(irWithAngle);
 
     const irNoAngle: IRScene = {
       version: CURRENT_IR_VERSION,
@@ -470,7 +470,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(irNoAngle))).toEqual(irNoAngle);
+    expect(normalizeReactInput(convertIRToReactNode(irNoAngle))).toEqual(irNoAngle);
   });
 
   it('arc step round-trip：startAngle / endAngle / radius 透传保留', () => {
@@ -487,7 +487,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('circlePath step round-trip：radius 透传保留', () => {
@@ -504,7 +504,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   it('ellipsePath step round-trip：radius object 透传保留', () => {
@@ -521,7 +521,7 @@ describe('convertIRToReactNode', () => {
         },
       ],
     };
-    expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+    expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
   });
 
   describe('step.label round-trip', () => {
@@ -544,7 +544,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('八种带 label 的 kind 全部 round-trip', () => {
@@ -588,7 +588,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('三段 fold round-trip 保留显式 fraction 与省略状态', () => {
@@ -606,7 +606,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('IR 中没有 label 字段时 round-trip 不会凭空多出 label', () => {
@@ -623,7 +623,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
   });
 
@@ -645,7 +645,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('strokeWidth 数值双向保留', () => {
@@ -663,7 +663,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('opacity / fillOpacity / strokeOpacity 三件双向保留', () => {
@@ -686,7 +686,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
   });
 
@@ -705,7 +705,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips AtPosition 8 方向枚举全覆盖', () => {
@@ -733,7 +733,7 @@ describe('convertIRToReactNode', () => {
             },
           ],
         };
-        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+        expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
       }
     });
 
@@ -752,7 +752,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(irString))).toEqual(irString);
+      expect(normalizeReactInput(convertIRToReactNode(irString))).toEqual(irString);
 
       // of = 笛卡尔
       const irCartesian: IRScene = {
@@ -767,7 +767,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(irCartesian))).toEqual(irCartesian);
+      expect(normalizeReactInput(convertIRToReactNode(irCartesian))).toEqual(irCartesian);
 
       // of = 嵌套 polar
       const irPolar: IRScene = {
@@ -786,7 +786,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(irPolar))).toEqual(irPolar);
+      expect(normalizeReactInput(convertIRToReactNode(irPolar))).toEqual(irPolar);
     });
 
     it('round-trips OffsetPosition Step.to：path 内 step 用 { of, offset }', () => {
@@ -804,7 +804,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips arrowDetail 顶层 + start / end 子对象 merge', () => {
@@ -831,7 +831,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it.each(['at-start', 'very-near-start', 'near-start', 'midway', 'near-end', 'very-near-end', 'at-end'] as const)(
@@ -855,7 +855,7 @@ describe('convertIRToReactNode', () => {
             },
           ],
         };
-        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+        expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
       },
     );
 
@@ -878,7 +878,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips IRTarget `relative` / `relativeAccumulate`', () => {
@@ -896,7 +896,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips IRScope：仅 children（无 id / transforms / localNamespace）', () => {
@@ -910,7 +910,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips IRScope：含 placement / pivot / id / localNamespace 的 transform 复合', () => {
@@ -939,7 +939,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips 嵌套 IRScope', () => {
@@ -960,7 +960,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips IRScope 含 path 子节点', () => {
@@ -985,7 +985,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips IRScope 样式继承字段：级联 + 四通道 + resetStyle + node/path color + step label 样式', () => {
@@ -1035,7 +1035,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips Coordinate 占位节点', () => {
@@ -1053,7 +1053,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips Node.label 单对象 + 数组形态', () => {
@@ -1078,7 +1078,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(irSingle))).toEqual(irSingle);
+      expect(normalizeReactInput(convertIRToReactNode(irSingle))).toEqual(irSingle);
 
       // 数组形态：多 label
       const irArray: IRScene = {
@@ -1098,7 +1098,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(irArray))).toEqual(irArray);
+      expect(normalizeReactInput(convertIRToReactNode(irArray))).toEqual(irArray);
     });
   });
 
@@ -1129,7 +1129,7 @@ describe('convertIRToReactNode', () => {
           type: 'scene',
           children: [{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', fill }],
         };
-        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+        expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
       }
     });
 
@@ -1151,7 +1151,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips Scope.clip：circle / rect / ellipse / polygon', () => {
@@ -1174,7 +1174,7 @@ describe('convertIRToReactNode', () => {
           type: 'scene',
           children: [{ type: 'scope', clip, children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }] }],
         };
-        expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+        expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
       }
     });
 
@@ -1206,7 +1206,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips Path rotate / scale（等比 + 非等比）/ marks', () => {
@@ -1234,7 +1234,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips bend out/in/looseness（asymmetric / self-loop）', () => {
@@ -1251,7 +1251,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
 
     it('round-trips generator step：name / to / params / label', () => {
@@ -1275,7 +1275,7 @@ describe('convertIRToReactNode', () => {
           },
         ],
       };
-      expect(buildIR(convertIRToReactNode(ir))).toEqual(ir);
+      expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
   });
 
@@ -1296,7 +1296,7 @@ describe('convertIRToReactNode', () => {
     };
     const options = { composites: [panelComposite] };
 
-    expect(buildIR(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
+    expect(normalizeReactInput(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
   });
 
   it('scope 内 composite lowering 后保留 scope 与 path children', () => {
@@ -1314,7 +1314,7 @@ describe('convertIRToReactNode', () => {
     };
     const options = { composites: [pathComposite] };
 
-    expect(buildIR(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
+    expect(normalizeReactInput(convertIRToReactNode(ir, options))).toEqual(lowerIRToKernel(ir, options));
   });
 
   it('缺失 composite definition 时错误保留 key 与 IR path', () => {

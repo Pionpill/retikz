@@ -1,4 +1,4 @@
-import type { IRNodeLabelInput } from '@retikz/core';
+import type { InputNodeLabel } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
@@ -10,14 +10,14 @@ import { nodeLabelControls, previewControlContract } from './node-label.controls
 export const previewControls = nodeLabelControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const position: IRNodeLabelInput['position'] =
+  const position: InputNodeLabel['position'] =
     values.positionMode === 'angle'
       ? values.positionAngle
       : values.positionMode === 'boundary'
         ? { boundary: values.boundary, fraction: values.fraction }
         : values.direction;
-  const rotate: IRNodeLabelInput['rotate'] = values.rotateMode === 'angle' ? values.rotateAngle : values.rotateMode;
-  const pin: IRNodeLabelInput['pin'] =
+  const rotate: InputNodeLabel['rotate'] = values.rotateMode === 'angle' ? values.rotateAngle : values.rotateMode;
+  const pin: InputNodeLabel['pin'] =
     values.placement === 'outside' && values.pinStyle !== 'none'
       ? {
           stroke: values.pinColor,

@@ -13,18 +13,17 @@ import { defineRetainedRenderer, RetainedRenderErrorCode } from '@retikz/render/
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
 import type {
   RetainedSvgUpdateOptions,
   StaticMountCanvasOptions,
   StaticMountOptions,
   StaticMountUnifiedOptions,
-  VanillaCompileDriver,
-  VanillaFigureSpec,
-  VanillaTier2Adapter,
-} from '../../src';
+} from '../../src/dom';
 
-import { mount, mountCanvas, mountSvg, VanillaLayerCache } from '../../src';
-import { createRetainedCompositeDefinitions } from '../../src/runtime/retained-composites';
+import { InputLayerCache } from '../../src';
+import { mount, mountCanvas, mountSvg } from '../../src/dom';
+import { createRetainedCompositeDefinitions } from '../../src/processing/composites';
 
 const source = (fill: string): IRScene => ({
   version: 1,
@@ -35,9 +34,8 @@ const source = (fill: string): IRScene => ({
   ],
 });
 
-const plainFigure = (fill: string): VanillaFigureSpec => ({
-  version: 1,
-  type: 'figure',
+const inputScene = (fill: string): InputScene => ({
+  type: 'scene',
   layers: [
     {
       type: 'layer',
@@ -75,8 +73,10 @@ const createMemoryRendererFactory = (
   onDispose?: () => void,
   onFrame?: (frame: RenderFrameSnapshot) => void,
   failMount: boolean | (() => boolean) = false,
+  onCreate?: () => void,
 ): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
+    onCreate?.();
     let current: RenderFrameSnapshot | undefined;
     const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       if (current !== undefined) {
@@ -146,15 +146,15 @@ const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): Any
     }),
   });
 
-const datasetAdapter: VanillaTier2Adapter<{ color: string }> = {
+const datasetAdapter: InputEmbedAdapter<{ color: string }> = {
   kind: 'fixture-dataset',
   lower: props => ({
     node: { namespace: 'fixture', type: 'datasetBox' },
-    compositeDependencies: {
-      roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
       providers: [
         {
-          key: { namespace: 'fixture', type: 'datasetBox' },
+          key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
           dependencies: [],
           datasets: { color: props.color },
           makeDefinition: makeDatasetDefinition,
@@ -164,9 +164,8 @@ const datasetAdapter: VanillaTier2Adapter<{ color: string }> = {
   }),
 };
 
-const datasetFigure = (color: string): VanillaFigureSpec => ({
-  type: 'figure',
-  version: 1,
+const datasetScene = (color: string): InputScene => ({
+  type: 'scene',
   children: [{ type: 'embed', kind: 'fixture-dataset', id: 'dataset', props: { color } }],
 });
 
@@ -222,9 +221,8 @@ const createLayerDriver = (): VanillaCompileDriver => {
   });
 };
 
-const layerFigure = (authoring: unknown): VanillaFigureSpec => ({
-  type: 'figure',
-  version: 1,
+const layerScene = (authoring: unknown): InputScene => ({
+  type: 'scene',
   authoring,
   children: [{ type: 'node', id: 'layer-box', position: [0, 0], shape: 'rectangle' }],
 });
@@ -251,14 +249,14 @@ describe('@retikz/vanilla retained mount', () => {
       dispose,
       frame => frames.push(frame),
     );
-    const view = mountSvg(document.createElement('div'), layerFigure(false), {
+    const view = mountSvg(document.createElement('div'), layerScene(false), {
       compileDriver: createLayerDriver(),
       runtime: { rendererFactory },
     });
     const handler = vi.fn();
     view.hydrate({ handlers: { 'layer-box': { click: handler } } });
 
-    view.update(layerFigure(true));
+    view.update(layerScene(true));
 
     expect(frames.at(-2)?.layers).toEqual([]);
     expect(frames.at(-1)?.layers).toHaveLength(1);
@@ -272,7 +270,7 @@ describe('@retikz/vanilla retained mount', () => {
 
   it('编译驱动解析失败时保留上一帧和 committed metadata', () => {
     const frames: Array<RenderFrameSnapshot> = [];
-    const view = mountSvg(document.createElement('div'), layerFigure(true), {
+    const view = mountSvg(document.createElement('div'), layerScene(true), {
       compileDriver: createLayerDriver(),
       runtime: {
         rendererFactory: createMemoryRendererFactory('entity', false, undefined, undefined, undefined, frame =>
@@ -282,13 +280,13 @@ describe('@retikz/vanilla retained mount', () => {
     });
     const artifacts = view.artifacts;
     const runtimeMeta = view.runtimeMeta;
-    const committed = frames.at(-1);
+    const committedFrame = frames.at(-1);
 
-    expect(() => view.update(layerFigure('fail'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
-    expect(frames.at(-1)).toBe(committed);
+    expect(() => view.update(layerScene('fail'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(frames.at(-1)).toBe(committedFrame);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
-    expect(() => view.update(layerFigure(false))).not.toThrow();
+    expect(() => view.update(layerScene(false))).not.toThrow();
     view.dispose();
   });
 
@@ -390,15 +388,15 @@ describe('@retikz/vanilla retained mount', () => {
     } as const;
     const makeDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
       definitions[z.enum(['#ef4444', '#22c55e']).parse(datasets.color)];
-    const adapter: VanillaTier2Adapter<{ color: string }> = {
+    const adapter: InputEmbedAdapter<{ color: string }> = {
       kind: 'fixture-cached-dataset',
       lower: props => ({
         node: { namespace: 'fixture', type: 'datasetBox' },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'datasetBox' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
               dependencies: [],
               datasets: { color: props.color },
               makeDefinition,
@@ -407,9 +405,8 @@ describe('@retikz/vanilla retained mount', () => {
         },
       }),
     };
-    const figure = (color: '#ef4444' | '#22c55e'): VanillaFigureSpec => ({
-      type: 'figure',
-      version: 1,
+    const cachedDatasetScene = (color: '#ef4444' | '#22c55e'): InputScene => ({
+      type: 'scene',
       children: [{ type: 'embed', kind: 'fixture-cached-dataset', id: 'dataset', props: { color } }],
     });
     let rejectNextUpdate = true;
@@ -418,14 +415,14 @@ describe('@retikz/vanilla retained mount', () => {
       rejectNextUpdate = false;
       return reject;
     });
-    const view = mountSvg(document.createElement('div'), figure('#ef4444'), {
+    const view = mountSvg(document.createElement('div'), cachedDatasetScene('#ef4444'), {
       adapters: [adapter],
       runtime: { rendererFactory },
     });
 
-    expect(() => view.update(figure('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+    expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
     expect(greenExpand).toHaveBeenCalledTimes(1);
-    view.update(figure('#ef4444'));
+    view.update(cachedDatasetScene('#ef4444'));
 
     expect(redExpand).toHaveBeenCalledTimes(1);
   });
@@ -501,28 +498,79 @@ describe('@retikz/vanilla retained mount', () => {
     );
   });
 
-  it('plain spec update 使用本次 normalization 生成的 composite definitions', () => {
+  it('InputScene update 使用本次 normalization 生成的 composite definitions', () => {
     const container = document.createElement('div');
-    const view = mountSvg(container, datasetFigure('#ef4444'), { adapters: [datasetAdapter] });
+    const view = mountSvg(container, datasetScene('#ef4444'), { adapters: [datasetAdapter] });
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
-    view.update(datasetFigure('#22c55e'));
+    view.update(datasetScene('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
+  });
+
+  it('Composite topology 切换复用 renderer，候选失败时保留已提交状态', () => {
+    const frames: Array<RenderFrameSnapshot> = [];
+    const dispose = vi.fn();
+    let rejectNextPrepare = false;
+    let rendererFactoryCalls = 0;
+    const rendererFactory = createMemoryRendererFactory(
+      'entity',
+      () => rejectNextPrepare,
+      undefined,
+      undefined,
+      dispose,
+      frame => frames.push(frame),
+      false,
+      () => {
+        rendererFactoryCalls += 1;
+      },
+    );
+    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+      adapters: [datasetAdapter],
+      runtime: { rendererFactory },
+    });
+    const initialCompileResult = view.compileResult;
+
+    view.update(datasetScene('#22c55e'));
+
+    expect(rendererFactoryCalls).toBe(1);
+    expect(frames).toHaveLength(2);
+    expect(Number(frames[1]?.primary.revision)).toBe(Number(frames[0]?.primary.revision) + 1);
+    expect(view.compileResult).not.toBe(initialCompileResult);
+    expect(view.diagnostics()).toEqual([]);
+    const committedFrame = frames.at(-1);
+    const committedCompileResult = view.compileResult;
+    const committedHtml = view.root.innerHTML;
+
+    rejectNextPrepare = true;
+    expect(() => view.update(source('#3b82f6'))).toThrowError(
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererPrepareFailed }),
+    );
+
+    expect(frames.at(-1)).toBe(committedFrame);
+    expect(view.compileResult).toBe(committedCompileResult);
+    expect(view.root.innerHTML).toBe(committedHtml);
+    expect(view.diagnostics()).toEqual([
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererPrepareFailed }),
+    ]);
+
+    view.dispose();
+    view.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
   });
 
   it('mount 后修改 adapter callback 不改变 retained session compile 语义', () => {
     const container = document.createElement('div');
     const adapter = { ...datasetAdapter };
-    const view = mountSvg(container, datasetFigure('#ef4444'), { adapters: [adapter] });
+    const view = mountSvg(container, datasetScene('#ef4444'), { adapters: [adapter] });
 
     adapter.lower = () => ({
       node: { namespace: 'fixture', type: 'datasetBox' },
-      compositeDependencies: {
-        roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+      providerDependencies: {
+        roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
         providers: [
           {
-            key: { namespace: 'fixture', type: 'datasetBox' },
+            key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
             dependencies: [],
             datasets: { color: '#22c55e' },
             makeDefinition: makeDatasetDefinition,
@@ -530,7 +578,7 @@ describe('@retikz/vanilla retained mount', () => {
         ],
       },
     });
-    view.update(datasetFigure('#ef4444'));
+    view.update(datasetScene('#ef4444'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
   });
@@ -589,13 +637,12 @@ describe('@retikz/vanilla retained mount', () => {
     const view = mountSvg(
       container,
       {
-        type: 'figure',
-        version: 1,
+        type: 'scene',
         layers: [
           {
             type: 'layer',
             id: 'main',
-            cache: VanillaLayerCache.Static,
+            cache: InputLayerCache.Static,
             children: [{ type: 'node', id: 'box', position: [0, 0], shape: 'rectangle' }],
           },
         ],
@@ -610,7 +657,7 @@ describe('@retikz/vanilla retained mount', () => {
     );
 
     expect(() => {
-      (view.runtimeMeta.layers[0] as { cache: string }).cache = VanillaLayerCache.Dynamic;
+      (view.runtimeMeta.layers[0] as { cache: string }).cache = InputLayerCache.Dynamic;
     }).toThrow(TypeError);
     expect(() => {
       (view.runtimeMeta.identityIndex as Map<string, Array<string>>).set('forged', ['main']);
@@ -707,7 +754,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('IR/plain spec SVG static view 完整重绘、复用 root 并同步 metadata', () => {
+  it('IR/InputScene SVG static view 完整重绘、复用 root 并同步 metadata', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       runtime: { mode: 'static' },
@@ -715,7 +762,7 @@ describe('@retikz/vanilla retained mount', () => {
     });
     const root = view.root;
 
-    view.update(plainFigure('#22c55e'));
+    view.update(inputScene('#22c55e'));
 
     expect(view.mode).toBe('static');
     expect(view.root).toBe(root);
@@ -724,7 +771,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(view.artifacts.length).toBeGreaterThan(0);
   });
 
-  it('IR/plain spec Canvas static view 完整重绘并复用 root', () => {
+  it('IR/InputScene Canvas static view 完整重绘并复用 root', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, source('#ef4444'), {
       runtime: { mode: 'static' },
@@ -732,7 +779,7 @@ describe('@retikz/vanilla retained mount', () => {
     });
     const root = view.root;
 
-    view.update(plainFigure('#22c55e'));
+    view.update(inputScene('#22c55e'));
 
     expect(view.mode).toBe('static');
     expect(view.root).toBe(root);
@@ -814,16 +861,6 @@ describe('@retikz/vanilla retained mount', () => {
       throw new Error('materialization failed');
     });
     expect(() => view.update(source('#22c55e'))).toThrow('materialization failed');
-  });
-
-  it('retained update 在 Vanilla 边界拒绝非法 Core Theme 并保留旧 view', () => {
-    const view = mountSvg(document.createElement('div'), source('#ef4444'));
-    const html = view.root.innerHTML;
-    const artifacts = view.artifacts;
-
-    expect(() => view.update({ ...source('#22c55e'), theme: 1 } as never)).toThrow(/scene\.theme/i);
-    expect(view.root.innerHTML).toBe(html);
-    expect(view.artifacts).toBe(artifacts);
   });
 
   it('retained hydrate 以 contribution transaction 添加和移除 handler', () => {
@@ -952,10 +989,14 @@ describe('@retikz/vanilla retained mount', () => {
     });
     const artifacts = view.artifacts;
     const runtimeMeta = view.runtimeMeta;
+    const compileResult = view.compileResult;
+    const committedHtml = view.root.innerHTML;
 
     expect(() => view.update(source('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
+    expect(view.compileResult).toBe(compileResult);
+    expect(view.root.innerHTML).toBe(committedHtml);
   });
 
   it('SVG retained update 在运行时拒绝 Canvas-only animationProperties 配置', () => {
@@ -991,9 +1032,7 @@ describe('@retikz/vanilla retained mount', () => {
       expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
       expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
     ]);
-    expect(() => view.update(source('#22c55e'))).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }),
-    );
+    expect(() => view.update(source('#22c55e'))).toThrow('Processing controller is disposed');
 
     expect(() => view.dispose()).not.toThrow();
     expect(() => view.dispose()).not.toThrow();

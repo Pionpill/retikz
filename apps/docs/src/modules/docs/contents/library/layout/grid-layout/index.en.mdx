@@ -31,12 +31,12 @@ import { GridLayout, LayoutItem } from '@retikz/layout-react';
 </Layout>
 ```
 
-Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout()` with `GridLayoutVanillaAdapter` for Vanilla. For the complete family, pass the three layout Definitions in `composites`, or use `LayoutVanillaAdapters` for Vanilla embeds.
+Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout()` with `GridLayoutInputEmbedAdapter` for Vanilla. For the complete family, pass the three layout Definitions in `composites`, or use `LayoutInputEmbedAdapters` for Vanilla embeds.
 
 | Scenario         | Public entry                                                                                      |
 | ---------------- | ------------------------------------------------------------------------------------------------- |
 | React            | `GridLayout`, `LayoutItem` (`@retikz/layout-react`)                                               |
-| Vanilla          | `gridLayout`, `GridLayoutVanillaAdapter` (`@retikz/layout-vanilla`)                               |
+| Vanilla          | `gridLayout`, `GridLayoutInputEmbedAdapter` (`@retikz/layout-vanilla`)                            |
 | Optional inspect | `InspectGridLayout` (`@retikz/layout-react/inspect`), `inspectGridLayout` (Vanilla)               |
 | IR / persistence | `GridLayoutSchema`, `createGridLayout`, `IRGridLayout`, `GridLayoutDefinition` (`@retikz/layout`) |
 

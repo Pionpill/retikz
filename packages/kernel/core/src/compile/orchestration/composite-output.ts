@@ -1,19 +1,19 @@
 import { ZodError } from 'zod';
 
 import type {
-  CompositeExpandResult,
   CompositeCompileChild,
   CompositeCompileScopeProps,
+  CompositeExpandResult,
   CompositeReplayWrapper,
   Transform,
 } from '../../contract';
 import type { IRChild } from '../../schemas';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
+import { validateSpatialHandleDeclarations } from '../../contract';
 import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { CompositeContractError } from '../probe-failure';
-import { validateSpatialHandleDeclarations } from '../../contract';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 
 /** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */

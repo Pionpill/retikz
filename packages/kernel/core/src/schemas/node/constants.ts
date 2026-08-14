@@ -6,7 +6,6 @@ export const BuiltinShape = {
   Circle: 'circle',
   Ellipse: 'ellipse',
   Diamond: 'diamond',
-  Cross: 'cross',
 } as const;
 
 /** Node 文字颜色的宿主专用关键字 */

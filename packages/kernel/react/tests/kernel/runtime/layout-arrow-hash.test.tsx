@@ -1,9 +1,30 @@
+import { defineArrow } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { Layout } from '../../../src/kernel';
 import { Path } from '../../../src/kernel';
 import { Step } from '../../../src/kernel';
+
+const TestOpenArrowDefinition = defineArrow({
+  name: 'testOpen',
+  hollow: true,
+  lineContactX: 1,
+  tipX: 9,
+  emit: context => [
+    {
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [1, 1] },
+        { kind: 'line', to: [9, 5] },
+        { kind: 'line', to: [1, 9] },
+        { kind: 'close' },
+      ],
+      stroke: typeof context.stroke === 'string' ? context.stroke : { kind: 'contextStroke' },
+      strokeWidth: context.lineWidth,
+    },
+  ],
+});
 
 /**
  * Layout 容器：spec → marker id hash 行为
@@ -125,8 +146,8 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
 
   it("空心 open + fill='red' silent ignore → 最终 SVG 中不含 marker 内的 red 填充", () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100}>
-        <Path arrow="->" arrowDetail={{ shape: 'open', fill: 'red' }}>
+      <Layout width={100} height={100} arrows={[TestOpenArrowDefinition]}>
+        <Path arrow="->" arrowDetail={{ shape: 'testOpen', fill: 'red' }}>
           <Step kind="move" to={[0, 0]} />
           <Step kind="line" to={[80, 0]} />
         </Path>

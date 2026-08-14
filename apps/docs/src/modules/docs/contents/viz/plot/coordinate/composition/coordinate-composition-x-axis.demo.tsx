@@ -24,6 +24,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Axis
         id="calendar"
         dimension="x"
+        grid={xGridVisible}
         placement={{ kind: 'side', side: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.secondaryAxisSide] }}
         title="D"
       />

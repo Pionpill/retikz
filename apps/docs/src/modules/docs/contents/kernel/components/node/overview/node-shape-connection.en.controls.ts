@@ -12,7 +12,6 @@ const shapeOptions = [
   { value: 'polygon', label: 'Hexagon' },
   { value: 'star', label: 'Star' },
   { value: 'sector', label: 'Sector' },
-  { value: 'arc', label: 'Arc' },
 ] as const;
 
 const boundaryOptions = [
