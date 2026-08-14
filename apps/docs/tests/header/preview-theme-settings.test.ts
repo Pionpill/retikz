@@ -1,4 +1,4 @@
-import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
+import { BrushCleaning, CircleDot, GraduationCap, Sparkles } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -10,7 +10,7 @@ import {
 
 describe('preview theme settings icons', () => {
   it('maps each ThemeStyle to its semantic icon', () => {
-    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Default)).toBe(Feather);
+    expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Default)).toBe(CircleDot);
     expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Academic)).toBe(GraduationCap);
     expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Vibrant)).toBe(Sparkles);
     expect(getPreviewThemeStyleIcon(PreviewThemeStyle.Clean)).toBe(BrushCleaning);
