@@ -1,6 +1,7 @@
-import { Layout, Node } from '@retikz/react';
-import { createGrid, GridDefinition, LegendContentKind, LegendProvider } from '@retikz/standard';
+import { createInputScene, Layout, Node } from '@retikz/react';
+import { createGrid, GridDefinition, GridProvider, LegendContentKind, LegendProvider } from '@retikz/standard';
 import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react';
+import { normalizeScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -23,7 +24,7 @@ describe('Standard React definition loading', () => {
     ).not.toThrow();
   });
 
-  it('keeps nested Tier 2 capability loading explicit at the Legend boundary', () => {
+  it('forwards nested Tier 2 capability loading through the Legend Vanilla adapter', () => {
     const legend = (
       <Legend kind={LegendContentKind.Items}>
         <LegendItem itemKey="grid" sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />} />
@@ -36,7 +37,7 @@ describe('Standard React definition loading', () => {
           {legend}
         </Layout>,
       ),
-    ).toThrow(/standard\.grid/i);
+    ).not.toThrow();
     expect(() =>
       renderToStaticMarkup(
         <Layout composites={[GridDefinition]} width={120} height={80}>
@@ -44,17 +45,12 @@ describe('Standard React definition loading', () => {
         </Layout>,
       ),
     ).not.toThrow();
-    expect(
-      Legend.embeddableAdapter.contribute({
-        kind: LegendContentKind.Items,
-        children: (
-          <LegendItem
-            itemKey="grid"
-            sample={<Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />}
-          />
-        ),
-      }).compositeDependencies,
-    ).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
+    const input = createInputScene(legend);
+    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    expect(normalized.contributions[0]).toEqual({
+      roots: [LegendProvider.key, GridProvider.key],
+      providers: [LegendProvider, GridProvider],
+    });
   });
 
   it('compiles direct Standard IR with explicit definitions', () => {

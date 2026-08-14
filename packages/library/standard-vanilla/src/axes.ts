@@ -1,23 +1,23 @@
 import type { AxesInput } from '@retikz/standard';
-import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { AxesProvider, createAxes } from '@retikz/standard';
 
-import { StandardAxesVanillaNamespace } from './constants';
+import { StandardAxesEmbedKind } from './constants';
 
-/** Standard Axes 的 Vanilla Tier 2 adapter */
-export const AxesVanillaAdapter: VanillaTier2Adapter<AxesInput> = {
-  kind: StandardAxesVanillaNamespace,
+/** Standard Axes 的 InputEmbed adapter */
+export const AxesInputEmbedAdapter: InputEmbedAdapter<AxesInput> = {
+  kind: StandardAxesEmbedKind,
   lower: props => ({
     node: createAxes(props),
     compositeDependencies: { roots: [AxesProvider.key], providers: [AxesProvider] },
   }),
 };
 
-/** 创建由 AxesVanillaAdapter 下沉的 Standard Axes embed */
-export const axes = (id: string, input: AxesInput): VanillaEmbedSpec<AxesInput> => ({
+/** 创建由 AxesInputEmbedAdapter 下沉的 Standard Axes embed */
+export const axes = (id: string, input: AxesInput): InputEmbed<AxesInput> => ({
   type: 'embed',
-  kind: StandardAxesVanillaNamespace,
+  kind: StandardAxesEmbedKind,
   id,
   props: input,
 });

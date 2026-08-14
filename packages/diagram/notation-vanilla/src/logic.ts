@@ -1,12 +1,23 @@
 import type {
   ConnectorInput,
   DecisionInput,
+  IRConnector,
   JunctionInput,
   LogicFrameInput,
+  LogicFrameRegionInput,
+  LogicFrameSectionInput,
   StageInput,
   TerminalInput,
 } from '@retikz/notation';
-import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
+import type {
+  InputChild,
+  InputEmbed,
+  InputEmbedAdapter,
+  InputEmbedContext,
+  InputEmbedContribution,
+  InputNode,
+  InputPath,
+} from '@retikz/vanilla';
 
 import {
   ConnectorProvider,
@@ -24,140 +35,269 @@ import {
 } from '@retikz/notation';
 
 import {
-  NotationConnectorVanillaNamespace,
-  NotationDecisionVanillaNamespace,
-  NotationJunctionVanillaNamespace,
-  NotationLogicFrameVanillaNamespace,
-  NotationStageVanillaNamespace,
-  NotationTerminalVanillaNamespace,
+  NotationConnectorEmbedKind,
+  NotationDecisionEmbedKind,
+  NotationJunctionEmbedKind,
+  NotationLogicFrameEmbedKind,
+  NotationStageEmbedKind,
+  NotationTerminalEmbedKind,
 } from './constants';
 
-/** LogicFrame 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type LogicFrameVanillaInput = Omit<LogicFrameInput, 'id'>;
+/** LogicFrame region 的 framework-neutral authoring 输入 */
+export type InputLogicFrameRegion = Omit<LogicFrameRegionInput, 'child'> & {
+  child: InputChild;
+};
 
-/** Terminal 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type TerminalVanillaInput = Omit<TerminalInput, 'id'>;
+/** LogicFrame section 的 framework-neutral authoring 输入 */
+export type InputLogicFrameSection = Omit<LogicFrameSectionInput, 'child'> & {
+  child: InputChild;
+};
 
-/** Stage 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type StageVanillaInput = Omit<StageInput, 'id'>;
+/** LogicFrame 的 authoring 输入可显式指定稳定身份，省略时由 embed id 派生 */
+export type InputLogicFrame = Omit<LogicFrameInput, 'id' | 'header' | 'sections'> & {
+  /** 要持久化到 LogicFrame IR 的显式身份 */
+  id?: string;
+  header?: InputLogicFrameRegion;
+  sections?: ReadonlyArray<InputLogicFrameSection>;
+};
 
-/** Decision 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type DecisionVanillaInput = Omit<DecisionInput, 'id'>;
+/** Terminal 的 authoring 输入，embed id 提供稳定身份 */
+export type InputTerminal = Omit<TerminalInput, 'id'> & {
+  /** 由框架 adapter 收集、等待 Vanilla 归一化的 Core Node 输入 */
+  authoringNode?: InputNode;
+};
 
-/** Junction 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type JunctionVanillaInput = Omit<JunctionInput, 'id'>;
+/** Stage 的 authoring 输入，embed id 提供稳定身份 */
+export type InputStage = Omit<StageInput, 'id'> & {
+  /** 由框架 adapter 收集、等待 Vanilla 归一化的 Core Node 输入 */
+  authoringNode?: InputNode;
+};
+
+/** Decision 的 authoring 输入，embed id 提供稳定身份 */
+export type InputDecision = Omit<DecisionInput, 'id'> & {
+  /** 由框架 adapter 收集、等待 Vanilla 归一化的 Core Node 输入 */
+  authoringNode?: InputNode;
+};
+
+/** Junction 的 authoring 输入，embed id 提供稳定身份 */
+export type InputJunction = Omit<JunctionInput, 'id'> & {
+  /** 由框架 adapter 收集、等待 Vanilla 归一化的 Core Node 输入 */
+  authoringNode?: InputNode;
+};
 
 type OmitId<T> = T extends unknown ? Omit<T, 'id'> : never;
+type ConnectorAuthoringInput = Omit<Extract<ConnectorInput, { way: unknown }>, 'id' | 'way'> & {
+  authoringPath: InputPath;
+};
 
-/** Connector 的 Vanilla 构建器输入，embed id 提供稳定身份 */
-export type ConnectorVanillaInput = OmitId<ConnectorInput>;
+/** Connector 的 authoring 输入，embed id 提供稳定身份 */
+export type InputConnector = OmitId<ConnectorInput> | ConnectorAuthoringInput;
+
+type CollectedInputDependencies = Readonly<{
+  roots: Array<InputEmbedContribution['compositeDependencies']['roots'][number]>;
+  providers: Array<InputEmbedContribution['compositeDependencies']['providers'][number]>;
+  authoringSites: Array<NonNullable<InputEmbedContribution['authoringSites']>[number]>;
+}>;
+
+/** 在当前根 Scene traversal 中归一化一个 Notation slot */
+const normalizeNotationChild = (
+  child: InputChild,
+  label: string,
+  context: InputEmbedContext,
+  collected: CollectedInputDependencies,
+) => {
+  const normalizeChildren = context.normalizeChildren;
+  if (normalizeChildren === undefined) throw new Error('Notation slot inputs require Kernel Vanilla normalizeScene.');
+  const normalized = normalizeChildren([child]);
+  if (normalized.children.length !== 1) {
+    throw new Error(`${label} must normalize to exactly one Core child.`);
+  }
+  collected.roots.push(...normalized.compositeDependencies.roots);
+  collected.providers.push(...normalized.compositeDependencies.providers);
+  collected.authoringSites.push(...normalized.authoringSites);
+  return normalized.children[0];
+};
+
+/** 在当前根 Scene traversal 中归一化 LogicFrame region */
+const normalizeLogicFrameRegion = (
+  input: InputLogicFrameRegion,
+  label: string,
+  context: InputEmbedContext,
+  collected: CollectedInputDependencies,
+): LogicFrameRegionInput => ({
+  ...input,
+  child: normalizeNotationChild(input.child, label, context, collected),
+});
+
+/** 在当前根 Scene traversal 中归一化 LogicFrame section */
+const normalizeLogicFrameSection = (
+  input: InputLogicFrameSection,
+  context: InputEmbedContext,
+  collected: CollectedInputDependencies,
+): LogicFrameSectionInput => ({
+  ...input,
+  child: normalizeNotationChild(input.child, `LogicFrameSection '${input.key}'`, context, collected),
+});
+
+/** 将框架收集的 Core Node 输入收敛为 Notation semantic unit 输入 */
+const normalizeSemanticNode = <TInput extends Record<string, unknown>>(
+  input: TInput,
+  context: InputEmbedContext,
+): Omit<TInput, 'authoringNode'> => {
+  const { authoringNode, ...base } = input as TInput & { authoringNode?: InputNode };
+  if (authoringNode === undefined) return base;
+  const normalizeChildren = context.normalizeChildren;
+  if (normalizeChildren === undefined)
+    throw new Error('Notation semantic inputs require Kernel Vanilla normalizeScene.');
+  const normalized = normalizeChildren([authoringNode]);
+  if (
+    normalized.children.length !== 1 ||
+    normalized.children[0].type !== 'node' ||
+    'namespace' in normalized.children[0]
+  ) {
+    throw new Error('Notation semantic unit must normalize to exactly one Core Node.');
+  }
+  const { type: _type, shape: _shape, id: _id, ...node } = normalized.children[0];
+  void _type;
+  void _shape;
+  void _id;
+  return { ...base, ...node };
+};
 
 /** 使用 embed id 创建规范 Connector IR */
-const createEmbeddedConnector = (id: string, input: ConnectorVanillaInput) => {
+const createEmbeddedConnector = (id: string, input: InputConnector, context: InputEmbedContext) => {
+  if ('authoringPath' in input) {
+    const { authoringPath, ...base } = input;
+    const normalizeChildren = context.normalizeChildren;
+    if (normalizeChildren === undefined)
+      throw new Error('Notation Connector inputs require Kernel Vanilla normalizeScene.');
+    const normalized = normalizeChildren([authoringPath]);
+    if (normalized.children.length !== 1 || normalized.children[0].type !== 'path') {
+      throw new Error('Notation Connector must normalize to exactly one Core Path.');
+    }
+    return createConnector({ ...base, id, children: normalized.children[0].children as IRConnector['children'] });
+  }
   if ('way' in input && input.way !== undefined) {
     return createConnector({ ...input, id, way: input.way });
   }
   return createConnector({ ...input, id, children: input.children });
 };
 
-/** Notation LogicFrame 的 Vanilla 适配器 */
-export const LogicFrameVanillaAdapter: VanillaTier2Adapter<LogicFrameVanillaInput> = {
-  kind: NotationLogicFrameVanillaNamespace,
-  lower: (props, context) => ({
-    node: createLogicFrame({ ...props, id: `${context.id}/logicFrame` }),
-    compositeDependencies: { roots: [LogicFrameProvider.key], providers: [LogicFrameProvider] },
-  }),
+/** Notation LogicFrame 的 InputEmbed adapter */
+export const LogicFrameInputEmbedAdapter: InputEmbedAdapter<InputLogicFrame> = {
+  kind: NotationLogicFrameEmbedKind,
+  lower: (props, context) => {
+    const { header, sections, id, ...input } = props;
+    const collected: CollectedInputDependencies = { roots: [], providers: [], authoringSites: [] };
+    return {
+      node: createLogicFrame({
+        ...input,
+        id: id ?? `${context.id}/logicFrame`,
+        ...(header === undefined
+          ? {}
+          : { header: normalizeLogicFrameRegion(header, 'LogicFrameHeader', context, collected) }),
+        ...(sections === undefined
+          ? {}
+          : { sections: sections.map(section => normalizeLogicFrameSection(section, context, collected)) }),
+      }),
+      compositeDependencies: {
+        roots: [LogicFrameProvider.key, ...collected.roots],
+        providers: [LogicFrameProvider, ...collected.providers],
+      },
+      ...(collected.authoringSites.length === 0 ? {} : { authoringSites: collected.authoringSites }),
+    };
+  },
 };
 
-/** 创建 Notation LogicFrame 的 Vanilla embed 节点 */
-export const logicFrame = (id: string, input: LogicFrameVanillaInput): VanillaEmbedSpec<LogicFrameVanillaInput> => ({
+/** 创建 Notation LogicFrame 的 authoring embed 节点 */
+export const logicFrame = (id: string, input: InputLogicFrame): InputEmbed<InputLogicFrame> => ({
   type: 'embed',
-  kind: NotationLogicFrameVanillaNamespace,
+  kind: NotationLogicFrameEmbedKind,
   id,
   props: input,
 });
 
-/** Notation Terminal 的 Vanilla 适配器 */
-export const TerminalVanillaAdapter: VanillaTier2Adapter<TerminalVanillaInput> = {
-  kind: NotationTerminalVanillaNamespace,
+/** Notation Terminal 的 InputEmbed adapter */
+export const TerminalInputEmbedAdapter: InputEmbedAdapter<InputTerminal> = {
+  kind: NotationTerminalEmbedKind,
   lower: (props, context) => ({
-    node: createTerminal({ ...props, id: context.id }),
+    node: createTerminal({ ...normalizeSemanticNode(props, context), id: context.id }),
     compositeDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
   }),
 };
 
-/** 创建 Notation Terminal 的 Vanilla embed 节点 */
-export const terminal = (id: string, input: TerminalVanillaInput): VanillaEmbedSpec<TerminalVanillaInput> => ({
+/** 创建 Notation Terminal 的 authoring embed 节点 */
+export const terminal = (id: string, input: InputTerminal): InputEmbed<InputTerminal> => ({
   type: 'embed',
-  kind: NotationTerminalVanillaNamespace,
+  kind: NotationTerminalEmbedKind,
   id,
   props: input,
 });
 
-/** Notation Stage 的 Vanilla 适配器 */
-export const StageVanillaAdapter: VanillaTier2Adapter<StageVanillaInput> = {
-  kind: NotationStageVanillaNamespace,
+/** Notation Stage 的 InputEmbed adapter */
+export const StageInputEmbedAdapter: InputEmbedAdapter<InputStage> = {
+  kind: NotationStageEmbedKind,
   lower: (props, context) => ({
-    node: createStage({ ...props, id: context.id }),
+    node: createStage({ ...normalizeSemanticNode(props, context), id: context.id }),
     compositeDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
   }),
 };
 
-/** 创建 Notation Stage 的 Vanilla embed 节点 */
-export const stage = (id: string, input: StageVanillaInput): VanillaEmbedSpec<StageVanillaInput> => ({
+/** 创建 Notation Stage 的 authoring embed 节点 */
+export const stage = (id: string, input: InputStage): InputEmbed<InputStage> => ({
   type: 'embed',
-  kind: NotationStageVanillaNamespace,
+  kind: NotationStageEmbedKind,
   id,
   props: input,
 });
 
-/** Notation Decision 的 Vanilla 适配器 */
-export const DecisionVanillaAdapter: VanillaTier2Adapter<DecisionVanillaInput> = {
-  kind: NotationDecisionVanillaNamespace,
+/** Notation Decision 的 InputEmbed adapter */
+export const DecisionInputEmbedAdapter: InputEmbedAdapter<InputDecision> = {
+  kind: NotationDecisionEmbedKind,
   lower: (props, context) => ({
-    node: createDecision({ ...props, id: context.id }),
+    node: createDecision({ ...normalizeSemanticNode(props, context), id: context.id }),
     compositeDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
   }),
 };
 
-/** 创建 Notation Decision 的 Vanilla embed 节点 */
-export const decision = (id: string, input: DecisionVanillaInput): VanillaEmbedSpec<DecisionVanillaInput> => ({
+/** 创建 Notation Decision 的 authoring embed 节点 */
+export const decision = (id: string, input: InputDecision): InputEmbed<InputDecision> => ({
   type: 'embed',
-  kind: NotationDecisionVanillaNamespace,
+  kind: NotationDecisionEmbedKind,
   id,
   props: input,
 });
 
-/** Notation Junction 的 Vanilla 适配器 */
-export const JunctionVanillaAdapter: VanillaTier2Adapter<JunctionVanillaInput> = {
-  kind: NotationJunctionVanillaNamespace,
+/** Notation Junction 的 InputEmbed adapter */
+export const JunctionInputEmbedAdapter: InputEmbedAdapter<InputJunction> = {
+  kind: NotationJunctionEmbedKind,
   lower: (props, context) => ({
-    node: createJunction({ ...props, id: context.id }),
+    node: createJunction({ ...normalizeSemanticNode(props, context), id: context.id }),
     compositeDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
   }),
 };
 
-/** 创建 Notation Junction 的 Vanilla embed 节点 */
-export const junction = (id: string, input: JunctionVanillaInput): VanillaEmbedSpec<JunctionVanillaInput> => ({
+/** 创建 Notation Junction 的 authoring embed 节点 */
+export const junction = (id: string, input: InputJunction): InputEmbed<InputJunction> => ({
   type: 'embed',
-  kind: NotationJunctionVanillaNamespace,
+  kind: NotationJunctionEmbedKind,
   id,
   props: input,
 });
 
-/** Notation Connector 的 Vanilla 适配器 */
-export const ConnectorVanillaAdapter: VanillaTier2Adapter<ConnectorVanillaInput> = {
-  kind: NotationConnectorVanillaNamespace,
+/** Notation Connector 的 InputEmbed adapter */
+export const ConnectorInputEmbedAdapter: InputEmbedAdapter<InputConnector> = {
+  kind: NotationConnectorEmbedKind,
   lower: (props, context) => ({
-    node: createEmbeddedConnector(context.id, props),
+    node: createEmbeddedConnector(context.id, props, context),
     compositeDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
   }),
 };
 
-/** 创建 Notation Connector 的 Vanilla embed 节点 */
-export const connector = (id: string, input: ConnectorVanillaInput): VanillaEmbedSpec<ConnectorVanillaInput> => ({
+/** 创建 Notation Connector 的 authoring embed 节点 */
+export const connector = (id: string, input: InputConnector): InputEmbed<InputConnector> => ({
   type: 'embed',
-  kind: NotationConnectorVanillaNamespace,
+  kind: NotationConnectorEmbedKind,
   id,
   props: input,
 });

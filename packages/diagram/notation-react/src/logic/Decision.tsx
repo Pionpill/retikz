@@ -1,25 +1,23 @@
 import type { DecisionInput } from '@retikz/notation';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputDecision } from '@retikz/notation-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createDecision, DecisionProvider } from '@retikz/notation';
+import { DecisionInputEmbedAdapter } from '@retikz/notation-vanilla';
+import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { NotationEmbeddableComponent } from '../shared';
 
-import { resolveSemanticNodeInput } from './authoring';
+import { collectSemanticNodeInput } from './authoring';
 
 /** Decision React 编写参数 */
 export type DecisionProps = DecisionInput & Readonly<{ children?: ReactNode }>;
 
-const decisionEmbeddableAdapter: EmbeddableTier2Adapter<DecisionProps> = {
-  displayName: 'Decision',
-  contribute: props => {
-    const { children, ...input } = props;
-    return {
-      node: createDecision(resolveSemanticNodeInput(children, input)),
-      compositeDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
-    };
-  },
+/** 将 React 文字 children 组装为 Notation Vanilla Input */
+const createDecisionInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { children, ...input } = props as DecisionProps;
+  const collected = collectSemanticNodeInput(children, input, context.id);
+  return withInputEmbedAdapters(collected.input satisfies InputDecision, collected.adapters);
 };
 
 const DecisionComponent: FC<DecisionProps> = () => null;
@@ -29,4 +27,5 @@ export const Decision = DecisionComponent as NotationEmbeddableComponent<Decisio
 
 Decision.displayName = 'Decision';
 Decision.isTier2Embeddable = true;
-Decision.embeddableAdapter = decisionEmbeddableAdapter;
+Decision.inputEmbedAdapter = DecisionInputEmbedAdapter;
+Decision.createInputEmbedProps = createDecisionInput;

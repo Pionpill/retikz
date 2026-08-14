@@ -1,59 +1,57 @@
-import type { IRSurface, SurfaceInput } from '@retikz/standard';
-import type { VanillaEmbedSpec, VanillaTier2Adapter, VanillaTier2Contribution } from '@retikz/vanilla';
+import type { SurfaceInput } from '@retikz/standard';
+import type { InputChild, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { createSurface, SurfaceProvider } from '@retikz/standard';
 
-import { StandardSurfaceVanillaNamespace } from './constants';
+import { StandardSurfaceEmbedKind } from './constants';
 
-type CompositeDependencyContribution = VanillaTier2Contribution['compositeDependencies'];
-type SurfaceChild = IRSurface['child'];
+/** Surface 唯一 child 的作者侧输入 */
+export type InputSurfaceChild = InputChild;
 
-/** Vanilla Surface 唯一 child 的运行时 authoring 结果 */
-export type SurfaceVanillaChildAuthoring = Readonly<{
-  /** 写入 canonical Surface IR 的唯一 child */
-  node: SurfaceChild;
-  /** child 为 Tier 2 时显式携带的 provider graph contribution */
-  compositeDependencies?: CompositeDependencyContribution;
-}>;
-
-/** Vanilla Surface 输入由 embed id 派生持久化 Scope id */
-export type SurfaceVanillaInput = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | 'id'> & {
+/** Surface 输入可显式指定持久化 Scope id，省略时由 embed id 派生 */
+export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | 'id'> & {
+  /** 要持久化到 Surface IR 的显式身份 */
+  id?: string;
   /** 唯一 child 与其可选 Tier 2 依赖 */
-  child: SurfaceVanillaChildAuthoring;
+  child: InputSurfaceChild;
 };
 
-/** 创建不会进入 IR 的 Vanilla Surface child authoring 结果 */
-export const surfaceChild = (
-  node: SurfaceChild,
-  compositeDependencies?: CompositeDependencyContribution,
-): SurfaceVanillaChildAuthoring =>
-  Object.freeze({ node, ...(compositeDependencies === undefined ? {} : { compositeDependencies }) });
+/** 创建由 Surface adapter 在根 Scene traversal 中归一化的唯一 child 输入 */
+export const surfaceChild = (child: InputSurfaceChild): InputSurfaceChild => child;
 
-/** Standard Surface 的 Vanilla Tier 2 adapter */
-export const SurfaceVanillaAdapter: VanillaTier2Adapter<SurfaceVanillaInput> = {
-  kind: StandardSurfaceVanillaNamespace,
+/** Standard Surface 的 InputEmbed adapter */
+export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
+  kind: StandardSurfaceEmbedKind,
   lower: (props, context) => {
-    const { child, ...input } = props;
+    const { child, id, ...input } = props;
+    const normalizeChildren = context.normalizeChildren;
+    if (normalizeChildren === undefined)
+      throw new Error('Standard Surface inputs require Kernel Vanilla normalizeScene.');
+    const normalized = normalizeChildren([child]);
+    if (normalized.children.length !== 1) {
+      throw new Error('Standard Surface requires exactly one normalized child.');
+    }
     return {
       node: createSurface({
         namespace: 'standard',
         type: 'surface',
         ...input,
-        id: `${context.id}/surface`,
-        child: child.node,
+        id: id ?? `${context.id}/surface`,
+        child: normalized.children[0],
       }),
       compositeDependencies: {
-        roots: [SurfaceProvider.key, ...(child.compositeDependencies?.roots ?? [])],
-        providers: [SurfaceProvider, ...(child.compositeDependencies?.providers ?? [])],
+        roots: [SurfaceProvider.key, ...normalized.compositeDependencies.roots],
+        providers: [SurfaceProvider, ...normalized.compositeDependencies.providers],
       },
+      ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };
   },
 };
 
-/** 创建由 SurfaceVanillaAdapter 下沉的 Standard Surface embed */
-export const surface = (id: string, input: SurfaceVanillaInput): VanillaEmbedSpec<SurfaceVanillaInput> => ({
+/** 创建由 SurfaceInputEmbedAdapter 下沉的 Standard Surface embed */
+export const surface = (id: string, input: InputSurface): InputEmbed<InputSurface> => ({
   type: 'embed',
-  kind: StandardSurfaceVanillaNamespace,
+  kind: StandardSurfaceEmbedKind,
   id,
   props: input,
 });

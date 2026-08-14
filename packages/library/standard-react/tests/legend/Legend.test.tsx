@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { convertReactNodeToIR, Layout, Node, Path, Step } from '@retikz/react';
+import { createInputScene, Layout, Node, Path, Step } from '@retikz/react';
 import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard';
+import { normalizeScene } from '@retikz/vanilla';
 import { forwardRef, Fragment, memo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -27,7 +28,15 @@ const itemSample = (
 
 const itemLabel = <Node position={[0, 0]} text="Active" />;
 
-const contribute = (props: LegendProps) => Legend.embeddableAdapter.contribute(props);
+/** 以 React 真实 authoring 路径归一化一个 Legend */
+const contribute = ({ children, ...props }: LegendProps) => {
+  const input = createInputScene(<Legend {...props}>{children}</Legend>);
+  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  return {
+    node: normalized.ir.children[0],
+    compositeDependencies: normalized.contributions[0],
+  };
+};
 
 describe('<Legend>', () => {
   it('forwards authored root Scope identity and metadata through both forms', () => {
@@ -262,12 +271,18 @@ describe('<Legend>', () => {
       }),
     ).toThrow(/one LegendRamp/i);
 
-    expect(() => convertReactNodeToIR(<LegendTitle>{itemLabel}</LegendTitle>)).toThrow(/direct child of Legend/i);
-    expect(() => convertReactNodeToIR(<LegendItem itemKey="item" sample={itemSample} />)).toThrow(
+    expect(() => normalizeScene(createInputScene(<LegendTitle>{itemLabel}</LegendTitle>).scene)).toThrow(
       /direct child of Legend/i,
     );
-    expect(() => convertReactNodeToIR(<LegendRamp>{itemSample}</LegendRamp>)).toThrow(/direct child of Legend/i);
-    expect(() => convertReactNodeToIR(<LegendTick tickKey="tick" offset={0} />)).toThrow(/direct child of Legend/i);
+    expect(() => normalizeScene(createInputScene(<LegendItem itemKey="item" sample={itemSample} />).scene)).toThrow(
+      /direct child of Legend/i,
+    );
+    expect(() => normalizeScene(createInputScene(<LegendRamp>{itemSample}</LegendRamp>).scene)).toThrow(
+      /direct child of Legend/i,
+    );
+    expect(() => normalizeScene(createInputScene(<LegendTick tickKey="tick" offset={0} />).scene)).toThrow(
+      /direct child of Legend/i,
+    );
   });
 
   it('rejects invalid required and optional slot cardinality before conversion', () => {
