@@ -53,7 +53,7 @@ describe('Table Vanilla plain authoring', () => {
       type: 'embed',
       kind: 'table',
       id: 'panel',
-      props: { spec, data: {} },
+      props: { table: { kind: 'manual', input: { rows: [[null]] } }, data: {} },
     });
     expect(() => embedTable('', spec)).toThrow('table vanilla: embed id must be non-empty');
     expect(() => embedTable('   ', spec)).toThrow('table vanilla: embed id must be non-empty');

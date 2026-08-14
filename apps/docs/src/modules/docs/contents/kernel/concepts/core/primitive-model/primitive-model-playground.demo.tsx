@@ -2,12 +2,13 @@ import type { IRBoundary } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
+import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import type { BoundaryChoice, BoundaryFitChoice, ShapeChoice } from './primitive-model-playground-boundary';
 
-import { previewControlContract,primitiveModelPlaygroundControls } from './primitive-model-playground.controls';
+import { previewControlContract, primitiveModelPlaygroundControls } from './primitive-model-playground.controls';
 import { nodeShapeOf, primitiveModelBoundaryGuideShape } from './primitive-model-playground-boundary';
 
 export const previewControls = primitiveModelPlaygroundControls;
@@ -64,7 +65,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={400}
       height={300}
       viewBox={{ x: -175, y: -145, width: 350, height: 290 }}
-      shapes={[primitiveModelBoundaryGuideShape]}
+      shapes={[primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}
     >
       <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-3} />
       <Node

@@ -22,31 +22,6 @@ describe('ClipSpecSchema 合法形态', () => {
     const parsed = ClipSpecSchema.safeParse({ kind: 'ellipse', cx: 5, cy: 5, rx: 30, ry: 20 });
     expect(parsed.success).toBe(true);
   });
-
-  it('polygon 恰 3 点接受', () => {
-    const parsed = ClipSpecSchema.safeParse({
-      kind: 'polygon',
-      points: [
-        [0, 0],
-        [10, 0],
-        [5, 10],
-      ],
-    });
-    expect(parsed.success).toBe(true);
-  });
-
-  it('polygon 多于 3 点接受', () => {
-    const parsed = ClipSpecSchema.safeParse({
-      kind: 'polygon',
-      points: [
-        [0, 0],
-        [10, 0],
-        [10, 10],
-        [0, 10],
-      ],
-    });
-    expect(parsed.success).toBe(true);
-  });
 });
 
 describe('ClipSpecSchema 退化 / 非法形态拒绝', () => {
@@ -110,61 +85,20 @@ describe('ClipSpecSchema 退化 / 非法形态拒绝', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('polygon 仅 2 点拒绝', () => {
-    const parsed = ClipSpecSchema.safeParse({
-      kind: 'polygon',
-      points: [
-        [0, 0],
-        [10, 0],
-      ],
-    });
-    expect(parsed.success).toBe(false);
+  it('polygon 与 path 作为开放 provider spec 保留给注册表校验', () => {
+    expect(ClipSpecSchema.safeParse({ kind: 'polygon', points: [] }).success).toBe(true);
+    expect(
+      ClipSpecSchema.safeParse({ kind: 'path', commands: [{ kind: 'move', to: [0, 0], typo: true }] }).success,
+    ).toBe(true);
   });
 
-  it('polygon 空 points 拒绝', () => {
-    const parsed = ClipSpecSchema.safeParse({ kind: 'polygon', points: [] });
-    expect(parsed.success).toBe(false);
-  });
-
-  it('polygon 含三元组点拒绝', () => {
-    const parsed = ClipSpecSchema.safeParse({
-      kind: 'polygon',
-      points: [
-        [0, 0],
-        [10, 0],
-        [5, 10, 1],
-      ],
-    });
-    expect(parsed.success).toBe(false);
-  });
-
-  it('polygon 含非 finite 点坐标拒绝', () => {
-    const parsed = ClipSpecSchema.safeParse({
-      kind: 'polygon',
-      points: [
-        [0, 0],
-        [Infinity, 0],
-        [5, 10],
-      ],
-    });
-    expect(parsed.success).toBe(false);
-  });
-
-  it('path clip 内 path command 未知字段拒绝', () => {
-    const parsed = ClipSpecSchema.safeParse({
-      kind: 'path',
-      commands: [{ kind: 'move', to: [0, 0], typo: true }],
-    });
-    expect(parsed.success).toBe(false);
-  });
-
-  it('compound clip 未知字段拒绝', () => {
+  it('compound 作为开放的自定义 clip spec 通过 Core schema', () => {
     const parsed = ClipSpecSchema.safeParse({
       kind: 'compound',
       children: [{ kind: 'circle', cx: 0, cy: 0, r: 10 }],
-      extra: 'ignored before strict',
+      extra: 'preserved for the registered provider schema',
     });
-    expect(parsed.success).toBe(false);
+    expect(parsed.success).toBe(true);
   });
 
   it('custom kind 接受 JSON-safe 对象，具体语义由 compile 的 clips provider 校验', () => {

@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { VanillaAuthoringSite } from '@retikz/vanilla';
+import type { InputAuthoringSite } from '@retikz/vanilla';
 
 import type { InspectionSelectionRule } from '../compile';
 import type { InspectorKey } from '../contract';
@@ -30,7 +30,7 @@ export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthori
   Object.freeze({ token: INSPECTION_VANILLA_AUTHORING_TOKEN, input });
 
 /** 读取基础 Vanilla adapter 报告的 opaque Inspect authoring 标记 */
-const readInspectionVanillaAuthoring = (site: VanillaAuthoringSite): InspectionVanillaAuthoring | undefined => {
+const readInspectionVanillaAuthoring = (site: InputAuthoringSite): InspectionVanillaAuthoring | undefined => {
   const candidate = site.authoring;
   if (typeof candidate !== 'object' || candidate === null) return undefined;
   return Reflect.get(candidate, 'token') === INSPECTION_VANILLA_AUTHORING_TOKEN
@@ -39,7 +39,7 @@ const readInspectionVanillaAuthoring = (site: VanillaAuthoringSite): InspectionV
 };
 
 /** 把一个 Vanilla authored site 的可选标记转换为通用 InspectionSelection rules */
-export const inspectionRulesFromVanillaSite = (site: VanillaAuthoringSite): ReadonlyArray<InspectionSelectionRule> => {
+export const inspectionRulesFromVanillaSite = (site: InputAuthoringSite): ReadonlyArray<InspectionSelectionRule> => {
   const authoring = readInspectionVanillaAuthoring(site);
   if (authoring === undefined) return Object.freeze([]);
   const target =

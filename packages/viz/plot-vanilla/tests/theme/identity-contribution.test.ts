@@ -2,7 +2,7 @@ import type * as RetikzCore from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
-import type { VanillaEmbedContext } from '@retikz/vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { ThemeMode } from '@retikz/core';
 import { definePlotThemeStyle, getDefaultPlotThemePreset } from '@retikz/plot';
@@ -29,7 +29,7 @@ vi.mock('@retikz/vanilla', async importOriginal => {
   };
 });
 
-import { createPlotAdapter, plot, renderPlot } from '../../src';
+import { plot, PlotInputEmbedAdapter, renderPlot } from '../../src';
 
 const spec: IRPlotSpec = plot({
   data: { reference: 'sales' },
@@ -43,7 +43,7 @@ const spec: IRPlotSpec = plot({
 
 const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 
-const contextOf = (id: string): VanillaEmbedContext => ({
+const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'plot',
   layerId: 'chart',
@@ -65,12 +65,18 @@ describe('Plot Vanilla runtime style options', () => {
     expect(options?.themeStyles).toEqual([]);
   });
 
-  it('embedded createPlotAdapter keeps runtime style definitions out of the contribution payload', () => {
-    const contribution = createPlotAdapter(data).lower({ spec }, contextOf('panel'));
+  it('embedded PlotInputEmbedAdapter keeps runtime style definitions out of the contribution payload', () => {
+    const contribution = PlotInputEmbedAdapter.lower({ spec, datasets: data }, contextOf('panel'));
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');
-    expect(contribution.compositeDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(contribution.compositeDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(contribution.providerDependencies.roots).toEqual([
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+    ]);
+    expect(contribution.providerDependencies.providers[2]?.key).toEqual({
+      capability: 'composite',
+      namespace: 'plot',
+      type: 'plot',
+    });
   });
 });

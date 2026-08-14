@@ -37,7 +37,7 @@ const ANG_PT: [number, number] = [RB.x + RB.w, RB.y + RB.w * Math.tan(30 * DEG)]
 // 边比例 anchor { side: 'top', fraction:0.25}：top 边左→右，fraction=0 在 TL
 const EDGE_PT: [number, number] = [RB.x - RB.w + 0.25 * 2 * RB.w, RB.y - RB.h];
 
-// 第二排：有 shape 专属 anchor 的非矩形 —— star / sector / arc
+// 第二排：有 shape 专属 anchor 的非矩形 —— star / sector
 const STAR_C = { x: -130, y: 88, ro: 34, ri: 14 };
 const STAR: Array<[number, number]> = Array.from({ length: 10 }, (_unused, j): [number, number] =>
   polar(STAR_C.x, STAR_C.y, j % 2 === 0 ? STAR_C.ro : STAR_C.ri, -90 + j * 36),
@@ -50,13 +50,6 @@ const SECTOR_TIPS: Array<[number, number]> = [
   polar(SEC.x, SEC.y, SEC.ro, (SEC.a + SEC.b) / 2), // outer-arc-mid
   polar(SEC.x, SEC.y, (SEC.ri + SEC.ro) / 2, SEC.a), // start-edge-mid
   polar(SEC.x, SEC.y, (SEC.ri + SEC.ro) / 2, SEC.b), // end-edge-mid
-];
-
-const ARC = { x: 150, y: 104, r: 36, a: -150, b: -30 };
-const ARC_TIPS: Array<[number, number]> = [
-  polar(ARC.x, ARC.y, ARC.r, ARC.a), // start
-  polar(ARC.x, ARC.y, ARC.r, (ARC.a + ARC.b) / 2), // arc-mid
-  polar(ARC.x, ARC.y, ARC.r, ARC.b), // end
 ];
 
 const Demo: FC = () => (
@@ -112,22 +105,13 @@ const Demo: FC = () => (
       star · tip-N
     </Node>
 
-    {/* 第二排 · sector：apex 与外弧端点 */}
+    {/* 第二排 · sector：apex 与外弧中点 */}
     <Draw way={[[SEC.x, SEC.y], ...arcPts(SEC.x, SEC.y, SEC.ro, SEC.a, SEC.b, 14), DrawWay.Cycle]} {...RECT} />
     {SECTOR_TIPS.map(([x, y], i) => (
       <Circle key={`sec-${i}`} center={[x, y]} radius={3} fill="dodgerblue" stroke="none" />
     ))}
     <Node id="tsec" position={[SEC.x, 140]} {...TITLE} font={FONT}>
-      sector · apex / arc-mid / edge-mid
-    </Node>
-
-    {/* 第二排 · arc：start / arc-mid / end */}
-    <Draw way={arcPts(ARC.x, ARC.y, ARC.r, ARC.a, ARC.b, 14)} {...RECT} />
-    {ARC_TIPS.map(([x, y], i) => (
-      <Circle key={`arc-${i}`} center={[x, y]} radius={3} fill="dodgerblue" stroke="none" />
-    ))}
-    <Node id="tarc" position={[ARC.x, 140]} {...TITLE} font={FONT}>
-      arc · start / mid / end
+      sector · apex / outer-arc-mid / edge-mid
     </Node>
   </Layout>
 );

@@ -1,26 +1,34 @@
-import type { FlexLayoutInput } from '@retikz/layout';
-import type { VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
+import type { FlexLayoutItemInput } from '@retikz/layout';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { createFlexLayout, FlexLayoutProvider } from '@retikz/layout';
+
+import type { InputFlexLayout } from './normalize';
+
+import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Flex 布局嵌入项的稳定类别 */
 const FlexLayoutEmbedKind = 'layout.flexLayout';
 
-/** Layout Flex 布局的 Vanilla 适配器 */
-export const FlexLayoutVanillaAdapter: VanillaTier2Adapter<FlexLayoutInput> = {
+/** Layout Flex 布局的 InputEmbed adapter */
+export const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout> = {
   kind: FlexLayoutEmbedKind,
-  lower: props => ({
-    node: createFlexLayout(props),
-    compositeDependencies: { roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] },
-  }),
+  lower: (props, context) => {
+    const { children, ...input } = props;
+    const normalized = normalizeLayoutItems<FlexLayoutItemInput>(children, context);
+    return {
+      node: createFlexLayout({ ...input, children: normalized.items }),
+      providerDependencies: {
+        roots: [FlexLayoutProvider.key, ...normalized.providerDependencies.roots],
+        providers: [FlexLayoutProvider, ...normalized.providerDependencies.providers],
+      },
+      ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+    };
+  },
 };
 
 /** 创建由 Layout 适配器下沉的 Flex 布局嵌入项 */
-export const flexLayout = (
-  id: string,
-  input: FlexLayoutInput,
-  authoring?: unknown,
-): VanillaEmbedSpec<FlexLayoutInput> => ({
+export const flexLayout = (id: string, input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> => ({
   type: 'embed',
   kind: FlexLayoutEmbedKind,
   id,

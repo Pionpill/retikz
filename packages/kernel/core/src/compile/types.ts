@@ -3,20 +3,13 @@ import type { ZodType } from 'zod';
 
 import type {
   AnyCompositeDefinition,
-  AnyPathKindDefinition,
-  ArrowDefinition,
-  BoundaryDefinition,
-  ClipDefinition,
   CompileObserverOutput,
   CompileOccurrenceLocator,
-  PathGeneratorDefinition,
-  PatternDefinition,
   RibbonWidthProfileDefinition,
   Scene,
-  ShapeDefinition,
   SpatialHandleIndex,
 } from '../contract';
-import type { ThemeStyleDefinition } from '../contract';
+import type { CoreProviderDefinitions, ThemeStyleDefinition } from '../contract';
 import type { IRCoordinate, IRNode, IRPathBase, IRScene, IRScope, JsonValue } from '../schemas';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
@@ -180,49 +173,9 @@ export type CompileLayoutOptions = {
 };
 
 /** 运行时注入的 provider 注册表 */
-export type CompileProviderOptions = {
+export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'> & {
   /** 运行时注入的 Core Theme style definitions */
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
-  /**
-   * 运行时注入的 shape 定义
-   * @description 未注册名称会在编译期报错
-   * @default BUILTIN_SHAPES
-   */
-  shapes?: ReadonlyArray<ShapeDefinition>;
-  /**
-   * 运行时注入的 connection surface 定义
-   * @description `boundary` 先查本注册表，再兜底查 shape 注册表
-   * @default BUILTIN_BOUNDARIES
-   */
-  boundaries?: ReadonlyArray<BoundaryDefinition>;
-  /**
-   * 运行时注入的 clip providers
-   * @default BUILTIN_CLIPS
-   */
-  clips?: ReadonlyArray<ClipDefinition>;
-  /**
-   * 运行时注入的 arrow 定义
-   * @description 未注册名称会在编译期报错
-   * @default BUILTIN_ARROWS
-   */
-  arrows?: ReadonlyArray<ArrowDefinition>;
-  /**
-   * 运行时注入的 pattern motif 定义
-   * @description 未注册名称会在编译期报错
-   * @default BUILTIN_PATTERNS
-   */
-  patterns?: ReadonlyArray<PatternDefinition>;
-  /**
-   * 运行时注入的 path generator 定义
-   * @description 未注册名称会在编译期报错
-   * @default BUILTIN_PATH_GENERATORS
-   */
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  /**
-   * 运行时注入的 path kind providers
-   * @default BUILTIN_PATH_KINDS
-   */
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
   /**
    * 运行时注入的 ribbon 宽度 profile
    * @description profile 函数从这里注入，永不进入 IR

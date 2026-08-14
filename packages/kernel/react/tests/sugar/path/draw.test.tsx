@@ -3,17 +3,17 @@ import { describe, expect, it } from 'vitest';
 
 import { Path } from '../../../src/kernel';
 import { Step } from '../../../src/kernel';
-import { buildIR } from '../../../src/kernel/adapter';
 import { Draw } from '../../../src/sugar';
+import { normalizeReactInput } from '../../helpers/normalize-input';
 
 /**
  * Draw 是 Sugar：调一次它得到 <Path><Step.../></Path> 子树。
- * 在 node env 不渲染，直接调 FC 拿 element 树检查；走 buildIR 拿最终 IR 验证语义。
+ * 在 node env 不渲染，直接调 FC 拿 element 树检查；经 Vanilla normalize 取得最终 IR 验证语义。
  *
  * Hard rule：Sugar 不引入新能力——任何 Draw 表达都必须能用 Kernel 等价表达。这里通过对比
  * Draw 输出的 IR 与手写 Kernel 的 IR 是否一致来验
  */
-const ir = (jsx: React.ReactNode) => buildIR(jsx);
+const ir = (jsx: React.ReactNode) => normalizeReactInput(jsx);
 
 describe('Draw: 基础展开', () => {
   it('两个 id：展开为 Path + move + line', () => {
@@ -83,6 +83,22 @@ describe('Draw: 基础展开', () => {
       fillOpacity: 0.5,
       strokeOpacity: 0.7,
       zIndex: 5,
+    });
+  });
+
+  it('thickness 由 Vanilla Path normalizer 映射为 strokeWidth，且显式 0 优先', () => {
+    expect(ir(<Draw way={['a', 'b']} thickness="thick" />).children).toEqual([
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: { id: 'a' } },
+          { type: 'step', kind: 'line', to: { id: 'b' } },
+        ],
+        strokeWidth: 2,
+      },
+    ]);
+    expect(ir(<Draw way={['a', 'b']} thickness="thick" strokeWidth={0} />).children[0]).toMatchObject({
+      strokeWidth: 0,
     });
   });
 

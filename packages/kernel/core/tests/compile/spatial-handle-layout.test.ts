@@ -72,14 +72,14 @@ describe('spatial handle layout replay', () => {
     const [parentHandle, childHandle] = handles;
 
     expect(handles.map(handle => handle.role)).toEqual(['parent', 'child']);
-    expect(parentHandle?.geometry.bounds).toEqual({ x: 9, y: 11, width: 10, height: 10 });
-    expect(childHandle?.geometry.bounds).toEqual({ x: 39, y: 51, width: 10, height: 10 });
-    expect(childHandle?.ownerPath.map(owner => [owner.type, owner.instanceId])).toEqual([
+    expect(parentHandle.geometry.bounds).toEqual({ x: 9, y: 11, width: 10, height: 10 });
+    expect(childHandle.geometry.bounds).toEqual({ x: 39, y: 51, width: 10, height: 10 });
+    expect(childHandle.ownerPath.map(owner => [owner.type, owner.instanceId])).toEqual([
       ['parent', 'outer'],
       ['child', 'inner'],
     ]);
-    expect(childHandle?.finalOccurrence.expansionPath.some(segment => segment.kind === 'replay')).toBe(true);
-    expect(childHandle?.originOccurrence.expansionPath.some(segment => segment.kind === 'probe')).toBe(true);
-    expect(childHandle?.finalOccurrence).not.toEqual(childHandle?.originOccurrence);
+    expect(childHandle.finalOccurrence.expansionPath.some(segment => segment.kind === 'replay')).toBe(true);
+    expect(childHandle.originOccurrence.expansionPath.some(segment => segment.kind === 'probe')).toBe(true);
+    expect(childHandle.finalOccurrence).not.toEqual(childHandle.originOccurrence);
   });
 });

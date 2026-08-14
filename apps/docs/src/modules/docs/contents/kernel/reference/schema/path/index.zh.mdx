@@ -1,4 +1,4 @@
-﻿---
+---
 title: 路径
 description: 笔画外壳、step 动作序列与 step 目标点
 ---
@@ -428,11 +428,11 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 <ZodSchema
   name="GeneratorStepSchema"
-  description="生成器动作：委托一个内置或注册的 path generator（内置 parabola，自定义 sin 等）产出子路径。"
+  description="生成器动作：委托本次已注册的 path generator（例如 Standard parabola 或自定义 sin）产出子路径。"
   descriptions={{
     type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`generator` —— 把本段委托给内置或 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
-    name: '生成器名；内置名可直接用，自定义名由 CompileOptions.pathGenerators 注册，未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
+    kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
+    name: '生成器名；由 CompileOptions.pathGenerators 注册，Standard parabola 也需显式注入。未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
     to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
     params:
       '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析到当前 Path 的局部坐标再运行',
@@ -572,7 +572,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
   description="路径级箭头视觉配置：顶层默认加可选起末端覆盖。"
   descriptions={{
     shape:
-      '箭头形状名（开放字符串）：内置 8 种 normal / open / stealth / openStealth / diamond / openDiamond / circle / openCircle，或经 `CompileOptions.arrows` 注册的扩展名（未注册名 compile 期报错）；默认 stealth',
+      '箭头形状名（开放字符串）：内置 6 种 Core 箭头 normal / open / stealth / openStealth / circle / openCircle，以及 2 种 Standard 箭头 diamond / openDiamond，或经 `CompileOptions.arrows` 注册的扩展名（未注册名 compile 期报错）；默认 stealth',
     scale: '等比缩放因子（默认 1），乘到 length / width 之后',
     length: '尖长（user units，沿 path 方向），默认 6',
     width: '尖宽（user units，垂直 path 方向），默认 6',

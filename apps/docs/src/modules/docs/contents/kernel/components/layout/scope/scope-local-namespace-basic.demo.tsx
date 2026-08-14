@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Scope } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,scopeLocalNamespaceBasicControls } from './scope-local-namespace-basic.controls';
+import { previewControlContract, scopeLocalNamespaceBasicControls } from './scope-local-namespace-basic.controls';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeLocalNamespaceBasicControls;

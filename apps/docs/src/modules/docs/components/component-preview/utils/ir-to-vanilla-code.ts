@@ -261,7 +261,7 @@ const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
   if (ribbon === undefined) return rawIrChildCode(path, indent, 'missing ribbon options');
 
   if (ribbon.mode === 'boundary') {
-    return rawIrChildCode(path, indent, 'boundary ribbon has no vanilla plain spec shorthand');
+    return rawIrChildCode(path, indent, 'boundary ribbon has no Vanilla Input shorthand');
   }
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing ribbon centerline');
@@ -289,17 +289,17 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
 
 const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame', 'surface', 'surfaceChild', 'legend'];
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'GridVanillaAdapter',
-  'AxesVanillaAdapter',
-  'FrameVanillaAdapter',
-  'SurfaceVanillaAdapter',
-  'LegendVanillaAdapter',
+  'GridInputEmbedAdapter',
+  'AxesInputEmbedAdapter',
+  'FrameInputEmbedAdapter',
+  'SurfaceInputEmbedAdapter',
+  'LegendInputEmbedAdapter',
 ];
 const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
 const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'FlexLayoutVanillaAdapter',
-  'GridLayoutVanillaAdapter',
-  'OverlayLayoutVanillaAdapter',
+  'FlexLayoutInputEmbedAdapter',
+  'GridLayoutInputEmbedAdapter',
+  'OverlayLayoutInputEmbedAdapter',
 ];
 const NOTATION_HELPER_ORDER: ReadonlyArray<string> = [
   'logicFrame',
@@ -310,12 +310,12 @@ const NOTATION_HELPER_ORDER: ReadonlyArray<string> = [
   'connector',
 ];
 const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'LogicFrameVanillaAdapter',
-  'TerminalVanillaAdapter',
-  'StageVanillaAdapter',
-  'DecisionVanillaAdapter',
-  'JunctionVanillaAdapter',
-  'ConnectorVanillaAdapter',
+  'LogicFrameInputEmbedAdapter',
+  'TerminalInputEmbedAdapter',
+  'StageInputEmbedAdapter',
+  'DecisionInputEmbedAdapter',
+  'JunctionInputEmbedAdapter',
+  'ConnectorInputEmbedAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -569,7 +569,7 @@ const rewriteNotationInput = (kind: string, input: Record<string, unknown>, ctx:
 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
+  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
   if (!STANDARD_HELPER_ORDER.includes(record.type) || !STANDARD_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
@@ -595,7 +595,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
 
 const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
+  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
   if (!LAYOUT_HELPER_ORDER.includes(record.type) || !LAYOUT_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
@@ -611,7 +611,7 @@ const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =
 
 const notationCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}VanillaAdapter`;
+  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
   if (!NOTATION_HELPER_ORDER.includes(record.type) || !NOTATION_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
@@ -649,12 +649,12 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
   return `[\n${lines.join('\n')}\n${pad(indent)}]`;
 };
 
-const HELPER_ORDER: ReadonlyArray<string> = ['figure', 'node', 'path', 'coordinate', 'scope'];
+const HELPER_ORDER: ReadonlyArray<string> = ['scene', 'node', 'path', 'coordinate', 'scope'];
 
 /** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
 export const irToVanillaCode = (ir: IRScene): string => {
   const ctx: Ctx = {
-    used: new Set(['figure']),
+    used: new Set(['scene']),
     usesDrawWay: false,
     standardHelpers: new Set(),
     standardAdapters: new Set(),
@@ -718,7 +718,7 @@ export const irToVanillaCode = (ir: IRScene): string => {
   const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.notation];
   const compile =
     definitionNames.length > 0 ? `\nconst compile = { composites: [${definitionNames.join(', ')}] };\n` : '';
-  return `${imports.join('\n')}\n\nconst fig = figure(${figureArgs});\n${adapterCode}${compile}`;
+  return `${imports.join('\n')}\n\nconst input = scene(${figureArgs});\n${adapterCode}${compile}`;
 };
 
 /** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */

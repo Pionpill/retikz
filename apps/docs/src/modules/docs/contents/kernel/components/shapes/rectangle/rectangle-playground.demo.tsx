@@ -4,7 +4,7 @@ import { Draw, Layout, Rectangle } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,rectanglePlaygroundControls } from './rectangle-playground.controls';
+import { previewControlContract, rectanglePlaygroundControls } from './rectangle-playground.controls';
 
 export const previewControls = rectanglePlaygroundControls;
 

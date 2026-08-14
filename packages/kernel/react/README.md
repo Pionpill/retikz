@@ -1,8 +1,8 @@
 # @retikz/react
 
-React adapter for [retikz](https://pionpill.github.io/retikz/) — declare TikZ-style diagrams with JSX. Build IR with Kernel / Sugar components, then render to **SVG or Canvas** from the same tree.
+React adapter for [retikz](https://pionpill.github.io/retikz/) — declare TikZ-style diagrams with JSX. Kernel / Sugar components collect Vanilla Input, which Vanilla normalizes and processes before rendering to **SVG or Canvas**.
 
-retikz 的 React 适配层：用 JSX 声明 TikZ 风格图形。Kernel / Sugar 组件构建 IR，`<Layout renderer="svg"｜"canvas">` 在最终渲染阶段选择输出后端（默认 `svg`，两路共用同一 `compileToScene`、同 Scene 等价）。
+retikz 的 React 适配层：用 JSX 声明 TikZ 风格图形。Kernel / Sugar 组件收集 Vanilla Input，由 Vanilla 统一归一化和处理；`<Layout renderer="svg"｜"canvas">` 在最终渲染阶段选择输出后端（默认 `svg`，两路共用同一处理结果）。
 
 ## Install
 
@@ -46,8 +46,8 @@ style names through `defineThemeStyle` and the matching owner-local definitions 
 
 - Kernel: `Layout` / `ThemeProvider` / `Node` / `Path` / `Step` / `Text` / `Coordinate` / `Scope`
 - Sugar: `Draw` and the shape components (`Circle` / `Rectangle` / …)
-- IR interop: `convertReactNodeToIR` / `convertIRToReactNode`; the reverse conversion preserves Tier 1 structure and accepts composite definitions to lower Tier 2 IR into equivalent Kernel JSX
-- Re-exported from core: `DrawWay`, target/anchor types, and extension definitions/helpers such as `defineArrow`, `defineBoundary`, `defineClip`, `definePattern`, `definePathGenerator`, `definePathKind`, and `defineRibbonWidthProfile`
+- IR interop: `convertIRToReactNode`; the conversion preserves Tier 1 structure and accepts composite definitions to lower Tier 2 IR into equivalent Kernel JSX
+- Core grammar vocabulary and extension definitions stay owned by `@retikz/core`; import them from that package when needed
 
 ## Docs
 

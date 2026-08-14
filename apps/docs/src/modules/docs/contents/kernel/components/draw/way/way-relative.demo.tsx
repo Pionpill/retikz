@@ -5,7 +5,7 @@ import { Circle, Draw, Layout, Node } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,wayRelativeControls } from './way-relative.controls';
+import { previewControlContract, wayRelativeControls } from './way-relative.controls';
 import { WayAccumulateStart, WayRelativeFirstOffset, WayRelativeStart, WayRelativeViewBox } from './way-relative.data';
 
 export const previewControls = wayRelativeControls;

@@ -1,0 +1,92 @@
+---
+title: 裁剪扩展
+description: 从 @retikz/standard/clip 按需引入组合裁剪定义，并分别在 React 与 Vanilla 的编译入口传入 Definition。
+---
+
+裁剪扩展在 Core 提供的基础裁剪之上，补充了更多可选内容：
+
+| 包名            | 提供内容                                                 |
+| --------------- | -------------------------------------------------------- |
+| `core`          | `rect` — 矩形、`circle` — 圆形、`ellipse` — 椭圆         |
+| `standard/clip` | `polygon` — 多边形、`path` — 路径、`compound` — 组合裁剪 |
+
+## 用法
+
+本页支持两种导入方式：
+
+- 按需导入特定 Definition，例如 `CompoundClipDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
+- 整体使用官方扩展，例如 `StandardClipDefinitions`，一次包含本子入口提供的全部 Standard Definition；组装 provider graph 时，对应使用 `StandardClipProviders`
+
+两种方式都只是当前图的显式装配，不会因为 import 自动全局注册裁剪。
+
+### React 用法
+
+从 `@retikz/standard/clip` 导入所需的 clip Definition，传给 React `Layout` 的 `clips` 属性，再在 `Scope` 上写入裁剪 spec。
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+
+<Layout clips={[CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition]}>
+  <Scope
+    clip={{
+      kind: 'compound',
+      fillRule: 'nonzero',
+      children: [
+        { kind: 'circle', cx: -32, cy: 0, r: 56 },
+        { kind: 'circle', cx: 32, cy: 0, r: 56 },
+      ],
+    }}
+  >
+    <Node position={[0, 0]} minimumSize={{ width: 180, height: 110 }} />
+  </Scope>
+</Layout>;
+```
+
+### Vanilla 用法
+
+在 `@retikz/vanilla` 中，把 Definition 放进 `compile.clips`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    clips: [CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition],
+  },
+});
+```
+
+Definition 只在当前 Core registry assembly 中有效，不进入 IR JSON，也不会通过 import 写入全局状态。若 IR 使用 `polygon`、`path` 或 `compound` 而当前没有注入对应 Definition，Core 会报告未注册的 clip；注入后再依据该 Definition 的 schema 验证数据。
+
+## 例子
+
+下面横向展示两个内容区域如何分别使用基础裁剪，并由 `compound` 承载。通过控制项可以切换左右区域的裁剪类型，也可以分别移动两个区域。
+
+<ComponentPreview
+  files="clip-gallery"
+  size="sm"
+  caption="橙色网格是原内容；左右两侧的可见区域分别由所选裁剪类型决定。"
+/>
+
+### 组合裁剪
+
+`compound` 通过 `children` 递归组合其他已注册的裁剪 spec。上面的例子展示两个可独立切换类型的子区域，适合需要将基础裁剪组合为一个区域的场景。
+
+该子入口当前提供单项 Definition、`StandardClipDefinitions`、`StandardClipProviders` 及对应参数类型；`@retikz/standard` 根入口不转发它们。
+
+#### API
+
+`compound` 使用 `CompoundClipSpec`，并在编译时注入 `CompoundClipDefinition`：
+
+| 字段        | 类型                                    | 说明                                                                       |
+| ----------- | --------------------------------------- | -------------------------------------------------------------------------- |
+| `kind`      | `'compound'`                            | 递归组合裁剪的判别字段                                                     |
+| `children`  | `Array<IRClipSpec \| CompoundClipSpec>` | 至少一个子裁剪；子项可以继续嵌套 `compound`，或引用 Core / 其他已注册 clip |
+| `fillRule?` | `'nonzero' \| 'evenodd'`                | 组合路径的填充规则；省略时沿 Core 的默认处理                               |
+
+## 相关
+
+- [能力装载](/library/standard/extension/capability-loading)：直接注入与 provider graph 的边界
+- [扩展](/library/standard/extension)：浏览其他可选能力

@@ -41,30 +41,21 @@ const plotThemeStyle = definePlotThemeStyle({
   resolve: () => ({ tokens: getDefaultPlotThemePreset(ThemeMode.Light) }),
 });
 
-describe('Plot React runtime style options', () => {
-  it('standalone Plot forwards Core and Plot style definitions to Layout and lowering', () => {
+describe('Plot React InputEmbed routing', () => {
+  it('standalone Plot passes an InputEmbed to Layout without resolving Core composites', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(<Plot spec={spec} data={data} themeStyles={[]} plotThemeStyles={[plotThemeStyle]} />);
 
     const layout = capturedLayouts.at(-1);
     expect(layout?.themeStyles).toEqual([]);
-    const composites = layout?.composites as Array<{ expand: (node: IRPlotSpec, context: unknown) => unknown }>;
-    expect(() =>
-      composites[0].expand(spec, {
-        theme: {
-          style: 'brand',
-          mode: 'light',
-          colors: {
-            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
-            categorical: ['#2563eb'],
-          },
-        },
-      }),
-    ).not.toThrow();
+    expect(layout).not.toHaveProperty('ir');
+    expect(layout).not.toHaveProperty('composites');
+    expect(Reflect.has(Plot, 'inputEmbedAdapter')).toBe(true);
+    expect((layout?.children as { type?: unknown }).type).toBe(Plot);
   });
 
-  it('standalone Plot consumes ambient Plot style definitions', () => {
+  it('keeps ambient Plot style definitions on the InputEmbed props', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(
@@ -74,46 +65,19 @@ describe('Plot React runtime style options', () => {
     );
 
     const layout = capturedLayouts.at(-1);
-    const composites = layout?.composites as Array<{ expand: (node: IRPlotSpec, context: unknown) => unknown }>;
-    expect(() =>
-      composites[0].expand(spec, {
-        theme: {
-          style: 'brand',
-          mode: 'light',
-          colors: {
-            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
-            categorical: ['#2563eb'],
-          },
-        },
-      }),
-    ).not.toThrow();
+    expect((layout?.children as { props?: { plotThemeStyles?: unknown } }).props?.plotThemeStyles).toEqual([
+      plotThemeStyle,
+    ]);
   });
 
-  it('embedded Plot adapter keeps runtime style definitions out of the contribution payload', () => {
-    const adapter = Plot.embeddableAdapter;
-    expect(adapter).toBeDefined();
+  it('preserves the React panel identity and authoring props on the InputEmbed', () => {
+    capturedLayouts.length = 0;
 
-    const contribution = adapter?.contribute({ spec, data });
-    expect(contribution).not.toHaveProperty('themeTokenDefinitions');
-    expect(contribution).not.toHaveProperty('datasets');
-    expect(contribution).not.toHaveProperty('makeComposites');
+    const namedSpec: IRPlotSpec = { ...spec, id: 'sales' };
+    renderToStaticMarkup(<Plot spec={namedSpec} data={data} x={24} y={12} />);
 
-    const dependency = contribution?.compositeDependencies;
-    expect(dependency?.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(dependency?.providers).toHaveLength(1);
-    expect(dependency?.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
-    expect(dependency?.providers[0]?.dependencies).toEqual([]);
-  });
-
-  it('embedded Plot contributions reuse the stable plot.plot maker', () => {
-    const adapter = Plot.embeddableAdapter;
-    expect(adapter).toBeDefined();
-
-    const first = adapter?.contribute({ spec, data });
-    const second = adapter?.contribute({ spec, data });
-
-    expect(first?.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      second?.compositeDependencies.providers[0]?.makeDefinition,
-    );
+    const child = capturedLayouts.at(-1)?.children as { props?: Record<string, unknown> };
+    expect(child.props).toMatchObject({ spec: namedSpec, data, x: 24, y: 12 });
+    expect(child.props).not.toHaveProperty('composites');
   });
 });

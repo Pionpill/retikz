@@ -100,10 +100,10 @@ npm view @retikz/standard dist-tags --registry=https://registry.npmjs.org/
 全仓验证和 dry-run 前必须完成，适用于 kernel / data / plot / table / standard 全部发布组：
 
 1. 从本次 milestone roadmap 枚举全部 ADR，并逐篇阅读全文。
-2. 按 `develop-wrapup` 的“ADR 长期一致性”标准检查：ADR 从 Proposed 起只保留核心决策、基础数据结构 / 公开契约、行为与兼容性、功能边界、架构验证、被否决方案、测试策略摘要和最终结果；不得只检查状态、文件长度、roadmap 或提交说明。
+2. 按 `develop-wrapup` 的“ADR 长期一致性”标准检查：ADR 从 Proposed 起只保留背景与目标、核心决策、基础数据结构 / 公开契约、行为、失败语义、兼容性和最终结果；功能与包边界、能力完备性、同类设计、被否决方案、测试策略和非目标属于 ignored plan，不得只检查状态、文件长度、roadmap 或提交说明。
 3. 最终生效 ADR 必须为 `Accepted`；被替代记录必须为 `Superseded`，并明确链接替代 ADR 与被替代原因。
 4. 对账 ADR 中的公开契约、类型示例、兼容性与最终实现、changelog、docs；任一陈旧描述都算阻断。
-5. 确认具体文件、私有命名、业务步骤、测试 case / 路径 / 命令、commit 切分和 review 记录没有留在 ADR；这些内容只属于 ignored plan，不要求在发布时提交或恢复。
+5. 确认设计检查材料、具体文件、私有命名、业务步骤、测试 case / 路径 / 命令、commit 切分和 review 记录没有留在 ADR；这些内容只属于 ignored plan，不要求在发布时提交或恢复。
 6. 向用户逐篇汇报 ADR、状态、长期形态、契约一致性与结论。任一项未通过时停止发布流程，不进入全仓门禁、dry-run、commit、tag 或 publish。
 
 Changelog 规则：
@@ -208,6 +208,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 已从 milestone roadmap 枚举并逐篇阅读全文审计全部 ADR，未用状态、roadmap 或提交说明替代。
 - [ ] 生效 ADR 从 Proposed 起保持长期形态并为 `Accepted`；被替代 ADR 为 `Superseded`，且替代关系明确。
 - [ ] ADR 未混入具体文件、私有逻辑、逐项测试、命令、commit 或 review 过程；ignored plan 未被误提交。
+- [ ] ADR 未保留包边界、完备性、同类设计、否决方案、测试策略或非目标等设计检查章节。
 - [ ] ADR 公开契约、类型示例与最终实现、changelog、docs 一致。
 - [ ] lockfile 可能漂移时已跑 `pnpm install`。
 - [ ] `pnpm run check:full` 通过。

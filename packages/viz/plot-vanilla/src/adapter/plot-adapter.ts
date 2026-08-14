@@ -1,18 +1,35 @@
-import type { CompositeDependencyContribution, CompositeDependencyProvider } from '@retikz/core';
+import type { CoreProviderContribution, CoreDependencyProvider } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
-import type { VanillaTier2Adapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
 
-import {
-  createPlotProvider as createPlotDependencyProvider,
-  PLOT_NAMESPACE,
-  PlotComposite,
-  PlotSpecSchema,
-} from '@retikz/plot';
+import { createPlotProvider as createPlotDependencyProvider, PLOT_NAMESPACE, PlotComposite } from '@retikz/plot';
+import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
-import type { PlotEmbedProps } from '../spec';
+import type { InputPlotEmbed } from '../spec';
 
+import { normalizePlot } from '../normalize/plot';
 import { assertPlotVanillaNonEmptyString } from '../shared';
+
+/** 将 Plot 根节点包进可选的面板 Scope */
+const wrapPlotPanel = (node: IRPlotSpec, panel: InputPlotEmbed['panel']) => {
+  if (panel === undefined) return node;
+  const { x, y, transforms, zIndex, clip, theme } = panel;
+  const panelTransforms =
+    x !== undefined || y !== undefined
+      ? [{ kind: 'translate' as const, x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])]
+      : transforms;
+  if (panelTransforms === undefined && zIndex === undefined && clip === undefined && theme === undefined) return node;
+  const input: InputScope = {
+    type: 'scope',
+    ...(panelTransforms === undefined ? {} : { transforms: panelTransforms }),
+    ...(zIndex === undefined ? {} : { zIndex }),
+    ...(clip === undefined ? {} : { clip }),
+    ...(theme === undefined ? {} : { theme }),
+    children: [node],
+  };
+  return normalizeScopeWithChildren(input, () => [node]);
+};
 
 /** 完整 PlotSpec 的 Vanilla contribution 输入 */
 export type PlotContributionInput = Readonly<{
@@ -26,45 +43,36 @@ export type PlotContributionInput = Readonly<{
 
 /** Plot-owned Vanilla contribution 解析结果 */
 export type ResolvedPlotContribution = Readonly<{
-  /** 经 schema 校验的完整 PlotSpec */
+  /** 已类型化的完整 Plot Source IR */
   spec: IRPlotSpec;
   /** 只包含 `plot.plot` 的 provider contribution */
-  contribution: CompositeDependencyContribution;
+  contribution: CoreProviderContribution;
 }>;
 
 /** 创建一个共享 datasets 与 lowering options 的 Plot dependency provider */
 export const createPlotProvider = (input: {
   datasets: ExternalDatasets;
   lowerOptions?: LowerPlotsOptions;
-}): CompositeDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
+}): CoreDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
 
 /** 将完整 PlotSpec 归一为 Plot-owned dependency contribution */
 export const resolvePlotContribution = (input: PlotContributionInput): ResolvedPlotContribution => {
-  const spec = PlotSpecSchema.parse(input.spec);
   const provider = createPlotProvider({ datasets: input.datasets, lowerOptions: input.lowerOptions });
-  return { spec, contribution: { roots: [provider.key], providers: [provider] } };
+  return { spec: input.spec, contribution: { roots: [provider.key], providers: [provider] } };
 };
 
-/** 创建共享 datasets 与 lowering options 的 Plot Vanilla Tier2 adapter */
-export const createPlotAdapter = (
-  datasets: ExternalDatasets,
-  options: LowerPlotsOptions = {},
-): VanillaTier2Adapter<PlotEmbedProps> => {
-  const provider = createPlotProvider({ datasets, lowerOptions: options });
-
-  return {
-    kind: PLOT_NAMESPACE,
-    lower: (props, context) => {
-      assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
-      const parsed = PlotSpecSchema.parse(props.spec);
-      const node = PlotSpecSchema.parse({
-        ...parsed,
-        id: `${context.id}/${parsed.id ?? PlotComposite.Plot}`,
-      });
-      return {
-        node,
-        compositeDependencies: { roots: [provider.key], providers: [provider] },
-      };
-    },
-  };
+/** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
+export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
+  kind: PLOT_NAMESPACE,
+  lower: (props, context) => {
+    assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
+    const spec = normalizePlot(props.spec);
+    const provider = createPlotProvider({ datasets: props.datasets, lowerOptions: props.lowerOptions });
+    const node =
+      props.preserveRootIdentity === true ? spec : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };
+    return {
+      node: wrapPlotPanel(node, props.panel),
+      providerDependencies: { roots: [provider.key], providers: [provider] },
+    };
+  },
 };

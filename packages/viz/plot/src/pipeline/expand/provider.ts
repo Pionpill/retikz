@@ -1,5 +1,7 @@
-import type { CompositeDependencyProvider, CompositeProviderKey } from '@retikz/core';
+import type { CompositeCoreProviderKey,CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+
+import { ContourShapeProvider, SectorShapeProvider } from '@retikz/standard/shape';
 
 import type { LowerPlotsOptions } from './types';
 
@@ -17,7 +19,11 @@ type PlotRuntimeEnvelope = {
 let plotRuntimeReferenceSeed = 0;
 
 /** Plot Composite provider 的公开完整 key */
-export const PlotProviderKey: CompositeProviderKey = Object.freeze({ namespace: PLOT_NAMESPACE, type: 'plot' });
+export const PlotProviderKey: CompositeCoreProviderKey = Object.freeze({
+  capability: 'composite',
+  namespace: PLOT_NAMESPACE,
+  type: 'plot',
+});
 
 /** 识别 provider-local lowering options envelope */
 const runtimeOptionsOf = (value: unknown): LowerPlotsOptions | undefined => {
@@ -82,7 +88,7 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
 };
 
 /** 使用 Core 已合并的 datasets 与 runtime envelopes 生成唯一 Plot definition */
-const makePlotDefinition: CompositeDependencyProvider['makeDefinition'] = mergedDatasets => {
+const makePlotDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
   const optionSets: Array<LowerPlotsOptions> = [];
   const datasetEntries: Array<[string, unknown]> = [];
   for (const [reference, value] of Object.entries(mergedDatasets)) {
@@ -97,7 +103,7 @@ const makePlotDefinition: CompositeDependencyProvider['makeDefinition'] = merged
 export const createPlotProvider = (
   datasets: ExternalDatasets,
   lowerOptions: LowerPlotsOptions = {},
-): CompositeDependencyProvider => {
+): CoreDependencyProvider => {
   let runtimeReference: string;
   do {
     runtimeReference = `${PlotRuntimeReferencePrefix}${plotRuntimeReferenceSeed}`;
@@ -107,8 +113,20 @@ export const createPlotProvider = (
   const runtimeEnvelope: PlotRuntimeEnvelope = { [PlotRuntimeOptions]: lowerOptions };
   return Object.freeze({
     key: PlotProviderKey,
-    dependencies: Object.freeze([]),
+    dependencies: Object.freeze([SectorShapeProvider.key, ContourShapeProvider.key]),
     datasets: Object.freeze({ ...datasets, [runtimeReference]: runtimeEnvelope }),
     makeDefinition: makePlotDefinition,
+  });
+};
+
+/** 创建 Plot 及其 Standard Shape 静态依赖的完整 Core provider contribution */
+export const createPlotProviderContribution = (
+  datasets: ExternalDatasets,
+  lowerOptions: LowerPlotsOptions = {},
+): CoreProviderContribution => {
+  const plotProvider = createPlotProvider(datasets, lowerOptions);
+  return Object.freeze({
+    roots: Object.freeze([PlotProviderKey]),
+    providers: Object.freeze([SectorShapeProvider, ContourShapeProvider, plotProvider]),
   });
 };

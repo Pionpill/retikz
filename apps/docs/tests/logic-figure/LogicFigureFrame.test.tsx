@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { convertReactNodeToIR, Node } from '@retikz/react';
+import { createInputScene, Node } from '@retikz/react';
 import { FrameSchema } from '@retikz/standard';
+import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -11,8 +12,15 @@ import {
 } from '@/modules/docs/components/logic-figure';
 
 const readFrame = (element: ReactNode) => {
-  const child = convertReactNodeToIR(element).children[0];
+  const input = createInputScene(element);
+  const child = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
   return FrameSchema.parse(child);
+};
+
+/** 通过唯一 React-to-Vanilla Input 路径触发 marker 的父级约束 */
+const normalizeReactNode = (element: ReactNode) => {
+  const input = createInputScene(element);
+  return normalizeScene(input.scene, { adapters: input.adapters });
 };
 
 describe('LogicFigureFrame', () => {
@@ -100,10 +108,10 @@ describe('LogicFigureFrame', () => {
   });
 
   it('rejects semantic header parts used outside LogicFigureFrame', () => {
-    expect(() => convertReactNodeToIR(<LogicFigureFrameTitle>Standalone</LogicFigureFrameTitle>)).toThrow(
+    expect(() => normalizeReactNode(<LogicFigureFrameTitle>Standalone</LogicFigureFrameTitle>)).toThrow(
       /direct child of LogicFigureFrame/i,
     );
-    expect(() => convertReactNodeToIR(<LogicFigureFrameDescription>Standalone</LogicFigureFrameDescription>)).toThrow(
+    expect(() => normalizeReactNode(<LogicFigureFrameDescription>Standalone</LogicFigureFrameDescription>)).toThrow(
       /direct child of LogicFigureFrame/i,
     );
   });

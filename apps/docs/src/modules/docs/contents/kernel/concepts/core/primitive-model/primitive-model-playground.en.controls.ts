@@ -40,7 +40,6 @@ export const primitiveModelPlaygroundEnControls = definePreviewControls({
             { value: 'polygon', label: 'Hexagon' },
             { value: 'star', label: 'Star' },
             { value: 'sector', label: 'Annular sector' },
-            { value: 'arc', label: 'Arc' },
           ],
         },
         {

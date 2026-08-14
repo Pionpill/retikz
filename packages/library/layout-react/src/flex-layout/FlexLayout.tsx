@@ -1,12 +1,15 @@
 import type { FlexLayoutInput } from '@retikz/layout';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputFlexLayout } from '@retikz/layout-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createFlexLayout, FlexLayoutProvider, LayoutItemKind } from '@retikz/layout';
+import { LayoutItemKind } from '@retikz/layout';
+import { FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
 
-import { resolveReactLayoutItems } from '../shared';
+import { createInputLayoutItems } from '../shared';
 
 /** Flex 布局的 React 属性 */
 export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
@@ -17,21 +20,12 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
     children?: ReactNode;
   }>;
 
-const flexLayoutEmbeddableAdapter: EmbeddableTier2Adapter<FlexLayoutProps> = {
-  displayName: 'FlexLayout',
-  contribute: props => {
-    const { authoring, children, ...input } = props;
-    void authoring;
-    const resolved = resolveReactLayoutItems(children, LayoutItemKind.Flex);
-    return {
-      node: createFlexLayout({ ...input, children: resolved.items }),
-      compositeDependencies: {
-        roots: [FlexLayoutProvider.key, ...resolved.compositeDependencies.roots],
-        providers: [FlexLayoutProvider, ...resolved.compositeDependencies.providers],
-      },
-      authoringSites: resolved.authoringSites,
-    };
-  },
+/** 将 React LayoutItem children 组装为 Vanilla FlexLayout 输入 */
+const createFlexLayoutInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { authoring: _authoring, children, ...input } = props as FlexLayoutProps;
+  void _authoring;
+  const collected = createInputLayoutItems(children, LayoutItemKind.Flex, context);
+  return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputFlexLayout, collected.adapters);
 };
 
 const FlexLayoutComponent: FC<FlexLayoutProps> = () => null;
@@ -41,4 +35,5 @@ export const FlexLayout = FlexLayoutComponent as LayoutEmbeddableComponent<FlexL
 
 FlexLayout.displayName = 'FlexLayout';
 FlexLayout.isTier2Embeddable = true;
-FlexLayout.embeddableAdapter = flexLayoutEmbeddableAdapter;
+FlexLayout.inputEmbedAdapter = FlexLayoutInputEmbedAdapter;
+FlexLayout.createInputEmbedProps = createFlexLayoutInput;

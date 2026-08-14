@@ -4,7 +4,7 @@ import { Layout, Node, Text } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,textAttrsControls } from './text-attrs.en.controls';
+import { previewControlContract, textAttrsControls } from './text-attrs.en.controls';
 
 export const previewControls = textAttrsControls;
 

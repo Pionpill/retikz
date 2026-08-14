@@ -2,7 +2,8 @@ import type { IRAnimationTrack } from '@retikz/core';
 import type { AnimationPropertyDefinition } from '@retikz/render/animation';
 import type { FC } from 'react';
 
-import { buildIR, Layout, Node } from '@retikz/react';
+import { createInputScene, Layout, Node } from '@retikz/react';
+import { normalizeScene } from '@retikz/vanilla';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
@@ -35,7 +36,7 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 /** 源码面板使用 canonical 状态生成 IR 与 Vanilla，避免执行带 hook 的交互组件 */
-export const previewIR = buildIR(
+const previewInput = createInputScene(
   <Node
     id="a"
     position={[0, 0]}
@@ -47,6 +48,8 @@ export const previewIR = buildIR(
     blur
   </Node>,
 );
+
+export const previewIR = normalizeScene(previewInput.scene, { adapters: previewInput.adapters }).ir;
 
 const Demo: FC = () => {
   const values = usePreviewControls(customPropertyControls);

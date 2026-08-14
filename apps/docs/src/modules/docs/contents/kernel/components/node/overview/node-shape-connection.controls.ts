@@ -24,7 +24,6 @@ const shapeOptions = [
   { value: 'polygon', label: '六边形' },
   { value: 'star', label: '星形' },
   { value: 'sector', label: '扇环' },
-  { value: 'arc', label: '圆弧' },
 ] as const;
 
 const boundaryOptions = [

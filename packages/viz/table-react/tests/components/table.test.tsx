@@ -1,6 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { IRTableSpec, TableStructureOutput } from '@retikz/table';
+import type { InputTable } from '@retikz/table-vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { Layout, ThemeProvider } from '@retikz/react';
@@ -15,6 +16,7 @@ import {
   TableComposite,
   TableRowKind,
 } from '@retikz/table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -52,13 +54,29 @@ const manualSpec = (id?: string): IRTableSpec =>
     rows: [['Ada']],
   });
 
-const adapterOf = <TProps,>(component: {
-  embeddableAdapter?: EmbeddableTier2Adapter<TProps>;
-}): EmbeddableTier2Adapter<TProps> => {
-  const adapter = component.embeddableAdapter;
-  if (adapter === undefined) throw new Error('expected embeddable adapter');
-  return adapter;
+type InputTableComponent = {
+  inputEmbedAdapter?: unknown;
+  createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable;
 };
+
+/** 创建 Table Vanilla adapter 的嵌入上下文 */
+const contextOf = (id: string): InputEmbedContext => ({
+  id,
+  kind: 'table',
+  layerId: 'default',
+  identityPath: ['default', id],
+});
+
+/** 读取 React 根组件构造的唯一 Table Vanilla 输入 */
+const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable => {
+  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
+  if (component.createInputEmbedProps === undefined) throw new Error('expected Table Vanilla input factory');
+  return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
+};
+
+/** 经 Vanilla adapter 取得 React authoring 的 Core contribution */
+const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, id: string) =>
+  TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
 describe('Table React components', () => {
   it('renders generic manual, detail, and custom Table specs through the same Table runtime', () => {
@@ -194,8 +212,8 @@ describe('Table React components', () => {
       id: 'score-table',
       rows: [[98]],
     };
-    const detailContribution = adapterOf(DetailTable).contribute(detailProps);
-    const manualContribution = adapterOf(ManualTable).contribute(manualProps);
+    const detailContribution = contributionOf(DetailTable, detailProps, 'people-table');
+    const manualContribution = contributionOf(ManualTable, manualProps, 'score-table');
 
     expect(detailContribution.node).toEqual(
       createDetailTableSpec({
@@ -211,39 +229,41 @@ describe('Table React components', () => {
     expect(renderToStaticMarkup(<ManualTable {...manualProps} />)).toContain('98');
   });
 
-  it('gives all three components independent embeddable adapters with stable runtime references', () => {
-    const tableAdapter = adapterOf(Table);
-    const detailAdapter = adapterOf(DetailTable);
-    const manualAdapter = adapterOf(ManualTable);
-    const tableContribution = tableAdapter.contribute({ spec: manualSpec('generic') });
-    const detailContribution = detailAdapter.contribute({
-      id: 'detail',
-      dataRef: 'people',
-      data: [],
-      columns: [{ id: 'name', field: 'name' }],
-    });
-    const manualContribution = manualAdapter.contribute({
-      id: 'manual',
-      rows: [[null]],
-    });
+  it('routes all three components through the shared Vanilla adapter with stable runtime references', () => {
+    const tableContribution = contributionOf(Table, { spec: manualSpec('generic') }, 'generic');
+    const detailContribution = contributionOf(
+      DetailTable,
+      {
+        id: 'detail',
+        dataRef: 'people',
+        data: [],
+        columns: [{ id: 'name', field: 'name' }],
+      },
+      'detail',
+    );
+    const manualContribution = contributionOf(
+      ManualTable,
+      {
+        id: 'manual',
+        rows: [[null]],
+      },
+      'manual',
+    );
 
-    expect([tableAdapter.displayName, detailAdapter.displayName, manualAdapter.displayName]).toEqual([
-      'Table',
-      'DetailTable',
-      'ManualTable',
-    ]);
-    expect(new Set([tableAdapter, detailAdapter, manualAdapter]).size).toBe(3);
+    expect(Table.inputEmbedAdapter).toBe(TableInputEmbedAdapter);
+    expect(DetailTable.inputEmbedAdapter).toBe(TableInputEmbedAdapter);
+    expect(ManualTable.inputEmbedAdapter).toBe(TableInputEmbedAdapter);
     expect(tableContribution.node).toMatchObject({ id: 'generic' });
     expect(detailContribution.node).toMatchObject({ id: 'detail' });
     expect(manualContribution.node).toMatchObject({ id: 'manual' });
-    expect(Object.keys(detailContribution.compositeDependencies.providers[0]?.datasets ?? {})).toContain(
+    expect(Object.keys(detailContribution.providerDependencies.providers[0]?.datasets ?? {})).toContain(
       '@@retikz/table/runtime/detail',
     );
-    expect(tableContribution.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      detailContribution.compositeDependencies.providers[0]?.makeDefinition,
+    expect(tableContribution.providerDependencies.providers[0]?.makeDefinition).toBe(
+      detailContribution.providerDependencies.providers[0]?.makeDefinition,
     );
-    expect(detailContribution.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      manualContribution.compositeDependencies.providers[0]?.makeDefinition,
+    expect(detailContribution.providerDependencies.providers[0]?.makeDefinition).toBe(
+      manualContribution.providerDependencies.providers[0]?.makeDefinition,
     );
   });
 
@@ -289,7 +309,7 @@ describe('Table React components', () => {
           <ManualTable id="same" rows={[[null]]} />
         </Layout>,
       ),
-    ).toThrow(/dataset.*@@retikz\/table\/runtime\/same.*conflicts by identity/i);
+    ).toThrow('normalizeScene: duplicate identity "same" at default > same');
     expect(() =>
       renderToStaticMarkup(
         <Layout>
@@ -332,11 +352,11 @@ describe('Table React components', () => {
   it('rejects containerStyle from all three embedded authoring entries', () => {
     const containerStyle = { color: 'rebeccapurple' };
 
-    expect(() => adapterOf(Table).contribute({ spec: manualSpec('generic-style'), containerStyle })).toThrow(
+    expect(() => inputOf(Table, { spec: manualSpec('generic-style'), containerStyle })).toThrow(
       /containerStyle.*outer.*Layout/i,
     );
     expect(() =>
-      adapterOf(DetailTable).contribute({
+      inputOf(DetailTable, {
         id: 'detail-style',
         dataRef: 'people',
         data: [],
@@ -344,7 +364,7 @@ describe('Table React components', () => {
         containerStyle,
       }),
     ).toThrow(/containerStyle.*outer.*Layout/i);
-    expect(() => adapterOf(ManualTable).contribute({ id: 'manual-style', rows: [[1]], containerStyle })).toThrow(
+    expect(() => inputOf(ManualTable, { id: 'manual-style', rows: [[1]], containerStyle })).toThrow(
       /containerStyle.*outer.*Layout/i,
     );
   });

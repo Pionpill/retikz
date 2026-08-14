@@ -54,10 +54,10 @@ const scene = compileToScene({ version: 1, type: 'scene', children: [stage] }, {
 Vanilla builder 返回 embed，而不是提前抹掉语义的 Core Node。adapter 使用 embed id 创建同 id 的规范 `IRStage`，并贡献 `StageDefinition`：
 
 ```ts
-import { StageVanillaAdapter, stage } from '@retikz/notation-vanilla';
+import { StageInputEmbedAdapter, stage } from '@retikz/notation-vanilla';
 
 const step = stage('step', { position: [0, 0], text: 'Process' });
-const adapters = [StageVanillaAdapter];
+const adapters = [StageInputEmbedAdapter];
 ```
 
 以下 recipe 仅存在于文档中，用于展示组合方式，不会新增 `Process`、`Class` 或 `Data` export

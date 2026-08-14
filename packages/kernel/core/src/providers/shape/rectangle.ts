@@ -7,6 +7,7 @@ import type { ScenePrimitive } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
+import { verticesToSegments } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import {
   boundaryFromContour,
@@ -16,7 +17,6 @@ import {
   localToWorld,
   rect,
 } from '../../shared';
-import { verticesToSegments } from './outline';
 import { rectPrimitiveStyle } from './style';
 
 const rectangleParamsSchema = z.strictObject({

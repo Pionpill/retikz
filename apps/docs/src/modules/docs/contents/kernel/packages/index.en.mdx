@@ -7,16 +7,16 @@ The packages section helps when choosing an installation entry or understanding 
 
 ## Responsibilities
 
-| Package              | Responsibility                            | Reach for it when                                |
-| -------------------- | ----------------------------------------- | ------------------------------------------------ |
-| `@retikz/foundation` | Cross-package types, assertions, errors   | Reusing primitives or migrating imports          |
-| `@retikz/inspect`    | Selection, auxiliary content, host wiring | Showing path controls or layout overlays         |
-| `@retikz/runtime`    | Identity, ownership, execution tracing    | Defining state ownership across revisions        |
-| `@retikz/react`      | JSX components, IR adapter, React host    | Authoring and rendering figures in React         |
-| `@retikz/vanilla`    | Plain specs, browser mounts, SSR          | Working without React or rendering strings       |
-| `@retikz/tex`        | Lower formulas into glyph paths           | Rendering mathematics inside node text           |
-| `@retikz/math`       | Pure computational geometry               | Reusing vectors, affine, arcs, and intersections |
-| `@retikz/render`     | Scene to SVG / Canvas and hydration       | Integrating or choosing a render backend         |
+| Package              | Responsibility                              | Reach for it when                                                    |
+| -------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
+| `@retikz/foundation` | Cross-package types, assertions, errors     | Reusing primitives or migrating imports                              |
+| `@retikz/inspect`    | Selection, auxiliary content, host wiring   | Showing path controls or layout overlays                             |
+| `@retikz/runtime`    | Identity, ownership, execution tracing      | Defining state ownership across revisions                            |
+| `@retikz/react`      | JSX components, IR adapter, React host      | Authoring and rendering figures in React                             |
+| `@retikz/vanilla`    | InputScene, processing, browser mounts, SSR | Working without React, rendering strings, or implementing an adapter |
+| `@retikz/tex`        | Lower formulas into glyph paths             | Rendering mathematics inside node text                               |
+| `@retikz/math`       | Pure computational geometry                 | Reusing vectors, affine, arcs, and intersections                     |
+| `@retikz/render`     | Scene to SVG / Canvas and hydration         | Integrating or choosing a render backend                             |
 
 ## Chapters
 
@@ -45,7 +45,9 @@ The packages section helps when choosing an installation entry or understanding 
   </LinkedCard>
   <LinkedCard href="/kernel/packages/vanilla">
     <span className="font-semibold">@retikz/vanilla</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Plain specs, SVG / Canvas mounts, and SSR</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      InputScene, processing, SVG / Canvas mounts, and SSR
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/packages/tex">
     <span className="font-semibold">@retikz/tex</span>

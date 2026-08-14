@@ -95,7 +95,7 @@ describe('Standard Legend documentation', () => {
     for (const source of [zh, en]) {
       expect(source).toMatch(/<ZodSchema\s+name="LegendSchema"\s+expandNested\s*\/>/);
       expect(source).toMatch(/<ZodSchema\s+name="LegendArtifactSchema"\s+expandNested\s*\/>/);
-      for (const api of ['Legend', 'legend()', 'LegendVanillaAdapter', 'createLegend()', 'LegendDefinition']) {
+      for (const api of ['Legend', 'legend()', 'LegendInputEmbedAdapter', 'createLegend()', 'LegendDefinition']) {
         expect(source).toContain(api);
       }
       for (const preview of ['legend-basic', 'legend-ramp', 'legend-playground', 'legend-pipeline']) {

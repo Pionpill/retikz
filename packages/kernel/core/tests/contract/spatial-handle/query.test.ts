@@ -58,7 +58,7 @@ describe('spatial handle query', () => {
           namespace: 'third',
           type: 'card',
           instanceId: 'card-a',
-          occurrence: entries[0].ownerPath[1]!.occurrence,
+          occurrence: entries[0].ownerPath[1].occurrence,
         },
         key: 'a',
         role: 'card',

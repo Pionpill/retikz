@@ -1,12 +1,15 @@
 import type { GridLayoutInput } from '@retikz/layout';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputGridLayout } from '@retikz/layout-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { createGridLayout, GridLayoutProvider, LayoutItemKind } from '@retikz/layout';
+import { LayoutItemKind } from '@retikz/layout';
+import { GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { LayoutEmbeddableComponent } from '../shared';
 
-import { resolveReactLayoutItems } from '../shared';
+import { createInputLayoutItems } from '../shared';
 
 /** Grid 布局的 React 属性 */
 export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
@@ -17,21 +20,12 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
     children?: ReactNode;
   }>;
 
-const gridLayoutEmbeddableAdapter: EmbeddableTier2Adapter<GridLayoutProps> = {
-  displayName: 'GridLayout',
-  contribute: props => {
-    const { authoring, children, ...input } = props;
-    void authoring;
-    const resolved = resolveReactLayoutItems(children, LayoutItemKind.Grid);
-    return {
-      node: createGridLayout({ ...input, children: resolved.items }),
-      compositeDependencies: {
-        roots: [GridLayoutProvider.key, ...resolved.compositeDependencies.roots],
-        providers: [GridLayoutProvider, ...resolved.compositeDependencies.providers],
-      },
-      authoringSites: resolved.authoringSites,
-    };
-  },
+/** 将 React LayoutItem children 组装为 Vanilla GridLayout 输入 */
+const createGridLayoutInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { authoring: _authoring, children, ...input } = props as GridLayoutProps;
+  void _authoring;
+  const collected = createInputLayoutItems(children, LayoutItemKind.Grid, context);
+  return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputGridLayout, collected.adapters);
 };
 
 const GridLayoutComponent: FC<GridLayoutProps> = () => null;
@@ -41,4 +35,5 @@ export const GridLayout = GridLayoutComponent as LayoutEmbeddableComponent<GridL
 
 GridLayout.displayName = 'GridLayout';
 GridLayout.isTier2Embeddable = true;
-GridLayout.embeddableAdapter = gridLayoutEmbeddableAdapter;
+GridLayout.inputEmbedAdapter = GridLayoutInputEmbedAdapter;
+GridLayout.createInputEmbedProps = createGridLayoutInput;

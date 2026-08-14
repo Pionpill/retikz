@@ -1,17 +1,20 @@
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { IRPlotSpec, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
+import type { InputPlot, ResolveLabelMap } from '@retikz/plot-vanilla';
 
-import { lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
+import { lowerPlotWithLineage } from '@retikz/plot';
+import { inputPlotFromSpec, normalizePlotAuthoring, resolveLabelOf } from '@retikz/plot-vanilla';
 
-import type { ResolveLabelMap } from './adapter';
 import type { PlotProps } from './Plot';
 
-import { buildPlotSpec, resolveLabelOf } from './adapter';
+import { collectPlotDeclarations } from './adapter';
 
 /** `Plot` props 的完整 authoring 结果 */
 export type ResolvedPlotAuthoring = Readonly<{
-  /** 完整并通过 schema 校验的 PlotSpec */
+  /** 完整 Plot Source IR */
   spec: IRPlotSpec;
+  /** 交给 Plot Vanilla adapter 的 framework-neutral authoring Input */
+  input: InputPlot;
   /** runtime-only dataset table */
   datasets: ExternalDatasets;
   /** Plot lowering runtime options */
@@ -100,33 +103,6 @@ const lowerPlotOptionsOf = (
   };
 };
 
-const withIntrinsicSize = (spec: IRPlotSpec, width: number | undefined, height: number | undefined): IRPlotSpec => ({
-  ...spec,
-  ...(spec.width === undefined && width !== undefined ? { width } : {}),
-  ...(spec.height === undefined && height !== undefined ? { height } : {}),
-});
-
-const withPlotThemeTokens = (
-  spec: IRPlotSpec,
-  plotThemeTokens: IRPlotSpec['plotThemeTokens'] | undefined,
-): IRPlotSpec => ({
-  ...spec,
-  ...(plotThemeTokens !== undefined ? { plotThemeTokens } : {}),
-});
-
-const withPlotThemeTokenRules = (
-  spec: IRPlotSpec,
-  plotThemeTokenRules: IRPlotSpec['plotThemeTokenRules'] | undefined,
-): IRPlotSpec => ({
-  ...spec,
-  ...(plotThemeTokenRules !== undefined ? { plotThemeTokenRules } : {}),
-});
-
-const withPlotTheme = (spec: IRPlotSpec, plotTheme: IRPlotSpec['plotTheme'] | undefined): IRPlotSpec => ({
-  ...spec,
-  ...(plotTheme !== undefined ? { plotTheme } : {}),
-});
-
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
   for (const [key, child] of Object.entries(value)) {
@@ -162,37 +138,44 @@ export const resolvePlotAuthoring = (
   // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
-    spec = withPlotTheme(
-      withPlotThemeTokenRules(withPlotThemeTokens(props.spec, props.plotThemeTokens), props.plotThemeTokenRules),
-      props.plotTheme,
-    );
+    spec = normalizePlotAuthoring({
+      spec: props.spec,
+      width: props.width,
+      height: props.height,
+      plotThemeTokens: props.plotThemeTokens,
+      plotThemeTokenRules: props.plotThemeTokenRules,
+      plotTheme: props.plotTheme,
+    });
     datasets = props.data;
   } else {
     // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
-    spec = buildPlotSpec(props.children, dataRef, {
-      id: props.id,
-      width: props.width,
-      height: props.height,
-      coordinate: props.coordinate,
-      composition: props.composition,
-      model: props.model,
-      dataFieldNames: dataFieldNamesOf(props.data),
-      plotThemeTokens: props.plotThemeTokens,
-      plotThemeTokenRules: props.plotThemeTokenRules,
-      plotTheme: props.plotTheme,
-      transforms: props.dataTransforms,
-      markTransformShortcuts: props.markTransformShortcuts,
-      deferPositionScaleInference: props.model === undefined,
+    spec = normalizePlotAuthoring({
+      declarations: collectPlotDeclarations(props.children),
+      dataReference: dataRef,
+      options: {
+        id: props.id,
+        width: props.width,
+        height: props.height,
+        coordinate: props.coordinate,
+        composition: props.composition,
+        model: props.model,
+        dataFieldNames: dataFieldNamesOf(props.data),
+        plotThemeTokens: props.plotThemeTokens,
+        plotThemeTokenRules: props.plotThemeTokenRules,
+        plotTheme: props.plotTheme,
+        transforms: props.dataTransforms,
+        markTransformShortcuts: props.markTransformShortcuts,
+        deferPositionScaleInference: props.model === undefined,
+      },
     });
     collectedResolveLabel = resolveLabelOf(spec);
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
-  // 入口校验：非法 spec（缺判别字段等）抛清晰 ZodError，而非落到 core 内部崩
-  const validated = PlotSpecSchema.parse(withIntrinsicSize(spec, props.width, props.height));
   return {
-    spec: validated,
+    spec,
+    input: inputPlotFromSpec(spec),
     datasets,
     lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel),
   };

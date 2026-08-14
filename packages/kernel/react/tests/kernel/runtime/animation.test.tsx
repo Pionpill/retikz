@@ -9,7 +9,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node } from '../../../src';
-import { convertReactNodeToIR } from '../../../src';
+import { normalizeReactInput } from '../../helpers/normalize-input';
 
 /**
  * 动画 runtime（react，jsdom）：SVG load track → 内联 <style> 自播；交互 track → WAAPI 桥；animate={false} 静态
@@ -109,7 +109,7 @@ describe('react SVG 动画', () => {
 
 describe('preset 集成', () => {
   it('<Node animations={[fadeIn()]}> → 节点 IR 带等价 opacity track', () => {
-    const ir = convertReactNodeToIR(<Node id="a" position={[0, 0]} animations={[fadeIn()]} />);
+    const ir = normalizeReactInput(<Node id="a" position={[0, 0]} animations={[fadeIn()]} />);
     const node = ir.children[0] as { animations?: Array<IRAnimationTrack> };
     expect(node.animations).toEqual([fadeIn()]);
   });

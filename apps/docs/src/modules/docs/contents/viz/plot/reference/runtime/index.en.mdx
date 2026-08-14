@@ -11,7 +11,7 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
-React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` wraps a spec in Scene IR and injects `lowerPlots` into `<Layout>`. `embedPlot()` and `createPlotAdapter()` connect the same spec to Kernel Vanilla figures and layers. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
+React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` collects its spec as a React Input Scene and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an InputEmbed for Vanilla `scene()`, and `PlotInputEmbedAdapter` normalizes and lowers it. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
 `<Plot theme>` is the local Core Scope Theme around the Plot panel: standalone and embedded paths both wrap the Plot node in that Scope, so it only overrides that Plot's `style`, `mode`, and namespaced `tokens`. It is distinct from the Plot-spec fields `plotThemeTokens` and `plotTheme`, which are Plot-owned visual inputs. Vanilla `renderPlot(spec, data, { theme })` instead writes `theme` to the root `IRScene.theme`, making it the Core Theme for the entire compiled Scene; it does not rewrite `spec.plotThemeTokens` or `spec.plotTheme`.
 
@@ -21,7 +21,7 @@ All three entries delegate data, scale, coordinate, mark, and guide semantics to
 
 <ComponentPreview files="plot-authoring-convergence" size="md" hideCode />
 
-The React DSL collects JSX through `buildPlotSpec`, while Vanilla's `plot()` accepts a plain object. Both delegate axis, facet, and scaffold bindings to the shared authoring normalization in `@retikz/plot`. The `spec` prop and generated JSON can still provide complete Plot IR. Every entry passes through `PlotSpecSchema` before execution, so downstream code receives a schema-valid `IRPlotSpec`.
+The React DSL only collects JSX / props and dispatches Plot Vanilla, while Vanilla's `plot()` accepts a plain object. Both use `@retikz/plot-vanilla` to expand axis, facet, and scaffold bindings into the same `IRPlotSpec`. Typed authoring input is not schema-parsed again; configuration from JSON, files, or another unknown boundary must enter IR through `PlotSpecSchema` or a parser.
 
 `IRPlotSpec` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, or mark Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
 
@@ -29,7 +29,7 @@ The React DSL collects JSX through `buildPlotSpec`, while Vanilla's `plot()` acc
 | -------------------- | ------------------------------------------------ | -------------------------------- |
 | React DSL            | `<Plot>` plus mark, guide, and scale children    | After shared normalization       |
 | React spec           | `<Plot spec={...} data={...}>`                   | The `spec` does                  |
-| Vanilla              | `plot({...})` or a complete plain spec           | After normalization / validation |
+| Vanilla              | `plot({...})` or a complete `InputPlot`          | After normalization / validation |
 | Runtime dependencies | datasets, field maps, resolvers, and Definitions | No                               |
 
 ## Lowering and Outputs
@@ -48,7 +48,7 @@ Lineage and location are independent recomputation paths over shared inputs, not
 | ------------------- | --------------------------------------------------- | ----------------------------------------------------- |
 | React standalone    | `<Plot>`                                            | SVG / Canvas managed by `<Layout>`                    |
 | React embedded      | `<Layout><Plot /></Layout>`                         | Scene compiled with other Tier 2 IR                   |
-| Vanilla embedded    | `embedPlot()` plus `createPlotAdapter()`            | Scene inside a Kernel figure / layer                  |
+| Vanilla embedded    | `embedPlot()` plus `PlotInputEmbedAdapter`          | Scene inside a Kernel Input Scene / layer             |
 | Vanilla / SSR       | `renderPlot(spec, datasets, { theme, ...options })` | SVG string or `{ svg, lineage }` under the root Theme |
 | Custom host         | `lowerPlots(datasets, options)` plus Core compile   | Core IR → Scene                                       |
 | Audit / interaction | `lowerPlotWithLineage()` and `createPlotLocator()`  | Runtime-only lineage / anchor                         |
@@ -56,46 +56,46 @@ Lineage and location are independent recomputation paths over shared inputs, not
 <SourceLinks
   sources={[
     {
-      label: 'React props to spec, datasets, and lowering options',
+      label: 'React props are collected and dispatched to Plot Vanilla authoring',
       path: 'packages/viz/plot-react/src/plot-runtime.ts',
       startLine: 126,
       endLine: 167,
     },
     {
-      label: 'React standalone and embedded host wiring',
+      label: 'React Plot creates Plot Vanilla embed input',
       path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 119,
-      endLine: 177,
+      startLine: 115,
+      endLine: 133,
     },
     {
-      label: 'Embedded Plot dataset and lowering-option aggregation',
-      path: 'packages/viz/plot-react/src/embedded-runtime.ts',
-      startLine: 55,
-      endLine: 104,
-    },
-    {
-      label: 'Shared authoring normalization and canonical PlotSpec',
-      path: 'packages/viz/plot/src/contract/authoring/create-plot-spec.ts',
-      startLine: 8,
-      endLine: 27,
-    },
-    {
-      label: 'Vanilla plain helper and Tier 2 embed',
-      path: 'packages/viz/plot-vanilla/src/spec/helpers.ts',
-      startLine: 10,
-      endLine: 16,
-    },
-    {
-      label: 'Vanilla Tier 2 adapter validation, identity, and datasets',
+      label: 'Plot Vanilla adapter aggregates datasets and lowering contribution',
       path: 'packages/viz/plot-vanilla/src/adapter/plot-adapter.ts',
-      startLine: 10,
-      endLine: 32,
+      startLine: 63,
+      endLine: 77,
     },
     {
-      label: 'Vanilla validation, Core compilation, and SVG output',
+      label: 'Plot Vanilla normalizes typed authoring input into Plot Source IR',
+      path: 'packages/viz/plot-vanilla/src/normalize/plot/normalize.ts',
+      startLine: 23,
+      endLine: 45,
+    },
+    {
+      label: 'Plot Input helper and InputEmbed',
+      path: 'packages/viz/plot-vanilla/src/spec/helpers.ts',
+      startLine: 14,
+      endLine: 26,
+    },
+    {
+      label: 'Vanilla adapter wraps panel Scope and retains dataset ownership',
+      path: 'packages/viz/plot-vanilla/src/adapter/plot-adapter.ts',
+      startLine: 13,
+      endLine: 30,
+    },
+    {
+      label: 'Vanilla compiles typed Plot IR and emits SVG',
       path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
-      startLine: 47,
-      endLine: 68,
+      startLine: 58,
+      endLine: 75,
     },
     {
       label: 'Plot lowering runtime options',

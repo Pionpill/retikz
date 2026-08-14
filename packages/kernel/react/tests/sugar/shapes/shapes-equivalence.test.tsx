@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { Path } from '../../../src/kernel';
 import { Step } from '../../../src/kernel';
-import { buildIR } from '../../../src/kernel/adapter';
 import { Arc } from '../../../src/sugar';
 import { Circle } from '../../../src/sugar';
 import { Ellipse } from '../../../src/sugar';
@@ -11,8 +10,9 @@ import { RegularPolygon } from '../../../src/sugar';
 import { Sector } from '../../../src/sugar';
 import { Star } from '../../../src/sugar';
 import { polarXY, regularPolygonVertices, starVertices } from '../../../src/sugar/shapes/shape-helpers';
+import { normalizeReactInput } from '../../helpers/normalize-input';
 
-const ir = (jsx: React.ReactNode) => buildIR(jsx);
+const ir = (jsx: React.ReactNode) => normalizeReactInput(jsx);
 
 describe('Circle equivalence', () => {
   it('center + radius', () => {

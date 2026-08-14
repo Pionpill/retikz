@@ -13,7 +13,7 @@ retikz 的官方仓库当前维护六个 kernel 组包：
 | [`@retikz/core`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core)       | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM                                         | 官方维护 |
 | [`@retikz/render`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/render)   | renderer-neutral 的 Scene 输出层：SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具 | 官方维护 |
 | [`@retikz/react`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react)     | React adapter：JSX 组件编译成 IR，再通过 SVG 或 Canvas 渲染                                           | 官方维护 |
-| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | 无框架 runtime：plain spec helper、SVG / Canvas mount、水合、动画控制与 SVG string 输出               | 官方维护 |
+| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | 无框架基础：Input helper、processing、SVG / Canvas mount、水合、动画控制与 SVG string 输出            | 官方维护 |
 | [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | 可选 LaTeX 公式接入：MathJax SVG 字形路径 lowering 到 renderer-agnostic Scene                         | 官方维护 |
 
 Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR 仍然是 universal 的，新框架 adapter 可以复用 `@retikz/core` 与 `@retikz/render` 的大部分 renderer 能力，只需要补自己的组件桥接层与必要的文字度量。
@@ -67,8 +67,8 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) ——子编译器**<br />
    按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
 
-8. **[`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse) ——Sugar 入口（可选）**<br />
-   [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/target-sugar.ts)：把 `<Draw way={[...]}>` 这种 Sugar 形态翻译为 IR。`@retikz/react` 在 Sugar 组件内部调用它们。
+8. **[`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse) ——独立语法入口（可选）**<br />
+   [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/target-sugar.ts) 处理独立的 path / target 字符串 grammar。Vanilla 的 `normalizePath` 统一调度这些 parser，把已类型化的 InputPath 收敛为 Core IR；React 不直接调用它们。
 
 9. **注册扩展面（可选）**<br />
    [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
@@ -89,35 +89,35 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 ### 包结构
 
-| 模块                                                                                                 | 职责                                                                                                                                   |
-| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel——`components` 放标记组件，`protocol` 放共享识别协议，`adapter` 做 JSX ↔ IR，`runtime` 放 `<Layout>` 与 hydration 接线 |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX 组件——`path` 放 `<Draw>` / `<EdgeLabel>`，`shapes` 放形状 sugar；编译期展开为 Kernel，不引入新能力                           |
-| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React 宿主渲染接线——`svg`、`canvas`、`text` 分别承接 SVG element、CanvasHost 与 browser measurer                                       |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | 公开 API surface——Kernel + Sugar 组件 + `convertReactNodeToIR` / `convertIRToReactNode` 桥                                             |
+| 模块                                                                                                 | 职责                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel——`components` 放标记组件，`protocol` 放共享识别协议，`adapter` 做 JSX → InputScene，`runtime` 放 `<Layout>` 与 hydration 接线 |
+| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX 组件——`path` 放 `<Draw>` / `<EdgeLabel>`，`shapes` 放形状 sugar；编译期展开为 Kernel，不引入新能力                                   |
+| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React 结果宿主接线——`processing-result`、`svg`、`canvas`、`text` 承接 processing result、SVG、CanvasHost 与 browser measurer                   |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | 公开 API surface——Kernel + Sugar 组件、`createInputScene` 与 `convertIRToReactNode`                                                            |
 
 ### 推荐阅读顺序
 
 1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) ——公开 API**<br />
-   先看暴露了什么 Kernel / Sugar 组件、什么类型、什么桥接函数。core 的 `WayDSL` 等常量在这里透传一份，方便单包 import。
+   先看暴露了什么 Kernel / Sugar 组件、prop 类型和 adapter bridge。Core 的 grammar vocabulary 仍由 Core owner 导出；React 只公开自己的 JSX 入口。
 
 2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx) ——顶层编排**<br />
-   `<Layout>` 是整条管线的入口：children → `buildIRWithContributions` → `compileToScene` → `result.scene` → renderer，并在 commit 后发布 `result.artifacts`。把这一个文件读懂，整个 adapter 的形状就有了。
+   `<Layout>` 是整条管线的入口：children → `createInputScene` → Vanilla processing（normalize、Core Program、runtime）→ `ProcessingResultHost`，并在 commit 后发布同次 compile 的 artifacts。把这一个文件读懂，整个 adapter 的形状就有了。
 
-3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts) ——JSX → IR**<br />
-   按 child 的 displayName 分派到 IRNode / IRPath / IRStep / IRScope 等构造，是 JSX 与 IR 的桥。同目录的 [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) 走反方向（IR → React element 树），用于编辑器 / AI 工作流"喂 IR 显示组件"。
+3. **[`kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts) ——JSX → InputScene**<br />
+   按 child 的 displayName 分派到 InputNode / InputPath / InputStep / InputScope 等作者输入，并收集 Tier 2 的 `InputEmbedAdapter`；它不解析 Core authoring grammar。同目录的 [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) 走反方向（IR → React element 树），用于编辑器 / AI 工作流"喂 IR 显示组件"。
 
 4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Step.tsx) 等 ——Kernel 组件**<br />
-   这些组件本身不渲染——只是声明 displayName，把 props 传给 `builder`。读懂一个就读懂全部。
+   这些组件本身不渲染——只是声明 displayName，把 props 交给 Input collector。读懂一个就读懂全部。
 
-5. **[`render/svg/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/svg/render-prim.tsx) ——Scene → SVG element**<br />
-   按 primitive `type` 分派出 `<rect>` / `<ellipse>` / `<text>` / `<path>` / `<g>`；paint / clip / marker 资源由同目录的 defs 组件物化。换框架时，这一层是主要重写面。
+5. **[`render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx) ——ProcessingResult → React 宿主**<br />
+   React 只把 Vanilla 的只读 processing result 映射为 SVG 或 Canvas，并绑定 hydration、动画与 artifacts 通知。换框架时，复用 Vanilla processing，仅替换这一层宿主即可。
 
 6. **[`render/text/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/text/browser-measurer.ts) ——文字度量注入**<br />
-   基于 canvas `measureText` 提供 `TextMeasurer`，通过 `CompileOptions.measureText` 注入到 `compileToScene`。SSR 无 document 时自动回退到 core 的 `fallbackMeasurer`。
+   基于 canvas `measureText` 提供 `TextMeasurer`，通过 Vanilla processing 的 `CompileOptions.measureText` 注入 Core compile。SSR 无 document 时自动回退到 core 的 `fallbackMeasurer`。
 
-7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) ——Sugar 展开**<br />
-   `<Draw way={[...]}>` 在组件内部调 [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts)（来自 core）拿到 step 数组，再渲染 Kernel `<Path><Step/></Path>`。Sugar 不引入新能力，全部展开为 Kernel。
+7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) ——Sugar 转交**<br />
+   `<Draw way={[...]}>` 只把 props 转交给 Kernel `<Path>`。随后 Vanilla 的 `normalizePath` 解析 `way` 并生成 Core Path steps；Sugar 不引入新的图形能力。
 
 8. **[`sugar/shapes/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar/shapes) 的形状组件（可选）**<br />
    `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<RegularPolygon>` / `<Star>` 也是 Sugar：它们把常见几何形写法展开为等价 `<Path>`。Standard `Grid` 则是拥有持久化 IR 的 Tier 2 composite。
@@ -126,32 +126,33 @@ Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR
 
 如果你要做 `@retikz/vue` / `@retikz/svelte` 等，对照 React adapter：
 
-| React 这边                               | 新 adapter 要做的                                                 |
-| ---------------------------------------- | ----------------------------------------------------------------- |
-| `kernel/*.tsx` 组件（声明 displayName）  | 各框架的组件等价物（声明组件类型识别符）                          |
-| `kernel/builder.ts`（JSX → IR）          | 各框架 children / vnode → IR 的 bridge                            |
-| `render/svg/render-prim.tsx` + defs 组件 | 把 Scene primitive 与 resources 转为框架原生元素                  |
-| `render/text/browser-measurer.ts`        | 浏览器 / SSR / Native 各自的 measurer（实现 `TextMeasurer` 即可） |
+| React 这边                                  | 新 adapter 要做的                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------ |
+| `kernel/*.tsx` 组件（声明 displayName）     | 各框架的组件等价物（声明组件类型识别符）                                 |
+| `kernel/input-scene.ts`（JSX → InputScene） | 各框架 children / vnode → InputScene 的 bridge，并复用 Vanilla normalize |
+| `render/processing-result.tsx`              | 将 Vanilla processing result 接入框架原生宿主                            |
+| `render/text/browser-measurer.ts`           | 浏览器 / SSR / Native 各自的 measurer（实现 `TextMeasurer` 即可）        |
 
 `@retikz/core` 的 IR、`compileToScene`、`shared/geometry` helper、`contract/scene` 类型一律复用，不需要重写。
 
 ## 关键文件速查
 
-| 想查什么               | 看哪里                                                                                                                                         |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| IR 顶层结构            | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)         |
-| 节点字段               | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)           |
-| Path / Step 类型       | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                              |
-| 极坐标 / 相对定位      | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                      |
-| Scene primitive 类型   | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                          |
-| 编译流水线             | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)                   |
-| 文字度量接口           | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)         |
-| boundaryPoint / anchor | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) 等      |
-| core 公开 API          | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                   |
-| React 顶层管道         | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)           |
-| JSX → IR 桥            | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts)           |
-| Scene → SVG element    | [`react/render/svg/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/svg/render-prim.tsx) |
-| react 公开 API         | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                 |
+| 想查什么                       | 看哪里                                                                                                                                             |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IR 顶层结构                    | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)             |
+| 节点字段                       | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)               |
+| Path / Step 类型               | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                                  |
+| 极坐标 / 相对定位              | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                          |
+| Scene primitive 类型           | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                              |
+| 编译流水线                     | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)                       |
+| 文字度量接口                   | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)             |
+| boundaryPoint / anchor         | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) 等          |
+| core 公开 API                  | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                       |
+| React 顶层管道                 | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)               |
+| JSX → InputScene 桥            | [`react/kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts)       |
+| Vanilla processing             | [`vanilla/processing/prepare.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/vanilla/src/processing/prepare.ts)           |
+| Processing result → React 宿主 | [`react/render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx) |
+| react 公开 API                 | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                     |
 
 ## 相关阅读
 

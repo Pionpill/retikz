@@ -3,7 +3,8 @@ import type { IRScene } from '@retikz/core';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mountCanvas, mountSvg, renderToSvgString } from '../../src';
+import { renderToSvgString } from '../../src';
+import { mountCanvas, mountSvg } from '../../src/dom';
 
 /**
  * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
@@ -114,36 +115,24 @@ describe('mountSvg 动画', () => {
   });
 
   it('prefers-reduced-motion → 静态（无 <style>）', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: true })),
-    );
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const view = mountSvg(document.createElement('div'), loadIr);
     expect(view.root.querySelector('style')).toBeNull();
   });
 
   it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: true })),
-    );
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const view = mountSvg(document.createElement('div'), loadIr, { animation: { enabled: true } });
     expect(view.root.querySelector('style')).not.toBeNull();
   });
 
   it('renderToSvgString 缺省跟随 prefers-reduced-motion', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: true })),
-    );
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
     expect(renderToSvgString(loadIr)).not.toContain('@keyframes');
   });
 
   it('renderToSvgString 显式 enabled:true 覆盖 prefers-reduced-motion', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: true })),
-    );
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
     expect(renderToSvgString(loadIr, { animation: { enabled: true } })).toContain('@keyframes');
   });
 });
@@ -181,10 +170,7 @@ describe('mountCanvas 动画', () => {
   });
 
   it('{animation:{enabled:true}} 覆盖 prefers-reduced-motion', () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({ matches: true })),
-    );
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
     const view = mountCanvas(document.createElement('div'), loadIr, {
       output: { width: 100, height: 100 },
       animation: { enabled: true },

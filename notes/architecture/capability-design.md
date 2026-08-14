@@ -126,9 +126,9 @@
 - 上移到宿主、preset、adapter 或 renderer 私有能力，并明确不进入主责包契约。
 - 明确不支持或延期，记录原因、影响和后续入口。
 
-## 7. ADR 必填检查
+## 7. ADR 设计配套检查
 
-新增或改变能力边界的 ADR 必须加入：
+新增或改变能力边界的 ADR 必须在草拟时同步创建镜像简略 `PLAN.md`，并在 plan 中加入：
 
 ```md
 ## 能力完备性检查
@@ -145,15 +145,15 @@
 - 本轮结论：组合 / 扩展当前域 / 下沉 / 上移 / 不支持或延期
 ```
 
-不影响能力边界的 ADR 或 docs-only 收口可以写简版结论，但必须说明为什么不适用完整检查。
+不影响能力边界的 ADR 或 docs-only 收口可以在 plan 中写简版结论，但必须说明为什么不适用完整检查。ADR 本身只保留由这些检查冻结的核心决策、必要公开契约、行为、失败语义与兼容性，不重复保存检查过程。
 
 ## 8. 治理关系
 
 - 本文定义全仓能力域和决策方法。
 - completeness 文档定义各能力域解决的问题、边界和闭环标准。
 - 根与就近 `AGENTS.md`、`standard-*` skills 负责执行包职责和代码落层。
-- ADR 证明单次迭代符合适用完备目标；roadmap 只安排已确认缺口的实施顺序。
-- Alpha ADR 草案在人工确认和实现前，必须通过 `develop-completeness` 的 `adr-gate`。主 agent 先自审；只有已确认执行计划授权时才增加一个只读 reviewer，并在修订后复用同一 reviewer 检查新快照。循环上限以计划为准，达到上限仍未 PASS 时交人工决策。
+- ADR 冻结单次迭代的长期公开决策，镜像 plan 证明它符合适用完备目标；roadmap 只安排已确认缺口的实施顺序。
+- Alpha ADR 与同步简略 plan 在人工确认和实现前，必须共同通过 `develop-completeness` 的 `adr-gate`。主 agent 先自审；只有已确认执行计划授权时才增加一个只读 reviewer，并在修订后复用同一 reviewer 检查新快照。循环上限以计划为准，达到上限仍未 PASS 时交人工决策。
 - Beta milestone 在实施前和全部 TODO 集成后，分别对 Drawing、Data、Visualization 执行 `code-audit`。入口 findings 只生成候选 TODO，scope 经人工确认后才能实施；出口只允许修复已批准 scope 内的 beta 问题。需要净新增公开能力、组件、IR、schema 或用户可见行为契约的缺口必须退回 Alpha 或延期。
 - subagent、reviewer 与评审轮次必须来自已确认的任务计划，不存在自动派遣授权；ADR 修订与 Beta 修复仍受对应 flow 和当前任务授权约束，不替代人工 scope、commit 或发布授权。
 

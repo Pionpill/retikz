@@ -10,7 +10,7 @@ import { z } from 'zod';
 
 import type { IRScene } from '../../../src';
 
-import { CoreOwnerDefinition, createCoreProgram, defineComposite, CompositeBaseSchema } from '../../../src';
+import { CompositeBaseSchema,CoreOwnerDefinition, createCoreProgram, defineComposite } from '../../../src';
 
 const card = defineComposite({
   namespace: 'third',

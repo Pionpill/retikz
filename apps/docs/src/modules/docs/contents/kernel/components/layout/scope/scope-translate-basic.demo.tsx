@@ -1,4 +1,5 @@
-import type { IRScopePlacement, IRScopeSelfPoint, IRTransformInput } from '@retikz/core';
+import type { IRScopePlacement, IRScopeSelfPoint } from '@retikz/core';
+import type { InputTransform } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
@@ -30,7 +31,7 @@ const placementOf = (values: ScopeTransformValues): IRScopePlacement | undefined
     : undefined;
 
 /** 把面板值转换为当前选中的 Scope transform 输入 */
-const transformOf = (values: ScopeTransformValues): IRTransformInput => {
+const transformOf = (values: ScopeTransformValues): InputTransform => {
   switch (values.operation) {
     case 'translate':
       return { kind: 'translate', x: values.translateX, y: values.translateY };

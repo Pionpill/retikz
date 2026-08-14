@@ -153,9 +153,9 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("description: { text: 'Preview source' }");
     expect(result.source?.vanilla?.files[0]?.code).toContain('padding: { x: 8, y: 10 }');
     expect(result.source?.vanilla?.files[0]?.code).toContain("headerDirection: 'vertical'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain('GridVanillaAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('AxesVanillaAdapter');
-    expect(result.source?.vanilla?.files[0]?.code).toContain('FrameVanillaAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('GridInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('AxesInputEmbedAdapter');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('FrameInputEmbedAdapter');
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
@@ -203,7 +203,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("embedTable('preview-table-1'");
-    expect(vanilla?.files[0]?.code).toContain('createTableAdapter()');
+    expect(vanilla?.files[0]?.code).toContain('TableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');
@@ -216,7 +216,7 @@ describe('buildPreviewSource', () => {
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("embedTable('preview-table-1'");
-    expect(vanilla?.files[0]?.code).toContain('createTableAdapter()');
+    expect(vanilla?.files[0]?.code).toContain('TableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
     expect(vanilla?.render).toBeUndefined();
     expect(buildVanillaPreview(preview).svg).toContain('<svg');

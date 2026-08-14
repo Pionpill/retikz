@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompositeDependencyContribution } from '@retikz/core';
+import type { AnyCompositeDefinition, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import type { LowerTablesOptions } from '../types';
@@ -16,4 +16,4 @@ export type TableRuntimeContributionInput = Readonly<{
 }>;
 
 /** 可由 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
-export type TableRuntimeContribution = CompositeDependencyContribution;
+export type TableRuntimeContribution = CoreProviderContribution;
