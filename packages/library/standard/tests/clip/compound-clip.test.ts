@@ -4,7 +4,13 @@ import { compileToScene, defineClip } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { CompoundClipDefinition, CompoundClipProvider, CompoundClipSchema } from '../../src/clip';
+import {
+  CompoundClipDefinition,
+  CompoundClipProvider,
+  CompoundClipSchema,
+  PathClipDefinition,
+  PolygonClipDefinition,
+} from '../../src/clip';
 
 const roundedRectClip = (): ClipDefinition =>
   defineClip({
@@ -29,6 +35,30 @@ const roundedRectClip = (): ClipDefinition =>
   });
 
 describe('Standard compound clip definition', () => {
+  it('provides polygon and path definitions as explicit Standard extensions', () => {
+    expect(PolygonClipDefinition.kind).toBe('polygon');
+    expect(PathClipDefinition.kind).toBe('path');
+    const scene: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'scope',
+          clip: {
+            kind: 'polygon',
+            points: [
+              [0, 0],
+              [20, 0],
+              [10, 20],
+            ],
+          },
+          children: [],
+        },
+      ],
+    };
+    expect(() => compileToScene(scene, { clips: [PolygonClipDefinition] })).not.toThrow();
+  });
+
   it('parses recursive compound children and delegates a custom child to Core registry resolution', () => {
     const clip = CompoundClipSchema.parse({
       kind: 'compound',

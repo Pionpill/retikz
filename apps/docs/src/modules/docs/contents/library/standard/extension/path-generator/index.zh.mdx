@@ -1,0 +1,88 @@
+---
+title: 路径生成器扩展
+description: 从 @retikz/standard/path-generator 按需引入抛物线路径生成器，并分别在 React 与 Vanilla 的编译入口传入 Definition。
+---
+
+路径生成器扩展在 Core 提供的基础 Path step 之上，补充了更多可选内容：
+
+| 包名                      | 提供内容                       |
+| ------------------------- | ------------------------------ |
+| `core`                    | 基础 Path step，可完成路径闭环 |
+| `standard/path-generator` | `parabola` 抛物线路径生成器    |
+
+## 用法
+
+### React 用法
+
+从 `@retikz/standard/path-generator` 导入 `ParabolaPathGeneratorDefinition`，传给 React `Layout` 的 `pathGenerators` 属性。路径 step 仍通过 `params.control` 引用控制点。
+
+```tsx
+import { Layout, Node, Path, Step } from '@retikz/react';
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+
+<Layout pathGenerators={[ParabolaPathGeneratorDefinition]}>
+  <Node id="A" position={[-120, 40]}>
+    A
+  </Node>
+  <Node id="B" position={[120, 40]}>
+    B
+  </Node>
+  <Node id="C" position={[0, -60]}>
+    C
+  </Node>
+  <Path>
+    <Step kind="move" to="A" />
+    <Step kind="generator" name="parabola" to="B" params={{ control: { id: 'C' } }} />
+  </Path>
+</Layout>;
+```
+
+### Vanilla 用法
+
+在 `@retikz/vanilla` 中，把 Definition 放进 `compile.pathGenerators`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    pathGenerators: [ParabolaPathGeneratorDefinition],
+  },
+});
+```
+
+这只是将静态 Definition 交给当前 Core compile，不是运行时动态加载。step 使用未注册的 generator 名称时，Core 会在 lookup 时明确失败；注入后由 Definition 的参数 schema 检查所需数据，例如 `parabola` 的 `control` target。
+
+## 例子
+
+下面展示 `parabola` 如何把 JSON-safe 的目标引用转换为一段二次曲线。灰色点线只标记控制点与两端的关系，并不是输出路径的一部分。
+
+<ComponentPreview
+  files="parabola-gallery"
+  size="sm"
+  caption="C 是传给 `params.control` 的目标；橙色曲线由 ParabolaPathGeneratorDefinition 生成。"
+/>
+
+### 抛物线路径
+
+`parabola` 将起点、终点和 `params.control` 目标展开为一段二次曲线。灰色辅助线只解释控制关系，不会成为输出路径。它适合需要经过显式控制点的连接线。
+
+当前子入口只提供 `ParabolaPathGeneratorDefinition` 与 `StandardPathGeneratorName`；`@retikz/standard` 根入口不聚合这些内容。
+
+#### API
+
+`parabola` 使用 `ParabolaPathGeneratorDefinition`，并通过 `params.control` 接收控制点：
+
+| 字段             | 类型         | 说明                                                                                        |
+| ---------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| `name`           | `'parabola'` | 生成器名称，也可使用 `StandardPathGeneratorName.Parabola`                                   |
+| `to`             | `IRTarget`   | Path step 的终点；该生成器要求提供此字段                                                    |
+| `params.control` | `IRTarget`   | 必填的控制点目标。示例使用 `{ id: 'C' }`，也可以使用 Core `TargetSchema` 支持的其他目标形式 |
+
+`control` 目标会在生成器执行前解析为当前 Path 局部坐标，生成器随后输出一段二次曲线。`params` 必须保持 JSON-safe，不要传入函数或运行时对象。
+
+## 相关
+
+- [能力装载](/library/standard/extension/capability-loading)：直接注入与 provider graph 的边界
+- [扩展](/library/standard/extension)：浏览其他可选能力

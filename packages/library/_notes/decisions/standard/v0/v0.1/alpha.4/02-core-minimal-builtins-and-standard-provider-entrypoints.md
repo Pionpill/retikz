@@ -25,18 +25,18 @@ Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Ki
 
 本次边界冻结如下：
 
-| 能力                 | Core 默认内置                                  | Standard 官方扩展                                                       | 理由                                                               |
-| -------------------- | ---------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Shape provider       | `rectangle`、`ellipse`、`polygon`              | `cross`、`arc`、`sector`、`star`、`contour`                             | 前三者覆盖基础盒、曲面和任意直边轮廓；其它属于可选形态             |
-| Shape preset         | `circle`、`diamond`                            | 无                                                                      | 它们是基础 Shape 的参数化预设，不增加 provider implementation      |
-| Arrow                | `normal`、`stealth`                            | `open`、`openStealth`、`diamond`、`openDiamond`、`circle`、`openCircle` | 两个实心尖头覆盖无配置和显式基础箭头；空心与 UML 风格属于官方扩展  |
-| Pattern              | `lines`、`dots`、`grid`                        | 无                                                                      | 当前三项已是小型基础集合；后续新增内容默认进入 Standard            |
-| Boundary             | `rectangle`、`circle`、`ellipse`               | 无                                                                      | 三项与基础 Node 连接面闭环，保持 Core 内置                         |
-| Clip                 | `rect`、`circle`、`ellipse`、`polygon`、`path` | `compound`                                                              | 五种基础裁剪直接对应 Core Scene 表达；递归组合属于可选扩展         |
-| Path Generator       | 无                                             | `parabola`                                                              | Path step 不依赖 generator 也能闭环，官方 generator 按需装配       |
-| Path Kind            | `stroke`                                       | `ribbon`                                                                | Stroke 是 Path 默认语义；Ribbon 是独立且体积较大的可选几何实现     |
-| Ribbon Width Profile | 无                                             | `bulge`                                                                 | Ribbon 外迁后 profile contract 与官方实现由同一 Standard 子域拥有  |
-| Theme baseline       | 保留现状                                       | 不在本次迁移                                                            | Core theme 默认和 shared colors 属于基础编译环境，不是内容扩展集合 |
+| 能力                 | Core 默认内置                                              | Standard 官方扩展                           | 理由                                                                                                 |
+| -------------------- | ---------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Shape provider       | `rectangle`、`ellipse`、`polygon`                          | `cross`、`arc`、`sector`、`star`、`contour` | 前三者覆盖基础盒、曲面和任意直边轮廓；其它属于可选形态                                               |
+| Shape preset         | `circle`、`diamond`                                        | 无                                          | 它们是基础 Shape 的参数化预设，不增加 provider implementation                                        |
+| Arrow                | `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle` | `diamond`、`openDiamond`            | 六个基础箭头覆盖无配置、显式基础、三角与 Stealth 空心对称及圆点端点；菱形箭头属于 UML 风格扩展        |
+| Pattern              | `lines`、`dots`、`grid`                                    | 无                                          | 当前三项已是小型基础集合；后续新增内容默认进入 Standard                                              |
+| Boundary             | `rectangle`、`circle`、`ellipse`                           | 无                                          | 三项与基础 Node 连接面闭环，保持 Core 内置                                                           |
+| Clip                 | `rect`、`circle`、`ellipse`                                | `polygon`、`path`、`compound`               | 基础几何裁剪保留在 Core；多边形、结构化路径和递归组合按需装配并复用 Core clip contract 与 Scene 表达 |
+| Path Generator       | 无                                                         | `parabola`                                  | Path step 不依赖 generator 也能闭环，官方 generator 按需装配                                         |
+| Path Kind            | `stroke`                                                   | `ribbon`                                    | Stroke 是 Path 默认语义；Ribbon 是独立且体积较大的可选几何实现                                       |
+| Ribbon Width Profile | 无                                                         | `bulge`                                     | Ribbon 外迁后 profile contract 与官方实现由同一 Standard 子域拥有                                    |
+| Theme baseline       | 保留现状                                                   | 不在本次迁移                                | Core theme 默认和 shared colors 属于基础编译环境，不是内容扩展集合                                   |
 
 除随 Ribbon 整体归属 Standard 的 Width Profile 子扩展外，表中“Standard 官方扩展”仍使用 Core 定义的 `XxxDefinition`、`defineXxx()`、registry option 和消费语义。迁移不把 Core contract、IR discriminator、registry 或 compile lookup 复制到 Standard，也不改变第三方定义能力。
 
@@ -48,7 +48,7 @@ Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Ki
 
 ```ts
 import { CrossShapeDefinition } from '@retikz/standard/shape';
-import { OpenArrowDefinition } from '@retikz/standard/arrow';
+import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
 import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
 import { RibbonPathKindDefinition, BulgeRibbonWidthProfileDefinition } from '@retikz/standard/ribbon';

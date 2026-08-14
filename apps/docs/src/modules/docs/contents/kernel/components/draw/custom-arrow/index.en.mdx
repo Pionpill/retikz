@@ -11,14 +11,14 @@ The example below registers a hollow `bracket` arrow through `<Layout arrows>`. 
 
 ## Applicability
 
-The eight built-ins already cover solid and hollow triangles, stealth tips, diamonds, and circles. Register a definition only when the endpoint outline itself is missing.
+Core provides the `normal`, `open`, `stealth`, `openStealth`, `circle`, and `openCircle` basic arrows by default. The remaining official diamond pair is available on demand from [Arrow Extensions](/library/standard/extension/arrow). Register a definition only when neither the Core nor the assembled Standard outline fits.
 
-| Need                                    | Choose                                              |
-| --------------------------------------- | --------------------------------------------------- |
-| Resize or recolor an existing arrow     | `arrowDetail`                                       |
-| Use different built-ins at each end     | `arrowDetail.start` / `end`                         |
-| Add a new endpoint outline              | Custom Arrow                                        |
-| Change the output of the whole relation | [Custom Paths](/kernel/components/draw/custom-path) |
+| Need                                        | Choose                                              |
+| ------------------------------------------- | --------------------------------------------------- |
+| Resize or recolor an existing arrow         | `arrowDetail`                                       |
+| Use different registered shapes at each end | `arrowDetail.start` / `end`                         |
+| Add a new endpoint outline                  | Custom Arrow                                        |
+| Change the output of the whole relation     | [Custom Paths](/kernel/components/draw/custom-path) |
 
 An ArrowDefinition serves both Path endpoints and `marks[].mark.shape`. It does not own arrow direction, mark position, path stroke, or renderer instances.
 
@@ -58,7 +58,7 @@ The definition never enters IR. React, Vanilla, or persisted IR can reference th
 
 ## Execution
 
-The eight built-ins and custom definitions first enter one registry. Compilation merges path defaults, `arrowDetail`, and per-end overrides before resolving the shape. It then shortens the path from the resolved size, line width, and contact point, and calls `emit` for marker geometry.
+Core basic arrows, explicitly assembled Standard arrows, and custom definitions all enter one registry. Compilation merges path defaults, `arrowDetail`, and per-end overrides before resolving the shape. It then shortens the path from the resolved size, line width, and contact point, and calls `emit` for marker geometry.
 
 The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an explicit color they use `{ kind: 'contextStroke' }`, allowing one definition to follow each Path stroke instead of freezing a color at registration time.
 
@@ -73,7 +73,7 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
       endLine: 59,
     },
     {
-      label: 'Built-in and custom arrow registry',
+      label: 'Unified registry for Core basic and injected arrows',
       path: 'packages/kernel/core/src/providers/arrow/registry.ts',
       startLine: 6,
       endLine: 13,
@@ -98,7 +98,7 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
 | Case                                       | Result                                                          |
 | ------------------------------------------ | --------------------------------------------------------------- |
 | Empty name                                 | Registry rejects the non-empty key contract                     |
-| Duplicate built-in or custom name          | Registry merge reports a duplicate registration                 |
+| Duplicate Core, Standard, or custom name   | Registry merge reports a duplicate registration                 |
 | Unknown `arrowDetail.shape`                | Compile lists available names and `options.arrows`              |
 | Invalid `baseSize`, contact, or dimensions | Compile rejects invalid marker sizing                           |
 | Unknown primitive or non-finite geometry   | Marker validation prevents invalid Scene output                 |

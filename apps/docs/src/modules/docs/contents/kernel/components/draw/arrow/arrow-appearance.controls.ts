@@ -6,7 +6,7 @@ const shapeOptions = [
   { label: '实心三角', value: 'normal' },
   { label: '空心三角', value: 'open' },
   { label: '实心锐箭', value: 'stealth' },
-  { label: '空心锐箭', value: 'openStealth' },
+  { label: '空心锐箭（Core）', value: 'openStealth' },
   { label: '实心菱形', value: 'diamond' },
   { label: '空心菱形', value: 'openDiamond' },
   { label: '实心圆点', value: 'circle' },

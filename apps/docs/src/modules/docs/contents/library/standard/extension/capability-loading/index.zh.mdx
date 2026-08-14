@@ -1,134 +1,61 @@
 ---
-title: Provider 与 Definition 装载
-description: 让 React 与 Vanilla 通过 rooted provider graph 装配 Standard 能力，同时保留直接 IR 的 CompileOptions.composites 最终入口
+title: 能力装载
+description: 通过直接 CompileOptions 注入或 adapter 的 provider graph 装配 Standard 可选能力，同时始终复用 Core 的 registry 与 compile。
 ---
 
-持久化 Standard IR 只保存 JSON-safe 数据，Definition 中的函数必须在编译前装配。可复用 authoring 模块贡献 rooted providers；已经拥有完整 Definition 集合的直接 IR 宿主继续使用 Core `CompileOptions.composites`：
+持久化 IR 只保存 JSON-safe 数据，Definition 中包含运行时逻辑，必须在编译前装配。本页区分两条明确路径：直接 IR 宿主传入完整 Definition 集合；React、Vanilla 和 Tier 2 authoring 由 adapter 声明 provider contribution，再由 Core 解析本次所需的闭包。
+
+Standard 不提供全局注册、preset、bundle 或隐式全集。可选 shape、arrow、clip 与 path generator 仅从各自的 `@retikz/standard/<capability>` 子入口导入；`@retikz/standard` 根入口只保留 composites，不聚合这些 Definition。
+
+## 直接 Definition 注入
+
+直接编译、恢复持久化 IR 或已经掌握完整依赖集合的宿主，应把每个 Definition 放入对应的 Core compile option：
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { FrameDefinition, GridDefinition } from '@retikz/standard';
+import { DiamondArrowDefinition } from '@retikz/standard/arrow';
+import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-const scene = compileToScene(persistedIR, {
-  composites: [GridDefinition, FrameDefinition],
+const result = compileToScene(scene, {
+  shapes: [CrossShapeDefinition],
+  arrows: [DiamondArrowDefinition],
+  clips: [CompoundClipDefinition],
+  pathGenerators: [ParabolaPathGeneratorDefinition],
 });
 ```
 
-Standard 不提供 bundle、preset、全局 registry 或内置白名单。`GridProvider`、`AxesProvider`、`FrameProvider`、`SurfaceProvider` 与 `LegendProvider` 各自只生成一个 exact-key Definition；Core resolver 从实际 roots 计算传递闭包，最终仍进入 Core 唯一 composite registry
+React 的 `<Layout>` 也暴露相同的 `shapes`、`arrows`、`clips` 和 `pathGenerators` 入口。调用方仅传入当前图真正使用的项；这不是动态 import，也不改变其他编译调用的 registry。
 
-## 适用边界
+## adapter 的 provider graph
 
-Provider 路径适用于 React / Vanilla adapter、跨 namespace 的第三方 composite，以及需要复用依赖装配的工具链。直接 Definition 路径适用于服务端编译、文件恢复、LLM 生成 IR 和已经掌握完整依赖集合的宿主。两条路径只解决“编译时使用哪些 Definition”，不负责动态 import、运行时包分割、renderer 配置、布局策略或宿主生命周期
+React、Vanilla 和第一方 Tier 2 在 authoring 阶段可声明 `CoreProviderContribution`。一个 contribution 由实际需要的 roots 和静态携带的 providers 组成；普通 provider key 使用 `capability + name`，composite key 使用 `namespace + type`。
 
-React JSX 和 Vanilla embed 由各自 adapter 负责 authoring，并贡献相同的 `CompositeDependencyContribution`。直接 IR 不猜测依赖，仍由宿主显式传入完整 `composites`
+Core 的 `resolveCoreProviderDependencies()` 统一处理 roots、传递依赖和与显式 definitions 的合并，然后产生 `shapes`、`arrows`、`clips`、`pathGenerators`、`composites` 等普通 compile options。Standard 子入口只提供静态 Definition 或 provider；它不实现合并、去重、lookup 或第二套 registry。
 
-## 定义能力
+## 执行与持久化边界
 
-每个 Standard composite owner 直接导出自己的 Definition、factory、schema、artifact 和 lowering：
+1. 直接宿主显式传入 Definition，或 adapter 为已创作的能力声明 contribution
+2. Core 在 compile 前解析本次 roots 的 dependency-first 闭包，并检查缺失、循环和冲突
+3. Core 将结果与宿主的显式 definitions 合并到对应 compile options
+4. Core 使用唯一 registry 校验 IR、查找 Definition 并生成 Scene 与诊断
 
-```ts
-import { GridDefinition, createGrid, GridSchema } from '@retikz/standard';
-
-const grid = GridSchema.parse(createGrid({ bounds: { start: [20, 20], end: [260, 150] }, line: { spacing: 20 } }));
-const compileOptions = { composites: [GridDefinition] };
-```
-
-第三方 composite 同样使用 Core 的 `defineComposite()` 产生 Definition，并用一个 provider 声明所需 Standard provider 的 key：
-
-```ts
-import type { CompositeDependencyProvider } from '@retikz/core';
-
-import { resolveCompositeDependencies } from '@retikz/core';
-import { FrameProvider } from '@retikz/standard';
-
-const CardProvider = {
-  key: { namespace: 'third', type: 'card' },
-  dependencies: [FrameProvider.key],
-  datasets: {},
-  makeDefinition: () => CardDefinition,
-} satisfies CompositeDependencyProvider;
-
-const composites = resolveCompositeDependencies({
-  contributions: [{ roots: [CardProvider.key], providers: [CardProvider, FrameProvider] }],
-});
-```
-
-Definition 的 `namespace` 与 `type` 是 Core lookup key；JSON IR 只保存对应 discriminator 和数据。Provider 不做动态 import，调用方仍要正常导入并显式携带需要的 provider
-
-## 注入宿主
-
-### 直接 IR 与 React `ir` 模式
-
-```tsx
-import { Layout } from '@retikz/react';
-import { FrameDefinition, GridDefinition } from '@retikz/standard';
-
-<Layout ir={persistedIR} composites={[GridDefinition, FrameDefinition]} />;
-```
-
-缺少某个 Definition 时，Core 保留 `COMPOSITE_NOT_REGISTERED` 诊断。Core 原生 child 和其它已注册 composite 仍按 Core 规则处理
-
-### React JSX
-
-`<Grid>`、`<Axes>`、`<Frame>`、`<Surface>` 与 `<Legend>` 通过静态 adapter 把各自 provider 设为 root。`<Surface>` 还把唯一 Tier 2 child 的 contribution 接在自身之后，保持 authored provider 顺序。布局容器由 `@retikz/layout-react` 贡献自己的 provider；`<Layout>` 只收集 contributions 并调用 Core resolver，不创建第二套 registry
-
-### Vanilla
-
-Vanilla builder 继续使用 adapter 做 authoring；当前使用的 adapter 可以按需传入，也可以使用 `StandardVanillaAdapters` 这一 adapter 便利数组。adapter 贡献 rooted provider graph，与 React 使用同一个 Core resolver：
-
-```ts
-import { GridDefinition } from '@retikz/standard';
-import { renderToSvgString } from '@retikz/vanilla';
-
-const svg = renderToSvgString(persistedIR, {
-  compile: { composites: [GridDefinition] },
-});
-```
-
-`StandardVanillaAdapters` 属于 `@retikz/standard-vanilla` 的 authoring 便利入口，不是 Standard 的 compile preset。布局 authoring 使用 `@retikz/layout-vanilla` 的 `LayoutVanillaAdapters`
-
-## 执行机制
-
-1. adapter 或工具链把 authored capability 的 provider key 设为 root，并携带可用 providers
-2. Core resolver 预检缺失依赖、cycle、maker / dependency / dataset identity 冲突
-3. resolver 按 dependency-first 顺序生成 Definition，并在其后追加宿主显式 `composites`
-4. Core 按 `namespace` / `type` 建立本次编译的唯一 composite registry
-5. Core 校验 IR、展开 Definition，并产生 Scene、diagnostic 和适用的 typed artifact
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Grid exact-key provider',
-      path: 'packages/library/standard/src/composites/presentation/grid/provider.ts',
-    },
-  ]}
-/>
+provider、maker 和 dataset 只存在于 authoring 与编译装配阶段。它们不得进入 IR、Scene、artifact、manifest 或持久化 JSON。
 
 ## 错误与限制
 
-| 情况                                              | 结果                                               |
-| ------------------------------------------------- | -------------------------------------------------- |
-| root 或传递依赖缺少 provider                      | resolver 在 maker / compile 前报告完整依赖链       |
-| 同 provider key 的 maker 或有序 dependencies 不同 | resolver fail-loud，不采用 first / last wins       |
-| 同 provider key、同 dataset reference 的值不同源  | 只有 `Object.is` 同源可去重，否则 fail-loud        |
-| provider 结果与显式 `composites` 使用同 key       | 同一个 Definition 对象去重；不同对象 fail-loud     |
-| 直接 IR 缺少需要的 Standard Definition            | Core 产生 `COMPOSITE_NOT_REGISTERED`，保持明确诊断 |
-| Definition 进入持久化 JSON                        | 不允许；JSON 只保存 schema 定义的数据              |
-
-## API 参考
-
-| 导出                                                                                           | 所属包                     | 职责                                           |
-| ---------------------------------------------------------------------------------------------- | -------------------------- | ---------------------------------------------- |
-| `GridProvider`、`AxesProvider`、`FrameProvider`、`SurfaceProvider`、`LegendProvider`           | `@retikz/standard`         | React / Vanilla / 工具链共用的 rooted provider |
-| `GridDefinition`、`AxesDefinition`、`FrameDefinition`、`SurfaceDefinition`、`LegendDefinition` | `@retikz/standard`         | 直接 IR 宿主使用的最终 Core Definition         |
-| `GridSchema`、`createGrid()` 等                                                                | `@retikz/standard`         | 校验和构造 JSON-safe Standard 输入             |
-| `StandardVanillaAdapters`                                                                      | `@retikz/standard-vanilla` | 当前 Standard Vanilla adapter 便利数组         |
-
-三个 Standard 包仍只发布根入口；Provider 与 Definition 都是 named export，消费方 bundler 可按引用 tree-shaking。按需使用指当前 contributions 的可达闭包，不等同于运行时动态加载
+| 情况                                        | 结果                                                   |
+| ------------------------------------------- | ------------------------------------------------------ |
+| root 或传递依赖缺少 provider                | Core resolver 在 maker 与 compile 前报告完整依赖链     |
+| 同一 provider key 的 maker 或有序依赖不同   | Core resolver 明确失败，不采用 first-wins 或 last-wins |
+| provider 结果与显式 Definition 使用相同 key | 相同 Definition 对象可去重；不同对象明确失败           |
+| IR 引用未装配的可选能力                     | 对应 Core registry lookup 明确失败并报告可用项         |
+| 将 Definition 或 provider 写入持久化 JSON   | 不允许；JSON 只保存 schema 定义的数据                  |
 
 ## 相关
 
-- [Standard](/library/standard)：了解包族定位，以及 React、Vanilla 和持久化 JSON 三种使用入口
-- [复合组件](/library/standard/composite)：浏览 Standard composite 目录
-- [布局容器](/library/layout)：Flex、Grid、Overlay 与 typed artifact
-- [Core 扩展机制](/kernel/reference/runtime/extensions)：定义和注册第三方 Core Definition
+- [形状](/library/standard/extension/shape)：可选节点形状
+- [箭头](/library/standard/extension/arrow)：可选端点标记
+- [裁剪](/library/standard/extension/clip)：递归组合裁剪
+- [路径生成器](/library/standard/extension/path-generator)：可选 step 规则

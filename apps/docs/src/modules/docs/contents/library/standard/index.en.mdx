@@ -1,43 +1,42 @@
 ---
 title: Standard · Extensions
-description: Extend Core horizontally with optional Tier 2 drawing capabilities that preserve common presentation intent without adding another drawing kernel.
+description: Extend Core with domain-neutral composites and explicitly assembled optional drawing Definitions while preserving one Core compile and registry path.
 ---
 
-Standard provides domain-neutral presentation components such as Grid, Axes, Frame, and Legend. Their JSON-safe high-level inputs preserve common drawing intent and lower through explicitly loaded Definitions into existing Core primitives.
+Standard has two public kinds of content: domain-neutral composites at its root entry and optional official drawing Definitions at capability subpaths. Both reuse Core's Definition, registry, and compile path; Standard does not create another drawing kernel.
 
-Layout containers now belong to the independent [Layout](/library/layout) package family. Standard only reuses Layout's public composition surface inside capabilities such as Legend; it no longer exports layout APIs.
+Layout containers belong to the independent [Layout](/library/layout) package family. Standard only reuses Layout's public composition surface inside its own capabilities, such as Legend, and no longer exports layout APIs.
 
 ## Boundary with Core
 
-Standard extends Core horizontally rather than creating another drawing kernel:
+Standard extends Core horizontally rather than replacing it:
 
 - Kernel installation, compilation, and rendering stay unchanged when Standard is unused
-- Definitions load explicitly per figure; they are not global and never enter persisted JSON
-- Standard IR lowers through the Core composite registry and remains consumable by existing SVG, Canvas, and other renderers
+- Definitions are assembled explicitly per figure, never registered globally, and never written into persisted JSON
+- Standard content still compiles through the Core registry to the existing Scene consumed by SVG, Canvas, and other renderers
 
-## Three packages
+## Three packages and capability subpaths
 
-| Package                    | Responsibility                                 | Use it when                                        |
-| -------------------------- | ---------------------------------------------- | -------------------------------------------------- |
-| `@retikz/standard`         | Schemas, factories, Definitions, and lowering  | Validating or persisting IR and compiling directly |
-| `@retikz/standard-react`   | React DSL for presentation components          | Authoring inside a React `Layout`                  |
-| `@retikz/standard-vanilla` | Plain-spec helpers and Vanilla Tier 2 adapters | Authoring in browsers or scripts without React     |
+| Entry                           | Responsibility                                                        | Use it when                                                      |
+| ------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `@retikz/standard`              | Schemas, factories, Definitions, and lowering for Standard composites | Using Grid, Axes, Frame, Surface, or Legend                      |
+| `@retikz/standard-react`        | React DSL for presentation components                                 | Authoring inside a React `Layout`                                |
+| `@retikz/standard-vanilla`      | Plain-spec helpers and Vanilla Tier 2 adapters                        | Authoring in browsers or scripts without React                   |
+| `@retikz/standard/<capability>` | Definitions for one optional drawing capability family                | A figure needs an optional shape, arrow, clip, or path generator |
 
-All three packages share the schemas and lowering from `@retikz/standard`. React and Vanilla connect authoring inputs to the same capabilities without duplicating semantics.
-
-For React authoring, use components from `@retikz/standard-react` inside the `Layout` from `@retikz/react`. For Vanilla, combine the plain-spec helpers and adapters from `@retikz/standard-vanilla`. When loading persisted JSON, validate complete IR with `@retikz/standard` and pass the required Definitions to the Core compiler.
+React and Vanilla only connect authoring inputs to the same capabilities. For optional drawing content, import a single Definition from the precise `@retikz/standard/<capability>` subpath and pass it to Core compile options; the `@retikz/standard` root does not forward it.
 
 ## Pages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/library/standard/composite">
     <span className="font-semibold">Presentation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Grid, Axes, Frame, and Legend</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Grid, Axes, Frame, Surface, and Legend</span>
   </LinkedCard>
   <LinkedCard href="/library/standard/extension">
     <span className="font-semibold">Extensions</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Definition selection, injection, and host boundaries
+      Explicitly assemble official drawing Definitions by capability subpath
     </span>
   </LinkedCard>
   <LinkedCard href="/library/standard/changelog">

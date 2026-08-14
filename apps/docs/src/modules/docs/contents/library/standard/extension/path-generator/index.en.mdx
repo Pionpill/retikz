@@ -1,0 +1,88 @@
+---
+title: Path Generator Extensions
+description: Import the parabola path generator from @retikz/standard/path-generator on demand, then pass its Definition through the React or Vanilla compile entry point.
+---
+
+Path-generator extensions build on Core's basic Path steps and add more optional content:
+
+| Package                   | Provided content                             |
+| ------------------------- | -------------------------------------------- |
+| `core`                    | Basic Path steps that complete the path loop |
+| `standard/path-generator` | `parabola` path generator                    |
+
+## Usage
+
+### React usage
+
+Import `ParabolaPathGeneratorDefinition` from `@retikz/standard/path-generator` and pass it to the React `Layout` `pathGenerators` prop. The path step still references its control point through `params.control`.
+
+```tsx
+import { Layout, Node, Path, Step } from '@retikz/react';
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+
+<Layout pathGenerators={[ParabolaPathGeneratorDefinition]}>
+  <Node id="A" position={[-120, 40]}>
+    A
+  </Node>
+  <Node id="B" position={[120, 40]}>
+    B
+  </Node>
+  <Node id="C" position={[0, -60]}>
+    C
+  </Node>
+  <Path>
+    <Step kind="move" to="A" />
+    <Step kind="generator" name="parabola" to="B" params={{ control: { id: 'C' } }} />
+  </Path>
+</Layout>;
+```
+
+### Vanilla usage
+
+With `@retikz/vanilla`, put the Definition in `compile.pathGenerators`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    pathGenerators: [ParabolaPathGeneratorDefinition],
+  },
+});
+```
+
+This supplies a static Definition to the current Core compilation, not runtime dynamic loading. When a step names an unregistered generator, Core fails explicitly at lookup; after injection, the Definition schema validates required data such as the `control` target for `parabola`.
+
+## Examples
+
+The example below shows how `parabola` turns a JSON-safe target reference into one quadratic curve segment. The gray dotted lines only show the relationship between the control point and endpoints; they are not part of the output path.
+
+<ComponentPreview
+  files="parabola-gallery"
+  size="sm"
+  caption="C is the target passed through `params.control`; ParabolaPathGeneratorDefinition generates the orange curve."
+/>
+
+### Parabola path
+
+`parabola` expands a start, an end, and the target in `params.control` into one quadratic curve. The gray guides explain the control relationship but are not output path content. Use it for connections that must pass through an explicit control point.
+
+This subpath currently provides `ParabolaPathGeneratorDefinition` and `StandardPathGeneratorName` only; the `@retikz/standard` root does not aggregate them.
+
+#### API
+
+`parabola` uses `ParabolaPathGeneratorDefinition` and receives its control point through `params.control`:
+
+| Field            | Type         | Description                                                                                                                  |
+| ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `name`           | `'parabola'` | Generator name, also available as `StandardPathGeneratorName.Parabola`                                                       |
+| `to`             | `IRTarget`   | Path-step endpoint; this generator requires it                                                                               |
+| `params.control` | `IRTarget`   | Required control-point target. The example uses `{ id: 'C' }`; other forms supported by Core's `TargetSchema` are also valid |
+
+The `control` target is resolved to the current Path's local coordinates before generation, after which the generator emits one quadratic curve. Keep `params` JSON-safe; do not pass functions or runtime objects.
+
+## Related
+
+- [Capability Loading](/library/standard/extension/capability-loading): boundary between direct injection and the provider graph
+- [Extensions](/library/standard/extension): browse the other optional capabilities

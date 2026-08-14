@@ -1,0 +1,85 @@
+---
+title: Clip Extensions
+description: Import the compound clip Definition from @retikz/standard/clip on demand, then pass it through the React or Vanilla compile entry point.
+---
+
+Clip extensions build on Core's basic clips and add more optional content:
+
+| Package         | Provided content              |
+| --------------- | ----------------------------- |
+| `core`          | `rect`, `circle`, `ellipse`   |
+| `standard/clip` | `polygon`, `path`, `compound` |
+
+## Usage
+
+### React usage
+
+Import the clip Definitions you need from `@retikz/standard/clip`, pass them to the React `Layout` `clips` prop, and place the clip spec on a `Scope`.
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+
+<Layout clips={[CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition]}>
+  <Scope
+    clip={{
+      kind: 'compound',
+      fillRule: 'nonzero',
+      children: [
+        { kind: 'circle', cx: -32, cy: 0, r: 56 },
+        { kind: 'circle', cx: 32, cy: 0, r: 56 },
+      ],
+    }}
+  >
+    <Node position={[0, 0]} minimumSize={{ width: 180, height: 110 }} />
+  </Scope>
+</Layout>;
+```
+
+### Vanilla usage
+
+With `@retikz/vanilla`, put the Definition in `compile.clips`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    clips: [CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition],
+  },
+});
+```
+
+The Definition exists only for the current Core registry assembly; it does not enter IR JSON or write global state as an import side effect. If IR uses `polygon`, `path`, or `compound` without injecting the corresponding Definition, Core reports an unregistered clip; after injection it validates the data through that Definition's schema.
+
+## Examples
+
+The preview lays out two content regions horizontally. Each side uses a selectable basic clip inside `compound`; the controls also move the two regions independently.
+
+<ComponentPreview
+  files="clip-gallery"
+  size="sm"
+  caption="The orange grids are the original content; each visible region follows its selected clip type."
+/>
+
+### Compound clipping
+
+`compound` recursively combines other registered clip specs through `children`. The example above uses two independently selectable child regions and suits cases where basic clips need to form one combined region.
+
+This subpath currently provides `PolygonClipDefinition`, `PathClipDefinition`, `CompoundClipDefinition`, and their parameter types; the `@retikz/standard` root does not forward them.
+
+#### API
+
+`compound` uses `CompoundClipSpec` and requires `CompoundClipDefinition` during compilation:
+
+| Field       | Type                                    | Description                                                                                      |
+| ----------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `kind`      | `'compound'`                            | Discriminator for recursive compound clipping                                                    |
+| `children`  | `Array<IRClipSpec \| CompoundClipSpec>` | At least one child; each child can nest another `compound` or reference a Core / registered clip |
+| `fillRule?` | `'nonzero' \| 'evenodd'`                | Fill rule for the combined path; omitted values follow Core's default handling                   |
+
+## Related
+
+- [Capability Loading](/library/standard/extension/capability-loading): boundary between direct injection and the provider graph
+- [Extensions](/library/standard/extension): browse the other optional capabilities

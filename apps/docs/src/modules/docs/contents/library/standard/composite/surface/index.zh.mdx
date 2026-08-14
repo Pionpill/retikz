@@ -81,7 +81,7 @@ Surface 还在 authored 外层 Scope 发布 key 为 `surface` 的 qualified spat
 
 ### React 与 Vanilla
 
-React `SurfaceProps` 用 `children` 代替 IR 的 `child`，并要求最终恰好一个 IR child。Vanilla 使用 `surfaceChild(node, compositeDependencies?)` 显式携带嵌套 Tier 2 的运行时 provider contribution；这份 metadata 不进入 IR 或 Scene。
+React `SurfaceProps` 用 `children` 代替 IR 的 `child`，并要求最终恰好一个 IR child。Vanilla 使用 `surfaceChild(node, providerDependencies?)` 显式携带嵌套 Tier 2 的运行时 provider contribution；这份 metadata 不进入 IR 或 Scene。
 
 ## 相关
 

@@ -1,9 +1,15 @@
 import type { FC } from 'react';
 
 import { Layout, Node, Path, Step } from '@retikz/react';
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
 
 const Demo: FC = () => (
-  <Layout width={420} height={180} viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
+  <Layout
+    width={420}
+    height={180}
+    viewBox={{ x: -210, y: -90, width: 420, height: 180 }}
+    pathGenerators={[ParabolaPathGeneratorDefinition]}
+  >
     <Node id="A" position={[-160, 48]} shape="circle" fill="#f8fafc">
       A
     </Node>

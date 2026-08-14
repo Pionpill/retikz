@@ -1,4 +1,4 @@
-import { LayoutAxisProposalKind, LayoutIntrinsicMode, PathClipSchema, RectClipSchema } from '@retikz/core';
+import { LayoutAxisProposalKind, LayoutIntrinsicMode, RectClipSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { LayoutAlignment, LayoutAxisSizeKind } from '../../src';
@@ -193,6 +193,6 @@ describe('shared layout Box geometry', () => {
         { kind: 'close' },
       ],
     });
-    expect(PathClipSchema.safeParse(zeroWidth).success).toBe(true);
+    expect(zeroWidth).toMatchObject({ kind: 'path' });
   });
 });

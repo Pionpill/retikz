@@ -22,9 +22,7 @@ const ContourShapeParamsSchema = z.strictObject({
   points: z
     .array(z.tuple([z.number(), z.number()]))
     .min(3)
-    .describe(
-      "Closed local-frame vertex ring (any local origin — core auto-centers on the points' AABB center so Node position aligns to the geometric center; no caller pre-centering needed), >=3 points; edges are straight lines, last point auto-connects to first.",
-    ),
+    .describe('At least three two-dimensional vertices forming a closed contour in order.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Uniform per-vertex fillet radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
   ),
@@ -82,12 +80,10 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
   }),
 });
 
-const makeContourShapeDefinition = () => ContourShapeDefinition;
-
 /** Contour 的静态 Core provider */
 export const ContourShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'shape', name: ContourShapeDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: makeContourShapeDefinition,
+  key: { capability: 'shape', name: ContourShapeDefinition.name },
+  dependencies: [],
+  datasets: {},
+  makeDefinition: () => ContourShapeDefinition,
 });

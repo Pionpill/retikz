@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { ClipResource, GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
-import { compileToScene } from '../../src/compile/compile';
+import { compileToScene, defineClip } from '../../src';
+
+const polygonClip = defineClip({
+  kind: 'polygon',
+  schema: z.strictObject({
+    kind: z.literal('polygon'),
+    points: z.array(z.tuple([z.number(), z.number()])).min(3),
+  }),
+  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+});
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -116,7 +126,7 @@ describe('finite 守卫不误伤合法值', () => {
 describe('clip Scene JSON round-trip 不失真', () => {
   /** JSON 序列化 + 反序列化后 Scene 与原始等价（NaN/Infinity 会变 null，-0 会变 0） */
   const assertRoundTrip = (ir: IRScene): void => {
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
     const roundTripped = JSON.parse(JSON.stringify(compiled));
     expect(roundTripped).toEqual(compiled);
   };
@@ -146,7 +156,7 @@ describe('clip Scene JSON round-trip 不失真', () => {
     // 注：vitest toEqual 用 Object.is 区分 -0/0，故这里 round-trip 与原始的 strict 深比较会差一格
     //   （见报告：-0 量化是既有 quirk，渲染无影响，不 BLOCKING）。
     const ir = handcraftedScope({ kind: 'rect', x: -0.001, y: -0.004, width: 10, height: 10 });
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
     const json = JSON.stringify(compiled);
     // 关键契约：序列化产物里没有 null（非 finite 会序列化成 null）
     expect(json).not.toContain('null');
@@ -179,7 +189,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       } as unknown as IRScene['children'][number],
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
     expect(clipResources(compiled.resources)).toHaveLength(1);
     const groups = allGroups(compiled.primitives);
     expect(groups[0].clipRef).toBe(groups[1].clipRef);
@@ -212,7 +222,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
     // 点序不同 → 不同 polygon → 2 条资源
     expect(clipResources(compiled.resources)).toHaveLength(2);
   });
@@ -231,7 +241,7 @@ describe('clip dedup 边界', () => {
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
-    const compiled = compileToScene(ir).scene;
+    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });
 
@@ -373,7 +383,7 @@ describe('clip 退化几何', () => {
       Math.round(50 * Math.cos((i / 500) * 2 * Math.PI)),
       Math.round(50 * Math.sin((i / 500) * 2 * Math.PI)),
     ]);
-    const compiled = compileToScene(handcraftedScope({ kind: 'polygon', points })).scene;
+    const compiled = compileToScene(handcraftedScope({ kind: 'polygon', points }), { clips: [polygonClip] }).scene;
     const clips = clipResources(compiled.resources);
     expect(clips).toHaveLength(1);
     const shape = clips[0].shape;
@@ -391,6 +401,7 @@ describe('clip 退化几何', () => {
           [5, 5],
         ],
       }),
+      { clips: [polygonClip] },
     ).scene;
     expect(clipResources(compiled.resources)).toHaveLength(1);
   });

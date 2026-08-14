@@ -86,7 +86,7 @@ import { Scope } from '@retikz/react';
 
 ### 裁剪与层级
 
-`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。用面板切换六种内置裁剪区；内置类型不够时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
+`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示五种 Core 基础裁剪和一种从 Standard 注入的 `compound` 组合裁剪；需要业务 kind 时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
 
 <ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 

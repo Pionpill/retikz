@@ -549,7 +549,12 @@ const findProviderDataset = (
   let found = false;
   for (const contribution of preview.contributions) {
     for (const provider of contribution.providers) {
-      if (provider.key.namespace !== namespace || !Object.hasOwn(provider.datasets, reference)) continue;
+      if (
+        provider.key.capability !== 'composite' ||
+        provider.key.namespace !== namespace ||
+        !Object.hasOwn(provider.datasets, reference)
+      )
+        continue;
       const candidate = provider.datasets[reference];
       if (found && dataset !== candidate) {
         throw new Error(`${label} dataset reference "${reference}" resolves to different values.`);

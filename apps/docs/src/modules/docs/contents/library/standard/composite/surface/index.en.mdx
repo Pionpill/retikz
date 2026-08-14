@@ -84,7 +84,7 @@ The authored outer Scope also publishes a qualified handle whose key is `surface
 
 ### React and Vanilla
 
-React `SurfaceProps` replaces IR `child` with `children` and requires exactly one resulting IR child. Vanilla uses `surfaceChild(node, compositeDependencies?)` to carry a nested Tier 2 provider contribution explicitly. That runtime metadata never enters IR or Scene.
+React `SurfaceProps` replaces IR `child` with `children` and requires exactly one resulting IR child. Vanilla uses `surfaceChild(node, providerDependencies?)` to carry a nested Tier 2 provider contribution explicitly. That runtime metadata never enters IR or Scene.
 
 ## Related
 

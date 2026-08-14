@@ -88,8 +88,8 @@ The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Cor
     {
       label: 'Normalize a plain spec into Core IR and metadata',
       path: 'packages/kernel/vanilla/src/spec/normalize.ts',
-      startLine: 314,
-      endLine: 334,
+      startLine: 279,
+      endLine: 306,
     },
     {
       label: 'One-shot Scene entry for SSR and static mounts',
@@ -225,7 +225,7 @@ const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
   kind: 'badge',
   lower: (props, context) => ({
     node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 };
 
@@ -238,15 +238,15 @@ const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 
 `normalizeFigureSpec` is exported from the package root. `adapters` is a top-level render / mount option, not a field inside `compile`. To inspect normalization before rendering, call `normalizeFigureSpec(spec, { adapters })` directly and read its `ir`, `composites`, and `runtimeMeta` result.
 
-A plain-spec retained update may replace the callback behind the same composite key, schema, and execution branch, committing or rolling it back with the Scene transaction. Definition count, order, key, schema, expand / compile branch, and artifact schema form fixed topology; dispose and remount to change them.
+A plain-spec retained update may replace the callback behind the same provider key, schema, and execution branch, committing or rolling it back with the Scene transaction. Definition count, order, key, schema, branch, and artifact schema form fixed topology; dispose and remount to change them.
 
 <SourceLinks
   sources={[
     {
-      label: 'Fixed composite topology and callback transaction',
-      path: 'packages/kernel/vanilla/src/runtime/retained-composites.ts',
-      startLine: 98,
-      endLine: 145,
+      label: 'Fixed provider topology and callback transaction',
+      path: 'packages/kernel/vanilla/src/runtime/retained-providers.ts',
+      startLine: 137,
+      endLine: 241,
     },
     {
       label: 'Connect the composite candidate to the Session update',

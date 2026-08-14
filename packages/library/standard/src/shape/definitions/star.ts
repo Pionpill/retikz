@@ -119,12 +119,10 @@ export const StarShapeDefinition = defineShape<StarShapeParams>({
   },
 });
 
-const makeStarShapeDefinition = () => StarShapeDefinition;
-
 /** Star 的静态 Core provider */
 export const StarShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'shape', name: StarShapeDefinition.name }),
-  dependencies: Object.freeze([]),
-  datasets: Object.freeze({}),
-  makeDefinition: makeStarShapeDefinition,
+  key: { capability: 'shape', name: StarShapeDefinition.name },
+  dependencies: [],
+  datasets: {},
+  makeDefinition: () => StarShapeDefinition,
 });

@@ -1,42 +1,41 @@
 ---
 title: Standard · 拓展
-description: 用可选的 Tier 2 绘图能力横向扩展 Core，保留常用呈现语义而不增加新的绘图内核。
+description: 以领域无关的复合组件和按能力装配的可选绘图定义扩展 Core，同时保持唯一的 Core 编译与注册表路径。
 ---
 
-Standard 提供 Grid、Axes、Frame 与 Legend 等领域无关的呈现组件。它们用 JSON-safe 高层输入保存常用绘图意图，经显式加载的 Definition 下沉为既有 Core 图元。
+Standard 有两类公开内容：根入口中的领域无关复合组件，以及能力子入口中的可选官方绘图定义。两者都复用 Core 的 Definition、registry 与 compile；Standard 不创建第二套绘图内核。
 
-布局容器已经由独立的 [Layout](/library/layout) 包族拥有；Standard 只在实现 Legend 等自身能力时通过 Layout 公共组合面复用排版能力，不再导出布局 API。
+布局容器由独立的 [Layout](/library/layout) 包族拥有。Standard 只在 Legend 等自身能力中通过 Layout 的公开组合面复用排版能力，不再导出布局 API。
 
 ## 与 Core 的边界
 
-Standard 是 Core 的横向拓展，不是新的绘图内核：
+Standard 横向扩展 Core，而不是替代它：
 
-- 不使用 Standard 时，Kernel 的安装、编译和渲染路径保持不变
-- Definition 按图显式加载，不做全局注册，也不写入持久化 JSON
-- Standard IR 经 Core composite registry 下沉后，仍由现有 SVG、Canvas 等 renderer 消费
+- 不使用 Standard 时，Kernel 的安装、编译和渲染路径不变
+- Definition 按图显式装配，不进行全局注册，也不写入持久化 JSON
+- Standard 内容仍经 Core registry 编译为既有 Scene，并由 SVG、Canvas 等 renderer 消费
 
-## 三个发布包
+## 三个包与能力子入口
 
-| 包                         | 负责什么                                    | 什么时候使用                        |
-| -------------------------- | ------------------------------------------- | ----------------------------------- |
-| `@retikz/standard`         | schema、factory、Definition 与 lowering     | 校验或持久化 IR，直接接入 Core 编译 |
-| `@retikz/standard-react`   | 呈现组件的 React DSL                        | 在 React `Layout` 中创作            |
-| `@retikz/standard-vanilla` | plain spec helper 与 Vanilla Tier 2 adapter | 无 React 的浏览器或脚本入口         |
+| 入口                            | 职责                                                           | 何时使用                                            |
+| ------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
+| `@retikz/standard`              | Standard composites 的 schema、factory、Definition 与 lowering | 使用 Grid、Axes、Frame、Surface 或 Legend           |
+| `@retikz/standard-react`        | 呈现组件的 React DSL                                           | 在 React `Layout` 中创作                            |
+| `@retikz/standard-vanilla`      | plain spec helper 与 Vanilla Tier 2 adapter                    | 无 React 的浏览器或脚本入口                         |
+| `@retikz/standard/<capability>` | 单一可选绘图能力族的 Definitions                               | 当前图需要可选 shape、arrow、clip 或 path generator |
 
-三个包共享 `@retikz/standard` 中的 schema 与 lowering。React 和 Vanilla 只负责把作者输入接入同一能力，不复制语义。
-
-使用 React 创作时，在 `@retikz/react` 的 `Layout` 中直接使用 `@retikz/standard-react` 组件；使用 Vanilla 时，通过 `@retikz/standard-vanilla` 的 plain spec helper 与 adapter 接入；读取持久化 JSON 时，则用 `@retikz/standard` 校验完整 IR，并把所需 Definition 传给 Core 编译器。
+React 与 Vanilla 只把作者输入接入同一能力。需要可选绘图内容时，从精确的 `@retikz/standard/<capability>` 子入口导入单项 Definition，并传给 Core compile options；`@retikz/standard` 根入口不转发这些内容。
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/library/standard/composite">
     <span className="font-semibold">展现</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Grid、Axes、Frame 与 Legend</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Grid、Axes、Frame、Surface 与 Legend</span>
   </LinkedCard>
   <LinkedCard href="/library/standard/extension">
     <span className="font-semibold">扩展</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Definition 选择、注入与宿主边界</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">按能力子入口显式装配官方绘图定义</span>
   </LinkedCard>
   <LinkedCard href="/library/standard/changelog">
     <span className="font-semibold">更新日志</span>

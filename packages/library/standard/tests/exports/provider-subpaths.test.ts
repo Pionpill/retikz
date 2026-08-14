@@ -20,14 +20,12 @@ describe('Standard provider subpath exports', () => {
   it('keeps optional providers out of the root entry and makes each capability entry explicit', () => {
     for (const name of [
       'CrossShapeDefinition',
-      'OpenArrowDefinition',
       'CompoundClipDefinition',
       'ParabolaPathGeneratorDefinition',
     ]) {
       expect(root).not.toHaveProperty(name);
     }
     expect(shape.CrossShapeDefinition).toBeDefined();
-    expect(arrow.OpenArrowDefinition).toBeDefined();
     expect(clip.CompoundClipDefinition).toBeDefined();
     expect(pathGenerator.ParabolaPathGeneratorDefinition).toBeDefined();
   });

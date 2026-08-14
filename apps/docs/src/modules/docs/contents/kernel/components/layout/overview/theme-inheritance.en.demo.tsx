@@ -1,4 +1,4 @@
-import type { CompositeDependencyProvider, IRNode, ThemeModeValue } from '@retikz/core';
+import type { CoreDependencyProvider, IRNode, ThemeModeValue } from '@retikz/core';
 import type { EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -76,8 +76,8 @@ const themeCardComposite = defineComposite({
   },
 });
 
-const ThemeCardProvider: CompositeDependencyProvider = {
-  key: { namespace: 'theme-demo', type: 'card' },
+const ThemeCardProvider: CoreDependencyProvider = {
+  key: { capability: 'composite', namespace: 'theme-demo', type: 'card' },
   dependencies: [],
   datasets: {},
   makeDefinition: () => themeCardComposite,
@@ -87,7 +87,7 @@ const themeCardAdapter: EmbeddableTier2Adapter<ThemeCardProps> = {
   displayName: 'ThemeCard',
   contribute: props => ({
     node: { namespace: 'theme-demo', type: 'card', label: props.label },
-    compositeDependencies: { roots: [ThemeCardProvider.key], providers: [ThemeCardProvider] },
+    providerDependencies: { roots: [ThemeCardProvider.key], providers: [ThemeCardProvider] },
   }),
 };
 

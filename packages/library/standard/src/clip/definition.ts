@@ -2,7 +2,8 @@ import type { ClipDefinition, ClipResolveContext, ClipShape } from '@retikz/core
 
 import { defineClip } from '@retikz/core';
 
-import type { CompoundClipSpec } from './schema';
+import type { CompoundClipSpec, StandardPathClipSpec, StandardPolygonClipSpec } from './schema';
+import { PathClipSchema, PolygonClipSchema } from './schema';
 
 import { CompoundClipSchema } from './schema';
 
@@ -24,4 +25,18 @@ export const CompoundClipDefinition: ClipDefinition = defineClip({
   kind: 'compound',
   schema: CompoundClipSchema,
   resolve: resolveCompoundClip,
+});
+
+/** Standard 提供的多边形裁剪 Definition */
+export const PolygonClipDefinition: ClipDefinition = defineClip<StandardPolygonClipSpec>({
+  kind: 'polygon',
+  schema: PolygonClipSchema,
+  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+});
+
+/** Standard 提供的路径裁剪 Definition */
+export const PathClipDefinition: ClipDefinition = defineClip<StandardPathClipSpec>({
+  kind: 'path',
+  schema: PathClipSchema,
+  resolve: spec => ({ kind: 'path', commands: spec.commands, fillRule: spec.fillRule }),
 });

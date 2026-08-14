@@ -51,17 +51,23 @@ React injects definitions through `<Layout pathGenerators>`; direct core calls u
 </Layout>
 ```
 
-The built-in `parabola` needs no injection. It resolves `params.control` as a target and emits one quadratic Bezier command:
+`parabola` is an optional generator supplied by Standard. It resolves `params.control` as a target and emits one quadratic Bezier command. Import its Definition from `@retikz/standard/path-generator` and pass it to the current `<Layout>`:
+
+```tsx
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+
+<Layout pathGenerators={[ParabolaPathGeneratorDefinition]}>{/* generator Step */}</Layout>;
+```
 
 <ComponentPreview files="path-generator-parabola" size="xs" />
 
 ## Execution
 
-Built-in and custom definitions enter one registry before lookup by the Step `name`. Compilation validates parameters, resolves declared target fields, invokes `generate`, and checks every output command for a complete shape and finite coordinates.
+Core carries no default path generators. Standard and custom definitions injected by the host enter one registry before lookup by the Step `name`. Compilation validates parameters, resolves declared target fields, invokes `generate`, and checks every output command for a complete shape and finite coordinates.
 
 | Stage           | Input                            | Result                                        |
 | --------------- | -------------------------------- | --------------------------------------------- |
-| Merge           | Built-ins + host definitions     | One name registry                             |
+| Merge           | Host-injected definitions        | One name registry                             |
 | Validate        | `params` + `paramsSchema`        | JSON-safe parameter object                    |
 | Resolve targets | Top-level `targetParams` keys    | Current Path-local coordinates                |
 | Generate        | `from` / `to` / params / targets | `PathCommand[]`                               |
@@ -103,7 +109,7 @@ Built-in and custom definitions enter one registry before lookup by the Step `na
 | Case                                     | Result                                                                    |
 | ---------------------------------------- | ------------------------------------------------------------------------- |
 | Empty name                               | `definePathGenerator` rejects it immediately                              |
-| Duplicate built-in or custom name        | Registry merge reports a duplicate registration                           |
+| Duplicate registered name                | Registry merge reports a duplicate registration                           |
 | Step references an unknown name          | Compile lists available names and the injection option                    |
 | `paramsSchema` rejects input             | Error includes provider name and the relevant IR path                     |
 | Parsed params contain functions/`NaN`    | The JSON-safe guard rejects them                                          |

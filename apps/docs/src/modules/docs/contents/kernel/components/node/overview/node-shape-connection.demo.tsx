@@ -2,6 +2,7 @@ import type { IRBoundary, IRNodeTarget } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
+import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -63,7 +64,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={400}
       height={185}
       viewBox={{ x: -260, y: -120, width: 520, height: 240 }}
-      shapes={[boundaryGuideShape]}
+      shapes={[boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}
     >
       <Node
         id="A"

@@ -51,17 +51,23 @@ React 通过 `<Layout pathGenerators>` 注入；直接调用 core 时使用 `Com
 </Layout>
 ```
 
-内置 `parabola` 不需要额外注入。它用 `params.control` 解析一个控制点，再生成二次贝塞尔命令：
+`parabola` 是 Standard 提供的可选生成器。它用 `params.control` 解析一个控制点，再生成二次贝塞尔命令；使用时从 `@retikz/standard/path-generator` 导入 Definition 并传给当前 `<Layout>`：
+
+```tsx
+import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
+
+<Layout pathGenerators={[ParabolaPathGeneratorDefinition]}>{/* generator Step */}</Layout>;
+```
 
 <ComponentPreview files="path-generator-parabola" size="xs" />
 
 ## 执行机制
 
-内置与自定义生成器先进入同一个 registry，再按 Step 的 `name` 查找。compile 依次校验参数、解析声明过的目标字段、调用 `generate`，最后检查每条输出命令是否完整且坐标有限。
+Core 默认不携带路径生成器。宿主注入的 Standard 或自定义生成器先进入同一个 registry，再按 Step 的 `name` 查找。compile 依次校验参数、解析声明过的目标字段、调用 `generate`，最后检查每条输出命令是否完整且坐标有限。
 
 | 阶段     | 输入                        | 结果                            |
 | -------- | --------------------------- | ------------------------------- |
-| 合并     | 内置 definitions + 宿主注入 | 统一名称 registry               |
+| 合并     | 宿主注入的 definitions      | 统一名称 registry               |
 | 校验     | `params` + `paramsSchema`   | JSON-safe 参数对象              |
 | 解析目标 | `targetParams` 顶层字段     | 当前 Path 局部坐标              |
 | 生成     | `from` / `to` / 参数 / 目标 | `PathCommand[]`                 |
@@ -103,7 +109,7 @@ React 通过 `<Layout pathGenerators>` 注入；直接调用 core 时使用 `Com
 | 情况                            | 结果                                                      |
 | ------------------------------- | --------------------------------------------------------- |
 | 名称为空                        | `definePathGenerator` 立即拒绝                            |
-| 与内置或另一自定义项重名        | registry 合并时报重复注册                                 |
+| 与另一已注册项重名              | registry 合并时报重复注册                                 |
 | Step 引用未注册名称             | 编译报错，并列出可用名称与注入入口                        |
 | `paramsSchema` 拒绝参数         | 错误包含生成器名与对应 IR 路径                            |
 | 参数解析后含函数、`NaN` 等      | JSON-safe 护栏拒绝                                        |

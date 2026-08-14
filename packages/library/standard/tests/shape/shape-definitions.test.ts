@@ -4,8 +4,6 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import {
-  ArcShapeDefinition,
-  ArcShapeProvider,
   ContourShapeDefinition,
   ContourShapeProvider,
   CrossShapeDefinition,
@@ -37,16 +35,118 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<Scene
   );
 
 describe('Standard optional shape definitions', () => {
-  it('compiles a parameterized arc and preserves its open path commands', () => {
+  it('resolves cross width and height overrides by side, axis, then default', () => {
     const compiled = compileToScene(
       scene([
         {
           type: 'node',
           position: [0, 0],
-          shape: { type: 'arc', params: { radius: 20, startAngle: 0, endAngle: 90 } },
+          shape: {
+            type: 'cross',
+            params: {
+              width: { default: 4, horizontal: 6, vertical: 8 },
+              height: { default: 10, horizontal: 12, vertical: 14, top: 20, right: 22, bottom: 24, left: 26 },
+            },
+          },
         },
       ]),
-      { padding: 0, shapes: [ArcShapeDefinition] },
+      { padding: 0, shapes: [CrossShapeDefinition] },
+    ).scene;
+
+    const path = firstPath(compiled.primitives);
+    expect(path?.commands).toEqual([
+      { kind: 'move', to: [-4, -20] },
+      { kind: 'line', to: [4, -20] },
+      { kind: 'line', to: [4, -3] },
+      { kind: 'line', to: [22, -3] },
+      { kind: 'line', to: [22, 3] },
+      { kind: 'line', to: [4, 3] },
+      { kind: 'line', to: [4, 24] },
+      { kind: 'line', to: [-4, 24] },
+      { kind: 'line', to: [-4, 3] },
+      { kind: 'line', to: [-26, 3] },
+      { kind: 'line', to: [-26, -3] },
+      { kind: 'line', to: [-4, -3] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('accepts scalar cross width and height for symmetric arms', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'node',
+          position: [0, 0],
+          shape: { type: 'cross', params: { width: 6, height: 10 } },
+        },
+      ]),
+      { padding: 0, shapes: [CrossShapeDefinition] },
+    ).scene;
+
+    const path = firstPath(compiled.primitives);
+    expect(path?.commands).toEqual([
+      { kind: 'move', to: [-3, -10] },
+      { kind: 'line', to: [3, -10] },
+      { kind: 'line', to: [3, -3] },
+      { kind: 'line', to: [10, -3] },
+      { kind: 'line', to: [10, 3] },
+      { kind: 'line', to: [3, 3] },
+      { kind: 'line', to: [3, 10] },
+      { kind: 'line', to: [-3, 10] },
+      { kind: 'line', to: [-3, 3] },
+      { kind: 'line', to: [-10, 3] },
+      { kind: 'line', to: [-10, -3] },
+      { kind: 'line', to: [-3, -3] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('uses cross axis overrides before object defaults', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'node',
+          position: [0, 0],
+          shape: {
+            type: 'cross',
+            params: {
+              width: { default: 4, horizontal: 6 },
+              height: { default: 10, horizontal: 12, vertical: 14 },
+            },
+          },
+        },
+      ]),
+      { padding: 0, shapes: [CrossShapeDefinition] },
+    ).scene;
+
+    const path = firstPath(compiled.primitives);
+    expect(path?.commands).toEqual([
+      { kind: 'move', to: [-2, -14] },
+      { kind: 'line', to: [2, -14] },
+      { kind: 'line', to: [2, -3] },
+      { kind: 'line', to: [12, -3] },
+      { kind: 'line', to: [12, 3] },
+      { kind: 'line', to: [2, 3] },
+      { kind: 'line', to: [2, 14] },
+      { kind: 'line', to: [-2, 14] },
+      { kind: 'line', to: [-2, 3] },
+      { kind: 'line', to: [-12, 3] },
+      { kind: 'line', to: [-12, -3] },
+      { kind: 'line', to: [-2, -3] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('compiles a zero-thickness sector as an open arc', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'node',
+          position: [0, 0],
+          shape: { type: 'sector', params: { innerRadius: 20, outerRadius: 20, startAngle: 0, endAngle: 90 } },
+        },
+      ]),
+      { padding: 0, shapes: [SectorShapeDefinition] },
     ).scene;
 
     const path = firstPath(compiled.primitives);
@@ -54,6 +154,23 @@ describe('Standard optional shape definitions', () => {
       { kind: 'move', to: [20, 0] },
       { kind: 'arc', center: [0, 0], radius: 20, startAngle: 0, endAngle: 90 },
     ]);
+    expect(path?.fill).toBe('transparent');
+    expect(path?.commands.some(command => command.kind === 'close')).toBe(false);
+  });
+
+  it('rejects an inner radius larger than the outer radius', () => {
+    expect(() =>
+      compileToScene(
+        scene([
+          {
+            type: 'node',
+            position: [0, 0],
+            shape: { type: 'sector', params: { innerRadius: 21, outerRadius: 20, startAngle: 0, endAngle: 90 } },
+          },
+        ]),
+        { padding: 0, shapes: [SectorShapeDefinition] },
+      ),
+    ).toThrow('outerRadius must be greater than or equal to innerRadius');
   });
 
   it('compiles cross, sector, star, and contour definitions with their visual path semantics', () => {
@@ -167,7 +284,6 @@ describe('Standard optional shape definitions', () => {
 
   it('exports each shape through an independent static Core provider', () => {
     expect(CrossShapeProvider.makeDefinition({})).toBe(CrossShapeDefinition);
-    expect(ArcShapeProvider.makeDefinition({})).toBe(ArcShapeDefinition);
     expect(SectorShapeProvider.makeDefinition({})).toBe(SectorShapeDefinition);
     expect(StarShapeProvider.makeDefinition({})).toBe(StarShapeDefinition);
     expect(ContourShapeProvider.makeDefinition({})).toBe(ContourShapeDefinition);

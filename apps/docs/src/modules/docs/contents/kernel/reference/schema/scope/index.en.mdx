@@ -68,13 +68,12 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 ## Clip
 
-`ClipSpecSchema` is the union accepted by `Scope.clip`. Built-in geometry uses the JSON shapes below; a custom `kind` is registered through `CompileOptions.clips` and resolved during compile.
+`ClipSpecSchema` is the Core contract accepted by `Scope.clip`. Built-in geometry uses the JSON shapes below. Any other `kind` is a JSON-safe custom clip spec: Core preserves the serialized fields, then validates and resolves them through the matching Definition contributed to `CompileOptions.clips`.
 
-| Branch            | Discriminator            | Content                                        |
-| ----------------- | ------------------------ | ---------------------------------------------- |
-| Built-in geometry | `rect` / `circle`, etc.  | Uses one of the fixed schemas below            |
-| `compound`        | `kind: 'compound'`       | Recursively combines multiple ClipSpec values  |
-| Custom Definition | Any other non-empty kind | Fields are validated by `CompileOptions.clips` |
+| Branch            | Discriminator            | Content                                                      |
+| ----------------- | ------------------------ | ------------------------------------------------------------ |
+| Built-in geometry | `rect` / `circle`, etc.  | Uses one of the fixed schemas below                          |
+| Custom Definition | Any other non-empty kind | JSON-safe fields are validated by its contributed Definition |
 
 <span id="rectclip"></span>
 
@@ -94,22 +93,8 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 <ZodSchema name="EllipseClipSchema" />
 
-<span id="polygonclip"></span>
+Polygon and path clip schemas are provided by `@retikz/standard/clip` and are validated by their injected Definitions rather than by the Core schema registry. See [Clip extensions](/library/standard/extension/clip).
 
-### PolygonClip
-
-<ZodSchema name="PolygonClipSchema" />
-
-<span id="pathclip"></span>
-
-### PathClip
-
-<ZodSchema name="PathClipSchema" />
-
-<span id="compoundclip"></span>
-
-### CompoundClip
-
-<ZodSchema name="CompoundClipSchema" />
+`compound` is an optional Standard clip, not a Core schema branch. Import `CompoundClipDefinition` from `@retikz/standard/clip` and contribute it through `CompileOptions.clips`; that Definition owns the recursive `children` contract and resolves it with the same Core clip registry path as other custom kinds.
 
 For the custom Definition, registry, and renderer boundary, see [Custom Clip](/kernel/components/layout/custom-clip).

@@ -88,8 +88,8 @@ plain spec 路径会先由 `normalizeFigureSpec` 生成 Core IR，再由 Core Pr
     {
       label: 'plain spec 归一为 Core IR 与 metadata',
       path: 'packages/kernel/vanilla/src/spec/normalize.ts',
-      startLine: 314,
-      endLine: 334,
+      startLine: 279,
+      endLine: 306,
     },
     {
       label: 'SSR 与 static mount 的一次性 Scene 入口',
@@ -225,7 +225,7 @@ const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
   kind: 'badge',
   lower: (props, context) => ({
     node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 };
 
@@ -238,15 +238,15 @@ const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
 
 `normalizeFigureSpec` 从包根导出；`adapters` 是 render / mount 选项的顶层字段，不放在 `compile` 里。若需要在渲染前检查归一结果，可直接调用 `normalizeFigureSpec(spec, { adapters })`，读取返回的 `ir`、`composites` 与 `runtimeMeta`。
 
-plain-spec retained update 可以替换同一 composite key/schema/执行分支的 callback，并与 Scene transaction 一起 commit 或 rollback；Definition 数量、顺序、key、schema、expand / compile 分支或 artifact schema 属于固定 topology，改变时必须 dispose 后 remount。
+plain-spec retained update 可以替换同一 provider key/schema/执行分支的 callback，并与 Scene transaction 一起 commit 或 rollback；Definition 数量、顺序、key、schema、分支或 artifact schema 属于固定 topology，改变时必须 dispose 后 remount。
 
 <SourceLinks
   sources={[
     {
-      label: 'Composite 固定 topology 与 callback transaction',
-      path: 'packages/kernel/vanilla/src/runtime/retained-composites.ts',
-      startLine: 98,
-      endLine: 145,
+      label: 'Provider 固定 topology 与 callback transaction',
+      path: 'packages/kernel/vanilla/src/runtime/retained-providers.ts',
+      startLine: 137,
+      endLine: 241,
     },
     {
       label: 'Composite candidate 接入 Session update',

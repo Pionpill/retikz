@@ -1,0 +1,67 @@
+---
+title: 箭头扩展
+description: 从 @retikz/standard/arrow 按需引入菱形箭头，并分别在 React 与 Vanilla 的编译入口传入 Definition。
+---
+
+箭头扩展在 Core 提供的基础箭头之上，补充了更多可选内容：
+
+| 包名             | 提供内容                                                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `core`           | `normal` / `open` — 实心与空心三角、`stealth` / `openStealth` — 实心与空心 Stealth、`circle` / `openCircle` — 实心与空心圆点 |
+| `standard/arrow` | `diamond` / `openDiamond` — 实心与空心菱形                                                                                   |
+
+## 用法
+
+### React 用法
+
+从 `@retikz/standard/arrow` 导入图中实际使用的 Standard Definition，传给 React `Layout` 的 `arrows` 属性。Core 箭头无需额外注入；导入子入口不会全局注册 Standard 箭头，Definition 只对当前图生效。
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
+
+<Layout arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}>
+  <Draw
+    way={[
+      [0, 0],
+      [160, 0],
+    ]}
+    arrow="->"
+    arrowDetail={{ end: { shape: 'openDiamond' } }}
+  />
+</Layout>;
+```
+
+### Vanilla 用法
+
+在 `@retikz/vanilla` 中，把同一个 Definition 放进 `compile.arrows`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition],
+  },
+});
+```
+
+路径 IR 只保存箭头名称和 JSON-safe 配置。若名称没有对应的内置或本次注入的 Definition，Core 会在 lookup 时明确报错并列出可用项，不会替换成默认箭头。
+
+## 例子
+
+总览按行横向并列两条平级的单向箭头：左侧为实心造型，右侧为对应的空心造型，方便比较造型而不改变路径本身。
+
+<ComponentPreview files="arrow-gallery" size="xs" />
+
+### 菱形箭头
+
+`diamond` 与 `openDiamond` 分别提供实心、空心菱形端点，适合表达聚合、汇合或需要区别于普通三角箭头的关系。
+
+<ComponentPreview files="diamond-arrows" size="sm" />
+
+## 相关
+
+- [能力装载](/library/standard/extension/capability-loading)：直接注入与 provider graph 的边界
+- [扩展](/library/standard/extension)：浏览其他可选能力

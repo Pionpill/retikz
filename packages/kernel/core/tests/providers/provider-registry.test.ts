@@ -90,6 +90,6 @@ describe('provider registry contract', () => {
 
   it('indexes_retained_builtin_clips_by_kind', () => {
     expect(BUILTIN_CLIPS.rect.kind).toBe('rect');
-    expect(BUILTIN_CLIPS.path.kind).toBe('path');
+    expect(BUILTIN_CLIPS.ellipse.kind).toBe('ellipse');
   });
 });

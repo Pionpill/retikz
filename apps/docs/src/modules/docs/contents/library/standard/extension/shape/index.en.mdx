@@ -1,0 +1,139 @@
+---
+title: Shape Extensions
+description: Import optional node shapes on demand from @retikz/standard/shape, then pass their Definitions through the React or Vanilla compile entry point.
+---
+
+Shape extensions build on Core's basic shapes and add more optional content:
+
+| Package          | Provided content                                       |
+| ---------------- | ------------------------------------------------------ |
+| `core`           | `rectangle`, `ellipse`, `polygon`; `circle`, `diamond` |
+| `standard/shape` | `cross`, `sector`, `star`, `contour`                   |
+
+A Sector with `innerRadius === outerRadius` represents an open arc.
+
+## Usage
+
+### React usage
+
+Import the Definitions a figure needs from `@retikz/standard/shape` and pass them to the React `Layout` `shapes` prop. Definitions and parameters are separate: Node stores only a shape name and JSON-safe `params`, and the import does not register shapes globally.
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
+
+<Layout shapes={[CrossShapeDefinition]}>
+  <Node position={[0, 0]} shape="cross" minimumSize={{ width: 80, height: 80 }}>
+    cross
+  </Node>
+</Layout>;
+```
+
+### Vanilla usage
+
+With `@retikz/vanilla`, put the Definition in `compile.shapes`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    shapes: [CrossShapeDefinition],
+  },
+});
+```
+
+When an IR shape is neither a Core default nor registered in this invocation's `shapes`, Core fails explicitly at lookup instead of silently substituting a similar shape. `polygon` is a minimal Core built-in; see [Polygon](/kernel/components/shapes/polygon).
+
+## Examples
+
+The list below introduces several extension shapes. The four shapes share one coordinate system so you can compare their basic appearances before exploring each shape's own geometry.
+
+<ComponentPreview files="shape-gallery" size="sm" />
+
+### Cross
+
+`cross` is a cross marker whose arm widths and four directional heights can be controlled independently. It fits concise glyphs for deletion, disabling, intersections, and asymmetric cross marks.
+
+<ComponentPreview files="cross-example" size="sm" />
+
+Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A scalar `width` or `height` applies to every matching value. Object forms resolve each value from the most specific field to the broadest fallback: side, axis, then `default`.
+
+| Field     | Type                                                                                                                                  | Description                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | Horizontal and vertical arm widths; scalar applies to both |
+| `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | Four arm heights with axis and default fallbacks           |
+
+### Open arc
+
+`sector` uses equal `innerRadius` and `outerRadius` for a connectable open arc. It suits arc-shaped glyphs in flow and relation diagrams; the angle range controls its opening.
+
+<ComponentPreview files="sector-open-example" size="sm" />
+
+#### API
+
+Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. Set `innerRadius` equal to `outerRadius` for an open arc; the `params` object has type `SectorShapeParams`:
+
+| Field                         | Type     | Description            |
+| ----------------------------- | -------- | ---------------------- |
+| `innerRadius` / `outerRadius` | `number` | Equal positive radius  |
+| `startAngle`                  | `number` | Start angle in degrees |
+| `endAngle`                    | `number` | End angle in degrees   |
+
+### Sector
+
+`sector` combines inner/outer radii with an angle range to form a pie slice, ring wedge, or open arc. `cornerRadius` rounds radial corners only for positive-thickness sectors. It suits angle ranges, ring progress, and sector state nodes.
+
+<ComponentPreview files="sector-example" size="md" />
+
+#### API
+
+Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The `params` object has type `SectorShapeParams`:
+
+| Field           | Type     | Description                                                              |
+| --------------- | -------- | ------------------------------------------------------------------------ |
+| `innerRadius`   | `number` | Non-negative inner radius; `0` creates a solid pie slice                 |
+| `outerRadius`   | `number` | Positive outer radius; must be at least `innerRadius` (equality is open) |
+| `startAngle`    | `number` | Start angle in degrees                                                   |
+| `endAngle`      | `number` | End angle in degrees                                                     |
+| `cornerRadius?` | `number` | Positive-thickness corner radius; omitted or `0` keeps corners sharp     |
+
+### Star
+
+`star` builds a star from point count, inner/outer radii, rotation, and corner radius, and exposes `tip-N` and `notch-N` named anchors. It suits emphasis, ratings, and nodes that need semantic anchors.
+
+<ComponentPreview files="star-example" size="md" />
+
+#### API
+
+Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `params` object has type `StarShapeParams`:
+
+| Field           | Type     | Description                                      |
+| --------------- | -------- | ------------------------------------------------ |
+| `points`        | `number` | Integer from 3 to 1024                           |
+| `innerRadius`   | `number` | Positive inner radius                            |
+| `outerRadius`   | `number` | Positive outer radius; must exceed `innerRadius` |
+| `rotate?`       | `number` | Shape self-rotation in degrees                   |
+| `cornerRadius?` | `number` | Per-vertex corner radius                         |
+
+### Custom contours
+
+`contour` accepts a closed vertex ring and aligns the Node position to its bounding-box center. `cornerRadius` applies feasible rounding at each corner. This example uses presets instead of editing JSON and shows tag, shield, and notched outlines.
+
+<ComponentPreview files="contour-example" size="md" />
+
+#### API
+
+Use `shape={{ type: 'contour', params }}` and inject `ContourShapeDefinition`. The `params` object has type `ContourShapeParams`:
+
+| Field           | Type                      | Description                                                                                         |
+| --------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `points`        | `Array<[number, number]>` | At least 3 vertices in a closed ring; Node aligns its position to the vertices' bounding-box center |
+| `cornerRadius?` | `number`                  | Per-corner radius; omitted or `0` keeps corners sharp                                               |
+
+## Related
+
+- [Capability Loading](/library/standard/extension/capability-loading): boundary between direct injection and the provider graph
+- [Shapes](/kernel/components/shapes): Core built-in shapes and node geometry
+- [Extensions](/library/standard/extension): browse the other optional capabilities
