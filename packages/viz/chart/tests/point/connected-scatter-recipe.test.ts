@@ -213,7 +213,6 @@ describe('Connected Scatter Chart recipe', () => {
       {
         target: 'mark.connection',
         inputPath: ['components', 'connection'],
-        sourcePath: '$spec/components/connection',
         changes: [
           { path: ['curve'], value: 'basis' },
           { path: ['stroke'], value: { kind: 'constant', value: '#16a34a' } },
@@ -222,7 +221,6 @@ describe('Connected Scatter Chart recipe', () => {
       {
         target: 'mark.points',
         inputPath: ['mark'],
-        sourcePath: '$spec/mark',
         changes: [{ path: ['color'], value: { kind: 'constant', value: '#dc2626' } }],
       },
     ]);

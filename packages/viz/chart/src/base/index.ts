@@ -1,6 +1,4 @@
 export { ChartDefinition } from './definition';
-export type { IRChartInspection, IRChartInspectionMember } from './inspection';
-export { ChartInspectionMemberSchema, ChartInspectionSchema } from './inspection';
 export type {
   ChartAuthoringInput,
   ChartPresentationAuthoringRecord,
@@ -9,16 +7,12 @@ export type {
   ChartPresentationPresetValue,
   ChartPresentationShorthand,
   IRChartPresentation,
-  IRChartPresentationItemInspection as IRChartPresentationInspectionItem,
   IRChartPresentationItem,
-  IRChartPresentationItemInspection,
   IRChartPresentationPlotItem,
 } from './presentation';
 export {
   ChartPresentationAuthoringRecordSchema,
   ChartPresentationFlexItemSchema,
-  ChartPresentationInspectionSchema,
-  ChartPresentationItemInspectionSchema,
   ChartPresentationItemKey,
   ChartPresentationItemSchema,
   ChartPresentationPlotItemSchema,

@@ -3,7 +3,7 @@ import type { IRPlotSpec } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
 import type { CHART_NAMESPACE, IRChartShared } from '../../base/schemas';
-import type { ChartInspectionMemberKindValue } from '../../shared';
+import type { ChartMemberKindValue } from '../../shared';
 
 /** 所有私有 Chart variant 共用的 namespace 与判别边界 */
 export type InternalChartSpecBound = IRChartShared & {
@@ -18,7 +18,7 @@ export type ChartSeedMember = {
   /** 稳定语义 target */
   target: string;
   /** Plot member collection kind */
-  kind: ChartInspectionMemberKindValue;
+  kind: ChartMemberKindValue;
   /** 是否属于 recipe 必需结构 */
   core: boolean;
   /** seed 中的 JSON member 值 */
@@ -27,8 +27,6 @@ export type ChartSeedMember = {
   plotPath: ReadonlyArray<string | number>;
   /** 相对 member 根允许 patch 的非空叶路径 */
   patchablePaths: ReadonlyArray<ReadonlyArray<string>>;
-  /** inspection 使用的 recipe source path */
-  sourcePath: string;
 };
 
 /** 一个 member-relative patch change */
@@ -45,8 +43,6 @@ export type ChartMemberPatch = {
   target: string;
   /** Chart 输入中的结构化诊断路径 */
   inputPath: ReadonlyArray<string | number>;
-  /** inspection 使用的稳定输入 source path */
-  sourcePath: string;
   /** 应用于同一 member 的字段 changes */
   changes: ReadonlyArray<ChartPatchChange>;
 };
