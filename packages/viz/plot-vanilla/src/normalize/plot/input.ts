@@ -7,7 +7,7 @@ import type {
   IRPlotPointMark,
   IRPlotScaleOperation,
   IRPlotSpec,
-} from '../../schemas';
+} from '@retikz/plot';
 
 type PlotComposition = NonNullable<IRPlotSpec['composition']>;
 type PlotArrangement = NonNullable<PlotComposition['arrangements']>[number];
@@ -42,12 +42,12 @@ type PlotForbiddenAxisBindings = {
 };
 
 /** Plot mark 的 framework-neutral authoring 输入 */
-export type PlotAuthoringMark =
+export type InputPlotMark =
   | (PlotAxisBindableMark & PlotTopologyBindings & PlotAxisBindings)
   | (Exclude<IRPlotMarkOperation, PlotAxisBindableMark> & PlotTopologyBindings & PlotForbiddenAxisBindings);
 
 /** Plot guide 的 framework-neutral authoring 输入 */
-export type PlotAuthoringGuide = IRPlotGuide & {
+export type InputPlotGuide = IRPlotGuide & {
   /** 绑定的 facet id */
   facetId?: string;
   /** 绑定的 scaffold id */
@@ -57,7 +57,7 @@ export type PlotAuthoringGuide = IRPlotGuide & {
 };
 
 /** facet composition 的 plain authoring 输入 */
-export type PlotFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'column'> & {
+export type InputPlotFacet = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'column'> & {
   /** 行方向分面字段或完整维度配置 */
   row?: string | NonNullable<FacetGridSpec['row']>;
   /** 列方向分面字段或完整维度配置 */
@@ -71,7 +71,7 @@ export type PlotFacetInput = Omit<FacetGridSpec, 'kind' | 'view' | 'row' | 'colu
 };
 
 /** shared tracks composition 的 plain authoring 输入 */
-export type PlotScaffoldInput = Omit<SharedScaffoldSpec, 'kind' | 'coordinate'> & {
+export type InputPlotScaffold = Omit<SharedScaffoldSpec, 'kind' | 'coordinate'> & {
   /** scaffold 内 track 使用的坐标系；缺省继承 Plot 坐标系 */
   coordinate?: SharedScaffoldSpec['coordinate'];
   /** 当前 scaffold arrangement 的间距配置 */
@@ -80,24 +80,24 @@ export type PlotScaffoldInput = Omit<SharedScaffoldSpec, 'kind' | 'coordinate'> 
   resolve?: PlotComposition['resolve'];
 };
 
-/** 创建 canonical PlotSpec 的 framework-neutral authoring 输入 */
-export type PlotAuthoringInput = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
+/** 创建 Plot Source IR 的 framework-neutral authoring 输入 */
+export type InputPlot = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' | 'guides'> & {
   /** Plot mark 列表，可使用 authoring-only binding 字段 */
-  marks: Array<PlotAuthoringMark>;
+  marks: Array<InputPlotMark>;
   /** Plot guide 列表，可使用 authoring-only binding 字段 */
-  guides?: Array<PlotAuthoringGuide>;
+  guides?: Array<InputPlotGuide>;
   /** 待展开的 facet 声明 */
-  facets?: Array<PlotFacetInput>;
+  facets?: Array<InputPlotFacet>;
   /** 待展开的 shared scaffold 声明 */
-  scaffolds?: Array<PlotScaffoldInput>;
+  scaffolds?: Array<InputPlotScaffold>;
 };
 
 /** 共享 binding normalization 的输入 */
 export type NormalizePlotBindingsInput = {
   /** 待规范化的 mark */
-  marks: ReadonlyArray<PlotAuthoringMark>;
+  marks: ReadonlyArray<InputPlotMark>;
   /** 待规范化的 guide */
-  guides: ReadonlyArray<PlotAuthoringGuide>;
+  guides: ReadonlyArray<InputPlotGuide>;
   /** 现有 scale 声明 */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** Plot 默认坐标系 */
@@ -105,12 +105,12 @@ export type NormalizePlotBindingsInput = {
   /** 显式 composition；不能与 facet / scaffold sugar 混用 */
   composition?: IRPlotSpec['composition'];
   /** 待展开的 facet 声明 */
-  facets: ReadonlyArray<PlotFacetInput>;
+  facets: ReadonlyArray<InputPlotFacet>;
   /** 待展开的 shared scaffold 声明 */
-  scaffolds: ReadonlyArray<PlotScaffoldInput>;
+  scaffolds: ReadonlyArray<InputPlotScaffold>;
 };
 
-/** 共享 binding normalization 的 canonical 结果 */
+/** 共享 binding normalization 的 Plot Source IR 结果 */
 export type NormalizedPlotBindings = {
   /** 已移除 authoring-only 字段的 mark */
   marks: Array<IRPlotMarkOperation>;

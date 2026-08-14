@@ -5,17 +5,18 @@ import type {
   IRPlotMarkOperation,
   IRPlotScaleOperation,
   IRPlotSpec,
-} from '../../schemas';
+} from '@retikz/plot';
+
+import { PlotCoordinate, PlotGuide, PlotMark, PlotScale } from '@retikz/plot';
+
 import type {
+  InputPlotFacet,
+  InputPlotGuide,
+  InputPlotMark,
+  InputPlotScaffold,
   NormalizedPlotBindings,
   NormalizePlotBindingsInput,
-  PlotAuthoringGuide,
-  PlotAuthoringMark,
-  PlotFacetInput,
-  PlotScaffoldInput,
-} from './types';
-
-import { PlotCoordinate, PlotGuide, PlotMark, PlotScale } from '../../schemas';
+} from './input';
 
 type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
 type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
@@ -36,11 +37,11 @@ const axisScaleNameOf = (baseScaleName: string, axisId: string): string => `${ba
 const isAxisGuide = (guide: IRPlotGuide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis;
 
 /** 判断 mark 是否支持按坐标轴分配 coordinate view */
-const isPositionMark = (mark: PlotAuthoringMark): boolean =>
+const isPositionMark = (mark: InputPlotMark): boolean =>
   mark.type === PlotMark.Path || mark.type === PlotMark.Point || mark.type === PlotMark.Interval;
 
 /** 移除 mark 上的 authoring-only binding 字段 */
-const stripMarkBindings = (mark: PlotAuthoringMark): IRPlotMarkOperation => {
+const stripMarkBindings = (mark: InputPlotMark): IRPlotMarkOperation => {
   const { xAxisId: _xAxisId, yAxisId: _yAxisId, facetId: _facetId, trackId: _trackId, ...rest } = mark;
   void _xAxisId;
   void _yAxisId;
@@ -50,7 +51,7 @@ const stripMarkBindings = (mark: PlotAuthoringMark): IRPlotMarkOperation => {
 };
 
 /** 移除 guide 上的 authoring-only binding 字段 */
-const stripGuideBindings = (guide: PlotAuthoringGuide): IRPlotGuide => {
+const stripGuideBindings = (guide: InputPlotGuide): IRPlotGuide => {
   const { facetId: _facetId, scaffoldId: _scaffoldId, trackId: _trackId, ...rest } = guide;
   void _facetId;
   void _scaffoldId;
@@ -59,20 +60,20 @@ const stripGuideBindings = (guide: PlotAuthoringGuide): IRPlotGuide => {
 };
 
 /** 把 mark 绑定到解析后的 coordinate view */
-const withMarkScope = (mark: PlotAuthoringMark, coordinateView: string | undefined): IRPlotMarkOperation => {
+const withMarkScope = (mark: InputPlotMark, coordinateView: string | undefined): IRPlotMarkOperation => {
   const stripped = stripMarkBindings(mark);
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };
 
 /** 把 axis guide 绑定到解析后的 coordinate view */
-const withGuideScope = (guide: PlotAuthoringGuide, coordinateView: string | undefined): IRPlotGuide => {
+const withGuideScope = (guide: InputPlotGuide, coordinateView: string | undefined): IRPlotGuide => {
   const stripped = stripGuideBindings(guide);
   if (!isAxisGuide(stripped)) return stripped;
   return coordinateView === undefined ? stripped : { ...stripped, coordinateView };
 };
 
 /** 校验单个 mark 的 binding 种类与原有 coordinate view 是否兼容 */
-const assertMarkBindingCompatibility = (mark: PlotAuthoringMark): void => {
+const assertMarkBindingCompatibility = (mark: InputPlotMark): void => {
   const ownsAxisBinding = Object.hasOwn(mark, 'xAxisId') || Object.hasOwn(mark, 'yAxisId');
   if (ownsAxisBinding && !isPositionMark(mark)) {
     throw new Error(`${ERROR_PREFIX} axis binding is only supported on path, point, and interval marks`);
@@ -93,7 +94,7 @@ const assertMarkBindingCompatibility = (mark: PlotAuthoringMark): void => {
 };
 
 /** 校验单个 guide 的 topology binding 与坐标视图是否兼容 */
-const assertGuideBindingCompatibility = (guide: PlotAuthoringGuide): void => {
+const assertGuideBindingCompatibility = (guide: InputPlotGuide): void => {
   const bindings = [
     guide.facetId !== undefined ? 'facetId' : undefined,
     guide.scaffoldId !== undefined ? 'scaffoldId' : undefined,
@@ -264,7 +265,7 @@ const fillCompositionScaleBindings = (
 };
 
 /** 把 facet authoring 输入转为 canonical facet arrangement */
-const normalizeFacet = (facet: PlotFacetInput): FacetGridSpec => {
+const normalizeFacet = (facet: InputPlotFacet): FacetGridSpec => {
   const { row, column, view, spacing, resolve, ...rest } = facet;
   return {
     ...rest,
@@ -279,8 +280,8 @@ const normalizeFacet = (facet: PlotFacetInput): FacetGridSpec => {
 
 /** 按显式 view、scaffold 模板或 authoring 默认解析 track view id */
 const scaffoldTrackViewIdOf = (
-  scaffold: Pick<PlotScaffoldInput, 'id' | 'viewIdTemplate'>,
-  track: PlotScaffoldInput['tracks'][number],
+  scaffold: Pick<InputPlotScaffold, 'id' | 'viewIdTemplate'>,
+  track: InputPlotScaffold['tracks'][number],
 ): string => {
   if (track.view !== undefined) return track.view;
   if (scaffold.viewIdTemplate === undefined) return track.id;
@@ -288,7 +289,7 @@ const scaffoldTrackViewIdOf = (
 };
 
 /** 把 scaffold authoring 输入转为 canonical tracks arrangement */
-const normalizeScaffold = (scaffold: PlotScaffoldInput, coordinate: IRPlotCoordinateOperation): SharedScaffoldSpec => {
+const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordinateOperation): SharedScaffoldSpec => {
   const { coordinate: scaffoldCoordinate, spacing, resolve, ...rest } = scaffold;
   return {
     ...rest,
@@ -302,8 +303,8 @@ const normalizeScaffold = (scaffold: PlotScaffoldInput, coordinate: IRPlotCoordi
 
 /** 把 facet 与 scaffold authoring 声明装配为 canonical composition 与绑定索引 */
 const buildTopologyComposition = (
-  facets: ReadonlyArray<PlotFacetInput>,
-  scaffolds: ReadonlyArray<PlotScaffoldInput>,
+  facets: ReadonlyArray<InputPlotFacet>,
+  scaffolds: ReadonlyArray<InputPlotScaffold>,
   coordinate: IRPlotCoordinateOperation,
 ): {
   composition: CompositionSpec;
@@ -361,12 +362,12 @@ const buildTopologyComposition = (
 
 /** 把 mark 与 axis guide 的 facet、track、scaffold 绑定解析为 coordinate view */
 const normalizeTopologyBindings = (
-  marks: ReadonlyArray<PlotAuthoringMark>,
-  guides: ReadonlyArray<PlotAuthoringGuide>,
+  marks: ReadonlyArray<InputPlotMark>,
+  guides: ReadonlyArray<InputPlotGuide>,
   scales: ReadonlyArray<IRPlotScaleOperation>,
   coordinate: IRPlotCoordinateOperation,
-  facets: ReadonlyArray<PlotFacetInput>,
-  scaffolds: ReadonlyArray<PlotScaffoldInput>,
+  facets: ReadonlyArray<InputPlotFacet>,
+  scaffolds: ReadonlyArray<InputPlotScaffold>,
 ): NormalizedPlotBindings => {
   const { composition, facetViewById, trackViewById, scaffoldDefaultViewById } = buildTopologyComposition(
     facets,
@@ -412,7 +413,7 @@ const normalizeTopologyBindings = (
   };
 };
 
-/** 把 authoring-only axis、facet 与 scaffold binding 展开为 canonical PlotSpec 字段 */
+/** 把 authoring-only axis、facet 与 scaffold binding 展开为 Plot Source IR 字段 */
 export const normalizePlotBindings = (input: NormalizePlotBindingsInput): NormalizedPlotBindings => {
   const { marks, guides, scales, coordinate, composition, facets, scaffolds } = input;
   marks.forEach(assertMarkBindingCompatibility);

@@ -1,5 +1,6 @@
 import type { IRChild } from '@retikz/core';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputTable } from '@retikz/table-vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, resolveDefaultCoreThemeColors } from '@retikz/core';
 import {
@@ -11,6 +12,7 @@ import {
   defineTableThemeStyle,
   getDefaultTableThemePreset,
 } from '@retikz/table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -31,14 +33,29 @@ import { ReactTableRuntimeKind, resolveReactTableRuntime } from '../../src/table
 
 const content: IRChild = { type: 'node', position: [0, 0], text: 'Badge' };
 
-/** 读取根组件的嵌入式 adapter */
-const adapterOf = <TProps,>(component: {
-  embeddableAdapter?: EmbeddableTier2Adapter<TProps>;
-}): EmbeddableTier2Adapter<TProps> => {
-  const adapter = component.embeddableAdapter;
-  if (adapter === undefined) throw new Error('expected embeddable adapter');
-  return adapter;
+/** 创建 Table Vanilla adapter 的嵌入上下文 */
+const contextOf = (id: string): InputEmbedContext => ({
+  id,
+  kind: 'table',
+  layerId: 'default',
+  identityPath: ['default', id],
+});
+
+type InputTableComponent = {
+  inputEmbedAdapter?: unknown;
+  createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable;
 };
+
+/** 读取 React 根组件构造的唯一 Table Vanilla 输入 */
+const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable => {
+  if (component.inputEmbedAdapter !== TableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
+  if (component.createInputEmbedProps === undefined) throw new Error('expected Table Vanilla input factory');
+  return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
+};
+
+/** 经 Vanilla adapter 取得当前 React authoring 的 Core contribution */
+const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, id: string) =>
+  TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
 describe('Table React composition authoring collectors', () => {
   it('collects ordered DetailColumn markers through Fragments, arrays, and empty nodes', () => {
@@ -290,9 +307,7 @@ describe('Table React composition root integration', () => {
       children: <DetailColumn id="name" field="name" header="Name" />,
     };
 
-    expect(adapterOf(DetailTable).contribute(childrenMode).node).toEqual(
-      adapterOf(DetailTable).contribute(propsMode).node,
-    );
+    expect(inputOf(DetailTable, childrenMode).table).toEqual(inputOf(DetailTable, propsMode).table);
     expect(renderToStaticMarkup(<DetailTable {...childrenMode} />)).toBe(
       renderToStaticMarkup(<DetailTable {...propsMode} />),
     );
@@ -394,20 +409,23 @@ describe('Table React composition root integration', () => {
       fontSize: 14,
     });
 
-    expect(runtime.spec).toMatchObject({
-      id: 'detail-root-props',
-      data: { reference: 'people', model: [{ name: 'name' }] },
-      structure: {
-        kind: 'detail',
+    expect(runtime.table).toMatchObject({
+      kind: 'detail',
+      input: {
+        id: 'detail-root-props',
+        dataRef: 'people',
+        model: [{ name: 'name' }],
         header: false,
         columns: [{ id: 'name', field: 'name', formatter: { name: 'root-props-formatter' } }],
+        layout: { columnSize: { kind: 'fixed', value: 96 } },
+        meta: { source: 'root-props-test' },
+        rules,
+        encodings,
+        tableThemeTokens: { 'cell.content.color': '#fafafa' },
       },
-      layout: { columnSize: { kind: 'fixed', value: 96 } },
-      meta: { source: 'root-props-test' },
-      rules,
-      encodings,
-      tableThemeTokens: { 'cell.content.color': '#fafafa' },
     });
+    expect(runtime.table).not.toHaveProperty('namespace');
+    expect(runtime.table).not.toHaveProperty('type');
     expect(runtime.datasets).toMatchObject({ people: [{ name: 'Ada' }] });
     expect(runtime.lowerOptions).toEqual({
       structureDefinitions,
@@ -460,9 +478,7 @@ describe('Table React composition root integration', () => {
       ),
     };
 
-    expect(adapterOf(ManualTable).contribute(childrenMode).node).toEqual(
-      adapterOf(ManualTable).contribute(propsMode).node,
-    );
+    expect(inputOf(ManualTable, childrenMode).table).toEqual(inputOf(ManualTable, propsMode).table);
     const output = renderToStaticMarkup(<ManualTable {...childrenMode} />);
     expect(output).toBe(renderToStaticMarkup(<ManualTable {...propsMode} />));
     expect(output).toContain('Ada');
@@ -497,11 +513,13 @@ describe('Table React composition root integration', () => {
       ),
     });
 
-    expect(markerRuntime.spec).toEqual(propsRuntime.spec);
-    expect(markerRuntime.spec).toMatchObject(root);
-    expect(markerRuntime.spec.structure).toEqual({
+    expect(markerRuntime.table).toEqual(propsRuntime.table);
+    expect(markerRuntime.table).toMatchObject({
       kind: 'manual',
-      rows: [[{ value: 98, formatter: { name: 'number' } }]],
+      input: {
+        ...root,
+        rows: [[{ value: 98, formatter: { name: 'number' } }]],
+      },
     });
   });
 
@@ -595,7 +613,7 @@ describe('Table React composition root integration', () => {
       header: false,
       children: <DetailColumn id="name" field="name" />,
     };
-    const contribution = adapterOf(DetailTable).contribute(props);
+    const contribution = contributionOf(DetailTable, props, 'detail-runtime-reference');
 
     expect(contribution.node).toEqual(
       createDetailTableSpec({
@@ -612,24 +630,22 @@ describe('Table React composition root integration', () => {
   });
 
   it('rejects mixed and absent DetailTable structure sources through the shared runtime', () => {
-    const adapter = adapterOf(DetailTable);
     const shared = { id: 'detail-invalid', dataRef: 'people', data: [] };
     const child = <DetailColumn id="name" field="name" />;
 
     expect(() =>
-      adapter.contribute({
+      inputOf(DetailTable, {
         ...shared,
         columns: [{ id: 'name', field: 'name' }],
         children: child,
       } as unknown as DetailTableProps),
     ).toThrow('table react: DetailTable columns cannot be mixed with DetailColumn children');
-    expect(() => adapter.contribute(shared as unknown as DetailTableProps)).toThrow(
+    expect(() => inputOf(DetailTable, shared as unknown as DetailTableProps)).toThrow(
       'table react: DetailTable requires columns or DetailColumn children',
     );
   });
 
   it('rejects mixed and absent ManualTable structure sources through the shared runtime', () => {
-    const adapter = adapterOf(ManualTable);
     const shared = { id: 'manual-invalid' };
     const children = (
       <Row>
@@ -638,13 +654,13 @@ describe('Table React composition root integration', () => {
     );
     const rows = [['Ada']];
 
-    expect(() => adapter.contribute({ ...shared, rows, children } as unknown as ManualTableProps)).toThrow(
+    expect(() => inputOf(ManualTable, { ...shared, rows, children } as unknown as ManualTableProps)).toThrow(
       'table react: ManualTable Row children cannot be mixed with rows or rowKinds',
     );
     expect(() =>
-      adapter.contribute({ ...shared, rowKinds: ['body'], children } as unknown as ManualTableProps),
+      inputOf(ManualTable, { ...shared, rowKinds: ['body'], children } as unknown as ManualTableProps),
     ).toThrow('table react: ManualTable Row children cannot be mixed with rows or rowKinds');
-    expect(() => adapter.contribute(shared as unknown as ManualTableProps)).toThrow(
+    expect(() => inputOf(ManualTable, shared as unknown as ManualTableProps)).toThrow(
       'table react: ManualTable requires rows or Row children',
     );
   });

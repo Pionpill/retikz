@@ -10,16 +10,10 @@ import type {
   IRPlotTextChannel,
 } from '@retikz/plot';
 
-import {
-  MarkGeometryLabelListSchema,
-  MarkNodeLabelListSchema,
-  MarkNodeLabelSchema,
-  PlotMark,
-  RelationPathGeometrySchema,
-} from '@retikz/plot';
+import { PlotMark } from '@retikz/plot';
 
-import type { DatumLabelProps, PathMarkProps, ReferenceMarkProps, RelationMarkProps } from '../components';
 import type { NormalizationState } from './contracts';
+import type { DatumLabelProps, PathMarkProps, ReferenceMarkProps, RelationMarkProps } from './input-marks';
 import type { StyleSugarContext } from './style-sugar';
 
 import {
@@ -74,7 +68,7 @@ export const buildMarkLabel = (props: DatumLabelProps): IRPlotMarkNodeLabel | un
     field: label,
     ...(labelDisplayFormat !== undefined ? { displayFormat: labelDisplayFormat } : {}),
   };
-  return MarkNodeLabelSchema.parse({
+  return {
     content,
     ...(labelPosition !== undefined ? { position: labelPosition } : {}),
     ...(labelDistance !== undefined ? { distance: labelDistance } : {}),
@@ -84,7 +78,7 @@ export const buildMarkLabel = (props: DatumLabelProps): IRPlotMarkNodeLabel | un
     ...(labelRotate !== undefined ? { rotate: labelRotate } : {}),
     ...(labelKeepUpright !== undefined ? { keepUpright: labelKeepUpright } : {}),
     ...(labelPin !== undefined && labelPin !== false ? { pin: labelPin } : {}),
-  });
+  };
 };
 
 /** 收集某 mark 的运行时 resolveLabel；仅在配置 mark id 时按 id 注册，且不会进入 IR */
@@ -102,20 +96,28 @@ export const recordResolveLabel = (
 
 /** 把几何标签输入规范化为几何标签列表 */
 export const canonicalGeometryLabel = (
-  label: PathMarkProps['label'] | RelationMarkProps['label'],
-): IRPlotMarkGeometryLabelList => MarkGeometryLabelListSchema.parse(label);
+  label: NonNullable<PathMarkProps['label'] | RelationMarkProps['label']>,
+): IRPlotMarkGeometryLabelList => label;
 
 /** 按 reference mark 宿主形态规范化标签列表 */
 export const canonicalReferenceLabel = (
-  props: ReferenceMarkProps,
+  label: NonNullable<ReferenceMarkProps['label']>,
+  usesNodeHost: boolean,
 ): IRPlotMarkNodeLabelList | IRPlotMarkGeometryLabelList => {
-  const usesNodeHost = props.kind === 'region' || props.xTo !== undefined || props.yTo !== undefined;
-  return usesNodeHost ? MarkNodeLabelListSchema.parse(props.label) : MarkGeometryLabelListSchema.parse(props.label);
+  const entries = Array.isArray(label) ? label : [label];
+  const hasNodeOnlyField = entries.some(entry => 'keepUpright' in entry || 'pin' in entry || 'rotate' in entry);
+  const hasGeometryOnlyField = entries.some(entry => 'side' in entry || 'sloped' in entry);
+  if (usesNodeHost && hasGeometryOnlyField) {
+    throw new Error('buildPlotSpec: reference band / region expects node label fields');
+  }
+  if (!usesNodeHost && hasNodeOnlyField) {
+    throw new Error('buildPlotSpec: reference line expects geometry label fields');
+  }
+  return label;
 };
 
 /** 规范化 relation mark 的路径几何 */
-export const canonicalRelationPath = (path: RelationMarkProps['path']): IRPlotRelationPathGeometry =>
-  RelationPathGeometrySchema.parse(path);
+export const canonicalRelationPath = (path: NonNullable<RelationMarkProps['path']>): IRPlotRelationPathGeometry => path;
 
 /** 把 x/y 字段装成位置 encoding */
 export const positionEncoding = (x: string, y: string): Pick<IRPlotEncoding, 'x' | 'y'> => ({
@@ -236,7 +238,9 @@ export const collectReference = (props: ReferenceMarkProps, into: Collected, sty
     ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
     ...(fillOpacityStyle !== undefined ? { fillOpacity: fillOpacityStyle } : {}),
     ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
-    ...(label !== undefined ? { label: canonicalReferenceLabel(props) } : {}),
+    ...(label !== undefined
+      ? { label: canonicalReferenceLabel(label, region || xTo !== undefined || yTo !== undefined) }
+      : {}),
     ...nodeStylePropsOf(referenceNodeStyleProps, styleContext),
     ...pathStylePropsOf(props, styleContext),
     encoding: { ...positional, ...colorEnc, ...extensionChannelEncoding(channels) },

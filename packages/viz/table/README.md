@@ -40,7 +40,7 @@ from the same layout transaction as the Scene.
 
 - `@retikz/data` owns shared data models and transforms.
 - `@retikz/table-react` provides `Table`, `DetailTable`, and `ManualTable` React entries.
-- `@retikz/table-vanilla` provides plain spec helpers, a Tier 2 embed adapter, and one-shot SSR.
+- `@retikz/table-vanilla` provides Input helpers, an InputEmbed adapter, and one-shot SSR.
 - Plot content may enter a Cell through Core composition, but this package does not depend on
   `@retikz/plot`.
 

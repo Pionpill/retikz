@@ -12,17 +12,6 @@ import type {
 import { IntervalBoundKind, PlotGuide, PlotMark, PlotTransform } from '@retikz/plot';
 
 import type {
-  AxisProps,
-  IntervalMarkProps,
-  LegendProps,
-  PathMarkProps,
-  PointMarkProps,
-  ReferenceMarkProps,
-  RelationMarkProps,
-  ScaleProps,
-  TransformProps,
-} from '../components';
-import type {
   FacetGridSpec,
   NormalizationState,
   PlotAuthoringDeclaration,
@@ -30,6 +19,16 @@ import type {
   ScaffoldTrackSpec,
   SharedScaffoldSpec,
 } from './contracts';
+import type { AxisProps, LegendProps } from './input-guides';
+import type {
+  IntervalMarkProps,
+  PathMarkProps,
+  PointMarkProps,
+  ReferenceMarkProps,
+  RelationMarkProps,
+} from './input-marks';
+import type { ScaleProps } from './input-scales';
+import type { TransformProps } from './input-transform';
 import type { StyleSugarContext } from './style-sugar';
 
 import {

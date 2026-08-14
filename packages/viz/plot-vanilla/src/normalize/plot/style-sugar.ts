@@ -14,6 +14,7 @@ import type {
   MarkValueType,
 } from '@retikz/plot';
 
+import type { PlotAuthoringContext } from './contracts';
 import type {
   CoreNodeChannelProps,
   CorePathChannelProps,
@@ -21,8 +22,7 @@ import type {
   ExtensionChannelProp,
   IntervalMarkProps,
   PointMarkProps,
-} from '../components';
-import type { PlotAuthoringContext } from './contracts';
+} from './input-marks';
 
 const AUTO_COLOR = '__color';
 

@@ -1,8 +1,9 @@
+import { PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { createPlotSpec, PlotSpecSchema } from '../../../src';
+import { normalizePlot } from '../../../src';
 
-describe('createPlotSpec', () => {
+describe('normalizePlot', () => {
   it('从 plain authoring input 创建 schema-valid PlotSpec 并保留显式 identity', () => {
     const input = {
       id: 'sales',
@@ -23,7 +24,7 @@ describe('createPlotSpec', () => {
     };
     const snapshot = structuredClone(input);
 
-    const spec = createPlotSpec(input);
+    const spec = normalizePlot(input);
 
     expect(spec).toMatchObject({
       namespace: 'plot',
@@ -52,7 +53,7 @@ describe('createPlotSpec', () => {
     };
     const snapshot = structuredClone(input);
 
-    const spec = createPlotSpec(input);
+    const spec = normalizePlot(input);
 
     expect(spec.composition).toEqual({
       defaultView: 'salesPanel',
@@ -99,8 +100,8 @@ describe('createPlotSpec', () => {
     };
     const snapshot = structuredClone(input);
 
-    const first = createPlotSpec(input);
-    const second = createPlotSpec(input);
+    const first = normalizePlot(input);
+    const second = normalizePlot(input);
 
     expect(first).toEqual(second);
     expect(first.composition?.arrangements?.[0]).toMatchObject({ kind: 'tracks', id: 'ops' });
@@ -109,7 +110,7 @@ describe('createPlotSpec', () => {
 
   it('拒绝显式 composition 与 topology sugar 混用', () => {
     expect(() =>
-      createPlotSpec({
+      normalizePlot({
         data: { reference: 'sales' },
         scales: [],
         composition: {

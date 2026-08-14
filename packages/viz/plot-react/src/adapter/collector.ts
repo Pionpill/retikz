@@ -1,10 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import type { ReactElement, ReactNode } from 'react';
-
-import { JsonObjectSchema } from '@retikz/core';
-import { Fragment, isValidElement } from 'react';
-
 import type {
   CollectionContext,
   PlotAuthoringDeclarations,
@@ -13,7 +8,11 @@ import type {
   PlotDeclarationKind,
   PlotDeclarationPath,
   ScaffoldTrackSpec,
-} from './contracts';
+} from '@retikz/plot-vanilla';
+import type { ReactElement, ReactNode } from 'react';
+
+import { JsonObjectSchema } from '@retikz/core';
+import { Fragment, isValidElement } from 'react';
 
 import {
   Axis,

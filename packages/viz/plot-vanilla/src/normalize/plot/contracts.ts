@@ -8,10 +8,10 @@ import type {
   IRPlotScaleOperation,
   IRPlotSpec,
   IRPlotTransform,
-  PlotAuthoringMark,
 } from '@retikz/plot';
 
-import type { ScaleProps } from '../components';
+import type { InputPlotMark } from './input';
+import type { ScaleProps } from './input-scales';
 
 /** `<Plot coordinate>` 入口形态：字符串简写、内置对象配置或自定义坐标配置 */
 export type CoordinateInput =
@@ -58,7 +58,8 @@ export type CoordinateInput =
        */
       endAngle?: number;
     }
-  | ({ type: string } & Record<string, unknown>);
+  | ({ type: string } & IRJsonObject)
+  | IRPlotCoordinateOperation;
 
 /** 2D 极坐标入口配置 */
 export type Polar2DCoordinateInput = Extract<CoordinateInput, { type: 'polar2D' }>;
@@ -181,7 +182,7 @@ export type PlotAuthoringRuntime = {
 };
 
 /** 绑定 composition 作用域的 mark */
-export type AxisBoundMark = Extract<PlotAuthoringMark, IRPlotMark>;
+export type AxisBoundMark = Extract<InputPlotMark, IRPlotMark>;
 
 /** 绑定 composition 作用域的 guide */
 export type AxisBoundGuide = IRPlotGuide & {

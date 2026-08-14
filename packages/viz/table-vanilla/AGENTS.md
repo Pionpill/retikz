@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-当前基线提供 `detailTable()`、`manualTable()`、`embedTable()`、`createTableAdapter()` 与 `renderTable()`。前两者分别返回无方法的 plain `IRDetailTableSpec` / `IRManualTableSpec`，其中 `manualTable()` 与 `@retikz/table` 共用非空矩形 `rows` 持久化契约；embed / adapter 复用 Kernel Figure 与 `mount().update()`，`renderTable()` 通过同一次 Table compile 返回 SSR 产物与可选 manifest artifact。当前不提供 fluent builder 或 Table 私有 mount runtime。
+当前基线提供 `detailTable()`、`manualTable()`、`embedTable()`、`TableInputEmbedAdapter` 与 `renderTable()`。前两者分别返回无方法的 plain `IRDetailTableSpec` / `IRManualTableSpec`，其中 `manualTable()` 与 `@retikz/table` 共用非空矩形 `rows` 持久化契约；embed 输入在 Vanilla 内归一化为 Table Source IR，`renderTable()` 通过同一次 Table compile 返回 SSR 产物与可选 manifest artifact。当前不提供 fluent builder、Table 私有 mount runtime 或 Figure 接线。
 
 ## 验证
 

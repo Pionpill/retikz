@@ -1,6 +1,6 @@
 import type { IRPlotCoordinateOperation, IRPlotScale } from '@retikz/plot';
 
-import { CoordinateOperationSchema, normalizePlotBindings, PlotCoordinate, PlotGuide, PlotMark } from '@retikz/plot';
+import { PlotCoordinate, PlotGuide, PlotMark } from '@retikz/plot';
 
 import type {
   AxisBoundGuide,
@@ -11,6 +11,7 @@ import type {
 } from './contracts';
 import type { PolarConfig } from './scale-coordinate';
 
+import { normalizePlotBindings } from './bindings';
 import {
   buildAngleScale,
   buildCartesianXScale,
@@ -120,6 +121,7 @@ export const normalizePlotRoot = (
     // 自定义坐标系：IR 直接存 { type:<customType>, ...config }；roles / 投影函数来自运行时 CoordinateDefinition
     if (
       typeof coordinateInput !== 'object' ||
+      coordinateInput.type.trim().length === 0 ||
       BUILTIN_COORDINATE_INPUT_TYPES.has(coordinateInput.type) ||
       coordinateInput.type === 'custom'
     ) {
@@ -127,7 +129,7 @@ export const normalizePlotRoot = (
         'buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }',
       );
     }
-    coordinate = CoordinateOperationSchema.parse({ ...coordinateInput });
+    coordinate = { ...coordinateInput };
     scales = [];
   } else {
     const xScale = buildCartesianXScale(collected.hasBar, explicitScales.x);

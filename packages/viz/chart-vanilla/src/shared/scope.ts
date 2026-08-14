@@ -1,14 +1,17 @@
 import type { IRChild, IRScope } from '@retikz/core';
 
-import type { ChartRootProps } from './types';
+import type { InputChartPanel } from '../normalize/chart';
 
-/** 将 Chart 包裹为带外层 Scope 行为的 Core child */
-export const wrapChartScope = <TChart extends IRChild>(chart: TChart, props: Omit<ChartRootProps, 'id'>): IRChild => {
-  const { x, y, transforms, placement, zIndex, clip, theme } = props;
+/** 把 Chart 包装为可选的根 Scope */
+export const wrapChartPanel = <TChart extends IRChild>(chart: TChart, panel: InputChartPanel | undefined): IRChild => {
+  if (panel === undefined) return chart;
+  const { x, y, transforms, placement, zIndex, clip, theme } = panel;
   const scopeTransforms =
     x !== undefined || y !== undefined
       ? ([{ kind: 'translate', x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])] as NonNullable<IRScope['transforms']>)
-      : transforms;
+      : transforms === undefined
+        ? undefined
+        : [...transforms];
   if (
     scopeTransforms === undefined &&
     placement === undefined &&

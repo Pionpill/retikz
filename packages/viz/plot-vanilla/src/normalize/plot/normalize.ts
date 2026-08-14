@@ -1,3 +1,7 @@
+import type { IRPlotSpec } from '@retikz/plot';
+
+import { PLOT_NAMESPACE, PlotComposite } from '@retikz/plot';
+
 import type {
   NormalizationState,
   PlotAuthoringContext,
@@ -5,7 +9,9 @@ import type {
   PlotDeclarationCollection,
   PlotMemberFragment,
 } from './contracts';
+import type { InputPlot } from './input';
 
+import { normalizePlotBindings } from './bindings';
 import { assertChartExtensionCollection, normalizeChartExtension } from './chart-extension';
 import { applyDeclaration } from './member-normalizer';
 import { normalizePlotRoot } from './plot-root';
@@ -14,7 +20,39 @@ import { styleSugarContext } from './style-sugar';
 /** normalization 内部累加器的本地简写 */
 type Collected = NormalizationState;
 
-/** 把 JSON-safe React declarations 归一化为 Plot member fragment 与 runtime sidecar */
+/** 将 Plot Vanilla 输入归一为唯一的 Plot Source IR */
+export const normalizePlot = (input: InputPlot): IRPlotSpec => {
+  const { marks, guides = [], facets = [], scaffolds = [], coordinate, composition, ...base } = input;
+  const normalized = normalizePlotBindings({
+    marks,
+    guides,
+    scales: base.scales,
+    coordinate,
+    composition,
+    facets,
+    scaffolds,
+  });
+  return {
+    namespace: PLOT_NAMESPACE,
+    type: PlotComposite.Plot,
+    ...base,
+    scales: normalized.scales,
+    ...(normalized.composition === undefined ? {} : { composition: normalized.composition }),
+    ...(normalized.coordinate === undefined ? {} : { coordinate: normalized.coordinate }),
+    marks: normalized.marks,
+    guides: normalized.guides,
+  };
+};
+
+/** 从已归一化的 Plot Source IR 还原可再次归一化的 authoring Input */
+export const inputPlotFromSpec = (spec: IRPlotSpec): InputPlot => {
+  const { namespace: _namespace, type: _type, ...input } = spec;
+  void _namespace;
+  void _type;
+  return input;
+};
+
+/** 把 JSON-safe Plot declarations 归一化为 Plot member fragment 与 runtime sidecar */
 export const normalizePlotDeclarations = (
   collection: PlotDeclarationCollection,
   context: PlotAuthoringContext,

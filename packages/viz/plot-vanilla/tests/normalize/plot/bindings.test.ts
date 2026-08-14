@@ -1,8 +1,8 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { PlotAuthoringMark } from '../../../src';
+import type { InputPlotMark } from '../../../src';
 
-import { normalizePlotBindings } from '../../../src';
+import { normalizePlotBindings } from '../../../src/normalize/plot/bindings';
 
 describe('normalizePlotBindings', () => {
   it('把多 y 轴绑定展开为稳定 overlay composition', () => {
@@ -381,7 +381,7 @@ describe('normalizePlotBindings', () => {
   ])('拒绝在非 position mark $type 上使用 axis binding', mark => {
     expect(() =>
       normalizePlotBindings({
-        marks: [mark as unknown as PlotAuthoringMark],
+        marks: [mark as unknown as InputPlotMark],
         guides: [
           { type: 'axis', id: 'top', dimension: 'x' },
           { type: 'axis', id: 'right', dimension: 'y' },
@@ -406,7 +406,7 @@ describe('normalizePlotBindings', () => {
   ])('拒绝非 position mark $type 显式持有 undefined axis binding 字段', mark => {
     expect(() =>
       normalizePlotBindings({
-        marks: [mark as unknown as PlotAuthoringMark],
+        marks: [mark as unknown as InputPlotMark],
         guides: [],
         scales: [],
         coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
@@ -417,12 +417,12 @@ describe('normalizePlotBindings', () => {
   });
 
   it('只为 position mark 暴露 axis binding 类型', () => {
-    expectTypeOf<Extract<PlotAuthoringMark, { type: 'point' }>>().toMatchObjectType<{
+    expectTypeOf<Extract<InputPlotMark, { type: 'point' }>>().toMatchObjectType<{
       xAxisId?: string;
       yAxisId?: string;
     }>();
-    expectTypeOf<Extract<PlotAuthoringMark, { type: 'reference' }>['xAxisId']>().toEqualTypeOf<undefined>();
-    expectTypeOf<Extract<PlotAuthoringMark, { type: 'reference' }>['yAxisId']>().toEqualTypeOf<undefined>();
+    expectTypeOf<Extract<InputPlotMark, { type: 'reference' }>['xAxisId']>().toEqualTypeOf<undefined>();
+    expectTypeOf<Extract<InputPlotMark, { type: 'reference' }>['yAxisId']>().toEqualTypeOf<undefined>();
   });
 
   it('对多种 binding mode 使用统一错误前缀', () => {

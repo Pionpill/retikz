@@ -4,13 +4,13 @@ import type { IRPlotMark, IRPlotScale, IRPlotTransform } from '@retikz/plot';
 import { DataFieldType } from '@retikz/data';
 import { PlotScale } from '@retikz/plot';
 
-import type { PositionScaleType, ScaleDimension, ScaleProps } from '../components';
 import type {
   CoordinateInput,
   MarkTransformShortcutDefinition,
   NormalizationState,
   Polar2DCoordinateInput,
 } from './contracts';
+import type { PositionScaleType, ScaleDimension, ScaleProps } from './input-scales';
 
 const AUTO_X = '__x';
 const AUTO_Y = '__y';

@@ -9,7 +9,7 @@ import type {
 } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
-import { lowerPlots, lowerPlotWithLineage, PlotSpecSchema } from '@retikz/plot';
+import { lowerPlots, lowerPlotWithLineage } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 
 /** renderPlot 两种返回模式共享的根 Scene Theme 输入 */
@@ -60,25 +60,24 @@ const renderPlotImpl = (
   data: ExternalDatasets,
   options: RenderPlotOptions | RenderPlotLineageOptions = {},
 ): string | RenderPlotLineageResult => {
-  const validated = PlotSpecSchema.parse(spec);
   const scene = compileToScene(
     {
       version: 1,
       type: 'scene',
       ...(options.theme !== undefined ? { theme: options.theme } : {}),
-      children: [validated],
+      children: [spec],
     },
     { composites: lowerPlots(data, options), themeStyles: options.themeStyles },
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;
-  const { lineage } = lowerPlotWithLineage(validated, data, options);
+  const { lineage } = lowerPlotWithLineage(spec, data, options);
   return { svg, lineage };
 };
 
 /**
  * 把 PlotSpec 与外部数据渲染为 SVG 字符串或带 lineage 的 runtime 结果
- * @description 该入口不依赖 DOM；先校验 PlotSpec，再用外部 datasets 下沉并渲染。`width` / `height` 同时控制 Plot 绘图区与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
- * @throws PlotSpec 不合法时抛出 ZodError；缺少引用的数据集或 lowering 失败时透传对应错误
+ * @description 该入口不依赖 DOM；直接用已类型化的 PlotSpec 与外部 datasets 下沉并渲染。`width` / `height` 同时控制 Plot 绘图区与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
+ * @throws 缺少引用的数据集或 lowering 失败时透传对应错误
  */
 export const renderPlot = renderPlotImpl as RenderPlot;

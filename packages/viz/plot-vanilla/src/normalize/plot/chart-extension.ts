@@ -1,8 +1,7 @@
 import type { IRPlotCoordinateOperation, IRPlotScaleOperation } from '@retikz/plot';
 
-import { CoordinateOperationSchema, normalizePlotBindings, PlotGuide } from '@retikz/plot';
+import { PlotGuide } from '@retikz/plot';
 
-import type { ScaleProps } from '../components';
 import type {
   AxisBoundGuide,
   CoordinateInput,
@@ -16,7 +15,9 @@ import type {
   PlotDeclarationSource,
   PlotMemberFragment,
 } from './contracts';
+import type { ScaleProps } from './input-scales';
 
+import { normalizePlotBindings } from './bindings';
 import { PlotDeclarationError, PlotDeclarationErrorCode } from './errors';
 import { buildPositionScale, collectExplicitScales, coordinateTypeOf } from './scale-coordinate';
 import { assembledTransformsOf } from './topology';
@@ -116,7 +117,7 @@ const chartExtensionCoordinateOf = (
 ): IRPlotCoordinateOperation | undefined => {
   if (source === undefined) return undefined;
   const input = source.value;
-  return CoordinateOperationSchema.parse(typeof input === 'string' ? { type: input } : input);
+  return typeof input === 'string' ? { type: input } : { ...input };
 };
 
 /** 只把显式 Chart children 归一化为 JSON-safe Plot member fragment */

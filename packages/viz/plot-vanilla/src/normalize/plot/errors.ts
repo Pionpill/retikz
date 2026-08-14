@@ -14,7 +14,7 @@ export const PlotDeclarationErrorCode = {
 /** Plot declaration 归一化错误码取值 */
 export type PlotDeclarationErrorCodeValue = ValueOf<typeof PlotDeclarationErrorCode>;
 
-type PlotDeclarationErrorDetails = Readonly<{
+export type PlotDeclarationErrorDetails = Readonly<{
   /** 当前声明来源路径 */
   path: PlotDeclarationPath;
   /** 与当前声明冲突的首个来源路径 */
