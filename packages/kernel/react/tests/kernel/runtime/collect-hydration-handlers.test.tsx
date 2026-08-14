@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Circle, collectHydrationHandlers, Node, Path, Scope, Step } from '../../../src';
 
 /**
- * 水合：collectHydrationHandlers（与 buildIR 同源遍历，按 id 收 handler）
+ * 水合：collectHydrationHandlers（与 InputScene 遍历同源，按 id 收 handler）
  * @description 穿透 Fragment、递归 Scope 子级、展开 Sugar / wrapper 后按各元素 id 把 on<Event> props 收成
  *   `{ [id]: { click, ... } }`（on<Event> → RetikzEventValue 去 on 前缀首字母小写）。
  *   无 id 带 handler → dev warn + 跳过；重复 id → dev warn + 合并/后覆盖

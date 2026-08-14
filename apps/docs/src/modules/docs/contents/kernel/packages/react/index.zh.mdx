@@ -1,11 +1,11 @@
 ---
 title: '@retikz/react'
-description: 用 JSX 组织 Kernel 与 Sugar 组件，把生成的 Core IR 接入 retained 或 static Runtime 与稳定的 SVG / Canvas 宿主。
+description: 用 JSX 组织 Kernel 与 Sugar 组件，构造 Vanilla InputScene，并以 React 宿主呈现 retained 或 static processing 的 SVG / Canvas 结果。
 ---
 
-`@retikz/react` 是 React 应用的首选入口。你用 `<Layout>`、`<Node>`、`<Path>`、`<Scope>`、`<Draw>` 等 JSX 组件声明图形；包内 adapter 把 props 与 children 转成 `@retikz/core` IR，再由 `<Layout>` 编译 Scene 并接入 SVG 或 Canvas 宿主。
+`@retikz/react` 是 React 应用的首选入口。你用 `<Layout>`、`<Node>`、`<Path>`、`<Scope>`、`<Draw>` 等 JSX 组件声明图形；包内 collector 把 props 与 children 收集为 `@retikz/vanilla` 的 `InputScene`，再由 `<Layout>` 宿主 processing 结果的 SVG 或 Canvas。
 
-它负责 React 写法和生命周期接线，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`，后端执行与跨后端 runtime 属于 `@retikz/render`。
+它负责 React 写法和结果宿主，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`；Input 归一、composite 依赖解析、Core Program 与 retained processing 状态属于 `@retikz/vanilla`。
 
 ## 安装与使用
 
@@ -39,15 +39,15 @@ export const Diagram = () => (
 
 ### 用 JSX 降低描述成本
 
-`@retikz/core` 的 IR 可以直接构造，但图形通常包含嵌套、复用和组合关系。JSX 用组件树自然表达这些结构，让 `<Layout>`、`<Scope>`、`<Node>`、`<Path>` 等声明贴近图形层级，减少手工拼装 Core IR 的样板代码。
+`@retikz/core` 的 IR 可以直接构造，但图形通常包含嵌套、复用和组合关系。JSX 用组件树自然表达这些结构，让 `<Layout>`、`<Scope>`、`<Node>`、`<Path>` 等声明贴近图形层级，减少手工拼装作者输入的样板代码。
 
-retikz 把 React 作为官方支持的一等框架：`@retikz/react` 的组件 API、文档、示例和适配行为会随 Kernel 一起维护。React 在这里是 authoring layer；最终数据契约和编译语义仍由框架无关的 `@retikz/core` 拥有。
+retikz 把 React 作为官方支持的一等框架：`@retikz/react` 的组件 API、文档、示例和适配行为会随 Kernel 一起维护。React 在这里是 authoring 与结果宿主层；最终数据契约和编译语义仍由框架无关的 `@retikz/core`，以及共享 processing 的 `@retikz/vanilla` 拥有。
 
 ### 为什么不提供其他官方框架包
 
-这不是 Core 只能接入 React。任何框架只要把自己的组件或模板结构转换成相同的 Core IR，并接入 `compileToScene` 与 renderer 生命周期，就能复用 retikz 的 Kernel 能力。
+这不是 Core 只能接入 React。任何框架只要把自己的组件或模板结构转换成相同的 `InputScene`，并把它交给 `@retikz/vanilla` processing，就能复用 retikz 的 Kernel 能力。
 
-`@retikz/react` 同时是其他框架适配器的实现参考，展示组件树到 IR、宿主能力注入和渲染生命周期接线的完整边界。官方把维护资源集中在 React，不负责开发、发布或维护 Vue、Svelte 等其他框架包；这些适配器可由社区沿用同一边界独立实现。
+`@retikz/react` 同时是其他框架适配器的实现参考，展示组件树到 `InputScene`、宿主能力注入和 processing-result 接线的完整边界。官方把维护资源集中在 React，不负责开发、发布或维护 Vue、Svelte 等其他框架包；这些适配器可由社区沿用同一边界独立实现。
 
 ## 组件不会直接渲染 DOM
 
@@ -55,11 +55,11 @@ retikz 把 React 作为官方支持的一等框架：`@retikz/react` 的组件 A
 
 选择标记组件不是因为 React 不能绘图，而是为了让图形语义只有一个真源。如果 `<Node>`、`<Path>` 各自实现 DOM、浏览器布局和几何计算，React DSL 就会逐渐形成一套与 Core IR 平行的规则；同一张图在 React、Vanilla 或其它适配器中也可能得到不同结果。
 
-因此 JSX 只负责组织声明，builder 把它收敛为框架无关的 Core IR。中间过程不创建额外 DOM，也不把 CSS layout 变成图形编译的隐式输入；持久化、传输、SSR 和其它框架适配都可以继续复用同一份 IR → Scene 管线。
+因此 JSX 只负责组织声明，collector 把它收敛为框架无关的 `InputScene`。中间过程不创建额外 DOM，也不把 CSS layout 变成图形编译的隐式输入；共享 processing 再将 Input 归一为持久化、传输和其它框架适配可复用的 Core IR。
 
-React 仍然在合适的边界发挥作用：它声明稳定的 `<svg>` / `<canvas>` host shell，并把 commit、ref 与卸载生命周期接到所选 Runtime host。默认 retained 路径由 `@retikz/render` participant 独占 SVG descendants 或 Canvas bitmap；static 路径则直接完整物化 Scene。两条路径都避免 React reconciliation 与 renderer 同时改写同一棵子树。薄的是图形语义，不是宿主接线。
+React 仍然在合适的边界发挥作用：它订阅 Vanilla processing 的只读结果，并把 commit、ref 与卸载生命周期接到稳定的 `<svg>` / `<canvas>` 宿主。retained controller 与 static processing 都归 Vanilla 管理；React 只把已完成的 Scene 映射为宿主。薄的是图形语义，不是宿主接线。
 
-`<Node>`、`<Path>`、`<Scope>` 等 Kernel 组件是 **IR 标记**，不是 DOM 组件。它们自身返回 `null`，只用稳定的 `displayName` 告诉 React builder“这是什么图元”；因此 `<Node>` 不会先生成一个 `<div>`，也不会拥有另一套浏览器布局语义。
+`<Node>`、`<Path>`、`<Scope>` 等 Kernel 组件是 **Input 标记**，不是 DOM 组件。它们自身返回 `null`，只用稳定的 `displayName` 告诉 React collector“这是什么图元”；因此 `<Node>` 不会先生成一个 `<div>`，也不会拥有另一套浏览器布局语义。
 
 ```tsx
 export const Node: FC<NodeProps> = () => null;
@@ -83,7 +83,7 @@ return (
 );
 ```
 
-`readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；最终由 `buildIRWithContributions` 组装出普通 JSON `IRScene`。
+`readSceneChildren` 同步遍历 children：识别 Kernel 标记、展开 Fragment，并直接调用函数式 Sugar 后继续递归。这个过程不经过 React DOM renderer，所以 Kernel / Sugar 必须是无 hook、无副作用的函数组件；`createInputScene()` 产出唯一的 `InputScene` 与收集到的 `InputEmbedAdapter`，再交给 Vanilla normalize。
 
 <SourceLinks
   sources={[
@@ -94,45 +94,43 @@ return (
       endLine: 118,
     },
     {
-      label: 'Draw 展开为 Path / Step',
+      label: 'Draw 将输入透传给 Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 61,
-      endLine: 155,
+      startLine: 50,
+      endLine: 54,
     },
   ]}
 />
 
 ### Retained 更新边界
 
-标记组件避免了中间 DOM 和重复图形语义，但 JSX → IR 仍会在 children 引用变化时重新执行。当前每次 `ir` 或 Core options 改变，React render 阶段还会调用一次 `compileToScene` 生成 SSR-safe seed；默认 retained 模式在客户端 commit 后还会由 Runtime Session 为 transaction 再编译同一输入。retained 更新降低的是后端提交成本，不会消除这次 render-time full compile。
+标记组件避免了中间 DOM 和重复图形语义，但 JSX → Input 仍会在 children 引用变化时重新执行。`<Layout>` 在 React render 中准备一个 static fallback；客户端 commit 后，默认 retained 模式创建 Vanilla processing controller，并把后续 Input 或 `ir` source 交给它更新。controller 只发布完整成功的 revision，失败时 React 继续宿主上一次成功结果。
 
-频繁更新的大图可在组件外或 `useMemo` 中持有稳定 IR 与 Core options，再通过 `ir` prop 跳过 builder，并让 seed compile 的 memo 命中。
+频繁更新的大图可在组件外或 `useMemo` 中持有稳定 IR、children 与 Core options，避免无意义地重建 Input 或 processing controller。直接传 `ir` prop 时会跳过 JSX collector，但仍由 Vanilla processing 统一执行后续编译。
 
-在 retained 模式下，客户端 commit 后 `Layout` 会创建 Runtime Session，把完整 IR Snapshot 与 renderer config 作为一次 transaction 更新。Core Program 能证明安全的变更会发布局部 Scene Patch；其它合法变更用 `replaceScene` fallback 保持 full oracle 等价。SVG / Canvas retained participant 在 prepare 阶段隔离候选状态，只有 transaction 成功后才把 DOM / bitmap、事件、动画句柄、artifacts 与可选只读图层一起发布。
+Vanilla controller 在 retained 模式中拥有 Core Program、runtime session 与更新策略；static 模式只准备一次无生命周期的 processing。React 订阅该 controller 的只读结果，再以 `ProcessingResultHost` 呈现同 revision 的 Scene、artifacts、只读图层和事件接线。
 
-卸载时 Session 会反向 best-effort 清理，并在逻辑资源 retire 后同次重试失败的 renderer cleanup；已成功项不会重复执行。持续失败只进入 Runtime diagnostics，不会阻断 React 完成 unmount。
-
-Definition 数组按有序元素 identity 规范化，因此 render 时重新创建 `[shape]` 这类等价容器不会重建 Session；Definition 本身、renderer backend、`idPrefix` 或 `runtime.rendererFactory` 改变时会重建。并发调度与 progressive materialization 仍不属于当前公开契约。
+Definition 数组按有序元素 identity 规范化，因此 render 时重新创建 `[shape]` 这类等价容器不会重建 processing controller。Definition 本身、renderer backend、`idPrefix` 或 processing options 改变时会重新挂载 controller。并发调度与 progressive materialization 仍不属于当前公开契约。
 
 <SourceLinks
   sources={[
     {
       label: 'Layout 的 Definition 容器规范化',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 48,
-      endLine: 73,
+      startLine: 106,
+      endLine: 129,
     },
     {
-      label: 'Retained Session 创建与首次发布',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 244,
-      endLine: 294,
+      label: 'React 的 static fallback 与 retained processing 订阅',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 233,
+      endLine: 298,
     },
     {
-      label: 'Retained Session update transaction',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 305,
-      endLine: 323,
+      label: 'Vanilla retained controller 创建 Core Program 与 Runtime',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 96,
+      endLine: 151,
     },
   ]}
 />
@@ -153,7 +151,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 | `retained + full` | 有实际依赖变化时跳过 Program `update()` 完整运行 | 与 auto 持有相同 Runtime 状态和事务能力；不是低内存模式                                 |
 | `static`          | 每次完整 compile 并直接物化 SVG / Canvas         | 不创建 Session、Snapshot、diff、transaction 或 rollback；减少常驻状态，但每次工作量更大 |
 
-`mode: 'static'` 不能同时传 `updateStrategy`、`rendererFactory` 或 `onDiagnostic`。TypeScript 的 `LayoutRuntimeOptions` 会拒绝组合，JavaScript 入口也会在创建宿主前抛错。static 的 compile 在宿主写入前失败时不会发布新画面；物化、动画或水合已开始后若失败则向外传播错误，但不承诺恢复旧宿主状态。
+`mode: 'static'` 不能同时传 `updateStrategy` 或 `onDiagnostic`。TypeScript 的 `LayoutRuntimeOptions` 会拒绝组合，JavaScript 入口也会在创建宿主前抛错。static 的 compile 在宿主写入前失败时不会发布新画面；物化、动画或水合已开始后若失败则向外传播错误，但不承诺恢复旧宿主状态。
 
 在同一个 retained host 上把 `updateStrategy` 从 `auto` 改为 `full`（或反向）会 dispose 旧 Session，并用当前完整输入创建新 Session；宿主元素 identity 保持稳定，revision 从 initial 重新开始。切换 `mode` 则会释放并替换整套宿主。若只想保留 transaction、diagnostics 和 rollback，同时排除增量路径，应选择 `retained + full`，不要选择 `static`。
 
@@ -166,59 +164,60 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
       endLine: 48,
     },
     {
-      label: 'Static / retained host 分派',
+      label: 'React 分派 static 或 retained processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 539,
-      endLine: 584,
+      startLine: 233,
+      endLine: 298,
     },
     {
-      label: '策略变化重建 retained Session',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 238,
-      endLine: 306,
+      label: 'Vanilla retained controller 的 Core Program 与更新策略',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 96,
+      endLine: 176,
     },
   ]}
 />
 
 ## 从 JSX 到 Scene
 
-`<Layout>` 先调用 React builder 把 JSX 适配为 Core IR；每次输入或 Core options 改变时，render 阶段用 `compileToScene` 生成 SSR-safe seed，客户端 commit 后由同一组 Core options 创建或更新 Core Program。下图蓝色节点属于 `@retikz/react` 的 authoring / adapter，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
+`<Layout>` 先调用 React collector 把 JSX 适配为 Vanilla Input；每次输入或 Core options 改变时，React 只准备 static fallback，并在客户端 commit 后让 Vanilla processing 创建或更新 Core Program。下图蓝色节点属于 `@retikz/react` 的 authoring / host，绿色节点是 `@retikz/vanilla` 的共享 processing，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
-| 阶段                       | 所有者          | 做什么                                                      |
-| -------------------------- | --------------- | ----------------------------------------------------------- |
-| Kernel / Sugar JSX         | `@retikz/react` | 收集 props 与 children；Sugar 先展开为 Kernel               |
-| `buildIRWithContributions` | `@retikz/react` | 遍历组件树，生成 `IRScene`，同时收集可嵌入 Tier 2 的贡献    |
-| `IRScene`                  | `@retikz/core`  | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM  |
-| `compileToScene`           | `@retikz/core`  | 处理 composite，解析 registry、引用、几何、布局、资源与动画 |
-| `CompileResult`            | `@retikz/core`  | 同次返回后端中立 `scene` 与 typed `artifacts`               |
+| 阶段                 | 所有者            | 做什么                                                                 |
+| -------------------- | ----------------- | ---------------------------------------------------------------------- |
+| Kernel / Sugar JSX   | `@retikz/react`   | 收集 props 与 children；Sugar 先展开为 Kernel                          |
+| `createInputScene()` | `@retikz/react`   | 遍历组件树，生成 `InputScene`，并收集 Tier 2 `InputEmbedAdapter`       |
+| `normalizeScene()`   | `@retikz/vanilla` | 将 typed Input 归一为 `IRScene`，下沉 embeds 并汇总 composite 依赖     |
+| `IRScene`            | `@retikz/core`    | JSON 可序列化的绘图契约，不包含 React element、hook 或 DOM             |
+| `compileToScene`     | `@retikz/core`    | 处理 composite，解析 registry、引用、几何、布局、资源与动画            |
+| `ProcessingResult`   | `@retikz/vanilla` | 以同一 revision 返回 Scene、artifacts、readonly layers 与 runtime meta |
 
-`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX builder。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
+`Layout` 会把文本测量器、Definition registries、TeX lowerer 等宿主能力作为 processing 的 compile options 注入，但这些选项不会把 React 写进 IR 或 Scene。直接传 `ir` prop 时会跳过 JSX collector。`artifacts` prop 请求 opt-in 产物，`onArtifacts` 在所选 host 发布后接收同次 compile 的 immutable artifacts；不会为通知再编译一次。
 
-基础包只提供领域中立的 `LayoutCompileDriver` 与不解释的 `authoring` site。默认驱动执行普通 Core 编译，observer 与只读图层都为空。可选的 `@retikz/inspect/react` 通过 `InspectLayout`、`InspectScope` 和 `InspectPath` 解释运行时选择，并把检查 observer 接入同一 static 或 retained 宿主；这些选择不进入 `IRScene`、`IRScope` 或 `IRPath`。
+基础包只提供领域中立的 `VanillaCompileDriver` 与不解释的 `authoring` site。默认 driver 由 Vanilla processing 执行普通 Core 编译，observer 与只读图层都为空。可选的 `@retikz/inspect/react` 通过 `InspectLayout`、`InspectScope` 和 `InspectPath` 解释运行时选择，并把检查 observer 接入同一 static 或 retained processing；这些选择不进入 `IRScene`、`IRScope` 或 `IRPath`。
 
-`LayoutCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。Static host 直接物化完整 frame；retained host 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect)。
+`VanillaCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。static processing 直接物化完整 frame；retained processing 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 <SourceLinks
   sources={[
     {
-      label: 'React builder 遍历 children',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 585,
-      endLine: 650,
+      label: 'React 收集 JSX 为 InputScene 与 adapters',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 451,
+      endLine: 510,
     },
     {
-      label: 'React children 生成 IRScene',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 685,
-      endLine: 701,
+      label: 'Vanilla 归一 Input 并合并 Composite dependencies',
+      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
+      startLine: 50,
+      endLine: 73,
     },
     {
-      label: 'Layout 串联 builder 与 compile',
+      label: 'Layout 构造 processing source 与 options',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 442,
-      endLine: 522,
+      startLine: 410,
+      endLine: 486,
     },
     {
       label: 'Core IR 编译为 Scene',
@@ -231,47 +230,47 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 ## Scene 之后
 
-Scene 已经没有 React 组件语义。在默认 retained 模式下，`@retikz/render` 负责把 Snapshot / Patch 执行到目标后端，`@retikz/react` 只补 React 宿主生命周期和 Session 接线：
+Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态地得到同一 revision 的结果，`@retikz/react` 只订阅并把这个结果宿主到 React：
 
-| 目标   | `@retikz/render`                                                | `@retikz/react`                                      |
-| ------ | --------------------------------------------------------------- | ---------------------------------------------------- |
-| SVG    | retained renderer 独占 descendants，执行 Patch 或 full fallback | 声明稳定 `<svg>` shell，SSR seed 后以 `adopt` 接管   |
-| Canvas | retained renderer 更新 dirty region 或 full fallback            | 声明稳定 `<canvas>` shell，并固定 mount 生命周期 DPR |
+| 目标   | `@retikz/vanilla`                                      | `@retikz/react`                                           |
+| ------ | ------------------------------------------------------ | --------------------------------------------------------- |
+| SVG    | 管理 processing controller、Core Program 与 Scene 结果 | 用 `ProcessingResultHost` 映射为稳定 SVG 并绑定 hydration |
+| Canvas | 管理 processing controller、Core Program 与 Scene 结果 | 用 `ProcessingResultHost` 映射为 Canvas 宿主              |
 
 事件 handler 是函数，不能进入 JSON IR。children 模式下，React 侧会用另一条 `collectHydrationHandlers` 扫描按图元 id 收集函数；渲染完成后再绑定到 SVG 定位或 Canvas hit-test。直接传 `ir` prop 时，则通过 `handlers` prop 提供这条运行时旁路。
 
 <SourceLinks
   sources={[
     {
-      label: 'Layout 接入 retained host',
+      label: 'Layout 将 source 与 options 交给 Vanilla processing',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 562,
-      endLine: 584,
+      startLine: 410,
+      endLine: 486,
     },
     {
-      label: 'Retained host 声明宿主 shell',
-      path: 'packages/kernel/react/src/render/runtime/RetainedHost.tsx',
-      startLine: 329,
-      endLine: 356,
+      label: 'React 将 processing result 映射为 SVG 或 Canvas 宿主',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 100,
+      endLine: 177,
     },
     {
       label: 'JSX handler 运行时旁路',
       path: 'packages/kernel/react/src/kernel/runtime/collect-hydration-handlers.ts',
-      startLine: 53,
-      endLine: 105,
+      startLine: 51,
+      endLine: 87,
     },
   ]}
 />
 
 ## 职责边界
 
-| 能力       | `@retikz/react` 负责什么                          | 能力真源            |
-| ---------- | ------------------------------------------------- | ------------------- |
-| JSX DSL    | Kernel 组件一对一构造 IR；Sugar 同步展开为 Kernel | `@retikz/core` IR   |
-| 编译宿主   | 收集 children / IR、注入选项并接入 React 生命周期 | `@retikz/core` 编译 |
-| 渲染与交互 | 选择 SVG / Canvas、收集事件并连接宿主             | `@retikz/render`    |
+| 能力       | `@retikz/react` 负责什么                             | 能力真源                          |
+| ---------- | ---------------------------------------------------- | --------------------------------- |
+| JSX DSL    | Kernel 组件构造 Input；Sugar 同步展开为 Kernel       | `@retikz/vanilla` Input / Core IR |
+| 编译宿主   | 收集 children / IR、注入选项并订阅 processing result | `@retikz/vanilla` processing      |
+| 渲染与交互 | 选择 SVG / Canvas、收集事件并连接 React 宿主         | `@retikz/render` 输出能力         |
 
-`@retikz/react` 不包含无框架 plain spec；在非 React、SSR 字符串或直接 DOM 挂载场景使用 [`@retikz/vanilla`](/kernel/packages/vanilla)。
+`@retikz/react` 不包含无框架 Input helper 或 DOM mount；在非 React、SSR 字符串或直接 DOM 挂载场景使用 [`@retikz/vanilla`](/kernel/packages/vanilla)。
 
 ## 继续阅读
 

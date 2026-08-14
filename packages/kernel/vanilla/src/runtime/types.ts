@@ -4,15 +4,18 @@ import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 
-import type { AnyVanillaTier2Adapter, VanillaFigureSpec, VanillaRuntimeMeta } from '../spec';
+import type { AnyInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
 import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
-/** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla plain spec */
-export type RenderInput = Scene | IRScene | VanillaFigureSpec;
+export type { VanillaViewModeValue } from './constants';
+export { VanillaViewMode } from './constants';
+
+/** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
+export type RenderInput = Scene | IRScene | InputScene;
 
 /** 可进入 retained Runtime session 的未编译输入 */
-export type RetainedRenderInput = IRScene | VanillaFigureSpec;
+export type RetainedRenderInput = IRScene | InputScene;
 
 /** 输出资源与显示尺寸选项 */
 export type VanillaOutputOptions = {
@@ -106,9 +109,9 @@ export type VanillaRuntimeOptions = VanillaRetainedRuntimeOptions | VanillaStati
 
 /**
  * render 与 mount 入口共享的选项
- * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / plain spec 时传给
+ * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / InputScene 时传给
  *   Core 编译；`compileDriver` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
- *   `adapters` 只参与 plain spec normalization
+ *   `adapters` 只参与 InputScene normalization
  */
 export type CommonOptions = {
   /** 输出资源与显示尺寸选项 */
@@ -122,8 +125,8 @@ export type CommonOptions = {
   compileDriver?: VanillaCompileDriver;
   /** runtime 动画选项 */
   animation?: VanillaAnimationOptions;
-  /** 可嵌入 Tier2 adapter 列表，仅 plain spec normalization 使用 */
-  adapters?: ReadonlyArray<AnyVanillaTier2Adapter>;
+  /** 可嵌入 Tier2 adapter 列表，仅 InputScene normalize 使用 */
+  adapters?: ReadonlyArray<AnyInputEmbedAdapter>;
 };
 
 /** SSR / build-time SVG string options；显式禁止 mount-only runtime 配置 */
@@ -132,19 +135,19 @@ export type RenderToStringOptions = CommonOptions & Readonly<{ runtime?: never }
 /** 预编译 Scene 的 static DOM mount options；显式禁止 retained-only runtime 配置 */
 export type StaticMountOptions = CommonOptions & Readonly<{ runtime?: never }>;
 
-/** IR / plain spec retained DOM mount options；可注入 renderer factory */
+/** IR / InputScene retained DOM mount options；可注入 renderer factory */
 export type RetainedMountOptions = CommonOptions & {
-  /** retained Runtime session 配置；仅 IR / plain spec mount 使用 */
+  /** retained Runtime session 配置；仅 IR / InputScene mount 使用 */
   runtime?: VanillaRetainedRuntimeOptions;
 };
 
-/** IR / plain spec static DOM mount options */
+/** IR / InputScene static DOM mount options */
 export type RawStaticMountOptions = CommonOptions & {
   /** static 完整编译与物化配置 */
   runtime: VanillaStaticRuntimeOptions;
 };
 
-/** IR / plain spec DOM mount options */
+/** IR / InputScene DOM mount options */
 export type MountOptions = RetainedMountOptions | RawStaticMountOptions;
 
 /** SVG / Canvas view 共享的 lifecycle 与 committed metadata */
@@ -161,15 +164,15 @@ export type VanillaViewState<TRoot extends SVGSVGElement | HTMLCanvasElement> = 
   hydrate: (options: HydrateOptions) => HydrationHandle;
   /** 动画播放控制句柄（scene 含动画且未降级时存在）：play / pause / seek；manual trigger 经此驱动 */
   animation?: AnimationControls;
-  /** 当前 plain spec normalization metadata；IR / Scene 输入时为空 metadata */
-  readonly runtimeMeta: VanillaRuntimeMeta;
+  /** 当前 InputScene normalization metadata；IR / Scene 输入时为空 metadata */
+  readonly runtimeMeta: InputRuntimeMeta;
   /** 当前输入同次 compile 产出的 immutable artifacts；Scene 输入固定为空数组 */
   readonly artifacts: ReadonlyArray<CompileArtifact>;
   /** authored input 的当前 committed 完整 compile result；Scene 输入为 undefined */
   readonly compileResult: CompileResult | undefined;
 }>;
 
-/** IR / plain spec SVG retained view */
+/** IR / InputScene SVG retained view */
 export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
@@ -189,12 +192,12 @@ export type StaticSvgView = VanillaViewState<SVGSVGElement> &
     update: (next: Scene) => void;
   }>;
 
-/** IR / plain spec SVG static view */
+/** IR / InputScene SVG static view */
 export type StaticRawSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
-    /** 完整归一化、编译并重绘下一份 IR 或 plain spec */
+    /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
     update: (next: RetainedRenderInput) => void;
   }>;
 
@@ -243,7 +246,7 @@ export type CanvasViewState = VanillaViewState<HTMLCanvasElement> &
     clientToScene: (clientX: number, clientY: number) => ScenePoint;
   }>;
 
-/** IR / plain spec Canvas retained view */
+/** IR / InputScene Canvas retained view */
 export type RetainedCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */
@@ -263,12 +266,12 @@ export type StaticCanvasView = CanvasViewState &
     update: (next: Scene) => void;
   }>;
 
-/** IR / plain spec Canvas static view */
+/** IR / InputScene Canvas static view */
 export type StaticRawCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
-    /** 完整归一化、编译并重绘下一份 IR 或 plain spec */
+    /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
     update: (next: RetainedRenderInput) => void;
   }>;
 
@@ -281,19 +284,19 @@ export type RetainedVanillaView = RetainedSvgView | RetainedCanvasView;
 /** 所有 static Vanilla view */
 export type StaticVanillaView = StaticSvgView | StaticCanvasView | StaticRawSvgView | StaticRawCanvasView;
 
-/** IR / plain spec retained Canvas mount 选项 */
+/** IR / InputScene retained Canvas mount 选项 */
 export type RetainedMountCanvasOptions = RetainedMountOptions & {
   /** Canvas 专属 runtime 选项 */
   canvas?: VanillaCanvasOptions;
 };
 
-/** IR / plain spec static Canvas mount 选项 */
+/** IR / InputScene static Canvas mount 选项 */
 export type RawStaticMountCanvasOptions = RawStaticMountOptions & {
   /** Canvas 专属显示、dpr 与动画插值选项 */
   canvas?: VanillaCanvasOptions;
 };
 
-/** IR / plain spec Canvas mount 选项 */
+/** IR / InputScene Canvas mount 选项 */
 export type MountCanvasOptions = RetainedMountCanvasOptions | RawStaticMountCanvasOptions;
 
 /** 预编译 Scene static Canvas mount 选项 */

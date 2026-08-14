@@ -1,4 +1,5 @@
-import type { IRStepLabelInput, IRStepRadius } from '@retikz/core';
+import type { IRStepRadius } from '@retikz/core';
+import type { InputStepLabel } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import type { DslTarget } from '../../kernel/components';
@@ -18,7 +19,7 @@ export type ArcProps = PathVisualProps &
     /** 闭合方式：缺省 / `'open'` 开放弧；`'chord'` 两端点连弦闭合；`'sector'` 连回圆心成扇形（均可填充） */
     close?: 'open' | 'chord' | 'sector';
     /** 弧上边标注（透传到底层 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射） */
-    label?: IRStepLabelInput;
+    label?: InputStepLabel;
   } & { center: DslTarget; radius: IRStepRadius };
 
 /**

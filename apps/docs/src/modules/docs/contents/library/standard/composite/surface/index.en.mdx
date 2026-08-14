@@ -23,7 +23,7 @@ import { Surface } from '@retikz/standard-react';
 | Path           | Public entry                                                                                         |
 | -------------- | ---------------------------------------------------------------------------------------------------- |
 | React          | `Surface` from `@retikz/standard-react`                                                              |
-| Vanilla        | `surface`, `surfaceChild`, and `SurfaceVanillaAdapter` from `@retikz/standard-vanilla`               |
+| Vanilla        | `surface`, `surfaceChild`, and `SurfaceInputEmbedAdapter` from `@retikz/standard-vanilla`            |
 | IR / persisted | `SurfaceSchema`, `IRSurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard` |
 
 ## Examples
@@ -84,7 +84,7 @@ The authored outer Scope also publishes a qualified handle whose key is `surface
 
 ### React and Vanilla
 
-React `SurfaceProps` replaces IR `child` with `children` and requires exactly one resulting IR child. Vanilla uses `surfaceChild(node, providerDependencies?)` to carry a nested Tier 2 provider contribution explicitly. That runtime metadata never enters IR or Scene.
+React `SurfaceProps` replaces IR `child` with `children` and requires exactly one resulting IR child. Vanilla uses `surfaceChild(node)` to mark the sole nested child. The same normalization pass collects nested Tier 2 provider contributions, which never enter IR or Scene.
 
 ## Related
 

@@ -1,7 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { DirectionalAnchorInput, SideInput } from '../../shared';
 import type { NodeTextAlign } from '../text';
 import type {
   BuiltinShape,
@@ -30,22 +29,8 @@ export type IRBoxSize = z.infer<typeof BoxSizeSchema>;
 
 export type IRNodeLabelBoundaryPosition = z.infer<typeof NodeLabelBoundaryPositionSchema>;
 
-export type IRNodeLabelBoundaryPositionInput = Omit<IRNodeLabelBoundaryPosition, 'boundary'> & {
-  boundary: SideInput;
-};
-
 /** Node label IR 类型 */
 export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
-
-export type NodeLabelPositionInput =
-  | DirectionalAnchorInput
-  | typeof NodeLabelPosition.Center
-  | number
-  | IRNodeLabelBoundaryPositionInput;
-
-export type IRNodeLabelInput = Omit<IRNodeLabel, 'position'> & {
-  position?: NodeLabelPositionInput;
-};
 
 /** 节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签 */
 export type IRNode = z.infer<typeof NodeSchema>;

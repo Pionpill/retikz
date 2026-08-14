@@ -1,5 +1,4 @@
 export * from './anchor';
-export * from './authoring';
 export * from './channel';
 export * from './coordinate';
 export * from './guide';

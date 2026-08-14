@@ -13,7 +13,7 @@ retikz separates describing a drawing, supplying capabilities, and executing out
 
 ## Architecture at a glance
 
-Start with two stable artifacts: **IR is the description boundary, and Scene is the execution boundary**. React JSX, Vanilla plain specs, and validated external IR converge on one primary data flow. Core outputs Scene rather than SVG strings, DOM objects, or Canvas pixels.
+Start with two stable artifacts: **IR is the description boundary, and Scene is the execution boundary**. React JSX and Vanilla `InputScene` data converge through one normalization flow, while validated external IR enters compilation directly. Core outputs Scene rather than SVG strings, DOM objects, or Canvas pixels.
 
 <ComponentPreview files="principles-packages" size="sm" hideCode />
 
@@ -25,7 +25,7 @@ Solid arrows show data flow: author input becomes IR, `compileToScene` creates S
 | `@retikz/core`    | IR / Scene, Definitions, registries, compilation  | React lifecycle, DOM, Canvas          |
 | `@retikz/render`  | SVG, Canvas, hydration, animation runtime         | Author DSL, IR meaning, layout        |
 | `@retikz/react`   | JSX adapter, `<Layout>` host, React wiring        | Parallel IR or renderer semantics     |
-| `@retikz/vanilla` | Plain specs, mount, hydrate, SSR                  | Geometry different from React         |
+| `@retikz/vanilla` | InputScene, processing, mount, hydrate, SSR       | Geometry different from React         |
 | `@retikz/tex`     | Lower LaTeX into renderer-neutral glyph paths     | General text model or backend hacks   |
 
 ## How Core source folders work together
@@ -89,7 +89,7 @@ Built-ins register first and custom items follow. Registry construction rejects 
       label: 'Merge built-in and custom Definitions into one registry',
       path: 'packages/kernel/core/src/providers/registry/registry.ts',
       startLine: 74,
-      endLine: 112,
+      endLine: 98,
     },
   ]}
 />
@@ -100,7 +100,7 @@ Built-ins register first and custom items follow. Registry construction rejects 
 
 <ComponentPreview files="principles-compile" size="xs" hideCode />
 
-1. **Authoring converges on IR**: React JSX, Vanilla plain specs, and parser sugar produce one JSON contract; external JSON is validated before entering.
+1. **Authoring converges on IR**: React JSX and Vanilla InputScene data normalize to one JSON IR; parser sugar expands in its owning input layer, and external JSON is validated before entering.
 2. **Create compile context**: combine call-local measurement, warnings, lowerers, and built-in plus custom provider Definitions without global state.
 3. **Composite lowering**: validate Tier 2 nodes against registered Definitions and expand them into Tier 1 Kernel IR.
 4. **Layout and namespaces**: resolve Node, Coordinate, and Scope positions, shapes, boundaries, and styles, then register layouts.
@@ -136,7 +136,7 @@ Each arrow points to the first owner, while the second line in the node shows co
 
 | Request signal                 | First owner             | Boundary failure                       |
 | ------------------------------ | ----------------------- | -------------------------------------- |
-| Friendlier JSX / plain specs   | React / Vanilla adapter | Adapters produce different geometry    |
+| Friendlier JSX / InputScene    | React / Vanilla adapter | Adapters produce different geometry    |
 | Shared drawing semantics       | `@retikz/core`          | Adapter / renderer repeats layout      |
 | High-level domain model        | Domain composite        | Chart / domain fields enter core IR    |
 | Pure geometry and numeric work | `@retikz/math`          | Math depends on schema or runtime      |

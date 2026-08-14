@@ -54,10 +54,10 @@ const scene = compileToScene({ version: 1, type: 'scene', children: [stage] }, {
 A Vanilla builder returns an embed instead of prematurely erasing the semantic identity into a Core Node. Its adapter creates a same-id canonical `IRStage` and contributes `StageDefinition`:
 
 ```ts
-import { StageVanillaAdapter, stage } from '@retikz/notation-vanilla';
+import { StageInputEmbedAdapter, stage } from '@retikz/notation-vanilla';
 
 const step = stage('step', { position: [0, 0], text: 'Process' });
-const adapters = [StageVanillaAdapter];
+const adapters = [StageInputEmbedAdapter];
 ```
 
 The following recipes stay in docs. They demonstrate composition, not new `Process`, `Class`, or `Data` exports

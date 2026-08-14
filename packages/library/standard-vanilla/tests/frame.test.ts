@@ -1,21 +1,20 @@
-import { createFrame } from '@retikz/standard';
-import { normalizeFigureSpec } from '@retikz/vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import type { FrameVanillaInput } from '../src';
+import type { InputFrame } from '../src';
 
 import {
   axes,
-  AxesVanillaAdapter,
+  AxesInputEmbedAdapter,
   frame,
   frameDescription,
+  FrameInputEmbedAdapter,
   frameTitle,
-  FrameVanillaAdapter,
   grid,
-  GridVanillaAdapter,
+  GridInputEmbedAdapter,
 } from '../src';
 
-const input: FrameVanillaInput = {
+const input: InputFrame = {
   padding: 12,
   border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 6 },
   headerDirection: 'vertical',
@@ -32,33 +31,39 @@ describe('frame()', () => {
 
   it('derives the Frame identity and canonical IR from the Vanilla embed id', () => {
     const embed = frame('definition-contract', input);
-    const contribution = FrameVanillaAdapter.lower(embed.props, {
-      id: embed.id,
-      kind: embed.kind,
-      layerId: 'main',
-      identityPath: ['main', embed.id],
-    });
+    const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [FrameInputEmbedAdapter] });
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.frame', id: 'definition-contract' });
-    expect(contribution.node).toEqual(createFrame({ id: 'definition-contract/frame', ...input }));
+    expect(normalized.ir.children[0]).toMatchObject({
+      namespace: 'standard',
+      type: 'frame',
+      id: 'definition-contract/frame',
+      padding: 12,
+      title: { text: 'Contract', font: { family: 'serif' } },
+      description: { text: 'One registry contract.', maxTextWidth: 220 },
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    });
   });
 
   it('coexists with Grid and Axes and contributes all definitions once', () => {
-    const figure = normalizeFigureSpec(
-      {
-        type: 'figure',
-        version: 1,
+    const result = normalizeScene(
+      scene({
         children: [
           grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }),
           axes('plane', { x: { extent: 20 }, y: { extent: 20 } }),
           frame('definition-contract', input),
         ],
-      },
-      { adapters: [GridVanillaAdapter, AxesVanillaAdapter, FrameVanillaAdapter] },
+      }),
+      { adapters: [GridInputEmbedAdapter, AxesInputEmbedAdapter, FrameInputEmbedAdapter] },
     );
 
-    expect(figure.providerDefinitions.composites).toHaveLength(3);
-    expect(figure.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
-    expect(figure.ir.children[2]).toEqual(createFrame({ id: 'definition-contract/frame', ...input }));
+    expect(result.contributions).toHaveLength(3);
+    expect(result.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame']);
+    expect(result.ir.children[2]).toMatchObject({
+      namespace: 'standard',
+      type: 'frame',
+      id: 'definition-contract/frame',
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    });
   });
 });

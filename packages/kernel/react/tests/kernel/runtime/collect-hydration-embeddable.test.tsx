@@ -1,8 +1,7 @@
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { describe, expect, it, vi } from 'vitest';
-
-import type { EmbeddableTier2Adapter } from '../../../src';
 
 import { collectHydrationHandlers, Node, Scope } from '../../../src';
 
@@ -16,13 +15,13 @@ import { collectHydrationHandlers, Node, Scope } from '../../../src';
 /** 可嵌入子组件 type 上可挂的可嵌入静态属性形状（避免 as any） */
 type EmbeddableType<TProps> = FC<TProps> & {
   isTier2Embeddable?: boolean;
-  embeddableAdapter?: EmbeddableTier2Adapter;
+  inputEmbedAdapter?: InputEmbedAdapter;
 };
 
 /** 标准 adapter：静态贡献一个占位 node，不解释 datasets / composites */
-const makeAdapter = (displayName: string): EmbeddableTier2Adapter => ({
-  displayName,
-  contribute: () => ({
+const makeAdapter = (displayName: string): InputEmbedAdapter => ({
+  kind: displayName,
+  lower: () => ({
     node: { type: 'node', id: 'a', position: [0, 0] },
     providerDependencies: { roots: [], providers: [] },
   }),
@@ -45,7 +44,7 @@ const makeEmbeddableFixture = (
   if (options.marked) {
     Component.isTier2Embeddable = true;
     if (options.withAdapter) {
-      Component.embeddableAdapter = makeAdapter(displayName);
+      Component.inputEmbedAdapter = makeAdapter(displayName);
     }
   }
   return { Component, wasCalled: () => called };

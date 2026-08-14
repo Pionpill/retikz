@@ -6,23 +6,27 @@ import type {
 } from '@retikz/chart';
 import type { CompileResult, IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
+import type { LowerPlotsOptions } from '@retikz/plot';
+import type { InputPlot } from '@retikz/plot-vanilla';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
-import { createChart as createCanonicalChart } from '@retikz/chart';
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { renderToSvgString } from '@retikz/vanilla';
+import { CHART_NAMESPACE } from '@retikz/chart';
+import { embed, renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
 
 import type { ChartAuthoringResult } from '../shared';
 
+import { normalizeChart } from '../normalize/chart';
 import { chartContributionOf } from '../shared';
+import { ChartInputEmbedAdapter } from './adapter';
 
+export type { InputChart, InputChartPanel } from '../normalize/chart';
 export type { ChartAuthoringResult } from '../shared';
+export { ChartInputEmbedAdapter } from './adapter';
 
 /** 基础 Chart Vanilla authoring 输入 */
 export type CreateChartInput = Readonly<{
-  /** 完整 PlotSpec */
-  plot: IRPlotSpec;
+  /** 完整 Plot authoring 输入 */
+  plot: InputPlot;
   /** Plot lowering 的外部 datasets */
   datasets: ExternalDatasets;
   /** Plot lowering runtime options */
@@ -46,18 +50,13 @@ export type CreateChartInput = Readonly<{
 /** 从完整 PlotSpec 和 plain presentation authoring 创建 canonical Chart */
 export const createChart = (input: CreateChartInput): ChartAuthoringResult => {
   const { datasets, lowerOptions, chartThemeStyles, theme, themeStyles, ...authoring } = input;
-  const chart = createCanonicalChart(authoring);
-  return chartContributionOf(
-    chart,
-    {
-      spec: chart.plot,
-      datasets,
-      ...(lowerOptions === undefined ? {} : { lowerOptions }),
-    },
-    chartThemeStyles,
-    theme,
-    themeStyles,
-  );
+  const normalized = normalizeChart({
+    ...authoring,
+    datasets,
+    ...(lowerOptions === undefined ? {} : { lowerOptions }),
+    ...(chartThemeStyles === undefined ? {} : { chartThemeStyles }),
+  });
+  return chartContributionOf(normalized, theme, themeStyles);
 };
 
 /** Chart SSR render 选项 */
@@ -73,35 +72,38 @@ export type RenderChartResult = Readonly<{
 
 /** 用一次 Core compile 将 Chart authoring result 渲染为 SVG */
 export const renderChart = (input: ChartAuthoringResult, options: RenderChartOptions = {}): RenderChartResult => {
+  if (Object.hasOwn(options, 'compileDriver')) {
+    throw new Error('Vanilla compile drivers require authored IR or a plain figure spec');
+  }
   const { compile: compileOptions, ...renderOptions } = options;
   const {
     composites: explicitComposites,
     themeStyles: explicitThemeStyles,
     ...compileOptionsWithoutDefinitions
   } = compileOptions ?? {};
-  const providerDefinitions = resolveCoreProviderDependencies({
-    contributions: [input.contribution],
-    ...(explicitComposites === undefined ? {} : { definitions: { composites: explicitComposites } }),
-  });
   const themeStyles =
     input.themeStyles === undefined
       ? explicitThemeStyles
       : explicitThemeStyles === undefined
         ? input.themeStyles
         : [...input.themeStyles, ...explicitThemeStyles];
-  const compileResult = compileToScene(
-    {
-      version: 1,
-      type: 'scene',
+  const result = toSceneResult(
+    scene({
       ...(input.theme === undefined ? {} : { theme: input.theme }),
-      children: [input.chart],
-    },
+      children: [embed(CHART_NAMESPACE, input.chart.id ?? CHART_NAMESPACE, input.input)],
+    }),
     {
-      ...compileOptionsWithoutDefinitions,
-      ...providerDefinitions,
-      ...(themeStyles === undefined ? {} : { themeStyles }),
+      adapters: [ChartInputEmbedAdapter],
+      compile: {
+        ...compileOptionsWithoutDefinitions,
+        ...(explicitComposites === undefined ? {} : { composites: explicitComposites }),
+        ...(themeStyles === undefined ? {} : { themeStyles }),
+      },
     },
   );
-  const svg = renderToSvgString(compileResult.scene, renderOptions);
-  return { svg, compileResult };
+  if (result.compileResult === undefined) {
+    throw new Error('chart vanilla: InputScene processing must produce a Core compile result');
+  }
+  const svg = renderToSvgString(result.scene, renderOptions);
+  return { svg, compileResult: result.compileResult };
 };

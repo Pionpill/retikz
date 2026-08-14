@@ -50,12 +50,12 @@ const compile = { composites: [LogicFrameDefinition] };
 Vanilla uses an embed id for authoring and derives the canonical `id` inside the adapter:
 
 ```ts
-import { LogicFrameVanillaAdapter, logicFrame } from '@retikz/notation-vanilla';
+import { LogicFrameInputEmbedAdapter, logicFrame } from '@retikz/notation-vanilla';
 
 const embed = logicFrame('order', {
   sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
 });
-const adapters = [LogicFrameVanillaAdapter];
+const adapters = [LogicFrameInputEmbedAdapter];
 ```
 
 The same shell can contain Core children, Notation logic units, or other nested composites. Logic units retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.

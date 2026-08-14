@@ -1,24 +1,22 @@
 import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard';
 import {
   axes,
-  AxesVanillaAdapter,
+  AxesInputEmbedAdapter,
   frame,
-  FrameVanillaAdapter,
+  FrameInputEmbedAdapter,
   grid,
-  GridVanillaAdapter,
+  GridInputEmbedAdapter,
   legend,
-  LegendVanillaAdapter,
-  StandardVanillaAdapters,
+  LegendInputEmbedAdapter,
+  StandardInputEmbedAdapters,
   surface,
   surfaceChild,
-  SurfaceVanillaAdapter,
+  SurfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla';
-import { normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
+import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-const figure = {
-  type: 'figure' as const,
-  version: 1 as const,
+const input = scene({
   children: [
     grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } }),
     axes('plane', { x: { extent: 20 }, y: { extent: 20 } }),
@@ -31,30 +29,30 @@ const figure = {
       },
     }),
   ],
-};
+});
 
 describe('Standard Vanilla definition loading', () => {
   it('provides the current adapter catalog once in stable frozen order', () => {
-    expect(StandardVanillaAdapters).toEqual([
-      GridVanillaAdapter,
-      AxesVanillaAdapter,
-      FrameVanillaAdapter,
-      SurfaceVanillaAdapter,
-      LegendVanillaAdapter,
+    expect(StandardInputEmbedAdapters).toEqual([
+      GridInputEmbedAdapter,
+      AxesInputEmbedAdapter,
+      FrameInputEmbedAdapter,
+      SurfaceInputEmbedAdapter,
+      LegendInputEmbedAdapter,
     ]);
-    expect(Object.isFrozen(StandardVanillaAdapters)).toBe(true);
-    expect(Object.isFrozen(GridVanillaAdapter)).toBe(false);
+    expect(Object.isFrozen(StandardInputEmbedAdapters)).toBe(true);
+    expect(Object.isFrozen(GridInputEmbedAdapter)).toBe(false);
   });
 
   it('normalizes all current embeds with the all-adapters preset', () => {
-    const normalized = normalizeFigureSpec(figure, { adapters: StandardVanillaAdapters });
+    const normalized = normalizeScene(input, { adapters: StandardInputEmbedAdapters });
 
-    expect(normalized.providerDefinitions.composites).toHaveLength(5);
+    expect(normalized.contributions).toHaveLength(5);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['grid', 'axes', 'frame', 'surface', 'legend']);
   });
 
   it('keeps partial adapter selection explicit', () => {
-    expect(() => normalizeFigureSpec(figure, { adapters: [GridVanillaAdapter, FrameVanillaAdapter] })).toThrow(
+    expect(() => normalizeScene(input, { adapters: [GridInputEmbedAdapter, FrameInputEmbedAdapter] })).toThrow(
       /kind "standard\.axes" but no adapter was provided/i,
     );
   });
@@ -72,26 +70,18 @@ describe('Standard Vanilla definition loading', () => {
   it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
     expect(() =>
       renderToSvgString(
+        scene({ children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
         {
-          type: 'figure',
-          version: 1,
-          children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
-        },
-        {
-          adapters: [GridVanillaAdapter],
+          adapters: [GridInputEmbedAdapter],
           compile: { composites: [GridDefinition] },
         },
       ),
     ).not.toThrow();
     expect(() =>
       renderToSvgString(
+        scene({ children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
         {
-          type: 'figure',
-          version: 1,
-          children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
-        },
-        {
-          adapters: [GridVanillaAdapter],
+          adapters: [GridInputEmbedAdapter],
           compile: { composites: [{ ...GridDefinition }] },
         },
       ),

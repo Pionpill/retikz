@@ -1,10 +1,17 @@
 import type { AxesInput } from '@retikz/standard';
 
-import { buildIRWithContributions } from '@retikz/react';
+import { createInputScene } from '@retikz/react';
 import { AxesDefinition, AxesProvider, createAxes, GridProvider } from '@retikz/standard';
+import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { Axes, Grid } from '../../src';
+
+/** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
+const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
+  const input = createInputScene(children);
+  return normalizeScene(input.scene, { adapters: input.adapters });
+};
 
 const input: AxesInput = {
   origin: { position: [100, 80], label: '0' },
@@ -23,29 +30,29 @@ const input: AxesInput = {
 
 describe('<Axes>', () => {
   it('forwards authored root Scope identity instead of deriving it from React host state', () => {
-    const authored = {
-      ...input,
+    const result = normalizeReactInput(
+      <Axes {...input} id="authored-axes" localNamespace meta={{ source: 'react' }} />,
+    );
+
+    expect(result.ir.children[0]).toMatchObject({
       id: 'authored-axes',
       localNamespace: true,
       meta: { source: 'react' },
-    };
-    const contribution = Axes.embeddableAdapter.contribute(authored);
-
-    expect(contribution.node).toMatchObject({ id: 'authored-axes', localNamespace: true, meta: { source: 'react' } });
+    });
   });
 
   it('contributes canonical Axes IR through one stable exact-key provider', () => {
-    const first = Axes.embeddableAdapter.contribute(input);
-    const second = Axes.embeddableAdapter.contribute(input);
+    const first = normalizeReactInput(<Axes {...input} />);
+    const second = normalizeReactInput(<Axes {...input} />);
 
-    expect(first.node).toEqual(createAxes(input));
-    expect(first.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
-    expect(second.providerDependencies.providers[0]).toBe(AxesProvider);
+    expect(first.ir.children[0]).toEqual(createAxes(input));
+    expect(first.contributions[0]).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
+    expect(second.contributions[0]?.providers[0]).toBe(AxesProvider);
     expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
   });
 
   it('coexists with Grid under distinct qualified provider keys', () => {
-    const result = buildIRWithContributions(
+    const result = normalizeReactInput(
       <>
         <Grid bounds={{ start: [-2, -1], end: [2, 1] }} line={{ spacing: 1 }} />
         <Axes {...input} />

@@ -91,15 +91,15 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
     },
     {
       label: 'React embedded Table 向外层宿主贡献运行时输入',
-      path: 'packages/viz/table-react/src/embedded-runtime.ts',
-      startLine: 12,
-      endLine: 45,
+      path: 'packages/viz/table-react/src/table-runtime.ts',
+      startLine: 276,
+      endLine: 286,
     },
     {
       label: 'runtime contribution 合并并冻结复制后的容器',
       path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
-      startLine: 92,
-      endLine: 178,
+      startLine: 17,
+      endLine: 51,
     },
   ]}
 />
@@ -116,7 +116,7 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
 
 `ManualTable` 的两种 authoring 模式互斥。props 模式直接转发行优先持久化结构；marker 模式根据最大占用位置推导列数并补 `null`，然后交给同一个 `createManualTableSpec()` 与 Table schema。
 
-`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。standalone 宿主 CSS 使用 `containerStyle`，它只在进入内部 Layout 时改名为 `style`，绝不进入 TableSpec。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile`、`artifacts/onArtifacts` 与 `embeddables` 不属于 Table 根组件公共面。
+`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。standalone 宿主 CSS 使用 `containerStyle`，它只在进入内部 Layout 时改名为 `style`，绝不进入 TableSpec。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile` 与 `artifacts/onArtifacts` 不属于 Table 根组件公共面。
 
 | 共享属性                   | 类型                                            | 默认值 | 描述                                               |
 | -------------------------- | ----------------------------------------------- | ------ | -------------------------------------------------- |
@@ -205,7 +205,7 @@ Table 会检查 options / domain 的 JSON 形状、range / evaluator 的 Core CS
 
 ## Vanilla
 
-`detailTable()` / `manualTable()` 构造 plain spec；`embedTable()` 与 `createTableAdapter()` 接入 figure/mount；`renderTable()` 是一次性 SSR 入口。
+`detailTable()` / `manualTable()` 构造普通数据规格；`embedTable()` 与 `TableInputEmbedAdapter` 接入 Scene / mount；`renderTable()` 是一次性 SSR 入口。
 
 ```ts
 const result = renderTable(spec, {

@@ -9,12 +9,12 @@ Notation 按职责拆分：`@retikz/notation` 提供 canonical JSON、Schema、f
 
 | 能力       | Notation                                                                       | React                                                 | Vanilla                                  |
 | ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
-| LogicFrame | `LogicFrameSchema`、`IRLogicFrame`、`createLogicFrame`、`LogicFrameDefinition` | `LogicFrame`、`LogicFrameHeader`、`LogicFrameSection` | `logicFrame`、`LogicFrameVanillaAdapter` |
-| Terminal   | `TerminalSchema`、`IRTerminal`、`createTerminal`、`TerminalDefinition`         | `Terminal`                                            | `terminal`、`TerminalVanillaAdapter`     |
-| Stage      | `StageSchema`、`IRStage`、`createStage`、`StageDefinition`                     | `Stage`                                               | `stage`、`StageVanillaAdapter`           |
-| Decision   | `DecisionSchema`、`IRDecision`、`createDecision`、`DecisionDefinition`         | `Decision`                                            | `decision`、`DecisionVanillaAdapter`     |
-| Junction   | `JunctionSchema`、`IRJunction`、`createJunction`、`JunctionDefinition`         | `Junction`                                            | `junction`、`JunctionVanillaAdapter`     |
-| Connector  | `ConnectorSchema`、`IRConnector`、`createConnector`、`ConnectorDefinition`     | `Connector`                                           | `connector`、`ConnectorVanillaAdapter`   |
+| LogicFrame | `LogicFrameSchema`、`IRLogicFrame`、`createLogicFrame`、`LogicFrameDefinition` | `LogicFrame`、`LogicFrameHeader`、`LogicFrameSection` | `logicFrame`、`LogicFrameInputEmbedAdapter` |
+| Terminal   | `TerminalSchema`、`IRTerminal`、`createTerminal`、`TerminalDefinition`         | `Terminal`                                            | `terminal`、`TerminalInputEmbedAdapter`     |
+| Stage      | `StageSchema`、`IRStage`、`createStage`、`StageDefinition`                     | `Stage`                                               | `stage`、`StageInputEmbedAdapter`           |
+| Decision   | `DecisionSchema`、`IRDecision`、`createDecision`、`DecisionDefinition`         | `Decision`                                            | `decision`、`DecisionInputEmbedAdapter`     |
+| Junction   | `JunctionSchema`、`IRJunction`、`createJunction`、`JunctionDefinition`         | `Junction`                                            | `junction`、`JunctionInputEmbedAdapter`     |
+| Connector  | `ConnectorSchema`、`IRConnector`、`createConnector`、`ConnectorDefinition`     | `Connector`                                           | `connector`、`ConnectorInputEmbedAdapter`   |
 
 六类公开元素都保留 `namespace: 'notation'` 与各自的语义 `type`。Definition 是从 Notation IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
 

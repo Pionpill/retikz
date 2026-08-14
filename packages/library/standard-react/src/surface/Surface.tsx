@@ -1,9 +1,10 @@
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { SurfaceInput } from '@retikz/standard';
+import type { InputSurface } from '@retikz/standard-vanilla';
 import type { FC, ReactNode } from 'react';
 
-import { buildIRWithContributions } from '@retikz/react';
-import { createSurface, SurfaceProvider } from '@retikz/standard';
+import { createInputScene, withInputEmbedAdapters } from '@retikz/react';
+import { SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
@@ -13,27 +14,19 @@ export type SurfaceProps = Omit<SurfaceInput, 'namespace' | 'type' | 'child'> & 
   children: ReactNode;
 };
 
-const surfaceEmbeddableAdapter: EmbeddableTier2Adapter<SurfaceProps> = {
-  displayName: 'Surface',
-  contribute: props => {
-    const { children, ...input } = props;
-    const built = buildIRWithContributions(children);
-    if (built.ir.children.length !== 1) {
-      throw new Error('Surface children must lower to exactly one IR child.');
-    }
-    return {
-      node: createSurface({
-        namespace: 'standard',
-        type: 'surface',
-        ...input,
-        child: built.ir.children[0],
-      }),
-      providerDependencies: {
-        roots: [SurfaceProvider.key, ...built.contributions.flatMap(contribution => contribution.roots)],
-        providers: [SurfaceProvider, ...built.contributions.flatMap(contribution => contribution.providers)],
-      },
-    };
-  },
+/** 将唯一 React child 收集为 Standard Vanilla Input */
+const createSurfaceInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  const { children, ...input } = props as SurfaceProps;
+  const childInput = createInputScene(children, { embedIdPrefix: `${context.id}:child` });
+  const childrenInput = childInput.scene.children;
+  if (childrenInput === undefined || childrenInput.length !== 1) {
+    throw new Error('Surface children must contain exactly one authoring child.');
+  }
+  const inputProps: InputSurface = {
+    ...input,
+    child: childrenInput[0],
+  };
+  return withInputEmbedAdapters(inputProps, childInput.adapters);
 };
 
 const SurfaceComponent: FC<SurfaceProps> = () => null;
@@ -43,4 +36,5 @@ export const Surface = SurfaceComponent as StandardEmbeddableComponent<SurfacePr
 
 Surface.displayName = 'Surface';
 Surface.isTier2Embeddable = true;
-Surface.embeddableAdapter = surfaceEmbeddableAdapter;
+Surface.inputEmbedAdapter = SurfaceInputEmbedAdapter;
+Surface.createInputEmbedProps = createSurfaceInput;

@@ -50,12 +50,12 @@ const compile = { composites: [LogicFrameDefinition] };
 Vanilla 使用 embed id 编写，adapter 会在内部派生 canonical `id`：
 
 ```ts
-import { LogicFrameVanillaAdapter, logicFrame } from '@retikz/notation-vanilla';
+import { LogicFrameInputEmbedAdapter, logicFrame } from '@retikz/notation-vanilla';
 
 const embed = logicFrame('order', {
   sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
 });
-const adapters = [LogicFrameVanillaAdapter];
+const adapters = [LogicFrameInputEmbedAdapter];
 ```
 
 同一外壳可以容纳 Core child、Notation 逻辑单元或其它嵌套 composite。逻辑单元保留自己的 Notation IR，因此直接 IR 中包含 `Stage` 时需要同时注入 `LogicFrameDefinition` 与 `StageDefinition`；React 组件和 Vanilla adapter 会为实际使用的元素自动贡献对应 Definition。

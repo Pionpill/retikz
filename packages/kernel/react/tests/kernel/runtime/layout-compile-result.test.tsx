@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { AnyCompositeDefinition, CompileResult, CoreProgramOutput } from '@retikz/core';
+import type { CompileResult } from '@retikz/core';
 
 import {
   compileToScene,
@@ -14,9 +14,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { LayoutCompileDriver } from '../../../src';
-
-import { defaultLayoutCompileDriver, Layout } from '../../../src';
+import { Layout } from '../../../src';
 
 const card = defineComposite({
   namespace: 'third',
@@ -107,64 +105,6 @@ describe('<Layout onCompileResult>', () => {
     expect(initial?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
     expect(onCompileResult.mock.calls[1]?.[0].spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     expect(onCompileResult.mock.calls[1]?.[0]).not.toBe(initial);
-    await act(() => root.unmount());
-  });
-
-  it('does not publish a retained candidate rejected by the compile driver', async () => {
-    const onCompileResult = vi.fn();
-    const onDiagnostic = vi.fn();
-    let reject = false;
-    let resolveCount = 0;
-    const baseSession = defaultLayoutCompileDriver.create({
-      instance: {},
-      source: scene(10),
-      authoringSites: [],
-      coreOptions: { composites: [card] },
-    });
-    const session = Object.freeze({
-      ...baseSession,
-      resolve: (output: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>) => {
-        resolveCount += 1;
-        if (reject && resolveCount >= 5) throw new Error('driver rejected candidate');
-        return baseSession.resolve(output);
-      },
-    });
-    const driver: LayoutCompileDriver = { create: () => session };
-    const container = document.createElement('div');
-    const root = createRoot(container);
-
-    await act(() =>
-      root.render(
-        <Layout
-          ir={scene(10)}
-          composites={[card]}
-          compileDriver={driver}
-          onCompileResult={onCompileResult}
-          runtime={{ onDiagnostic }}
-        />,
-      ),
-    );
-    const committed = onCompileResult.mock.calls[0]?.[0];
-
-    reject = true;
-    await act(() =>
-      root.render(
-        <Layout
-          ir={scene(20)}
-          composites={[card]}
-          compileDriver={driver}
-          onCompileResult={onCompileResult}
-          runtime={{ onDiagnostic }}
-        />,
-      ),
-    );
-
-    expect(onDiagnostic).toHaveBeenCalledWith(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', phase: 'run' }),
-    );
-    expect(onCompileResult).toHaveBeenCalledTimes(1);
-    expect(onCompileResult.mock.calls[0]?.[0]).toBe(committed);
-    expect(committed?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
     await act(() => root.unmount());
   });
 

@@ -1,6 +1,6 @@
 ---
 title: Plot
-description: An overview of Plot, from React, Vanilla, or plain specs through Plot IR and external data to Core IR, Scene, and renderers.
+description: An overview of Plot, from React, Vanilla Input, or InputPlot through Plot IR and external data to Core IR, Scene, and renderers.
 ---
 
 `@retikz/plot` is the chart-semantics layer in the Viz group. It uses serializable Plot IR to describe field bindings, scales, coordinates, marks, guides, and composition, then lowers those high-level semantics into Core IR that Kernel can compile.
@@ -15,7 +15,7 @@ Solid arrows show the main path from authoring to rendered output. External data
 
 ## From declaration to Scene
 
-1. **Build Plot IR**: `<Plot>` children, Vanilla `plot()`, and a complete plain spec all produce the same JSON-safe `IRPlotSpec`. The React DSL is an authoring entry, not a separate chart model.
+1. **Build Plot IR**: `<Plot>` children, Vanilla `plot()`, and a complete `InputPlot` all produce the same JSON-safe `IRPlotSpec`. The React DSL is an authoring entry, not a separate chart model.
 2. **Attach external data**: IR points to runtime datasets through `data.reference`. Data owns field parsing, general transforms, and provenance; dataset rows do not enter the IR.
 3. **Resolve chart semantics**: lowering applies data transforms, channel bindings, scales, and coordinate projection before mark and guide definitions produce lowerable results. Built-in and custom capabilities share the same registry, resolver, and consumer path.
 4. **Lower to Core IR**: `lowerPlots` is a Tier 2 composite definition that expands Plot nodes into Core IR such as `Scope`, `Node`, and `Path`. Lineage, locators, and diagnostics remain separate runtime results.
@@ -24,22 +24,22 @@ Solid arrows show the main path from authoring to rendered output. External data
 <SourceLinks
   sources={[
     {
-      label: 'React Plot spec / children entries and lowering injection',
+      label: 'React Plot collects props into Plot Vanilla embed input',
       path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 140,
-      endLine: 169,
+      startLine: 115,
+      endLine: 133,
     },
     {
-      label: 'React children assembled into equivalent Plot IR',
+      label: 'React children are collected and delegated to Plot Vanilla normalization',
       path: 'packages/viz/plot-react/src/adapter/build-plot-spec.ts',
-      startLine: 35,
-      endLine: 73,
+      startLine: 14,
+      endLine: 22,
     },
     {
-      label: 'Shared authoring input normalized into a canonical PlotSpec',
-      path: 'packages/viz/plot/src/contract/authoring/create-plot-spec.ts',
-      startLine: 7,
-      endLine: 28,
+      label: 'Plot Vanilla normalizes InputPlot into Plot Source IR',
+      path: 'packages/viz/plot-vanilla/src/normalize/plot/normalize.ts',
+      startLine: 23,
+      endLine: 45,
     },
     {
       label: 'Unified Plot composite lowering entry',
@@ -58,15 +58,15 @@ Solid arrows show the main path from authoring to rendered output. External data
 
 ## How the three packages split responsibility
 
-| Package                | Owns                                                                      | Typical entries                                    |
-| ---------------------- | ------------------------------------------------------------------------- | -------------------------------------------------- |
-| `@retikz/plot`         | Plot IR, shared authoring, definitions / registries, resolution, lowering | `createPlotSpec()`, `PlotSpecSchema`, `lowerPlots` |
-| `@retikz/plot-react`   | React authoring and runtime wiring                                        | `<Plot>`, `buildPlotSpec`                          |
-| `@retikz/plot-vanilla` | Plain specs, Vanilla Tier 2 wiring, and SSR                               | `plot()`, `embedPlot()`, `renderPlot()`            |
+| Package                | Owns                                                                  | Typical entries                                               |
+| ---------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `@retikz/plot`         | Plot IR schema, definitions / registries, domain resolution, lowering | `PlotSpecSchema`, `lowerPlots`                                |
+| `@retikz/plot-react`   | React props / children collection and React host wiring               | `<Plot>`                                                      |
+| `@retikz/plot-vanilla` | Typed authoring, InputEmbed wiring, SSR, and DOM-free rendering       | `InputPlot`, `normalizePlot()`, `embedPlot()`, `renderPlot()` |
 
-All three packages share the IR and lowering source of truth in `@retikz/plot`. Adapters may add framework-appropriate authoring sugar, but they must not duplicate or alter scale, coordinate, mark, or guide semantics.
+All three packages share the IR and lowering source of truth in `@retikz/plot`. `@retikz/plot-vanilla` is the framework-neutral authoring owner: it expands `facets`, `scaffolds`, and axis / topology bindings from `InputPlot` into `IRPlotSpec`, without schema-parsing typed input again. Unknown external data must still enter IR through a Plot schema or parser.
 
-`createPlotSpec()` is the framework-neutral authoring convergence point. It expands `facets`, `scaffolds`, and axis / topology bindings into a canonical `IRPlotSpec`, then performs full schema validation. React and Vanilla both reuse this normalization path. If you already have a complete `IRPlotSpec`, pass it directly to the runtime without wrapping it in another authoring helper.
+React only collects JSX / props and dispatches Plot Vanilla; it owns no parallel Plot IR builder, schema parse, or lowering. If you already have a complete `IRPlotSpec`, pass it directly to the runtime without wrapping it in another authoring helper.
 
 ## What Plot owns—and what it does not
 

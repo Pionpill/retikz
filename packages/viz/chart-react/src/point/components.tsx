@@ -4,34 +4,20 @@ import type {
   IRScatterChartSpec,
   PointChartTypeValue,
 } from '@retikz/chart/point';
-import type { ResolvedTheme, ThemeStyleDefinition } from '@retikz/core';
+import type { InputPointChart } from '@retikz/chart-vanilla/point';
 import type { ExternalRow } from '@retikz/data';
-import type { EmbeddableAuthoringContext, EmbeddableContribution, EmbeddableTier2Adapter } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import {
-  ChartProvider,
-  createChartProvider,
-  DEFAULT_CHART_DATA_REFERENCE,
-  PointChartType,
-  resolvePointChartSpec,
-} from '@retikz/chart/point';
-import {
-  DEFAULT_RESOLVED_THEME,
-  resolveCoreProviderDependencies,
-  resolveTheme,
-  resolveThemeStyleRegistry,
-} from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { createPlotProviderContribution } from '@retikz/plot';
-import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
-import { Layout, useTheme, useThemeStyles } from '@retikz/react';
-import { SurfaceProvider } from '@retikz/standard';
-import { createElement } from 'react';
+import { DEFAULT_CHART_DATA_REFERENCE, PointChartType } from '@retikz/chart/point';
+import { PointChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { collectPlotDeclarations, usePlotThemeStyles } from '@retikz/plot-react';
+import { resolvePlotExtensionAuthoring } from '@retikz/plot-vanilla';
+import { Layout } from '@retikz/react';
+import { createElement, useMemo } from 'react';
 
-import type { ChartCommonProps, ChartRootProps, EmbeddableChartComponent } from '../shared';
+import type { ChartCommonProps, InputEmbeddableChartComponent } from '../shared';
 
-import { splitPresentationMarkers, useChartThemeStyles, wrapChartScope } from '../shared';
+import { splitPresentationMarkers, useChartThemeStyles } from '../shared';
 
 /** typed Point Chart 共享的 React input algebra */
 export type TypedPointChartProps<TSpec> = Omit<
@@ -77,33 +63,37 @@ export type ConnectedScatterChartProps = TypedPointChartProps<IRConnectedScatter
 
 type AnyTypedPointChartProps = ScatterChartProps | BubbleChartProps | ConnectedScatterChartProps;
 
-/** 解析 typed Point recipe 在当前 Chart 根上实际生效的 Core Theme */
-const resolveTypedChartTheme = (
-  inheritedTheme: ResolvedTheme,
-  theme: ChartRootProps['theme'] | undefined,
-  themeStyles: ReadonlyArray<ThemeStyleDefinition> | undefined,
-): ResolvedTheme =>
-  resolveTheme(inheritedTheme, theme, 'chart-react Point Chart Theme', resolveThemeStyleRegistry(themeStyles));
-
-const mergeCoreThemeStyles = (
-  inherited: ReadonlyArray<ThemeStyleDefinition> | undefined,
-  local: ReadonlyArray<ThemeStyleDefinition> | undefined,
-): ReadonlyArray<ThemeStyleDefinition> | undefined => {
-  if (inherited === undefined) return local;
-  if (local === undefined) return inherited;
-  return [...inherited, ...local];
+/** 从 Point Chart 根 props 组装可由 Chart Vanilla adapter 消费的根 Scope */
+const createPointChartPanelInput = (props: AnyTypedPointChartProps): InputPointChart['panel'] => {
+  const { x, y, transforms, placement, zIndex, clip, theme } = props;
+  if (
+    x === undefined &&
+    y === undefined &&
+    transforms === undefined &&
+    placement === undefined &&
+    zIndex === undefined &&
+    clip === undefined &&
+    theme === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    ...(x === undefined ? {} : { x }),
+    ...(y === undefined ? {} : { y }),
+    ...(transforms === undefined ? {} : { transforms }),
+    ...(placement === undefined ? {} : { placement }),
+    ...(zIndex === undefined ? {} : { zIndex }),
+    ...(clip === undefined ? {} : { clip }),
+    ...(theme === undefined ? {} : { theme }),
+  };
 };
 
-const resolveEmbeddedTypedChartTheme = (
-  props: AnyTypedPointChartProps,
-  context: EmbeddableAuthoringContext | undefined,
-): ResolvedTheme => resolveTypedChartTheme(context?.theme ?? DEFAULT_RESOLVED_THEME, props.theme, context?.themeStyles);
-
-const typedChartContribution = (
+/** 将 typed Point Chart React props 转换为唯一的 Chart Vanilla 输入 */
+const createTypedPointChartInput = (
   type: PointChartTypeValue,
-  props: AnyTypedPointChartProps,
-  effectiveTheme: ResolvedTheme | undefined = undefined,
-): EmbeddableContribution => {
+  props: Readonly<Record<string, unknown>>,
+): InputPointChart => {
+  const chartProps = props as AnyTypedPointChartProps;
   const {
     data,
     dataRef,
@@ -114,13 +104,6 @@ const typedChartContribution = (
     chartThemeStyles,
     plotThemeStyles,
     id,
-    x,
-    y,
-    transforms,
-    placement,
-    zIndex,
-    clip,
-    theme,
     children,
     width: _width,
     height: _height,
@@ -134,6 +117,13 @@ const typedChartContribution = (
     animationRef: _animationRef,
     onArtifacts: _onArtifacts,
     onCompileResult: _onCompileResult,
+    x: _x,
+    y: _y,
+    transforms: _transforms,
+    placement: _placement,
+    zIndex: _zIndex,
+    clip: _clip,
+    theme: _theme,
     transform,
     scales,
     coordinate,
@@ -141,20 +131,27 @@ const typedChartContribution = (
     guides,
     marks,
     ...recipeInput
-  } = props;
+  } = chartProps;
   void _className;
   void _style;
   void _renderer;
+  void _themeStyles;
   void _runtime;
   void _animate;
   void _snapshotAt;
   void _animationRef;
   void _onArtifacts;
   void _onCompileResult;
+  void _x;
+  void _y;
+  void _transforms;
+  void _placement;
+  void _zIndex;
+  void _clip;
+  void _theme;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
-  const resolvedTheme = effectiveTheme ?? resolveTypedChartTheme(DEFAULT_RESOLVED_THEME, theme, _themeStyles);
   const split = splitPresentationMarkers(children);
-  const extension = resolvePlotExtensionAuthoring(split.plotChildren, {
+  const extension = resolvePlotExtensionAuthoring(collectPlotDeclarations(split.plotChildren), {
     data: { reference },
     ...(transform === undefined ? {} : { dataTransforms: transform }),
     ...(scales === undefined ? {} : { scales: { value: scales, path: ['props', 'scales'] } }),
@@ -163,52 +160,30 @@ const typedChartContribution = (
     ...(guides === undefined ? {} : { guides: { value: guides, path: ['props', 'guides'] } }),
     ...(marks === undefined ? {} : { marks: { value: marks, path: ['props', 'marks'] } }),
   });
-  const resolution = resolvePointChartSpec(
-    {
-      namespace: 'chart',
-      type,
-      ...(id === undefined ? {} : { id }),
-      data: { reference },
-      ...recipeInput,
-      ...extension.fragment,
-      ...(_width === undefined ? {} : { width: _width }),
-      ...(_height === undefined ? {} : { height: _height }),
-    },
-    resolvedTheme,
-    { chartThemeStyles, plotThemeStyles },
-    {
-      ...(title === undefined ? {} : { title }),
-      ...(subtitle === undefined ? {} : { subtitle }),
-      ...(note === undefined ? {} : { note }),
-      ...(source === undefined ? {} : { source }),
-      ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
-    },
-  );
-  const plotContribution = createPlotProviderContribution(
-    { [reference]: data },
-    {
-      ...extension.runtime,
-      ...(plotThemeStyles === undefined ? {} : { plotThemeStyles }),
-    },
-  );
-  const chartProvider = createChartProvider(chartThemeStyles);
-  return {
-    node: wrapChartScope(resolution.chart, { x, y, transforms, placement, zIndex, clip, theme }),
-    providerDependencies: {
-      roots: [ChartProvider.key],
-      providers: [SurfaceProvider, FlexLayoutProvider, ...plotContribution.providers, chartProvider],
-    },
+  const input: InputPointChart['input'] = {
+    data,
+    ...(dataRef === undefined ? {} : { dataRef }),
+    ...(title === undefined ? {} : { title }),
+    ...(subtitle === undefined ? {} : { subtitle }),
+    ...(note === undefined ? {} : { note }),
+    ...(source === undefined ? {} : { source }),
+    ...(chartThemeStyles === undefined ? {} : { chartThemeStyles }),
+    ...(plotThemeStyles === undefined ? {} : { plotThemeStyles }),
+    ...(id === undefined ? {} : { id }),
+    ...recipeInput,
+    ...extension.fragment,
+    ...(_width === undefined ? {} : { width: _width }),
+    ...(_height === undefined ? {} : { height: _height }),
+    ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
   };
+  const panel = createPointChartPanelInput(chartProps);
+  return { type, input, ...(panel === undefined ? {} : { panel }) };
 };
 
 const createTypedChartComponent = <TProps extends AnyTypedPointChartProps>(
   type: PointChartTypeValue,
   displayName: string,
-): EmbeddableChartComponent<TProps> => {
-  const adapter: EmbeddableTier2Adapter<TProps> = {
-    displayName,
-    contribute: (props, context) => typedChartContribution(type, props, resolveEmbeddedTypedChartTheme(props, context)),
-  };
+): InputEmbeddableChartComponent<TProps, InputPointChart, typeof PointChartInputEmbedAdapter> => {
   const Component: FC<TProps> = props => {
     const {
       width,
@@ -224,71 +199,69 @@ const createTypedChartComponent = <TProps extends AnyTypedPointChartProps>(
       onArtifacts,
       onCompileResult,
     } = props;
-    const ambientTheme = useTheme();
-    const ambientCoreThemeStyles = useThemeStyles();
     const ambientChartThemeStyles = useChartThemeStyles();
     const ambientPlotThemeStyles = usePlotThemeStyles();
-    const coreThemeStyles = mergeCoreThemeStyles(ambientCoreThemeStyles, themeStyles);
-    const contributionProps = {
-      ...props,
-      chartThemeStyles:
+    const effectiveProps = useMemo<TProps>(() => {
+      const chartThemeStyles =
         ambientChartThemeStyles === undefined
           ? props.chartThemeStyles
           : props.chartThemeStyles === undefined
             ? ambientChartThemeStyles
-            : [...ambientChartThemeStyles, ...props.chartThemeStyles],
-      plotThemeStyles:
+            : [...ambientChartThemeStyles, ...props.chartThemeStyles];
+      const plotThemeStyles =
         ambientPlotThemeStyles === undefined
           ? props.plotThemeStyles
           : props.plotThemeStyles === undefined
             ? ambientPlotThemeStyles
-            : [...ambientPlotThemeStyles, ...props.plotThemeStyles],
-    };
-    const contribution = typedChartContribution(
-      type,
-      contributionProps,
-      resolveTypedChartTheme(
-        resolveTheme(
-          DEFAULT_RESOLVED_THEME,
-          ambientTheme,
-          'chart-react ambient Theme',
-          resolveThemeStyleRegistry(coreThemeStyles),
-        ),
-        props.theme,
-        coreThemeStyles,
-      ),
+            : [...ambientPlotThemeStyles, ...props.plotThemeStyles];
+      return {
+        ...props,
+        ...(chartThemeStyles === undefined ? {} : { chartThemeStyles }),
+        ...(plotThemeStyles === undefined ? {} : { plotThemeStyles }),
+      };
+    }, [ambientChartThemeStyles, ambientPlotThemeStyles, props]);
+    return createElement(
+      Layout,
+      {
+        width,
+        height,
+        className,
+        style,
+        renderer,
+        themeStyles,
+        runtime,
+        animate,
+        snapshotAt,
+        animationRef,
+        onArtifacts,
+        onCompileResult,
+      },
+      createElement(Component, effectiveProps),
     );
-    const providerDefinitions = resolveCoreProviderDependencies({ contributions: [contribution.providerDependencies] });
-    return createElement(Layout, {
-      ir: { version: 1, type: 'scene', children: [contribution.node] },
-      ...providerDefinitions,
-      width,
-      height,
-      className,
-      style,
-      renderer,
-      themeStyles,
-      runtime,
-      animate,
-      snapshotAt,
-      animationRef,
-      onArtifacts,
-      onCompileResult,
-    });
   };
-  const chart = Component as EmbeddableChartComponent<TProps>;
+  const chart = Component as InputEmbeddableChartComponent<TProps, InputPointChart, typeof PointChartInputEmbedAdapter>;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
-  chart.embeddableAdapter = adapter;
+  chart.inputEmbedAdapter = PointChartInputEmbedAdapter;
+  chart.createInputEmbedProps = props => createTypedPointChartInput(type, props);
   return chart;
 };
 
 /** Scatter typed Chart React component */
-export const ScatterChart = createTypedChartComponent<ScatterChartProps>(PointChartType.Scatter, 'ScatterChart');
+export const ScatterChart: InputEmbeddableChartComponent<
+  ScatterChartProps,
+  InputPointChart,
+  typeof PointChartInputEmbedAdapter
+> = createTypedChartComponent<ScatterChartProps>(PointChartType.Scatter, 'ScatterChart');
 /** Bubble typed Chart React component */
-export const BubbleChart = createTypedChartComponent<BubbleChartProps>(PointChartType.Bubble, 'BubbleChart');
+export const BubbleChart: InputEmbeddableChartComponent<
+  BubbleChartProps,
+  InputPointChart,
+  typeof PointChartInputEmbedAdapter
+> = createTypedChartComponent<BubbleChartProps>(PointChartType.Bubble, 'BubbleChart');
 /** Connected Scatter typed Chart React component */
-export const ConnectedScatterChart = createTypedChartComponent<ConnectedScatterChartProps>(
-  PointChartType.ConnectedScatter,
-  'ConnectedScatterChart',
-);
+export const ConnectedScatterChart: InputEmbeddableChartComponent<
+  ConnectedScatterChartProps,
+  InputPointChart,
+  typeof PointChartInputEmbedAdapter
+> = createTypedChartComponent<ConnectedScatterChartProps>(PointChartType.ConnectedScatter, 'ConnectedScatterChart');

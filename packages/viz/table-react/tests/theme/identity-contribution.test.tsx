@@ -1,6 +1,8 @@
 import type * as RetikzReact from '@retikz/react';
+import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { createManualTableSpec } from '@retikz/table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -30,8 +32,15 @@ describe('Table React runtime style contract', () => {
     expect(capturedLayouts.at(-1)).not.toHaveProperty('themeTokenDefinitions');
   });
 
-  it('embedded Table adapter keeps removed theme token definitions out of the contribution payload', () => {
-    const contribution = Table.embeddableAdapter.contribute({ spec });
+  it('Table Vanilla adapter keeps removed theme token definitions out of the contribution payload', () => {
+    const input = Table.createInputEmbedProps({ spec });
+    const context: InputEmbedContext = {
+      id: 'scores',
+      kind: 'table',
+      layerId: 'default',
+      identityPath: ['default', 'scores'],
+    };
+    const contribution = TableInputEmbedAdapter.lower(input, context);
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { figure, mountSvg, path, renderToSvgString, scope } from '@retikz/vanilla';
+import { path, renderToSvgString, scene, scope } from '@retikz/vanilla';
+import { mountSvg } from '@retikz/vanilla/dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -11,7 +12,7 @@ const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
 const request = Object.freeze({ inspector: STROKE_PATH_INSPECTOR_KEY, value: Object.freeze({ labels: true }) });
 
 const content = (barrier = false) =>
-  figure({
+  scene({
     children: [
       scope(barrier ? { authoring: createInspectionVanillaAuthoring(false) } : {}, [
         path('curve', {
@@ -36,7 +37,7 @@ afterEach(() => {
 });
 
 describe('@retikz/inspect/vanilla authoring and driver', () => {
-  it('可选 authoring 复用基础 plain spec 并在 SSR 输出只读图层', () => {
+  it('可选 authoring 复用基础 InputScene 并在 SSR 输出只读图层', () => {
     const onCommit = vi.fn();
     const svg = renderToSvgString(content(), {
       output: { idPrefix: 'inspect-vanilla' },

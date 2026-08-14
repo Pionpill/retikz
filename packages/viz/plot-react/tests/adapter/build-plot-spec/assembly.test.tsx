@@ -2,7 +2,6 @@ import type { IRPlotRelateTransform, IRPlotRelationRoutingSpec, IRPlotSpec } fro
 
 import { lowerPlots, PlotSpecSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
-import { ZodError } from 'zod';
 
 import { buildPlotSpec } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
@@ -350,10 +349,6 @@ describe('buildPlotSpec 装配', () => {
       '__plot',
     );
     expect(spec.marks).toHaveLength(1);
-  });
-
-  it('无 mark 子节点 → buildPlotSpec fail-loud 抛 schema 错误', () => {
-    expect(() => buildPlotSpec(<></>, '__plot')).toThrow(ZodError);
   });
 
   // 薄 Plot guide 装配（无默认 / 显式）

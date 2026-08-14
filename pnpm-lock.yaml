@@ -627,9 +627,15 @@ importers:
       '@retikz/notation':
         specifier: workspace:*
         version: link:../notation
+      '@retikz/notation-vanilla':
+        specifier: workspace:^
+        version: link:../notation-vanilla
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -821,6 +827,9 @@ importers:
       '@retikz/runtime':
         specifier: workspace:*
         version: link:../runtime
+      '@retikz/vanilla':
+        specifier: workspace:*
+        version: link:../vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1034,9 +1043,15 @@ importers:
       '@retikz/layout':
         specifier: workspace:*
         version: link:../layout
+      '@retikz/layout-vanilla':
+        specifier: workspace:^
+        version: link:../layout-vanilla
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
     devDependencies:
       '@retikz/inspect':
         specifier: workspace:*
@@ -1142,6 +1157,12 @@ importers:
       '@retikz/standard':
         specifier: workspace:*
         version: link:../standard
+      '@retikz/standard-vanilla':
+        specifier: workspace:^
+        version: link:../standard-vanilla
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1244,27 +1265,27 @@ importers:
       '@retikz/chart':
         specifier: workspace:*
         version: link:../chart
+      '@retikz/chart-vanilla':
+        specifier: workspace:^
+        version: link:../chart-vanilla
       '@retikz/core':
         specifier: workspace:^
         version: link:../../kernel/core
       '@retikz/data':
         specifier: workspace:^
         version: link:../data
-      '@retikz/layout':
-        specifier: workspace:^
-        version: link:../../library/layout
       '@retikz/plot':
         specifier: workspace:^
         version: link:../plot
       '@retikz/plot-react':
         specifier: workspace:^
         version: link:../plot-react
+      '@retikz/plot-vanilla':
+        specifier: workspace:^
+        version: link:../plot-vanilla
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
-      '@retikz/standard':
-        specifier: workspace:^
-        version: link:../../library/standard
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1452,6 +1473,9 @@ importers:
       '@retikz/plot':
         specifier: workspace:*
         version: link:../plot
+      '@retikz/plot-vanilla':
+        specifier: workspace:^
+        version: link:../plot-vanilla
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
@@ -1593,6 +1617,12 @@ importers:
       '@retikz/table':
         specifier: workspace:*
         version: link:../table
+      '@retikz/table-vanilla':
+        specifier: workspace:*
+        version: link:../table-vanilla
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

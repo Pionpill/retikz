@@ -1,10 +1,10 @@
-import type { LegendInput } from '@retikz/standard';
-
 import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard';
-import { renderToSvgString } from '@retikz/vanilla';
+import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { legend, LegendVanillaAdapter } from '../src';
+import type { InputLegend } from '../src';
+
+import { legend, LegendInputEmbedAdapter } from '../src';
 
 const input = {
   id: 'authored-legend',
@@ -21,43 +21,32 @@ const input = {
       },
     ],
   },
-} satisfies LegendInput;
+} satisfies InputLegend;
 
 describe('legend()', () => {
   it('creates a stable embed whose adapter lowers to canonical Legend IR', () => {
     const embed = legend('status', input);
-    const contribution = LegendVanillaAdapter.lower(embed.props, {
-      id: embed.id,
-      kind: embed.kind,
-      layerId: 'main',
-      identityPath: ['main', embed.id],
-    });
+    const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [LegendInputEmbedAdapter] });
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.legend', id: 'status' });
-    expect(contribution.node).toEqual(createLegend(input));
-    expect(contribution.node).toMatchObject({ contentAlign: 'end' });
-    expect(contribution.providerDependencies).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
+    expect(normalized.ir.children[0]).toEqual(createLegend(input));
+    expect(normalized.ir.children[0]).toMatchObject({ contentAlign: 'end' });
+    expect(normalized.contributions[0]).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 
   it('renders the same SVG as direct canonical IR in the same compile environment', () => {
     const embed = legend('status', input);
-    const contribution = LegendVanillaAdapter.lower(embed.props, {
-      id: embed.id,
-      kind: embed.kind,
-      layerId: 'main',
-      identityPath: ['main', embed.id],
-    });
-    const direct = createLegend(input);
+    const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [LegendInputEmbedAdapter] });
+    const direct = normalized.ir.children[0];
     const directOutput = renderToSvgString(
       { type: 'scene', version: 1, children: [direct] },
       { compile: { composites: [LegendDefinition] } },
     );
-    const vanillaOutput = renderToSvgString(
-      { type: 'scene', version: 1, children: [contribution.node] },
-      { compile: { composites: [LegendDefinition] } },
-    );
+    const vanillaOutput = renderToSvgString(scene({ children: [embed] }), {
+      adapters: [LegendInputEmbedAdapter],
+      compile: { composites: [LegendDefinition] },
+    });
 
-    expect(contribution.node).toEqual(direct);
     expect(LegendProvider.makeDefinition({})).toBe(LegendDefinition);
     expect(vanillaOutput).toBe(directOutput);
   });

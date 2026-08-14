@@ -13,20 +13,20 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 ## 一张图看懂架构
 
-先记住两个稳定产物：**IR 是描述边界，Scene 是执行边界**。React JSX、Vanilla plain spec 和已经过校验的外部 IR 都汇入同一条主数据流；Core 只输出 Scene，不直接输出 SVG 字符串、DOM 或 Canvas 像素。
+先记住两个稳定产物：**IR 是描述边界，Scene 是执行边界**。React JSX 与 Vanilla `InputScene` 都先汇入同一条归一化主数据流，已经校验的外部 IR 则直接进入编译；Core 只输出 Scene，不直接输出 SVG 字符串、DOM 或 Canvas 像素。
 
 <ComponentPreview files="principles-packages" size="sm" hideCode />
 
 图中的实线是数据流：作者输入进入 IR，`compileToScene` 同次生成 Scene 与 typed artifacts，renderer 再把 Scene 输出为 SVG 或 Canvas。虚线是能力依赖：`@retikz/math` 提供纯几何底座，`@retikz/tex` 作为可选 lowerer 接入编译，而不是成为 IR 或 renderer 的特殊分支。
 
-| 包                | 第一职责                                     | 明确不拥有                    |
-| ----------------- | -------------------------------------------- | ----------------------------- |
-| `@retikz/math`    | 零依赖几何、曲线、矩阵与数值算法             | IR、schema、绘图业务语义      |
-| `@retikz/core`    | IR / Scene 契约、Definition、registry 与编译 | React 生命周期、DOM、Canvas   |
-| `@retikz/render`  | SVG、Canvas、hydration 与 animation runtime  | 作者 DSL、IR 语义和布局算法   |
-| `@retikz/react`   | JSX adapter、`<Layout>` 宿主与 React 接线    | 平行 IR、平行 renderer 语义   |
-| `@retikz/vanilla` | plain spec、mount、hydrate 与 SSR            | 与 React 不同的几何或编译结果 |
-| `@retikz/tex`     | 把 LaTeX 降成 renderer-neutral glyph paths   | 通用文字模型和 renderer 特判  |
+| 包                | 第一职责                                      | 明确不拥有                    |
+| ----------------- | --------------------------------------------- | ----------------------------- |
+| `@retikz/math`    | 零依赖几何、曲线、矩阵与数值算法              | IR、schema、绘图业务语义      |
+| `@retikz/core`    | IR / Scene 契约、Definition、registry 与编译  | React 生命周期、DOM、Canvas   |
+| `@retikz/render`  | SVG、Canvas、hydration 与 animation runtime   | 作者 DSL、IR 语义和布局算法   |
+| `@retikz/react`   | JSX adapter、`<Layout>` 宿主与 React 接线     | 平行 IR、平行 renderer 语义   |
+| `@retikz/vanilla` | InputScene、processing、mount、hydrate 与 SSR | 与 React 不同的几何或编译结果 |
+| `@retikz/tex`     | 把 LaTeX 降成 renderer-neutral glyph paths    | 通用文字模型和 renderer 特判  |
 
 ## Core 源码如何协作
 
@@ -89,7 +89,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
       label: '内置与自定义 Definition 合并为统一 registry',
       path: 'packages/kernel/core/src/providers/registry/registry.ts',
       startLine: 74,
-      endLine: 112,
+      endLine: 98,
     },
   ]}
 />
@@ -100,7 +100,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 <ComponentPreview files="principles-compile" size="xs" hideCode />
 
-1. **作者输入汇入 IR**：React JSX、Vanilla plain spec 与 parser sugar 生成同一 JSON 契约；外部 JSON 在进入前显式校验。
+1. **作者输入汇入 IR**：React JSX 与 Vanilla InputScene 先统一归一为同一份 JSON IR；parser sugar 在所属输入层展开，外部 JSON 在进入前显式校验。
 2. **创建编译上下文**：合并本次调用的 measure、warning、lowerer，以及内置和自定义 provider definitions，不写全局状态。
 3. **Composite lowering**：Tier 2 节点按注册 Definition 校验并展开为 Tier 1 Kernel IR。
 4. **布局与命名空间**：解析 Node、Coordinate、Scope 的位置、形状、边界和样式，登记可引用 layout。
@@ -136,7 +136,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 | 需求信号                  | 第一责任 owner          | 边界失守信号                    |
 | ------------------------- | ----------------------- | ------------------------------- |
-| 更友好的 JSX / plain spec | React / Vanilla adapter | 两个 adapter 产生不同几何       |
+| 更友好的 JSX / InputScene | React / Vanilla adapter | 两个 adapter 产生不同几何       |
 | 通用绘图语义              | `@retikz/core`          | adapter / renderer 重复布局算法 |
 | 高层领域模型              | domain composite        | chart / domain 字段进入 core IR |
 | 纯几何与数值算法          | `@retikz/math`          | math 反向依赖 schema 或 runtime |

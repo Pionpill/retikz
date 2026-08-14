@@ -9,12 +9,12 @@ Notation is split by responsibility: `@retikz/notation` provides canonical JSON,
 
 | Capability | Notation                                                                       | React                                                 | Vanilla                                  |
 | ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------- |
-| LogicFrame | `LogicFrameSchema`, `IRLogicFrame`, `createLogicFrame`, `LogicFrameDefinition` | `LogicFrame`, `LogicFrameHeader`, `LogicFrameSection` | `logicFrame`, `LogicFrameVanillaAdapter` |
-| Terminal   | `TerminalSchema`, `IRTerminal`, `createTerminal`, `TerminalDefinition`         | `Terminal`                                            | `terminal`, `TerminalVanillaAdapter`     |
-| Stage      | `StageSchema`, `IRStage`, `createStage`, `StageDefinition`                     | `Stage`                                               | `stage`, `StageVanillaAdapter`           |
-| Decision   | `DecisionSchema`, `IRDecision`, `createDecision`, `DecisionDefinition`         | `Decision`                                            | `decision`, `DecisionVanillaAdapter`     |
-| Junction   | `JunctionSchema`, `IRJunction`, `createJunction`, `JunctionDefinition`         | `Junction`                                            | `junction`, `JunctionVanillaAdapter`     |
-| Connector  | `ConnectorSchema`, `IRConnector`, `createConnector`, `ConnectorDefinition`     | `Connector`                                           | `connector`, `ConnectorVanillaAdapter`   |
+| LogicFrame | `LogicFrameSchema`, `IRLogicFrame`, `createLogicFrame`, `LogicFrameDefinition` | `LogicFrame`, `LogicFrameHeader`, `LogicFrameSection` | `logicFrame`, `LogicFrameInputEmbedAdapter` |
+| Terminal   | `TerminalSchema`, `IRTerminal`, `createTerminal`, `TerminalDefinition`         | `Terminal`                                            | `terminal`, `TerminalInputEmbedAdapter`     |
+| Stage      | `StageSchema`, `IRStage`, `createStage`, `StageDefinition`                     | `Stage`                                               | `stage`, `StageInputEmbedAdapter`           |
+| Decision   | `DecisionSchema`, `IRDecision`, `createDecision`, `DecisionDefinition`         | `Decision`                                            | `decision`, `DecisionInputEmbedAdapter`     |
+| Junction   | `JunctionSchema`, `IRJunction`, `createJunction`, `JunctionDefinition`         | `Junction`                                            | `junction`, `JunctionInputEmbedAdapter`     |
+| Connector  | `ConnectorSchema`, `IRConnector`, `createConnector`, `ConnectorDefinition`     | `Connector`                                           | `connector`, `ConnectorInputEmbedAdapter`   |
 
 All six public elements retain `namespace: 'notation'` and their own semantic `type`. Definitions are explicit lowering contracts from Notation IR to Core IR and never enter persisted JSON
 

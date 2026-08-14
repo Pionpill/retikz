@@ -13,7 +13,7 @@ Layout schemas persist container and item configuration. Definitions, the Core c
 | -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
 | One definition | `FlexLayoutDefinition`, `GridLayoutDefinition`, `OverlayLayoutDefinition` | Register one layout composite with Core                   |
 | React          | `FlexLayout`, `GridLayout`, `OverlayLayout`, `LayoutItem`                 | Build canonical IR and contribute definitions to `Layout` |
-| Vanilla        | `LayoutVanillaAdapters`                                                   | Recognize all three embeds in figure, mount, or SSR hosts |
+| Vanilla        | `LayoutInputEmbedAdapters`                                                | Recognize all three embeds in Scene, mount, or SSR hosts  |
 
 Pass one or more of the three layout Definitions directly in `CompileOptions.composites`. React and Vanilla adapters produce the same Layout IR and contribute the same Definitions; their adapter convenience arrays do not become Core compile presets.
 
@@ -63,7 +63,7 @@ React containers start no local compilation and perform no DOM measurement. They
 
 ## Vanilla
 
-`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `VanillaEmbedSpec` values. Figure, mount, or SSR hosts need the matching adapter; use `LayoutVanillaAdapters` for the complete family.
+`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `InputEmbed` values. Scene, mount, or SSR hosts need the matching adapter; use `LayoutInputEmbedAdapters` for the complete family.
 
 Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes the layout Definitions required by its family. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
 

@@ -1,15 +1,35 @@
 import type { InspectionCompileResult } from '@retikz/inspect';
+import type { ReactNode } from 'react';
 
-import { createInspectorRegistry } from '@retikz/inspect';
-import { createInspectionLayoutDriver } from '@retikz/inspect/react';
-import { FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition } from '@retikz/layout';
-import { FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR } from '@retikz/layout/inspect';
-import { buildIRWithContributions, compileLayoutWithDriver, Node } from '@retikz/react';
+import { createLayoutInspectionVanillaDriver } from '@retikz/layout-vanilla/inspect';
+import { createInputScene, Node } from '@retikz/react';
+import { normalizeScene, prepareStaticProcessing } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { FlexLayout, LayoutItem } from '../../src';
 import { InspectFlexLayout, InspectGridLayout, LayoutInspectLayout, LayoutInspectScope } from '../../src/inspect';
+
+/** 通过 Vanilla processing 处理 React 输入并返回已提交的 Inspect 结果 */
+const inspectReactInput = (children: ReactNode): InspectionCompileResult | undefined => {
+  const input = createInputScene(children);
+  let committed: InspectionCompileResult | undefined;
+  const processing = prepareStaticProcessing(
+    input.scene,
+    {
+      adapters: input.adapters,
+      compile: { padding: 0 },
+      compileDriver: createLayoutInspectionVanillaDriver({
+        onCommit: result => {
+          committed = result;
+        },
+      }),
+    },
+    0,
+  );
+  processing.commit();
+  return committed;
+};
 
 describe('@retikz/layout-react/inspect', () => {
   it('通过可选 wrapper 输出 FlexLayout 只读辅助图层', () => {
@@ -46,21 +66,19 @@ describe('@retikz/layout-react/inspect', () => {
       'flexLayout',
     ],
   ])('只选择嵌套的 $0 occurrence', (_label, nested, expectedType) => {
-    const built = buildIRWithContributions(
+    const children = (
       <FlexLayout>
         <LayoutItem kind="flex" itemKey="nested">
           {nested}
         </LayoutItem>
-      </FlexLayout>,
+      </FlexLayout>
     );
+    const input = createInputScene(children);
+    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
     expect(
-      built.authoringSites
+      normalized.authoringSites
         .filter(site => site.kind === 'embeddable')
-        .map(site => ({
-          sourcePath: site.sourcePath,
-          owner: site.owner,
-          authoring: Reflect.get(site.props, 'authoring'),
-        })),
+        .map(site => ({ sourcePath: site.sourcePath, owner: site.owner, authoring: site.authoring })),
     ).toEqual([
       {
         sourcePath: 'children[0]',
@@ -73,36 +91,16 @@ describe('@retikz/layout-react/inspect', () => {
         authoring: expect.any(Object),
       },
     ]);
-    let committed: InspectionCompileResult | undefined;
-    const driver = createInspectionLayoutDriver({
-      registry: createInspectorRegistry([FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR]),
-      onCommit: result => (committed = result),
-    });
-    const driverInput = {
-      instance: {},
-      source: built.ir,
-      authoringSites: built.authoringSites,
-      coreOptions: { composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition], padding: 0 },
-    } as const;
-    const session = driver.create(driverInput);
-    const observer = session.observers[0].createSession();
-    expect(
-      observer.select({
-        owner: { kind: 'composite', namespace: 'layout', type: expectedType },
-        sourcePath: 'children[0]',
-      }),
-    ).toBe(true);
-    const output = compileLayoutWithDriver(driverInput, session);
-    session.commit?.(output);
-    const entries = committed?.inspection?.entries;
+
+    const entries = inspectReactInput(children)?.inspection?.entries;
     expect(entries?.length).toBeGreaterThan(0);
     expect(entries?.every(entry => entry.owner.kind === 'composite' && entry.owner.type === expectedType)).toBe(true);
     expect(entries?.every(entry => entry.occurrence.expansionPath.length > 0)).toBe(true);
     expect(new Set(entries?.map(entry => entry.colorScope))).toEqual(new Set([0]));
   });
 
-  it('贡献内部 Scope 检查无法定位时明确拒绝，避免误选父布局', () => {
-    const built = buildIRWithContributions(
+  it('贡献内部 Scope 无法定位时明确拒绝，避免误选择父布局', () => {
+    const input = createInputScene(
       <FlexLayout>
         <LayoutItem kind="flex" itemKey="nested">
           <LayoutInspectScope request={false}>
@@ -115,16 +113,17 @@ describe('@retikz/layout-react/inspect', () => {
         </LayoutItem>
       </FlexLayout>,
     );
-    const driver = createInspectionLayoutDriver({
-      registry: createInspectorRegistry([FLEX_LAYOUT_INSPECTOR]),
-    });
-    const session = driver.create({
-      instance: {},
-      source: built.ir,
-      authoringSites: built.authoringSites,
-      coreOptions: { composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition], padding: 0 },
-    });
 
-    expect(() => session.observers[0]?.createSession()).toThrow(/nested Scope/i);
+    expect(() =>
+      prepareStaticProcessing(
+        input.scene,
+        {
+          adapters: input.adapters,
+          compile: { padding: 0 },
+          compileDriver: createLayoutInspectionVanillaDriver(),
+        },
+        0,
+      ),
+    ).toThrow(/nested Scope/i);
   });
 });

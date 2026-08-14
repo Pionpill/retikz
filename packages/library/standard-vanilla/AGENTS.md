@@ -17,4 +17,4 @@
 
 ## 当前状态
 
-当前提供 Grid、Axes、Frame、Legend builders / adapters 与 `StandardVanillaAdapters`。Layout builders 与 inspection 已迁入 `@retikz/layout-vanilla`，本包只保留根入口
+当前提供 Grid、Axes、Frame、Legend、Surface 的 Input helper / InputEmbed adapter 与 `StandardInputEmbedAdapters`。Layout helper 与 inspection 已迁入 `@retikz/layout-vanilla`，本包只保留根入口

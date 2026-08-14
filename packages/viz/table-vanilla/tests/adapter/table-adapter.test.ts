@@ -1,15 +1,15 @@
-import type { IRDetailTableSpec, IRTableSpec } from '@retikz/table';
-import type { VanillaEmbedContext } from '@retikz/vanilla';
+import type { IRDetailTableSpec } from '@retikz/table';
+import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { createManualTableSpec, TableSpecSchema } from '@retikz/table';
-import { embed, figure, layer, normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
+import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createTableAdapter, embedTable } from '../../src';
+import { embedTable, inputTableFromSpec, TableInputEmbedAdapter } from '../../src';
 
-const contextOf = (id: string): VanillaEmbedContext => ({
+const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'table',
   layerId: 'content',
@@ -24,23 +24,24 @@ const detailSpec = (): IRDetailTableSpec => ({
 });
 
 describe('Table Vanilla adapter', () => {
-  it('validates handwritten embed ids/specs and namespaces the Table root identity', () => {
-    const adapter = createTableAdapter();
+  it('validates handwritten embed ids and namespaces the Table root identity', () => {
     const anonymous = createManualTableSpec({ rows: [[null]] });
     const named = createManualTableSpec({ id: 'scores', rows: [[null]] });
 
-    expect(adapter.lower({ spec: anonymous }, contextOf('panel')).node).toMatchObject({ id: 'panel/table' });
-    expect(adapter.lower({ spec: named }, contextOf('panel')).node).toMatchObject({ id: 'panel/scores' });
-    expect(() => adapter.lower({ spec: anonymous }, contextOf(''))).toThrow(
+    expect(
+      TableInputEmbedAdapter.lower({ table: inputTableFromSpec(anonymous) }, contextOf('panel')).node,
+    ).toMatchObject({
+      id: 'panel/table',
+    });
+    expect(TableInputEmbedAdapter.lower({ table: inputTableFromSpec(named) }, contextOf('panel')).node).toMatchObject({
+      id: 'panel/scores',
+    });
+    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromSpec(anonymous) }, contextOf(''))).toThrow(
       'table vanilla: embed id must be non-empty',
     );
-    expect(() =>
-      adapter.lower({ spec: { namespace: 'table' } as unknown as IRTableSpec }, contextOf('invalid')),
-    ).toThrow();
   });
 
   it('contextualizes only the Table id and preserves root authoring fields', () => {
-    const adapter = createTableAdapter();
     const spec = createManualTableSpec({
       id: 'scores',
       rows: [[98]],
@@ -57,7 +58,9 @@ describe('Table Vanilla adapter', () => {
       tableThemeTokens: { 'cell.content.color': '#fafafa' },
     });
 
-    const lowered = TableSpecSchema.parse(adapter.lower({ spec }, contextOf('panel')).node);
+    const lowered = TableSpecSchema.parse(
+      TableInputEmbedAdapter.lower({ table: inputTableFromSpec(spec) }, contextOf('panel')).node,
+    );
 
     expect(lowered).toEqual({ ...spec, id: 'panel/scores' });
     expect(lowered.rules).toEqual(spec.rules);
@@ -66,10 +69,9 @@ describe('Table Vanilla adapter', () => {
   });
 
   it('returns table.table roots and the shared stable provider maker for every lower call', () => {
-    const adapter = createTableAdapter();
     const spec = createManualTableSpec({ rows: [[null]] });
-    const first = adapter.lower({ spec }, contextOf('first'));
-    const second = adapter.lower({ spec }, contextOf('second'));
+    const first = TableInputEmbedAdapter.lower({ table: inputTableFromSpec(spec) }, contextOf('first'));
+    const second = TableInputEmbedAdapter.lower({ table: inputTableFromSpec(spec) }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
@@ -82,10 +84,9 @@ describe('Table Vanilla adapter', () => {
     );
   });
 
-  it('enters figure/layer SSR and reads each embed runtime data', () => {
-    const adapter = createTableAdapter();
+  it('enters scene/layer SSR and reads each embed runtime data', () => {
     const spec = detailSpec();
-    const tableFigure = figure({
+    const inputScene = scene({
       layers: [
         layer('content', [
           embedTable('first', spec, { data: { people: [{ name: 'Ada' }] } }),
@@ -93,18 +94,17 @@ describe('Table Vanilla adapter', () => {
         ]),
       ],
     });
-    const svg = renderToSvgString(tableFigure, { adapters: [adapter] });
+    const svg = renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] });
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
-    expect(normalizeFigureSpec(tableFigure, { adapters: [adapter] }).runtimeMeta.layers[0].childIds).toEqual([
+    expect(normalizeScene(inputScene, { adapters: [TableInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
       'first',
       'second',
     ]);
   });
 
   it('passes extra composites through the shared adapter contribution', () => {
-    const adapter = createTableAdapter();
     const schema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('badge'),
@@ -119,21 +119,22 @@ describe('Table Vanilla adapter', () => {
     const spec = createManualTableSpec({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
-    const tableFigure = figure([embedTable('nested', spec, { composites: [badge] })]);
+    const inputScene = scene([embedTable('nested', spec, { composites: [badge] })]);
 
-    expect(renderToSvgString(tableFigure, { adapters: [adapter] })).toContain('Nested');
+    expect(renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] })).toContain('Nested');
   });
 
   it('rejects handwritten empty ids and duplicate embed identities through the standard runtime', () => {
-    const adapter = createTableAdapter();
     const spec = createManualTableSpec({ rows: [[null]] });
-    const handwritten = embed('table', '', { spec });
+    const handwritten = embed('table', '', { table: inputTableFromSpec(spec) });
 
-    expect(() => normalizeFigureSpec(figure([handwritten]), { adapters: [adapter] })).toThrow(
+    expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
       'table vanilla: embed id must be non-empty',
     );
     expect(() =>
-      normalizeFigureSpec(figure([embedTable('same', spec), embedTable('same', spec)]), { adapters: [adapter] }),
+      normalizeScene(scene([embedTable('same', spec), embedTable('same', spec)]), {
+        adapters: [TableInputEmbedAdapter],
+      }),
     ).toThrow(/duplicate identity/i);
   });
 });

@@ -1,8 +1,8 @@
 import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
-import { normalizeFigureSpec } from '@retikz/vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { grid, GridVanillaAdapter } from '../src';
+import { grid, GridInputEmbedAdapter } from '../src';
 
 describe('grid()', () => {
   it('keeps an authored root id distinct from the Vanilla embed id', () => {
@@ -12,7 +12,7 @@ describe('grid()', () => {
       bounds: { start: [0, 0], end: [20, 10] },
       line: { spacing: 10 },
     });
-    const contribution = GridVanillaAdapter.lower(embed.props, {
+    const contribution = GridInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
       layerId: 'main',
@@ -27,7 +27,7 @@ describe('grid()', () => {
       bounds: { start: [0, 0], end: [20, 10] },
       line: { spacing: 10 },
     });
-    const contribution = GridVanillaAdapter.lower(embed.props, {
+    const contribution = GridInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
       layerId: 'main',
@@ -41,19 +41,17 @@ describe('grid()', () => {
   });
 
   it('merges multiple Grid embeds through one stable definition maker', () => {
-    const figure = normalizeFigureSpec(
-      {
-        type: 'figure',
-        version: 1,
+    const result = normalizeScene(
+      scene({
         children: [
           grid('first', { bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }),
           grid('second', { bounds: { start: [30, 0], end: [50, 10] }, line: { spacing: 10 } }),
         ],
-      },
-      { adapters: [GridVanillaAdapter] },
+      }),
+      { adapters: [GridInputEmbedAdapter] },
     );
 
-    expect(figure.providerDefinitions.composites).toHaveLength(1);
+    expect(result.contributions).toHaveLength(2);
   });
 
   it('accepts a center-form Cartesian position through the shared Grid input', () => {
@@ -62,7 +60,7 @@ describe('grid()', () => {
       line: { spacing: 10 },
     } as const;
     const embed = grid('center', input);
-    const contribution = GridVanillaAdapter.lower(embed.props, {
+    const contribution = GridInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
       layerId: 'main',
@@ -82,7 +80,7 @@ describe('grid()', () => {
       line: { spacing: 10 },
     } as const;
     const embed = grid('polar', input);
-    const contribution = GridVanillaAdapter.lower(embed.props, {
+    const contribution = GridInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
       kind: embed.kind,
       layerId: 'main',

@@ -1,22 +1,17 @@
 import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard';
-import { normalizeFigureSpec } from '@retikz/vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { frame, FrameVanillaAdapter, surface, surfaceChild, SurfaceVanillaAdapter } from '../src';
-
-const context = {
-  id: 'panel',
-  kind: 'standard.surface',
-  layerId: 'main',
-  identityPath: ['main', 'panel'],
-};
+import { frame, FrameInputEmbedAdapter, surface, surfaceChild, SurfaceInputEmbedAdapter } from '../src';
 
 describe('surface()', () => {
   it('wraps a raw Core child without inventing child dependencies', () => {
     const child = surfaceChild({ type: 'node', position: [0, 0], text: 'A' });
-    const contribution = SurfaceVanillaAdapter.lower({ padding: 4, child }, context);
+    const normalized = normalizeScene(scene({ children: [surface('panel', { padding: 4, child })] }), {
+      adapters: [SurfaceInputEmbedAdapter],
+    });
 
-    expect(contribution.node).toEqual(
+    expect(normalized.ir.children[0]).toEqual(
       createSurface({
         namespace: 'standard',
         type: 'surface',
@@ -25,7 +20,7 @@ describe('surface()', () => {
         child: { type: 'node', position: [0, 0], text: 'A' },
       }),
     );
-    expect(contribution.providerDependencies).toEqual({
+    expect(normalized.contributions[0]).toEqual({
       roots: [SurfaceProvider.key],
       providers: [SurfaceProvider],
     });
@@ -33,29 +28,20 @@ describe('surface()', () => {
 
   it('preserves explicit nested Tier-2 dependencies after Surface in authored order', () => {
     const childEmbed = frame('card', { children: [{ type: 'node', position: [0, 0], text: 'A' }] });
-    const childContribution = FrameVanillaAdapter.lower(childEmbed.props, {
-      id: childEmbed.id,
-      kind: childEmbed.kind,
-      layerId: 'main',
-      identityPath: ['main', childEmbed.id],
+    const normalized = normalizeScene(scene({ children: [surface('panel', { child: surfaceChild(childEmbed) })] }), {
+      adapters: [SurfaceInputEmbedAdapter, FrameInputEmbedAdapter],
     });
-    const contribution = SurfaceVanillaAdapter.lower(
-      { child: surfaceChild(childContribution.node, childContribution.providerDependencies) },
-      context,
-    );
 
-    expect(contribution.providerDependencies.roots).toEqual([SurfaceProvider.key, FrameProvider.key]);
-    expect(contribution.providerDependencies.providers).toEqual([SurfaceProvider, FrameProvider]);
+    expect(normalized.contributions[0]?.roots).toEqual([SurfaceProvider.key, FrameProvider.key]);
+    expect(normalized.contributions[0]?.providers).toEqual([SurfaceProvider, FrameProvider]);
   });
 
   it('normalizes through the public Vanilla embed without leaking runtime child metadata into IR', () => {
-    const result = normalizeFigureSpec(
-      {
-        type: 'figure',
-        version: 1,
+    const result = normalizeScene(
+      scene({
         children: [surface('panel', { child: surfaceChild({ type: 'node', position: [0, 0] }) })],
-      },
-      { adapters: [SurfaceVanillaAdapter] },
+      }),
+      { adapters: [SurfaceInputEmbedAdapter] },
     );
 
     expect(result.ir.children[0]).toEqual(

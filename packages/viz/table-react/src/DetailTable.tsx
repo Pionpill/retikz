@@ -2,10 +2,11 @@ import type { ExternalRow } from '@retikz/data';
 import type { DetailTableSpecInput, TableDetailColumnInput } from '@retikz/table';
 import type { FC, ReactNode } from 'react';
 
-import type { EmbeddableTableComponent, TableCommonProps } from './Table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 
-import { detailTableEmbeddableAdapter } from './embedded-runtime';
-import { ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
+import type { InputEmbeddableTableComponent, TableCommonProps } from './Table';
+
+import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
 type DetailTableRootProps = TableCommonProps &
@@ -36,7 +37,9 @@ const DetailTableComponent: FC<DetailTableProps> = props => (
 );
 
 /** 从 records 与 columns 构造并渲染 detail Table */
-export const DetailTable = DetailTableComponent as EmbeddableTableComponent<DetailTableProps>;
+export const DetailTable = DetailTableComponent as InputEmbeddableTableComponent<DetailTableProps>;
 DetailTable.displayName = 'DetailTable';
 DetailTable.isTier2Embeddable = true;
-DetailTable.embeddableAdapter = detailTableEmbeddableAdapter;
+DetailTable.inputEmbedAdapter = TableInputEmbedAdapter;
+DetailTable.createInputEmbedProps = props =>
+  createReactTableInput(ReactTableRuntimeKind.Detail, props as DetailTableProps);

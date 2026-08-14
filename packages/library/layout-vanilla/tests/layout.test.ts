@@ -10,50 +10,43 @@ import {
 } from '@retikz/layout';
 import {
   flexLayout,
-  FlexLayoutVanillaAdapter,
+  FlexLayoutInputEmbedAdapter,
   gridLayout,
-  GridLayoutVanillaAdapter,
-  LayoutVanillaAdapters,
+  GridLayoutInputEmbedAdapter,
+  LayoutInputEmbedAdapters,
   overlayLayout,
-  OverlayLayoutVanillaAdapter,
+  OverlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
-import { normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
+import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 const nestedGrid = createGridLayout({ columns: [{ kind: 'fixed', value: 10 }] });
 
-/** 构造 adapter identity 之外不参与 Layout lowering 的最小宿主上下文 */
-const contextFor = (kind: string) => ({
-  id: kind,
-  kind,
-  layerId: 'root',
-  identityPath: ['root', kind],
-});
-
 describe('Layout Vanilla family', () => {
   it('roots only the authored capability and publishes one stable exact-key provider', () => {
-    const flex = FlexLayoutVanillaAdapter.lower({}, contextFor('layout.flexLayout'));
-    const grid = GridLayoutVanillaAdapter.lower(
-      { columns: [{ kind: 'fixed', value: 10 }] },
-      contextFor('layout.gridLayout'),
+    const normalized = normalizeScene(
+      scene({
+        children: [
+          flexLayout('flex', {}),
+          gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] }),
+          overlayLayout('overlay', {}),
+        ],
+      }),
+      { adapters: LayoutInputEmbedAdapters },
     );
-    const overlay = OverlayLayoutVanillaAdapter.lower({}, contextFor('layout.overlayLayout'));
 
-    expect(flex.providerDependencies).toEqual({ roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] });
-    expect(grid.providerDependencies).toEqual({ roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] });
-    expect(overlay.providerDependencies).toEqual({
-      roots: [OverlayLayoutProvider.key],
-      providers: [OverlayLayoutProvider],
-    });
+    expect(normalized.contributions).toEqual([
+      { roots: [FlexLayoutProvider.key], providers: [FlexLayoutProvider] },
+      { roots: [GridLayoutProvider.key], providers: [GridLayoutProvider] },
+      { roots: [OverlayLayoutProvider.key], providers: [OverlayLayoutProvider] },
+    ]);
     expect(FlexLayoutProvider.makeDefinition({})).toBe(FlexLayoutDefinition);
     expect(GridLayoutProvider.makeDefinition({})).toBe(GridLayoutDefinition);
     expect(OverlayLayoutProvider.makeDefinition({})).toBe(OverlayLayoutDefinition);
   });
 
   it('builds exact embed specs and normalizes the family definitions once', () => {
-    const figure = {
-      type: 'figure' as const,
-      version: 1 as const,
+    const input = scene({
       children: [
         flexLayout('flex', {
           gap: { column: 4, row: 8 },
@@ -62,31 +55,31 @@ describe('Layout Vanilla family', () => {
         gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] }),
         overlayLayout('overlay', {}),
       ],
-    };
-    const normalized = normalizeFigureSpec(figure, { adapters: LayoutVanillaAdapters });
+    });
+    const normalized = normalizeScene(input, { adapters: LayoutInputEmbedAdapters });
 
-    expect(figure.children.map(child => child.kind)).toEqual([
+    expect(input.children.map(child => ('kind' in child ? child.kind : undefined))).toEqual([
       'layout.flexLayout',
       'layout.gridLayout',
       'layout.overlayLayout',
     ]);
     expect(normalized.ir.children.map(child => child.type)).toEqual(['flexLayout', 'gridLayout', 'overlayLayout']);
     expect(normalized.ir.children[0]).toMatchObject({ gap: { column: 4, row: 8 } });
-    expect(normalized.providerDefinitions.composites).toEqual([
-      FlexLayoutDefinition,
-      GridLayoutDefinition,
-      OverlayLayoutDefinition,
+    expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([
+      FlexLayoutProvider,
+      GridLayoutProvider,
+      OverlayLayoutProvider,
     ]);
   });
 
   it('exports a shallow-frozen family adapter array in container order', () => {
-    expect(LayoutVanillaAdapters).toEqual([
-      FlexLayoutVanillaAdapter,
-      GridLayoutVanillaAdapter,
-      OverlayLayoutVanillaAdapter,
+    expect(LayoutInputEmbedAdapters).toEqual([
+      FlexLayoutInputEmbedAdapter,
+      GridLayoutInputEmbedAdapter,
+      OverlayLayoutInputEmbedAdapter,
     ]);
-    expect(Object.isFrozen(LayoutVanillaAdapters)).toBe(true);
-    expect(Object.isFrozen(FlexLayoutVanillaAdapter)).toBe(false);
+    expect(Object.isFrozen(LayoutInputEmbedAdapters)).toBe(true);
+    expect(Object.isFrozen(FlexLayoutInputEmbedAdapter)).toBe(false);
   });
 
   it('rejects a Vanilla embed spec where canonical nested IR is required', () => {
@@ -107,9 +100,7 @@ describe('Layout Vanilla family', () => {
   });
 
   it('normalizes nested canonical layouts for SVG SSR without DOM state', () => {
-    const figure = {
-      type: 'figure' as const,
-      version: 1 as const,
+    const input = scene({
       children: [
         flexLayout('outer', {
           children: [
@@ -121,10 +112,9 @@ describe('Layout Vanilla family', () => {
           ],
         }),
       ],
-    };
-    const normalized = normalizeFigureSpec(figure, {
-      adapters: LayoutVanillaAdapters,
-      composites: [GridLayoutDefinition],
+    });
+    const normalized = normalizeScene(input, {
+      adapters: LayoutInputEmbedAdapters,
     });
 
     expect(normalized.ir.children[0]).toMatchObject({
@@ -138,12 +128,41 @@ describe('Layout Vanilla family', () => {
         },
       ],
     });
-    expect(normalized.providerDefinitions.composites).toEqual([FlexLayoutDefinition, GridLayoutDefinition]);
+    expect(normalized.contributions.flatMap(contribution => contribution.providers)).toEqual([FlexLayoutProvider]);
     expect(
-      renderToSvgString(figure, {
-        adapters: LayoutVanillaAdapters,
+      renderToSvgString(input, {
+        adapters: LayoutInputEmbedAdapters,
         compile: { composites: [GridLayoutDefinition] },
       }),
     ).toMatch(/^<svg/);
+  });
+
+  it('forwards nested Layout dependencies through Input items without React participation', () => {
+    const nestedGridEmbed = gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] });
+    const input = scene({
+      children: [
+        flexLayout('outer', {
+          children: [
+            {
+              kind: LayoutItemKind.Flex,
+              key: 'grid',
+              child: nestedGridEmbed,
+            },
+          ],
+        }),
+      ],
+    });
+
+    const normalized = normalizeScene(input, { adapters: LayoutInputEmbedAdapters });
+
+    expect(normalized.ir.children[0]).toMatchObject({
+      namespace: 'layout',
+      type: 'flexLayout',
+      children: [{ kind: LayoutItemKind.Flex, key: 'grid', child: { namespace: 'layout', type: 'gridLayout' } }],
+    });
+    expect(normalized.contributions[0]).toEqual({
+      roots: [FlexLayoutProvider.key, GridLayoutProvider.key],
+      providers: [FlexLayoutProvider, GridLayoutProvider],
+    });
   });
 });

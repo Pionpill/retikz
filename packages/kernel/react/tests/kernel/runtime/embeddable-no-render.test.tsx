@@ -1,4 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
@@ -7,15 +8,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { EmbeddableTier2Adapter } from '../../../src';
-
 import { collectHydrationHandlers } from '../../../src';
 import { Layout } from '../../../src/kernel';
-import { buildIRWithContributions } from '../../../src/kernel/adapter';
+import { createInputScene } from '../../../src/kernel/adapter/input-scene';
 
 /**
  * 端到端回归护栏：可嵌入 Tier2 子组件的函数体在静态遍历期间「绝不被调用 / 渲染」
- * @description 该特性存在的根因 bug：可嵌入组件曾在静态遍历（buildIR / collectHydrationHandlers）期间被同步
+ * @description 该特性存在的根因 bug：可嵌入组件曾在静态遍历（InputScene / collectHydrationHandlers）期间被同步
  *   CALL，触发其 React hooks（useId/useMemo）在 React render 之外执行，污染宿主 hook 顺序——
  *   重渲染 / i18n 语言切换时崩溃。本文件用「函数体一旦执行即抛」的 fixture 钉死两条遍历链与重渲染路径。
  *
@@ -31,7 +30,7 @@ type FixtureProps = { id: string; data: unknown };
 /** 可嵌入 fixture 组件类型：函数组件 + 可嵌入静态标记 */
 type EmbeddableFixture = FC<FixtureProps> & {
   isTier2Embeddable?: boolean;
-  embeddableAdapter?: EmbeddableTier2Adapter;
+  inputEmbedAdapter?: InputEmbedAdapter<FixtureProps>;
 };
 
 /**
@@ -63,9 +62,9 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
   const { namespace = 'demo', displayName = 'ThrowingPanel' } = options;
   const panelComposite = makePanelComposite(namespace);
   const makePanelDefinition = () => panelComposite;
-  const adapter: EmbeddableTier2Adapter<FixtureProps> = {
-    displayName,
-    contribute: props => ({
+  const adapter: InputEmbedAdapter<FixtureProps> = {
+    kind: displayName,
+    lower: props => ({
       node: { namespace, type: 'panel', panelId: props.id },
       providerDependencies: {
         roots: [{ capability: 'composite', namespace, type: 'panel' }],
@@ -85,7 +84,7 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
   };
   Fixture.displayName = displayName;
   Fixture.isTier2Embeddable = true;
-  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+  Fixture.inputEmbedAdapter = adapter;
   return Fixture;
 };
 
@@ -138,17 +137,19 @@ describe('可嵌入 Tier2 回归护栏：函数体绝不被静态遍历调用 / 
     expect(second).toContain('data-host-label="initial"');
   });
 
-  it('两条遍历链都 hook-free：buildIRWithContributions 与 collectHydrationHandlers 直接喂抛错可嵌入元素都不抛', () => {
+  it('两条遍历链都 hook-free：createInputScene 与 collectHydrationHandlers 直接喂抛错可嵌入元素都不抛', () => {
     const Throwing = makeThrowingFixture();
     const element = <Throwing id="probe" data={{ v: 2 }} />;
 
-    expect(() => buildIRWithContributions(element)).not.toThrow();
+    expect(() => createInputScene(element)).not.toThrow();
     expect(() => collectHydrationHandlers(element)).not.toThrow();
 
-    // 再钉一遍：buildIRWithContributions 确实静态产出了该可嵌入的贡献（adapter 被读、函数体没被调）
-    const { contributions } = buildIRWithContributions(element);
-    expect(contributions).toHaveLength(1);
-    expect(contributions[0]?.roots[0]).toEqual({ capability: 'composite', namespace: 'demo', type: 'panel' });
+    // React 只收集 Vanilla adapter，领域贡献由 Vanilla normalize / processing 统一消费
+    const input = createInputScene(element);
+    expect(input.adapters).toHaveLength(1);
+    const children = input.scene.children;
+    if (children === undefined) throw new Error('expected direct InputScene children');
+    expect(children[0]).toMatchObject({ type: 'embed', id: 'probe' });
   });
 
   it('模拟语言切换：同一 <Layout> 子树以变更后的无关 prop（locale 文案）重渲染，仍不抛、输出稳定', () => {

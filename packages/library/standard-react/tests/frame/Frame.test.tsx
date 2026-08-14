@@ -1,21 +1,42 @@
-import { buildIRWithContributions, convertReactNodeToIR, Node, Path, Step } from '@retikz/react';
+import { createInputScene, Node, Path, Step } from '@retikz/react';
 import { AxesProvider, createFrame, FrameProvider, GridProvider } from '@retikz/standard';
+import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
+
+import type { FrameProps } from '../../src';
 
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '../../src';
 
+/** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
+const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
+  const input = createInputScene(children);
+  return normalizeScene(input.scene, { adapters: input.adapters });
+};
+
+/** 以 React 真实 authoring 路径归一化一个 Frame */
+const contribute = ({ children, ...props }: FrameProps) => {
+  const normalized = normalizeReactInput(<Frame {...props}>{children}</Frame>);
+  return {
+    node: normalized.ir.children[0],
+    providerDependencies: normalized.contributions[0],
+  };
+};
+
 describe('<Frame>', () => {
   it('keeps root Scope fields separate from the nested border Path fields', () => {
-    const contribution = Frame.embeddableAdapter.contribute({
-      id: 'root/frame',
-      stroke: '#0f172a',
-      meta: { source: 'react' },
-      border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 },
-      children: <Node position={[0, 0]} />,
-    });
+    const result = normalizeReactInput(
+      <Frame
+        id="root"
+        stroke="#0f172a"
+        meta={{ source: 'react' }}
+        border={{ style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 }}
+      >
+        <Node position={[0, 0]} />
+      </Frame>,
+    );
 
-    expect(contribution.node).toMatchObject({
-      id: 'root/frame',
+    expect(result.ir.children[0]).toMatchObject({
+      id: 'root',
       stroke: '#0f172a',
       meta: { source: 'react' },
       border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 },
@@ -38,8 +59,8 @@ describe('<Frame>', () => {
         </>
       ),
     };
-    const first = Frame.embeddableAdapter.contribute(props);
-    const second = Frame.embeddableAdapter.contribute(props);
+    const first = contribute(props);
+    const second = contribute(props);
 
     expect(first.node).toEqual(
       createFrame({
@@ -67,7 +88,7 @@ describe('<Frame>', () => {
         ],
       },
     ];
-    const contribution = Frame.embeddableAdapter.contribute({
+    const contribution = contribute({
       id: 'styled/frame',
       children: (
         <>
@@ -103,7 +124,7 @@ describe('<Frame>', () => {
 
   it('fails loudly for duplicate parts, unsupported body children, and standalone parts', () => {
     expect(() =>
-      Frame.embeddableAdapter.contribute({
+      contribute({
         id: 'duplicate/frame',
         children: (
           <>
@@ -116,7 +137,7 @@ describe('<Frame>', () => {
     ).toThrow(/one FrameTitle/i);
 
     expect(() =>
-      Frame.embeddableAdapter.contribute({
+      contribute({
         id: 'invalid/frame',
         children: (
           <Path>
@@ -127,8 +148,8 @@ describe('<Frame>', () => {
       }),
     ).toThrow(/only accepts direct Node children/i);
 
-    expect(() => convertReactNodeToIR(<FrameTitle>Standalone</FrameTitle>)).toThrow(/direct child of Frame/i);
-    expect(() => convertReactNodeToIR(<FrameDescription>Standalone</FrameDescription>)).toThrow(
+    expect(() => normalizeReactInput(<FrameTitle>Standalone</FrameTitle>)).toThrow(/direct child of Frame/i);
+    expect(() => normalizeReactInput(<FrameDescription>Standalone</FrameDescription>)).toThrow(
       /direct child of Frame/i,
     );
   });
@@ -140,7 +161,7 @@ describe('<Frame>', () => {
     };
 
     expect(() =>
-      Frame.embeddableAdapter.contribute({
+      contribute({
         id: 'invalid/frame',
         children: <Node position={[0, 0]} />,
         ...objectHeaderProps,
@@ -149,7 +170,7 @@ describe('<Frame>', () => {
   });
 
   it('coexists with Grid and Axes under distinct contribution namespaces', () => {
-    const result = buildIRWithContributions(
+    const result = normalizeReactInput(
       <>
         <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         <Axes x={{ extent: 20 }} y={{ extent: 20 }} />
@@ -166,5 +187,6 @@ describe('<Frame>', () => {
       AxesProvider.key,
       FrameProvider.key,
     ]);
+    expect(result.ir.children[2]).toMatchObject({ id: 'group/frame' });
   });
 });

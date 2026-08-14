@@ -31,12 +31,12 @@ import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
 </Layout>
 ```
 
-Use `createOverlayLayout()` with `OverlayLayoutDefinition` for JSON/IR, or `overlayLayout()` with `OverlayLayoutVanillaAdapter` for Vanilla.
+Use `createOverlayLayout()` with `OverlayLayoutDefinition` for JSON/IR, or `overlayLayout()` with `OverlayLayoutInputEmbedAdapter` for Vanilla.
 
 | Scenario         | Public entry                                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------------------- |
 | React            | `OverlayLayout`, `LayoutItem` (`@retikz/layout-react`)                                                        |
-| Vanilla          | `overlayLayout`, `OverlayLayoutVanillaAdapter` (`@retikz/layout-vanilla`)                                     |
+| Vanilla          | `overlayLayout`, `OverlayLayoutInputEmbedAdapter` (`@retikz/layout-vanilla`)                                  |
 | Optional inspect | `InspectOverlayLayout` (`@retikz/layout-react/inspect`), `inspectOverlayLayout` (Vanilla)                     |
 | IR / persistence | `OverlayLayoutSchema`, `createOverlayLayout`, `IROverlayLayout`, `OverlayLayoutDefinition` (`@retikz/layout`) |
 

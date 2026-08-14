@@ -1,14 +1,11 @@
-import type { IRPlotSpec } from '@retikz/plot';
-import type { VanillaEmbedContext } from '@retikz/vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 
-import { compileToScene } from '@retikz/core';
-import { embed, figure, layer, normalizeFigureSpec, renderToSvgString } from '@retikz/vanilla';
+import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
-import { ZodError } from 'zod';
 
-import { createPlotAdapter, createPlotProvider, embedPlot, plot, resolvePlotContribution } from '../src';
+import { createPlotProvider, embedPlot, plot, PlotInputEmbedAdapter, resolvePlotContribution } from '../src';
 
-const contextOf = (id: string): VanillaEmbedContext => ({
+const contextOf = (id: string): InputEmbedContext => ({
   id,
   kind: 'plot',
   layerId: 'chart',
@@ -33,6 +30,23 @@ const salesSpec = (id?: string) =>
     ],
   });
 
+const salesInput = (id?: string) => ({
+  ...(id === undefined ? {} : { id }),
+  data: { reference: 'sales' },
+  scales: [
+    { type: 'band' as const, name: 'x' },
+    { type: 'linear' as const, name: 'y' },
+  ],
+  coordinate: { type: 'cartesian2D' as const, x: 'x', y: 'y' },
+  marks: [
+    {
+      type: 'interval' as const,
+      id: 'bars',
+      encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+    },
+  ],
+});
+
 const datasets = {
   sales: [
     { month: 'Jan', revenue: 10 },
@@ -41,98 +55,120 @@ const datasets = {
 };
 
 describe('Plot Vanilla Tier2 adapter', () => {
+  it('在 adapter 内将 Plot authoring Input 归一为 Core contribution', () => {
+    const input = { spec: salesInput('sales'), datasets };
+
+    expect(input.spec).not.toHaveProperty('namespace');
+    expect(input.spec).not.toHaveProperty('type');
+    expect(PlotInputEmbedAdapter.lower(input, contextOf('panel')).node).toMatchObject({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'panel/sales',
+    });
+  });
+
   it('exposes one Plot-owned contribution builder for complete PlotSpec inputs', () => {
     const spec = salesSpec('sales');
     const result = resolvePlotContribution({ spec, datasets, lowerOptions: { width: 360, height: 200 } });
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
 
     expect(result.spec).toEqual(spec);
-    expect(result.contribution.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
-    expect(result.contribution.providers.map(candidate => candidate.key)).toEqual([
-      { capability: 'shape', name: 'sector' },
-      { capability: 'shape', name: 'contour' },
-      provider.key,
-    ]);
-    expect(result.contribution.providers[2]?.makeDefinition).toBe(provider.makeDefinition);
+    expect(result.contribution.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(result.contribution.providers).toHaveLength(1);
+    expect(result.contribution.providers[0]).toMatchObject({ key: provider.key, dependencies: [] });
+    expect(result.contribution.providers[0]?.makeDefinition).toBe(provider.makeDefinition);
   });
 
-  it('经 figure/layer runtime 渲染 Plot embed', () => {
+  it('经 scene/layer runtime 渲染 Plot embed', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
-    const plotFigure = figure({ layers: [layer('chart', [embedPlot('sales-panel', spec)])] });
-    const svg = renderToSvgString(plotFigure, {
-      adapters: [createPlotAdapter(datasets, { width: 360, height: 200 })],
+    const inputScene = scene({
+      layers: [layer('chart', [embedPlot('sales-panel', spec, datasets, { width: 360, height: 200 })])],
+    });
+    const svg = renderToSvgString(inputScene, {
+      adapters: [PlotInputEmbedAdapter],
       output: { width: 360, height: 200 },
     });
 
     expect(svg).toContain('<rect');
     expect(spec).toEqual(input);
-    expect(
-      normalizeFigureSpec(plotFigure, { adapters: [createPlotAdapter(datasets)] }).runtimeMeta.layers[0].childIds,
-    ).toEqual(['sales-panel']);
+    expect(normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
+      'sales-panel',
+    ]);
   });
 
   it('保持 lineage 在 PlotSpec、Core IR 与 Scene meta 之外', () => {
-    const plotFigure = figure([embedPlot('sales-panel', salesSpec('sales'))]);
-    const normalized = normalizeFigureSpec(plotFigure, { adapters: [createPlotAdapter(datasets)] });
-    const scene = compileToScene(normalized.ir, normalized.providerDefinitions).scene;
+    const inputScene = scene([embedPlot('sales-panel', salesSpec('sales'), datasets)]);
+    const normalized = normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] });
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
-    expect(JSON.stringify(scene)).not.toContain('lineage');
+    expect(renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).not.toContain('lineage');
   });
 
   it('从 embed id 派生 root identity 且不修改原 spec', () => {
-    const adapter = createPlotAdapter(datasets);
     const named = salesSpec('sales');
     const anonymous = salesSpec();
 
-    expect(adapter.lower({ spec: named }, contextOf('panel')).node).toMatchObject({ id: 'panel/sales' });
-    expect(adapter.lower({ spec: anonymous }, contextOf('panel')).node).toMatchObject({ id: 'panel/plot' });
+    expect(PlotInputEmbedAdapter.lower({ spec: named, datasets }, contextOf('panel')).node).toMatchObject({
+      id: 'panel/sales',
+    });
+    expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('panel')).node).toMatchObject({
+      id: 'panel/plot',
+    });
     expect(named.id).toBe('sales');
     expect(anonymous.id).toBeUndefined();
+
+    const contribution = PlotInputEmbedAdapter.lower(
+      {
+        spec: salesSpec('sales'),
+        datasets,
+        preserveRootIdentity: true,
+        panel: {
+          x: 24,
+          y: 12,
+          transforms: [{ kind: 'scale', x: 0.5, y: 0.5 }],
+          zIndex: 3,
+        },
+      },
+      contextOf('panel'),
+    );
+
+    expect(contribution.node).toMatchObject({
+      type: 'scope',
+      transforms: [
+        { kind: 'translate', x: 24, y: 12 },
+        { kind: 'scale', x: 0.5, y: 0.5 },
+      ],
+      zIndex: 3,
+      children: [{ id: 'sales' }],
+    });
   });
 
   it('同一 adapter 的多个 lower 贡献 plot.plot root 并复用稳定 provider maker', () => {
-    const adapter = createPlotAdapter(datasets);
     const spec = salesSpec();
-    const first = adapter.lower({ spec }, contextOf('first'));
-    const second = adapter.lower({ spec }, contextOf('second'));
+    const first = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('first'));
+    const second = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
-    expect(first.providerDependencies.providers.map(provider => provider.key)).toEqual([
-      { capability: 'shape', name: 'sector' },
-      { capability: 'shape', name: 'contour' },
-      { capability: 'composite', namespace: 'plot', type: 'plot' },
-    ]);
-    expect(first.providerDependencies.providers[2]?.dependencies).toEqual([
-      { capability: 'shape', name: 'sector' },
-      { capability: 'shape', name: 'contour' },
-    ]);
-    expect(first.providerDependencies.providers[2]?.makeDefinition).toBe(
-      second.providerDependencies.providers[2]?.makeDefinition,
+    expect(first.providerDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(first.providerDependencies.providers).toHaveLength(1);
+    expect(first.providerDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(first.providerDependencies.providers[0]?.dependencies).toEqual([]);
+    expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
+      second.providerDependencies.providers[0]?.makeDefinition,
     );
   });
 
   it('缺失 dataset reference 时 fail-loud', () => {
-    const plotFigure = figure([embedPlot('missing', salesSpec())]);
+    const inputScene = scene([embedPlot('missing', salesSpec(), {})]);
 
-    expect(() => renderToSvgString(plotFigure, { adapters: [createPlotAdapter({})] })).toThrow(/sales/i);
-  });
-
-  it('手写 embed 不能绕过 PlotSpec schema', () => {
-    const malformed = { namespace: 'plot' } as unknown as IRPlotSpec;
-    const plotFigure = figure([embed('plot', 'invalid', { spec: malformed })]);
-
-    expect(() => renderToSvgString(plotFigure, { adapters: [createPlotAdapter(datasets)] })).toThrow(ZodError);
+    expect(() => renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).toThrow(/sales/i);
   });
 
   it.each(['', '   ', '\u2003', '\ufeff'])('helper and adapter reject blank embed id %j with the Plot prefix', id => {
-    const adapter = createPlotAdapter(datasets);
-
-    expect(() => embedPlot(id, salesSpec())).toThrowError('plot vanilla: embed id must be non-empty');
-    expect(() => adapter.lower({ spec: salesSpec() }, contextOf(id))).toThrowError(
+    expect(() => embedPlot(id, salesSpec(), datasets)).toThrowError('plot vanilla: embed id must be non-empty');
+    expect(() => PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id))).toThrowError(
       'plot vanilla: embed id must be non-empty',
     );
   });

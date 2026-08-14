@@ -1,8 +1,11 @@
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import type { LegendInput } from '@retikz/standard';
+import type { InputLegend } from '@retikz/standard-vanilla';
 import type { FC, ReactNode } from 'react';
 
-import { createLegend, LegendContentKind, LegendProvider } from '@retikz/standard';
+import { withInputEmbedAdapters } from '@retikz/react';
+import { LegendContentKind } from '@retikz/standard';
+import { LegendInputEmbedAdapter } from '@retikz/standard-vanilla';
 
 import type { StandardEmbeddableComponent } from '../shared';
 
@@ -35,55 +38,60 @@ export type LegendRampFormProps = LegendSharedProps &
 /** React Legend 的两个显式无头 authoring form */
 export type LegendProps = LegendItemsFormProps | LegendRampFormProps;
 
-/** 将 items form 的提升字段与 marker tree 组装为 Standard LegendInput */
-const createItemsLegend = (props: LegendItemsFormProps) => {
+/** 将 items form 的提升字段与 marker tree 收集为 Standard Vanilla Input */
+const createItemsLegend = (props: LegendItemsFormProps, context: ReactInputEmbedContext) => {
   const { kind, children, direction, wrap, gap, sampleGap, sampleAlign, ...legend } = props;
-  const converted = convertLegendItemsChildren(children);
-  return createLegend({
-    ...legend,
-    ...(converted.title === undefined ? {} : { title: converted.title }),
-    content: {
-      kind,
-      items: converted.items,
-      ...(direction === undefined ? {} : { direction }),
-      ...(wrap === undefined ? {} : { wrap }),
-      ...(gap === undefined ? {} : { gap }),
-      ...(sampleGap === undefined ? {} : { sampleGap }),
-      ...(sampleAlign === undefined ? {} : { sampleAlign }),
-    },
-  });
+  const converted = convertLegendItemsChildren(children, context);
+  return {
+    input: {
+      ...legend,
+      ...(converted.value.title === undefined ? {} : { title: converted.value.title }),
+      content: {
+        kind,
+        items: converted.value.items,
+        ...(direction === undefined ? {} : { direction }),
+        ...(wrap === undefined ? {} : { wrap }),
+        ...(gap === undefined ? {} : { gap }),
+        ...(sampleGap === undefined ? {} : { sampleGap }),
+        ...(sampleAlign === undefined ? {} : { sampleAlign }),
+      },
+    } satisfies InputLegend,
+    adapters: converted.adapters,
+  };
 };
 
-/** 将 ramp form 的提升字段与 marker tree 组装为 Standard LegendInput */
-const createRampLegend = (props: LegendRampFormProps) => {
+/** 将 ramp form 的提升字段与 marker tree 收集为 Standard Vanilla Input */
+const createRampLegend = (props: LegendRampFormProps, context: ReactInputEmbedContext) => {
   const { kind, children, direction, sampleGap, ...legend } = props;
-  const converted = convertLegendRampChildren(children);
-  return createLegend({
-    ...legend,
-    ...(converted.title === undefined ? {} : { title: converted.title }),
-    content: {
-      kind,
-      sample: converted.sample,
-      ticks: converted.ticks,
-      ...(direction === undefined ? {} : { direction }),
-      ...(sampleGap === undefined ? {} : { sampleGap }),
-    },
-  });
+  const converted = convertLegendRampChildren(children, context);
+  return {
+    input: {
+      ...legend,
+      ...(converted.value.title === undefined ? {} : { title: converted.value.title }),
+      content: {
+        kind,
+        sample: converted.value.sample,
+        ticks: converted.value.ticks,
+        ...(direction === undefined ? {} : { direction }),
+        ...(sampleGap === undefined ? {} : { sampleGap }),
+      },
+    } satisfies InputLegend,
+    adapters: converted.adapters,
+  };
 };
 
-const legendEmbeddableAdapter: EmbeddableTier2Adapter<LegendProps> = {
-  displayName: 'Legend',
-  contribute: props => {
-    if ('content' in props || 'title' in props || !('kind' in props)) {
-      throw new Error(
-        'React Legend uses marker children with an explicit kind; content and title props are not supported.',
-      );
-    }
-    return {
-      node: props.kind === LegendContentKind.Items ? createItemsLegend(props) : createRampLegend(props),
-      providerDependencies: { roots: [LegendProvider.key], providers: [LegendProvider] },
-    };
-  },
+/** 将 Legend marker children 组装为 Standard Vanilla Input */
+const createLegendInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  if ('content' in props || 'title' in props || !('kind' in props)) {
+    throw new Error(
+      'React Legend uses marker children with an explicit kind; content and title props are not supported.',
+    );
+  }
+  const collected =
+    (props as LegendProps).kind === LegendContentKind.Items
+      ? createItemsLegend(props as LegendItemsFormProps, context)
+      : createRampLegend(props as LegendRampFormProps, context);
+  return withInputEmbedAdapters(collected.input, collected.adapters);
 };
 
 const LegendComponent: FC<LegendProps> = () => null;
@@ -93,4 +101,5 @@ export const Legend = LegendComponent as StandardEmbeddableComponent<LegendProps
 
 Legend.displayName = 'Legend';
 Legend.isTier2Embeddable = true;
-Legend.embeddableAdapter = legendEmbeddableAdapter;
+Legend.inputEmbedAdapter = LegendInputEmbedAdapter;
+Legend.createInputEmbedProps = createLegendInput;

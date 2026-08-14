@@ -16,14 +16,15 @@ Drawing Complete 不表示 core 内置所有 shape、diagram preset 或视觉效
 
 ## 2. 包角色与交界面
 
-| 角色           | 包                                  | 责任                                                                                   | 不拥有                                |
-| -------------- | ----------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------- |
-| 计算底座       | `@retikz/math`                      | 零依赖纯几何、向量、仿射、求交和曲线计算                                               | IR、Scene、layout 语义                |
-| 执行底座       | `@retikz/runtime`                   | identity、ownership、program、transaction、revision 与 trace；协调 Core 等领域 program | Core IR、Scene、几何、renderer        |
-| 主责包         | `@retikz/core`                      | Core IR、definition / registry、compile、Scene、Composite assembly 与 headless sidecar | DOM、renderer 实例、框架状态          |
-| Scene 执行包   | `@retikz/render`                    | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                      | 新图形 IR、上层领域语义               |
-| authoring 宿主 | `@retikz/react` / `@retikz/vanilla` | 构造 IR、注入 compile / runtime options、持有宿主生命周期并暴露等价入口                | 平行 IR、adapter 私有图形能力         |
-| 上层消费方     | plot / table / standard 等 Tier 2   | lowering 到 Core IR，复用 Core contract；按需把领域 program 装配到 `@retikz/runtime`   | Core 的通用图形、几何和 renderer 语义 |
+| 角色         | 包                                | 责任                                                                                                | 不拥有                                                               |
+| ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 计算底座     | `@retikz/math`                    | 零依赖纯几何、向量、仿射、求交和曲线计算                                                            | IR、Scene、layout 语义                                               |
+| 执行底座     | `@retikz/runtime`                 | identity、ownership、program、transaction、revision 与 trace；协调 Core 等领域 program              | Core IR、Scene、几何、renderer                                       |
+| 主责包       | `@retikz/core`                    | Core IR、definition / registry、compile、Scene、Composite assembly 与 headless sidecar              | DOM、renderer 实例、框架状态                                         |
+| Scene 执行包 | `@retikz/render`                  | 把 Scene 映射到 SVG / Canvas 等后端，报告能力降级                                                   | 新图形 IR、上层领域语义                                              |
+| API 基础包   | `@retikz/vanilla`                 | `InputXxx -> Core IR`、编译 / runtime 选项与 framework-neutral processing session / readonly result | Core 图形语义、DOM 与框架生命周期                                    |
+| 框架宿主     | `@retikz/react` 等                | 框架语法到 Vanilla Input、框架生命周期、订阅结果与宿主桥接                                          | Core IR builder、compile driver、Runtime session、平行 renderer 编排 |
+| 上层消费方   | plot / table / standard 等 Tier 2 | lowering 到 Core IR，复用 Core contract；按需把领域 program 装配到 `@retikz/runtime`                | Core 的通用图形、几何和 renderer 语义                                |
 
 完整闭环可以跨包，但语义所有权不能漂移。比如 renderer 负责实现 blur，不等于 blur 可以只存在于 SVG descriptor；React 负责 JSX authoring，不等于 shape extension 可以只存在于组件映射。
 
@@ -101,7 +102,7 @@ provider 可内置
 compile 可消费
 Scene / manifest 可承载
 render 可执行或诊断降级
-React / Vanilla 可等价暴露
+Vanilla 处理与各框架宿主桥接可等价暴露
 tests 可锁定
 docs / notes 可解释
 ```
@@ -123,7 +124,7 @@ docs / notes 可解释
 - Composite assembly 与跨 namespace 依赖如何闭环：
 - qualified spatial handle、owner path 与 Scene 边界是否适用：
 - renderer 实现或诊断降级：
-- React / Vanilla 如何等价暴露：
+- Vanilla authoring / processing 与 React 等框架宿主如何等价暴露：
 - Interaction Readiness 是否适用：
 - 不支持边界与本轮结论：
 ```
