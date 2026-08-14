@@ -157,7 +157,7 @@
     "baseUnits": "基础单元",
     "frameUnits": "复合单元",
     "logicFrame": "LogicFrame",
-    "logicUnit": "逻辑单元",
+    "logicNode": "逻辑节点",
     "connector": "连接器",
     "notationApiReference": "Notation API 参考",
     "releases": "发布",

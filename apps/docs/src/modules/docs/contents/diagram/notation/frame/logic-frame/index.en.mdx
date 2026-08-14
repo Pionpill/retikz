@@ -14,7 +14,7 @@ import { LogicFrame, LogicFrameHeader, LogicFrameSection } from '@retikz/notatio
 
 ```tsx
 <Layout width={360} height={180}>
-  <LogicFrame id="order" logicUnitVariant="secondary">
+  <LogicFrame id="order" logicNodeVariant="secondary">
     <LogicFrameHeader>
       <Node position={[0, 0]} text="Order" />
     </LogicFrameHeader>
@@ -30,7 +30,7 @@ import { LogicFrame, LogicFrameHeader, LogicFrameSection } from '@retikz/notatio
 
 Marker children must be direct children of `LogicFrame`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
 
-`logicUnitVariant` only provides a default for descendant logic units; it does not change the Frame shell or divider. A nested Frame shadows the outer scope, an explicit unit `variant` wins, and `variant="default"` resets inherited styling. See [Logic Unit](/diagram/notation/unit/logic-unit#logicunitvariant) for the five recipes
+`logicNodeVariant` only provides a default for descendant logic nodes; it does not change the Frame shell or divider. A nested Frame shadows the outer scope, an explicit unit `variant` wins, and `variant="default"` resets inherited styling. See [Logic Node](/diagram/notation/unit/logic-node#logicnodevariant) for the five recipes
 
 ## Examples
 
@@ -60,7 +60,7 @@ const embed = logicFrame('order', {
 const adapters = [LogicFrameInputEmbedAdapter];
 ```
 
-The same shell can contain Core children, Notation logic units, or other nested composites. Logic units retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
+The same shell can contain Core children, Notation logic nodes, or other nested composites. Logic nodes retain their own Notation IR, so direct IR containing a `Stage` must inject both `LogicFrameDefinition` and `StageDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
 
 <ComponentPreview
   files="process-recipe"
@@ -91,7 +91,7 @@ The shell and divider are emitted as Core visual primitives. Divider rectangles 
 | Field               | Type                                     | Default                                              | Description                                            |
 | ------------------- | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
 | `id`                | `string`                                 | —                                                    | Stable authored block identity used by targets         |
-| `logicUnitVariant?` | `LogicUnitVariantValue`                  | omitted                                              | Default variant for descendant logic units             |
+| `logicNodeVariant?` | `LogicNodeVariantValue`                  | omitted                                              | Default variant for descendant logic nodes             |
 | `header?`           | `{ child: IRChild; padding? }`           | omitted                                              | One optional header region                             |
 | `sections`          | `Array<{ key, role?, child, padding? }>` | `[]`                                                 | Ordered, uniquely keyed regions                        |
 | `size?`             | `LayoutSizeInput`                        | `{ x: { kind: 'content' }, y: { kind: 'content' } }` | Outer allocation policy                                |
@@ -104,6 +104,6 @@ Blank or duplicate section keys fail loudly. Connector accepts section target sy
 
 ## Related
 
-- [Logic Unit](/diagram/notation/unit/logic-unit): content-bearing logic nodes
+- [Logic Node](/diagram/notation/unit/logic-node): content-bearing logic nodes
 - [Connector](/diagram/notation/unit/connector): relationships between authored identities
 - [Layout containers](/library/layout): the generic layout family

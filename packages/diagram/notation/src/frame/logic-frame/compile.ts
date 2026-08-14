@@ -29,7 +29,7 @@ import {
 } from '@retikz/layout/compose';
 
 import type { LogicLayoutItemArtifact } from '../../shared';
-import type { LogicUnitVariantValue } from '../../unit';
+import type { LogicNodeVariantValue } from '../../unit';
 import type { IRLogicFrame, LogicFrameArtifact } from './types';
 
 import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
@@ -145,7 +145,7 @@ const regionsOf = (node: IRLogicFrame): ReadonlyArray<LogicFrameRegion> => [
   })),
 ];
 
-const logicUnitTypes = new Set<string>([
+const logicNodeTypes = new Set<string>([
   NotationElementType.Terminal,
   NotationElementType.Stage,
   NotationElementType.Decision,
@@ -154,25 +154,25 @@ const logicUnitTypes = new Set<string>([
 
 const isNotationComposite = (child: IRChild): child is IRComposite => 'namespace' in child;
 
-/** 把最近的 LogicFrame variant 作用域递归投影到可承载逻辑单元的子容器 */
-const applyLogicUnitVariant = (child: IRChild, inheritedVariant: LogicUnitVariantValue | undefined): IRChild => {
+/** 把最近的 LogicFrame variant 作用域递归投影到可承载逻辑节点的子容器 */
+const applyLogicNodeVariant = (child: IRChild, inheritedVariant: LogicNodeVariantValue | undefined): IRChild => {
   if (isNotationComposite(child)) {
     if (child.namespace === NOTATION_NAMESPACE && child.type === NotationElementType.LogicFrame) {
       const frame = child as unknown as IRLogicFrame;
-      const frameVariant = frame.logicUnitVariant ?? inheritedVariant;
+      const frameVariant = frame.logicNodeVariant ?? inheritedVariant;
       return {
         ...frame,
         ...(frame.header === undefined
           ? {}
-          : { header: { ...frame.header, child: applyLogicUnitVariant(frame.header.child, frameVariant) } }),
+          : { header: { ...frame.header, child: applyLogicNodeVariant(frame.header.child, frameVariant) } }),
         sections: frame.sections.map(section => ({
           ...section,
-          child: applyLogicUnitVariant(section.child, frameVariant),
+          child: applyLogicNodeVariant(section.child, frameVariant),
         })),
       };
     }
-    if (child.namespace === NOTATION_NAMESPACE && logicUnitTypes.has(child.type)) {
-      const unit = child as IRComposite & { variant?: LogicUnitVariantValue };
+    if (child.namespace === NOTATION_NAMESPACE && logicNodeTypes.has(child.type)) {
+      const unit = child as IRComposite & { variant?: LogicNodeVariantValue };
       return unit.variant === undefined && inheritedVariant !== undefined
         ? { ...unit, variant: inheritedVariant }
         : unit;
@@ -180,7 +180,7 @@ const applyLogicUnitVariant = (child: IRChild, inheritedVariant: LogicUnitVarian
     return child;
   }
   if (child.type === 'scope') {
-    return { ...child, children: child.children.map(nested => applyLogicUnitVariant(nested, inheritedVariant)) };
+    return { ...child, children: child.children.map(nested => applyLogicNodeVariant(nested, inheritedVariant)) };
   }
   return child;
 };
@@ -221,7 +221,7 @@ export const compileLogicFrame = (
 ): LayoutCompositeCompileResult<LogicFrameArtifact> => {
   const regions = regionsOf(node).map(region => ({
     ...region,
-    child: applyLogicUnitVariant(region.child, node.logicUnitVariant),
+    child: applyLogicNodeVariant(region.child, node.logicNodeVariant),
   }));
   const synthetic = syntheticFlexOf(node, regions);
   const flexResult = compileFlexLayout(synthetic, context);

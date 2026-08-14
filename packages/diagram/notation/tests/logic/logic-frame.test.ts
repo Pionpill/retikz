@@ -332,11 +332,11 @@ describe('LogicFrame layout and artifact contract', () => {
     expect(groupsOf(output.scene.primitives).some(group => group.id === 'nested-leaf')).toBe(true);
   });
 
-  it('inherits LogicUnitVariant through regions, nested frames, and Core scopes without sibling leakage', () => {
+  it('inherits LogicNodeVariant through regions, nested frames, and Core scopes without sibling leakage', () => {
     const inner = block({
       id: 'variant-inner',
       padding: 0,
-      logicUnitVariant: 'outline',
+      logicNodeVariant: 'outline',
       sections: [
         { key: 'inner-outline', child: Notation.createStage({ id: 'inner-outline', position: [0, 0] }) },
         {
@@ -348,7 +348,7 @@ describe('LogicFrame layout and artifact contract', () => {
     const outer = block({
       id: 'variant-outer',
       padding: 0,
-      logicUnitVariant: 'secondary',
+      logicNodeVariant: 'secondary',
       header: { child: Notation.createStage({ id: 'variant-header', position: [0, 0] }) },
       sections: [
         { key: 'outer-secondary', child: Notation.createStage({ id: 'outer-secondary', position: [0, 0] }) },

@@ -51,7 +51,7 @@ describe('SCHEMA_REGISTRY', () => {
         url: '/library/standard/composite/surface#surfaceschema',
       },
       LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
-      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/logic-unit' },
+      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/logic-node' },
       ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
     });
   });

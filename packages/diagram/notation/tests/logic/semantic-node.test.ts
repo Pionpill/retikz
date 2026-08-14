@@ -135,7 +135,7 @@ describe('Notation semantic unit Node lowering', () => {
     ['outline', ThemeMode.Dark, '#ffffff', { textColor: '#ffffff', stroke: '#999999', fill: 'none' }],
     ['vibrant', ThemeMode.Light, '#000000', { textColor: '#000000', stroke: '#000000', fill: '#d9d9d9' }],
     ['vibrant', ThemeMode.Dark, '#ffffff', { textColor: '#ffffff', stroke: '#ffffff', fill: '#262626' }],
-  ] as const)('applies the %s/%s LogicUnitVariant recipe', (variant, mode, color, expected) => {
+  ] as const)('applies the %s/%s LogicNodeVariant recipe', (variant, mode, color, expected) => {
     const units = [
       Notation.createTerminal({ id: 'terminal', position, variant }),
       Notation.createStage({ id: 'stage', position, variant }),

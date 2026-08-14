@@ -42,8 +42,8 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('StandardTerminal');
   });
 
-  it('exposes LogicUnitVariant and removes the old ThemeStyle ownership', () => {
-    expect(notationExports.LogicUnitVariant).toEqual({
+  it('exposes LogicNodeVariant and removes the old ThemeStyle ownership', () => {
+    expect(notationExports.LogicNodeVariant).toEqual({
       Default: 'default',
       Primary: 'primary',
       Secondary: 'secondary',
@@ -65,7 +65,7 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports.LogicNeutralStyleSchema).toBeDefined();
     expect(notationExports.LogicContentSizeDefault).toBeDefined();
     expect(notationExports).not.toHaveProperty('STANDARD_LAYOUT_NAMESPACE');
-    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceBaseShape');
+    expect(notationExports).not.toHaveProperty('LogicNodeAppearanceBaseShape');
     expect(notationExports).not.toHaveProperty('ConnectorAppearanceCanonicalSchema');
   });
 
@@ -81,7 +81,7 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('ConnectorAppearanceSchema');
     expect(notationExports).not.toHaveProperty('createCallout');
     expect(notationExports).not.toHaveProperty('CalloutDefinition');
-    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceSchema');
+    expect(notationExports).not.toHaveProperty('LogicNodeAppearanceSchema');
   });
 
   it('rejects the old Standard composite namespace', () => {

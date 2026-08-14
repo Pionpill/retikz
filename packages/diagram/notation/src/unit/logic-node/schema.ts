@@ -5,7 +5,7 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { z as zod } from 'zod';
 
 import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
-import { LogicUnitVariant } from './constants';
+import { LogicNodeVariant } from './constants';
 
 const SemanticNodeShape = NodeSchema.omit({ type: true, id: true, shape: true }).shape;
 
@@ -27,9 +27,9 @@ const createSemanticNodeSchema = <const TType extends string>(
       ...SemanticNodeShape,
       id: NonBlankStringSchema.describe('Stable authored semantic unit identity.'),
       variant: zod
-        .enum(LogicUnitVariant)
+        .enum(LogicNodeVariant)
         .optional()
-        .describe('Logic unit visual variant; omitted values use frame scope or default.'),
+        .describe('Logic node visual variant; omitted values use frame scope or default.'),
       ...(defaults.minimumSize === undefined
         ? {}
         : { minimumSize: NodeSchema.shape.minimumSize.default(defaults.minimumSize) }),

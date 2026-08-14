@@ -36,12 +36,12 @@ import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/notatio
 import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/frame/logic-frame/process-recipe.zh.demo';
 import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.en.demo';
 import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/connector/connector-routing.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/data-recipe.zh.demo';
-import LogicUnitEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/logic-unit.en.demo';
-import LogicUnitZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-unit/logic-unit.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-node/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-node/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-node/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-node/data-recipe.zh.demo';
+import LogicNodeEnDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-node/logic-node.en.demo';
+import LogicNodeZhDemo from '../../src/modules/docs/contents/diagram/notation/unit/logic-node/logic-node.zh.demo';
 
 const definitions = [TerminalDefinition, StageDefinition, ConnectorDefinition] as const;
 
@@ -137,8 +137,8 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   ) as CanvasRenderingContext2D;
 
 describe('Notation renderer integration', () => {
-  it('lowers the real logic-unit demo with explicit ordinary Core paints', () => {
-    const preview = buildPreviewIR(LogicUnitZhDemo);
+  it('lowers the real logic-node demo with explicit ordinary Core paints', () => {
+    const preview = buildPreviewIR(LogicNodeZhDemo);
     const lowered = lowerIRToKernel(
       { ...preview.ir, theme: { mode: ThemeMode.Light } },
       { composites: createNotationDefinitions() },
@@ -165,8 +165,8 @@ describe('Notation renderer integration', () => {
   it.each([
     ['logic block en', LogicFrameBasicEnDemo],
     ['logic block zh', LogicFrameBasicZhDemo],
-    ['logic unit en', LogicUnitEnDemo],
-    ['logic unit zh', LogicUnitZhDemo],
+    ['logic node en', LogicNodeEnDemo],
+    ['logic node zh', LogicNodeZhDemo],
     ['connector en', ConnectorRoutingEnDemo],
     ['connector zh', ConnectorRoutingZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],

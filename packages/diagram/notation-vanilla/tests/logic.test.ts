@@ -59,7 +59,7 @@ describe('@retikz/notation-vanilla package boundary', () => {
 });
 
 describe('Notation Vanilla semantic authoring', () => {
-  it('creates all six adapters and preserves LogicUnitVariant authoring fields', () => {
+  it('creates all six adapters and preserves LogicNodeVariant authoring fields', () => {
     const adapters = createNotationVanillaAdapters();
     const stageAdapter = adapters[2];
     const contribution = lower(

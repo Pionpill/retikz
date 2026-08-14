@@ -49,7 +49,7 @@ describe('Notation React semantic unit authoring', () => {
     expect(result.ir.children[0]).toMatchObject({ namespace: 'notation', type: 'logicFrame', id: 'order' });
   });
 
-  it('creates all six adapters and preserves LogicUnitVariant authoring fields', () => {
+  it('creates all six adapters and preserves LogicNodeVariant authoring fields', () => {
     const adapters = createNotationReactAdapters();
     const stageAdapter = adapters.find(adapter => adapter.kind === 'notation.stage');
 
@@ -82,7 +82,7 @@ describe('Notation React semantic unit authoring', () => {
     const result = normalizeReactInput(
       createElement(
         LogicFrame,
-        { id: 'variant-frame', logicUnitVariant: 'secondary' },
+        { id: 'variant-frame', logicNodeVariant: 'secondary' },
         createElement(LogicFrameSection, {
           sectionKey: 'body',
           children: createElement(Stage, { id: 'variant-stage', position: [0, 0], variant: 'primary' }),
@@ -94,7 +94,7 @@ describe('Notation React semantic unit authoring', () => {
       namespace: 'notation',
       type: 'logicFrame',
       id: 'variant-frame',
-      logicUnitVariant: 'secondary',
+      logicNodeVariant: 'secondary',
       sections: [
         {
           child: { namespace: 'notation', type: 'stage', id: 'variant-stage', variant: 'primary' },

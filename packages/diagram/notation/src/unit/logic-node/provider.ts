@@ -1,7 +1,7 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 
 import {
-  createLogicUnitDefinitions,
+  createLogicNodeDefinitions,
   DecisionDefinition,
   JunctionDefinition,
   StageDefinition,
@@ -13,9 +13,9 @@ const makeStageDefinition = () => StageDefinition;
 const makeDecisionDefinition = () => DecisionDefinition;
 const makeJunctionDefinition = () => JunctionDefinition;
 
-/** 创建四类逻辑单元 providers */
-export const createLogicUnitProviders = (): ReadonlyArray<CoreDependencyProvider> => {
-  const [terminal, stage, decision, junction] = createLogicUnitDefinitions();
+/** 创建四类逻辑节点 providers */
+export const createLogicNodeProviders = (): ReadonlyArray<CoreDependencyProvider> => {
+  const [terminal, stage, decision, junction] = createLogicNodeDefinitions();
   const definitions = [terminal, stage, decision, junction] as const;
   return Object.freeze(
     definitions.map(definition =>

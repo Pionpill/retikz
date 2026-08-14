@@ -10,7 +10,7 @@ The first release includes:
 - `Terminal`, `Stage`, `Decision`, and `Junction` as semantic IR that lowers one-to-one to same-id Core Nodes
 - `Connector` as semantic IR that reuses Core Path steps or Draw ways and lowers one-to-one to a same-id stroke Path
 - one explicit `Definition` for each element
-- five Notation-owned `LogicUnitVariant` values for logic-unit visual hierarchy
+- five Notation-owned `LogicNodeVariant` values for logic-node visual hierarchy
 
 ## Install
 
@@ -30,9 +30,9 @@ const edge = createConnector({ id: 'edge', way: [[0, 0], DrawWay.Hv, 'step'] });
 const composites = createNotationDefinitions();
 ```
 
-Omitted logic-unit `textColor`, `stroke`, and `fill` values are resolved during
+Omitted logic-node `textColor`, `stroke`, and `fill` values are resolved during
 lowering from `variant`. `default`, `primary`, `secondary`, `outline`, and
-`vibrant` are closed Notation-owned values; `LogicFrame.logicUnitVariant`
+`vibrant` are closed Notation-owned values; `LogicFrame.logicNodeVariant`
 provides an inherited default for descendants. Each unit's `color` is its
 primary color; omitting it uses black in Light mode or white in Dark mode.
 Fixed 10%, 15%, and 60% tints are precomposed against white in Light mode or
