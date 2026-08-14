@@ -8,7 +8,7 @@ const makeAdapter = (kind: string): InputEmbedAdapter => ({
   kind,
   lower: () => ({
     node: { type: 'node', id: 'n', position: [0, 0] },
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 });
 

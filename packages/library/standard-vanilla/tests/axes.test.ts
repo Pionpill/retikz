@@ -45,7 +45,7 @@ describe('axes()', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes', id: 'plane' });
     expect(contribution.node).toEqual(createAxes(input));
-    expect(contribution.compositeDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
     expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
   });
 

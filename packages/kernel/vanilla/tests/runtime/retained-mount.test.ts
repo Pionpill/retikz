@@ -1,4 +1,4 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
 import type {
   RenderFrameSnapshot,
@@ -150,11 +150,11 @@ const datasetAdapter: InputEmbedAdapter<{ color: string }> = {
   kind: 'fixture-dataset',
   lower: props => ({
     node: { namespace: 'fixture', type: 'datasetBox' },
-    compositeDependencies: {
-      roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
       providers: [
         {
-          key: { namespace: 'fixture', type: 'datasetBox' },
+          key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
           dependencies: [],
           datasets: { color: props.color },
           makeDefinition: makeDatasetDefinition,
@@ -392,11 +392,11 @@ describe('@retikz/vanilla retained mount', () => {
       kind: 'fixture-cached-dataset',
       lower: props => ({
         node: { namespace: 'fixture', type: 'datasetBox' },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'datasetBox' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
               dependencies: [],
               datasets: { color: props.color },
               makeDefinition,
@@ -566,11 +566,11 @@ describe('@retikz/vanilla retained mount', () => {
 
     adapter.lower = () => ({
       node: { namespace: 'fixture', type: 'datasetBox' },
-      compositeDependencies: {
-        roots: [{ namespace: 'fixture', type: 'datasetBox' }],
+      providerDependencies: {
+        roots: [{ capability: 'composite', namespace: 'fixture', type: 'datasetBox' }],
         providers: [
           {
-            key: { namespace: 'fixture', type: 'datasetBox' },
+            key: { capability: 'composite', namespace: 'fixture', type: 'datasetBox' },
             dependencies: [],
             datasets: { color: '#22c55e' },
             makeDefinition: makeDatasetDefinition,

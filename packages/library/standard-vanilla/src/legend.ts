@@ -36,8 +36,8 @@ export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
 };
 
 type CollectedLegendSlots = Readonly<{
-  roots: Array<InputEmbedContribution['compositeDependencies']['roots'][number]>;
-  providers: Array<InputEmbedContribution['compositeDependencies']['providers'][number]>;
+  roots: Array<InputEmbedContribution['providerDependencies']['roots'][number]>;
+  providers: Array<InputEmbedContribution['providerDependencies']['providers'][number]>;
   authoringSites: Array<NonNullable<InputEmbedContribution['authoringSites']>[number]>;
 }>;
 
@@ -54,8 +54,8 @@ const normalizeLegendSlot = (
   if (normalized.children.length !== 1) {
     throw new Error(`${label} must normalize to exactly one IRChild.`);
   }
-  collected.roots.push(...normalized.compositeDependencies.roots);
-  collected.providers.push(...normalized.compositeDependencies.providers);
+  collected.roots.push(...normalized.providerDependencies.roots);
+  collected.providers.push(...normalized.providerDependencies.providers);
   collected.authoringSites.push(...normalized.authoringSites);
   return normalized.children[0];
 };
@@ -111,7 +111,7 @@ export const LegendInputEmbedAdapter: InputEmbedAdapter<InputLegend> = {
         ...(title === undefined ? {} : { title }),
         content,
       }),
-      compositeDependencies: {
+      providerDependencies: {
         roots: [LegendProvider.key, ...collected.roots],
         providers: [LegendProvider, ...collected.providers],
       },

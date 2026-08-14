@@ -1,6 +1,6 @@
 import type {
   CompileObservationOwner,
-  CompositeDependencyContribution,
+  CoreProviderContribution,
   IRChild,
   IRTheme,
   ResolvedTheme,
@@ -26,7 +26,7 @@ export type NormalizedInputEmbedChildren = Readonly<{
   /** 已归一为 Core Source IR 的子节点 */
   children: ReadonlyArray<IRChild>;
   /** 子节点按声明顺序产生的 Composite dependency contribution */
-  compositeDependencies: CompositeDependencyContribution;
+  providerDependencies: CoreProviderContribution;
   /** 子节点按声明顺序产生的作者来源 */
   authoringSites: ReadonlyArray<InputEmbedAuthoringSite>;
 }>;
@@ -90,7 +90,7 @@ export type InputEmbedContribution = {
   /** 放入 Core Source IR 的 child */
   node: IRChild;
   /** 交由 Vanilla processing 统一消费的 Composite dependency contribution */
-  compositeDependencies: CompositeDependencyContribution;
+  providerDependencies: CoreProviderContribution;
   /** 贡献节点内部按声明顺序收集的运行时作者来源 */
   authoringSites?: ReadonlyArray<InputEmbedAuthoringSite>;
 };

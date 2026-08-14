@@ -18,9 +18,9 @@ export const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout> = {
     const normalized = normalizeLayoutItems<FlexLayoutItemInput>(children, context);
     return {
       node: createFlexLayout({ ...input, children: normalized.items }),
-      compositeDependencies: {
-        roots: [FlexLayoutProvider.key, ...normalized.compositeDependencies.roots],
-        providers: [FlexLayoutProvider, ...normalized.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [FlexLayoutProvider.key, ...normalized.providerDependencies.roots],
+        providers: [FlexLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };

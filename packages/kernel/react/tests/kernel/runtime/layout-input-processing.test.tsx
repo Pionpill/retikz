@@ -298,7 +298,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
         receiveContext(context);
         return {
           node: { type: 'node', id: 'theme-probe', position: [0, 0] },
-          compositeDependencies: { roots: [], providers: [] },
+          providerDependencies: { roots: [], providers: [] },
         };
       },
     };

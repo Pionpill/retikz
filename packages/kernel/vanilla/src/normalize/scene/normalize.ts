@@ -1,4 +1,4 @@
-import type { CompositeDependencyContribution, IRChild, IRScope } from '@retikz/core';
+import type { CoreProviderContribution, IRChild, IRScope } from '@retikz/core';
 
 import { CURRENT_IR_VERSION, PathKind } from '@retikz/core';
 
@@ -46,7 +46,7 @@ type NormalizeContext = {
   adapters: InputNormalizeOptions['adapters'];
   embedThemeContext?: InputEmbedThemeContext;
   resolveEmbedScopeTheme?: NonNullable<InputNormalizeOptions['embedThemeContext']>['resolveScope'];
-  contributions: Array<CompositeDependencyContribution>;
+  contributions: Array<CoreProviderContribution>;
   identityIndex: Map<string, Array<string>>;
   parentIndex: Map<string, string>;
   identityFrame: string;
@@ -192,7 +192,7 @@ const normalizeEmbeddedChildren = (
   context: NormalizeContext,
   reusedEmbedIdentity: ReusedEmbedIdentity,
 ): NormalizedInputEmbedChildren => {
-  const contributions: Array<CompositeDependencyContribution> = [];
+  const contributions: Array<CoreProviderContribution> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
   const nestedContext: NormalizeContext = {
     ...context,
@@ -220,7 +220,7 @@ const normalizeEmbeddedChildren = (
   }
   return Object.freeze({
     children: Object.freeze(normalizedChildren),
-    compositeDependencies: Object.freeze({
+    providerDependencies: Object.freeze({
       roots: Object.freeze(contributions.flatMap(contribution => contribution.roots)),
       providers: Object.freeze(contributions.flatMap(contribution => contribution.providers)),
     }),
@@ -261,7 +261,7 @@ const normalizeEmbed = (input: AnyInputEmbed, ctx: NormalizeContext): IRChild =>
       ),
   };
   const contribution = adapter.lower(input.props as never, context);
-  ctx.contributions.push(contribution.compositeDependencies);
+  ctx.contributions.push(contribution.providerDependencies);
   validateAdapterOutputIdentities(contribution.node, {
     ...ctx,
     embedId: input.id,
@@ -375,7 +375,7 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
     throw new Error('normalizeScene: scene cannot contain both children and layers');
   }
   const layers = asLayerStack(scene);
-  const contributions: Array<CompositeDependencyContribution> = [];
+  const contributions: Array<CoreProviderContribution> = [];
   const identityIndex = new Map<string, Array<string>>();
   const parentIndex = new Map<string, string>();
   const layerIds = new Set<string>();

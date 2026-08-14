@@ -39,9 +39,9 @@ export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
         id: id ?? `${context.id}/surface`,
         child: normalized.children[0],
       }),
-      compositeDependencies: {
-        roots: [SurfaceProvider.key, ...normalized.compositeDependencies.roots],
-        providers: [SurfaceProvider, ...normalized.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [SurfaceProvider.key, ...normalized.providerDependencies.roots],
+        providers: [SurfaceProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };

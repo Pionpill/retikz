@@ -33,7 +33,7 @@ Foreign.inputEmbedAdapter = {
   kind: 'test.foreign',
   lower: props => ({
     node: { type: 'node', id: (props as ForeignProps).id, position: [0, 0] },
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 };
 

@@ -94,8 +94,8 @@ type ConnectorAuthoringInput = Omit<Extract<ConnectorInput, { way: unknown }>, '
 export type InputConnector = OmitId<ConnectorInput> | ConnectorAuthoringInput;
 
 type CollectedInputDependencies = Readonly<{
-  roots: Array<InputEmbedContribution['compositeDependencies']['roots'][number]>;
-  providers: Array<InputEmbedContribution['compositeDependencies']['providers'][number]>;
+  roots: Array<InputEmbedContribution['providerDependencies']['roots'][number]>;
+  providers: Array<InputEmbedContribution['providerDependencies']['providers'][number]>;
   authoringSites: Array<NonNullable<InputEmbedContribution['authoringSites']>[number]>;
 }>;
 
@@ -112,8 +112,8 @@ const normalizeNotationChild = (
   if (normalized.children.length !== 1) {
     throw new Error(`${label} must normalize to exactly one Core child.`);
   }
-  collected.roots.push(...normalized.compositeDependencies.roots);
-  collected.providers.push(...normalized.compositeDependencies.providers);
+  collected.roots.push(...normalized.providerDependencies.roots);
+  collected.providers.push(...normalized.providerDependencies.providers);
   collected.authoringSites.push(...normalized.authoringSites);
   return normalized.children[0];
 };
@@ -200,7 +200,7 @@ export const LogicFrameInputEmbedAdapter: InputEmbedAdapter<InputLogicFrame> = {
           ? {}
           : { sections: sections.map(section => normalizeLogicFrameSection(section, context, collected)) }),
       }),
-      compositeDependencies: {
+      providerDependencies: {
         roots: [LogicFrameProvider.key, ...collected.roots],
         providers: [LogicFrameProvider, ...collected.providers],
       },
@@ -222,7 +222,7 @@ export const TerminalInputEmbedAdapter: InputEmbedAdapter<InputTerminal> = {
   kind: NotationTerminalEmbedKind,
   lower: (props, context) => ({
     node: createTerminal({ ...normalizeSemanticNode(props, context), id: context.id }),
-    compositeDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
+    providerDependencies: { roots: [TerminalProvider.key], providers: [TerminalProvider] },
   }),
 };
 
@@ -239,7 +239,7 @@ export const StageInputEmbedAdapter: InputEmbedAdapter<InputStage> = {
   kind: NotationStageEmbedKind,
   lower: (props, context) => ({
     node: createStage({ ...normalizeSemanticNode(props, context), id: context.id }),
-    compositeDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
+    providerDependencies: { roots: [StageProvider.key], providers: [StageProvider] },
   }),
 };
 
@@ -256,7 +256,7 @@ export const DecisionInputEmbedAdapter: InputEmbedAdapter<InputDecision> = {
   kind: NotationDecisionEmbedKind,
   lower: (props, context) => ({
     node: createDecision({ ...normalizeSemanticNode(props, context), id: context.id }),
-    compositeDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
+    providerDependencies: { roots: [DecisionProvider.key], providers: [DecisionProvider] },
   }),
 };
 
@@ -273,7 +273,7 @@ export const JunctionInputEmbedAdapter: InputEmbedAdapter<InputJunction> = {
   kind: NotationJunctionEmbedKind,
   lower: (props, context) => ({
     node: createJunction({ ...normalizeSemanticNode(props, context), id: context.id }),
-    compositeDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
+    providerDependencies: { roots: [JunctionProvider.key], providers: [JunctionProvider] },
   }),
 };
 
@@ -290,7 +290,7 @@ export const ConnectorInputEmbedAdapter: InputEmbedAdapter<InputConnector> = {
   kind: NotationConnectorEmbedKind,
   lower: (props, context) => ({
     node: createEmbeddedConnector(context.id, props, context),
-    compositeDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
+    providerDependencies: { roots: [ConnectorProvider.key], providers: [ConnectorProvider] },
   }),
 };
 

@@ -14,7 +14,7 @@ export const ChartInputEmbedAdapter: InputEmbedAdapter<InputChart> = {
     const result = chartContributionOf(normalizeChart(props));
     return {
       node: wrapChartPanel(result.chart, props.panel),
-      compositeDependencies: result.contribution,
+      providerDependencies: result.contribution,
     };
   },
 };

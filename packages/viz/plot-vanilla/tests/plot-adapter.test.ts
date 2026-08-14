@@ -151,12 +151,12 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.compositeDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(first.compositeDependencies.providers).toHaveLength(1);
-    expect(first.compositeDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
-    expect(first.compositeDependencies.providers[0]?.dependencies).toEqual([]);
-    expect(first.compositeDependencies.providers[0]?.makeDefinition).toBe(
-      second.compositeDependencies.providers[0]?.makeDefinition,
+    expect(first.providerDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
+    expect(first.providerDependencies.providers).toHaveLength(1);
+    expect(first.providerDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
+    expect(first.providerDependencies.providers[0]?.dependencies).toEqual([]);
+    expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
+      second.providerDependencies.providers[0]?.makeDefinition,
     );
   });
 

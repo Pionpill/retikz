@@ -1,6 +1,6 @@
 import type {
   CompileObservationOwner,
-  CompositeDependencyContribution,
+  CoreProviderContribution,
   IRChild,
   IRCoordinate,
   IRScene,
@@ -108,7 +108,7 @@ export type NormalizedInputScene = {
   /** 唯一的 Core Source IR */
   ir: IRScene;
   /** 原样收集，待 processing 唯一调用 Core resolver */
-  contributions: ReadonlyArray<CompositeDependencyContribution>;
+  contributions: ReadonlyArray<CoreProviderContribution>;
   /** 运行时缓存与失效边界 metadata */
   runtimeMeta: InputRuntimeMeta;
   /** 按作者顺序收集的 provenance */

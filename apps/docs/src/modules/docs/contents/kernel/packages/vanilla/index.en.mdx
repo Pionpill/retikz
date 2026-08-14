@@ -131,7 +131,7 @@ const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
   kind: 'badge',
   lower: (props, context) => ({
     node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
-    compositeDependencies: { roots: [], providers: [] },
+    providerDependencies: { roots: [], providers: [] },
   }),
 };
 

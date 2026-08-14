@@ -97,8 +97,8 @@ describe('<Chart>', () => {
         ],
       },
     });
-    expect(contribution.compositeDependencies.roots).toEqual([ChartProvider.key]);
-    expect(contribution.compositeDependencies.providers.map(provider => provider.key)).toMatchObject([
+    expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
+    expect(contribution.providerDependencies.providers.map(provider => provider.key)).toMatchObject([
       { namespace: 'standard', type: 'surface' },
       { namespace: 'layout', type: 'flexLayout' },
       PlotProviderKey,
@@ -164,7 +164,7 @@ describe('<Chart>', () => {
       plot: { data: { reference: 'chart.data' } },
       presentation: { children: [{ preset: 'title' }, { key: 'chart.plot' }] },
     });
-    expect(contribution.compositeDependencies.roots).toEqual([ChartProvider.key]);
+    expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
   });
 
   it('keeps Layout host props out of the typed Chart Vanilla input', () => {
@@ -199,7 +199,7 @@ describe('<Chart>', () => {
 
     expect(PointChartInputEmbedAdapter.lower(input, contextOf('income-life'))).toMatchObject({
       node: { type: 'scope', children: [{ namespace: 'chart', type: 'chart' }] },
-      compositeDependencies: { roots: [ChartProvider.key] },
+      providerDependencies: { roots: [ChartProvider.key] },
     });
   });
 

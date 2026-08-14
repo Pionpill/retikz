@@ -52,6 +52,6 @@ describe('surface()', () => {
         child: { type: 'node', position: [0, 0] },
       }),
     );
-    expect(JSON.stringify(result.ir)).not.toContain('compositeDependencies');
+    expect(JSON.stringify(result.ir)).not.toContain('providerDependencies');
   });
 });

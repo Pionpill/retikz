@@ -196,7 +196,7 @@ export const PointChartInputEmbedAdapter: InputEmbedAdapter<InputPointChart> = {
     );
     return {
       node: wrapChartPanel(result.chart, props.panel),
-      compositeDependencies: result.contribution,
+      providerDependencies: result.contribution,
     };
   },
 };

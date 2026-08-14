@@ -90,9 +90,9 @@ export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
         ...(title === undefined ? {} : { title }),
         ...(description === undefined ? {} : { description }),
       }),
-      compositeDependencies: {
-        roots: [FrameProvider.key, ...normalizedChildren.compositeDependencies.roots],
-        providers: [FrameProvider, ...normalizedChildren.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [FrameProvider.key, ...normalizedChildren.providerDependencies.roots],
+        providers: [FrameProvider, ...normalizedChildren.providerDependencies.providers],
       },
       ...(normalizedChildren.authoringSites.length === 0 ? {} : { authoringSites: normalizedChildren.authoringSites }),
     };

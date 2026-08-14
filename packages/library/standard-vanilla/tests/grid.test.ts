@@ -36,7 +36,7 @@ describe('grid()', () => {
 
     expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid', id: 'paper' });
     expect(contribution.node).toMatchObject({ namespace: 'standard', type: 'grid' });
-    expect(contribution.compositeDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
     expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
   });
 

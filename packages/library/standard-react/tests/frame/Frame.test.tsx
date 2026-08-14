@@ -18,7 +18,7 @@ const contribute = ({ children, ...props }: FrameProps) => {
   const normalized = normalizeReactInput(<Frame {...props}>{children}</Frame>);
   return {
     node: normalized.ir.children[0],
-    compositeDependencies: normalized.contributions[0],
+    providerDependencies: normalized.contributions[0],
   };
 };
 

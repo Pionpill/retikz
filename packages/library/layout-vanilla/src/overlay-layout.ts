@@ -18,9 +18,9 @@ export const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayou
     const normalized = normalizeLayoutItems<OverlayLayoutItemInput>(children, context);
     return {
       node: createOverlayLayout({ ...input, children: normalized.items }),
-      compositeDependencies: {
-        roots: [OverlayLayoutProvider.key, ...normalized.compositeDependencies.roots],
-        providers: [OverlayLayoutProvider, ...normalized.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [OverlayLayoutProvider.key, ...normalized.providerDependencies.roots],
+        providers: [OverlayLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };

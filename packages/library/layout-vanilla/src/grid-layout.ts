@@ -18,9 +18,9 @@ export const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout> = {
     const normalized = normalizeLayoutItems<GridLayoutItemInput>(children, context);
     return {
       node: createGridLayout({ ...input, children: normalized.items }),
-      compositeDependencies: {
-        roots: [GridLayoutProvider.key, ...normalized.compositeDependencies.roots],
-        providers: [GridLayoutProvider, ...normalized.compositeDependencies.providers],
+      providerDependencies: {
+        roots: [GridLayoutProvider.key, ...normalized.providerDependencies.roots],
+        providers: [GridLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
     };

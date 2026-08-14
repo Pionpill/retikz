@@ -66,11 +66,11 @@ const makeThrowingFixture = (options: { namespace?: string; displayName?: string
     kind: displayName,
     lower: props => ({
       node: { namespace, type: 'panel', panelId: props.id },
-      compositeDependencies: {
-        roots: [{ namespace, type: 'panel' }],
+      providerDependencies: {
+        roots: [{ capability: 'composite', namespace, type: 'panel' }],
         providers: [
           {
-            key: { namespace, type: 'panel' },
+            key: { capability: 'composite', namespace, type: 'panel' },
             dependencies: [],
             datasets: { [props.id]: props.data },
             makeDefinition: makePanelDefinition,

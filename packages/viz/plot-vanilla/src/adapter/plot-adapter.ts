@@ -1,4 +1,4 @@
-import type { CompositeDependencyContribution, CompositeDependencyProvider } from '@retikz/core';
+import type { CoreProviderContribution, CoreDependencyProvider } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
@@ -46,14 +46,14 @@ export type ResolvedPlotContribution = Readonly<{
   /** 已类型化的完整 Plot Source IR */
   spec: IRPlotSpec;
   /** 只包含 `plot.plot` 的 provider contribution */
-  contribution: CompositeDependencyContribution;
+  contribution: CoreProviderContribution;
 }>;
 
 /** 创建一个共享 datasets 与 lowering options 的 Plot dependency provider */
 export const createPlotProvider = (input: {
   datasets: ExternalDatasets;
   lowerOptions?: LowerPlotsOptions;
-}): CompositeDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
+}): CoreDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
 
 /** 将完整 PlotSpec 归一为 Plot-owned dependency contribution */
 export const resolvePlotContribution = (input: PlotContributionInput): ResolvedPlotContribution => {
@@ -69,12 +69,10 @@ export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
     const spec = normalizePlot(props.spec);
     const provider = createPlotProvider({ datasets: props.datasets, lowerOptions: props.lowerOptions });
     const node =
-      props.preserveRootIdentity === true
-        ? spec
-        : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };
+      props.preserveRootIdentity === true ? spec : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };
     return {
       node: wrapPlotPanel(node, props.panel),
-      compositeDependencies: { roots: [provider.key], providers: [provider] },
+      providerDependencies: { roots: [provider.key], providers: [provider] },
     };
   },
 };

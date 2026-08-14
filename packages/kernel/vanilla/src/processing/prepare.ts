@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, CompileOptions } from '@retikz/core';
 
 import {
   DEFAULT_RESOLVED_THEME,
-  resolveCompositeDependencies,
+  resolveCoreProviderDependencies,
   resolveTheme,
   resolveThemeStyleRegistry,
 } from '@retikz/core';
@@ -40,12 +40,26 @@ const createInputEmbedThemeContextResolver = (
 /** 合并调用方 compile 选项与唯一的 Composite resolver 输出 */
 const resolveCoreOptions = (
   compile: CompileOptions | undefined,
-  contributions: Parameters<typeof resolveCompositeDependencies>[0]['contributions'],
-): CompileOptions<ReadonlyArray<AnyCompositeDefinition>> =>
-  Object.freeze({
-    ...compile,
-    composites: resolveCompositeDependencies({ contributions, composites: compile?.composites }),
+  contributions: Parameters<typeof resolveCoreProviderDependencies>[0]['contributions'],
+): CompileOptions<ReadonlyArray<AnyCompositeDefinition>> => {
+  const resolved = resolveCoreProviderDependencies({
+    contributions,
+    definitions:
+      compile === undefined
+        ? undefined
+        : {
+            shapes: compile.shapes,
+            boundaries: compile.boundaries,
+            clips: compile.clips,
+            arrows: compile.arrows,
+            patterns: compile.patterns,
+            pathGenerators: compile.pathGenerators,
+            pathKinds: compile.pathKinds,
+            composites: compile.composites,
+          },
   });
+  return Object.freeze({ ...compile, ...resolved });
+};
 
 /** 将 typed InputScene 或已类型化 IRScene 准备为 processing 的唯一 Core 输入 */
 export const prepareProcessingInput = (

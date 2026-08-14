@@ -13,7 +13,7 @@ const contribute = ({ children, ...props }: SurfaceProps) => {
   const normalized = normalizeScene(input.scene, { adapters: input.adapters });
   return {
     node: normalized.ir.children[0],
-    compositeDependencies: normalized.contributions[0],
+    providerDependencies: normalized.contributions[0],
   };
 };
 

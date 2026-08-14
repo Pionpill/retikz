@@ -30,11 +30,11 @@ describe('Vanilla processing', () => {
       kind: 'fixture-box',
       lower: () => ({
         node: { namespace: 'fixture', type: 'box' },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'box' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'box' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'box' },
               dependencies: [],
               datasets: {},
               makeDefinition,
@@ -68,7 +68,7 @@ describe('Vanilla processing', () => {
         expect(context.themeStyles).toEqual([themeStyle]);
         return {
           node: { type: 'node', id: 'theme-probe', position: [0, 0] },
-          compositeDependencies: { roots: [], providers: [] },
+          providerDependencies: { roots: [], providers: [] },
         };
       },
     };
@@ -156,11 +156,11 @@ describe('Vanilla processing', () => {
       kind: 'fixture-box',
       lower: () => ({
         node: { namespace: 'fixture', type: 'box' },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'box' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'box' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'box' },
               dependencies: [],
               datasets: {},
               makeDefinition: () => definition,
@@ -204,11 +204,11 @@ describe('Vanilla processing', () => {
       kind: 'broken-composite',
       lower: () => ({
         node: { namespace: 'fixture', type: 'broken' },
-        compositeDependencies: {
-          roots: [{ namespace: 'fixture', type: 'broken' }],
+        providerDependencies: {
+          roots: [{ capability: 'composite', namespace: 'fixture', type: 'broken' }],
           providers: [
             {
-              key: { namespace: 'fixture', type: 'broken' },
+              key: { capability: 'composite', namespace: 'fixture', type: 'broken' },
               dependencies: [],
               datasets: {},
               makeDefinition: () => definition,

@@ -37,11 +37,11 @@ const createBoxAdapter = (
   kind: 'fixture-box',
   lower: props => ({
     node: { namespace: 'fixture', type: 'box', text: props.text },
-    compositeDependencies: {
-      roots: [{ namespace: 'fixture', type: 'box' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'fixture', type: 'box' }],
       providers: [
         {
-          key: { namespace: 'fixture', type: 'box' },
+          key: { capability: 'composite', namespace: 'fixture', type: 'box' },
           dependencies: [],
           datasets: { shared: props.data },
           makeDefinition,
@@ -293,7 +293,7 @@ describe('@retikz/vanilla InputScene', () => {
           id: 'chart/root',
           children: [{ type: 'node', id: 'chart/label', position: [0, 0], text: props.label }],
         },
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -313,7 +313,7 @@ describe('@retikz/vanilla InputScene', () => {
           type: 'scope',
           children: [{ type: 'node', id: context.id, position: [0, 0] }],
         },
-        compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
       }),
     };
 
@@ -339,7 +339,7 @@ describe('@retikz/vanilla InputScene', () => {
             type: 'box',
             text: 'frame',
           },
-          compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
         };
       },
     };
@@ -382,7 +382,7 @@ describe('@retikz/vanilla InputScene', () => {
             type: 'box',
             text: 'frame',
           },
-          compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
         };
       },
     };
@@ -419,7 +419,7 @@ describe('@retikz/vanilla InputScene', () => {
         normalizeChildren([scope({ theme: { mode: ThemeMode.Dark } }, [node('child', { position: [0, 0] })])]);
         return {
           node: { type: 'scope', children: [] },
-          compositeDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
         };
       },
     };
