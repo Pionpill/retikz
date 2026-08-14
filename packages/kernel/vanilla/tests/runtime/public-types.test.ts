@@ -88,6 +88,10 @@ describe('Vanilla retained 公开类型', () => {
     expectTypeOf<HasKey<ProcessingController, 'updateParticipant'>>().toEqualTypeOf<false>();
   });
 
+  it('预编译 Scene 不能创建 retained processing controller', () => {
+    expectTypeOf<Scene>().not.toMatchTypeOf<Parameters<typeof createProcessingController>[0]>();
+  });
+
   it('SSR options 不接受 retained renderer factory，mount options 才拥有 runtime 配置', () => {
     expectTypeOf<RenderToStringOptions>().toHaveProperty('runtime').toEqualTypeOf<undefined>();
     expectTypeOf<IsAssignable<MountOptions, RenderToStringOptions>>().toEqualTypeOf<false>();
@@ -117,7 +121,7 @@ describe('Vanilla retained 公开类型', () => {
     expectTypeOf<VanillaViewModeValue>().toEqualTypeOf<'retained' | 'static'>();
   });
 
-  it('raw static mount 由 runtime mode 判别，update 统一接受 IR 与 plain spec', () => {
+  it('raw static mount 由 runtime mode 判别，update 统一接受 IR 与 InputScene', () => {
     expectTypeOf<RawStaticMountOptions>().toHaveProperty('runtime');
     expectTypeOf<RawStaticMountCanvasOptions>().toHaveProperty('runtime');
     expectTypeOf<Parameters<StaticRawSvgView['update']>[0]>().toEqualTypeOf<Parameters<RetainedSvgView['update']>[0]>();

@@ -1,7 +1,6 @@
-import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { StaticRenderFrame } from '@retikz/render/runtime';
+import type { ProcessingResult } from '@retikz/vanilla';
 import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
 
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
@@ -16,47 +15,41 @@ import {
 import { buildSvgFrameDocument } from '@retikz/render/svg';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { CanvasHost } from '../canvas';
-import { svgToReact } from '../svg';
+import { CanvasHost } from './canvas';
+import { svgToReact } from './svg';
 
-/** React static host 的公开输入 */
-export type StaticHostProps = Readonly<{
-  /** 要完整物化的 renderer 后端 */
+/** Vanilla processing result 的 React 宿主属性 */
+export type ProcessingResultHostProps = Readonly<{
+  /** Vanilla 已完成编译的完整处理结果 */
+  result: ProcessingResult;
+  /** 目标渲染后端 */
   backend: 'svg' | 'canvas';
-  /** 当前 render 已完整编译的主图与只读辅助层 */
-  frame: StaticRenderFrame;
-  /** 当前完整编译产生的 artifacts */
-  artifacts: ReadonlyArray<CompileArtifact>;
-  /** 当前完整 Core compile result */
-  compileResult: CompileResult;
-  /** 当前 hydration handler 注册表 */
+  /** 当前 revision 的 hydration handler 注册表 */
   handlers: HydrationHandlers;
-  /** SVG CSS 宽度或 Canvas CSS user-space 宽度 */
+  /** SVG 或 Canvas CSS 宽度 */
   width?: number | string;
-  /** SVG CSS 高度或 Canvas CSS user-space 高度 */
+  /** SVG 或 Canvas CSS 高度 */
   height?: number | string;
-  /** 透传到宿主根元素的类名 */
+  /** 宿主 className */
   className?: string;
-  /** 透传到宿主根元素的样式 */
+  /** 宿主内联样式 */
   style?: CSSProperties;
-  /** 当前动画播放开关 */
+  /** 是否播放动画 */
   animate: boolean;
-  /** 可选静态动画采样时刻 */
+  /** 静态动画采样时刻 */
   snapshotAt?: number;
-  /** 自定义 easing registry */
+  /** easing registry */
   easings?: EasingRegistry;
-  /** 自定义 animation property registry */
+  /** animation property registry */
   animationProperties?: AnimationPropertyRegistry;
-  /** 当前动画控制器出口 */
+  /** 动画控制器出口 */
   animationRef?: Ref<AnimationControls | null>;
-  /** SSR 与资源引用共用的稳定 id 前缀 */
+  /** 资源 id 前缀 */
   idPrefix: string;
-  /** 完整编译 commit 后的 artifacts 通知出口 */
-  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
-  /** 完整编译成功提交后的 result 通知出口 */
-  onCompileResult?: (result: CompileResult) => void;
-  /** 当前完整 frame 成功提交后的领域中立 driver 通知 */
-  onCompileCommit?: () => void;
+  /** artifacts 成功提交通知 */
+  onArtifacts?: (artifacts: ProcessingResult['artifacts']) => void;
+  /** Core 完整编译结果通知 */
+  onCompileResult?: (result: NonNullable<ProcessingResult['compileResult']>) => void;
 }>;
 
 /** 写入 callback ref 或 RefObject */
@@ -65,10 +58,10 @@ const assignRef = <T,>(ref: Ref<T> | undefined, value: T): void => {
   else if (ref !== undefined && ref !== null) (ref as MutableRefObject<T>).current = value;
 };
 
-/** 把水合与 SVG 动画控制器绑定到 static figure root */
+/** 将 hydration 与 SVG 动画控制器绑定到 React SVG 根节点 */
 const useSvgRootBinding = (
   handlers: HydrationHandlers,
-  scene: Scene,
+  result: ProcessingResult,
   hasAnimations: boolean,
   publishAnimation: (controls: AnimationControls | null) => void,
 ): ((element: SVGSVGElement | null) => void) => {
@@ -79,17 +72,17 @@ const useSvgRootBinding = (
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return undefined;
-    const buildContext = createContextBuilder({
+    const context = createContextBuilder({
       renderer: 'svg',
       root,
-      scene,
+      scene: result.scene,
       resolveElement: resolveSvgElement,
-      resolvePoint: resolvePointViaLayout(root, scene.layout),
+      resolvePoint: resolvePointViaLayout(root, result.scene.layout),
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
-    const controller = createHydrationController(root, handlers, locateSvg, buildContext);
+    const controller = createHydrationController(root, handlers, locateSvg, context);
     return () => controller.dispose();
-  }, [handlers, scene]);
+  }, [handlers, result]);
   useEffect(() => {
     const root = rootRef.current;
     if (root === null || !hasAnimations) return undefined;
@@ -99,17 +92,15 @@ const useSvgRootBinding = (
       controls.dispose();
       publishAnimation(null);
     };
-  }, [hasAnimations, scene, publishAnimation]);
+  }, [hasAnimations, result, publishAnimation]);
   return setRoot;
 };
 
-/** 使用完整 Scene 重绘且不创建 Runtime Session 的 React host */
-export const StaticHost: FC<StaticHostProps> = props => {
+/** 将 Vanilla 只读 processing result 映射为 React SVG 或 Canvas 宿主 */
+export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
   const {
+    result,
     backend,
-    frame,
-    artifacts,
-    compileResult,
     handlers,
     width,
     height,
@@ -123,9 +114,8 @@ export const StaticHost: FC<StaticHostProps> = props => {
     idPrefix,
     onArtifacts,
     onCompileResult,
-    onCompileCommit,
   } = props;
-  const scene = frame.primary;
+  const frame = useMemo(() => Object.freeze({ primary: result.scene, layers: result.layers }), [result]);
   const document = useMemo(
     () =>
       backend === 'canvas'
@@ -138,12 +128,12 @@ export const StaticHost: FC<StaticHostProps> = props => {
           }),
     [backend, frame, idPrefix, animate, snapshotAt, easings],
   );
-  const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(scene);
+  const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(result.scene);
   const publishAnimation = useCallback(
     (controls: AnimationControls | null) => assignRef(animationRef, controls),
     [animationRef],
   );
-  const setRoot = useSvgRootBinding(handlers, scene, hasAnimations, publishAnimation);
+  const setRoot = useSvgRootBinding(handlers, result, hasAnimations, publishAnimation);
   const onArtifactsRef = useRef(onArtifacts);
   const onCompileResultRef = useRef(onCompileResult);
 
@@ -152,24 +142,20 @@ export const StaticHost: FC<StaticHostProps> = props => {
     onCompileResultRef.current = onCompileResult;
   }, [onArtifacts, onCompileResult]);
   useEffect(() => {
-    onArtifactsRef.current?.(artifacts);
-  }, [artifacts]);
+    try {
+      onArtifactsRef.current?.(result.artifacts);
+    } catch (cause) {
+      if (process.env.NODE_ENV !== 'production') console.warn('[retikz] <Layout> onArtifacts callback failed', cause);
+    }
+  }, [result]);
   useEffect(() => {
     try {
-      onCompileResultRef.current?.(compileResult);
+      onCompileResultRef.current?.(result.compileResult);
     } catch (cause) {
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== 'production')
         console.warn('[retikz] <Layout> onCompileResult callback failed', cause);
-      }
     }
-  }, [compileResult]);
-  useEffect(() => {
-    try {
-      onCompileCommit?.();
-    } catch (cause) {
-      if (process.env.NODE_ENV !== 'production') console.warn('[retikz] <Layout> compile driver commit failed', cause);
-    }
-  }, [onCompileCommit]);
+  }, [result]);
 
   if (backend === 'canvas') {
     return (

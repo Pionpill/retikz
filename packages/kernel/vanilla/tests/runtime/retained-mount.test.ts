@@ -73,8 +73,10 @@ const createMemoryRendererFactory = (
   onDispose?: () => void,
   onFrame?: (frame: RenderFrameSnapshot) => void,
   failMount: boolean | (() => boolean) = false,
+  onCreate?: () => void,
 ): RetainedRendererFactory =>
   ((input: RetainedRendererFactoryInput) => {
+    onCreate?.();
     let current: RenderFrameSnapshot | undefined;
     const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       if (current !== undefined) {
@@ -496,7 +498,7 @@ describe('@retikz/vanilla retained mount', () => {
     );
   });
 
-  it('plain spec update 使用本次 normalization 生成的 composite definitions', () => {
+  it('InputScene update 使用本次 normalization 生成的 composite definitions', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, datasetScene('#ef4444'), { adapters: [datasetAdapter] });
 
@@ -504,6 +506,57 @@ describe('@retikz/vanilla retained mount', () => {
     view.update(datasetScene('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
+  });
+
+  it('Composite topology 切换复用 renderer，候选失败时保留已提交状态', () => {
+    const frames: Array<RenderFrameSnapshot> = [];
+    const dispose = vi.fn();
+    let rejectNextPrepare = false;
+    let rendererFactoryCalls = 0;
+    const rendererFactory = createMemoryRendererFactory(
+      'entity',
+      () => rejectNextPrepare,
+      undefined,
+      undefined,
+      dispose,
+      frame => frames.push(frame),
+      false,
+      () => {
+        rendererFactoryCalls += 1;
+      },
+    );
+    const view = mountSvg(document.createElement('div'), source('#ef4444'), {
+      adapters: [datasetAdapter],
+      runtime: { rendererFactory },
+    });
+    const initialCompileResult = view.compileResult;
+
+    view.update(datasetScene('#22c55e'));
+
+    expect(rendererFactoryCalls).toBe(1);
+    expect(frames).toHaveLength(2);
+    expect(Number(frames[1]?.primary.revision)).toBe(Number(frames[0]?.primary.revision) + 1);
+    expect(view.compileResult).not.toBe(initialCompileResult);
+    expect(view.diagnostics()).toEqual([]);
+    const committedFrame = frames.at(-1);
+    const committedCompileResult = view.compileResult;
+    const committedHtml = view.root.innerHTML;
+
+    rejectNextPrepare = true;
+    expect(() => view.update(source('#3b82f6'))).toThrowError(
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererPrepareFailed }),
+    );
+
+    expect(frames.at(-1)).toBe(committedFrame);
+    expect(view.compileResult).toBe(committedCompileResult);
+    expect(view.root.innerHTML).toBe(committedHtml);
+    expect(view.diagnostics()).toEqual([
+      expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererPrepareFailed }),
+    ]);
+
+    view.dispose();
+    view.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
   });
 
   it('mount 后修改 adapter callback 不改变 retained session compile 语义', () => {
@@ -701,7 +754,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(view.diagnostics()).toEqual([]);
   });
 
-  it('IR/plain spec SVG static view 完整重绘、复用 root 并同步 metadata', () => {
+  it('IR/InputScene SVG static view 完整重绘、复用 root 并同步 metadata', () => {
     const container = document.createElement('div');
     const view = mountSvg(container, source('#ef4444'), {
       runtime: { mode: 'static' },
@@ -718,7 +771,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(view.artifacts.length).toBeGreaterThan(0);
   });
 
-  it('IR/plain spec Canvas static view 完整重绘并复用 root', () => {
+  it('IR/InputScene Canvas static view 完整重绘并复用 root', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, source('#ef4444'), {
       runtime: { mode: 'static' },
@@ -979,9 +1032,7 @@ describe('@retikz/vanilla retained mount', () => {
       expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
       expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
     ]);
-    expect(() => view.update(source('#22c55e'))).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }),
-    );
+    expect(() => view.update(source('#22c55e'))).toThrow('Processing controller is disposed');
 
     expect(() => view.dispose()).not.toThrow();
     expect(() => view.dispose()).not.toThrow();

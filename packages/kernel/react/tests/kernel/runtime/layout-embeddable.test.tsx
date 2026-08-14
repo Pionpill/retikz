@@ -1,12 +1,11 @@
 import type { AnyCompositeDefinition, CompositeDependencyProvider, CompositeProviderKey } from '@retikz/core';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-
-import type { EmbeddableTier2Adapter } from '../../../src';
 
 import { Layout, Node } from '../../../src';
 
@@ -15,7 +14,7 @@ type DefinitionMaker = CompositeDependencyProvider['makeDefinition'];
 
 type EmbeddableFixture = FC<FixtureProps> & {
   isTier2Embeddable?: boolean;
-  embeddableAdapter?: EmbeddableTier2Adapter;
+  inputEmbedAdapter?: InputEmbedAdapter<FixtureProps>;
 };
 
 const definitionOf = (key: CompositeProviderKey): AnyCompositeDefinition => {
@@ -50,9 +49,9 @@ const makeFixture = (options: {
   extraProviders?: ReadonlyArray<CompositeDependencyProvider>;
   roots?: ReadonlyArray<CompositeProviderKey>;
 }): EmbeddableFixture => {
-  const adapter: EmbeddableTier2Adapter<FixtureProps> = {
-    displayName: options.displayName,
-    contribute: props => ({
+  const adapter: InputEmbedAdapter<FixtureProps> = {
+    kind: options.displayName,
+    lower: props => ({
       node: { namespace: options.key.namespace, type: options.key.type, panelId: props.id },
       compositeDependencies: {
         roots: options.roots ?? [options.key],
@@ -66,7 +65,7 @@ const makeFixture = (options: {
   const Fixture: EmbeddableFixture = () => null;
   Fixture.displayName = options.displayName;
   Fixture.isTier2Embeddable = true;
-  Fixture.embeddableAdapter = adapter as EmbeddableTier2Adapter;
+  Fixture.inputEmbedAdapter = adapter;
   return Fixture;
 };
 
@@ -129,9 +128,9 @@ describe('<Layout> Composite provider graph', () => {
     const userKey = { namespace: 'user', type: 'panel' } as const;
     const demoMaker = vi.fn(() => definitionOf(demoKey));
     const Demo = makeFixture({ displayName: 'Demo', key: demoKey, makeDefinition: demoMaker });
-    const userAdapter: EmbeddableTier2Adapter<FixtureProps> = {
-      displayName: 'User',
-      contribute: props => ({
+    const userAdapter: InputEmbedAdapter<FixtureProps> = {
+      kind: 'User',
+      lower: props => ({
         node: { namespace: userKey.namespace, type: userKey.type, panelId: props.id },
         compositeDependencies: { roots: [], providers: [] },
       }),
@@ -139,7 +138,7 @@ describe('<Layout> Composite provider graph', () => {
     const User: EmbeddableFixture = () => null;
     User.displayName = 'User';
     User.isTier2Embeddable = true;
-    User.embeddableAdapter = userAdapter as EmbeddableTier2Adapter;
+    User.inputEmbedAdapter = userAdapter;
 
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100} composites={[definitionOf(userKey)]}>

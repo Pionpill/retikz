@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import type { IRScene } from '@retikz/core';
+
+import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -51,6 +53,49 @@ describe('Vanilla processing', () => {
     expect(prepared.coreOptions.composites).toEqual([definition]);
   });
 
+  it('在同一 Scope 链中把有效 Theme 交给 InputEmbed adapter', () => {
+    const themeStyle = defineThemeStyle({
+      name: 'academic',
+      resolve: () => ({
+        semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+        categorical: ['#112233'],
+      }),
+    });
+    const adapter: InputEmbedAdapter<Record<string, never>> = {
+      kind: 'theme-probe',
+      lower: (_props, context) => {
+        expect(context.theme).toMatchObject({ style: 'academic', mode: ThemeMode.Dark });
+        expect(context.themeStyles).toEqual([themeStyle]);
+        return {
+          node: { type: 'node', id: 'theme-probe', position: [0, 0] },
+          compositeDependencies: { roots: [], providers: [] },
+        };
+      },
+    };
+
+    const prepared = prepareProcessingInput(
+      {
+        theme: { style: 'academic', mode: ThemeMode.Light },
+        children: [
+          {
+            type: 'scope',
+            theme: { mode: ThemeMode.Dark },
+            children: [{ type: 'embed', kind: 'theme-probe', id: 'theme-probe', props: {} }],
+          },
+        ],
+      },
+      { adapters: [adapter], compile: { themeStyles: [themeStyle] } },
+    );
+
+    expect(prepared.source.children).toEqual([
+      {
+        type: 'scope',
+        theme: { mode: ThemeMode.Dark },
+        children: [{ type: 'node', id: 'theme-probe', position: [0, 0] }],
+      },
+    ]);
+  });
+
   it('IRScene 直接进入 processing，不触发 Input normalize 或 schema parse', () => {
     const source = {
       type: 'scene' as const,
@@ -59,6 +104,14 @@ describe('Vanilla processing', () => {
     };
 
     expect(prepareProcessingInput(source, {}).source).toEqual(source);
+  });
+
+  it('retained controller 创建时保留 Core 编译诊断', () => {
+    expect(() =>
+      createProcessingController({
+        children: [{ type: 'node', id: 'broken', position: [0, 0], shape: 'missing-shape' }],
+      }),
+    ).toThrow(/Unknown shape 'missing-shape'/);
   });
 
   it('controller 仅在完整成功后发布不可变 revision，失败保持上一次结果', () => {
@@ -89,6 +142,99 @@ describe('Vanilla processing', () => {
     expect(() => controller.update({ children: [{ id: 'after-dispose', position: [60, 0] }] })).toThrow(/disposed/i);
   });
 
+  it('retained controller 接受新增和移除 Composite contribution 的 InputScene 更新', () => {
+    const definition = defineComposite({
+      namespace: 'fixture',
+      type: 'box',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('box'),
+      }),
+      expand: () => ({ children: [] }),
+    });
+    const adapter: InputEmbedAdapter<Record<string, never>> = {
+      kind: 'fixture-box',
+      lower: () => ({
+        node: { namespace: 'fixture', type: 'box' },
+        compositeDependencies: {
+          roots: [{ namespace: 'fixture', type: 'box' }],
+          providers: [
+            {
+              key: { namespace: 'fixture', type: 'box' },
+              dependencies: [],
+              datasets: {},
+              makeDefinition: () => definition,
+            },
+          ],
+        },
+      }),
+    };
+    const controller = createProcessingController(
+      { children: [{ id: 'stable', position: [0, 0] }] },
+      { adapters: [adapter] },
+    );
+    const first = controller.read();
+
+    expect(() =>
+      controller.update({
+        children: [{ type: 'embed', kind: 'fixture-box', id: 'box', props: {} }],
+      }),
+    ).not.toThrow();
+    expect(controller.read().revision).toBe(first.revision + 1);
+
+    expect(() => controller.update({ children: [{ id: 'restored', position: [20, 0] }] })).not.toThrow();
+    expect(controller.read().revision).toBe(first.revision + 2);
+    controller.dispose();
+  });
+
+  it('候选 Composite topology 编译失败时保留旧 result 并记录 diagnostics', () => {
+    const failure = new Error('expected candidate composite failure');
+    const definition = defineComposite({
+      namespace: 'fixture',
+      type: 'broken',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('broken'),
+      }),
+      expand: () => {
+        throw failure;
+      },
+    });
+    const adapter: InputEmbedAdapter<Record<string, never>> = {
+      kind: 'broken-composite',
+      lower: () => ({
+        node: { namespace: 'fixture', type: 'broken' },
+        compositeDependencies: {
+          roots: [{ namespace: 'fixture', type: 'broken' }],
+          providers: [
+            {
+              key: { namespace: 'fixture', type: 'broken' },
+              dependencies: [],
+              datasets: {},
+              makeDefinition: () => definition,
+            },
+          ],
+        },
+      }),
+    };
+    const controller = createProcessingController(
+      { children: [{ id: 'stable', position: [0, 0] }] },
+      { adapters: [adapter] },
+    );
+    const stable = controller.read();
+
+    expect(() =>
+      controller.update({
+        children: [{ type: 'embed', kind: 'broken-composite', id: 'broken', props: {} }],
+      }),
+    ).toThrow(/expected candidate composite failure/);
+    expect(controller.read()).toBe(stable);
+    expect(controller.diagnostics()).toEqual([
+      expect.objectContaining({ message: 'expected candidate composite failure' }),
+    ]);
+    controller.dispose();
+  });
+
   it('订阅方异常不会回滚已提交 revision，并经诊断边界报告', () => {
     const controller = createProcessingController({ children: [{ id: 'first', position: [0, 0] }] });
     const first = controller.read();
@@ -111,6 +257,20 @@ describe('Vanilla processing', () => {
     expect(result.revision).toBe(0);
     expect(result.compileResult).toBeUndefined();
     expect(result.scene).toBe(scene);
+  });
+
+  it('已类型化 IRScene 直接进入 processing，不重走 Input normalize', () => {
+    const ir: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [{ type: 'node', id: 'source', position: [0, 0] }],
+    };
+
+    const prepared = prepareProcessingInput(ir, {});
+
+    expect(prepared.source).toBe(ir);
+    expect(prepared.authoringSites).toEqual([]);
+    expect(prepared.runtimeMeta.layers).toEqual([]);
   });
 
   it('retained processing 只在成功 Runtime transaction 后替换完整 result', () => {

@@ -1,4 +1,55 @@
-import type { CompositeDependencyContribution, IRChild } from '@retikz/core';
+import type {
+  CompileObservationOwner,
+  CompositeDependencyContribution,
+  IRChild,
+  IRTheme,
+  ResolvedTheme,
+  ThemeStyleDefinition,
+} from '@retikz/core';
+
+import type { InputChild } from '../scene';
+
+/** 嵌入贡献内部按声明顺序收集的运行时作者来源 */
+export type InputEmbedAuthoringSite = Readonly<{
+  /** 内部作者来源的类别 */
+  kind: 'scope' | 'path' | 'embeddable';
+  /** 对应的 Core 编译观察所属者 */
+  owner?: CompileObservationOwner;
+  /** 作者来源的稳定类型 */
+  type: string;
+  /** 由调用方提供且基础归一化不解释的载荷 */
+  authoring: unknown;
+}>;
+
+/** 嵌入 adapter 在同次 Scene 归一化中处理的子项结果 */
+export type NormalizedInputEmbedChildren = Readonly<{
+  /** 已归一为 Core Source IR 的子节点 */
+  children: ReadonlyArray<IRChild>;
+  /** 子节点按声明顺序产生的 Composite dependency contribution */
+  compositeDependencies: CompositeDependencyContribution;
+  /** 子节点按声明顺序产生的作者来源 */
+  authoringSites: ReadonlyArray<InputEmbedAuthoringSite>;
+}>;
+
+/** InputEmbed 所在位置已生效的 Core Theme 上下文 */
+export type InputEmbedThemeContext = Readonly<{
+  /** Scene / Scope 链解析后的有效 Theme */
+  theme: ResolvedTheme;
+  /** 调用方提供的 Core Theme style definitions */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+}>;
+
+/** processing 注入给 InputScene normalizer 的 Scope Theme 解析器 */
+export type InputEmbedThemeContextResolver = Readonly<{
+  /** Scene 根的有效 Theme 上下文 */
+  root: InputEmbedThemeContext;
+  /** 为嵌套 Scope 解析下一级有效 Theme 上下文 */
+  resolveScope: (
+    parent: InputEmbedThemeContext,
+    theme: IRTheme | undefined,
+    sourcePath: string,
+  ) => InputEmbedThemeContext;
+}>;
 
 /** 作者侧 Tier 2 嵌入输入 */
 export type InputEmbed<TProps = Record<string, unknown>> = {
@@ -26,6 +77,12 @@ export type InputEmbedContext = {
   layerId: string;
   /** 从分层到当前节点的身份路径 */
   identityPath: Array<string>;
+  /** processing 已准备的有效 Theme */
+  theme?: ResolvedTheme;
+  /** processing 传递的 Core Theme style definitions */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  /** 在当前根 Scene traversal 中归一化嵌入 slot 的已类型化 authoring 子项 */
+  normalizeChildren?: (children: ReadonlyArray<InputChild>) => NormalizedInputEmbedChildren;
 };
 
 /** Tier 2 adapter 对 Source IR 与 Composite resolver 的贡献 */
@@ -34,6 +91,8 @@ export type InputEmbedContribution = {
   node: IRChild;
   /** 交由 Vanilla processing 统一消费的 Composite dependency contribution */
   compositeDependencies: CompositeDependencyContribution;
+  /** 贡献节点内部按声明顺序收集的运行时作者来源 */
+  authoringSites?: ReadonlyArray<InputEmbedAuthoringSite>;
 };
 
 /** Tier 2 作者输入到 Core contribution 的适配器 */

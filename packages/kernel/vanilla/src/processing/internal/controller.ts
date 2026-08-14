@@ -9,9 +9,14 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
+  RuntimeError,
 } from '@retikz/runtime';
 
-import type { VanillaCompileDriverInput, VanillaCompileDriverSession } from '../../runtime/compile-driver';
+import type {
+  VanillaCompileDriver,
+  VanillaCompileDriverInput,
+  VanillaCompileDriverSession,
+} from '../../runtime/compile-driver';
 import type {
   PreparedProcessingInput,
   ProcessingController,
@@ -48,6 +53,13 @@ const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, n
 /** 根 processing result participant 的稳定 Runtime key */
 const PROCESSING_RESULT_PARTICIPANT_KEY = '@retikz/vanilla:processing-result' as const;
 
+/** 返回 Runtime 包装错误中最接近 Core 编译诊断的根因 */
+const processingCause = (cause: unknown): unknown => {
+  let current = cause;
+  while (current instanceof RuntimeError && current.cause !== undefined) current = current.cause;
+  return current;
+};
+
 /** 复制 retained 生命周期内继续读取的处理配置 */
 const captureProcessingOptions = (options: ProcessingOptions): ProcessingOptions => {
   const composites = options.compile?.composites;
@@ -63,6 +75,16 @@ const captureProcessingOptions = (options: ProcessingOptions): ProcessingOptions
         }),
     ...(options.adapters === undefined ? {} : { adapters: Object.freeze([...options.adapters]) }),
   });
+};
+
+/** 恢复 compile driver 的上一份输入，并保持 retained session identity */
+const restoreVanillaCompileDriverSession = (
+  compileDriver: VanillaCompileDriver,
+  input: VanillaCompileDriverInput,
+  compileSession: VanillaCompileDriverSession,
+): void => {
+  const restored = createVanillaCompileDriverSession(compileDriver, input);
+  if (restored !== compileSession) throw new Error('Vanilla compile driver restore changed session identity');
 };
 
 /** 以同一 Runtime revision 冻结全部 processing 公共结果 */
@@ -84,25 +106,43 @@ const createProcessingResult = (
   });
 };
 
-/** 创建带可选固定内部 participant 的 processing controller */
-const createProcessingController = (
-  source: ProcessingSource,
-  options: ProcessingOptions = {},
+/** 单条 Runtime session 持有的 Core Program、Definitions 与 committed processing result */
+type RetainedProcessingState = Readonly<{
+  /** 当前 Program 可接受的 definition topology */
+  compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
+  /** 当前编译驱动输入，用于失败后恢复驱动状态 */
+  driverInput: () => VanillaCompileDriverInput;
+  /** 读取该 session 的已提交结果 */
+  read: () => ProcessingResult;
+  /** 在固定 topology 内更新 source */
+  update: (
+    next: PreparedProcessingInput,
+    nextDriverInput: VanillaCompileDriverInput,
+    revision: number,
+  ) => ProcessingResult;
+  /** 仅更新固定 participant 的配置 */
+  updateParticipant: (revision: number) => ProcessingResult;
+  /** 提交当前已准备 Core 输出的 compile driver 通知 */
+  commitDriver: () => void;
+  /** 读取并清空当前 Runtime session 的诊断 */
+  diagnostics: () => ReadonlyArray<unknown>;
+  /** 释放当前 Runtime session */
+  dispose: () => void;
+}>;
+
+/** 创建一个与固定 Composite topology 绑定的 retained processing state */
+const createRetainedProcessingState = (
+  initial: PreparedProcessingInput,
+  initialDriverInput: VanillaCompileDriverInput,
+  initialRevision: number,
+  fixedOptions: ProcessingOptions,
+  compileDriver: NonNullable<ProcessingOptions['compileDriver']>,
+  hasCustomCompileDriver: boolean,
+  compileSession: VanillaCompileDriverSession,
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
-): ProcessingController => {
-  const fixedOptions = captureProcessingOptions(options);
-  const initial = prepareProcessingInput(source, fixedOptions);
-  const compileDriver = fixedOptions.compileDriver ?? defaultVanillaCompileDriver;
-  const hasCustomCompileDriver = fixedOptions.compileDriver !== undefined;
-  const instance = Object.freeze({});
+): RetainedProcessingState => {
   const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
-  let driverInput: VanillaCompileDriverInput = Object.freeze({
-    instance,
-    source: initial.source,
-    authoringSites: initial.authoringSites,
-    coreOptions: initial.coreOptions,
-  });
-  const compileSession = createVanillaCompileDriverSession(compileDriver, driverInput);
+  let driverInput = initialDriverInput;
   const coreProgram = createCoreProgram(
     { ...initial.coreOptions, composites: compositeDefinitions.definitions },
     {
@@ -130,8 +170,8 @@ const createProcessingController = (
   });
   const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
   let participantResult: ProcessingResult | undefined;
-  let participantPrepared: PreparedProcessingInput = initial;
-  let participantRevision = 0;
+  let participantPrepared = initial;
+  let participantRevision = initialRevision;
   const resultParticipant = defineRuntimeCommitParticipant<ProcessingResult>({
     key: PROCESSING_RESULT_PARTICIPANT_KEY,
     owners: [],
@@ -160,30 +200,153 @@ const createProcessingController = (
       participantResult = undefined;
     },
   });
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    updateStrategy: fixedOptions.updateStrategy,
-    participants: [
-      resultParticipant,
-      ...(transactionParticipant === undefined ? [] : [transactionParticipant.participant]),
-    ],
-    initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, initial.source),
-      createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
-      createRuntimeOwnerInput(VanillaCompileDriverRevisionOwnerDefinition, 0),
-      ...(transactionParticipant?.initialSnapshots ?? []),
-    ],
-  });
+  let session: ReturnType<typeof createRuntimeSession>;
+  try {
+    session = createRuntimeSession({
+      owners,
+      programs,
+      updateStrategy: fixedOptions.updateStrategy,
+      participants: [
+        resultParticipant,
+        ...(transactionParticipant === undefined ? [] : [transactionParticipant.participant]),
+      ],
+      initialSnapshots: [
+        createRuntimeOwnerInput(CoreOwnerDefinition, initial.source),
+        createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
+        createRuntimeOwnerInput(VanillaCompileDriverRevisionOwnerDefinition, 0),
+        ...(transactionParticipant?.initialSnapshots ?? []),
+      ],
+    });
+  } catch (cause) {
+    throw processingCause(cause);
+  }
   transactionParticipant?.connect?.(session);
   let prepared = initial;
   let compositeRevision = 0;
   let compileDriverRevision = 0;
   let current = session.participant(resultParticipant);
-  commitVanillaCompileOutput(
-    compileSession,
-    resolveVanillaCompileOutput(compileSession, session.artifact(coreProgram).value.output),
-  );
+
+  /** 在本 session 的当前 Core 输出上提交 compile driver 通知 */
+  const commitDriver = (): void => {
+    commitVanillaCompileOutput(
+      compileSession,
+      resolveVanillaCompileOutput(compileSession, session.artifact(coreProgram).value.output),
+    );
+  };
+
+  return Object.freeze({
+    compositeDefinitions,
+    driverInput: () => driverInput,
+    read: () => current,
+    update: (next, nextDriverInput, revision) => {
+      const definitions = compositeDefinitions.prepare(next.coreOptions.composites);
+      const previousDriverInput = driverInput;
+      try {
+        const nextCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
+        if (nextCompileSession !== compileSession) {
+          throw new Error('Vanilla compile driver must preserve its session for a retained processing controller');
+        }
+        const nextCompositeRevision = definitions.changed ? compositeRevision + 1 : compositeRevision;
+        const nextCompileDriverRevision = hasCustomCompileDriver ? compileDriverRevision + 1 : compileDriverRevision;
+        participantPrepared = next;
+        participantRevision = revision;
+        session.update({
+          baseRevision: session.revision(),
+          owners: [
+            createRuntimeOwnerUpdate(CoreOwnerDefinition, next.source),
+            ...(definitions.changed
+              ? [createRuntimeOwnerUpdate(VanillaCompositeRevisionOwnerDefinition, nextCompositeRevision)]
+              : []),
+            ...(hasCustomCompileDriver
+              ? [createRuntimeOwnerUpdate(VanillaCompileDriverRevisionOwnerDefinition, nextCompileDriverRevision)]
+              : []),
+            ...(transactionParticipant?.update({ prepared: next, revision, kind: 'source' }) ?? []),
+          ],
+        });
+        definitions.commit();
+        compositeRevision = nextCompositeRevision;
+        compileDriverRevision = nextCompileDriverRevision;
+        driverInput = nextDriverInput;
+        prepared = next;
+        current = session.participant(resultParticipant);
+        commitDriver();
+        return current;
+      } catch (cause) {
+        participantPrepared = prepared;
+        participantRevision = current.revision;
+        definitions.rollback();
+        try {
+          restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
+        } catch (restoreCause) {
+          throw new Error('Vanilla compile driver input rollback failed', { cause: restoreCause });
+        }
+        throw cause;
+      }
+    },
+    updateParticipant: revision => {
+      if (transactionParticipant?.updateParticipant === undefined) {
+        throw new Error('createProcessingController: participant configuration is unavailable');
+      }
+      participantPrepared = prepared;
+      participantRevision = revision;
+      try {
+        session.update({
+          baseRevision: session.revision(),
+          owners: transactionParticipant.updateParticipant(revision),
+        });
+        current = session.participant(resultParticipant);
+        commitDriver();
+        return current;
+      } catch (cause) {
+        participantRevision = current.revision;
+        throw cause;
+      }
+    },
+    commitDriver,
+    diagnostics: session.diagnostics,
+    dispose: () => session.dispose(),
+  });
+};
+
+/** 创建带可选固定内部 participant 的 processing controller */
+const createProcessingController = (
+  source: ProcessingSource,
+  options: ProcessingOptions = {},
+  transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
+): ProcessingController => {
+  const fixedOptions = captureProcessingOptions(options);
+  const initial = prepareProcessingInput(source, fixedOptions);
+  const compileDriver = fixedOptions.compileDriver ?? defaultVanillaCompileDriver;
+  const hasCustomCompileDriver = fixedOptions.compileDriver !== undefined;
+  const instance = Object.freeze({});
+  const driverInput = (prepared: PreparedProcessingInput): VanillaCompileDriverInput =>
+    Object.freeze({
+      instance,
+      source: prepared.source,
+      authoringSites: prepared.authoringSites,
+      coreOptions: prepared.coreOptions,
+    });
+  const initialDriverInput = driverInput(initial);
+  const compileSession = createVanillaCompileDriverSession(compileDriver, initialDriverInput);
+  const createState = (
+    prepared: PreparedProcessingInput,
+    input: VanillaCompileDriverInput,
+    revision: number,
+    participantFactory?: ProcessingTransactionParticipantFactory,
+  ): RetainedProcessingState =>
+    createRetainedProcessingState(
+      prepared,
+      input,
+      revision,
+      fixedOptions,
+      compileDriver,
+      hasCustomCompileDriver,
+      compileSession,
+      participantFactory,
+    );
+  let state = createState(initial, initialDriverInput, 0, transactionParticipantFactory);
+  let current = state.read();
+  state.commitDriver();
   let disposed = false;
   const listeners = new Set<(result: ProcessingResult) => void>();
   const diagnostics: Array<unknown> = [];
@@ -200,24 +363,7 @@ const createProcessingController = (
   };
 
   const assertActive = (): void => {
-    if (disposed) {
-      session.update({ baseRevision: session.revision(), owners: [] });
-    }
-  };
-
-  const rollbackDriverInput = (
-    previous: VanillaCompileDriverInput,
-    definitions: ReturnType<typeof compositeDefinitions.prepare>,
-    cause: unknown,
-  ): never => {
-    definitions.rollback();
-    try {
-      const restored = createVanillaCompileDriverSession(compileDriver, previous);
-      if (restored !== compileSession) throw new Error('Vanilla compile driver restore changed session identity');
-    } catch (restoreCause) {
-      throw new Error('Vanilla compile driver input rollback failed', { cause: restoreCause });
-    }
-    throw cause;
+    if (disposed) throw new Error('Processing controller is disposed');
   };
 
   return Object.freeze({
@@ -230,56 +376,40 @@ const createProcessingController = (
         diagnostics.push(cause);
         throw cause;
       }
-      const definitions = compositeDefinitions.prepare(next.coreOptions.composites);
-      const previousDriverInput = driverInput;
-      const nextDriverInput: VanillaCompileDriverInput = Object.freeze({
-        instance,
-        source: next.source,
-        authoringSites: next.authoringSites,
-        coreOptions: next.coreOptions,
-      });
-      try {
-        const nextCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
-        if (nextCompileSession !== compileSession) {
-          throw new Error('Vanilla compile driver must preserve its session for a retained processing controller');
-        }
-        const nextCompositeRevision = definitions.changed ? compositeRevision + 1 : compositeRevision;
-        const nextCompileDriverRevision = hasCustomCompileDriver ? compileDriverRevision + 1 : compileDriverRevision;
-        participantPrepared = next;
-        participantRevision = current.revision + 1;
-        session.update({
-          baseRevision: session.revision(),
-          owners: [
-            createRuntimeOwnerUpdate(CoreOwnerDefinition, next.source),
-            ...(definitions.changed
-              ? [createRuntimeOwnerUpdate(VanillaCompositeRevisionOwnerDefinition, nextCompositeRevision)]
-              : []),
-            ...(hasCustomCompileDriver
-              ? [createRuntimeOwnerUpdate(VanillaCompileDriverRevisionOwnerDefinition, nextCompileDriverRevision)]
-              : []),
-            ...(transactionParticipant?.update({ prepared: next, revision: participantRevision, kind: 'source' }) ??
-              []),
-          ],
-        });
-        definitions.commit();
-        compositeRevision = nextCompositeRevision;
-        compileDriverRevision = nextCompileDriverRevision;
-        driverInput = nextDriverInput;
-        prepared = next;
-        const output = session.artifact(coreProgram).value.output;
-        const nextResult = session.participant(resultParticipant);
-        commitVanillaCompileOutput(compileSession, resolveVanillaCompileOutput(compileSession, output));
-        current = nextResult;
-        notifyListeners(nextResult);
-      } catch (cause) {
-        participantPrepared = prepared;
-        participantRevision = current.revision;
+      const nextDriverInput = driverInput(next);
+      if (!state.compositeDefinitions.isCompatible(next.coreOptions.composites)) {
+        const previous = state;
+        let candidate: RetainedProcessingState;
         try {
-          rollbackDriverInput(previousDriverInput, definitions, cause);
-        } catch (rollbackCause) {
-          diagnostics.push(rollbackCause);
-          throw rollbackCause;
+          const candidateCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
+          if (candidateCompileSession !== compileSession) {
+            throw new Error('Vanilla compile driver must preserve its session for a retained processing controller');
+          }
+          candidate = createState(next, nextDriverInput, current.revision + 1, transactionParticipantFactory);
+        } catch (cause) {
+          try {
+            restoreVanillaCompileDriverSession(compileDriver, previous.driverInput(), compileSession);
+          } catch (restoreCause) {
+            const rollbackCause = new Error('Vanilla compile driver input rollback failed', { cause: restoreCause });
+            diagnostics.push(rollbackCause);
+            throw rollbackCause;
+          }
+          diagnostics.push(cause);
+          throw cause;
         }
+        previous.dispose();
+        state = candidate;
+        current = state.read();
+        state.commitDriver();
+        notifyListeners(current);
+        return;
+      }
+      try {
+        current = state.update(next, nextDriverInput, current.revision + 1);
+        notifyListeners(current);
+      } catch (cause) {
+        diagnostics.push(cause);
+        throw cause;
       }
     },
     read: () => current,
@@ -289,33 +419,21 @@ const createProcessingController = (
       return () => listeners.delete(listener);
     },
     diagnostics: () => {
-      const result = Object.freeze([...diagnostics, ...session.diagnostics()]);
+      const result = Object.freeze([...diagnostics, ...state.diagnostics()]);
       diagnostics.length = 0;
       return result;
     },
     dispose: () => {
       disposed = true;
       listeners.clear();
-      session.dispose();
+      state.dispose();
     },
     updateParticipant: () => {
       assertActive();
-      if (transactionParticipant?.updateParticipant === undefined) {
-        throw new Error('createProcessingController: participant configuration is unavailable');
-      }
-      participantPrepared = prepared;
-      participantRevision = current.revision + 1;
       try {
-        session.update({
-          baseRevision: session.revision(),
-          owners: transactionParticipant.updateParticipant(participantRevision),
-        });
-        const output = session.artifact(coreProgram).value.output;
-        commitVanillaCompileOutput(compileSession, resolveVanillaCompileOutput(compileSession, output));
-        current = session.participant(resultParticipant);
+        current = state.updateParticipant(current.revision + 1);
         notifyListeners(current);
       } catch (cause) {
-        participantRevision = current.revision;
         diagnostics.push(cause);
         throw cause;
       }

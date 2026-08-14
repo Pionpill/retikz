@@ -54,7 +54,7 @@ const resolveDevicePixelRatio = (override: number | undefined): number => {
 };
 
 /**
- * 把 IR / Scene / plain spec 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
+ * 把 IR / Scene / InputScene 挂成真实 `<canvas>` DOM（无框架浏览器 runtime，对齐 `mountSvg`）
  * @description 输入会先归一成 Scene，再按「名义显示尺寸」
  *   `output.width` / `output.height`（均为有限数值时）× dpr 开、否则回退内容边界；`renderToCanvas` 再把 Scene 内容 meet-fit
  *   进去（镜像 SVG `preserveAspectRatio=meet` + CanvasHost）。返回的 `CanvasView` 暴露 `hydrate`（hitTest 定位）

@@ -41,7 +41,6 @@ export const path = (
     throw new Error('path: config is required');
   }
   return {
-    type: 'path',
     ...(named ? { id: idOrConfig } : {}),
     ...config,
   };
@@ -51,7 +50,7 @@ export const path = (
 export const scope = (
   config: Omit<InputScope, 'type' | 'children'>,
   children: ReadonlyArray<InputScope['children'][number]>,
-): InputScope => ({ type: 'scope', ...config, children });
+): InputScope => ({ ...config, children });
 
 /** 创建作者侧 Layer 输入 */
 export const layer = (

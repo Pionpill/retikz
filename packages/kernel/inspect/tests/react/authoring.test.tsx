@@ -9,13 +9,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { BUILTIN_INSPECTORS, createInspectorRegistry, defineInspector, STROKE_PATH_INSPECTOR_KEY } from '../../src';
-import {
-  createInspectionLayoutDriver,
-  createInspectionReactAuthoring,
-  InspectLayout,
-  InspectPath,
-  InspectScope,
-} from '../../src/react';
+import { InspectLayout, InspectPath, InspectScope } from '../../src/react';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
 
@@ -83,7 +78,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
   });
 
   it('rejects a self request whose authored site owner does not match the Inspector owner', () => {
-    const driver = createInspectionLayoutDriver({ registry });
+    const driver = createInspectionVanillaDriver({ registry });
     const session = driver.create({
       instance: {},
       source: {
@@ -104,10 +99,8 @@ describe('@retikz/inspect/react authoring and driver', () => {
           kind: 'path',
           sourcePath: 'children[0].path',
           owner: { kind: 'composite', namespace: 'fixture', type: 'box' },
-          elementType: InspectPath,
-          props: {
-            authoring: createInspectionReactAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, value: true }),
-          },
+          type: 'path',
+          authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, value: true }),
         },
       ],
       coreOptions: {},
@@ -139,7 +132,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
       type: 'scene' as const,
       children: [{ namespace: 'fixture', type: 'host' }],
     };
-    const driver = createInspectionLayoutDriver({ registry: colonRegistry });
+    const driver = createInspectionVanillaDriver({ registry: colonRegistry });
     const session = driver.create({
       instance: {},
       source,
@@ -148,15 +141,15 @@ describe('@retikz/inspect/react authoring and driver', () => {
           kind: 'embeddable',
           sourcePath: 'children[0]',
           owner: firstOwner,
-          elementType: 'first',
-          props: { authoring: createInspectionReactAuthoring({ inspector: firstKey, value: true }) },
+          type: 'first',
+          authoring: createInspectionVanillaAuthoring({ inspector: firstKey, value: true }),
         },
         {
           kind: 'embeddable',
           sourcePath: 'children[0]',
           owner: secondOwner,
-          elementType: 'second',
-          props: { authoring: createInspectionReactAuthoring({ inspector: secondKey, value: true }) },
+          type: 'second',
+          authoring: createInspectionVanillaAuthoring({ inspector: secondKey, value: true }),
         },
       ],
       coreOptions: {},

@@ -22,7 +22,7 @@ dom/       DOM mount、hydrate、view lifecycle
 - `normalize` 是所有框架包的 authoring 真源：React 等框架包只构造 `InputXxx` 并调度此处公开 normalizer，不能直接拼装 Core IR 或复制 authoring shorthand 逻辑。
 - helper 只能构造或归一化既有 Core IR；不得新增平行字段语义。
 - `processing` 组合 Core / Render，拥有所有框架可复用的 compile driver、retained processing session、revision、只读 processing result；`runtime` 保留 SSR 和共享运行时类型，Scene → SVG / Canvas 算法保持在 `@retikz/render`。
-- 预编译 `Scene` 只创建 static processing result；IR / plain spec 由 processing mode 选择 retained Session 或无 Session 的 static full 执行，默认 retained；Patch、fallback 与 rollback 只属于 retained 路径并委托 Render participant。
+- 预编译 `Scene` 只创建 static processing result；IR / InputScene 由 processing mode 选择 retained Session 或无 Session 的 static full 执行，默认 retained；Patch、fallback 与 rollback 只属于 retained 路径并委托 Render participant。
 - 根入口与 SSR 路径不得依赖 DOM 全局。DOM 访问只在 `dom/` 的浏览器 mount / hydrate 调用路径发生；框架包不调用该子入口。
 - Tier 2 adapter 只负责把领域输入转成 Core IR contribution，不把领域 schema 或算法内置到 vanilla。
 - Tier 2 adapter 的 Composite roots / providers 只收集后交给 Core provider graph resolver；Vanilla 不维护单 namespace maker 聚合、私有拓扑、dataset 冲突或 definition 去重语义。

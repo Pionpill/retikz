@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { InputNode, InputPath, InputScene } from '../../src';
 
-import { normalizeNode, normalizePath, normalizeScene } from '../../src';
+import { InputPathArrowDirection, normalizeNode, normalizePath, normalizeScene } from '../../src';
 
 describe('Vanilla Input normalizers', () => {
   it('将 typed Node 输入收敛为唯一 Source IR', () => {
@@ -51,6 +51,73 @@ describe('Vanilla Input normalizers', () => {
         { type: 'step', kind: 'line', to: [24, 0] },
       ],
       strokeWidth: 0,
+    });
+  });
+
+  it('路径箭头方向使用公开 const object enum 表达', () => {
+    expect(InputPathArrowDirection).toEqual({ None: 'none', Forward: '->', Backward: '<-', Both: '<->' });
+  });
+
+  it('将 typed Step 的字符串 target 收敛为 Core Path step', () => {
+    const input: InputPath = {
+      id: 'edge',
+      children: [
+        { type: 'step', kind: 'move', to: 'source.center' },
+        { type: 'step', kind: 'axis-line', axis: 'horizontal', to: 'target.bottom', label: { text: 'flow' } },
+      ],
+    };
+
+    expect(normalizePath(input)).toEqual({
+      type: 'path',
+      id: 'edge',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'source', anchor: 'center' } },
+        {
+          type: 'step',
+          kind: 'axis-line',
+          axis: 'horizontal',
+          to: { id: 'target', anchor: 'bottom' },
+          label: { text: 'flow' },
+        },
+      ],
+    });
+  });
+
+  it('将首个可定位步骤收敛为 move，保留后续绘制步骤', () => {
+    expect(
+      normalizePath({
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'line', to: 'source' },
+          { type: 'step', kind: 'line', to: 'target' },
+        ],
+      }),
+    ).toMatchObject({
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'source' } },
+        { type: 'step', kind: 'line', to: { id: 'target' } },
+      ],
+    });
+  });
+
+  it('拒绝不足两个步骤的非自包含路径', () => {
+    expect(() =>
+      normalizePath({
+        type: 'path',
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+      }),
+    ).toThrow('path requires at least 2 steps');
+  });
+
+  it('允许单个自包含 rectangle 步骤', () => {
+    expect(
+      normalizePath({
+        type: 'path',
+        children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 10] }],
+      }),
+    ).toMatchObject({
+      children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 10] }],
     });
   });
 

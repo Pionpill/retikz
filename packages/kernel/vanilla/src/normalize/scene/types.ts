@@ -1,7 +1,14 @@
-import type { CompositeDependencyContribution, IRChild, IRCoordinate, IRScene, IRViewBox } from '@retikz/core';
+import type {
+  CompileObservationOwner,
+  CompositeDependencyContribution,
+  IRChild,
+  IRCoordinate,
+  IRScene,
+  IRViewBox,
+} from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 
-import type { AnyInputEmbed, AnyInputEmbedAdapter } from '../embed';
+import type { AnyInputEmbed, AnyInputEmbedAdapter, InputEmbedThemeContextResolver } from '../embed';
 import type { InputNode } from '../node';
 import type { InputPath } from '../path';
 import type { InputScope } from '../scope';
@@ -72,6 +79,8 @@ export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'embeddable';
 export type InputAuthoringSite = Readonly<{
   kind: InputAuthoringSiteKind;
   sourcePath: string;
+  /** 对应的 Core 编译观察所属者 */
+  owner?: CompileObservationOwner;
   type: string;
   authoring: unknown;
 }>;
@@ -110,4 +119,6 @@ export type NormalizedInputScene = {
 export type InputNormalizeOptions = {
   /** 调用方显式提供的 Tier 2 adapter */
   adapters?: ReadonlyArray<AnyInputEmbedAdapter>;
+  /** 仅由 processing 准备并注入的 Scope Theme 上下文解析器 */
+  embedThemeContext?: InputEmbedThemeContextResolver;
 };

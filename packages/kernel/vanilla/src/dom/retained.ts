@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic, RuntimeSession } from '@retikz/runtime';
+import type { RuntimeDiagnostic } from '@retikz/runtime';
 
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
 import {
@@ -201,14 +201,18 @@ const createRenderParticipantFactory = (
   read: () => RetainedRendererRead;
   updateConfig: (input: ProcessingParticipantUpdateInput) => ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>>;
 }> => {
-  let renderer: ReturnType<typeof createRetainedRenderParticipant> | undefined;
-  let read: (() => RetainedRendererRead) | undefined;
-  let updateConfig:
-    | ((input: ProcessingParticipantUpdateInput) => ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>>)
+  let lease: ReturnType<typeof createRetainedRenderParticipant>['lease'] | undefined;
+  let active:
+    | Readonly<{
+        read: () => RetainedRendererRead;
+        updateConfig: (
+          input: ProcessingParticipantUpdateInput,
+        ) => ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>>;
+      }>
     | undefined;
   const factory: ProcessingTransactionParticipantFactory = context => {
     const rendererFactory = options.runtimeOptions.rendererFactory ?? builtinRetainedRendererFactory;
-    renderer =
+    const renderer =
       options.backend === 'svg'
         ? createRetainedRenderParticipant({
             backend: 'svg',
@@ -217,6 +221,7 @@ const createRenderParticipantFactory = (
             immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
             coreProgram: context.coreProgram,
             resolveReadonlyLayers: context.resolveReadonlyLayers,
+            ...(lease === undefined ? {} : { rendererLease: lease }),
           })
         : createRetainedRenderParticipant({
             backend: 'canvas',
@@ -229,10 +234,13 @@ const createRenderParticipantFactory = (
             },
             coreProgram: context.coreProgram,
             resolveReadonlyLayers: context.resolveReadonlyLayers,
+            ...(lease === undefined ? {} : { rendererLease: lease }),
           });
     let current = Object.freeze({ ...initialState, runtimeMeta: context.initial.runtimeMeta });
     let currentHandlers = handlers();
-    updateConfig = input => {
+    const updateConfig = (
+      input: ProcessingParticipantUpdateInput,
+    ): ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>> => {
       current =
         input.kind === 'source' ? Object.freeze({ ...state(), runtimeMeta: input.prepared.runtimeMeta }) : state();
       currentHandlers = handlers();
@@ -240,37 +248,35 @@ const createRenderParticipantFactory = (
         createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, createRenderConfig(current, currentHandlers, canvas)),
       ]);
     };
-    let session: RuntimeSession | undefined;
-    read = () => {
-      if (renderer === undefined || session === undefined)
-        throw new Error('Vanilla DOM retained renderer is unavailable');
-      return renderer.read(session);
-    };
     return Object.freeze({
       owners: Object.freeze([RenderRuntimeOwnerDefinition]),
       initialSnapshots: Object.freeze([
         createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, createRenderConfig(current, currentHandlers, canvas)),
       ]),
       participant: renderer.participant,
-      update: input => updateConfig?.(input) ?? Object.freeze([]),
+      update: input => updateConfig(input),
       connect: nextSession => {
-        session = nextSession;
+        lease = renderer.lease;
+        active = Object.freeze({
+          read: () => renderer.read(nextSession),
+          updateConfig,
+        });
       },
       updateParticipant: revision =>
-        updateConfig?.({
+        updateConfig({
           prepared: context.initial,
           revision,
           kind: 'participant',
-        }) ?? Object.freeze([]),
+        }),
     }) satisfies ProcessingTransactionParticipant;
   };
   return Object.freeze({
     factory,
     read: () => {
-      if (read === undefined) throw new Error('Vanilla DOM retained renderer is unavailable');
-      return read();
+      if (active === undefined) throw new Error('Vanilla DOM retained renderer is unavailable');
+      return active.read();
     },
-    updateConfig: input => updateConfig?.(input) ?? Object.freeze([]),
+    updateConfig: input => active?.updateConfig(input) ?? Object.freeze([]),
   });
 };
 

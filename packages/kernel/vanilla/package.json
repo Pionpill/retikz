@@ -7,7 +7,7 @@
     "layer": "adapter",
     "publishable": true
   },
-  "description": "Framework-free retikz runtime: author plain specs, mount SVG/Canvas, hydrate interactions, control animations, or render SVG strings for SSR.",
+  "description": "Framework-free retikz authoring and processing: normalize InputScene, create static or retained processing results, and render SVG strings for SSR; DOM mount, hydration, and animation live in @retikz/vanilla/dom.",
   "type": "module",
   "engines": {
     "node": ">=24"

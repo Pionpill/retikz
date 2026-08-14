@@ -18,9 +18,9 @@ export type PreparedVanillaCompileInput = Readonly<{
   source: IRScene;
   /** 本次编译使用的 Core options */
   coreOptions: CompileOptions;
-  /** plain spec normalizer 报告的 authored sites */
+  /** InputScene normalizer 报告的 authored sites */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
-  /** plain spec 运行时元数据 */
+  /** InputScene 运行时元数据 */
   runtimeMeta: InputRuntimeMeta;
 }>;
 
@@ -36,7 +36,7 @@ export type SceneResult = {
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** 可选编译驱动产出的诊断 */
   diagnostics: ReadonlyArray<unknown>;
-  /** plain spec 运行时元数据 */
+  /** InputScene 运行时元数据 */
   runtimeMeta: InputRuntimeMeta;
 };
 

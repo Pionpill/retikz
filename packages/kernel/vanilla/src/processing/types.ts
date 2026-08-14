@@ -39,7 +39,7 @@ export type PreparedProcessingInput = Readonly<{
   runtimeMeta: InputRuntimeMeta;
 }>;
 
-/** 一次成功 processing 提交的不可变结果 */
+/** 一次成功 processing 编译得到的不可变结果 */
 export type ProcessingResult = Readonly<{
   /** controller 内单调递增的 committed revision */
   revision: number;

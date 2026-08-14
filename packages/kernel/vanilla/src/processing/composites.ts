@@ -22,6 +22,8 @@ export type PreparedCompositeDefinitions = Readonly<{
 export type RetainedCompositeDefinitions = Readonly<{
   /** session-lifetime identity 稳定的代理 Definitions */
   definitions: ReadonlyArray<AnyCompositeDefinition>;
+  /** 判断 candidate 能否复用当前 Core Program 的固定 definition topology */
+  isCompatible: (next: ReadonlyArray<AnyCompositeDefinition> | undefined) => boolean;
   /** 校验固定 topology 并暂存下一组 callback */
   prepare: (next: ReadonlyArray<AnyCompositeDefinition> | undefined) => PreparedCompositeDefinitions;
 }>;
@@ -89,18 +91,17 @@ const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
 };
 
 /** 校验 next normalization 没有热改 Core Program 的固定 definition 拓扑 */
-const assertCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): void => {
+/** 判断 candidate 是否保持当前 Core Program 的 definition topology */
+const isCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): boolean => {
   const initialExpand = typeof initial.expand === 'function';
   const nextExpand = typeof next.expand === 'function';
-  if (
-    initial.namespace !== next.namespace ||
-    initial.type !== next.type ||
-    initial.schema !== next.schema ||
-    initialExpand !== nextExpand ||
-    initial.artifactSchema !== next.artifactSchema
-  ) {
-    invalidDefinitions({ initial, next });
-  }
+  return (
+    initial.namespace === next.namespace &&
+    initial.type === next.type &&
+    initial.schema === next.schema &&
+    initialExpand === nextExpand &&
+    initial.artifactSchema === next.artifactSchema
+  );
 };
 
 /**
@@ -116,10 +117,21 @@ export const createRetainedCompositeDefinitions = (
   const definitions = Object.freeze(slots.map(createDelegate));
   return Object.freeze({
     definitions,
+    isCompatible: nextDefinitions => {
+      const next = nextDefinitions ?? [];
+      return (
+        next.length === slots.length &&
+        next.every((definition, index) => isCompatibleDefinition(slots[index].current, definition))
+      );
+    },
     prepare: nextDefinitions => {
       const next = nextDefinitions ?? [];
-      if (next.length !== slots.length) invalidDefinitions({ initial, next });
-      next.forEach((definition, index) => assertCompatibleDefinition(initial[index], definition));
+      if (
+        next.length !== slots.length ||
+        !next.every((definition, index) => isCompatibleDefinition(slots[index].current, definition))
+      ) {
+        invalidDefinitions({ initial, next });
+      }
       const previous = slots.map(slot => slot.current);
       const changed = next.some((definition, index) => definition !== previous[index]);
       next.forEach((definition, index) => {

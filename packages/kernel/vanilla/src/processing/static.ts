@@ -15,12 +15,20 @@ const EMPTY_ARTIFACTS = Object.freeze([]);
 const EMPTY_LAYERS = Object.freeze([]);
 const EMPTY_DIAGNOSTICS = Object.freeze([]);
 
-/** 用给定 revision 将一次 authored processing 结果冻结为公开快照 */
-export const processToResult = (
+/** 已完成编译、等待宿主确认提交的 static processing 候选结果 */
+export type PreparedStaticProcessing = Readonly<{
+  /** 不可变的同 revision processing result */
+  result: ProcessingResult;
+  /** 在宿主完成帧提交后通知 compile driver，重复调用无副作用 */
+  commit: () => void;
+}>;
+
+/** 准备一次 authored static processing，保留 compile driver 的提交时机给宿主 */
+export const prepareStaticProcessing = (
   source: ProcessingSource,
   options: ProcessingOptions,
   revision: number,
-): ProcessingResult => {
+): PreparedStaticProcessing => {
   const prepared = prepareProcessingInput(source, options);
   const input = Object.freeze({
     instance: Object.freeze({}),
@@ -30,8 +38,7 @@ export const processToResult = (
   });
   const session = createVanillaCompileDriverSession(options.compileDriver ?? defaultVanillaCompileDriver, input);
   const output = compileVanillaWithDriver(input, session);
-  commitVanillaCompileOutput(session, output);
-  return Object.freeze({
+  const result = Object.freeze({
     revision,
     scene: output.primary.scene,
     compileResult: output.primary,
@@ -40,6 +47,26 @@ export const processToResult = (
     diagnostics: Object.freeze([...output.diagnostics]),
     runtimeMeta: prepared.runtimeMeta,
   });
+  let committed = false;
+  return Object.freeze({
+    result,
+    commit: () => {
+      if (committed) return;
+      committed = true;
+      commitVanillaCompileOutput(session, output);
+    },
+  });
+};
+
+/** 用给定 revision 处理并立即提交一次 authored static result */
+export const processToResult = (
+  source: ProcessingSource,
+  options: ProcessingOptions,
+  revision: number,
+): ProcessingResult => {
+  const prepared = prepareStaticProcessing(source, options, revision);
+  prepared.commit();
+  return prepared.result;
 };
 
 /** 以 revision `0` 执行一次无生命周期的作者输入处理 */

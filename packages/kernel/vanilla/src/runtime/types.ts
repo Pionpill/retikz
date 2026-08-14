@@ -111,7 +111,7 @@ export type VanillaRuntimeOptions = VanillaRetainedRuntimeOptions | VanillaStati
  * render 与 mount 入口共享的选项
  * @description `output` 管输出资源和显示尺寸；`compile` 只在输入是 IR / InputScene 时传给
  *   Core 编译；`compileDriver` 提供领域中立扩展接线；`animation` 控制 SVG / Canvas runtime 动画；
- *   `adapters` 只参与 plain spec normalization
+ *   `adapters` 只参与 InputScene normalization
  */
 export type CommonOptions = {
   /** 输出资源与显示尺寸选项 */
@@ -197,7 +197,7 @@ export type StaticRawSvgView = VanillaViewState<SVGSVGElement> &
   Readonly<{
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
-    /** 完整归一化、编译并重绘下一份 IR 或 plain spec */
+    /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
     update: (next: RetainedRenderInput) => void;
   }>;
 
@@ -271,7 +271,7 @@ export type StaticRawCanvasView = CanvasViewState &
   Readonly<{
     /** view 执行模式 */
     mode: typeof VanillaViewMode.Static;
-    /** 完整归一化、编译并重绘下一份 IR 或 plain spec */
+    /** 完整归一化、编译并重绘下一份 IR 或 InputScene */
     update: (next: RetainedRenderInput) => void;
   }>;
 

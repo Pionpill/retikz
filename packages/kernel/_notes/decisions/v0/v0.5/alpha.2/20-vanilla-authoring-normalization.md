@@ -52,9 +52,11 @@ declare const normalizeScene: (input: InputScene, options?: InputNormalizeOption
 
 `InputChild` 由各领域 `InputXxx` 和 `InputEmbed` 组成。`InputEmbed` 是 Tier 2 输入的唯一 authoring 入口：它以稳定的 kind、identity 与领域 typed props 表达嵌入项，不能携带 Core IR、Scene 或独立 session。它只能匹配调用方显式提供的 Vanilla adapter；adapter 产出既有 Core IR contribution 与显式 Composite dependency contribution。Vanilla processing 是该 contribution 的唯一消费者：它用 contribution 与调用方显式提供的既有 Core Composite definitions 调度 Core 的既有 resolver，得到的 definitions 随唯一 `IRScene` 进入 Core compile。不存在全局发现、内置白名单或 adapter 私有 registry。框架包只构造同一 `InputEmbed`，不得绕过它直接拼装 Tier 2 Core contribution。
 
+`InputEmbed` adapter 的 framework-neutral context 包含该 embed 所在 Scene / Scope 链已经生效的 Core Theme，以及调用方提供的 Theme style definitions。Vanilla processing 在同一次 `InputScene` 归一中按 Scope 层级调用 Core 的既有 Theme resolver 准备此 context；它不复制 selector、默认颜色或 style registry 语义，解析结果不进入 Source IR、Scene、artifact 或 Composite dependency。此 context 只让既有 Tier 2 adapter 在正确的 Theme 下产生同一 contribution；它不是新的持久化 Input 字段、全局 Theme registry 或框架专有旁路。
+
 可选 authoring metadata 只用于 provenance 与 framework-neutral compile-driver observation：它随 `InputScene`、Layer、Child 或 Embed 的 authoring site 只读传递，normalizer 不解释、不把它变成图形语义，且它永不写入 Core IR、Scene、artifact、manifest 或 Composite dependency。它不是字段扩展、领域配置或第二条 Input 路径。
 
-`normalizeScene` 是统一顶层入口，返回 `NormalizedInputScene`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `NormalizedInputScene.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。`InputNormalizeOptions` 只接收显式 Vanilla adapter 以及该既有 resolver 所需、由调用方提供的 Core Composite definitions。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
+`normalizeScene` 是统一顶层入口，返回 `NormalizedInputScene`：其中唯一的 Source IR、按显式 adapter 收集的 Composite dependency contribution、authoring provenance 与 runtime metadata 必须来自同一次有序归一化，不能由调用方再做第二次 children 遍历或手工合并。只有 `NormalizedInputScene.ir` 与 Vanilla processing 通过既有 Core resolver 得到的 definitions 能交给 Core；contribution、provenance 与 runtime metadata 只供 Vanilla processing 使用，既不成为 Core compile 的平行输入，也不替代既有 resolver 输入。其 options 只接收显式 Vanilla adapter 与 processing 已准备的窄 Theme context；调用方的 Core Composite definitions 与 Theme style definitions 只经 `ProcessingOptions.compile` 进入 Vanilla processing，再由该 owner 调度既有 Core resolver。`normalizeNode`、`normalizePath` 等实体 normalizer 仍直接返回对应 `IRXxx`，以便组合出该顶层结果。
 
 `InputPosition`、`InputTarget`、`InputTransform`、`InputNodeLabel`、`InputStepLabel`、`InputStep` 与其它实际存在的 authoring 子结构遵循同一规则：以最窄的 Source IR 类型派生，只在 authoring 形态确实不同处放宽。无差异的 Source IR 字段直接复用 `IRXxx`，不为命名完整性制造平行类型。
 
@@ -68,7 +70,7 @@ processing 在创建 Runtime session 前可以接收固定的、领域中立的 
 
 预编译 `Scene` 不进入 controller：它只能经过 Vanilla 根入口的静态处理形成 revision 固定的 static processing result，不能被伪装成可更新的 authoring source。静态 result 与 controller result 使用同一只读结果形态；仅缺少 retained update / subscription 生命周期。这使 React 和未来框架只能订阅 Vanilla 的 committed result，而不拥有另一个 session 或提交协议。根入口不读取浏览器全局，也不提供 mount、hydrate 或元素管理。`@retikz/vanilla/dom` 才拥有默认 DOM materializer、mount、hydrate 和浏览器生命周期：它在 processing 创建 session 前注入 Render participant，使 Core Program、processing result 与 renderer 在同一 Runtime transaction 中完成 mount、update、hydration configuration 和回滚。DOM 不复制 compile、Core Program 或 Runtime session；renderer prepare 失败时，旧 Scene、DOM、processing result 与 revision 必须一起保持。
 
-React 直接依赖 `@retikz/vanilla`。它将 React 专属语法收集为 Vanilla `InputXxx`，调用 Vanilla normalize 与处理 API；它不再定义、复制或直接调用 Core IR builder、compile driver、Core Program、Runtime session 或 retained renderer 编排。React 只保留 JSX / Fragment / children 解包、开发期 React 提示、hook、ref、React 生命周期、对 Vanilla 只读结果的订阅，以及结果到 React SVG / Canvas 宿主的薄映射。React 不调用 Vanilla DOM mount 子入口，避免两个 owner 同时管理同一宿主节点。未来 React 以外的框架包同样只依赖相应 Vanilla API，而不重建 Core / Plot authoring 或处理逻辑。
+React 直接依赖 `@retikz/vanilla`。它将 React 专属语法收集为 Vanilla `InputXxx`，调用 Vanilla normalize 与处理 API；它不再定义、复制或直接调用 Core IR builder、Theme resolver、compile driver、Core Program、Runtime session 或 retained renderer 编排。React 只保留 JSX / Fragment / children 解包、开发期 React 提示、hook、ref、React 生命周期、对 Vanilla 只读结果的订阅，以及结果到 React SVG / Canvas 宿主的薄映射。Scene / Scope 的 sparse Theme 和 caller Theme style definitions 随 Input / processing options 原样传入 Vanilla，由其准备 embed context。React 不调用 Vanilla DOM mount 子入口，避免两个 owner 同时管理同一宿主节点。未来 React 以外的框架包同样只依赖相应 Vanilla API，而不重建 Core / Plot authoring 或处理逻辑。
 
 ```text
 React JSX / props / children
@@ -88,16 +90,16 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 - 默认行为：相同 authoring 含义无论来自 Vanilla helper、`InputScene` 或 React JSX，必须得到结构等价的 `NormalizedInputScene.ir`；直接 children 与等价 Layer 输入具有相同的 Core IR 与 contribution 顺序及 compile 结果。随后 Core compile 结果保持不变
 - 失败与诊断：unknown、JSON、字符串与 DSL 仍只在 Core parser / schema 边界诊断。Vanilla normalizer 只诊断 TypeScript 不能表达且 Source IR schema 未覆盖的 authoring 组合不变量，不重复 schema 或类型已经保证的检查
 - 兼容性 / breaking：Core 不再导出 authoring `*Input` 类型和只服务该层的 helper；消费方改从 Vanilla 导入 `InputXxx` 与 `normalizeXxx`。不保留旧导入别名或自动迁移路径
-- React / Vanilla 等价性：React 生成同一 `InputScene` / `InputXxx` 语义并调用同一 Vanilla normalizer 与 processing controller；React 特有的 Fragment / JSX children 遍历、Sugar 展开、开发期提示、hook、ref、React 状态订阅和宿主映射不进入 Vanilla
+- React / Vanilla 等价性：React 生成同一 `InputScene` / `InputXxx` 语义并调用同一 Vanilla normalizer 与 processing controller；嵌入式 Tier 2 adapter 在 Vanilla 准备的有效 Scope Theme 下生成 contribution。React 特有的 Fragment / JSX children 遍历、Sugar 展开、开发期提示、hook、ref、React 状态订阅和宿主映射不进入 Vanilla
 - 处理状态：controller 只发布完整成功 revision，失败更新保留最后一个 committed result 并经诊断报告；DOM 的 Render participant 与 result participant 属于同一 transaction，任一 renderer prepare 失败都会同时回滚结果、revision 与宿主帧；预编译 `Scene` 只获得不可更新、不可订阅的 static result
 - 直接 IR：手写、持久化和外部解析得到的 `IRScene` 继续直接交给 Core `compileToScene`；交给 Vanilla processing 时不经过 Input，而是作为已归一 Source IR 使用同一 processing result 链路
 
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Drawing Complete 的 adapter 等价暴露；解决 authoring 输入、IR builder 与框架接线分散导致的平行路径
-- 主责包与协作包：Vanilla 拥有 Core `InputXxx`、Input-to-IR normalize、framework-neutral compile driver、retained processing session 与只读处理结果；React 和未来框架包拥有自身语法、状态模型、生命周期与宿主适配；Core 拥有 Source IR schema、Canonical、compile 与 Scene；Render 只执行 Scene
+- 主责包与协作包：Vanilla 拥有 Core `InputXxx`、Input-to-IR normalize、InputEmbed 的有效 Theme context、framework-neutral compile driver、retained processing session 与只读处理结果；React 和未来框架包拥有自身语法、状态模型、生命周期与宿主适配；Core 拥有 Source IR schema、Theme resolver、Canonical、compile 与 Scene；Render 只执行 Scene
 - 拥有：Vanilla 的无框架 helpers、plain spec、所有框架可复用的 authoring 输入组装和处理链；Vanilla DOM 子入口的浏览器 materializer、mount、hydrate 与元素生命周期；React 的 JSX / ReactNode 解包、组件协议、状态订阅和 React 宿主接线
-- 不拥有：Vanilla 不拥有 Core schema、Canonical、registry、lowering 或 Scene 语义；React 不拥有 Core IR builder、compile driver、Runtime session 或 renderer 编排；Core 不拥有框架通用 Input、framework-neutral processing API 或任一框架专有 host 细节
+- 不拥有：Vanilla 不拥有 Core schema、Theme 默认和 registry 语义、Canonical、lowering 或 Scene 语义；React 不拥有 Core IR builder、Theme resolver、compile driver、Runtime session 或 renderer 编排；Core 不拥有框架通用 Input、framework-neutral processing API 或任一框架专有 host 细节
 - 外部扩展与下游闭环：Tier 2 的 Vanilla 包遵循同一模式，拥有本领域 `InputXxx -> Plot / Tier 2 IR`，将其以 `InputEmbed` 接入 `InputScene` 并复用 Vanilla 处理链；其 React 包只将 JSX 映射到该 Vanilla Input 和结果桥接。Core Composite contribution 仍交给既有 Core resolver，不新增 adapter 私有 registry
 - 不支持边界：本 ADR 不把 Vanilla plain spec 变为持久化格式，不让 DOM 子入口进入 Vanilla 根入口，也不让 Core 依赖 Vanilla 或任一框架包。它不让 React 直接拥有或调用命令式 DOM mount；React 仅映射 Vanilla 结果到自身宿主
 
@@ -106,7 +108,7 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 - 是否可由现有能力组合：不能。现有 Vanilla 已有 FigureSpec normalize、compile driver 与 retained session，但 Node / Path / Scope helpers 直接使用 IR，React 仍直接组装 IR 并复制 compile driver、session 与 retained renderer 编排；仅靠约定无法删除平行 owner 路径
 - math / core / render / adapter 责任切分：Math 不变；Core 保持 IR 与编译语义；Vanilla 下沉作者输入并拥有 framework-neutral processing；Vanilla DOM 承担命令式浏览器 materializer；React 只保留框架转换与宿主桥接；Render 不改
 - 是否需要新 IR / contract / registry；不采用 registry 的理由：不需要新 IR 或 registry。Input normalize 是闭合的作者侧语法转换，能力扩展仍先由 Core IR / Definition contract 建立，再由 Vanilla 适配，不存在由第三方运行时发现 Input normalizer 的需求
-- Scene / manifest / renderer / diagnostics 如何闭环：Vanilla 以单次 `normalizeScene` 得到既有 IR 与 Core resolver 所需的显式 contribution 后交给 Core，并把同 revision 的 Scene、artifact、manifest、diagnostics 和只读 layers 作为 processing result 交给 DOM 或框架桥接；DOM 在 session 创建前提供固定 Render participant，因此 Core、result 与 renderer 一次 transaction 成功才提交，失败保持前一结果与宿主帧；renderer 无 Input 认知，React 只订阅该结果并映射自己的 host
+- Scene / manifest / renderer / diagnostics 如何闭环：Vanilla 以单次 `normalizeScene` 得到既有 IR、embed 的有效 Scope Theme 与 Core resolver 所需的显式 contribution 后交给 Core，并把同 revision 的 Scene、artifact、manifest、diagnostics 和只读 layers 作为 processing result 交给 DOM 或框架桥接；DOM 在 session 创建前提供固定 Render participant，因此 Core、result 与 renderer 一次 transaction 成功才提交，失败保持前一结果与宿主帧；renderer 无 Input 认知，React 只订阅该结果并映射自己的 host
 - provenance / locator / Interaction Readiness 是否适用：既有 Vanilla / React authored site 与 hydration 收集必须保持来源等价；本 ADR 不新增 target、behavior、intent 或 interaction contract
 - 结论：上移。将 framework-neutral authoring normalize 与 processing 从 Core / React 上移到 API 基础包 Vanilla，保持领域语义留在 Core
 
