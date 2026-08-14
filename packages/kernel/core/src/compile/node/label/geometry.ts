@@ -2,7 +2,7 @@ import type { Position } from '@retikz/math';
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
-import type { CanonicalNodeLabelBoundaryPosition } from '../../../normalize/node';
+import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve/node';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout } from '../types';
 
 import { AnchorUnitVectorByAnchor } from '../../../shared';

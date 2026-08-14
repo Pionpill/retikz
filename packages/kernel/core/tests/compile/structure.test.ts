@@ -136,10 +136,8 @@ describe('compile source structure', () => {
       'alignmentGuidesOfNode',
       'anchorOf',
       'angleBoundaryOf',
-      'boundaryKey',
       'boundaryPointOf',
       'boxInsets',
-      'chooseBlackOrWhiteForLuminance',
       'computeCompiledNodeLayout',
       'createScopeCircleLayout',
       'createScopePlaceholderLayout',
@@ -153,11 +151,9 @@ describe('compile source structure', () => {
       'labelExtentPoints',
       'layoutNode',
       'outerRectOf',
-      'parseStaticCssColor',
       'resolveBoundary',
       'resolveLabelRotateDeg',
       'resolveNodeLabelGeometry',
-      'resolveNodeTextColor',
     ]);
 
     const layout: Partial<NodeLayout> = {};
@@ -175,9 +171,60 @@ describe('compile source structure', () => {
     expect(text).not.toContain('const resolvePendingPaths =');
   });
 
-  it('boundary compile does not import concrete shape providers', () => {
+  it('node resolve stays free of compile dependencies', () => {
+    for (const path of ['src/resolve/node/shape.ts', 'src/resolve/node/boundary.ts']) {
+      expect(source(path)).not.toContain('/compile/');
+    }
+  });
+
+  it('node synthetic layout resolves through the canonical node path', () => {
+    const text = source('src/compile/node/synthetic.ts');
+    expect(text).toContain('resolveNode(');
+    expect(text).toContain('layoutNode(');
+    expect(text).not.toContain('resolveShapeRegistry');
+    expect(text).not.toContain('resolveBoundaryRegistry');
+    expect(text).not.toContain('providerDefinitionOf');
+  });
+
+  it('node layouts keep boundary resolution data without registry closures', () => {
+    const layout = source('src/compile/node/layout.ts');
+    const types = source('src/compile/node/types.ts');
+    const anchors = source('src/compile/node/anchors.ts');
+    expect(types).not.toContain('resolveBoundary:');
+    expect(layout).not.toContain('resolveBoundaryReference(');
+    expect(anchors).not.toContain('resolveBoundaryReference(');
+  });
+
+  it('compile keeps boundary lookup out of node geometry and probe diagnostics local', () => {
+    const nodeSources = [
+      'src/compile/node/anchors.ts',
+      'src/compile/node/boundary.ts',
+      'src/compile/node/emit.ts',
+      'src/compile/node/layout.ts',
+      'src/compile/node/synthetic.ts',
+      'src/compile/node/types.ts',
+    ];
+    for (const path of nodeSources) {
+      const text = source(path);
+      expect(text).not.toContain('createBoundaryResolver');
+      expect(text).not.toContain('createNodeBoundaryReferenceResolver');
+      expect(text).not.toContain('resolveBoundaryReference(');
+    }
+
+    const probeFailure = source('src/compile/probe-failure.ts');
+    expect(probeFailure).not.toContain('export {');
+    expect(probeFailure).not.toContain('isCompositeContractError');
+    expect(probeFailure).not.toContain('isFatalProbeError');
+    expect(probeFailure).not.toContain('safeThrownDetail');
+    expect(() => source('src/compile/provider-payload.ts')).toThrow();
+  });
+
+  it('boundary geometry consumes resolved references without provider lookup', () => {
     const text = source('src/compile/node/boundary.ts');
-    expect(text).not.toContain("from '../providers/shape'");
+    expect(text).toContain('BoundaryReferenceResolution');
+    expect(text).not.toContain('providerDefinitionOf');
+    expect(text).not.toContain('resolveShapeRegistry');
+    expect(text).not.toContain('resolveBoundaryRegistry');
   });
 
   it('ribbon compile implementation is directory based', () => {

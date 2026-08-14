@@ -5,9 +5,9 @@ import type { CanonicalStep } from '../../../normalize/path';
 import type { IRPosition } from '../../../schemas';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
+import { parseProviderPayload } from '../../../resolve/provider-payload';
 import { JsonObjectSchema } from '../../../schemas';
-import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../probe-failure';
-import { parseProviderPayload } from '../../provider-payload';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();

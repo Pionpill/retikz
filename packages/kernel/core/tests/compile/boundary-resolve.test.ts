@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ResolveBoundaryContext } from '../../src/compile/node';
+import type { BoundaryGeometryResolveContext } from '../../src/compile/node';
 import type { Rect } from '../../src/shared/geometry/rect';
 
-import { boundaryKey, resolveBoundary } from '../../src/compile/node';
+import { resolveBoundary as resolveBoundaryGeometry } from '../../src/compile/node';
+import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
+import type { ProviderCollection } from '../../src/providers/registry';
+import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
+import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
 
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
@@ -27,13 +31,31 @@ const customWithoutEnvelope = {
   connectionEnvelope: undefined,
 };
 
-const resolveContext = (overrides: Partial<ResolveBoundaryContext> = {}): ResolveBoundaryContext => ({
+type BoundaryTestContext = BoundaryGeometryResolveContext & {
+  shapeRegistry: ProviderCollection<ShapeDefinition>;
+  boundaryRegistry: ProviderCollection<BoundaryDefinition>;
+};
+
+const resolveContext = (overrides: Partial<BoundaryTestContext> = {}): BoundaryTestContext => ({
   visualDef: rectangle,
   visualRect,
   visualParams: {},
   shapeRegistry: registry,
+  boundaryRegistry: resolveBoundaryRegistry(),
   ...overrides,
 });
+
+const resolveBoundary = (boundary: Parameters<typeof resolveBoundaryReference>[0], context: BoundaryTestContext) =>
+  resolveBoundaryGeometry(
+    resolveBoundaryReference(boundary, {
+      visualDef: context.visualDef,
+      visualParams: context.visualParams,
+      shapeRegistry: context.shapeRegistry,
+      boundaryRegistry: context.boundaryRegistry,
+      irPath: context.irPath,
+    }),
+    context,
+  );
 
 describe('resolveBoundary', () => {
   it("'shape' / undefined → visual def + rect", () => {

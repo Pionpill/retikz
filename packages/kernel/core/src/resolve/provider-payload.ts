@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import { LayoutProbeRecoverableError, safeThrownDetail } from './probe-failure';
+import { LayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';
 
 /** provider payload 校验输入 */
 export type ParseProviderPayloadInput<TOutput> = {

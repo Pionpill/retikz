@@ -2,15 +2,15 @@ import type { ClipDefinition, ClipResource, ClipShape, PathClipShape, PathComman
 import type { IRClipSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry/index';
-import { JsonObjectSchema, PathCommandSchema } from '../../schemas';
 import {
   CompositeContractError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   LayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../probe-failure';
-import { parseProviderPayload } from '../provider-payload';
+} from '../../resolve/diagnostics';
+import { parseProviderPayload } from '../../resolve/provider-payload';
+import { JsonObjectSchema, PathCommandSchema } from '../../schemas';
 import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../scene-primitive';
 
 export type ClipRegistry = {

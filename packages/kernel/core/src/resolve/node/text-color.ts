@@ -1,11 +1,11 @@
-import type { EffectiveLabelDefault } from '../../../resolve/style';
-import type { IRLineSpec, IRNode, IRNodeLabel } from '../../../schemas';
-import type { CompileWarningCodeValue } from '../../warning';
-import type { ParsedCssColor } from './types';
+import type { EffectiveLabelDefault } from '../style';
+import type { IRLineSpec, IRNode, IRNodeLabel } from '../../schemas';
+import type { ParsedCssColor } from './text-color-types';
 
-import { NodeTextColor } from '../../../schemas';
-import { CompileWarningCode } from '../../constants';
-import { parseStaticCssColor } from './parse';
+import { NodeTextColor } from '../../schemas';
+import { parseStaticCssColor } from './text-color-parse';
+
+export { parseStaticCssColor } from './text-color-parse';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLineSpec): boolean => {
@@ -40,10 +40,10 @@ const hasNodeTextColorConsumer = (node: IRNode, labelDefault: EffectiveLabelDefa
 };
 
 /** 把不可解析原因转成稳定 warning，并返回固定 fallback */
-const fallbackTextColor = (reason: string, warn: (code: CompileWarningCodeValue, message: string) => void): string => {
+const fallbackTextColor = (reason: string, warn: (code: string, message: string) => void): string => {
   const fallback = 'currentColor';
   warn(
-    CompileWarningCode.TextAutoContrastUnresolved,
+    'TEXT_AUTO_CONTRAST_UNRESOLVED',
     `Cannot resolve Node auto-contrast text color: ${reason}; using fallback '${fallback}'`,
   );
   return fallback;
@@ -70,7 +70,7 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
 export const resolveNodeTextColor = (
   node: IRNode,
   labelDefault: EffectiveLabelDefault,
-  warn: (code: CompileWarningCodeValue, message: string) => void,
+  warn: (code: string, message: string) => void,
 ): IRNode => {
   if (node.textColor !== NodeTextColor.Contrast) return node;
 

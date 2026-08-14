@@ -9,7 +9,7 @@ import type {
 import type { IRPaintSpec } from '../../schemas';
 
 import { providerDefinitionOf } from '../../providers/registry/index';
-import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../probe-failure';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../resolve/diagnostics';
 import { validateMarkerPrimitives } from './marker-primitive';
 import { resolvePatternStyleContext } from './pattern-style';
 

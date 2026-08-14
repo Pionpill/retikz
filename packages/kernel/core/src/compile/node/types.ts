@@ -1,8 +1,7 @@
-﻿import type { BoundsInsets } from '@retikz/math';
+﻿import type { BoundsInsets, Position } from '@retikz/math';
 
-import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
-import type { CanonicalNode, CanonicalNodeLabel } from '../../normalize/node';
-import type { ProviderCollection } from '../../providers/registry/index';
+import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
+import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve/node';
 import type {
   BlendModeValue,
   IRAnimationTrack,
@@ -18,6 +17,44 @@ import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 export type NodeFontWeight = NonNullable<IRFont['weight']>;
+
+/** 连接面 provider 的几何实现契约 */
+export type BoundaryGeometryDefinition = {
+  /** provider 名称 */
+  name: string;
+  /** 按方向求连接点 */
+  boundaryPoint: (rect: Rect, toward: Position, params: IRJsonObject) => Position;
+  /** 求命名 anchor */
+  anchor?: (rect: Rect, name: string, params: IRJsonObject) => Position | undefined;
+};
+
+/** 已按视觉 rect 解析出的连接面几何 */
+export type BoundaryGeometryResolution = {
+  /** 连接面 definition */
+  def: BoundaryGeometryDefinition;
+  /** provider 使用的连接面 rect */
+  rect: Rect;
+  /** 已校验参数 */
+  params: IRJsonObject;
+};
+
+/** 连接面几何解析所需的布局上下文 */
+export type BoundaryGeometryResolveContext = {
+  /** 节点视觉 shape definition */
+  visualDef: ShapeDefinition;
+  /** 节点视觉 shape rect */
+  visualRect: Rect;
+  /** 节点视觉 shape 参数 */
+  visualParams: IRJsonObject;
+  /** 当前 node 的 IR 路径 */
+  irPath?: string;
+  /** shape-aware envelope 缓存 */
+  connectionEnvelopeCache?: Map<string, Rect>;
+  /** tight fallback warning 去重集合 */
+  connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
+  /** compile warning 分发函数 */
+  warn?: (code: CompileWarningCodeValue, message: string) => void;
+};
 
 /** 节点正文与附属 label 共享的文本布局上下文 */
 export type NodeTextLayoutContext = {
@@ -149,13 +186,8 @@ export type NodeLayout = {
   meta?: IRJsonObject;
   /** 时间轴动画 tracks */
   animations?: Array<IRAnimationTrack>;
-  /** 构建本 layout 的 shape 注册表引用 */
-  shapes: ProviderCollection<ShapeDefinition>;
-  /**
-   * boundary 注册表引用
-   * @default resolveBoundaryRegistry
-   */
-  boundaries?: ProviderCollection<BoundaryDefinition>;
+  /** 已绑定的默认连接面 provider 与参数 */
+  boundaryResolution: BoundaryReferenceResolution;
   /** shape-aware connection envelope 缓存 */
   connectionEnvelopeCache?: Map<string, Rect>;
   /** tight fallback warning 去重集合 */

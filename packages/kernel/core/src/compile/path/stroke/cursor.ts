@@ -1,4 +1,5 @@
 import type { Transform } from '../../../contract';
+import type { BoundaryReferenceResolver } from '../../../resolve/node';
 import type { CanonicalStep } from '../../../normalize/path';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
@@ -61,6 +62,8 @@ export type CreateStrokeCursorInput = {
   scopeChain: ReadonlyArray<Transform>;
   /** path warning 收集器 */
   warn: (code: string, message: string, subPath?: string) => void;
+  /** Path 显式 target boundary 的临时解析回调 */
+  resolveExplicitBoundary?: BoundaryReferenceResolver;
 };
 
 /** 判断 step 是否具有普通 `to` 目标 */
@@ -82,10 +85,11 @@ export const createStrokeCursor = ({
   namespaceStack,
   scopeChain,
   warn,
+  resolveExplicitBoundary,
 }: CreateStrokeCursorInput): StrokeCursor => {
   const anchors: Array<IRPosition | null> = steps.map((step, index) => {
     if (!isStrokeTargetStep(step)) return null;
-    const anchor = localPointOfTarget(step.to, namespaceStack, scopeChain);
+    const anchor = localPointOfTarget(step.to, namespaceStack, scopeChain, resolveExplicitBoundary);
     const targetId = nodeIdFromResolvableTarget(step.to);
     if (!anchor && targetId !== undefined) {
       warn(

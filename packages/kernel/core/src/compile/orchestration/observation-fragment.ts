@@ -3,8 +3,8 @@ import type { IRChild } from '../../schemas';
 import type { CompileContext } from './context';
 import type { PendingCompileObservation } from './types';
 
+import { safeErrorMessage } from '../../resolve/diagnostics';
 import { CompileWarningCode } from '../constants';
-import { safeErrorMessage } from '../probe-failure';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { assertFiniteLayout, computeLayoutFromBounds } from '../scene';
 import { orderCompileWarnings } from './diagnostics';

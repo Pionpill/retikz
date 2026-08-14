@@ -2,15 +2,17 @@ import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry/index';
-import type { IRPosition } from '../../schemas';
+import type { IRJsonObject, IRNode, IRPosition } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
-import { resolveBoundaryRegistry } from '../../providers/boundary';
-import { providerDefinitionOf } from '../../providers/registry/index';
-import { resolveShapeRegistry } from '../../providers/shape';
+import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
+import { BUILTIN_SHAPES } from '../../providers/shape';
+import { resolveNode } from '../../resolve/node';
 import { applyTransformChain } from '../transform';
-import { boxInsets } from './box';
+import { fallbackMeasurer } from '../text';
+import { NamespaceStack } from '../namespace';
+import { layoutNode } from './layout';
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */
 export type SyntheticLayoutRegistryContext = {
@@ -40,42 +42,67 @@ export type ScopeRectangleLayoutInput = {
 
 /** synthetic scope circle layout 输入 */
 export type ScopeCircleLayoutInput = {
-  /** layout id */
-  id: string;
   /** 子树外包络角点 */
   cornerPoints: ReadonlyArray<IRPosition>;
   /** 空点集时使用的回退原点 */
   fallbackOrigin: IRPosition;
+  /** layout id */
+  id: string;
+};
+
+const syntheticNode = (
+  input: SyntheticRectangleLayoutInput,
+  shape: 'rectangle' | 'ellipse',
+  shapeParams: IRJsonObject = {},
+): IRNode => {
+  const rect = input.rect;
+  return {
+    type: 'node',
+    id: input.id,
+    shape: Object.keys(shapeParams).length === 0 ? shape : { type: shape, params: shapeParams },
+    position: [rect.x, rect.y],
+    minimumSize: { width: rect.width, height: rect.height },
+    padding: 0,
+    margin: 0,
+    rotate: ((rect.rotate ?? 0) * 180) / Math.PI,
+  };
+};
+
+/** 通过 resolveNode + layoutNode 构造 synthetic layout */
+const resolveSyntheticLayout = (
+  input: SyntheticRectangleLayoutInput,
+  shape: 'rectangle' | 'ellipse',
+  context: SyntheticLayoutRegistryContext,
+  shapeParams: IRJsonObject = {},
+): NodeLayout => {
+  const shapes = context.shapes ?? BUILTIN_SHAPES;
+  const boundaries = context.boundaries ?? BUILTIN_BOUNDARIES;
+  const node = syntheticNode(input, shape, shapeParams);
+  const resolution = resolveNode(node, {
+    styleFrames: [],
+    shapes,
+    boundaries,
+    irPath: `synthetic.${input.id}`,
+    warn: () => {},
+  });
+  const layout = layoutNode(resolution, {
+    measureText: fallbackMeasurer,
+    namespaceStack: new NamespaceStack(),
+  });
+  return {
+    ...layout,
+    textWidth: input.rect.width,
+    textHeight: input.rect.height,
+    lineHeight: 0,
+    fontSize: 0,
+  };
 };
 
 /** 构造编译期 synthetic rectangle layout */
 export const createSyntheticRectangleLayout = (
   input: SyntheticRectangleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
-): NodeLayout => {
-  const shapes = context.shapes ?? resolveShapeRegistry();
-  const boundaries = context.boundaries ?? resolveBoundaryRegistry();
-  const rect: Rect = { ...input.rect, rotate: input.rect.rotate ?? 0 };
-  return {
-    id: input.id,
-    shapeName: 'rectangle',
-    shapeDef: providerDefinitionOf(shapes, 'rectangle', {
-      capability: 'shape',
-      optionName: 'shapes',
-    }),
-    rect,
-    contentCenter: [rect.x, rect.y],
-    rotateDeg: 0,
-    margin: boxInsets(0),
-    textWidth: rect.width,
-    textHeight: rect.height,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-    shapes,
-    boundaries,
-  };
-};
+): NodeLayout => resolveSyntheticLayout(input, 'rectangle', context);
 
 /** 用 scope id 和当前 transform chain 构造临时 0×0 synthetic layout */
 export const createScopePlaceholderLayout = (
@@ -113,26 +140,13 @@ export const createScopeCircleLayout = (
   input: ScopeCircleLayoutInput,
   context: SyntheticLayoutRegistryContext = {},
 ): NodeLayout => {
-  const shapes = context.shapes ?? resolveShapeRegistry();
-  const boundaries = context.boundaries ?? resolveBoundaryRegistry();
   const mec = input.cornerPoints.length > 0 ? circle.minimalEnclosing([...input.cornerPoints]) : null;
   const center: IRPosition = mec ? [mec.center[0], mec.center[1]] : input.fallbackOrigin;
   const diameter = mec ? mec.radius * 2 : 0;
-  return {
-    id: input.id,
-    shapeName: 'ellipse',
-    shapeDef: providerDefinitionOf(shapes, 'ellipse', { capability: 'shape', optionName: 'shapes' }),
-    shapeParams: { circumscribe: 'equal' },
-    rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 },
-    contentCenter: [center[0], center[1]],
-    rotateDeg: 0,
-    margin: boxInsets(0),
-    textWidth: diameter,
-    textHeight: diameter,
-    align: 'middle',
-    lineHeight: 0,
-    fontSize: 0,
-    shapes,
-    boundaries,
-  };
+  return resolveSyntheticLayout(
+    { id: input.id, rect: { x: center[0], y: center[1], width: diameter, height: diameter, rotate: 0 } },
+    'ellipse',
+    context,
+    { circumscribe: 'equal' },
+  );
 };

@@ -64,7 +64,7 @@ const emitCanonicalPathPrimitive = (
   }
   // 先把 relative/relativeAccumulate 解析为当前 scope 局部坐标，后续算法可统一按非 relative target 处理
   const canonicalSteps = canonicalChildren;
-  const steps = normalizePathSteps(canonicalSteps, namespaceStack, scopeChain);
+  const steps = normalizePathSteps(canonicalSteps, namespaceStack, scopeChain, pathEmitOptions.resolveExplicitBoundary);
   // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
   // 其余 step 需"起点 + 至少一段绘制"故最少 2 段
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
@@ -77,7 +77,13 @@ const emitCanonicalPathPrimitive = (
     return null;
   }
 
-  const cursor = createStrokeCursor({ steps, namespaceStack, scopeChain, warn });
+  const cursor = createStrokeCursor({
+    steps,
+    namespaceStack,
+    scopeChain,
+    warn,
+    resolveExplicitBoundary: pathEmitOptions.resolveExplicitBoundary,
+  });
 
   /** 主循环每轮置为当前 step.kind，emit* 据此打 provenance 标 */
   let currentStepKind = '';
@@ -151,7 +157,12 @@ const emitCanonicalPathPrimitive = (
           cursor.relativeBaseline[1] + originalStep.to.relativeAccumulate[1],
         ];
       } else {
-        generatorTarget = localPointOfTarget(originalStep.to, namespaceStack, scopeChain);
+        generatorTarget = localPointOfTarget(
+          originalStep.to,
+          namespaceStack,
+          scopeChain,
+          pathEmitOptions.resolveExplicitBoundary,
+        );
       }
       if (generatorTarget) {
         if (!isFinitePoint(generatorTarget)) {
@@ -186,7 +197,12 @@ const emitCanonicalPathPrimitive = (
           smoothBaseline = resolved;
           continue;
         }
-        const resolved = localPointOfTarget(originalPoint, namespaceStack, scopeChain);
+        const resolved = localPointOfTarget(
+          originalPoint,
+          namespaceStack,
+          scopeChain,
+          pathEmitOptions.resolveExplicitBoundary,
+        );
         if (!resolved) {
           points.push(originalPoint);
           continue;
@@ -216,6 +232,7 @@ const emitCanonicalPathPrimitive = (
         commandEmitter,
         cursor,
         sampling,
+        resolveExplicitBoundary: pathEmitOptions.resolveExplicitBoundary,
       });
       if (!lowered) return null;
       if (
@@ -240,7 +257,12 @@ const emitCanonicalPathPrimitive = (
     }
 
     if (step.kind === 'axis-line' && originalStep.kind === 'axis-line') {
-      const targetReference = localPointOfTarget(originalStep.to, namespaceStack, scopeChain);
+      const targetReference = localPointOfTarget(
+        originalStep.to,
+        namespaceStack,
+        scopeChain,
+        pathEmitOptions.resolveExplicitBoundary,
+      );
       if (!targetReference) return null;
       const currentReference = cursor.getPenOverride() ?? prev.anchor;
       const projected: IRPosition =
@@ -275,6 +297,7 @@ const emitCanonicalPathPrimitive = (
       penOverride: usedOverride,
       commandEmitter,
       sampling,
+      resolveExplicitBoundary: pathEmitOptions.resolveExplicitBoundary,
     });
     if (!lowered) return null;
   }

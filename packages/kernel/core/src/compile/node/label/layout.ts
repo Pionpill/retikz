@@ -1,4 +1,3 @@
-import type { EffectiveLabelDefault } from '../../../resolve/style';
 import type { FontSpec, TextMeasurer } from '../../text';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 
@@ -7,8 +6,6 @@ import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
-  /** 样式栈解析出的 label 默认值 */
-  labelDefault?: EffectiveLabelDefault;
   /** 节点 label 与节点边界的默认距离 */
   labelDistance: number;
   /** 基准字体大小 */
@@ -29,7 +26,6 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     node,
     measureText,
     texLowering,
-    labelDefault,
     labelDistance,
     baseFontSize,
     rootFontSize,
@@ -44,20 +40,16 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
   const measureLabelText = nodeLabelMeasurer(measureText);
   return rawLabels?.map(lab => {
     const labFont = lab.font;
-    const labelBaseFontSize = resolveFontSize(labelDefault?.font?.size, {
-      rootFontSize,
-      inheritedFontSize: baseFontSize,
-    });
     const labFontSize =
       resolveFontSize(labFont?.size, {
         rootFontSize,
-        inheritedFontSize: labelBaseFontSize,
+        inheritedFontSize: baseFontSize,
       }) * fontScale;
-    const labFamily = labFont?.family ?? labelDefault?.font?.family ?? fontFamily;
-    const labWeight = labFont?.weight ?? labelDefault?.font?.weight ?? fontWeight;
-    const labStyle = labFont?.style ?? labelDefault?.font?.style ?? fontStyle;
-    const labTextColor = lab.textColor ?? labelDefault?.textColor ?? labelDefault?.color ?? node.textColor;
-    const labOpacity = lab.opacity ?? labelDefault?.opacity;
+    const labFamily = labFont?.family ?? fontFamily;
+    const labWeight = labFont?.weight ?? fontWeight;
+    const labStyle = labFont?.style ?? fontStyle;
+    const labTextColor = lab.textColor ?? node.textColor;
+    const labOpacity = lab.opacity;
     const labFontSpec: FontSpec = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
     const resolved = resolveLineRunsWithWarning(lab.text, {
       gatingOn: texGatingOn,

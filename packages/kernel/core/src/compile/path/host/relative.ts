@@ -1,6 +1,7 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
+import type { BoundaryReferenceResolver } from '../../../resolve/node';
 import type { CanonicalStep } from '../../../normalize/path';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
@@ -12,6 +13,7 @@ export const normalizePathSteps = (
   steps: ReadonlyArray<CanonicalStep>,
   namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform> = [],
+  resolveExplicitBoundary?: BoundaryReferenceResolver,
 ): Array<CanonicalStep> => {
   let prevEnd: IRPosition | null = null;
   const out: Array<CanonicalStep> = [];
@@ -57,7 +59,7 @@ export const normalizePathSteps = (
         }
         normalizedPoints.push(resolvedPt);
         if (updatePrevEnd) {
-          const pos = localPointOfTarget(resolvedPt, namespaceStack, scopeChain);
+          const pos = localPointOfTarget(resolvedPt, namespaceStack, scopeChain, resolveExplicitBoundary);
           if (pos) prevEnd = pos;
         }
       }
@@ -69,7 +71,7 @@ export const normalizePathSteps = (
       // generator 产段终点要等编译期 generate 才知；预处理阶段以 step.to 近似推进 prevEnd（多数曲线收于 to），
       // 供后续相对定位。无 to 的纯参数曲线保守不推进（产段末端不可预知）。
       if (step.to !== undefined) {
-        const pos = localPointOfTarget(step.to, namespaceStack, scopeChain);
+        const pos = localPointOfTarget(step.to, namespaceStack, scopeChain, resolveExplicitBoundary);
         if (pos) prevEnd = pos;
       }
       continue;
@@ -98,7 +100,7 @@ export const normalizePathSteps = (
     out.push({ ...step, to: resolvedTo });
 
     if (updatePrevEnd) {
-      const pos = localPointOfTarget(resolvedTo, namespaceStack, scopeChain);
+      const pos = localPointOfTarget(resolvedTo, namespaceStack, scopeChain, resolveExplicitBoundary);
       if (pos) prevEnd = pos;
     }
   }

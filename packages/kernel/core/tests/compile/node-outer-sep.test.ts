@@ -24,7 +24,12 @@ const mkLayout = (margin: number, rotate = 0): NodeLayout => ({
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
-  shapes: BUILTIN_SHAPES,
+  boundaryResolution: {
+    name: BUILTIN_SHAPES.rectangle.name,
+    definition: BUILTIN_SHAPES.rectangle,
+    params: {},
+    isShape: true,
+  },
 });
 
 const hypot = (p: readonly [number, number]): number => Math.hypot(p[0], p[1]);

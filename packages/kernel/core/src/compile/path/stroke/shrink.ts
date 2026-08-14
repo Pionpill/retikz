@@ -11,12 +11,12 @@ import type {
 import type { IRArrowMark, IRPosition } from '../../../schemas';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
 import {
   ARROW_MARKER_DEFAULT_SIZE,
   ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
   DEFAULT_ARROW_SHAPE,
 } from '../../../schemas';
-import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../probe-failure';
 import { validateMarkerPrimitives } from '../../resource';
 import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
 

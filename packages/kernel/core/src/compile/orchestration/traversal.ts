@@ -25,6 +25,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
+import type { BoundaryReferenceResolver } from '../../resolve/node';
 import type {
   IRChild,
   IRPathBase,
@@ -61,15 +62,19 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
-import { normalizeNode } from '../../normalize/node';
 import { providerDefinitionOf } from '../../providers/registry/index';
-import { resolveDropShadow } from '../../resolve/style';
 import {
-  createStyleResolveFrame,
-  resolveEffectiveLabelDefault,
-  resolveEffectiveNodeStyle,
-  resolveEffectivePath,
-} from '../../resolve/style';
+  CompositeContractError,
+  isFatalProbeError,
+  isLayoutProbeRecoverableError,
+  LayoutProbeRecoverableError,
+  safeErrorMessage,
+  safeThrownDetail,
+} from '../../resolve/diagnostics';
+import { resolveBoundaryReference, resolveNode } from '../../resolve/node';
+import { parseProviderPayload } from '../../resolve/provider-payload';
+import { resolveDropShadow } from '../../resolve/style';
+import { createStyleResolveFrame, resolveEffectivePath } from '../../resolve/style';
 import { resolveTheme } from '../../resolve/theme';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -90,23 +95,15 @@ import {
   layoutNode,
   outerRectOf,
 } from '../node';
-import { resolveNodeTextColor } from '../node';
 import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
 import { resolvePosition } from '../position';
 import {
   CompileInvariantError,
-  CompositeContractError,
   createLayoutChildFailure,
   enrichLayoutProbeError,
-  isFatalProbeError,
-  isLayoutProbeRecoverableError,
-  LayoutProbeRecoverableError,
   normalizeLayoutProbeError,
   raiseLayoutChildFailure,
-  safeErrorMessage,
-  safeThrownDetail,
 } from '../probe-failure';
-import { parseProviderPayload } from '../provider-payload';
 import { resolveAnchorRefUncached } from '../reference';
 import { createClipRegistry, createPaintRegistry, validateMarkerPrimitives } from '../resource';
 import {
@@ -204,6 +201,7 @@ export const compileChildrenToPrimitives = (
       rootFontSize: context.rootFontSize,
       shapes: context.shapes,
       boundaries: context.boundaries,
+      patterns: context.patterns,
       arrows: context.arrows,
       pathGenerators: context.pathGenerators,
       pathKinds: context.pathKinds,
@@ -230,6 +228,21 @@ export const compileChildrenToPrimitives = (
       ...(options.identityTracker === undefined ? {} : { identityTracker: options.identityTracker }),
     },
   };
+
+  const resolveExplicitBoundary: BoundaryReferenceResolver = (boundary, referenceContext) =>
+    resolveBoundaryReference(boundary, {
+      visualDef: referenceContext.visualDef,
+      visualParams: referenceContext.visualParams,
+      shapeRegistry: runtime.context.shapes,
+      boundaryRegistry: runtime.context.boundaries,
+      irPath: referenceContext.irPath,
+    });
+
+  const resolveBetweenGlobal = (
+    between: Parameters<typeof refPointOfTarget>[0],
+    namespaceStack: Parameters<typeof refPointOfTarget>[1],
+    scopeChain: Parameters<typeof refPointOfTarget>[2],
+  ) => refPointOfTarget(between, namespaceStack, scopeChain, resolveExplicitBoundary);
 
   /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
   const validatePathKindCompileResult = (
@@ -336,6 +349,7 @@ export const compileChildrenToPrimitives = (
       resolvePaint: runtime.context.paint.register,
       resolvedArrows: runtime.context.arrows,
       effectivePathGenerators: runtime.context.pathGenerators,
+      resolveExplicitBoundary,
       lowerTex: runtime.context.lowerTex,
       rootFontSize: runtime.context.rootFontSize,
     };
@@ -458,21 +472,25 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
-    const effectiveNode = resolveEffectiveNodeStyle(child, styleStack);
-    const labelDefault = resolveEffectiveLabelDefault(styleStack);
     const warn = (code: CompileWarningCodeValue, message: string): void =>
       runtime.context.onWarn({ code, message, path: nodeIrPath });
-    const resolvedNode = resolveNodeTextColor(effectiveNode, labelDefault, warn);
-    const canonicalNode = normalizeNode(resolvedNode);
+    const resolvedNode = resolveNode(child, {
+      styleFrames: styleStack,
+      shapes: runtime.context.shapes,
+      boundaries: runtime.context.boundaries,
+      irPath: nodeIrPath,
+      warn,
+    });
+    const canonicalNode = {
+      ...resolvedNode.node,
+      animations: filterAnimations(resolvedNode.node.animations, {
+        target: 'element',
+        onWarn: runtime.context.onWarn,
+        irPath: nodeIrPath,
+      }),
+    };
     const layout = layoutNode(
-      {
-        ...canonicalNode,
-        animations: filterAnimations(canonicalNode.animations, {
-          target: 'element',
-          onWarn: runtime.context.onWarn,
-          irPath: nodeIrPath,
-        }),
-      },
+      { ...resolvedNode, node: canonicalNode },
       {
         measureText: runtime.context.measureText,
         namespaceStack: runtime.state.namespaceStack,
@@ -480,11 +498,8 @@ export const compileChildrenToPrimitives = (
         labelDistance: runtime.context.labelDistance,
         rootFontSize: runtime.context.rootFontSize,
         scopeChain,
-        labelDefault,
-        shapes: runtime.context.shapes,
-        boundaries: runtime.context.boundaries,
-        resolveBetweenGlobal: refPointOfTarget,
-        irPath: nodeIrPath,
+        resolveExplicitBoundary,
+        resolveBetweenGlobal,
         warn,
         ...(frame.childProposal?.x === undefined ? {} : { allocationWidthProposal: frame.childProposal.x }),
         texLowering: {
@@ -542,7 +557,7 @@ export const compileChildrenToPrimitives = (
       namespaceStack: runtime.state.namespaceStack,
       nodeDistance: runtime.context.nodeDistance,
       scopeChain,
-      resolveBetweenGlobal: refPointOfTarget,
+      resolveBetweenGlobal,
     });
     if (!localCenter) {
       throw new LayoutProbeRecoverableError(
@@ -637,7 +652,7 @@ export const compileChildrenToPrimitives = (
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
       );
     }
-    const world = refPointOfTarget(target, runtime.state.namespaceStack, frame.scopeChain);
+    const world = resolveBetweenGlobal(target, runtime.state.namespaceStack, frame.scopeChain);
     if (world === null) {
       throw new Error(`Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`);
     }
@@ -735,7 +750,7 @@ export const compileChildrenToPrimitives = (
         namespaceStack: runtime.state.namespaceStack,
         nodeDistance: runtime.context.nodeDistance,
         scopeChain: frame.scopeChain,
-        resolveBetweenGlobal: refPointOfTarget,
+        resolveBetweenGlobal,
         intrinsicLayout,
         onUnresolved: transform => {
           failedTransform = transform;
@@ -789,7 +804,7 @@ export const compileChildrenToPrimitives = (
       namespaceStack: runtime.state.namespaceStack,
       nodeDistance: runtime.context.nodeDistance,
       scopeChain: frame.scopeChain,
-      resolveBetweenGlobal: refPointOfTarget,
+      resolveBetweenGlobal,
       onUnresolved: transform => {
         failedTransform = transform;
       },

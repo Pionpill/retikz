@@ -1,7 +1,5 @@
-﻿import type { BoundaryDefinition, LayoutAxisProposal, ShapeDefinition, Transform } from '../../contract';
-import type { CanonicalNode } from '../../normalize/node';
-import type { ProviderCollection } from '../../providers/registry/index';
-import type { EffectiveLabelDefault } from '../../resolve/style';
+﻿import type { LayoutAxisProposal, Transform } from '../../contract';
+import type { BoundaryReferenceResolver, CanonicalNode, NodeResolution } from '../../resolve/node';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
@@ -10,19 +8,18 @@ import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
-import { resolveBoundaryRegistry } from '../../providers/boundary';
-import { resolveShapeRegistry } from '../../providers/shape';
-import { CenterAnchor } from '../../shared';
-import { DEG_TO_RAD } from '../../shared/geometry';
-import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
-import { resolvePosition } from '../position';
 import {
   CompositeContractError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   LayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../probe-failure';
+} from '../../resolve/diagnostics';
+import { boundaryKey } from '../../resolve/node';
+import { CenterAnchor } from '../../shared';
+import { DEG_TO_RAD } from '../../shared/geometry';
+import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
+import { resolvePosition } from '../position';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import { resolveFontSize } from '../text';
@@ -30,7 +27,6 @@ import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGloba
 import { layoutNodeContent } from './content/layout';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
-import { resolveNodeShape } from './shape';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;
@@ -61,6 +57,7 @@ const placeAnchorPositionedLayout = (
   provisional: NodeLayout,
   namespaceStack: NamespaceStack,
   scopeChain: ReadonlyArray<Transform>,
+  resolveExplicitBoundary?: BoundaryReferenceResolver,
 ): NodeLayout => {
   if (node.id !== undefined && node.id === position.target.id) {
     throw new Error(`Node anchor position cannot reference itself ('${node.id}')`);
@@ -78,10 +75,22 @@ const placeAnchorPositionedLayout = (
   }
 
   const targetAnchor = position.target.anchor ?? CenterAnchor.Center;
+  const targetBoundary = position.target.boundary ?? targetEntry.layout.boundary;
+  const explicitTargetBoundary =
+    position.target.boundary !== undefined &&
+    position.target.boundary !== 'shape' &&
+    boundaryKey(position.target.boundary) !== boundaryKey(targetEntry.layout.boundary)
+      ? resolveExplicitBoundary?.(position.target.boundary, {
+          visualDef: targetEntry.layout.shapeDef,
+          visualParams: targetEntry.layout.shapeParams ?? {},
+          irPath: targetEntry.layout.irPath,
+        })
+      : undefined;
   const targetPointBase = resolveAnchorRefUncached(
     targetEntry.layout,
     targetAnchor,
-    position.target.boundary ?? targetEntry.layout.boundary,
+    targetBoundary,
+    explicitTargetBoundary,
   );
   const targetPoint: IRPosition = position.target.offset
     ? [targetPointBase[0] + position.target.offset[0], targetPointBase[1] + position.target.offset[1]]
@@ -120,25 +129,20 @@ export type LayoutNodeContext = {
   rootFontSize?: number;
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
-  /** 当前样式栈解析出的 label 默认值 */
-  labelDefault?: EffectiveLabelDefault;
-  /** shape 注册表 */
-  shapes?: ProviderCollection<ShapeDefinition>;
-  /** boundary 注册表 */
-  boundaries?: ProviderCollection<BoundaryDefinition>;
+  /** Path / layout target 显式连接面解析回调 */
+  resolveExplicitBoundary?: BoundaryReferenceResolver;
   /** between target 的全局点解析函数 */
   resolveBetweenGlobal?: ResolveBetweenGlobal;
   /** TeX 降级上下文 */
   texLowering?: TexLoweringContext;
-  /** 当前 node 的 IR 路径，用于 provider payload 诊断 */
-  irPath?: string;
   /** 当前 node 的 compile warning 分发函数 */
   warn?: (code: CompileWarningCodeValue, message: string) => void;
   /** 父级给 allocation box 的水平 proposal */
   allocationWidthProposal?: LayoutAxisProposal;
 };
 
-export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): NodeLayout => {
+export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContext): NodeLayout => {
+  const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {
     measureText,
     namespaceStack,
@@ -146,12 +150,9 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
     labelDistance = DEFAULT_LABEL_DISTANCE,
     rootFontSize = DEFAULT_FONT_SIZE,
     scopeChain = [],
-    labelDefault,
-    shapes = resolveShapeRegistry(),
-    boundaries = resolveBoundaryRegistry(),
+    resolveExplicitBoundary,
     resolveBetweenGlobal,
     texLowering,
-    irPath,
     warn,
     allocationWidthProposal,
   } = context;
@@ -159,7 +160,7 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const { x: sx, y: sy } = node.scale;
   const fontScale = Math.min(sx, sy);
-  const { shapeName, shapeDef, shapeParams } = resolveNodeShape({ node, shapes, scaleX: sx, scaleY: sy, irPath });
+  const { name: shapeName, definition: shapeDef, params: shapeParams } = shapeResolution;
 
   const baseFontSize = resolveFontSize(node.font?.size, {
     rootFontSize,
@@ -335,7 +336,6 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
     node,
     measureText,
     texLowering,
-    labelDefault,
     labelDistance,
     baseFontSize,
     rootFontSize,
@@ -346,7 +346,7 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
   });
 
   const provisional: NodeLayout = {
-    irPath,
+    irPath: resolution.irPath,
     id: node.id,
     shapeName,
     shapeDef,
@@ -387,10 +387,9 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
     shadow: node.shadow,
     blendMode: node.blendMode,
     boundary: node.boundary,
+    boundaryResolution,
     meta: node.meta,
     animations: node.animations,
-    shapes,
-    boundaries,
     connectionEnvelopeCache: new Map(),
     connectionEnvelopeWarnings: new Set(),
     warn,
@@ -400,6 +399,6 @@ export const layoutNode = (node: CanonicalNode, context: LayoutNodeContext): Nod
     labels: layoutNodeLabels(provisional, measuredLabels),
   };
   return anchorPosition
-    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, namespaceStack, scopeChain)
+    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, namespaceStack, scopeChain, resolveExplicitBoundary)
     : resolved;
 };

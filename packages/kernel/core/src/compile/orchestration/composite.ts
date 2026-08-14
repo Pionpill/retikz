@@ -12,7 +12,7 @@ import type { CompileWarningInput } from '../warning';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve/theme';
 import { CompileWarningCode } from '../constants';
 import { CompileInvariantError } from '../probe-failure';
-import { parseProviderPayload } from '../provider-payload';
+import { parseProviderPayload } from '../../resolve/provider-payload';
 import { validateExpandCompositeOutput } from './composite-output';
 
 /** composite 嵌套展开最大深度 */

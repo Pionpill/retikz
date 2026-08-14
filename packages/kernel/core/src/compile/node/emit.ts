@@ -9,7 +9,7 @@ import {
   isLayoutProbeRecoverableError,
   LayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../probe-failure';
+} from '../../resolve/diagnostics';
 import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
 import { toAlphabeticBaselineY } from '../text';

@@ -252,6 +252,7 @@ export type TraversalContext = Pick<
   | 'rootFontSize'
   | 'shapes'
   | 'boundaries'
+  | 'patterns'
   | 'arrows'
   | 'pathGenerators'
   | 'pathKinds'

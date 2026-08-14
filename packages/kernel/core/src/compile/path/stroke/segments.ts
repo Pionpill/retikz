@@ -1,6 +1,7 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
+import type { BoundaryReferenceResolver } from '../../../resolve/node';
 import type { CanonicalStep } from '../../../normalize/path';
 import type { IRPosition } from '../../../schemas';
 import type { NamespaceStack } from '../../namespace';
@@ -40,6 +41,8 @@ export type LowerSegmentStepContext = {
   commandEmitter: PathCommandEmitter;
   /** label 与 mark 采样收集器 */
   sampling: StrokeSamplingCollector;
+  /** Path 显式 target boundary 的临时解析回调 */
+  resolveExplicitBoundary?: BoundaryReferenceResolver;
 };
 
 /** 判断 step 是否属于普通 segment family */
@@ -56,9 +59,18 @@ export const isStrokeSegmentStep = (step: CanonicalStep): step is StrokeSegmentS
  * @returns `false` 表示 target clipping 失败，调用方应跳过整个 path
  */
 export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentStepContext): boolean => {
-  const { namespaceStack, scopeChain, previous, currentAnchor, penOverride, commandEmitter, sampling } = context;
+  const {
+    namespaceStack,
+    scopeChain,
+    previous,
+    currentAnchor,
+    penOverride,
+    commandEmitter,
+    sampling,
+    resolveExplicitBoundary,
+  } = context;
   const { emitLine, emitQuad, emitCubic, startSegment } = commandEmitter;
-  const targetContext = { namespaceStack, scopeChain };
+  const targetContext = { namespaceStack, scopeChain, resolveExplicitBoundary };
 
   if (step.kind === 'line') {
     const fromClip = penOverride ?? clipForTarget(previous.step.to, currentAnchor, targetContext);

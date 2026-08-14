@@ -4,7 +4,7 @@ import type { RibbonLike } from './types';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';
 import { JsonObjectSchema } from '../../../schemas';
-import { parseProviderPayload } from '../../provider-payload';
+import { parseProviderPayload } from '../../../resolve/provider-payload';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);

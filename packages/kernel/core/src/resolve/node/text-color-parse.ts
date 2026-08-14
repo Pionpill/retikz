@@ -1,6 +1,6 @@
-import type { ParsedCssColor } from './types';
+import type { ParsedCssColor } from './text-color-types';
 
-import { CSS_NAMED_COLOR_HEX } from './constants';
+import { CSS_NAMED_COLOR_HEX } from './text-color-constants';
 
 const NUMBER_SOURCE = String.raw`[+-]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?`;
 const NUMBER_PATTERN = new RegExp(`^${NUMBER_SOURCE}$`);
