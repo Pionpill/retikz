@@ -1,4 +1,5 @@
-import { createPlotSpec, lowerPlots } from '@retikz/plot';
+import { lowerPlots } from '@retikz/plot';
+import { normalizePlot } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotSpec } from '../../../src/adapter';
@@ -17,7 +18,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       </>,
       'sales',
     );
-    const plain = createPlotSpec({
+    const plain = normalizePlot({
       data: { reference: 'sales' },
       scales: [
         { type: 'linear', name: '__x' },
@@ -52,7 +53,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       </>,
       'ops',
     );
-    const plain = createPlotSpec({
+    const plain = normalizePlot({
       data: { reference: 'ops' },
       scales: [
         { type: 'linear', name: '__x' },
@@ -176,7 +177,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       </>,
       'ops',
     );
-    const plain = createPlotSpec({
+    const plain = normalizePlot({
       data: { reference: 'ops' },
       scales: [
         { type: 'linear', name: '__x' },
@@ -222,7 +223,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       </>,
       'weather',
     );
-    const plain = createPlotSpec({
+    const plain = normalizePlot({
       data: { reference: 'weather' },
       scales: [
         { type: 'linear', name: '__x' },
@@ -272,7 +273,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       'weather',
       { composition },
     );
-    const plain = createPlotSpec({
+    const plain = normalizePlot({
       data: { reference: 'weather' },
       scales: [
         { type: 'linear', name: '__x' },
@@ -293,7 +294,7 @@ describe('React 与 framework-neutral authoring parity', () => {
 
   it('冲突输入共享 plot authoring 核心错误语义', () => {
     const plain = () =>
-      createPlotSpec({
+      normalizePlot({
         data: { reference: 'sales' },
         scales: [],
         facets: [{ id: 'sales', row: 'region' }],

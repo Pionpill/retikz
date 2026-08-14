@@ -1,20 +1,21 @@
-import type { LegendInput } from '@retikz/standard';
+import type { ReactInputEmbedContext } from '@retikz/react';
+import type { InputLegend } from '@retikz/standard-vanilla';
+import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
-import { convertReactNodeToIR } from '@retikz/react';
+import { createInputScene } from '@retikz/react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { LegendItemProps, LegendRampProps, LegendTickProps, LegendTitleProps } from './LegendMarkers';
 
 import { LegendItem, LegendRamp, LegendTick, LegendTitle } from './LegendMarkers';
 
-type LegendChild = NonNullable<LegendInput['title']>;
-
+type LegendChild = NonNullable<InputLegend['title']>;
+type CollectedLegend<T> = Readonly<{ value: T; adapters: ReadonlyArray<AnyInputEmbedAdapter> }>;
 type LegendItemsChildren = Readonly<{
   title?: LegendChild;
   items: Array<Readonly<{ key: string; sample: LegendChild; label?: LegendChild }>>;
 }>;
-
 type LegendRampChildren = Readonly<{
   title?: LegendChild;
   sample: LegendChild;
@@ -27,9 +28,7 @@ const flattenLegendNodes = (children: ReactNode): Array<ReactNode> => {
   Children.forEach(children, child => {
     if (child === null || child === undefined || typeof child === 'boolean') return;
     if (isValidElement(child) && child.type === Fragment) {
-      flattenLegendNodes((child as ReactElement<{ children?: ReactNode }>).props.children).forEach(value =>
-        flattened.push(value),
-      );
+      flattened.push(...flattenLegendNodes((child as ReactElement<{ children?: ReactNode }>).props.children));
       return;
     }
     flattened.push(child);
@@ -37,92 +36,129 @@ const flattenLegendNodes = (children: ReactNode): Array<ReactNode> => {
   return flattened;
 };
 
-/** 判断 slot element 是否能进入同步 React builder */
+/** 判断 slot element 是否能进入 React Input 收集路径 */
 const isConvertibleElement = (node: ReactNode): node is ReactElement =>
   isValidElement(node) && typeof node.type === 'function';
 
-/** 把 required marker slot 转换为恰好一个 IRChild */
-const convertRequiredSlot = (children: ReactNode, label: string): LegendChild => {
+/** 收集 required marker slot 的唯一 Input child 与递归 adapter */
+const collectRequiredSlot = (
+  children: ReactNode,
+  label: string,
+  embedIdPrefix: string,
+): CollectedLegend<LegendChild> => {
   const nodes = flattenLegendNodes(children);
   if (nodes.length !== 1 || !isConvertibleElement(nodes[0])) {
     throw new Error(`${label} must contain exactly one convertible React element.`);
   }
-  const converted = convertReactNodeToIR(nodes[0]).children;
-  if (converted.length !== 1) {
-    throw new Error(`${label} must convert to exactly one IRChild.`);
+  const input = createInputScene(nodes[0], { embedIdPrefix });
+  const childrenInput = input.scene.children;
+  if (childrenInput === undefined || childrenInput.length !== 1) {
+    throw new Error(`${label} must contain exactly one authoring child.`);
   }
-  return converted[0];
+  return { value: childrenInput[0], adapters: input.adapters };
 };
 
-/** 把 optional marker slot 转换为零或一个 IRChild */
-const convertOptionalSlot = (children: ReactNode, label: string): LegendChild | undefined => {
+/** 收集 optional marker slot 的零或一个 Input child 与递归 adapter */
+const collectOptionalSlot = (
+  children: ReactNode,
+  label: string,
+  embedIdPrefix: string,
+): CollectedLegend<LegendChild | undefined> => {
   const nodes = flattenLegendNodes(children);
-  if (nodes.length === 0) return undefined;
+  if (nodes.length === 0) return { value: undefined, adapters: [] };
   if (nodes.length !== 1 || !isConvertibleElement(nodes[0])) {
     throw new Error(`${label} must contain at most one convertible React element.`);
   }
-  const converted = convertReactNodeToIR(nodes[0]).children;
-  if (converted.length !== 1) {
-    throw new Error(`${label} must convert to at most one IRChild.`);
+  const input = createInputScene(nodes[0], { embedIdPrefix });
+  const childrenInput = input.scene.children;
+  if (childrenInput === undefined || childrenInput.length !== 1) {
+    throw new Error(`${label} must contain at most one authoring child.`);
   }
-  return converted[0];
+  return { value: childrenInput[0], adapters: input.adapters };
 };
 
-/** 读取两个 Legend form 共用的唯一标题 marker */
-const readTitle = (current: LegendChild | undefined, element: ReactElement<LegendTitleProps>): LegendChild => {
-  if (current !== undefined) throw new Error('Legend accepts at most one LegendTitle.');
-  return convertRequiredSlot(element.props.children, 'LegendTitle');
-};
+/** 合并多个 marker slot 收集的递归 adapter */
+const adaptersOf = (parts: ReadonlyArray<CollectedLegend<unknown>>): ReadonlyArray<AnyInputEmbedAdapter> =>
+  Object.freeze(parts.flatMap(part => part.adapters));
 
-/** 将 items form 的直属 marker 转换为 canonical title 与 items */
-export const convertLegendItemsChildren = (children: ReactNode): LegendItemsChildren => {
+/** 收集 items form 的直属 marker 输入 */
+export const convertLegendItemsChildren = (
+  children: ReactNode,
+  context: ReactInputEmbedContext,
+): CollectedLegend<LegendItemsChildren> => {
   let title: LegendChild | undefined;
   const items: LegendItemsChildren['items'] = [];
-  for (const child of flattenLegendNodes(children)) {
+  const parts: Array<CollectedLegend<unknown>> = [];
+  for (const [index, child] of flattenLegendNodes(children).entries()) {
     if (isValidElement<LegendTitleProps>(child) && child.type === LegendTitle) {
-      title = readTitle(title, child);
+      if (title !== undefined) throw new Error('Legend accepts at most one LegendTitle.');
+      const slot = collectRequiredSlot(child.props.children, 'LegendTitle', `${context.id}:title`);
+      title = slot.value;
+      parts.push(slot);
       continue;
     }
     if (isValidElement<LegendItemProps>(child) && child.type === LegendItem) {
-      const label = convertOptionalSlot(child.props.children, 'LegendItem label');
+      const sample = collectRequiredSlot(
+        child.props.sample,
+        'LegendItem sample',
+        `${context.id}:items:${index}:sample`,
+      );
+      const label = collectOptionalSlot(child.props.children, 'LegendItem label', `${context.id}:items:${index}:label`);
+      parts.push(sample, label);
       items.push({
         key: child.props.itemKey,
-        sample: convertRequiredSlot(child.props.sample, 'LegendItem sample'),
-        ...(label === undefined ? {} : { label }),
+        sample: sample.value,
+        ...(label.value === undefined ? {} : { label: label.value }),
       });
       continue;
     }
     throw new Error('Items Legend accepts only LegendTitle and LegendItem as direct children.');
   }
-  return { ...(title === undefined ? {} : { title }), items };
+  return {
+    value: { ...(title === undefined ? {} : { title }), items },
+    adapters: adaptersOf(parts),
+  };
 };
 
-/** 将 ramp form 的直属 marker 转换为 canonical title、sample 与 ticks */
-export const convertLegendRampChildren = (children: ReactNode): LegendRampChildren => {
+/** 收集 ramp form 的直属 marker 输入 */
+export const convertLegendRampChildren = (
+  children: ReactNode,
+  context: ReactInputEmbedContext,
+): CollectedLegend<LegendRampChildren> => {
   let title: LegendChild | undefined;
   let sample: LegendChild | undefined;
   const ticks: LegendRampChildren['ticks'] = [];
-  for (const child of flattenLegendNodes(children)) {
+  const parts: Array<CollectedLegend<unknown>> = [];
+  for (const [index, child] of flattenLegendNodes(children).entries()) {
     if (isValidElement<LegendTitleProps>(child) && child.type === LegendTitle) {
-      title = readTitle(title, child);
+      if (title !== undefined) throw new Error('Legend accepts at most one LegendTitle.');
+      const slot = collectRequiredSlot(child.props.children, 'LegendTitle', `${context.id}:title`);
+      title = slot.value;
+      parts.push(slot);
       continue;
     }
     if (isValidElement<LegendRampProps>(child) && child.type === LegendRamp) {
       if (sample !== undefined) throw new Error('Ramp Legend requires exactly one LegendRamp.');
-      sample = convertRequiredSlot(child.props.children, 'LegendRamp');
+      const slot = collectRequiredSlot(child.props.children, 'LegendRamp', `${context.id}:ramp`);
+      sample = slot.value;
+      parts.push(slot);
       continue;
     }
     if (isValidElement<LegendTickProps>(child) && child.type === LegendTick) {
-      const label = convertOptionalSlot(child.props.children, 'LegendTick label');
+      const label = collectOptionalSlot(child.props.children, 'LegendTick label', `${context.id}:ticks:${index}:label`);
+      parts.push(label);
       ticks.push({
         key: child.props.tickKey,
         offset: child.props.offset,
-        ...(label === undefined ? {} : { label }),
+        ...(label.value === undefined ? {} : { label: label.value }),
       });
       continue;
     }
     throw new Error('Ramp Legend accepts only LegendTitle, LegendRamp, and LegendTick as direct children.');
   }
   if (sample === undefined) throw new Error('Ramp Legend requires exactly one LegendRamp.');
-  return { ...(title === undefined ? {} : { title }), sample, ticks };
+  return {
+    value: { ...(title === undefined ? {} : { title }), sample, ticks },
+    adapters: adaptersOf(parts),
+  };
 };

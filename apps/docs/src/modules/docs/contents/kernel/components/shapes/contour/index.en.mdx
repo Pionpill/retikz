@@ -3,7 +3,7 @@ title: Contour
 description: An arbitrary closed vertex ring as a node shape — give it a ring of points and get a connectable, roundable, auto-centered contour node.
 ---
 
-`contour` is a built-in Node shape that takes an **arbitrary closed vertex ring**: give it a ring of points (`params.points`) and the node's boundary is the closed contour through those points. It runs on the same contour engine as `polygon` / `star`; the only difference is where the vertices come from — `polygon` derives a regular polygon from a side count, while `contour` takes the points you give directly. See [Shapes](/kernel/components/shapes) for the full definition.
+`contour` is an optional Standard Node shape that takes an **arbitrary closed vertex ring**: give it a ring of points (`params.points`) and the node's boundary is the closed contour through those points. It runs on the same contour engine as `polygon` / `star`; the only difference is where the vertices come from — `polygon` derives a regular polygon from a side count, while `contour` takes the points you give directly. See [Shapes](/kernel/components/shapes) for the full definition. Import `ContourShapeDefinition` from `@retikz/standard/shape` and inject it into the current `<Layout>` before using it.
 
 One thing sets it apart from the other shapes: it is **a Node shape only**, with no sugar drawing component. To draw an arbitrary closed outline, use [`<Path>`](/kernel/components/draw/path) with `line` steps; `contour` solves a different problem — making that arbitrary contour **still a connectable node** (other lines can target it by id and snap to its boundary).
 
@@ -14,25 +14,28 @@ Set `shape={{ type: 'contour', params: { points } }}` on `<Node>` and the node i
 ### Usage
 
 ```tsx
-import { Node } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
+import { ContourShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Node
-  shape={{
-    type: 'contour',
-    params: {
-      points: [
-        [-30, 44],
-        [30, 30],
-        [30, -44],
-        [-30, -44],
-      ],
-      cornerRadius: 8,
-    },
-  }}
-  fill="steelblue"
-/>
+<Layout shapes={[ContourShapeDefinition]}>
+  <Node
+    shape={{
+      type: 'contour',
+      params: {
+        points: [
+          [-30, 44],
+          [30, 30],
+          [30, -44],
+          [-30, -44],
+        ],
+        cornerRadius: 8,
+      },
+    }}
+    fill="steelblue"
+  />
+</Layout>
 ```
 
 ### Examples
@@ -81,9 +84,9 @@ Translating every input point by the same amount therefore cannot change the fin
   sources={[
     {
       label: 'Vertex AABB centering and contour generation',
-      path: 'packages/kernel/core/src/providers/shape/contour.ts',
-      startLine: 31,
-      endLine: 73,
+      path: 'packages/library/standard/src/shape/definitions/contour.ts',
+      startLine: 43,
+      endLine: 83,
     },
   ]}
 />
@@ -102,9 +105,9 @@ Standard direction names such as `top` / `right` ask for a fixed canonical point
   sources={[
     {
       label: 'Contour intersection and named-anchor declaration',
-      path: 'packages/kernel/core/src/providers/shape/contour.ts',
-      startLine: 61,
-      endLine: 68,
+      path: 'packages/library/standard/src/shape/definitions/contour.ts',
+      startLine: 63,
+      endLine: 71,
     },
     {
       label: 'Automatic attachment endpoint resolution',

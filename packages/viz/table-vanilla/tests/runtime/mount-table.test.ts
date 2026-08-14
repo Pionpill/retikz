@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { figure, layer, mount } from '@retikz/vanilla';
+import { layer, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createTableAdapter, detailTable, embedTable } from '../../src';
+import { detailTable, embedTable, TableInputEmbedAdapter } from '../../src';
 
 const createCanvasContext = (): CanvasRenderingContext2D => {
   const target: Record<string | symbol, unknown> = {
@@ -33,18 +34,17 @@ afterEach(() => {
 
 describe('Table Vanilla mounted runtime', () => {
   it('updates SVG data while preserving root identity and supports the Canvas host', () => {
-    const adapter = createTableAdapter();
     const spec = detailTable({
       dataRef: 'people',
       header: false,
       columns: [{ id: 'name', field: 'name' }],
     });
     const tableFigure = (name: string) =>
-      figure({
+      scene({
         layers: [layer('content', [embedTable('people-panel', spec, { data: { people: [{ name }] } })])],
       });
     const svgContainer = document.createElement('div');
-    const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [adapter] });
+    const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [TableInputEmbedAdapter] });
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
@@ -53,7 +53,10 @@ describe('Table Vanilla mounted runtime', () => {
     expect(svgRoot.textContent).toContain('Grace');
 
     const canvasContainer = document.createElement('div');
-    const canvasView = mount(canvasContainer, tableFigure('Lin'), { renderer: 'canvas', adapters: [adapter] });
+    const canvasView = mount(canvasContainer, tableFigure('Lin'), {
+      renderer: 'canvas',
+      adapters: [TableInputEmbedAdapter],
+    });
     const canvasRoot = canvasView.root;
     canvasView.update(tableFigure('Edsger'));
     expect(canvasView.root).toBe(canvasRoot);

@@ -7,20 +7,20 @@ The `@retikz/core` compile layer turns JSON-serializable IR into a `Scene` and t
 
 ## Functions
 
-| API                            | Signature                                                                                               | Purpose                                                                                               |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `compileToScene`               | `(ir: IRScene, options?: CompileOptions) => CompileResult`                                              | Main entry; returns `scene` and immutable `artifacts` together                                        |
-| `observeCompileToScene`        | `(ir, options, observers) => ObservedCompileResult`                                                     | Creates explicit observation sessions and returns primary plus definition-ordered outputs             |
-| `lowerIRToKernel`              | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`                                     | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                             |
-| `resolveCompositeDependencies` | `(options: ResolveCompositeDependenciesOptions) => ReadonlyArray<AnyCompositeDefinition>`               | Resolves a rooted provider graph into the ordered Definitions accepted by `CompileOptions.composites` |
-| `selectSpatialHandles`         | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => ReadonlyArray<QualifiedSpatialHandle>` | Precisely filters zero or more qualified spatial handles                                              |
-| `resolveSpatialHandle`         | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => QualifiedSpatialHandle`                | Requires exactly one match and throws on a miss or ambiguity                                          |
-| `computeLayout`                | `(points, padding, round) => Layout`                                                                    | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene`          |
-| `resolveBoxSpacing`            | `(value, fallback) => BoundsInsets`                                                                     | Normalizes a uniform or side-specific value into complete four-side spacing                           |
-| `fallbackMeasurer`             | `(text, font) => TextMetrics`                                                                           | Default text measurer; approximate but runnable, useful as a no-DOM fallback                          |
-| `formatCompileWarning`         | `(warning: CompileWarning) => string`                                                                   | Formats a structured warning into the standard readable message                                       |
-| `formatCompileOccurrence`      | `(locator: CompileOccurrenceLocator) => string`                                                         | Formats an artifact occurrence locator                                                                |
-| `isNodeLayoutCompileArtifact`  | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact`                                  | Narrows an opt-in Node-layout artifact                                                                |
+| API                               | Signature                                                                                               | Purpose                                                                                      |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `compileToScene`                  | `(ir: IRScene, options?: CompileOptions) => CompileResult`                                              | Main entry; returns `scene` and immutable `artifacts` together                               |
+| `observeCompileToScene`           | `(ir, options, observers) => ObservedCompileResult`                                                     | Creates explicit observation sessions and returns primary plus definition-ordered outputs    |
+| `lowerIRToKernel`                 | `(ir: IRScene, options?: LowerIRToKernelOptions) => LoweredIRScene`                                     | Recursively expands composites and returns Kernel IR with no Tier 2 nodes                    |
+| `resolveCoreProviderDependencies` | `(options: ResolveCoreProviderDependenciesOptions) => CoreProviderDefinitions`                          | Resolves a rooted provider graph into Core-capability-grouped compile options                |
+| `selectSpatialHandles`            | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => ReadonlyArray<QualifiedSpatialHandle>` | Precisely filters zero or more qualified spatial handles                                     |
+| `resolveSpatialHandle`            | `(index: SpatialHandleIndex, selector: SpatialHandleSelector) => QualifiedSpatialHandle`                | Requires exactly one match and throws on a miss or ambiguity                                 |
+| `computeLayout`                   | `(points, padding, round) => Layout`                                                                    | Computes the scene bounds from bbox candidate points; usually called inside `compileToScene` |
+| `resolveBoxSpacing`               | `(value, fallback) => BoundsInsets`                                                                     | Normalizes a uniform or side-specific value into complete four-side spacing                  |
+| `fallbackMeasurer`                | `(text, font) => TextMetrics`                                                                           | Default text measurer; approximate but runnable, useful as a no-DOM fallback                 |
+| `formatCompileWarning`            | `(warning: CompileWarning) => string`                                                                   | Formats a structured warning into the standard readable message                              |
+| `formatCompileOccurrence`         | `(locator: CompileOccurrenceLocator) => string`                                                         | Formats an artifact occurrence locator                                                       |
+| `isNodeLayoutCompileArtifact`     | `(artifact: CompileArtifact) => artifact is NodeLayoutCompileArtifact`                                  | Narrows an opt-in Node-layout artifact                                                       |
 
 `compileToScene` traverses and registers nodes and coordinates in the current scope before filling deferred path slots. A path can therefore reference a target declared later in that scope. Output is then stably sorted by ascending `zIndex`; only primitives with the same `zIndex` retain declaration order.
 
@@ -59,16 +59,16 @@ Callers validate `value` with their owning schema first. `fallback` must be fini
 
 | Option                | Type                                          | Default      | Notes                                                                                                                   |
 | --------------------- | --------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | built-in set | Append custom node shapes. See [Custom Shapes](/kernel/components/shapes/custom-shape)                                  |
+| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | Core basic set | Inject custom or optional Standard node shapes. See [Shape Extensions](/library/standard/extension/shape)              |
 | `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | built-in set | Append custom connection surfaces. See [Custom Boundaries](/kernel/components/node/custom-boundary)                     |
-| `clips`               | `ReadonlyArray<ClipDefinition>`               | built-in set | Append custom clipping regions. See [Custom Clips](/kernel/components/layout/custom-clip)                               |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | built-in set | Append custom arrows. See [Custom Arrows](/kernel/components/draw/custom-arrow)                                         |
+| `clips`               | `ReadonlyArray<ClipDefinition>`               | Core basic set | Inject custom or Standard compound clips. See [Clip Extensions](/library/standard/extension/clip)                       |
+| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | Core basic set | Inject custom or optional Standard arrows. See [Arrow Extensions](/library/standard/extension/arrow)                    |
 | `patterns`            | `ReadonlyArray<PatternDefinition>`            | built-in set | Append custom fill pattern motifs. See [Custom Patterns](/kernel/components/effects/custom-pattern)                     |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | built-in set | Append custom curve generators; core includes `parabola`. See [Path Generators](/kernel/components/draw/path-generator) |
+| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | none         | Inject custom or Standard path generators; Core has no default entry. See [Path Generators](/kernel/components/draw/path-generator) |
 | `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | built-in set | Append custom path kind providers                                                                                       |
 | `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | built-in set | Append ribbon width profiles; core includes `bulge`, and profile functions never enter IR                               |
 
-Definitions passed here are appended to the corresponding `BUILTIN_*` collection. An empty key or a name that duplicates a built-in or another custom item throws immediately; providers are never overwritten.
+Definitions passed here merge with the matching Core basic collection. An empty key or a name that duplicates an item registered for the invocation throws immediately; providers are never overwritten. Optional Standard content follows this same merge and diagnostic path.
 
 ### Theme token owner registry
 
@@ -98,16 +98,16 @@ A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact
 
 ### Provider graph assembly
 
-The provider graph is a pure pre-compile assembly protocol, not a second composite registry. React, Vanilla, and reusable domain toolchains collect `CompositeDependencyContribution` values, call `resolveCompositeDependencies()` for an ordered Definition array, then pass that array to the existing `CompileOptions.composites` input.
+The provider graph is a pure pre-compile assembly protocol, not a second registry. React, Vanilla, and reusable domain toolchains collect `CoreProviderContribution` values, call `resolveCoreProviderDependencies()` for capability-grouped `CoreProviderDefinitions`, then pass each collection to the matching `CompileOptions` field.
 
-| Public contract                       | Key fields / result                                 | Responsibility                                                     |
-| ------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
-| `CompositeProviderKey`                | `namespace`, `type`                                 | Unambiguously identifies one final Composite Definition            |
-| `CompositeDependencyProvider`         | `key`, `dependencies`, `datasets`, `makeDefinition` | Declares one Definition, direct dependencies, and runtime data     |
-| `CompositeDependencyContribution`     | `roots`, `providers`                                | Declares roots required by an authored node and imported providers |
-| `ResolveCompositeDependenciesOptions` | `contributions`, `composites?`                      | Merges provider results with final explicit Definitions            |
+| Public contract                          | Key fields / result                                                         | Responsibility                                                     |
+| ---------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `CoreProviderKey`                        | Regular: `capability`, `name`; composite: `capability`, `namespace`, `type` | Unambiguously identifies one Core provider                         |
+| `CoreDependencyProvider`                 | `key`, `dependencies`, `datasets`, `makeDefinition`                         | Declares one Definition, direct dependencies, and runtime data     |
+| `CoreProviderContribution`               | `roots`, `providers`                                                        | Declares roots required by an authored node and imported providers |
+| `ResolveCoreProviderDependenciesOptions` | `contributions`, `definitions?`                                             | Merges provider results with final explicit Definitions            |
 
-The resolver completes full preflight before running a maker. Repeated provider keys require the same maker reference and ordered dependencies. A repeated dataset reference under one provider key deduplicates only when its value is identical by `Object.is`. Missing providers and cycles report the complete chain. Output is dependency-first with first-reachable tie-breaking, and each maker runs once.
+The resolver completes full preflight before running a maker. Repeated provider keys require the same maker reference and ordered dependencies. A repeated dataset reference under one provider key deduplicates only when its value is identical by `Object.is`. Missing providers and cycles report the complete chain. Output materializes in dependency-first, first-reachable order, then groups under matching compile options such as `shapes`, `arrows`, `clips`, `pathGenerators`, and `composites`; each maker runs once.
 
 `options.composites` is the final explicit-Definition channel, not a private sidecar for nested adapters. Provider results come first; explicit Definitions append in authored order. The same object at the same key deduplicates, while a different object fails immediately. Authors calling `compileToScene()` with a complete Definition array may skip the provider graph and continue passing `CompileOptions.composites` directly.
 
@@ -302,8 +302,8 @@ The spatial index is a tooling sidecar, not part of Scene. SVG, Canvas, and SSR 
     {
       label: 'Vanilla SceneResult and authored / Scene input branches',
       path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
-      startLine: 35,
-      endLine: 116,
+      startLine: 47,
+      endLine: 88,
     },
     {
       label: 'Observer, owner-output, and isolated-fragment contracts',

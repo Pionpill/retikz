@@ -1,15 +1,32 @@
 import type { CompileArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { TableCompileArtifact } from '@retikz/table';
+import type { InputTable, InputTableSpec } from '@retikz/table-vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
-import { lowerTables, TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '@retikz/table';
+import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { useCallback, useMemo, useRef } from 'react';
 
 import type { ReactTableRuntime } from './table-runtime';
 
 import { useTableThemeStyles } from './theme-context';
+
+/** standalone Table 运行时交给 Layout 的内部 InputEmbed 组件属性 */
+type TableRuntimeEmbedProps = InputTable;
+
+/** React Layout 遍历时识别的 Table Vanilla InputEmbed 宿主 */
+type TableRuntimeEmbedComponent = FC<TableRuntimeEmbedProps> & {
+  isTier2Embeddable: true;
+  inputEmbedAdapter: InputEmbedAdapter<InputTable>;
+};
+
+const TableRuntimeEmbed = (() => null) as unknown as TableRuntimeEmbedComponent;
+TableRuntimeEmbed.displayName = 'TableRuntimeEmbed';
+TableRuntimeEmbed.isTier2Embeddable = true;
+TableRuntimeEmbed.inputEmbedAdapter = TableInputEmbedAdapter;
 
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
   artifact.kind === 'composite' &&
@@ -20,9 +37,9 @@ const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompil
 
 /** 共享 standalone Table runtime view，不作为公开组件导出 */
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
-  const { spec, lowerOptions, composites, onManifest, display } = runtime;
-  const specKey = JSON.stringify(spec);
-  const stableSpec = useMemo(() => TableSpecSchema.parse(JSON.parse(specKey)), [specKey]);
+  const { table, lowerOptions, composites, onManifest, display } = runtime;
+  const tableKey = JSON.stringify(table);
+  const stableTable = useMemo<InputTableSpec>(() => JSON.parse(tableKey) as InputTableSpec, [tableKey]);
   const { datasetReference, datasetSource } = runtime;
   const stableDatasets = useMemo<ExternalDatasets>(
     () =>
@@ -31,7 +48,6 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
         : { [datasetReference]: datasetSource as ExternalDatasets[string] },
     [datasetReference, datasetSource],
   );
-  const scene = useMemo(() => ({ version: 1 as const, type: 'scene' as const, children: [stableSpec] }), [stableSpec]);
   const {
     formatterDefinitions,
     presentationDefinitions,
@@ -45,25 +61,33 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     if (tableThemeStyles === undefined) return ambientTableThemeStyles;
     return [...ambientTableThemeStyles, ...tableThemeStyles];
   }, [ambientTableThemeStyles, tableThemeStyles]);
-  const tableDefinitions = useMemo(
-    () =>
-      lowerTables(stableDatasets, {
-        formatterDefinitions,
-        presentationDefinitions,
-        structureDefinitions,
-        tableThemeStyles: effectiveTableThemeStyles,
-        visualScaleDefinitions,
-      }),
+  const stableLowerOptions = useMemo(
+    () => ({
+      ...(formatterDefinitions === undefined ? {} : { formatterDefinitions }),
+      ...(presentationDefinitions === undefined ? {} : { presentationDefinitions }),
+      ...(structureDefinitions === undefined ? {} : { structureDefinitions }),
+      ...(visualScaleDefinitions === undefined ? {} : { visualScaleDefinitions }),
+      ...(effectiveTableThemeStyles === undefined ? {} : { tableThemeStyles: effectiveTableThemeStyles }),
+    }),
     [
+      effectiveTableThemeStyles,
       formatterDefinitions,
       presentationDefinitions,
-      stableDatasets,
       structureDefinitions,
-      effectiveTableThemeStyles,
       visualScaleDefinitions,
     ],
   );
-  const mergedComposites = useMemo(() => [...tableDefinitions, ...composites], [composites, tableDefinitions]);
+  const input = useMemo<InputTable>(
+    () => ({
+      table: stableTable,
+      data: stableDatasets,
+      lowerOptions: stableLowerOptions,
+      composites,
+      preserveRootIdentity: true,
+    }),
+    [composites, stableDatasets, stableLowerOptions, stableTable],
+  );
+  const inputChild = useMemo(() => <TableRuntimeEmbed {...input} />, [input]);
   const notifiedManifestKey = useRef<string>();
   const handleArtifacts = useCallback(
     (artifacts: ReadonlyArray<CompileArtifact>): void => {
@@ -83,11 +107,8 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
   );
 
   return (
-    <Layout
-      ir={scene}
-      composites={mergedComposites}
-      onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
-      {...display}
-    />
+    <Layout onArtifacts={onManifest === undefined ? undefined : handleArtifacts} {...display}>
+      {inputChild}
+    </Layout>
   );
 };

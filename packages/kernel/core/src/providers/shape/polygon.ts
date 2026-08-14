@@ -7,6 +7,7 @@ import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
+import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from '../../contract';
 import {
   boundaryFromContour,
   CenterAnchor,
@@ -17,7 +18,6 @@ import {
   pointsConnectionEnvelope,
   rect,
 } from '../../shared';
-import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from './outline';
 
 const MAX_POLYGON_SIDES = 1024;
 

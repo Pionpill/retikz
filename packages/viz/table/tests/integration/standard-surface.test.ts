@@ -1,4 +1,4 @@
-import { compileToScene, resolveCompositeDependencies } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { createSurface, SurfaceProvider } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,7 @@ describe('Table inside Standard Surface', () => {
       structure: { kind: 'manual', rows: [['Ada']] },
     };
     const tableContribution = createTableRuntimeContribution({ reference: 'surface-table' });
-    const composites = resolveCompositeDependencies({
+    const providerDefinitions = resolveCoreProviderDependencies({
       contributions: [
         {
           roots: [SurfaceProvider.key, ...tableContribution.roots],
@@ -31,9 +31,12 @@ describe('Table inside Standard Surface', () => {
       child: table,
     });
 
-    const result = compileToScene({ type: 'scene', version: 1, children: [surface] }, { composites, padding: 0 });
+    const result = compileToScene(
+      { type: 'scene', version: 1, children: [surface] },
+      { ...providerDefinitions, padding: 0 },
+    );
 
-    expect(composites.map(definition => `${definition.namespace}.${definition.type}`)).toEqual([
+    expect(providerDefinitions.composites?.map(definition => `${definition.namespace}.${definition.type}`)).toEqual([
       'standard.surface',
       'table.table',
     ]);

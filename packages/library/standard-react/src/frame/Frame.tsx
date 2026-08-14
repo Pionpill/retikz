@@ -1,9 +1,11 @@
-import type { EmbeddableTier2Adapter, HydrationEventProps, NodeProps } from '@retikz/react';
-import type { FrameInput, IRFrame, IRFrameDescription, IRFrameTitle } from '@retikz/standard';
+import type { HydrationEventProps, NodeProps, ReactInputEmbedContext } from '@retikz/react';
+import type { FrameInput } from '@retikz/standard';
+import type { InputFrame, InputFrameHeaders } from '@retikz/standard-vanilla';
+import type { InputNode } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
-import { convertReactNodeToIR, Node } from '@retikz/react';
-import { createFrame, FrameDescriptionSchema, FrameProvider, FrameTitleSchema } from '@retikz/standard';
+import { createInputScene, Node, withInputEmbedAdapters } from '@retikz/react';
+import { FrameInputEmbedAdapter } from '@retikz/standard-vanilla';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -20,40 +22,27 @@ export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventP
 /** Frame 辅助说明接受的 JSON-safe Node authoring 字段 */
 export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof HydrationEventProps>;
 
-type FrameNode = IRFrame['children'][number];
-
 type FrameParts = {
   body: Array<ReactNode>;
-  title?: IRFrameTitle;
-  description?: IRFrameDescription;
+  title?: InputNode;
+  description?: InputNode;
 };
 
-/** 将 React children 转为 Frame 支持的直接 Core Node */
-const convertFrameChildren = (children: ReactNode): Array<FrameNode> => {
-  const irChildren = convertReactNodeToIR(children).children;
-  if (!irChildren.every((child): child is FrameNode => child.type === 'node' && !('namespace' in child))) {
-    throw new Error('Frame only accepts direct Node children.');
-  }
-  return irChildren;
-};
-
-/** 复用公开 Node JSX 转换路径生成无 position 的 canonical header 输入 */
+/** 收集 Node-like header JSX 为延后归一化的 Vanilla InputNode */
 const convertHeaderProps = (
   props: FrameTitleProps | FrameDescriptionProps,
   kind: 'title' | 'description',
-): IRFrameTitle | IRFrameDescription => {
-  const irChildren = convertReactNodeToIR(createElement(Node, { ...props, position: [0, 0] })).children;
-  if (irChildren.length !== 1) {
-    throw new Error(`Frame ${kind} must convert to exactly one Core Node.`);
+): InputNode => {
+  const input = createInputScene(createElement(Node, { ...props, position: [0, 0] }));
+  const children = input.scene.children;
+  if (children === undefined || children.length !== 1) {
+    throw new Error(`Frame ${kind} must contain exactly one Core Node authoring input.`);
   }
-  const child = irChildren[0];
+  const child = children[0];
   if (child.type !== 'node' || 'namespace' in child) {
-    throw new Error(`Frame ${kind} must convert to exactly one Core Node.`);
+    throw new Error(`Frame ${kind} must contain exactly one Core Node authoring input.`);
   }
-  const { type: _type, position: _position, ...header } = child;
-  void _type;
-  void _position;
-  return kind === 'title' ? FrameTitleSchema.parse(header) : FrameDescriptionSchema.parse(header);
+  return child;
 };
 
 /** 从 Frame 的透明 Fragment 与直接 children 中提取唯一语义 parts */
@@ -82,24 +71,28 @@ const readFrameParts = (children: ReactNode): FrameParts => {
   return result;
 };
 
-const frameEmbeddableAdapter: EmbeddableTier2Adapter<FrameProps> = {
-  displayName: 'Frame',
-  contribute: props => {
-    if ('title' in props || 'description' in props) {
-      throw new Error('React Frame headers must use direct FrameTitle and FrameDescription children.');
-    }
-    const { children, ...input } = props;
-    const parts = readFrameParts(children);
-    return {
-      node: createFrame({
-        ...input,
-        ...(parts.title !== undefined ? { title: parts.title } : {}),
-        ...(parts.description !== undefined ? { description: parts.description } : {}),
-        children: convertFrameChildren(parts.body),
-      }),
-      compositeDependencies: { roots: [FrameProvider.key], providers: [FrameProvider] },
-    };
-  },
+/** 将 Frame marker 与 Node children 收集为 Standard Vanilla Input */
+const createFrameInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
+  if ('title' in props || 'description' in props) {
+    throw new Error('React Frame headers must use direct FrameTitle and FrameDescription children.');
+  }
+  const { children, ...input } = props as FrameProps;
+  const parts = readFrameParts(children);
+  const bodyInput = createInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
+  const childrenInput = bodyInput.scene.children;
+  if (childrenInput === undefined) {
+    throw new Error('Frame body must use direct child authoring.');
+  }
+  const headers: InputFrameHeaders = {
+    ...(parts.title === undefined ? {} : { title: parts.title }),
+    ...(parts.description === undefined ? {} : { description: parts.description }),
+  };
+  const inputProps: InputFrame = {
+    ...input,
+    children: childrenInput,
+    ...(Object.keys(headers).length === 0 ? {} : { headers }),
+  };
+  return withInputEmbedAdapters(inputProps, bodyInput.adapters);
 };
 
 const FrameComponent: FC<FrameProps> = () => null;
@@ -109,7 +102,8 @@ export const Frame = FrameComponent as StandardEmbeddableComponent<FrameProps>;
 
 Frame.displayName = 'Frame';
 Frame.isTier2Embeddable = true;
-Frame.embeddableAdapter = frameEmbeddableAdapter;
+Frame.inputEmbedAdapter = FrameInputEmbedAdapter;
+Frame.createInputEmbedProps = createFrameInput;
 
 /** 声明 Frame 的 Node-like 主标题，只能作为 Frame 的直接 child */
 export const FrameTitle: FC<FrameTitleProps> = () => {

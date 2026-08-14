@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,wayCycleControls } from './way-cycle.controls';
+import { previewControlContract, wayCycleControls } from './way-cycle.controls';
 import { WayCyclePresentationByState } from './way-cycle.data';
 
 export const previewControls = wayCycleControls;

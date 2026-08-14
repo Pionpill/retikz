@@ -66,7 +66,7 @@ describe('compile path: axis-line', () => {
             { type: 'node', id: 'target', position: [100, 0] },
             {
               type: 'path',
-              marks: arrowMarks('->', { shape: 'open' }),
+              marks: arrowMarks('->', { shape: 'stealth' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'axis-line', axis: 'horizontal', to },

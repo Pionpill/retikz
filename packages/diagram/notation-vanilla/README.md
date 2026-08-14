@@ -1,8 +1,8 @@
 # @retikz/notation-vanilla
 
-Framework-free authoring bindings for [`@retikz/notation`](../notation). Every
-builder returns a Vanilla embed, and explicit adapters normalize those embeds
-to canonical Notation IR for SSR and mount workflows.
+Framework-neutral Input bindings for [`@retikz/notation`](../notation). Every
+helper returns an `InputEmbed`, and explicit InputEmbed adapters lower those
+embeds for SSR and mount workflows.
 
 ## Install
 
@@ -17,11 +17,11 @@ This package is ESM-only and requires Node.js 24 or newer.
 import { DrawWay } from '@retikz/core';
 import {
   connector,
-  ConnectorVanillaAdapter,
+  ConnectorInputEmbedAdapter,
   stage,
-  StageVanillaAdapter,
+  StageInputEmbedAdapter,
   terminal,
-  TerminalVanillaAdapter,
+  TerminalInputEmbedAdapter,
 } from '@retikz/notation-vanilla';
 
 const children = [
@@ -29,13 +29,13 @@ const children = [
   stage('step', { position: [160, 0], text: 'Process' }),
   connector('edge', { way: ['start', DrawWay.Hv, 'step'] }),
 ];
-const adapters = [TerminalVanillaAdapter, StageVanillaAdapter, ConnectorVanillaAdapter];
+const adapters = [TerminalInputEmbedAdapter, StageInputEmbedAdapter, ConnectorInputEmbedAdapter];
 ```
 
-LogicFrame, Terminal, Stage, Decision, Junction, Connector, and Callout
-builders and adapters cover the complete Notation family. Semantic units and
-Connector reuse the embed id as the canonical Notation IR id; LogicFrame and
-Callout derive stable nested ids for their outer composites. Connector accepts
+LogicFrame, Terminal, Stage, Decision, Junction, and Connector helpers and
+adapters cover the complete Notation family. Semantic units and Connector
+reuse the embed id as the canonical Notation IR id; LogicFrame derives stable
+nested ids for its outer composite. Connector accepts
 either canonical Step `children` or authoring-only `way`.
 Direct persisted IR uses selected Definitions from `@retikz/notation` through
 Core compile options.

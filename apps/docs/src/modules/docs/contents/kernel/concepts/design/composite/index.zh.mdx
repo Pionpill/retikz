@@ -242,30 +242,30 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
 
 普通用户只需要把支持嵌入的 domain 组件放进 `<Layout>`。组件所属包负责贡献高层节点与 composite definition，`<Layout>` 再把它们交给同一条 core lowering 管线；core 仍不依赖具体 domain。
 
-如果你在实现 domain adapter、注入 `composites` / `embeddables`，或排查 datasets 汇总与宿主行为，请直接查 [Layout 高级能力与宿主接入](/kernel/components/layout/overview#高级能力与宿主接入)和[扩展运行时](/kernel/reference/runtime/extensions)，概念页不展开 React 静态遍历与聚合细节。
+如果你在实现 domain InputEmbedAdapter、注册 `adapters`，或排查 datasets 汇总与宿主行为，请直接查 [Layout 高级能力与宿主接入](/kernel/components/layout/overview#高级能力与宿主接入)和[扩展运行时](/kernel/reference/runtime/extensions)，概念页不展开 React Input 收集与 Vanilla processing 聚合细节。
 
 ## Provider roots 与传递依赖
 
-嵌入式 adapter 不直接拼 Definition 数组。它返回高层 `node`，并用 `CompositeDependencyContribution` 声明当前节点实际需要的 `roots` 与本次程序已经导入的 `providers`。每个 provider 只拥有一个完整 `namespace + type` key、直接依赖、runtime-only datasets 和一个稳定 `makeDefinition` 函数。
+嵌入式 adapter 不直接拼 Definition 数组。它返回高层 `node`，并用 `CoreProviderContribution` 声明当前节点实际需要的 `roots` 与本次程序已经导入的 `providers`。普通 provider key 使用 `capability + name`；composite key 使用 `capability: 'composite' + namespace + type`。每个 provider 还声明直接依赖、runtime-only datasets 和稳定的 `makeDefinition` 函数。
 
 <ComponentPreview files="embeddable-flow" size="xl" hideCode />
 
 Core 从 roots 计算可达闭包，按依赖优先、首次可达顺序物化每个 Definition 一次。下面的第三方 `third.card` 依赖 Standard Frame；两者进入同一张图，没有内置白名单：
 
 ```ts
-import type { CompositeDependencyProvider } from '@retikz/core';
+import type { CoreDependencyProvider } from '@retikz/core';
 
-import { resolveCompositeDependencies } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
 import { FrameProvider } from '@retikz/standard';
 
 const CardProvider = {
-  key: { namespace: 'third', type: 'card' },
+  key: { capability: 'composite', namespace: 'third', type: 'card' },
   dependencies: [FrameProvider.key],
   datasets: {},
   makeDefinition: () => CardDefinition,
-} satisfies CompositeDependencyProvider;
+} satisfies CoreDependencyProvider;
 
-const composites = resolveCompositeDependencies({
+const definitions = resolveCoreProviderDependencies({
   contributions: [
     {
       roots: [CardProvider.key],
@@ -277,19 +277,19 @@ const composites = resolveCompositeDependencies({
 
 `datasets` 只在 maker 调用前按 provider key 与 reference 合并，不进入 IR、Scene 或 manifest。同 reference 只有 `Object.is` 同源才能去重；provider maker、依赖顺序或 dataset identity 冲突都会在任何 maker 执行前失败。缺失依赖与环也在预检阶段报出完整 key 链。
 
-Provider graph 负责从可复用模块装配“需要哪些 Definition”。`CompileOptions.composites` 仍是 Core 编译器最终读取的 Definition 数组：直接 IR 作者可以显式传完整数组；React、Vanilla 或其它工具链则先用 resolver 生成数组。Provider 结果先写入，显式 Definition 后追加；同 key 只允许同一个 Definition 对象去重，不同对象 fail-loud。
+Provider graph 负责从可复用模块装配“需要哪些 Definition”。`resolveCoreProviderDependencies()` 产出按 Core capability 分组的 options；直接 IR 作者可以显式传完整 Definition 集合，React、Vanilla 或其它工具链则先解析 contribution。Provider 结果先写入，显式 Definitions 后追加；同 key 只允许同一个 Definition 对象去重，不同对象 fail-loud。
 
 <SourceLinks
   sources={[
     {
       label: 'Provider graph contract 与 runtime-only datasets',
-      path: 'packages/kernel/core/src/contract/composite/dependency-provider.ts',
+      path: 'packages/kernel/core/src/contract/provider/dependency-provider.ts',
       startLine: 1,
       endLine: 37,
     },
     {
       label: '可达闭包、拓扑顺序与冲突预检',
-      path: 'packages/kernel/core/src/contract/composite/resolve-dependencies.ts',
+      path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts',
       startLine: 69,
       endLine: 209,
     },

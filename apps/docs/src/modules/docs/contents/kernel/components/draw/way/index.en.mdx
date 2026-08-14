@@ -85,7 +85,7 @@ This section zooms in on the local expansion from `way` to `<Path>` / `<Step>`. 
 
 That is why a fold or curve operator must be followed immediately by a target, while a shape operator leaves the next item available to the scan. `{ label }` enters a pending state that the next segment-producing item consumes, so place it before the target or segment operator. Consecutive labels, trailing labels, and labels attached to cycle are rejected.
 
-Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` and passes stroke, fill, arrow, and related visual props to `<Path>`. It is compact sugar rather than a second path model.
+Finally, `<Draw>` passes `way`, stroke, fill, arrows, and related visual props to `<Path>`; Vanilla then normalizes it into the Step sequence. It is compact sugar rather than a second path model.
 
 <SourceLinks
   sources={[
@@ -102,10 +102,10 @@ Finally, `<Draw>` expands the Step sequence into `<Step>` children of `<Path>` a
       endLine: 511,
     },
     {
-      label: 'Draw expansion into Path + Step',
+      label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 66,
-      endLine: 165,
+      startLine: 50,
+      endLine: 54,
     },
   ]}
 />

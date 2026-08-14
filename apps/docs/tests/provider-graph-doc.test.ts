@@ -13,30 +13,31 @@ describe('provider graph documentation', () => {
     const compile = readContent('kernel/reference/runtime/compile', lang);
 
     for (const contract of [
-      'CompositeProviderKey',
-      'CompositeDependencyProvider',
-      'CompositeDependencyContribution',
-      'ResolveCompositeDependenciesOptions',
+      'CoreProviderKey',
+      'CoreDependencyProvider',
+      'CoreProviderContribution',
+      'ResolveCoreProviderDependenciesOptions',
     ]) {
       expect(compile).toContain(contract);
     }
-    expect(concept).toContain("namespace: 'third'");
+    expect(concept).toContain("capability: 'composite', namespace: 'third'");
     expect(concept).toContain('files="embeddable-flow"');
     expect(concept).toContain('dependencies: [FrameProvider.key]');
     expect(concept).toContain('Object.is');
-    expect(concept).toContain('CompileOptions.composites');
-    expect(compile).toContain('resolveCompositeDependencies()');
-    expect(compile).toContain('options.composites');
+    expect(concept).toContain('resolveCoreProviderDependencies()');
+    expect(compile).toContain('resolveCoreProviderDependencies()');
+    expect(compile).toContain('CoreProviderDefinitions');
   });
 
   it.each(['zh', 'en'] as const)('%s Standard 页面区分 provider 装配与直接 Definition 输入', lang => {
     const loading = readContent('library/standard/extension/capability-loading', lang);
-    const landing = readContent('library/standard/composite', lang);
+    const landing = readContent('library/standard/extension', lang);
 
-    expect(loading).toContain('GridProvider');
-    expect(loading).toContain('FrameProvider');
-    expect(loading).toContain('resolveCompositeDependencies');
-    expect(loading).toContain('CompileOptions.composites');
+    expect(loading).toContain('CrossShapeDefinition');
+    expect(loading).toContain('DiamondArrowDefinition');
+    expect(loading).toContain('resolveCoreProviderDependencies');
+    expect(loading).toContain('CoreProviderContribution');
+    expect(landing).toContain('/library/standard/extension/shape');
     expect(landing).toContain('/library/standard/extension/capability-loading');
     expect(landing.match(/<LinkedCard /g)?.length).toBeGreaterThanOrEqual(4);
     expect(landing.indexOf('</div>')).toBeGreaterThan(landing.lastIndexOf('</LinkedCard>'));

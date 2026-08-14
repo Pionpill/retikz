@@ -1,4 +1,4 @@
-import type { CompositeDependencyProvider } from '@retikz/core';
+import type { CoreDependencyProvider } from '@retikz/core';
 
 import { FlexLayoutProvider } from '@retikz/layout';
 import { PlotProviderKey } from '@retikz/plot';
@@ -41,7 +41,7 @@ const mergeChartThemeStyles = (
 };
 
 /** 将 Chart runtime envelope 合并为唯一 canonical definition */
-const makeChartDefinition: CompositeDependencyProvider['makeDefinition'] = mergedDatasets => {
+const makeChartDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
   const definitionSets: Array<ReadonlyArray<ChartThemeStyleDefinition>> = [];
   for (const value of Object.values(mergedDatasets)) {
     const styles = runtimeStylesOf(value);
@@ -53,6 +53,7 @@ const makeChartDefinition: CompositeDependencyProvider['makeDefinition'] = merge
 
 /** chart.chart 的完整 provider key */
 export const ChartProviderKey = Object.freeze({
+  capability: 'composite' as const,
   namespace: ChartDefinition.namespace,
   type: ChartDefinition.type,
 });
@@ -60,7 +61,7 @@ export const ChartProviderKey = Object.freeze({
 /** 创建携带当前 Chart Theme definitions 的 canonical dependency provider */
 export const createChartProvider = (
   chartThemeStyles: ReadonlyArray<ChartThemeStyleDefinition> | undefined = undefined,
-): CompositeDependencyProvider => {
+): CoreDependencyProvider => {
   const datasets =
     chartThemeStyles === undefined || chartThemeStyles.length === 0
       ? {}

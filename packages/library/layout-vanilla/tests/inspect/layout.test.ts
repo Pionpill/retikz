@@ -1,13 +1,13 @@
 import { LayoutItemKind } from '@retikz/layout';
-import { figure, renderToSvgString } from '@retikz/vanilla';
+import { renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { LayoutVanillaAdapters } from '../../src';
+import { LayoutInputEmbedAdapters } from '../../src';
 import { createLayoutInspectionVanillaDriver, inspectFlexLayout } from '../../src/inspect';
 
 describe('@retikz/layout-vanilla/inspect', () => {
   it('通过可选 helper 输出 FlexLayout 只读辅助图层', () => {
-    const source = figure({
+    const source = scene({
       children: [
         inspectFlexLayout('flex', {
           children: [
@@ -17,7 +17,7 @@ describe('@retikz/layout-vanilla/inspect', () => {
       ],
     });
     const svg = renderToSvgString(source, {
-      adapters: LayoutVanillaAdapters,
+      adapters: LayoutInputEmbedAdapters,
       compileDriver: createLayoutInspectionVanillaDriver(),
     });
     expect(svg).toContain('data-retikz-readonly-layer');

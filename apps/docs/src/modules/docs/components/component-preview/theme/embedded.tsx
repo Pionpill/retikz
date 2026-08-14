@@ -1,6 +1,5 @@
 import type { PlotProps } from '@retikz/plot-react';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
-import type { DetailTableProps, EmbeddableTableComponent, ManualTableProps } from '@retikz/table-react';
+import type { DetailTableProps, InputEmbeddableTableComponent, ManualTableProps } from '@retikz/table-react';
 import type { FC } from 'react';
 
 import { Plot as RuntimePlot } from '@retikz/plot-react';
@@ -18,18 +17,15 @@ const withPlotThemeStyles = (props: PlotProps): PlotProps => ({
       : [...PreviewPlotThemeStyles, ...props.plotThemeStyles],
 });
 
-const runtimePlotAdapter = RuntimePlot.embeddableAdapter;
-if (runtimePlotAdapter === undefined) throw new Error('docs: Runtime Plot must expose an embeddable adapter');
+const runtimePlotAdapter = RuntimePlot.inputEmbedAdapter;
 
 /** docs preview 的 Plot 边界，同时覆盖 standalone 与 Layout-embedded runtime definitions */
 export const PreviewPlot = Object.assign(((props: PlotProps) => <RuntimePlot {...props} />) as FC<PlotProps>, {
   displayName: 'PreviewPlot',
   isTier2Embeddable: true as const,
-  embeddableAdapter: {
-    ...runtimePlotAdapter,
-    displayName: 'PreviewPlot',
-    contribute: (props: PlotProps) => runtimePlotAdapter.contribute(withPlotThemeStyles(props)),
-  } satisfies EmbeddableTier2Adapter<PlotProps>,
+  inputEmbedAdapter: runtimePlotAdapter,
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
+    RuntimePlot.createInputEmbedProps(withPlotThemeStyles(props as PlotProps)),
 });
 
 /** 只为绕过 React context 的 Layout-embedded adapter 补齐 docs Table definitions */
@@ -43,26 +39,26 @@ const withTableThemeStyles = <TProps extends { tableThemeStyles?: DetailTablePro
       : [...PreviewTableThemeStyles, ...props.tableThemeStyles],
 });
 
-const previewDetailAdapter: EmbeddableTier2Adapter<DetailTableProps> = {
-  ...RuntimeDetailTable.embeddableAdapter,
-  displayName: 'PreviewDetailTable',
-  contribute: props => RuntimeDetailTable.embeddableAdapter.contribute(withTableThemeStyles(props)),
-};
-
 /** docs preview 的 DetailTable 边界 */
-export const PreviewDetailTable: EmbeddableTableComponent<DetailTableProps> = Object.assign(
+export const PreviewDetailTable: InputEmbeddableTableComponent<DetailTableProps> = Object.assign(
   ((props: DetailTableProps) => <RuntimeDetailTable {...props} />) as FC<DetailTableProps>,
-  { displayName: 'PreviewDetailTable', isTier2Embeddable: true as const, embeddableAdapter: previewDetailAdapter },
+  {
+    displayName: 'PreviewDetailTable',
+    isTier2Embeddable: true as const,
+    inputEmbedAdapter: RuntimeDetailTable.inputEmbedAdapter,
+    createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
+      RuntimeDetailTable.createInputEmbedProps(withTableThemeStyles(props as DetailTableProps)),
+  },
 );
 
-const previewManualAdapter: EmbeddableTier2Adapter<ManualTableProps> = {
-  ...RuntimeManualTable.embeddableAdapter,
-  displayName: 'PreviewManualTable',
-  contribute: props => RuntimeManualTable.embeddableAdapter.contribute(withTableThemeStyles(props)),
-};
-
 /** docs preview 的 ManualTable 边界 */
-export const PreviewManualTable: EmbeddableTableComponent<ManualTableProps> = Object.assign(
+export const PreviewManualTable: InputEmbeddableTableComponent<ManualTableProps> = Object.assign(
   ((props: ManualTableProps) => <RuntimeManualTable {...props} />) as FC<ManualTableProps>,
-  { displayName: 'PreviewManualTable', isTier2Embeddable: true as const, embeddableAdapter: previewManualAdapter },
+  {
+    displayName: 'PreviewManualTable',
+    isTier2Embeddable: true as const,
+    inputEmbedAdapter: RuntimeManualTable.inputEmbedAdapter,
+    createInputEmbedProps: (props: Readonly<Record<string, unknown>>) =>
+      RuntimeManualTable.createInputEmbedProps(withTableThemeStyles(props as ManualTableProps)),
+  },
 );

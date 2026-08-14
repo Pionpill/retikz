@@ -1,4 +1,4 @@
-import type { IRBoxSpacing, IRStepLabelInput } from '@retikz/core';
+import type { IRBoxSpacing, IRStepLabel } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
@@ -193,7 +193,7 @@ export type IRPlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
 export type IRPlotRelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
 
 /** relation 路由步骤标签输入，沿用 core step label 并替换文本字段 */
-export type RelationStepLabelInput = Omit<IRStepLabelInput, 'text'> & {
+export type RelationStepLabelInput = Omit<IRStepLabel, 'text'> & {
   text: IRPlotRelationStepLabel['text'];
 };
 

@@ -11,7 +11,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
-React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格包装成 Scene IR 并向 `<Layout>` 注入 `lowerPlots`；`embedPlot()` 与 `createPlotAdapter()` 把同一规格接入 Kernel Vanilla 的 figure / layer。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
+React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格收集为 React Input Scene，并交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 InputEmbed，配合 `PlotInputEmbedAdapter` 完成归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
 `<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme：standalone 与 embedded 都把它包在 Plot node 外层，因此只覆盖该 Plot 的 `style`、`mode` 与 namespaced `tokens`。它不同于 Plot spec 内的 `plotThemeTokens` / `plotTheme`，后两者是 Plot owner 的视觉字段。Vanilla `renderPlot(spec, data, { theme })` 则把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotThemeTokens` 或 `spec.plotTheme`。
 
@@ -21,7 +21,7 @@ React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 
 
 <ComponentPreview files="plot-authoring-convergence" size="md" hideCode />
 
-React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain object；两者把 axis、facet 与 scaffold binding 交给 `@retikz/plot` 的共享 authoring normalization。`spec` prop 与直接生成的 JSON 仍可提供完整 Plot IR。所有入口都在执行前通过 `PlotSpecSchema`，因此下游只处理 schema-valid 的 `IRPlotSpec`。
+React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` 接收 plain object。两者都由 `@retikz/plot-vanilla` 展开 axis、facet 与 scaffold binding，形成同一份 `IRPlotSpec`。已类型化的 authoring 输入不会重复 schema 校验；来自 JSON、文件或其它未知边界的配置应先通过 `PlotSpecSchema` 或 parser 进入 IR。
 
 `IRPlotSpec` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
 
@@ -29,7 +29,7 @@ React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain 
 | ---------- | ------------------------------------------------ | ---------------------- |
 | React DSL  | `<Plot>`、mark / guide / scale 子组件            | 共享规范化后进入       |
 | React spec | `<Plot spec={...} data={...}>`                   | `spec` 进入            |
-| Vanilla    | `plot({...})`、完整 plain spec                   | 共享规范化或校验后进入 |
+| Vanilla    | `plot({...})`、完整 `InputPlot`                  | 共享规范化或校验后进入 |
 | 运行时依赖 | datasets、field maps、resolver、各类 Definitions | 不进入                 |
 
 ## Lowering 与产物
@@ -48,7 +48,7 @@ React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain 
 | ---------------- | --------------------------------------------------- | --------------------------------------------- |
 | React standalone | `<Plot>`                                            | `<Layout>` 管理的 SVG / Canvas                |
 | React embedded   | `<Layout><Plot /></Layout>`                         | 与其它 Tier 2 内容合编的 Scene                |
-| Vanilla embedded | `embedPlot()` + `createPlotAdapter()`               | Kernel figure / layer 中的 Scene              |
+| Vanilla embedded | `embedPlot()` + `PlotInputEmbedAdapter`             | Kernel Input Scene / layer 中的 Scene         |
 | Vanilla / SSR    | `renderPlot(spec, datasets, { theme, ...options })` | 根 Theme 下的 SVG 字符串或 `{ svg, lineage }` |
 | 自定义宿主       | `lowerPlots(datasets, options)` + Core compile      | Core IR → Scene                               |
 | 审计与交互       | `lowerPlotWithLineage()`、`createPlotLocator()`     | runtime-only lineage / anchor                 |
@@ -56,46 +56,46 @@ React DSL 通过 `buildPlotSpec` 收集 JSX，Vanilla 的 `plot()` 接收 plain 
 <SourceLinks
   sources={[
     {
-      label: 'React props 到规格、datasets 与 lowering 选项',
+      label: 'React props 收集并调度 Plot Vanilla authoring',
       path: 'packages/viz/plot-react/src/plot-runtime.ts',
       startLine: 126,
       endLine: 167,
     },
     {
-      label: 'React standalone 与嵌入式宿主接线',
+      label: 'React Plot 生成 Plot Vanilla 嵌入输入',
       path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 119,
-      endLine: 177,
+      startLine: 115,
+      endLine: 133,
     },
     {
-      label: '嵌入式 Plot 数据与 lowering 选项聚合',
-      path: 'packages/viz/plot-react/src/embedded-runtime.ts',
-      startLine: 55,
-      endLine: 104,
-    },
-    {
-      label: '共享 authoring normalization 与 canonical PlotSpec',
-      path: 'packages/viz/plot/src/contract/authoring/create-plot-spec.ts',
-      startLine: 8,
-      endLine: 27,
-    },
-    {
-      label: 'Vanilla plain helper 与 Tier 2 embed',
-      path: 'packages/viz/plot-vanilla/src/spec/helpers.ts',
-      startLine: 10,
-      endLine: 16,
-    },
-    {
-      label: 'Vanilla Tier 2 adapter 校验、identity 与 datasets 接线',
+      label: 'Plot Vanilla adapter 聚合 datasets 与 lowering contribution',
       path: 'packages/viz/plot-vanilla/src/adapter/plot-adapter.ts',
-      startLine: 10,
-      endLine: 32,
+      startLine: 63,
+      endLine: 77,
     },
     {
-      label: 'Vanilla 校验、Core 编译与 SVG 输出',
+      label: 'Plot Vanilla 将 typed authoring input 归一为 Plot Source IR',
+      path: 'packages/viz/plot-vanilla/src/normalize/plot/normalize.ts',
+      startLine: 23,
+      endLine: 45,
+    },
+    {
+      label: 'Plot Input helper 与 InputEmbed',
+      path: 'packages/viz/plot-vanilla/src/spec/helpers.ts',
+      startLine: 14,
+      endLine: 26,
+    },
+    {
+      label: 'Vanilla adapter 包装面板 Scope 并保留 datasets ownership',
+      path: 'packages/viz/plot-vanilla/src/adapter/plot-adapter.ts',
+      startLine: 13,
+      endLine: 30,
+    },
+    {
+      label: 'Vanilla 用已类型化 Plot IR 编译并输出 SVG',
       path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
-      startLine: 47,
-      endLine: 68,
+      startLine: 58,
+      endLine: 75,
     },
     {
       label: 'Plot lowering 的运行时选项',

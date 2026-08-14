@@ -13,7 +13,7 @@ The official repo currently maintains six kernel packages:
 | [`@retikz/core`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core)       | IR schemas, geometry, parsers, and the Scene compiler; zero React, zero DOM                                                             | Officially maintained |
 | [`@retikz/render`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/render)   | Renderer-neutral Scene output adapters: SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities          | Officially maintained |
 | [`@retikz/react`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react)     | React adapter: JSX components that compile to IR, then render through SVG or Canvas                                                     | Officially maintained |
-| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | Framework-free runtime: plain spec helpers, SVG/Canvas mounting, hydration, animation controls, and SVG string output                   | Officially maintained |
+| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | Framework-neutral foundation: Input helpers, processing, SVG/Canvas mounting, hydration, animation controls, and SVG string output      | Officially maintained |
 | [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | Optional LaTeX integration: MathJax SVG glyph paths lowered into the renderer-agnostic Scene model                                      | Officially maintained |
 
 Vue / Svelte / Solid / Native adapters are still future or community surfaces, but the IR remains universal: a new framework adapter can reuse `@retikz/core` and most renderer work from `@retikz/render`, then supply its own component bridge and text measurer where needed.
@@ -67,8 +67,8 @@ Walk inward from both ends: input contract (IR) first, then output contract (Sce
 7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) — Sub-compilers**<br />
    Drill in as needed: node layout / path stepping / position resolution. [`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
 
-8. **[`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse) — Sugar entry (optional)**<br />
-   [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/target-sugar.ts) translate `<Draw way={[...]}>` and similar Sugar forms into IR. `@retikz/react` calls them inside its Sugar components.
+8. **[`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse) — Standalone grammar entry (optional)**<br />
+   [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/target-sugar.ts) handle standalone path and target string grammar. Vanilla `normalizePath` dispatches them to normalize typed InputPath into Core IR; React does not call them directly.
 
 9. **Registry extension surfaces (optional)**<br />
    [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers): third-party packages should start from `contract/`; built-in implementations and registry merging live under `providers/`.
@@ -89,35 +89,35 @@ Keep these constraints in mind when reading core; they explain why some implemen
 
 ### Package Layout
 
-| Module                                                                                               | Responsibility                                                                                                                                                                          |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel — `components` hold marker components, `protocol` holds shared recognition contracts, `adapter` bridges JSX ↔ IR, and `runtime` hosts `<Layout>` plus hydration wiring |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX components — `path` holds `<Draw>` / `<EdgeLabel>`, and `shapes` holds shape sugar; all expand into Kernel at compile time and introduce no new capabilities                  |
-| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React host rendering wiring — `svg`, `canvas`, and `text` split SVG elements, CanvasHost, and the browser measurer                                                                      |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components and the `convertReactNodeToIR` / `convertIRToReactNode` bridges                                                                          |
+| Module                                                                                               | Responsibility                                                                                                                                                                                  |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel — `components` hold marker components, `protocol` holds shared recognition contracts, `adapter` bridges JSX → InputScene, and `runtime` hosts `<Layout>` plus hydration wiring |
+| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX components — `path` holds `<Draw>` / `<EdgeLabel>`, and `shapes` holds shape sugar; all expand into Kernel at compile time and introduce no new capabilities                          |
+| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React result-host wiring — `processing-result`, `svg`, `canvas`, and `text` handle processing results, SVG, CanvasHost, and the browser measurer                                                |
+| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components, `createInputScene`, and `convertIRToReactNode`                                                                                                  |
 
 ### Recommended Reading Order
 
 1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) — Public API**<br />
-   See which Kernel / Sugar components, types, and bridges are exposed. `WayDSL` and related constants from core are re-exported here so React users can import from a single package.
+   See the exported Kernel / Sugar components, prop types, and adapter bridges. Core grammar vocabulary remains exported by its Core owner; React exposes only its JSX entry points.
 
 2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx) — Top-level orchestrator**<br />
-   `<Layout>` is the entry point of the whole pipeline: children → `buildIRWithContributions` → `compileToScene` → `result.scene` → renderer, with `result.artifacts` published after commit. One file gives you the adapter's overall shape.
+   `<Layout>` is the entry point of the whole pipeline: children → `createInputScene` → Vanilla processing (normalization, Core Program, runtime) → `ProcessingResultHost`, with same-compile artifacts published after commit. One file gives you the adapter's overall shape.
 
-3. **[`kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts) — JSX → IR**<br />
-   Dispatches by child `displayName` to construct IRNode / IRPath / IRStep / IRScope, etc. The companion [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".
+3. **[`kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts) — JSX → InputScene**<br />
+   Dispatches by child `displayName` to construct authoring InputNode / InputPath / InputStep / InputScope values and collect Tier 2 `InputEmbedAdapter` values; it does not parse Core authoring grammar. The companion [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".
 
 4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Step.tsx) etc. — Kernel components**<br />
-   These components don't render anything themselves — they only declare a `displayName` and hand props to `builder`. Read one and you've read them all.
+   These components don't render anything themselves — they only declare a `displayName` and hand props to the Input collector. Read one and you've read them all.
 
-5. **[`render/svg/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/svg/render-prim.tsx) — Scene → SVG element**<br />
-   Dispatches by primitive `type` to `<rect>` / `<ellipse>` / `<text>` / `<path>` / `<g>`; paint / clip / marker resources are materialized by sibling defs components. This layer is the main rewrite surface when porting to another framework.
+5. **[`render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx) — ProcessingResult → React host**<br />
+   React only maps Vanilla's readonly processing result to SVG or Canvas, then binds hydration, animation, and artifact notifications. A different framework can reuse Vanilla processing and replace only this host layer.
 
 6. **[`render/text/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/text/browser-measurer.ts) — Text measurer injection**<br />
-   A canvas-`measureText`-based `TextMeasurer`, injected into `compileToScene` via `CompileOptions.measureText`. When there's no document (SSR), it falls back to core's `fallbackMeasurer` automatically.
+   A canvas-`measureText`-based `TextMeasurer`, injected into Core compilation through Vanilla processing's `CompileOptions.measureText`. When there's no document (SSR), it falls back to core's `fallbackMeasurer` automatically.
 
-7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) — Sugar expansion**<br />
-   `<Draw way={[...]}>` internally calls [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) (from core) to obtain a step array, then renders Kernel `<Path><Step/></Path>`. Sugar introduces no new capabilities; everything expands to Kernel.
+7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) — Sugar forwarding**<br />
+   `<Draw way={[...]}>` only forwards its props to Kernel `<Path>`. Vanilla `normalizePath` then parses `way` and emits Core Path steps; Sugar introduces no new drawing capability.
 
 8. **Shape components in [`sugar/shapes/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar/shapes) (optional)**<br />
    `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<RegularPolygon>` / `<Star>` are Sugar too: they expand common geometry idioms into equivalent `<Path>` declarations. Standard `Grid` is instead a Tier 2 composite with its own persistent IR.
@@ -129,29 +129,30 @@ If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter ma
 | In React                                          | Your new adapter needs                                                              |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker)           |
-| `kernel/builder.ts` (JSX → IR)                    | A children / vnode → IR bridge for your framework                                   |
-| `render/svg/render-prim.tsx` + defs components    | Mapping Scene primitives and resources to your framework's native elements          |
+| `kernel/input-scene.ts` (JSX → InputScene)        | A children / vnode → InputScene bridge that reuses Vanilla normalization            |
+| `render/processing-result.tsx`                    | Connecting a Vanilla processing result to your framework's native host              |
 | `render/text/browser-measurer.ts`                 | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
 
 `@retikz/core`'s IR, `compileToScene`, `shared/geometry` helpers, and `contract/scene` types are reused unchanged — no need to rewrite them.
 
 ## Quick File Index
 
-| Looking for               | File                                                                                                                                                |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IR root                   | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)              |
-| Node fields               | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)                |
-| Path / Step types         | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                                   |
-| Polar / relative position | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                           |
-| Scene primitive types     | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                               |
-| Compile pipeline          | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)                        |
-| Text measurement contract | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)              |
-| boundaryPoint / anchor    | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) and siblings |
-| core public API           | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                        |
-| React top-level pipeline  | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)                |
-| JSX → IR bridge           | [`react/kernel/builder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/builder.ts)                |
-| Scene → SVG element       | [`react/render/svg/render-prim.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/svg/render-prim.tsx)      |
-| react public API          | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                      |
+| Looking for                    | File                                                                                                                                                |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IR root                        | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)              |
+| Node fields                    | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)                |
+| Path / Step types              | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                                   |
+| Polar / relative position      | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                           |
+| Scene primitive types          | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                               |
+| Compile pipeline               | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)                        |
+| Text measurement contract      | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)              |
+| boundaryPoint / anchor         | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) and siblings |
+| core public API                | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                        |
+| React top-level pipeline       | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)                |
+| JSX → InputScene bridge        | [`react/kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts)        |
+| Vanilla processing             | [`vanilla/processing/prepare.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/vanilla/src/processing/prepare.ts)            |
+| Processing result → React host | [`react/render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx)  |
+| react public API               | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                      |
 
 ## Further Reading
 

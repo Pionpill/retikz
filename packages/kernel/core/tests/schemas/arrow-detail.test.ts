@@ -14,8 +14,6 @@ describe('ArrowDetailSchema：字段合法 / optional', () => {
       'open',
       'stealth',
       'openStealth',
-      'diamond',
-      'openDiamond',
       'circle',
       'openCircle',
     ]);

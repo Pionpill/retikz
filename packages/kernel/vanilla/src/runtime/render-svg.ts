@@ -39,8 +39,8 @@ const captureRenderToStringOptions = (input: unknown): RenderToStringOptions => 
 };
 
 /**
- * 把 IR / Scene / plain spec 渲染成 SVG 字符串（SSR / 构建期）
- * @description 收 IR / Scene / plain spec 时薄包 `@retikz/render/svg`：`toScene`
+ * 把 IR / Scene / InputScene 渲染成 SVG 字符串（SSR / 构建期）
+ * @description 收 IR / Scene / InputScene 时薄包 `@retikz/render/svg`：`toSceneResult`
  *   （ir 缺省走 core fallback measurer、确定性）→ 序列化。`output.width` / `output.height` 直接透传给 render，由其结构化写进根
  *   `<svg>` attrs（不在本层对字符串做正则后处理）。零 DOM
  */

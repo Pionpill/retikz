@@ -1,0 +1,128 @@
+---
+title: 形状扩展
+description: 从 @retikz/standard/shape 按需引入可选节点形状，并分别在 React 与 Vanilla 的编译入口传入 Definition。
+---
+
+形状扩展在 Core 提供的基础形状之上，补充了更多可选内容：
+
+| 包名             | 提供内容                                                               |
+| ---------------- | ---------------------------------------------------------------------- |
+| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形               |
+| `standard/shape` | `cross` — 十字形、`sector` — 扇形、`star` — 星形、`contour` — 任意轮廓 |
+
+## 用法
+
+本页支持两种导入方式：
+
+- 按需导入特定 Definition，例如 `CrossShapeDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
+- 整体使用官方扩展，例如 `StandardShapeDefinitions`，一次包含本子入口提供的全部 Standard Definition；组装 provider graph 时，对应使用 `StandardShapeProviders`
+
+两种方式都只是当前图的显式装配，不会因为 import 自动全局注册形状。
+
+### React 用法
+
+从 `@retikz/standard/shape` 导入当前图需要的 Definition，传给 React `Layout` 的 `shapes` 属性。Definition 与参数分离：Node 只保存 `shape` 名称和 JSON-safe `params`，导入模块不会全局注册形状。
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
+
+<Layout shapes={[CrossShapeDefinition]}>
+  <Node position={[0, 0]} shape="cross" minimumSize={{ width: 80, height: 80 }}>
+    十字形
+  </Node>
+</Layout>;
+```
+
+### Vanilla 用法
+
+在 `@retikz/vanilla` 中，把 Definition 放进 `compile.shapes`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { CrossShapeDefinition } from '@retikz/standard/shape';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    shapes: [CrossShapeDefinition],
+  },
+});
+```
+
+当 IR 形状既不是 Core 默认项，也没有在本次 `shapes` 中注册时，Core 会在 lookup 时明确失败，不会以相近形状静默替代。`polygon` 是 Core 最小内置形状，详见 [Polygon](/kernel/components/shapes/polygon)。
+
+## 例子
+
+下面首先给出一个列表，介绍几个扩展形状。四个形状在同一坐标系内横向排列，便于先比较基本外观，再进入各自的几何参数。
+
+<ComponentPreview files="shape-gallery" size="sm" />
+
+### 十字形
+
+`cross` 支持独立控制水平臂、垂直臂的宽度，以及上、右、下、左四个方向的高度。它适合删除、禁用、交叉点和不对称十字架等 glyph。
+
+<ComponentPreview files="cross-example" size="sm" />
+
+使用 `shape={{ type: 'cross', params }}` 并注入 `CrossShapeDefinition`。`width` 或 `height` 可以直接使用数字，也可以使用对象；对象字段按“方向 > 轴向 > default”解析，即 `top/right/bottom/left` 优先于 `horizontal/vertical`，再回退到 `default`。
+
+| 字段      | 类型                                                                                                                                  | 说明                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | 水平臂与垂直臂宽度；数字同时应用于两个轴向 |
+| `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | 四个方向高度，并支持轴向和 default 回退    |
+
+### 扇形
+
+`sector` 用内外半径和角度范围构成实心扇片、环楔或开放弧，`cornerRadius` 可把正厚度 Sector 的径向转角变圆。将 `innerRadius` 与 `outerRadius` 设为相同的正数即可退化为可连接的开放弧；它适合角度范围、环形进度和扇区状态节点。
+
+<ComponentPreview files="sector-example" size="md" />
+
+#### API
+
+节点使用 `shape={{ type: 'sector', params }}`，并注入 `SectorShapeDefinition`。`params` 类型为 `SectorShapeParams`：
+
+| 字段            | 类型     | 说明                                                   |
+| --------------- | -------- | ------------------------------------------------------ |
+| `innerRadius`   | `number` | 非负内半径；`0` 表示实心扇片                           |
+| `outerRadius`   | `number` | 正数外半径，必须大于等于 `innerRadius`；相等时为开放弧 |
+| `startAngle`    | `number` | 起始角度，单位为度                                     |
+| `endAngle`      | `number` | 结束角度，单位为度                                     |
+| `cornerRadius?` | `number` | 正厚度 Sector 的转角圆角半径；省略或为 `0` 时保持尖角  |
+
+### 星形
+
+`star` 通过尖角数量、内外半径、旋转和圆角生成星形，并提供 `tip-N` 与 `notch-N` 命名 anchor。它适合强调、评分或需要语义锚点的图节点。
+
+<ComponentPreview files="star-example" size="md" />
+
+#### API
+
+节点使用 `shape={{ type: 'star', params }}`，并注入 `StarShapeDefinition`。`params` 类型为 `StarShapeParams`：
+
+| 字段            | 类型     | 说明                               |
+| --------------- | -------- | ---------------------------------- |
+| `points`        | `number` | 整数，范围为 3–1024                |
+| `innerRadius`   | `number` | 正数内半径                         |
+| `outerRadius`   | `number` | 正数外半径，必须大于 `innerRadius` |
+| `rotate?`       | `number` | 形状自身旋转角度，单位为度         |
+| `cornerRadius?` | `number` | 每个顶点的圆角半径                 |
+
+### 任意轮廓
+
+`contour` 接受一组闭合顶点环，并会以包围盒中心对齐 Node 位置；`cornerRadius` 对每个转角应用可行的圆角。这里用预设点集避免编辑 JSON，同时展示标签、盾牌和缺口等非标准轮廓。
+
+<ComponentPreview files="contour-example" size="md" />
+
+#### API
+
+节点使用 `shape={{ type: 'contour', params }}`，并注入 `ContourShapeDefinition`。`params` 类型为 `ContourShapeParams`：
+
+| 字段            | 类型                      | 说明                                                                     |
+| --------------- | ------------------------- | ------------------------------------------------------------------------ |
+| `points`        | `Array<[number, number]>` | 至少 3 个顶点，按给定顺序组成闭合顶点环；Node 会按顶点包围盒中心对齐位置 |
+| `cornerRadius?` | `number`                  | 每个转角的圆角半径；省略或为 `0` 时保持尖角                              |
+
+## 相关
+
+- [能力装载](/library/standard/extension/capability-loading)：直接注入与 provider graph 的边界
+- [形状](/kernel/components/shapes)：Core 内置形状与节点几何
+- [扩展](/library/standard/extension)：浏览其他可选能力

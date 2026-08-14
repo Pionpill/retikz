@@ -1,4 +1,3 @@
-export type { ResolvedPlotExtensionAuthoring } from './build-plot-spec';
 export { buildPlotSpec, decorateDefaultGuides, resolveLabelOf, resolvePlotExtensionAuthoring } from './build-plot-spec';
 export { collectPlotDeclarations } from './collector';
 export type {
@@ -7,17 +6,10 @@ export type {
   MarkTransformShortcutContext,
   MarkTransformShortcutDefinition,
   PlotAuthoringContext,
-  PlotAuthoringDeclaration,
-  PlotAuthoringDeclarations,
-  PlotAuthoringRuntime,
-  PlotAuthoringRuntimeSource,
   PlotComposition,
-  PlotDeclarationCollection,
   PlotDeclarationPath,
   PlotDeclarationSource,
-  PlotMemberFragment,
+  ResolvedPlotExtensionAuthoring,
   ResolveLabelMap,
-} from './contracts';
-export type { PlotDeclarationErrorCodeValue } from './errors';
-export { PlotDeclarationError, PlotDeclarationErrorCode } from './errors';
-export { normalizePlotDeclarations } from './normalize';
+} from '@retikz/plot-vanilla';
+export { PlotDeclarationError, PlotDeclarationErrorCode } from '@retikz/plot-vanilla';

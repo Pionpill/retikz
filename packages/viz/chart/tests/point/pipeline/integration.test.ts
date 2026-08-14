@@ -1,8 +1,8 @@
 import type { ExternalDatasets } from '@retikz/data';
 
-import { compileToScene, resolveCompositeDependencies } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
-import { createPlotProvider } from '@retikz/plot';
+import { createPlotProviderContribution } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
@@ -37,17 +37,17 @@ const chart = resolvePointChartSpec(
 
 describe('canonical Chart provider and compile integration', () => {
   it('resolves Surface, Flex, Plot, then Chart from the single Chart root', () => {
-    const plotProvider = createPlotProvider(datasets, { width: 320, height: 180 });
-    const definitions = resolveCompositeDependencies({
+    const plotContribution = createPlotProviderContribution(datasets, { width: 320, height: 180 });
+    const definitions = resolveCoreProviderDependencies({
       contributions: [
         {
           roots: [ChartProvider.key],
-          providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, ChartProvider],
+          providers: [SurfaceProvider, FlexLayoutProvider, ...plotContribution.providers, ChartProvider],
         },
       ],
     });
 
-    expect(definitions.map(definition => [definition.namespace, definition.type])).toEqual([
+    expect(definitions.composites?.map(definition => [definition.namespace, definition.type])).toEqual([
       ['standard', 'surface'],
       ['layout', 'flexLayout'],
       ['plot', 'plot'],
@@ -56,16 +56,19 @@ describe('canonical Chart provider and compile integration', () => {
   });
 
   it('renders presentation and Plot through ordinary Scene output and publishes the Chart-qualified Surface handle', () => {
-    const plotProvider = createPlotProvider(datasets, { width: 320, height: 180, provenance: true });
-    const composites = resolveCompositeDependencies({
+    const plotContribution = createPlotProviderContribution(datasets, { width: 320, height: 180, provenance: true });
+    const providerDefinitions = resolveCoreProviderDependencies({
       contributions: [
         {
           roots: [ChartProvider.key],
-          providers: [SurfaceProvider, FlexLayoutProvider, plotProvider, ChartProvider],
+          providers: [SurfaceProvider, FlexLayoutProvider, ...plotContribution.providers, ChartProvider],
         },
       ],
     });
-    const result = compileToScene({ type: 'scene', version: 1, children: [chart] }, { composites, padding: 0 });
+    const result = compileToScene(
+      { type: 'scene', version: 1, children: [chart] },
+      { ...providerDefinitions, padding: 0 },
+    );
     const surface = result.spatialHandles.entries.find(entry => entry.role === 'surface');
 
     expect(result.scene.primitives.length).toBeGreaterThan(0);

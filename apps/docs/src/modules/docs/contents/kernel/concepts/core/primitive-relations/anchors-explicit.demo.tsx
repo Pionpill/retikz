@@ -1,6 +1,7 @@
 import type { FC, ReactElement } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
+import { StarShapeDefinition } from '@retikz/standard/shape';
 
 /**
  * 显式（锁定）anchor：通用方位 anchor 走盒模型；形状专属 anchor 走真实形状
@@ -42,7 +43,7 @@ const ring = (tag: string, cx: number, dirs: Array<Dir>): Array<ReactElement> =>
 ];
 
 const Demo: FC = () => (
-  <Layout width={560} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={560} height={270} style={{ maxWidth: '100%', height: 'auto' }} shapes={[StarShapeDefinition]}>
     <Node id="rect-o" position={[-185, 0]} shape="rectangle" padding={12} stroke="gray" dashPattern={[4, 3]}>
       Node
     </Node>

@@ -1,32 +1,32 @@
 ---
 title: Shapes
-description: retikz's geometric shapes — both the official sugar for drawing a Path and the boundary shapes a Node supports by default.
+description: retikz's geometric shapes — both official sugar for drawing a Path and geometry that Core or Standard can assemble as a Node boundary.
 ---
 
 Shapes (circle, ellipse, arc, sector, rectangle, polygon, star, arbitrary contour) are a family of geometric primitives in retikz, most with **two faces**:
 
 - **As a Path shape (sugar)** — components like `<Circle>` and `<Sector>` are the official set of shape shortcuts; they draw a shape line at a position and expand to an underlying `<Path>`. They save you from hand-writing Path / Step for common shapes.
-- **As a Node shape** — `<Node shape="circle">` bounds a node by that shape: it holds text, is referenceable by `<Path>` / `<Draw>` through its id, and snaps connection endpoints to its edge.
+- **As a Node shape** — `<Node shape="circle">` bounds a node by that shape: it holds text, is referenceable by `<Path>` / `<Draw>` through its id, and snaps connection endpoints to its edge. Core assembles `rectangle` / `ellipse` / `polygon` by default with their `circle` / `diamond` presets; other Node shapes need an explicitly injected Definition.
 
 Each shape page documents both faces as two self-contained halves: "As a Path shape" first, then "As a Node shape". In short: reach for sugar to draw a shape line, and for `<Node shape>` to get a connectable, labelable shape node.
 
-The Node shape registry is also open to extensions. For shapes beyond the built-ins (cylinder / cloud…), use [Custom Shapes](/kernel/components/shapes/custom-shape) at the end of this group. For curve steps beyond `parabola`, switch to [Path Generators](/kernel/components/draw/path-generator) under Drawing.
+The Node shape registry is also open to extensions. Assemble the official `cross` / `arc` / `sector` / `star` / `contour` shapes on demand from [Shape Extensions](/library/standard/extension/shape); use [Custom Shapes](/kernel/components/shapes/custom-shape) at the end of this group for other domain shapes. For extra path generators, switch to [Path Generators](/kernel/components/draw/path-generator) under Drawing.
 
 <ComponentPreview files="shapes-family" size="md" hideCode />
 
 ## What each part does
 
-In this table, Sugar means a shortcut component that expands to a Path at compile time; Kernel means a shape capability consumed directly through the core Node / Path contracts.
+In this table, Sugar means a shortcut component that expands to a Path at compile time; Core means a Node shape shipped with Kernel, while Standard means a Node shape explicitly assembled from `@retikz/standard/shape`.
 
-| Page             | Type            | Responsibility                                                         | Use it when                                            |
-| ---------------- | --------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
-| Circle / Ellipse | Sugar + Kernel  | Draw circle / ellipse Paths; provide circle / ellipse Nodes            | You need round marks, containers, or nodes             |
-| Arc / Sector     | Sugar + Kernel  | Draw arc / sector Paths; provide parametric arc / sector Nodes         | You need angle marks, ring wedges, or glyphs           |
-| Rectangle        | Sugar + Kernel  | Draw rectangle Paths; provide the default Node boundary                | You need boxes, flow nodes, or rounded nodes           |
-| Polygon          | Sugar + Kernel  | Draw regular-polygon Paths; provide polygon / diamond Nodes            | You need polygon marks or decision nodes               |
-| Star             | Sugar + Kernel  | Draw star Paths; provide star Nodes with geometric anchors             | You need ratings, emphasis, or star nodes              |
-| Contour          | Kernel          | Turn any closed vertex ring into a connectable, roundable Node         | You need a freeform node; use `<Path>` for a line only |
-| Custom Shapes    | Extension guide | Extend layout, boundaries, anchors, and drawing with `ShapeDefinition` | Built-ins cannot express the domain shape              |
+| Page             | Type             | Responsibility                                                            | Use it when                                            |
+| ---------------- | ---------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Circle / Ellipse | Sugar + Core     | Draw circle / ellipse Paths; provide circle / ellipse Nodes               | You need round marks, containers, or nodes             |
+| Arc / Sector     | Sugar + Standard | Draw arc / sector Paths; optionally provide parametric arc / sector Nodes | You need angle marks, ring wedges, or glyphs           |
+| Rectangle        | Sugar + Core     | Draw rectangle Paths; provide the default Node boundary                   | You need boxes, flow nodes, or rounded nodes           |
+| Polygon          | Sugar + Core     | Draw regular-polygon Paths; provide polygon / diamond Nodes               | You need polygon marks or decision nodes               |
+| Star             | Sugar + Standard | Draw star Paths; optionally provide star Nodes with geometric anchors     | You need ratings, emphasis, or star nodes              |
+| Contour          | Standard         | Turn any closed vertex ring into a connectable, roundable Node            | You need a freeform node; use `<Path>` for a line only |
+| Custom Shapes    | Extension guide  | Extend layout, boundaries, anchors, and drawing with `ShapeDefinition`    | Built-ins cannot express the domain shape              |
 
 ## In this section
 

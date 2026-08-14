@@ -6,7 +6,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node } from '../../../src';
-import { buildIR } from '../../../src/kernel/adapter';
+import { normalizeReactInput } from '../../helpers/normalize-input';
 
 /**
  * 水合：JSX 模式下 `handlers` prop 被忽略（契约）
@@ -89,7 +89,7 @@ describe('JSX 模式 handlers prop 契约', () => {
 
   it('对照：ir prop 模式下 handlers prop 生效（同一 prop 仅此路径有效）', async () => {
     const fromHandlersProp = vi.fn();
-    const ir = buildIR(<Node id="a" position={[0, 0]} fill="red" minimumSize={2} />);
+    const ir = normalizeReactInput(<Node id="a" position={[0, 0]} fill="red" minimumSize={2} />);
     const handlers: HydrationHandlers = { a: { click: fromHandlersProp } };
 
     const container = document.createElement('div');

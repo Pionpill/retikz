@@ -66,6 +66,8 @@ describe('Chart Vanilla authoring', () => {
     expect(result.contribution.providers.map(provider => provider.key)).toEqual([
       SurfaceProvider.key,
       FlexLayoutProvider.key,
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
       PlotProviderKey,
       ChartProvider.key,
     ]);

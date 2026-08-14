@@ -11,12 +11,13 @@ When a domain needs a reusable named clipping primitive, define a `ClipDefinitio
 
 A custom clip solves “the existing `clip.kind` vocabulary cannot express this domain concept.” It is not the default form of every clip.
 
-| Need                                           | Choose                       |
-| ---------------------------------------------- | ---------------------------- |
-| One-off rectangle, circle, ellipse, or polygon | Write a built-in clip spec   |
-| A path or combined regions                     | Built-in `path` / `compound` |
-| A reusable domain clipping primitive           | Register `ClipDefinition`    |
-| Renderer-specific mask / filter behavior       | Outside the Clip Registry    |
+| Need                                     | Choose                                                                                    |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| One-off rectangle, circle, or ellipse    | Write a Core built-in clip spec                                                           |
+| Polygon or path clipping                 | Assemble the matching Definition from [Clip Extensions](/library/standard/extension/clip) |
+| Combined regions                         | Assemble `compound` from [Clip Extensions](/library/standard/extension/clip)              |
+| A reusable domain clipping primitive     | Register `ClipDefinition`                                                                 |
+| Renderer-specific mask / filter behavior | Outside the Clip Registry                                                                 |
 
 IR stores only a JSON-safe spec with a `kind`. Functions, Zod schemas, and caches stay in the host-injected Definition. A custom provider must return a Scene-supported clip shape instead of creating a parallel rendering protocol.
 
@@ -75,7 +76,7 @@ Built-in and custom Definitions first merge into one registry. Every `clip.kind`
 
 <ComponentPreview files="clip-registry-flow" size="sm" hideCode />
 
-`compound.children` returns to this path through `context.resolve`, so one compound clip can mix built-in and custom kinds. The resolved shape is deduplicated into a stable `clipRef` referenced by Scope's `GroupPrim`.
+After `CompoundClipDefinition` is assembled, `compound.children` returns to this path through `context.resolve`, so one compound clip can mix Core built-ins, other Standard, and custom kinds. The resolved shape is deduplicated into a stable `clipRef` referenced by Scope's `GroupPrim`.
 
 <SourceLinks
   sources={[
@@ -108,14 +109,14 @@ Built-in and custom Definitions first merge into one registry. Every `clip.kind`
 
 ## Errors and Limits
 
-| Case                            | Result                                                       |
-| ------------------------------- | ------------------------------------------------------------ |
-| Empty key                       | Definition or registry rejects it immediately                |
-| Same key as a built-in          | Duplicate clip registration error                            |
-| Duplicate custom keys           | The same duplicate-registration error                        |
-| Unknown `clip.kind`             | Compile error suggests injection through `options.clips`     |
-| Spec fails `schema`             | Compile error preserves provider key, IR path, and Zod cause |
-| `resolve` returns invalid shape | The Definition author violated the required Scene output     |
+| Case                                          | Result                                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| Empty key                                     | Definition or registry rejects it immediately                |
+| Same key as a Core, Standard, or custom entry | Duplicate clip registration error                            |
+| Duplicate custom keys                         | The same duplicate-registration error                        |
+| Unknown `clip.kind`                           | Compile error suggests injection through `options.clips`     |
+| Spec fails `schema`                           | Compile error preserves provider key, IR path, and Zod cause |
+| `resolve` returns invalid shape               | The Definition author violated the required Scene output     |
 
 Custom clip parameters must be JSON-serializable. Do not put functions, ReactNode values, class instances, or renderer objects in a spec.
 
@@ -130,7 +131,7 @@ Except for the explicitly marked React injection prop, import every type, functi
 - `ClipDefinitionInput<TSpec>`: the generic authoring contract that keeps `schema` and `resolve` on the same spec type
 - `ClipDefinition`: the unified Definition shape stored and consumed by the registry after its concrete spec type is erased
 - `ClipResolveContext`: runtime context passed to `resolve`, providing shared precision rounding and recursive clip resolution
-- `BUILTIN_CLIPS`: Core's read-only Definition collection, both iterable and addressable through names such as `.rect`
+- `BUILTIN_CLIPS`: Core's three-entry read-only Definition collection, both iterable and addressable through names such as `.rect`
 - `BuiltinClipProviderName`: the union of every built-in clip key
 - `resolveClipRegistry(clips?)`: merges built-in and custom Definitions and applies shared empty-key and duplicate checks; normal consumers do not call it directly
 - `CompileOptions.clips`: injects custom Definitions through the Core compile entry
@@ -150,22 +151,19 @@ Except for the explicitly marked React injection prop, import every type, functi
 
 `BUILTIN_CLIPS` is not a string enum. It is a read-only `ClipDefinition` array with named indexes. Iterate it to inspect every Definition, or access one through `BUILTIN_CLIPS.rect`; IR still uses the corresponding `kind` string.
 
-| Named index              | IR `kind`  | Spec fields                 | Meaning                                              |
-| ------------------------ | ---------- | --------------------------- | ---------------------------------------------------- |
-| `BUILTIN_CLIPS.rect`     | `rect`     | `x`, `y`, `width`, `height` | Axis-aligned rectangular clip region                 |
-| `BUILTIN_CLIPS.circle`   | `circle`   | `cx`, `cy`, `r`             | Circular clip region                                 |
-| `BUILTIN_CLIPS.ellipse`  | `ellipse`  | `cx`, `cy`, `rx`, `ry`      | Elliptical clip region                               |
-| `BUILTIN_CLIPS.polygon`  | `polygon`  | `points`                    | Polygon clip region with at least three vertices     |
-| `BUILTIN_CLIPS.path`     | `path`     | `commands`, `fillRule?`     | Structured path clip region                          |
-| `BUILTIN_CLIPS.compound` | `compound` | `children`, `fillRule?`     | Recursively combines built-in or custom clip regions |
+| Named index             | IR `kind` | Spec fields                 | Meaning                              |
+| ----------------------- | --------- | --------------------------- | ------------------------------------ |
+| `BUILTIN_CLIPS.rect`    | `rect`    | `x`, `y`, `width`, `height` | Axis-aligned rectangular clip region |
+| `BUILTIN_CLIPS.circle`  | `circle`  | `cx`, `cy`, `r`             | Circular clip region                 |
+| `BUILTIN_CLIPS.ellipse` | `ellipse` | `cx`, `cy`, `rx`, `ry`      | Elliptical clip region               |
 
 <SourceLinks
   sources={[
     {
       label: 'Built-in Clip Definitions and named indexes',
       path: 'packages/kernel/core/src/providers/clip/definitions.ts',
-      startLine: 39,
-      endLine: 89,
+      startLine: 21,
+      endLine: 74,
     },
   ]}
 />
@@ -174,5 +172,6 @@ Except for the explicitly marked React injection prop, import every type, functi
 
 - [Scope](/kernel/components/layout/scope): Use `<Scope clip>` and understand the local-coordinate boundary
 - [Layout](/kernel/components/layout/overview): Unified capability injection entry
+- [Clip Extensions](/library/standard/extension/clip): Assemble the official compound clip
 - [Compile Options](/kernel/reference/runtime/compile): Core-side `CompileOptions.clips`
 - [Runtime Extensions](/kernel/reference/runtime/extensions): Index of all Definition / registry capabilities

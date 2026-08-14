@@ -16,11 +16,9 @@ const PUBLIC_RUNTIME_EXPORTS = [
   'Draw',
   'Circle',
   'Rectangle',
-  'convertReactNodeToIR',
   'convertIRToReactNode',
   'RendererModeProvider',
   'AnimationModeProvider',
-  'defaultLayoutCompileDriver',
 ];
 
 const INTERNAL_RENDER_EXPORTS = [
@@ -48,6 +46,12 @@ describe('@retikz/react public API', () => {
 
   it('不从包根暴露 renderer internals', () => {
     for (const name of INTERNAL_RENDER_EXPORTS) {
+      expect(react).not.toHaveProperty(name);
+    }
+  });
+
+  it('不暴露已迁移到 Vanilla 的 IR builder 与 processing owner', () => {
+    for (const name of ['convertReactNodeToIR', 'buildIR', 'buildIRWithContributions', 'LayoutCompileDriver']) {
       expect(react).not.toHaveProperty(name);
     }
   });

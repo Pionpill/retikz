@@ -29,13 +29,15 @@ describe('@retikz/table-react package boundary', () => {
     });
   });
 
-  it('depends on Table, Foundation, and Kernel React without taking a Plot dependency', () => {
+  it('depends on Table Vanilla and Kernel React without taking a Plot dependency', () => {
     expect(Object.keys(manifest.dependencies).sort()).toEqual([
       '@retikz/core',
       '@retikz/data',
       '@retikz/foundation',
       '@retikz/react',
       '@retikz/table',
+      '@retikz/table-vanilla',
+      '@retikz/vanilla',
     ]);
     expect(manifest.dependencies).not.toHaveProperty('@retikz/plot');
     expect(manifest.peerDependencies).toEqual({ react: '>=18', 'react-dom': '>=18' });

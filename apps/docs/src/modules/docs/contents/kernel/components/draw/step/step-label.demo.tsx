@@ -4,7 +4,7 @@ import { EdgeLabel, Layout, Node, Path, Step } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract,stepLabelControls } from './step-label.controls';
+import { previewControlContract, stepLabelControls } from './step-label.controls';
 
 export const previewControls = stepLabelControls;
 

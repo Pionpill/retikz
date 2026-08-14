@@ -507,7 +507,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
           children: [
             {
               type: 'scope',
-              arrowDefault: { end: { shape: 'circle' } },
+              arrowDefault: { end: { shape: 'stealth' } },
               children: [
                 {
                   type: 'path',
@@ -524,8 +524,8 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       ],
     };
     const arrow = linePathOf(ir)?.arrowEnd;
-    // per-field merge：内层 shape=circle 覆盖，外层 end.color=red 保留（path 无主色，arrowDefault 端点色生效）
-    expect(arrow?.shape).toBe('circle');
+    // per-field merge：内层 shape=stealth 覆盖，外层 end.color=red 保留（path 无主色，arrowDefault 端点色生效）
+    expect(arrow?.shape).toBe('stealth');
     expect(markerPaintColor(arrow)).toBe('red');
   });
 });

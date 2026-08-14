@@ -6,35 +6,34 @@ import { useMemo } from 'react';
 
 import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
 import type { InspectorRegistry } from '../providers';
-import type { InspectionReactAuthoringInput } from './authoring';
+import type { InspectionVanillaAuthoringInput } from '../vanilla';
 
-import { createInspectionReactAuthoring } from './authoring';
-import { createInspectionLayoutDriver } from './driver';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../vanilla';
 
 /** 可选 Inspect Path wrapper props */
 export type InspectPathProps = Omit<PathProps, 'authoring'> &
   Readonly<{
     /** 当前 authored Path 的 Inspector request */
-    request: Exclude<InspectionReactAuthoringInput, false>;
+    request: Exclude<InspectionVanillaAuthoringInput, false>;
   }>;
 
 /** 复用基础 Path lowering、只附加 runtime-only Inspector authoring 标记 */
 export const InspectPath: FC<InspectPathProps> = props => {
   const { request, ...pathProps } = props;
-  return <Path {...pathProps} authoring={createInspectionReactAuthoring(request)} />;
+  return <Path {...pathProps} authoring={createInspectionVanillaAuthoring(request)} />;
 };
 
 /** 可选 Inspect Scope wrapper props */
 export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
   Readonly<{
     /** 当前 subtree 的 requests，false 表示不可重开的 barrier */
-    request: InspectionReactAuthoringInput;
+    request: InspectionVanillaAuthoringInput;
   }>;
 
 /** 复用基础 Scope lowering、只附加 runtime-only Inspector authoring 标记 */
 export const InspectScope: FC<InspectScopeProps> = props => {
   const { request, ...scopeProps } = props;
-  return <Scope {...scopeProps} authoring={createInspectionReactAuthoring(request)} />;
+  return <Scope {...scopeProps} authoring={createInspectionVanillaAuthoring(request)} />;
 };
 
 /** 绑定 Inspect registry/selection/callback 的可选 Layout wrapper props */
@@ -45,7 +44,7 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
     /** 与 authored wrapper rules 合并的显式 selection */
     selection?: InspectionSelection;
     /** 可选 scene requests，false 表示全图 barrier */
-    request?: InspectionReactAuthoringInput;
+    request?: InspectionVanillaAuthoringInput;
     /** committed diagnostics 逐条通知 */
     onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
     /** 同 revision Inspect compile result 通知 */
@@ -56,13 +55,13 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
 export const InspectLayout: FC<InspectLayoutProps> = props => {
   const { registry, selection, request, onDiagnostic, onCommit, ...layoutProps } = props;
   const driver = useMemo(
-    () => createInspectionLayoutDriver({ registry, selection, onDiagnostic, onCommit }),
+    () => createInspectionVanillaDriver({ registry, selection, onDiagnostic, onCommit }),
     [registry, selection, onDiagnostic, onCommit],
   );
   return (
     <Layout
       {...layoutProps}
-      authoring={request === undefined ? undefined : createInspectionReactAuthoring(request)}
+      authoring={request === undefined ? undefined : createInspectionVanillaAuthoring(request)}
       compileDriver={driver}
     />
   );

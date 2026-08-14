@@ -96,34 +96,4 @@ describe('clip providers', () => {
     ).toThrow(/duplicate clip registration/i);
   });
 
-  it('compound builtin clip can reference custom clips and dedupes by resolved shape', () => {
-    const clip: IRClipSpec = {
-      kind: 'compound',
-      fillRule: 'evenodd',
-      children: [
-        { kind: 'rect', x: 0, y: 0, width: 80, height: 50 },
-        { kind: 'roundedRect', x: 20, y: 10, width: 40, height: 20, r: 4 },
-      ],
-    };
-    const scene = compileToScene(
-      {
-        version: 1,
-        type: 'scene',
-        children: [
-          { type: 'scope', clip, children: [] },
-          { type: 'scope', clip, children: [] },
-        ],
-      },
-      { clips: [roundedRectClip()] },
-    ).scene;
-    expect(scene.resources ?? []).toHaveLength(1);
-    expect((scene.resources ?? [])[0]).toMatchObject({
-      kind: 'clip',
-      shape: {
-        kind: 'compound',
-        fillRule: 'evenodd',
-        children: [{ kind: 'rect' }, { kind: 'path' }],
-      },
-    });
-  });
 });

@@ -26,18 +26,18 @@ import { Draw } from '@retikz/react';
 
 ### 方向、形状与外观
 
-一个面板集中控制 `arrow` 方向、8 种内置形状、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 6。
+一个面板集中控制 `arrow` 方向、六种 Core 基础箭头与两种 Standard 可选箭头、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。面板已显式注入它使用的 Standard 定义。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 6。
 
 <ComponentPreview files="arrow-appearance" size="md" />
 
-内置形状成对提供实心与空心版本：
+Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 与圆点箭头。其余实心 / 空心菱形箭头由 [`@retikz/standard/arrow`](/library/standard/extension/arrow) 提供；使用 Standard 名称时，需要把对应 Definition 注入当前 `<Layout arrows>` 或 `CompileOptions.arrows`：
 
-| 实心                 | 空心                     | 典型用途             |
-| -------------------- | ------------------------ | -------------------- |
-| `'normal'` 实心三角  | `'open'` 空心三角        | 基础三角 / UML 泛化  |
-| `'stealth'` 倒钩三角 | `'openStealth'` 空心倒钩 | 默认箭头、现代流程图 |
-| `'diamond'` 实心菱形 | `'openDiamond'` 空心菱形 | UML 组合 / 聚合      |
-| `'circle'` 实心圆点  | `'openCircle'` 空心圆点  | 连接点 / 空心端点    |
+| 实心                          | 空心                              | 典型用途             |
+| ----------------------------- | --------------------------------- | -------------------- |
+| `'normal'` Core 实心三角      | `'open'` Core 空心三角            | 基础三角 / UML 泛化  |
+| `'stealth'` Core 倒钩三角     | `'openStealth'` Core 空心倒钩     | 默认箭头、现代流程图 |
+| `'diamond'` Standard 实心菱形 | `'openDiamond'` Standard 空心菱形 | UML 组合 / 聚合      |
+| `'circle'` Core 实心圆点      | `'openCircle'` Core 空心圆点      | 连接点 / 空心端点    |
 
 > 多节点路径（如 a → b → c）按段独立 clip，但箭头**只**贴在整体起点 / 终点——中间节点不会出现额外箭头。
 
@@ -65,15 +65,15 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="arrow-compile-flow" size="sm" hideCode />
 
-元素显式字段优先于路径主色和 Scope 箭头默认值；字段仍缺省时，才读取所选箭头定义的内置尺寸。`shape` 会查询内置或自定义 `ArrowDefinition`，并在 compile 阶段物化为与渲染器无关（renderer-agnostic）的 marker 几何；未注册名称会直接报错，不会静默回退成默认形状。
+元素显式字段优先于路径主色和 Scope 箭头默认值；字段仍缺省时，才读取所选箭头定义的内置尺寸。`shape` 会查询 Core 基础、显式注入的 Standard 或自定义 `ArrowDefinition`，并在 compile 阶段物化为与渲染器无关（renderer-agnostic）的 marker 几何；未注册名称会直接报错，不会静默回退成默认形状。
 
 <SourceLinks
   sources={[
     {
       label: '方向拆分与逐端字段合并',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 242,
-      endLine: 274,
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 194,
+      endLine: 218,
     },
     {
       label: 'Scope 默认值与路径主色解析',
@@ -153,21 +153,22 @@ import { Draw } from '@retikz/react';
 
 `arrowDetail` 对象包含 8 个视觉字段 + 可选 `start` / `end` 子对象。`start` / `end` 子对象使用相同字段集（不递归），并与顶层默认逐字段合并：
 
-| 字段        | 类型                                               | 默认值               | 描述                                                                                   |
-| ----------- | -------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------- |
-| `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string` | `'stealth'`          | 箭头形状；内置 8 种或经 `<Layout arrows>` / `CompileOptions.arrows` 注册的自定义箭头名 |
-| `scale`     | `number > 0`                                       | `1`                  | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15）         |
-| `length`    | `number ≥ 0`                                       | `6`                  | 尖长（用户单位，沿路径方向）                                                           |
-| `width`     | `number ≥ 0`                                       | `6`                  | 尖宽（用户单位，垂直路径方向）                                                         |
-| `color`     | `string`                                           | —                    | 描边色覆盖；缺省继承路径描边色                                                         |
-| `fill`      | `string`                                           | `color` 或路径描边色 | 填充色覆盖；**空心形状上静默无效**（写了被静默丢弃）                                   |
-| `opacity`   | `number ∈ [0, 1]`                                  | —                    | 箭头独立透明度；缺省继承路径透明度                                                     |
-| `lineWidth` | `number ≥ 0`                                       | `1.5`                | 空心形状描边粗细；实心形状忽略                                                         |
-| `start`     | `IRArrowEndDetail`（同字段集，无 `start` / `end`） | —                    | 起端覆盖配置（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`）                              |
-| `end`       | `IRArrowEndDetail`（同字段集，无 `start` / `end`） | —                    | 末端覆盖配置（仅 `arrow` 含末端时生效：`'->'` / `'<->'`）                              |
+| 字段        | 类型                                               | 默认值               | 描述                                                                                                                                                         |
+| ----------- | -------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string` | `'stealth'`          | Core 基础箭头为 `normal` / `open` / `stealth` / `openStealth` / `circle` / `openCircle`；Standard 可选或自定义名称经 `<Layout arrows>` / `CompileOptions.arrows` 注册 |
+| `scale`     | `number > 0`                                       | `1`                  | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15）                                                                               |
+| `length`    | `number ≥ 0`                                       | `6`                  | 尖长（用户单位，沿路径方向）                                                                                                                                 |
+| `width`     | `number ≥ 0`                                       | `6`                  | 尖宽（用户单位，垂直路径方向）                                                                                                                               |
+| `color`     | `string`                                           | —                    | 描边色覆盖；缺省继承路径描边色                                                                                                                               |
+| `fill`      | `string`                                           | `color` 或路径描边色 | 填充色覆盖；**空心形状上静默无效**（写了被静默丢弃）                                                                                                         |
+| `opacity`   | `number ∈ [0, 1]`                                  | —                    | 箭头独立透明度；缺省继承路径透明度                                                                                                                           |
+| `lineWidth` | `number ≥ 0`                                       | `1.5`                | 空心形状描边粗细；实心形状忽略                                                                                                                               |
+| `start`     | `IRArrowEndDetail`（同字段集，无 `start` / `end`） | —                    | 起端覆盖配置（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`）                                                                                                    |
+| `end`       | `IRArrowEndDetail`（同字段集，无 `start` / `end`） | —                    | 末端覆盖配置（仅 `arrow` 含末端时生效：`'->'` / `'<->'`）                                                                                                    |
 
 ## 相关
 
 - [Draw](/kernel/components/draw/overview)：日常连线的 Sugar 写法
 - [Path](/kernel/components/draw/path)：底层路径容器，`arrow` / `arrowDetail` 行为一致
+- [箭头扩展](/library/standard/extension/arrow)：按需装配官方可选箭头
 - [自定义箭头](/kernel/components/draw/custom-arrow)：注册项目自己的箭头 shape

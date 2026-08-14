@@ -1,16 +1,16 @@
-import type { FlexLayoutInput } from '@retikz/layout';
+import type { InputFlexLayout } from '@retikz/layout-vanilla';
 
 import { createInspectionVanillaAuthoring } from '@retikz/inspect/vanilla';
 import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
-import { LayoutVanillaAdapters } from '@retikz/layout-vanilla';
+import { LayoutInputEmbedAdapters } from '@retikz/layout-vanilla';
 import {
   createLayoutInspectionBarrier,
   createLayoutInspectionVanillaDriver,
   inspectFlexLayout,
 } from '@retikz/layout-vanilla/inspect';
-import { figure, renderToSvgString, scope } from '@retikz/vanilla';
+import { renderToSvgString, scene, scope } from '@retikz/vanilla';
 
-const flexInput = (first: string, second: string): FlexLayoutInput => ({
+const flexInput = (first: string, second: string): InputFlexLayout => ({
   size: { x: { kind: 'fixed', value: 220 }, y: { kind: 'fixed', value: 110 } },
   padding: 12,
   children: [
@@ -29,7 +29,7 @@ const flexInput = (first: string, second: string): FlexLayoutInput => ({
   ],
 });
 
-const fig = figure({
+const fig = scene({
   authoring: createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }),
   viewBox: { x: 0, y: 0, width: 520, height: 190 },
   children: [
@@ -47,7 +47,7 @@ const fig = figure({
 });
 
 export const svg = renderToSvgString(fig, {
-  adapters: LayoutVanillaAdapters,
+  adapters: LayoutInputEmbedAdapters,
   compileDriver: createLayoutInspectionVanillaDriver(),
   output: { width: 520, height: 190 },
 });

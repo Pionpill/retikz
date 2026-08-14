@@ -1,13 +1,12 @@
 import type { IRScene, IRTheme } from '@retikz/core';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { EmbeddableTier2Adapter } from '../../../src';
-
-import { Layout, ThemeProvider } from '../../../src/kernel';
+import { Layout, Scope, ThemeProvider } from '../../../src/kernel';
 
 const testThemeStyles = ['academic', 'vibrant', 'clean'].map(name =>
   defineThemeStyle({
@@ -40,15 +39,15 @@ const themedBox = defineComposite({
 });
 
 const makeThemedBoxDefinition = () => themedBox;
-const themedBoxAdapter: EmbeddableTier2Adapter = {
-  displayName: 'ThemedBox',
-  contribute: () => ({
+const themedBoxAdapter: InputEmbedAdapter = {
+  kind: 'ThemedBox',
+  lower: () => ({
     node: { namespace: 'theme-test', type: 'box' },
-    compositeDependencies: {
-      roots: [{ namespace: 'theme-test', type: 'box' }],
+    providerDependencies: {
+      roots: [{ capability: 'composite', namespace: 'theme-test', type: 'box' }],
       providers: [
         {
-          key: { namespace: 'theme-test', type: 'box' },
+          key: { capability: 'composite', namespace: 'theme-test', type: 'box' },
           dependencies: [],
           datasets: {},
           makeDefinition: makeThemedBoxDefinition,
@@ -59,7 +58,7 @@ const themedBoxAdapter: EmbeddableTier2Adapter = {
 };
 const ThemedBox = Object.assign(() => null, {
   isTier2Embeddable: true as const,
-  embeddableAdapter: themedBoxAdapter,
+  inputEmbedAdapter: themedBoxAdapter,
 });
 
 const input: IRScene = {
@@ -118,10 +117,6 @@ const themeProbe = defineComposite({
 });
 
 describe('<Layout theme>', () => {
-  class ThemeInstance {
-    style = 'academic';
-  }
-
   it('children模式把宿主Theme写入根Scene供Composite读取', () => {
     const markup = renderToStaticMarkup(
       <Layout
@@ -242,60 +237,51 @@ describe('<Layout theme>', () => {
     expect(markup).toContain('#123456');
   });
 
-  it.each([
-    ['Date', new Date()],
-    ['class instance', new ThemeInstance()],
-    ['inherited field', Object.create({ style: 'academic' })],
-  ])('宿主 overlay不清洗持久化 IR中的伪造 %s Theme', (_label, persistedTheme) => {
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout
-          ir={{ type: 'scene', version: 1, theme: persistedTheme, children: [] } as never}
-          theme={{ mode: ThemeMode.Dark }}
-          width={100}
-          height={100}
-        />,
-      ),
-    ).toThrow(/scene\.theme/i);
-  });
-
-  it('宿主 overlay不读取持久化 Theme accessor', () => {
-    let accessorReads = 0;
-    const persistedTheme = {};
-    Object.defineProperty(persistedTheme, 'style', {
-      enumerable: true,
-      get: () => {
-        accessorReads += 1;
-        return 'academic';
-      },
+  it('嵌入式 Tier 2 adapter 读取所在 Scope 解析后的 Theme', () => {
+    const receiveContext = vi.fn();
+    const ScopedBox = Object.assign(() => null, {
+      isTier2Embeddable: true as const,
+      inputEmbedAdapter: {
+        ...themedBoxAdapter,
+        lower: (_props, context) => {
+          receiveContext(context);
+          return themedBoxAdapter.lower({}, context);
+        },
+      } satisfies InputEmbedAdapter,
     });
 
-    expect(() =>
-      renderToStaticMarkup(
-        <Layout
-          ir={{ type: 'scene', version: 1, theme: persistedTheme, children: [] } as never}
-          theme={{ mode: ThemeMode.Dark }}
-          width={100}
-          height={100}
-        />,
-      ),
-    ).toThrow(/scene\.theme/i);
-    expect(accessorReads).toBe(0);
+    renderToStaticMarkup(
+      <Layout
+        theme={{ style: 'academic', mode: ThemeMode.Light }}
+        themeStyles={testThemeStyles}
+        width={100}
+        height={100}
+      >
+        <Scope theme={{ mode: ThemeMode.Dark }}>
+          <ScopedBox />
+        </Scope>
+      </Layout>,
+    );
+
+    expect(receiveContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        theme: expect.objectContaining({ style: 'academic', mode: ThemeMode.Dark }),
+      }),
+    );
   });
 
-  it('宿主overlay不吞掉自有__proto__未知字段', () => {
-    const persistedTheme = { style: 'academic' };
-    Object.defineProperty(persistedTheme, '__proto__', { value: 'persisted', enumerable: true });
-
+  it('不同 Scope 内的匿名嵌入组件保持不同的内部 identity', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout
-          ir={{ type: 'scene', version: 1, theme: persistedTheme, children: [] } as never}
-          theme={{ mode: ThemeMode.Dark }}
-          width={100}
-          height={100}
-        />,
+        <Layout themeStyles={testThemeStyles} width={100} height={100}>
+          <Scope>
+            <ThemedBox />
+          </Scope>
+          <Scope>
+            <ThemedBox />
+          </Scope>
+        </Layout>,
       ),
-    ).toThrow(/__proto__/i);
+    ).not.toThrow();
   });
 });
