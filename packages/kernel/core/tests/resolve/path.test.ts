@@ -10,7 +10,7 @@ import type {
 import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
 
 import { compileToScene } from '../../src';
-import { resolvePath } from '../../src/resolve/path';
+import { resolvePathWithBuiltinProviders } from './path-helper';
 
 const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
   type: 'path',
@@ -40,7 +40,7 @@ describe('resolvePath', () => {
     expectTypeOf<Extract<CanonicalRibbonSampling, { kind: 'adaptive' }>['maxSamples']>().toEqualTypeOf<number>();
     expectTypeOf<CanonicalRibbonEndpoint['cap']>().not.toEqualTypeOf<undefined>();
 
-    const canonical = resolvePath(
+    const canonical = resolvePathWithBuiltinProviders(
       path({
         kind: 'ribbon',
         ribbon: {
@@ -61,7 +61,7 @@ describe('resolvePath', () => {
   });
 
   it('expands fold and smooth static defaults without changing geometry inputs', () => {
-    const canonical = resolvePath(
+    const canonical = resolvePathWithBuiltinProviders(
       path({
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
@@ -93,13 +93,15 @@ describe('resolvePath', () => {
       to: [index + 1, 0] as [number, number],
       label: { text: position, position } as const,
     }));
-    const canonical = resolvePath(path({ children: [{ type: 'step', kind: 'move', to: [0, 0] }, ...children] }));
+    const canonical = resolvePathWithBuiltinProviders(
+      path({ children: [{ type: 'step', kind: 'move', to: [0, 0] }, ...children] }),
+    );
 
     for (const [index, step] of canonical.path.children!.slice(1).entries()) {
       expect(step).toMatchObject({ label: { position: expected[index], side: 'top', distance: 4 } });
     }
     expect(
-      resolvePath(
+      resolvePathWithBuiltinProviders(
         path({
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -116,7 +118,7 @@ describe('resolvePath', () => {
   });
 
   it('normalizes a host label to an array while preserving explicit falsy values', () => {
-    const canonical = resolvePath(
+    const canonical = resolvePathWithBuiltinProviders(
       path({ label: { text: 'host', position: 'at-end', side: 'bottom', distance: 0, sloped: false } }),
     );
 
@@ -124,7 +126,7 @@ describe('resolvePath', () => {
   });
 
   it('normalizes ribbon defaults, sampling shorthand, adaptive cap, and stable width stops', () => {
-    const canonical = resolvePath(
+    const canonical = resolvePathWithBuiltinProviders(
       path({
         kind: 'ribbon',
         ribbon: {
@@ -162,7 +164,7 @@ describe('resolvePath', () => {
       },
     });
 
-    const adaptive = resolvePath(
+    const adaptive = resolvePathWithBuiltinProviders(
       path({ kind: 'ribbon', ribbon: { width: 2, sampling: { kind: 'adaptive', tolerance: 3 } } }),
     );
     expect(adaptive.path.ribbon?.sampling).toEqual({ kind: 'adaptive', tolerance: 3, maxSamples: 512 });

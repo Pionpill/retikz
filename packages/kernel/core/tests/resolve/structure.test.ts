@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { basename, dirname, relative, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -35,8 +35,8 @@ describe('resolve source structure', () => {
       expect(text).not.toContain('resolution?:');
       expect(text).not.toContain('emitResolvedPathPrimitive');
     }
-    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*PathResolution/u);
-    expect(ribbon).toMatch(/export const emitRibbonPrimitive = \(\s*resolution:\s*PathResolution/u);
+    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*StrokePathResolution/u);
+    expect(ribbon).toMatch(/export const emitRibbonPrimitive = \(\s*resolution:\s*RibbonPathResolution/u);
   });
 
   it('keeps node layout free of provider lookup orchestration', () => {
@@ -45,12 +45,11 @@ describe('resolve source structure', () => {
     expect(text).not.toContain('resolveShapeRegistry(');
   });
 
-  it('keeps path lower, layout, and emit files free of direct provider lookups', () => {
+  it('keeps all path compile files free of direct provider lookups', () => {
     const offenders = sourceFiles('src/compile/path')
-      .filter(path => /(?:lower|layout|emit)\.ts$/u.test(basename(path)))
-      .filter(path => source(path).includes('providerDefinitionOf('))
+      .filter(path => /providerDefinitionOf\(|resolve[A-Z][A-Za-z]*Registry\s*\(/u.test(source(path)))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
-    expect(offenders).toEqual(['src/compile/path/stroke/lower.ts']);
+    expect(offenders).toEqual([]);
   });
 });

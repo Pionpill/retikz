@@ -37,6 +37,7 @@ import {
 } from '../../shared';
 import { resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
+import { resolvePathKind } from './provider';
 
 const LABEL_POSITION: Record<string, number> = {
   'at-start': 0,
@@ -243,7 +244,8 @@ const resolveSteps = (
     if (step.kind === 'generator') {
       bindNestedTargets(step.params, `${prefix}.children[${index}].params`);
       const to = step.to === undefined ? undefined : resolve(step.to, `${prefix}.children[${index}].to`);
-      out.push(to === undefined ? step : { ...step, to });
+      const resolvedStep = to === undefined ? step : { ...step, to };
+      out.push(resolvedStep);
       if (to !== undefined) {
         const point = pointOfTarget(to, resolver, scopeChain);
         if (point) previous = point;
@@ -267,13 +269,15 @@ const resolveSteps = (
   return out;
 };
 
-/** 将 Path Source IR 与样式、静态默认值和上下文 target 绑定为统一结果 */
-export const resolvePath = (path: IRPathBase, context: PathResolveContext = {}): PathResolution => {
+export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
   const canonicalPath = canonicalizePath(styled);
+  const irPath = context.irPath ?? 'path';
+  const kind = resolvePathKind(canonicalPath, context, irPath);
   const targets = new Map<string, TargetResolution>();
   const scopeChain = context.scopeChain ?? [];
-  const canonicalSteps = resolveSteps(canonicalPath.children ?? [], context, targets, 'path');
+  const canonicalSteps =
+    canonicalPath.children === undefined ? undefined : resolveSteps(canonicalPath.children, context, targets, irPath);
   const ribbon = canonicalPath.ribbon;
   const resolvedRibbon =
     ribbon === undefined
@@ -282,15 +286,20 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext = {}):
           ...ribbon,
           ...(ribbon.upper === undefined
             ? {}
-            : { upper: resolveSteps(ribbon.upper, context, targets, 'path.ribbon.upper') }),
+            : { upper: resolveSteps(ribbon.upper, context, targets, `${irPath}.ribbon.upper`) }),
           ...(ribbon.lower === undefined
             ? {}
-            : { lower: resolveSteps(ribbon.lower, context, targets, 'path.ribbon.lower') }),
+            : { lower: resolveSteps(ribbon.lower, context, targets, `${irPath}.ribbon.lower`) }),
         };
   const resolvedPath: CanonicalPath = {
     ...canonicalPath,
-    children: canonicalSteps,
+    ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
     ...(resolvedRibbon === undefined ? {} : { ribbon: resolvedRibbon }),
   };
-  return { path: resolvedPath, targets, scopeChain };
+  return {
+    path: resolvedPath,
+    targets,
+    scopeChain,
+    kind,
+  };
 };

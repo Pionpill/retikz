@@ -1,13 +1,12 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
-import type { CanonicalStep, PathResolution, PathTargetView } from '../../../resolve/path';
+import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve/path';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
-import { resolveArrowRegistry } from '../../../providers';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
@@ -15,7 +14,7 @@ import { fallbackMeasurer } from '../../text';
 import { pointOfTarget, resolvePathBaseProps } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
-import { emitInlineMarkPrimitives, pathEndpointArrowSpecs, resolvePathEndpointDecorations } from './decorations';
+import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrowSpecs } from './decorations';
 import { assertArrowCanInheritStroke } from './marks';
 import { wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
@@ -43,7 +42,7 @@ export type EmitPathPrimitiveContext = {
  * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning
  */
 const emitCanonicalPathPrimitive = (
-  resolution: PathResolution,
+  resolution: StrokePathResolution,
   context: EmitPathPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
   const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
@@ -209,8 +208,7 @@ const emitCanonicalPathPrimitive = (
         targetView,
         scopeChain,
         round,
-        irPath,
-        generators: pathEmitOptions.effectivePathGenerators,
+        generatorResolution: originalStep.kind === 'generator' ? resolution.generators.get(originalStep) : undefined,
         warn,
         commandEmitter,
         cursor,
@@ -294,8 +292,10 @@ const emitCanonicalPathPrimitive = (
 
   const baseProps = resolvePathBaseProps(canonicalPath, { resolvePaint });
   const strokeWidth = baseProps.strokeWidth;
-  const resolvedArrows = pathEmitOptions.resolvedArrows ?? resolveArrowRegistry();
-  const { arrows, inlineMarks } = resolvePathEndpointDecorations(path, { resolvedArrows, round });
+  const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
+    arrowResolutions: resolution.arrows,
+    round,
+  });
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   const marks = emitInlineMarkPrimitives({
@@ -303,7 +303,7 @@ const emitCanonicalPathPrimitive = (
     inlineMarks,
     segmentSamplers,
     roundedCommands,
-    resolvedArrows,
+    arrowResolutions: resolution.arrows,
     baseProps,
     round,
   });
@@ -343,6 +343,6 @@ const emitCanonicalPathPrimitive = (
 
 /** 将已解析的 path 输出为路径图元 */
 export const emitPathPrimitive = (
-  resolution: PathResolution,
+  resolution: StrokePathResolution,
   context: EmitPathPrimitiveContext,
 ): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(resolution, context);

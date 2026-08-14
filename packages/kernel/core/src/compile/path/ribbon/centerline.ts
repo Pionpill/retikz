@@ -3,7 +3,13 @@ import type { Vector2 } from '@retikz/math';
 import { point, vector2 } from '@retikz/math';
 
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
-import type { CanonicalStep, CanonicalStepWithoutLabel, PathResolution, PathTargetView } from '../../../resolve/path';
+import type {
+  CanonicalStep,
+  CanonicalStepWithoutLabel,
+  PathGeneratorResolution,
+  PathTargetView,
+  StrokePathResolution,
+} from '../../../resolve/path';
 import type { IRPosition, IRRibbonDirection } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { TextMeasurer } from '../../text';
@@ -320,7 +326,7 @@ export const sampleAtDistance = (
 export type EmittedPathFromStepsInput = {
   steps: ReadonlyArray<CanonicalStep>;
   source: string;
-  resolution: PathResolution;
+  resolution: StrokePathResolution;
   targetView: PathTargetView;
   round: (n: number) => number;
   measureText: TextMeasurer;
@@ -342,9 +348,15 @@ export const emittedPathFromSteps = ({
 }: EmittedPathFromStepsInput): PathPrim => {
   const canonicalSteps = steps.map(stripStepLabel);
   const canonicalPath = { ...resolution.path, children: canonicalSteps };
-  const nestedResolution: PathResolution = {
+  const generators = new Map<CanonicalStep, PathGeneratorResolution>();
+  for (let index = 0; index < steps.length; index += 1) {
+    const bound = resolution.generators.get(steps[index]);
+    if (bound !== undefined) generators.set(canonicalSteps[index], bound);
+  }
+  const nestedResolution: StrokePathResolution = {
     ...resolution,
     path: canonicalPath,
+    generators,
   };
   const emitted = emitPathPrimitive(nestedResolution, { targetView, round, measureText, options });
   if (emitted === null) {

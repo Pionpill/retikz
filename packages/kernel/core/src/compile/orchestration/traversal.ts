@@ -64,7 +64,6 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
-import { providerDefinitionOf } from '../../providers/registry/index';
 import {
   CompositeContractError,
   isFatalProbeError,
@@ -74,9 +73,13 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { resolveBoundaryReference, resolveNode } from '../../resolve/node';
+import {
+  resolvePath as resolvePathValue,
+  resolveRibbonPathProviders,
+  resolveStrokePathProviders,
+} from '../../resolve/path';
 import { parseProviderPayload } from '../../resolve/provider-payload';
 import { createStyleResolveFrame } from '../../resolve/style';
-import { resolvePath as resolvePathValue } from '../../resolve/path';
 import { resolveTheme } from '../../resolve/theme';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -98,7 +101,6 @@ import {
   outerRectOf,
 } from '../node';
 import { emitPathPrimitive, emitRibbonPrimitive } from '../path';
-import { bindPathTarget, localPointOfTarget, pathTargetViewOf, refPointOfTarget } from './path-target';
 import { resolvePosition } from '../position';
 import {
   CompileInvariantError,
@@ -135,6 +137,7 @@ import {
   withCompileWarningOccurrence,
 } from './diagnostics';
 import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
+import { bindPathTarget, localPointOfTarget, pathTargetViewOf, refPointOfTarget } from './path-target';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -331,7 +334,7 @@ export const compileChildrenToPrimitives = (
     return { keys, publisher, hasPublished: () => hasPublished, value: () => published };
   };
 
-  /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调 */
+  /** 消费 resolve/path 已绑定的 path kind，并提供内置 stroke / ribbon emit 回调 */
   const emitPathKindPrimitive = (
     pendingPath: PendingPathEmission,
     resolution: PathResolution,
@@ -340,34 +343,19 @@ export const compileChildrenToPrimitives = (
     const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
       runtime.context.onWarn({ code, message, path: node?.irPath ?? irPath });
     const targetView = pathTargetViewOf(resolution.targets, targetWarn);
-    const kind = path.kind ?? 'stroke';
-    const definition = providerDefinitionOf(runtime.context.pathKinds, kind, {
-      capability: 'path kind',
-      optionName: 'pathKinds',
-    });
+    const { name: kind, definition } = resolution.kind;
     const observationOwner = Object.freeze({ kind: 'pathKind' as const, name: kind });
     const ownerOutput = createOwnerOutputPublisher(
       observationOwner,
       pendingPath.occurrence.sourcePath,
       definition.ownerOutput,
     );
-    const optionsValue = definition.optionsSchema
-      ? parseProviderPayload({
-          capability: 'path kind',
-          providerName: kind,
-          irPath: `${irPath}.kindOptions`,
-          payloadName: 'options',
-          schema: definition.optionsSchema,
-          value: path.kindOptions ?? {},
-        })
-      : (path.kindOptions ?? {});
+    const optionsValue = resolution.kind.options;
     const emitOptions = {
       onWarn: runtime.context.onWarn,
       irPath,
       scopeChain,
       resolvePaint: runtime.context.paint.register,
-      resolvedArrows: runtime.context.arrows,
-      effectivePathGenerators: runtime.context.pathGenerators,
       targetView,
       lowerTex: runtime.context.lowerTex,
       rootFontSize: runtime.context.rootFontSize,
@@ -379,10 +367,21 @@ export const compileChildrenToPrimitives = (
             styleStack: pendingPath.styleStack,
             scopeChain,
             targetResolver,
+            pathKinds: runtime.context.pathKinds,
+            pathGenerators: runtime.context.pathGenerators,
+            arrows: runtime.context.arrows,
+            ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+            irPath,
           });
     const emitStroke = ((nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
       const source = nextPath ?? path;
-      const emittedResolution = resolutionOf(source);
+      const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
+        pathKinds: runtime.context.pathKinds,
+        pathGenerators: runtime.context.pathGenerators,
+        arrows: runtime.context.arrows,
+        ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+        irPath,
+      });
       const emittedTargetView = pathTargetViewOf(emittedResolution.targets, targetWarn);
       const emitted = emitPathPrimitive(emittedResolution, {
         targetView: emittedTargetView,
@@ -402,14 +401,19 @@ export const compileChildrenToPrimitives = (
       ownerOutput: ownerOutput.publisher,
       emitStroke,
       emitRibbon: nextPath => {
-        const emittedResolution = resolutionOf(nextPath ?? path);
+        const emittedResolution = resolveRibbonPathProviders(resolutionOf(nextPath ?? path), {
+          pathKinds: runtime.context.pathKinds,
+          pathGenerators: runtime.context.pathGenerators,
+          arrows: runtime.context.arrows,
+          ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+          irPath,
+        });
         return emitRibbonPrimitive(emittedResolution, {
           targetView: pathTargetViewOf(emittedResolution.targets, targetWarn),
           round: runtime.context.round,
           measureText: runtime.context.measureText,
           options: {
             ...emitOptions,
-            ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
           },
         });
       },
@@ -468,6 +472,11 @@ export const compileChildrenToPrimitives = (
             styleStack: pendingPath.styleStack,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
+            pathKinds: runtime.context.pathKinds,
+            pathGenerators: runtime.context.pathGenerators,
+            arrows: runtime.context.arrows,
+            ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
+            irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
             emitPathKindPrimitive(pendingPath, resolution),

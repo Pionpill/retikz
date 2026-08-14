@@ -1,10 +1,6 @@
-﻿import type { RibbonWidthProfileDefinition } from '../../../contract';
-import type { CanonicalRibbonSampling, CanonicalRibbonWidth } from '../../../resolve/path';
+import type { CanonicalRibbonSampling, RibbonWidthResolution } from '../../../resolve/path';
 import type { RibbonLike } from './types';
 
-import { providerDefinitionOf } from '../../../providers/registry/index';
-import { JsonObjectSchema } from '../../../schemas';
-import { parseProviderPayload } from '../../../resolve/provider-payload';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
@@ -35,12 +31,8 @@ export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => 
  * 把 IRRibbonWidth 解析为 offset∈[0,1] → width 的函数
  * @description number 走常量宽度；stops 先按 offset 排序再插值；profile 查运行时注册表并校验 params JSON-safe
  */
-export const widthFunction = (
-  width: CanonicalRibbonWidth,
-  profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
-  totalLength: number,
-  irPath = 'ribbon.width',
-): ((offset: number) => number) => {
+export const widthFunction = (resolution: RibbonWidthResolution, totalLength: number): ((offset: number) => number) => {
+  const { width } = resolution;
   if (typeof width === 'number') {
     return () => assertFiniteWidth(width, 'number');
   }
@@ -66,37 +58,11 @@ export const widthFunction = (
     };
   }
 
-  const profile = providerDefinitionOf(profiles, width.name, {
-    capability: 'ribbon width profile',
-    optionName: 'ribbonWidthProfiles',
-  });
-  const rawParams = width.params ?? {};
-  const paramsPath = `${irPath}.params`;
-  const params = profile.paramsSchema
-    ? parseProviderPayload({
-        capability: 'ribbon width profile',
-        providerName: width.name,
-        irPath: paramsPath,
-        payloadName: 'params',
-        schema: profile.paramsSchema,
-        value: rawParams,
-      })
-    : parseProviderPayload({
-        capability: 'ribbon width profile',
-        providerName: width.name,
-        irPath: paramsPath,
-        payloadName: 'params',
-        schema: JsonObjectSchema,
-        value: rawParams,
-      });
-  parseProviderPayload({
-    capability: 'ribbon width profile',
-    providerName: width.name,
-    irPath: paramsPath,
-    payloadName: 'params',
-    schema: JsonObjectSchema,
-    value: params,
-  });
+  const profile = resolution.definition;
+  const params = resolution.params;
+  if (profile === undefined || params === undefined) {
+    throw new Error(`Ribbon width profile '${width.name}' has no resolving-phase provider binding.`);
+  }
   return offset => {
     const rawWidth = profile.widthAt({ offset, length: totalLength, params });
     return withProviderOutputValidationBoundary(`Ribbon width profile "${width.name}"`, () =>
@@ -111,17 +77,14 @@ export const widthFunction = (
  */
 export const centerlineWidthFunction = (
   ribbon: RibbonLike,
-  profiles: ReadonlyMap<string, RibbonWidthProfileDefinition>,
+  widthResolution: RibbonWidthResolution | undefined,
   totalLength: number,
-  irPath?: string,
 ): ((offset: number) => number) => {
   if (ribbon.width !== undefined) {
-    return widthFunction(
-      ribbon.width,
-      profiles,
-      totalLength,
-      irPath === undefined ? undefined : `${irPath}.ribbon.width`,
-    );
+    if (widthResolution === undefined) {
+      throw new Error('Ribbon width has no resolving-phase provider binding.');
+    }
+    return widthFunction(widthResolution, totalLength);
   }
   const startWidth = ribbon.start.width;
   const endWidth = ribbon.end.width;
@@ -137,8 +100,8 @@ export const centerlineWidthFunction = (
 };
 
 /** 动态 width（stops/profile）会让解析型 offset 不再可靠，需要走采样轮廓 */
-export const centerlineWidthRequiresSampling = (ribbon: RibbonLike): boolean =>
-  ribbon.width !== undefined && typeof ribbon.width !== 'number';
+export const centerlineWidthRequiresSampling = (widthResolution: RibbonWidthResolution | undefined): boolean =>
+  widthResolution?.requiresSampling ?? false;
 
 /**
  * 解析 ribbon 采样数

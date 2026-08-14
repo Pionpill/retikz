@@ -1,6 +1,14 @@
-import type { Transform } from '../../contract';
 import type {
+  AnyPathKindDefinition,
+  ArrowDefinition,
+  PathGeneratorDefinition,
+  RibbonWidthProfileDefinition,
+  Transform,
+} from '../../contract';
+import type {
+  IRArrowMark,
   IRGeometryLabel,
+  IRJsonObject,
   IRPathBase,
   IRPathRibbonOptions,
   IRPosition,
@@ -110,6 +118,61 @@ export type CanonicalPath = Omit<IRPathBase, 'children' | 'label' | 'ribbon' | '
   shadow?: ResolvedDropShadow;
 };
 
+/** path kind provider 在 resolving 阶段绑定后的定义与 kindOptions */
+export type PathKindResolution = Readonly<{
+  name: string;
+  definition: AnyPathKindDefinition;
+  options: unknown;
+}>;
+
+/** path generator step 在 resolving 阶段绑定后的定义与参数 */
+export type PathGeneratorResolution = Readonly<{
+  stepIndex: number;
+  name: string;
+  definition: PathGeneratorDefinition;
+  params: IRJsonObject;
+  irPath: string;
+}>;
+
+/** arrow mark 的有效视觉属性 */
+export type ArrowMarkVisual = Readonly<{
+  shape: string;
+  scale: number;
+  length: number;
+  width: number;
+  color?: string;
+  fill?: string;
+  opacity?: number;
+  lineWidth: number;
+}>;
+
+/** arrow mark 在 resolving 阶段确定的几何输入 */
+export type ArrowMarkGeometry = Readonly<{
+  baseSize: number;
+  tipX: number;
+  contactX: number;
+  resolvedLength: number;
+  resolvedWidth: number;
+  boundaryOuterInset: number;
+  shrink: number;
+}>;
+
+/** arrow mark 在 resolving 阶段绑定的 provider、视觉属性与几何输入 */
+export type ArrowMarkResolution = Readonly<{
+  mark: IRArrowMark;
+  definition: ArrowDefinition;
+  visual: ArrowMarkVisual;
+  geometry: ArrowMarkGeometry;
+}>;
+
+/** ribbon width 在 resolving 阶段绑定的 profile 或静态宽度规则 */
+export type RibbonWidthResolution = Readonly<{
+  width: CanonicalRibbonWidth;
+  definition?: RibbonWidthProfileDefinition;
+  params?: IRJsonObject;
+  requiresSampling: boolean;
+}>;
+
 /** 解析阶段向 target/reference 提供的几何能力 */
 export type PathTargetResolver = Readonly<{
   /** 将 target 解析到当前 scope 的局部参考点 */
@@ -138,6 +201,16 @@ export type PathResolveContext = Readonly<{
   styleStack?: ReadonlyArray<StyleResolveFrame>;
   /** target/reference 解析能力 */
   targetResolver?: PathTargetResolver;
+  /** path kind provider registry */
+  pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
+  /** path generator provider registry */
+  pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
+  /** arrow provider registry */
+  arrows: ReadonlyMap<string, ArrowDefinition>;
+  /** ribbon width profile registry */
+  ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
+  /** 当前 path 的 IR locator，用于 provider payload 诊断 */
+  irPath?: string;
 }>;
 
 /** 已绑定的单个路径 target 信息 */
@@ -154,7 +227,7 @@ export type TargetResolution = Readonly<{
   boundaryResolution?: BoundaryReferenceResolution;
 }>;
 
-/** Path Source IR 经样式、静态默认值与 target 绑定后的统一结果 */
+/** Path Source IR 经样式、静态默认值与 target 绑定后的基础结果 */
 export type PathResolution = Readonly<{
   /** 唯一的 canonical path owner，compile/lower/emit 均从此字段读取路径数据 */
   path: CanonicalPath;
@@ -162,4 +235,22 @@ export type PathResolution = Readonly<{
   targets: ReadonlyMap<string, TargetResolution>;
   /** 解析时的 scope chain 快照 */
   scopeChain: ReadonlyArray<Transform>;
+  /** 已绑定的 path kind provider 与 options */
+  kind: PathKindResolution;
 }>;
+
+/** stroke emitter 消费的、已绑定 secondary provider 的 path resolution */
+export type StrokePathResolution = PathResolution &
+  Readonly<{
+    /** 按 canonical step 对象索引的 generator resolution */
+    generators: ReadonlyMap<CanonicalStep, PathGeneratorResolution>;
+    /** 按 canonical arrow mark 对象索引的 arrow resolution */
+    arrows: ReadonlyMap<IRArrowMark, ArrowMarkResolution>;
+  }>;
+
+/** ribbon emitter 消费的、已绑定 secondary provider 的 path resolution */
+export type RibbonPathResolution = StrokePathResolution &
+  Readonly<{
+    /** ribbon 顶层 width 的已绑定 profile resolution */
+    ribbonWidth?: RibbonWidthResolution;
+  }>;

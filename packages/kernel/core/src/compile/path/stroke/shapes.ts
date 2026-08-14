@@ -1,9 +1,9 @@
 import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
-import type { PathGeneratorDefinition, Transform } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve/path';
-import type { IRPosition, IRTarget } from '../../../schemas';
+import type { Transform } from '../../../contract';
+import type { CanonicalStep, PathGeneratorResolution } from '../../../resolve/path';
 import type { PathTargetView } from '../../../resolve/path';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
@@ -37,10 +37,8 @@ export type LowerShapeStepContext = {
   scopeChain: ReadonlyArray<Transform>;
   /** 坐标取整函数 */
   round: (value: number) => number;
-  /** 当前 path 的 IR locator */
-  irPath: string;
-  /** path generator 注册表 */
-  generators: ReadonlyMap<string, PathGeneratorDefinition> | undefined;
+  /** 当前 generator step 在 resolving 阶段绑定的 provider resolution */
+  generatorResolution?: PathGeneratorResolution;
   /** path warning 回调 */
   warn: (code: string, message: string, subPath?: string) => void;
   /** path command 写入器 */
@@ -84,7 +82,7 @@ const resolvePartialClosed = (
  * @returns `false` 表示 target clipping 或 provider 解析失败，调用方应跳过整个 path
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: LowerShapeStepContext): boolean => {
-  const { targetView, scopeChain, round, irPath, generators, warn, commandEmitter, cursor, sampling } = context;
+  const { targetView, scopeChain, round, generatorResolution, warn, commandEmitter, cursor, sampling } = context;
   const { boundsPoints, emitMove, emitLine, emitClose, emitQuad, emitCubic, emitArc, emitEllipseArc, startSegment } =
     commandEmitter;
 
@@ -94,13 +92,15 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
     const resolvedTo = step.to !== undefined ? pointOfTarget(step.to, targetView, scopeChain) : null;
     const to = resolvedTo ?? undefined;
     const generated = lowerGeneratorStepToCommands({
-      step,
-      generators,
+      resolution:
+        generatorResolution ??
+        (() => {
+          throw new Error(`Path generator '${step.name}' has no resolving-phase provider binding.`);
+        })(),
       from,
       ...(to !== undefined ? { to } : {}),
       round,
       resolveTargetParam: value => pointOfTarget(value as IRTarget, targetView, scopeChain) ?? undefined,
-      irPath: `${irPath}.children[${index}]`,
     });
 
     startSegment(from);

@@ -1,7 +1,6 @@
 import type { ScenePrimitive } from '../../../contract';
-import type { PathResolution, PathTargetView } from '../../../resolve/path';
+import type { PathTargetView, RibbonPathResolution } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
-
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathPrimitiveEmitResult } from '../types';
@@ -49,7 +48,7 @@ export type EmitRibbonPrimitiveContext = {
  * @description boundary 模式把 upper/lower 两条 path 采样成闭合轮廓；centerline 模式复用普通 path emit 解析中心线，再按宽度函数生成左右边界。静态宽度优先走 analyticOutlineCommands，必要时回退采样轮廓
  */
 export const emitRibbonPrimitive = (
-  resolution: PathResolution,
+  resolution: RibbonPathResolution,
   context: EmitRibbonPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
   const { targetView, round, measureText, options = {} } = context;
@@ -141,14 +140,10 @@ export const emitRibbonPrimitive = (
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
     throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
   }
-  const widthAt = centerlineWidthFunction(
-    ribbon,
-    options.ribbonWidthProfiles ?? new Map(),
-    totalLength,
-    options.irPath,
-  );
+  const widthAt = centerlineWidthFunction(ribbon, resolution.ribbonWidth, totalLength);
   const samples = resolveSampleCount(ribbon.sampling, totalLength);
-  const sampleCount = samples ?? (centerlineWidthRequiresSampling(ribbon) ? DEFAULT_RIBBON_SAMPLES : undefined);
+  const sampleCount =
+    samples ?? (centerlineWidthRequiresSampling(resolution.ribbonWidth) ? DEFAULT_RIBBON_SAMPLES : undefined);
   // 静态宽度优先解析型轮廓，必要时回退采样
   const outline =
     sampleCount === undefined
