@@ -1,7 +1,7 @@
-﻿import type { IRNode } from '../../schemas';
-import type { CascadeState, StyleFrame } from './frame';
+import type { IRNode } from '../../schemas';
+import type { CascadeState, StyleResolveFrame } from './types';
 
-import { cuts, pickDefinedKeys } from './frame';
+import { cutsStyleChannel, pickDefinedKeys } from './frame';
 
 /** 级联 graphic state 投影到 node 样式字段 */
 const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
@@ -32,10 +32,10 @@ const expandNodeColor = (src: Partial<IRNode>): Partial<IRNode> => {
 };
 
 /** 解析 node 的最终样式 */
-export const resolveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleFrame>): IRNode => {
+export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleResolveFrame>): IRNode => {
   let acc: Partial<IRNode> = {};
   for (const frame of stack) {
-    if (cuts(frame.resetStyle, 'node')) acc = {};
+    if (cutsStyleChannel(frame.resetStyle, 'node')) acc = {};
     acc = { ...acc, ...pickDefinedKeys(cascadeToNode(frame.cascade)) };
     if (frame.nodeDefault) {
       acc = { ...acc, ...pickDefinedKeys(expandNodeColor(frame.nodeDefault)) };

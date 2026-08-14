@@ -1,4 +1,5 @@
-import type { IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel } from '../../../schemas';
+import type { EffectiveLabelDefault } from '../../../resolve/style';
+import type { IRLineSpec, IRNode, IRNodeLabel } from '../../../schemas';
 import type { CompileWarningCodeValue } from '../../warning';
 import type { ParsedCssColor } from './types';
 
@@ -21,7 +22,7 @@ const bodyInheritsNodeTextColor = (text: IRNode['text']): boolean => {
 };
 
 /** 判断 label 的正文或 pin 是否仍消费 Node 文字颜色 */
-const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: IRLabelDefault): boolean => {
+const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: EffectiveLabelDefault): boolean => {
   if (label.textColor !== undefined || labelDefault.textColor !== undefined || labelDefault.color !== undefined) {
     return false;
   }
@@ -31,7 +32,7 @@ const labelInheritsNodeTextColor = (label: IRNodeLabel, labelDefault: IRLabelDef
 };
 
 /** 判断至少一个真实文本或 pin 消费者是否继承 Node 文字颜色 */
-const hasNodeTextColorConsumer = (node: IRNode, labelDefault: IRLabelDefault): boolean => {
+const hasNodeTextColorConsumer = (node: IRNode, labelDefault: EffectiveLabelDefault): boolean => {
   if (bodyInheritsNodeTextColor(node.text)) return true;
   if (node.label === undefined) return false;
   const labels = Array.isArray(node.label) ? node.label : [node.label];
@@ -68,7 +69,7 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
 /** 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color */
 export const resolveNodeTextColor = (
   node: IRNode,
-  labelDefault: IRLabelDefault,
+  labelDefault: EffectiveLabelDefault,
   warn: (code: CompileWarningCodeValue, message: string) => void,
 ): IRNode => {
   if (node.textColor !== NodeTextColor.Contrast) return node;

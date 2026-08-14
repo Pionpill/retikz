@@ -1,7 +1,7 @@
 ﻿import type { BoundsInsets } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
-import type { CanonicalNode, CanonicalNodeLabel } from '../../normalize';
+import type { CanonicalNode, CanonicalNodeLabel } from '../../normalize/node';
 import type { ProviderCollection } from '../../providers/registry/index';
 import type {
   BlendModeValue,

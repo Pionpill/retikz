@@ -1,13 +1,13 @@
 import type { IRFont, IRGeometryLabel, IRLabelDefault } from '../../schemas';
-import type { StyleFrame } from './frame';
+import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 
-import { cuts, pickDefinedKeys } from './frame';
+import { cutsStyleChannel, pickDefinedKeys } from './frame';
 
 /** fold labelDefault 通道 */
-export const resolveLabelDefault = (stack: ReadonlyArray<StyleFrame>): IRLabelDefault => {
+export const resolveEffectiveLabelDefault = (stack: ReadonlyArray<StyleResolveFrame>): EffectiveLabelDefault => {
   let acc: IRLabelDefault = {};
   for (const frame of stack) {
-    if (cuts(frame.resetStyle, 'label')) acc = {};
+    if (cutsStyleChannel(frame.resetStyle, 'label')) acc = {};
     if (frame.labelDefault) acc = { ...acc, ...pickDefinedKeys(frame.labelDefault) };
   }
   return acc;
@@ -32,7 +32,7 @@ const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undef
 /** 解析 path label 的最终样式 */
 export const resolveGeometryLabel = (
   label: IRGeometryLabel,
-  labelDefault: IRLabelDefault,
+  labelDefault: EffectiveLabelDefault,
   masterColor: string | undefined,
 ): IRGeometryLabel => {
   const out: IRGeometryLabel = { ...label };

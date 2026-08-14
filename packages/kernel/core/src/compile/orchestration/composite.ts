@@ -9,11 +9,11 @@ import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
 import type { CompileWarningInput } from '../warning';
 
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve/theme';
 import { CompileWarningCode } from '../constants';
 import { CompileInvariantError } from '../probe-failure';
 import { parseProviderPayload } from '../provider-payload';
 import { validateExpandCompositeOutput } from './composite-output';
-import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 
 /** composite 嵌套展开最大深度 */
 export const DEFAULT_MAX_COMPOSITE_DEPTH = 32;

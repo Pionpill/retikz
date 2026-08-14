@@ -8,9 +8,9 @@ import type {
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
   NodeTextAlignValue,
+  ResolvedDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
-import type { CanonicalDropShadow } from '../shadow';
 
 /** 已补齐边界比例的节点标签位置 */
 export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPosition, 'fraction'> & {
@@ -71,5 +71,5 @@ export type CanonicalNode = Omit<
   /** 已解析的边框虚线样式 */
   dashPattern?: StrokeDashPattern;
   /** 已展开预设与静态默认值的投影 */
-  shadow?: CanonicalDropShadow;
+  shadow?: ResolvedDropShadow;
 };

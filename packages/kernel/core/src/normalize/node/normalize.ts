@@ -3,8 +3,7 @@ import type { BoundsInsets } from '@retikz/math';
 import type { IRAxisScale, IRBoxSize, IRBoxSpacing, IRNode, IRNodeLabel } from '../../schemas';
 import type { CanonicalNode, CanonicalNodeLabel } from './types';
 
-import { normalizeShadow } from '../shadow';
-import { normalizeDashPattern } from '../stroke';
+import { resolveDashPattern, resolveDropShadow } from '../../resolve/style';
 
 /** Node 缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;
@@ -84,7 +83,7 @@ export const normalizeNode = (node: IRNode): CanonicalNode => {
     label: normalizeNodeLabels(node.label),
     align: node.align ?? 'middle',
     rotate: node.rotate ?? 0,
-    dashPattern: normalizeDashPattern(node.dashPattern, dashed, dotted),
-    shadow: normalizeShadow(node.shadow),
+    dashPattern: resolveDashPattern(node.dashPattern, dashed, dotted),
+    shadow: resolveDropShadow(node.shadow),
   };
 };

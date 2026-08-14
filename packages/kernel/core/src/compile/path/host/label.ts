@@ -64,7 +64,7 @@ export const emitLabelPrimitive = (
     tex: texCtx,
     placement: placementCtx,
   } = context;
-  // label.font / textColor / opacity 已由 compile/style 解析（fold scope labelDefault + 宿主 path 主色）
+  // label.font / textColor / opacity 已由 resolve/style 解析（fold scope labelDefault + 宿主 path 主色）
   const fontSize = resolveFontSize(label.font?.size, {
     rootFontSize,
     inheritedFontSize: rootFontSize,

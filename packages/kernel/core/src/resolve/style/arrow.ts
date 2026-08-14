@@ -1,7 +1,7 @@
 import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPathBase } from '../../schemas';
-import type { StyleFrame } from './frame';
+import type { StyleResolveFrame } from './types';
 
-import { cuts, pickDefinedKeys } from './frame';
+import { cutsStyleChannel, pickDefinedKeys } from './frame';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
 const mergeArrowEnd = (
@@ -35,13 +35,13 @@ const dropArrowEndColor = (end: IRArrowEndDetail): IRArrowEndDetail => {
 /** 解析 path 最终箭头样式，合并 scope 默认值、path 主色和显式 arrow 配置 */
 const resolveArrowDetail = (
   explicit: IRArrowDetail | undefined,
-  stack: ReadonlyArray<StyleFrame>,
+  stack: ReadonlyArray<StyleResolveFrame>,
   masterColor: string | undefined,
 ): IRArrowDetail | undefined => {
   let acc: IRArrowDetail = {};
   let touched = false;
   for (const frame of stack) {
-    if (cuts(frame.resetStyle, 'arrow')) {
+    if (cutsStyleChannel(frame.resetStyle, 'arrow')) {
       acc = {};
       touched = false;
     }
@@ -70,7 +70,7 @@ const arrowMarkFromDetail = (detail: IRArrowEndDetail | undefined): Omit<IRArrow
 
 type ResolveArrowMarkContext = {
   pos: number;
-  stack: ReadonlyArray<StyleFrame>;
+  stack: ReadonlyArray<StyleResolveFrame>;
   masterColor: string | undefined;
 };
 
@@ -87,10 +87,10 @@ const resolveArrowMark = (mark: IRArrowMark, { pos, stack, masterColor }: Resolv
   };
 };
 
-/** 为 path marks 中的 arrow mark 补齐继承来的箭头样式 */
+/** 为 path marks 中的 arrow mark 补齐继承而来的箭头样式 */
 export const resolvePathMarks = (
   marks: IRPathBase['marks'] | undefined,
-  stack: ReadonlyArray<StyleFrame>,
+  stack: ReadonlyArray<StyleResolveFrame>,
   masterColor: string | undefined,
 ): IRPathBase['marks'] | undefined => {
   if (marks === undefined) return undefined;

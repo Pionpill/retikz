@@ -61,9 +61,16 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
-import { normalizeNode } from '../../normalize';
-import { normalizeShadow } from '../../normalize';
+import { normalizeNode } from '../../normalize/node';
 import { providerDefinitionOf } from '../../providers/registry/index';
+import { resolveDropShadow } from '../../resolve/style';
+import {
+  createStyleResolveFrame,
+  resolveEffectiveLabelDefault,
+  resolveEffectiveNodeStyle,
+  resolveEffectivePath,
+} from '../../resolve/style';
+import { resolveTheme } from '../../resolve/theme';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
@@ -108,7 +115,6 @@ import {
   withProviderOutputValidationBoundary,
 } from '../scene-primitive';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
-import { createStyleFrame, resolveEffectivePath, resolveLabelDefault, resolveNodeStyle } from '../style';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
 import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { filterAnimations } from './animation';
@@ -138,7 +144,6 @@ import {
 } from './primitive';
 import { createRuntimeTopologyTracker } from './runtime-topology';
 import { replayPendingSpatialHandle } from './spatial-handle';
-import { resolveTheme } from './theme';
 import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
 
 /** 只保留会改变 Scope 样式级联结果的 frame，避免空 Scope frame 触发 replay 重编译 */
@@ -429,7 +434,7 @@ export const compileChildrenToPrimitives = (
           if (result !== null) {
             pendingPath.boundsSink.push({
               points: [...result.boundsPoints],
-              shadow: normalizeShadow(pendingPath.path.shadow),
+              shadow: resolveDropShadow(pendingPath.path.shadow),
             });
             pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
           }
@@ -453,8 +458,8 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
-    const effectiveNode = resolveNodeStyle(child, styleStack);
-    const labelDefault = resolveLabelDefault(styleStack);
+    const effectiveNode = resolveEffectiveNodeStyle(child, styleStack);
+    const labelDefault = resolveEffectiveLabelDefault(styleStack);
     const warn = (code: CompileWarningCodeValue, message: string): void =>
       runtime.context.onWarn({ code, message, path: nodeIrPath });
     const resolvedNode = resolveNodeTextColor(effectiveNode, labelDefault, warn);
@@ -901,7 +906,7 @@ export const compileChildrenToPrimitives = (
         locatorPrefix: `${locatorPrefix}children[${index}].scope.`,
         layoutSink: scopeLayouts,
         pathSink: scopePendingPaths,
-        styleStack: [...styleStack, createStyleFrame(child)],
+        styleStack: [...styleStack, createStyleResolveFrame(child)],
         theme,
         publicationSink: scopePublications,
         boundsSink: scopeBounds,
@@ -1590,10 +1595,7 @@ export const compileChildrenToPrimitives = (
     const spatialOwnerPath = Object.freeze([...frame.spatialOwnerPath, spatialOwner]);
     if (definition.expand !== undefined) {
       const callable = definition as unknown as {
-        expand: (
-          node: unknown,
-          context: Readonly<{ theme: TraversalFrame['theme'] }>,
-        ) => CompositeExpandResult;
+        expand: (node: unknown, context: Readonly<{ theme: TraversalFrame['theme'] }>) => CompositeExpandResult;
       };
       const produced = callable.expand(parsed, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);

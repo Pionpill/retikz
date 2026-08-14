@@ -1,9 +1,10 @@
-﻿import type { IRGeometryLabel, IRLabelDefault, IRPathBase, IRStep } from '../../schemas';
-import type { CascadeState, StyleFrame } from './frame';
+import type { IRGeometryLabel, IRPathBase, IRStep } from '../../schemas';
+import type { CascadeState, EffectiveLabelDefault, StyleResolveFrame } from './types';
 
 import { resolvePathMarks } from './arrow';
-import { cuts, pickDefinedKeys, pickDrawableStyle } from './frame';
-import { resolveGeometryLabel, resolveLabelDefault } from './label';
+import { pickDrawableStyle } from './drawable';
+import { cutsStyleChannel, pickDefinedKeys } from './frame';
+import { resolveEffectiveLabelDefault, resolveGeometryLabel } from './label';
 
 /** 级联 graphic state 投影到 path 样式字段 */
 const cascadeToPath = (c: CascadeState): Partial<IRPathBase> => {
@@ -48,7 +49,7 @@ const expandRibbonColor = (src: Partial<IRPathBase>): Partial<IRPathBase> => {
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
 const resolveStepLabels = (
   children: ReadonlyArray<IRStep>,
-  labelDefault: IRLabelDefault,
+  labelDefault: EffectiveLabelDefault,
   masterColor: string | undefined,
 ): Array<IRStep> =>
   children.map(step => {
@@ -60,7 +61,7 @@ const resolveStepLabels = (
 
 const resolveGeometryLabelField = (
   label: IRGeometryLabel | Array<IRGeometryLabel> | undefined,
-  labelDefault: IRLabelDefault,
+  labelDefault: EffectiveLabelDefault,
   masterColor: string | undefined,
 ): IRGeometryLabel | Array<IRGeometryLabel> | undefined => {
   if (label === undefined) return undefined;
@@ -71,13 +72,13 @@ const resolveGeometryLabelField = (
 };
 
 /** 解析 path 的最终样式 */
-export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleFrame>): IRPathBase => {
+export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleResolveFrame>): IRPathBase => {
   let acc: Partial<IRPathBase> = {};
   let masterColor: string | undefined;
   const pathKind = path.kind ?? 'stroke';
   const isRibbon = pathKind === 'ribbon';
   for (const frame of stack) {
-    if (cuts(frame.resetStyle, 'path')) {
+    if (cutsStyleChannel(frame.resetStyle, 'path')) {
       acc = {};
       masterColor = undefined;
     }
@@ -103,7 +104,7 @@ export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<Styl
   };
   const effective = acc as IRPathBase;
 
-  const labelDefault = resolveLabelDefault(stack);
+  const labelDefault = resolveEffectiveLabelDefault(stack);
   if (isRibbon) delete effective.marks;
   else effective.marks = resolvePathMarks(path.marks, stack, masterColor);
   if (path.children !== undefined) {

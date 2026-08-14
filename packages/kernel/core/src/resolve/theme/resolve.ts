@@ -1,11 +1,10 @@
 import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 
-import { resolveDefaultCoreThemeColors } from '../../providers/theme';
-import { resolveThemeStyleRegistry } from '../../providers/theme';
+import { resolveDefaultCoreThemeColors, resolveThemeStyleRegistry } from '../../providers/theme';
 import { ThemeMode } from '../../shared';
 
-/** Core compile 的冻结 Theme 基线 */
+/** Core resolve 的 Theme 基线 */
 export const DEFAULT_RESOLVED_THEME: ResolvedTheme = Object.freeze({
   mode: ThemeMode.Light,
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),

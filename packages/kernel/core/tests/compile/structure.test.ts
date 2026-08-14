@@ -18,7 +18,6 @@ describe('compile source structure', () => {
     expect(Object.keys(compile).sort()).toEqual([
       'CORE_PROGRAM_ID',
       'CompileWarningCode',
-      'DEFAULT_RESOLVED_THEME',
       'compileToScene',
       'computeLayout',
       'createCoreProgram',
@@ -28,8 +27,13 @@ describe('compile source structure', () => {
       'isNodeLayoutCompileArtifact',
       'lowerIRToKernel',
       'observeCompileToScene',
-      'resolveTheme',
     ]);
+  });
+
+  it('theme resolution is owned by resolve while package-root exports stay stable', () => {
+    expect(source('src/compile/index.ts')).not.toContain('DEFAULT_RESOLVED_THEME');
+    expect(source('src/compile/index.ts')).not.toContain('resolveTheme');
+    expect(source('src/index.ts')).toContain("export { DEFAULT_RESOLVED_THEME, resolveTheme } from './resolve';");
   });
 
   it('does not retain the removed inspection public files or exports', () => {

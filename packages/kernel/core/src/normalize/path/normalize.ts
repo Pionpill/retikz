@@ -16,7 +16,7 @@ import type {
   CanonicalStep,
 } from './types';
 
-import { normalizeShadow } from '../shadow';
+import { resolveDropShadow } from '../../resolve/style';
 
 const LABEL_POSITION: Record<string, number> = {
   'at-start': 0,
@@ -114,5 +114,5 @@ export const normalizePath = (path: IRPathBase): CanonicalPath => ({
   label:
     path.label === undefined ? undefined : (Array.isArray(path.label) ? path.label : [path.label]).map(normalizeLabel),
   ribbon: path.ribbon === undefined ? undefined : normalizeRibbon(path.ribbon),
-  shadow: normalizeShadow(path.shadow),
+  shadow: resolveDropShadow(path.shadow),
 });

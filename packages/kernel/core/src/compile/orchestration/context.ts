@@ -26,13 +26,13 @@ import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveRibbonWidthProfileRegistry } from '../../providers/ribbon';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve/theme';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
 import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
-import { DEFAULT_RESOLVED_THEME, resolveTheme } from './theme';
 
 /**
  * 标准化后的 compile 依赖上下文

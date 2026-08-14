@@ -1,7 +1,8 @@
 ﻿import type { BoundaryDefinition, LayoutAxisProposal, ShapeDefinition, Transform } from '../../contract';
-import type { CanonicalNode } from '../../normalize';
+import type { CanonicalNode } from '../../normalize/node';
 import type { ProviderCollection } from '../../providers/registry/index';
-import type { IRAnchorPosition, IRLabelDefault, IRPosition } from '../../schemas';
+import type { EffectiveLabelDefault } from '../../resolve/style';
+import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
 import type { TextMeasurer } from '../text';
@@ -120,7 +121,7 @@ export type LayoutNodeContext = {
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前样式栈解析出的 label 默认值 */
-  labelDefault?: IRLabelDefault;
+  labelDefault?: EffectiveLabelDefault;
   /** shape 注册表 */
   shapes?: ProviderCollection<ShapeDefinition>;
   /** boundary 注册表 */

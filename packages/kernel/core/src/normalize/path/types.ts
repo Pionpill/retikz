@@ -5,8 +5,8 @@ import type {
   IRRibbonSampling,
   IRRibbonWidth,
   IRStep,
+  ResolvedDropShadow,
 } from '../../schemas';
-import type { CanonicalDropShadow } from '../shadow';
 
 /** 展开位置、方向与距离默认值后的路径几何标签 */
 export type CanonicalGeometryLabel = Omit<IRGeometryLabel, 'position' | 'side' | 'distance'> & {
@@ -107,5 +107,5 @@ export type CanonicalPath = Omit<IRPathBase, 'children' | 'label' | 'ribbon' | '
   /** 完整流带选项 */
   ribbon?: CanonicalRibbonOptions;
   /** 已展开预设与静态默认值的投影 */
-  shadow?: CanonicalDropShadow;
+  shadow?: ResolvedDropShadow;
 };

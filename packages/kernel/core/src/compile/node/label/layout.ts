@@ -1,4 +1,4 @@
-import type { IRLabelDefault } from '../../../schemas';
+import type { EffectiveLabelDefault } from '../../../resolve/style';
 import type { FontSpec, TextMeasurer } from '../../text';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 
@@ -8,7 +8,7 @@ import { resolveNodeLabelGeometry } from './geometry';
 /** 节点附属 label 布局输入 */
 export type LayoutNodeLabelsInput = NodeTextLayoutContext & {
   /** 样式栈解析出的 label 默认值 */
-  labelDefault?: IRLabelDefault;
+  labelDefault?: EffectiveLabelDefault;
   /** 节点 label 与节点边界的默认距离 */
   labelDistance: number;
   /** 基准字体大小 */
