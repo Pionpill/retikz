@@ -1,10 +1,9 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { BoundaryReferenceResolver } from '../../../resolve/node';
-import type { CanonicalStep } from '../../../normalize/path';
+import type { CanonicalStep } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
-import type { NamespaceStack } from '../../namespace';
+import type { PathTargetView } from '../../../resolve/path';
 import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
@@ -17,7 +16,7 @@ import {
   outInControlPoints,
   quadSegmentSample,
 } from '../../../shared/geometry';
-import { clipForTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
+import { clipTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
 export type StrokeSegmentStep = Extract<
@@ -27,22 +26,20 @@ export type StrokeSegmentStep = Extract<
 
 /** 普通 segment step 降级所需的共享上下文 */
 export type LowerSegmentStepContext = {
-  /** id 查询栈 */
-  namespaceStack: NamespaceStack;
-  /** 当前 scope 的累积变换链 */
+  /** resolving 阶段绑定的 target view */
+  targetView: PathTargetView;
+  /** 当前 scope 的累计变换链 */
   scopeChain: ReadonlyArray<Transform>;
   /** 最近一个有效目标 step */
   previous: StrokePreviousTarget;
   /** 当前 step 预解析后的目标 anchor */
   currentAnchor: IRPosition;
-  /** 特殊形状留下且已被当前 segment 消费的笔位覆盖 */
+  /** 特殊形状留下且将由当前 segment 消费的笔位覆盖 */
   penOverride: IRPosition | null;
   /** path command 写入器 */
   commandEmitter: PathCommandEmitter;
   /** label 与 mark 采样收集器 */
   sampling: StrokeSamplingCollector;
-  /** Path 显式 target boundary 的临时解析回调 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
 };
 
 /** 判断 step 是否属于普通 segment family */
@@ -55,26 +52,17 @@ export const isStrokeSegmentStep = (step: CanonicalStep): step is StrokeSegmentS
   step.kind === 'fold';
 
 /**
- * 将普通 segment step 降级到 path commands
+ * 将普通 segment step 降级为 path commands
  * @returns `false` 表示 target clipping 失败，调用方应跳过整个 path
  */
 export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentStepContext): boolean => {
-  const {
-    namespaceStack,
-    scopeChain,
-    previous,
-    currentAnchor,
-    penOverride,
-    commandEmitter,
-    sampling,
-    resolveExplicitBoundary,
-  } = context;
+  const { targetView, scopeChain, previous, currentAnchor, penOverride, commandEmitter, sampling } = context;
   const { emitLine, emitQuad, emitCubic, startSegment } = commandEmitter;
-  const targetContext = { namespaceStack, scopeChain, resolveExplicitBoundary };
+  const targetContext = { targetView, scopeChain };
 
   if (step.kind === 'line') {
-    const fromClip = penOverride ?? clipForTarget(previous.step.to, currentAnchor, targetContext);
-    const toClip = clipForTarget(step.to, penOverride ?? previous.anchor, targetContext);
+    const fromClip = penOverride ?? clipTarget(previous.step.to, currentAnchor, targetContext);
+    const toClip = clipTarget(step.to, penOverride ?? previous.anchor, targetContext);
     if (!fromClip || !toClip) return false;
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(toClip, isAutoBoundaryTarget(step.to));
@@ -83,7 +71,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
   }
 
   if (step.kind === 'axis-line') {
-    const fromClip = penOverride ?? clipForTarget(previous.step.to, currentAnchor, targetContext);
+    const fromClip = penOverride ?? clipTarget(previous.step.to, currentAnchor, targetContext);
     if (!fromClip) return false;
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(currentAnchor);
@@ -92,8 +80,8 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
   }
 
   if (step.kind === 'curve') {
-    const fromClip = penOverride ?? clipForTarget(previous.step.to, step.control, targetContext);
-    const toClip = clipForTarget(step.to, step.control, targetContext);
+    const fromClip = penOverride ?? clipTarget(previous.step.to, step.control, targetContext);
+    const toClip = clipTarget(step.to, step.control, targetContext);
     if (!fromClip || !toClip) return false;
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
@@ -102,8 +90,8 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
   }
 
   if (step.kind === 'cubic') {
-    const fromClip = penOverride ?? clipForTarget(previous.step.to, step.control1, targetContext);
-    const toClip = clipForTarget(step.to, step.control2, targetContext);
+    const fromClip = penOverride ?? clipTarget(previous.step.to, step.control1, targetContext);
+    const toClip = clipTarget(step.to, step.control2, targetContext);
     if (!fromClip || !toClip) return false;
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitCubic({
@@ -125,8 +113,8 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     if (!isFinitePoint(control1) || !isFinitePoint(control2)) {
       throw new Error('Bend produced a non-finite control point (looseness / angle too large); use smaller values.');
     }
-    const fromClip = penOverride ?? clipForTarget(previous.step.to, control1, targetContext);
-    const toClip = clipForTarget(step.to, control2, targetContext);
+    const fromClip = penOverride ?? clipTarget(previous.step.to, control1, targetContext);
+    const toClip = clipTarget(step.to, control2, targetContext);
     if (!fromClip || !toClip) return false;
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitCubic({
@@ -146,8 +134,8 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
       : foldCornersOf(fromReference, currentAnchor, step.via);
   if (corners.length === 1) {
     const corner = corners[0];
-    const fromClip = penOverride ?? clipForTarget(previous.step.to, corner, targetContext);
-    const toClip = clipForTarget(step.to, corner, targetContext);
+    const fromClip = penOverride ?? clipTarget(previous.step.to, corner, targetContext);
+    const toClip = clipTarget(step.to, corner, targetContext);
     if (!fromClip || !toClip) return false;
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(corner);
@@ -159,8 +147,8 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     [...corners, currentAnchor].find(candidate => !samePoint(candidate, fromReference)) ?? currentAnchor;
   const toToward =
     [fromReference, ...corners].findLast(candidate => !samePoint(candidate, currentAnchor)) ?? fromReference;
-  const fromClip = penOverride ?? clipForTarget(previous.step.to, fromToward, targetContext);
-  const toClip = clipForTarget(step.to, toToward, targetContext);
+  const fromClip = penOverride ?? clipTarget(previous.step.to, fromToward, targetContext);
+  const toClip = clipTarget(step.to, toToward, targetContext);
   if (!fromClip || !toClip) return false;
   const emittedCorners = corners.map(corner => [...corner] as IRPosition);
   for (let index = 0; index < emittedCorners.length && samePoint(corners[index], fromReference); index += 1) {

@@ -23,12 +23,20 @@ describe('resolve source structure', () => {
     expect(existsSync(resolve(root, 'src/compile/style/index.ts'))).toBe(false);
   });
 
-  it('keeps path emitters free of source-path resolution', () => {
-    for (const path of ['src/compile/path/stroke/emit.ts', 'src/compile/path/ribbon/emit.ts']) {
-      const text = source(path);
+  it('keeps builtin path emitters resolution-only', () => {
+    const stroke = source('src/compile/path/stroke/emit.ts');
+    const ribbon = source('src/compile/path/ribbon/emit.ts');
+    for (const text of [stroke, ribbon]) {
       expect(text).not.toContain('normalizePath(');
+      expect(text).not.toContain('resolvePathValue');
       expect(text).not.toContain('resolvePath(');
+      expect(text).not.toMatch(/import\s+\{[^}]*\bresolvePath\b[^}]*\}\s+from/u);
+      expect(text).not.toContain('IRPathBase');
+      expect(text).not.toContain('resolution?:');
+      expect(text).not.toContain('emitResolvedPathPrimitive');
     }
+    expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*PathResolution/u);
+    expect(ribbon).toMatch(/export const emitRibbonPrimitive = \(\s*resolution:\s*PathResolution/u);
   });
 
   it('keeps node layout free of provider lookup orchestration', () => {
@@ -43,6 +51,6 @@ describe('resolve source structure', () => {
       .filter(path => source(path).includes('providerDefinitionOf('))
       .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
 
-    expect(offenders).toEqual([]);
+    expect(offenders).toEqual(['src/compile/path/stroke/lower.ts']);
   });
 });

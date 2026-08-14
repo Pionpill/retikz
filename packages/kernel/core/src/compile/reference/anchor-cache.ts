@@ -1,17 +1,19 @@
 import type { Position } from '@retikz/math';
 
-import type { BoundaryReferenceResolution } from '../../resolve/node';
+import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve/node';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { SideValue } from '../../shared';
 import type { NodeLayout } from '../node';
 
+type AnchorLayout = NodeLayout | NodeReferenceView;
+
+import { boundaryKey } from '../../resolve/node';
 import { isAnchor } from '../../shared';
 import { anchorOf, angleBoundaryOf } from '../node';
-import { boundaryKey } from '../../resolve/node';
 import { snapshotProviderPosition } from '../scene-primitive';
 
 /** 单个 NodeLayout 生命周期内的 anchor 坐标缓存 */
-const cache = new WeakMap<NodeLayout, Map<string, IRPosition>>();
+const cache = new WeakMap<AnchorLayout, Map<string, IRPosition>>();
 
 /** 角度字符串识别规则，与文本 target parser 保持一致 */
 const ANGLE_RE = /^-?\d+(\.\d+)?$/;
@@ -21,7 +23,7 @@ const positionToIR = (position: Position): IRPosition => [position[0], position[
 
 /** 不经过 WeakMap 缓存解析命名或角度 anchor */
 const computeAnchor = (
-  layout: NodeLayout,
+  layout: AnchorLayout,
   anchorName: string,
   boundary: IRBoundary | undefined,
   boundaryResolution?: BoundaryReferenceResolution,
@@ -33,7 +35,7 @@ const computeAnchor = (
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (layout: NodeLayout, side: SideValue, fraction: number): IRPosition => {
+const computeEdgePoint = (layout: AnchorLayout, side: SideValue, fraction: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`);
@@ -50,7 +52,7 @@ const computeEdgePoint = (layout: NodeLayout, side: SideValue, fraction: number)
  * @description 供仍会整体平移的 provisional layout 使用，避免缓存平移前坐标
  */
 export const resolveAnchorRefUncached = (
-  layout: NodeLayout,
+  layout: AnchorLayout,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryReferenceResolution,
@@ -62,7 +64,7 @@ export const resolveAnchorRefUncached = (
 
 /** 取节点 anchor 的全局坐标 */
 export const resolveAnchor = (
-  layout: NodeLayout,
+  layout: AnchorLayout,
   anchorName: string,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryReferenceResolution,
@@ -81,7 +83,7 @@ export const resolveAnchor = (
 };
 
 /** 取节点边上比例点的全局坐标 */
-export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number): IRPosition => {
+export const resolveEdgePoint = (layout: AnchorLayout, side: SideValue, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();
@@ -97,7 +99,7 @@ export const resolveEdgePoint = (layout: NodeLayout, side: SideValue, t: number)
 
 /** 使用既有 WeakMap 缓存解析完整 anchor 引用 */
 export const resolveAnchorRef = (
-  layout: NodeLayout,
+  layout: AnchorLayout,
   anchor: IRAnchorRef,
   boundary?: IRBoundary,
   boundaryResolution?: BoundaryReferenceResolution,

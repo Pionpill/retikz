@@ -1,5 +1,5 @@
 import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../../contract';
-import type { CanonicalPath } from '../../../normalize/path';
+import type { CanonicalPath } from '../../../resolve/path';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { ResolvedPathBaseProps } from '../host';

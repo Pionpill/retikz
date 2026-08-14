@@ -1,7 +1,7 @@
 ﻿import type { Vector2 } from '@retikz/math';
 
 import type { RibbonWidthProfileDefinition } from '../../../contract';
-import type { CanonicalPath, CanonicalRibbonOptions } from '../../../normalize/path';
+import type { CanonicalPath, CanonicalRibbonOptions } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { PathEmitOptions } from '../types';

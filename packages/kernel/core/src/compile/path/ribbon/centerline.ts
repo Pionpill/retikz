@@ -3,10 +3,9 @@ import type { Vector2 } from '@retikz/math';
 import { point, vector2 } from '@retikz/math';
 
 import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
-import type { CanonicalStep, CanonicalStepWithoutLabel } from '../../../normalize/path';
+import type { CanonicalStep, CanonicalStepWithoutLabel, PathResolution, PathTargetView } from '../../../resolve/path';
 import type { IRPosition, IRRibbonDirection } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { NamespaceStack } from '../../namespace';
 import type { TextMeasurer } from '../../text';
 import type { RibbonEmitOptions, RibbonSegment, RibbonSegmentInput } from './types';
 
@@ -19,7 +18,7 @@ import {
   polar,
   quadSegmentSample,
 } from '../../../shared/geometry';
-import { emitCanonicalPath } from '../stroke';
+import { emitPathPrimitive } from '../stroke';
 
 const LENGTH_SUBDIVISIONS = 16;
 
@@ -321,7 +320,8 @@ export const sampleAtDistance = (
 export type EmittedPathFromStepsInput = {
   steps: ReadonlyArray<CanonicalStep>;
   source: string;
-  namespaceStack: NamespaceStack;
+  resolution: PathResolution;
+  targetView: PathTargetView;
   round: (n: number) => number;
   measureText: TextMeasurer;
   options: RibbonEmitOptions;
@@ -334,16 +334,19 @@ export type EmittedPathFromStepsInput = {
 export const emittedPathFromSteps = ({
   steps,
   source,
-  namespaceStack,
+  resolution,
+  targetView,
   round,
   measureText,
   options,
 }: EmittedPathFromStepsInput): PathPrim => {
-  const path = {
-    type: 'path',
-    children: steps.map(stripStepLabel),
-  } as const;
-  const emitted = emitCanonicalPath(path, { namespaceStack, round, measureText, options });
+  const canonicalSteps = steps.map(stripStepLabel);
+  const canonicalPath = { ...resolution.path, children: canonicalSteps };
+  const nestedResolution: PathResolution = {
+    ...resolution,
+    path: canonicalPath,
+  };
+  const emitted = emitPathPrimitive(nestedResolution, { targetView, round, measureText, options });
   if (emitted === null) {
     throw new Error(`Ribbon ${source} path was skipped unexpectedly.`);
   }
@@ -364,13 +367,14 @@ export type SegmentsFromStepsInput = EmittedPathFromStepsInput & {
 export const segmentsFromSteps = ({
   steps,
   source,
-  namespaceStack,
+  resolution,
+  targetView,
   round,
   measureText,
   options,
   endpointTangents = {},
 }: SegmentsFromStepsInput): { segments: Array<RibbonSegment>; totalLength: number } => {
-  const prim = emittedPathFromSteps({ steps, source, namespaceStack, round, measureText, options });
+  const prim = emittedPathFromSteps({ resolution, steps, source, targetView, round, measureText, options });
   const inputs = commandsToSegmentInputs(prim.commands, source);
   const segments = segmentInputsToSegments(inputs, endpointTangents);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);

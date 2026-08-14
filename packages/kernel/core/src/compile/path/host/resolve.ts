@@ -1,4 +1,4 @@
-import type { CanonicalPath } from '../../../normalize/path';
+import type { CanonicalPath } from '../../../resolve/path';
 import type { PaintResolver } from '../../resource';
 import type { PathBaseProps } from '../stroke';
 

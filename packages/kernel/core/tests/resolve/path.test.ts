@@ -6,11 +6,11 @@ import type {
   CanonicalRibbonSampling,
   CanonicalRibbonWidth,
   CanonicalStep,
-} from '../../src/normalize/path';
+} from '../../src/resolve/path';
 import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
 
 import { compileToScene } from '../../src';
-import { normalizePath } from '../../src/normalize/path';
+import { resolvePath } from '../../src/resolve/path';
 
 const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
   type: 'path',
@@ -27,7 +27,7 @@ const sceneWith = (pathValue: IRPathBase): IRScene => ({
   children: [pathValue],
 });
 
-describe('normalizePath', () => {
+describe('resolvePath', () => {
   it('exposes complete canonical step and ribbon variants to compile consumers', () => {
     expectTypeOf<Extract<CanonicalStep, { kind: 'line' }>['label']>().toEqualTypeOf<
       CanonicalGeometryLabel | undefined
@@ -40,7 +40,7 @@ describe('normalizePath', () => {
     expectTypeOf<Extract<CanonicalRibbonSampling, { kind: 'adaptive' }>['maxSamples']>().toEqualTypeOf<number>();
     expectTypeOf<CanonicalRibbonEndpoint['cap']>().not.toEqualTypeOf<undefined>();
 
-    const canonical = normalizePath(
+    const canonical = resolvePath(
       path({
         kind: 'ribbon',
         ribbon: {
@@ -56,12 +56,12 @@ describe('normalizePath', () => {
         },
       }),
     );
-    expectTypeOf(canonical.ribbon?.upper).toEqualTypeOf<Array<CanonicalStep> | undefined>();
-    expectTypeOf(canonical.ribbon?.lower).toEqualTypeOf<Array<CanonicalStep> | undefined>();
+    expectTypeOf(canonical.path.ribbon?.upper).toEqualTypeOf<Array<CanonicalStep> | undefined>();
+    expectTypeOf(canonical.path.ribbon?.lower).toEqualTypeOf<Array<CanonicalStep> | undefined>();
   });
 
   it('expands fold and smooth static defaults without changing geometry inputs', () => {
-    const canonical = normalizePath(
+    const canonical = resolvePath(
       path({
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
@@ -71,9 +71,9 @@ describe('normalizePath', () => {
       }),
     );
 
-    expect(canonical.children![1]).toMatchObject({ kind: 'fold', fraction: 0.5 });
-    expect(canonical.children![2]).toMatchObject({ kind: 'smooth', tension: 1 });
-    expect(canonical.children![0]).toMatchObject({ to: [0, 0] });
+    expect(canonical.path.children![1]).toMatchObject({ kind: 'fold', fraction: 0.5 });
+    expect(canonical.path.children![2]).toMatchObject({ kind: 'smooth', tension: 1 });
+    expect(canonical.path.children![0]).toMatchObject({ to: [0, 0] });
   });
 
   it('canonicalizes every geometry label position, side, and distance', () => {
@@ -93,13 +93,13 @@ describe('normalizePath', () => {
       to: [index + 1, 0] as [number, number],
       label: { text: position, position } as const,
     }));
-    const canonical = normalizePath(path({ children: [{ type: 'step', kind: 'move', to: [0, 0] }, ...children] }));
+    const canonical = resolvePath(path({ children: [{ type: 'step', kind: 'move', to: [0, 0] }, ...children] }));
 
-    for (const [index, step] of canonical.children!.slice(1).entries()) {
+    for (const [index, step] of canonical.path.children!.slice(1).entries()) {
       expect(step).toMatchObject({ label: { position: expected[index], side: 'top', distance: 4 } });
     }
     expect(
-      normalizePath(
+      resolvePath(
         path({
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -111,20 +111,20 @@ describe('normalizePath', () => {
             },
           ],
         }),
-      ).children![1],
+      ).path.children![1],
     ).toMatchObject({ label: { position: 0.5, side: 'center', distance: 4 } });
   });
 
   it('normalizes a host label to an array while preserving explicit falsy values', () => {
-    const canonical = normalizePath(
+    const canonical = resolvePath(
       path({ label: { text: 'host', position: 'at-end', side: 'bottom', distance: 0, sloped: false } }),
     );
 
-    expect(canonical.label).toEqual([{ text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false }]);
+    expect(canonical.path.label).toEqual([{ text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false }]);
   });
 
   it('normalizes ribbon defaults, sampling shorthand, adaptive cap, and stable width stops', () => {
-    const canonical = normalizePath(
+    const canonical = resolvePath(
       path({
         kind: 'ribbon',
         ribbon: {
@@ -144,7 +144,7 @@ describe('normalizePath', () => {
       }),
     );
 
-    expect(canonical.ribbon).toMatchObject({
+    expect(canonical.path.ribbon).toMatchObject({
       mode: 'centerline',
       align: 'center',
       interpolation: 'linear',
@@ -162,10 +162,10 @@ describe('normalizePath', () => {
       },
     });
 
-    const adaptive = normalizePath(
+    const adaptive = resolvePath(
       path({ kind: 'ribbon', ribbon: { width: 2, sampling: { kind: 'adaptive', tolerance: 3 } } }),
     );
-    expect(adaptive.ribbon?.sampling).toEqual({ kind: 'adaptive', tolerance: 3, maxSamples: 512 });
+    expect(adaptive.path.ribbon?.sampling).toEqual({ kind: 'adaptive', tolerance: 3, maxSamples: 512 });
   });
 
   it('compiles compact Path forms to the same Scene as their explicit Source IR equivalents', () => {

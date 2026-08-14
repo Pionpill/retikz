@@ -1,8 +1,8 @@
-﻿import type { BoundaryReferenceResolver } from '../../resolve/node';
 import type { PathGeneratorDefinition, Transform } from '../../contract';
 import type { ScenePrimitive } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
 import type { IRPosition } from '../../schemas';
+import type { PathTargetView } from '../../resolve/path';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
 import type { CompileWarningInput } from '../warning';
@@ -39,8 +39,8 @@ export type PathEmitOptions = {
   resolvedArrows?: ResolvedArrowRegistry;
   /** 有效 path generator 表 */
   effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
-  /** Path 显式 target boundary 的临时解析回调 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
+  /** resolving 阶段绑定的 target geometry view（由 emit context 提供） */
+  targetView?: PathTargetView;
   /** 注入的 TeX 降级能力 */
   lowerTex?: LowerTex;
   /** preset 与 rem 字号解析的根字号 */

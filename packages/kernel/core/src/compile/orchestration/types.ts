@@ -34,6 +34,7 @@ import type { PendingSpatialHandle } from './spatial-handle';
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = {
   /** 已合并样式和动画过滤后的 path IR */
+  /** path Source IR，样式与动态 target 解析延迟到 resolving phase */
   path: IRPathBase;
   /** warning 与诊断使用的 IR locator */
   irPath: string;

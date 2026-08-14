@@ -1,12 +1,11 @@
 import type { Transform } from '../../../contract';
-import type { BoundaryReferenceResolver } from '../../../resolve/node';
-import type { CanonicalStep } from '../../../normalize/path';
+import type { CanonicalStep } from '../../../resolve/path';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import type { NamespaceStack } from '../../namespace';
+import type { PathTargetView } from '../../../resolve/path';
 
 import { CompileWarningCode } from '../../constants';
 import { nodeIdFromResolvableTarget } from '../../position';
-import { localPointOfTarget } from '../host';
+import { pointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */
 export type StrokeTargetStep = Exclude<
@@ -56,14 +55,13 @@ export type StrokeCursor = {
 export type CreateStrokeCursorInput = {
   /** 已归一化的 path steps */
   steps: Array<CanonicalStep>;
-  /** id 查询栈 */
-  namespaceStack: NamespaceStack;
+  /** resolving 阶段绑定的 target view */
+  targetView: PathTargetView;
   /** 当前 scope 的累积变换链 */
   scopeChain: ReadonlyArray<Transform>;
   /** path warning 收集器 */
   warn: (code: string, message: string, subPath?: string) => void;
-  /** Path 显式 target boundary 的临时解析回调 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
+  /** Path target 已在 resolving 阶段绑定；此处不再访问 namespace 或 provider */
 };
 
 /** 判断 step 是否具有普通 `to` 目标 */
@@ -80,16 +78,10 @@ export const isStrokeTargetStep = (step: CanonicalStep): step is StrokeTargetSte
  * 创建 path stroke step 游标
  * @description 初始化时按声明顺序预解析普通目标 anchor；循环推进只消费当前索引的前一个 step
  */
-export const createStrokeCursor = ({
-  steps,
-  namespaceStack,
-  scopeChain,
-  warn,
-  resolveExplicitBoundary,
-}: CreateStrokeCursorInput): StrokeCursor => {
+export const createStrokeCursor = ({ steps, targetView, scopeChain, warn }: CreateStrokeCursorInput): StrokeCursor => {
   const anchors: Array<IRPosition | null> = steps.map((step, index) => {
     if (!isStrokeTargetStep(step)) return null;
-    const anchor = localPointOfTarget(step.to, namespaceStack, scopeChain, resolveExplicitBoundary);
+    const anchor = pointOfTarget(step.to, targetView, scopeChain);
     const targetId = nodeIdFromResolvableTarget(step.to);
     if (!anchor && targetId !== undefined) {
       warn(

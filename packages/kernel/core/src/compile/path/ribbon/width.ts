@@ -1,5 +1,5 @@
 ﻿import type { RibbonWidthProfileDefinition } from '../../../contract';
-import type { CanonicalRibbonSampling, CanonicalRibbonWidth } from '../../../normalize/path';
+import type { CanonicalRibbonSampling, CanonicalRibbonWidth } from '../../../resolve/path';
 import type { RibbonLike } from './types';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';

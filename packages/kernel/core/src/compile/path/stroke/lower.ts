@@ -1,7 +1,7 @@
 ﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
 import type { PathCommand, PathGeneratorDefinition } from '../../../contract';
-import type { CanonicalStep } from '../../../normalize/path';
+import type { CanonicalStep } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 
 import { providerDefinitionOf } from '../../../providers/registry/index';

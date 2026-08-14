@@ -1,5 +1,5 @@
 import type { GroupPrim, ScenePrimitive } from '../../../contract';
-import type { CanonicalPath } from '../../../normalize/path';
+import type { CanonicalPath } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 import type { PathPrimitiveEmitResult } from '../types';
 

@@ -1,10 +1,9 @@
 import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
 import type { PathGeneratorDefinition, Transform } from '../../../contract';
-import type { BoundaryReferenceResolver } from '../../../resolve/node';
-import type { CanonicalStep } from '../../../normalize/path';
+import type { CanonicalStep } from '../../../resolve/path';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import type { NamespaceStack } from '../../namespace';
+import type { PathTargetView } from '../../../resolve/path';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
@@ -21,10 +20,10 @@ import {
 } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
 import { nodeIdFromResolvableTarget } from '../../position';
-import { clipForTarget, isAutoBoundaryTarget, localPointOfTarget, samePoint } from '../host';
+import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import { lowerGeneratorStepToCommands } from './lower';
 
-/** 自包含或高阶几何 path step */
+/** 由几何形状或生成器产生路径命令的 shape step */
 export type StrokeShapeStep = Extract<
   CanonicalStep,
   { kind: 'generator' | 'cycle' | 'rectangle' | 'arc' | 'circlePath' | 'ellipsePath' | 'smooth' }
@@ -32,26 +31,24 @@ export type StrokeShapeStep = Extract<
 
 /** shape step 降级所需的共享上下文 */
 export type LowerShapeStepContext = {
-  /** id 查询栈 */
-  namespaceStack: NamespaceStack;
-  /** 当前 scope 的累积变换链 */
+  /** resolving 阶段绑定的 target view */
+  targetView: PathTargetView;
+  /** 当前 scope 的累计变换链 */
   scopeChain: ReadonlyArray<Transform>;
   /** 坐标取整函数 */
   round: (value: number) => number;
   /** 当前 path 的 IR locator */
   irPath: string;
-  /** 有效 path generator 表 */
+  /** path generator 注册表 */
   generators: ReadonlyMap<string, PathGeneratorDefinition> | undefined;
-  /** path warning 收集器 */
+  /** path warning 回调 */
   warn: (code: string, message: string, subPath?: string) => void;
   /** path command 写入器 */
   commandEmitter: PathCommandEmitter;
-  /** step 循环共享游标 */
+  /** step 游标 */
   cursor: StrokeCursor;
   /** label 与 mark 采样收集器 */
   sampling: StrokeSamplingCollector;
-  /** Path 显式 target boundary 的临时解析回调 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
 };
 
 /** 判断 step 是否属于 shape family */
@@ -64,7 +61,7 @@ export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep 
   step.kind === 'ellipsePath' ||
   step.kind === 'smooth';
 
-/** 解析部分圆或椭圆的闭合模式 */
+/** 将 partial circle/ellipse 的 closed 选项规范化 */
 const resolvePartialClosed = (
   closed: 'closed' | 'chord' | 'open' | 'sector' | undefined,
   index: number,
@@ -83,30 +80,18 @@ const resolvePartialClosed = (
 };
 
 /**
- * 将 shape family step 降级到 path commands
- * @returns `false` 表示目标解析失败，调用方应跳过整个 path；provider 异常保持向外抛出
+ * 将 shape family step 降级为 path commands
+ * @returns `false` 表示 target clipping 或 provider 解析失败，调用方应跳过整个 path
  */
 export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: LowerShapeStepContext): boolean => {
-  const {
-    namespaceStack,
-    scopeChain,
-    round,
-    irPath,
-    generators,
-    warn,
-    commandEmitter,
-    cursor,
-    sampling,
-    resolveExplicitBoundary,
-  } = context;
+  const { targetView, scopeChain, round, irPath, generators, warn, commandEmitter, cursor, sampling } = context;
   const { boundsPoints, emitMove, emitLine, emitClose, emitQuad, emitCubic, emitArc, emitEllipseArc, startSegment } =
     commandEmitter;
 
   if (step.kind === 'generator') {
     const previous = cursor.previous();
     const from: IRPosition = commandEmitter.getLastEnd() ?? (previous ? previous.anchor : [0, 0]);
-    const resolvedTo =
-      step.to !== undefined ? localPointOfTarget(step.to, namespaceStack, scopeChain, resolveExplicitBoundary) : null;
+    const resolvedTo = step.to !== undefined ? pointOfTarget(step.to, targetView, scopeChain) : null;
     const to = resolvedTo ?? undefined;
     const generated = lowerGeneratorStepToCommands({
       step,
@@ -114,8 +99,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
       from,
       ...(to !== undefined ? { to } : {}),
       round,
-      resolveTargetParam: value =>
-        localPointOfTarget(value as IRTarget, namespaceStack, scopeChain, resolveExplicitBoundary) ?? undefined,
+      resolveTargetParam: value => pointOfTarget(value as IRTarget, targetView, scopeChain) ?? undefined,
       irPath: `${irPath}.children[${index}]`,
     });
 
@@ -168,18 +152,14 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
     const moveTo = cursor.lastMoveTarget();
     const previous = cursor.previous();
     if (!moveTo || (!previous && !usedOverride)) return true;
-    const moveAnchor = localPointOfTarget(moveTo, namespaceStack, scopeChain, resolveExplicitBoundary);
+    const moveAnchor = pointOfTarget(moveTo, targetView, scopeChain);
     if (!moveAnchor) return false;
 
     const fromClip =
-      usedOverride ??
-      (previous
-        ? clipForTarget(previous.step.to, moveAnchor, { namespaceStack, scopeChain, resolveExplicitBoundary })
-        : null);
-    const toClip = clipForTarget(moveTo, fromClip ?? previous?.anchor ?? moveAnchor, {
-      namespaceStack,
+      usedOverride ?? (previous ? clipTarget(previous.step.to, moveAnchor, { targetView, scopeChain }) : null);
+    const toClip = clipTarget(moveTo, fromClip ?? previous?.anchor ?? moveAnchor, {
+      targetView,
       scopeChain,
-      resolveExplicitBoundary,
     });
     if (!fromClip || !toClip) return false;
 
@@ -194,8 +174,8 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   }
 
   if (step.kind === 'rectangle') {
-    const from = localPointOfTarget(step.from, namespaceStack, scopeChain, resolveExplicitBoundary);
-    const to = localPointOfTarget(step.to, namespaceStack, scopeChain, resolveExplicitBoundary);
+    const from = pointOfTarget(step.from, targetView, scopeChain);
+    const to = pointOfTarget(step.to, targetView, scopeChain);
     if (!from || !to) {
       const fromId = nodeIdFromResolvableTarget(step.from);
       const toId = nodeIdFromResolvableTarget(step.to);
@@ -257,7 +237,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   if (step.kind === 'arc') {
     let center: IRPosition;
     if (step.center !== undefined) {
-      const resolved = localPointOfTarget(step.center, namespaceStack, scopeChain, resolveExplicitBoundary);
+      const resolved = pointOfTarget(step.center, targetView, scopeChain);
       if (!resolved) {
         const centerId = nodeIdFromResolvableTarget(step.center);
         if (centerId !== undefined) {
@@ -433,7 +413,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   const resolvedPoints: Array<IRPosition> = [];
   for (let pointIndex = 0; pointIndex < step.points.length; pointIndex++) {
     const point = step.points[pointIndex];
-    const resolved = localPointOfTarget(point, namespaceStack, scopeChain, resolveExplicitBoundary);
+    const resolved = pointOfTarget(point, targetView, scopeChain);
     if (!resolved) {
       const pointId = nodeIdFromResolvableTarget(point);
       if (pointId !== undefined) {
@@ -448,9 +428,7 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
     resolvedPoints.push(resolved);
   }
 
-  const fromClip =
-    usedOverride ??
-    clipForTarget(previous.step.to, resolvedPoints[0], { namespaceStack, scopeChain, resolveExplicitBoundary });
+  const fromClip = usedOverride ?? clipTarget(previous.step.to, resolvedPoints[0], { targetView, scopeChain });
   if (!fromClip) return false;
   const segments = curve.catmullRomToCubic([fromClip, ...resolvedPoints], step.tension);
   startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(previous.step.to));

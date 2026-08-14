@@ -26,12 +26,14 @@ import type {
   Transform,
 } from '../../contract';
 import type { BoundaryReferenceResolver } from '../../resolve/node';
+import type { PathResolution } from '../../resolve/path';
 import type {
   IRChild,
   IRPathBase,
   IRPosition,
   IRScopePlacementTarget,
   IRScopeSelfPoint,
+  IRTarget,
   IRTransform,
   JsonValue,
 } from '../../schemas';
@@ -73,8 +75,8 @@ import {
 } from '../../resolve/diagnostics';
 import { resolveBoundaryReference, resolveNode } from '../../resolve/node';
 import { parseProviderPayload } from '../../resolve/provider-payload';
-import { resolveDropShadow } from '../../resolve/style';
-import { createStyleResolveFrame, resolveEffectivePath } from '../../resolve/style';
+import { createStyleResolveFrame } from '../../resolve/style';
+import { resolvePath as resolvePathValue } from '../../resolve/path';
 import { resolveTheme } from '../../resolve/theme';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -95,7 +97,8 @@ import {
   layoutNode,
   outerRectOf,
 } from '../node';
-import { emitPathPrimitive, emitRibbonPrimitive, refPointOfTarget } from '../path';
+import { emitPathPrimitive, emitRibbonPrimitive } from '../path';
+import { bindPathTarget, localPointOfTarget, pathTargetViewOf, refPointOfTarget } from './path-target';
 import { resolvePosition } from '../position';
 import {
   CompileInvariantError,
@@ -244,6 +247,16 @@ export const compileChildrenToPrimitives = (
     scopeChain: Parameters<typeof refPointOfTarget>[2],
   ) => refPointOfTarget(between, namespaceStack, scopeChain, resolveExplicitBoundary);
 
+  /** resolve 阶段唯一接触 NamespaceStack 的 target binding 能力 */
+  const targetResolver = {
+    pointOfTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
+      localPointOfTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
+    refPointOfTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
+      refPointOfTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
+    bindTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
+      bindPathTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
+  };
+
   /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
   const validatePathKindCompileResult = (
     kind: string,
@@ -319,8 +332,14 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 按 path.kind 查找 path kind provider，并提供内置 stroke / ribbon emit 回调 */
-  const emitPathKindPrimitive = (pendingPath: PendingPathEmission): PathKindCompileResult | null => {
+  const emitPathKindPrimitive = (
+    pendingPath: PendingPathEmission,
+    resolution: PathResolution,
+  ): PathKindCompileResult | null => {
     const { path, irPath, scopeChain } = pendingPath;
+    const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
+      runtime.context.onWarn({ code, message, path: node?.irPath ?? irPath });
+    const targetView = pathTargetViewOf(resolution.targets, targetWarn);
     const kind = path.kind ?? 'stroke';
     const definition = providerDefinitionOf(runtime.context.pathKinds, kind, {
       capability: 'path kind',
@@ -349,13 +368,24 @@ export const compileChildrenToPrimitives = (
       resolvePaint: runtime.context.paint.register,
       resolvedArrows: runtime.context.arrows,
       effectivePathGenerators: runtime.context.pathGenerators,
-      resolveExplicitBoundary,
+      targetView,
       lowerTex: runtime.context.lowerTex,
       rootFontSize: runtime.context.rootFontSize,
     };
+    const resolutionOf = (nextPath: IRPathBase): PathResolution =>
+      nextPath === path
+        ? resolution
+        : resolvePathValue(nextPath, {
+            styleStack: pendingPath.styleStack,
+            scopeChain,
+            targetResolver,
+          });
     const emitStroke = ((nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
-      const emitted = emitPathPrimitive(nextPath ?? path, {
-        namespaceStack: runtime.state.namespaceStack,
+      const source = nextPath ?? path;
+      const emittedResolution = resolutionOf(source);
+      const emittedTargetView = pathTargetViewOf(emittedResolution.targets, targetWarn);
+      const emitted = emitPathPrimitive(emittedResolution, {
+        targetView: emittedTargetView,
         round: runtime.context.round,
         measureText: runtime.context.measureText,
         options: {
@@ -371,16 +401,18 @@ export const compileChildrenToPrimitives = (
       options: optionsValue,
       ownerOutput: ownerOutput.publisher,
       emitStroke,
-      emitRibbon: nextPath =>
-        emitRibbonPrimitive(nextPath ?? path, {
-          namespaceStack: runtime.state.namespaceStack,
+      emitRibbon: nextPath => {
+        const emittedResolution = resolutionOf(nextPath ?? path);
+        return emitRibbonPrimitive(emittedResolution, {
+          targetView: pathTargetViewOf(emittedResolution.targets, targetWarn),
           round: runtime.context.round,
           measureText: runtime.context.measureText,
           options: {
             ...emitOptions,
             ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
           },
-        }),
+        });
+      },
     });
     const validated = validatePathKindCompileResult(kind, produced);
     if (validated === null) {
@@ -432,7 +464,14 @@ export const compileChildrenToPrimitives = (
     try {
       for (const pendingPath of pendingPaths) {
         try {
-          const result = withWarningOccurrence(pendingPath.occurrence, () => emitPathKindPrimitive(pendingPath));
+          const resolution = resolvePathValue(pendingPath.path, {
+            styleStack: pendingPath.styleStack,
+            scopeChain: pendingPath.scopeChain,
+            targetResolver,
+          });
+          const result = withWarningOccurrence(pendingPath.occurrence, () =>
+            emitPathKindPrimitive(pendingPath, resolution),
+          );
           const rawPrimitives = result?.primitives ?? [];
           const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
           const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
@@ -448,7 +487,7 @@ export const compileChildrenToPrimitives = (
           if (result !== null) {
             pendingPath.boundsSink.push({
               points: [...result.boundsPoints],
-              shadow: resolveDropShadow(pendingPath.path.shadow),
+              shadow: resolution.path.shadow,
             });
             pushAllocation(pendingPath.allocationSink, [...result.boundsPoints], pendingPath.allocationBoundary);
           }
@@ -589,13 +628,12 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, pathSink, styleStack } = frame;
     const pathIrPath = `${locatorPrefix}children[${index}].path`;
-    const effectivePath = resolveEffectivePath(child, styleStack);
     const placeholder = makePathPlaceholder();
     primitiveSink.push(placeholder);
     const pending: PendingPathEmission = {
       path: {
-        ...effectivePath,
-        animations: filterAnimations(effectivePath.animations, {
+        ...child,
+        animations: filterAnimations(child.animations, {
           target: 'element',
           onWarn: runtime.context.onWarn,
           irPath: pathIrPath,

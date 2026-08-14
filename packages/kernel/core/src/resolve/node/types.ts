@@ -16,6 +16,7 @@ import type {
   StrokeDashPattern,
 } from '../../schemas';
 import type { EffectiveLabelDefault, StyleResolveFrame } from '../style';
+import type { Rect } from '../../shared/geometry';
 
 /** 已补齐边界比例的节点标签位置 */
 export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPosition, 'fraction'> & {
@@ -90,6 +91,34 @@ export type BoundaryReferenceResolution = {
   /** 是否引用视觉 shape */
   isShape: boolean;
 };
+
+/**
+ * Path target binding 所需的纯节点几何视图
+ *
+ * 该视图只保留节点引用与边界几何需要的值，不携带 NamespaceStack、NodeLayout
+ * 或其他 compile 编排状态。resolve 阶段将已完成 layout 的节点投影为此视图，
+ * 后续 path lowering 只消费这份不可变数据
+ */
+export type NodeReferenceView = Readonly<{
+  /** 节点 id */
+  id?: string;
+  /** 节点 shape 名称 */
+  shapeName: string;
+  /** 节点视觉 shape definition */
+  shapeDef: ShapeDefinition;
+  /** 已校验的 shape 参数 */
+  shapeParams: IRJsonObject;
+  /** 节点视觉 rect */
+  rect: Rect;
+  /** 节点外边距 */
+  margin: BoundsInsets;
+  /** 节点自身默认连接面 */
+  boundary?: IRBoundary;
+  /** 已绑定的默认连接面 provider 与参数 */
+  boundaryResolution: BoundaryReferenceResolution;
+  /** 当前节点 IR 路径 */
+  irPath?: string;
+}>;
 
 /** 将边界引用绑定到 shape 上下文的解析回调 */
 export type BoundaryReferenceResolver = (

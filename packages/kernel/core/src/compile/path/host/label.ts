@@ -1,5 +1,5 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
-import type { CanonicalGeometryLabel } from '../../../normalize/path';
+import type { CanonicalGeometryLabel } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
