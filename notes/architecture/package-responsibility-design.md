@@ -36,7 +36,7 @@ Retikz 将领域语义、无框架 API 和框架适配分为三组。右侧包�
 
 Core 是通用绘图领域的唯一 owner。它定义 JSON-safe 的 Core Source IR schema 与 `IRXxx` 类型，维护通用 Definition / registry，负责将 Core Source IR 编译为 renderer-agnostic Scene。
 
-Core 还拥有 `IRXxx -> CanonicalXxx` 的领域 normalize：展开 IR 等价简写、补齐领域默认值、校验 Canonical 化后出现的领域不变量，并完成颜色等领域值转换，使所有 compile 内部消费收敛到 Canonical。`CanonicalXxx` 定义在领域 `normalize/<domain>/types.ts`，由同目录的 `normalizeXxx` 产出；`compile/<domain>/resolve.ts` 只准备 context 并调度它。只有 `IRXxx` 由 Zod schema 派生。Core 对外的编译入口保持为接收 `IRScene` 的 `compileToScene`；不新增同义的 `compileIRToScene`。
+Core 还拥有 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution` 的领域 resolve：统一处理 IR 等价简写、领域默认、继承与覆盖优先级、registry / reference / host lookup、Canonical 化后出现的领域不变量及颜色等领域值转换，使所有 compile 内部消费收敛到唯一结构。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在领域 `resolve/<domain>/types.ts`，由同目录 `resolveXxx` 产出。compile 创建和维护 context、决定 traversal 与阶段顺序，并在上下文就绪点调度 resolver；它不重复数据结构确定化。只有 `IRXxx` 由 Zod schema 派生。Core 对外的编译入口保持为接收 `IRScene` 的 `compileToScene`；不新增同义的 `compileIRToScene`。
 
 Core 不提供框架通用 authoring Input，不持有 JSX、DOM、框架调度或浏览器挂载能力。它也不因上层 API 的便利需求扩展持久化 IR 以外的平行输入模型。
 
@@ -80,30 +80,30 @@ Plot React 是 Plot API 的框架适配包。它将 Plot JSX / props 映射为 P
 Framework Input (`InputXxx`, TypeScript only)
   -> Vanilla normalizeXxx
 Source IR (`IRXxx`, schema-derived, JSON-safe, persisted)
-  -> Core / Plot compile resolveXxx（准备 NormalizeContext）
-  -> Core / Plot domain normalizeXxx
-Canonical (`CanonicalXxx`, domain normalize types, internal, no schema)
+  -> Core / Plot compile / pipeline（创建并维护 context，决定调度时机）
+  -> Core / Plot domain resolveXxx (`IRXxx + XxxResolveContext`)
+Canonical / Resolution (`CanonicalXxx` / `XxxResolution`, domain resolve types, internal, no schema)
   -> lowerXxx
   -> Scene
   -> Vanilla readonly processing result
   -> Framework host bridge
 ```
 
-| 形态           | owner                 | 定义与用途                                                                                 |
-| -------------- | --------------------- | ------------------------------------------------------------------------------------------ |
-| `InputXxx`     | Vanilla               | TypeScript authoring API；没有 Zod schema，不持久化                                        |
-| `IRXxx`        | Core / Plot           | 从 Source IR schema 派生；唯一可持久化 JSON 契约，可保留紧凑等价简写                       |
-| `CanonicalXxx` | Core / Plot normalize | 由 `IRXxx` 派生的完整内部类型；定义在 `normalize/<domain>/types.ts`，没有 schema、不持久化 |
+| 形态           | owner               | 定义与用途                                                                                                      |
+| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `InputXxx`     | Vanilla             | TypeScript authoring API；没有 Zod schema，不持久化                                                             |
+| `IRXxx`        | Core / Plot         | 从 Source IR schema 派生；唯一可持久化 JSON 契约，可保留紧凑等价简写                                            |
+| `CanonicalXxx` | Core / Plot resolve | 由 `IRXxx` 派生并结合当前 context 确定的完整内部类型；定义在 `resolve/<domain>/types.ts`，没有 schema、不持久化 |
 
 `parseXxx` 只接受 `unknown`、序列化 JSON、字符串或 provider payload 等外部数据；公开 compile 已接收 `IRXxx` 时不得重新 parse。Vanilla `normalizeXxx` 表示 `InputXxx` 到 Source IR 的组装。独立的 Core 文本 / DSL parser 继续由 Core 拥有；它的 grammar 类型不命名为 `InputXxx`，框架包只能经 Vanilla 调度该类 parser，不能各自复制或直接拼装其 IR 结果。被领域 compile consumer 复用的 closed value vocabulary / mapping 留在 Core；只服务 typed authoring 的 `*SugarInput` 与 Input-to-IR 字段组装留在 Vanilla。
 
-Vanilla `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 registry、data、host 或 DOM，也不 warning。Vanilla processing 组合已归一的 Source IR、Core compile、Runtime 与 Render 的公开能力，产出可订阅的只读处理结果；其根入口同样不读取 DOM。Core / Plot `normalizeXxx` 才展开 IR 等价简写、补领域默认值、校验 Canonical 化后才出现的领域不变量，并完成颜色等领域值转换；`resolveXxx` 只解析 options / registry / data / host 等 context 后调度 normalizer。不得重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。Theme 的 style、mode、颜色与 token 默认全部由 Core / Plot normalize 使用 context 确定；可由 `CompileOptions.themeStyles` 注入的颜色必须在该阶段决定。
+Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 registry、data、host 或 DOM，也不 warning。Vanilla processing 组合 Source IR、Core compile、Runtime 与 Render 的公开能力，产出可订阅的只读处理结果；其根入口同样不读取 DOM。Core / Plot `resolveXxx` 消费当前 context，统一展开 IR 等价简写、补领域默认值、计算继承与覆盖优先级、执行 registry / reference / host lookup、校验 Canonical 化后才出现的领域不变量，并完成颜色等领域值转换。compile / pipeline 只负责 context 生命周期、依赖顺序与调度，不重复 resolver 的结构处理。不得重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。Theme 的 style、mode、颜色与 token 默认全部由 Core / Plot resolve 使用 context 确定；可由 `CompileOptions.themeStyles` 注入的颜色必须在该阶段决定。
 
 ## 6. 跨包不变量
 
-1. 同一领域能力只能有一个 Source IR schema、一个 Vanilla Input-to-IR normalize、一个 Core / Plot IR-to-Canonical normalize 与一个正式 compile / lowering 路径
+1. 同一领域能力只能有一个 Source IR schema、一个 Vanilla API Input-to-IR normalize、一个 Core / Plot IR-and-context-to-Canonical resolve 与一个正式 compile / lowering 路径
 2. 所有框架包必须依赖相应 Vanilla 包，复用其 authoring 与 processing；框架包只能改变 authoring 语法、生命周期或宿主接线，订阅 Vanilla 只读处理结果，不能重建 Source IR、compile driver、Runtime session、retained renderer 或 renderer 编排
-3. `InputXxx` 的便利写法与 TypeScript 类型属于 Vanilla；持久化 compact 写法属于 Source IR；`CanonicalXxx` 由 `IRXxx` 派生并定义在 Core / Plot domain `normalize/`。三者不得混为同一 schema 或平行真源
+3. `InputXxx` 的便利写法与 TypeScript 类型属于 Vanilla API 包；持久化 compact 写法属于 Source IR；`CanonicalXxx` 由 `IRXxx` 派生、结合当前 context 确定并定义在 Core / Plot domain `resolve/`。三者不得混为同一 schema 或平行真源
 4. Vanilla 根入口、Core、Plot 都不得反向依赖 DOM 或框架包；DOM 能力只进入明确子入口
 5. 领域默认值与 IR shorthand 由 Core / Plot resolve 决定，不得在 Vanilla、adapter 或每个下游 consumer 各自复制
 6. 新能力先建立其领域 owner 的公开契约；再由 Vanilla 与框架包等价接入，不以 adapter 便利创建平行 IR、registry、session 或 renderer 路径
@@ -113,6 +113,6 @@ Vanilla `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 regi
 修改任一包的职责、依赖方向、Source IR / Canonical 边界、Input builder、DOM 子入口或框架适配路径时，ADR 必须说明：
 
 - 能力属于 Core / Plot、API 基础包、DOM 子入口还是具体框架包
-- `InputXxx`、`IRXxx`、`CanonicalXxx` 的 owner、持久化边界和 normalize / resolve 责任；若有额外上下文对象，说明其独立语义名而非泛用 `ResolvedXxx`
+- `InputXxx`、`IRXxx`、`CanonicalXxx` 的 owner、持久化边界和 Vanilla normalize / domain resolve 责任；若有额外上下文或解析结果，使用 `XxxResolveContext`、`EffectiveXxx`、`XxxResolution` 或准确领域名，不使用泛化 `ResolvedXxx`
 - React / Vanilla 与其它框架能否通过同一 Vanilla 链路获得等价领域语义；不能等价时的 capability 差异和诊断
-- 是否引入反向依赖、平行 schema、平行 normalize、平行 session、平行 compile 或 renderer 路径
+- 是否引入反向依赖、平行 schema、纵向领域 normalize、平行 resolve、平行 session、平行 compile 或 renderer 路径
