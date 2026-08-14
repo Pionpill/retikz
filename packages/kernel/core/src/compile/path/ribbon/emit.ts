@@ -98,7 +98,7 @@ export const emitRibbonPrimitive = (
       round,
     });
     return {
-      primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint, resolution.paint)],
+      primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint, resolution.style, resolution.paint)],
       boundsPoints: outline.points,
     };
   }
@@ -224,7 +224,10 @@ export const emitRibbonPrimitive = (
   }
 
   return {
-    primitives: [styledPrimitiveFromOutline(ribbon, outline, resolvePaint, resolution.paint), ...labelPrimitives],
+    primitives: [
+      styledPrimitiveFromOutline(ribbon, outline, resolvePaint, resolution.style, resolution.paint),
+      ...labelPrimitives,
+    ],
     boundsPoints: [...outline.points, ...labelBoundsPoints],
   };
 };

@@ -313,5 +313,12 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
       ...(fill === undefined ? {} : { fill }),
       ...(stroke === undefined ? {} : { stroke }),
     },
+    style: {
+      strokeWidth: resolvedPath.strokeWidth ?? 1,
+      strokeRequested: resolvedPath.stroke !== undefined || resolvedPath.strokeWidth !== undefined,
+      strokeFillDefault: 'none',
+      ribbonFillDefault: 'currentColor',
+      strokeDefault: 'currentColor',
+    },
   };
 };

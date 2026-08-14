@@ -74,6 +74,16 @@ describe('compile source structure', () => {
     expect(() => source('src/compile/path/emit.ts')).toThrow();
   });
 
+  it('path style materialization is owned by stroke output', () => {
+    expect(() => source('src/compile/path/host/resolve.ts')).toThrow();
+    expect(source('src/compile/path/host/index.ts')).not.toContain("'./resolve'");
+
+    const output = source('src/compile/path/stroke/output.ts');
+    expect(output).toContain('export const emitPathBaseProps');
+    expect(output).toContain('EmitPathBasePropsContext');
+    expect(source('src/compile/path/stroke/emit.ts')).toContain('emitPathBaseProps');
+  });
+
   it('stroke path emit module delegates focused helpers', () => {
     const text = source('src/compile/path/stroke/emit.ts');
     expect(text).not.toContain('const buildMarkMarkerGroup =');

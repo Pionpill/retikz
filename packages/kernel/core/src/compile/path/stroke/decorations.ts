@@ -2,15 +2,15 @@ import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../..
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve/path';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { ResolvedPathBaseProps } from '../host';
 import type { PathPrimitiveEmitResult } from '../types';
+import type { PathBasePropsWithStrokeWidth } from './output';
 
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { sampleRoundedCommands } from './rounded-corners';
 import { emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
 
 /** 端点箭头与中段 marks 分流结果 */
-export type ResolvedPathEndpointDecorations = {
+export type PathEndpointDecorations = {
   /** 起点 / 终点箭头规格与 shrink 信息 */
   arrows: {
     arrowStart?: ResolvedArrowEndSpec;
@@ -25,7 +25,7 @@ export type ResolvedPathEndpointDecorations = {
 };
 
 /** path 端点 mark 解析输入 */
-export type ResolvePathEndpointDecorationsContext = {
+export type EmitPathEndpointDecorationsContext = {
   /** resolving 阶段绑定的 arrow resolutions */
   arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
   /** 坐标取整函数 */
@@ -38,10 +38,10 @@ export type ResolvePathEndpointDecorationsContext = {
  */
 export const emitPathEndpointDecorations = (
   path: Pick<CanonicalPath, 'marks'>,
-  context: ResolvePathEndpointDecorationsContext,
-): ResolvedPathEndpointDecorations => {
+  context: EmitPathEndpointDecorationsContext,
+): PathEndpointDecorations => {
   const { arrowResolutions, round } = context;
-  const arrows: ResolvedPathEndpointDecorations['arrows'] = {
+  const arrows: PathEndpointDecorations['arrows'] = {
     shrinkStart: 0,
     shrinkEnd: 0,
     boundaryOuterInsetStart: 0,
@@ -97,7 +97,7 @@ export type EmitInlineMarkPrimitivesInput = {
   /** 已解析 arrow registry */
   arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
   /** PathPrim 公共样式属性 */
-  baseProps: ResolvedPathBaseProps;
+  baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
   round: (n: number) => number;
 };
@@ -151,7 +151,7 @@ export const emitInlineMarkPrimitives = ({
 
 /** 端点箭头字段：无箭头时不写 undefined key，保持 Scene 输出纯净 */
 export const pathEndpointArrowSpecs = (
-  arrows: ResolvedPathEndpointDecorations['arrows'],
+  arrows: PathEndpointDecorations['arrows'],
 ): { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } => {
   const endpointSpecs: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } = {};
   if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;

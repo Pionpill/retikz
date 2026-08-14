@@ -28,6 +28,24 @@ const sceneWith = (pathValue: IRPathBase): IRScene => ({
 });
 
 describe('resolvePath', () => {
+  it('resolves path style defaults before compile materialization', () => {
+    expect(resolvePathWithBuiltinProviders(path()).style).toEqual({
+      strokeWidth: 1,
+      strokeRequested: false,
+      strokeFillDefault: 'none',
+      ribbonFillDefault: 'currentColor',
+      strokeDefault: 'currentColor',
+    });
+
+    expect(resolvePathWithBuiltinProviders(path({ kind: 'ribbon', strokeWidth: 2 })).style).toEqual({
+      strokeWidth: 2,
+      strokeRequested: true,
+      strokeFillDefault: 'none',
+      ribbonFillDefault: 'currentColor',
+      strokeDefault: 'currentColor',
+    });
+  });
+
   it('exposes complete canonical step and ribbon variants to compile consumers', () => {
     expectTypeOf<Extract<CanonicalStep, { kind: 'line' }>['label']>().toEqualTypeOf<
       CanonicalGeometryLabel | undefined

@@ -11,12 +11,12 @@ import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../s
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
 import { fallbackMeasurer } from '../../text';
-import { pointOfTarget, resolvePathBaseProps } from '../host';
+import { pointOfTarget } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrowSpecs } from './decorations';
 import { assertArrowCanInheritStroke } from './marks';
-import { wrapPathPrimitiveOutput } from './output';
+import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
 import { createStrokeSamplingCollector } from './sampling';
 import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
@@ -290,7 +290,11 @@ const emitCanonicalPathPrimitive = (
     }
   }
 
-  const baseProps = resolvePathBaseProps(canonicalPath, { resolvePaint, paint: resolution.paint });
+  const baseProps = emitPathBaseProps(canonicalPath, {
+    resolvePaint,
+    paint: resolution.paint,
+    style: resolution.style,
+  });
   const strokeWidth = baseProps.strokeWidth;
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
     arrowResolutions: resolution.arrows,

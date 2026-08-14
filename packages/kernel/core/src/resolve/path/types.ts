@@ -233,6 +233,20 @@ export type TargetResolution = Readonly<{
   boundaryResolution?: BoundaryReferenceResolution;
 }>;
 
+/** path 静态样式默认值与显式描边请求状态 */
+export type PathStyleResolution = Readonly<{
+  /** 最终描边宽度，缺省输入已解析为 1 */
+  strokeWidth: number;
+  /** 用户或级联样式是否显式请求描边字段；ribbon emitter 据此写出 stroke */
+  strokeRequested: boolean;
+  /** stroke emitter 未提供 fill 时的默认值 */
+  strokeFillDefault: 'none';
+  /** ribbon emitter 未提供 fill 时的默认值 */
+  ribbonFillDefault: 'currentColor';
+  /** emitter 未提供 stroke 时的默认值 */
+  strokeDefault: 'currentColor';
+}>;
+
 /** Path Source IR 经样式、静态默认值与 target 绑定后的基础结果 */
 export type PathResolution = Readonly<{
   /** 唯一的 canonical path owner，compile/lower/emit 均从此字段读取路径数据 */
@@ -245,6 +259,8 @@ export type PathResolution = Readonly<{
   kind: PathKindResolution;
   /** 已完成 paint provider selection 和 pattern style shaping */
   paint: Readonly<{ fill?: PaintResolutionInput; stroke?: PaintResolutionInput }>;
+  /** 已完成 path kind 相关静态样式默认值解析 */
+  style: PathStyleResolution;
 }>;
 
 /** stroke emitter 消费的、已绑定 secondary provider 的 path resolution */

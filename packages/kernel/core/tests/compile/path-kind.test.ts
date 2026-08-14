@@ -175,6 +175,7 @@ describe('Path kind registry', () => {
       { pathKinds: [sourceRibbon] },
     );
 
+    expect(prim.fill).toBe('currentColor');
     expect(observedSamples).toBe(true);
     expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
   });

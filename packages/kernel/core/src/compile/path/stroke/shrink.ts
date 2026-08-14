@@ -64,7 +64,7 @@ const emitArrowEndSpec = (resolution: ArrowMarkResolution, round: (n: number) =>
 };
 
 /** 已解析的端点箭头及对应 path 收缩量 */
-export type ResolvedEndpointArrowMark = {
+export type EndpointArrowMarkEmission = {
   /** 已物化的 Scene 端点箭头描述 */
   spec: ResolvedArrowEndSpec;
   /** path 本体需要向内收缩的距离（未乘 strokeWidth） */
@@ -76,7 +76,7 @@ export type ResolvedEndpointArrowMark = {
 export const emitEndpointArrowMark = (
   resolution: ArrowMarkResolution,
   round: (n: number) => number,
-): ResolvedEndpointArrowMark => {
+): EndpointArrowMarkEmission => {
   return {
     spec: emitArrowEndSpec(resolution, round),
     shrink: resolution.geometry.shrink,
