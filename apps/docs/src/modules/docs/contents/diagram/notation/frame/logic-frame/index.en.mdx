@@ -14,7 +14,7 @@ import { LogicFrame, LogicFrameHeader, LogicFrameSection } from '@retikz/notatio
 
 ```tsx
 <Layout width={360} height={180}>
-  <LogicFrame id="order">
+  <LogicFrame id="order" logicUnitVariant="secondary">
     <LogicFrameHeader>
       <Node position={[0, 0]} text="Order" />
     </LogicFrameHeader>
@@ -29,6 +29,8 @@ import { LogicFrame, LogicFrameHeader, LogicFrameSection } from '@retikz/notatio
 ```
 
 Marker children must be direct children of `LogicFrame`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
+
+`logicUnitVariant` only provides a default for descendant logic units; it does not change the Frame shell or divider. A nested Frame shadows the outer scope, an explicit unit `variant` wins, and `variant="default"` resets inherited styling. See [Logic Unit](/diagram/notation/unit/logic-unit#logicunitvariant) for the five recipes
 
 ## Examples
 
@@ -86,16 +88,17 @@ The shell and divider are emitted as Core visual primitives. Divider rectangles 
 
 ## API Reference
 
-| Field         | Type                                     | Default                                              | Description                                            |
-| ------------- | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
-| `id`          | `string`                                 | —                                                    | Stable authored block identity used by targets         |
-| `header?`     | `{ child: IRChild; padding? }`           | omitted                                              | One optional header region                             |
-| `sections`    | `Array<{ key, role?, child, padding? }>` | `[]`                                                 | Ordered, uniquely keyed regions                        |
-| `size?`       | `LayoutSizeInput`                        | `{ x: { kind: 'content' }, y: { kind: 'content' } }` | Outer allocation policy                                |
-| `padding?`    | `number` or `IRBoxSpacing`               | `8`                                                  | Default region padding                                 |
-| `rowGap?`     | `number`                                 | `0`                                                  | Space between adjacent regions                         |
-| `overflow?`   | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
-| `appearance?` | `LogicFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
+| Field               | Type                                     | Default                                              | Description                                            |
+| ------------------- | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| `id`                | `string`                                 | —                                                    | Stable authored block identity used by targets         |
+| `logicUnitVariant?` | `LogicUnitVariantValue`                  | omitted                                              | Default variant for descendant logic units             |
+| `header?`           | `{ child: IRChild; padding? }`           | omitted                                              | One optional header region                             |
+| `sections`          | `Array<{ key, role?, child, padding? }>` | `[]`                                                 | Ordered, uniquely keyed regions                        |
+| `size?`             | `LayoutSizeInput`                        | `{ x: { kind: 'content' }, y: { kind: 'content' } }` | Outer allocation policy                                |
+| `padding?`          | `number` or `IRBoxSpacing`               | `8`                                                  | Default region padding                                 |
+| `rowGap?`           | `number`                                 | `0`                                                  | Space between adjacent regions                         |
+| `overflow?`         | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
+| `appearance?`       | `LogicFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
 
 Blank or duplicate section keys fail loudly. Connector accepts section target syntax but currently rejects section targets before lowering; use a whole block target instead.
 

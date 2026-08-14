@@ -27,50 +27,103 @@ import { Decision, Junction, Stage, Terminal } from '@retikz/notation-react';
 </Layout>
 ```
 
-字符串 children 会成为 Node 文本，也可以像 Core `Node` 一样使用 `<Text>`。适用的 Node props（例如 `fill`、`padding`、`minimumSize` 和 `position`）继续透传，但 `namespace`、语义 `type` 和固定 `shape` 由逻辑单元拥有
+字符串 children 会成为 Node 文本，也可以像 Core `Node` 一样使用 `<Text>`。适用的 Node props（例如 `color`、`fill`、`padding`、`minimumSize` 和 `position`）继续透传，但 `namespace`、语义 `type` 和固定 `shape` 由逻辑单元拥有
 
-| 单元       | 固定 shape           | 逻辑职责           | 默认样式                                          |
-| ---------- | -------------------- | ------------------ | ------------------------------------------------- |
-| `Terminal` | capsule（圆角矩形）  | 流程起点或终点     | minimum `48 × 24`，padding `{ x: 12, y: 6 }`      |
-| `Stage`    | 圆角矩形，radius `8` | 流程中的处理或动作 | padding `8`                                       |
-| `Decision` | 扁菱形，宽高比 `1.8` | 条件或分支         | padding `{ x: 3, y: 2 }`                          |
-| `Junction` | circle               | 分叉、汇合或延续点 | minimum `8 × 8`，padding `0`，fill `currentColor` |
+| 单元       | 固定 shape           | 逻辑职责           | 默认几何                                     |
+| ---------- | -------------------- | ------------------ | -------------------------------------------- |
+| `Terminal` | capsule（圆角矩形）  | 流程起点或终点     | minimum `48 × 24`，padding `{ x: 12, y: 6 }` |
+| `Stage`    | 圆角矩形，radius `8` | 流程中的处理或动作 | padding `8`                                  |
+| `Decision` | 扁菱形，宽高比 `1.8` | 条件或分支         | padding `{ x: 3, y: 2 }`                     |
+| `Junction` | circle               | 分叉、汇合或延续点 | minimum `8 × 8`，padding `0`                 |
 
-## 示例
+## 例子
+
+### LogicUnitVariant
+
+逻辑单元使用 Notation 自有的五值 `LogicUnitVariant`，不消费 Core 或 Viz 的全局 Theme Style。`variant` 是单个逻辑单元的显式基线；省略时使用最近 `LogicFrame.logicUnitVariant`，没有 Frame 作用域时使用 `default`
+
+| variant     | 文本           | 边框             | 背景             |
+| ----------- | -------------- | ---------------- | ---------------- |
+| `default`   | `currentColor` | `currentColor`   | `none`           |
+| `primary`   | `contrast`     | `currentColor`   | `currentColor`   |
+| `secondary` | `currentColor` | `none`           | 主要色预合成 10% |
+| `outline`   | `currentColor` | 主要色预合成 60% | `none`           |
+| `vibrant`   | `currentColor` | `currentColor`   | 主要色预合成 15% |
+
+`secondary` 不带边框。10% / 15% / 60% 是在 Light 的 `#ffffff` 或 Dark 的 `#000000` 上预合成的颜色，不会生成 renderer opacity。`primary` 的文本使用 Core `contrast`，根据填充选择黑色或白色。逻辑单元的 `color` 是主要色；省略时 Light 为 `#000000`、Dark 为 `#ffffff`
+
+显式 `textColor`、`stroke`、`fill` 按字段覆盖 variant 基线，显式 `opacity`、`fillOpacity`、`strokeOpacity` 也原样保留。需要预合成或计算对比色的 variant 若主要色无法静态解析，会明确报错；Notation 不读取 Core categorical palette，也不把 variant 写入 Core Scene 或 renderer
 
 <ComponentPreview files="logic-unit" size="lg" />
 
-直接 IR 使用对应 factory，并在 Core compile options 中显式注入实际使用的 Definition：
+### LogicFrame 继承
+
+`LogicFrame.logicUnitVariant` 为 header、sections、嵌套 `LogicFrame` 和 Core `Scope` 子树中的逻辑单元设置默认值。嵌套 Frame 的值会建立新的作用域，逻辑单元显式 `variant` 优先；`variant="default"` 可以重置外层值。Frame 外壳、divider、Connector 和兄弟分支不受影响
+
+```tsx
+import { LogicFrame, LogicFrameSection, Stage } from '@retikz/notation-react';
+
+<LogicFrame id="order" logicUnitVariant="secondary">
+  <LogicFrameSection sectionKey="input">
+    <Stage id="load" position={[0, 0]} />
+  </LogicFrameSection>
+  <LogicFrameSection sectionKey="important">
+    <Stage id="validate" position={[0, 0]} variant="primary" />
+  </LogicFrameSection>
+</LogicFrame>;
+```
+
+### Direct、React 与 Vanilla 接线
+
+三种入口共享同一份 Notation IR 和 variant lowering 逻辑。直接 IR 使用 package assembly；React 与 Vanilla adapter 不需要传入 ThemeStyle 或额外的 variant registry
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createStage, StageDefinition } from '@retikz/notation';
+import { createNotationDefinitions, createStage } from '@retikz/notation';
 
-const stage = createStage({ id: 'step', position: [0, 0], text: 'Process' });
-// stage.namespace === 'notation'；stage.type === 'stage'
-const scene = compileToScene({ version: 1, type: 'scene', children: [stage] }, { composites: [StageDefinition] });
+const stage = createStage({
+  id: 'step',
+  position: [0, 0],
+  text: 'Process',
+  color: '#2563eb',
+  variant: 'primary',
+});
+const scene = compileToScene(
+  { version: 1, type: 'scene', children: [stage] },
+  { composites: createNotationDefinitions() },
+);
 ```
 
-Vanilla builder 返回 embed，而不是提前抹掉语义的 Core Node。adapter 使用 embed id 创建同 id 的规范 `IRStage`，并贡献 `StageDefinition`：
-
-```ts
-import { StageInputEmbedAdapter, stage } from '@retikz/notation-vanilla';
-
-const step = stage('step', { position: [0, 0], text: 'Process' });
-const adapters = [StageInputEmbedAdapter];
-```
+### 组合 recipe
 
 以下 recipe 仅存在于文档中，用于展示组合方式，不会新增 `Process`、`Class` 或 `Data` export
 
 <ComponentPreview files="class-recipe" size="lg" caption="使用 LogicFrame header 和 typed section 的 Class recipe" />
 
-<ComponentPreview files="data-recipe" size="lg" caption="使用中性 Stage 与 Decision 的 Data recipe" />
+<ComponentPreview files="data-recipe" size="lg" caption="使用 variant 逻辑单元和显式关系的 Data recipe" />
 
-## 语义边界
+## 技术原理
 
-逻辑单元只拥有可持久化的图式身份、固定 shape 与默认值，不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Node 的布局、样式、主题、target、编译和 Scene 输出继续由 Core 负责
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解 lowering 边界或排查颜色行为时再回来阅读。"
+/>
+
+逻辑单元拥有可持久化的图式身份、固定 shape、主要色解释和 `LogicUnitVariant`。它不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Core 负责 Node 布局、target、编译和 Scene 输出；Notation 只在 lowering 时把有效 variant 投影为普通 Node paint
+
+## API 参考
+
+| API                                        | 包                         | 作用                                                                |
+| ------------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
+| `variant?: LogicUnitVariantValue`          | 四个逻辑单元组件与 IR      | 设置单个逻辑单元的视觉变体；省略时继承 Frame 默认值或使用 `default` |
+| `logicUnitVariant?: LogicUnitVariantValue` | `LogicFrame`               | 设置后代逻辑单元的默认变体；嵌套 Frame 建立新的作用域               |
+| `color?: string`                           | 四个逻辑单元组件与 IR      | 设置主要色；省略时 Light 为 `#000000`、Dark 为 `#ffffff`            |
+| `createNotationDefinitions()`              | `@retikz/notation`         | 为直接 IR 创建完整的 Notation Definition 集合                       |
+| `createNotationReactAdapters()`            | `@retikz/notation-react`   | 创建供 React InputScene 归一化使用的六个 adapter                    |
+| `createNotationVanillaAdapters()`          | `@retikz/notation-vanilla` | 创建供 Vanilla runtime 归一化使用的六个 adapter                     |
 
 ## 相关
 
-- [LogicFrame](/diagram/notation/frame/logic-frame)：可复用布局容器
+- [LogicFrame](/diagram/notation/frame/logic-frame)：可复用布局容器与 variant 作用域
 - [Connector](/diagram/notation/unit/connector)：连接 authored identity

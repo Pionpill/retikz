@@ -1,10 +1,10 @@
 import type { IRLabelDefault, IRLineSpec, IRNode, IRNodeLabel } from '../../../schemas';
+import type { ParsedCssColor } from '../../../shared/color';
 import type { CompileWarningCodeValue } from '../../warning';
-import type { ParsedCssColor } from './types';
 
 import { NodeTextColor } from '../../../schemas';
+import { parseStaticCssColor } from '../../../shared';
 import { CompileWarningCode } from '../../constants';
-import { parseStaticCssColor } from './parse';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLineSpec): boolean => {

@@ -134,7 +134,7 @@ const parseHexColor = (value: string): ParsedCssColor | null => {
   };
 };
 
-/** 解析 auto-contrast 支持的静态 CSS color 子集 */
+/** 解析 Core 颜色计算支持的静态 CSS color 子集 */
 export const parseStaticCssColor = (input: string): ParsedCssColor | null => {
   const value = trimAsciiWhitespace(input).toLowerCase();
   if (value.length === 0) return null;

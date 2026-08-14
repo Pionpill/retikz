@@ -1,64 +1,123 @@
-import type { CompositeExpandResult, ExpandCompositeDefinition, IRNode } from '@retikz/core';
+import type {
+  CompositeExpandContext,
+  CompositeExpandResult,
+  ExpandCompositeDefinition,
+  IRNode,
+  ResolvedTheme,
+} from '@retikz/core';
 
-import { defineComposite } from '@retikz/core';
+import { compositeOpaqueColor, defineComposite, NodeTextColor, ThemeMode } from '@retikz/core';
 
 import type { IRDecision, IRJunction, IRStage, IRTerminal, LogicSemanticNode } from './types';
 
 import { NOTATION_NAMESPACE, NotationElementType } from '../../shared';
+import { LogicUnitVariant } from './constants';
 import { DecisionSchema, JunctionSchema, StageSchema, TerminalSchema } from './schema';
 
-/** 把一个Notation基础单元展开为固定形状的同标识Core Node */
-const expandSemanticNode = (node: LogicSemanticNode, shape: NonNullable<IRNode['shape']>): CompositeExpandResult => {
-  const { namespace: _namespace, type: _type, ...input } = node;
-  void _namespace;
-  void _type;
-  return { children: [{ type: 'node', ...input, shape }] };
+/** 返回逻辑单元 authored 主要色或与当前模式对应的确定黑白默认值 */
+const primaryColorOf = (node: LogicSemanticNode, theme: ResolvedTheme): string =>
+  node.color ?? (theme.mode === ThemeMode.Light ? '#000000' : '#ffffff');
+
+/** 在下沉边界把 Notation Theme 的 currentColor 绑定到逻辑单元最终主要色 */
+const materializeThemePaint = (paint: string, primaryColor: string): string =>
+  paint === 'currentColor' ? primaryColor : paint;
+
+/** 计算使用当前模式底色的逻辑单元浅色预合成结果 */
+const tintedColor = (primaryColor: string, theme: ResolvedTheme, weight: number): string =>
+  compositeOpaqueColor(primaryColor, theme.mode === ThemeMode.Light ? '#ffffff' : '#000000', weight);
+
+/** 解析逻辑单元变体的字段级默认外观 */
+const resolveLogicUnitVariant = (
+  variant: LogicSemanticNode['variant'],
+  primaryColor: string,
+  theme: ResolvedTheme,
+): Readonly<{ textColor: string; stroke: string; fill: string }> => {
+  const effectiveVariant = variant ?? LogicUnitVariant.Default;
+  switch (effectiveVariant) {
+    case LogicUnitVariant.Default:
+      return { textColor: primaryColor, stroke: primaryColor, fill: 'none' };
+    case LogicUnitVariant.Primary:
+      compositeOpaqueColor(primaryColor, theme.mode === ThemeMode.Light ? '#ffffff' : '#000000', 1);
+      return { textColor: NodeTextColor.Contrast, stroke: primaryColor, fill: primaryColor };
+    case LogicUnitVariant.Secondary:
+      return { textColor: primaryColor, stroke: 'none', fill: tintedColor(primaryColor, theme, 0.1) };
+    case LogicUnitVariant.Outline:
+      return { textColor: primaryColor, stroke: tintedColor(primaryColor, theme, 0.6), fill: 'none' };
+    case LogicUnitVariant.Vibrant:
+      return { textColor: primaryColor, stroke: primaryColor, fill: tintedColor(primaryColor, theme, 0.15) };
+  }
 };
 
-/** Notation Terminal的轻量展开定义 */
-export const TerminalDefinition: ExpandCompositeDefinition<
-  IRTerminal,
-  typeof NOTATION_NAMESPACE,
-  typeof NotationElementType.Terminal
-> = defineComposite({
-  namespace: NOTATION_NAMESPACE,
-  type: NotationElementType.Terminal,
-  schema: TerminalSchema,
-  expand: node => expandSemanticNode(node, { type: 'rectangle', params: { cornerRadius: 1_000_000 } }),
-});
+/** 把一个Notation基础单元展开为固定形状的同标识Core Node */
+const expandSemanticNode = (
+  node: LogicSemanticNode,
+  shape: NonNullable<IRNode['shape']>,
+  context: CompositeExpandContext,
+): CompositeExpandResult => {
+  const { namespace: _namespace, type: _type, variant: _variant, ...input } = node;
+  const primaryColor = primaryColorOf(node, context.theme);
+  const baseline = resolveLogicUnitVariant(node.variant, primaryColor, context.theme);
+  void _namespace;
+  void _type;
+  void _variant;
+  return {
+    children: [
+      {
+        type: 'node',
+        ...input,
+        shape,
+        color: primaryColor,
+        textColor: input.textColor ?? materializeThemePaint(baseline.textColor, primaryColor),
+        stroke: input.stroke ?? materializeThemePaint(baseline.stroke, primaryColor),
+        fill: input.fill ?? materializeThemePaint(baseline.fill, primaryColor),
+      },
+    ],
+  };
+};
 
-/** Notation Stage的轻量展开定义 */
-export const StageDefinition: ExpandCompositeDefinition<
-  IRStage,
-  typeof NOTATION_NAMESPACE,
-  typeof NotationElementType.Stage
-> = defineComposite({
-  namespace: NOTATION_NAMESPACE,
-  type: NotationElementType.Stage,
-  schema: StageSchema,
-  expand: node => expandSemanticNode(node, { type: 'rectangle', params: { cornerRadius: 8 } }),
-});
+/** 创建四类逻辑单元 Definition */
+export const createLogicUnitDefinitions = () => {
+  const terminal: ExpandCompositeDefinition<
+    IRTerminal,
+    typeof NOTATION_NAMESPACE,
+    typeof NotationElementType.Terminal
+  > = defineComposite({
+    namespace: NOTATION_NAMESPACE,
+    type: NotationElementType.Terminal,
+    schema: TerminalSchema,
+    expand: (node, context) =>
+      expandSemanticNode(node, { type: 'rectangle', params: { cornerRadius: 1_000_000 } }, context),
+  });
+  const stage: ExpandCompositeDefinition<IRStage, typeof NOTATION_NAMESPACE, typeof NotationElementType.Stage> =
+    defineComposite({
+      namespace: NOTATION_NAMESPACE,
+      type: NotationElementType.Stage,
+      schema: StageSchema,
+      expand: (node, context) => expandSemanticNode(node, { type: 'rectangle', params: { cornerRadius: 8 } }, context),
+    });
+  const decision: ExpandCompositeDefinition<
+    IRDecision,
+    typeof NOTATION_NAMESPACE,
+    typeof NotationElementType.Decision
+  > = defineComposite({
+    namespace: NOTATION_NAMESPACE,
+    type: NotationElementType.Decision,
+    schema: DecisionSchema,
+    expand: (node, context) => expandSemanticNode(node, { type: 'diamond', params: { aspectRatio: 1.8 } }, context),
+  });
+  const junction: ExpandCompositeDefinition<
+    IRJunction,
+    typeof NOTATION_NAMESPACE,
+    typeof NotationElementType.Junction
+  > = defineComposite({
+    namespace: NOTATION_NAMESPACE,
+    type: NotationElementType.Junction,
+    schema: JunctionSchema,
+    expand: (node, context) => expandSemanticNode(node, 'circle', context),
+  });
+  return [terminal, stage, decision, junction] as const;
+};
 
-/** Notation Decision的轻量展开定义 */
-export const DecisionDefinition: ExpandCompositeDefinition<
-  IRDecision,
-  typeof NOTATION_NAMESPACE,
-  typeof NotationElementType.Decision
-> = defineComposite({
-  namespace: NOTATION_NAMESPACE,
-  type: NotationElementType.Decision,
-  schema: DecisionSchema,
-  expand: node => expandSemanticNode(node, { type: 'diamond', params: { aspectRatio: 1.8 } }),
-});
-
-/** Notation Junction的轻量展开定义 */
-export const JunctionDefinition: ExpandCompositeDefinition<
-  IRJunction,
-  typeof NOTATION_NAMESPACE,
-  typeof NotationElementType.Junction
-> = defineComposite({
-  namespace: NOTATION_NAMESPACE,
-  type: NotationElementType.Junction,
-  schema: JunctionSchema,
-  expand: node => expandSemanticNode(node, 'circle'),
-});
+/** Notation 内置逻辑单元 Definition */
+export const [TerminalDefinition, StageDefinition, DecisionDefinition, JunctionDefinition] =
+  createLogicUnitDefinitions();

@@ -149,7 +149,6 @@ describe('compile source structure', () => {
       'labelExtentPoints',
       'layoutNode',
       'outerRectOf',
-      'parseStaticCssColor',
       'resolveBoundary',
       'resolveLabelRotateDeg',
       'resolveNodeLabelGeometry',

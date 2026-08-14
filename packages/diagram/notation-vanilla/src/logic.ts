@@ -25,6 +25,7 @@ import {
   createDecision,
   createJunction,
   createLogicFrame,
+  createNotationProviders,
   createStage,
   createTerminal,
   DecisionProvider,
@@ -301,3 +302,36 @@ export const connector = (id: string, input: InputConnector): InputEmbed<InputCo
   id,
   props: input,
 });
+
+type NotationCompositeProvider = ReturnType<typeof createNotationProviders>[number];
+
+/** 用指定 composite provider 配置并擦除一个 Vanilla adapter 的具体 props 类型 */
+const configureVanillaAdapter = <TProps>(
+  adapter: InputEmbedAdapter<TProps>,
+  provider: NotationCompositeProvider,
+): InputEmbedAdapter<unknown> => ({
+  kind: adapter.kind,
+  lower: (props, context) => {
+    const contribution = adapter.lower(props as TProps, context);
+    return {
+      ...contribution,
+      providerDependencies: {
+        roots: [provider.key, ...contribution.providerDependencies.roots.slice(1)],
+        providers: [provider, ...contribution.providerDependencies.providers.slice(1)],
+      },
+    };
+  },
+});
+
+/** 创建可一次性传给 Vanilla normalize 的完整 Notation adapter 集合 */
+export const createNotationVanillaAdapters = (): Array<InputEmbedAdapter<unknown>> => {
+  const [logicFrame, terminal, stage, decision, junction, connector] = createNotationProviders();
+  return [
+    configureVanillaAdapter(LogicFrameInputEmbedAdapter, logicFrame),
+    configureVanillaAdapter(TerminalInputEmbedAdapter, terminal),
+    configureVanillaAdapter(StageInputEmbedAdapter, stage),
+    configureVanillaAdapter(DecisionInputEmbedAdapter, decision),
+    configureVanillaAdapter(JunctionInputEmbedAdapter, junction),
+    configureVanillaAdapter(ConnectorInputEmbedAdapter, connector),
+  ];
+};

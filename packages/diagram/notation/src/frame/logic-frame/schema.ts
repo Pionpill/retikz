@@ -18,6 +18,7 @@ import {
   NOTATION_NAMESPACE,
   NotationElementType,
 } from '../../shared';
+import { LogicUnitVariant } from '../../unit';
 
 /** LogicFrame 轮廓外观 */
 export const LogicOutlineAppearanceSchema = z
@@ -78,6 +79,10 @@ const LogicFrameShape = {
   namespace: z.literal(NOTATION_NAMESPACE).describe('Notation composite namespace.'),
   type: z.literal(NotationElementType.LogicFrame).describe('LogicFrame composite discriminator.'),
   id: NonBlankStringSchema.describe('Stable authored LogicFrame identity.'),
+  logicUnitVariant: z
+    .enum(LogicUnitVariant)
+    .optional()
+    .describe('Default visual variant inherited by descendant logic units.'),
   header: LogicFrameRegionSchema.optional().describe('Optional authored header region.'),
   sections: z
     .array(LogicFrameSectionSchema)

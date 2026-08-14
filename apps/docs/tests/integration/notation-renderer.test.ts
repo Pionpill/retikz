@@ -1,11 +1,12 @@
-import type { IRChild, Scene } from '@retikz/core';
+import type { IRChild, IRNode, Scene } from '@retikz/core';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene, lowerIRToKernel, ThemeMode } from '@retikz/core';
 import {
   ConnectorDefinition,
   createConnector,
+  createNotationDefinitions,
   createStage,
   createTerminal,
   StageDefinition,
@@ -56,11 +57,18 @@ const translated = (x: number, y: number, child: IRChild): IRChild => ({
   children: [child],
 });
 
+const collectNodes = (children: ReadonlyArray<IRChild>): Array<IRNode> =>
+  children.flatMap(child => {
+    if (child.type === 'node' && 'position' in child) return [child as unknown as IRNode];
+    if (child.type === 'scope' && 'children' in child) return collectNodes(child.children as ReadonlyArray<IRChild>);
+    return [];
+  });
+
 const vanillaTranslated = (x: number, y: number, child: IRChild): IRChild => translated(x, y, child);
 
 const directChildren = (): Array<IRChild> => [
-  translated(48, 65, createTerminal({ id: 'start', position: [0, 0], text: 'Start' })),
-  translated(210, 65, createStage({ id: 'step', position: [0, 0], text: 'Step' })),
+  translated(48, 65, createTerminal({ id: 'start', position: [0, 0], text: 'Start', color: '#2563eb' })),
+  translated(210, 65, createStage({ id: 'step', position: [0, 0], text: 'Step', color: '#16a34a' })),
   createConnector({
     id: 'edge',
     children: [
@@ -77,12 +85,12 @@ const ReactLogic: FC = () =>
     createElement(
       Scope,
       { transforms: [{ kind: 'translate', x: 48, y: 65 }] },
-      createElement(Terminal, { id: 'start', position: [0, 0] }, 'Start'),
+      createElement(Terminal, { id: 'start', position: [0, 0], color: '#2563eb' }, 'Start'),
     ),
     createElement(
       Scope,
       { transforms: [{ kind: 'translate', x: 210, y: 65 }] },
-      createElement(Stage, { id: 'step', position: [0, 0] }, 'Step'),
+      createElement(Stage, { id: 'step', position: [0, 0], color: '#16a34a' }, 'Step'),
     ),
     createElement(
       Connector,
@@ -101,8 +109,16 @@ const lower = (adapter: AnyInputEmbedAdapter, embed: { id: string; kind: string;
   }).node;
 
 const vanillaChildren = (): Array<IRChild> => [
-  vanillaTranslated(48, 65, lower(TerminalInputEmbedAdapter, terminal('start', { position: [0, 0], text: 'Start' }))),
-  vanillaTranslated(210, 65, lower(StageInputEmbedAdapter, stage('step', { position: [0, 0], text: 'Step' }))),
+  vanillaTranslated(
+    48,
+    65,
+    lower(TerminalInputEmbedAdapter, terminal('start', { position: [0, 0], text: 'Start', color: '#2563eb' })),
+  ),
+  vanillaTranslated(
+    210,
+    65,
+    lower(StageInputEmbedAdapter, stage('step', { position: [0, 0], text: 'Step', color: '#16a34a' })),
+  ),
   lower(
     ConnectorInputEmbedAdapter,
     connector('edge', {
@@ -121,6 +137,31 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   ) as CanvasRenderingContext2D;
 
 describe('Notation renderer integration', () => {
+  it('lowers the real logic-unit demo with explicit ordinary Core paints', () => {
+    const preview = buildPreviewIR(LogicUnitZhDemo);
+    const lowered = lowerIRToKernel(
+      { ...preview.ir, theme: { mode: ThemeMode.Light } },
+      { composites: createNotationDefinitions() },
+    );
+    const nodes = collectNodes(lowered.children);
+
+    expect(nodes).toHaveLength(4);
+    expect(nodes).toMatchObject([
+      { id: 'unit-start', color: '#2563eb', textColor: '#2563eb', stroke: '#2563eb', fill: 'none' },
+      { id: 'unit-stage', color: '#16a34a', textColor: 'contrast', stroke: '#16a34a', fill: '#16a34a' },
+      { id: 'unit-decision', color: '#d97706', textColor: '#d97706', stroke: 'none', fill: '#fbf1e6' },
+      { id: 'unit-junction', color: '#9333ea', textColor: '#9333ea', stroke: '#9333ea', fill: '#efe0fc' },
+    ]);
+    nodes.forEach(node => {
+      expect(node).not.toHaveProperty('variant');
+      expect(node).not.toHaveProperty('opacity');
+      expect(node).not.toHaveProperty('fillOpacity');
+      expect(node).not.toHaveProperty('strokeOpacity');
+    });
+    expect(JSON.stringify(lowered)).not.toContain('"namespace":"notation"');
+    expect(JSON.stringify(lowered)).not.toMatch(/rgba|hsla/i);
+  });
+
   it.each([
     ['logic block en', LogicFrameBasicEnDemo],
     ['logic block zh', LogicFrameBasicZhDemo],

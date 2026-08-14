@@ -13,6 +13,8 @@ Core 公开 `ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColo
 
 Core 只负责传播 selector 并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors 与当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
 
+需要把静态颜色按固定比例落到不透明背景时，可使用 `compositeOpaqueColor(foreground, backdrop, weight)`。它解析静态 CSS color，以 source-over sRGB 预合成并返回小写六位 hex；动态颜色或非不透明 backdrop 会明确报错
+
 ## 完整 Snapshot 与 Core Program
 
 调用方始终提交完整 IR Snapshot。Core owner 负责复制、冻结和比较文档；Core Program 读取 typed Snapshot，产生完整 `CompileResult`、`SceneRuntimeSnapshot` 与可选 `ScenePatch`，最后由 Runtime Session 原子发布。
@@ -167,6 +169,7 @@ session.update({
 | `ThemeStyle` / `ThemeMode` / `ThemeSchema`                     | 内置 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口     |
 | `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`            | 稀疏持久化覆盖、完整冻结环境与 shared color view              |
 | `ThemeStyleDefinition` / `defineThemeStyle`                    | 定义运行时 Core style resolver，并经 `themeStyles` 注入       |
+| `compositeOpaqueColor()`                                       | 把静态前景色按固定权重预合成为不透明六位 hex                  |
 | `createCoreProgram(options, runtimeOptions?)`                  | 创建保留 composite artifact 泛型的 Runtime Program Definition |
 | `CoreChange`                                                   | `add` / `update` / `remove` / `move` change hint union        |
 | `CoreProgramOptions<TComposites>`                              | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置       |

@@ -103,6 +103,12 @@ const section = (
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'group' }>> =>
   primitives.flatMap(primitive => (primitive.type === 'group' ? [primitive, ...groupsOf(primitive.children)] : []));
 
+const compileNotationBlock = (root: IRChild) =>
+  compileToScene(sceneOf([root]), {
+    composites: [...Notation.createNotationDefinitions(), createProbeLeafDefinition()],
+    padding: 0,
+  });
+
 describe('LogicFrame layout and artifact contract', () => {
   beforeAll(() => {
     expect(Notation.LogicFrameDefinition, 'production mutation required: LogicFrameDefinition').toBeDefined();
@@ -324,6 +330,54 @@ describe('LogicFrame layout and artifact contract', () => {
 
     expect(artifacts.map(value => value.id)).toEqual(expect.arrayContaining(['nested-inner', 'nested-outer']));
     expect(groupsOf(output.scene.primitives).some(group => group.id === 'nested-leaf')).toBe(true);
+  });
+
+  it('inherits LogicUnitVariant through regions, nested frames, and Core scopes without sibling leakage', () => {
+    const inner = block({
+      id: 'variant-inner',
+      padding: 0,
+      logicUnitVariant: 'outline',
+      sections: [
+        { key: 'inner-outline', child: Notation.createStage({ id: 'inner-outline', position: [0, 0] }) },
+        {
+          key: 'inner-default',
+          child: Notation.createStage({ id: 'inner-default', position: [0, 0], variant: 'default' }),
+        },
+      ],
+    });
+    const outer = block({
+      id: 'variant-outer',
+      padding: 0,
+      logicUnitVariant: 'secondary',
+      header: { child: Notation.createStage({ id: 'variant-header', position: [0, 0] }) },
+      sections: [
+        { key: 'outer-secondary', child: Notation.createStage({ id: 'outer-secondary', position: [0, 0] }) },
+        {
+          key: 'outer-primary',
+          child: Notation.createStage({ id: 'outer-primary', position: [0, 0], variant: 'primary' }),
+        },
+        {
+          key: 'scope',
+          child: {
+            type: 'scope',
+            children: [Notation.createStage({ id: 'scope-secondary', position: [0, 0] }), inner],
+          },
+        },
+        { key: 'outer-sibling', child: Notation.createStage({ id: 'outer-sibling', position: [0, 0] }) },
+      ],
+    });
+
+    const output = compileNotationBlock(outer);
+    const primitives = primitivesOf(output.scene.primitives);
+    const rectOf = (id: string) => primitives.find(primitive => primitive.type === 'rect' && primitive.id === id);
+
+    expect(rectOf('variant-header')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
+    expect(rectOf('outer-secondary')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
+    expect(rectOf('outer-primary')).toMatchObject({ fill: '#000000', stroke: '#000000' });
+    expect(rectOf('scope-secondary')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
+    expect(rectOf('inner-outline')).toMatchObject({ fill: 'none', stroke: '#666666' });
+    expect(rectOf('inner-default')).toMatchObject({ fill: 'none', stroke: '#000000' });
+    expect(rectOf('outer-sibling')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
   });
 
   it('reuses the canonical Flex compiler without requiring FlexLayoutDefinition', () => {
