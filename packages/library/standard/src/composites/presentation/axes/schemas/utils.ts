@@ -1,12 +1,12 @@
 import { enumerateLattice } from '../../shared/lattice';
 import { AxesTickExtent, AxesTickSourceKind } from '../constants';
 
-interface AxesResolvedExtent {
+interface CanonicalAxesExtent {
   negative: number;
   positive: number;
 }
 
-type AxesExtentInput = number | AxesResolvedExtent;
+type AxesExtentInput = number | CanonicalAxesExtent;
 
 type AxesTickSourceInput =
   | {
@@ -19,13 +19,13 @@ type AxesTickSourceInput =
       values: Array<number>;
     };
 
-/** 将对称长度 shorthand 解析为显式正负方向长度 */
-export const resolveAxesExtent = (extent: AxesExtentInput): AxesResolvedExtent =>
+/** 将对称长度 shorthand 规范化为显式正负方向长度 */
+export const normalizeAxesExtent = (extent: AxesExtentInput): CanonicalAxesExtent =>
   typeof extent === 'number' ? { negative: extent, positive: extent } : extent;
 
 /** 返回规则刻度来源实际覆盖的有符号轴向范围 */
-export const resolveAxesTickRange = (
-  extent: AxesResolvedExtent,
+export const axesTickRangeOf = (
+  extent: CanonicalAxesExtent,
   tickExtent: (typeof AxesTickExtent)[keyof typeof AxesTickExtent],
 ): { min: number; max: number } => ({
   min: tickExtent === AxesTickExtent.Positive ? 0 : -extent.negative,
@@ -35,14 +35,14 @@ export const resolveAxesTickRange = (
 /** 按轴向正负语义枚举刻度值，排除原点并过滤过于靠近端点的刻度 */
 export const enumerateAxesTickValues = (
   source: AxesTickSourceInput,
-  extent: AxesResolvedExtent,
+  extent: CanonicalAxesExtent,
   endpointGap: number,
 ): Array<number> => {
   const values =
     source.kind === AxesTickSourceKind.Values
       ? source.values
       : enumerateLattice({
-          ...resolveAxesTickRange(extent, source.extent),
+          ...axesTickRangeOf(extent, source.extent),
           spacing: source.spacing,
           origin: 0,
           includeBoundary: false,

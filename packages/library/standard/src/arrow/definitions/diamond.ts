@@ -19,14 +19,12 @@ export const DiamondArrowDefinition = defineArrow({
   ],
 });
 
-const makeDiamondArrowDefinition = () => DiamondArrowDefinition;
-
 /** Diamond 箭头的静态 Core provider */
 export const DiamondArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: DiamondArrowDefinition.name }),
   dependencies: Object.freeze([]),
   datasets: Object.freeze({}),
-  makeDefinition: makeDiamondArrowDefinition,
+  makeDefinition: () => DiamondArrowDefinition,
 });
 
 /** 可选空心菱形箭头 Definition */
@@ -49,12 +47,10 @@ export const OpenDiamondArrowDefinition = defineArrow({
   ],
 });
 
-const makeOpenDiamondArrowDefinition = () => OpenDiamondArrowDefinition;
-
 /** OpenDiamond 箭头的静态 Core provider */
 export const OpenDiamondArrowProvider: CoreDependencyProvider = Object.freeze({
   key: Object.freeze({ capability: 'arrow', name: OpenDiamondArrowDefinition.name }),
   dependencies: Object.freeze([]),
   datasets: Object.freeze({}),
-  makeDefinition: makeOpenDiamondArrowDefinition,
+  makeDefinition: () => OpenDiamondArrowDefinition,
 });
