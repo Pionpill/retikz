@@ -11,7 +11,7 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { compileToScene, observeCompileToScene } from '@retikz/core';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 
-import type { VanillaAuthoringSite } from '../spec';
+import type { InputAuthoringSite } from '../normalize';
 
 type VanillaCoreProgramOutput = CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>;
 
@@ -34,7 +34,7 @@ export type VanillaCompileDriverInput = Readonly<{
   /** 本次执行的 canonical Core IR */
   source: IRScene;
   /** normalizer 按 authored 顺序报告的运行时 sites */
-  authoringSites: ReadonlyArray<VanillaAuthoringSite>;
+  authoringSites: ReadonlyArray<InputAuthoringSite>;
   /** 普通 Core compile 与 retained Program 共用的固定配置 */
   coreOptions: CompileOptions;
 }>;

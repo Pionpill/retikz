@@ -113,9 +113,9 @@ import { Path, Step } from '@retikz/react';
 
 ### 从标记到有序 Step
 
-`<Step>` 是返回 `null` 的标记组件，本身不创建 DOM 或图形。父 `<Path>` 按 JSX 顺序收集这些标记，把字符串 target、缺省 `kind` 和 `<EdgeLabel>` child 归一成可序列化的 `IRStep`；显式 `label` prop 比 child 优先。
+`<Step>` 是返回 `null` 的标记组件，本身不创建 DOM 或图形。父 `<Path>` 按 JSX 顺序收集这些标记，把字符串 target、缺省 `kind` 和 `<EdgeLabel>` child 收集为 Vanilla `InputStep`；显式 `label` prop 比 child 优先。随后由 Vanilla normalize 产出可序列化的 `IRStep`。
 
-除单个自包含的 `rectangle` 外，一条 Path 至少需要两个 Step。首段不是 `move` 时，React 适配层会把它改成 `move`：有 `to` 就保留该目标，没有 `to` 就回退到 `[0, 0]`。因此首段写成 `line` 只会定位游标，不会画出这条线。
+除单个自包含的 `rectangle` 外，一条 Path 至少需要两个 Step。首段不是 `move` 时，Vanilla normalize 会把它改成 `move`：有 `to` 就保留该目标，没有 `to` 就回退到 `[0, 0]`。因此首段写成 `line` 只会定位游标，不会画出这条线。
 
 <SourceLinks
   sources={[
@@ -127,15 +127,15 @@ import { Path, Step } from '@retikz/react';
     },
     {
       label: 'Path 收集 Step 与标签优先级',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 363,
-      endLine: 576,
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 256,
+      endLine: 421,
     },
     {
       label: '首段与最短序列规范化',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 561,
-      endLine: 576,
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 76,
+      endLine: 85,
     },
   ]}
 />
@@ -241,8 +241,8 @@ import { Path, Step } from '@retikz/react';
 | `fraction`     | `number`                                                                                                                                                                                             | `0.5`    | 仅三段 fold `-\|-` / `\|-\|` 可用：中间垂直或水平腿在起终 reference 间的归一化位置，范围 `0..1`                                                                                                                                                                                                                                        |
 | `from`         | `IRTarget`                                                                                                                                                                                           | —        | 仅 `kind="rectangle"` 必填：矩形一个角点                                                                                                                                                                                                                                                                                               |
 | `to`           | `IRTarget`                                                                                                                                                                                           | —        | `kind="cycle"` / `'arc'` / `'circlePath'` / `'ellipsePath'` 时不需要；`kind="rectangle"` 与其它会推进游标的 kind 必填——目标点：节点 id、笛卡尔 `[x, y]`、极坐标对象、偏移定位对象 `{ of, offset }`、比例定位 `{ between, fraction }`、相对偏移对象 `{ relative }` / `{ relativeAccumulate }`，或 sugar 字符串 `'+dx,dy'` / `'++dx,dy'` |
-| `name`         | `string`                                                                                                                                                                                             | —        | 仅 `kind="generator"` 必填：内置或 `<Layout pathGenerators>` 注册的路径生成器名称                                                                                                                                                                                                                                                      |
-| `params`       | `IRJsonObject`                                                                                                                                                                                       | —        | 仅 `kind="generator"` 必填：传给路径生成器的 JSON-safe 参数；如内置 `parabola` 使用 `{ control }`                                                                                                                                                                                                                                      |
+| `name`         | `string`                                                                                                                                                                                             | —        | 仅 `kind="generator"` 必填：本次 `<Layout pathGenerators>` 注册的路径生成器名称；`parabola` 由 Standard 子入口提供                                                                                                                                                                                                                     |
+| `params`       | `IRJsonObject`                                                                                                                                                                                       | —        | 仅 `kind="generator"` 必填：传给路径生成器的 JSON-safe 参数；Standard `parabola` 使用 `{ control }`                                                                                                                                                                                                                                    |
 | `cornerRadius` | `number`                                                                                                                                                                                             | —        | 仅 `kind="rectangle"` 可选：矩形圆角半径                                                                                                                                                                                                                                                                                               |
 
 `kind="axis-line"` 的 `to` 使用更窄的 `IRAxisLineTarget | string`：只接受笛卡尔坐标、NodeTarget 与对应字符串 shorthand。
@@ -260,7 +260,7 @@ import { Path, Step } from '@retikz/react';
 | `'cubic'`       | 三次贝塞尔（两个控制点）                          | path "C"          |
 | `'bend'`        | 弧形简记（方向 + 角度），编译期退到 cubic         | path "C"          |
 | `'smooth'`      | 过游标 + `points` 的平滑曲线，编译期退到 cubic 链 | path "C"×N        |
-| `'generator'`   | 调用内置或注册的路径生成器                        | provider 产命令   |
+| `'generator'`   | 调用已注册的路径生成器                            | provider 产命令   |
 | `'arc'`         | 以游标为圆心，按起末角度 + 半径画弧               | path "A"          |
 | `'circlePath'`  | 以游标为圆心画整圆，画完回到圆心                  | path "A"×2        |
 | `'ellipsePath'` | 以游标为圆心画整椭圆，画完回到圆心                | path "A"×2        |

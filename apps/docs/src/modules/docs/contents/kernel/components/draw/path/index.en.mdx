@@ -37,7 +37,7 @@ import { Path, Step } from '@retikz/react';
 </Path>
 ```
 
-`<Step>` supports thirteen kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `generator` for built-in or custom path generators, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) and [path generators](/kernel/components/draw/path-generator) for details.
+`<Step>` supports thirteen kinds — `move` / `line` for straight segments, `fold` for the right-angle fold, `cycle` to close back, `curve` / `cubic` for Bezier curves, `bend` as the arc shorthand (with out/in angles and self-loops), `smooth` for a smooth curve through a list of points, `generator` for injected custom or Standard path generators, `arc` / `circlePath` / `ellipsePath` for arcs / full circles / full ellipses centered on the cursor, and `rectangle` for a diagonal rectangle. See [Step](/kernel/components/draw/step) and [path generators](/kernel/components/draw/path-generator) for details.
 
 ## Examples
 
@@ -51,7 +51,7 @@ Compare a polyline, multiple subpaths, and a closed fill in one panel. Repeated 
 
 #### Arrows
 
-`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — eight built-in shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/kernel/components/draw/arrow)** page.
+`arrow` picks direction (`'->'` / `'<-'` / `'<->'` / `'none'`); `arrowDetail` is a single object covering every visual spec (shape / scale / length / width / color / fill / opacity / lineWidth) plus optional `start` / `end` sub-objects for per-end overrides. The full reference — Core's `normal` / `stealth` baseline, optional Standard arrow shapes, per-end merge semantics, color / sizing / opacity, and the complete API table — lives on the **[Arrow](/kernel/components/draw/arrow)** page.
 
 #### Endpoint connection surface
 

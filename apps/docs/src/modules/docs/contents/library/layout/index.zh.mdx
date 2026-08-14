@@ -34,7 +34,7 @@ Layout 把“如何排布子图形”从手写坐标中提取出来。Flex、Gri
 | ------------------------ | ---------------------------------- | ----------------------------------- |
 | `@retikz/layout`         | schema、factory、Definition 与求解 | 校验或持久化 IR，直接接入 Core 编译 |
 | `@retikz/layout-react`   | 布局容器的 React DSL               | 在 React `Layout` 中创作            |
-| `@retikz/layout-vanilla` | plain spec helper 与 adapter       | 无 React 的浏览器或脚本入口         |
+| `@retikz/layout-vanilla` | Input helper 与 InputEmbedAdapter  | 无 React 的浏览器或脚本入口         |
 
 使用 React 创作时，在 `@retikz/react` 的 `Layout` 中组合 `FlexLayout`、`GridLayout` 或 `OverlayLayout`；使用 Vanilla 时，通过 `@retikz/layout-vanilla` 的 helper 与 adapter 接入；读取持久化 JSON 时，则用 `@retikz/layout` 校验完整布局 IR，并把所需 Definition 传给 Core 编译器。
 

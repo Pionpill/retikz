@@ -2,6 +2,7 @@ import type { IRNodeTarget } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Draw, Layout, Node, Rectangle } from '@retikz/react';
+import { ContourShapeDefinition } from '@retikz/standard/shape';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -43,7 +44,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   ];
 
   return (
-    <Layout width={400} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
+    <Layout
+      width={400}
+      height={430}
+      viewBox={{ x: -215, y: -215, width: 430, height: 430 }}
+      shapes={[ContourShapeDefinition]}
+    >
       <Rectangle
         center={[0, 0]}
         width={84}

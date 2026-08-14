@@ -75,7 +75,9 @@
     "@retikz/data": "workspace:^",
     "@retikz/foundation": "workspace:^",
     "@retikz/react": "workspace:^",
-    "@retikz/table": "workspace:*"
+    "@retikz/table": "workspace:*",
+    "@retikz/table-vanilla": "workspace:*",
+    "@retikz/vanilla": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

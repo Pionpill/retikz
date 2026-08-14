@@ -117,7 +117,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 | `label`                           | 写入下一段的 `step.label`，不单独成 step | 消费自身，等待下一段       |
 | `cycle`                           | `cycle` step                             | 消费当前项并闭合当前子路径 |
 
-扫描同时完成结构校验：`way` 少于两项、首项不是目标、中缀算子后缺目标、连续 `label` 或末尾悬空 `label` 都会在 Draw 展开时直接报错，而不会生成一棵含糊的 Kernel 子树。
+扫描同时完成结构校验：`way` 少于两项、首项不是目标、中缀算子后缺目标、连续 `label` 或末尾悬空 `label` 都会在 Input 归一化时直接报错，而不会生成一棵含糊的 Kernel 子树。
 
 <SourceLinks
   sources={[
@@ -147,15 +147,15 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 </Path>
 ```
 
-Draw 把描边、填充、箭头和层级等整条路径的属性透传给 `<Path>`，再把归一化后的每个动作映射为 `<Step>`。因此两种写法进入同一套 Kernel 语义和后续几何流程；从 Draw 切到手写 Path + Step 只改变控制粒度，不会引入另一套路径行为。
+Draw 把 `way` 与描边、填充、箭头和层级等整条路径属性透传给 `<Path>`；Vanilla 再把它归一化为每个动作对应的 Step。因此两种写法进入同一套 Kernel 语义和后续几何流程；从 Draw 切到手写 Path + Step 只改变控制粒度，不会引入另一套路径行为。
 
 <SourceLinks
   sources={[
     {
-      label: 'Draw 展开为 Path 与 Step',
+      label: 'Draw 将输入透传给 Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 88,
-      endLine: 157,
+      startLine: 50,
+      endLine: 54,
     },
   ]}
 />

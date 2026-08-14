@@ -91,15 +91,15 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
     },
     {
       label: 'React embedded Table runtime contribution to the outer host',
-      path: 'packages/viz/table-react/src/embedded-runtime.ts',
-      startLine: 12,
-      endLine: 45,
+      path: 'packages/viz/table-react/src/table-runtime.ts',
+      startLine: 276,
+      endLine: 286,
     },
     {
       label: 'Runtime contribution merge and frozen copied containers',
       path: 'packages/viz/table/src/pipeline/contribution/contribution.ts',
-      startLine: 92,
-      endLine: 178,
+      startLine: 17,
+      endLine: 51,
     },
   ]}
 />
@@ -116,7 +116,7 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
 
 The two `ManualTable` authoring modes are mutually exclusive. Props mode forwards the persisted row-major structure. Marker mode derives width from the maximum occupied position, pads with `null`, and then uses the same `createManualTableSpec()` and Table schema.
 
-`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters TableSpec. See the authoritative [Layout API](/kernel/components/layout/overview) for complete field semantics. Scope styles, full `compile`, `artifacts/onArtifacts`, and `embeddables` are not part of the Table-root public surface.
+`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters TableSpec. See the authoritative [Layout API](/kernel/components/layout/overview) for complete field semantics. Scope styles, full `compile`, and `artifacts/onArtifacts` are not part of the Table-root public surface.
 
 | Shared prop                | Type                                            | Default | Description                                            |
 | -------------------------- | ----------------------------------------------- | ------- | ------------------------------------------------------ |
@@ -205,7 +205,7 @@ The built-ins are `ordinal-color`, `sequential-color`, and `threshold-color`. An
 
 ## Vanilla
 
-`detailTable()` / `manualTable()` construct plain specs; `embedTable()` with `createTableAdapter()` enters figure/mount composition; `renderTable()` is the one-shot SSR entry.
+`detailTable()` / `manualTable()` construct ordinary-data specs; `embedTable()` with `TableInputEmbedAdapter` enters Scene / mount composition; `renderTable()` is the one-shot SSR entry.
 
 ```ts
 const result = renderTable(spec, {

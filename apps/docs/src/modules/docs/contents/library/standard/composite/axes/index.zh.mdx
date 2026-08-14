@@ -23,7 +23,7 @@ React 入口会在当前 `Layout` 局部贡献 `AxesDefinition`。持久化或�
 | 场景        | 公开入口                                                           |
 | ----------- | ------------------------------------------------------------------ |
 | React       | `Axes`（`@retikz/standard-react`）                                 |
-| Vanilla     | `axes`、`AxesVanillaAdapter`（`@retikz/standard-vanilla`）         |
+| Vanilla     | `axes`、`AxesInputEmbedAdapter`（`@retikz/standard-vanilla`）      |
 | IR / 持久化 | `AxesSchema`、`createAxes`、`AxesDefinition`（`@retikz/standard`） |
 
 包族定位和三种使用入口见 [Standard](/library/standard)。当需求包含数据 domain、scale、自动 tick、formatter 或标签避让时，应改用 [Plot axis](/viz/plot/guide/axis)。

@@ -1,4 +1,4 @@
-import type { VanillaEmbedContext, VanillaEmbedSpec, VanillaTier2Adapter } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
 import {
   ConnectorProvider,
@@ -11,32 +11,32 @@ import { describe, expect, it } from 'vitest';
 
 import {
   connector,
-  ConnectorVanillaAdapter,
+  ConnectorInputEmbedAdapter,
   decision,
-  DecisionVanillaAdapter,
+  DecisionInputEmbedAdapter,
   junction,
-  JunctionVanillaAdapter,
+  JunctionInputEmbedAdapter,
   stage,
-  StageVanillaAdapter,
+  StageInputEmbedAdapter,
   terminal,
-  TerminalVanillaAdapter,
+  TerminalInputEmbedAdapter,
 } from '../src';
 
-const lower = <TProps>(spec: VanillaEmbedSpec<TProps>, adapter: VanillaTier2Adapter<TProps>) =>
+const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>
   adapter.lower(spec.props, {
     id: spec.id,
     kind: spec.kind,
     layerId: 'layer',
     identityPath: ['layer', spec.id],
-  } satisfies VanillaEmbedContext);
+  } satisfies InputEmbedContext);
 
 describe('@retikz/notation-vanilla package boundary', () => {
   it('does not expose Callout authoring', async () => {
     const notationVanilla = await import('../src');
 
     expect(notationVanilla).not.toHaveProperty('callout');
-    expect(notationVanilla).not.toHaveProperty('CalloutVanillaAdapter');
-    expect(notationVanilla).not.toHaveProperty('NotationCalloutVanillaNamespace');
+    expect(notationVanilla).not.toHaveProperty('CalloutInputEmbedAdapter');
+    expect(notationVanilla).not.toHaveProperty('NotationCalloutEmbedKind');
   });
 });
 
@@ -56,23 +56,23 @@ describe('Notation Vanilla semantic authoring', () => {
     {
       type: 'terminal',
       id: 'terminal',
-      lower: () => lower(terminal('terminal', { position: [0, 0] }), TerminalVanillaAdapter),
+      lower: () => lower(terminal('terminal', { position: [0, 0] }), TerminalInputEmbedAdapter),
     },
-    { type: 'stage', id: 'stage', lower: () => lower(stage('stage', { position: [20, 0] }), StageVanillaAdapter) },
+    { type: 'stage', id: 'stage', lower: () => lower(stage('stage', { position: [20, 0] }), StageInputEmbedAdapter) },
     {
       type: 'decision',
       id: 'decision',
-      lower: () => lower(decision('decision', { position: [40, 0] }), DecisionVanillaAdapter),
+      lower: () => lower(decision('decision', { position: [40, 0] }), DecisionInputEmbedAdapter),
     },
     {
       type: 'junction',
       id: 'junction',
-      lower: () => lower(junction('junction', { position: [60, 0] }), JunctionVanillaAdapter),
+      lower: () => lower(junction('junction', { position: [60, 0] }), JunctionInputEmbedAdapter),
     },
     {
       type: 'connector',
       id: 'connector',
-      lower: () => lower(connector('connector', { way: ['terminal', 'stage'] }), ConnectorVanillaAdapter),
+      lower: () => lower(connector('connector', { way: ['terminal', 'stage'] }), ConnectorInputEmbedAdapter),
     },
   ] as const)('lowers $type to same-id semantic IR and contributes its Definition', ({ type, id, lower: runLower }) => {
     const contribution = runLower();
@@ -85,7 +85,7 @@ describe('Notation Vanilla semantic authoring', () => {
     }[type];
 
     expect(contribution.node).toMatchObject({ namespace: 'notation', type, id });
-    expect(contribution.compositeDependencies).toEqual({ roots: [provider.key], providers: [provider] });
+    expect(contribution.providerDependencies).toEqual({ roots: [provider.key], providers: [provider] });
     expect(provider.makeDefinition({})).toMatchObject({ namespace: 'notation', type });
   });
 });

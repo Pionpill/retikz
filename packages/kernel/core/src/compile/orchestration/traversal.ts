@@ -9,6 +9,7 @@ import type {
   CompileOwnerOutputPublisher,
   CompositeCompileChild,
   CompositeCompileScopeProps,
+  CompositeExpandResult,
   CompositeReplay,
   CompositeReplayWrapper,
   EmitStroke,
@@ -1592,7 +1593,7 @@ export const compileChildrenToPrimitives = (
         expand: (
           node: unknown,
           context: Readonly<{ theme: TraversalFrame['theme'] }>,
-        ) => import('../../contract').CompositeExpandResult;
+        ) => CompositeExpandResult;
       };
       const produced = callable.expand(parsed, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);

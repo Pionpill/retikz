@@ -19,9 +19,10 @@ const adapterManifests = [
 ];
 
 describe('Standard package exports', () => {
-  it('keeps Standard root-only after Layout ownership moves', () => {
-    expect(Object.keys(standardManifest.exports)).toEqual(['.']);
-    expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(['.']);
+  it('keeps composites at the root and makes optional providers explicit subpaths', () => {
+    const entries = ['.', './shape', './arrow', './clip'];
+    expect(Object.keys(standardManifest.exports)).toEqual(entries);
+    expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(entries);
   });
 
   it('keeps Standard adapters root-only after Layout ownership moves', () => {

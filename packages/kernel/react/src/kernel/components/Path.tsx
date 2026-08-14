@@ -1,11 +1,10 @@
-import type { IRArrowDetail, IRPath, PathThicknessValue } from '@retikz/core';
+import type { IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
+import type { InputPath } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../protocol';
 
 import { TIKZ_PATH } from '../protocol';
-
-export type PathArrowDirectionValue = 'none' | '->' | '<-' | '<->';
 
 export type PathProps = HydrationEventProps & {
   /** 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR */
@@ -45,13 +44,13 @@ export type PathProps = HydrationEventProps & {
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
    */
-  arrow?: PathArrowDirectionValue;
+  arrow?: InputPath['arrow'];
   /**
    * 箭头详细配置
    * @description 顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape
    *   （open / openStealth / openDiamond / openCircle）上 `fill` silent no-op
    */
-  arrowDetail?: IRArrowDetail;
+  arrowDetail?: InputPath['arrowDetail'];
   /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */
   fill?: IRPath['fill'];
   /** 填充规则：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */
@@ -82,6 +81,8 @@ export type PathProps = HydrationEventProps & {
    * @description 每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）
    */
   marks?: IRPath['marks'];
+  /** TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤 */
+  way?: WayDSL;
   /** 应当全部是 <Step /> */
   children?: ReactNode;
 };

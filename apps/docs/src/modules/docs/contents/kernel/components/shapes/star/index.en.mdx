@@ -49,16 +49,19 @@ This shape sugar also forwards the shared Path props, including `stroke`, `fill`
 
 ## As a node shape
 
-When you need a star **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type:'star', params }}` on `<Node>`. It is sized by the radius parameters, **independent of any text content**.
+When you need a star **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type:'star', params }}` on `<Node>`. It is sized by the radius parameters, **independent of any text content**. The Node variant is an optional Standard shape, while sugar `<Star>` remains a Kernel React component. Inject `StarShapeDefinition` into the current `<Layout>` before using the Node variant.
 
 ### Usage
 
 ```tsx
-import { Node } from '@retikz/react';
+import { Layout, Node } from '@retikz/react';
+import { StarShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
+<Layout shapes={[StarShapeDefinition]}>
+  <Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
+</Layout>
 ```
 
 ### Examples
@@ -117,9 +120,9 @@ The contour has `2p` vertices, with an angular step of `180° / p` between neigh
     },
     {
       label: 'Node star local geometry calculation',
-      path: 'packages/kernel/core/src/providers/shape/star.ts',
-      startLine: 55,
-      endLine: 80,
+      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      startLine: 56,
+      endLine: 72,
     },
   ]}
 />
@@ -144,9 +147,9 @@ The left side of the figure also shows the two rotation baselines: Sugar `rotate
     },
     {
       label: 'Node star boundary, anchors, and Scene output',
-      path: 'packages/kernel/core/src/providers/shape/star.ts',
-      startLine: 97,
-      endLine: 134,
+      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      startLine: 80,
+      endLine: 120,
     },
   ]}
 />

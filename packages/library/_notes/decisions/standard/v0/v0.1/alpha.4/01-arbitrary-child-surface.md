@@ -101,10 +101,10 @@ Surface 继续使用 Core `CompositeDefinition` 和 Standard 的直接 Definitio
 
 - `@retikz/standard` 从根入口导出 schema、IR type、factory 与单项 `SurfaceDefinition`
 - `@retikz/standard-react` 提供 `<Surface>`，children 恰好一个可被 Core / Tier 2 builder 下沉的 drawable child；adapter 递归使用 `@retikz/react` 的公开 builder 获取该 child 的 IR 与 provider contributions，再把 Surface root/provider 与 child roots/providers按出现顺序组合成一个 contribution。Surface 不扫描 child IR 猜 provider
-- `@retikz/standard-vanilla` 提供等价 plain helper / embed adapter。其嵌套输入是显式 `{ node: IRChild, compositeDependencies?: CompositeDependencyContribution }` authoring result；普通 Core child只带 `node`，Tier 2 child同时带自身 contribution。adapter 把 Surface root/provider 放在前面并原样追加 child roots/providers
+- `@retikz/standard-vanilla` 提供等价 plain helper / embed adapter。其嵌套输入是显式 `{ node: IRChild, providerDependencies?: CoreProviderContribution }` authoring result；普通 Core child只带 `node`，Tier 2 child同时带自身 contribution。adapter 把 Surface root/provider 放在前面并原样追加 child roots/providers
 - 直接 JSON 作者把 `SurfaceDefinition` 与 child 所需 definitions 一起放入 compile environment
 
-Surface 自身依赖 Layout 的公开 composition capability，但不转手导出 Layout API。跨 namespace definition 装配使用 Core ADR-18 provider graph；Standard 不发布 Surface bundle、all preset、内置白名单或 module-level registry。
+Surface 自身依赖 Layout 的公开 composition capability，但不转手导出 Layout API。跨 capability definition 装配使用 Core provider graph；Standard 不发布 Surface bundle、all preset、内置白名单或 module-level registry。
 
 React/Vanilla 的嵌套 authoring result 只存在于 adapter runtime，不进入 `IRSurface`、Scene 或序列化 JSON。child provider 缺失、重复或冲突仍由 Core provider graph同步诊断；Surface adapter只保留 authored order并拼接 contribution arrays，不自行去重、拓扑排序或合并 datasets。
 

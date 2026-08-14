@@ -23,7 +23,7 @@ import { Surface } from '@retikz/standard-react';
 | 场景        | 公开入口                                                                                       |
 | ----------- | ---------------------------------------------------------------------------------------------- |
 | React       | `Surface`（`@retikz/standard-react`）                                                          |
-| Vanilla     | `surface`、`surfaceChild`、`SurfaceVanillaAdapter`（`@retikz/standard-vanilla`）               |
+| Vanilla     | `surface`、`surfaceChild`、`SurfaceInputEmbedAdapter`（`@retikz/standard-vanilla`）            |
 | IR / 持久化 | `SurfaceSchema`、`IRSurfaceSchema`、`createSurface`、`SurfaceDefinition`（`@retikz/standard`） |
 
 ## 示例
@@ -81,7 +81,7 @@ Surface 还在 authored 外层 Scope 发布 key 为 `surface` 的 qualified spat
 
 ### React 与 Vanilla
 
-React `SurfaceProps` 用 `children` 代替 IR 的 `child`，并要求最终恰好一个 IR child。Vanilla 使用 `surfaceChild(node, compositeDependencies?)` 显式携带嵌套 Tier 2 的运行时 provider contribution；这份 metadata 不进入 IR 或 Scene。
+React `SurfaceProps` 用 `children` 代替 IR 的 `child`，并要求最终恰好一个 IR child。Vanilla 使用 `surfaceChild(node)` 标记唯一的嵌套 child；嵌套 Tier 2 的 provider contribution 由同一次归一化自动收集，不进入 IR 或 Scene。
 
 ## 相关
 

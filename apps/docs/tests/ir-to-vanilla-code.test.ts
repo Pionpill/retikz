@@ -13,11 +13,11 @@ const ir = (children: IRScene['children'], viewBox?: IRScene['viewBox']): IRScen
 });
 
 describe('irToVanillaCode', () => {
-  it('import-header：恒定 vanilla import + figure 装配', () => {
+  it('import-header：恒定 vanilla import + scene 装配', () => {
     const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
     expect(code).toContain("from '@retikz/vanilla'");
-    expect(code).toContain('figure(');
-    expect(code).toContain('const fig = figure({ children: [');
+    expect(code).toContain('scene(');
+    expect(code).toContain('const input = scene({ children: [');
   });
 
   it('node-codegen：具名 / 匿名 / 字段映射', () => {
@@ -173,15 +173,15 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("node('c'");
   });
 
-  it('figure-viewbox：viewBox → figure config；无则 {}', () => {
+  it('scene-viewbox：viewBox → scene config；无则 {}', () => {
     const withVb = irToVanillaCode(
       ir([{ type: 'node', id: 'a', position: [0, 0] }], { x: 0, y: 0, width: 100, height: 80 }),
     );
     expect(withVb).toContain('viewBox: { x: 0, y: 0, width: 100, height: 80 }');
 
     const noVb = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0] }]));
-    expect(noVb).toContain('figure({ children: [');
-    expect(noVb).not.toContain('figure({}');
+    expect(noVb).toContain('scene({ children: [');
+    expect(noVb).not.toContain('scene({}');
   });
 
   it('import-tailoring：只用 node 时 import 不含 draw/scope/coordinate', () => {
@@ -200,9 +200,9 @@ describe('irToVanillaCode', () => {
     expect(code).not.toContain('"position"');
   });
 
-  it('empty-scene：空 children + 无 config → figure()，不抛', () => {
+  it('empty-scene：空 children + 无 config → scene()，不抛', () => {
     expect(() => irToVanillaCode(ir([]))).not.toThrow();
-    expect(irToVanillaCode(ir([]))).toContain('const fig = figure({ children: [] });');
+    expect(irToVanillaCode(ir([]))).toContain('const input = scene({ children: [] });');
   });
 });
 
@@ -306,9 +306,9 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain('flexLayout(');
     expect(code).toContain('gridLayout(');
     expect(code).toContain('overlayLayout(');
-    expect(code).toContain('FlexLayoutVanillaAdapter');
-    expect(code).toContain('GridLayoutVanillaAdapter');
-    expect(code).toContain('OverlayLayoutVanillaAdapter');
+    expect(code).toContain('FlexLayoutInputEmbedAdapter');
+    expect(code).toContain('GridLayoutInputEmbedAdapter');
+    expect(code).toContain('OverlayLayoutInputEmbedAdapter');
   });
 
   it('为 Legend 生成 authoring builder、adapter 与嵌套 Standard / Layout definitions', () => {
@@ -369,7 +369,7 @@ describe('irToVanillaCode fallback', () => {
     );
 
     expect(code).toContain("legend('preview-legend-1'");
-    expect(code).toContain('LegendVanillaAdapter');
+    expect(code).toContain('LegendInputEmbedAdapter');
     expect(code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
     expect(code).not.toContain('LegendDefinition');
     expect(code).not.toMatch(/\binspect\b/);
@@ -413,13 +413,13 @@ describe('irToVanillaCode fallback', () => {
     expect(code).toContain("connector('preview-connector-1'");
     expect(code).toContain("to: { id: 'preview-terminal-1' }");
     expect(code).toContain("to: { id: 'preview-stage-1' }");
-    expect(code).toContain('TerminalVanillaAdapter');
-    expect(code).toContain('StageVanillaAdapter');
-    expect(code).toContain('DecisionVanillaAdapter');
-    expect(code).toContain('JunctionVanillaAdapter');
-    expect(code).toContain('ConnectorVanillaAdapter');
+    expect(code).toContain('TerminalInputEmbedAdapter');
+    expect(code).toContain('StageInputEmbedAdapter');
+    expect(code).toContain('DecisionInputEmbedAdapter');
+    expect(code).toContain('JunctionInputEmbedAdapter');
+    expect(code).toContain('ConnectorInputEmbedAdapter');
     expect(code).toContain("from '@retikz/notation-vanilla'");
-    expect(code).not.toContain("ConnectorVanillaAdapter } from '@retikz/standard-vanilla'");
+    expect(code).not.toContain("ConnectorInputEmbedAdapter } from '@retikz/standard-vanilla'");
     expect(code).not.toContain('TerminalDefinition');
     expect(code).not.toContain('Unsupported Standard composite');
   });

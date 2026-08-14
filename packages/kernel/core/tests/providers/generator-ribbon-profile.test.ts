@@ -30,58 +30,8 @@ const commandPoint = (command: PathPrim['commands'][number]): [number, number] =
 };
 
 describe('builtin path generator and ribbon width profile', () => {
-  it('builtin_parabola_without_options', () => {
-    expect(BUILTIN_PATH_GENERATORS.map(definition => definition.name)).toContain('parabola');
-
-    const compiled = compileToScene(
-      scene([
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 40] },
-            {
-              type: 'step',
-              kind: 'generator',
-              name: 'parabola',
-              to: [120, 40],
-              params: { control: [60, 0] },
-            },
-          ],
-        },
-      ]),
-      { padding: 0 },
-    ).scene;
-    const prim = firstPathPrim(compiled.primitives);
-
-    expect(prim.commands).toEqual([
-      { kind: 'move', to: [0, 40] },
-      { kind: 'quad', control: [60, 0], to: [120, 40] },
-    ]);
-  });
-
-  it('builtin_parabola_control_target_id', () => {
-    const compiled = compileToScene(
-      scene([
-        { type: 'coordinate', id: 'C', position: [60, 0] },
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 40] },
-            {
-              type: 'step',
-              kind: 'generator',
-              name: 'parabola',
-              to: [120, 40],
-              params: { control: { id: 'C' } },
-            },
-          ],
-        },
-      ]),
-      { padding: 0 },
-    ).scene;
-    const prim = firstPathPrim(compiled.primitives);
-
-    expect(prim.commands[1]).toEqual({ kind: 'quad', control: [60, 0], to: [120, 40] });
+  it('Core has no builtin path generators', () => {
+    expect(BUILTIN_PATH_GENERATORS).toEqual([]);
   });
 
   it('builtin_bulge_without_options_and_peak_midpoint', () => {
@@ -143,37 +93,6 @@ describe('builtin path generator and ribbon width profile', () => {
     expect(commandsFor(12, 4)[1]).toEqual({ kind: 'line', to: [5, 2] });
   });
 
-  it('parabola_missing_to_and_invalid_params_throw', () => {
-    expect(
-      () =>
-        compileToScene(
-          scene([
-            {
-              type: 'path',
-              children: [
-                { type: 'step', kind: 'move', to: [0, 0] },
-                { type: 'step', kind: 'generator', name: 'parabola', params: { control: [10, 10] } },
-              ],
-            },
-          ]),
-        ).scene,
-    ).toThrow(/parabola.*to/s);
-
-    expect(
-      () =>
-        compileToScene(
-          scene([
-            {
-              type: 'path',
-              children: [
-                { type: 'step', kind: 'move', to: [0, 0] },
-                { type: 'step', kind: 'generator', name: 'parabola', to: [20, 0], params: {} },
-              ],
-            },
-          ]),
-        ).scene,
-    ).toThrow();
-  });
 
   it('bulge_rejects_negative_base_or_peak', () => {
     expect(
@@ -243,9 +162,9 @@ describe('builtin path generator and ribbon width profile', () => {
     if (lowerStart !== undefined) expect(commandPoint(lowerStart)).toEqual([0, 0]);
   });
 
-  it('custom_duplicate_builtin_name', () => {
-    const parabola = definePathGenerator({
-      name: 'parabola',
+  it('custom_path_generator_is_not_reserved_by_an_empty_builtin_collection', () => {
+    const generator = definePathGenerator({
+      name: 'customLine',
       paramsSchema: z.object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
@@ -254,12 +173,20 @@ describe('builtin path generator and ribbon width profile', () => {
       widthAt: () => 4,
     });
 
-    expect(
-      () =>
-        compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
-          pathGenerators: [parabola],
-        }).scene,
-    ).toThrow(/duplicate path generator registration: "parabola"/);
+    expect(() =>
+      compileToScene(
+        scene([
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'generator', name: 'customLine', params: {} },
+            ],
+          },
+        ]),
+        { pathGenerators: [generator] },
+      ).scene,
+    ).not.toThrow();
     expect(
       () =>
         compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
@@ -268,36 +195,4 @@ describe('builtin path generator and ribbon width profile', () => {
     ).toThrow(/duplicate ribbon width profile registration: "bulge"/);
   });
 
-  it('parabola_inside_scope_transform_and_with_label', () => {
-    const compiled = compileToScene(
-      scene([
-        {
-          type: 'scope',
-          transforms: [{ kind: 'translate', x: 100, y: 0 }],
-          children: [
-            {
-              type: 'path',
-              children: [
-                { type: 'step', kind: 'move', to: [0, 0] },
-                {
-                  type: 'step',
-                  kind: 'generator',
-                  name: 'parabola',
-                  to: [40, 0],
-                  params: { control: [20, -20] },
-                  label: { text: 'p', position: 'midway' },
-                },
-              ],
-            },
-          ],
-        },
-      ]),
-      { padding: 0 },
-    ).scene;
-    const prim = firstPathPrim(compiled.primitives);
-
-    expect(commandPoint(prim.commands[0])).toEqual([0, 0]);
-    expect(prim.commands[1]).toEqual({ kind: 'quad', control: [20, -20], to: [40, 0] });
-    expect(flattenPrims(compiled.primitives).some(item => item.type === 'text')).toBe(true);
-  });
 });

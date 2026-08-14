@@ -413,8 +413,8 @@ export const kernelV05: Release = {
             {
               label: { zh: 'BREAKING：通用编译驱动', en: 'BREAKING: Generic compile drivers' },
               content: {
-                zh: 'React 基础包只提供领域中立 `LayoutCompileDriver` 与 authoring site。BREAKING：删除 `Layout`、`Scope`、`Path` 的 `inspect` prop；Path 检查改从 `@retikz/inspect/react` 导入 `InspectLayout`、`InspectScope` 与 `InspectPath`。',
-                en: 'The React base package now provides only the domain-neutral `LayoutCompileDriver` and authoring sites. BREAKING: removes the `inspect` prop from `Layout`, `Scope`, and `Path`; migrate Path inspection to `InspectLayout`, `InspectScope`, and `InspectPath` from `@retikz/inspect/react`.',
+                zh: 'React 基础包只提供 authoring site，并将处理委托给 `@retikz/vanilla`。BREAKING：删除 `Layout`、`Scope`、`Path` 的 `inspect` prop；Path 检查改从 `@retikz/inspect/react` 导入 `InspectLayout`、`InspectScope` 与 `InspectPath`。',
+                en: 'The React base package now provides authoring sites only and delegates processing to `@retikz/vanilla`. BREAKING: removes the `inspect` prop from `Layout`, `Scope`, and `Path`; migrate Path inspection to `InspectLayout`, `InspectScope`, and `InspectPath` from `@retikz/inspect/react`.',
               },
             },
           ],

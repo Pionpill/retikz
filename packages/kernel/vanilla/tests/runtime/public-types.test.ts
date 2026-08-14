@@ -3,7 +3,17 @@ import type { CompileResult, Scene } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
-  CommonOptions,
+  InputEmbed,
+  InputNode,
+  InputPath,
+  InputScene,
+  InputScope,
+  ProcessingController,
+  // @ts-expect-error transaction participant 仅供 DOM 与 processing 内部协作，根入口不得导出
+  ProcessingTransactionParticipant,
+  SceneResult,
+} from '../../src';
+import type {
   MountCanvasOptions,
   MountOptions,
   MountUnifiedOptions,
@@ -14,22 +24,18 @@ import type {
   RetainedCanvasView,
   RetainedSvgUpdateOptions,
   RetainedSvgView,
-  SceneResult,
   StaticMountCanvasOptions,
   StaticMountOptions,
   StaticMountUnifiedOptions,
   StaticRawCanvasView,
   StaticRawSvgView,
-  VanillaEmbedSpec,
-  VanillaFigureSpec,
-  VanillaPathSpec,
   VanillaRuntimeOptions,
-  VanillaViewState,
-  VanillaScopeSpec,
   VanillaViewModeValue,
-} from '../../src';
+  VanillaViewState,
+} from '../../src/dom';
 
-import { mount, mountCanvas, mountSvg, VanillaViewMode } from '../../src';
+import { createProcessingController } from '../../src';
+import { mount, mountCanvas, mountSvg, VanillaViewMode } from '../../src/dom';
 
 type IsAssignable<TValue, TTarget> = TValue extends TTarget ? true : false;
 type HasKey<TValue, TKey extends PropertyKey> = TKey extends keyof TValue ? true : false;
@@ -49,6 +55,19 @@ const assertStaticMountRejectsRetainedRuntime = (): void => {
 
 void assertStaticMountRejectsRetainedRuntime;
 
+const assertRootControllerRejectsParticipantArgument = (): void => {
+  // @ts-expect-error 根 controller 只接受 source 与固定 processing options
+  createProcessingController({ children: [] }, {}, {});
+};
+
+void assertRootControllerRejectsParticipantArgument;
+
+const assertRootDoesNotExportParticipant = (participant: ProcessingTransactionParticipant | undefined): void => {
+  void participant;
+};
+
+void assertRootDoesNotExportParticipant;
+
 describe('Vanilla retained 公开类型', () => {
   it('SceneResult 与 live view 始终拥有 compileResult 字段', () => {
     expectTypeOf<SceneResult>().toHaveProperty('compileResult').toEqualTypeOf<CompileResult | undefined>();
@@ -58,11 +77,19 @@ describe('Vanilla retained 公开类型', () => {
   });
 
   it('基础 authoring 与 runtime 不再暴露 inspection 字段', () => {
-    expectTypeOf<HasKey<CommonOptions, 'inspect'>>().toEqualTypeOf<false>();
-    expectTypeOf<HasKey<VanillaFigureSpec, 'inspect'>>().toEqualTypeOf<false>();
-    expectTypeOf<HasKey<VanillaScopeSpec, 'inspect'>>().toEqualTypeOf<false>();
-    expectTypeOf<HasKey<VanillaPathSpec, 'inspect'>>().toEqualTypeOf<false>();
-    expectTypeOf<HasKey<VanillaEmbedSpec, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<InputScene, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<InputScope, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<InputPath, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<InputNode, 'inspect'>>().toEqualTypeOf<false>();
+    expectTypeOf<HasKey<InputEmbed, 'inspect'>>().toEqualTypeOf<false>();
+  });
+
+  it('根 processing controller 不暴露 DOM participant 配置入口', () => {
+    expectTypeOf<HasKey<ProcessingController, 'updateParticipant'>>().toEqualTypeOf<false>();
+  });
+
+  it('预编译 Scene 不能创建 retained processing controller', () => {
+    expectTypeOf<Scene>().not.toMatchTypeOf<Parameters<typeof createProcessingController>[0]>();
   });
 
   it('SSR options 不接受 retained renderer factory，mount options 才拥有 runtime 配置', () => {
@@ -94,7 +121,7 @@ describe('Vanilla retained 公开类型', () => {
     expectTypeOf<VanillaViewModeValue>().toEqualTypeOf<'retained' | 'static'>();
   });
 
-  it('raw static mount 由 runtime mode 判别，update 统一接受 IR 与 plain spec', () => {
+  it('raw static mount 由 runtime mode 判别，update 统一接受 IR 与 InputScene', () => {
     expectTypeOf<RawStaticMountOptions>().toHaveProperty('runtime');
     expectTypeOf<RawStaticMountCanvasOptions>().toHaveProperty('runtime');
     expectTypeOf<Parameters<StaticRawSvgView['update']>[0]>().toEqualTypeOf<Parameters<RetainedSvgView['update']>[0]>();

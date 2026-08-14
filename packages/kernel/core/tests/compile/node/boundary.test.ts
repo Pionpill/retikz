@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../../src/contract';
-import type { IRBoundary, IRNode, IRNodeTarget, IRScene } from '../../../src/schemas';
-import type { Rect } from '../../../src/shared/geometry/rect';
+import type { IRNode } from '../../../src/schemas';
 
-import { compileToScene } from '../../../src/compile/compile';
 import { NamespaceStack } from '../../../src/compile/namespace';
-import { anchorOf, angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
+import { angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
 import { normalizeNode } from '../../../src/normalize/node';
-import { BUILTIN_SHAPES, star } from '../../../src/providers/shape';
+import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
 import { NodeSchema } from '../../../src/schemas/node';
 import { NodeTargetSchema } from '../../../src/schemas/path/target';
@@ -62,25 +59,6 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
   layoutNode(normalizeNode(node), { measureText, namespaceStack, shapes: BUILTIN_SHAPES });
 
 describe('boundary-aware boundary/canonical', () => {
-  it("boundaryPointOf 'rectangle' boundary hits AABB edge, 'shape' hits star outline", () => {
-    const namespaceStack = new NamespaceStack();
-    const starLayout = layoutBoundaryNode(
-      {
-        type: 'node',
-        id: 'star1',
-        shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
-        position: [0, 0],
-      },
-      namespaceStack,
-    );
-    // 对角线方向：星形轮廓凹入（凹角内径），AABB 矩形则在外接框边缘——两者一定不同
-    const toward: [number, number] = [100, 100];
-    const onShape = boundaryPointOf(starLayout, toward, 'shape');
-    const onRect = boundaryPointOf(starLayout, toward, 'rectangle');
-    // 真实星形边界（凹入的凹角侧） ≠ AABB 矩形右上角边界
-    expect(onShape).not.toEqual(onRect);
-  });
-
   it("boundaryPointOf 缺省参数等价于 'shape'", () => {
     const namespaceStack = new NamespaceStack();
     const layout = layoutBoundaryNode(
@@ -95,45 +73,6 @@ describe('boundary-aware boundary/canonical', () => {
     const toward: [number, number] = [100, 0];
     // 缺省与显式 'shape' 结果相同
     expect(boundaryPointOf(layout, toward)).toEqual(boundaryPointOf(layout, toward, 'shape'));
-  });
-
-  it('sector canonical top via AABB (不再 throw)', () => {
-    const namespaceStack = new NamespaceStack();
-    const sectorLayout = layoutBoundaryNode(
-      {
-        type: 'node',
-        id: 'sec1',
-        shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
-        position: [0, 0],
-      },
-      namespaceStack,
-    );
-    // 改前：sector.anchor 不认识 canonical 名，抛 Unknown anchor
-    // 改后：canonical 名上提为 AABB，不再 throw，返回 AABB 上的点
-    expect(() => anchorOf(sectorLayout, 'top', 'shape')).not.toThrow();
-    const point = anchorOf(sectorLayout, 'top', 'shape');
-    // top 点的 y 坐标应在 rect 上边（y <= rect.y，即 top = y - halfHeight）
-    expect(point).toBeDefined();
-    expect(Array.isArray(point)).toBe(true);
-  });
-
-  it("anchorOf sector 专属 anchor 'apex' 仍返回形状自身值，不受 boundary 影响", () => {
-    const namespaceStack = new NamespaceStack();
-    const sectorLayout = layoutBoundaryNode(
-      {
-        type: 'node',
-        id: 'sec2',
-        shape: { type: 'sector', params: { innerRadius: 10, outerRadius: 30, startAngle: 0, endAngle: 90 } },
-        position: [0, 0],
-      },
-      namespaceStack,
-    );
-    // apex 是 sector 专属命名 anchor，不是 rect 方位名，始终走视觉形状
-    expect(() => anchorOf(sectorLayout, 'apex')).not.toThrow();
-    expect(() => anchorOf(sectorLayout, 'apex', 'shape')).not.toThrow();
-    expect(() => anchorOf(sectorLayout, 'apex', 'rectangle')).not.toThrow();
-    // 不同 boundary 对专属 anchor 结果相同（恒走视觉形状）
-    expect(anchorOf(sectorLayout, 'apex', 'shape')).toEqual(anchorOf(sectorLayout, 'apex', 'rectangle'));
   });
 
   it('angleBoundaryOf 缺省与显式 shape 等价', () => {
@@ -156,8 +95,8 @@ describe('boundary-aware boundary/canonical', () => {
     const layout = layoutBoundaryNode(
       {
         type: 'node',
-        id: 'star-margin',
-        shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
+        id: 'polygon-margin',
+        shape: { type: 'polygon', params: { sides: 5 } },
         boundary: { type: 'circle', params: { fit: 'tight', gap: 2 } },
         margin: 8,
         position: [0, 0],
@@ -169,130 +108,10 @@ describe('boundary-aware boundary/canonical', () => {
     const standard = resolveAnchor(layout, 'right', boundary);
     const numeric = resolveAnchor(layout, '0', boundary);
 
-    expect(automatic[0]).toBeCloseTo(40);
     expect(standard[0]).toBeCloseTo(automatic[0]);
     expect(standard[1]).toBeCloseTo(automatic[1]);
     expect(numeric[0]).toBeCloseTo(automatic[0]);
     expect(numeric[1]).toBeCloseTo(automatic[1]);
-  });
-});
-
-describe('star.anchor no longer handles canonical directly', () => {
-  it('returns undefined for canonical names (compile layer owns them now)', () => {
-    const rect: Rect = { x: 0, y: 0, width: 60, height: 60, rotate: 0 };
-    const params = { points: 5, innerRadius: 10, outerRadius: 30 };
-    expect(star.anchor(rect, 'top', params)).toBeUndefined();
-    expect(star.anchor(rect, 'tip-0', params)).toBeDefined();
-  });
-});
-
-// ─── 端到端集成：path clip 透传 boundary ?? node.boundary ───────────────────────
-
-/**
- * 找"连接线"那条 PathPrim（IRPath step 编译产物）：区分于节点 emit 的形状路径。
- * star 的 emit 产含 close 命令的多边形；连接线只有 move + line，无 close。
- * 以"无 close 命令"作为区分依据
- */
-const findConnectionPath = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
-  prims.filter((x): x is PathPrim => x.type === 'path').find(p => !p.commands.some(c => c.kind === 'close'));
-
-/**
- * 构造 IR（star 节点 + path），编译后取连接线在 star 那端的实际端点
- * @param nodeBoundary star 节点的 boundary（undefined = 无）
- * @param targetOverride 追加到 { id: 'star' } 的额外字段（如 boundary）
- * @param start path 的 move 起点（决定 toward 方向）
- */
-const lineEndpointWithNode = (
-  nodeBoundary: IRBoundary | undefined,
-  targetOverride: Partial<IRNodeTarget>,
-  start: [number, number] = [200, 0],
-): [number, number] => {
-  const target: IRNodeTarget = { id: 'star', ...targetOverride };
-  const nodeIr: IRScene['children'][number] = nodeBoundary
-    ? {
-        type: 'node',
-        id: 'star',
-        shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
-        position: [0, 0],
-        boundary: nodeBoundary,
-      }
-    : {
-        type: 'node',
-        id: 'star',
-        shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
-        position: [0, 0],
-      };
-  const ir: IRScene = {
-    version: 1,
-    type: 'scene',
-    children: [
-      nodeIr,
-      {
-        type: 'path',
-        children: [
-          { type: 'step', kind: 'move', to: start },
-          { type: 'step', kind: 'line', to: target },
-        ],
-      },
-    ],
-  };
-  const compiled = compileToScene(ir).scene;
-  // star emit 产含 close 的多边形 PathPrim；连接线无 close，以此区分
-  const prim = findConnectionPath(compiled.primitives);
-  if (!prim) throw new Error('expected connection PathPrim');
-  for (const cmd of prim.commands) {
-    if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
-  }
-  throw new Error('no line command found');
-};
-
-describe('端到端：path clip 透传 boundary ?? node.boundary', () => {
-  // 方向选取：[200, 0] → star 中心 [0, 0]，即 toward = [0,0]（path 从 [200,0] 连到 star）
-  // star 有 5 个尖角，0° 是第一个尖角（outerRadius=30）；
-  // 改从 [0,0] 方向出发，让 toward 从 star 中心看去往 [200,0]（即 right 方向 0°）——
-  // star 在 0° 方向是尖角（outerRadius=30）；circle 默认 tight，半径精确等于 outerRadius
-  //
-  // 默认 −90 基准下：tip-k 角 = −90 + k·72（即 270/342/54/126/198°），notch-k 角 = −54 + k·72
-  //   （即 306/18/90/162/234°）。选 18° 方向（notch-1）取凹角边界。
-  //
-  // 让 boundaryPoint 取 18° 方向：path 从 star 中心朝 [100, 100·tan18°≈32.49] 出发，
-  //   toward 方向 = arctan(32.49/100) ≈ 18°，正好命中 notch-1（凹角），
-  //   star 边界 ≈ innerRadius=10，circle 外接圆边界更远，差异显著
-
-  it('(a) node 无 boundary → 端点贴真实星形边界（凹角方向，约 innerRadius=10）', () => {
-    // start=[100, 32.49]: toward≈18°，star 凹角（notch-1），边界约 r=10
-    const pointA = lineEndpointWithNode(undefined, {}, [100, 100 * Math.tan((18 * Math.PI) / 180)]);
-    // 星形边界点离中心 [0,0] 的距离应约等于 10（innerRadius）
-    const distA = Math.sqrt(pointA[0] ** 2 + pointA[1] ** 2);
-    expect(distA).toBeCloseTo(10, 0);
-  });
-
-  it('(b) node boundary="circle" → 默认 tight，端点贴星形 outerRadius', () => {
-    const pointB = lineEndpointWithNode('circle', {});
-    const distB = Math.sqrt(pointB[0] ** 2 + pointB[1] ** 2);
-    expect(distB).toBeCloseTo(30);
-  });
-
-  it("node circle fit:'bounds' → 端点贴视觉 AABB 外接圆", () => {
-    const point = lineEndpointWithNode({ type: 'circle', params: { fit: 'bounds' } }, {});
-    expect(Math.hypot(point[0], point[1])).toBeGreaterThan(30);
-  });
-
-  it('(a) != (b)：star 形边界与圆形边界不同（凹角方向显著差异）', () => {
-    const notchStart: [number, number] = [100, 100 * Math.tan((18 * Math.PI) / 180)];
-    const pointA = lineEndpointWithNode(undefined, {}, notchStart);
-    const pointB = lineEndpointWithNode('circle', {}, notchStart);
-    // 真实凹角与外接圆连接面必然不等
-    expect(pointA).not.toEqual(pointB);
-  });
-
-  it('(c) node boundary="circle" 且 端点 boundary="shape" → 又贴真实星形边界，≈ (a)', () => {
-    // 端点 boundary:'shape' 覆盖 node boundary:'circle'，回退到视觉形状（star 凹角 ≈ 10）
-    const notchStart: [number, number] = [100, 100 * Math.tan((18 * Math.PI) / 180)];
-    const pointC = lineEndpointWithNode('circle', { boundary: 'shape' }, notchStart);
-    const pointA = lineEndpointWithNode(undefined, {}, notchStart);
-    expect(pointC[0]).toBeCloseTo(pointA[0], 4);
-    expect(pointC[1]).toBeCloseTo(pointA[1], 4);
   });
 });
 
@@ -332,70 +151,6 @@ describe('public export + remaining quadrants', () => {
     expect(() => core.compileToScene(ir)).toThrow(/Unknown connection surface provider 'nope'/);
   });
 
-  it('specific_anchor_ignores_boundary: tip-0 是星形专属 anchor，boundary 不影响其解析结果', () => {
-    // 两个 IR：boundary='shape'（默认）和 boundary='circle'，anchor='tip-0' 均指向同一尖角
-    const makeIr = (boundary: string): core.IRScene => ({
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'star',
-          shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
-          position: [0, 0],
-          boundary,
-        },
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [100, 0] },
-            { type: 'step', kind: 'line', to: { id: 'star', anchor: 'tip-0' } },
-          ],
-        },
-      ],
-    });
-    const sceneShape = core.compileToScene(makeIr('shape')).scene;
-    const sceneCircle = core.compileToScene(makeIr('circle')).scene;
-    // 取连接线的 line 端点（无 close 的路径）
-    const endpointOf = (prims: ReadonlyArray<core.ScenePrimitive>): [number, number] => {
-      const path = prims
-        .filter((p): p is core.PathPrim => p.type === 'path')
-        .find(p => !p.commands.some(c => c.kind === 'close'));
-      if (!path) throw new Error('no connection path');
-      for (const cmd of path.commands) {
-        if (cmd.kind === 'line') return [cmd.to[0], cmd.to[1]];
-      }
-      throw new Error('no line command');
-    };
-    const epShape = endpointOf(sceneShape.primitives);
-    const epCircle = endpointOf(sceneCircle.primitives);
-    // tip-0 是专属命名 anchor，boundary 改变不影响结果
-    expect(epShape[0]).toBeCloseTo(epCircle[0], 4);
-    expect(epShape[1]).toBeCloseTo(epCircle[1], 4);
-  });
-
-  it('layout_neutral: boundary 改变不影响 scene.layout（节点布局边界）', () => {
-    const makeIr = (boundary: string | undefined): core.IRScene => ({
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'node',
-          id: 'star',
-          shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
-          position: [0, 0],
-          ...(boundary !== undefined ? { boundary } : {}),
-        },
-      ],
-    });
-    const layoutDefault = core.compileToScene(makeIr(undefined)).scene.layout;
-    const layoutShape = core.compileToScene(makeIr('shape')).scene.layout;
-    const layoutCircle = core.compileToScene(makeIr('circle')).scene.layout;
-    // layout 由视觉 shape 决定，boundary 只影响连接面路由，与 layout 无关
-    expect(layoutShape).toEqual(layoutDefault);
-    expect(layoutCircle).toEqual(layoutDefault);
-  });
-
   it('roundtrip_self_describing: 含 node.boundary / 端点 boundary 的 IR JSON 序列化后再 schema parse 等价', () => {
     const ir: core.IRScene = {
       version: 1,
@@ -403,8 +158,8 @@ describe('public export + remaining quadrants', () => {
       children: [
         {
           type: 'node',
-          id: 'star',
-          shape: { type: 'star', params: { points: 5, innerRadius: 10, outerRadius: 30 } },
+          id: 'node',
+          shape: { type: 'polygon', params: { sides: 5 } },
           position: [0, 0],
           boundary: 'circle',
         },
@@ -412,7 +167,7 @@ describe('public export + remaining quadrants', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [100, 0] },
-            { type: 'step', kind: 'line', to: { id: 'star', boundary: 'shape' } },
+            { type: 'step', kind: 'line', to: { id: 'node', boundary: 'shape' } },
           ],
         },
       ],

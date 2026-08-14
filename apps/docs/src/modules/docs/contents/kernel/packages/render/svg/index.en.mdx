@@ -28,10 +28,10 @@ import { Layout, Node } from '@retikz/react';
 **Vanilla (browser)** — `mountSvg` mounts the figure as DOM; the returned view exposes `root` (the `<svg>`) and `dispose`:
 
 ```ts
-import { mountSvg } from '@retikz/vanilla';
+import { mountSvg } from '@retikz/vanilla/dom';
 
 const view = mountSvg(container, ir);
-// view.root is the <svg>; view.update(next) re-renders; view.dispose() unmounts
+// view.root is the <svg>; view.update(next) uses the selected static or retained processing; view.dispose() unmounts
 ```
 
 **Vanilla (SSR / build-time)** — `renderToSvgString` returns an HTML string without touching the DOM, so it runs in Node:
@@ -44,11 +44,11 @@ const svg = renderToSvgString(ir); // '<svg ...>...</svg>', drop it into HTML
 
 The three entries have different input contracts:
 
-| Entry               | Accepted input                                  | Output     |
-| ------------------- | ----------------------------------------------- | ---------- |
-| React `<Layout>`    | JSX `children`<br />or `IRScene`                | SVG DOM    |
-| Vanilla `mountSvg`  | `Scene` / `IRScene`<br />or `VanillaFigureSpec` | SVG DOM    |
-| `renderToSvgString` | `Scene` / `IRScene`<br />or `VanillaFigureSpec` | SVG string |
+| Entry               | Accepted input                           | Output     |
+| ------------------- | ---------------------------------------- | ---------- |
+| React `<Layout>`    | JSX `children`<br />or `IRScene`         | SVG DOM    |
+| Vanilla `mountSvg`  | `Scene` / `IRScene`<br />or `InputScene` | SVG DOM    |
+| `renderToSvgString` | `Scene` / `IRScene`<br />or `InputScene` | SVG string |
 
 ## Adding interaction to an SVG figure
 

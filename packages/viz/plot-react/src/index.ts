@@ -7,7 +7,7 @@ export type {
   ResolveLabelMap,
 } from './adapter';
 export type { ResolvedPlotExtensionAuthoring } from './adapter';
-export { buildPlotSpec, resolveLabelOf, resolvePlotExtensionAuthoring } from './adapter';
+export { buildPlotSpec, collectPlotDeclarations, resolveLabelOf, resolvePlotExtensionAuthoring } from './adapter';
 export type {
   AxisProps,
   DatumLabelProps,

@@ -63,7 +63,7 @@ const byWay = createConnector({
 
 <ComponentPreview files="connector-routing" size="lg" />
 
-Direct JSON must contain canonical `children` and explicitly inject `ConnectorDefinition`. Vanilla `connector()` returns an embed; `ConnectorVanillaAdapter` creates a same-id `IRConnector` from the embed id without adding a `/connector` suffix
+Direct JSON must contain canonical `children` and explicitly inject `ConnectorDefinition`. Vanilla `connector()` returns an embed; `ConnectorInputEmbedAdapter` creates a same-id `IRConnector` from the embed id without adding a `/connector` suffix
 
 When `marks` is omitted, Connector adds one terminal arrow. An explicit `marks` array completely replaces that default, so `marks: []` explicitly disables arrows
 

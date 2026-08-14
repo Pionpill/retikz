@@ -106,18 +106,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'EllipseClip',
     url: '/kernel/reference/schema/scope#ellipseclip',
   },
-  PolygonClipSchema: {
-    schema: IR.PolygonClipSchema,
-    label: 'PolygonClip',
-    url: '/kernel/reference/schema/scope#polygonclip',
-  },
-  PathClipSchema: { schema: IR.PathClipSchema, label: 'PathClip', url: '/kernel/reference/schema/scope#pathclip' },
-  CompoundClipSchema: {
-    schema: IR.CompoundClipSchema,
-    label: 'CompoundClip',
-    url: '/kernel/reference/schema/scope#compoundclip',
-  },
-
   NodeSchema: { schema: IR.NodeSchema, label: 'Node', url: '/kernel/reference/schema/entity#node' },
   NodeLabelSchema: { schema: IR.NodeLabelSchema, label: 'NodeLabel', url: '/kernel/reference/schema/entity#nodelabel' },
   CoordinateSchema: {

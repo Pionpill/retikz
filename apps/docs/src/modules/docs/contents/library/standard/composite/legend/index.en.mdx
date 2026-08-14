@@ -38,7 +38,7 @@ React composes content through `LegendTitle`, `LegendItem`, `LegendRamp`, and `L
 | Scenario         | Public entry point                                                                                  |
 | ---------------- | --------------------------------------------------------------------------------------------------- |
 | React            | `Legend`, `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick` from `@retikz/standard-react` |
-| Vanilla          | `legend()` and `LegendVanillaAdapter` from `@retikz/standard-vanilla`                               |
+| Vanilla          | `legend()` and `LegendInputEmbedAdapter` from `@retikz/standard-vanilla`                            |
 | IR / persistence | `LegendSchema`, `createLegend()`, and `LegendDefinition` from `@retikz/standard`                    |
 
 See [Standard](/library/standard) for the package family and its three entry points. Domain packages produce resolved samples; Standard Legend owns only generic presentation semantics and typed Legend artifacts, while Layout provides the reusable arrangement capability.
@@ -170,8 +170,8 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
 | `LegendItem`           | `@retikz/standard-react`   | Declare a discrete sample, stable key, and optional label             | —       |
 | `LegendRamp`           | `@retikz/standard-react`   | Declare the continuous sample slot                                    | —       |
 | `LegendTick`           | `@retikz/standard-react`   | Declare a normalized tick and optional label                          | —       |
-| `legend(id, input)`    | `@retikz/standard-vanilla` | Create an embed consumed by `LegendVanillaAdapter`                    | —       |
-| `LegendVanillaAdapter` | `@retikz/standard-vanilla` | Lower an embed through `createLegend()` and contribute its Definition | —       |
+| `legend(id, input)`    | `@retikz/standard-vanilla` | Create an embed consumed by `LegendInputEmbedAdapter`                 | —       |
+| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla` | Lower an embed through `createLegend()` and contribute its Definition | —       |
 | `createLegend(input)`  | `@retikz/standard`         | Validate input, apply defaults, and add fixed discriminators          | —       |
 | `LegendDefinition`     | `@retikz/standard`         | Core Definition injected for the Legend composite on demand           | —       |
 

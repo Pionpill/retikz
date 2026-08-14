@@ -77,13 +77,13 @@
   },
   "dependencies": {
     "@retikz/chart": "workspace:*",
+    "@retikz/chart-vanilla": "workspace:^",
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
-    "@retikz/layout": "workspace:^",
     "@retikz/plot": "workspace:^",
     "@retikz/plot-react": "workspace:^",
-    "@retikz/react": "workspace:^",
-    "@retikz/standard": "workspace:^"
+    "@retikz/plot-vanilla": "workspace:^",
+    "@retikz/react": "workspace:^"
   },
   "peerDependencies": {
     "react": ">=18",

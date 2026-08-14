@@ -105,13 +105,12 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
 
 ## 裁剪
 
-`ClipSpecSchema` 是 `Scope.clip` 的联合类型。内置几何直接使用下面的 JSON 形状；自定义 `kind` 由 `CompileOptions.clips` 注册并在编译期解析。
+`ClipSpecSchema` 是 `Scope.clip` 接受的 Core 契约。内置几何直接使用下面的 JSON 形状。其他任意 `kind` 都是 JSON-safe 的自定义裁剪 spec：Core 保留可序列化字段，再通过贡献给 `CompileOptions.clips` 的对应 Definition 校验和解析。
 
-| 分支              | 判别方式               | 内容                                          |
-| ----------------- | ---------------------- | --------------------------------------------- |
-| 内置几何          | `rect` / `circle` 等   | 使用下方固定字段 schema                       |
-| `compound`        | `kind: 'compound'`     | 递归组合多个 ClipSpec                         |
-| 自定义 Definition | 其它非空 `kind` 字符串 | JSON 字段由 `CompileOptions.clips` 注册项校验 |
+| 分支              | 判别方式               | 内容                                     |
+| ----------------- | ---------------------- | ---------------------------------------- |
+| 内置几何          | `rect` / `circle` 等   | 使用下方固定字段 schema                  |
+| 自定义 Definition | 其它非空 `kind` 字符串 | JSON-safe 字段由其贡献的 Definition 校验 |
 
 <span id="rectclip"></span>
 
@@ -160,45 +159,8 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
   }}
 />
 
-<span id="polygonclip"></span>
+多边形与路径裁剪 schema 由 `@retikz/standard/clip` 提供，并通过注入的 Definition 校验，不属于 Core schema registry。详见[裁剪扩展](/library/standard/extension/clip)。
 
-### 多边形
-
-<ZodSchema
-  name="PolygonClipSchema"
-  description="由至少三个顶点定义的多边形裁剪区域。"
-  descriptions={{
-    kind: '判别字段 polygon',
-    points: '至少三个 `[x, y]` 顶点，使用 scope 局部坐标',
-  }}
-/>
-
-<span id="pathclip"></span>
-
-### 路径
-
-<ZodSchema
-  name="PathClipSchema"
-  description="由结构化 PathCommand 定义的路径裁剪区域。"
-  descriptions={{
-    kind: '判别字段 path',
-    commands: '至少一条结构化 PathCommand；这里接收已展开的几何命令，不接收 Path Step',
-    fillRule: '裁剪路径填充规则：nonzero 或 evenodd',
-  }}
-/>
-
-<span id="compoundclip"></span>
-
-### 复合裁剪
-
-<ZodSchema
-  name="CompoundClipSchema"
-  description="递归组合多个子裁剪区域的复合裁剪。"
-  descriptions={{
-    kind: '判别字段 compound',
-    children: '至少一个 ClipSpec；递归累积为同一裁剪路径',
-    fillRule: '复合裁剪路径的填充规则：nonzero 或 evenodd',
-  }}
-/>
+`compound` 是可选的 Standard 裁剪，不是 Core schema 分支。从 `@retikz/standard/clip` 导入 `CompoundClipDefinition` 并贡献给 `CompileOptions.clips`；该 Definition 拥有递归 `children` 契约，并与其他自定义 kind 一样走同一条 Core 裁剪 registry 解析路径。
 
 自定义裁剪的 Definition、registry 与 renderer 边界见 [自定义裁剪](/kernel/components/layout/custom-clip)。

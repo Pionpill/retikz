@@ -5,11 +5,18 @@ import {
   StageProvider,
   TerminalProvider,
 } from '@retikz/notation';
-import { buildIRWithContributions, Step, Text } from '@retikz/react';
+import { createInputScene, Node, Step, Text } from '@retikz/react';
+import { normalizeScene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { Connector, Decision, Junction, Stage, Terminal } from '../../src';
+import { Connector, Decision, Junction, LogicFrame, LogicFrameHeader, Stage, Terminal } from '../../src';
+
+/** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
+const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
+  const input = createInputScene(children);
+  return normalizeScene(input.scene, { adapters: input.adapters });
+};
 
 describe('@retikz/notation-react package boundary', () => {
   it('does not expose Callout authoring', async () => {
@@ -20,9 +27,21 @@ describe('@retikz/notation-react package boundary', () => {
 });
 
 describe('Notation React semantic unit authoring', () => {
+  it('preserves an explicit LogicFrame identity through the Vanilla adapter', () => {
+    const result = normalizeReactInput(
+      createElement(
+        LogicFrame,
+        { id: 'order' },
+        createElement(LogicFrameHeader, null, createElement(Node, { position: [0, 0], text: 'Order' })),
+      ),
+    );
+
+    expect(result.ir.children[0]).toMatchObject({ namespace: 'notation', type: 'logicFrame', id: 'order' });
+  });
+
   it('keeps semantic IR while supporting the same text children as Core Node', () => {
-    const stage = buildIRWithContributions(createElement(Stage, { id: 'stage', position: [0, 0] }, 'Process'));
-    const terminal = buildIRWithContributions(
+    const stage = normalizeReactInput(createElement(Stage, { id: 'stage', position: [0, 0] }, 'Process'));
+    const terminal = normalizeReactInput(
       createElement(Terminal, { id: 'terminal', position: [0, 0] }, createElement(Text, null, 'Start')),
     );
 
@@ -43,7 +62,7 @@ describe('Notation React semantic unit authoring', () => {
   });
 
   it('contributes the matching Definition for every semantic unit', () => {
-    const result = buildIRWithContributions(
+    const result = normalizeReactInput(
       createElement(
         Fragment,
         null,
@@ -65,7 +84,7 @@ describe('Notation React semantic unit authoring', () => {
 
 describe('Notation React Connector authoring', () => {
   it('normalizes Core Step children to canonical Connector IR', () => {
-    const result = buildIRWithContributions(
+    const result = normalizeReactInput(
       createElement(
         Connector,
         { id: 'connector', role: 'flow' },
@@ -88,7 +107,7 @@ describe('Notation React Connector authoring', () => {
   });
 
   it('supports Draw way input and rejects mixing it with Step children', () => {
-    const result = buildIRWithContributions(createElement(Connector, { id: 'draw', way: ['source', 'target'] }));
+    const result = normalizeReactInput(createElement(Connector, { id: 'draw', way: ['source', 'target'] }));
 
     expect(result.ir.children[0]).toMatchObject({
       namespace: 'notation',
@@ -99,7 +118,7 @@ describe('Notation React Connector authoring', () => {
       ],
     });
     expect(() =>
-      buildIRWithContributions(
+      normalizeReactInput(
         createElement(
           Connector,
           { id: 'mixed', way: ['source', 'target'] },

@@ -1,8 +1,8 @@
 import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput } from '@retikz/layout';
-import type { EmbeddableContribution } from '@retikz/react';
+import type { InputEmbedContribution } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
-type IRChild = EmbeddableContribution['node'];
+type IRChild = InputEmbedContribution['node'];
 
 type LayoutItemChildSource =
   | Readonly<{ children: ReactNode; ir?: never }>

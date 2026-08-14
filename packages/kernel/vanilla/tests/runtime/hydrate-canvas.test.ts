@@ -4,7 +4,7 @@ import type { HydrationContext } from '@retikz/render/hydration';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mountCanvas } from '../../src';
+import { mountCanvas } from '../../src/dom';
 
 /**
  * @retikz/vanilla mountCanvas 的 canvas 水合（client 坐标 → 逆 meet-fit → hitTest 命中 → handler）

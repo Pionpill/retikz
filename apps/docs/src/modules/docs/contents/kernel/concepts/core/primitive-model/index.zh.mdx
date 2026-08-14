@@ -63,11 +63,11 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 | shape 类型   | 尺寸来源                         | 例子                                         |
 | ------------ | -------------------------------- | -------------------------------------------- |
 | 文本容器形状 | 文字 + padding，经外接框下限约束 | rectangle、circle、ellipse、polygon、diamond |
-| 参数驱动形状 | shape params 自己决定几何        | sector、arc、star                            |
+| 参数驱动形状 | shape params 自己决定几何        | sector、star                                 |
 
 <ComponentPreview files="shapes" size="md" hideCode />
 
-灰块是内容盒、虚线是内框，这五个文本容器形状共享同一个内框，shape 以内框为准画出不同轮廓：rectangle 即内框，其余把它包得更大（circle / diamond 分别是 ellipse / polygon 的 preset）。参数驱动形状（sector / arc / star）的几何来自 params，不走这套内框逻辑。
+灰块是内容盒、虚线是内框，这五个文本容器形状共享同一个内框，shape 以内框为准画出不同轮廓：rectangle 即内框，其余把它包得更大（circle / diamond 分别是 ellipse / polygon 的 preset）。参数驱动形状（sector / star）的几何来自 params，不走这套内框逻辑；Sector 的等半径状态可以表达开放弧。
 
 文本容器形状更像按钮或 DOM 盒子：文字变长，节点会变大。参数驱动形状更像一个几何 glyph：半径、角度、尖角数量已经定义了大小，文本只是附着在它上面。
 
@@ -138,7 +138,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 ## 动手试一试
 
-先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star、sector 与 arc，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector、arc 则使用演示中预设的几何参数，文字叠加在既定外形上。
+先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star 与 sector，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector 则使用演示中预设的几何参数，文字叠加在既定外形上。后两种是 Standard 可选 shape，演示已通过 `<Layout shapes>` 显式注入；普通使用同样需要从 `@retikz/standard/shape` 导入对应 Definition。Sector 将等内外半径解释为开放弧。
 
 接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/overview)与[Shapes](/kernel/components/shapes) API 继续查对应组件页。
 
@@ -170,9 +170,9 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
     },
     {
       label: '从 star 顶点生成 tight 连接包络',
-      path: 'packages/kernel/core/src/providers/shape/star.ts',
-      startLine: 127,
-      endLine: 127,
+      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      startLine: 103,
+      endLine: 103,
     },
     {
       label: '从内容、padding 与 minimumSize 计算节点布局',

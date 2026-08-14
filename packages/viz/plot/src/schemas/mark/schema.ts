@@ -28,7 +28,7 @@ import {
   PathLineCapSchema,
   PathLineJoinSchema,
   PathScaleSchema,
-  PathThicknessSchema,
+  PathThickness,
   ShadowPreset,
   ShapeRefSchema,
 } from '@retikz/core';
@@ -448,7 +448,7 @@ export const PathFillRuleStyleSchema = markValueSchema(
   'path fillRule style value',
 );
 export const PathThicknessStyleSchema = markValueSchema(
-  PathThicknessSchema,
+  z.enum(PathThickness),
   'Data field path bound to path thickness',
   'Constant core Path thickness preset',
   'path thickness style value',

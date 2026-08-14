@@ -1173,7 +1173,7 @@ describe('preview controls registry', () => {
         optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
       }));
     };
-    const shapeOptions = ['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector', 'arc'];
+    const shapeOptions = ['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector'];
     const boundaryOptions = ['shape', 'circle', 'rectangle', 'ellipse'];
     const fitOptions = ['tight', 'bounds'];
     const anchorOptions = [
@@ -1295,7 +1295,7 @@ describe('preview controls registry', () => {
     const segments = ['kernel', 'components', 'node', 'overview'];
     const source = demoSources[buildKey(segments, 'node-shape-connection')];
 
-    expect(source).toContain('shapes={[boundaryGuideShape]}');
+    expect(source).toContain('shapes={[boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}');
     expect(source?.match(/^\s*<BoundaryGuide$/gm)).toHaveLength(2);
     expect(source).toContain('dashPattern={[1, 4]}');
     expect(demoSources[buildKey(segments, 'node-boundary-surfaces')]).toBeUndefined();
@@ -1320,7 +1320,7 @@ describe('preview controls registry', () => {
     const source = demoSources[buildKey(segments, 'primitive-model-playground')];
     const helperSource = existsSync(helperPath) ? readFileSync(helperPath, 'utf8') : '';
 
-    expect(source).toContain('shapes={[primitiveModelBoundaryGuideShape]}');
+    expect(source).toContain('shapes={[primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}');
     expect(source).toContain('<BoundaryGuide shape=');
     expect(source).toContain('dashPattern={[6, 4]}');
     expect(helperSource).toContain("if (params.boundary === 'shape') return;");

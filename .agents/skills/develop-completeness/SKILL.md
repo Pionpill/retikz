@@ -9,10 +9,10 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ## 模式
 
-| 模式         | 输入                                                       | 输出                                      | 用途                             |
-| ------------ | ---------------------------------------------------------- | ----------------------------------------- | -------------------------------- |
-| `adr-gate`   | 长期形态的 Alpha ADR、当前代码、适用 completeness / AGENTS | 返回调用方的结构化 findings，不写报告文件 | 人工确认前阻止错误归属和局部闭环 |
-| `code-audit` | 能力域、当前完整代码、公开表面与架构文档                   | ignored completeness report               | Beta 入口规划或出口验收          |
+| 模式         | 输入                                                                      | 输出                                      | 用途                             |
+| ------------ | ------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------- |
+| `adr-gate`   | 长期形态的 Alpha ADR、同步简略 plan、当前代码、适用 completeness / AGENTS | 返回调用方的结构化 findings，不写报告文件 | 人工确认前阻止错误归属和局部闭环 |
+| `code-audit` | 能力域、当前完整代码、公开表面与架构文档                                  | ignored completeness report               | Beta 入口规划或出口验收          |
 
 调用方必须明确模式；不要把代码评分报告代替 ADR gate，也不要用 ADR 自述代替 Beta 代码证据。
 
@@ -43,18 +43,20 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ### 输入要求
 
-- 读取完整 Proposed ADR，尤其是核心决策、基础数据结构 / 公开契约、行为与失败语义、功能边界、被否决方案和架构验证。
+- 读取完整 Proposed ADR，检查核心决策、基础数据结构 / 公开契约、行为与失败语义。
+- 读取同步简略 `PLAN.md`，检查目标与非目标、功能与包边界、能力完备性、同类设计、被否决方案和测试策略摘要。
 - 对照当前代码判断 ADR 是否复用既有机制；尚未实现不妨碍设计门禁。
 - 调用方提供固定快照和当前检查轮次；默认由主 agent 执行，执行计划已授权常规 reviewer 时记录其实际模型与循环上限。
 
 ### Gate 重点
 
-- ADR 必须选择明确结论：组合、扩展当前域、下沉、上移、不支持或延期。
-- 新增开放语义时，ADR 必须定义内置与自定义同路的 define-registry 链路；若能力天然闭合，必须写出不采用 registry 的契约理由。
+- 简略 plan 必须选择明确结论：组合、扩展当前域、下沉、上移、不支持或延期。
+- 新增开放语义时，ADR 冻结必要公开 contract；简略 plan 验证内置与自定义同路的 define-registry 链路。能力天然闭合时，理由记录在 plan。
 - 基础数据结构、公开契约、默认 / 失败语义和跨包接口必须足以冻结功能，不能让 plan 或 implementer 再决定所有权或公开字段。
 - 发现需要另一个能力域先补底座时，当前 ADR 不得用局部 adapter / renderer patch 绕过。
-- ADR 必须保留稳定测试策略摘要，说明需要哪些证据层和关键不变量；具体 case、文件、路径、命令和数量属于镜像 plan，不是 Gate 缺失项。
+- 简略 plan 必须保留测试策略摘要，说明需要哪些证据层和关键不变量；具体 case、文件、路径、命令和数量在 ADR 确认后进入细化 plan / `TEST_CONTRACT.md`，不是当前 Gate 缺失项。
 - Gate 不得要求 ADR 增加文件 scope、private helper、业务逻辑步骤、Zod 拼装、测试 case、验证命令、commit 切分或 review 过程。
+- Gate finding 必须写入正确真源：公开契约、默认 / 失败语义和 breaking 行为属于 ADR；设计检查与实施准备属于 plan。
 
 ### 输出契约
 
@@ -64,15 +66,15 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 ReviewerVerdict: REVIEWER_PASS | BLOCKED
 Round: <current>/<plan-limit>
 Reviewer: <actual-model>
-Snapshot: HEAD=<sha>; ADR=<path-and-content-version>
+Snapshot: HEAD=<sha>; ADR=<path-and-content-version>; PLAN=<path-and-content-version>
 
 ## BLOCKING
 
 - ID：AG-<序号>
   检查轴：<共同检查矩阵中的一项>
   问题：<会导致错误实现或边界破坏的具体事实>
-  证据：<ADR 段落 + 1-2 个当前代码 / 契约路径>
-  必须修订：<ADR 应补齐或改写的长期契约；实现细节写 plan>
+  证据：<ADR / plan 段落 + 1-2 个当前代码 / 契约路径>
+  必须修订：<明确应修订 ADR 还是 plan；实现细节留在 plan>
 
 ## WARNING
 
@@ -162,7 +164,7 @@ PASS | BLOCKED | ESCALATE_ALPHA
 ### `adr-gate`
 
 - 覆盖共同检查矩阵，使用当前代码证据而非只读 ADR 自述。
-- 只检查长期功能和架构契约，不把 plan 细节反向写入 ADR。
+- 同时检查短 ADR 的长期功能契约和简略 plan 的设计检查结论，不把 plan 内容反向写入 ADR。
 - 输出严格符合 findings 契约，没有修改任何文件。
 - 主 agent 自审或计划内单 reviewer 结论已明确；Gate PASS 由调用方归并。
 

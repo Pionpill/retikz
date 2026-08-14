@@ -8,19 +8,19 @@ import { Layout, Node } from '../../../src';
 
 type TestCanvasContext = Readonly<{
   context: CanvasRenderingContext2D;
-  drawImage: ReturnType<typeof vi.fn>;
+  fillText: ReturnType<typeof vi.fn>;
 }>;
 
 /** 给 retained Canvas 提供完整的录制型原生 context surface */
 const createTestCanvasContext = (): TestCanvasContext => {
-  const drawImage = vi.fn();
+  const fillText = vi.fn();
   const target: Record<string | symbol, unknown> = {
     canvas: null,
     fillStyle: '#000000',
     strokeStyle: '#000000',
     lineWidth: 1,
     font: '',
-    drawImage,
+    fillText,
     measureText: () => ({
       width: 8,
       actualBoundingBoxAscent: 8,
@@ -37,7 +37,7 @@ const createTestCanvasContext = (): TestCanvasContext => {
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
-  return { context, drawImage };
+  return { context, fillText };
 };
 
 beforeEach(() => {
@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 describe('Layout retained renderer 规格', () => {
-  it('react-canvas-mode-mounts：renderer="canvas" 挂载并 commit 位图', async () => {
+  it('react-canvas-mode-mounts：renderer="canvas" 挂载并绘制当前 Scene', async () => {
     const recorded = createTestCanvasContext();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => recorded.context);
     const container = document.createElement('div');
@@ -69,7 +69,7 @@ describe('Layout retained renderer 规格', () => {
     expect(canvas).toBeInstanceOf(HTMLCanvasElement);
     expect(canvas?.width).toBe(320);
     expect(canvas?.height).toBe(180);
-    expect(recorded.drawImage).toHaveBeenCalled();
+    expect(recorded.fillText).toHaveBeenCalledWith('A', expect.any(Number), expect.any(Number));
     await act(() => root.unmount());
   });
 

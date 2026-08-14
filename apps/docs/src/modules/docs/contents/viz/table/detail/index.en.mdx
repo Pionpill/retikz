@@ -79,7 +79,7 @@ With data and column order held constant, tracks determine each Cell box and Cel
 
 ### Vanilla and SSR
 
-The Vanilla API uses a plain helper to construct the same detail-table spec. Use `embedTable()` with `createTableAdapter()` for browser composition, or `renderTable()` for one-shot server rendering.
+The Vanilla API uses a plain helper to construct the same detail-table spec. Use `embedTable()` with `TableInputEmbedAdapter` for browser composition, or `renderTable()` for one-shot server rendering.
 
 ```ts
 import { detailTable, renderTable } from '@retikz/table-vanilla';

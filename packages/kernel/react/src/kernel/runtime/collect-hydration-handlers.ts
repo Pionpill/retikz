@@ -3,11 +3,10 @@ import type { ReactNode } from 'react';
 
 import { Children, Fragment, isValidElement } from 'react';
 
-import type { EmbeddableTier2Adapter } from '../protocol';
 import type { HydrationEventPropName } from '../protocol';
 
 import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from '../protocol';
-import { resolveEmbeddableAdapter } from '../protocol';
+import { resolveInputEmbedAdapter } from '../protocol';
 import { EVENT_PROP_TO_NAME } from '../protocol';
 
 /** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
@@ -54,16 +53,12 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
  * @description 带 `id` 且声明了 `on<Event>` 的元素会注册为水合事件挂点；`<Scope>` 和普通函数式 Sugar 会继续读取子元素。
  *   带 handler 但无 `id` 的元素会在开发环境告警并跳过；重复 `id` 会合并不同事件，同一事件以后出现者覆盖
  */
-const visit = (
-  registry: Map<string, ElementHandlers>,
-  children: ReactNode,
-  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
-): void => {
+const visit = (registry: Map<string, ElementHandlers>, children: ReactNode): void => {
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
     const props = child.props as Record<string, unknown>;
     if (child.type === Fragment) {
-      visit(registry, props.children as ReactNode, embeddables);
+      visit(registry, props.children as ReactNode);
       return;
     }
     const handlers = readElementHandlers(props);
@@ -72,7 +67,7 @@ const visit = (
     switch (name) {
       case TIKZ_SCOPE:
         // 容器：递归子级（与 builder 的 buildScopeFromProps → readSceneChildren 同源）。
-        visit(registry, props.children as ReactNode, embeddables);
+        visit(registry, props.children as ReactNode);
         return;
       case TIKZ_NODE:
       case TIKZ_PATH:
@@ -82,12 +77,12 @@ const visit = (
     }
     if (typeof child.type === 'function') {
       // 可嵌入 Tier2：自身 id + handler 已被上方 mergeElement 捕获；其内部由 composite lowering 管理，
-      // 绝不调用 / 递归该组件。resolveEmbeddableAdapter 在「标记但缺 adapter」时 fail-loud throw（与 builder 一致）。
-      const adapter = resolveEmbeddableAdapter(child.type, getDisplayName(child), embeddables);
+      // 绝不调用 / 递归该组件。标记但缺 InputEmbedAdapter 时会 fail-loud throw。
+      const adapter = resolveInputEmbedAdapter(child.type);
       if (adapter) return;
       // 其余函数式组件（Sugar / 自定义 wrapper）：同步展开后递归，捕获展开后的 id-bearing Kernel 元素。
       const expanded = (child.type as (props: unknown) => ReactNode)(props);
-      visit(registry, expanded, embeddables);
+      visit(registry, expanded);
     }
   });
 };
@@ -97,11 +92,8 @@ const visit = (
  * @description 返回 `{ [id]: { click, pointerEnter, ... } }` 注册表，供 `<Layout>` 在渲染后绑定事件。
  *   带 handler 但无 `id` 会跳过并在开发环境告警；重复 `id` 会合并不同事件，同一事件以后出现者覆盖
  */
-export const collectHydrationHandlers = (
-  children: ReactNode,
-  embeddables?: ReadonlyArray<EmbeddableTier2Adapter>,
-): HydrationHandlers => {
+export const collectHydrationHandlers = (children: ReactNode): HydrationHandlers => {
   const registry = new Map<string, ElementHandlers>();
-  visit(registry, children, embeddables);
+  visit(registry, children);
   return Object.fromEntries(registry);
 };

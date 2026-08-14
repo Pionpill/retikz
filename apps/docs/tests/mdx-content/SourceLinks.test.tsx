@@ -77,7 +77,7 @@ describe('<SourceLinks>', () => {
       <SourceLinks
         sources={[
           { label: '输入归一', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-          { label: '根 Scope', path: 'packages/kernel/react/src/kernel/adapter/builder.ts' },
+          { label: '根 Scope', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
         ]}
       />,
     );
