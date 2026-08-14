@@ -17,15 +17,15 @@ Standard 是 Core 的横向拓展，不是新的绘图内核：
 
 ## 三个发布包
 
-| 包                         | 负责什么                                    | 什么时候使用                        |
-| -------------------------- | ------------------------------------------- | ----------------------------------- |
-| `@retikz/standard`         | schema、factory、Definition 与 lowering     | 校验或持久化 IR，直接接入 Core 编译 |
-| `@retikz/standard-react`   | 呈现组件的 React DSL                        | 在 React `Layout` 中创作            |
-| `@retikz/standard-vanilla` | plain spec helper 与 Vanilla Tier 2 adapter | 无 React 的浏览器或脚本入口         |
+| 包                         | 负责什么                                | 什么时候使用                        |
+| -------------------------- | --------------------------------------- | ----------------------------------- |
+| `@retikz/standard`         | schema、factory、Definition 与 lowering | 校验或持久化 IR，直接接入 Core 编译 |
+| `@retikz/standard-react`   | 呈现组件的 React DSL                    | 在 React `Layout` 中创作            |
+| `@retikz/standard-vanilla` | Input helper 与 InputEmbedAdapter       | 无 React 的浏览器或脚本入口         |
 
 三个包共享 `@retikz/standard` 中的 schema 与 lowering。React 和 Vanilla 只负责把作者输入接入同一能力，不复制语义。
 
-使用 React 创作时，在 `@retikz/react` 的 `Layout` 中直接使用 `@retikz/standard-react` 组件；使用 Vanilla 时，通过 `@retikz/standard-vanilla` 的 plain spec helper 与 adapter 接入；读取持久化 JSON 时，则用 `@retikz/standard` 校验完整 IR，并把所需 Definition 传给 Core 编译器。
+使用 React 创作时，在 `@retikz/react` 的 `Layout` 中直接使用 `@retikz/standard-react` 组件；使用 Vanilla 时，通过 `@retikz/standard-vanilla` 的 Input helper 与 `InputEmbedAdapter` 接入；读取持久化 JSON 时，则用 `@retikz/standard` 校验完整 IR，并把所需 Definition 传给 Core 编译器。
 
 ## 章节内容
 

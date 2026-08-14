@@ -242,7 +242,7 @@ PGFPlots 位于 TikZ 基础图元之上；同样地，`@retikz/plot` 通过 comp
 
 普通用户只需要把支持嵌入的 domain 组件放进 `<Layout>`。组件所属包负责贡献高层节点与 composite definition，`<Layout>` 再把它们交给同一条 core lowering 管线；core 仍不依赖具体 domain。
 
-如果你在实现 domain adapter、注入 `composites` / `embeddables`，或排查 datasets 汇总与宿主行为，请直接查 [Layout 高级能力与宿主接入](/kernel/components/layout/overview#高级能力与宿主接入)和[扩展运行时](/kernel/reference/runtime/extensions)，概念页不展开 React 静态遍历与聚合细节。
+如果你在实现 domain InputEmbedAdapter、注册 `adapters`，或排查 datasets 汇总与宿主行为，请直接查 [Layout 高级能力与宿主接入](/kernel/components/layout/overview#高级能力与宿主接入)和[扩展运行时](/kernel/reference/runtime/extensions)，概念页不展开 React Input 收集与 Vanilla processing 聚合细节。
 
 ## Provider roots 与传递依赖
 

@@ -1,22 +1,23 @@
 ---
 title: '@retikz/vanilla'
-description: Author figures outside React with a plain spec, then render them as retained or static SVG / Canvas views or SSR strings.
+description: Organize graphics as framework-neutral InputScene data, normalize and process it at the package root, and mount DOM output through a dedicated subpath.
 ---
 
-`@retikz/vanilla` is the framework-free entry. You can describe a figure with a plain spec, or pass Core IR or a compiled `Scene` directly, then produce output through SSR, the SVG DOM, or the Canvas runtime.
+`@retikz/vanilla` is the API foundation shared by all framework adapters. It organizes ordinary TypeScript data as an `InputScene`, normalizes that input into Core `IRScene`, and runs shared processing. React, Vue, and other framework packages only collect their framework input and host the result.
 
-It owns plain-data authoring, input adaptation, and host lifecycles without inventing new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; backend execution belongs to `@retikz/render`.
+The package root has no browser-DOM dependency, so it works in SSR, build scripts, and other frameworks. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
-## Installation & Usage
+## Install and use
 
 ```bash
 pnpm add @retikz/vanilla
 ```
 
 ```ts
-import { figure, layer, mount, node, path, renderToSvgString } from '@retikz/vanilla';
+import { layer, node, path, renderToSvgString, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
 
-const spec = figure({
+const input = scene({
   id: 'flow',
   layers: [
     layer('main', [
@@ -30,198 +31,103 @@ const spec = figure({
   ],
 });
 
-const svg = renderToSvgString(spec);
-const view = mount(document.querySelector('#diagram')!, spec);
+const svg = renderToSvgString(input);
+const view = mount(document.querySelector('#diagram')!, input);
 ```
 
-`renderToSvgString` does not depend on the DOM, so it works for SSR, build-time generation, or saving SVG. `mount` targets browser hosts, creates SVG by default, and can switch to Canvas with `renderer: 'canvas'`. The returned view owns later updates, interaction hydration, animation controls, and disposal.
+`renderToSvgString` needs no DOM, so it suits SSR, build-time generation, and saving SVG. `mount` hosts a browser view, creating SVG by default or Canvas with `renderer: 'canvas'`. The returned `view` owns later `update`, interaction hydration, animation controls, and disposal.
 
-`figure({ theme: { style, mode } })` writes a sparse root `IRScene.theme`, and `scope({ theme }, children)` uses the same local inheritance contract. Helpers and normalization copy Theme objects rather than mutating caller input, so React and Vanilla can feed the same Theme IR into the same Core compile pipeline.
+`scene({ theme: { style, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization copies Theme objects rather than mutating caller input; both routes finally use the same Core Theme and compile contract.
 
-## Why @retikz/vanilla Exists
+## Input normalization and processing
 
-### Authoring With Plain Data
+### Why InputScene exists
 
-Constructing `@retikz/core` IR directly is valid, but applications often also need layers, stable identities, Tier 2 embeds, and runtime metadata. `figure`, `layer`, `node`, `path`, `scope`, and `embed` express those structures with ordinary objects and functions, without JSX, a React runtime, or component lifecycles. This fits servers, build scripts, native DOM applications, and other non-React hosts.
+Directly building `@retikz/core` IR is valid, but applications often need authoring-friendly Path, Scope, Layer, Tier 2 embeds, and runtime metadata. `scene`, `layer`, `node`, `path`, `scope`, and `embed` construct those inputs as ordinary data, without JSX, a React runtime, or component lifecycles.
 
-These helpers only reduce construction overhead. `node`, `path`, and the other primitives still produce Core graphics, while a plain spec must normalize into the same Core IR. It is not a second IR parallel to Core. The final Core IR remains JSON-serializable; callers and adapters are responsible for keeping `embed.props` serializable when that property matters to their workflow.
+`InputScene` is not a second graphics semantic. `normalizeScene()` centrally handles input sugar, authoring provenance, and embed lowering, then produces the only Core `IRScene`. The resulting IR remains JSON-serializable; callers and their domain adapters decide whether `authoring` and `embed.props` are serializable.
 
-### Why Specs And Runtime Stay Separate
+### From Input to Scene
 
-A spec only describes what to draw. It does not retain a DOM node, Canvas, clock, or `update` method; `mount` returns a view that manages host state. The same spec can therefore produce an SSR string, mount in a browser, or pass through `normalizeFigureSpec` for inspection before rendering.
-
-This separation keeps authoring data easy to generate, compare, and test while concentrating side effects at the runtime boundary. Vanilla is thin in graphics semantics, not in host wiring: it still owns DOM materialization, Canvas redraws, hydration, and animation lifecycles.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Plain spec helpers return ordinary objects',
-      path: 'packages/kernel/vanilla/src/spec/helpers.ts',
-      startLine: 19,
-      endLine: 118,
-    },
-    {
-      label: 'Vanilla spec and runtime metadata contracts',
-      path: 'packages/kernel/vanilla/src/spec/types.ts',
-      startLine: 88,
-      endLine: 123,
-    },
-  ]}
-/>
-
-## From Spec To Scene
-
-`@retikz/vanilla` accepts three input levels. Blue nodes in the figure belong to Vanilla authoring and adaptation; orange nodes are the data contract and compiler owned by Core. Concrete backends begin after `Scene`.
+Blue nodes in this diagram belong to Vanilla input and processing; orange nodes belong to Core. Vanilla, React, and future framework adapters all use this same Input-normalization path.
 
 <ComponentPreview files="vanilla-pipeline" size="xs" hideCode />
 
-| Input          | Owner             | Runtime handling                                                                              |
-| -------------- | ----------------- | --------------------------------------------------------------------------------------------- |
-| plain spec     | `@retikz/vanilla` | Normalize layers, embeds, and metadata; retained by default, with an optional raw static view |
-| Core `IRScene` | `@retikz/core`    | Skip spec normalization; retained by default, with an optional raw static view                |
-| `Scene`        | `@retikz/core`    | Skip normalization and compilation; only create a full-redraw static view                     |
+| Input            | Owner             | How processing handles it                                              |
+| ---------------- | ----------------- | ---------------------------------------------------------------------- |
+| `InputScene`     | `@retikz/vanilla` | Normalizes input, lowers embeds, and collects metadata                 |
+| Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                |
+| Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically |
 
-The plain-spec path first uses `normalizeFigureSpec` to produce Core IR. The Core Program then resolves composites, registries, references, geometry, layout, resources, and animation. Retained mounts of IR or a plain spec use `createVanillaRetainedSession → prepareRetainedInput` to create an updateable Core + Render Session; raw static mounts fully normalize, compile, and materialize on every update. `renderToSvgString` and static mounts of a precompiled `Scene` continue through `toSceneResult` for one-shot compilation / dispatch. Every path ultimately consumes the same Core Scene and Render backends rather than defining parallel graphics semantics.
+`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` keeps a Core Program and Runtime session in retained mode, while `prepareStaticProcessing()` returns one successful result with no lifecycle.
 
 <SourceLinks
   sources={[
     {
-      label: 'Normalize a plain spec into Core IR and metadata',
-      path: 'packages/kernel/vanilla/src/spec/normalize.ts',
-      startLine: 314,
-      endLine: 334,
+      label: 'Input helpers and scene() construction',
+      path: 'packages/kernel/vanilla/src/normalize/helpers.ts',
     },
     {
-      label: 'One-shot Scene entry for SSR and static mounts',
+      label: 'InputScene and normalized-result contracts',
+      path: 'packages/kernel/vanilla/src/normalize/scene/types.ts',
+    },
+    {
+      label: 'InputScene normalization and embed lowering',
+      path: 'packages/kernel/vanilla/src/normalize/scene/normalize.ts',
+    },
+    {
+      label: 'Processing input preparation',
+      path: 'packages/kernel/vanilla/src/processing/prepare.ts',
+    },
+  ]}
+/>
+
+## Runtime and DOM boundary
+
+| API                 | Purpose                             | Returns                      |
+| ------------------- | ----------------------------------- | ---------------------------- |
+| `renderToSvgString` | Produce an `<svg>` string for SSR   | `string`                     |
+| `mount`             | Mount SVG or Canvas by `renderer`   | `VanillaView` / `CanvasView` |
+| `mountSvg`          | Explicitly mount SVG DOM            | `VanillaView`                |
+| `mountCanvas`       | Explicitly mount Canvas             | `CanvasView`                 |
+| `hydrate`           | Bind handlers to SSR / existing SVG | `HydrationHandle`            |
+
+The last four APIs are imported from `@retikz/vanilla/dom`. By default, `InputScene` and `IRScene` create a `VanillaViewMode.Retained` view. `update(next, options?)` atomically publishes the same processing transaction's Scene, artifacts, readonly layers, runtime metadata, events, and animation. A failed transaction publishes no new revision; if rollback itself fails, the view becomes broken and must be disposed and remounted.
+
+With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRScene` fully normalizes, compiles, and redraws without a Session, Snapshot, Patch, transaction, or rollback. A precompiled `Scene` is always static and accepts only another `Scene`.
+
+`mode` and `updateStrategy` are fixed when mounting. `VanillaRetainedRuntimeOptions` permits `rendererFactory`; it is an optional DOM retained-backend extension point, and static mode rejects it. Dispose and remount to change the renderer, DPR, compile topology, or retained strategy.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'One-shot routing for SSR and precompiled Scene',
       path: 'packages/kernel/vanilla/src/runtime/to-scene.ts',
-      startLine: 26,
-      endLine: 46,
     },
     {
-      label: 'Retained mount input preparation',
-      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 99,
-      endLine: 120,
+      label: 'Unified DOM mount dispatch',
+      path: 'packages/kernel/vanilla/src/dom/mount.ts',
     },
     {
-      label: 'Retained Core + Render Session creation entry',
-      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 216,
-      endLine: 285,
+      label: 'DOM retained processing controller',
+      path: 'packages/kernel/vanilla/src/dom/retained.ts',
     },
   ]}
 />
 
-## Runtime & Performance Boundaries
+## Layers and embeds
 
-| API                 | Purpose                                   | Returns                      |
-| ------------------- | ----------------------------------------- | ---------------------------- |
-| `renderToSvgString` | Produce an `<svg>` string for SSR         | `string`                     |
-| `mount`             | Mount SVG or Canvas by `renderer`         | `VanillaView` / `CanvasView` |
-| `mountSvg`          | Mount an SVG DOM explicitly               | `VanillaView`                |
-| `mountCanvas`       | Mount a Canvas explicitly                 | `CanvasView`                 |
-| `hydrate`           | Bind handlers to SSR / existing SVG roots | `HydrationHandle`            |
+`scene({ children })` creates an implicit Layer with the id `default`. Use `layers` and `layer()` when you need draw order, stable Layer ids, or cache hints. `zIndex` only orders the Layer stack, retaining declaration order for equal values. `cache` enters `InputRuntimeMeta` only; the DOM retained renderer conservatively reduces it to a Render cache policy and it never enters Core IR.
 
-`mountSvg` / `mountCanvas` return a view discriminated by `mode` or `VanillaViewMode`. With default options, IR and plain specs create a `VanillaViewMode.Retained` view: `update(next, options?)` places the complete input and mutable renderer config in one transaction. Core publishes a Scene Patch or full fallback, and the Render participant atomically replaces DOM / bitmap, artifacts, optional readonly layers, runtime metadata, events, and animation handles only after success. A failed transaction publishes no new revision. The old view remains usable when rollback succeeds; if rollback itself fails, the Session becomes broken and must be disposed and remounted.
-
-Retained `view.dispose()` removes the host and performs one reverse best-effort cleanup, retrying failed entries in the same call after logical resources retire. If cleanup remains pending, repeated `view.dispose()` calls retry only failed entries; successful work and host removal remain idempotent.
-
-IR and plain specs can also explicitly select static full redraws. The three valid combinations are:
-
-| Configuration     | Update behavior                                           | Session, memory, and failure semantics                                                              |
-| ----------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps Snapshots, candidates, diagnostics, atomic commits, and rollback; this is the default         |
-| `retained + full` | Skips Program `update()` for affected work and runs fully | Retains the same Runtime state and transaction guarantees as auto; it is not a low-memory mode      |
-| `static`          | Fully normalizes, compiles, and redraws on every update   | Creates no Session, Snapshot, diff, transaction, or rollback; less resident state, more update work |
-
-A raw static view accepts `IRScene | VanillaFigureSpec` in `update(next)` instead of locking to the initial input subtype. It updates runtime metadata, artifacts, hydration, and animation on the same root. Compilation or normalization failures before host writes preserve the old picture and public getters. Failures after materialization, animation, or hydration switching begins throw synchronously without a rollback guarantee; dispose and remount the view.
-
-A precompiled `Scene` still creates a naturally `VanillaViewMode.Static` view. `update(nextScene)` preserves root identity but fully redraws the backend; there is no Core Program, Patch, Runtime diagnostics, compile artifacts, or runnable compile driver. This entry rejects the entire `runtime` field, and `compileDriver` fails loudly because the adapter cannot reconstruct authored sites or owner outputs from a compiled Scene. Pass IR or a plain spec when observation or auxiliary layers are required.
-
-Both `mode` and `updateStrategy` are fixed at mount time. Dispose and remount to change the strategy, DPR, or compile topology; do not try to switch them through `update()`.
-
-`diagnostics()` on a retained view returns and drains Runtime diagnostics in queue order. `runtimeMeta` is a deeply immutable snapshot: layers, `childIds`, identity paths, and readonly indexes do not alias internal transaction state. `hydrate()` reads the latest committed Scene, so callers do not rebind after every update.
-
-The SVG retained renderer preserves unchanged DOM identity. Canvas updates a dirty region for safe local changes and otherwise takes the full fallback. Concurrent scheduling and progressive materialization are not part of the current public contract.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'SVG static / retained view dispatch',
-      path: 'packages/kernel/vanilla/src/runtime/mount-svg.ts',
-      startLine: 207,
-      endLine: 220,
-    },
-    {
-      label: 'Vanilla retained Session creation',
-      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 216,
-      endLine: 285,
-    },
-    {
-      label: 'Vanilla retained update transaction',
-      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 301,
-      endLine: 341,
-    },
-    {
-      label: 'Vanilla retained hydration and public read',
-      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 342,
-      endLine: 379,
-    },
-  ]}
-/>
-
-## Options Shape
-
-Render options are grouped by the stage that consumes them:
+Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds the caller-injected `InputEmbedAdapter` by `kind`, lowering typed props into a Core child and Composite dependency contribution.
 
 ```ts
-renderToSvgString(spec, {
-  output: { width: 640, height: 360, idPrefix: 'flow' },
-  compile: { composites, measureText },
-  compileDriver,
-  animation: { enabled: true },
-});
-
-mount(canvasRoot, spec, {
-  renderer: 'canvas',
-  output: { width: 640, height: 360 },
-  canvas: { devicePixelRatio: 2 },
-  runtime: { mode: 'retained', updateStrategy: 'auto', rendererFactory },
-});
-
-mount(svgRoot, spec, {
-  runtime: { mode: 'static' },
-});
-```
-
-`figure()` only describes the figure. `output` controls display size and resource ids, `compile` injects Core compile capabilities, `compileDriver` supplies domain-neutral observer, readonly-layer, and extension-diagnostic wiring, `animation` controls playback or snapshots, and `canvas` applies only to Canvas mounts. The default driver runs ordinary Core compilation and produces no readonly layers. `runtime.mode` defaults to `retained`, while `runtime.updateStrategy` defaults to `auto`; `rendererFactory` replaces the built-in factory only for retained IR / plain-spec mounts. Static mode remains mutually exclusive with `updateStrategy` and `rendererFactory`, and invalid modes, primitives, or accessors throw `RETAINED_RUNTIME_INPUT_INVALID` before DOM creation.
-
-A plain spec figure, Scope, Path, or embed may carry an opaque `authoring` payload. The base normalizer only reports a stable source path and site kind; it neither interprets the payload nor writes it into final Core IR. Optional `@retikz/inspect/vanilla` provides `createInspectionVanillaAuthoring()` and an inspection driver. Layout adds family helpers, a barrier, and a preconfigured driver from `@retikz/layout-vanilla/inspect`. When a retained update changes authoring sites, the candidate transaction creates a new driver session; failure preserves the old frame.
-
-`RenderToStringOptions`, `StaticMountOptions`, `StaticMountCanvasOptions`, and `StaticMountUnifiedOptions` are the existing static options for SSR or precompiled Scenes and continue to reject the whole `runtime` field. Raw-input static mounts instead use `RawStaticMountOptions` / `RawStaticMountCanvasOptions` and require `runtime: { mode: 'static' }`.
-
-Omit `animation.enabled` to follow the system's reduced-motion preference. Explicit `true` forces playback on, and explicit `false` forces it off. `snapshotAt` still overrides playback and produces a static frame.
-
-Retained `update()` accepts only backend-matched closed plain-data options. SVG `RetainedSvgUpdateOptions` contains only top-level `animation`; Canvas `RetainedCanvasUpdateOptions` additionally accepts `canvas.animationProperties`. `devicePixelRatio` is fixed at mount. Passing Canvas-only config to SVG, hot DPR changes, unknown fields, symbols, and accessors throw stable `RETAINED_RUNTIME_INPUT_INVALID`; dispose and remount to change DPR or compile capabilities.
-
-## Layers And Embeds
-
-`figure({ children })` creates a default layer. Use explicit `layers` when you need draw ordering, stable layer ids, or future invalidation hints. `zIndex` only orders the layer stack, with equal values retaining declaration order. `cache` only enters runtime metadata and does not enter Core IR. Alpha.2 folds it into a retained-config hint, but the SVG and Canvas renderers do not consume it yet and do not enable auto, static, or dynamic layer reuse from it.
-
-Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds an injected adapter by `kind` and statically lowers props into a Core IR child and a rooted composite provider contribution.
-
-An adapter root may reuse the embed id when authoring and canonical IR represent the same semantic element; a complex adapter may also emit other unique ids. Vanilla records actual ownership through `identityIndex` and `parentIndex` instead of requiring an `embedId/...` string prefix. Public identities must still be unique across the figure.
-
-```ts
-import type { VanillaTier2Adapter } from '@retikz/vanilla';
-import { embed, figure, layer, node, renderToSvgString } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import { embed, layer, node, renderToSvgString, scene } from '@retikz/vanilla';
 
 type BadgeProps = { label: string };
 
-const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
+const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
   kind: 'badge',
   lower: (props, context) => ({
     node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
@@ -229,79 +135,53 @@ const badgeAdapter: VanillaTier2Adapter<BadgeProps> = {
   }),
 };
 
-const spec = figure({
+const input = scene({
   layers: [layer('content', [embed('badge', 'sales', { label: 'Sales' })])],
 });
 
-const svg = renderToSvgString(spec, { adapters: [badgeAdapter] });
+const svg = renderToSvgString(input, { adapters: [BadgeInputEmbedAdapter] });
 ```
 
-`normalizeFigureSpec` is exported from the package root. `adapters` is a top-level render / mount option, not a field inside `compile`. To inspect normalization before rendering, call `normalizeFigureSpec(spec, { adapters })` directly and read its `ir`, `composites`, and `runtimeMeta` result.
+`normalizeScene()` is exported from the package root. `adapters` is a top-level render, mount, and processing option—not a field inside `compile`. To inspect a normalized result, call `normalizeScene(input, { adapters })` and read `ir`, `contributions`, `runtimeMeta`, and `authoringSites`.
 
-A plain-spec retained update may replace the callback behind the same composite key, schema, and execution branch, committing or rolling it back with the Scene transaction. Definition count, order, key, schema, expand / compile branch, and artifact schema form fixed topology; dispose and remount to change them.
+Adapters, Composite definitions, and compile topology are fixed for a retained mount's lifetime. A domain adapter can process new props at the same authored position; dispose and remount to change the adapter set, a Composite schema, definition count, or execution branch.
 
-<SourceLinks
-  sources={[
-    {
-      label: 'Fixed composite topology and callback transaction',
-      path: 'packages/kernel/vanilla/src/runtime/retained-composites.ts',
-      startLine: 98,
-      endLine: 145,
-    },
-    {
-      label: 'Connect the composite candidate to the Session update',
-      path: 'packages/kernel/vanilla/src/runtime/retained-session.ts',
-      startLine: 301,
-      endLine: 340,
-    },
-  ]}
-/>
+## Responsibility boundaries
 
-## Responsibility Boundaries
+| Capability              | What `@retikz/vanilla` owns                                 | Source of truth / boundary           |
+| ----------------------- | ----------------------------------------------------------- | ------------------------------------ |
+| Framework-neutral input | Builds InputScene, Layers, embeds, and Core primitive input | `@retikz/core` IR                    |
+| Input normalization     | Lowers Input to IR and collects adapter contributions       | `@retikz/core` compile contract      |
+| Shared processing       | Prepares input and manages Core Program and results         | `@retikz/core` / `@retikz/runtime`   |
+| DOM host                | `/dom` SVG / Canvas output, updates, hydration, animation   | `@retikz/render` backend execution   |
+| Tier 2 embeds           | Dispatches Input adapters and collects lowering results     | Domain packages own props / lowering |
 
-| Capability           | What `@retikz/vanilla` owns                                                    | Source of truth / boundary              |
-| -------------------- | ------------------------------------------------------------------------------ | --------------------------------------- |
-| Plain-data authoring | figure, layer, embed, Core primitive helpers, and spec normalization           | `@retikz/core` IR                       |
-| Compile entry        | Accept spec / IR / Scene, aggregate adapter contributions, inject options      | `@retikz/core` compilation              |
-| Host runtime         | SSR strings, DOM / Canvas mounting, update, hydration, and animation lifecycle | `@retikz/render` backend execution      |
-| Tier 2 embeds        | Dispatch adapters by `kind` and aggregate lowering contributions               | Each domain package owns props/lowering |
+React applications use [`@retikz/react`](/kernel/packages/react) to collect JSX. Other frameworks should reuse this package's Input and processing in the same way. Use the relevant Vanilla entry directly for SSR strings or direct DOM / Canvas mounting.
 
-Prefer [`@retikz/react`](/kernel/packages/react) for JSX authoring and React host lifecycles. Use this package for framework-free authoring, SSR strings, or direct DOM / Canvas mounting.
+## API summary
 
-## API Summary
-
-| API                                 | Kind           | Description                                                                            |
-| ----------------------------------- | -------------- | -------------------------------------------------------------------------------------- |
-| `figure`                            | authoring      | Builds a plain spec root with an optional root Theme                                   |
-| `layer`                             | authoring      | Builds a layer with ordering and metadata                                              |
-| `node`                              | authoring      | Builds a named or anonymous node                                                       |
-| `coordinate`                        | authoring      | Builds a named coordinate with a required id                                           |
-| `path`                              | authoring      | Builds a path; `way` reuses Draw way DSL                                               |
-| `scope`                             | authoring      | Builds a Theme, style, and namespace scope                                             |
-| `embed`                             | authoring      | Builds a Tier 2 embed node                                                             |
-| `VanillaLayerCache`                 | authoring      | Provides a metadata hint for future layer invalidation optimization                    |
-| `VanillaViewMode`                   | runtime        | Public const object for retained / static view modes                                   |
-| `VanillaRuntimeOptions`             | type           | Discriminated retained / static config for raw inputs                                  |
-| `VanillaRetainedRuntimeOptions`     | type           | Retained mode, update strategy, and renderer factory                                   |
-| `VanillaStaticRuntimeOptions`       | type           | Closed config that only permits `mode: "static"`                                       |
-| `CommonOptions`                     | type           | Output, compile, compile-driver, animation, and adapter options                        |
-| `CommonOptions.compile.themeStyles` | compile option | Supplies runtime Core Theme style resolvers; functions never enter plain specs or JSON |
-| `VanillaFigureSpec`                 | type           | Version 1 plain spec with an optional root `theme`                                     |
-| `VanillaScopeSpec`                  | type           | Scope spec with local Theme and opaque authoring                                       |
-| `VanillaPathSpec`                   | type           | Core Path spec with opaque authoring                                                   |
-| `VanillaEmbedSpec`                  | type           | Tier 2 spec with opaque authoring                                                      |
-| `VanillaCompileDriver`              | type           | Injects observers and resolves same-revision readonly layers                           |
-| `isVanillaFigureSpec`               | normalization  | Checks for a version 1 plain spec                                                      |
-| `normalizeFigureSpec`               | normalization  | Produces Core IR, composites, and runtime metadata                                     |
-| `VanillaTier2Adapter`               | type           | Defines lowering for `embed()`                                                         |
-| `RetainedVanillaView`               | runtime        | Transactional retained view for IR / plain specs                                       |
-| `StaticVanillaView`                 | runtime        | Full-redraw view for a precompiled Scene or raw input                                  |
-| `StaticRawSvgView`                  | runtime        | SVG static view for IR / plain specs                                                   |
-| `StaticRawCanvasView`               | runtime        | Canvas static view for IR / plain specs                                                |
-| `RawStaticMountOptions`             | type           | SVG static-mount options for IR / plain specs                                          |
-| `RawStaticMountCanvasOptions`       | type           | Canvas static-mount options for IR / plain specs                                       |
-| `StaticMountOptions`                | type           | SVG static-mount options for a precompiled Scene                                       |
-| `StaticMountCanvasOptions`          | type           | Canvas static-mount options for a precompiled Scene                                    |
-| `StaticMountUnifiedOptions`         | type           | Unified static-mount options for a precompiled Scene                                   |
-| `RetainedSvgUpdateOptions`          | type           | Animation config for SVG retained updates                                              |
-| `RetainedCanvasUpdateOptions`       | type           | Animation and property config for Canvas retained updates                              |
+| API                                  | Kind          | Description                                                |
+| ------------------------------------ | ------------- | ---------------------------------------------------------- |
+| `scene` / `layer`                    | Input helper  | Build a Scene input and named Layer                        |
+| `node` / `coordinate` / `path`       | Input helper  | Build Core primitives or authoring Path input              |
+| `scope` / `embed`                    | Input helper  | Build Scope and Tier 2 embed input                         |
+| `InputLayerCache`                    | const object  | Layer cache hint                                           |
+| `InputScene` / `InputChild`          | type          | Framework-neutral authoring root and children              |
+| `InputLayer` / `InputNode`           | type          | Layer and Node input                                       |
+| `InputPath` / `InputScope`           | type          | Path and Scope input with authoring sugar or payload       |
+| `InputEmbed`                         | type          | Tier 2 embed input                                         |
+| `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution              |
+| `isInputScene` / `normalizeScene`    | normalization | Detect and normalize InputScene                            |
+| `NormalizedInputScene`               | type          | IR, contributions, metadata, and authoring provenance      |
+| `ProcessingSource`                   | type          | InputScene or IRScene accepted by processing               |
+| `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy    |
+| `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and metadata       |
+| `createProcessingController`         | processing    | Framework-neutral retained processing controller           |
+| `prepareStaticProcessing`            | processing    | One lifecycle-free processing result                       |
+| `renderToSvgString`                  | SSR           | Render InputScene, IRScene, or Scene as an SVG string      |
+| `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`            |
+| `VanillaRuntimeOptions`              | type          | Retained or static runtime config for InputScene / IRScene |
+| `VanillaRetainedRuntimeOptions`      | type          | Retained mode, update strategy, optional renderer factory  |
+| `VanillaStaticRuntimeOptions`        | type          | Closed configuration permitting only `mode: 'static'`      |
+| `RetainedVanillaView`                | runtime       | Transactional retained view for IRScene / InputScene       |
+| `StaticVanillaView`                  | runtime       | Full-redraw view for Scene, IRScene, or InputScene         |

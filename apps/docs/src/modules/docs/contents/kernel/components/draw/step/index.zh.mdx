@@ -113,9 +113,9 @@ import { Path, Step } from '@retikz/react';
 
 ### 从标记到有序 Step
 
-`<Step>` 是返回 `null` 的标记组件，本身不创建 DOM 或图形。父 `<Path>` 按 JSX 顺序收集这些标记，把字符串 target、缺省 `kind` 和 `<EdgeLabel>` child 归一成可序列化的 `IRStep`；显式 `label` prop 比 child 优先。
+`<Step>` 是返回 `null` 的标记组件，本身不创建 DOM 或图形。父 `<Path>` 按 JSX 顺序收集这些标记，把字符串 target、缺省 `kind` 和 `<EdgeLabel>` child 收集为 Vanilla `InputStep`；显式 `label` prop 比 child 优先。随后由 Vanilla normalize 产出可序列化的 `IRStep`。
 
-除单个自包含的 `rectangle` 外，一条 Path 至少需要两个 Step。首段不是 `move` 时，React 适配层会把它改成 `move`：有 `to` 就保留该目标，没有 `to` 就回退到 `[0, 0]`。因此首段写成 `line` 只会定位游标，不会画出这条线。
+除单个自包含的 `rectangle` 外，一条 Path 至少需要两个 Step。首段不是 `move` 时，Vanilla normalize 会把它改成 `move`：有 `to` 就保留该目标，没有 `to` 就回退到 `[0, 0]`。因此首段写成 `line` 只会定位游标，不会画出这条线。
 
 <SourceLinks
   sources={[
@@ -127,15 +127,15 @@ import { Path, Step } from '@retikz/react';
     },
     {
       label: 'Path 收集 Step 与标签优先级',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 363,
-      endLine: 576,
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 256,
+      endLine: 421,
     },
     {
       label: '首段与最短序列规范化',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 561,
-      endLine: 576,
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 76,
+      endLine: 85,
     },
   ]}
 />

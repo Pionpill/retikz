@@ -1,8 +1,8 @@
 import type { IRScopePlacement, IRScopeSelfPoint } from '@retikz/core';
+import type { InputTransform } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
-import type { InputTransform } from '@retikz/vanilla';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 

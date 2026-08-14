@@ -79,7 +79,7 @@ Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 
 
 ### Vanilla 与 SSR
 
-Vanilla API 使用 plain helper 构造同一份明细表 spec。浏览器组合时使用 `embedTable()` 与 `createTableAdapter()`；一次性服务端渲染使用 `renderTable()`。
+Vanilla API 使用 plain helper 构造同一份明细表 spec。浏览器组合时使用 `embedTable()` 与 `TableInputEmbedAdapter`；一次性服务端渲染使用 `renderTable()`。
 
 ```ts
 import { detailTable, renderTable } from '@retikz/table-vanilla';

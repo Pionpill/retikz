@@ -416,7 +416,7 @@ describe('ComponentPreviewDialog', () => {
 
     const card = container.firstElementChild!;
     expect(card.querySelector('[data-runtime-renderer="canvas"]')).not.toBeNull();
-    const cardVanillaButton = card.querySelector<HTMLButtonElement>('button[aria-label="Vanilla plain spec code"]');
+    const cardVanillaButton = card.querySelector<HTMLButtonElement>('button[aria-label="Vanilla Input code"]');
     expect(cardVanillaButton).not.toBeNull();
     act(() => cardVanillaButton!.click());
     expect(card.querySelector('[data-runtime-renderer="svg"]')).not.toBeNull();
@@ -437,9 +437,7 @@ describe('ComponentPreviewDialog', () => {
     expect(dialog).not.toBeNull();
     expect(dialog!.querySelector('[data-runtime-renderer="canvas"]')).not.toBeNull();
 
-    const dialogVanillaButton = dialog!.querySelector<HTMLButtonElement>(
-      'button[aria-label="Vanilla plain spec code"]',
-    );
+    const dialogVanillaButton = dialog!.querySelector<HTMLButtonElement>('button[aria-label="Vanilla Input code"]');
     expect(dialogVanillaButton).not.toBeNull();
     act(() => dialogVanillaButton!.click());
     expect(dialog!.querySelector('[data-runtime-renderer="svg"]')).not.toBeNull();

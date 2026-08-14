@@ -1,7 +1,8 @@
 import type { AnyPathKindDefinition, CompositeDependencyContribution, IRScene } from '@retikz/core';
 import type { FC, ReactElement, ReactNode } from 'react';
 
-import { buildIRWithContributions, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
+import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
+import { normalizeScene } from '@retikz/vanilla';
 import { createElement, isValidElement } from 'react';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
@@ -75,9 +76,12 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
       childNode = createElement(Scope, styleProps, props.children);
     }
   }
-  const built =
+  const normalized =
     props.ir === undefined
-      ? buildIRWithContributions(childNode)
+      ? (() => {
+          const input = createInputScene(childNode);
+          return normalizeScene(input.scene, { adapters: input.adapters });
+        })()
       : {
           ir: props.ir,
           contributions: [] as Array<CompositeDependencyContribution>,
@@ -85,7 +89,7 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
   const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
-  let ir = built.ir;
+  let ir = normalized.ir;
   if (viewBox !== undefined) ir = { ...ir, viewBox };
   if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
   const ownsOutputSize = isLayout || isEmbeddableRoot;
@@ -94,7 +98,7 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
   return {
     ir,
-    contributions: built.contributions,
+    contributions: [...normalized.contributions],
     width,
     height,
     pathKinds,

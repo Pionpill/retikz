@@ -113,9 +113,9 @@ The panel adjusts `position`, `side`, `sloped`, and text color together. `positi
 
 ### From markers to an ordered Step sequence
 
-`<Step>` is a marker component that returns `null`; it creates no DOM or graphic by itself. Its parent `<Path>` collects these markers in JSX order and normalizes string targets, a missing `kind`, and `<EdgeLabel>` children into serializable `IRStep` values. An explicit `label` prop wins over the child form.
+`<Step>` is a marker component that returns `null`; it creates no DOM or graphic by itself. Its parent `<Path>` collects these markers in JSX order, collecting string targets, a missing `kind`, and `<EdgeLabel>` children as Vanilla `InputStep` values. An explicit `label` prop wins over the child form. Vanilla normalization then produces serializable `IRStep` values.
 
-Except for a single self-contained `rectangle`, a Path needs at least two Steps. If the first Step is not `move`, the React adapter converts it to `move`: it keeps `to` when available and falls back to `[0, 0]` otherwise. A leading `line` therefore positions the cursor instead of drawing that line.
+Except for a single self-contained `rectangle`, a Path needs at least two Steps. If the first Step is not `move`, Vanilla normalization converts it to `move`: it keeps `to` when available and falls back to `[0, 0]` otherwise. A leading `line` therefore positions the cursor instead of drawing that line.
 
 <SourceLinks
   sources={[
@@ -127,15 +127,15 @@ Except for a single self-contained `rectangle`, a Path needs at least two Steps.
     },
     {
       label: 'Path Step collection and label precedence',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 363,
-      endLine: 576,
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 256,
+      endLine: 421,
     },
     {
       label: 'First-step and minimum-sequence normalization',
-      path: 'packages/kernel/react/src/kernel/adapter/builder.ts',
-      startLine: 561,
-      endLine: 576,
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 76,
+      endLine: 85,
     },
   ]}
 />

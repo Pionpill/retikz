@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 
-import { buildIRWithContributions, convertReactNodeToIR } from '@retikz/react';
+import { createInputScene } from '@retikz/react';
+import { normalizeScene } from '@retikz/vanilla';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -26,6 +27,12 @@ const typeName = (element: ReactElement): string | undefined => {
   const raw = type.displayName ?? type.name;
   if (raw === undefined) return undefined;
   return raw.startsWith('@retikz/') ? raw.slice('@retikz/'.length) : raw;
+};
+
+/** 将 JSX child 通过唯一的 React-to-Vanilla Input 路径归一为 Source IR */
+const normalizeReactChildren = (children: ReactNode) => {
+  const input = createInputScene(children);
+  return normalizeScene(input.scene, { adapters: input.adapters });
 };
 
 describe('parseRetikzJsx — happy path', () => {
@@ -121,12 +128,12 @@ describe('parseRetikzJsx — happy path', () => {
     expect(typeName(element)).toBe('Layout');
   });
 
-  it('与 convertReactNodeToIR 串联：能产出合法 IR', () => {
+  it('与 Vanilla normalizeScene 串联：能产出合法 IR', () => {
     const element = parseOk(
       '<Layout><Node position={{ x: 0, y: 0 }}>A</Node><Node position={{ x: 50, y: 0 }}>B</Node></Layout>',
     );
     const tikzProps = element.props as { children?: ReactNode };
-    const ir = convertReactNodeToIR(tikzProps.children);
+    const ir = normalizeReactChildren(tikzProps.children).ir;
     // 不深究 IR 内部细节，但顶层应是 children 数组、长度 2 的 'node' kind
     expect(Array.isArray(ir.children)).toBe(true);
     expect(ir.children.length).toBe(2);
@@ -139,7 +146,7 @@ describe('parseRetikzJsx — happy path', () => {
       '<Layout><Frame id="group/frame" padding={12}><FrameTitle>Group</FrameTitle><FrameDescription>Details</FrameDescription><Node position={[0, 0]}>A</Node></Frame></Layout>',
     );
     const layoutProps = element.props as { children?: ReactNode };
-    const result = buildIRWithContributions(layoutProps.children);
+    const result = normalizeReactChildren(layoutProps.children);
 
     expect(result.ir.children[0]).toMatchObject({
       namespace: 'standard',

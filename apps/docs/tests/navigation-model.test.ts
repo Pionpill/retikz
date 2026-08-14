@@ -113,7 +113,7 @@ describe('layout utils', () => {
     const bubble = points?.children?.find(page => page.id === 'bubble');
     const chartPaths = flattenLeaves('viz', vizSection)
       .map(node => node.path)
-      .filter(path => path.startsWith('/viz/chart/'));
+      .filter(path => path.startsWith('/viz/chart/') && !path.includes('/changelog/'));
 
     expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.scatter-points' });
     expect(scatter?.meta).toMatchObject({

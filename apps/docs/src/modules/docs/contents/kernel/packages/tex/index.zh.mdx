@@ -150,14 +150,14 @@ const lowerTex = await createMathJaxLowerTex({
 
 ### Vanilla 注入
 
-Vanilla 把同一个 lowerer 放在 `compile.lowerTex`；plain spec、Core IR 与 Scene 仍沿用各自原有入口：
+Vanilla 把同一个 lowerer 放在 `compile.lowerTex`；InputScene、Core IR 与 Scene 仍沿用各自原有入口：
 
 ```ts
-import { figure, node, renderToSvgString } from '@retikz/vanilla';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
 import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine());
-const spec = figure({
+const spec = scene({
   children: [node('eq', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
 });
 

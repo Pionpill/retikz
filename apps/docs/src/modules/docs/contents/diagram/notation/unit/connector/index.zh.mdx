@@ -63,7 +63,7 @@ const byWay = createConnector({
 
 <ComponentPreview files="connector-routing" size="lg" />
 
-直接 JSON 必须写 canonical `children`，并显式注入 `ConnectorDefinition`。Vanilla 的 `connector()` 返回 embed；`ConnectorVanillaAdapter` 以 embed id 创建同 id `IRConnector`，不会添加 `/connector` 后缀
+直接 JSON 必须写 canonical `children`，并显式注入 `ConnectorDefinition`。Vanilla 的 `connector()` 返回 embed；`ConnectorInputEmbedAdapter` 以 embed id 创建同 id `IRConnector`，不会添加 `/connector` 后缀
 
 省略 `marks` 时 Connector 默认添加一个终点箭头。显式 `marks` 会完整覆盖默认值，因此 `marks: []` 可以明确关闭箭头
 

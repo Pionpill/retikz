@@ -1,7 +1,7 @@
+import type { InputNodeLabel } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
-import type { InputNodeLabel } from '@retikz/vanilla';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

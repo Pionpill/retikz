@@ -144,8 +144,8 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('`@retikz/chart-react`');
-    expect(en).toContain('`@retikz/chart-react`');
+    expect(zh).toContain('`@retikz/chart-react/point`');
+    expect(en).toContain('`@retikz/chart-react/point`');
     expect(zh).toContain('`ScatterChart`');
     expect(en).toContain('`ScatterChart`');
     expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');

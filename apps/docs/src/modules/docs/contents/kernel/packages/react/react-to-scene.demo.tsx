@@ -2,12 +2,12 @@ import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 
-/** @retikz/react 把 JSX 适配为 Core IR，再交给 Core 编译成 Scene 的职责链 */
+/** @retikz/react 把 JSX 收集为 Vanilla Input，再由 processing 产出 Scene 的职责链 */
 const Demo: FC = () => (
-  <Layout width={780} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout width={860} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
     <Node
       id="jsx"
-      position={[-320, 0]}
+      position={[-350, 0]}
       text={['Kernel / Sugar JSX', 'React children']}
       stroke="dodgerblue"
       fill="dodgerblue"
@@ -17,9 +17,9 @@ const Demo: FC = () => (
       font={{ size: 12 }}
     />
     <Node
-      id="builder"
-      position={[-155, 0]}
-      text={['React builder', 'buildIRWithContributions']}
+      id="input"
+      position={[-175, 0]}
+      text={['React collector', 'createInputScene']}
       stroke="dodgerblue"
       fill="dodgerblue"
       fillOpacity={0.08}
@@ -28,22 +28,22 @@ const Demo: FC = () => (
       font={{ size: 12, weight: 'bold' }}
     />
     <Node
-      id="ir"
-      position={[15, 0]}
-      text={['IRScene', 'JSON contract']}
-      stroke="darkorange"
-      fill="darkorange"
+      id="input-scene"
+      position={[0, 0]}
+      text={['InputScene', 'typed authoring']}
+      stroke="mediumseagreen"
+      fill="mediumseagreen"
       fillOpacity={0.08}
       cornerRadius={4}
       padding={8}
       font={{ size: 12 }}
     />
     <Node
-      id="compile"
-      position={[170, 0]}
-      text={['Core compiler', 'compileToScene']}
-      stroke="darkorange"
-      fill="darkorange"
+      id="processing"
+      position={[185, 0]}
+      text={['Vanilla processing', 'normalize + compile']}
+      stroke="mediumseagreen"
+      fill="mediumseagreen"
       fillOpacity={0.08}
       cornerRadius={4}
       padding={8}
@@ -51,7 +51,7 @@ const Demo: FC = () => (
     />
     <Node
       id="scene"
-      position={[320, 0]}
+      position={[370, 0]}
       text={['Scene', 'renderer-agnostic']}
       stroke="darkorange"
       fill="darkorange"
@@ -61,10 +61,10 @@ const Demo: FC = () => (
       font={{ size: 12 }}
     />
 
-    <Draw way={['jsx', 'builder']} arrow="->" stroke="gray" />
-    <Draw way={['builder', 'ir']} arrow="->" stroke="gray" />
-    <Draw way={['ir', 'compile']} arrow="->" stroke="gray" />
-    <Draw way={['compile', 'scene']} arrow="->" stroke="gray" />
+    <Draw way={['jsx', 'input']} arrow="->" stroke="gray" />
+    <Draw way={['input', 'input-scene']} arrow="->" stroke="gray" />
+    <Draw way={['input-scene', 'processing']} arrow="->" stroke="gray" />
+    <Draw way={['processing', 'scene']} arrow="->" stroke="gray" />
   </Layout>
 );
 

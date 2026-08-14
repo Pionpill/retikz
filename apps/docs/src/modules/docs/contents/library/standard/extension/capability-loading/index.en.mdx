@@ -70,11 +70,11 @@ If a Definition is missing, Core retains its `COMPOSITE_NOT_REGISTERED` diagnost
 
 ### React JSX
 
-`<Grid>`, `<Axes>`, `<Frame>`, `<Surface>`, and `<Legend>` set their own provider as a root through static adapters. `<Surface>` then appends the contribution of its one Tier 2 child, preserving authored provider order. Layout containers contribute their providers from `@retikz/layout-react`. `<Layout>` only collects contributions and calls the Core resolver; it creates no second registry
+`<Grid>`, `<Axes>`, `<Frame>`, `<Surface>`, and `<Legend>` set their own provider as a root through static InputEmbed adapters. `<Surface>` then appends the contribution of its one Tier 2 child, preserving authored provider order. Layout containers create InputEmbed values from `@retikz/layout-react`; `<Layout>` hands them to Vanilla processing for the single Core resolver path and creates no second registry
 
 ### Vanilla
 
-Vanilla builders continue to use adapters for authoring. Pass only the adapters used by the current figure, or use `StandardVanillaAdapters` as the adapter convenience array. The adapters contribute a rooted provider graph that enters the same Core resolver as React:
+Vanilla Scenes use InputEmbed adapters for authoring. Pass only the adapters used by the current Scene, or use `StandardInputEmbedAdapters` as the convenience array. The adapters contribute a rooted provider graph that Vanilla processing sends through the single Core resolver:
 
 ```ts
 import { GridDefinition } from '@retikz/standard';
@@ -85,7 +85,7 @@ const svg = renderToSvgString(persistedIR, {
 });
 ```
 
-`StandardVanillaAdapters` is an authoring convenience from `@retikz/standard-vanilla`, not a Standard compile preset. Layout authoring uses `LayoutVanillaAdapters` from `@retikz/layout-vanilla`
+`StandardInputEmbedAdapters` is an authoring convenience from `@retikz/standard-vanilla`, not a Standard compile preset. Layout authoring uses `LayoutInputEmbedAdapters` from `@retikz/layout-vanilla`
 
 ## Execution model
 
@@ -122,7 +122,7 @@ const svg = renderToSvgString(persistedIR, {
 | `GridProvider`, `AxesProvider`, `FrameProvider`, `SurfaceProvider`, `LegendProvider`           | `@retikz/standard`         | Rooted providers shared by React, Vanilla, and toolchains   |
 | `GridDefinition`, `AxesDefinition`, `FrameDefinition`, `SurfaceDefinition`, `LegendDefinition` | `@retikz/standard`         | Final Core Definitions for direct-IR hosts                  |
 | `GridSchema`, `createGrid()`, and peers                                                        | `@retikz/standard`         | Validate and construct JSON-safe Standard input             |
-| `StandardVanillaAdapters`                                                                      | `@retikz/standard-vanilla` | Convenience array for the current Standard Vanilla adapters |
+| `StandardInputEmbedAdapters`                                                                   | `@retikz/standard-vanilla` | Convenience array for the current Standard Vanilla adapters |
 
 All three Standard packages still expose only their root entry. Providers and Definitions are named exports, so consumers' bundlers can tree-shake by reference. On-demand use means the reachable closure of current contributions; it is not runtime dynamic loading
 

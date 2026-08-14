@@ -17,11 +17,11 @@ Standard extends Core horizontally rather than creating another drawing kernel:
 
 ## Three packages
 
-| Package                    | Responsibility                                 | Use it when                                        |
-| -------------------------- | ---------------------------------------------- | -------------------------------------------------- |
-| `@retikz/standard`         | Schemas, factories, Definitions, and lowering  | Validating or persisting IR and compiling directly |
-| `@retikz/standard-react`   | React DSL for presentation components          | Authoring inside a React `Layout`                  |
-| `@retikz/standard-vanilla` | Plain-spec helpers and Vanilla Tier 2 adapters | Authoring in browsers or scripts without React     |
+| Package                    | Responsibility                                | Use it when                                        |
+| -------------------------- | --------------------------------------------- | -------------------------------------------------- |
+| `@retikz/standard`         | Schemas, factories, Definitions, and lowering | Validating or persisting IR and compiling directly |
+| `@retikz/standard-react`   | React DSL for presentation components         | Authoring inside a React `Layout`                  |
+| `@retikz/standard-vanilla` | Input helpers and InputEmbedAdapter values    | Authoring in browsers or scripts without React     |
 
 All three packages share the schemas and lowering from `@retikz/standard`. React and Vanilla connect authoring inputs to the same capabilities without duplicating semantics.
 

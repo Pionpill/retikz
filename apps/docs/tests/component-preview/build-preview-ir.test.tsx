@@ -1,5 +1,5 @@
 import type { CompositeDependencyContribution } from '@retikz/core';
-import type { EmbeddableTier2Adapter } from '@retikz/react';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
@@ -24,9 +24,9 @@ const hookedCompositeDependencies = {
   ],
 } satisfies CompositeDependencyContribution;
 
-const hookedEmbeddableAdapter: EmbeddableTier2Adapter = {
-  displayName: 'HookedEmbeddable',
-  contribute: () => ({
+const hookedEmbeddableAdapter: InputEmbedAdapter = {
+  kind: 'hooked.demo',
+  lower: () => ({
     node: { namespace: 'hooked', type: 'demo' },
     compositeDependencies: hookedCompositeDependencies,
   }),
@@ -34,7 +34,7 @@ const hookedEmbeddableAdapter: EmbeddableTier2Adapter = {
 
 const HookedEmbeddable: FC & {
   isTier2Embeddable?: true;
-  embeddableAdapter?: EmbeddableTier2Adapter;
+  inputEmbedAdapter?: InputEmbedAdapter;
 } = () => {
   useMemo(() => 1, []);
   return <Layout width={40} height={20} />;
@@ -42,7 +42,7 @@ const HookedEmbeddable: FC & {
 
 HookedEmbeddable.displayName = 'HookedEmbeddable';
 HookedEmbeddable.isTier2Embeddable = true;
-HookedEmbeddable.embeddableAdapter = hookedEmbeddableAdapter;
+HookedEmbeddable.inputEmbedAdapter = hookedEmbeddableAdapter;
 
 const HookedEmbeddableDemo: FC = () => <HookedEmbeddable />;
 

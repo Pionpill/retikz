@@ -242,7 +242,7 @@ PGFPlots sits above TikZ primitives; similarly, `@retikz/plot` uses composites t
 
 Ordinary users only place a supported domain component inside `<Layout>`. Its package contributes the high-level node and composite definition, and `<Layout>` sends both through the same core lowering path without teaching core about that domain.
 
-If you are implementing a domain adapter, injecting `composites` / `embeddables`, or debugging dataset aggregation and host behavior, go directly to [Layout: Higher-Level Capabilities and Host Integration](/kernel/components/layout/overview#higher-level-capabilities-and-host-integration) and [Runtime Extensions](/kernel/reference/runtime/extensions). This concept page intentionally omits React static-walk and aggregation internals.
+If you are implementing a domain InputEmbedAdapter, registering `adapters`, or debugging dataset aggregation and host behavior, go directly to [Layout: Higher-Level Capabilities and Host Integration](/kernel/components/layout/overview#higher-level-capabilities-and-host-integration) and [Runtime Extensions](/kernel/reference/runtime/extensions). This concept page intentionally omits React Input collection and Vanilla-processing aggregation internals.
 
 ## Provider roots and transitive dependencies
 

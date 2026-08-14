@@ -14,25 +14,14 @@ describe('docs search index frontmatter', () => {
     const index = await loadSearchIndex();
 
     expect(index['/viz/chart/points/scatter']?.zh?.headings).toEqual(
-      expect.arrayContaining([
-        'Point Mark',
-        'Axis',
-        'Label',
-        'Scale',
-        'Transform',
-        'Theme 与 Layout',
-        'Additional Marks',
-      ]),
+      expect.arrayContaining(['Chart authoring', 'Presentation', 'Runtime styles', 'Plot extensions']),
     );
     expect(index['/viz/chart/points/scatter']?.en?.headings).toEqual(
       expect.arrayContaining([
-        'Point Mark',
-        'Axis',
-        'Label',
-        'Scale',
-        'Transform',
-        'Theme and Layout',
-        'Additional Marks',
+        'Chart authoring',
+        'Presentation',
+        'Runtime styles',
+        'Plot extensions',
       ]),
     );
   });

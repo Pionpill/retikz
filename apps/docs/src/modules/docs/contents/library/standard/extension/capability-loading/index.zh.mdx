@@ -70,11 +70,11 @@ import { FrameDefinition, GridDefinition } from '@retikz/standard';
 
 ### React JSX
 
-`<Grid>`、`<Axes>`、`<Frame>`、`<Surface>` 与 `<Legend>` 通过静态 adapter 把各自 provider 设为 root。`<Surface>` 还把唯一 Tier 2 child 的 contribution 接在自身之后，保持 authored provider 顺序。布局容器由 `@retikz/layout-react` 贡献自己的 provider；`<Layout>` 只收集 contributions 并调用 Core resolver，不创建第二套 registry
+`<Grid>`、`<Axes>`、`<Frame>`、`<Surface>` 与 `<Legend>` 通过静态 InputEmbed adapter 把各自 provider 设为 root。`<Surface>` 还把唯一 Tier 2 child 的 contribution 接在自身之后，保持 authored provider 顺序。布局容器由 `@retikz/layout-react` 生成 InputEmbed；`<Layout>` 把 Input 交给 Vanilla processing 统一解析 contributions，不创建第二套 registry
 
 ### Vanilla
 
-Vanilla builder 继续使用 adapter 做 authoring；当前使用的 adapter 可以按需传入，也可以使用 `StandardVanillaAdapters` 这一 adapter 便利数组。adapter 贡献 rooted provider graph，与 React 使用同一个 Core resolver：
+Vanilla Scene 使用 InputEmbed adapter 做 authoring；当前使用的 adapter 可以按需传入，也可以使用 `StandardInputEmbedAdapters` 这一便利数组。adapter 贡献 rooted provider graph，并由 Vanilla processing 统一交给 Core resolver：
 
 ```ts
 import { GridDefinition } from '@retikz/standard';
@@ -85,7 +85,7 @@ const svg = renderToSvgString(persistedIR, {
 });
 ```
 
-`StandardVanillaAdapters` 属于 `@retikz/standard-vanilla` 的 authoring 便利入口，不是 Standard 的 compile preset。布局 authoring 使用 `@retikz/layout-vanilla` 的 `LayoutVanillaAdapters`
+`StandardInputEmbedAdapters` 属于 `@retikz/standard-vanilla` 的 authoring 便利入口，不是 Standard 的 compile preset。布局 authoring 使用 `@retikz/layout-vanilla` 的 `LayoutInputEmbedAdapters`
 
 ## 执行机制
 
@@ -122,7 +122,7 @@ const svg = renderToSvgString(persistedIR, {
 | `GridProvider`、`AxesProvider`、`FrameProvider`、`SurfaceProvider`、`LegendProvider`           | `@retikz/standard`         | React / Vanilla / 工具链共用的 rooted provider |
 | `GridDefinition`、`AxesDefinition`、`FrameDefinition`、`SurfaceDefinition`、`LegendDefinition` | `@retikz/standard`         | 直接 IR 宿主使用的最终 Core Definition         |
 | `GridSchema`、`createGrid()` 等                                                                | `@retikz/standard`         | 校验和构造 JSON-safe Standard 输入             |
-| `StandardVanillaAdapters`                                                                      | `@retikz/standard-vanilla` | 当前 Standard Vanilla adapter 便利数组         |
+| `StandardInputEmbedAdapters`                                                                   | `@retikz/standard-vanilla` | 当前 Standard Vanilla adapter 便利数组         |
 
 三个 Standard 包仍只发布根入口；Provider 与 Definition 都是 named export，消费方 bundler 可按引用 tree-shaking。按需使用指当前 contributions 的可达闭包，不等同于运行时动态加载
 

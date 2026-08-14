@@ -121,7 +121,7 @@ The `way` array is scanned from left to right. Its first item must be a target a
 | `label`                           | Sets the next `step.label`; no own step | Waits for and decorates next step |
 | `cycle`                           | `cycle` step                            | Closes the current subpath        |
 
-The same scan validates structure. A `way` with fewer than two items, a non-target first item, an infix operator without a following target, consecutive labels, or a trailing label fails while Draw expands instead of producing an ambiguous Kernel subtree.
+The same scan validates structure. A `way` with fewer than two items, a non-target first item, an infix operator without a following target, consecutive labels, or a trailing label fails during Input normalization instead of producing an ambiguous Kernel subtree.
 
 <SourceLinks
   sources={[
@@ -151,15 +151,15 @@ expands to the equivalent Kernel component tree:
 </Path>
 ```
 
-Draw forwards whole-path properties such as stroke, fill, arrows, and stacking to `<Path>`, then maps every normalized action to a `<Step>`. Both forms therefore enter the same Kernel semantics and downstream geometry pipeline. Switching from Draw to an explicit Path + Step tree changes authoring granularity, not path behavior.
+Draw forwards `way` and whole-path properties such as stroke, fill, arrows, and stacking to `<Path>`; Vanilla then normalizes it into a Step for every action. Both forms therefore enter the same Kernel semantics and downstream geometry pipeline. Switching from Draw to an explicit Path + Step tree changes authoring granularity, not path behavior.
 
 <SourceLinks
   sources={[
     {
-      label: 'Draw expansion into Path and Step',
+      label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 88,
-      endLine: 157,
+      startLine: 50,
+      endLine: 54,
     },
   ]}
 />
