@@ -1,9 +1,14 @@
-import type { CoreProviderContribution, CoreDependencyProvider } from '@retikz/core';
+import type { CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
 
-import { createPlotProvider as createPlotDependencyProvider, PLOT_NAMESPACE, PlotComposite } from '@retikz/plot';
+import {
+  createPlotProvider as createPlotDependencyProvider,
+  createPlotProviderContribution,
+  PLOT_NAMESPACE,
+  PlotComposite,
+} from '@retikz/plot';
 import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
 import type { InputPlotEmbed } from '../spec';
@@ -45,7 +50,7 @@ export type PlotContributionInput = Readonly<{
 export type ResolvedPlotContribution = Readonly<{
   /** 已类型化的完整 Plot Source IR */
   spec: IRPlotSpec;
-  /** 只包含 `plot.plot` 的 provider contribution */
+  /** Plot composite 及其 Standard shape 依赖的 provider contribution */
   contribution: CoreProviderContribution;
 }>;
 
@@ -57,8 +62,10 @@ export const createPlotProvider = (input: {
 
 /** 将完整 PlotSpec 归一为 Plot-owned dependency contribution */
 export const resolvePlotContribution = (input: PlotContributionInput): ResolvedPlotContribution => {
-  const provider = createPlotProvider({ datasets: input.datasets, lowerOptions: input.lowerOptions });
-  return { spec: input.spec, contribution: { roots: [provider.key], providers: [provider] } };
+  return {
+    spec: input.spec,
+    contribution: createPlotProviderContribution(input.datasets, input.lowerOptions),
+  };
 };
 
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
@@ -67,12 +74,12 @@ export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
   lower: (props, context) => {
     assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
     const spec = normalizePlot(props.spec);
-    const provider = createPlotProvider({ datasets: props.datasets, lowerOptions: props.lowerOptions });
+    const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
     const node =
       props.preserveRootIdentity === true ? spec : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };
     return {
       node: wrapPlotPanel(node, props.panel),
-      providerDependencies: { roots: [provider.key], providers: [provider] },
+      providerDependencies,
     };
   },
 };

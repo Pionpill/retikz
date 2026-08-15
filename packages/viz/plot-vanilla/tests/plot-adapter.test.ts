@@ -73,10 +73,16 @@ describe('Plot Vanilla Tier2 adapter', () => {
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
 
     expect(result.spec).toEqual(spec);
-    expect(result.contribution.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(result.contribution.providers).toHaveLength(1);
-    expect(result.contribution.providers[0]).toMatchObject({ key: provider.key, dependencies: [] });
-    expect(result.contribution.providers[0]?.makeDefinition).toBe(provider.makeDefinition);
+    expect(result.contribution.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(result.contribution.providers).toHaveLength(3);
+    expect(result.contribution.providers[2]).toMatchObject({
+      key: provider.key,
+      dependencies: [
+        { capability: 'shape', name: 'sector' },
+        { capability: 'shape', name: 'contour' },
+      ],
+    });
+    expect(result.contribution.providers[2]?.makeDefinition).toBe(provider.makeDefinition);
   });
 
   it('经 scene/layer runtime 渲染 Plot embed', () => {
@@ -151,12 +157,19 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.providerDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(first.providerDependencies.providers).toHaveLength(1);
-    expect(first.providerDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
-    expect(first.providerDependencies.providers[0]?.dependencies).toEqual([]);
-    expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
-      second.providerDependencies.providers[0]?.makeDefinition,
+    expect(first.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(first.providerDependencies.providers).toHaveLength(3);
+    expect(first.providerDependencies.providers[2]?.key).toEqual({
+      capability: 'composite',
+      namespace: 'plot',
+      type: 'plot',
+    });
+    expect(first.providerDependencies.providers[2]?.dependencies).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+    ]);
+    expect(first.providerDependencies.providers[2]?.makeDefinition).toBe(
+      second.providerDependencies.providers[2]?.makeDefinition,
     );
   });
 
