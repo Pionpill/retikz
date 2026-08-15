@@ -1,6 +1,6 @@
 ---
 title: Arc / Sector
-description: Arcs and sectors — draw a Path with sugar, or use them as a node's sector / arc boundary.
+description: Draw arc and sector Paths with Kernel sugar, or use the Standard Sector shape for sector, ring-wedge, and open-arc Node boundaries.
 ---
 
 Arcs and sectors are both angle-based: draw an angle span with `<Arc>` / `<Sector>` (sugar), or give a node a sector, ring-wedge, or open-arc boundary with `shape={{ type: 'sector', params }}`. Node shapes keep one `sector` definition; `innerRadius === outerRadius` automatically becomes an open arc. See [Shapes](/kernel/components/shapes) for the full definition.
@@ -113,7 +113,7 @@ Shared props (forwarded to the underlying `<Path>`):
 
 ## As a node shape
 
-When you need a sector / arc **node** (referenceable by a connection, usable as an icon glyph) rather than a line, set `shape={{ type, params }}` on `<Node>`. These shapes are sized by the radii / angles in `params`, **independent of any text content**. The Node variants are optional Standard shapes, while sugar `<Arc>` / `<Sector>` remain Kernel React components. Inject the matching Definition into the current `<Layout>` before using the Node variants.
+When you need a referenceable, icon-ready **Sector Node** rather than a line, set `shape={{ type: 'sector', params }}` on `<Node>`. Its size comes from the radii and angles in `params`, **independent of text content**; when `innerRadius === outerRadius`, the same Sector definition expresses an open-arc boundary. Standard provides only this optional Sector Node shape, while `<Arc>` and `<Sector>` are Kernel React Path sugar. Inject `SectorShapeDefinition` into the current `<Layout>` before using the Sector Node.
 
 ### Usage
 

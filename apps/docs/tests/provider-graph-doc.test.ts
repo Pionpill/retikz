@@ -43,10 +43,26 @@ describe('provider graph documentation', () => {
     expect(landing.indexOf('</div>')).toBeGreaterThan(landing.lastIndexOf('</LinkedCard>'));
   });
 
+  it.each(['zh', 'en'] as const)('%s 文档不暴露未实现的 Standard provider 与 Arc Node 公共面', lang => {
+    const standard = readContent('library/standard', lang);
+    const compile = readContent('kernel/reference/runtime/compile', lang);
+    const step = readContent('kernel/components/draw/step', lang);
+    const shapes = readContent('kernel/components/shapes', lang);
+    const arcSector = readContent('kernel/components/shapes/arc-sector', lang);
+
+    const source = [standard, compile, step, shapes, arcSector].join('\n');
+    expect(source).not.toContain('@retikz/standard/path-generator');
+    expect(source).not.toContain('ParabolaPathGeneratorDefinition');
+    expect(source).not.toContain('ArcShapeDefinition');
+    expect(source).not.toMatch(/Standard.{0,80}parabola|parabola.{0,80}Standard/iu);
+    expect(arcSector).toContain('SectorShapeDefinition');
+    expect(arcSector).not.toMatch(/sector \/ arc \*\*node\*\*|Node variants|扇形 \/ 弧形的\*\*节点\*\*/iu);
+  });
+
   it('删除公开文档与演示中的 namespace-local maker 旧协议', () => {
     const files = [
-      'kernel/packages/vanilla/index.zh.mdx',
-      'kernel/packages/vanilla/index.en.mdx',
+      'kernel/packages/framework/vanilla/index.zh.mdx',
+      'kernel/packages/framework/vanilla/index.en.mdx',
       'kernel/components/layout/overview/theme-inheritance.zh.demo.tsx',
       'kernel/components/layout/overview/theme-inheritance.en.demo.tsx',
       'kernel/concepts/design/composite/embeddable-flow.demo.tsx',

@@ -221,10 +221,24 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
-            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、通用 provider dependency graph、最小内置集合、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
+            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, a generic provider dependency graph, a minimal built-in set, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
           },
           items: [
+            {
+              label: { zh: '通用 provider dependency graph', en: 'Generic provider dependency graph' },
+              content: {
+                zh: '`CoreProviderContribution` 以 typed roots、providers、ordered dependencies 与 owner-local datasets 统一装配 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Kind 和 Composite。`resolveCoreProviderDependencies()` 只物化可达闭包，并在 dispatch 前报告缺失依赖、循环、maker / dependency 冲突与 dataset 冲突；React、Vanilla、SSR 与 Tier 2 共用同一 resolver。',
+                en: '`CoreProviderContribution` uses typed roots, providers, ordered dependencies, and owner-local datasets to assemble Shape, Boundary, Clip, Arrow, Pattern, Path Generator, Path Kind, and Composite capabilities. `resolveCoreProviderDependencies()` materializes only the reachable closure and reports missing dependencies, cycles, maker or dependency conflicts, and dataset conflicts before dispatch; React, Vanilla, SSR, and Tier 2 packages share the same resolver.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：最小内置 provider 集合', en: 'BREAKING: minimal built-in provider set' },
+              content: {
+                zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、rect / circle / ellipse Clip、lines / dots / grid Pattern、三种 Boundary，以及 stroke / ribbon Path Kind；Path Generator 默认为空。Ribbon 暂留 Core，后续由 Standard ADR-03 完成整体迁移。cross / sector / star / contour、diamond / openDiamond 和 polygon / path / compound 等可选官方 definitions 改由 `@retikz/standard/shape`、`/arrow`、`/clip` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',
+                en: 'Core defaults retain rectangle, ellipse, and polygon Shapes; six baseline Arrows; rect, circle, and ellipse Clips; lines, dots, and grid Patterns; three Boundaries; and the stroke and ribbon Path Kinds, while Path Generator defaults are empty. Ribbon remains in Core until Standard ADR-03 completes its whole-owner migration. Optional official Definitions such as cross, sector, star, contour, diamond, openDiamond, polygon, path, and compound now come explicitly from `@retikz/standard/shape`, `/arrow`, and `/clip`. Direct compilation injects them through the corresponding options, while adapters use complete provider contributions; migrated capabilities keep no Core re-export or automatic fallback.',
+              },
+            },
             {
               label: { zh: 'BREAKING：领域中立编译观测', en: 'BREAKING: Domain-neutral compile observation' },
               content: {

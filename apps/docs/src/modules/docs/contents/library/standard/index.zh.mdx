@@ -17,12 +17,12 @@ Standard 横向扩展 Core，而不是替代它：
 
 ## 三个包与能力子入口
 
-| 入口                            | 职责                                                           | 何时使用                                            |
-| ------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
-| `@retikz/standard`              | Standard composites 的 schema、factory、Definition 与 lowering | 使用 Grid、Axes、Frame、Surface 或 Legend           |
-| `@retikz/standard-react`        | 呈现组件的 React DSL                                           | 在 React `Layout` 中创作                            |
-| `@retikz/standard-vanilla`      | plain spec helper 与 Vanilla Tier 2 adapter                    | 无 React 的浏览器或脚本入口                         |
-| `@retikz/standard/<capability>` | 单一可选绘图能力族的 Definitions                               | 当前图需要可选 shape、arrow、clip 或 path generator |
+| 入口                            | 职责                                                           | 何时使用                                  |
+| ------------------------------- | -------------------------------------------------------------- | ----------------------------------------- |
+| `@retikz/standard`              | Standard composites 的 schema、factory、Definition 与 lowering | 使用 Grid、Axes、Frame、Surface 或 Legend |
+| `@retikz/standard-react`        | 呈现组件的 React DSL                                           | 在 React `Layout` 中创作                  |
+| `@retikz/standard-vanilla`      | plain spec helper 与 Vanilla Tier 2 adapter                    | 无 React 的浏览器或脚本入口               |
+| `@retikz/standard/<capability>` | 单一可选绘图能力族的 Definitions                               | 当前图需要可选 shape、arrow 或 clip       |
 
 React 与 Vanilla 只把作者输入接入同一能力。需要可选绘图内容时，从精确的 `@retikz/standard/<capability>` 子入口导入单项 Definition，并传给 Core compile options；`@retikz/standard` 根入口不转发这些内容。
 

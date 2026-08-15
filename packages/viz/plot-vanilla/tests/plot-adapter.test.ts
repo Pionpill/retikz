@@ -67,16 +67,26 @@ describe('Plot Vanilla Tier2 adapter', () => {
     });
   });
 
-  it('exposes one Plot-owned contribution builder for complete PlotSpec inputs', () => {
+  it('为完整 PlotSpec 贡献 Plot provider 及其 Standard Shape 依赖闭包', () => {
     const spec = salesSpec('sales');
     const result = resolvePlotContribution({ spec, datasets, lowerOptions: { width: 360, height: 200 } });
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
 
     expect(result.spec).toEqual(spec);
-    expect(result.contribution.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(result.contribution.providers).toHaveLength(1);
-    expect(result.contribution.providers[0]).toMatchObject({ key: provider.key, dependencies: [] });
-    expect(result.contribution.providers[0]?.makeDefinition).toBe(provider.makeDefinition);
+    expect(result.contribution.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(result.contribution.providers.map(item => item.key)).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+    ]);
+    expect(result.contribution.providers[2]).toMatchObject({
+      key: provider.key,
+      dependencies: [
+        { capability: 'shape', name: 'sector' },
+        { capability: 'shape', name: 'contour' },
+      ],
+    });
+    expect(result.contribution.providers[2]?.makeDefinition).toBe(provider.makeDefinition);
   });
 
   it('经 scene/layer runtime 渲染 Plot embed', () => {
@@ -144,19 +154,25 @@ describe('Plot Vanilla Tier2 adapter', () => {
     });
   });
 
-  it('同一 adapter 的多个 lower 贡献 plot.plot root 并复用稳定 provider maker', () => {
+  it('同一 adapter 的多个 lower 贡献完整依赖闭包并复用稳定 provider maker', () => {
     const spec = salesSpec();
     const first = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('first'));
     const second = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.providerDependencies.roots).toEqual([{ namespace: 'plot', type: 'plot' }]);
-    expect(first.providerDependencies.providers).toHaveLength(1);
-    expect(first.providerDependencies.providers[0]?.key).toEqual({ namespace: 'plot', type: 'plot' });
-    expect(first.providerDependencies.providers[0]?.dependencies).toEqual([]);
-    expect(first.providerDependencies.providers[0]?.makeDefinition).toBe(
-      second.providerDependencies.providers[0]?.makeDefinition,
+    expect(first.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(first.providerDependencies.providers.map(provider => provider.key)).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+    ]);
+    expect(first.providerDependencies.providers[2]?.dependencies).toEqual([
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
+    ]);
+    expect(first.providerDependencies.providers[2]?.makeDefinition).toBe(
+      second.providerDependencies.providers[2]?.makeDefinition,
     );
   });
 

@@ -22,8 +22,8 @@ export const standardV01: Release = {
         {
           label: { zh: '显式能力装载', en: 'Explicit capability loading' },
           content: {
-            zh: '每项能力直接提供 Definition；宿主通过 Core `CompileOptions.composites` 选择当前图需要的 definitions。所有入口都复用 Core registry，不建立全局注册或第二套冲突规则。',
-            en: 'Each capability directly provides a Definition; hosts select the definitions needed by the current figure through Core `CompileOptions.composites`. Every path reuses the Core registry without global registration or a second conflict model.',
+            zh: '每项能力直接提供 Definition；宿主通过对应 Core compile options 或 provider contribution 选择当前图需要的 definitions。所有入口都复用 Core registry，不建立全局注册或第二套冲突规则。',
+            en: 'Each capability directly provides a Definition; hosts select the definitions needed by the current figure through the corresponding Core compile options or provider contributions. Every path reuses the Core registry without global registration or a second conflict model.',
           },
         },
       ],
@@ -32,8 +32,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：Standard 聚焦横向绘图拓展，排版布局迁入独立 Layout 包族。',
-            en: 'BREAKING: Standard focuses on horizontal drawing extensions; layout composition moves to the independent Layout package family.',
+            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、Clip providers；排版布局迁入独立 Layout 包族。',
+            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, and Clip providers, and moves layout composition to the independent Layout package family.',
           },
           items: [
             {
@@ -48,6 +48,27 @@ export const standardV01: Release = {
               content: {
                 zh: 'Legend 继续属于 Standard，但通过 Layout 公共组合入口复用 canonical 排版求解，不再 deep import Standard 内部布局实现。',
                 en: 'Legend remains owned by Standard while reusing canonical layout solving through the public Layout composition entry instead of deep-importing layout internals.',
+              },
+            },
+            {
+              label: { zh: '任意 child Surface', en: 'Arbitrary-child Surface' },
+              content: {
+                zh: '`standard.surface` 以单一 JSON-safe composite 包装任意 Core child，并统一处理 padding、背景、边框、圆角、overflow、Scope 与 qualified spatial handles。直接 IR、React、Vanilla、SSR、SVG 与 Canvas 共用同一 Definition 和布局语义。',
+                en: '`standard.surface` wraps any Core child in one JSON-safe composite with shared padding, background, border, corner-radius, overflow, Scope, and qualified-spatial-handle semantics. Direct IR, React, Vanilla, SSR, SVG, and Canvas share the same Definition and layout behavior.',
+              },
+            },
+            {
+              label: { zh: '按能力发布官方 providers', en: 'Capability-scoped official providers' },
+              content: {
+                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 提供 polygon、path、compound。它们导出单项 Definition 与静态 provider，不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
+                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` provides polygon, path, and compound. These entries export individual Definitions and static providers without root aggregation or side-effect registration through Standard, React, or Vanilla.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：显式 provider 装配', en: 'BREAKING: explicit provider assembly' },
+              content: {
+                zh: 'Core 不再默认携带上述可选 definitions。直接编译须从对应 Standard 子入口注入所需 Definition；adapter 与 Tier 2 使用 `CoreProviderContribution` 携带完整依赖闭包。缺失依赖、循环或同 key 冲突在 compile dispatch 前 fail-loud，不提供旧 Core re-export、自动安装或兼容 fallback。',
+                en: 'Core no longer includes these optional Definitions by default. Direct compilation injects required Definitions from the corresponding Standard subpath, while adapters and Tier 2 packages carry complete dependency closures through `CoreProviderContribution`. Missing dependencies, cycles, and same-key conflicts fail before compile dispatch, with no legacy Core re-exports, auto-installation, or compatibility fallback.',
               },
             },
           ],
@@ -182,8 +203,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：布局 builder、adapters 与检查驱动迁入 `@retikz/layout-vanilla`。',
-            en: 'BREAKING: layout builders, adapters, and inspection wiring move to `@retikz/layout-vanilla`.',
+            zh: '新增 Surface authoring 与 embed adapter；BREAKING：布局 builder、adapters 与检查驱动迁入 `@retikz/layout-vanilla`。',
+            en: 'Adds Surface authoring and its embed adapter. BREAKING: layout builders, adapters, and inspection wiring move to `@retikz/layout-vanilla`.',
           },
           items: [
             {
@@ -191,6 +212,13 @@ export const standardV01: Release = {
               content: {
                 zh: '从 `@retikz/layout-vanilla` 导入 `flexLayout()`、`gridLayout()`、`overlayLayout()` 与 `LayoutVanillaAdapters`；检查能力改从其 `/inspect` 入口导入。Standard 不再转发这些标识符。',
                 en: 'Import `flexLayout()`, `gridLayout()`, `overlayLayout()`, and `LayoutVanillaAdapters` from `@retikz/layout-vanilla`, with inspection support under its `/inspect` entry. Standard no longer forwards these identifiers.',
+              },
+            },
+            {
+              label: { zh: 'Surface Vanilla 闭环', en: 'Surface Vanilla path' },
+              content: {
+                zh: '`surface()` 与 `embedSurface()` 归一为同一 `standard.surface` IR；`SurfaceInputEmbedAdapter` 携带 Surface 及任意 child 所需的完整 provider contribution，并可直接用于 SSR。',
+                en: '`surface()` and `embedSurface()` normalize to the same `standard.surface` IR. `SurfaceInputEmbedAdapter` carries the complete provider contribution required by Surface and its arbitrary child and can be used directly for SSR.',
               },
             },
           ],
@@ -289,8 +317,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：布局 JSX 与可选 Inspector JSX 迁入 `@retikz/layout-react`。',
-            en: 'BREAKING: layout JSX and optional Inspector JSX move to `@retikz/layout-react`.',
+            zh: '新增任意 child `<Surface>`；BREAKING：布局 JSX 与可选 Inspector JSX 迁入 `@retikz/layout-react`。',
+            en: 'Adds arbitrary-child `<Surface>`. BREAKING: layout JSX and optional Inspector JSX move to `@retikz/layout-react`.',
           },
           items: [
             {
@@ -298,6 +326,13 @@ export const standardV01: Release = {
               content: {
                 zh: '从 `@retikz/layout-react` 导入 FlexLayout、GridLayout、OverlayLayout 与 LayoutItem；从其 `/inspect` 入口导入 `LayoutInspectLayout`、`LayoutInspectScope` 与 `InspectXxxLayout`。',
                 en: 'Import FlexLayout, GridLayout, OverlayLayout, and LayoutItem from `@retikz/layout-react`, and use its `/inspect` entry for `LayoutInspectLayout`, `LayoutInspectScope`, and `InspectXxxLayout`.',
+              },
+            },
+            {
+              label: { zh: 'Surface React 闭环', en: 'Surface React path' },
+              content: {
+                zh: '`<Surface>` 接受一个任意 drawable child，将 appearance、padding、overflow 与完整 Scope props 归一为 `standard.surface`，并与直接 IR、Vanilla 和 SSR 共用同一 provider contribution。',
+                en: '`<Surface>` accepts one arbitrary drawable child, normalizes appearance, padding, overflow, and complete Scope props into `standard.surface`, and shares one provider contribution with direct IR, Vanilla, and SSR.',
               },
             },
           ],

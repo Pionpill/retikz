@@ -1,12 +1,12 @@
 # ADR-02：Core 最小内置集合与 Standard provider 子入口
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-15，公开契约、Tier 2 装配与跨入口闭环完成）
 - 决策日期：2026-08-13
 - 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Standard alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md)
 
 ## 背景与目标
 
-Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Kind、Ribbon Width Profile 等能力建立 Definition、define helper、registry、compile options、统一 lookup 与诊断。当前多数官方实现仍随 Core 根包一起分发，即使一幅图没有使用 star、contour、compound clip、parabola 或 Ribbon，也会把这些可选实现纳入 Core 的默认依赖图。
+Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator 与 Path Kind 等能力建立 Definition、define helper、registry、compile options、统一 lookup 与诊断。此前多数官方实现仍随 Core 根包一起分发，即使一幅图没有使用 star、contour 或 compound clip，也会把这些可选实现纳入 Core 的默认依赖图。
 
 这使 Core 同时承担“绘图语言和编译机制 owner”与“官方扩展内容全集”两种职责。前者属于 Drawing Complete 的稳定底座，后者是可按需安装的横向能力。继续把所有官方实现加入 Core 会让每次新增箭头、Shape 或 Path Kind 都扩大最底层包，也迫使 Plot 等 Tier 2 在“依赖 Core 即隐式获得全部内容”和“各自拼装 definitions”之间选择。
 
@@ -21,24 +21,23 @@ Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Ki
 3. 它复用与外部 definition 相同的 contract、registry、resolver 与 dispatch，不拥有内置旁路
 4. 单项实现的体积和依赖适合作为所有 Core 消费者的常驻成本
 
-“每种能力不超过 5 个 Core 内置项”是硬上限，不是准入理由。达到上限前仍须满足上述四项；超过上限的内容必须进入 Standard 或其它正确 owner。Core 可以少于 5 个，允许某类可选能力没有默认内置项。
+内置项数量不构成独立准入或排除条件。Core 可以只保留一个能力的最小集合，也允许某类可选能力没有默认内置项；新增实现仍须逐项满足上述原则并进入正确 owner。
 
 本次边界冻结如下：
 
-| 能力                 | Core 默认内置                                              | Standard 官方扩展                           | 理由                                                                                                 |
-| -------------------- | ---------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Shape provider       | `rectangle`、`ellipse`、`polygon`                          | `cross`、`arc`、`sector`、`star`、`contour` | 前三者覆盖基础盒、曲面和任意直边轮廓；其它属于可选形态                                               |
-| Shape preset         | `circle`、`diamond`                                        | 无                                          | 它们是基础 Shape 的参数化预设，不增加 provider implementation                                        |
-| Arrow                | `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle` | `diamond`、`openDiamond`            | 六个基础箭头覆盖无配置、显式基础、三角与 Stealth 空心对称及圆点端点；菱形箭头属于 UML 风格扩展        |
-| Pattern              | `lines`、`dots`、`grid`                                    | 无                                          | 当前三项已是小型基础集合；后续新增内容默认进入 Standard                                              |
-| Boundary             | `rectangle`、`circle`、`ellipse`                           | 无                                          | 三项与基础 Node 连接面闭环，保持 Core 内置                                                           |
-| Clip                 | `rect`、`circle`、`ellipse`                                | `polygon`、`path`、`compound`               | 基础几何裁剪保留在 Core；多边形、结构化路径和递归组合按需装配并复用 Core clip contract 与 Scene 表达 |
-| Path Generator       | 无                                                         | `parabola`                                  | Path step 不依赖 generator 也能闭环，官方 generator 按需装配                                         |
-| Path Kind            | `stroke`                                                   | `ribbon`                                    | Stroke 是 Path 默认语义；Ribbon 是独立且体积较大的可选几何实现                                       |
-| Ribbon Width Profile | 无                                                         | `bulge`                                     | Ribbon 外迁后 profile contract 与官方实现由同一 Standard 子域拥有                                    |
-| Theme baseline       | 保留现状                                                   | 不在本次迁移                                | Core theme 默认和 shared colors 属于基础编译环境，不是内容扩展集合                                   |
+| 能力           | Core 默认内置                                                      | Standard 官方扩展                    | 理由                                                                                                 |
+| -------------- | ------------------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Shape provider | `rectangle`、`ellipse`、`polygon`                                  | `cross`、`sector`、`star`、`contour` | 前三者覆盖基础盒、曲面和任意直边轮廓；其它属于可选形态                                               |
+| Shape preset   | `circle`、`diamond`                                                | 无                                   | 它们是基础 Shape 的参数化预设，不增加 provider implementation                                        |
+| Arrow          | `normal`、`open`、`stealth`、`openStealth`、`circle`、`openCircle` | `diamond`、`openDiamond`             | 六个基础箭头覆盖实心 / 空心三角、Stealth 与圆点端点；菱形箭头属于可选扩展                            |
+| Pattern        | `lines`、`dots`、`grid`                                            | 无                                   | 当前三项已是小型基础集合；后续新增内容仍按能力归属判断                                               |
+| Boundary       | `rectangle`、`circle`、`ellipse`                                   | 无                                   | 三项与基础 Node 连接面闭环，保持 Core 内置                                                           |
+| Clip           | `rect`、`circle`、`ellipse`                                        | `polygon`、`path`、`compound`        | 基础几何裁剪保留在 Core；多边形、结构化路径和递归组合按需装配并复用 Core clip contract 与 Scene 表达 |
+| Path Generator | 无                                                                 | 无                                   | Path step 不依赖 generator 也能闭环；本 ADR 不建立 Standard 官方实现                                 |
+| Path Kind      | `stroke`、`ribbon`                                                 | 无                                   | Stroke 是 Path 默认语义；Ribbon 暂留 Core，待 ADR-03 完成完整 owner 迁移                             |
+| Theme baseline | 保留现状                                                           | 不在本次迁移                         | Core theme 默认和 shared colors 属于基础编译环境，不是内容扩展集合                                   |
 
-除随 Ribbon 整体归属 Standard 的 Width Profile 子扩展外，表中“Standard 官方扩展”仍使用 Core 定义的 `XxxDefinition`、`defineXxx()`、registry option 和消费语义。迁移不把 Core contract、IR discriminator、registry 或 compile lookup 复制到 Standard，也不改变第三方定义能力。
+表中“Standard 官方扩展”仍使用 Core 定义的 `XxxDefinition`、`defineXxx()`、registry option 和消费语义。迁移不把 Core contract、IR discriminator、registry 或 compile lookup 复制到 Standard，也不改变第三方定义能力。
 
 迁出项对应的官方名称常量、参数 schema 和 schema-derived 类型一并归 Standard；Core 只保留开放的 provider key / spec 基础契约和默认内置项的名称。多数能力当前已经用开放字符串或 definition schema 完成该边界；`compound` Clip 是例外，其专用递归 schema 也随 definition 迁出。Core 的通用 Clip spec 继续接受注册项的 JSON-safe object，并在 compile lookup 后用所选 `ClipDefinition.schema` 解析；Core 不为迁出的 `compound` 保留 reserved key 或静态 schema 分支。
 
@@ -50,15 +49,13 @@ Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Ki
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
-import { ParabolaPathGeneratorDefinition } from '@retikz/standard/path-generator';
-import { RibbonPathKindDefinition, BulgeRibbonWidthProfileDefinition } from '@retikz/standard/ribbon';
 ```
 
 每个子入口只导出该能力族的稳定定义、名称常量、定义参数类型、单项 Definition，以及需要传递依赖或合并 owner-local datasets 时使用的静态 provider。它不创建跨能力的 Standard registry，不改变 Core definition 类型，也不暴露私有几何 helper。
 
 这些 provider extensions 不从 `@retikz/standard` 根入口、`@retikz/standard-react` 根入口或 `@retikz/standard-vanilla` 根入口转发。Standard 已有 composites 仍可按其既有根入口契约导出；本决策只禁止把迁入的 Core provider extensions 重新聚合成另一个隐式全集。各子入口是明确的 package exports，并具有独立构建入口；包保持 `sideEffects: false`，未导入的子入口不得执行注册或进入调用方模块图。
 
-子入口名称按 Core 能力名而不是当前消费者命名。Ribbon 同时拥有 Path Kind 与 Width Profile，但二者共同构成一项不可拆的 Ribbon 能力，因此使用单一 `ribbon` 子入口，不发布 `path-kind/ribbon`、`profile/bulge` 等实现路径，也不把 Ribbon 混入通用 `path-generator`。
+子入口名称按 Core 能力名而不是当前消费者命名。本决策只建立 `shape`、`arrow`、`clip` 三个子入口；Path Generator 与 Ribbon 不发布空入口，后续真实能力必须由其自身 ADR 决定完整契约与公开面。
 
 ## Core provider dependency graph 与 assembly
 
@@ -106,7 +103,7 @@ declare const resolveCoreProviderDependencies: (
 
 这是等价的最小跨层形状；最终公开命名应复用既有 Composite graph vocabulary，但不得拆成 adapter 私有协议。`capability + name` 是普通 provider 的完整 identity；Composite 继续使用独立的 `namespace + type` identity，不能编码进字符串或退化成 owner namespace、数组位置。resolver 最终按 `CompileProviderOptions` 的能力复数名返回分组 definitions。
 
-`datasets` 是 provider owner 合并同一 key 多次 authored contribution 的唯一扩展槽；每个 owner 用自身稳定的数据项 key 写入独立值。Core 只提供按数据项 key 与 reference identity 的确定性合并和冲突检查，不解释 Ribbon profile、Composite runtime data 或其它 owner-local 内容。没有 datasets 的普通单项 definition 使用空表和固定 maker。Ribbon Width Profile 不成为 Core provider capability；ADR-03 令 Standard Ribbon provider 以 profile name 作为 owner-local 数据项 key，并从合并后的 dataset 创建唯一 `ribbon` Path Kind definition。
+`datasets` 是 provider owner 合并同一 key 多次 authored contribution 的唯一扩展槽；每个 owner 用自身稳定的数据项 key 写入独立值。Core 只提供按数据项 key 与 reference identity 的确定性合并和冲突检查，不解释 Composite runtime data 或其它 owner-local 内容。没有 datasets 的普通单项 definition 使用空表和固定 maker；Ribbon 与 Width Profile 的数据模型不由本 ADR 冻结。
 
 Theme Style 不进入本次 dependency graph。它是完整 compile environment 的显式主题解析配置，不由 authored child 自动要求；调用方继续通过 `CompileOptions.themeStyles` 提供。若未来出现跨包传递 Theme Style 依赖，必须用独立 ADR 验证其生命周期和冲突语义，不能借本次 provider 内容迁移顺带扩张。
 
@@ -141,3 +138,7 @@ Core 是 dependency / assembly contract、resolver 和冲突语义的 owner。St
 - 迁入 Standard 的 definition 在相同输入、theme、precision 和 host services 下必须保持迁移前的 Scene 几何、bounds、marker、clip 与诊断语义
 - 同一调用显式提供冲突 definition 时 fail-loud；不会因它来自 Core、Standard、Tier 2 或用户自定义而使用不同优先级
 - 不提供旧 Core definition re-export、弃用 alias、自动安装 Standard、兼容 fallback 或“若已安装则发现”的双轨行为
+
+## 接受结果
+
+Core 已以统一 provider dependency graph 装配普通 provider 与 Composite，并把解析结果合并进同一 compile options；Standard 的 `shape`、`arrow`、`clip` 子入口提供上述可选 definitions 与静态 providers，根入口不聚合这些扩展。React、Vanilla、SSR 与官方 Tier 2 均沿同一 contribution 闭包传递依赖，Plot 等消费者显式携带其所需的 Standard providers，不依赖宿主预装或全局注册。

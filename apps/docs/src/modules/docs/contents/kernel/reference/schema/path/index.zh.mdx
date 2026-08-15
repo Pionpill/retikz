@@ -428,11 +428,11 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 <ZodSchema
   name="GeneratorStepSchema"
-  description="生成器动作：委托本次已注册的 path generator（例如 Standard parabola 或自定义 sin）产出子路径。"
+  description="生成器动作：委托本次已注册的自定义 path generator 产出子路径。"
   descriptions={{
     type: '判别字段，标记本节点为 path step',
     kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
-    name: '生成器名；由 CompileOptions.pathGenerators 注册，Standard parabola 也需显式注入。未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
+    name: '生成器名；由 CompileOptions.pathGenerators 显式注册。未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
     to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
     params:
       '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析到当前 Path 的局部坐标再运行',

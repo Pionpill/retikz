@@ -98,9 +98,12 @@ describe('<Chart>', () => {
       },
     });
     expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
-    expect(contribution.providerDependencies.providers.map(provider => provider.key)).toMatchObject([
-      { namespace: 'standard', type: 'surface' },
-      { namespace: 'layout', type: 'flexLayout' },
+    expect(contribution.providerDependencies.providers.map(provider => provider.key)).toEqual([
+      { capability: 'composite', namespace: 'standard', type: 'surface' },
+      { capability: 'clip', name: 'path' },
+      { capability: 'composite', namespace: 'layout', type: 'flexLayout' },
+      { capability: 'shape', name: 'sector' },
+      { capability: 'shape', name: 'contour' },
       PlotProviderKey,
       ChartProvider.key,
     ]);
