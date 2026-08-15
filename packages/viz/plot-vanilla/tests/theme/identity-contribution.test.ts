@@ -72,8 +72,9 @@ describe('Plot Vanilla runtime style options', () => {
     expect(contribution).not.toHaveProperty('makeComposites');
     expect(contribution.providerDependencies.roots).toEqual([
       { capability: 'composite', namespace: 'plot', type: 'plot' },
+      { capability: 'pathKind', name: 'ribbon' },
     ]);
-    expect(contribution.providerDependencies.providers[2]?.key).toEqual({
+    expect(contribution.providerDependencies.providers[3]?.key).toEqual({
       capability: 'composite',
       namespace: 'plot',
       type: 'plot',

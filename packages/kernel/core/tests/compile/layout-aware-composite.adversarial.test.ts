@@ -33,13 +33,13 @@ import {
   definePathGenerator,
   definePathKind,
   definePattern,
-  defineRibbonWidthProfile,
   defineShape,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
   lowerIRToKernel,
   NaturalLayoutProposal,
+  PathSchema,
 } from '../../src';
 import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
@@ -2086,7 +2086,8 @@ describe('layout-aware composite constraints and bounds', () => {
 
   it('keeps hostile PathKind compile output reflection fatal inside a discarded probe', () => {
     const hostilePathKind = definePathKind({
-      schema: z.object({ kind: z.literal('hostilePathKind') }),
+      name: 'hostilePathKind',
+      schema: PathSchema.extend({ kind: z.literal('hostilePathKind') }),
       compile: () =>
         new Proxy(
           { primitives: [], boundsPoints: [] },
@@ -2109,7 +2110,10 @@ describe('layout-aware composite constraints and bounds', () => {
           {
             type: 'path',
             kind: 'hostilePathKind',
-            children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
           },
           NaturalLayoutProposal,
         );
@@ -2150,7 +2154,8 @@ describe('layout-aware composite constraints and bounds', () => {
       },
     );
     const dynamicPathKind = definePathKind({
-      schema: z.strictObject({ kind: z.literal('dynamicPathKind') }),
+      name: 'dynamicPathKind',
+      schema: PathSchema.extend({ kind: z.literal('dynamicPathKind') }),
       compile: () => result,
     });
 
@@ -2158,53 +2163,16 @@ describe('layout-aware composite constraints and bounds', () => {
       sceneOf({
         type: 'path',
         kind: 'dynamicPathKind',
-        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 0] },
+        ],
       }),
       { pathKinds: [dynamicPathKind] },
     );
 
     expect(compiled.scene.layout).toMatchObject({ width: 20, height: 20 });
     expect({ boundsPointsReads, xReads }).toEqual({ boundsPointsReads: 1, xReads: 1 });
-  });
-
-  it('keeps non-finite Ribbon width profile output fatal inside a discarded probe', () => {
-    const malformedProfile = defineRibbonWidthProfile({
-      name: 'malformedRibbonWidth',
-      widthAt: () => Number.NaN,
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'malformedRibbonWidthParent',
-      schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('malformedRibbonWidthParent'),
-      }),
-      compile: (_, context) => {
-        context.layoutChild(
-          {
-            type: 'path',
-            kind: 'ribbon',
-            ribbon: {
-              width: { kind: 'profile', name: 'malformedRibbonWidth' },
-              samples: 2,
-            },
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-          },
-          NaturalLayoutProposal,
-        );
-        return { children: [] };
-      },
-    });
-
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'malformedRibbonWidthParent' }), {
-        composites: [parent],
-        ribbonWidthProfiles: [malformedProfile],
-      }),
-    ).toThrow(CompositeContractError);
   });
 
   it('lets structurally malformed shape, arrow, pattern, clip, and path-generator outputs pierce a discarded probe', () => {

@@ -106,21 +106,21 @@ The resolved scale serves both marks and guides: continuous scales output numeri
   sources={[
     {
       label: 'Default type derivation and baseline validation',
-      path: 'packages/viz/plot/src/providers/scale/registry.ts',
-      startLine: 132,
-      endLine: 170,
+      path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
+      startLine: 47,
+      endLine: 167,
     },
     {
       label: 'Single-value expansion and padding for continuous domains',
-      path: 'packages/viz/plot/src/providers/scale/shared/domain.ts',
-      startLine: 126,
-      endLine: 152,
+      path: 'packages/viz/plot/src/resolve/scale/domain.ts',
+      startLine: 121,
+      endLine: 147,
     },
     {
       label: 'Resolution entry points for positional scale definitions',
-      path: 'packages/viz/plot/src/providers/scale/features/position.ts',
-      startLine: 503,
-      endLine: 625,
+      path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
+      startLine: 169,
+      endLine: 187,
     },
   ]}
 />
@@ -129,21 +129,21 @@ The resolved scale serves both marks and guides: continuous scales output numeri
 
 React `<Scale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlotSpec.scales`. `Axis.scale` is a shortcut for common types on the same dimension.
 
-| Prop               | Type                                                                          | Default        | Description                                                                    |
-| ------------------ | ----------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
-| `dimension`        | `'x' \| 'y'`                                                                  | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
-| `type`             | `PositionScaleType`                                                           | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
-| `domain?`          | `[number, number] \| IRPlotBandScale['domain'] \| IRPlotPointScale['domain']` | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
-| `domainPadding?`   | `number \| { lower?; upper? }`                                                | `5%` inferred  | Fractional padding around continuous domains; explicit domains default to 0    |
-| `singleValueSpan?` | `number`                                                                      | type-derived   | Minimum span used to expand a single-value domain                              |
-| `base?`            | `IRPlotLogScale['base']`                                                      | `10`           | `log` only; must be greater than `1`                                           |
-| `constant?`        | `IRPlotSymlogScale['constant']`                                               | `1`            | `symlog` only; controls the width of the linear region around zero             |
-| `paddingInner?`    | `number`                                                                      | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1` |
-| `paddingOuter?`    | `number`                                                                      | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`              |
-| `padding?`         | `number`                                                                      | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`             |
-| `align?`           | `number`                                                                      | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`  |
+| Prop               | Type                            | Default        | Description                                                                    |
+| ------------------ | ------------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| `dimension`        | `'x' \| 'y'`                    | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
+| `type`             | `ScaleProps['type']`            | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
+| `domain?`          | `ScaleProps['domain']`          | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
+| `domainPadding?`   | `ScaleProps['domainPadding']`   | `5%` inferred  | Fractional padding around continuous domains; explicit domains default to 0    |
+| `singleValueSpan?` | `ScaleProps['singleValueSpan']` | type-derived   | Minimum span used to expand a single-value domain                              |
+| `base?`            | `ScaleProps['base']`            | `10`           | `log` only; must be greater than `1`                                           |
+| `constant?`        | `ScaleProps['constant']`        | `1`            | `symlog` only; controls the width of the linear region around zero             |
+| `paddingInner?`    | `number`                        | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1` |
+| `paddingOuter?`    | `number`                        | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`              |
+| `padding?`         | `number`                        | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`             |
+| `align?`           | `number`                        | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`  |
 
-The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `nice`, and `clamp`. Every variant and custom scale operation follows this public IR contract.
+The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `nice`, and `clamp`. These `IRPlot*` types and schemas come from `@retikz/plot`; every variant and custom scale operation follows this public IR contract.
 
 <SourceLinks
   sources={[
@@ -151,7 +151,7 @@ The complete `IRPlotScale` surface can also name a scale, set an output `range`,
       label: 'React Scale reuses Plot Vanilla input types',
       path: 'packages/viz/plot-react/src/components/scales.tsx',
       startLine: 1,
-      endLine: 9,
+      endLine: 7,
     },
     {
       label: 'Positional scale IR schemas',

@@ -5,7 +5,6 @@ import type {
   AnyCompositeDefinition,
   CompileObserverOutput,
   CompileOccurrenceLocator,
-  RibbonWidthProfileDefinition,
   Scene,
   SpatialHandleIndex,
 } from '../contract';
@@ -176,12 +175,6 @@ export type CompileLayoutOptions = {
 export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'> & {
   /** 运行时注入的 Core Theme style definitions */
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
-  /**
-   * 运行时注入的 ribbon 宽度 profile
-   * @description profile 函数从这里注入，永不进入 IR
-   * @default BUILTIN_RIBBON_WIDTH_PROFILES
-   */
-  ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
 };
 
 /** Tier 2 composite 展开选项 */

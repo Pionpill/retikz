@@ -1,10 +1,16 @@
-import type { InputFacet, InputScaffold, InputTrack } from '@retikz/plot-vanilla';
+import type { InputPlotFacet, InputPlotFacetDimension, InputPlotScaffold, InputPlotTrack } from '@retikz/plot-vanilla';
 import type { FC, ReactNode } from 'react';
 
-export type FacetDimensionInput = InputFacet['row'];
-export type FacetProps = InputFacet & { children?: ReactNode };
-export type ScaffoldProps = InputScaffold & { children?: ReactNode };
-export type TrackProps = InputTrack & { children?: ReactNode };
+export type FacetProps = Omit<InputPlotFacet, 'row' | 'column'> & {
+  row?: InputPlotFacetDimension;
+  column?: InputPlotFacetDimension;
+  children?: ReactNode;
+};
+export type ScaffoldProps = Omit<InputPlotScaffold, 'tracks'> & {
+  tracks?: InputPlotScaffold['tracks'];
+  children?: ReactNode;
+};
+export type TrackProps = InputPlotTrack & { children?: ReactNode };
 
 /** 分面布局声明组件 */
 export const Facet: FC<FacetProps> = () => null;

@@ -238,33 +238,8 @@ const rawIrChildCode = (child: IRChild, indent: number, reason: string): string 
   `/* ${reason}; raw IR child, switch to IR view for structure. */ ${formatObject(child, indent)}`;
 
 const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
-  if (path.kind === 'ribbon') return ribbonCode(path, indent, ctx);
   if (path.children === undefined) {
     return rawIrChildCode(path, indent, 'missing path steps');
-  }
-  if (!path.children.every(isWayRepresentableStep)) {
-    return rawIrChildCode(path, indent, 'not vanilla way sugar');
-  }
-  ctx.used.add('path');
-  const id = path.id;
-  const config = stripKeys(path, ['type', 'children', 'id']);
-  const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
-  const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
-    "'__WAY__'",
-    wayStr,
-  );
-  return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
-};
-
-const ribbonCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
-  const ribbon = path.ribbon;
-  if (ribbon === undefined) return rawIrChildCode(path, indent, 'missing ribbon options');
-
-  if (ribbon.mode === 'boundary') {
-    return rawIrChildCode(path, indent, 'boundary ribbon has no Vanilla Input shorthand');
-  }
-  if (path.children === undefined) {
-    return rawIrChildCode(path, indent, 'missing ribbon centerline');
   }
   if (!path.children.every(isWayRepresentableStep)) {
     return rawIrChildCode(path, indent, 'not vanilla way sugar');

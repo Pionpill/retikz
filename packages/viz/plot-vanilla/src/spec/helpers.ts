@@ -6,7 +6,7 @@ import { PLOT_NAMESPACE } from '@retikz/plot';
 import { embed } from '@retikz/vanilla';
 
 import type { InputPlot } from '../normalize/plot';
-import type { InputPlotEmbed } from './types';
+import type { InputPlotEmbed, PlotSource } from './types';
 
 import { normalizePlot } from '../normalize/plot';
 import { assertPlotVanillaNonEmptyString } from '../shared';
@@ -14,13 +14,21 @@ import { assertPlotVanillaNonEmptyString } from '../shared';
 /** 从 plain authoring input 创建 Plot Source IR */
 export const plot = (input: InputPlot): IRPlotSpec => normalizePlot(input);
 
+/** 将显式 Plot source 收敛为 Plot Source IR；IR source 保持原对象身份 */
+export const plotSpecOf = (source: PlotSource): IRPlotSpec =>
+  source.input === undefined ? source.spec : normalizePlot(source.input);
+
 /** 构造可由 Plot InputEmbedAdapter 消费的标准 embed */
 export const embedPlot = (
   id: string,
-  spec: InputPlot,
+  source: PlotSource,
   datasets: ExternalDatasets,
   lowerOptions?: LowerPlotsOptions,
 ): InputEmbed<InputPlotEmbed> => {
   assertPlotVanillaNonEmptyString(id, 'plot vanilla: embed id must be non-empty');
-  return embed(PLOT_NAMESPACE, id, { spec, datasets, ...(lowerOptions === undefined ? {} : { lowerOptions }) });
+  return embed(PLOT_NAMESPACE, id, {
+    ...source,
+    datasets,
+    ...(lowerOptions === undefined ? {} : { lowerOptions }),
+  });
 };

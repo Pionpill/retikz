@@ -10,7 +10,7 @@ description: retikz 的几何形状——既是画一条 Path 的官方 Sugar，
 
 每个形状页把这两副面孔分两大块写全：先「作为 Path 图形」，再「作为 Node 形状」。简单说：要画一条形状线，用 Sugar；要一个可连接、可标注的形状节点，用 `<Node shape>`。
 
-Node 形状注册表也对扩展开放。官方 `cross` / `arc` / `sector` / `star` / `contour` 可从[形状扩展](/library/standard/extension/shape)按需装配；其他领域形状在本分组最后的[自定义形状](/kernel/components/shapes/custom-shape)页注册。想补充路径生成器，则转到绘制分组的[路径生成器](/kernel/components/draw/path-generator)。
+Node 形状注册表也对扩展开放。官方 `cross` / `sector` / `star` / `contour` 可从[形状扩展](/library/standard/extension/shape)按需装配；其他领域形状在本分组最后的[自定义形状](/kernel/components/shapes/custom-shape)页注册。想补充路径生成器，则转到绘制分组的[路径生成器](/kernel/components/draw/path-generator)。
 
 <ComponentPreview files="shapes-family" size="md" hideCode />
 
@@ -18,15 +18,15 @@ Node 形状注册表也对扩展开放。官方 `cross` / `arc` / `sector` / `st
 
 表中的 Sugar 指编译时展开为 Path 的快捷组件；Core 指随 Kernel 提供的 Node 形状，Standard 指需从 `@retikz/standard/shape` 显式装配的 Node 形状。
 
-| 页面             | 类型             | 职责                                                    | 适合场景                            |
-| ---------------- | ---------------- | ------------------------------------------------------- | ----------------------------------- |
-| Circle / Ellipse | Sugar + Core     | 画圆 / 椭圆 Path；提供圆 / 椭圆 Node 边界               | 圆形标记、椭圆容器、可连接节点      |
-| Arc / Sector     | Sugar + Standard | 画弧 / 扇形 Path；可选地提供带参数的弧 / 扇形 Node 边界 | 角度标记、环楔、扇区图标图元        |
-| Rectangle        | Sugar + Core     | 画矩形 Path；提供 Node 的默认矩形边界                   | 矩形框、流程节点、圆角节点          |
-| Polygon          | Sugar + Core     | 画正多边形 Path；提供正多边形 / 菱形 Node 边界          | 多边形标记、决策节点                |
-| Star             | Sugar + Standard | 画星形 Path；可选地提供带几何 anchor 的星形 Node 边界   | 评级、强调标记、可连接星形          |
-| Contour          | Standard         | 把任意闭合顶点环变成可连接、可圆角的 Node 边界          | 自由轮廓节点；只画线时改用 `<Path>` |
-| 自定义形状       | 扩展指南         | 用 `ShapeDefinition` 扩展布局、边界、anchor 与绘制      | 内置形状无法表达的业务图元          |
+| 页面             | 类型             | 职责                                                  | 适合场景                            |
+| ---------------- | ---------------- | ----------------------------------------------------- | ----------------------------------- |
+| Circle / Ellipse | Sugar + Core     | 画圆 / 椭圆 Path；提供圆 / 椭圆 Node 边界             | 圆形标记、椭圆容器、可连接节点      |
+| Arc / Sector     | Sugar + Standard | 画弧 / 扇形 Path；可选地提供 Sector Node 边界         | 角度标记、环楔、扇区图标图元        |
+| Rectangle        | Sugar + Core     | 画矩形 Path；提供 Node 的默认矩形边界                 | 矩形框、流程节点、圆角节点          |
+| Polygon          | Sugar + Core     | 画正多边形 Path；提供正多边形 / 菱形 Node 边界        | 多边形标记、决策节点                |
+| Star             | Sugar + Standard | 画星形 Path；可选地提供带几何 anchor 的星形 Node 边界 | 评级、强调标记、可连接星形          |
+| Contour          | Standard         | 把任意闭合顶点环变成可连接、可圆角的 Node 边界        | 自由轮廓节点；只画线时改用 `<Path>` |
+| 自定义形状       | 扩展指南         | 用 `ShapeDefinition` 扩展布局、边界、anchor 与绘制    | 内置形状无法表达的业务图元          |
 
 ## 章节内容
 

@@ -15,7 +15,7 @@ import { normalizePlotDeclarations } from './normalize';
 
 export type {
   BuildPlotSpecOptions,
-  CoordinateInput,
+  InputPlotCoordinate,
   MarkTransformShortcutContext,
   MarkTransformShortcutDefinition,
   ResolveLabelMap,
@@ -40,31 +40,6 @@ export type ResolvedPlotExtensionAuthoring = Readonly<{
   /** 不进入 IR 的 Plot runtime sidecar */
   runtime: PlotAuthoringRuntime;
 }>;
-
-/** Plot Vanilla 接收的无框架 authoring 输入 */
-export type InputPlotAuthoring =
-  | Readonly<{
-      /** 已有的 Plot Source IR */
-      spec: IRPlotSpec;
-      /** 覆盖 Plot 固有宽度 */
-      width?: number;
-      /** 覆盖 Plot 固有高度 */
-      height?: number;
-      /** Plot 主题 token 稀疏覆盖 */
-      plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
-      /** Plot 主题 token 规则 */
-      plotThemeTokenRules?: IRPlotSpec['plotThemeTokenRules'];
-      /** Plot 主题 */
-      plotTheme?: IRPlotSpec['plotTheme'];
-    }>
-  | Readonly<{
-      /** React 等框架收集的声明记录 */
-      declarations: PlotDeclarationCollection;
-      /** Plot 外部数据引用 */
-      dataReference: string;
-      /** Plot Source IR 根级 authoring 选项 */
-      options?: BuildPlotSpecOptions;
-    }>;
 
 /**
  * 将 Chart typed children 交给 Plot 的正式 collector 和 normalizer
@@ -135,22 +110,6 @@ export const normalizePlotSpec = (
   } satisfies IRPlotSpec;
   if (runtime.resolveLabel !== undefined) resolveLabelBySpec.set(spec, runtime.resolveLabel);
   return spec;
-};
-
-/** 将无框架 Plot authoring 输入归一为 Source IR */
-export const normalizePlotAuthoring = (input: InputPlotAuthoring): IRPlotSpec => {
-  if ('spec' in input) {
-    return Object.assign(
-      {},
-      input.spec,
-      input.spec.width === undefined && input.width !== undefined ? { width: input.width } : {},
-      input.spec.height === undefined && input.height !== undefined ? { height: input.height } : {},
-      input.plotThemeTokens === undefined ? {} : { plotThemeTokens: input.plotThemeTokens },
-      input.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: input.plotThemeTokenRules },
-      input.plotTheme === undefined ? {} : { plotTheme: input.plotTheme },
-    );
-  }
-  return normalizePlotSpec(input.declarations, input.dataReference, input.options);
 };
 
 /**

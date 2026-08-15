@@ -20,7 +20,7 @@ const adapterManifests = [
 
 describe('Standard package exports', () => {
   it('keeps composites at the root and makes optional providers explicit subpaths', () => {
-    const entries = ['.', './shape', './arrow', './clip'];
+    const entries = ['.', './shape', './arrow', './clip', './ribbon'];
     expect(Object.keys(standardManifest.exports)).toEqual(entries);
     expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(entries);
   });

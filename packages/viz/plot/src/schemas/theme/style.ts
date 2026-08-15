@@ -142,6 +142,6 @@ export const PlotAxisThemeTokenOverridesSchema = z
   .describe('Sparse strict Axis token overrides for one scoped theme rule');
 
 /** preset 与用户覆盖解析后的完整 Plot token map */
-export const PlotResolvedThemeTokensSchema = z
+export const PlotThemeTokenResolutionSchema = z
   .strictObject(PlotThemeTokenFieldShape)
   .describe('Complete resolved map of canonical Plot theme tokens');

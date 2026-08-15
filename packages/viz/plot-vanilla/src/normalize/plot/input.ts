@@ -92,8 +92,8 @@ export type InputPlot = Omit<IRPlotSpec, 'namespace' | 'type' | 'marks' | 'guide
   scaffolds?: Array<InputPlotScaffold>;
 };
 
-/** 共享 binding normalization 的输入 */
-export type NormalizePlotBindingsInput = {
+/** 共享 binding normalization 的上下文 */
+export type PlotBindingsNormalizationContext = {
   /** 待规范化的 mark */
   marks: ReadonlyArray<InputPlotMark>;
   /** 待规范化的 guide */

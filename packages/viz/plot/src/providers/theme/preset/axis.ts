@@ -2,7 +2,7 @@ import type { ThemeModeValue } from '@retikz/core';
 
 import { ThemeMode } from '@retikz/core';
 
-import type { IRPlotAxisThemeTokenRules, IRPlotResolvedThemeTokens } from '../../../schemas';
+import type { IRPlotAxisThemeTokenRules, IRPlotThemeTokenResolution } from '../../../schemas';
 
 import { PlotThemeToken } from '../../../schemas';
 
@@ -11,7 +11,7 @@ type AxisPresetSource = Readonly<{
   lineStroke: string;
   lineStrokeWidth: number;
   lineDrawOpacity: number;
-  tickMark: IRPlotResolvedThemeTokens['axis.tick.mark'];
+  tickMark: IRPlotThemeTokenResolution['axis.tick.mark'];
   tickLabelEnabled: boolean;
   tickLabelForeground: string;
   tickLabelFontSize: number;
@@ -42,7 +42,7 @@ type AxisStylePreset = Pick<
 type AxisModePreset = Pick<AxisPresetSource, 'lineStroke' | 'tickLabelForeground' | 'titleForeground' | 'gridStroke'>;
 type AxisTokenPreset = Readonly<
   Pick<
-    IRPlotResolvedThemeTokens,
+    IRPlotThemeTokenResolution,
     | typeof PlotThemeToken.AxisLineEnabled
     | typeof PlotThemeToken.AxisLineStroke
     | typeof PlotThemeToken.AxisLineStrokeWidth

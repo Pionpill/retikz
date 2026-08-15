@@ -3,12 +3,8 @@
 import { collectTransformFields } from '@retikz/data';
 
 import { type AnyMarkDefinition } from '../contract';
-import {
-  collectMarkFields,
-  createFieldCollector,
-  resolveMarkRegistry,
-  resolvePlotTransformRegistry,
-} from '../providers';
+import { createFieldCollector, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
+import { collectMarkFields } from '../resolve/mark';
 import { type IRPlotMarkOperation, type IRPlotSpec, type IRPlotTransform } from '../schemas';
 
 const markTransformOf = (mark: IRPlotMarkOperation): Array<IRPlotTransform> | undefined =>
@@ -62,7 +58,7 @@ export const collectSourceFields = (
       transformContext,
     );
     const markFields = new Set<string>();
-    collectMarkFields(mark, createFieldCollector(markFields), markRegistry);
+    collectMarkFields(mark, createFieldCollector(markFields), { registry: markRegistry });
     for (const field of markFields) {
       if (!markDerived.has(field)) fields.add(field);
     }

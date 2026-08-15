@@ -11,20 +11,24 @@ import type {
   IRPlotPointShapeStyle,
   IRPlotPointStrokeStyle,
   IRPlotPointStrokeWidthStyle,
-  MarkValueType,
 } from '@retikz/plot';
+import type { MarkValueKind } from '@retikz/plot';
 
 import type { PlotAuthoringContext } from './contracts';
 import type {
-  CoreNodeChannelProps,
-  CorePathChannelProps,
-  DatumLabelProps,
-  ExtensionChannelProp,
-  IntervalMarkProps,
-  PointMarkProps,
+  InputPlotCoreNodeChannels,
+  InputPlotCorePathChannels,
+  InputPlotDatumLabel,
+  InputPlotExtensionChannel,
+  InputPlotIntervalMark,
+  InputPlotPointMark,
 } from './input-marks';
 
 const AUTO_COLOR = '__color';
+
+type PlotMarkValue<T> =
+  | { kind: typeof MarkValueKind.Field; value: string; scale?: string }
+  | { kind: typeof MarkValueKind.Constant; value: T };
 
 /** 把颜色或系列字段转换为绑定自动颜色比例尺的通道 */
 export const colorChannel = (
@@ -95,7 +99,7 @@ export const styleSugarContext = (context: PlotAuthoringContext): StyleSugarCont
   return { fieldNames };
 };
 
-const isMarkValue = (value: unknown): value is MarkValueType<unknown> =>
+const isMarkValue = (value: unknown): value is PlotMarkValue<unknown> =>
   value !== null &&
   typeof value === 'object' &&
   'kind' in value &&
@@ -107,7 +111,7 @@ const isChannelBinding = (value: unknown): value is IRPlotChannel =>
   typeof value === 'object' &&
   ('field' in value || 'value' in value || 'scale' in value);
 
-const channelBindingOf = (value: ExtensionChannelProp): IRPlotChannel => {
+const channelBindingOf = (value: InputPlotExtensionChannel): IRPlotChannel => {
   if (isMarkValue(value)) {
     return value.kind === 'field' ? { field: String(value.value) } : { value: value.value };
   }
@@ -116,14 +120,16 @@ const channelBindingOf = (value: ExtensionChannelProp): IRPlotChannel => {
 };
 
 /** 把扩展通道 props 规范化为 Plot channels encoding */
-export const extensionChannelEncoding = (channels: DatumLabelProps['channels']): Pick<IRPlotEncoding, 'channels'> => {
+export const extensionChannelEncoding = (
+  channels: InputPlotDatumLabel['channels'],
+): Pick<IRPlotEncoding, 'channels'> => {
   if (channels === undefined) return {};
   const out: Record<string, IRPlotChannel> = {};
   for (const [name, value] of Object.entries(channels)) out[name] = channelBindingOf(value);
   return Object.keys(out).length > 0 ? { channels: out } : {};
 };
 
-type PaintStyleInput = string | IRPaintSpec | MarkValueType<string | IRPaintSpec> | undefined;
+type PaintStyleInput = string | IRPaintSpec | PlotMarkValue<string | IRPaintSpec> | undefined;
 
 /** 把 paint 样式解析为字段绑定或常量值 */
 export const paintStyleOf = <T extends IRPlotPointFillStyle | IRPlotPointStrokeStyle>(
@@ -142,7 +148,7 @@ export const paintStyleOf = <T extends IRPlotPointFillStyle | IRPlotPointStrokeS
 
 /** 把 point color 样式解析为字段绑定或常量值，并为字段补自动颜色比例尺 */
 export const pointColorStyleOf = (
-  value: PointMarkProps['color'],
+  value: InputPlotPointMark['color'],
   context: StyleSugarContext,
 ): IRPlotPointColorStyle | undefined => {
   if (value === undefined) return undefined;
@@ -155,7 +161,7 @@ export const pointColorStyleOf = (
 
 /** 把 stroke 样式解析为字段绑定或常量值 */
 export const strokeStyleOf = (
-  stroke: PointMarkProps['stroke'],
+  stroke: InputPlotPointMark['stroke'],
   context: StyleSugarContext,
 ): IRPlotPointStrokeStyle | undefined => {
   return paintStyleOf<IRPlotPointStrokeStyle>(stroke, 'stroke', context);
@@ -163,7 +169,7 @@ export const strokeStyleOf = (
 
 /** 把 strokeWidth 样式解析为字段绑定或数值常量 */
 export const strokeWidthStyleOf = (
-  strokeWidth: PointMarkProps['strokeWidth'],
+  strokeWidth: InputPlotPointMark['strokeWidth'],
   context: StyleSugarContext,
 ): IRPlotPointStrokeWidthStyle | undefined => {
   if (strokeWidth === undefined) return undefined;
@@ -175,8 +181,8 @@ export const strokeWidthStyleOf = (
 };
 
 /** 把数值样式解析为字段绑定或常量值 */
-export const numberStyleOf = <T extends MarkValueType<number>>(
-  value: string | number | MarkValueType<number> | undefined,
+export const numberStyleOf = <T extends PlotMarkValue<number>>(
+  value: string | number | PlotMarkValue<number> | undefined,
   prop: string,
   context: StyleSugarContext,
 ): T | undefined => {
@@ -190,7 +196,7 @@ export const numberStyleOf = <T extends MarkValueType<number>>(
 
 /** 把 interval pull 简写解析为字段绑定或非负数常量 */
 export const intervalPullStyleOf = (
-  value: IntervalMarkProps['pull'],
+  value: InputPlotIntervalMark['pull'],
 ): IRPlotPointNonnegativeNumberStyle | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
@@ -199,11 +205,11 @@ export const intervalPullStyleOf = (
 
 /** 把枚举样式解析为字段绑定或允许的常量值 */
 export const enumStyleOf = <T extends string>(
-  value: string | MarkValueType<T> | undefined,
+  value: string | PlotMarkValue<T> | undefined,
   prop: string,
   allowed: ReadonlySet<string>,
   context: StyleSugarContext,
-): MarkValueType<T> | undefined => {
+): PlotMarkValue<T> | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (context.fieldNames.has(value)) return { kind: 'field', value };
@@ -214,10 +220,10 @@ export const enumStyleOf = <T extends string>(
 
 /** 把布尔样式解析为字段绑定或常量值 */
 export const booleanStyleOf = (
-  value: string | boolean | MarkValueType<boolean> | undefined,
+  value: string | boolean | PlotMarkValue<boolean> | undefined,
   prop: string,
   context: StyleSugarContext,
-): MarkValueType<boolean> | undefined => {
+): PlotMarkValue<boolean> | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (typeof value === 'boolean') return { kind: 'constant', value };
@@ -227,10 +233,10 @@ export const booleanStyleOf = (
 };
 
 const jsonStyleOf = <T>(
-  value: string | T | MarkValueType<T> | undefined,
+  value: string | T | PlotMarkValue<T> | undefined,
   prop: string,
   context: StyleSugarContext,
-): MarkValueType<T> | undefined => {
+): PlotMarkValue<T> | undefined => {
   if (value === undefined) return undefined;
   if (isMarkValue(value)) return value;
   if (typeof value === 'string') {
@@ -243,7 +249,7 @@ const jsonStyleOf = <T>(
 
 /** 把 box spacing 样式解析为字段绑定或常量值 */
 export const boxSpacingStyleOf = (
-  value: CoreNodeChannelProps['padding'],
+  value: InputPlotCoreNodeChannels['padding'],
   prop: string,
   context: StyleSugarContext,
 ): IRPlotNodeBoxSpacingStyle | undefined => {
@@ -258,20 +264,23 @@ export const boxSpacingStyleOf = (
 };
 
 const nodeScaleStyleOf = (
-  value: CoreNodeChannelProps['scale'],
+  value: InputPlotCoreNodeChannels['scale'],
   prop: string,
   context: StyleSugarContext,
 ): IRPlotNodeAxisScaleStyle | undefined => jsonStyleOf<number | IRAxisScale>(value, prop, context);
 
 /** 把节点最小尺寸解析为字段绑定或 box size 常量 */
 export const nodeBoxSizeStyleOf = (
-  value: PointMarkProps['minimumSize'],
+  value: InputPlotPointMark['minimumSize'],
   prop: string,
   context: StyleSugarContext,
 ): IRPlotNodeBoxSizeStyle | undefined => jsonStyleOf<number | IRBoxSize>(value, prop, context);
 
 /** 把节点共享样式 props 规范化为 Plot mark 样式字段 */
-export const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSugarContext): Record<string, unknown> => {
+export const nodeStylePropsOf = (
+  props: InputPlotCoreNodeChannels,
+  context: StyleSugarContext,
+): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
@@ -324,7 +333,10 @@ export const nodeStylePropsOf = (props: CoreNodeChannelProps, context: StyleSuga
 };
 
 /** 把路径共享样式 props 规范化为 Plot mark 样式字段 */
-export const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSugarContext): Record<string, unknown> => {
+export const pathStylePropsOf = (
+  props: InputPlotCorePathChannels,
+  context: StyleSugarContext,
+): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
@@ -384,7 +396,7 @@ export const pathStylePropsOf = (props: CorePathChannelProps, context: StyleSuga
 
 /** 把 shape prop 规范化为字段或常量样式 */
 export const shapeStyleOf = (
-  value: PointMarkProps['shape'],
+  value: InputPlotPointMark['shape'],
   context: StyleSugarContext,
 ): IRPlotPointShapeStyle | undefined => {
   if (value === undefined) return undefined;

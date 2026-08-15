@@ -3,9 +3,7 @@ import type { BuildPlotSpecOptions, PlotAuthoringContext, ResolvedPlotExtensionA
 import type { ReactNode } from 'react';
 
 import {
-  decorateDefaultGuides,
   normalizePlotSpec,
-  resolveLabelOf,
   resolvePlotExtensionAuthoring as normalizePlotExtensionAuthoring,
 } from '@retikz/plot-vanilla';
 
@@ -20,5 +18,3 @@ export const resolvePlotExtensionAuthoring = (
   children: ReactNode,
   context: Omit<PlotAuthoringContext, 'mode'>,
 ): ResolvedPlotExtensionAuthoring => normalizePlotExtensionAuthoring(collectPlotDeclarations(children), context);
-
-export { decorateDefaultGuides, resolveLabelOf };

@@ -286,13 +286,12 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 高级能力与宿主接入
 
-| 属性                  | 类型                                                  | 默认值 | 描述                                                                                   |
-| --------------------- | ----------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
-| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)                 |
-| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)                    |
-| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)                  |
-| `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/concepts/design/composite) |
-| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/extension/tex)                        |
+| 属性             | 类型                                             | 默认值 | 描述                                                                                                                             |
+| ---------------- | ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `pathGenerators` | `ReadonlyArray`<br />`<PathGeneratorDefinition>` | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)                                                           |
+| `pathKinds`      | `ReadonlyArray`<br />`<PathKindDefinition>`      | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)或可选的[Standard Ribbon](/library/standard/extension/ribbon) |
+| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/concepts/design/composite)                                           |
+| `lowerTex`       | `LowerTex`                                       | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/extension/tex)                                                                  |
 
 ### 全图默认值
 

@@ -1,0 +1,1 @@
+export { resolvePlotTheme } from './theme';

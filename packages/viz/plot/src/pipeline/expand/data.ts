@@ -27,7 +27,7 @@ import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry
 import { collectSourceFields } from '../source-fields';
 
 /** 对单个 mark 应用局部 transform，返回该 mark 实际消费的数据行 */
-export const resolveMarkRows = (
+export const applyMarkTransforms = (
   mark: IRPlotMarkOperation,
   rows: Array<ExternalRow>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,

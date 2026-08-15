@@ -22,7 +22,7 @@ A custom shape owns a node's layout footprint, visible contour, and default conn
 
 `node.shape` may be a string or `{ type, params }`. Both forms must remain 100% JSON-serializable. A `ShapeDefinition` contains functions, so it cannot enter the IR or be reconstructed from JSON.
 
-Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definitions share one registry, parameter-validation, and consumption path. `circle` and `diamond` are compile-time presets normalized to `ellipse` and `polygon`; official optional items such as `star` / `sector` / `arc` / `contour` follow the same path after they are imported from `@retikz/standard/shape`.
+Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definitions share one registry, parameter-validation, and consumption path. `circle` and `diamond` are compile-time presets normalized to `ellipse` and `polygon`; official optional items such as `star` / `sector` / `cross` / `contour` follow the same path after they are imported from `@retikz/standard/shape`.
 
 ## Define the capability
 

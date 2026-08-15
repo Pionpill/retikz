@@ -40,7 +40,7 @@ export type PositionScale = {
  * @description 自定义 channel scale 用它把 raw 原始值强转为可解析量，并解析命名配色：
  *   values 一律传 raw 原始值，由 definition 据 fieldType 自行强转
  */
-export type ChannelResolveContext = {
+export type ChannelScaleResolveContext = {
   /** 绑定字段类型（continuous / temporal / categorical / undefined）；definition 据此选强转方式 */
   fieldType?: DataFieldTypeValue;
   /** 原始值 → 有限数（非有限 → null）；复用内置数值强转 */
@@ -99,7 +99,7 @@ export type ChannelScaleDefinition<TScaleOperation extends IRPlotScaleOperation 
   /** 字段兼容谓词（sequential 接 continuous + temporal、ordinal 接 categorical / 未知） */
   isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
   /** 单次建 ChannelScaleResolution：实绘 evaluator + legend 同源数据（不拆 resolve / legend 两函数，守实绘 / legend 同源） */
-  resolve: (def: TScaleOperation, values: Array<unknown>, ctx: ChannelResolveContext) => ChannelScaleResolution;
+  resolve: (def: TScaleOperation, values: Array<unknown>, ctx: ChannelScaleResolveContext) => ChannelScaleResolution;
 };
 
 /**
@@ -136,7 +136,7 @@ export type AnyScaleDefinition =
       family: 'channel';
       schema: z.ZodType;
       isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
-      resolve: (def: never, values: Array<unknown>, ctx: ChannelResolveContext) => ChannelScaleResolution;
+      resolve: (def: never, values: Array<unknown>, ctx: ChannelScaleResolveContext) => ChannelScaleResolution;
     };
 
 /**

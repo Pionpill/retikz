@@ -183,7 +183,7 @@ export const PointEncodingSchema = PositionEncodingSchema.extend({
   ),
   ...MarkChannelEncodingSchema.shape,
 }).describe(
-  'PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as MarkValueType fields',
+  'PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as schema-defined style fields',
 );
 
 export const MarkLabelContentSchema = z

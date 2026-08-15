@@ -4,23 +4,20 @@ import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { AnyScaleDefinition, ChannelResolveContext } from '../../../src/contract';
+import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotSpec } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineScale, extractScaleType } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
+import { BUILTIN_SCALES, linearPositionScale, resolveLinearScale, resolveScaleRegistry } from '../../../src/providers';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
-  BUILTIN_SCALES,
-  linearPositionScale,
   resolveChannelScale,
-  resolveLinearScale,
   resolvePositionScale,
-  resolveScaleRegistry,
-} from '../../../src/providers';
+} from '../../../src/resolve/scale';
 import { BUILTIN_SCALE_TYPES, PlotSpecSchema } from '../../../src/schemas';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
@@ -32,7 +29,7 @@ const unitScale = defineScale({
   resolve: (_def, values, range) =>
     linearPositionScale(
       resolveLinearScale(
-        { domain: [0, 1] },
+        { type: 'linear', name: 'unit', domain: [0, 1] },
         values.filter((value): value is number => typeof value === 'number'),
         range,
       ),
@@ -62,7 +59,7 @@ const monoScale = defineScale({
   },
 }) as AnyScaleDefinition;
 
-const channelCtx = (over: Partial<ChannelResolveContext> = {}): ChannelResolveContext => ({
+const channelCtx = (over: Partial<ChannelScaleResolveContext> = {}): ChannelScaleResolveContext => ({
   toNumber: value => (typeof value === 'number' && Number.isFinite(value) ? value : null),
   coerceTimestamp: () => null,
   resolveColorScheme: () => () => '#000000',
@@ -135,14 +132,14 @@ describe('scale registry（contract spec）', () => {
 
   it('unknown_scale_type_throws', () => {
     const registry = resolveScaleRegistry();
-    expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], registry)).toThrow(
+    expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], { registry })).toThrow(
       /scale type "nope" is not registered/,
     );
   });
 
   it('custom_position_scale_projects', () => {
     const registry = resolveScaleRegistry([unitScale]);
-    const scale = resolvePositionScale({ type: 'unit', name: 'x' }, [0, 0.5, 1], [0, 100], registry);
+    const scale = resolvePositionScale({ type: 'unit', name: 'x' }, [0, 0.5, 1], [0, 100], { registry });
     expect(scale.coordinate(0)).toBe(0);
     expect(scale.coordinate(1)).toBe(100);
     expect(scale.coordinate(0.5)).toBe(50);
@@ -150,14 +147,14 @@ describe('scale registry（contract spec）', () => {
 
   it('channel_scale_as_position_fails_loud', () => {
     const registry = resolveScaleRegistry();
-    expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], registry)).toThrow(
+    expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], { registry })).toThrow(
       /cannot drive a positional/,
     );
   });
 
   it('position_scale_as_color_fails_loud', () => {
     const registry = resolveScaleRegistry();
-    expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), registry)).toThrow(
+    expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), { registry })).toThrow(
       /is not a color scale/,
     );
   });
@@ -168,7 +165,7 @@ describe('scale registry（contract spec）', () => {
       { type: 'mono', name: 'c' },
       ['a', 'b', 'a'],
       channelCtx({ fieldType: DataFieldType.Categorical }),
-      registry,
+      { registry },
     );
     expect(resolution.legendForm).toBe('swatch');
     expect(resolution.of('a')).toBe('#111111');
@@ -179,12 +176,9 @@ describe('scale registry（contract spec）', () => {
   it('custom_channel_field_incompatible_fails', () => {
     const registry = resolveScaleRegistry([monoScale]);
     expect(() =>
-      resolveChannelScale(
-        { type: 'mono', name: 'c' },
-        [1, 2],
-        channelCtx({ fieldType: DataFieldType.Continuous }),
+      resolveChannelScale({ type: 'mono', name: 'c' }, [1, 2], channelCtx({ fieldType: DataFieldType.Continuous }), {
         registry,
-      ),
+      }),
     ).toThrow(/incompatible/i);
   });
 
@@ -194,24 +188,26 @@ describe('scale registry（contract spec）', () => {
       fieldType: DataFieldType.Continuous,
       resolveColorScheme: name => (name === 'brand' ? () => '#ff00ff' : () => '#000000'),
     });
-    const resolution = resolveChannelScale({ type: 'sequential', name: 'c', scheme: 'brand' }, [0, 1], ctx, registry);
+    const resolution = resolveChannelScale({ type: 'sequential', name: 'c', scheme: 'brand' }, [0, 1], ctx, {
+      registry,
+    });
     expect(resolution.of(0.5)).toBe('#ff00ff');
   });
 
   it('isFieldCompatible 谓词驱动 position compat', () => {
     const registry = resolveScaleRegistry();
-    expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs', registry)).toThrow(
+    expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs', { registry })).toThrow(
       /incompatible/i,
     );
-    expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs', registry)).not.toThrow();
+    expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs', { registry })).not.toThrow();
   });
 
   it('allowsBaseline 谓词驱动 baseline guard', () => {
     const registry = resolveScaleRegistry();
-    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], registry)).toThrow(
+    expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], { registry })).toThrow(
       /cannot be used with interval\/area/,
     );
-    expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], registry)).not.toThrow();
+    expect(() => assertBaselineScaleCompatible('linear', [{ type: 'interval' }], { registry })).not.toThrow();
   });
 
   it('custom_position_scale_lowers_in_plot', () => {

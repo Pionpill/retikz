@@ -20,6 +20,9 @@ import type {
   PaintValue,
   PathKindCompileContext,
   PathKindCompileResult,
+  PathKindLabelInput,
+  PathPrim,
+  ResolvedPathKindAppearance,
   ScenePrimitive,
   SceneResource,
   SpatialHandleOwner,
@@ -33,6 +36,7 @@ import type {
   IRPosition,
   IRScopePlacementTarget,
   IRScopeSelfPoint,
+  IRStep,
   IRTarget,
   IRTransform,
   JsonValue,
@@ -73,11 +77,7 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { resolveBoundaryReference, resolveNode } from '../../resolve/node';
-import {
-  resolvePath as resolvePathValue,
-  resolveRibbonPathProviders,
-  resolveStrokePathProviders,
-} from '../../resolve/path';
+import { resolvePath as resolvePathValue, resolveStrokePathProviders } from '../../resolve/path';
 import { parseProviderPayload } from '../../resolve/provider-payload';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
 import { createStyleResolveFrame } from '../../resolve/style';
@@ -101,7 +101,8 @@ import {
   layoutNode,
   outerRectOf,
 } from '../node';
-import { emitPathPrimitive, emitRibbonPrimitive } from '../path';
+import { emitPathPrimitive } from '../path';
+import { emitLabelPrimitive } from '../path';
 import { resolvePosition } from '../position';
 import {
   CompileInvariantError,
@@ -213,7 +214,6 @@ export const compileChildrenToPrimitives = (
       arrows: context.arrows,
       pathGenerators: context.pathGenerators,
       pathKinds: context.pathKinds,
-      ribbonWidthProfiles: context.ribbonWidthProfiles,
       paint: context.paint,
       clip: context.clip,
       composites: context.composites,
@@ -336,7 +336,7 @@ export const compileChildrenToPrimitives = (
     return { keys, publisher, hasPublished: () => hasPublished, value: () => published };
   };
 
-  /** 消费 resolve/path 已绑定的 path kind，并提供内置 stroke / ribbon emit 回调 */
+  /** 消费 resolve/path 已绑定的 path kind，并提供内置 stroke emit 回调 */
   const emitPathKindPrimitive = (
     pendingPath: PendingPathEmission,
     resolution: PathResolution,
@@ -352,7 +352,6 @@ export const compileChildrenToPrimitives = (
       pendingPath.occurrence.sourcePath,
       definition.ownerOutput,
     );
-    const optionsValue = resolution.kind.options;
     const emitOptions = {
       onWarn: runtime.context.onWarn,
       irPath,
@@ -372,7 +371,6 @@ export const compileChildrenToPrimitives = (
             pathKinds: runtime.context.pathKinds,
             pathGenerators: runtime.context.pathGenerators,
             arrows: runtime.context.arrows,
-            ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
             patterns: runtime.context.patterns,
             round: runtime.context.round,
             irPath,
@@ -383,13 +381,20 @@ export const compileChildrenToPrimitives = (
         pathKinds: runtime.context.pathKinds,
         pathGenerators: runtime.context.pathGenerators,
         arrows: runtime.context.arrows,
-        ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
         patterns: runtime.context.patterns,
         round: runtime.context.round,
         irPath,
       });
-      const emittedTargetView = pathTargetViewOf(emittedResolution.targets, targetWarn);
-      const emitted = emitPathPrimitive(emittedResolution, {
+      const strokeColor = emittedResolution.path.color;
+      const strokeResolution = {
+        ...emittedResolution,
+        paint: {
+          ...emittedResolution.paint,
+          ...(emittedResolution.paint.stroke === undefined && strokeColor !== undefined ? { stroke: strokeColor } : {}),
+        },
+      };
+      const emittedTargetView = pathTargetViewOf(strokeResolution.targets, targetWarn);
+      const emitted = emitPathPrimitive(strokeResolution, {
         targetView: emittedTargetView,
         round: runtime.context.round,
         measureText: runtime.context.measureText,
@@ -400,31 +405,95 @@ export const compileChildrenToPrimitives = (
       });
       return emitted;
     }) as EmitStroke;
-    const compilePathKind = definition.compile as unknown as (context: PathKindCompileContext<unknown>) => unknown;
-    const produced = compilePathKind({
-      path,
-      options: optionsValue,
-      ownerOutput: ownerOutput.publisher,
-      emitStroke,
-      emitRibbon: nextPath => {
-        const emittedResolution = resolveRibbonPathProviders(resolutionOf(nextPath ?? path), {
-          pathKinds: runtime.context.pathKinds,
-          pathGenerators: runtime.context.pathGenerators,
-          arrows: runtime.context.arrows,
-          ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
-          patterns: runtime.context.patterns,
-          round: runtime.context.round,
-          irPath,
-        });
-        return emitRibbonPrimitive(emittedResolution, {
-          targetView: pathTargetViewOf(emittedResolution.targets, targetWarn),
-          round: runtime.context.round,
+    const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {
+      const pathWithoutKindOptions = { ...path };
+      delete pathWithoutKindOptions.kindOptions;
+      const source: IRPathBase = {
+        ...pathWithoutKindOptions,
+        kind: 'stroke',
+        ...(input?.children === undefined ? {} : { children: [...input.children] }),
+        label: undefined,
+        marks: undefined,
+        color: undefined,
+        fill: undefined,
+        stroke: undefined,
+        strokeWidth: undefined,
+        rotate: undefined,
+        scale: undefined,
+      };
+      const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
+        pathKinds: runtime.context.pathKinds,
+        pathGenerators: runtime.context.pathGenerators,
+        arrows: runtime.context.arrows,
+        patterns: runtime.context.patterns,
+        round: runtime.context.round,
+        irPath,
+      });
+      const emitted = emitPathPrimitive(emittedResolution, {
+        targetView: pathTargetViewOf(emittedResolution.targets, targetWarn),
+        round: runtime.context.round,
+        measureText: runtime.context.measureText,
+        options: emitOptions,
+      });
+      const findPath = (primitives: ReadonlyArray<ScenePrimitive>): PathPrim | undefined => {
+        for (const primitive of primitives) {
+          if (primitive.type === 'path') return primitive;
+          if (primitive.type === 'group') {
+            const nested = findPath(primitive.children);
+            if (nested !== undefined) return nested;
+          }
+        }
+        return undefined;
+      };
+      const primitive = emitted === null ? undefined : findPath(emitted.primitives);
+      return {
+        commands: primitive?.commands ?? [],
+        boundsPoints: emitted?.boundsPoints ?? [],
+      };
+    };
+    const resolvedFill =
+      resolution.paint.fill === undefined ? undefined : emitOptions.resolvePaint(resolution.paint.fill);
+    const resolvedStroke =
+      resolution.paint.stroke === undefined ? undefined : emitOptions.resolvePaint(resolution.paint.stroke);
+    const appearance: ResolvedPathKindAppearance = Object.freeze({
+      ...(resolution.path.color === undefined ? {} : { color: resolution.path.color }),
+      ...(resolvedFill === undefined ? {} : { fill: resolvedFill }),
+      ...(resolvedStroke === undefined ? {} : { stroke: resolvedStroke }),
+      ...(resolution.path.fillRule === undefined ? {} : { fillRule: resolution.path.fillRule }),
+      strokeWidth: resolution.style.strokeWidth,
+      ...(resolution.path.dashPattern === undefined ? {} : { dashPattern: resolution.path.dashPattern }),
+      ...(resolution.path.dashOffset === undefined ? {} : { dashOffset: resolution.path.dashOffset }),
+      ...(resolution.path.lineCap === undefined ? {} : { strokeLinecap: resolution.path.lineCap }),
+      ...(resolution.path.lineJoin === undefined ? {} : { strokeLinejoin: resolution.path.lineJoin }),
+      ...(resolution.path.opacity === undefined ? {} : { opacity: resolution.path.opacity }),
+      ...(resolution.path.fillOpacity === undefined ? {} : { fillOpacity: resolution.path.fillOpacity }),
+      ...(resolution.path.strokeOpacity === undefined ? {} : { strokeOpacity: resolution.path.strokeOpacity }),
+      ...(resolution.path.shadow === undefined ? {} : { shadow: resolution.path.shadow }),
+      ...(resolution.path.blendMode === undefined ? {} : { blendMode: resolution.path.blendMode }),
+    });
+    const hostLabelBoundsPoints: Array<IRPosition> = [];
+    const emitHostLabels = (input: PathKindLabelInput): ReadonlyArray<ScenePrimitive> =>
+      input.labels.flatMap((label, index) => {
+        const sample = input.samples[index];
+        const emittedLabel = emitLabelPrimitive(label, sample, {
           measureText: runtime.context.measureText,
-          options: {
-            ...emitOptions,
-          },
+          round: runtime.context.round,
+          rootFontSize: runtime.context.rootFontSize,
+          hostOpacity: path.opacity,
+          placement: { boundaryOffset: sample.boundaryOffset },
         });
-      },
+        hostLabelBoundsPoints.push(...emittedLabel.boundsPoints);
+        return [emittedLabel.primitive];
+      });
+    const compilePathKind = definition.compile as unknown as (context: PathKindCompileContext) => unknown;
+    const produced = compilePathKind({
+      path: resolution.kind.path,
+      ownerOutput: ownerOutput.publisher,
+      materializePath,
+      emitStroke,
+      emitHostLabels,
+      appearance,
+      round: runtime.context.round,
     });
     const validated = validatePathKindCompileResult(kind, produced);
     if (validated === null) {
@@ -453,7 +522,10 @@ export const compileChildrenToPrimitives = (
         styleStack: [...pendingPath.styleStack],
       });
     }
-    return validated.result;
+    return {
+      ...validated.result,
+      boundsPoints: [...validated.result.boundsPoints, ...hostLabelBoundsPoints],
+    };
   };
 
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */
@@ -483,7 +555,6 @@ export const compileChildrenToPrimitives = (
             pathKinds: runtime.context.pathKinds,
             pathGenerators: runtime.context.pathGenerators,
             arrows: runtime.context.arrows,
-            ribbonWidthProfiles: runtime.context.ribbonWidthProfiles,
             patterns: runtime.context.patterns,
             round: runtime.context.round,
             irPath: pendingPath.irPath,

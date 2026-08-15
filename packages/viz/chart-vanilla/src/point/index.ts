@@ -14,7 +14,6 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { DEFAULT_CHART_DATA_REFERENCE, PointChartType, resolvePointChartSpec } from '@retikz/chart/point';
 import { DEFAULT_RESOLVED_THEME, resolveTheme, resolveThemeStyleRegistry } from '@retikz/core';
-import { inputPlotFromSpec } from '@retikz/plot-vanilla';
 
 import type { InputChartPanel, NormalizedChart } from '../normalize/chart';
 import type { ChartAuthoringResult } from '../shared';
@@ -159,7 +158,7 @@ const createTypedChart = (
     input: {
       ...(id === undefined ? {} : { id }),
       ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
-      plot: inputPlotFromSpec(resolution.plotSpec),
+      plot: { spec: resolution.plotSpec },
       ...(title === undefined ? {} : { title }),
       ...(subtitle === undefined ? {} : { subtitle }),
       ...(note === undefined ? {} : { note }),

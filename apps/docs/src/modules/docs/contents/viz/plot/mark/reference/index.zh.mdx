@@ -3,7 +3,7 @@ title: ReferenceMark
 description: ReferenceMark 表达参考约束：常量或字段值可以展开成线、单轴带或坐标区域。
 ---
 
-`<ReferenceMark>` 在数据空间声明参考约束。默认绑 `y` 得到水平参考，绑 `x` 得到竖直参考；只给下界是线，配 `xTo` / `yTo` 是单轴带。设 `kind="region"` 时，ReferenceMark 使用 `x` / `xTo` 与 `y` / `yTo` 构造二维区域。`number` 表示常量，`FieldName` 表示字段名或字段路径，并按每行数据生成一条参考。
+`<ReferenceMark>` 在数据空间声明参考约束。默认绑 `y` 得到水平参考，绑 `x` 得到竖直参考；只给下界是线，配 `xTo` / `yTo` 是单轴带。设 `kind="region"` 时，ReferenceMark 使用 `x` / `xTo` 与 `y` / `yTo` 构造二维区域。数字表示常量，React `ReferenceMarkProps` 的字段值按行读取并生成参考；Vanilla 对应的字段名 TypeScript 类型是 `InputPlotFieldName`。
 
 它和 `<PointMark>` / `<IntervalMark>` 一样参与同一坐标系内的叠放顺序，但不从点、线、面维度出发，而是先确定一个固定轴值，再沿对侧轴域展开。
 
@@ -86,7 +86,7 @@ extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑�
   description="需要排查 line、band、region 的形态推断、常量与逐行参考的数量，或坐标系支持范围时再回来读。"
 />
 
-`<ReferenceMark>` 进入 `PlotSpec` 前先校验边界组合，错误配置不会被静默猜测。lowering 再根据下界、上界与 `kind` 区分 line、band 和 region。
+`<ReferenceMark>` 进入 `IRPlotSpec` 前先校验边界组合，错误配置不会被静默猜测。lowering 再根据下界、上界与 `kind` 区分 line、band 和 region。
 
 下图在 ReferenceMark 的职责边界内展示两条下沉路径：line 直接生成路径 steps，band / region 则先形成逻辑 Cell，再交给坐标帧投影。
 
@@ -132,10 +132,10 @@ extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑�
 
 | 属性                              | 类型                                   | 默认值     | 描述                                                                                                    |
 | --------------------------------- | -------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
-| `x?` / `y?`                       | `number` / `FieldName`                 | —          | 默认形态的参考轴值，必须二选一；数字生成常量参考，字段按行生成                                          |
-| `xTo?` / `yTo?`                   | `number` / `FieldName`                 | —          | 与同 role 下界配对的上界；给出后 line 变为 band                                                         |
+| `x?` / `y?`                       | `ReferenceMarkProps['x']`              | —          | 默认形态的参考轴值，必须二选一；数字生成常量参考，字段按行生成                                          |
+| `xTo?` / `yTo?`                   | `ReferenceMarkProps['xTo']`            | —          | 与同 role 下界配对的上界；给出后 line 变为 band                                                         |
 | `kind?`                           | <ApiValues name="ReferenceMarkKind" /> | —          | 设为 `region` 时，使用多个 role 的上下界构造区域                                                        |
-| `extentField?` / `extentToField?` | `FieldName`                            | 对侧轴满域 | 把 line / band 限制在对侧 role 的逐行起止范围内，必须成对                                               |
+| `extentField?` / `extentToField?` | `ReferenceMarkProps['extentField']`    | 对侧轴满域 | 把 line / band 限制在对侧 role 的逐行起止范围内，必须成对                                               |
 | `color?`                          | `string`                               | 默认图层色 | 下界 `x` / `y` 为数字时直接设色；下界为字段时解释为逐行颜色字段                                         |
 | `label?`                          | `ReferenceMarkProps['label']`          | —          | line 下沉为 geometry label，band / region 下沉为 node label；内容写在 `content.field` / `content.value` |
 

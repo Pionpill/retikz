@@ -10,7 +10,9 @@ The first release includes:
 - `Axes` for static mathematical coordinate axes
 - `Frame` for bordered semantic groups with Node-like titles and descriptions
 - `Legend` for discrete items and continuous ramps with shared layout artifacts
+- `Surface` for wrapping any Core child with box appearance and layout semantics
 - per-composite `Definition` exports for explicit Core compilation
+- optional `shape`, `arrow`, `clip`, and `ribbon` capability subpaths
 
 ## Install
 
@@ -23,10 +25,12 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ```ts
 import { createGrid, GridDefinition } from '@retikz/standard';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 ```
 
 Imports do not mutate a global registry. Pass only the definitions selected for
-the current figure directly through Core compile options.
+the current figure directly through Core compile options such as `composites`
+or `pathKinds`.
 
-See the [Standard documentation](https://pionpill.github.io/retikz/standard/introduction)
+See the [Standard documentation](https://pionpill.github.io/retikz/library/standard)
 for components, persisted IR, and direct-definition loading examples.

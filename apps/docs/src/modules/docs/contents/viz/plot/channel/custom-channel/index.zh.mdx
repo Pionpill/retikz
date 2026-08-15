@@ -36,15 +36,20 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 
 通过 `<Plot channelDefinitions={[intensityChannel]}>` 注入 definition；Vanilla 源码使用 `renderPlot` options 注入同一 definition。
 
-React DSL 的字符串值表示字段名；常量使用 `{ value }` 或 `MarkValueType`：
+React DSL 的字符串值表示字段名。类型化 authoring 的常量使用 `{ kind: 'constant', value }`；已经归一化的 raw IR binding 使用 `{ value }` 表示同一个常量，前一种写法会由 authoring normalizer 转为后一种：
 
 ```tsx
 <PointMark channels={{ intensity: 'score' }} />
-<PointMark channels={{ intensity: { value: 0.65 } }} />
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。definition 始终留在运行时，不进入 Plot IR。
+它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。只要传入的是 `IRPlotSpec`，raw IR 形式就可以直接使用：
+
+```ts
+const rawChannelBinding: IRPlotChannel = { value: 0.65 };
+```
+
+definition 始终留在运行时，不进入 Plot IR。
 
 ## 执行机制
 
@@ -66,14 +71,14 @@ channel definition 不应检查 `mark.type`。它只负责解析和交付；某�
     {
       label: '内置与自定义通道合并到统一注册表',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 77,
-      endLine: 114,
+      startLine: 67,
+      endLine: 93,
     },
     {
       label: '通道 lookup、resolve 与交付分派',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 120,
-      endLine: 190,
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 44,
+      endLine: 123,
     },
   ]}
 />
@@ -98,14 +103,14 @@ encoding: {
 
 公开导出：
 
-| 从 `@retikz/plot` 导入 | 用途                                                                                    |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| `defineScopeChannel`   | 定义交付到 Core Scope 的通道                                                            |
-| `defineNodeChannel`    | 定义交付到 Core Node 的通道                                                             |
-| `definePathChannel`    | 定义交付到 Core Path 的通道                                                             |
-| `defineChannel`        | 定义需要显式 kind 与交付契约的通用通道                                                  |
-| `ChannelDefinition`    | 查询 channel、output、resolve 与 deliver 的完整契约                                     |
-| `ChannelContext`       | 查询 rows、字段类型和 scale registry 等公共解析上下文；Node / Scope / Path 提供同构别名 |
+| 从 `@retikz/plot` 导入            | 用途                                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------------- |
+| `defineScopeChannel`              | 定义交付到 Core Scope 的通道                                                            |
+| `defineNodeChannel`               | 定义交付到 Core Node 的通道                                                             |
+| `definePathChannel`               | 定义交付到 Core Path 的通道                                                             |
+| `defineChannel`                   | 定义需要显式 kind 与交付契约的通用通道                                                  |
+| `ChannelDefinition`               | 查询 channel、output、resolve 与 deliver 的完整契约                                     |
+| `ChannelDefinitionResolveContext` | 查询 rows、字段类型和 scale registry 等公共解析上下文；Node / Scope / Path 提供同构别名 |
 
 宿主注入：
 

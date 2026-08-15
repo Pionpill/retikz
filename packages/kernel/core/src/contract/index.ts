@@ -9,7 +9,6 @@ export * from './path-generator';
 export * from './path-kind';
 export * from './pattern';
 export * from './provider';
-export * from './ribbon';
 export * from './runtime';
 export * from './scene';
 export * from './scene-patch';

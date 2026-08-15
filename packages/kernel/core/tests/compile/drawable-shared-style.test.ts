@@ -22,14 +22,6 @@ const linePath = (overrides: Record<string, unknown> = {}): IRScene['children'][
   ...overrides,
 });
 
-const ribbon = (overrides: Record<string, unknown> = {}): IRScene['children'][number] => ({
-  type: 'path',
-  kind: 'ribbon',
-  ribbon: { width: 10, samples: 2 },
-  children: steps,
-  ...overrides,
-});
-
 const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
   for (const primitive of primitives) {
@@ -108,37 +100,7 @@ describe('Drawable shared style resolution', () => {
     ).toBe(true);
   });
 
-  it('drawable-shared-path-default-ribbon-subset：pathDefault 的共享字段会作用到 ribbon', () => {
-    const [prim] = pathPrims(
-      scene([
-        {
-          type: 'scope',
-          pathDefault: {
-            color: '#0f766e',
-            fillOpacity: 0.4,
-            stroke: '#134e4a',
-            strokeWidth: 2,
-            strokeOpacity: 0.6,
-            opacity: 0.8,
-            shadow: 'sm',
-            blendMode: 'multiply',
-          },
-          children: [ribbon()],
-        },
-      ]),
-    );
-
-    expect(prim.fill).toBe('#0f766e');
-    expect(prim.fillOpacity).toBe(0.4);
-    expect(prim.stroke).toBe('#134e4a');
-    expect(prim.strokeWidth).toBe(2);
-    expect(prim.strokeOpacity).toBe(0.6);
-    expect(prim.opacity).toBe(0.8);
-    expect(prim.shadow).toBeDefined();
-    expect(prim.blendMode).toBe('multiply');
-  });
-
-  it('drawable-shared-path-default-path-only-ignored-for-ribbon：path-only 默认值不泄漏给 ribbon', () => {
+  it('drawable-shared-path-default-fields-apply-to-stroke', () => {
     const [prim] = pathPrims(
       scene([
         {
@@ -150,40 +112,39 @@ describe('Drawable shared style resolution', () => {
             lineJoin: 'round',
             roundedCorners: 5,
           },
-          children: [ribbon()],
+          children: [linePath()],
         },
       ]),
     );
 
-    expect(prim.fill).toBe('#2563eb');
-    expect(prim.dashPattern).toBeUndefined();
-    expect(prim.strokeWidth).toBeUndefined();
+    expect(prim.stroke).toBe('#2563eb');
+    expect(prim.dashPattern).toEqual([4, 2]);
+    expect(prim.strokeWidth).toBe(1);
   });
 
-  it('drawable-shared-z-index-relation-style：zIndex 排序对 path 和 ribbon 采用同一语义', () => {
+  it('drawable-shared-z-index-relation-style：zIndex 排序对 path 采用同一语义', () => {
     const prims = pathPrims(
-      scene([ribbon({ id: 'front-ribbon', zIndex: 3 }), linePath({ id: 'back-path', zIndex: 0 })]),
+      scene([linePath({ id: 'front-path', zIndex: 3 }), linePath({ id: 'back-path', zIndex: 0 })]),
     );
 
-    expect(prims.map(prim => prim.id)).toEqual(['back-path', 'front-ribbon']);
+    expect(prims.map(prim => prim.id)).toEqual(['back-path', 'front-path']);
   });
 
-  it('drawable-shared-color-fallback：pathDefault color 默认映射到 path stroke 与 ribbon fill', () => {
+  it('drawable-shared-color-fallback：pathDefault color 默认映射到 path stroke', () => {
     const prims = pathPrims(
       scene([
         {
           type: 'scope',
           pathDefault: { color: 'crimson' },
-          children: [linePath(), ribbon()],
+          children: [linePath()],
         },
       ]),
     );
 
     expect(prims[0].stroke).toBe('crimson');
-    expect(prims[1].fill).toBe('crimson');
   });
 
-  it('drawable-shared-reset-style-path：resetStyle path 同时切断 path 和 ribbon 的 pathDefault', () => {
+  it('drawable-shared-reset-style-path：resetStyle path 切断 pathDefault', () => {
     const prims = pathPrims(
       scene([
         {
@@ -193,7 +154,7 @@ describe('Drawable shared style resolution', () => {
             {
               type: 'scope',
               resetStyle: ['path'],
-              children: [linePath(), ribbon()],
+              children: [linePath()],
             },
           ],
         },
@@ -202,8 +163,6 @@ describe('Drawable shared style resolution', () => {
 
     expect(prims[0].stroke).toBe('currentColor');
     expect(prims[0].strokeWidth).toBe(1);
-    expect(prims[1].fill).toBe('currentColor');
-    expect(prims[1].strokeWidth).toBeUndefined();
   });
 
   it('drawable-shared-label-default-independent：labelDefault 不进入 drawable geometry style', () => {
@@ -211,19 +170,19 @@ describe('Drawable shared style resolution', () => {
       type: 'scope',
       pathDefault: { color: 'red' },
       labelDefault: { textColor: 'blue' },
-      children: [ribbon({ label: { text: 'flow' } })],
+      children: [linePath({ label: { text: 'flow' } })],
     });
 
     expect(parsed.pathDefault).toEqual({ color: 'red' });
     expect(parsed.labelDefault).toEqual({ textColor: 'blue' });
   });
 
-  it('drawable-shared-arrow-default-independent：arrowDefault 不进入 pathDefault / ribbon 默认样式', () => {
+  it('drawable-shared-arrow-default-independent：arrowDefault 不进入 pathDefault 默认样式', () => {
     const parsed = ScopeSchema.parse({
       type: 'scope',
       pathDefault: { color: 'red' },
       arrowDefault: { shape: 'circle' },
-      children: [ribbon()],
+      children: [linePath()],
     });
 
     expect(parsed.pathDefault).toEqual({ color: 'red' });

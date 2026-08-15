@@ -1,11 +1,12 @@
 import type { IRNode, IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
+import { ContourShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { PositionScale } from '../../../src/contract';
-import type { Cell } from '../../../src/contract';
+import type { Cell, CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
 import type { IRPlotIntervalMark, IRPlotSpec } from '../../../src/schemas';
@@ -18,9 +19,10 @@ import {
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { buildIntervalContext, datumAnchor } from '../../../src/providers';
-import { lowerMark } from '../../../src/providers';
+import { buildIntervalContext } from '../../../src/providers';
+import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
+import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';
 
 /**
@@ -30,6 +32,12 @@ import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
+
+const markRegistry = resolveMarkRegistry();
+const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
+  lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
+const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
+  resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
@@ -380,7 +388,7 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
         },
       ],
     };
-    const compiled = compileToScene(scene).scene;
+    const compiled = compileToScene(scene, { shapes: [ContourShapeDefinition] }).scene;
     expect(compiled).toBeTruthy();
   });
 });

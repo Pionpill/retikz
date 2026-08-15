@@ -8,10 +8,10 @@ import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotSpec, ScaledMarkValueType } from '../../../schemas';
+import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle, IRPlotSpec } from '../../../schemas';
 
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
-import { PlotScale } from '../../../schemas';
+import { MarkValueKind, PlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
@@ -21,15 +21,20 @@ type NumericPathResolverOptions = {
   clamp?: boolean;
 };
 
-const isScaledMarkValue = <T>(value: unknown): value is ScaledMarkValueType<T> =>
+type MarkStyleValue<T> =
+  | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
+  | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
+
+const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
   value !== null &&
   typeof value === 'object' &&
-  ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant') &&
+  ((value as { kind?: unknown }).kind === MarkValueKind.Field ||
+    (value as { kind?: unknown }).kind === MarkValueKind.Constant) &&
   'value' in value;
 
-const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): ScaledMarkValueType<T> | undefined => {
+const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkStyleValue<T> | undefined => {
   const value = (mark as Record<string, unknown>)[channel];
-  return isScaledMarkValue<T>(value) ? value : undefined;
+  return isMarkStyleValue<T>(value) ? value : undefined;
 };
 
 const jsonValue = (value: unknown): JsonValue | undefined =>
@@ -64,7 +69,7 @@ const makeNumericPathResolver = (
   node: IRPlotSpec,
   rows: Array<ExternalRow>,
   fieldTypes: DataFieldTypeMap,
-  pick: (mark: IRPlotMarkOperation) => ScaledMarkValueType<number> | undefined,
+  pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,
   channelName: string,
   options: NumericPathResolverOptions = {},
 ): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
@@ -81,20 +86,20 @@ const makeNumericPathResolver = (
     if (source.field === undefined) return source;
 
     const numeric = rows.map(row => resolveFieldPath(row, source.field as string)).filter(isFiniteNumber);
+    const scaleName = channel.kind === MarkValueKind.Field ? channel.scale : undefined;
     let scale: ((value: number) => number) | undefined;
-    if (channel.scale !== undefined || options.range !== undefined) {
+    if (scaleName !== undefined || options.range !== undefined) {
       let def: IRPlotLinearScale = {
         type: PlotScale.Linear,
-        name: channel.scale ?? `__path_${channelName}_${source.field}`,
+        name: scaleName ?? `__path_${channelName}_${source.field}`,
         ...(options.range !== undefined ? { range: [options.range[0], options.range[1]] as [number, number] } : {}),
         ...(options.clamp !== undefined ? { clamp: options.clamp } : {}),
       };
-      if (channel.scale !== undefined) {
-        const found = scaleByName.get(channel.scale);
-        if (!found)
-          throw new Error(`lowerPlots: ${channelName} path channel references unknown scale "${channel.scale}"`);
+      if (scaleName !== undefined) {
+        const found = scaleByName.get(scaleName);
+        if (!found) throw new Error(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
         if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
-          throw new Error(`lowerPlots: ${channelName} path channel scale "${channel.scale}" must be a linear scale`);
+          throw new Error(`lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`);
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
@@ -110,13 +115,13 @@ const makeNumericPathResolver = (
   };
 };
 
-const pickPathStrokeWidth = (mark: IRPlotMarkOperation): ScaledMarkValueType<number> | undefined =>
+const pickPathStrokeWidth = (mark: IRPlotMarkOperation): MarkStyleValue<number> | undefined =>
   pickStyleChannel<number>(mark, 'strokeWidth');
 
-const pickPathOpacity = (mark: IRPlotMarkOperation): ScaledMarkValueType<number> | undefined =>
+const pickPathOpacity = (mark: IRPlotMarkOperation): MarkStyleValue<number> | undefined =>
   pickStyleChannel<number>(mark, 'opacity');
 
-const pickPathFillOpacity = (mark: IRPlotMarkOperation): ScaledMarkValueType<number> | undefined =>
+const pickPathFillOpacity = (mark: IRPlotMarkOperation): MarkStyleValue<number> | undefined =>
   pickStyleChannel<number>(mark, 'fillOpacity');
 
 const pathNumericChannels: {

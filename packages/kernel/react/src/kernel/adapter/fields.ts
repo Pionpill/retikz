@@ -55,7 +55,6 @@ void _assertNodeFieldsCheck;
 export const PATH_FIELDS = [
   'kind',
   'kindOptions',
-  'ribbon',
   'label',
   'id',
   'meta',

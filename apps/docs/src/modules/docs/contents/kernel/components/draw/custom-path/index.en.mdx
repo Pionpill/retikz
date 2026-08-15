@@ -1,11 +1,11 @@
 ---
 title: Custom Paths
-description: Register a whole-Path kind provider, validate JSON options, and reuse stroke or ribbon compilation to produce renderer-neutral Scene primitives.
+description: Register a whole-Path kind provider, validate complete Path subjects, and reuse Core stroke services to produce renderer-neutral Scene primitives.
 ---
 
 A custom Path kind extends **how the whole path is emitted**. IR stores only an open `kind` and JSON-safe `kindOptions`. After the host injects a `PathKindDefinition`, core resolves it from the shared registry and lets it produce Scene primitives.
 
-The `highlight` kind below reuses the built-in stroke emitter and changes only line width and output color. Its definition, `<Layout pathKinds>` injection, and usage live in one runnable example.
+The `highlight` kind below reuses Core stroke emission and changes only line width. Its definition, `<Layout pathKinds>` injection, and usage live in one runnable example.
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
@@ -19,25 +19,37 @@ First decide whether the extension owns one segment or the whole path:
 | Change whole-Path primitives or outlines | Custom Path kind                                          |
 | Add only a new endpoint shape            | [Custom Arrows](/kernel/components/draw/custom-arrow)     |
 
-If you only need another stroke color, width, dash, arrow, or ribbon option, use the existing Path props instead of inventing a kind for a style preset.
+If you only need another stroke color, width, dash, or arrow, use the existing Path props instead of inventing a kind for a style preset. For a filled Ribbon path, see the optional [Standard Ribbon](/library/standard/extension/ribbon) definition.
 
 ## Define the capability
 
-Use `definePathKind` to declare a Path schema with a non-empty `kind` literal, an optional options schema, and a compile function that owns the whole path.
+Use `definePathKind` to declare an explicit registry key, a complete Path subject schema, and a compile function that owns the whole path. Compose the schema from the open `PathSchema` host plus the kind literal and `kindOptions`, so the definition owns the complete payload contract.
 
 ```tsx
-const highlight = definePathKind({
-  schema: z.strictObject({ kind: z.literal('highlight') }),
-  optionsSchema: z.strictObject({ strokeWidth: z.number().positive() }),
-  compile: context =>
-    context.emitStroke({
-      ...context.path,
-      strokeWidth: context.options.strokeWidth,
-    }),
+const HighlightOptionsSchema = z.strictObject({
+  strokeWidth: z.number().positive(),
+});
+const HighlightPathSchema = PathSchema.extend({
+  kind: z.literal('highlight'),
+  kindOptions: HighlightOptionsSchema,
+});
+type HighlightPath = z.infer<typeof HighlightPathSchema>;
+
+const highlight = definePathKind<HighlightPath>({
+  name: 'highlight',
+  schema: HighlightPathSchema,
+  compile: context => {
+    const { kindOptions, ...strokePath } = context.path;
+    return context.emitStroke({
+      ...strokePath,
+      kind: 'stroke',
+      strokeWidth: kindOptions.strokeWidth,
+    });
+  },
 });
 ```
 
-`schema.shape.kind.value` is the registry key. `kindOptions` passes through `optionsSchema` and remains JSON-safe. The definition and compile function are runtime capability and never enter IR.
+`name` is the registry key; it is not inferred from an internal Zod schema literal. `schema` is the complete source subject schema: Core's open `PathSchema` accepts shared host fields first, then the selected definition parses `kind`, `kindOptions`, and any cross-field constraints during resolution. The definition and compile function are runtime capability and never enter IR.
 
 ### Optional Inspector
 
@@ -68,7 +80,8 @@ const highlightInspector = defineInspector({
 });
 
 const highlight = definePathKind({
-  schema: z.strictObject({ kind: z.literal('highlight') }),
+  name: 'highlight',
+  schema: HighlightPathSchema,
   ownerOutput: { schema: StrokePathOwnerOutputSchema },
   compile: context =>
     context.ownerOutput.requested
@@ -96,17 +109,23 @@ React injects definitions through `<Layout pathKinds>`; direct core calls use `C
 
 ## Execution
 
-Built-in `stroke`, `ribbon`, and custom kinds first merge into one registry. When compiling a Path, core resolves `kind`, validates `kindOptions`, and passes the provider both standard stroke and ribbon emitters.
+Core's built-in `stroke` and custom kinds first merge into one registry. Optional Standard Ribbon is also an ordinary definition loaded through `pathKinds`; it does not change Core's built-in set. When compiling a Path, Core resolves `kind`, validates the subject with the definition's complete schema, and then passes the compile context to the provider.
 
-A provider may create new Scene primitives directly, or call `emitStroke` / `emitRibbon` to reuse endpoint resolution, path commands, arrows, and ribbon logic. Returned `primitives` and `boundsPoints` use current Path-local coordinates; the outer Scope transform is applied afterward.
+A provider may create new Scene primitives directly, or call `emitStroke` to reuse endpoint resolution, path commands, and arrows. `materializePath` supplies deterministic path commands without stroke decorations; `emitHostLabels` owns shared host labels; `appearance` and `round` provide resolved host appearance and the current compile precision; `ownerOutput` publishes an owner result only when observed. Returned `primitives` and `boundsPoints` use current Path-local coordinates; the outer Scope transform is applied afterward.
 
 <SourceLinks
   sources={[
     {
-      label: 'Path kind definition contract',
+      label: 'Path kind definition and compile-context contract',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
-      startLine: 40,
-      endLine: 53,
+      startLine: 65,
+      endLine: 115,
+    },
+    {
+      label: 'Definition name and schema validation',
+      path: 'packages/kernel/core/src/contract/path-kind/define.ts',
+      startLine: 12,
+      endLine: 44,
     },
     {
       label: 'Built-in and custom kind merge',
@@ -115,27 +134,33 @@ A provider may create new Scene primitives directly, or call `emitStroke` / `emi
       endLine: 17,
     },
     {
-      label: 'Kind lookup, option validation, and compile call',
+      label: 'Kind lookup and complete subject-schema validation',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+    {
+      label: 'Compile-context service assembly and invocation',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 93,
-      endLine: 145,
+      startLine: 378,
+      endLine: 498,
     },
   ]}
 />
 
 ## Errors and limits
 
-| Case                                           | Result                                                    |
-| ---------------------------------------------- | --------------------------------------------------------- |
-| Empty or non-string `kind` literal             | `definePathKind` rejects it immediately                   |
-| Duplicate `stroke`, `ribbon`, or custom key    | Registry merge reports a duplicate registration           |
-| Path references an unknown kind                | Compile lists available names and `options.pathKinds`     |
-| `kindOptions` fails its schema                 | Error includes kind name and the relevant IR path         |
-| Provider returns `null`                        | The Path produces no primitives                           |
-| Selected non-null result omits owner output    | Core observation fails loudly                             |
-| Owner output or Inspector subject fails schema | The corresponding validation stage fails loudly           |
-| Inspector returns an invalid Core child        | Error includes owner, occurrence, and output index        |
-| `boundsPoints` misses actual output bounds     | Auto layout and Path-level rotate/scale become inaccurate |
+| Case                                            | Result                                                    |
+| ----------------------------------------------- | --------------------------------------------------------- |
+| Empty or non-string definition `name`           | `definePathKind` rejects it immediately                   |
+| Duplicate `stroke` or custom key                | Registry merge reports a duplicate registration           |
+| Path references an unknown kind                 | Compile lists available names and `options.pathKinds`     |
+| The selected definition schema rejects the Path | Error includes kind name and the relevant IR path         |
+| Provider returns `null`                         | The Path produces no primitives                           |
+| Selected non-null result omits owner output     | Core observation fails loudly                             |
+| Owner output or Inspector subject fails schema  | The corresponding validation stage fails loudly           |
+| Inspector returns an invalid Core child         | Error includes owner, occurrence, and output index        |
+| `boundsPoints` misses actual output bounds      | Auto layout and Path-level rotate/scale become inaccurate |
 
 A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
 
@@ -143,12 +168,12 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### PathKindDefinition
 
-| Field           | Type                            | Default                 | Description                                     |
-| --------------- | ------------------------------- | ----------------------- | ----------------------------------------------- |
-| `schema`        | `PathKindDefinition['schema']`  | —                       | Declares Path shape and provides registry key   |
-| `optionsSchema` | `ZodType<IRJsonObject>`         | Raw `kindOptions ?? {}` | Validates custom instance options               |
-| `compile`       | `PathKindDefinition['compile']` | —                       | Emits whole-Path Scene primitives and bounds    |
-| `ownerOutput`   | `CompileOwnerOutputDefinition`  | —                       | Declares an on-demand final owner-output schema |
+| Field         | Type                            | Default | Description                                             |
+| ------------- | ------------------------------- | ------- | ------------------------------------------------------- |
+| `name`        | `string`                        | —       | Non-empty registry key referenced by `Path.kind`        |
+| `schema`      | `PathKindDefinition['schema']`  | —       | Validates the complete Path subject for this definition |
+| `compile`     | `PathKindDefinition['compile']` | —       | Emits whole-Path Scene primitives and bounds            |
+| `ownerOutput` | `CompileOwnerOutputDefinition`  | —       | Declares an on-demand final owner-output schema         |
 
 ### InspectorDefinition
 
@@ -164,13 +189,15 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### Compile context
 
-| Field         | Type                                   | Default      | Description                                            |
-| ------------- | -------------------------------------- | ------------ | ------------------------------------------------------ |
-| `path`        | `IRPathBase`                           | —            | Complete IR for the current Path                       |
-| `options`     | `TOptions`                             | —            | `kindOptions ?? {}` parsed by `optionsSchema`          |
-| `ownerOutput` | `CompileOwnerOutputPublisher`          | —            | Publishes a schema-backed final owner output on demand |
-| `emitStroke`  | `PathKindCompileContext['emitStroke']` | Current Path | Reuses standard stroke compilation                     |
-| `emitRibbon`  | `PathKindCompileContext['emitRibbon']` | Current Path | Reuses standard ribbon compilation                     |
+| Field             | Type                                       | Default      | Description                                                     |
+| ----------------- | ------------------------------------------ | ------------ | --------------------------------------------------------------- |
+| `path`            | `IRPathBase`                               | —            | Complete Path subject after the definition schema has parsed it |
+| `ownerOutput`     | `CompileOwnerOutputPublisher`              | —            | Publishes a schema-backed final owner output on demand          |
+| `materializePath` | `(input?) => MaterializedPath`             | Current Path | Materializes selected steps without stroke decorations          |
+| `emitStroke`      | `PathKindCompileContext['emitStroke']`     | Current Path | Reuses Core stroke compilation                                  |
+| `emitHostLabels`  | `PathKindCompileContext['emitHostLabels']` | —            | Compiles shared host labels from positioned geometry            |
+| `appearance`      | `ResolvedPathKindAppearance`               | —            | Provides resolved renderer-neutral host appearance              |
+| `round`           | `(value: number) => number`                | —            | Uses the current compile precision                              |
 
 ### PathKindCompileResult
 
@@ -182,7 +209,7 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 ## Related
 
 - [Path](/kernel/components/draw/path): built-in `stroke` and host fields
-- [Ribbon](/kernel/components/draw/ribbon): width and boundary options for the built-in `ribbon` kind
+- [Standard Ribbon](/library/standard/extension/ribbon): optional Ribbon Path kind Definition and provider contribution
 - [Path Generators](/kernel/components/draw/path-generator): extends only one generator Step
 - [Custom Arrows](/kernel/components/draw/custom-arrow): extends only endpoint markers
 - [Runtime extensions](/kernel/reference/runtime/extensions): cross-capability definition and registry overview

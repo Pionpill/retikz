@@ -89,7 +89,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
   description="需要排查无效数据为何被跳过、文本点为何替换圆点，或颜色分组如何下沉时再回来读。"
 />
 
-`<PointMark>` 只声明数据到点几何的映射，不直接渲染 DOM。它进入 `PlotSpec` 后由 mark registry 分派给 point lowering，并复用当前坐标系与 core `Node`。
+`<PointMark>` 只声明数据到点几何的映射，不直接渲染 DOM。它进入 `IRPlotSpec` 后由 mark registry 分派给 point lowering，并复用当前坐标系与 core `Node`。
 
 | 阶段 | 可观察行为                                                                               |
 | ---- | ---------------------------------------------------------------------------------------- |
@@ -111,10 +111,10 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
       endLine: 46,
     },
     {
-      label: '按 mark type 解析 definition 并统一分派',
-      path: 'packages/viz/plot/src/providers/mark/registry.ts',
-      startLine: 146,
-      endLine: 166,
+      label: '按 mark type 解析 definition',
+      path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
+      startLine: 11,
+      endLine: 29,
     },
     {
       label: 'PointMark 投影、Node 生成与颜色分层',
@@ -138,17 +138,17 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | 属性                                 | 类型                                                                                                                                                                            | 默认值                                       | 描述                                                                 |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------- |
 | `id?`                                | `string`                                                                                                                                                                        | —                                            | mark 句柄；使用 `resolveLabel` 时必填                                |
-| `x?` / `y?` / `z?`                   | `FieldName`                                                                                                                                                                     | —                                            | 位置角色字段；内置坐标使用 `x` 或 `x` / `y`，`z` 留给自定义坐标 role |
+| `x?` / `y?` / `z?`                   | `PointMarkProps['x']`                                                                                                                                                           | —                                            | 位置角色字段；内置坐标使用 `x` 或 `x` / `y`，`z` 留给自定义坐标 role |
 | `color?`                             | `PointMarkProps['color']`                                                                                                                                                       | —                                            | 点的语义颜色；字段绑定会建立颜色通道与比例尺                         |
 | `size?`                              | `PointMarkProps['size']`                                                                                                                                                        | —                                            | 普通点的尺寸；数值字段经 sqrt scale 映射为半径，无效值跳过该 glyph   |
 | `shape?`                             | `PointMarkProps['shape']`                                                                                                                                                       | —                                            | 普通点的形状；分类字段映射到 shape 调色板                            |
-| `text?`                              | `FieldName`                                                                                                                                                                     | —                                            | 把点本身替换为无边框文本 Node                                        |
+| `text?`                              | `PointMarkProps['text']`                                                                                                                                                        | —                                            | 把点本身替换为无边框文本 Node                                        |
 | `displayFormat?`                     | `string`                                                                                                                                                                        | —                                            | `text` 的 d3 数值或时间格式                                          |
 | `textColor?`                         | `PointMarkProps['textColor']`                                                                                                                                                   | —                                            | 文本点的文字颜色                                                     |
 | `dx?` / `dy?`                        | `number`                                                                                                                                                                        | `0`                                          | 文本点相对投影锚点的屏幕方向微调                                     |
-| `label?`                             | `FieldName`                                                                                                                                                                     | —                                            | 在保留点 glyph 的同时，把字段内容挂到 `Node.label`                   |
+| `label?`                             | `PointMarkProps['label']`                                                                                                                                                       | —                                            | 在保留点 glyph 的同时，把字段内容挂到 `Node.label`                   |
 | `labelDisplayFormat?`                | `string`                                                                                                                                                                        | —                                            | `label` 的 d3 数值或时间格式                                         |
-| `labelPosition?`                     | `NodeLabelPositionInput`                                                                                                                                                        | `top`                                        | 中心、四边、四角、角度或边界位置对象                                 |
+| `labelPosition?`                     | `PointMarkProps['labelPosition']`                                                                                                                                               | `top`                                        | 中心、四边、四角、角度或边界位置对象                                 |
 | `labelPosition.boundary`             | `'top' \| 'right' \| 'bottom' \| 'left'`                                                                                                                                        | 对象写法必填                                 | 选择矩形边界；与 `fraction` 组成 `{ boundary, fraction? }`           |
 | `labelPosition.fraction?`            | `number`                                                                                                                                                                        | `0.5`                                        | 沿所选边界的归一化位置，范围 `0` 到 `1`                              |
 | `labelDistance?`                     | `number`                                                                                                                                                                        | `12`                                         | 标签与宿主边界之间的距离；居中标签不使用                             |
@@ -162,7 +162,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | `resolveLabel?`                      | `(row: ExternalRow) => string`                                                                                                                                                  | —                                            | 运行时标签函数；不进入 IR，必须同时提供 `id`                         |
 | `anchorId?`                          | `IRPlotAnchorIdSpec`                                                                                                                                                            | —                                            | 为每个有效点生成稳定的 core Node id；以下三种来源必须恰选一种        |
 | `anchorId.prefix?`                   | `string`                                                                                                                                                                        | mark id 或 `mark.<index>`                    | 当前 Plot 内的 id 命名空间                                           |
-| `anchorId.field?`                    | `FieldName`                                                                                                                                                                     | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
+| `anchorId.field?`                    | `IRPlotAnchorIdSpec['field']`                                                                                                                                                   | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
 | `anchorId.template?`                 | `string`                                                                                                                                                                        | —                                            | JSON-safe id 模板；支持 plot、mark、index 与字段占位符               |
 | `anchorId.generator?`                | `string`                                                                                                                                                                        | —                                            | 从 `LowerPlotsOptions.anchorIdGenerators` 解析的运行时生成器 key     |
 

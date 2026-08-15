@@ -1,25 +1,23 @@
 import type { IRScope } from '@retikz/core';
 import type { IRShapeValue, JsonValue } from '@retikz/core';
-import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow } from '@retikz/data';
+import type { DataFieldTypeValue } from '@retikz/data';
 
 import { DataFieldType } from '@retikz/data';
 
-import type { AnyChannelDefinition, AnyMarkDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
-import type { ResolvedPlotGuideTheme, ResolvedPlotPalette, ScaleDescriptor } from '../../providers';
+import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
+import type { ScaleDescriptor } from '../../providers';
+import type { ChannelResolveContext } from '../../resolve/channel';
+import type { EffectivePlotGuideTheme } from '../../resolve/theme';
 import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlotSpec, LegendChannelValue } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
-import type { LegendEntry, LegendInput } from '../guide';
+import type { LegendEntry, LowerLegendOptions } from '../guide';
 import type { MarkDataView } from './types';
 
-import {
-  channelKindsForMark,
-  resolveGuideTicks,
-  resolveLegendGuideTokens,
-  resolveLinearScale,
-  resolveMarkChannels,
-  resolveSqrtScale,
-  scaleTicks,
-} from '../../providers';
+import { resolveLinearScale, resolveSqrtScale, scaleTicks } from '../../providers';
+import { resolveChannelDefinition, resolveMarkChannels } from '../../resolve/channel';
+import { resolveGuideTicks } from '../../resolve/guide';
+import { resolveScaleDefinition } from '../../resolve/scale';
+import { resolveLegendGuideTokens } from '../../resolve/theme';
 import { LegendSymbolFit, PlotLayerZIndex, PlotScale } from '../../schemas';
 import { lowerLegend } from '../guide';
 
@@ -30,18 +28,7 @@ import { lowerLegend } from '../guide';
  */
 export const collectChannelDescriptors = (
   node: IRPlotSpec,
-  channelCtx: {
-    node: IRPlotSpec;
-    rows: Array<ExternalRow>;
-    fieldTypes: DataFieldTypeMap;
-    fieldTypeEvidence?: ReadonlySet<string>;
-    scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
-    resolveColorScheme: (name: string) => (t: number) => string;
-    palette: ResolvedPlotPalette;
-  },
-  channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
-  markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
-  defaultColor: string,
+  channelCtx: ChannelResolveContext,
   markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
@@ -49,13 +36,7 @@ export const collectChannelDescriptors = (
     if (descriptor) out.push(descriptor);
   };
   for (const view of markDataViews ?? node.marks.map(mark => ({ mark, rows: channelCtx.rows }))) {
-    const markChannels = resolveMarkChannels(
-      view.mark,
-      { ...channelCtx, rows: view.rows },
-      channelRegistry,
-      defaultColor,
-      channelKindsForMark(view.mark, markRegistry),
-    );
+    const markChannels = resolveMarkChannels(view.mark, { ...channelCtx, rows: view.rows });
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;
@@ -118,8 +99,8 @@ const selectLegendDescriptor = (
     if (matched.length === 0) {
       const scale = scaleByName.get(guide.scale);
       if (scale === undefined) throw new Error(`lowerPlots: legend references unknown scale "${guide.scale}"`);
-      const scaleDefinition = scaleRegistry.get(scale.type);
-      if (scaleDefinition?.family !== 'channel') {
+      const scaleDefinition = resolveScaleDefinition(scale, { registry: scaleRegistry });
+      if (scaleDefinition.family !== 'channel') {
         throw new Error(
           `lowerPlots: scale "${guide.scale}" is not a color scale (legend channel "${guide.channel}" can only bind channel scales)`,
         );
@@ -147,7 +128,11 @@ const niceNumericTicks = (
   count: number,
 ): Array<{ value: number; offset: number; label: string }> => {
   const [lo, hi] = domain;
-  const scale = resolveLinearScale({ domain: [lo, hi] }, [], [0, 1]);
+  const scale = resolveLinearScale(
+    { type: PlotScale.Linear, name: '__legend_numeric_ticks', domain: [lo, hi] },
+    [],
+    [0, 1],
+  );
   const { values, labels } = scaleTicks(scale, count);
   const span = hi - lo;
   return values.map((value, index) => ({
@@ -161,7 +146,11 @@ const legendRampTickScale = (
   domain: readonly [number, number],
   fieldType: DataFieldTypeValue | undefined,
 ): PositionScale => {
-  const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
+  const scale = resolveLinearScale(
+    { type: PlotScale.Linear, name: '__legend_ramp_ticks', domain: [domain[0], domain[1]] },
+    [],
+    [0, 1],
+  );
   return {
     coordinate: value => scale(Number(value)),
     domain: () => [domain[0], domain[1]],
@@ -208,8 +197,8 @@ const resolveSqrtForLegend = (
   return value => scale(value);
 };
 
-/** legend baseInput 形状（lowerLegend 入参里与求值无关的固定部分） */
-type LegendBaseInput = {
+/** legend lowering 的固定公共字段（与具体形态和条目求值无关） */
+type LegendLoweringBase = {
   channel: LegendChannelValue;
   position: 'right' | 'left' | 'top' | 'bottom';
   orient: 'vertical' | 'horizontal';
@@ -217,7 +206,7 @@ type LegendBaseInput = {
   band: Rect;
   id: string;
   zIndex: number;
-  style: LegendInput['style'];
+  style: LowerLegendOptions['style'];
 };
 
 /**
@@ -229,9 +218,9 @@ type LegendBaseInput = {
 const resolveColorLegend = (
   descriptor: ScaleDescriptor,
   guide: IRPlotLegendGuide,
-  baseInput: LegendBaseInput,
+  base: LegendLoweringBase,
   showLabels: boolean,
-): LegendInput => {
+): LowerLegendOptions => {
   // 标题只在用户显式给时渲染（field 名仅作占位 fallback 的语义来源，不自动生成标题 Node，避免与条目标签混淆）
   const title = guide.title;
   const resolution = descriptor.colorScale;
@@ -251,7 +240,7 @@ const resolveColorLegend = (
       return { offset: t, color: resolution.of(lo + (hi - lo) * t) ?? '' };
     });
     const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
-    return { ...baseInput, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
+    return { ...base, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
   }
 
   // 分箱 swatch：quantize / threshold / quantile → 每档色块 + 区间标签（闭开口：[a, b)，末档闭）；edges = 档间内部边界
@@ -259,7 +248,11 @@ const resolveColorLegend = (
     const edges = resolution.edges;
     const colors = resolution.range;
     const formatNumber = resolveLinearScale(
-      { domain: edges.length > 0 ? [edges[0], edges[edges.length - 1]] : [0, 1] },
+      {
+        type: PlotScale.Linear,
+        name: '__legend_bin_labels',
+        domain: edges.length > 0 ? [edges[0], edges[edges.length - 1]] : [0, 1],
+      },
       [],
       [0, 1],
     ).tickFormat();
@@ -276,14 +269,14 @@ const resolveColorLegend = (
             : `${formatNumber(lower as number)}–${formatNumber(upper as number)}`;
       return { label, color };
     });
-    return { ...baseInput, form: 'swatch', title, entries };
+    return { ...base, form: 'swatch', title, entries };
   }
 
   // ordinal 离散 swatch：每类别一色块 + 类别标签（domain = 类别序、range = 对应色，与实绘同源）
   const entries: Array<LegendEntry> = resolution.domain.map(
     (category, index): LegendEntry => ({ label: showLabels ? String(category) : '', color: resolution.range[index] }),
   );
-  return { ...baseInput, form: 'swatch', title, entries };
+  return { ...base, form: 'swatch', title, entries };
 };
 
 /** 单个 legend 在其所在边的预留带宽 / 带高（user units）；无文字度量 → 固定估算，溢出可接受（plot-design §13.1） */
@@ -375,7 +368,7 @@ export const buildLegendLayers = (
   bands: Array<Rect>,
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolvedTheme: ResolvedPlotGuideTheme,
+  resolvedTheme: EffectivePlotGuideTheme,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
@@ -384,7 +377,7 @@ export const buildLegendLayers = (
       guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
     const id = legendLayerId(node.id, guide.channel, legendIndex, legendGuides.length);
     const style = resolveLegendGuideTokens(resolvedTheme, guide.style);
-    const baseInput: LegendBaseInput = {
+    const base: LegendLoweringBase = {
       channel: guide.channel,
       position: guide.position ?? 'right',
       orient,
@@ -398,8 +391,8 @@ export const buildLegendLayers = (
     const descriptor = selectLegendDescriptor(guide, channelDescriptors, scaleByName, scaleRegistry);
 
     if (descriptor?.colorScale !== undefined) {
-      const input = resolveColorLegend(descriptor, guide, baseInput, showLabels);
-      return lowerLegend(input);
+      const options = resolveColorLegend(descriptor, guide, base, showLabels);
+      return lowerLegend(options);
     }
     if (guide.channel === 'color') {
       throw new Error(
@@ -412,7 +405,7 @@ export const buildLegendLayers = (
         `lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`,
       );
     }
-    const channelDefinition = channelRegistry.get(guide.channel);
+    const channelDefinition = resolveChannelDefinition(guide.channel, { channelRegistry });
     const legendForm =
       channelDefinition !== undefined && 'legend' in channelDefinition ? channelDefinition.legend : undefined;
     const channelOutput =
@@ -434,7 +427,7 @@ export const buildLegendLayers = (
         symbolSize: style.symbolSize,
         color: 'currentColor',
       }));
-      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (legendForm === 'size') {
       if (channelOutput?.outputKind !== 'number') {
@@ -460,7 +453,7 @@ export const buildLegendLayers = (
             ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)
             : radiusScale(tick.value)) * style.symbolScale,
       }));
-      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (legendForm === 'ramp') {
       if (channelOutput?.outputKind !== 'color' && channelOutput?.outputKind !== 'number') {
@@ -489,7 +482,7 @@ export const buildLegendLayers = (
           : stops;
       const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
       return lowerLegend({
-        ...baseInput,
+        ...base,
         form: 'ramp',
         title,
         entries: [],
@@ -501,7 +494,7 @@ export const buildLegendLayers = (
         label: showLabels ? String(category) : '',
         color: String(descriptor.range[index]),
       }));
-      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (channelOutput?.outputKind !== 'number') {
       throw new Error(
@@ -517,6 +510,6 @@ export const buildLegendLayers = (
       const t = span === 0 ? 1 : (tick.value - lo) / span;
       return { label: showLabels ? tick.label : '', opacity: oMin + (oMax - oMin) * Math.max(0, Math.min(1, t)) };
     });
-    return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+    return lowerLegend({ ...base, form: 'swatch', title, entries });
   });
 };

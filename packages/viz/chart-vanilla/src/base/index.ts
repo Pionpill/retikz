@@ -7,7 +7,7 @@ import type {
 import type { CompileResult, IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
-import type { InputPlot } from '@retikz/plot-vanilla';
+import type { PlotSource } from '@retikz/plot-vanilla';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
 import { CHART_NAMESPACE } from '@retikz/chart';
@@ -25,8 +25,8 @@ export { ChartInputEmbedAdapter } from './adapter';
 
 /** 基础 Chart Vanilla authoring 输入 */
 export type CreateChartInput = Readonly<{
-  /** 完整 Plot authoring 输入 */
-  plot: InputPlot;
+  /** Plot Vanilla 的显式 Input 或 Source IR */
+  plot: PlotSource;
   /** Plot lowering 的外部 datasets */
   datasets: ExternalDatasets;
   /** Plot lowering runtime options */

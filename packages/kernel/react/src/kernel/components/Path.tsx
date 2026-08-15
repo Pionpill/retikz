@@ -11,7 +11,6 @@ export type PathProps = HydrationEventProps & {
   authoring?: unknown;
   kind?: IRPath['kind'];
   kindOptions?: IRPath['kindOptions'];
-  ribbon?: IRPath['ribbon'];
   label?: IRPath['label'];
   /** 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定 */
   id?: IRPath['id'];

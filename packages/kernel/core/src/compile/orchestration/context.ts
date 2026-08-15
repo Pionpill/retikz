@@ -6,7 +6,6 @@
   ClipDefinition,
   PathGeneratorDefinition,
   PatternDefinition,
-  RibbonWidthProfileDefinition,
   ShapeDefinition,
   ThemeStyleDefinition,
 } from '../../contract';
@@ -23,7 +22,6 @@ import { resolveCompositeRegistry } from '../../providers/composite';
 import { resolvePathGeneratorRegistry } from '../../providers/path-generator';
 import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
-import { resolveRibbonWidthProfileRegistry } from '../../providers/ribbon';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve/theme';
@@ -85,8 +83,6 @@ export type CompileContext = {
   pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
   /** path kind provider 注册表 */
   pathKinds: ReadonlyMap<string, AnyPathKindDefinition>;
-  /** ribbon width profile provider 注册表 */
-  ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
   /** paint 资源注册表 */
   paint: ReturnType<typeof createPaintRegistry>;
   /** clip 资源注册表 */
@@ -142,7 +138,6 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     patterns,
     pathGenerators: resolvePathGeneratorRegistry(options.pathGenerators),
     pathKinds: resolvePathKindRegistry(options.pathKinds),
-    ribbonWidthProfiles: resolveRibbonWidthProfileRegistry(options.ribbonWidthProfiles),
     paint: createPaintRegistry(round),
     clip: createClipRegistry(round),
   };

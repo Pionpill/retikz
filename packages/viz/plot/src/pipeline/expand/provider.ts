@@ -1,6 +1,7 @@
-import type { CompositeCoreProviderKey,CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
+import type { CompositeCoreProviderKey, CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
+import { BUILTIN_RIBBON_WIDTH_PROFILES, createRibbonProviderContribution } from '@retikz/standard/ribbon';
 import { ContourShapeProvider, SectorShapeProvider } from '@retikz/standard/shape';
 
 import type { LowerPlotsOptions } from './types';
@@ -125,8 +126,14 @@ export const createPlotProviderContribution = (
   lowerOptions: LowerPlotsOptions = {},
 ): CoreProviderContribution => {
   const plotProvider = createPlotProvider(datasets, lowerOptions);
+  const ribbonContribution = createRibbonProviderContribution(BUILTIN_RIBBON_WIDTH_PROFILES);
   return Object.freeze({
-    roots: Object.freeze([PlotProviderKey]),
-    providers: Object.freeze([SectorShapeProvider, ContourShapeProvider, plotProvider]),
+    roots: Object.freeze([PlotProviderKey, ...ribbonContribution.roots]),
+    providers: Object.freeze([
+      SectorShapeProvider,
+      ContourShapeProvider,
+      ...ribbonContribution.providers,
+      plotProvider,
+    ]),
   });
 };

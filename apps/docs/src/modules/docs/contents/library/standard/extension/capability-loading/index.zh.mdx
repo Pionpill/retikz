@@ -3,7 +3,7 @@ title: 能力装载
 description: 先选择按需导入或完整集合的 Standard Definition，再了解 React、Vanilla 与 provider graph 如何把它们交给 Core 编译。
 ---
 
-Standard 扩展不会自动注册。使用形状、箭头或裁剪时，先从对应子入口导入 Definition，再传给 React `Layout` 或 Vanilla 的编译入口。
+Standard 扩展不会自动注册。使用形状、箭头、裁剪或 Path kind 时，先从对应子入口导入 Definition，再传给 React `Layout` 或 Vanilla 的编译入口。
 
 ## 如何使用
 
@@ -17,9 +17,15 @@ Standard 扩展不会自动注册。使用形状、箭头或裁剪时，先从�
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-<Layout shapes={[CrossShapeDefinition]} arrows={[DiamondArrowDefinition]} clips={[CompoundClipDefinition]}>
+<Layout
+  shapes={[CrossShapeDefinition]}
+  arrows={[DiamondArrowDefinition]}
+  clips={[CompoundClipDefinition]}
+  pathKinds={[RibbonPathKindDefinition]}
+>
   {/* 图形内容 */}
 </Layout>;
 ```
@@ -30,6 +36,7 @@ Vanilla 使用同一组 Definition：
 import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
 const svg = renderToSvgString(input, {
@@ -37,6 +44,7 @@ const svg = renderToSvgString(input, {
     shapes: [CrossShapeDefinition],
     arrows: [DiamondArrowDefinition],
     clips: [CompoundClipDefinition],
+    pathKinds: [RibbonPathKindDefinition],
   },
 });
 ```
@@ -73,12 +81,13 @@ const svg = renderToSvgString(input, {
 });
 ```
 
-| 方式                     | 适合场景                                |
-| ------------------------ | --------------------------------------- |
-| 具体 Definition          | 只装载当前图使用的能力                  |
-| `StandardXxxDefinitions` | 快速使用对应官方扩展包的全部 Definition |
+| 方式                       | 适合场景                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------- |
+| 具体 Definition            | 只装载当前图使用的能力                                                                |
+| `RibbonPathKindDefinition` | Ribbon 只有一个直接 Path kind Definition，没有完整的 `StandardRibbonDefinitions` 集合 |
+| `StandardXxxDefinitions`   | 快速使用对应官方扩展包的全部 Definition                                               |
 
-如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips` 数组。
+如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`，Ribbon 则使用 `createRibbonProviderContribution()`。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips`、`pathKinds` 数组。
 
 ## 内部编译逻辑
 
@@ -88,13 +97,15 @@ const svg = renderToSvgString(input, {
 
 图中左侧的单个 Definition 和完整集合只是两种装载入口；它们会汇入同一条 Core 编译路径。provider graph 负责在编译前组织 Definition，IR 只在消费阶段按名称查找已经装载的能力。
 
-- 直接传入 Definition 时，Core 将它们放入对应的 `shapes`、`arrows` 或 `clips` registry
-- 使用 Provider 时，adapter 先收集 `CoreProviderContribution`，Core 的 `resolveCoreProviderDependencies()` 解析依赖，再把结果按能力分组为普通 compile options
+- 直接传入 Definition 时，Core 将它们放入对应的 `shapes`、`arrows`、`clips` 或 `pathKinds` registry
+- 使用 Provider 时，adapter 先收集 `CoreProviderContribution`（例如 `createRibbonProviderContribution()`），Core 的 `resolveCoreProviderDependencies()` 解析依赖，再把结果按能力分组为普通 compile options
 - Standard 只提供 Definition 和 Provider，不维护全局注册表，也不创建第二套 lookup 规则
+
+直接 Definition 输入就是最终的 compile option 值；provider contribution 则是声明 roots、dependencies 与 runtime 数据集的闭包。Core 先解析 contribution，再产出同一套普通的 `pathKinds`（或其它能力）数组。
 
 ## 持久化与限制
 
-IR 只保存图形数据，例如节点的 `shape: 'cross'` 或路径中的箭头名称。Definition、Provider 和 maker 属于运行时装配内容，不会写入 IR、Scene 或持久化 JSON。
+IR 只保存图形数据，例如节点的 `shape: 'cross'`、路径中的箭头名称或 Path kind 名。Definition、Provider 和 maker 属于运行时装配内容，不会写入 IR、Scene 或持久化 JSON。
 
 导入 Standard 子入口也不会自动影响其他编译调用。每次编译都应显式传入当前图需要的 Definition 或集合；如果 IR 引用了未装载的能力，Core 会在 registry lookup 时报告错误。重复注册同一个 key 或 provider key 时，Core 也会明确拒绝冲突。
 
@@ -103,4 +114,5 @@ IR 只保存图形数据，例如节点的 `shape: 'cross'` 或路径中的箭�
 - [形状](/library/standard/extension/shape)：可选节点形状
 - [箭头](/library/standard/extension/arrow)：可选端点标记
 - [裁剪](/library/standard/extension/clip)：递归组合裁剪
+- [Ribbon](/library/standard/extension/ribbon)：可选 Ribbon Path kind Definition 与 provider contribution
 - [Core 编译参考](/kernel/reference/runtime/compile)：查看 CompileOptions 与 provider graph 的完整契约

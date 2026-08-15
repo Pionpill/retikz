@@ -1,13 +1,4 @@
-import {
-  BendDirection,
-  BoxSpacingSchema,
-  FoldStepVia,
-  JsonObjectSchema,
-  PaintSpecSchema,
-  RibbonAlignment,
-  RibbonSamplingSchema,
-  RibbonTaperInterpolation,
-} from '@retikz/core';
+import { BendDirection, BoxSpacingSchema, FoldStepVia, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
 import {
   AnchorRefSchema,
   PathDecorationSchema,
@@ -33,6 +24,7 @@ import {
   ShapeRefSchema,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import { z } from 'zod';
 
 import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
@@ -982,16 +974,10 @@ export const RelationPathGeometrySchema = z
 
 export const RelationRibbonSpecificOptionsSchema = z
   .strictObject({
-    interpolation: z
-      .enum(RibbonTaperInterpolation)
-      .optional()
-      .describe('Interpolation curve between start.width and end.width'),
-    align: z.enum(RibbonAlignment).optional().describe('Which side of the generated band stays on the centerline'),
-    samples: z
-      .union([z.boolean(), z.number().int().min(2).max(512)])
-      .optional()
-      .describe('Sampling shorthand for centerline lowering'),
-    sampling: RibbonSamplingSchema.optional().describe('Explicit sampling strategy'),
+    interpolation: RibbonPathOptionsSchema.shape.interpolation,
+    align: RibbonPathOptionsSchema.shape.align,
+    samples: RibbonPathOptionsSchema.shape.samples,
+    sampling: RibbonPathOptionsSchema.shape.sampling,
   })
   .superRefine((options, ctx) => {
     if (options.samples !== undefined && options.sampling !== undefined) {

@@ -14,7 +14,6 @@ import type {
   LowerTex,
   PathGeneratorDefinition,
   PatternDefinition,
-  RibbonWidthProfileDefinition,
   ShapeDefinition,
   TextMeasurer,
   ThemeStyleDefinition,
@@ -198,8 +197,6 @@ export type LayoutProps = ScopeStyleProps & {
   pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
   /** 自定义 path kind 定义 */
   pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
-  /** 自定义 ribbon 宽度 profile */
-  ribbonWidthProfiles?: ReadonlyArray<RibbonWidthProfileDefinition>;
   /** Tier 2 composite definitions */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
   /** Core Theme style definitions */
@@ -332,7 +329,6 @@ export const Layout: FC<LayoutProps> = props => {
     patterns,
     pathGenerators,
     pathKinds,
-    ribbonWidthProfiles,
     composites,
     themeStyles,
     lowerTex,
@@ -359,7 +355,6 @@ export const Layout: FC<LayoutProps> = props => {
   const stablePatterns = canonicalizeDefinitionArray(patterns);
   const stablePathGenerators = canonicalizeDefinitionArray(pathGenerators);
   const stablePathKinds = canonicalizeDefinitionArray(pathKinds);
-  const stableRibbonWidthProfiles = canonicalizeDefinitionArray(ribbonWidthProfiles);
   const stableComposites = canonicalizeDefinitionArray(composites);
   const ambientThemeStyles = useThemeStyles();
   const stableThemeStyles = canonicalizeDefinitionArray(
@@ -456,7 +451,6 @@ export const Layout: FC<LayoutProps> = props => {
         patterns: stablePatterns,
         pathGenerators: stablePathGenerators,
         pathKinds: stablePathKinds,
-        ribbonWidthProfiles: stableRibbonWidthProfiles,
         composites: stableComposites,
         themeStyles: stableThemeStyles,
         lowerTex,
@@ -477,7 +471,6 @@ export const Layout: FC<LayoutProps> = props => {
       stablePatterns,
       stablePathGenerators,
       stablePathKinds,
-      stableRibbonWidthProfiles,
       stableComposites,
       stableThemeStyles,
       lowerTex,

@@ -1,5 +1,7 @@
 import type { z } from 'zod';
 
+import { ZodError } from 'zod';
+
 import { LayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';
 
 /** provider payload 校验输入 */
@@ -18,6 +20,27 @@ export type ParseProviderPayloadInput<TOutput> = {
   value: unknown;
 };
 
+/** 格式化 Zod issue 的嵌套字段路径，用于补充 provider payload 定位信息 */
+const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
+  let formatted = '';
+  for (const segment of path) {
+    if (typeof segment === 'number') {
+      formatted += `[${segment}]`;
+    } else {
+      formatted += `${formatted.length === 0 ? '' : '.'}${String(segment)}`;
+    }
+  }
+  return formatted;
+};
+
+/** 为 path kind 的完整 subject schema 失败补充 schema 内字段定位 */
+const appendPathKindIssuePath = (capability: string, payloadName: string, irPath: string, error: unknown): string => {
+  if (capability !== 'path kind' || payloadName !== 'path' || !(error instanceof ZodError)) return irPath;
+  const issuePath = formatIssuePath(error.issues[0]?.path ?? []);
+  if (issuePath.length === 0) return irPath;
+  return `${irPath}${issuePath.startsWith('[') ? '' : '.'}${issuePath}`;
+};
+
 /** 用统一错误上下文解析 provider payload，并保留原始 ZodError cause */
 export const parseProviderPayload = <TOutput>({
   capability,
@@ -31,8 +54,9 @@ export const parseProviderPayload = <TOutput>({
     return schema.parse(value);
   } catch (error) {
     const message = safeThrownDetail(error);
+    const locator = appendPathKindIssuePath(capability, payloadName, irPath, error);
     throw new LayoutProbeRecoverableError(
-      `${capability} '${providerName}' failed ${payloadName} validation at ${irPath}: ${message}`,
+      `${capability} '${providerName}' failed ${payloadName} validation at ${locator}: ${message}`,
       { cause: error, providerKey: providerName },
     );
   }

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { definePathKind } from '@retikz/core';
+import { definePathKind, PathSchema } from '@retikz/core';
 import { Layout, Node, Path, Step } from '@retikz/react';
 import { z } from 'zod';
 
@@ -8,15 +8,21 @@ const HighlightOptionsSchema = z.strictObject({
   stroke: z.string().min(1),
   strokeWidth: z.number().positive().optional(),
 });
-type HighlightOptions = z.infer<typeof HighlightOptionsSchema>;
+const HighlightPathSchema = PathSchema.extend({
+  kind: z.literal('highlight'),
+  kindOptions: HighlightOptionsSchema,
+});
+type HighlightPath = z.infer<typeof HighlightPathSchema>;
 
-const highlight = definePathKind<HighlightOptions>({
-  schema: z.strictObject({ kind: z.literal('highlight') }),
-  optionsSchema: HighlightOptionsSchema,
+const highlight = definePathKind<HighlightPath>({
+  name: 'highlight',
+  schema: HighlightPathSchema,
   compile: context => {
+    const { kindOptions, ...strokePath } = context.path;
     const base = context.emitStroke({
-      ...context.path,
-      strokeWidth: context.options.strokeWidth ?? context.path.strokeWidth ?? 10,
+      ...strokePath,
+      kind: 'stroke',
+      strokeWidth: kindOptions.strokeWidth ?? context.path.strokeWidth ?? 10,
     });
     if (base === null) return null;
     return {
@@ -25,7 +31,7 @@ const highlight = definePathKind<HighlightOptions>({
         primitive.type === 'path'
           ? {
               ...primitive,
-              stroke: context.options.stroke,
+              stroke: kindOptions.stroke,
               strokeLinecap: 'round',
               strokeLinejoin: 'round',
             }

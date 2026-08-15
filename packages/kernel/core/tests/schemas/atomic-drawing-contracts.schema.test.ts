@@ -28,6 +28,7 @@ import {
   PathSchema,
   PathStrokeSchema,
   PathStructureSchema,
+  StrokePathSchema,
   StrokeStyleSchema,
 } from '../../src';
 
@@ -110,8 +111,10 @@ describe('Core atomic drawing contracts', () => {
     };
 
     expect(PathSchema.parse(path)).toEqual(path);
-    expect(PathSchema.safeParse({ type: 'path' }).success).toBe(false);
-    expect(PathSchema.safeParse({ ...path, kindOptions: {} }).success).toBe(false);
+    expect(PathSchema.safeParse({ type: 'path' }).success).toBe(true);
+    expect(PathSchema.safeParse({ ...path, kindOptions: {} }).success).toBe(true);
+    expect(StrokePathSchema.safeParse({ type: 'path' }).success).toBe(false);
+    expect(StrokePathSchema.safeParse({ ...path, kindOptions: {} }).success).toBe(false);
   });
 
   it('reuses atomic leaf schema instances in compatibility aggregates', () => {

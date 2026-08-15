@@ -1,11 +1,11 @@
 ---
 title: 自定义路径
-description: 为整条 Path 注册新的 kind provider，校验 JSON 配置，并复用描边或流带能力生成后端中立的 Scene 图元。
+description: 为整条 Path 注册新的 kind provider，校验完整 Path subject，并复用 Core 描边服务生成后端中立的 Scene 图元。
 ---
 
 自定义 Path kind 扩展的是**整条路径如何输出**。IR 只保存开放的 `kind` 与 JSON-safe `kindOptions`；宿主注入 `PathKindDefinition` 后，core 从统一 registry 找到 provider，并由它生成 Scene 图元。
 
-下面的 `highlight` kind 复用内置描边编译器，只改写线宽与输出颜色。definition、`<Layout pathKinds>` 注入和使用方式都包含在同一个示例中。
+下面的 `highlight` kind 复用 Core 描边编译器，只改写线宽。definition、`<Layout pathKinds>` 注入和使用方式都包含在同一个示例中。
 
 <ComponentPreview files="custom-path-highlight" size="xs" />
 
@@ -19,25 +19,37 @@ description: 为整条 Path 注册新的 kind provider，校验 JSON 配置，�
 | 改变整条 Path 的图元、轮廓或组合方式 | 自定义 Path kind                                     |
 | 只增加新的端点造型                   | [自定义箭头](/kernel/components/draw/custom-arrow)   |
 
-如果只是换描边色、线宽、虚线、箭头或流带参数，直接使用现有 Path props；不要为样式组合创建新的 kind。
+如果只是换描边色、线宽、虚线或箭头，直接使用现有 Path props；不要为样式组合创建新的 kind。需要填充式 Ribbon 路径时，见可选的 [Standard Ribbon](/library/standard/extension/ribbon) definition。
 
 ## 定义能力
 
-用 `definePathKind` 声明一个含非空 `kind` literal 的 Path schema、可选配置 schema，以及整条路径的 compile 函数。
+用 `definePathKind` 声明一个显式 registry key、完整 Path subject schema，以及整条路径的 compile 函数。schema 应在开放的 `PathSchema` 上组合该 kind 的 literal 与 `kindOptions`，从而让 definition 自己拥有完整的 payload 约束。
 
 ```tsx
-const highlight = definePathKind({
-  schema: z.strictObject({ kind: z.literal('highlight') }),
-  optionsSchema: z.strictObject({ strokeWidth: z.number().positive() }),
-  compile: context =>
-    context.emitStroke({
-      ...context.path,
-      strokeWidth: context.options.strokeWidth,
-    }),
+const HighlightOptionsSchema = z.strictObject({
+  strokeWidth: z.number().positive(),
+});
+const HighlightPathSchema = PathSchema.extend({
+  kind: z.literal('highlight'),
+  kindOptions: HighlightOptionsSchema,
+});
+type HighlightPath = z.infer<typeof HighlightPathSchema>;
+
+const highlight = definePathKind<HighlightPath>({
+  name: 'highlight',
+  schema: HighlightPathSchema,
+  compile: context => {
+    const { kindOptions, ...strokePath } = context.path;
+    return context.emitStroke({
+      ...strokePath,
+      kind: 'stroke',
+      strokeWidth: kindOptions.strokeWidth,
+    });
+  },
 });
 ```
 
-`schema.shape.kind.value` 是 registry key。`kindOptions` 会先经过 `optionsSchema`，并保持 JSON-safe；definition 与 compile 函数只存在于运行时，不进入 IR。
+`name` 是 registry key，不从 Zod schema 的内部结构推导。`schema` 是该 kind 的完整 source subject schema：Core 的开放 `PathSchema` 先接受共享 host 字段，解析阶段找到 definition 后，再由这个 schema 校验 `kind`、`kindOptions` 与其它跨字段约束。definition 与 compile 函数只存在于运行时，不进入 IR。
 
 ### 可选 Inspector
 
@@ -68,7 +80,8 @@ const highlightInspector = defineInspector({
 });
 
 const highlight = definePathKind({
-  schema: z.strictObject({ kind: z.literal('highlight') }),
+  name: 'highlight',
+  schema: HighlightPathSchema,
   ownerOutput: { schema: StrokePathOwnerOutputSchema },
   compile: context =>
     context.ownerOutput.requested
@@ -96,17 +109,23 @@ React 通过 `<Layout pathKinds>` 注入；直接调用 core 时使用 `CompileO
 
 ## 执行机制
 
-内置 `stroke`、`ribbon` 与自定义 kind 先合并到同一个 registry。编译 Path 时，core 按 `kind` 查找 definition、校验 `kindOptions`，再把标准描边与流带 emitter 一起交给 provider。
+Core 内置的 `stroke` 与自定义 kind 先合并到同一个 registry。可选的 Standard Ribbon 也只是通过 `pathKinds` 装载的普通 definition，不会改变 Core 的内置集合。编译 Path 时，Core 按 `kind` 查找 definition，再用 definition 的完整 schema 校验 subject，随后把编译上下文交给 provider。
 
-provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke` / `emitRibbon` 复用现有端点解析、路径命令、箭头与流带逻辑。返回的 `primitives` 与 `boundsPoints` 都使用当前 Path 的局部坐标，外层 Scope 变换随后统一应用。
+provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke` 复用现有端点解析、路径命令和箭头逻辑。`materializePath` 提供不带描边装饰的确定性路径命令；`emitHostLabels` 负责共享宿主标签；`appearance` 与 `round` 提供已解析的外观和同次编译精度；`ownerOutput` 只在被观测时发布所属者产物。返回的 `primitives` 与 `boundsPoints` 都使用当前 Path 的局部坐标，外层 Scope 变换随后统一应用。
 
 <SourceLinks
   sources={[
     {
-      label: 'Path kind definition 契约',
+      label: 'Path kind definition 与 compile context 契约',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
-      startLine: 40,
-      endLine: 53,
+      startLine: 65,
+      endLine: 115,
+    },
+    {
+      label: 'definition name 与 schema 的入口校验',
+      path: 'packages/kernel/core/src/contract/path-kind/define.ts',
+      startLine: 12,
+      endLine: 44,
     },
     {
       label: '内置与自定义 kind 合并',
@@ -115,10 +134,16 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
       endLine: 17,
     },
     {
-      label: 'kind 查找、配置校验与 compile 调用',
+      label: 'kind 查找与完整 subject schema 校验',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+    {
+      label: 'compile context 服务装配与调用',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 93,
-      endLine: 145,
+      startLine: 378,
+      endLine: 498,
     },
   ]}
 />
@@ -127,10 +152,10 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 | 情况                                            | 结果                                            |
 | ----------------------------------------------- | ----------------------------------------------- |
-| `kind` literal 为空或不是字符串                 | `definePathKind` 立即拒绝                       |
-| 与 `stroke`、`ribbon` 或自定义项重名            | registry 合并时报重复注册                       |
+| definition `name` 为空或不是字符串              | `definePathKind` 立即拒绝                       |
+| 与 `stroke` 或自定义项重名                      | registry 合并时报重复注册                       |
 | Path 引用未注册 kind                            | 编译列出可用名称与 `options.pathKinds` 注入提示 |
-| `kindOptions` 不符合 schema                     | 错误包含 kind 名和对应 IR 路径                  |
+| 选定 definition schema 拒绝 Path                | 错误包含 kind 名和对应 IR 路径                  |
 | provider 返回 `null`                            | 该 Path 不产生图元                              |
 | 已请求的非空结果未发布 owner output             | Core 观测契约 fail-loud                         |
 | owner output 或 Inspector subject 不符合 schema | 对应校验阶段 fail-loud                          |
@@ -143,12 +168,12 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ### PathKindDefinition
 
-| 字段            | 类型                            | 默认值                   | 描述                                  |
-| --------------- | ------------------------------- | ------------------------ | ------------------------------------- |
-| `schema`        | `PathKindDefinition['schema']`  | —                        | 声明 Path 形态并提供 registry key     |
-| `optionsSchema` | `ZodType<IRJsonObject>`         | 原始 `kindOptions ?? {}` | 校验自定义实例配置                    |
-| `compile`       | `PathKindDefinition['compile']` | —                        | 为整条 Path 生成 Scene 图元与边界依据 |
-| `ownerOutput`   | `CompileOwnerOutputDefinition`  | —                        | 声明可按需发布的最终所属者产物 schema |
+| 字段          | 类型                            | 默认值 | 描述                                        |
+| ------------- | ------------------------------- | ------ | ------------------------------------------- |
+| `name`        | `string`                        | —      | 非空 registry key，由 `Path.kind` 引用      |
+| `schema`      | `PathKindDefinition['schema']`  | —      | 校验当前 definition 对应的完整 Path subject |
+| `compile`     | `PathKindDefinition['compile']` | —      | 为整条 Path 生成 Scene 图元与边界依据       |
+| `ownerOutput` | `CompileOwnerOutputDefinition`  | —      | 声明可按需发布的最终所属者产物 schema       |
 
 ### InspectorDefinition
 
@@ -164,13 +189,15 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 
 ### compile 上下文
 
-| 字段          | 类型                                   | 默认值    | 描述                                                |
-| ------------- | -------------------------------------- | --------- | --------------------------------------------------- |
-| `path`        | `IRPathBase`                           | —         | 当前 Path 的完整 IR                                 |
-| `options`     | `TOptions`                             | —         | `kindOptions ?? {}` 经 `optionsSchema` 解析后的结果 |
-| `ownerOutput` | `CompileOwnerOutputPublisher`          | —         | 按需发布带 schema 的最终所属者产物                  |
-| `emitStroke`  | `PathKindCompileContext['emitStroke']` | 当前 Path | 复用标准描边编译                                    |
-| `emitRibbon`  | `PathKindCompileContext['emitRibbon']` | 当前 Path | 复用标准流带编译                                    |
+| 字段              | 类型                                       | 默认值    | 描述                                        |
+| ----------------- | ------------------------------------------ | --------- | ------------------------------------------- |
+| `path`            | `IRPathBase`                               | —         | definition schema 解析后的完整 Path subject |
+| `ownerOutput`     | `CompileOwnerOutputPublisher`              | —         | 按需发布带 schema 的最终所属者产物          |
+| `materializePath` | `(input?) => MaterializedPath`             | 当前 Path | 物化选定 step，不应用描边装饰               |
+| `emitStroke`      | `PathKindCompileContext['emitStroke']`     | 当前 Path | 复用 Core 标准描边编译                      |
+| `emitHostLabels`  | `PathKindCompileContext['emitHostLabels']` | —         | 用已定位几何编译共享宿主标签                |
+| `appearance`      | `ResolvedPathKindAppearance`               | —         | 提供已解析的、与 renderer 无关的宿主外观    |
+| `round`           | `(value: number) => number`                | —         | 使用本次 compile 的取整精度                 |
 
 ### PathKindCompileResult
 
@@ -182,7 +209,7 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 ## 相关
 
 - [Path](/kernel/components/draw/path)：内置 `stroke` 与宿主字段
-- [Ribbon](/kernel/components/draw/ribbon)：内置 `ribbon` kind 的宽度与边界配置
+- [Standard Ribbon](/library/standard/extension/ribbon)：可选 Ribbon Path kind Definition 与 provider contribution
 - [路径生成器](/kernel/components/draw/path-generator)：只扩展一个 generator Step
 - [自定义箭头](/kernel/components/draw/custom-arrow)：只扩展端点 marker
 - [运行时扩展](/kernel/reference/runtime/extensions)：跨能力的 definition / registry 总览
