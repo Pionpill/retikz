@@ -58,6 +58,8 @@ plan、实现阶段、阶段性 diff 和 commit 前 review 默认不使用 `cros
 
 循环次数不得超过执行计划声明的上限；达到上限、快照无法固定或 finding 要求扩大 scope 时停止交人工。未授权 reviewer 时由主 agent 自审。commit 是否执行仍取决于已确认的 Git 权限，不因 review 通过自动获得授权。
 
+长任务在计划已获得 commit 授权后，允许执行者按功能闭环、风险和验证边界自行拆分多个本地 commit；不得把全部功能、测试、文档和收尾改动堆进一个 commit。每个 commit 仍须精确 stage 并审计范围，push、tag、publish 继续单独授权。
+
 常规 reviewer 重点检查文件结构与依赖方向、命名 / barrel / JSDoc / 中文注释、计划偏差、测试弱化和 docs 遗漏。每个 checkpoint 使用单 reviewer，不为“更多视角”临时追加 agent。
 
 ## 最终整体 Review
