@@ -1,8 +1,6 @@
-import type { IRPlotResolvedThemeTokens, IRPlotThemeResolution, PlotThemeTokenValue } from '../../schemas';
+import type { IRPlotThemeResolution, IRPlotThemeTokenResolution, PlotThemeTokenValue } from '../../schemas';
 
-import { PlotResolvedThemeTokensSchema } from '../../schemas';
-
-type MutablePlotTokens = { -readonly [K in keyof IRPlotResolvedThemeTokens]: IRPlotResolvedThemeTokens[K] };
+type MutablePlotTokens = { -readonly [K in keyof IRPlotThemeTokenResolution]: IRPlotThemeTokenResolution[K] };
 
 const matchesDimension = (dimension: string | ReadonlyArray<string>, candidate: string): boolean =>
   typeof dimension === 'string' ? dimension === candidate : dimension.includes(candidate);
@@ -15,7 +13,7 @@ const isBaselineTokenSource = (path: string): boolean => path.startsWith('$defau
 export const resolvePlotAxisThemeTokens = (
   resolution: IRPlotThemeResolution,
   dimension: string,
-): IRPlotResolvedThemeTokens => {
+): IRPlotThemeTokenResolution => {
   const tokens: MutablePlotTokens = structuredClone(resolution.tokens);
   const sourceByToken = new Map(resolution.tokenSources.map(source => [source.token, source.path]));
 
@@ -31,5 +29,5 @@ export const resolvePlotAxisThemeTokens = (
     }
   }
 
-  return PlotResolvedThemeTokensSchema.parse(tokens);
+  return tokens;
 };

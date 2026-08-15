@@ -1,8 +1,8 @@
 import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_TICK_COUNT, resolveLinearScale, scaleTicks } from '../../../src/providers';
-import { resolvePositionScale as resolvePositionScaleOp, resolveScaleRegistry } from '../../../src/providers';
+import { DEFAULT_TICK_COUNT, resolveLinearScale, resolveScaleRegistry, scaleTicks } from '../../../src/providers';
+import { resolvePositionScale as resolvePositionScaleOp } from '../../../src/resolve/scale';
 import { type IRPlotScaleOperation } from '../../../src/schemas';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参
@@ -11,12 +11,12 @@ const resolvePositionScale = (
   operation: IRPlotScaleOperation,
   values: Array<unknown>,
   range: readonly [number, number],
-) => resolvePositionScaleOp(operation, values, range, scaleRegistry);
+) => resolvePositionScaleOp(operation, values, range, { registry: scaleRegistry });
 
 describe('resolveLinearScale (contract d3-scale)', () => {
   // Happy path
   it('scale_maps_like_alpha1', () => {
-    const scale = resolveLinearScale({ domain: [0, 2] }, [], [0, 480]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 2] }, [], [0, 480]);
     expect(scale(0)).toBe(0);
     expect(scale(1)).toBe(240);
     expect(scale(2)).toBe(480);
@@ -24,7 +24,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
 
   it('scale_infers_domain_from_values', () => {
     // domain 缺省时从数据值 extent 推断
-    const scale = resolveLinearScale({ domainPadding: 0 }, [3, 7, 5], [0, 100]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domainPadding: 0 }, [3, 7, 5], [0, 100]);
     expect(scale(3)).toBe(0);
     expect(scale(7)).toBe(100);
   });
@@ -46,35 +46,43 @@ describe('resolveLinearScale (contract d3-scale)', () => {
   // 边界
   it('scale_single_datum_midpoint', () => {
     // d0=d1：d3 归一化返回 0.5 → range 中点
-    const scale = resolveLinearScale({ domain: [5, 5] }, [], [0, 480]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [5, 5] }, [], [0, 480]);
     expect(scale(5)).toBe(240);
   });
 
   it('scale_empty_values_extent', () => {
     // 空数据 + 无显式 domain → safeExtent 回退 [0,1]
-    const scale = resolveLinearScale({ domainPadding: 0 }, [], [0, 100]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domainPadding: 0 }, [], [0, 100]);
     expect(scale(0)).toBe(0);
     expect(scale(1)).toBe(100);
   });
 
   it('scale_nice_toggle', () => {
     // nice 会把 [0,9.7] 扩展到整齐的 [0,10]
-    const scale = resolveLinearScale({ domain: [0, 9.7], nice: true }, [], [0, 100]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 9.7], nice: true }, [], [0, 100]);
     expect(scale.domain()).toEqual([0, 10]);
-    const plain = resolveLinearScale({ domain: [0, 9.7] }, [], [0, 100]);
+    const plain = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 9.7] }, [], [0, 100]);
     expect(plain.domain()).toEqual([0, 9.7]);
   });
 
   it('scale_clamp_toggle', () => {
     // clamp 现在真生效：域外输入夹到 range 端点
-    const clamped = resolveLinearScale({ domain: [0, 10], range: [0, 100], clamp: true }, [], [0, 1]);
+    const clamped = resolveLinearScale(
+      { type: 'linear', name: 'direct', domain: [0, 10], range: [0, 100], clamp: true },
+      [],
+      [0, 1],
+    );
     expect(clamped(20)).toBe(100);
-    const open = resolveLinearScale({ domain: [0, 10], range: [0, 100] }, [], [0, 1]);
+    const open = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 10], range: [0, 100] }, [], [0, 1]);
     expect(open(20)).toBe(200);
   });
 
   it('explicit_range_respected', () => {
-    const scale = resolveLinearScale({ domain: [0, 10], range: [50, 150] }, [], [0, 480]);
+    const scale = resolveLinearScale(
+      { type: 'linear', name: 'direct', domain: [0, 10], range: [50, 150] },
+      [],
+      [0, 480],
+    );
     expect(scale(0)).toBe(50);
     expect(scale(10)).toBe(150);
   });
@@ -82,7 +90,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
 
 describe('scaleTicks (contract)', () => {
   it('scaleticks_count_and_labels', () => {
-    const scale = resolveLinearScale({ domain: [0, 10] }, [], [0, 100]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 10] }, [], [0, 100]);
     const { values, labels } = scaleTicks(scale, 5);
     // d3 ticks 取 nice 整数刻度，含端点
     expect(values).toContain(0);
@@ -92,7 +100,7 @@ describe('scaleTicks (contract)', () => {
   });
 
   it('scaleticks_default_count', () => {
-    const scale = resolveLinearScale({ domain: [0, 100] }, [], [0, 100]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 100] }, [], [0, 100]);
     const withDefault = scaleTicks(scale);
     const explicit = scaleTicks(scale, DEFAULT_TICK_COUNT);
     expect(withDefault.values).toEqual(explicit.values);
@@ -100,7 +108,7 @@ describe('scaleTicks (contract)', () => {
 
   it('scaleticks_single_datum', () => {
     // 退化 domain：d3 仍给非空刻度（单点），不崩
-    const scale = resolveLinearScale({ domain: [5, 5] }, [], [0, 100]);
+    const scale = resolveLinearScale({ type: 'linear', name: 'direct', domain: [5, 5] }, [], [0, 100]);
     const { values, labels } = scaleTicks(scale, 5);
     expect(values.length).toBeGreaterThan(0);
     expect(labels).toHaveLength(values.length);
@@ -188,7 +196,10 @@ describe('resolvePositionScale linear back-compat (contract)', () => {
     expect(pos.coordinate(1)).toBe(240);
     expect(pos.bandwidth).toBe(0);
     // ticks 与直接 scaleTicks 等价
-    const direct = scaleTicks(resolveLinearScale({ domain: [0, 2] }, [], [0, 480]), DEFAULT_TICK_COUNT);
+    const direct = scaleTicks(
+      resolveLinearScale({ type: 'linear', name: 'direct', domain: [0, 2] }, [], [0, 480]),
+      DEFAULT_TICK_COUNT,
+    );
     expect(pos.ticks(DEFAULT_TICK_COUNT)).toEqual(direct);
   });
 

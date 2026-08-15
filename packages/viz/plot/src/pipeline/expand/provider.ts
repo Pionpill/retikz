@@ -1,4 +1,4 @@
-import type { CompositeCoreProviderKey,CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
+import type { CompositeCoreProviderKey, CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import { ContourShapeProvider, SectorShapeProvider } from '@retikz/standard/shape';

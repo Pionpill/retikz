@@ -27,7 +27,6 @@ import {
   PlotScale,
 } from '../../../schemas';
 import { computePlotArea } from '../../../shared';
-import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
@@ -175,16 +174,16 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     const xAxis = ctx.axisGuides.find(guide => guide.dimension === 'x');
     const yAxis = ctx.axisGuides.find(guide => guide.dimension === 'y');
     const xTicks: TickSet | undefined = xAxis
-      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(xScale, xAxis.ticks, xAxis.tickLabels || undefined))
+      ? (ctx.collectAxisTicks('x') ?? ctx.resolveGuideTicks(xScale, xAxis.ticks, xAxis.tickLabels || undefined))
       : undefined;
     const yTicks: TickSet | undefined = yAxis
-      ? (ctx.collectAxisTicks('y') ?? resolveGuideTicks(yScale, yAxis.ticks, yAxis.tickLabels || undefined))
+      ? (ctx.collectAxisTicks('y') ?? ctx.resolveGuideTicks(yScale, yAxis.ticks, yAxis.tickLabels || undefined))
       : undefined;
     const layoutXTicks = xAxis
-      ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
       : undefined;
     const layoutYTicks = yAxis
-      ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
       : undefined;
 
     const computed = computePlotArea(
@@ -209,10 +208,10 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     if (yRangeOverride !== undefined) yScale.setRange([yRangeOverride[0], yRangeOverride[1]]);
     const frame = createCartesianCoordinate(xScale, yScale);
     const visibleXTicks = xAxis
-      ? resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
       : undefined;
     const visibleYTicks = yAxis
-      ? resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
       : undefined;
 
     const [xRangeStart, xRangeEnd] = xScale.range();
@@ -257,10 +256,10 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
     const provisional: [number, number] = horizontal ? [0, ctx.width] : [ctx.height, 0];
     const scale = ctx.buildPositionScale(scaleDef, values, provisional);
     const ticks: TickSet | undefined = axis
-      ? (ctx.collectAxisTicks('x') ?? resolveGuideTicks(scale, axis.ticks, axis.tickLabels || undefined))
+      ? (ctx.collectAxisTicks('x') ?? ctx.resolveGuideTicks(scale, axis.ticks, axis.tickLabels || undefined))
       : undefined;
     const layoutTicks = axis
-      ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
       : undefined;
     const computed = computePlotArea(
       ctx.width,
@@ -282,7 +281,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
     const baseline = horizontal ? plotArea.y + plotArea.height : plotArea.x;
     const frame = createCartesian1DCoordinate(scale, orientation, baseline);
     const visibleTicks = axis
-      ? resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(ticks ?? EMPTY_TICKS, axis.ticks, value => scale.coordinate(value))
       : undefined;
 
     const guideContext: GuideContext = {

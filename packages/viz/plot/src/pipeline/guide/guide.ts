@@ -15,12 +15,13 @@ import type {
   TickSet,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { ResolvedLegendGuideTokens } from '../../providers';
+import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
 import type { Rect } from '../../shared';
 
 import { guideLayerId, guideLayerMeta } from '../../contract';
-import { defaultOriginAxisTickSideOf, resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers';
+import { defaultOriginAxisTickSideOf } from '../../providers';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -1642,7 +1643,7 @@ export type LegendInput = {
   /** legend 语义图层的 core zIndex */
   zIndex?: number;
   /** 已按 built-in plotTheme < PlotSpec.plotTheme < LegendGuide.style 合并的视觉 token */
-  style: ResolvedLegendGuideTokens;
+  style: EffectiveLegendGuideTokens;
 };
 
 /**

@@ -1,5 +1,5 @@
 import type { IRScope } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
+import type { ExternalRow, IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
 import type { z } from 'zod';
 
@@ -49,7 +49,8 @@ export type CoordinateResolution = {
  * @description 这里暴露的是坐标系无关的能力：画布尺寸、数据取值、scale 解析、guide 下沉与 provenance。
  *   definition 不应该绕过这些 helper 另建平行数据 / scale 语义
  */
-export type CoordinateResolveContext = {
+/** 坐标 definition 由 provider 消费的窄运行时上下文 */
+export type CoordinateDefinitionResolveContext = {
   /** 画布宽度 */
   width: number;
   /** 画布高度 */
@@ -79,6 +80,18 @@ export type CoordinateResolveContext = {
   ) => Array<unknown>;
   /** Override axis ticks for marks whose role position is derived from interval bounds. */
   collectAxisTicks: (role: DimensionRole) => TickSet | undefined;
+  /** 解析轴 / 网格候选刻度；由 resolve 层注入，provider 不直接依赖 guide resolver */
+  resolveGuideTicks: (
+    scale: PositionScale,
+    source?: NonNullable<IRPlotAxisGuide['ticks']>,
+    labelFormat?: Exclude<IRPlotAxisGuide['tickLabels'], false | undefined>,
+  ) => TickSet;
+  /** 按 guide density 从候选刻度中筛出可见刻度；由 resolve 层注入 */
+  resolveVisibleGuideTicks: (
+    ticks: TickSet,
+    source: NonNullable<IRPlotAxisGuide['ticks']> | undefined,
+    coordinate: (value: IRDataScalarValue) => number,
+  ) => TickSet;
   /** 解析某个定位角色的 scale operation；未指定 scaleName 时按数据推导默认 scale（含自定义 type） */
   resolveScaleForRole: (
     role: DimensionRole,
@@ -120,7 +133,7 @@ export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOp
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验 */
   roles: ReadonlyArray<DimensionRole>;
   /** 将 coordinate operation 解析成运行时 frame 与 guide 层 */
-  resolve: (operation: TCoordinateOperation, ctx: CoordinateResolveContext) => CoordinateResolution;
+  resolve: (operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
 };
 
 /**
@@ -174,5 +187,5 @@ export type AnyCoordinateDefinition = Omit<CoordinateDefinition<IRPlotCoordinate
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse */
   schema: z.ZodType;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
-  resolve: (operation: never, ctx: CoordinateResolveContext) => CoordinateResolution;
+  resolve: (operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
 };

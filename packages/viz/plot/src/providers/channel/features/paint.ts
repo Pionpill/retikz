@@ -1,19 +1,17 @@
 ﻿import type { IRPaintSpec } from '@retikz/core';
-import type { DataFieldTypeMap } from '@retikz/data';
+import type { DataFieldTypeMap, IRDataFieldDefinition } from '@retikz/data';
 
 import { PaintSpecSchema } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { ChannelResolveContext, MarkChannelDefinition } from '../../../contract';
+import type { ChannelScaleResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
 import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
-import type { CategoryOrder } from '../../scale';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
 import { PlotScale } from '../../../schemas';
-import { orderedCategoryDomain, resolveChannelScale } from '../../scale';
 
 /** 颜色通道 definition 的名称、取值与图例配置 */
 export type ColorChannelDefinitionOptions = {
@@ -47,7 +45,7 @@ export const makeColorChannelDefinition = (
   kind: ChannelDefinitionKind.Mark,
   resolve: ctx => {
     const scaleByName = new Map(ctx.node.scales.map(scale => [scale.name, scale] as const));
-    const fieldOrders = new Map<string, CategoryOrder>();
+    const fieldOrders = new Map<string, NonNullable<IRDataFieldDefinition['order']>>();
     for (const field of ctx.node.data.model ?? []) {
       if (field.order !== undefined) fieldOrders.set(field.name, field.order);
     }
@@ -59,11 +57,6 @@ export const makeColorChannelDefinition = (
         return { resolver: () => constant, defaultValue: constant };
       }
       if (channel.field === undefined) return undefined;
-      if (ctx.scaleRegistry === undefined || ctx.resolveColorScheme === undefined) {
-        throw new Error(
-          `lowerPlots: ${options.channel} channel resolution requires scaleRegistry and resolveColorScheme in ChannelContext`,
-        );
-      }
       const field = channel.field;
       const colorFieldType = ctx.fieldTypes.get(field);
       if (
@@ -90,14 +83,14 @@ export const makeColorChannelDefinition = (
         scaleOperation.domain === undefined
       ) {
         const order = fieldOrders.get(field);
-        if (order !== undefined && order !== FieldOrderMode.Appearance)
-          scaleOperation = { ...scaleOperation, domain: orderedCategoryDomain(rawValues, order) };
+        if (order !== undefined && order !== FieldOrderMode.Appearance) {
+          scaleOperation = { ...scaleOperation, domain: ctx.resolveCategoryDomain(rawValues, order) };
+        }
       }
-      const resolution = resolveChannelScale(
+      const resolution = ctx.resolveChannelScale(
         scaleOperation,
         rawValues,
         colorResolveContext(ctx.fieldTypes, field, ctx.resolveColorScheme, ctx.palette),
-        ctx.scaleRegistry,
       );
       return {
         resolver: row => resolution.of(resolveFieldPath(row, field)),
@@ -121,7 +114,7 @@ const colorResolveContext = (
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
   palette: ChannelPaletteContext | undefined,
-): ChannelResolveContext => ({
+): ChannelScaleResolveContext => ({
   fieldType: fieldTypes.get(field),
   toNumber: value => (isFiniteNumber(value) ? value : null),
   coerceTimestamp,

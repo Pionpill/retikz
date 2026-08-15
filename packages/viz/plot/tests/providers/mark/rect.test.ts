@@ -1,17 +1,19 @@
 import type { IRNode, IRScope } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { PositionScale } from '../../../src/contract';
+import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotIntervalMark, IRPlotSpec } from '../../../src/schemas';
 
 import { type Cell } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { buildIntervalContext, datumAnchor, intervalCell } from '../../../src/providers';
-import { lowerMark } from '../../../src/providers';
+import { buildIntervalContext, intervalCell } from '../../../src/providers';
+import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
+import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /**
@@ -21,6 +23,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
+
+const markRegistry = resolveMarkRegistry();
+const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
+  lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
+const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
+  resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
 const WIDTH = 400;
 const HEIGHT = 400;

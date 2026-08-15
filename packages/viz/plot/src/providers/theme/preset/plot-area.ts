@@ -2,13 +2,13 @@ import type { ThemeModeValue } from '@retikz/core';
 
 import { ThemeMode } from '@retikz/core';
 
-import type { IRPlotResolvedThemeTokens } from '../../../schemas';
+import type { IRPlotThemeTokenResolution } from '../../../schemas';
 
 import { PlotThemeToken } from '../../../schemas';
 
-type PlotAreaTokenPreset = Readonly<Pick<IRPlotResolvedThemeTokens, typeof PlotThemeToken.PlotAreaFill>>;
+type PlotAreaTokenPreset = Readonly<Pick<IRPlotThemeTokenResolution, typeof PlotThemeToken.PlotAreaFill>>;
 
-type PlotAreaFill = IRPlotResolvedThemeTokens[typeof PlotThemeToken.PlotAreaFill];
+type PlotAreaFill = IRPlotThemeTokenResolution[typeof PlotThemeToken.PlotAreaFill];
 
 const transparentModes: Record<ThemeModeValue, PlotAreaFill> = {
   [ThemeMode.Light]: 'none',

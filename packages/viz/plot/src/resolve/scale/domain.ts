@@ -1,11 +1,6 @@
-import type { z } from 'zod';
-
 import { isFiniteNumber } from '@retikz/math';
 
-import type { DomainPaddingSchema } from '../../../schemas';
-
-/** position scale 的 domain padding 输入 */
-export type DomainPaddingInput = z.infer<typeof DomainPaddingSchema>;
+import type { IRPlotDomainPadding } from '../../schemas';
 
 /** 可按连续值域规则扩展的 position scale 族 */
 export type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
@@ -21,7 +16,7 @@ export type ResolvePaddedDomainOptions = {
   /** domain 是否来自用户显式配置 */
   explicitDomain: boolean;
   /** 用户声明的 domain padding；数字代表两端同值，对象可分别指定上下界 */
-  domainPadding?: DomainPaddingInput;
+  domainPadding?: IRPlotDomainPadding;
   /** 单值 domain 展开跨度 */
   singleValueSpan?: number;
   /** log scale 的对数底 */
@@ -41,7 +36,7 @@ const finiteDomain = (domain: readonly [number, number], scaleName: string): [nu
 };
 
 const paddingSides = (
-  padding: DomainPaddingInput | undefined,
+  padding: IRPlotDomainPadding | undefined,
   explicitDomain: boolean,
   defaultDomainPadding: number,
 ): { lower: number; upper: number } => {

@@ -5,10 +5,10 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
-import type { PositionScale, TickSet } from '../../../contract';
-import type { GuideTickTimeUnitValue } from '../../../schemas';
+import type { PositionScale, TickSet } from '../../contract';
+import type { GuideTickTimeUnitValue } from '../../schemas';
 
-import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../../schemas';
+import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../schemas';
 
 const MAX_INTERVAL_TICKS = 10_000;
 

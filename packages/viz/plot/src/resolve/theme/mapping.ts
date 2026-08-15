@@ -1,6 +1,6 @@
-import type { IRPlotAxisTheme, IRPlotResolvedThemeTokens, IRPlotTheme, PlotThemeTokenValue } from '../../schemas';
+import type { IRPlotAxisTheme, IRPlotTheme, IRPlotThemeTokenResolution, PlotThemeTokenValue } from '../../schemas';
 
-import { PlotThemeSchema, PlotThemeToken } from '../../schemas';
+import { PlotThemeToken } from '../../schemas';
 
 type JsonObject = Record<string, unknown>;
 
@@ -34,10 +34,10 @@ const mergeThemeValue = (base: unknown, override: unknown): unknown => {
 
 /** 对两个合法 Plot theme 做确定性的原子 merge */
 export const mergePlotTheme = (base: IRPlotTheme, override: IRPlotTheme): IRPlotTheme =>
-  PlotThemeSchema.parse(mergeThemeValue(base, override));
+  mergeThemeValue(base, override) as IRPlotTheme;
 
 /** 把完整 Plot token map 中的 Axis token 映射为原生 Axis theme */
-export const plotAxisThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotAxisTheme => ({
+export const plotAxisThemeFromTokens = (tokens: IRPlotThemeTokenResolution): IRPlotAxisTheme => ({
   line: tokens[PlotThemeToken.AxisLineEnabled]
     ? {
         stroke: tokens[PlotThemeToken.AxisLineStroke],
@@ -74,60 +74,59 @@ export const plotAxisThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPl
 });
 
 /** 把完整 Plot token map 映射为正式原生 Plot theme */
-export const plotThemeFromTokens = (tokens: IRPlotResolvedThemeTokens): IRPlotTheme =>
-  PlotThemeSchema.parse({
-    plotArea: { fill: tokens[PlotThemeToken.PlotAreaFill] },
-    typography: {
+export const plotThemeFromTokens = (tokens: IRPlotThemeTokenResolution): IRPlotTheme => ({
+  plotArea: { fill: tokens[PlotThemeToken.PlotAreaFill] },
+  typography: {
+    font: {
+      family: tokens[PlotThemeToken.PlotTypographyFontFamily],
+      size: tokens[PlotThemeToken.PlotTypographyFontSize],
+    },
+    textColor: tokens[PlotThemeToken.PlotTypographyForeground],
+  },
+  axis: plotAxisThemeFromTokens(tokens),
+  legend: {
+    title: {
       font: {
-        family: tokens[PlotThemeToken.PlotTypographyFontFamily],
-        size: tokens[PlotThemeToken.PlotTypographyFontSize],
+        size: tokens[PlotThemeToken.LegendTitleFontSize],
+        weight: tokens[PlotThemeToken.LegendTitleFontWeight],
       },
-      textColor: tokens[PlotThemeToken.PlotTypographyForeground],
+      textColor: tokens[PlotThemeToken.LegendTitleForeground],
     },
-    axis: plotAxisThemeFromTokens(tokens),
-    legend: {
-      title: {
-        font: {
-          size: tokens[PlotThemeToken.LegendTitleFontSize],
-          weight: tokens[PlotThemeToken.LegendTitleFontWeight],
-        },
-        textColor: tokens[PlotThemeToken.LegendTitleForeground],
-      },
-      label: {
-        font: { size: tokens[PlotThemeToken.LegendLabelFontSize] },
-        textColor: tokens[PlotThemeToken.LegendLabelForeground],
-      },
-      swatchSize: tokens[PlotThemeToken.LegendSwatchSize],
-      swatchGap: tokens[PlotThemeToken.LegendSwatchGap],
-      entryGap: tokens[PlotThemeToken.LegendEntryGap],
-      titleGap: tokens[PlotThemeToken.LegendTitleGap],
-      rampLength: tokens[PlotThemeToken.LegendRampLength],
-      rampThickness: tokens[PlotThemeToken.LegendRampThickness],
-      symbolSize: tokens[PlotThemeToken.LegendSymbolSize],
-      symbolScale: tokens[PlotThemeToken.LegendSymbolScale],
-      symbolFit: tokens[PlotThemeToken.LegendSymbolFit],
+    label: {
+      font: { size: tokens[PlotThemeToken.LegendLabelFontSize] },
+      textColor: tokens[PlotThemeToken.LegendLabelForeground],
     },
-    palette: {
-      categorical: tokens[PlotThemeToken.PlotPaletteCategorical],
-      series: tokens[PlotThemeToken.PlotPaletteSeries],
-      sector: tokens[PlotThemeToken.PlotPaletteSector],
-      sequential: tokens[PlotThemeToken.PlotPaletteSequential],
-      diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
-      shape: tokens[PlotThemeToken.PlotPaletteShape],
-    },
-  });
+    swatchSize: tokens[PlotThemeToken.LegendSwatchSize],
+    swatchGap: tokens[PlotThemeToken.LegendSwatchGap],
+    entryGap: tokens[PlotThemeToken.LegendEntryGap],
+    titleGap: tokens[PlotThemeToken.LegendTitleGap],
+    rampLength: tokens[PlotThemeToken.LegendRampLength],
+    rampThickness: tokens[PlotThemeToken.LegendRampThickness],
+    symbolSize: tokens[PlotThemeToken.LegendSymbolSize],
+    symbolScale: tokens[PlotThemeToken.LegendSymbolScale],
+    symbolFit: tokens[PlotThemeToken.LegendSymbolFit],
+  },
+  palette: {
+    categorical: tokens[PlotThemeToken.PlotPaletteCategorical],
+    series: tokens[PlotThemeToken.PlotPaletteSeries],
+    sector: tokens[PlotThemeToken.PlotPaletteSector],
+    sequential: tokens[PlotThemeToken.PlotPaletteSequential],
+    diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
+    shape: tokens[PlotThemeToken.PlotPaletteShape],
+  },
+});
 
-type MutablePlotTokens = { -readonly [K in keyof IRPlotResolvedThemeTokens]: IRPlotResolvedThemeTokens[K] };
+type MutablePlotTokens = { -readonly [K in keyof IRPlotThemeTokenResolution]: IRPlotThemeTokenResolution[K] };
 
 /**
  * 把原生 Plot theme 中可映射的 authored 值投影回 complete token map
  * @description 原生 theme 额外字段保留在最终 theme 中，不伪造并不存在的 canonical token
  */
 export const applyPlotThemeToTokens = (
-  baseTokens: IRPlotResolvedThemeTokens,
+  baseTokens: IRPlotThemeTokenResolution,
   resolvedTheme: IRPlotTheme,
   authoredTheme: IRPlotTheme,
-): Readonly<{ tokens: IRPlotResolvedThemeTokens; overrides: Array<PlotThemeTokenOverride> }> => {
+): Readonly<{ tokens: IRPlotThemeTokenResolution; overrides: Array<PlotThemeTokenOverride> }> => {
   const tokens: MutablePlotTokens = structuredClone(baseTokens);
   const overrides: Array<PlotThemeTokenOverride> = [];
   const set = <TToken extends PlotThemeTokenValue>(token: TToken, value: MutablePlotTokens[TToken], path: string) => {

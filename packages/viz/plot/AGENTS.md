@@ -18,20 +18,27 @@
 shared/       无依赖共享词汇、纯函数、映射和工具类型
 schemas/      Zod schema 与 Plot IR 类型真源
 contract/     coordinate / scale / mark / channel / guide / locator 等可视化扩展契约与公开类型
-providers/    内置 definition、plot-specific transform、BUILTIN_*、registry resolver、dispatch / apply / resolve，以及 Plot preset / token / `plotTheme` 解析
-pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；guide / locator 等运行时编排也归这里
+providers/    内置 definition / implementation、plot-specific transform、BUILTIN_* 与 registry merge
+resolve/      消费 Source IR + 窄 resolve context，统一做 context determination、lookup、默认、优先级与领域校验，产出 Canonical / Effective / Resolution
+pipeline/     创建 context、排阶段并调度 resolver，消费已确定结果后完成 Tier 2 -> Kernel IR 的 lowering / emit
 ```
 
 - `shared` 不依赖其他 plot 层；跨层复用的纯函数和稳定词汇优先放这里。
-- `contract` 不依赖 `providers` / `pipeline`；providers 依赖 contract；pipeline 负责编排。providers 里的既有 provenance helper 依赖是历史例外，新增代码不要扩大例外。
+- 依赖方向固定为 `shared -> schemas -> contract -> providers -> resolve -> pipeline`；左侧不得反向依赖右侧。
 - `schemas` 可被所有层依赖，但 schema 不读取实现层。
-- `pipeline/guide` 负责 axis / legend 下沉为 Kernel IR；`contract/guide` 只放 coordinate provider 与 pipeline 共用的 guide context 类型。
+- `contract` 只定义作者扩展契约和公开类型；`providers` 只提供内置 definition / implementation、`BUILTIN_*` 集合与内置/自定义 registry 合并，不拥有 pipeline dispatch、领域 apply 或 context resolve。
+- `resolve` 拥有 channel、scale、coordinate、mark、guide、theme、composition 与 lineage 的 Source IR + context determination，以及 lookup、默认/级联、补全后校验和 Canonical / Effective / Resolution；`resolveXxxRegistry` 仅用于 providers 的 registry 合并。
+- `pipeline` 负责建立并维护 context、确定阶段顺序、调用 `resolveXxx`，并消费结果执行 data transform、guide / locator 编排与 Core IR lowering / emit；不得直接 lookup registry、解释领域默认或建立平行 resolve / apply 阶段。
+- `pipeline/guide` 负责 axis / legend 下沉为 Kernel IR；`contract/guide` 只放公开契约和 provider / resolve / pipeline 共用的 guide context 类型。
+- `composition` 的 registry、arrangement policy/layout、facet panel 与相关 context determination 属于 `resolve/composition`；pipeline 只消费其结果编排 frame / layout / lowering。
+- `lineage` 的默认与有效选项属于 `resolve/lineage`；pipeline 只执行 lineage lowering / locator。
+- `theme` 的内置 catalog、preset、token definition 与 registry merge 属于 `providers/theme`；Plot theme mapping、cascade、effective token 与 resolution 属于 `resolve/theme`。`scale`、`channel`、`mark` 遵循同一规则：definition / implementation / registry merge 在 providers，lookup、默认、校验与语义 determination 在 resolve。
 - Plot Composite 从 Core context 消费 effective Theme；PlotSpec 不重复 Core style / mode。省略 `style` 时使用随 `mode` 变化的 Plot 默认 token baseline；显式 `PlotThemeStyleDefinition` 经 Plot registry 解析完整 token baseline。`plotThemeTokens`、`colors`、native `plotTheme` 与 local guide / mark / scale config 按公开 cascade 覆盖该基线。resolver 接收 Core shared colors 并负责默认 palette，不在后续阶段无条件重写 palette
 - `plotThemeStyles` 是 Plot lowering 的 runtime definition 入口。React / Vanilla adapter 必须将同一 option 传给 standalone、embedded 与 plain lowering；自定义 style 解析到 Plot 时缺少同名 definition 必须 fail-loud
 - Plot canonical palette 使用 `plot.palette.*`；`data.palette.*` 不属于 Data 或 Plot 的公开 token namespace，不保留 alias 或双读。
 - Chart 与其它上层只能传递 Plot 公开 token contract 或调用 Plot 公开纯 resolver，不得复制 Plot key、schema、preset、merge 或 resolved theme。
 - `pipeline/locator` 负责通过 lowering 流程解析 datum / series 锚点；`contract/locator` 只放公开 locator 类型。
-- 模块外 import 优先走对应顶层 barrel（`../shared` / `../contract` / `../providers` / `../pipeline`）；公共 API barrel 可 deep import 做表面裁剪。
+- 模块外 import 必须走目标 owner 的顶层 barrel（`../shared` / `../schemas` / `../contract` / `../providers` / `../resolve` / `../pipeline`）；同 owner 内部可相邻导入，公共 API barrel 仅在有意裁剪表面时选择性导出，不从非 owner 模块转手导出。
 - 新共享逻辑放到最小合理归属层；多个语法层都需要时优先下沉到更底层，或上移到 `@retikz/math` / `@retikz/core`。
 
 改上述分层、依赖方向或 define-registry 能力前，先按根 AGENTS 读取 `standard-structure` 及对应层级 skill。
@@ -47,9 +54,9 @@ pipeline/     Tier 2 -> Kernel IR 下沉编排，消费 providers / contract；g
 
 ## Registry 规则
 
-- 内置与自定义 definition 经同一 `resolveXxxRegistry` 分派，不写内置白名单分支。
+- 内置与自定义 definition 经同一 `resolveXxxRegistry` 合并，不写内置白名单分支；具体 provider lookup、fallback、默认与上下文诊断由 `resolveXxx` 负责。
 - `contract/<层>` 放 `XxxDefinition`、`defineXxx`、`AnyXxxDefinition`、key extractor 和共享接口。
-- `providers/<层>` 放内置 definition、注册清单和 resolve / dispatch / apply 实现。
+- `providers/<层>` 放内置 definition / implementation、注册清单和 `BUILTIN_*` 集合；不放领域 resolve、pipeline dispatch 或阶段级 apply。
 - channel 按 `ChannelDefinitionKind` 组织内置实现；scale 只负责 scale family，不把通道消费逻辑塞进 scale。
 
 ## 公开 API

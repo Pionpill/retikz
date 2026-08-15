@@ -1,4 +1,4 @@
-import type { IRScope } from '@retikz/core';
+import type { IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotSpec } from '../../../src/schemas';
 
 import * as plot from '../../../src';
-import { defineMark, extractMarkType } from '../../../src/contract';
+import { defineMark, defineNodeChannel, extractMarkType } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
 import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSpecSchema } from '../../../src/schemas';
@@ -21,6 +21,8 @@ const DotMarkSchema = z.strictObject({
 });
 
 type DotMark = z.infer<typeof DotMarkSchema>;
+
+const BareMarkSchema = z.object({ type: z.literal('bare') });
 
 const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
@@ -39,6 +41,35 @@ const makeDotMark = (record: { calls: number; rows: number }) =>
       record.calls += 1;
       record.rows = rows.length;
       return { type: 'scope', children: [] };
+    },
+  });
+
+const makeBareMark = () =>
+  defineMark({
+    schema: BareMarkSchema,
+    lower: (mark, rows, _frame, channels) => {
+      const row = rows[0] ?? {};
+      const node: IRNode = { type: 'node', position: [0, 0], minimumSize: 1 };
+      for (const entry of channels.nodeDeliveries ?? []) {
+        const value = entry.resolver(row);
+        if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind: 'pointGlyph' });
+      }
+      return { type: 'scope', children: [node] };
+    },
+  });
+
+const makeBareIntensityChannel = (delivered: { value?: number }) =>
+  defineNodeChannel<number>({
+    channel: 'bareIntensity',
+    output: { outputKind: 'number', range: [0, 1] },
+    resolve: () => mark => {
+      const binding = (mark as { encoding?: { channels?: Record<string, { value?: unknown }> } }).encoding?.channels
+        ?.bareIntensity;
+      const value = binding?.value;
+      return typeof value === 'number' ? { resolver: () => value } : undefined;
+    },
+    deliver: (_node, value) => {
+      delivered.value = value;
     },
   });
 
@@ -126,6 +157,48 @@ describe('mark registry（contract：自定义 mark）', () => {
       expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeDotMark(record)] }),
     ).toThrow();
     expect(record.calls).toBe(0);
+  });
+
+  it('extension_channels_are_validated_before_custom_schema_strips_them', () => {
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'cartesian2D', x: 'cat', y: 'val' },
+      scales: [
+        { type: 'band', name: 'cat' },
+        { type: 'linear', name: 'val' },
+      ],
+      marks: [{ type: 'bare', encoding: { channels: { ghost: { value: 1 } } } }],
+    });
+    expect(() => expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeBareMark()] })).toThrow(
+      /channel "ghost" is not registered/,
+    );
+  });
+
+  it('registered_extension_channel_reads_source_mark_after_custom_schema_strips_it', () => {
+    const delivered: { value?: number } = {};
+    const spec = PlotSpecSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'cartesian2D', x: 'cat', y: 'val' },
+      scales: [
+        { type: 'band', name: 'cat' },
+        { type: 'linear', name: 'val' },
+      ],
+      marks: [{ type: 'bare', encoding: { channels: { bareIntensity: { value: 0.75 } } } }],
+    });
+    expandOf(
+      spec,
+      { d: [{ cat: 'A', val: 3 }] },
+      {
+        ...opts,
+        markDefinitions: [makeBareMark()],
+        channelDefinitions: [makeBareIntensityChannel(delivered)],
+      },
+    );
+    expect(delivered.value).toBe(0.75);
   });
 
   it('unregistered_custom_mark_fails_loud', () => {

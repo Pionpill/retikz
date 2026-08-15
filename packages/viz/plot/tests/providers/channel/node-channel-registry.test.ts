@@ -77,6 +77,16 @@ describe('node channel registry', () => {
       },
       rows: [],
       fieldTypes: new Map(),
+      resolveChannelScale: () => ({
+        of: () => undefined,
+        legendForm: 'swatch',
+        domain: [],
+        range: [],
+        scaleType: 'test',
+      }),
+      resolveCategoryDomain: values =>
+        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+      resolveColorScheme: () => () => '#000000',
     });
     const resolution = resolve({ type: 'point', size: { kind: 'constant', value: 7 }, encoding: {} });
     expect(resolution?.resolver({})).toBe(7);

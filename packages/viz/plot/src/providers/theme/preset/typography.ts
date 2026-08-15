@@ -2,7 +2,7 @@ import type { ThemeModeValue } from '@retikz/core';
 
 import { ThemeMode } from '@retikz/core';
 
-import type { IRPlotResolvedThemeTokens } from '../../../schemas';
+import type { IRPlotThemeTokenResolution } from '../../../schemas';
 
 import { PlotThemeToken } from '../../../schemas';
 
@@ -16,7 +16,7 @@ type TypographyStylePreset = Pick<TypographyPresetSource, 'fontFamily' | 'fontSi
 type TypographyModePreset = Pick<TypographyPresetSource, 'foreground'>;
 type TypographyTokenPreset = Readonly<
   Pick<
-    IRPlotResolvedThemeTokens,
+    IRPlotThemeTokenResolution,
     | typeof PlotThemeToken.PlotTypographyForeground
     | typeof PlotThemeToken.PlotTypographyFontFamily
     | typeof PlotThemeToken.PlotTypographyFontSize

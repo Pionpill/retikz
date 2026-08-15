@@ -1,25 +1,23 @@
 import type { IRScope } from '@retikz/core';
 import type { IRShapeValue, JsonValue } from '@retikz/core';
-import type { DataFieldTypeMap, DataFieldTypeValue, ExternalRow } from '@retikz/data';
+import type { DataFieldTypeValue } from '@retikz/data';
 
 import { DataFieldType } from '@retikz/data';
 
-import type { AnyChannelDefinition, AnyMarkDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
-import type { ResolvedPlotGuideTheme, ResolvedPlotPalette, ScaleDescriptor } from '../../providers';
+import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
+import type { ScaleDescriptor } from '../../providers';
+import type { ChannelResolveContext } from '../../resolve/channel';
+import type { EffectivePlotGuideTheme } from '../../resolve/theme';
 import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlotSpec, LegendChannelValue } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
 import type { LegendEntry, LegendInput } from '../guide';
 import type { MarkDataView } from './types';
 
-import {
-  channelKindsForMark,
-  resolveGuideTicks,
-  resolveLegendGuideTokens,
-  resolveLinearScale,
-  resolveMarkChannels,
-  resolveSqrtScale,
-  scaleTicks,
-} from '../../providers';
+import { resolveLinearScale, resolveSqrtScale, scaleTicks } from '../../providers';
+import { resolveChannelDefinition, resolveMarkChannels } from '../../resolve/channel';
+import { resolveGuideTicks } from '../../resolve/guide';
+import { resolveScaleDefinition } from '../../resolve/scale';
+import { resolveLegendGuideTokens } from '../../resolve/theme';
 import { LegendSymbolFit, PlotLayerZIndex, PlotScale } from '../../schemas';
 import { lowerLegend } from '../guide';
 
@@ -30,18 +28,7 @@ import { lowerLegend } from '../guide';
  */
 export const collectChannelDescriptors = (
   node: IRPlotSpec,
-  channelCtx: {
-    node: IRPlotSpec;
-    rows: Array<ExternalRow>;
-    fieldTypes: DataFieldTypeMap;
-    fieldTypeEvidence?: ReadonlySet<string>;
-    scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>;
-    resolveColorScheme: (name: string) => (t: number) => string;
-    palette: ResolvedPlotPalette;
-  },
-  channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
-  markRegistry: ReadonlyMap<string, AnyMarkDefinition>,
-  defaultColor: string,
+  channelCtx: ChannelResolveContext,
   markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
@@ -49,13 +36,7 @@ export const collectChannelDescriptors = (
     if (descriptor) out.push(descriptor);
   };
   for (const view of markDataViews ?? node.marks.map(mark => ({ mark, rows: channelCtx.rows }))) {
-    const markChannels = resolveMarkChannels(
-      view.mark,
-      { ...channelCtx, rows: view.rows },
-      channelRegistry,
-      defaultColor,
-      channelKindsForMark(view.mark, markRegistry),
-    );
+    const markChannels = resolveMarkChannels(view.mark, { ...channelCtx, rows: view.rows });
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;
@@ -118,8 +99,8 @@ const selectLegendDescriptor = (
     if (matched.length === 0) {
       const scale = scaleByName.get(guide.scale);
       if (scale === undefined) throw new Error(`lowerPlots: legend references unknown scale "${guide.scale}"`);
-      const scaleDefinition = scaleRegistry.get(scale.type);
-      if (scaleDefinition?.family !== 'channel') {
+      const scaleDefinition = resolveScaleDefinition(scale, { registry: scaleRegistry });
+      if (scaleDefinition.family !== 'channel') {
         throw new Error(
           `lowerPlots: scale "${guide.scale}" is not a color scale (legend channel "${guide.channel}" can only bind channel scales)`,
         );
@@ -147,7 +128,11 @@ const niceNumericTicks = (
   count: number,
 ): Array<{ value: number; offset: number; label: string }> => {
   const [lo, hi] = domain;
-  const scale = resolveLinearScale({ domain: [lo, hi] }, [], [0, 1]);
+  const scale = resolveLinearScale(
+    { type: PlotScale.Linear, name: '__legend_numeric_ticks', domain: [lo, hi] },
+    [],
+    [0, 1],
+  );
   const { values, labels } = scaleTicks(scale, count);
   const span = hi - lo;
   return values.map((value, index) => ({
@@ -161,7 +146,11 @@ const legendRampTickScale = (
   domain: readonly [number, number],
   fieldType: DataFieldTypeValue | undefined,
 ): PositionScale => {
-  const scale = resolveLinearScale({ domain: [domain[0], domain[1]] }, [], [0, 1]);
+  const scale = resolveLinearScale(
+    { type: PlotScale.Linear, name: '__legend_ramp_ticks', domain: [domain[0], domain[1]] },
+    [],
+    [0, 1],
+  );
   return {
     coordinate: value => scale(Number(value)),
     domain: () => [domain[0], domain[1]],
@@ -259,7 +248,11 @@ const resolveColorLegend = (
     const edges = resolution.edges;
     const colors = resolution.range;
     const formatNumber = resolveLinearScale(
-      { domain: edges.length > 0 ? [edges[0], edges[edges.length - 1]] : [0, 1] },
+      {
+        type: PlotScale.Linear,
+        name: '__legend_bin_labels',
+        domain: edges.length > 0 ? [edges[0], edges[edges.length - 1]] : [0, 1],
+      },
       [],
       [0, 1],
     ).tickFormat();
@@ -375,7 +368,7 @@ export const buildLegendLayers = (
   bands: Array<Rect>,
   channelRegistry: ReadonlyMap<string, AnyChannelDefinition>,
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
-  resolvedTheme: ResolvedPlotGuideTheme,
+  resolvedTheme: EffectivePlotGuideTheme,
 ): Array<IRScope> => {
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return legendGuides.map((guide, legendIndex): IRScope => {
@@ -412,7 +405,7 @@ export const buildLegendLayers = (
         `lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`,
       );
     }
-    const channelDefinition = channelRegistry.get(guide.channel);
+    const channelDefinition = resolveChannelDefinition(guide.channel, { channelRegistry });
     const legendForm =
       channelDefinition !== undefined && 'legend' in channelDefinition ? channelDefinition.legend : undefined;
     const channelOutput =

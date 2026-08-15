@@ -1,7 +1,7 @@
 import type { IRChild, JsonValue } from '@retikz/core';
 import type { DataLineageOptions, DataLineageRun, DataSourceIdentity, ExternalRow } from '@retikz/data';
 
-import type { PlotLocatorOptions, ResolvedAnchor } from './locator';
+import type { PlotAnchorResolution, PlotLocatorOptions } from './locator';
 
 /** plot row value 样本选项 */
 export type PlotRowValueOptions = {
@@ -177,7 +177,7 @@ export type PlotLocatorAnchorLineage = {
   /** locator address */
   address: string;
   /** locator 解析出的 anchor */
-  anchor: ResolvedAnchor;
+  anchor: PlotAnchorResolution;
 };
 
 /** locator lineage 查询结果 */
@@ -214,9 +214,9 @@ export type PlotSeriesLineage = {
 export type PlotLocatorQueryLineage = PlotDatumLineage | PlotSeriesLineage;
 
 /** locator lineage 查询结果 */
-export type PlotLineageResolvedAnchor = {
+export type PlotLineageAnchorResolution = {
   /** 原 locator 解析出的 anchor */
-  anchor: ResolvedAnchor;
+  anchor: PlotAnchorResolution;
   /** anchor 对应的 lineage 摘要 */
   lineage: PlotLocatorQueryLineage;
 };
@@ -224,9 +224,9 @@ export type PlotLineageResolvedAnchor = {
 /** plot lineage locator */
 export type PlotLineageLocator = {
   /** 查询 datum anchor 与 lineage */
-  datum: (transformedIndex: number, options?: PlotLocatorOptions) => PlotLineageResolvedAnchor | null;
+  datum: (transformedIndex: number, options?: PlotLocatorOptions) => PlotLineageAnchorResolution | null;
   /** 查询 series anchor 与 lineage */
-  series: (value: string | number, options?: PlotLocatorOptions) => PlotLineageResolvedAnchor | null;
+  series: (value: string | number, options?: PlotLocatorOptions) => PlotLineageAnchorResolution | null;
   /** 按地址解析 anchor 与 lineage */
-  resolve: (address: string) => PlotLineageResolvedAnchor | null;
+  resolve: (address: string) => PlotLineageAnchorResolution | null;
 };

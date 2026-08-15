@@ -3,8 +3,6 @@ import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlotSpec } from '../../../schemas';
-import type { Rect } from '../../../shared';
 import type {
   CompositionAxisPolicyValue,
   CompositionLayout,
@@ -14,18 +12,14 @@ import type {
   GridTargetSelector,
   ScaffoldTrack,
   SharedScaffold,
-} from '../composition';
-import type {
-  CoordinateFrameResolution,
-  CoordinateScopeRegistry,
-  CoordinateScopeRegistryEntry,
-  LowerPlotsOptions,
-  MarkDataView,
-} from '../types';
+} from '../../../resolve/composition';
+import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../../resolve/composition';
+import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
+import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlotSpec } from '../../../schemas';
+import type { Rect } from '../../../shared';
+import type { LowerPlotsOptions } from '../types';
 
 import { resolveCoordinateRegistry } from '../../../providers';
-import { AxisGridApplyTo, CoordinateViewPlacementKind, ScaffoldFrameMode } from '../../../schemas';
-import { DEFAULT_FONT_SIZE } from '../../../shared';
 import {
   axisGridApplyToOf,
   axisGridSelectorOf,
@@ -36,13 +30,15 @@ import {
   mergeCompositionMargin,
   resolveArrangementLayout,
   resolveArrangementPolicy,
-  resolveCoordinateScopeRegistry,
   withAxisGapOffsets,
-  withEnabledAxisGrid,
-  withoutAxisGrid,
-  withScopeContext,
-} from '../composition';
-import { resolveFrame } from './resolve';
+} from '../../../resolve/composition';
+import { resolveCoordinateDefinition, resolveCoordinateFrame } from '../../../resolve/coordinate';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../resolve/guide';
+import { AxisGridApplyTo, CoordinateViewPlacementKind, PlotGuide, ScaffoldFrameMode } from '../../../schemas';
+import { DEFAULT_FONT_SIZE } from '../../../shared';
+import { lowerCustomAxis, lowerGuide } from '../../guide';
+import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from '../composition';
+import { legendReserveOf } from '../legend';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
 export type ResolveScopedFramesInput = {
@@ -60,6 +56,7 @@ export type ResolveScopedFramesInput = {
   compositionFacets: Array<FacetGrid>;
   compositionScaffolds: Array<SharedScaffold>;
   compositionPolicyContext: { hasFacets: boolean; hasScaffolds: boolean };
+  coordinateScopes: CoordinateScopeRegistry;
   allGuides: Array<IRPlotGuide>;
   allGuidesWithCompositionGap: Array<IRPlotGuide>;
 };
@@ -97,11 +94,34 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
     compositionFacets,
     compositionScaffolds,
     compositionPolicyContext,
+    coordinateScopes,
     allGuides,
     allGuidesWithCompositionGap,
   } = input;
-  const coordinateScopes = resolveCoordinateScopeRegistry(node);
+  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
+  const coordinateResolveContextOf = (
+    source: IRPlotSpec,
+    guides: Array<IRPlotGuide>,
+    overrides: Partial<CoordinateResolveContext> = {},
+  ): CoordinateResolveContext => ({
+    coordinate: source.coordinate,
+    rows,
+    fieldTypes,
+    width,
+    height,
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    margin: options.margin,
+    provenance,
+    coordinateRegistry,
+    scaleRegistry,
+    legendReserve: legendReserveOf(guides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),
+    lowerGuide,
+    lowerCustomAxis,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
+    ...overrides,
+  });
   const scopeContextOf = (scope: CoordinateScopeRegistryEntry): IRJsonObject => {
     if (node.composition === undefined) return {};
     const context: IRJsonObject = { coordinateView: scope.id };
@@ -127,15 +147,8 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
     context: { hasFacets: boolean; hasScaffolds: boolean },
     dimension: DimensionRole,
   ): CompositionAxisPolicyValue => compositionAxisPolicyOf(resolve, context, dimension);
-  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const rolesOf = (coordinate: IRPlotCoordinateOperation): ReadonlySet<DimensionRole> => {
-    const definition = coordinateRegistry.get(coordinate.type);
-    if (definition === undefined) {
-      throw new Error(
-        `lowerPlots: coordinate type "${coordinate.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
-      );
-    }
-    return new Set(definition.roles);
+    return new Set(resolveCoordinateDefinition(coordinate, { coordinateRegistry }).roles);
   };
   const assertScaffoldRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scaffoldId: string): void => {
     if (!roles.has(role)) {
@@ -280,20 +293,14 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
       guides: [],
     };
     const scaffoldLayout = arrangementLayoutOf(scaffold);
-    const resolved = resolveFrame({
-      node: scaffoldNode,
-      rows,
-      fieldTypes,
-      width,
-      height,
-      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-      margin: mergeCompositionMargin(scaffoldLayout?.padding, options.margin),
-      labelGap: scaffoldLayout?.labelGap,
-      provenance,
-      coordinates: options.coordinates,
-      scaleRegistry,
-      markDataViews: scaffoldMarkDataViews,
-    });
+    const resolved = resolveCoordinateFrame(
+      scaffoldNode,
+      coordinateResolveContextOf(scaffoldNode, [], {
+        margin: mergeCompositionMargin(scaffoldLayout?.padding, options.margin),
+        labelGap: scaffoldLayout?.labelGap,
+        markDataViews: scaffoldMarkDataViews,
+      }),
+    );
     scaffoldFrames.set(scaffold.id, resolved);
     return resolved;
   };
@@ -366,45 +373,33 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
       marks: scopedMarkDataViews.map(view => view.mark),
       guides: scopedGuides,
     };
-    const rawResolution = resolveFrame({
-      node: scopedNode,
-      rows,
-      fieldTypes,
-      width,
-      height,
-      fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-      margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
-      labelGap: scopedLayout?.labelGap,
-      ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
-      ...(scaffoldFrame !== undefined && (scaffold?.frame ?? ScaffoldFrameMode.Shared) === ScaffoldFrameMode.Shared
-        ? { plotAreaOverride: scaffoldFrame.plotArea }
-        : {}),
-      ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
-      provenance,
-      coordinates: options.coordinates,
-      scaleRegistry,
-      markDataViews: scopedMarkDataViews,
-      ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
-    });
+    const rawResolution = resolveCoordinateFrame(
+      scopedNode,
+      coordinateResolveContextOf(scopedNode, scopedGuides, {
+        margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+        labelGap: scopedLayout?.labelGap,
+        ...(targetPlotArea !== undefined ? { plotAreaOverride: targetPlotArea } : {}),
+        ...(scaffoldFrame !== undefined && (scaffold?.frame ?? ScaffoldFrameMode.Shared) === ScaffoldFrameMode.Shared
+          ? { plotAreaOverride: scaffoldFrame.plotArea }
+          : {}),
+        ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+        markDataViews: scopedMarkDataViews,
+        ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
+      }),
+    );
     const gridResolution =
       scopedGridGuides.length > 0
-        ? resolveFrame({
-            node: { ...scopedNode, guides: scopedGridGuides },
-            rows,
-            fieldTypes,
-            width,
-            height,
-            fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-            margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
-            labelGap: scopedLayout?.labelGap,
-            plotAreaOverride: rawResolution.plotArea,
-            ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
-            provenance,
-            coordinates: options.coordinates,
-            scaleRegistry,
-            markDataViews: scopedMarkDataViews,
-            ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
-          })
+        ? resolveCoordinateFrame(
+            { ...scopedNode, guides: scopedGridGuides },
+            coordinateResolveContextOf({ ...scopedNode, guides: scopedGridGuides }, scopedGridGuides, {
+              margin: mergeCompositionMargin(scopedLayout?.padding, options.margin),
+              labelGap: scopedLayout?.labelGap,
+              plotAreaOverride: rawResolution.plotArea,
+              ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+              markDataViews: scopedMarkDataViews,
+              ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
+            }),
+          )
         : undefined;
     const scopeContext = scopeContextOf(scope);
     const resolved = {

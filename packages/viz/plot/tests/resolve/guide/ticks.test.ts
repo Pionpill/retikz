@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
 
-import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../src/providers/scale/shared';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../src/resolve/guide';
 
 const scaleOf = (
   tickKind: PositionScale['tickKind'],

@@ -3,20 +3,17 @@ import type { ResolvedTheme } from '@retikz/core';
 import { ThemeTokenSource } from '@retikz/core';
 
 import type { PlotThemeStyleDefinition } from '../../contract';
-import type { IRPlotSpec, IRPlotThemeResolution } from '../../schemas';
+import type { IRPlotSpec, IRPlotThemeResolution, IRPlotThemeTokenResolution } from '../../schemas';
 
+import { getDefaultPlotThemePreset, resolvePlotThemeStyleRegistry } from '../../providers/theme';
+import { getAxisTokenRules } from '../../providers/theme/preset';
 import {
   PlotAxisThemeTokenRulesSchema,
-  PlotResolvedThemeTokensSchema,
   PlotThemeResolutionSchema,
-  PlotThemeSchema,
   PlotThemeToken,
-  PlotThemeTokenOverridesSchema,
+  PlotThemeTokenResolutionSchema,
 } from '../../schemas';
-import { getDefaultPlotThemePreset } from './catalog';
 import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
-import { getAxisTokenRules } from './preset';
-import { resolvePlotThemeStyleRegistry } from './registry';
 
 /** 按 Plot style、Plot token 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
@@ -29,26 +26,30 @@ export const resolvePlotTheme = (
   const definition = style === undefined ? undefined : styles.get(style);
   if (style !== undefined && definition === undefined)
     throw new Error(`Plot theme style '${style}' is not registered.`);
-  const plotThemeTokens = PlotThemeTokenOverridesSchema.parse(input.plotThemeTokens ?? {});
-  const localTokenRules = PlotAxisThemeTokenRulesSchema.parse(input.plotThemeTokenRules ?? []);
-  const authoredTheme = input.plotTheme === undefined ? undefined : PlotThemeSchema.parse(input.plotTheme);
+  const plotThemeTokens = input.plotThemeTokens ?? {};
+  const localTokenRules = input.plotThemeTokenRules ?? [];
+  const authoredTheme = input.plotTheme;
   const styleResolution =
     definition === undefined
       ? { tokens: getDefaultPlotThemePreset(mode, effectiveTheme.colors.categorical), tokenRules: getAxisTokenRules() }
       : definition.resolve(effectiveTheme);
-  const baseline = PlotResolvedThemeTokensSchema.parse(styleResolution.tokens);
-  const styleTokenRules = PlotAxisThemeTokenRulesSchema.parse(styleResolution.tokenRules ?? []);
-  const tokensAfterLocal = PlotResolvedThemeTokensSchema.parse({
+  const baseline =
+    definition === undefined ? styleResolution.tokens : PlotThemeTokenResolutionSchema.parse(styleResolution.tokens);
+  const styleTokenRules =
+    definition === undefined
+      ? (styleResolution.tokenRules ?? [])
+      : PlotAxisThemeTokenRulesSchema.parse(styleResolution.tokenRules ?? []);
+  const tokensAfterLocal: IRPlotThemeTokenResolution = {
     ...baseline,
     ...structuredClone(plotThemeTokens),
-  });
+  };
   const tokenTheme = plotThemeFromTokens(tokensAfterLocal);
   const theme = authoredTheme === undefined ? tokenTheme : mergePlotTheme(tokenTheme, authoredTheme);
   const nativeResult =
     authoredTheme === undefined
       ? { tokens: tokensAfterLocal, overrides: [] }
       : applyPlotThemeToTokens(tokensAfterLocal, theme, authoredTheme);
-  const tokens = PlotResolvedThemeTokensSchema.parse(nativeResult.tokens);
+  const tokens = nativeResult.tokens;
   const nativeSources = new Map(nativeResult.overrides.map(source => [source.token, source.path]));
   const tokenSources = Object.values(PlotThemeToken).map(token => {
     const nativePath = nativeSources.get(token);

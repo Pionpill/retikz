@@ -18,8 +18,8 @@ import { isFiniteNumber } from '@retikz/math';
 import type {
   AnyChannelDefinition,
   ChannelResolution,
-  NodeChannelContext,
   NodeChannelDefinition,
+  NodeChannelDefinitionResolveContext,
 } from '../../../contract';
 import type {
   IRPlotLinearScale,
@@ -197,7 +197,7 @@ export const makeNumericNodeResolver = (
  *   边界：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud。
  */
 export const resolveSizeChannel = (
-  ctx: NodeChannelContext,
+  ctx: NodeChannelDefinitionResolveContext,
 ): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
   const { node, rows, fieldTypes } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
@@ -289,7 +289,7 @@ export const resolveSizeChannel = (
  *   循环取值。非 categorical 字段 fail-loud（形状是分类编码）
  */
 export const resolveShapeChannel = (
-  ctx: NodeChannelContext,
+  ctx: NodeChannelDefinitionResolveContext,
 ): ((mark: IRPlotMarkOperation) => ChannelResolution<JsonValue> | undefined) => {
   const { rows, fieldTypes } = ctx;
   return (mark: IRPlotMarkOperation): ChannelResolution<JsonValue> | undefined => {

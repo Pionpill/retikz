@@ -1,17 +1,17 @@
 import type { z } from 'zod';
 
 import type {
+  PlotPaletteResolutionSchema,
   PlotThemeAuthoredOverrideRecordSchema,
   PlotThemeResolutionSchema,
   PlotThemeTokenRuleSourceRecordSchema,
   PlotThemeTokenSourceRecordSchema,
-  ResolvedPlotPaletteSchema,
 } from './inspection';
 import type { PlotAxisThemeSchema, PlotPaletteThemeSchema, PlotThemeSchema } from './schema';
 import type {
   PlotAxisThemeTokenOverridesSchema,
-  PlotResolvedThemeTokensSchema,
   PlotThemeTokenOverridesSchema,
+  PlotThemeTokenResolutionSchema,
 } from './style';
 import type {
   PlotAxisThemeTokenRuleSchema,
@@ -44,19 +44,19 @@ export type IRPlotAxisThemeTokenRule = z.infer<typeof PlotAxisThemeTokenRuleSche
 export type IRPlotAxisThemeTokenRules = z.infer<typeof PlotAxisThemeTokenRulesSchema>;
 
 /** preset 与覆盖解析后的完整 Plot theme token */
-export type IRPlotResolvedThemeTokens = z.infer<typeof PlotResolvedThemeTokensSchema>;
+export type IRPlotThemeTokenResolution = z.infer<typeof PlotThemeTokenResolutionSchema>;
 
-/** 单个 Plot token 的稳定来源记录 */
-export type PlotThemeTokenSourceRecord = z.infer<typeof PlotThemeTokenSourceRecordSchema>;
+/** 单个 Plot token 的稳定来源 IR 记录 */
+export type IRPlotThemeTokenSourceRecord = z.infer<typeof PlotThemeTokenSourceRecordSchema>;
 
-/** 单条 Axis theme token rule 的稳定来源记录 */
-export type PlotThemeTokenRuleSourceRecord = z.infer<typeof PlotThemeTokenRuleSourceRecordSchema>;
+/** 单条 Axis theme token rule 的稳定来源 IR 记录 */
+export type IRPlotThemeTokenRuleSourceRecord = z.infer<typeof PlotThemeTokenRuleSourceRecordSchema>;
 
-/** Plot shorthand 或 native theme 的 authored 入口记录 */
-export type PlotThemeAuthoredOverrideRecord = z.infer<typeof PlotThemeAuthoredOverrideRecordSchema>;
+/** Plot shorthand 或 native theme 的 authored 入口 IR 记录 */
+export type IRPlotThemeAuthoredOverrideRecord = z.infer<typeof PlotThemeAuthoredOverrideRecordSchema>;
 
 /** Plot cascade 解析后的完整 palette */
-export type IRResolvedPlotPalette = z.infer<typeof ResolvedPlotPaletteSchema>;
+export type IRPlotPaletteResolution = z.infer<typeof PlotPaletteResolutionSchema>;
 
 /** Plot-owned theme resolution 与 inspection 结果 */
 export type IRPlotThemeResolution = z.infer<typeof PlotThemeResolutionSchema>;

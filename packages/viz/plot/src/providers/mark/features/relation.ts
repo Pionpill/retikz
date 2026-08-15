@@ -51,7 +51,7 @@ import {
   resolveGeometryMarkLabels,
 } from '../shared';
 
-type ResolvedTarget = {
+type TargetResolution = {
   target: IRTarget;
   coordinates: Array<IRCoordinate>;
 };
@@ -95,7 +95,7 @@ const resolveProjectedTarget = (
   transformedIndex: number,
   role: string,
   forceCoordinate: boolean,
-): ResolvedTarget | null => {
+): TargetResolution | null => {
   const values: Array<unknown> = [];
   for (const frameRole of frame.roles) {
     const field = (ref.project as Partial<Record<string, string>>)[frameRole];
@@ -142,7 +142,7 @@ const resolveTarget = (
   transformedIndex: number,
   role: string,
   forceCoordinate = false,
-): ResolvedTarget | null => {
+): TargetResolution | null => {
   if ('id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if ('project' in ref)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);

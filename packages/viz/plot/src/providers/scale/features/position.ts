@@ -1,4 +1,3 @@
-﻿import type { IRDataFieldDefinition } from '@retikz/data';
 import type {
   ScaleBand as D3ScaleBand,
   ScaleContinuousNumeric as D3ScaleContinuousNumeric,
@@ -8,7 +7,7 @@ import type {
 } from 'd3-scale';
 
 import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
-import { DataFieldType, FieldOrderMode } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import { extent as d3Extent } from 'd3-array';
 import {
@@ -47,7 +46,7 @@ import {
   SymlogScaleSchema,
   TimeScaleSchema,
 } from '../../../schemas';
-import { DEFAULT_TICK_COUNT, resolvePaddedDomain, safeExtent, scaleTicks } from '../shared';
+import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
 
 // ── 连续数值位置 scale（linear / log / pow / sqrt / symlog / radial）────────────────
 
@@ -57,31 +56,13 @@ import { DEFAULT_TICK_COUNT, resolvePaddedDomain, safeExtent, scaleTicks } from 
  *   返回 d3 ScaleLinear：可作 `(value) => number` 投影，也可 `.ticks()` / `.tickFormat()` / `.range([...])` 后续设值。
  *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致
  */
-type LinearScaleOptions = Omit<IRPlotLinearScale, 'type' | 'name'> & {
-  type?: IRPlotLinearScale['type'];
-  name?: string;
-  defaultDomainPadding?: number;
-  applyDomainPadding?: boolean;
-};
-
 /** 解析线性位置比例尺的 domain、range 与映射函数 */
 export const resolveLinearScale = (
-  def: LinearScaleOptions,
+  def: IRPlotLinearScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleLinear<number, number> => {
-  const domain =
-    def.applyDomainPadding === true
-      ? resolvePaddedDomain({
-          scaleName: def.name ?? '__linear',
-          family: 'linear',
-          domain: def.domain ?? safeExtent(values),
-          explicitDomain: def.domain !== undefined,
-          domainPadding: def.domainPadding,
-          singleValueSpan: def.singleValueSpan,
-          defaultDomainPadding: def.defaultDomainPadding ?? 0,
-        })
-      : [...(def.domain ?? safeExtent(values))];
+  const domain = [...(def.domain ?? safeExtent(values))];
   const scale = d3ScaleLinear()
     .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
@@ -95,14 +76,9 @@ export const resolveLinearScale = (
  * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
  *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理
  */
-type PositionDomainOptions = {
-  defaultDomainPadding?: number;
-  applyDomainPadding?: boolean;
-};
-
 /** 解析对数位置比例尺的 domain、range 与映射函数 */
 export const resolveLogScale = (
-  def: IRPlotLogScale & PositionDomainOptions,
+  def: IRPlotLogScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -114,19 +90,7 @@ export const resolveLogScale = (
   const positives = values.filter(value => value > 0);
   const [lo, hi] = d3Extent(positives);
   const sourceDomain = def.domain ?? (lo === undefined ? [1, 10] : [lo, hi]);
-  const domain =
-    def.applyDomainPadding === true
-      ? resolvePaddedDomain({
-          scaleName: def.name,
-          family: 'log',
-          domain: sourceDomain,
-          explicitDomain: def.domain !== undefined,
-          domainPadding: def.domainPadding,
-          singleValueSpan: def.singleValueSpan,
-          base: def.base,
-          defaultDomainPadding: def.defaultDomainPadding ?? 0,
-        })
-      : [...sourceDomain];
+  const domain = [...sourceDomain];
   const scale = d3ScaleLog()
     .base(def.base ?? 10)
     .domain(domain)
@@ -142,7 +106,7 @@ export const resolveLogScale = (
  *   整数 exponent 允许负 domain。exponent 缺省 2
  */
 export const resolvePowScale = (
-  def: IRPlotPowScale & PositionDomainOptions,
+  def: IRPlotPowScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -153,19 +117,7 @@ export const resolvePowScale = (
     );
   }
   const sourceDomain = def.domain ?? safeExtent(values);
-  const domain =
-    def.applyDomainPadding === true
-      ? resolvePaddedDomain({
-          scaleName: def.name,
-          family: 'pow',
-          domain: sourceDomain,
-          explicitDomain: def.domain !== undefined,
-          domainPadding: def.domainPadding,
-          singleValueSpan: def.singleValueSpan,
-          exponent,
-          defaultDomainPadding: def.defaultDomainPadding ?? 0,
-        })
-      : [...sourceDomain];
+  const domain = [...sourceDomain];
   const scale = d3ScalePow()
     .exponent(exponent)
     .domain(domain)
@@ -180,7 +132,7 @@ export const resolvePowScale = (
  * @description 显式 domain 含负值 → fail-loud；缺省从非负值 extent 推断。负数据值由 isValidInput 跳过
  */
 export const resolveSqrtScale = (
-  def: IRPlotSqrtScale & PositionDomainOptions,
+  def: IRPlotSqrtScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
@@ -190,18 +142,7 @@ export const resolveSqrtScale = (
     );
   }
   const sourceDomain = def.domain ?? safeExtent(values.filter(value => value >= 0));
-  const domain =
-    def.applyDomainPadding === true
-      ? resolvePaddedDomain({
-          scaleName: def.name,
-          family: 'sqrt',
-          domain: sourceDomain,
-          explicitDomain: def.domain !== undefined,
-          domainPadding: def.domainPadding,
-          singleValueSpan: def.singleValueSpan,
-          defaultDomainPadding: def.defaultDomainPadding ?? 0,
-        })
-      : [...sourceDomain];
+  const domain = [...sourceDomain];
   const scale = d3ScalePow()
     .exponent(0.5)
     .domain(domain)
@@ -217,23 +158,12 @@ export const resolveSqrtScale = (
  *   domain 缺省从值 extent 推断；负 / 零 domain 合法（symlog 全域有定义），不 fail-loud
  */
 export const resolveSymlogScale = (
-  def: IRPlotSymlogScale & PositionDomainOptions,
+  def: IRPlotSymlogScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
   const sourceDomain = def.domain ?? safeExtent(values);
-  const domain =
-    def.applyDomainPadding === true
-      ? resolvePaddedDomain({
-          scaleName: def.name,
-          family: 'symlog',
-          domain: sourceDomain,
-          explicitDomain: def.domain !== undefined,
-          domainPadding: def.domainPadding,
-          singleValueSpan: def.singleValueSpan,
-          defaultDomainPadding: def.defaultDomainPadding ?? 0,
-        })
-      : [...sourceDomain];
+  const domain = [...sourceDomain];
   const scale = d3ScaleSymlog<number, number>()
     .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
@@ -249,23 +179,12 @@ export const resolveSymlogScale = (
  *   domain 缺省从值 extent 推断
  */
 export const resolveRadialScale = (
-  def: IRPlotRadialScale & PositionDomainOptions,
+  def: IRPlotRadialScale,
   values: Array<number>,
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
   const sourceDomain = def.domain ?? safeExtent(values.filter(value => value >= 0));
-  const domain =
-    def.applyDomainPadding === true
-      ? resolvePaddedDomain({
-          scaleName: def.name,
-          family: 'radial',
-          domain: sourceDomain,
-          explicitDomain: def.domain !== undefined,
-          domainPadding: def.domainPadding,
-          singleValueSpan: def.singleValueSpan,
-          defaultDomainPadding: def.defaultDomainPadding ?? 0,
-        })
-      : [...sourceDomain];
+  const domain = [...sourceDomain];
   const scale = d3ScaleRadial<number>()
     .domain(domain)
     .range([...(def.range ?? fallbackRange)]);
@@ -343,15 +262,7 @@ export const resolveTimeScale = (
   fallbackRange: readonly [number, number],
 ): D3ScaleTime<number, number> => {
   const stamps = values.map(coerceTimestamp).filter((stamp): stamp is number => stamp !== null);
-  const [lo, hi] = resolvePaddedDomain({
-    scaleName: def.name,
-    family: 'time',
-    domain: def.domain ?? safeExtent(stamps),
-    explicitDomain: def.domain !== undefined,
-    domainPadding: def.domainPadding,
-    singleValueSpan: def.singleValueSpan,
-    defaultDomainPadding: 0.05,
-  });
+  const [lo, hi] = def.domain ?? safeExtent(stamps);
   const scale = d3ScaleUtc()
     .domain([new Date(lo), new Date(hi)])
     .range([fallbackRange[0], fallbackRange[1]]);
@@ -391,33 +302,6 @@ const DEFAULT_BAND_PADDING_INNER = 0.1;
 
 /** point scale 默认外缝（占 step 比例）；对齐 d3 scalePoint 默认，首尾各留半步 */
 const DEFAULT_POINT_PADDING = 0.5;
-
-/** IRDataFieldDefinition.order 的取值类型（单一真源派生自 schema，避免手写第二份） */
-export type CategoryOrder = NonNullable<IRDataFieldDefinition['order']>;
-
-/**
- * 按 order 计算有序的分类域：在 inferCategoryDomain 去重保序基础上再排
- * @description order='appearance'/undefined → 现状出现序去重；'ascending'/'descending' → 全数值按数值比、否则统一 String localeCompare（descending 反序）；
- *   Array → 以数组为类别序，数据出现但不在数组里的去重类别按出现序追加末尾（数组里有、数据无的值保留作空类别）
- */
-export const orderedCategoryDomain = (
-  values: Array<unknown>,
-  order: CategoryOrder | undefined,
-): Array<string | number> => {
-  const deduped = inferCategoryDomain(values);
-  if (order === undefined || order === FieldOrderMode.Appearance) return deduped;
-  if (order === FieldOrderMode.Ascending || order === FieldOrderMode.Descending) {
-    const allNumber = deduped.every(value => typeof value === 'number');
-    const sorted = [...deduped].sort((a, b) =>
-      allNumber ? (a as number) - (b as number) : String(a).localeCompare(String(b)),
-    );
-    return order === FieldOrderMode.Descending ? sorted.reverse() : sorted;
-  }
-  // Array：数组序优先；数据出现但不在数组里的类别按出现序追加末尾
-  const inArray = new Set<string | number>(order);
-  const appended = deduped.filter(value => !inArray.has(value));
-  return [...order, ...appended];
-};
 
 /** 建分类 band scale（d3 scaleBand）；domain 缺省按数据序去重推断 */
 export const resolveBandScale = (
@@ -505,14 +389,7 @@ const linearScaleDefinition = defineScale<IRPlotLinearScale>({
   schema: LinearScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
-  resolve: (def, values, range) =>
-    linearPositionScale(
-      resolveLinearScale(
-        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
-        values.filter(isFiniteNumber),
-        range,
-      ),
-    ),
+  resolve: (def, values, range) => linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), range)),
 });
 
 const logScaleDefinition = defineScale<IRPlotLogScale>({
@@ -522,11 +399,7 @@ const logScaleDefinition = defineScale<IRPlotLogScale>({
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveLogScale(
-        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
-        values.filter(isFiniteNumber),
-        range,
-      ),
+      resolveLogScale(def, values.filter(isFiniteNumber), range),
       value => isFiniteNumber(value) && value > 0,
     ),
 });
@@ -541,14 +414,7 @@ const powScaleDefinition = defineScale<IRPlotPowScale>({
     const isValidInput = integerExponent
       ? isFiniteNumber
       : (value: unknown): boolean => isFiniteNumber(value) && value >= 0;
-    return continuousPositionScale(
-      resolvePowScale(
-        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
-        values.filter(isFiniteNumber),
-        range,
-      ),
-      isValidInput,
-    );
+    return continuousPositionScale(resolvePowScale(def, values.filter(isFiniteNumber), range), isValidInput);
   },
 });
 
@@ -559,11 +425,7 @@ const sqrtScaleDefinition = defineScale<IRPlotSqrtScale>({
   allowsBaseline: false,
   resolve: (def, values, range) =>
     continuousPositionScale(
-      resolveSqrtScale(
-        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
-        values.filter(isFiniteNumber),
-        range,
-      ),
+      resolveSqrtScale(def, values.filter(isFiniteNumber), range),
       value => isFiniteNumber(value) && value >= 0,
     ),
 });
@@ -576,13 +438,7 @@ const symlogScaleDefinition = defineScale<IRPlotSymlogScale>({
   allowsBaseline: false,
   // symlog 全域有定义（含零 / 负），输入仅需有限数，沿用默认 isFiniteNumber 守门
   resolve: (def, values, range) =>
-    continuousPositionScale(
-      resolveSymlogScale(
-        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
-        values.filter(isFiniteNumber),
-        range,
-      ),
-    ),
+    continuousPositionScale(resolveSymlogScale(def, values.filter(isFiniteNumber), range)),
 });
 
 const radialScaleDefinition = defineScale<IRPlotRadialScale>({
@@ -592,13 +448,7 @@ const radialScaleDefinition = defineScale<IRPlotRadialScale>({
   // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
   allowsBaseline: true,
   resolve: (def, values, range) =>
-    continuousPositionScale(
-      resolveRadialScale(
-        { ...def, applyDomainPadding: true, defaultDomainPadding: 0.05 },
-        values.filter(isFiniteNumber),
-        range,
-      ),
-    ),
+    continuousPositionScale(resolveRadialScale(def, values.filter(isFiniteNumber), range)),
 });
 
 const timeScaleDefinition = defineScale<IRPlotTimeScale>({

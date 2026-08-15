@@ -1,4 +1,4 @@
-﻿import type { DataFieldTypeValue } from '@retikz/data';
+import type { DataFieldTypeValue } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
@@ -7,11 +7,11 @@ import { describe, expect, it } from 'vitest';
 import type { IRPlotSpec } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { deriveScale } from '../../../src/providers';
+import { resolveScaleRegistry } from '../../../src/providers';
 import {
   assertScaleFieldCompatible as assertScaleFieldCompatibleOp,
-  resolveScaleRegistry,
-} from '../../../src/providers';
+  derivePositionScale,
+} from '../../../src/resolve/scale';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参
@@ -21,7 +21,7 @@ const assertScaleFieldCompatible = (
   scaleType: string,
   fieldType: DataFieldTypeValue,
   scaleName: string,
-) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, scaleRegistry);
+) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, { registry: scaleRegistry });
 
 const compile = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) }).scene;
@@ -41,18 +41,18 @@ const spec = (
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
 
-describe('deriveScale — 按 DataFieldTypeValue 派生默认 scale', () => {
+describe('derivePositionScale — 按 DataFieldTypeValue 派生默认 scale', () => {
   it('continuous_to_linear', () => {
-    expect(deriveScale(DataFieldType.Continuous, 'x').type).toBe('linear');
+    expect(derivePositionScale(DataFieldType.Continuous, 'x').type).toBe('linear');
   });
   it('temporal_to_time', () => {
-    expect(deriveScale(DataFieldType.Temporal, 'x').type).toBe('time');
+    expect(derivePositionScale(DataFieldType.Temporal, 'x').type).toBe('time');
   });
   it('categorical_to_band', () => {
-    expect(deriveScale(DataFieldType.Categorical, 'x').type).toBe('band');
+    expect(derivePositionScale(DataFieldType.Categorical, 'x').type).toBe('band');
   });
   it('undefined_field_defaults_linear', () => {
-    expect(deriveScale(undefined, 'x').type).toBe('linear');
+    expect(derivePositionScale(undefined, 'x').type).toBe('linear');
   });
 });
 
