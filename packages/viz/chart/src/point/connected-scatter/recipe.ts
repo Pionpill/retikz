@@ -16,7 +16,7 @@ import {
 import type { ChartPatchChange, ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from '../recipe';
 import type { IRConnectedScatterChartSpec } from './schema';
 
-import { ChartInspectionMemberKind, chartRecipeId } from '../../shared';
+import { ChartMemberKind, chartRecipeId } from '../../shared';
 import { PointChartType } from '../constants';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from '../recipe';
 import { createChartAxisGuides, createChartCartesian2DSeed, plotMarkValueOf } from '../shared';
@@ -134,21 +134,19 @@ const createConnectedScatterSeed = (
     spec.composition === undefined
       ? {
           target: 'coordinate.main',
-          kind: ChartInspectionMemberKind.Coordinate,
+          kind: ChartMemberKind.Coordinate,
           core: true,
           value: jsonObject(cartesian.coordinate),
           plotPath: ['coordinate'] as const,
           patchablePaths: [],
-          sourcePath: '$recipe/connected-scatter/coordinate.main',
         }
       : {
           target: 'composition.main',
-          kind: ChartInspectionMemberKind.Composition,
+          kind: ChartMemberKind.Composition,
           core: true,
           value: jsonObject(spec.composition),
           plotPath: ['composition'] as const,
           patchablePaths: [],
-          sourcePath: '$recipe/connected-scatter/composition.main',
         };
   const colorScaleMember =
     colorScale === undefined
@@ -156,24 +154,20 @@ const createConnectedScatterSeed = (
       : [
           {
             target: 'scale.color',
-            kind: ChartInspectionMemberKind.Scale,
+            kind: ChartMemberKind.Scale,
             core: true,
             value: jsonObject(colorScale),
             plotPath: ['scales', 2] as const,
             patchablePaths: [],
-            sourcePath: '$recipe/connected-scatter/scale.color',
           },
         ];
   const guideMembers = guides.map((guide, index) => ({
     target: guide.type === PlotGuide.Legend ? 'guide.color' : guide.dimension === 'x' ? 'guide.x' : 'guide.y',
-    kind: ChartInspectionMemberKind.Guide,
+    kind: ChartMemberKind.Guide,
     core: false,
     value: jsonObject(guide),
     plotPath: ['guides', index] as const,
     patchablePaths: [],
-    sourcePath: `$recipe/connected-scatter/${
-      guide.type === PlotGuide.Legend ? 'guide.color' : `guide.${guide.dimension}`
-    }`,
   }));
   const connectionChanges = connectedPathPatchChanges(spec.components?.connection);
   const pointChanges = connectedPointPatchChanges(spec.mark);
@@ -182,41 +176,37 @@ const createConnectedScatterSeed = (
     members: [
       {
         target: 'scale.x',
-        kind: ChartInspectionMemberKind.Scale,
+        kind: ChartMemberKind.Scale,
         core: true,
         value: jsonObject(cartesian.scales[0]),
         plotPath: ['scales', 0],
         patchablePaths: [],
-        sourcePath: '$recipe/connected-scatter/scale.x',
       },
       {
         target: 'scale.y',
-        kind: ChartInspectionMemberKind.Scale,
+        kind: ChartMemberKind.Scale,
         core: true,
         value: jsonObject(cartesian.scales[1]),
         plotPath: ['scales', 1],
         patchablePaths: [],
-        sourcePath: '$recipe/connected-scatter/scale.y',
       },
       ...colorScaleMember,
       spatialMember,
       {
         target: 'mark.connection',
-        kind: ChartInspectionMemberKind.Mark,
+        kind: ChartMemberKind.Mark,
         core: true,
         value: jsonObject(connection),
         plotPath: ['marks', 0],
         patchablePaths: connectedPathPatchPaths.map(path => [path]),
-        sourcePath: '$recipe/connected-scatter/mark.connection',
       },
       {
         target: 'mark.points',
-        kind: ChartInspectionMemberKind.Mark,
+        kind: ChartMemberKind.Mark,
         core: true,
         value: jsonObject(points),
         plotPath: ['marks', 1],
         patchablePaths: connectedPointPatchPaths.map(path => [path]),
-        sourcePath: '$recipe/connected-scatter/mark.points',
       },
       ...guideMembers,
     ],
@@ -227,13 +217,10 @@ const createConnectedScatterSeed = (
             {
               target: 'mark.connection',
               inputPath: ['components', 'connection'],
-              sourcePath: '$spec/components/connection',
               changes: connectionChanges,
             },
           ]),
-      ...(pointChanges.length === 0
-        ? []
-        : [{ target: 'mark.points', inputPath: ['mark'], sourcePath: '$spec/mark', changes: pointChanges }]),
+      ...(pointChanges.length === 0 ? [] : [{ target: 'mark.points', inputPath: ['mark'], changes: pointChanges }]),
     ],
   };
 };

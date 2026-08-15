@@ -2,7 +2,7 @@ import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
 
 import type { ChartThemeTokenSourceRecord, IRChartResolvedThemeTokens } from './types';
 
-/** Chart theme 解析后供 presentation、recipe 与 inspection 共享的上下文 */
+/** Chart theme 解析后供 presentation 与 recipe 共享的上下文 */
 export type ResolvedChartThemeContext = {
   /** effective Theme 选择的 style definition */
   style?: ThemeStyleValue;
