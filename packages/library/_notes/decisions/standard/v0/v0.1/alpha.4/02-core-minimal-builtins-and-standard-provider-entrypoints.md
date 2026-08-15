@@ -121,7 +121,7 @@ assembly 遵循以下确定性规则：
 - resolver 返回普通 `CompileOptions` 可消费的 definitions，不创建长期全局 registry、module identity、版本 catalog 或 runtime loader
 - 所有冲突必须在 compile dispatch 前报告 capability、冲突 key 与来源；缺少已被 IR 引用的 definition 仍由对应 Core registry / lookup fail-loud，并列出当前可用项
 
-Core 是 dependency / assembly contract、resolver 和冲突语义的 owner。Standard 子入口只提供静态 definitions 或静态 providers；Plot、Table、Notation 等 Tier 2 只声明所需 roots 和 provider catalog，不实现 merge、去重或 lookup。
+Core 是 dependency / assembly contract、resolver 和冲突语义的 owner。Standard 子入口只提供静态 definitions 或静态 providers；Plot、Table、Graph 等 Tier 2 只声明所需 roots 和 provider catalog，不实现 merge、去重或 lookup。
 
 ## 各入口与 Tier 2 闭环
 

@@ -1,9 +1,9 @@
 # ADR-01：Standard Logic Diagram Profile
 
-- 状态：Superseded（由 [Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 取代；2026-08-09）
+- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
-- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把本 ADR 的图式语义迁入 Diagram owner；本页保留为历史设计记录
+- 后继：[Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 ADR 的图式语义迁入 Diagram owner；本页保留为历史设计记录
 
 ## 背景与目标
 
@@ -25,7 +25,7 @@ Standard alpha.3 提供一组 JSON-safe Tier 2 composite。每个组件以自身
 
 ## 基础数据结构与公开契约
 
-所有公开逻辑组件都使用非空稳定 `id`。普通单元沿用 Core 已解析对象 target；`LogicFrame` 额外允许引用一个 authored section：
+所有公开逻辑组件都使用非空稳定 `id`。普通 GraphNode 沿用 Core 已解析对象 target；`GraphFrame` 额外允许引用一个 authored section：
 
 ```ts
 type LogicDiagramTarget =
@@ -35,7 +35,7 @@ type LogicDiagramTarget =
       offset?: Position;
     }
   | {
-      kind: 'logicFrame';
+      kind: 'graphFrame';
       id: string;
       section?: string;
       anchor?: AnchorRef;
@@ -53,7 +53,7 @@ type LogicDiagramPoint = Position | LogicDiagramTarget;
 
 除 `Terminal.role` 明确闭合为 `start | end` 外，角色与分类使用非空开放字符串。内置常量只提供常见拼写和 authoring 便利；未知值合法并保持原样，在组件提供 typed artifact 时也原样保留，但不触发隐藏 provider lookup、布局、样式或验证分支。
 
-需要公开布局区域的 `LogicFrame`、基础逻辑节点与 `Callout` 输出 typed artifact，并共享以下不变量：
+需要公开布局区域的 `GraphFrame`、基础 GraphNode 与 `Callout` 输出 typed artifact，并共享以下不变量：
 
 - artifact 带组件 kind、稳定 id、allocation / visual / visible bounds
 - 可寻址子区域保留 authored key / role 与 bounds

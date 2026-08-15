@@ -1,9 +1,9 @@
-# ADR-03：Terminal、Stage、Decision 与 Junction 语义 Node
+# ADR-03：GraphNode role 语义（历史验证）
 
-- 状态：Superseded（由 [Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 取代；2026-08-09）
+- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01；2026-08-08 简化为 Core Node sugar
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md)
-- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把四个 Core Node sugar 迁入 Notation；迁移不改变本 ADR 的 Node 等价语义
+- 后继：[Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把四个 Core Node sugar 统一迁入 `GraphNode.role`；迁移不改变其 Core Node 等价语义
 
 ## 背景与目标
 
@@ -38,9 +38,9 @@ canonical 输出统一为 `IRNode`，顶层 `type` 始终为 `'node'`。不再�
 - Standard factory 解析对应 Schema，返回 `IRNode`
 - React 组件把自身 props 与字符串或 `<Text>` children 交给 Core `Node` builder，再用对应 Schema 归一
 - Vanilla `terminal`、`stage`、`decision`、`junction` builder 直接返回 `IRNode`，使用调用方传入的原始 id；它们不需要 adapter 或 Definition
-- LogicFrame、Connector、Callout 仍按各自 ADR 保留 composite / adapter；它们可以把语义 Node 当作普通 Core child
+- GraphFrame、GraphConnector、Callout 仍按各自 ADR 保留 composite / adapter；它们可以把 GraphNode 当作普通 Core child
 
-三种 authoring 面的 Node 输出必须保持 JSON 等价，renderer 不增加逻辑专有分支。Node 的位置和布局由 Core 负责；LogicFrame 若需要分组布局，复用既有 FlexLayout lowering
+三种 authoring 面的 GraphNode 输出必须保持 JSON 等价，renderer 不增加逻辑专有分支。Node 的位置和布局由 Core 负责；GraphFrame 若需要分组布局，复用既有 FlexLayout lowering
 
 ## 失败语义与边界
 
@@ -54,7 +54,7 @@ canonical 输出统一为 `IRNode`，顶层 `type` 始终为 `'node'`。不再�
 - Standard React：React Node sugar 与 `<Text>` children 归一
 - Standard Vanilla：直接 Node builder
 - Core：Node schema、文本、shape、boundary、布局与 Scene
-- LogicFrame / Connector / Callout：各自 composite 能力，不由 semantic Node 复制
+- GraphFrame / GraphConnector / Callout：各自 composite 能力，不由 GraphNode 复制
 
 ## 验证策略
 
@@ -62,10 +62,10 @@ canonical 输出统一为 `IRNode`，顶层 `type` 始终为 `'node'`。不再�
 - Factory：输出 `type: 'node'`、无 namespace/appearance/content、JSON 可序列化
 - React：字符串 children、`<Text>` children、与 Core Node 等价、无 semantic Definition
 - Vanilla：builder 直接返回 Node、保留原始 id、无 semantic adapter
-- Integration：语义 Node 可作为 LogicFrame、Connector、Callout 的普通 Core child
+- Integration：GraphNode 可作为 GraphFrame、GraphConnector、Callout 的普通 Core child
 
 ## 不在本 ADR 范围
 
-- LogicFrame 的区域布局与 artifact
+- GraphFrame 的区域布局与 artifact
 - Connector / Callout 的 routing、placement、leader 与 artifact
 - Process、Class、Data 等领域 recipe 或 graph/workflow 模型

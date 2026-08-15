@@ -83,7 +83,7 @@ React JSX / props / children
   -> React host bridge
 ```
 
-Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字符串或独立 DSL，并在单一入口执行外部形态校验后产出 IR。它不是 `InputXxx` normalize 的替代或后门。`parseWay` 与 target 字符串 grammar 是被 Vanilla、Notation 等独立 owner 消费的 Core DSL，继续留在 Core；它们使用 parser-local grammar 类型，不再借用 `IR*Input` 表达框架 authoring。Vanilla 的路径 normalizer 是 typed `way`、target 等 authoring grammar 的唯一调度入口；React 等框架包只能调用它，不能直接调用 Core parser 或拼装其 parser 产物。路径 thickness 目前既被 typed authoring 消费，也被 Plot 领域 channel resolver 消费；Core 保留公开的 closed value vocabulary 与确定性宽度 mapping，Vanilla 的路径 normalizer 决定 typed Input 的显式 `strokeWidth` 优先与 mapping 调度，Plot 继续消费前者而不依赖 Vanilla。Core 不保留 `*SugarInput` 或 typed authoring parser，Core parser 不得重新引入 `InputXxx` 类型或让 Core compile 接受宽松 Input。
+Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字符串或独立 DSL，并在单一入口执行外部形态校验后产出 IR。它不是 `InputXxx` normalize 的替代或后门。`parseWay` 与 target 字符串 grammar 是被 Vanilla、Graph 等独立 owner 消费的 Core DSL，继续留在 Core；它们使用 parser-local grammar 类型，不再借用 `IR*Input` 表达框架 authoring。Vanilla 的路径 normalizer 是 typed `way`、target 等 authoring grammar 的唯一调度入口；React 等框架包只能调用它，不能直接调用 Core parser 或拼装其 parser 产物。路径 thickness 目前既被 typed authoring 消费，也被 Plot 领域 channel resolver 消费；Core 保留公开的 closed value vocabulary 与确定性宽度 mapping，Vanilla 的路径 normalizer 决定 typed Input 的显式 `strokeWidth` 优先与 mapping 调度，Plot 继续消费前者而不依赖 Vanilla。Core 不保留 `*SugarInput` 或 typed authoring parser，Core parser 不得重新引入 `InputXxx` 类型或让 Core compile 接受宽松 Input。
 
 ## 行为、失败语义与兼容性
 
@@ -127,6 +127,6 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 ## 不在本 ADR 范围
 
 - Core Source IR、Canonical、compile 默认值、theme 解析或 Scene / renderer 语义
-- Plot、Table、Notation 等领域包的完整 Input 与 framework processing 迁移；它们各自的 Vanilla / framework 包在对应领域 ADR 中采用本链路。为移除 Core `IR*Input` 而必须处理的无消费 Tier 2 输入别名只可删除或改回其 schema-derived IR 类型，不借本 ADR 新增 Plot authoring API
+- Plot、Table、Graph 等领域包的完整 Input 与 framework processing 迁移；它们各自的 Vanilla / framework 包在对应领域 ADR 中采用本链路。为移除 Core `IR*Input` 而必须处理的无消费 Tier 2 输入别名只可删除或改回其 schema-derived IR 类型，不借本 ADR 新增 Plot authoring API
 - 新框架包、Vue / Svelte API、可视化 DSL 或新的 Sugar 图元
 - 从 unknown 文档、JSON、字符串或独立 DSL 到 IR 的 Core parser 契约改写，除非某项实现被证明只服务已类型化 Vanilla Input

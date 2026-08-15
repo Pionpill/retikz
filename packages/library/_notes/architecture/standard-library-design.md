@@ -16,7 +16,7 @@ Standard 是 Retikz 在 Core 之上的官方绘图拓展包家族。它横向提
 
 进入 Standard 的能力必须同时满足：
 
-1. 移除 Plot、Table、Notation、Graph、Flow、Workspace 等领域词汇后仍成立
+1. 移除 Plot、Table、Graph、Flow、Workspace 等领域词汇后仍成立
 2. 解决的是绘图词汇或简单组合缺口，不建立独立的纵向运行模型
 3. 通过 Core 既有 definition / registry / composite / lowering 契约闭环
 4. 持久化输入保持 JSON-safe，React 与 Vanilla 表达同一宿主无关语义
@@ -54,7 +54,7 @@ Standard 三包使用独立 release group `standard` 并保持组内 lockstep。
 
 ## 领域包协作
 
-Plot、Table、Notation 等领域包先把 channel、scale、表格规则、图式角色、provenance 与交互意图解析为领域无关输入，再分别消费 Standard 与 Layout。Chart / Table 可以把 owner-local theme token 与任意 drawable child 解析为 Surface 输入；Standard 不反向读取领域 IR，不提供领域 adapter，也不成为其它 Library capability 的 re-export 汇总入口。
+Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式角色、provenance 与交互意图解析为领域无关输入，再分别消费 Standard 与 Layout。Chart / Table 可以把 owner-local theme token 与任意 drawable child 解析为 Surface 输入；Standard 不反向读取领域 IR，不提供领域 adapter，也不成为其它 Library capability 的 re-export 汇总入口。
 
 ## 发布与演进
 
@@ -66,6 +66,6 @@ Plot、Table、Notation 等领域包先把 channel、scale、表格规则、图�
 
 - 排版布局 schema、solver、artifact、inspection 与 adapter
 - Tree、Layered、Force、GraphModel、edge routing 与碰撞避让
-- Plot / Table 数据语义、Notation 图式语义、领域 provenance 与交互
+- Plot / Table 数据语义、Graph 图式语义、领域 provenance 与交互
 - Core IR、Scene、renderer、运行时资源或编辑器状态
 - 兼容 re-export、双 namespace、隐式全局注册或跨 package 私有导入
