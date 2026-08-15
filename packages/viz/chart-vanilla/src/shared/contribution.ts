@@ -4,6 +4,7 @@ import { ChartProvider, createChartProvider } from '@retikz/chart';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { resolvePlotContribution } from '@retikz/plot-vanilla';
 import { SurfaceProvider } from '@retikz/standard';
+import { PathClipProvider } from '@retikz/standard/clip';
 
 import type { NormalizedChart } from '../normalize/chart';
 import type { ChartAuthoringResult } from './types';
@@ -26,7 +27,7 @@ export const chartContributionOf = (
     input,
     contribution: {
       roots: [ChartProvider.key],
-      providers: [SurfaceProvider, FlexLayoutProvider, ...plot.contribution.providers, chartProvider],
+      providers: [SurfaceProvider, PathClipProvider, FlexLayoutProvider, ...plot.contribution.providers, chartProvider],
     },
     ...(theme === undefined ? {} : { theme }),
     ...(themeStyles === undefined ? {} : { themeStyles }),

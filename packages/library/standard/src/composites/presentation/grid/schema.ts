@@ -82,10 +82,10 @@ type GridNumericBounds = {
   maxY: number;
 };
 
-const getGridNumericBounds = (grid: GridRefinementInput): GridNumericBounds => {
-  if ('start' in grid.bounds) {
-    const [startX, startY] = grid.bounds.start;
-    const [endX, endY] = grid.bounds.end;
+const normalizeGridBounds = (bounds: GridRefinementInput['bounds']): GridNumericBounds => {
+  if ('start' in bounds) {
+    const [startX, startY] = bounds.start;
+    const [endX, endY] = bounds.end;
     return {
       minX: Math.min(startX, endX),
       minY: Math.min(startY, endY),
@@ -95,18 +95,18 @@ const getGridNumericBounds = (grid: GridRefinementInput): GridNumericBounds => {
   }
 
   return {
-    minX: -grid.bounds.width / 2,
-    minY: -grid.bounds.height / 2,
-    maxX: grid.bounds.width / 2,
-    maxY: grid.bounds.height / 2,
+    minX: -bounds.width / 2,
+    minY: -bounds.height / 2,
+    maxX: bounds.width / 2,
+    maxY: bounds.height / 2,
   };
 };
 
 const refineGrid = (grid: GridRefinementInput, ctx: z.RefinementCtx): void => {
-  const line = resolveGridLines(grid.line);
+  const line = normalizeGridLines(grid.line);
   if (line === false) return;
 
-  const bounds = getGridNumericBounds(grid);
+  const bounds = normalizeGridBounds(grid.bounds);
   const verticalError = getLatticeRangeError({
     min: bounds.minX,
     max: bounds.maxX,
@@ -138,7 +138,7 @@ const refineGrid = (grid: GridRefinementInput, ctx: z.RefinementCtx): void => {
   }
 };
 
-const resolveGridLines = (line: GridRefinementInput['line']): GridLinePair | false => {
+const normalizeGridLines = (line: GridRefinementInput['line']): GridLinePair | false => {
   if (line === false) return false;
   if (line === true) {
     const defaultLine: GridLineConfig = { spacing: DEFAULT_GRID_LINE_SPACING, includeBoundary: false };

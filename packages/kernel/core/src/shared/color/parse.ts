@@ -1,6 +1,6 @@
-import type { ParsedCssColor } from './text-color-types';
+import type { ParsedCssColor } from './types';
 
-import { CSS_NAMED_COLOR_HEX } from './text-color-constants';
+import { CSS_NAMED_COLOR_HEX } from './constants';
 
 const NUMBER_SOURCE = String.raw`[+-]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?`;
 const NUMBER_PATTERN = new RegExp(`^${NUMBER_SOURCE}$`);
@@ -134,7 +134,7 @@ const parseHexColor = (value: string): ParsedCssColor | null => {
   };
 };
 
-/** 解析 auto-contrast 支持的静态 CSS color 子集 */
+/** 解析 Core 颜色计算支持的静态 CSS color 子集 */
 export const parseStaticCssColor = (input: string): ParsedCssColor | null => {
   const value = trimAsciiWhitespace(input).toLowerCase();
   if (value.length === 0) return null;

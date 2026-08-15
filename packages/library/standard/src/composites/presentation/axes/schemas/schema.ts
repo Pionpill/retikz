@@ -13,7 +13,7 @@ import { STANDARD_NAMESPACE } from '../../../shared';
 import { getLatticeRangeError } from '../../shared/lattice';
 import { StandardPathStrokeStyleSchema } from '../../shared/schemas';
 import { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from '../constants';
-import { enumerateAxesTickValues, resolveAxesExtent, resolveAxesTickRange } from './utils';
+import { axesTickRangeOf, enumerateAxesTickValues, normalizeAxesExtent } from './utils';
 
 const AxesDirectionalExtentSchema = z.strictObject({
   negative: NonNegativeNumberSchema.describe('Drawing length in the negative axis direction.'),
@@ -156,11 +156,11 @@ const valuesEqual = (left: number, right: number): boolean =>
 const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCtx): void => {
   if (axis.ticks === undefined || axis.ticks === false) return;
 
-  const extent = resolveAxesExtent(axis.extent);
+  const extent = normalizeAxesExtent(axis.extent);
   const ticks = axis.ticks;
   const source = ticks.source;
   if (source.kind === AxesTickSourceKind.Spacing) {
-    const range = resolveAxesTickRange(extent, source.extent);
+    const range = axesTickRangeOf(extent, source.extent);
     const error = getLatticeRangeError({ ...range, spacing: source.spacing, origin: 0, includeBoundary: false });
     if (error !== undefined) {
       ctx.addIssue({
@@ -227,7 +227,7 @@ const axisHasOutput = (axis: AxesAxisInput): boolean =>
   axis.label !== false;
 
 const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCtx): void => {
-  const extent = resolveAxesExtent(axis.extent);
+  const extent = normalizeAxesExtent(axis.extent);
   if (extent.negative === 0 && extent.positive === 0) {
     ctx.addIssue({
       code: 'custom',

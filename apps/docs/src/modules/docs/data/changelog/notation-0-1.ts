@@ -44,8 +44,8 @@ export const notationV01: Release = {
           version: 'alpha.1',
           date: '2026-08-09',
           summary: {
-            zh: '建立 Notation 包族并迁移首批七个可复用图式元素。',
-            en: 'Establishes the Notation package family and moves its first seven reusable diagram elements.',
+            zh: '建立 Notation 包族并迁移首批六个可复用图式元素；逻辑节点使用 Notation-owned `LogicNodeVariant`，并由 LogicFrame 提供可继承的默认变体。',
+            en: 'Establishes the Notation package family and moves six reusable diagram elements; logic nodes use the Notation-owned `LogicNodeVariant` vocabulary with inheritable defaults from LogicFrame.',
           },
           items: [],
         },
@@ -89,6 +89,10 @@ export const notationV01: Release = {
         {
           version: 'alpha.1',
           date: '2026-08-09',
+          summary: {
+            zh: '建立 Notation React authoring，并提供一次性创建六个 adapter 的 factory，让逻辑节点 `variant` 与 LogicFrame 默认值沿同一 IR 路径传递。',
+            en: 'Establishes Notation React authoring and adds a factory that creates all six adapters so logic-node `variant` and LogicFrame defaults share the same IR path.',
+          },
           items: [],
         },
       ],
@@ -131,6 +135,10 @@ export const notationV01: Release = {
         {
           version: 'alpha.1',
           date: '2026-08-09',
+          summary: {
+            zh: '建立 Notation Vanilla authoring，并提供一次性创建六个 adapter 的 factory，保持逻辑节点 `variant` 与 React 路径的 lowering 等价。',
+            en: 'Establishes Notation Vanilla authoring and adds a factory that creates all six adapters while keeping logic-node `variant` lowering equivalent to React.',
+          },
           items: [],
         },
       ],

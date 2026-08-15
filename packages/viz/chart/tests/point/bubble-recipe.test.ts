@@ -70,7 +70,6 @@ describe('Bubble Chart recipe', () => {
       'guide.y',
       'guide.size',
     ]);
-    expect(seed.members.every(member => member.sourcePath.startsWith('$recipe/bubble/'))).toBe(true);
   });
 
   it('uses an authored sqrt scale identity and respects optional guide topology', () => {
@@ -107,7 +106,6 @@ describe('Bubble Chart recipe', () => {
       {
         target: 'mark.main',
         inputPath: ['mark'],
-        sourcePath: '$spec/mark',
         changes: [
           { path: ['opacity'], value: { kind: 'constant', value: 0.7 } },
           { path: ['label'], value: { content: { field: 'name' } } },

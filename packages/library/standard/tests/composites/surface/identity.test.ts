@@ -1,10 +1,11 @@
 import type { GroupPrim, IRChild, PathPrim, ScenePrimitive } from '@retikz/core';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { createSurface, SurfaceDefinition } from '../../../src';
+import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src';
+import { PathClipDefinition, PathClipProvider } from '../../../src/clip';
 
 const node: IRChild = {
   type: 'node',
@@ -26,6 +27,25 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =>
   );
 
 describe('Surface appearance, Scope, and spatial identity', () => {
+  it('resolves the path clip dependency through the Surface provider graph', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [SurfaceProvider.key], providers: [SurfaceProvider, PathClipProvider] }],
+    });
+    const surface = createSurface({
+      namespace: 'standard',
+      type: 'surface',
+      id: 'provider-surface',
+      child: { type: 'coordinate', id: 'origin', position: [0, 0] },
+      overflow: 'clip',
+      cornerRadius: 4,
+    });
+
+    expect(definitions.clips?.map(definition => definition.kind)).toEqual(['path']);
+    expect(() =>
+      compileToScene({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
+    ).not.toThrow();
+  });
+
   it('keeps background, isolated content, and border in fixed layers without changing allocation', () => {
     const surface = createSurface({
       namespace: 'standard',
@@ -39,7 +59,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], padding: 0 },
+      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'surface-root');
     const paths = pathsOf(root?.children ?? []);
@@ -72,7 +92,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], padding: 0 },
+      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'clipped-surface');
     const content = root?.children.find((child): child is GroupPrim => child.type === 'group');
@@ -109,7 +129,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], padding: 0 },
+      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'styled-surface');
     const border = pathsOf(root?.children ?? []).find(path => path.stroke !== undefined);
@@ -210,7 +230,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], padding: 0 },
+      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
     );
     const clip = (result.scene.resources ?? []).find(resource => resource.kind === 'clip');
 

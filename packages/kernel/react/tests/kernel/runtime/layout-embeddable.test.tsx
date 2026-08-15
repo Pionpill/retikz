@@ -168,7 +168,7 @@ describe('<Layout> Composite provider graph', () => {
           <Missing id="missing" data={null} />
         </Layout>,
       ),
-    ).toThrow(/missing dependency provider.*demo\.panel -> standard\.frame/i);
+    ).toThrow(/missing dependency provider.*composite:demo\.panel -> composite:standard\.frame/i);
     expect(makeDefinition).not.toHaveBeenCalled();
 
     const dependencyMaker = vi.fn(() => definitionOf(dependency));
@@ -185,7 +185,7 @@ describe('<Layout> Composite provider graph', () => {
           <Cyclic id="cycle" data={null} />
         </Layout>,
       ),
-    ).toThrow(/provider cycle.*demo\.panel -> standard\.frame -> demo\.panel/i);
+    ).toThrow(/provider cycle.*composite:demo\.panel -> composite:standard\.frame -> composite:demo\.panel/i);
     expect(makeDefinition).not.toHaveBeenCalled();
     expect(dependencyMaker).not.toHaveBeenCalled();
 

@@ -2,12 +2,12 @@
 
 - 状态：Superseded（由 [Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 取代；2026-08-09）
 - 决策日期：2026-08-01
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [ADR-03](./03-semantic-logic-units.md) · [Core Path contract](../../../../../../../kernel/_notes/decisions/v0/v0.5/roadmap.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [ADR-03](./03-semantic-logic-nodes.md) · [Core Path contract](../../../../../../../kernel/_notes/decisions/v0/v0.5/roadmap.md)
 - 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把 Connector 与 Callout 迁入 Notation，并保留 Core Path / target 主链
 
 ## 背景与目标
 
-独立逻辑单元和 Block 需要通过 flow、branch、dependency、feedback 等局部关系形成可读逻辑图。直接使用 Core Path 可以表达几何，但不会保存关系 role 与 Block section target。与此同时，Connector 不能演变为全局 Edge 集合、自动 routing pipeline 或 GraphModel。
+独立逻辑节点和 Block 需要通过 flow、branch、dependency、feedback 等局部关系形成可读逻辑图。直接使用 Core Path 可以表达几何，但不会保存关系 role 与 Block section target。与此同时，Connector 不能演变为全局 Edge 集合、自动 routing pipeline 或 GraphModel。
 
 逻辑图还需要对整体组件或某个 Block section 添加定位说明。Callout 应复用同一 target，并要求作者显式决定 placement，不能引入全局碰撞求解。
 
@@ -95,7 +95,7 @@ type CalloutInput = {
     offset?: number;
   };
   leader?: false | ConnectorAppearanceInput;
-  appearance?: LogicUnitAppearanceInput;
+  appearance?: LogicNodeAppearanceInput;
 };
 ```
 
