@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { BoundaryGeometryResolveContext } from '../../src/compile/node';
+import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
+import type { ProviderCollection } from '../../src/providers/registry';
 import type { Rect } from '../../src/shared/geometry/rect';
 
 import { resolveBoundary as resolveBoundaryGeometry } from '../../src/compile/node';
-import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
-import type { ProviderCollection } from '../../src/providers/registry';
-import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
 import { defineBoundary } from '../../src/contract';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { ellipseShape, rectangle } from '../../src/providers/shape';
+import { boundaryKey, resolveBoundaryReference } from '../../src/resolve/node';
 
 const visualRect: Rect = { x: 0, y: 0, width: 40, height: 20, rotate: 0 };
 const registry = [rectangle, ellipseShape];

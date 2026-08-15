@@ -3,8 +3,8 @@ import { z } from 'zod';
 
 import type { ClipResource, GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
-import { compileToScene } from '../../src/compile/compile';
 import { defineClip } from '../../src';
+import { compileToScene } from '../../src/compile/compile';
 
 const polygonClip = defineClip({
   kind: 'polygon',

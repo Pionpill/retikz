@@ -30,6 +30,18 @@ const isPatternEmitResult = (value: unknown): value is PatternEmitResult =>
   Object.prototype.hasOwnProperty.call(value, 'tileSize') &&
   Object.prototype.hasOwnProperty.call(value, 'motif');
 
+/** 生成与对象属性插入顺序无关的 paint resource key */
+const paintKeyOf = (value: unknown): string => {
+  if (Array.isArray(value)) return `[${value.map(paintKeyOf).join(',')}]`;
+  if (value !== null && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map(key => `${JSON.stringify(key)}:${paintKeyOf(Reflect.get(value, key))}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value);
+};
+
 /** compile 仅消费 resolve 阶段已绑定的 pattern 并调用 provider emit */
 const resolvePatternTile = (resolution: PatternResolution, round: (n: number) => number): ResolvedPatternTile => {
   const { spec, definition, size, style } = resolution;
@@ -92,7 +104,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     if (paint === undefined) return undefined;
     if (typeof paint === 'string') return paint;
     const resolution: PaintResolution = paint;
-    const key = JSON.stringify(resolution.spec);
+    const key = paintKeyOf(resolution.spec);
     const id = insert(key, nextId => {
       const resource: Extract<SceneResource, { kind: 'paint' }> = {
         kind: 'paint',
@@ -105,7 +117,7 @@ export const createPaintRegistry = (round: (n: number) => number): PaintRegistry
     return { kind: 'resourceRef', id };
   };
   const importResolved = (resource: Extract<SceneResource, { kind: 'paint' }>): PaintValue => {
-    const key = JSON.stringify(resource.spec);
+    const key = paintKeyOf(resource.spec);
     const id = insert(key, nextId => ({ ...resource, id: nextId }));
     return { kind: 'resourceRef', id };
   };

@@ -1,8 +1,11 @@
-﻿import { describe, expect, it } from 'vitest';
+import type { IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive } from '@retikz/core';
 
-import type { IRPathBase, IRPathRibbonOptions, IRScene, IRStep, PathPrim, ScenePrimitive } from '../../src';
+import { compileToScene as compileCoreToScene } from '@retikz/core';
+import { describe, expect, it } from 'vitest';
 
-import { compileToScene, defineRibbonWidthProfile, PathSchema } from '../../src';
+import type { IRRibbonPathOptions } from '../../src/ribbon';
+
+import { createRibbonPathKindDefinition, defineRibbonWidthProfile, RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -26,11 +29,12 @@ const ribbonCenterAt = (prim: PathPrim, sampleCount: number, sampleIndex: number
   return [(left[0] + right[0]) / 2, (left[1] + right[1]) / 2];
 };
 
-type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'ribbon' | 'type'>> &
-  IRPathRibbonOptions & {
-    kind?: IRPathRibbonOptions['mode'];
+type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'kindOptions' | 'type'>> &
+  IRRibbonPathOptions & {
+    kind?: IRRibbonPathOptions['mode'];
     type?: 'path' | 'ribbon';
-    ribbon?: IRPathRibbonOptions;
+    kindOptions?: IRRibbonPathOptions;
+    ribbon?: IRRibbonPathOptions;
   };
 
 const defaultRibbonChildren: Array<IRStep> = [
@@ -43,6 +47,7 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
   const {
     type: inputType,
     kind,
+    kindOptions: nestedKindOptions,
     ribbon: nestedRibbon,
     width,
     start,
@@ -57,7 +62,7 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
     ...pathProps
   } = raw;
   void inputType;
-  const options: IRPathRibbonOptions = { ...(nestedRibbon ?? {}) };
+  const options: IRRibbonPathOptions = { ...(nestedKindOptions ?? nestedRibbon ?? {}) };
   const mode = kind === 'boundary' || kind === 'centerline' ? kind : options.mode;
   if (mode !== undefined) options.mode = mode;
   if (width !== undefined) options.width = width;
@@ -74,24 +79,13 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
     type: 'path',
     kind: 'ribbon',
     ...pathProps,
-    ribbon: options,
+    kindOptions: options,
   };
-  if (options.mode !== 'boundary') {
-    path.children = children ?? defaultRibbonChildren;
-  }
+  if (options.mode !== 'boundary') path.children = children ?? defaultRibbonChildren;
   return path;
 };
 
-const RibbonSchema = {
-  parse: (value: unknown): IRPathBase =>
-    PathSchema.parse(
-      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
-    ),
-  safeParse: (value: unknown) =>
-    PathSchema.safeParse(
-      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
-    ),
-};
+const RibbonSchema = RibbonPathSchema;
 
 const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
   normalizeRibbonInput({
@@ -103,8 +97,20 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
 
 const ribbonWithoutSamples = (overrides: RibbonInput = {}): IRPathBase => {
   const next = ribbon(overrides);
-  if (next.ribbon !== undefined) delete next.ribbon.samples;
+  if (next.kindOptions !== undefined && typeof next.kindOptions === 'object') {
+    const options = next.kindOptions as IRRibbonPathOptions;
+    delete options.samples;
+  }
   return next;
+};
+
+const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
+  const supplied = options.pathKinds ?? [];
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+  return compileCoreToScene(input, {
+    ...options,
+    pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
+  });
 };
 
 describe('compile ribbon', () => {
@@ -114,29 +120,34 @@ describe('compile ribbon', () => {
     expect(() => RibbonSchema.parse(ribbon({ width: undefined, start: { width: -1 }, end: { width: 2 } }))).toThrow();
     expect(() => RibbonSchema.parse(ribbon({ start: { direction: [0, 0] } }))).toThrow();
     expect(
-      RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } })).ribbon?.start?.direction,
+      (() => {
+        const parsed = RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } }));
+        const start = parsed.kindOptions.start;
+        expect(start).toBeDefined();
+        if (start === undefined) throw new Error('Expected ribbon start options.');
+        const direction = start.direction;
+        expect(direction).toBeDefined();
+        if (direction === undefined) throw new Error('Expected ribbon start direction.');
+        return direction;
+      })(),
     ).toEqual({
       angle: 90,
       radius: 1,
     });
     expect(
-      RibbonSchema.parse({
-        ...ribbon(),
-        start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
-        end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
-      }),
+      RibbonSchema.parse(
+        ribbon({
+          start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
+          end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+        }),
+      ),
     ).toMatchObject({
-      ribbon: {
+      kindOptions: {
         start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
         end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
       },
     });
-    expect(() =>
-      RibbonSchema.parse({
-        ...ribbon(),
-        start: { cap: { type: 'arc', center: [0, 0], radius: 0 } },
-      }),
-    ).toThrow();
+    expect(() => RibbonSchema.parse(ribbon({ start: { cap: { type: 'arc', center: [0, 0], radius: 0 } } }))).toThrow();
   });
 
   it('fixed-width ribbon lowers a straight centerline to one filled closed path', () => {
@@ -444,11 +455,12 @@ describe('compile ribbon', () => {
   });
 
   it('supports custom arc caps with explicit center and radius', () => {
-    const parsed = RibbonSchema.parse({
-      ...ribbon(),
-      start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
-      end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
-    });
+    const parsed = RibbonSchema.parse(
+      ribbon({
+        start: { cap: { type: 'arc', center: [0, 0], radius: 2, sweep: 'long' } },
+        end: { cap: { type: 'arc', center: [10, 0], radius: 2 } },
+      }),
+    );
     const prim = pathPrim(compileToScene(scene([parsed]), { padding: 0 }).scene.primitives[0]);
 
     expect(prim.commands).toEqual([
@@ -476,10 +488,7 @@ describe('compile ribbon', () => {
   });
 
   it('throws when a custom arc cap radius does not reach both ribbon sides', () => {
-    const parsed = RibbonSchema.parse({
-      ...ribbon(),
-      start: { cap: { type: 'arc', center: [0, 0], radius: 3 } },
-    });
+    const parsed = RibbonSchema.parse(ribbon({ start: { cap: { type: 'arc', center: [0, 0], radius: 3 } } }));
 
     expect(() => compileToScene(scene([parsed]), { padding: 0 }).scene).toThrow(/arc cap/);
   });
@@ -498,7 +507,7 @@ describe('compile ribbon', () => {
   });
 
   it('normalizes angle, vector, and polar endpoint directions through the same path', () => {
-    type RibbonDirection = NonNullable<IRPathRibbonOptions['start']>['direction'];
+    type RibbonDirection = NonNullable<IRRibbonPathOptions['start']>['direction'];
     const commandsFor = (startDirection: RibbonDirection, endDirection: RibbonDirection) =>
       pathPrim(
         compileToScene(
@@ -620,7 +629,7 @@ describe('compile ribbon', () => {
           samples: 2,
         }),
       ]),
-      { ribbonWidthProfiles: [taper], padding: 0 },
+      { pathKinds: [createRibbonPathKindDefinition({ profiles: [taper] })], padding: 0 },
     ).scene;
     const prim = pathPrim(compiled.primitives[0]);
 
@@ -643,7 +652,7 @@ describe('compile ribbon', () => {
     expect(
       () =>
         compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-          ribbonWidthProfiles: [bad],
+          pathKinds: [createRibbonPathKindDefinition({ profiles: [bad] })],
         }).scene,
     ).toThrow(/profile "bad"/);
   });
@@ -663,7 +672,12 @@ describe('compile ribbon', () => {
       fill: '#bfdbfe',
     });
     expect(RibbonSchema.parse(boundary)).toEqual(boundary);
-    expect(() => RibbonSchema.parse({ ...boundary, width: 4 })).toThrow(/Boundary/);
+    expect(() =>
+      RibbonSchema.parse({
+        ...boundary,
+        kindOptions: { ...(boundary.kindOptions as IRRibbonPathOptions), width: 4 },
+      }),
+    ).toThrow(/Boundary/);
 
     const prim = pathPrim(compileToScene(scene([boundary]), { padding: 0 }).scene.primitives[0]);
 

@@ -1,6 +1,5 @@
+import type { IRJsonObject } from '@retikz/core';
 import type { ZodType } from 'zod';
-
-import type { IRJsonObject } from '../../schemas';
 
 /** ribbon width profile 采样上下文 */
 export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObject> = {

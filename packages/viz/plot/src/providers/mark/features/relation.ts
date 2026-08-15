@@ -4,12 +4,12 @@ import type {
   IRNodeLabel,
   IRNodeTarget,
   IRPath,
-  IRPathRibbonOptions,
   IRStep,
   IRStepLabel,
   IRTarget,
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { IRRibbonPathOptions } from '@retikz/standard/ribbon';
 
 import { FoldStepVia } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
@@ -488,7 +488,7 @@ export const lowerRelation = (
       const width = resolveMarkValue<number>(mark.ribbon?.width, row);
       if (width === undefined) continue;
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
-      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRPathRibbonOptions>;
+      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRRibbonPathOptions>;
       const direction = horizontalRibbonEndpointDirection(source.target, target.target);
       const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
       const ribbon: IRPath = applyPathChannelDeliveries(
@@ -497,7 +497,7 @@ export const lowerRelation = (
           kind: 'ribbon',
           ...style,
           ...(label !== undefined ? { label } : {}),
-          ribbon: {
+          kindOptions: {
             ...ribbonOptions,
             ...(endWidth === undefined
               ? {

@@ -231,7 +231,7 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
 };
 
 /** 从路径种类 schema 读取提供者键 */
-const pathKindName = (definition: AnyPathKindDefinition): string => definition.schema.shape.kind.value;
+const pathKindName = (definition: AnyPathKindDefinition): string => definition.name;
 
 type DefinitionIdentity =
   | Readonly<{ capability: NamedProviderCapability; name: string }>

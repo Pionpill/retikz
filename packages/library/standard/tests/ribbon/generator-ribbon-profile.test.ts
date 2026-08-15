@@ -1,22 +1,26 @@
+import type { IRScene, PathPrim, ScenePrimitive } from '@retikz/core';
+
+import { BUILTIN_PATH_GENERATORS, compileToScene as compileCoreToScene, definePathGenerator } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
-
 import {
-  BUILTIN_PATH_GENERATORS,
   BUILTIN_RIBBON_WIDTH_PROFILES,
-  compileToScene,
-  definePathGenerator,
+  createRibbonPathKindDefinition,
   defineRibbonWidthProfile,
-} from '../../src';
-import { flattenPrims } from '../helpers/flatten';
+  RibbonPathKindDefinition,
+} from '../../src/ribbon';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
   type: 'scene',
   children,
 });
+
+const flattenPrims = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
+  primitives.flatMap(primitive =>
+    primitive.type === 'group' ? [primitive, ...flattenPrims(primitive.children)] : [primitive],
+  );
 
 const firstPathPrim = (primitives: Array<ScenePrimitive>): PathPrim => {
   const prim = flattenPrims(primitives).find((item): item is PathPrim => item.type === 'path');
@@ -29,7 +33,16 @@ const commandPoint = (command: PathPrim['commands'][number]): [number, number] =
   return command.to;
 };
 
-describe('builtin path generator and ribbon width profile', () => {
+const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
+  const supplied = options.pathKinds ?? [];
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+  return compileCoreToScene(input, {
+    ...options,
+    pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
+  });
+};
+
+describe('builtin path generator and Standard Ribbon width profile', () => {
   it('Core has no builtin path generators', () => {
     expect(BUILTIN_PATH_GENERATORS).toEqual([]);
   });
@@ -37,12 +50,12 @@ describe('builtin path generator and ribbon width profile', () => {
   it('builtin_bulge_without_options_and_peak_midpoint', () => {
     expect(BUILTIN_RIBBON_WIDTH_PROFILES.map(definition => definition.name)).toContain('bulge');
 
-    const compiled = compileToScene(
+    const compiled = compileToRibbonScene(
       scene([
         {
           type: 'path',
           kind: 'ribbon',
-          ribbon: {
+          kindOptions: {
             width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: 12 } },
             sampling: { kind: 'fixed', samples: 3 },
           },
@@ -70,12 +83,12 @@ describe('builtin path generator and ribbon width profile', () => {
   it('bulge_peak_equals_base_and_peak_less_than_base', () => {
     const commandsFor = (base: number, peak: number): Array<PathPrim['commands'][number]> =>
       firstPathPrim(
-        compileToScene(
+        compileToRibbonScene(
           scene([
             {
               type: 'path',
               kind: 'ribbon',
-              ribbon: {
+              kindOptions: {
                 width: { kind: 'profile', name: 'bulge', params: { base, peak } },
                 sampling: { kind: 'fixed', samples: 3 },
               },
@@ -93,18 +106,15 @@ describe('builtin path generator and ribbon width profile', () => {
     expect(commandsFor(12, 4)[1]).toEqual({ kind: 'line', to: [5, 2] });
   });
 
-
   it('bulge_rejects_negative_base_or_peak', () => {
     expect(
       () =>
-        compileToScene(
+        compileToRibbonScene(
           scene([
             {
               type: 'path',
               kind: 'ribbon',
-              ribbon: {
-                width: { kind: 'profile', name: 'bulge', params: { base: -1, peak: 12 } },
-              },
+              kindOptions: { width: { kind: 'profile', name: 'bulge', params: { base: -1, peak: 12 } } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [10, 0] },
@@ -116,14 +126,12 @@ describe('builtin path generator and ribbon width profile', () => {
 
     expect(
       () =>
-        compileToScene(
+        compileToRibbonScene(
           scene([
             {
               type: 'path',
               kind: 'ribbon',
-              ribbon: {
-                width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: -1 } },
-              },
+              kindOptions: { width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: -1 } } },
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [10, 0] },
@@ -135,12 +143,12 @@ describe('builtin path generator and ribbon width profile', () => {
   });
 
   it('bulge_with_adaptive_sampling_and_align', () => {
-    const compiled = compileToScene(
+    const compiled = compileToRibbonScene(
       scene([
         {
           type: 'path',
           kind: 'ribbon',
-          ribbon: {
+          kindOptions: {
             width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: 12 } },
             sampling: { kind: 'adaptive', tolerance: 5, maxSamples: 8 },
             align: 'left',
@@ -168,31 +176,42 @@ describe('builtin path generator and ribbon width profile', () => {
       paramsSchema: z.object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
-    const bulge = defineRibbonWidthProfile({
+    const duplicateBulge = defineRibbonWidthProfile({
       name: 'bulge',
       widthAt: () => 4,
     });
 
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'generator', name: 'customLine', params: {} },
-            ],
-          },
-        ]),
-        { pathGenerators: [generator] },
-      ).scene,
+    expect(
+      () =>
+        compileToRibbonScene(
+          scene([
+            {
+              type: 'path',
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'generator', name: 'customLine', params: {} },
+              ],
+            },
+          ]),
+          { pathGenerators: [generator] },
+        ).scene,
     ).not.toThrow();
     expect(
       () =>
-        compileToScene(scene([{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }]), {
-          ribbonWidthProfiles: [bulge],
-        }).scene,
-    ).toThrow(/duplicate ribbon width profile registration: "bulge"/);
+        compileToRibbonScene(
+          scene([
+            {
+              type: 'path',
+              kind: 'ribbon',
+              kindOptions: { width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: 8 } } },
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [10, 0] },
+              ],
+            },
+          ]),
+          { pathKinds: [createRibbonPathKindDefinition({ profiles: [duplicateBulge] })] },
+        ).scene,
+    ).toThrow(/defined more than once/);
   });
-
 });

@@ -1,7 +1,6 @@
-import type { CanonicalRibbonSampling, RibbonWidthResolution } from '../../../resolve/path';
+import type { RibbonWidthResolution } from '../resolve';
+import type { CanonicalRibbonSampling } from '../types';
 import type { RibbonLike } from './types';
-
-import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
@@ -65,9 +64,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   }
   return offset => {
     const rawWidth = profile.widthAt({ offset, length: totalLength, params });
-    return withProviderOutputValidationBoundary(`Ribbon width profile "${width.name}"`, () =>
-      assertFiniteWidth(rawWidth, `profile "${width.name}" at offset ${offset}`),
-    );
+    return assertFiniteWidth(rawWidth, `profile "${width.name}" at offset ${offset}`);
   };
 };
 

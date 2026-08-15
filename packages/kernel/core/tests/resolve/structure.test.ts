@@ -25,18 +25,14 @@ describe('resolve source structure', () => {
 
   it('keeps builtin path emitters resolution-only', () => {
     const stroke = source('src/compile/path/stroke/emit.ts');
-    const ribbon = source('src/compile/path/ribbon/emit.ts');
-    for (const text of [stroke, ribbon]) {
-      expect(text).not.toContain('normalizePath(');
-      expect(text).not.toContain('resolvePathValue');
-      expect(text).not.toContain('resolvePath(');
-      expect(text).not.toMatch(/import\s+\{[^}]*\bresolvePath\b[^}]*\}\s+from/u);
-      expect(text).not.toContain('IRPathBase');
-      expect(text).not.toContain('resolution?:');
-      expect(text).not.toContain('emitResolvedPathPrimitive');
-    }
+    expect(stroke).not.toContain('normalizePath(');
+    expect(stroke).not.toContain('resolvePathValue');
+    expect(stroke).not.toContain('resolvePath(');
+    expect(stroke).not.toMatch(/import\s+\{[^}]*\bresolvePath\b[^}]*\}\s+from/u);
+    expect(stroke).not.toContain('IRPathBase');
+    expect(stroke).not.toContain('resolution?:');
+    expect(stroke).not.toContain('emitResolvedPathPrimitive');
     expect(stroke).toMatch(/export const emitPathPrimitive = \(\s*resolution:\s*StrokePathResolution/u);
-    expect(ribbon).toMatch(/export const emitRibbonPrimitive = \(\s*resolution:\s*RibbonPathResolution/u);
   });
 
   it('keeps node layout free of provider lookup orchestration', () => {

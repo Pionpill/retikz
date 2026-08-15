@@ -1,7 +1,7 @@
+import type { IRPosition, PathCommand } from '@retikz/core';
+
 import { isFinitePoint } from '@retikz/math';
 
-import type { PathCommand } from '../../../../contract';
-import type { IRPosition } from '../../../../schemas';
 import type { RibbonSegment } from '../types';
 
 import { sampleAtDistance } from '../centerline';

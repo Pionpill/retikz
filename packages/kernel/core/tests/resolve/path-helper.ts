@@ -1,9 +1,4 @@
-import type {
-  PathResolution,
-  PathResolveContext,
-  RibbonPathResolution,
-  StrokePathResolution,
-} from '../../src/resolve/path';
+import type { PathResolution, PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
 import type { IRPathBase } from '../../src/schemas';
 
 import {
@@ -11,23 +6,16 @@ import {
   resolvePathGeneratorRegistry,
   resolvePathKindRegistry,
   resolvePatternRegistry,
-  resolveRibbonWidthProfileRegistry,
 } from '../../src';
-import { resolvePath, resolveRibbonPathProviders, resolveStrokePathProviders } from '../../src/resolve/path';
+import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
 
-type BuiltinProviderContext = Omit<
-  Partial<PathResolveContext>,
-  'pathKinds' | 'pathGenerators' | 'arrows' | 'ribbonWidthProfiles'
-> &
-  Partial<
-    Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'ribbonWidthProfiles' | 'patterns' | 'round'>
-  >;
+type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathKinds' | 'pathGenerators' | 'arrows'> &
+  Partial<Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'patterns' | 'round'>>;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
   pathKinds: resolvePathKindRegistry(),
   pathGenerators: resolvePathGeneratorRegistry(),
   arrows: resolveArrowRegistry(),
-  ribbonWidthProfiles: resolveRibbonWidthProfileRegistry(),
   patterns: resolvePatternRegistry(),
   round: value => value,
   ...context,
@@ -46,13 +34,4 @@ export const resolveStrokePathWithBuiltinProviders = (
 ): StrokePathResolution => {
   const providerContext = contextWithBuiltinProviders(context);
   return resolveStrokePathProviders(resolvePath(path, providerContext), providerContext);
-};
-
-/** resolve/path 测试统一绑定 ribbon emitter 所需的 provider */
-export const resolveRibbonPathWithBuiltinProviders = (
-  path: IRPathBase,
-  context: BuiltinProviderContext = {},
-): RibbonPathResolution => {
-  const providerContext = contextWithBuiltinProviders(context);
-  return resolveRibbonPathProviders(resolvePath(path, providerContext), providerContext);
 };

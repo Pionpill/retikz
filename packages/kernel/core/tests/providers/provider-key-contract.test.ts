@@ -12,6 +12,7 @@ import {
   definePathGenerator,
   definePathKind,
   defineShape,
+  PathSchema,
 } from '../../src';
 
 describe('provider key contract', () => {
@@ -97,19 +98,20 @@ describe('provider key contract', () => {
     },
   );
 
-  it('path_kind_definitions_are_keyed_by_schema_literal_kind', () => {
-    const pathKindNames = BUILTIN_PATH_KINDS.map(def => def.schema.shape.kind.value).sort();
+  it('path_kind_definitions_are_keyed_by_definition_name', () => {
+    const pathKindNames = BUILTIN_PATH_KINDS.map(def => def.name).sort();
 
-    expect(pathKindNames).toEqual(['ribbon', 'stroke']);
+    expect(pathKindNames).toEqual(['stroke']);
   });
 
-  it.each(['', ' ', '\u2003', '\ufeff'])('path kind rejects a blank schema literal (%j)', kind => {
+  it.each(['', ' ', '\u2003', '\ufeff'])('path kind rejects a blank name (%j)', name => {
     expect(() =>
       definePathKind({
-        schema: z.object({ kind: z.literal(kind) }),
+        name,
+        schema: PathSchema.extend({ kind: z.literal('custom') }),
         compile: () => null,
       }),
-    ).toThrowError('definePathKind: schema.shape.kind must be a non-empty z.literal string.');
+    ).toThrowError('definePathKind: name must be a non-empty string.');
   });
 
   it('composite_definition_declares_namespace_and_type_as_provider_key', () => {

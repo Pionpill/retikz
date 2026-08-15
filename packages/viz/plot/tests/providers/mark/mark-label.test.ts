@@ -181,6 +181,7 @@ describe('contract mark host label lowering', () => {
 
     const [ribbon] = collectPaths(markLayer(root, 0));
     expect(ribbon.kind).toBe('ribbon');
+    expect(ribbon.kindOptions).toMatchObject({ width: 12 });
     expect(ribbon.label).toEqual({ text: 'flow', position: 'midway', placement: 'inside', sloped: true });
   });
 });

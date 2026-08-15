@@ -3,13 +3,7 @@ import { z } from 'zod';
 
 import type { CompileWarning, IRScene, PathPrim, ScenePrimitive } from '../../src';
 
-import {
-  compileToScene,
-  CompileWarningCode,
-  definePathGenerator,
-  definePathKind,
-  defineRibbonWidthProfile,
-} from '../../src';
+import { compileToScene, CompileWarningCode, definePathGenerator, definePathKind, PathSchema } from '../../src';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -36,56 +30,14 @@ const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]):
     (primitive): primitive is PathPrim => primitive.type === 'path',
   );
 
+const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.extend({ kind: z.literal(kind) });
+
 describe('Path kind registry', () => {
   it('compiles omitted kind as the built-in stroke path kind', () => {
     const [prim] = pathPrims(scene([{ type: 'path', stroke: 'crimson', children: steps }]));
 
     expect(prim.stroke).toBe('crimson');
     expect(prim.fill).toBe('none');
-  });
-
-  it('compiles kind=ribbon through Path with ribbon options', () => {
-    const [prim] = pathPrims(
-      scene([
-        {
-          type: 'path',
-          kind: 'ribbon',
-          color: 'teal',
-          ribbon: { width: 10, samples: 2 },
-          children: steps,
-        },
-      ]),
-    );
-
-    expect(prim.fill).toBe('teal');
-    expect(prim.stroke).toBeUndefined();
-    expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
-  });
-
-  it('supports boundary ribbon as Path kind=ribbon with ribbon.mode=boundary', () => {
-    const [prim] = pathPrims(
-      scene([
-        {
-          type: 'path',
-          kind: 'ribbon',
-          fill: '#bfdbfe',
-          ribbon: {
-            mode: 'boundary',
-            upper: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [10, 0] },
-            ],
-            lower: [
-              { type: 'step', kind: 'move', to: [0, 4] },
-              { type: 'step', kind: 'line', to: [10, 4] },
-            ],
-          },
-        },
-      ] as IRScene['children']),
-    );
-
-    expect(prim.fill).toBe('#bfdbfe');
-    expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
   });
 
   it('throws for unknown path kinds until a provider is registered', () => {
@@ -99,15 +51,18 @@ describe('Path kind registry', () => {
 
   it('lets custom path kinds reuse the built-in stroke emitter', () => {
     const highlight = definePathKind({
-      schema: z.object({ kind: z.literal('highlight') }),
-      optionsSchema: z.object({ stroke: z.string().min(1) }).strict(),
+      name: 'highlight',
+      schema: PathSchema.extend({
+        kind: z.literal('highlight'),
+        kindOptions: z.strictObject({ stroke: z.string().min(1) }),
+      }),
       compile: context => {
         const base = context.emitStroke(context.path);
         if (base === null) return null;
         return {
           ...base,
           primitives: base.primitives.map(primitive =>
-            primitive.type === 'path' ? { ...primitive, stroke: context.options.stroke } : primitive,
+            primitive.type === 'path' ? { ...primitive, stroke: context.path.kindOptions.stroke } : primitive,
           ),
         };
       },
@@ -131,7 +86,8 @@ describe('Path kind registry', () => {
   it('keeps Source shorthand visible to custom providers before emitStroke canonicalizes it', () => {
     let observedPosition: unknown;
     const sourceStroke = definePathKind({
-      schema: z.object({ kind: z.literal('source-stroke') }),
+      name: 'source-stroke',
+      schema: customPathSchema('source-stroke'),
       compile: context => {
         const line = context.path.children?.[1];
         observedPosition = line && 'label' in line ? line.label?.position : undefined;
@@ -154,72 +110,15 @@ describe('Path kind registry', () => {
     expect(label).toMatchObject({ type: 'text', x: 100 });
   });
 
-  it('keeps Ribbon shorthand visible to custom providers before emitRibbon canonicalizes it', () => {
-    let observedSamples: unknown;
-    const sourceRibbon = definePathKind({
-      schema: z.object({ kind: z.literal('source-ribbon') }),
-      compile: context => {
-        observedSamples = context.path.ribbon?.samples;
-        return context.emitRibbon();
-      },
-    });
-    const [prim] = pathPrims(
-      scene([
-        {
-          type: 'path',
-          kind: 'source-ribbon',
-          ribbon: { width: 10, samples: true },
-          children: steps,
-        },
-      ] as IRScene['children']),
-      { pathKinds: [sourceRibbon] },
-    );
-
-    expect(prim.fill).toBe('currentColor');
-    expect(observedSamples).toBe(true);
-    expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
-  });
-
-  it('keeps generator bindings when a custom kind emits a ribbon centerline', () => {
-    let calls = 0;
-    const generator = definePathGenerator({
-      name: 'custom-ribbon-line',
-      paramsSchema: z.strictObject({}),
-      generate: ({ from }) => {
-        calls += 1;
-        return [{ kind: 'line', to: [from[0] + 20, from[1]] }];
-      },
-    });
-    const sourceRibbon = definePathKind({
-      schema: z.object({ kind: z.literal('custom-ribbon') }),
-      compile: context => context.emitRibbon(),
-    });
-    const [prim] = pathPrims(
-      scene([
-        {
-          type: 'path',
-          kind: 'custom-ribbon',
-          ribbon: { width: 10, samples: 2 },
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'custom-ribbon-line', params: {} },
-          ],
-        },
-      ] as IRScene['children']),
-      { pathKinds: [sourceRibbon], pathGenerators: [generator] },
-    );
-
-    expect(calls).toBe(1);
-    expect(prim.commands.at(-1)).toEqual({ kind: 'close' });
-  });
-
   it('does not resolve unused secondary providers for custom output', () => {
     const silent = definePathKind({
-      schema: z.object({ kind: z.literal('silent') }),
+      name: 'silent',
+      schema: customPathSchema('silent'),
       compile: () => null,
     });
     const direct = definePathKind({
-      schema: z.object({ kind: z.literal('direct') }),
+      name: 'direct',
+      schema: customPathSchema('direct'),
       compile: () => ({ primitives: [], boundsPoints: [] }),
     });
     const children = [
@@ -230,7 +129,6 @@ describe('Path kind registry', () => {
       type: 'path' as const,
       children,
       marks: [{ pos: 0.5, mark: { kind: 'arrow' as const, shape: 'missing-arrow' } }],
-      ribbon: { width: { kind: 'profile' as const, name: 'missing-profile' } },
     };
 
     expect(() =>
@@ -252,7 +150,8 @@ describe('Path kind registry', () => {
       },
     });
     const strokeOnly = definePathKind({
-      schema: z.object({ kind: z.literal('stroke-only') }),
+      name: 'stroke-only',
+      schema: customPathSchema('stroke-only'),
       compile: context => context.emitStroke(),
     });
 
@@ -262,7 +161,6 @@ describe('Path kind registry', () => {
           {
             type: 'path',
             kind: 'stroke-only',
-            ribbon: { width: { kind: 'profile', name: 'missing-profile' } },
             children: [steps[0], { type: 'step', kind: 'generator', name: 'stroke-only-generator', params: {} }],
           },
         ] as IRScene['children']),
@@ -274,16 +172,24 @@ describe('Path kind registry', () => {
 
   it('keeps custom short emitStroke ahead of secondary provider lookup', () => {
     const shortStroke = definePathKind({
-      schema: z.object({ kind: z.literal('short-stroke') }),
-      compile: context => context.emitStroke(),
+      name: 'short-stroke',
+      schema: customPathSchema('short-stroke'),
+      compile: context =>
+        context.emitStroke({
+          ...context.path,
+          kind: 'stroke',
+          children: context.path.children?.slice(0, 1),
+        }),
     });
     const warnings: Array<CompileWarning> = [];
     const source = {
       type: 'path' as const,
       kind: 'short-stroke' as const,
-      children: [{ type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] }],
+      children: [
+        { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
+      ],
       marks: [{ pos: 0.5, mark: { kind: 'arrow' as const, shape: 'missing-arrow' } }],
-      ribbon: { width: { kind: 'profile' as const, name: 'missing-profile' } },
     };
 
     expect(() =>
@@ -296,134 +202,11 @@ describe('Path kind registry', () => {
     expect(warnings[0]).toMatchObject({ code: CompileWarningCode.PathTooShort });
   });
 
-  it('resolves ribbon generators and width profiles, but only resolves arrows for marks', () => {
-    let generatorCalls = 0;
-    let profileCalls = 0;
-    const generator = definePathGenerator({
-      name: 'ribbon-only-generator',
-      paramsSchema: z.strictObject({}),
-      generate: ({ from }) => {
-        generatorCalls += 1;
-        return [{ kind: 'line', to: [from[0] + 10, from[1]] }];
-      },
-    });
-    const profile = defineRibbonWidthProfile({
-      name: 'ribbon-only-profile',
-      widthAt: () => {
-        profileCalls += 1;
-        return 8;
-      },
-    });
-    const ribbonOnly = definePathKind({
-      schema: z.object({ kind: z.literal('ribbon-only') }),
-      compile: context => context.emitRibbon(),
-    });
-
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'ribbon-only',
-            ribbon: { width: { kind: 'profile', name: 'ribbon-only-profile' }, samples: 2 },
-            children: [steps[0], { type: 'step', kind: 'generator', name: 'ribbon-only-generator', params: {} }],
-          },
-        ] as IRScene['children']),
-        {
-          pathKinds: [ribbonOnly],
-          pathGenerators: [generator],
-          ribbonWidthProfiles: [profile],
-        },
-      ),
-    ).not.toThrow();
-    expect(generatorCalls).toBe(1);
-    expect(profileCalls).toBeGreaterThan(0);
-  });
-
-  it('lets ribbon structure guards run before secondary provider lookup', () => {
-    const noRibbon = definePathKind({
-      schema: z.object({ kind: z.literal('no-ribbon') }),
-      compile: context => context.emitRibbon(),
-    });
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'no-ribbon',
-            children: [steps[0], { type: 'step', kind: 'generator', name: 'missing-generator', params: {} }],
-          },
-        ] as IRScene['children']),
-        { pathKinds: [noRibbon] },
-      ),
-    ).toThrow(/requires a `ribbon` options object/i);
-
-    const boundaryLabel = definePathKind({
-      schema: z.object({ kind: z.literal('boundary-label') }),
-      compile: context => context.emitRibbon(),
-    });
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'boundary-label',
-            label: { text: 'invalid' },
-            ribbon: {
-              mode: 'boundary',
-              upper: [steps[0], { type: 'step', kind: 'generator', name: 'missing-generator', params: {} }],
-              lower: [steps[0], steps[1]],
-              width: { kind: 'profile', name: 'missing-profile' },
-            },
-          },
-        ] as IRScene['children']),
-        { pathKinds: [boundaryLabel] },
-      ),
-    ).toThrow(/centerline ribbon labels/i);
-
-    const boundaryMissing = definePathKind({
-      schema: z.object({ kind: z.literal('boundary-missing') }),
-      compile: context => context.emitRibbon(),
-    });
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'boundary-missing',
-            ribbon: {
-              mode: 'boundary',
-              lower: [steps[0], steps[1]],
-              width: { kind: 'profile', name: 'missing-profile' },
-            },
-          },
-        ] as IRScene['children']),
-        { pathKinds: [boundaryMissing] },
-      ),
-    ).toThrow(/requires `upper` and `lower` steps/i);
-
-    const centerlineMissing = definePathKind({
-      schema: z.object({ kind: z.literal('centerline-missing') }),
-      compile: context => context.emitRibbon(),
-    });
-    expect(() =>
-      compileToScene(
-        scene([
-          {
-            type: 'path',
-            kind: 'centerline-missing',
-            ribbon: { width: { kind: 'profile', name: 'missing-profile' } },
-          },
-        ] as IRScene['children']),
-        { pathKinds: [centerlineMissing] },
-      ),
-    ).toThrow(/centerline ribbon requires `children`/i);
-  });
-
   it('keeps the no-Inspector emitStroke result free of inspection-only subject data', () => {
     const observed: Array<ReadonlyArray<string>> = [];
     const plain = definePathKind({
-      schema: z.object({ kind: z.literal('plain-stroke') }),
+      name: 'plain-stroke',
+      schema: customPathSchema('plain-stroke'),
       compile: context => {
         const result = context.emitStroke();
         if (result !== null) observed.push(Object.keys(result));
@@ -440,7 +223,8 @@ describe('Path kind registry', () => {
 
   it('keeps custom path kind primitives in the transformed owner group', () => {
     const badge = definePathKind({
-      schema: z.object({ kind: z.literal('badge') }),
+      name: 'badge',
+      schema: customPathSchema('badge'),
       compile: () => ({
         primitives: [{ type: 'rect', x: 0, y: 0, width: 10, height: 6, fill: 'gold' }],
         boundsPoints: [
@@ -454,7 +238,16 @@ describe('Path kind registry', () => {
         {
           type: 'scope',
           transforms: [{ kind: 'translate', x: 100, y: 20 }],
-          children: [{ type: 'path', kind: 'badge', children: [] }],
+          children: [
+            {
+              type: 'path',
+              kind: 'badge',
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [10, 0] },
+              ],
+            },
+          ],
         },
       ] as IRScene['children']),
       { pathKinds: [badge] },
@@ -470,8 +263,11 @@ describe('Path kind registry', () => {
 
   it('custom_path_kind_options_error_contains_provider_and_ir_path', () => {
     const highlight = definePathKind({
-      schema: z.object({ kind: z.literal('highlight') }),
-      optionsSchema: z.object({ stroke: z.string().min(1) }).strict(),
+      name: 'highlight',
+      schema: PathSchema.extend({
+        kind: z.literal('highlight'),
+        kindOptions: z.strictObject({ stroke: z.string().min(1) }),
+      }),
       compile: context => context.emitStroke(context.path),
     });
     const ir = scene([
@@ -484,6 +280,8 @@ describe('Path kind registry', () => {
     ] as IRScene['children']);
 
     expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(/path kind 'highlight'/);
-    expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(/children\[0\]\.path\.kindOptions/);
+    expect(() => compileToScene(ir, { pathKinds: [highlight] }).scene).toThrow(
+      /children\[0\]\.path\.kindOptions\.stroke/,
+    );
   });
 });

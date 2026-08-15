@@ -1,5 +1,5 @@
 import type { ArrowDefinition } from '../../contract';
-import type { IRArrowMark, IRJsonObject } from '../../schemas';
+import type { IRArrowMark, IRPathBase } from '../../schemas';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
@@ -24,28 +24,22 @@ import { parseProviderPayload } from '../provider-payload';
 
 const ARROW_GEOMETRY_BASE_SIZE = 10;
 
-/** 解析 path kind provider 与 kindOptions */
-export const resolvePathKind = (
-  path: { kind?: string; kindOptions?: IRJsonObject },
-  context: PathResolveContext,
-  irPath: string,
-): PathKindResolution => {
+/** 解析 path kind provider */
+export const resolvePathKind = (path: IRPathBase, context: PathResolveContext, irPath: string): PathKindResolution => {
   const kind = path.kind ?? 'stroke';
   const definition = providerDefinitionOf(context.pathKinds, kind, {
     capability: 'path kind',
     optionName: 'pathKinds',
   });
-  const options = definition.optionsSchema
-    ? parseProviderPayload({
-        capability: 'path kind',
-        providerName: kind,
-        irPath: `${irPath}.kindOptions`,
-        payloadName: 'options',
-        schema: definition.optionsSchema,
-        value: path.kindOptions ?? {},
-      })
-    : (path.kindOptions ?? {});
-  return { name: kind, definition, options };
+  const parsed = parseProviderPayload({
+    capability: 'path kind',
+    providerName: kind,
+    irPath,
+    payloadName: 'path',
+    schema: definition.schema,
+    value: path,
+  });
+  return { name: kind, definition, path: parsed as IRPathBase };
 };
 
 /** 解析 generator step 的 provider 与 params */

@@ -1,12 +1,10 @@
+import type { IRPosition, PolarPosition } from '@retikz/core';
 import type { Vector2 } from '@retikz/math';
 
+import { isPositionTuple, polar } from '@retikz/core';
 import { point } from '@retikz/math';
 
-import type { IRPosition, IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
-import type { Transform } from '../../../contract';
-import type { PathTargetView } from '../../../resolve/path';
-
-import { pointOfTarget } from '../host';
+import type { IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../types';
 
 const ARC_CAP_POINT_COUNT = 8;
 
@@ -76,28 +74,24 @@ export type ArcCapPointsInput = {
   from: IRPosition;
   to: IRPosition;
   endpoint: 'start' | 'end';
-  targetView: PathTargetView;
-  scopeChain?: ReadonlyArray<Transform>;
   round: (n: number) => number;
+};
+
+const pointOfCapCenter = (center: IRPosition | PolarPosition): IRPosition => {
+  if (isPositionTuple(center)) return center;
+  try {
+    return polar.toPosition(center);
+  } catch {
+    throw new Error('Ribbon arc cap center must use a Cartesian position or a PolarPosition without a node origin.');
+  }
 };
 
 /**
  * 解析显式 arc cap 并生成离散圆弧点
  * @description cap.center 可引用节点 / 坐标；半径必须与端面两侧点一致，否则端帽无法闭合
  */
-export const arcCapPoints = ({
-  cap,
-  from,
-  to,
-  endpoint,
-  targetView,
-  scopeChain = [],
-  round,
-}: ArcCapPointsInput): Array<IRPosition> => {
-  const resolvedCenter = pointOfTarget(cap.center, targetView, scopeChain);
-  if (resolvedCenter === null) {
-    throw new Error(`Ribbon ${endpoint} arc cap center could not be resolved.`);
-  }
+export const arcCapPoints = ({ cap, from, to, endpoint, round }: ArcCapPointsInput): Array<IRPosition> => {
+  const resolvedCenter = pointOfCapCenter(cap.center);
   const center: IRPosition = [round(resolvedCenter[0]), round(resolvedCenter[1])];
   assertArcCapRadius({ actual: point.distance(center, from), expected: cap.radius, endpoint, side: 'first' });
   assertArcCapRadius({ actual: point.distance(center, to), expected: cap.radius, endpoint, side: 'second' });

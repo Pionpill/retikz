@@ -1,32 +1,36 @@
 import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
 
-import type { IRJsonObject, JsonValue } from '../../schemas';
+import type { IRPathBase, JsonValue } from '../../schemas';
 import type { AnyPathKindDefinition, PathKindDefinition } from './types';
 
 /** 保留普通与带 owner output Path kind 两个互斥分支的定义入口 */
 type DefinePathKind = {
-  <TOptions = IRJsonObject>(definition: PathKindDefinition<TOptions, never>): PathKindDefinition<TOptions, never>;
-  <TOptions, TOwnerOutput extends JsonValue>(
-    definition: PathKindDefinition<TOptions, TOwnerOutput>,
-  ): PathKindDefinition<TOptions, TOwnerOutput>;
+  <TPath extends IRPathBase = IRPathBase>(
+    definition: PathKindDefinition<TPath, never>,
+  ): PathKindDefinition<TPath, never>;
+  <TPath extends IRPathBase, TOwnerOutput extends JsonValue>(
+    definition: PathKindDefinition<TPath, TOwnerOutput>,
+  ): PathKindDefinition<TPath, TOwnerOutput>;
 };
 
 /**
- * 定义 path kind 注册项，并校验 schema literal key
+ * 定义 path kind 注册项，并校验 name 与 schema 的 Zod parse 能力
  * @remarks 保留入口用于对齐 registry API，并集中处理定义点泛型
- * @throws 当 schema.shape.kind 不是非空 literal 字符串时
+ * @throws 当 name 不是非空字符串、schema 不具有 parse 能力，或 ownerOutput.schema 不是对象时
  */
 const definePathKindImplementation = (input: unknown): unknown => {
   const definition = input as AnyPathKindDefinition;
-  const kind = definition.schema.shape.kind.value;
-  const message = 'definePathKind: schema.shape.kind must be a non-empty z.literal string.';
-  if (typeof kind !== 'string') throw new Error(message);
+  const message = 'definePathKind: name must be a non-empty string.';
   try {
-    assertFoundationNonEmptyString(kind, 'definePathKind schema literal');
+    assertFoundationNonEmptyString(definition.name, 'definePathKind name');
   } catch {
     throw new Error(message);
   }
   const record = definition as unknown as Readonly<Record<string, unknown>>;
+  const schema = record.schema;
+  if (schema === null || typeof schema !== 'object' || typeof Reflect.get(schema, 'parse') !== 'function') {
+    throw new Error('definePathKind: schema must be a Zod schema.');
+  }
   const ownerOutput = record.ownerOutput;
   if (ownerOutput !== undefined) {
     if (

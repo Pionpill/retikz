@@ -1,21 +1,6 @@
+import type { IRPosition, PathCommand, SegmentSample } from '@retikz/core';
 import type { Vector2 } from '@retikz/math';
 
-import { point, vector2 } from '@retikz/math';
-
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../../contract';
-import type {
-  CanonicalStep,
-  CanonicalStepWithoutLabel,
-  PathGeneratorResolution,
-  PathTargetView,
-  StrokePathResolution,
-} from '../../../resolve/path';
-import type { IRPosition, IRRibbonDirection } from '../../../schemas';
-import type { SegmentSample } from '../../../shared/geometry';
-import type { TextMeasurer } from '../../text';
-import type { RibbonEmitOptions, RibbonSegment, RibbonSegmentInput } from './types';
-
-import { isPositionTuple } from '../../../shared';
 import {
   arcSegmentSample,
   cubicSegmentSample,
@@ -23,20 +8,14 @@ import {
   lineSegmentSample,
   polar,
   quadSegmentSample,
-} from '../../../shared/geometry';
-import { emitPathPrimitive } from '../stroke';
+} from '@retikz/core';
+import { isPositionTuple } from '@retikz/core';
+import { point, vector2 } from '@retikz/math';
+
+import type { IRRibbonDirection } from '../types';
+import type { RibbonSegment, RibbonSegmentInput } from './types';
 
 const LENGTH_SUBDIVISIONS = 16;
-
-/** 去掉 step.label，让中心线复用 path emit 时不会额外产出 label primitive */
-export const stripStepLabel = (step: CanonicalStep): CanonicalStepWithoutLabel => {
-  if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
-  const next = { ...step };
-  delete next.label;
-  return next;
-};
-
-const isPathPrim = (prim: ScenePrimitive): prim is PathPrim => prim.type === 'path';
 
 const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
   if (cursor !== undefined) return cursor;
@@ -323,71 +302,22 @@ export const sampleAtDistance = (
   return segments[segments.length - 1].sampleAt(1);
 };
 
-export type EmittedPathFromStepsInput = {
-  steps: ReadonlyArray<CanonicalStep>;
+export type SegmentsFromCommandsInput = {
+  commands: ReadonlyArray<PathCommand>;
   source: string;
-  resolution: StrokePathResolution;
-  targetView: PathTargetView;
-  round: (n: number) => number;
-  measureText: TextMeasurer;
-  options: RibbonEmitOptions;
-};
-
-/**
- * 复用普通 path emit，把 ribbon.children 降成单个 PathPrim
- * @description 这一步负责解析节点引用、relative、generator 等 path 语义；ribbon 后续只消费已物化的 commands
- */
-export const emittedPathFromSteps = ({
-  steps,
-  source,
-  resolution,
-  targetView,
-  round,
-  measureText,
-  options,
-}: EmittedPathFromStepsInput): PathPrim => {
-  const canonicalSteps = steps.map(stripStepLabel);
-  const canonicalPath = { ...resolution.path, children: canonicalSteps };
-  const generators = new Map<CanonicalStep, PathGeneratorResolution>();
-  for (let index = 0; index < steps.length; index += 1) {
-    const bound = resolution.generators.get(steps[index]);
-    if (bound !== undefined) generators.set(canonicalSteps[index], bound);
-  }
-  const nestedResolution: StrokePathResolution = {
-    ...resolution,
-    path: canonicalPath,
-    generators,
-  };
-  const emitted = emitPathPrimitive(nestedResolution, { targetView, round, measureText, options });
-  if (emitted === null) {
-    throw new Error(`Ribbon ${source} path was skipped unexpectedly.`);
-  }
-  if (emitted.primitives.length !== 1 || !isPathPrim(emitted.primitives[0])) {
-    throw new Error(`Ribbon ${source} must lower to exactly one open Path primitive.`);
-  }
-  return emitted.primitives[0];
-};
-
-export type SegmentsFromStepsInput = EmittedPathFromStepsInput & {
   endpointTangents?: { start?: Vector2; end?: Vector2 };
 };
 
 /**
- * 从一组 CanonicalStep 生成 ribbon 中心线段与总长度
- * @description boundary 模式的 upper/lower 和 centerline 模式的 children 都走这里，保证 path 解析口径一致
+ * 从 Core materializePath 的结构化命令生成 ribbon 中心线段与总长度
+ * @description Standard 只消费 Core public materializePath 服务返回的 renderer-neutral commands
  */
-export const segmentsFromSteps = ({
-  steps,
+export const segmentsFromCommands = ({
+  commands,
   source,
-  resolution,
-  targetView,
-  round,
-  measureText,
-  options,
   endpointTangents = {},
-}: SegmentsFromStepsInput): { segments: Array<RibbonSegment>; totalLength: number } => {
-  const prim = emittedPathFromSteps({ resolution, steps, source, targetView, round, measureText, options });
-  const inputs = commandsToSegmentInputs(prim.commands, source);
+}: SegmentsFromCommandsInput): { segments: Array<RibbonSegment>; totalLength: number } => {
+  const inputs = commandsToSegmentInputs(commands, source);
   const segments = segmentInputsToSegments(inputs, endpointTangents);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(totalLength) || totalLength <= 0) {

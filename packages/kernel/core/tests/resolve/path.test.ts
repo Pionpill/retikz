@@ -1,12 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type {
-  CanonicalGeometryLabel,
-  CanonicalRibbonEndpoint,
-  CanonicalRibbonSampling,
-  CanonicalRibbonWidth,
-  CanonicalStep,
-} from '../../src/resolve/path';
+import type { CanonicalGeometryLabel, CanonicalStep } from '../../src/resolve/path';
 import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
 
 import { compileToScene } from '../../src';
@@ -33,49 +27,23 @@ describe('resolvePath', () => {
       strokeWidth: 1,
       strokeRequested: false,
       strokeFillDefault: 'none',
-      ribbonFillDefault: 'currentColor',
       strokeDefault: 'currentColor',
     });
 
-    expect(resolvePathWithBuiltinProviders(path({ kind: 'ribbon', strokeWidth: 2 })).style).toEqual({
+    expect(resolvePathWithBuiltinProviders(path({ strokeWidth: 2 })).style).toEqual({
       strokeWidth: 2,
       strokeRequested: true,
       strokeFillDefault: 'none',
-      ribbonFillDefault: 'currentColor',
       strokeDefault: 'currentColor',
     });
   });
 
-  it('exposes complete canonical step and ribbon variants to compile consumers', () => {
+  it('exposes complete canonical step variants to compile consumers', () => {
     expectTypeOf<Extract<CanonicalStep, { kind: 'line' }>['label']>().toEqualTypeOf<
       CanonicalGeometryLabel | undefined
     >();
     expectTypeOf<Extract<CanonicalStep, { kind: 'fold'; via: '-|-' | '|-|' }>['fraction']>().toEqualTypeOf<number>();
     expectTypeOf<Extract<CanonicalStep, { kind: 'smooth' }>['tension']>().toEqualTypeOf<number>();
-    expectTypeOf<Extract<CanonicalRibbonWidth, { kind: 'stops' }>['interpolation']>().toEqualTypeOf<
-      'linear' | 'smooth' | 'step'
-    >();
-    expectTypeOf<Extract<CanonicalRibbonSampling, { kind: 'adaptive' }>['maxSamples']>().toEqualTypeOf<number>();
-    expectTypeOf<CanonicalRibbonEndpoint['cap']>().not.toEqualTypeOf<undefined>();
-
-    const canonical = resolvePathWithBuiltinProviders(
-      path({
-        kind: 'ribbon',
-        ribbon: {
-          mode: 'boundary',
-          upper: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'line', to: [10, 0] },
-          ],
-          lower: [
-            { type: 'step', kind: 'move', to: [0, 4] },
-            { type: 'step', kind: 'line', to: [10, 4] },
-          ],
-        },
-      }),
-    );
-    expectTypeOf(canonical.path.ribbon?.upper).toEqualTypeOf<Array<CanonicalStep> | undefined>();
-    expectTypeOf(canonical.path.ribbon?.lower).toEqualTypeOf<Array<CanonicalStep> | undefined>();
   });
 
   it('expands fold and smooth static defaults without changing geometry inputs', () => {
@@ -143,51 +111,6 @@ describe('resolvePath', () => {
     expect(canonical.path.label).toEqual([{ text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false }]);
   });
 
-  it('normalizes ribbon defaults, sampling shorthand, adaptive cap, and stable width stops', () => {
-    const canonical = resolvePathWithBuiltinProviders(
-      path({
-        kind: 'ribbon',
-        ribbon: {
-          width: {
-            kind: 'stops',
-            stops: [
-              { offset: 0.75, value: 8 },
-              { offset: 0.25, value: 2 },
-              { offset: 0.25, value: 3 },
-            ],
-          },
-          samples: true,
-          sampling: undefined,
-          start: { width: 2 },
-          end: { width: 4 },
-        },
-      }),
-    );
-
-    expect(canonical.path.ribbon).toMatchObject({
-      mode: 'centerline',
-      align: 'center',
-      interpolation: 'linear',
-      sampling: { kind: 'fixed', samples: 64 },
-      start: { width: 2, cap: 'butt' },
-      end: { width: 4, cap: 'butt' },
-      width: {
-        kind: 'stops',
-        interpolation: 'linear',
-        stops: [
-          { offset: 0.25, value: 2 },
-          { offset: 0.25, value: 3 },
-          { offset: 0.75, value: 8 },
-        ],
-      },
-    });
-
-    const adaptive = resolvePathWithBuiltinProviders(
-      path({ kind: 'ribbon', ribbon: { width: 2, sampling: { kind: 'adaptive', tolerance: 3 } } }),
-    );
-    expect(adaptive.path.ribbon?.sampling).toEqual({ kind: 'adaptive', tolerance: 3, maxSamples: 512 });
-  });
-
   it('compiles compact Path forms to the same Scene as their explicit Source IR equivalents', () => {
     const compact = path({
       children: [
@@ -221,31 +144,6 @@ describe('resolvePath', () => {
           label: { text: 'smooth', position: 0.5, side: 'top', distance: 4 },
         },
       ],
-    });
-
-    expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
-  });
-
-  it('compiles compact Ribbon forms to the same Scene as their explicit Source IR equivalents', () => {
-    const stops = [
-      { offset: 0.75, value: 8 },
-      { offset: 0.25, value: 2 },
-    ];
-    const compact = path({
-      kind: 'ribbon',
-      ribbon: { width: { kind: 'stops', stops }, samples: true },
-    });
-    const expanded = path({
-      kind: 'ribbon',
-      ribbon: {
-        mode: 'centerline',
-        align: 'center',
-        interpolation: 'linear',
-        width: { kind: 'stops', stops: [...stops].reverse(), interpolation: 'linear' },
-        sampling: { kind: 'fixed', samples: 64 },
-        start: { cap: 'butt' },
-        end: { cap: 'butt' },
-      },
     });
 
     expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);

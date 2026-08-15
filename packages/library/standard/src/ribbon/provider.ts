@@ -1,0 +1,46 @@
+import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '@retikz/core';
+
+import type { RibbonWidthProfileDefinition } from './profile-types';
+
+import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
+import { createRibbonPathKindDefinition } from './definition';
+
+const ribbonKey: CoreProviderKey = { capability: 'pathKind', name: 'ribbon' };
+
+const profileDatasetsOf = (
+  profiles: ReadonlyArray<RibbonWidthProfileDefinition>,
+): Readonly<Record<string, RibbonWidthProfileDefinition>> => {
+  const datasets = Object.create(null) as Record<string, RibbonWidthProfileDefinition>;
+  for (const profile of profiles) {
+    if (Object.hasOwn(datasets, profile.name) && datasets[profile.name] !== profile) {
+      throw new Error(`Ribbon width profile '${profile.name}' is defined more than once.`);
+    }
+    datasets[profile.name] = profile;
+  }
+  return datasets;
+};
+
+const makeRibbonDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
+  createRibbonPathKindDefinition({
+    profiles: Object.values(datasets) as ReadonlyArray<RibbonWidthProfileDefinition>,
+  });
+
+const ribbonProvider: CoreDependencyProvider = {
+  key: ribbonKey,
+  dependencies: [],
+  datasets: profileDatasetsOf(BUILTIN_RIBBON_WIDTH_PROFILES),
+  makeDefinition: makeRibbonDefinition,
+};
+
+/** 创建 Standard Ribbon 的 Core provider contribution */
+export const createRibbonProviderContribution = (
+  profiles: ReadonlyArray<RibbonWidthProfileDefinition> = [],
+): CoreProviderContribution => ({
+  roots: [ribbonKey],
+  providers: [
+    {
+      ...ribbonProvider,
+      datasets: profileDatasetsOf([...BUILTIN_RIBBON_WIDTH_PROFILES, ...profiles]),
+    },
+  ],
+});

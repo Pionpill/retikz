@@ -1,7 +1,5 @@
-import type { PathCommand, PathPrim } from '../../../../contract';
-import type { PathStyleResolution } from '../../../../resolve/path';
-import type { IRPosition } from '../../../../schemas';
-import type { PaintInput, PaintResolver } from '../../../resource';
+import type { IRPosition, PathCommand, PathPrim, ResolvedPathKindAppearance } from '@retikz/core';
+
 import type { RibbonLike } from '../types';
 
 /**
@@ -11,23 +9,27 @@ import type { RibbonLike } from '../types';
 export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
-  resolvePaint: PaintResolver,
-  style: PathStyleResolution,
-  paint?: Readonly<{ fill?: PaintInput; stroke?: PaintInput }>,
+  appearance: ResolvedPathKindAppearance,
 ): PathPrim => {
+  const strokeRequested = ribbon.stroke !== undefined || ribbon.strokeWidth !== undefined;
   const primitive: PathPrim = {
     type: 'path',
     commands: outline.commands,
-    fill: resolvePaint(paint?.fill) ?? style.ribbonFillDefault,
+    fill: appearance.fill ?? appearance.color ?? 'currentColor',
+    fillRule: appearance.fillRule,
     fillOpacity: ribbon.fillOpacity,
     opacity: ribbon.opacity,
-    shadow: ribbon.shadow,
-    blendMode: ribbon.blendMode,
+    shadow: appearance.shadow,
+    blendMode: appearance.blendMode,
   };
-  if (style.strokeRequested) {
-    primitive.stroke = resolvePaint(paint?.stroke) ?? style.strokeDefault;
-    primitive.strokeWidth = style.strokeWidth;
+  if (strokeRequested) {
+    primitive.stroke = appearance.stroke ?? 'currentColor';
+    primitive.strokeWidth = appearance.strokeWidth;
     primitive.strokeOpacity = ribbon.strokeOpacity;
+    primitive.dashPattern = appearance.dashPattern;
+    primitive.dashOffset = appearance.dashOffset;
+    primitive.strokeLinecap = appearance.strokeLinecap;
+    primitive.strokeLinejoin = appearance.strokeLinejoin;
   }
   if (ribbon.id !== undefined) primitive.id = ribbon.id;
   if (ribbon.meta !== undefined) primitive.meta = ribbon.meta;

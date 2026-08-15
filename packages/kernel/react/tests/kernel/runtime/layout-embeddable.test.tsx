@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CoreDependencyProvider, CompositeCoreProviderKey } from '@retikz/core';
+import type { AnyCompositeDefinition, CompositeCoreProviderKey,CoreDependencyProvider } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 

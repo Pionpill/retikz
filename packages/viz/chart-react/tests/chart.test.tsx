@@ -104,6 +104,7 @@ describe('<Chart>', () => {
       { capability: 'composite', namespace: 'layout', type: 'flexLayout' },
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
+      { capability: 'pathKind', name: 'ribbon' },
       PlotProviderKey,
       ChartProvider.key,
     ]);

@@ -1,9 +1,9 @@
+import type { IRPosition, SegmentSample } from '@retikz/core';
 import type { Vector2 } from '@retikz/math';
 
 import { isFinitePoint, vector2 } from '@retikz/math';
 
-import type { IRPosition, RibbonAlignmentValue } from '../../../../schemas';
-import type { SegmentSample } from '../../../../shared/geometry';
+import type { RibbonAlignmentValue } from '../../types';
 import type { RibbonCrossSection } from '../types';
 
 import { alignTangentNormal, blendTangent } from '../centerline';

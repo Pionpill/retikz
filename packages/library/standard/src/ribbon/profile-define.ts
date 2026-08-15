@@ -1,5 +1,6 @@
-import type { IRJsonObject } from '../../schemas';
-import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } from './types';
+import type { IRJsonObject } from '@retikz/core';
+
+import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } from './profile-types';
 
 /**
  * 定义 ribbon width profile 注册项

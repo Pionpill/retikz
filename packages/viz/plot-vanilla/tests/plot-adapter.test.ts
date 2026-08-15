@@ -73,20 +73,24 @@ describe('Plot Vanilla Tier2 adapter', () => {
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
 
     expect(result.spec).toEqual(spec);
-    expect(result.contribution.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(result.contribution.roots).toEqual([
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+      { capability: 'pathKind', name: 'ribbon' },
+    ]);
     expect(result.contribution.providers.map(item => item.key)).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
+      { capability: 'pathKind', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
-    expect(result.contribution.providers[2]).toMatchObject({
+    expect(result.contribution.providers[3]).toMatchObject({
       key: provider.key,
       dependencies: [
         { capability: 'shape', name: 'sector' },
         { capability: 'shape', name: 'contour' },
       ],
     });
-    expect(result.contribution.providers[2]?.makeDefinition).toBe(provider.makeDefinition);
+    expect(result.contribution.providers[3]?.makeDefinition).toBe(provider.makeDefinition);
   });
 
   it('经 scene/layer runtime 渲染 Plot embed', () => {
@@ -161,18 +165,22 @@ describe('Plot Vanilla Tier2 adapter', () => {
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
-    expect(first.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'plot', type: 'plot' }]);
+    expect(first.providerDependencies.roots).toEqual([
+      { capability: 'composite', namespace: 'plot', type: 'plot' },
+      { capability: 'pathKind', name: 'ribbon' },
+    ]);
     expect(first.providerDependencies.providers.map(provider => provider.key)).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
+      { capability: 'pathKind', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
-    expect(first.providerDependencies.providers[2]?.dependencies).toEqual([
+    expect(first.providerDependencies.providers[3]?.dependencies).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
     ]);
-    expect(first.providerDependencies.providers[2]?.makeDefinition).toBe(
-      second.providerDependencies.providers[2]?.makeDefinition,
+    expect(first.providerDependencies.providers[3]?.makeDefinition).toBe(
+      second.providerDependencies.providers[3]?.makeDefinition,
     );
   });
 

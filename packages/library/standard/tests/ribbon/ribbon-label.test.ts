@@ -1,18 +1,14 @@
+import type { GroupPrim, IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive, TextPrim } from '@retikz/core';
+
+import { compileToScene as compileCoreToScene, StepLabelSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type {
-  GroupPrim,
-  IRPathBase,
-  IRPathRibbonOptions,
-  IRScene,
-  IRStep,
-  PathPrim,
-  ScenePrimitive,
-  TextPrim,
-} from '../../src';
+import type { IRRibbonPathOptions } from '../../src/ribbon';
 
-import { compileToScene, PathSchema, StepLabelSchema } from '../../src';
-import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
+import { RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
+
+const ASCENT_FACTOR = 0.8;
+const DESCENT_FACTOR = 0.2;
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -20,11 +16,12 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'ribbon' | 'type'>> &
-  IRPathRibbonOptions & {
-    kind?: IRPathRibbonOptions['mode'];
+type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'kindOptions' | 'type'>> &
+  IRRibbonPathOptions & {
+    kind?: IRRibbonPathOptions['mode'];
     type?: 'path' | 'ribbon';
-    ribbon?: IRPathRibbonOptions;
+    kindOptions?: IRRibbonPathOptions;
+    ribbon?: IRRibbonPathOptions;
   };
 
 const defaultRibbonChildren: Array<IRStep> = [
@@ -37,6 +34,7 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
   const {
     type: inputType,
     kind,
+    kindOptions: nestedKindOptions,
     ribbon: nestedRibbon,
     width,
     start,
@@ -51,7 +49,7 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
     ...pathProps
   } = raw;
   void inputType;
-  const options: IRPathRibbonOptions = { ...(nestedRibbon ?? {}) };
+  const options: IRRibbonPathOptions = { ...(nestedKindOptions ?? nestedRibbon ?? {}) };
   const mode = kind === 'boundary' || kind === 'centerline' ? kind : options.mode;
   if (mode !== undefined) options.mode = mode;
   if (width !== undefined) options.width = width;
@@ -68,22 +66,13 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
     type: 'path',
     kind: 'ribbon',
     ...pathProps,
-    ribbon: options,
+    kindOptions: options,
   };
   if (options.mode !== 'boundary') path.children = children ?? defaultRibbonChildren;
   return path;
 };
 
-const RibbonSchema = {
-  parse: (value: unknown): IRPathBase =>
-    PathSchema.parse(
-      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
-    ),
-  safeParse: (value: unknown) =>
-    PathSchema.safeParse(
-      typeof value === 'object' && value !== null ? normalizeRibbonInput(value as Record<string, unknown>) : value,
-    ),
-};
+const RibbonSchema = RibbonPathSchema;
 
 const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
   normalizeRibbonInput({
@@ -92,6 +81,15 @@ const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
     children: defaultRibbonChildren,
     ...overrides,
   });
+
+const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
+  const supplied = options.pathKinds ?? [];
+  const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+  return compileCoreToScene(input, {
+    ...options,
+    pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
+  });
+};
 
 const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
@@ -159,6 +157,23 @@ describe('Ribbon label compile', () => {
     expect(paths).toHaveLength(1);
     expect(compiled.primitives[0].type).toBe('path');
     expect(label?.x).toBeCloseTo(50);
+  });
+
+  it('把 scope 内的长 host label 纳入 layout bounds', () => {
+    const compiled = compileToScene(
+      scene([
+        {
+          type: 'scope',
+          children: [ribbon({ label: { text: 'long host label', side: 'left' } })],
+        },
+      ]),
+      {
+        measureText: () => ({ width: 200, height: 20 }),
+        padding: 0,
+      },
+    ).scene;
+
+    expect(compiled.layout.x).toBeLessThan(-100);
   });
 
   it('position keyword 与数字端点沿 centerline 采样', () => {

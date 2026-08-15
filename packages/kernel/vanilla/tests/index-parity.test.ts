@@ -54,7 +54,6 @@ describe('@retikz/vanilla 入口边界', () => {
       'definePathGenerator',
       'definePathKind',
       'definePattern',
-      'defineRibbonWidthProfile',
       'fadeIn',
       'drawOn',
       'stagger',

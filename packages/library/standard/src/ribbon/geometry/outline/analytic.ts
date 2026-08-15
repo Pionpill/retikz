@@ -1,15 +1,12 @@
+import type { IRPosition, PathCommand, SegmentSample } from '@retikz/core';
 import type { Vector2 } from '@retikz/math';
 
+import { cubicSegmentSample, lineSegmentSample, quadSegmentSample } from '@retikz/core';
 import { point } from '@retikz/math';
 
-import type { PathCommand } from '../../../../contract';
-import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../../schemas';
-import type { SegmentSample } from '../../../../shared/geometry';
-import type { PathTargetView } from '../../../../resolve/path';
-import type { Transform } from '../../../../contract';
+import type { IRRibbonCap, RibbonAlignmentValue } from '../../types';
 import type { RibbonAnalyticSegment, RibbonCrossSection, RibbonSegment, RibbonSegmentInput } from '../types';
 
-import { cubicSegmentSample, lineSegmentSample, quadSegmentSample } from '../../../../shared/geometry';
 import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from '../caps';
 import { controlHandleLength } from '../centerline';
 import { ribbonCrossSection } from './cross-section';
@@ -124,8 +121,6 @@ export type AnalyticOutlineCommandsInput = {
   align: RibbonAlignmentValue;
   startEndpointCap: IRRibbonCap;
   endEndpointCap: IRRibbonCap;
-  targetView: PathTargetView;
-  scopeChain?: ReadonlyArray<Transform>;
   round: (n: number) => number;
 };
 
@@ -144,8 +139,6 @@ export const analyticOutlineCommands = ({
   align,
   startEndpointCap,
   endEndpointCap,
-  targetView,
-  scopeChain = [],
   round,
 }: AnalyticOutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } | null => {
   if (inputs.length !== segments.length) return null;
@@ -281,7 +274,6 @@ export const analyticOutlineCommands = ({
       from: endLeft,
       to: endRight,
       endpoint: 'end',
-      targetView,
       round,
     })) {
       commands.push({ kind: 'line', to: capPoint });
@@ -310,7 +302,6 @@ export const analyticOutlineCommands = ({
       from: startRight,
       to: startLeft,
       endpoint: 'start',
-      targetView,
       round,
     })) {
       commands.push({ kind: 'line', to: capPoint });
