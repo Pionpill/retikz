@@ -9,10 +9,10 @@ export const releaseGroups = {
     kind: 'feature',
     packages: ['@retikz/standard', '@retikz/standard-react', '@retikz/standard-vanilla'],
   },
-  notation: {
+  graph: {
     domain: 'diagram',
     kind: 'foundation',
-    packages: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
+    packages: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
   kernel: {
     domain: 'kernel',
