@@ -1380,10 +1380,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotAxisThemeTokenRules',
     url: '/viz/plot/reference/theme#plotaxisthemetokenrulesschema',
   },
-  PlotResolvedThemeTokensSchema: {
-    schema: PlotIR.PlotResolvedThemeTokensSchema,
-    label: 'PlotResolvedThemeTokens',
-    url: '/viz/plot/reference/theme#plotresolvedthemetokensschema',
+  PlotThemeTokenResolutionSchema: {
+    schema: PlotIR.PlotThemeTokenResolutionSchema,
+    label: 'PlotThemeTokenResolution',
+    url: '/viz/plot/reference/theme#plotthemetokenresolutionschema',
   },
   PlotThemeResolutionSchema: {
     schema: PlotIR.PlotThemeResolutionSchema,

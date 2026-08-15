@@ -66,14 +66,14 @@ A channel definition should not inspect `mark.type`. It owns resolution and deli
     {
       label: 'Merge built-in and custom channels into one registry',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 77,
-      endLine: 114,
+      startLine: 67,
+      endLine: 93,
     },
     {
       label: 'Channel lookup, resolve, and delivery dispatch',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 120,
-      endLine: 190,
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 44,
+      endLine: 123,
     },
   ]}
 />
@@ -98,14 +98,14 @@ encoding: {
 
 Public exports:
 
-| Import from `@retikz/plot` | Use                                                                                                 |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| `defineScopeChannel`       | Defines a channel delivered to a Core Scope                                                         |
-| `defineNodeChannel`        | Defines a channel delivered to a Core Node                                                          |
-| `definePathChannel`        | Defines a channel delivered to a Core Path                                                          |
-| `defineChannel`            | Defines a generic channel with explicit kind and delivery                                           |
-| `ChannelDefinition`        | Full channel, output, resolve, and deliver contract                                                 |
-| `ChannelContext`           | Shared rows, field types, and scale-registry context; Node / Scope / Path expose equivalent aliases |
+| Import from `@retikz/plot`        | Use                                                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `defineScopeChannel`              | Defines a channel delivered to a Core Scope                                                         |
+| `defineNodeChannel`               | Defines a channel delivered to a Core Node                                                          |
+| `definePathChannel`               | Defines a channel delivered to a Core Path                                                          |
+| `defineChannel`                   | Defines a generic channel with explicit kind and delivery                                           |
+| `ChannelDefinition`               | Full channel, output, resolve, and deliver contract                                                 |
+| `ChannelDefinitionResolveContext` | Shared rows, field types, and scale-registry context; Node / Scope / Path expose equivalent aliases |
 
 Host injection:
 

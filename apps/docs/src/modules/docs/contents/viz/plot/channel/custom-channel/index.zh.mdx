@@ -66,14 +66,14 @@ channel definition 不应检查 `mark.type`。它只负责解析和交付；某�
     {
       label: '内置与自定义通道合并到统一注册表',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 77,
-      endLine: 114,
+      startLine: 67,
+      endLine: 93,
     },
     {
       label: '通道 lookup、resolve 与交付分派',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 120,
-      endLine: 190,
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 44,
+      endLine: 123,
     },
   ]}
 />
@@ -98,14 +98,14 @@ encoding: {
 
 公开导出：
 
-| 从 `@retikz/plot` 导入 | 用途                                                                                    |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| `defineScopeChannel`   | 定义交付到 Core Scope 的通道                                                            |
-| `defineNodeChannel`    | 定义交付到 Core Node 的通道                                                             |
-| `definePathChannel`    | 定义交付到 Core Path 的通道                                                             |
-| `defineChannel`        | 定义需要显式 kind 与交付契约的通用通道                                                  |
-| `ChannelDefinition`    | 查询 channel、output、resolve 与 deliver 的完整契约                                     |
-| `ChannelContext`       | 查询 rows、字段类型和 scale registry 等公共解析上下文；Node / Scope / Path 提供同构别名 |
+| 从 `@retikz/plot` 导入            | 用途                                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------------- |
+| `defineScopeChannel`              | 定义交付到 Core Scope 的通道                                                            |
+| `defineNodeChannel`               | 定义交付到 Core Node 的通道                                                             |
+| `definePathChannel`               | 定义交付到 Core Path 的通道                                                             |
+| `defineChannel`                   | 定义需要显式 kind 与交付契约的通用通道                                                  |
+| `ChannelDefinition`               | 查询 channel、output、resolve 与 deliver 的完整契约                                     |
+| `ChannelDefinitionResolveContext` | 查询 rows、字段类型和 scale registry 等公共解析上下文；Node / Scope / Path 提供同构别名 |
 
 宿主注入：
 

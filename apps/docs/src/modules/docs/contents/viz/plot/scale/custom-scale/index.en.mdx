@@ -19,7 +19,7 @@ When built-in scales cannot express a domain mapping, special position distribut
 | family     | Input and output   | Key contract                                                                                                                                            |
 | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `position` | value → coordinate | `resolve` receives raw values and a fallback range, returns a full `PositionScale`; `isFieldCompatible` and `allowsBaseline` declare consumption limits |
-| `channel`  | value → color      | `resolve` receives raw values and `ChannelResolveContext`, returns a color evaluator, `legendForm`, `domain`, `range`, and optional `edges`             |
+| `channel`  | value → color      | `resolve` receives raw values and `ChannelScaleResolveContext`, returns a color evaluator, `legendForm`, `domain`, `range`, and optional `edges`        |
 
 The demo registers both `ease-position` and `brand`: the first redistributes x coordinates with an exponent, while the second maps categorical `tier` values to a brand palette. Drag the exponent to compare position mapping while color mapping stays fixed; switch source files to inspect both definitions, data, and host injection:
 
@@ -88,10 +88,22 @@ const spec: IRPlotSpec = {
       endLine: 121,
     },
     {
-      label: 'Registry, JSON validation, and family dispatch',
+      label: 'Scale registry merge and duplicate validation',
       path: 'packages/viz/plot/src/providers/scale/registry.ts',
+      startLine: 16,
+      endLine: 31,
+    },
+    {
+      label: 'Scale definition lookup and JSON validation',
+      path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
       startLine: 22,
-      endLine: 109,
+      endLine: 44,
+    },
+    {
+      label: 'Position / channel family dispatch',
+      path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
+      startLine: 169,
+      endLine: 210,
     },
     {
       label: 'Built-in-first named color-scheme resolver',
@@ -121,13 +133,13 @@ scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
 
 Public exports:
 
-| Import from `@retikz/plot` | Use                                                         |
-| -------------------------- | ----------------------------------------------------------- |
-| `defineScale`              | Builds a scale definition from family, schema, and resolve  |
-| `ScaleDefinition`          | Full position / channel Definition union                    |
-| `PositionScale`            | Coordinate, ticks, and range interface returned by position |
-| `ChannelResolveContext`    | Field type, coercion, and color-scheme resolution context   |
-| `ChannelScaleResolution`   | Color evaluator and legend source returned by channel       |
+| Import from `@retikz/plot`   | Use                                                         |
+| ---------------------------- | ----------------------------------------------------------- |
+| `defineScale`                | Builds a scale definition from family, schema, and resolve  |
+| `ScaleDefinition`            | Full position / channel Definition union                    |
+| `PositionScale`              | Coordinate, ticks, and range interface returned by position |
+| `ChannelScaleResolveContext` | Field type, coercion, and color-scheme resolution context   |
+| `ChannelScaleResolution`     | Color evaluator and legend source returned by channel       |
 
 Host injection:
 

@@ -58,7 +58,7 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 
 1. The host merges built-in and custom coordinate definitions into one registry and validates role names and duplicate types.
 2. Lowering looks up `coordinate.type`; a miss fails immediately, while a hit validates the JSON operation with the definition schema.
-3. `CoordinateResolveContext` collects each role's domain, resolves position scales, and exposes canvas and guide information.
+3. `CoordinateDefinitionResolveContext` collects each role's domain, resolves position scales, and exposes canvas and guide information.
 4. `resolve` builds a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
 5. Marks project through `frame.projectRoles` or optional `frame.projectCell` without depending on the concrete coordinate implementation.
 
@@ -80,15 +80,15 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
     },
     {
       label: 'Coordinate lookup and unregistered-type error',
-      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
-      startLine: 238,
-      endLine: 244,
+      path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
+      startLine: 36,
+      endLine: 47,
     },
     {
       label: 'Operation JSON and definition-schema validation',
-      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
-      startLine: 437,
-      endLine: 440,
+      path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
+      startLine: 447,
+      endLine: 450,
     },
   ]}
 />
@@ -112,12 +112,12 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 
 Public exports:
 
-| Import from `@retikz/plot` | Use                                                        |
-| -------------------------- | ---------------------------------------------------------- |
-| `defineCoordinate`         | Builds a coordinate definition from schema, roles, resolve |
-| `CoordinateDefinition`     | Full role and resolve runtime contract                     |
-| `CoordinateResolveContext` | Domain, scale, canvas, and guide resolution entry points   |
-| `createCoordinateFrame`    | Builds point, tangent, and optional Cell projection frame  |
+| Import from `@retikz/plot`           | Use                                                        |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `defineCoordinate`                   | Builds a coordinate definition from schema, roles, resolve |
+| `CoordinateDefinition`               | Full role and resolve runtime contract                     |
+| `CoordinateDefinitionResolveContext` | Domain, scale, canvas, and guide resolution entry points   |
+| `createCoordinateFrame`              | Builds point, tangent, and optional Cell projection frame  |
 
 Host injection:
 
