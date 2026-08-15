@@ -1,4 +1,5 @@
 import type { IRPlotSpec } from '@retikz/plot';
+import type { InputPlot } from '@retikz/plot-vanilla';
 
 import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
 import { defineThemeStyle } from '@retikz/core';
@@ -24,6 +25,16 @@ const plot: IRPlotSpec = {
   marks: [{ type: 'point', encoding: { x: { field: 'income' }, y: { field: 'life' } } }],
 };
 
+const plotInput = {
+  data: { reference: 'countries' },
+  scales: [
+    { type: 'linear' as const, name: 'x' },
+    { type: 'linear' as const, name: 'y' },
+  ],
+  coordinate: { type: 'cartesian2D' as const, x: 'x', y: 'y' },
+  marks: [{ type: 'point' as const, encoding: { x: { field: 'income' }, y: { field: 'life' } } }],
+} satisfies InputPlot;
+
 const brandCoreTheme = defineThemeStyle({
   name: 'brand',
   resolve: () => ({
@@ -46,9 +57,34 @@ const brandPlotTheme = definePlotThemeStyle({
 });
 
 describe('Chart Vanilla authoring', () => {
+  it('normalizes an explicit Plot Vanilla input before creating Chart IR', () => {
+    const result = createChart({
+      plot: { input: plotInput },
+      datasets: { countries: [] },
+    });
+
+    expect(result.chart.plot).toMatchObject({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'countries' },
+      marks: [{ type: 'point' }],
+    });
+    expect(result.input.plot).toEqual({ input: plotInput });
+  });
+
+  it('passes an explicit Plot IR through the source boundary without authoring fields', () => {
+    const result = createChart({
+      plot: { spec: plot },
+      datasets: { countries: [] },
+    });
+
+    expect(result.input.plot).toEqual({ spec: plot });
+    expect(result.chart.plot).toMatchObject(plot);
+  });
+
   it('creates canonical ordered presentation and its complete provider graph', () => {
     const result = createChart({
-      plot,
+      plot: { spec: plot },
       datasets: { countries: [] },
       title: 'Income and life expectancy',
       presentation: [
@@ -81,6 +117,7 @@ describe('Chart Vanilla authoring', () => {
       encoding: { x: { field: 'income' }, y: { field: 'life' } },
       title: 'Income and life expectancy',
     });
+    expect(chart.input.plot).toMatchObject({ spec: chart.chart.plot });
     const rendered = renderChart(chart, { output: { width: 320, height: 200 } });
 
     expect(chart.chart.plot.data.reference).toBe('chart.data');
@@ -105,7 +142,7 @@ describe('Chart Vanilla authoring', () => {
 
   it('applies Core compile options supplied to renderChart before rendering its single result', () => {
     const chart = createChart({
-      plot,
+      plot: { spec: plot },
       datasets: { countries: [] },
       title: 'Income and life expectancy',
       theme: { style: 'brand' },

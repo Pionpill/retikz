@@ -1,4 +1,4 @@
-import type { IRBoxSpacing, IRStepLabel } from '@retikz/core';
+import type { IRBoxSpacing } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
@@ -184,18 +184,8 @@ export type IRPlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
 /** relation 路由步骤标签声明 */
 export type IRPlotRelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
 
-/** relation 路由步骤标签输入，沿用 core step label 并替换文本字段 */
-export type RelationStepLabelInput = Omit<IRStepLabel, 'text'> & {
-  text: IRPlotRelationStepLabel['text'];
-};
-
 /** relation 路由中的单步声明 */
 export type IRPlotRelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
-
-/** relation 路由单步输入，允许使用 adapter 侧标签输入 */
-export type RelationRouteStepInput = Omit<IRPlotRelationRouteStep, 'label'> & {
-  label?: RelationStepLabelInput;
-};
 
 /** mark 局部数据变换声明 */
 export type IRPlotMarkTransform = z.infer<typeof MarkTransformSchema>;
@@ -229,12 +219,6 @@ export type IRPlotRelationPathSpecificOptions = z.infer<typeof RelationPathSpeci
 
 /** relation path 几何声明 */
 export type IRPlotRelationPathGeometry = z.infer<typeof RelationPathGeometrySchema>;
-
-/** relation path 几何输入，允许 adapter 侧标签和路由输入 */
-export type RelationPathGeometryInput = Omit<IRPlotRelationPathGeometry, 'label' | 'route'> & {
-  label?: RelationStepLabelInput;
-  route?: Array<RelationRouteStepInput>;
-};
 
 /** relation ribbon 专属选项声明 */
 export type IRPlotRelationRibbonSpecificOptions = z.infer<typeof RelationRibbonSpecificOptionsSchema>;

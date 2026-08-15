@@ -1,4 +1,4 @@
-import type { ExternalDatasets, IRDataModel } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
 import type { IRPlotSpec, PlotLineageRun } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
@@ -7,10 +7,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import * as plotReact from '../src';
-import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotLineage } from '../src';
+import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotAuthoring, resolvePlotLineage } from '../src';
 
 type InputEmbeddablePlotComponent = {
-  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => { spec: object };
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => { spec: IRPlotSpec };
 };
 
 const spec: IRPlotSpec = {
@@ -60,16 +60,49 @@ const geometry = (svg: string) => {
 };
 
 describe('<Plot spec data> 薄包装', () => {
-  it('嵌入 Plot 只向 Vanilla adapter 交付 authoring Input', () => {
+  it('嵌入 Plot 向 Vanilla adapter 交付显式 direct IR source', () => {
     const input = (Plot as unknown as InputEmbeddablePlotComponent).createInputEmbedProps({ spec, data });
 
-    expect(input.spec).not.toHaveProperty('namespace');
-    expect(input.spec).not.toHaveProperty('type');
+    expect(input.spec).toBe(spec);
+    expect(input.spec).toMatchObject({ namespace: 'plot', type: 'plot' });
+  });
+
+  it('resolvePlotAuthoring 保留无覆盖 spec 的 IR 身份且不返回 Input', () => {
+    const runtime = resolvePlotAuthoring({ spec, data });
+
+    expect(runtime.spec).toBe(spec);
+    expect('input' in runtime).toBe(false);
+  });
+
+  it('resolvePlotAuthoring 保留 DSL mark 的 runtime label sidecar 并保持 Plot IR 可序列化', () => {
+    const pointResolveLabel = (row: ExternalRow): string => String(row.label);
+    const intervalResolveLabel = (row: ExternalRow): string => String(row.label);
+    const runtime = resolvePlotAuthoring({
+      data: [{ month: 'Jan', revenue: 10, label: 'January' }],
+      children: (
+        <>
+          <PointMark id="points" x="month" y="revenue" resolveLabel={pointResolveLabel} />
+          <IntervalMark id="bars" x="month" y="revenue" resolveLabel={intervalResolveLabel} />
+        </>
+      ),
+    });
+
+    expect(runtime.lowerOptions.resolveLabel?.points).toBe(pointResolveLabel);
+    expect(runtime.lowerOptions.resolveLabel?.bars).toBe(intervalResolveLabel);
+    const serialized = JSON.stringify(runtime.spec);
+    expect(serialized).not.toContain('resolveLabel');
+    expect(serialized).not.toContain('function');
+    expect(serialized).toContain('"marks"');
   });
 
   it('不再公开 Plot presentation label authoring', () => {
     expect('TitleLabel' in plotReact).toBe(false);
     expect('CaptionLabel' in plotReact).toBe(false);
+    expect('FieldName' in plotReact).toBe(false);
+    expect('ExtensionChannelProp' in plotReact).toBe(false);
+    expect('ScaleDimension' in plotReact).toBe(false);
+    expect('PositionScaleType' in plotReact).toBe(false);
+    expect('FacetDimensionInput' in plotReact).toBe(false);
   });
 
   it('渲染出含 path（折线）与 circle（散点）的 SVG', () => {

@@ -7,15 +7,18 @@ import type {
   PlotLineageOptions,
   PlotLineageRun,
 } from '@retikz/plot';
-import type { InputPlotEmbed, InputPlotPanel } from '@retikz/plot-vanilla';
+import type {
+  InputPlotCoordinate,
+  InputPlotEmbed,
+  InputPlotPanel,
+  MarkTransformShortcutDefinition,
+} from '@retikz/plot-vanilla';
 import type { LayoutProps } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
 import { PlotInputEmbedAdapter } from '@retikz/plot-vanilla';
 import { Layout } from '@retikz/react';
 import { useEffect, useMemo, useRef } from 'react';
-
-import type { CoordinateInput, MarkTransformShortcutDefinition } from './adapter';
 
 import { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
 import { usePlotThemeStyles } from './theme-context';
@@ -77,7 +80,7 @@ export type PlotDslProps = PlotCommonProps &
     /** 逻辑字段到物理数据路径的映射 */
     fieldMap?: Record<string, string>;
     /** 坐标系输入 */
-    coordinate?: CoordinateInput;
+    coordinate?: InputPlotCoordinate;
     /** Plot composition 输入 */
     composition?: IRPlotSpec['composition'];
     /** 组合 DSL 前插入的 Plot data transforms */
@@ -115,10 +118,10 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
 /** 将 React Plot props 收敛为由 Plot Vanilla adapter 消费的 Input */
 const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmbed => {
   const plotProps = props as PlotProps;
-  const { input, datasets, lowerOptions } = resolvePlotAuthoring(plotProps, { embedded: true });
+  const { spec, datasets, lowerOptions } = resolvePlotAuthoring(plotProps, { embedded: true });
   const panel = createPlotPanelInput(plotProps);
   return {
-    spec: input,
+    spec,
     datasets,
     lowerOptions,
     preserveRootIdentity: true,

@@ -124,7 +124,7 @@ const FacetDimensionSchema = z
   })
   .describe('Facet dimension bound to a data field');
 
-const FacetDimensionInputSchema = z
+const FacetDimensionsSchema = z
   .union([FacetDimensionSchema, z.array(FacetDimensionSchema).min(1)])
   .describe('One or more facet dimensions bound to data fields');
 
@@ -135,14 +135,14 @@ const FacetHeaderLabelSchema = z
   })
   .describe('Facet header label text style');
 
-const FacetHeaderLabelInputSchema = z
+const FacetHeaderLabelValueSchema = z
   .union([z.boolean(), FacetHeaderLabelSchema])
   .describe('Facet label visibility or text style');
 
 const FacetHeaderSchema = z
   .strictObject({
-    row: FacetHeaderLabelInputSchema.optional().describe('Whether generated row labels are visible or styled'),
-    column: FacetHeaderLabelInputSchema.optional().describe('Whether generated column labels are visible or styled'),
+    row: FacetHeaderLabelValueSchema.optional().describe('Whether generated row labels are visible or styled'),
+    column: FacetHeaderLabelValueSchema.optional().describe('Whether generated column labels are visible or styled'),
   })
   .describe('Facet header visibility and text style');
 
@@ -151,10 +151,10 @@ export const FacetArrangementSchema = z
     kind: z.literal(CoordinateArrangementKind.Facet).describe('Arrangement discriminator: data-driven facet panels'),
     id: z.string().min(1).describe('Stable facet arrangement id used to derive panel view ids and provenance'),
     view: z.string().min(1).describe('Template coordinate view used by generated facet panels'),
-    row: FacetDimensionInputSchema.optional().describe(
+    row: FacetDimensionsSchema.optional().describe(
       'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
     ),
-    column: FacetDimensionInputSchema.optional().describe(
+    column: FacetDimensionsSchema.optional().describe(
       'Facet column dimension or ordered column-dimension hierarchy; omit for a one-dimensional row facet',
     ),
     empty: z
