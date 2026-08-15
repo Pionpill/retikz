@@ -2,7 +2,7 @@
 
 > 状态：已完成；ADR-01～05 已由 Notation alpha.1 Superseded，ADR-06 保持 Accepted
 >
-> 主题：提供可持久化的基础逻辑单元、headless `LogicFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
+> 主题：提供可持久化的基础逻辑节点、headless `LogicFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
 > 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把本 milestone 的图式元素迁入 Diagram owner；本页保留为 Standard 验证这些契约时的历史 milestone
 >
@@ -34,7 +34,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - Core 拥有 `IRChild`、Path step、target / anchor、namespace、layout-aware probe / replay、Scene 与 renderer 执行
 - React / Vanilla 只把宿主 authoring 归一为同一 Standard canonical IR，不复制 schema、布局、路由或 target 解析
 - `role`、`category` 等开放字符串只保存作者语义，在组件提供 typed artifact 时也原样保留，不触发隐藏 registry、布局或样式规则
-- 每项公开组件沿用 Core `CompositeDefinition` registry；alpha.3 不增加 LogicUnit、Block kind、routing 或 appearance provider registry
+- 每项公开组件沿用 Core `CompositeDefinition` registry；alpha.3 不增加 LogicNode、Block kind、routing 或 appearance provider registry
 - Process、Class、Data recipe 只消费公开能力，不成为 Standard schema、Definition 或 adapter 的前置依赖
 
 ## ADR 顺序
@@ -43,14 +43,14 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 | -------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ | ---------- |
 | [01](./01-logic-diagram-profile.md)    | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Superseded |
 | [02](./02-headless-logic-frame.md)     | Headless LogicFrame     | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Superseded |
-| [03](./03-semantic-logic-units.md)     | Semantic Logic Nodes    | 冻结四个 Core Node sugar 的职责 describe、固定 shape、默认值与跨宿主输入           | ADR-01                                     | Superseded |
+| [03](./03-semantic-logic-nodes.md)     | Semantic Logic Nodes    | 冻结四个 Core Node sugar 的职责 describe、固定 shape、默认值与跨宿主输入           | ADR-01                                     | Superseded |
 | [04](./04-connector-and-callout.md)    | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Superseded |
 | [05](./05-capability-and-authoring.md) | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Superseded |
 
 ```text
 01 shared profile
 ├─→ 02 LogicFrame ─┐
-└─→ 03 logic units ────┼─→ 04 Connector / Callout
+└─→ 03 logic nodes ────┼─→ 04 Connector / Callout
                        └─→ 05 definitions / adapters
 ```
 
@@ -59,7 +59,7 @@ alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻�
 - 语义 Node 的逻辑职责存在于 Schema describe 与固定 shape；canonical 输出仍是 Core Node，lowering 后的 shape、Path、Scope 与 Scene 不是反向恢复真源
 - `LogicFrame` 只理解 header、section、spacing、appearance、bounds 与 target，不理解标题、图标、字段、方法、代码、输入或输出
 - section 顺序只由 `sections` authored order 决定；不维护第二份 order，也不使用 `visible: false`
-- 基础逻辑单元全部复用 Core Node props，字符串 children / `<Text>` 归一为 Node 文本；`Decision` 不拥有 condition 专有字段或 outcome 列表
+- 基础逻辑节点全部复用 Core Node props，字符串 children / `<Text>` 归一为 Node 文本；`Decision` 不拥有 condition 专有字段或 outcome 列表
 - branch 语义只保存在 `Connector`，不同时写入 `Decision`
 - Connector 是局部关系 composite，不是 Edge 集合；它不统计连接数量、不验证拓扑，也不自动移动端点组件
 - Connector label 直接复用 Core `IRGeometryLabelInput` 与最后一个 drawable step 的 label，不接受任意复合 `IRChild`，也不由 Standard 测量或放置；polyline 明确把 label 放在连接终点段
@@ -119,7 +119,7 @@ Gate 至少证明：
 - [x] `LogicFrame` 与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；四个 semantic Node Schema / factory 与 Connector 的 schema、Definition、同 id Core Path lowering 形成闭环
 - [x] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
 - [x] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
-- [x] 整体 Block 与普通逻辑单元可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
+- [x] 整体 Block 与普通逻辑节点可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
 - [x] Core built-in stroke Path step label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
 - [x] Process / Class / Data recipe 只存在于 docs 内部实现，且至少服务三类真实逻辑图
 - [x] Standard 三包与双语 docs 完成受影响范围验证，无 renderer 特判、隐式 registry 或领域反向依赖

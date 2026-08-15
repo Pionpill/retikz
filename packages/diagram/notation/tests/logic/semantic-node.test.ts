@@ -1,6 +1,6 @@
-import type { AnyCompositeDefinition, IRChild, IRNode } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild, IRNode, ScenePrimitive } from '@retikz/core';
 
-import { lowerIRToKernel } from '@retikz/core';
+import { compileToScene, lowerIRToKernel, ThemeMode } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRDecision, IRJunction, IRStage, IRTerminal } from '../../src';
@@ -21,6 +21,11 @@ const definitions = (): Array<AnyCompositeDefinition> => [
   Notation.DecisionDefinition,
   Notation.JunctionDefinition,
 ];
+
+const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
+  primitives.flatMap(primitive =>
+    primitive.type === 'group' ? [primitive, ...flattenPrimitives(primitive.children)] : [primitive],
+  );
 
 describe('Notation semantic unit canonical IR', () => {
   it('keeps a distinct Notation discriminator and authored identity for every unit', () => {
@@ -60,35 +65,43 @@ describe('Notation semantic unit canonical IR', () => {
     ).toBe(false);
   });
 
-  it('preserves existing defaults in canonical semantic IR without persisting fixed shapes', () => {
-    expect(Notation.createTerminal({ id: 'terminal', position })).toMatchObject({
+  it('preserves geometry defaults while leaving Theme paints absent from canonical semantic IR', () => {
+    const terminal = Notation.createTerminal({ id: 'terminal', position });
+    const stage = Notation.createStage({ id: 'stage', position });
+    const decision = Notation.createDecision({ id: 'decision', position });
+    const junction = Notation.createJunction({ id: 'junction', position });
+
+    expect(terminal).toMatchObject({
       namespace: 'notation',
       type: 'terminal',
       minimumSize: { width: 48, height: 24 },
       padding: { x: 12, y: 6 },
-      fill: 'transparent',
     });
-    expect(Notation.createStage({ id: 'stage', position })).toMatchObject({
+    expect(stage).toMatchObject({
       namespace: 'notation',
       type: 'stage',
       padding: 8,
-      fill: 'transparent',
     });
-    expect(Notation.createDecision({ id: 'decision', position })).toMatchObject({
+    expect(decision).toMatchObject({
       namespace: 'notation',
       type: 'decision',
       padding: { x: 3, y: 2 },
-      fill: 'transparent',
     });
-    expect(Notation.createJunction({ id: 'junction', position })).toMatchObject({
+    expect(junction).toMatchObject({
       namespace: 'notation',
       type: 'junction',
       minimumSize: { width: 8, height: 8 },
       padding: 0,
-      fill: 'currentColor',
     });
-    expect(Notation.createTerminal({ id: 'terminal', position })).not.toHaveProperty('shape');
-    expect(Notation.createStage({ id: 'stage', position })).not.toHaveProperty('shape');
+    [terminal, stage, decision, junction].forEach(unit => {
+      expect(unit).not.toHaveProperty('shape');
+      expect(unit).not.toHaveProperty('textColor');
+      expect(unit).not.toHaveProperty('stroke');
+      expect(unit).not.toHaveProperty('fill');
+      expect(unit).not.toHaveProperty('opacity');
+      expect(unit).not.toHaveProperty('fillOpacity');
+      expect(unit).not.toHaveProperty('strokeOpacity');
+    });
   });
 });
 
@@ -109,6 +122,135 @@ describe('Notation semantic unit Node lowering', () => {
       { type: 'node', id: 'decision', shape: { type: 'diamond', params: { aspectRatio: 1.8 } } },
       { type: 'node', id: 'junction', shape: 'circle' },
     ]);
+  });
+
+  it.each([
+    ['default', ThemeMode.Light, '#000000', { textColor: '#000000', stroke: '#000000', fill: 'none' }],
+    ['default', ThemeMode.Dark, '#ffffff', { textColor: '#ffffff', stroke: '#ffffff', fill: 'none' }],
+    ['primary', ThemeMode.Light, '#000000', { textColor: 'contrast', stroke: '#000000', fill: '#000000' }],
+    ['primary', ThemeMode.Dark, '#ffffff', { textColor: 'contrast', stroke: '#ffffff', fill: '#ffffff' }],
+    ['secondary', ThemeMode.Light, '#000000', { textColor: '#000000', stroke: 'none', fill: '#e6e6e6' }],
+    ['secondary', ThemeMode.Dark, '#ffffff', { textColor: '#ffffff', stroke: 'none', fill: '#1a1a1a' }],
+    ['outline', ThemeMode.Light, '#000000', { textColor: '#000000', stroke: '#666666', fill: 'none' }],
+    ['outline', ThemeMode.Dark, '#ffffff', { textColor: '#ffffff', stroke: '#999999', fill: 'none' }],
+    ['vibrant', ThemeMode.Light, '#000000', { textColor: '#000000', stroke: '#000000', fill: '#d9d9d9' }],
+    ['vibrant', ThemeMode.Dark, '#ffffff', { textColor: '#ffffff', stroke: '#ffffff', fill: '#262626' }],
+  ] as const)('applies the %s/%s LogicNodeVariant recipe', (variant, mode, color, expected) => {
+    const units = [
+      Notation.createTerminal({ id: 'terminal', position, variant }),
+      Notation.createStage({ id: 'stage', position, variant }),
+      Notation.createDecision({ id: 'decision', position, variant }),
+      Notation.createJunction({ id: 'junction', position, variant }),
+    ];
+    const lowered = lowerIRToKernel({ ...sceneOf(units), theme: { mode } }, { composites: definitions() });
+
+    lowered.children.forEach(child => expect(child).toMatchObject({ color, ...expected }));
+  });
+
+  it('uses authored color as the primary color for every variant recipe', () => {
+    const variants = [
+      ['default', { textColor: '#cc3366', stroke: '#cc3366', fill: 'none' }],
+      ['primary', { textColor: 'contrast', stroke: '#cc3366', fill: '#cc3366' }],
+      ['secondary', { textColor: '#cc3366', stroke: 'none', fill: '#faebf0' }],
+      ['outline', { textColor: '#cc3366', stroke: '#e085a3', fill: 'none' }],
+      ['vibrant', { textColor: '#cc3366', stroke: '#cc3366', fill: '#f7e0e8' }],
+    ] as const;
+
+    variants.forEach(([variant, expected]) => {
+      const stage = Notation.createStage({ id: variant, position, color: '#cc3366', variant });
+      const lowered = lowerIRToKernel(
+        { ...sceneOf([stage]), theme: { mode: ThemeMode.Light } },
+        { composites: definitions() },
+      );
+      expect(lowered.children[0]).toMatchObject({ color: '#cc3366', ...expected });
+    });
+  });
+
+  it('uses Core contrast for primary text before Scene emission', () => {
+    const stage = Notation.createStage({
+      id: 'primary',
+      position,
+      text: 'Primary',
+      color: '#cc3366',
+      variant: 'primary',
+    });
+    const scene = compileToScene(
+      { ...sceneOf([stage]), theme: { mode: ThemeMode.Light } },
+      { composites: definitions() },
+    ).scene;
+    const primitives = flattenPrimitives(scene.primitives);
+
+    expect(primitives.find(primitive => primitive.type === 'rect')).toMatchObject({
+      fill: '#cc3366',
+      stroke: '#cc3366',
+    });
+    expect(primitives.find(primitive => primitive.type === 'text')).toMatchObject({ fill: '#ffffff' });
+  });
+
+  it.each(['primary', 'secondary', 'outline', 'vibrant'] as const)(
+    'rejects dynamic authored primary color for the %s recipe',
+    variant => {
+      const stage = Notation.createStage({ id: 'dynamic', position, color: 'currentColor', variant });
+
+      expect(() => lowerIRToKernel(sceneOf([stage]), { composites: definitions() })).toThrow(
+        /compositeOpaqueColor.*foreground/i,
+      );
+    },
+  );
+
+  it('passes explicit paints and opacity fields through independently without generating opacity', () => {
+    const authored = Notation.createStage({
+      id: 'authored',
+      position,
+      color: '#cc3366',
+      textColor: 'transparent',
+      stroke: 'none',
+      fill: 'currentColor',
+      opacity: 0.8,
+      fillOpacity: 0.7,
+      strokeOpacity: 0.6,
+    });
+    const textOnly = Notation.createStage({
+      id: 'text-only',
+      position: [60, 0],
+      color: '#cc3366',
+      textColor: 'transparent',
+    });
+    const strokeOnly = Notation.createStage({
+      id: 'stroke-only',
+      position: [120, 0],
+      color: '#cc3366',
+      stroke: 'none',
+    });
+    const fillOnly = Notation.createStage({
+      id: 'fill-only',
+      position: [180, 0],
+      color: '#cc3366',
+      fill: 'currentColor',
+    });
+    const inherited = Notation.createStage({ id: 'inherited', position: [240, 0], color: '#cc3366' });
+    const lowered = lowerIRToKernel(sceneOf([authored, textOnly, strokeOnly, fillOnly, inherited]), {
+      composites: definitions(),
+    });
+    const baseline = { color: '#cc3366', textColor: '#cc3366', stroke: '#cc3366', fill: 'none' };
+
+    expect(lowered.children[0]).toMatchObject({
+      textColor: 'transparent',
+      stroke: 'none',
+      fill: 'currentColor',
+      opacity: 0.8,
+      fillOpacity: 0.7,
+      strokeOpacity: 0.6,
+    });
+    expect(lowered.children[1]).toMatchObject({ ...baseline, textColor: 'transparent' });
+    expect(lowered.children[2]).toMatchObject({ ...baseline, stroke: 'none' });
+    expect(lowered.children[3]).toMatchObject({ ...baseline, fill: 'currentColor' });
+    expect(lowered.children[4]).toMatchObject(baseline);
+    lowered.children.slice(1).forEach(child => {
+      expect(child).not.toHaveProperty('opacity');
+      expect(child).not.toHaveProperty('fillOpacity');
+      expect(child).not.toHaveProperty('strokeOpacity');
+    });
   });
 
   it('passes the complete applicable Node surface through the Definition', () => {

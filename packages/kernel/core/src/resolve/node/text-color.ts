@@ -1,11 +1,9 @@
 import type { EffectiveLabelDefault } from '../style';
 import type { IRLineSpec, IRNode, IRNodeLabel } from '../../schemas';
-import type { ParsedCssColor } from './text-color-types';
+import type { ParsedCssColor } from '../../shared/color';
 
 import { NodeTextColor } from '../../schemas';
-import { parseStaticCssColor } from './text-color-parse';
-
-export { parseStaticCssColor } from './text-color-parse';
+import { parseStaticCssColor } from '../../shared';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLineSpec): boolean => {

@@ -1,7 +1,7 @@
 import type { ThemeModeValue } from '@retikz/core';
 import type { LucideIcon } from 'lucide-react';
 
-import { BrushCleaning, Feather, GraduationCap, Sparkles } from 'lucide-react';
+import { BrushCleaning, CircleDot, GraduationCap, Sparkles } from 'lucide-react';
 
 /** 文档站维护的闭合 Theme style 选项 */
 export const PreviewThemeStyle = {
@@ -30,7 +30,7 @@ export const PreviewThemeStyleOptions = [
 
 /** ThemeStyle 对应的文档站图标 */
 const previewThemeStyleIcons: Record<PreviewThemeStyleValue, LucideIcon> = {
-  [PreviewThemeStyle.Default]: Feather,
+  [PreviewThemeStyle.Default]: CircleDot,
   [PreviewThemeStyle.Academic]: GraduationCap,
   [PreviewThemeStyle.Vibrant]: Sparkles,
   [PreviewThemeStyle.Clean]: BrushCleaning,

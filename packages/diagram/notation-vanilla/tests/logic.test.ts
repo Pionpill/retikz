@@ -1,17 +1,20 @@
-import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
 import {
   ConnectorProvider,
   DecisionProvider,
   JunctionProvider,
+  LogicFrameProvider,
   StageProvider,
   TerminalProvider,
 } from '@retikz/notation';
+import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import {
   connector,
   ConnectorInputEmbedAdapter,
+  createNotationVanillaAdapters,
   decision,
   DecisionInputEmbedAdapter,
   junction,
@@ -22,13 +25,28 @@ import {
   TerminalInputEmbedAdapter,
 } from '../src';
 
+const normalizeChildren = (children: ReadonlyArray<InputChild>) => {
+  const normalized = normalizeScene({ children });
+  return {
+    children: normalized.ir.children,
+    providerDependencies: {
+      roots: normalized.contributions.flatMap(contribution => contribution.roots),
+      providers: normalized.contributions.flatMap(contribution => contribution.providers),
+    },
+    authoringSites: [],
+  };
+};
+
+const contextOf = (id: string, kind: string): InputEmbedContext => ({
+  id,
+  kind,
+  layerId: 'layer',
+  identityPath: ['layer', id],
+  normalizeChildren,
+});
+
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>
-  adapter.lower(spec.props, {
-    id: spec.id,
-    kind: spec.kind,
-    layerId: 'layer',
-    identityPath: ['layer', spec.id],
-  } satisfies InputEmbedContext);
+  adapter.lower(spec.props, contextOf(spec.id, spec.kind));
 
 describe('@retikz/notation-vanilla package boundary', () => {
   it('does not expose Callout authoring', async () => {
@@ -41,6 +59,33 @@ describe('@retikz/notation-vanilla package boundary', () => {
 });
 
 describe('Notation Vanilla semantic authoring', () => {
+  it('creates all six adapters and preserves LogicNodeVariant authoring fields', () => {
+    const adapters = createNotationVanillaAdapters();
+    const stageAdapter = adapters[2];
+    const contribution = lower(
+      stage('vibrant', { position: [0, 0], color: '#123456', variant: 'vibrant' }),
+      stageAdapter,
+    );
+
+    expect(adapters.map(adapter => adapter.kind)).toEqual([
+      'notation.logicFrame',
+      'notation.terminal',
+      'notation.stage',
+      'notation.decision',
+      'notation.junction',
+      'notation.connector',
+    ]);
+    expect(contribution.node).toMatchObject({ color: '#123456' });
+    expect(contribution.node).toMatchObject({ variant: 'vibrant' });
+    expect(
+      adapters[0].lower({ header: { child: { type: 'node', position: [0, 0] } } }, contextOf('frame', adapters[0].kind))
+        .providerDependencies.roots[0],
+    ).toEqual(LogicFrameProvider.key);
+    expect(
+      adapters[5].lower({ way: ['a', 'b'] }, contextOf('connector', adapters[5].kind)).providerDependencies.roots[0],
+    ).toEqual(ConnectorProvider.key);
+  });
+
   it('returns embeds for all five lightweight semantic elements', () => {
     expect(terminal('start', { position: [0, 0], text: 'Start' })).toMatchObject({
       type: 'embed',
