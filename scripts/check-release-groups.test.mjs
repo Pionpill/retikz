@@ -52,7 +52,7 @@ const baseGroups = {
     packages: ['@retikz/layout', '@retikz/layout-react', '@retikz/layout-vanilla'],
   },
   graph: {
-    domain: 'diagram',
+    domain: 'schematic',
     kind: 'foundation',
     packages: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
@@ -176,13 +176,13 @@ const basePackages = [
     },
   },
   {
-    path: 'packages/diagram/graph/package.json',
+    path: 'packages/schematic/graph/package.json',
     manifest: {
       ...createRootPublishContract(),
       name: '@retikz/graph',
       version: '0.1.0-alpha.1',
       retikz: {
-        domain: 'diagram',
+        domain: 'schematic',
         releaseGroup: 'graph',
         publishable: true,
       },
@@ -194,13 +194,13 @@ const basePackages = [
     },
   },
   {
-    path: 'packages/diagram/graph-react/package.json',
+    path: 'packages/schematic/graph-react/package.json',
     manifest: {
       ...createRootPublishContract(),
       name: '@retikz/graph-react',
       version: '0.1.0-alpha.1',
       retikz: {
-        domain: 'diagram',
+        domain: 'schematic',
         releaseGroup: 'graph',
         publishable: true,
       },
@@ -211,13 +211,13 @@ const basePackages = [
     },
   },
   {
-    path: 'packages/diagram/graph-vanilla/package.json',
+    path: 'packages/schematic/graph-vanilla/package.json',
     manifest: {
       ...createRootPublishContract(),
       name: '@retikz/graph-vanilla',
       version: '0.1.0-alpha.1',
       retikz: {
-        domain: 'diagram',
+        domain: 'schematic',
         releaseGroup: 'graph',
         publishable: true,
       },

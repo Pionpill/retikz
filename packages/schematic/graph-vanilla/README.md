@@ -37,5 +37,5 @@ GraphConnector accepts either canonical Step `children` or authoring-only `way`.
 Direct persisted IR uses selected Definitions from `@retikz/graph` through
 Core compile options.
 
-See the [Graph documentation](https://pionpill.github.io/retikz/diagram/graph)
+See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
 for complete examples.

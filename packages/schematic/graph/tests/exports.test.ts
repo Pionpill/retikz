@@ -16,7 +16,7 @@ describe('@retikz/graph package boundary', () => {
     expect(manifest).toMatchObject({
       name: '@retikz/graph',
       version: '0.1.0-alpha.1',
-      retikz: { domain: 'diagram', releaseGroup: 'graph' },
+      retikz: { domain: 'schematic', releaseGroup: 'graph' },
     });
     expect(Object.keys(manifest.exports)).toEqual(['.']);
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);

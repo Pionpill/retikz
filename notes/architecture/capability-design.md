@@ -74,7 +74,7 @@
 - [`Plot 可视化完备设计`](../../packages/viz/_notes/architecture/plot-visualization-complete.md)
 - [`Table 表格可视化完备设计`](../../packages/viz/_notes/architecture/table-visualization-complete.md)
 - [`Schematic 制图能力域设计`](./schematic-design.md)
-- `packages/diagram/_notes/architecture/schematic-graph-complete.md`（随首个 Graph ADR 建立）
+- `packages/schematic/_notes/architecture/schematic-graph-complete.md`（随首个 Graph ADR 建立）
 
 `@retikz/math`、`@retikz/runtime`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中分别承担纯计算、领域中立增量执行、Scene 执行、等价暴露或宿主接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
 

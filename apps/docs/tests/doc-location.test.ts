@@ -6,11 +6,11 @@ describe('resolveDocLocation', () => {
   it('将 Graph 两段路径归一化为有落地页的 section', () => {
     expect(
       resolveDocLocation({
-        moduleId: 'diagram',
+        moduleId: 'schematic',
         firstSeg: 'graph',
       }),
     ).toEqual({
-      moduleId: 'diagram',
+      moduleId: 'schematic',
       sectionId: 'graph',
       pageId: null,
     });
@@ -19,13 +19,13 @@ describe('resolveDocLocation', () => {
   it('保留 Graph 分组的 section + page + subPage 语义', () => {
     expect(
       resolveDocLocation({
-        moduleId: 'diagram',
+        moduleId: 'schematic',
         sectionId: 'graph',
         pageId: 'frame',
         subPageId: 'graph-frame',
       }),
     ).toEqual({
-      moduleId: 'diagram',
+      moduleId: 'schematic',
       sectionId: 'graph',
       pageId: 'frame',
       subPageId: 'graph-frame',

@@ -1,9 +1,9 @@
 # ADR-03：GraphNode role 语义（历史验证）
 
-- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
+- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01；2026-08-08 简化为 Core Node sugar
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md)
-- 后继：[Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把四个 Core Node sugar 统一迁入 `GraphNode.role`；迁移不改变其 Core Node 等价语义
+- 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把四个 Core Node sugar 统一迁入 `GraphNode.role`；迁移不改变其 Core Node 等价语义
 
 ## 背景与目标
 

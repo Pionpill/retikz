@@ -1,6 +1,6 @@
 # schematic 内部文档
 
-这里放当前仍位于 `packages/diagram/` 的 Schematic 分组内部协作文档。Graph 三包作为首个 foundation package family；未来 `@retikz/diagram` 是 Graph 之上的自动图示能力包，`flow` 只是其中一种布局类型或 preset。Graph editor adapter 继续由独立 roadmap / ADR 决定。
+这里放当前仍位于 `packages/schematic/` 的 Schematic 分组内部协作文档。Graph 三包作为首个 foundation package family；未来 `@retikz/diagram` 是 Graph 之上的自动图示能力包，`flow` 只是其中一种布局类型或 preset。Graph editor adapter 继续由独立 roadmap / ADR 决定。
 
 ## 目录
 

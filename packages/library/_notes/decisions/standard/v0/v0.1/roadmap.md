@@ -2,7 +2,7 @@
 
 > 状态：alpha.1～alpha.4 已完成。关联：[Standard v0 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 >
-> 图式语义后继：[Graph v0.1 roadmap](../../../../../../diagram/_notes/decisions/graph/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram。布局后继：[Layout v0.1 roadmap](../../../layout/v0/v0.1/roadmap.md) 已在 alpha.1 接管排版布局
+> 图式语义后继：[Graph v0.1 roadmap](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram。布局后继：[Layout v0.1 roadmap](../../../layout/v0/v0.1/roadmap.md) 已在 alpha.1 接管排版布局
 >
 > v0.1 是 Standard 包家族的首个版本。`Grid`、`Axes`、`Frame` 与 Legend 建立宿主无关 Tier 2 composite；alpha.2 曾验证的通用布局已在当前 alpha.4 迁入 Layout package family，Standard 回归横向绘图拓展边界，并在同一当前版本内增加任意 child Surface。
 
@@ -54,7 +54,7 @@ Grid、Axes、Frame、Legend 与 Surface 都通过 Core 既有 `CompositeDefinit
 
 ## Tier 2 语义约定
 
-- GraphFrame、GraphNode、GraphConnector 与 Callout 的现行 owner、namespace 和图式职责由 [Graph v0.1](../../../../../../diagram/_notes/decisions/graph/v0/v0.1/roadmap.md) 维护；Standard 不保留对应 discriminator、Definition 或 adapter
+- GraphFrame、GraphNode、GraphConnector 与 Callout 的现行 owner、namespace 和图式职责由 [Graph v0.1](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/roadmap.md) 维护；Standard 不保留对应 discriminator、Definition 或 adapter
 - FlexLayout、GridLayout、OverlayLayout 与通用 LayoutItem 由 Layout v0.1 维护；Standard Legend 只通过 Layout `/compose` 复用排版，现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
 - Legend 以领域无关 Standard 输入保存 title、`items | ramp`、任意 `IRChild` sample 与呈现布局；Plot/Table 只把各自领域解析结果转换为该输入，不把 channel、scale、Cell selector、formatter 函数或 interaction state 注入 Standard schema
 - Surface 只保存单一任意 `IRChild`、box appearance 与完整 Scope props；Chart / Table 负责把领域 token 和内容解析为 Surface 输入，Standard 不读取 PlotSpec、Chart presentation 或 Table 语义

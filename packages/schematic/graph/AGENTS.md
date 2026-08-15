@@ -1,6 +1,6 @@
-# @retikz/graph-react 工作指南
+# @retikz/graph 工作指南
 
-本文件覆盖 `packages/diagram/graph-react/`。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，Schematic 分组规则见 [`../AGENTS.md`](../AGENTS.md)。
+本文件覆盖 `packages/schematic/graph/`。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，Schematic 分组规则见 [`../AGENTS.md`](../AGENTS.md)。涉及 Schematic 能力归属时先读 [`Schematic 制图能力域设计`](../../../notes/architecture/schematic-design.md) 与 [`Schematic Graph 完备设计`](../_notes/architecture/schematic-graph-complete.md)。
 
 ## 分组职责
 

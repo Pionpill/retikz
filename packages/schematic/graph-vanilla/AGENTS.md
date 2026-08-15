@@ -1,6 +1,6 @@
-# schematic 分组工作指南
+# @retikz/graph-vanilla 工作指南
 
-本文件覆盖当前仍位于 `packages/diagram/` 的 Schematic 分组。全仓通用规则见根 [`AGENTS.md`](../../AGENTS.md)。涉及 Schematic 能力归属时先读 [`Schematic 制图能力域设计`](../../notes/architecture/schematic-design.md) 与 [`Schematic Graph 完备设计`](_notes/architecture/schematic-graph-complete.md)。
+本文件覆盖 `packages/schematic/graph-vanilla/`。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，Schematic 分组规则见 [`../AGENTS.md`](../AGENTS.md)。
 
 ## 分组职责
 

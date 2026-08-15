@@ -1,9 +1,9 @@
 # ADR-04：Connector 路由与显式 Callout
 
-- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
+- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [ADR-03](./03-semantic-logic-nodes.md) · [Core Path contract](../../../../../../../kernel/_notes/decisions/v0/v0.5/roadmap.md)
-- 后继：[Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把连接语义统一迁入 `GraphConnector`，并保留 Core Path / target 主链；Callout 后续已由 Graph alpha.3 撤回
+- 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把连接语义统一迁入 `GraphConnector`，并保留 Core Path / target 主链；Callout 后续已由 Graph alpha.3 撤回
 
 ## 背景与目标
 

@@ -2,7 +2,7 @@
   "name": "@retikz/graph-react",
   "version": "0.1.0-alpha.1",
   "retikz": {
-    "domain": "diagram",
+    "domain": "schematic",
     "releaseGroup": "graph",
     "layer": "adapter",
     "publishable": true
@@ -24,7 +24,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/diagram/graph-react"
+    "directory": "packages/schematic/graph-react"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"

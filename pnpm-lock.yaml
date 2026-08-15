@@ -371,13 +371,13 @@ importers:
         version: link:../../packages/kernel/foundation
       '@retikz/graph':
         specifier: workspace:*
-        version: link:../../packages/diagram/graph
+        version: link:../../packages/schematic/graph
       '@retikz/graph-react':
         specifier: workspace:*
-        version: link:../../packages/diagram/graph-react
+        version: link:../../packages/schematic/graph-react
       '@retikz/graph-vanilla':
         specifier: workspace:*
-        version: link:../../packages/diagram/graph-vanilla
+        version: link:../../packages/schematic/graph-vanilla
       '@retikz/inspect':
         specifier: workspace:*
         version: link:../../packages/kernel/inspect
@@ -588,7 +588,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
-  packages/diagram/graph:
+  packages/schematic/graph:
     dependencies:
       '@retikz/core':
         specifier: workspace:^
@@ -622,7 +622,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
-  packages/diagram/graph-react:
+  packages/schematic/graph-react:
     dependencies:
       '@retikz/graph':
         specifier: workspace:*
@@ -668,7 +668,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
-  packages/diagram/graph-vanilla:
+  packages/schematic/graph-vanilla:
     dependencies:
       '@retikz/graph':
         specifier: workspace:*

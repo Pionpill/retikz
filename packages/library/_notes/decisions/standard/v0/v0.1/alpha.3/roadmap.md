@@ -4,7 +4,7 @@
 >
 > 主题：提供可持久化的基础逻辑节点、headless `GraphFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
 >
-> 后继：[Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 milestone 的图式元素迁入 Diagram owner；本页保留为 Standard 验证这些契约时的历史 milestone
+> 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 milestone 的图式元素迁入 Diagram owner；本页保留为 Standard 验证这些契约时的历史 milestone
 >
 > 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
 

@@ -100,10 +100,10 @@ describe('changelog data', () => {
     );
   });
 
-  it('当前 Diagram 里程碑注册详情路由并覆盖 Graph 包族', () => {
+  it('当前 Schematic 里程碑注册详情路由并覆盖 Graph 包族', () => {
     const releases = schematicSection.find(section => section.id === 'releases');
     const changelogPage = releases?.pages.find(page => page.id === 'changelog');
-    const currentRelease = changelogForModule('diagram')[0];
+    const currentRelease = changelogForModule('schematic')[0];
     expect(currentRelease).toBeDefined();
     expect(currentRelease.packages.map(block => block.pkg)).toEqual([
       '@retikz/graph',

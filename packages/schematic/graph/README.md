@@ -54,5 +54,5 @@ GraphConnector's `way` form is authoring-only and is normalized through Core
 `children`. Imports do not mutate a global registry; pass only the Definitions
 selected for the current figure through Core compile options.
 
-See the [Graph documentation](https://pionpill.github.io/retikz/diagram/graph)
+See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
 for components, persisted IR, and direct-definition loading examples.

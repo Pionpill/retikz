@@ -221,9 +221,9 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   docs: { zh: '文档站', en: 'Docs' },
 };
 
-/** 包的类别分组：kernel 基础设施 / library 能力包 / diagram 图式 / viz 可视化层 / other；用于映射模块 changelog 切片 */
+/** 包的类别分组：kernel 基础设施 / library 能力包 / schematic 图式 / viz 可视化层 / other；用于映射模块 changelog 切片 */
 export type PackageGroup = {
-  id: 'kernel' | 'standard' | 'layout' | 'diagram' | 'viz' | 'other';
+  id: 'kernel' | 'standard' | 'layout' | 'schematic' | 'viz' | 'other';
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;
 };
@@ -251,7 +251,7 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
     members: ['@retikz/layout', '@retikz/layout-react', '@retikz/layout-vanilla'],
   },
   {
-    id: 'diagram',
+    id: 'schematic',
     members: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
   {

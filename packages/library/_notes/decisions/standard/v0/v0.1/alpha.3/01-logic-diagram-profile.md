@@ -1,9 +1,9 @@
 # ADR-01：Standard Logic Diagram Profile
 
-- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
+- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
-- 后继：[Graph alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 ADR 的图式语义迁入 Diagram owner；本页保留为历史设计记录
+- 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 ADR 的图式语义迁入 Diagram owner；本页保留为历史设计记录
 
 ## 背景与目标
 

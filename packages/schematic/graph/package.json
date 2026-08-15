@@ -1,13 +1,13 @@
 {
-  "name": "@retikz/graph-vanilla",
+  "name": "@retikz/graph",
   "version": "0.1.0-alpha.1",
   "retikz": {
-    "domain": "diagram",
+    "domain": "schematic",
     "releaseGroup": "graph",
-    "layer": "adapter",
+    "layer": "tier2",
     "publishable": true
   },
-  "description": "Framework-free authoring bindings for retikz Diagram Graph.",
+  "description": "Framework-agnostic Diagram Graph composites for retikz.",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -18,13 +18,13 @@
     "tikz",
     "diagram",
     "graph",
-    "vanilla"
+    "composite"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pionpill/retikz.git",
-    "directory": "packages/diagram/graph-vanilla"
+    "directory": "packages/schematic/graph"
   },
   "bugs": {
     "url": "https://github.com/Pionpill/retikz/issues"
@@ -64,8 +64,11 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
-    "@retikz/graph": "workspace:*",
-    "@retikz/vanilla": "workspace:^"
+    "@retikz/core": "workspace:^",
+    "@retikz/foundation": "workspace:^",
+    "@retikz/layout": "workspace:^",
+    "@retikz/math": "workspace:^",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -1,6 +1,6 @@
-# @retikz/graph-vanilla 工作指南
+# @retikz/graph-react 工作指南
 
-本文件覆盖 `packages/diagram/graph-vanilla/`。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，Schematic 分组规则见 [`../AGENTS.md`](../AGENTS.md)。
+本文件覆盖 `packages/schematic/graph-react/`。全仓通用规则见根 [`AGENTS.md`](../../../AGENTS.md)，Schematic 分组规则见 [`../AGENTS.md`](../AGENTS.md)。
 
 ## 分组职责
 

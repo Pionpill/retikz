@@ -14,14 +14,14 @@ retikz 将包的代码归属和发布节奏分开管理。
 | --------- | -------------------- | ------------------------------------------------------------ |
 | kernel    | `packages/kernel/*`  | 运行时、核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
 | library   | `packages/library/*` | 相对 Core 可选、供作者与官方 Tier 2 包跨领域复用的绘图能力库 |
-| schematic | `packages/diagram/*` | 通用关系图、显式几何与自动图示布局能力                       |
+| schematic | `packages/schematic/*` | 通用关系图、显式几何与自动图示布局能力                       |
 | viz       | `packages/viz/*`     | 可视化底座和 plot 等上层功能包                               |
 
 领域目录只表达代码归属和依赖方向，不表示同目录下所有包必须共享版本。
 
 跨领域复用的官方绘图能力库只归 `packages/library/*`，不再以“可选 kernel 扩展”的名义进入 `packages/kernel/*`。它相对 Core 保持可选，但 Plot、Table 等官方 Tier 2 包可以使用兼容版本单向依赖所需 Standard capability。
 
-Schematic 领域的 Graph package family 当前位于 `packages/diagram/*`，作为可独立绘制的通用关系与图式语义基础层；未来 `@retikz/diagram` 在 Graph 之上拥有自动布局、routing 与几何结果。它们可以消费 Core、Math 与 Standard 的公开能力，但 Standard 不反向依赖 Schematic 语义。本轮只更新领域与包职责文档，物理目录和 package metadata 的迁移另行执行。
+Schematic 领域的 Graph package family 当前位于 `packages/schematic/*`，作为可独立绘制的通用关系与图式语义基础层；未来 `@retikz/diagram` 在 Graph 之上拥有自动布局、routing 与几何结果。它们可以消费 Core、Math 与 Standard 的公开能力，但 Standard 不反向依赖 Schematic 语义。物理目录和 package metadata 已与 Schematic 领域命名同步。
 
 ## 发布组
 

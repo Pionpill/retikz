@@ -10,7 +10,7 @@ export const releaseGroups = {
     packages: ['@retikz/standard', '@retikz/standard-react', '@retikz/standard-vanilla'],
   },
   graph: {
-    domain: 'diagram',
+    domain: 'schematic',
     kind: 'foundation',
     packages: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },

@@ -32,9 +32,9 @@ export const changelog: Array<Release> = [
 ];
 
 /** 文档模块 id → changelog 包组 */
-const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'layout' | 'diagram' | 'viz' | 'other'>([
+const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'layout' | 'schematic' | 'viz' | 'other'>([
   ['kernel', 'kernel'],
-  ['schematic', 'diagram'],
+  ['schematic', 'schematic'],
   ['viz', 'viz'],
 ]);
 
@@ -78,7 +78,7 @@ const VIZ_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
 
 /** 包标识 → 所属包组 */
-const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'layout' | 'diagram' | 'viz' | 'other' | undefined =>
+const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'layout' | 'schematic' | 'viz' | 'other' | undefined =>
   PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
 
 /**

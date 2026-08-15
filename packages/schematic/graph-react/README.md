@@ -35,5 +35,5 @@ import { GraphConnector, GraphNode } from '@retikz/graph-react';
 both. Components contribute Definitions only for the current `Layout`;
 importing this package does not create global state.
 
-See the [Graph documentation](https://pionpill.github.io/retikz/diagram/graph)
+See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
 for complete examples.
