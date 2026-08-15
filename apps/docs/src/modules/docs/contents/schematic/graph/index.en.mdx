@@ -3,32 +3,32 @@ title: Graph
 description: Choose reusable diagram elements from one entry point, then express local structure and relationships with logic shells, GraphNode, and GraphConnector.
 ---
 
-Graph is the unified entry point for reusable elements in the Diagram domain. Its first set covers common logic links: `GraphFrame` owns a reusable shell and regions; `GraphNode` uses `role` for terminals, stages, decisions, and junctions; `GraphConnector` expresses relationships.
+Graph is the unified entry point for reusable elements in the Schematic domain. Its first set covers common logic links: `GraphFrame` owns a reusable shell and regions; `GraphNode` uses `role` for terminals, stages, decisions, and junctions; `GraphConnector` expresses relationships.
 
 Graph owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Layout containers, then use stable `id` values for explicit targets.
 
 ## Responsibilities at a glance
 
-| Member       | Owns                                                          | Does not own                            |
-| ------------ | ------------------------------------------------------------- | --------------------------------------- |
-| `GraphFrame` | A shell, header, ordered sections, and reusable region layout | Graph topology or automatic placement   |
-| `GraphNode` | Neutral shape, content, sizing, and semantic role             | Domain-specific state machines          |
-| `GraphConnector`  | One Core Path route and an optional final-step label          | Automatic routing or obstacle avoidance |
+| Member           | Owns                                                          | Does not own                            |
+| ---------------- | ------------------------------------------------------------- | --------------------------------------- |
+| `GraphFrame`     | A shell, header, ordered sections, and reusable region layout | Graph topology or automatic placement   |
+| `GraphNode`      | Neutral shape, content, sizing, and semantic role             | Domain-specific state machines          |
+| `GraphConnector` | One Core Path route and an optional final-step label          | Automatic routing or obstacle avoidance |
 
 All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Definitions are injected per figure; they never enter persisted JSON.
 
 ## Content groups
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/diagram/graph/unit">
+  <LinkedCard href="/schematic/graph/base">
     <span className="font-semibold">Base Units</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">GraphNode and GraphConnector</span>
   </LinkedCard>
-  <LinkedCard href="/diagram/graph/frame">
+  <LinkedCard href="/schematic/graph/frame">
     <span className="font-semibold">Composite Units</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">GraphFrame and future reusable compositions</span>
   </LinkedCard>
-  <LinkedCard href="/diagram/graph/api-reference">
+  <LinkedCard href="/schematic/graph/api-reference">
     <span className="font-semibold">Graph API Reference</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Schemas, factories, Definitions, and adapter identity
@@ -39,5 +39,5 @@ All members lower to existing Core primitives and can be authored through React,
 ## Related
 
 - [Layout containers](/library/layout): generic Flex, Grid, and Overlay arrangement
-- [Diagram introduction](/diagram/introduction): the boundary between Graph and future Graph capabilities
+- [Schematic introduction](/schematic/introduction): the boundary between Graph and Diagram capabilities
 - [Core paths](/kernel/components/draw/overview): the primitive output used by GraphConnector

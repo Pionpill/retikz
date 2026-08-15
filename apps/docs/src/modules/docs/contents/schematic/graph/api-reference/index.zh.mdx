@@ -7,11 +7,11 @@ Graph 按职责拆分：`@retikz/graph` 提供 canonical JSON、Schema、factory
 
 ## 公开导出
 
-| 能力 | Graph | React | Vanilla |
-| --- | --- | --- | --- |
-| GraphNode | `GraphNodeSchema`、`IRGraphNode`、`createGraphNode`、`GraphNodeDefinition` | `GraphNode` | `graphNode`、`GraphNodeInputEmbedAdapter` |
-| GraphConnector | `GraphConnectorSchema`、`IRGraphConnector`、`createGraphConnector`、`GraphConnectorDefinition` | `GraphConnector` | `graphConnector`、`GraphConnectorInputEmbedAdapter` |
-| GraphFrame | `GraphFrameSchema`、`IRGraphFrame`、`createGraphFrame`、`GraphFrameDefinition` | `GraphFrame`、markers | `graphFrame`、`GraphFrameInputEmbedAdapter` |
+| 能力           | Graph                                                                                          | React                 | Vanilla                                             |
+| -------------- | ---------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
+| GraphNode      | `GraphNodeSchema`、`IRGraphNode`、`createGraphNode`、`GraphNodeDefinition`                     | `GraphNode`           | `graphNode`、`GraphNodeInputEmbedAdapter`           |
+| GraphConnector | `GraphConnectorSchema`、`IRGraphConnector`、`createGraphConnector`、`GraphConnectorDefinition` | `GraphConnector`      | `graphConnector`、`GraphConnectorInputEmbedAdapter` |
+| GraphFrame     | `GraphFrameSchema`、`IRGraphFrame`、`createGraphFrame`、`GraphFrameDefinition`                 | `GraphFrame`、markers | `graphFrame`、`GraphFrameInputEmbedAdapter`         |
 
 三类公开元素都保留 `namespace: 'graph'` 与自己的语义 `type`。GraphNode 使用 `role` 区分四种基础语义；Definition 是从 Graph IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
 
@@ -58,7 +58,7 @@ React 组件与 Vanilla adapter 只为当前 authored 元素贡献对应 Definit
 
 ## 相关
 
-- [GraphNode](/diagram/graph/unit/node)
-- [GraphConnector](/diagram/graph/unit/connector)
-- [GraphFrame](/diagram/graph/frame/graph-frame)
+- [GraphNode](/schematic/graph/base/code)
+- [GraphConnector](/schematic/graph/base/connector)
+- [GraphFrame](/schematic/graph/frame/graph-frame)
 - [Definition 加载](/library/standard/extension/capability-loading)

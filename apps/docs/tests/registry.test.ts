@@ -50,9 +50,9 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/composite/surface#surfaceschema',
       },
-      GraphFrameSchema: { schema: GraphFrameSchema, url: '/diagram/graph/frame/graph-frame' },
-      GraphNodeSchema: { schema: GraphNodeSchema, url: '/diagram/graph/unit/node' },
-      GraphConnectorSchema: { schema: GraphConnectorSchema, url: '/diagram/graph/unit/connector' },
+      GraphFrameSchema: { schema: GraphFrameSchema, url: '/schematic/graph/frame/graph-frame' },
+      GraphNodeSchema: { schema: GraphNodeSchema, url: '/schematic/graph/base/code' },
+      GraphConnectorSchema: { schema: GraphConnectorSchema, url: '/schematic/graph/base/connector' },
     });
   });
 

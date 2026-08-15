@@ -26,18 +26,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import GraphFrameBasicEnDemo from '../../src/modules/docs/contents/diagram/graph/frame/graph-frame/graph-frame-basic.en.demo';
-import GraphFrameBasicZhDemo from '../../src/modules/docs/contents/diagram/graph/frame/graph-frame/graph-frame-basic.zh.demo';
-import ProcessRecipeEnDemo from '../../src/modules/docs/contents/diagram/graph/frame/graph-frame/process-recipe.en.demo';
-import ProcessRecipeZhDemo from '../../src/modules/docs/contents/diagram/graph/frame/graph-frame/process-recipe.zh.demo';
-import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/diagram/graph/unit/connector/connector-routing.en.demo';
-import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/diagram/graph/unit/connector/connector-routing.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/diagram/graph/unit/node/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/diagram/graph/unit/node/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/diagram/graph/unit/node/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/diagram/graph/unit/node/data-recipe.zh.demo';
-import GraphNodeEnDemo from '../../src/modules/docs/contents/diagram/graph/unit/node/graph-node.en.demo';
-import GraphNodeZhDemo from '../../src/modules/docs/contents/diagram/graph/unit/node/graph-node.zh.demo';
+import GraphFrameBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.en.demo';
+import GraphFrameBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.zh.demo';
+import ProcessRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/process-recipe.en.demo';
+import ProcessRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/process-recipe.zh.demo';
+import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/schematic/graph/base/connector/connector-routing.en.demo';
+import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/schematic/graph/base/connector/connector-routing.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/data-recipe.zh.demo';
+import GraphNodeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.en.demo';
+import GraphNodeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.zh.demo';
 
 const definitions = [GraphNodeDefinition, GraphConnectorDefinition] as const;
 

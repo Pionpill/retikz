@@ -30,7 +30,7 @@ import { GraphFrame, GraphFrameHeader, GraphFrameSection } from '@retikz/graph-r
 
 Marker children must be direct children of `GraphFrame`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
 
-`graphNodeVariant` only provides a default for descendant `GraphNode` values; it does not change the Frame shell or divider. A nested Frame shadows the outer scope, an explicit node `variant` wins, and `variant="default"` resets inherited styling. See [Logic Node](/diagram/graph/unit/node) for the five recipes
+`graphNodeVariant` only provides a default for descendant `GraphNode` values; it does not change the Frame shell or divider. A nested Frame shadows the outer scope, an explicit node `variant` wins, and `variant="default"` resets inherited styling. See [Logic Node](/schematic/graph/base/code) for the five recipes
 
 ## Examples
 
@@ -104,6 +104,6 @@ Blank or duplicate section keys fail loudly. GraphConnector targets follow the C
 
 ## Related
 
-- [Logic Node](/diagram/graph/unit/node): content-bearing logic nodes
-- [GraphConnector](/diagram/graph/unit/connector): relationships between authored identities
+- [Logic Node](/schematic/graph/base/code): content-bearing logic nodes
+- [GraphConnector](/schematic/graph/base/connector): relationships between authored identities
 - [Layout containers](/library/layout): the generic layout family

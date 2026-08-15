@@ -5,7 +5,7 @@ import {
   changelog,
   changelogForModule,
   changelogVersionSlug,
-  diagramSection,
+  schematicSection,
   kernelSection,
   librarySection,
   PACKAGE_IDS,
@@ -101,7 +101,7 @@ describe('changelog data', () => {
   });
 
   it('当前 Diagram 里程碑注册详情路由并覆盖 Graph 包族', () => {
-    const releases = diagramSection.find(section => section.id === 'releases');
+    const releases = schematicSection.find(section => section.id === 'releases');
     const changelogPage = releases?.pages.find(page => page.id === 'changelog');
     const currentRelease = changelogForModule('diagram')[0];
     expect(currentRelease).toBeDefined();

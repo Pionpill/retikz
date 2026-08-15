@@ -7,11 +7,11 @@ Graph is split by responsibility: `@retikz/graph` provides canonical JSON, schem
 
 ## Public exports
 
-| Capability | Graph | React | Vanilla |
-| --- | --- | --- | --- |
-| GraphNode | `GraphNodeSchema`, `IRGraphNode`, `createGraphNode`, `GraphNodeDefinition` | `GraphNode` | `graphNode`, `GraphNodeInputEmbedAdapter` |
-| GraphConnector | `GraphConnectorSchema`, `IRGraphConnector`, `createGraphConnector`, `GraphConnectorDefinition` | `GraphConnector` | `graphConnector`, `GraphConnectorInputEmbedAdapter` |
-| GraphFrame | `GraphFrameSchema`, `IRGraphFrame`, `createGraphFrame`, `GraphFrameDefinition` | `GraphFrame`, markers | `graphFrame`, `GraphFrameInputEmbedAdapter` |
+| Capability     | Graph                                                                                          | React                 | Vanilla                                             |
+| -------------- | ---------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
+| GraphNode      | `GraphNodeSchema`, `IRGraphNode`, `createGraphNode`, `GraphNodeDefinition`                     | `GraphNode`           | `graphNode`, `GraphNodeInputEmbedAdapter`           |
+| GraphConnector | `GraphConnectorSchema`, `IRGraphConnector`, `createGraphConnector`, `GraphConnectorDefinition` | `GraphConnector`      | `graphConnector`, `GraphConnectorInputEmbedAdapter` |
+| GraphFrame     | `GraphFrameSchema`, `IRGraphFrame`, `createGraphFrame`, `GraphFrameDefinition`                 | `GraphFrame`, markers | `graphFrame`, `GraphFrameInputEmbedAdapter`         |
 
 All three public elements retain `namespace: 'graph'` and their semantic `type`. GraphNode uses `role` for the four base semantics. Definitions are explicit lowering contracts from Graph IR to Core IR and never enter persisted JSON
 
@@ -58,7 +58,7 @@ React components and Vanilla adapters contribute only the Definitions required b
 
 ## Related
 
-- [GraphNode](/diagram/graph/unit/node)
-- [GraphConnector](/diagram/graph/unit/connector)
-- [GraphFrame](/diagram/graph/frame/graph-frame)
+- [GraphNode](/schematic/graph/base/code)
+- [GraphConnector](/schematic/graph/base/connector)
+- [GraphFrame](/schematic/graph/frame/graph-frame)
 - [Definition loading](/library/standard/extension/capability-loading)

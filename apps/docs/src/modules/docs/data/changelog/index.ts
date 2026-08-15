@@ -34,7 +34,7 @@ export const changelog: Array<Release> = [
 /** 文档模块 id → changelog 包组 */
 const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'layout' | 'diagram' | 'viz' | 'other'>([
   ['kernel', 'kernel'],
-  ['diagram', 'diagram'],
+  ['schematic', 'diagram'],
   ['viz', 'viz'],
 ]);
 

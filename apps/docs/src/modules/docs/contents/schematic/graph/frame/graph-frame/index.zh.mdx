@@ -30,7 +30,7 @@ import { GraphFrame, GraphFrameHeader, GraphFrameSection } from '@retikz/graph-r
 
 marker 必须是 `GraphFrame` 的直接子节点，且每个 marker 只拥有一个可绘制 child。脱离 JSX 时，可以传 JSON-safe 的 `header` 与 `sections` props。
 
-`graphNodeVariant` 只为后代 `GraphNode` 提供默认变体，不改变 Frame 外壳或 divider。嵌套 Frame 的值覆盖外层作用域，节点显式 `variant` 优先；`variant="default"` 可以重置继承值。完整的五种 recipe 见[逻辑节点](/diagram/graph/unit/node)
+`graphNodeVariant` 只为后代 `GraphNode` 提供默认变体，不改变 Frame 外壳或 divider。嵌套 Frame 的值覆盖外层作用域，节点显式 `variant` 优先；`variant="default"` 可以重置继承值。完整的五种 recipe 见[逻辑节点](/schematic/graph/base/code)
 
 ## 示例
 
@@ -104,6 +104,6 @@ section key 为空或重复时会 fail-loud。GraphConnector 的 target 完全�
 
 ## 相关
 
-- [逻辑节点](/diagram/graph/unit/node)：带 content 的逻辑节点
-- [GraphConnector](/diagram/graph/unit/connector)：authored identity 之间的关系
+- [逻辑节点](/schematic/graph/base/code)：带 content 的逻辑节点
+- [GraphConnector](/schematic/graph/base/connector)：authored identity 之间的关系
 - [布局容器](/library/layout)：通用布局家族

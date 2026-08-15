@@ -511,17 +511,17 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GraphFrameSchema: {
     schema: GraphIR.GraphFrameSchema,
     label: 'GraphFrame',
-    url: '/diagram/graph/frame/graph-frame',
+    url: '/schematic/graph/frame/graph-frame',
   },
   GraphNodeSchema: {
     schema: GraphIR.GraphNodeSchema,
     label: 'GraphNode',
-    url: '/diagram/graph/unit/node',
+    url: '/schematic/graph/base/code',
   },
   GraphConnectorSchema: {
     schema: GraphIR.GraphConnectorSchema,
     label: 'GraphConnector',
-    url: '/diagram/graph/unit/connector',
+    url: '/schematic/graph/base/connector',
   },
   TableSpecSchema: {
     schema: TableIR.TableSpecSchema,

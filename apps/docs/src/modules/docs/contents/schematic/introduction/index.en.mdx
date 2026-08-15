@@ -1,16 +1,16 @@
 ---
 title: Introduction
-description: Learn how Diagram separates reusable graph from future graph-structure capabilities, then start drawing through Graph.
+description: Learn how Schematic separates reusable graph elements from automatic diagram capabilities, then start drawing through Graph.
 ---
 
-The Diagram group owns domain capabilities for what appears in a diagram and what each element means. The current Graph package family provides independently drawable elements. Future Graph capabilities can compose those elements when a figure needs global nodes, edges, topology, or automatic layout without changing their drawing contracts.
+The Schematic group owns domain capabilities for what appears in a diagram, what each element means, and how relationships are organized. The current Graph package family provides independently drawable elements. Future Diagram capabilities can compose those elements when a figure needs global nodes, edges, topology, or automatic layout without changing their drawing contracts.
 
 ## Start with Graph
 
 The first Graph set includes `GraphFrame`, `GraphNode`, and `GraphConnector`. `GraphNode.role` distinguishes terminal, stage, decision, and junction semantics; `GraphConnector.role` distinguishes flow, branch, dependency, and feedback relationships. They reuse Core Node, Path, target, and Scene contracts plus Layout's generic containers. Graph does not copy geometry, renderer, or layout algorithms.
 
-| Package                    | Responsibility                                    | Use it when                                    |
-| -------------------------- | ------------------------------------------------- | ---------------------------------------------- |
+| Package                 | Responsibility                                    | Use it when                                    |
+| ----------------------- | ------------------------------------------------- | ---------------------------------------------- |
 | `@retikz/graph`         | Schemas, factories, Definitions, lowering, and IR | Validating or persisting JSON and using Core   |
 | `@retikz/graph-react`   | React JSX authoring                               | Authoring inside `@retikz/react` `Layout`      |
 | `@retikz/graph-vanilla` | Builders, adapters, SSR, and mount authoring      | Authoring in browsers or scripts without React |
@@ -22,14 +22,14 @@ All three packages produce the same canonical IR. React and Vanilla provide auth
 Graph owns the meaning, visual defaults, and lowering path of each diagram element. It does not own:
 
 - A global `GraphModel`, node and edge collections, or topology constraints
-- Automatic layout, routing, obstacle avoidance, or collision search
+- Automatic layout, routing, obstacle avoidance, or collision search; those capabilities belong to the upper Diagram layer
 - Editor state such as selection, viewport, or history
 - Execution models for UML or state machines
 
-You can therefore draw local logical structure with Graph today and reuse the same elements inside a future Graph capability.
+You can therefore draw local logical structure with Graph today and reuse the same elements inside a future Diagram capability.
 
 ## Next steps
 
-- [Graph](/diagram/graph): browse current elements, responsibilities, and entry points
+- [Graph](/schematic/graph): browse current elements, responsibilities, and entry points
 - [Layout containers](/library/layout): arrange GraphFrame and semantic units
 - [Core components](/kernel/components): use the underlying Node, Path, Scope, and Layout capabilities

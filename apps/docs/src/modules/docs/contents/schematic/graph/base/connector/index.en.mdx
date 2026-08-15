@@ -85,8 +85,8 @@ When `marks` is omitted, GraphConnector adds one terminal arrow. An explicit `ma
 
 | Field                  | Type                               | Default               | Description                                                                |
 | ---------------------- | ---------------------------------- | --------------------- | -------------------------------------------------------------------------- |
-| `id`                   | `string`                           | —                     | Stable authored GraphConnector identity and lowered Core Path id                |
-| `role`                 | `GraphConnectorRoleValue`          | —                     | Relation semantic retained only in Graph IR                              |
+| `id`                   | `string`                           | —                     | Stable authored GraphConnector identity and lowered Core Path id           |
+| `role`                 | `GraphConnectorRoleValue`          | —                     | Relation semantic retained only in Graph IR                                |
 | `children`             | `Array<IRStep>`                    | —                     | Canonical Core Path Step sequence and the only JSON geometry form          |
 | `way` (authoring only) | `WayDSL`                           | —                     | Mutually exclusive with `children` and normalized through `parseWay()`     |
 | `marks?`               | Core Path mark placements          | terminal arrow at `1` | An explicit array fully replaces the default; `[]` disables arrows         |
@@ -94,5 +94,5 @@ When `marks` is omitted, GraphConnector adds one terminal arrow. An explicit `ma
 
 ## Related
 
-- [GraphNode](/diagram/graph/unit/node): targetable graph units
+- [GraphNode](/schematic/graph/base/code): targetable graph units
 - [Core paths](/kernel/components/draw/overview): the lower-level contract GraphConnector reuses directly

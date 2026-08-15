@@ -14,33 +14,39 @@ import { GraphNode } from '@retikz/graph-react';
 
 ```tsx
 <Layout width={440} height={180}>
-  <GraphNode id="start" role="terminal" position={[20, 70]}>Start</GraphNode>
-  <GraphNode id="step" role="stage" position={[130, 70]}>Process</GraphNode>
-  <GraphNode id="check" role="decision" position={[250, 70]}><Text>Ready?</Text></GraphNode>
+  <GraphNode id="start" role="terminal" position={[20, 70]}>
+    Start
+  </GraphNode>
+  <GraphNode id="step" role="stage" position={[130, 70]}>
+    Process
+  </GraphNode>
+  <GraphNode id="check" role="decision" position={[250, 70]}>
+    <Text>Ready?</Text>
+  </GraphNode>
   <GraphNode id="join" role="junction" position={[380, 80]} />
 </Layout>
 ```
 
 字符串 children 会成为 Node 文本，也可以像 Core `Node` 一样使用 `<Text>`。适用的 Node props（例如 `color`、`fill`、`padding`、`minimumSize` 和 `position`）继续透传；`role` 提供默认 shape，显式 `shape` 可以覆盖该默认值
 
-| `role` | 默认 shape | 逻辑职责 | 默认几何 |
-| --- | --- | --- | --- |
-| `terminal` | capsule（圆角矩形） | 流程起点或终点 | minimum `48 × 24`，padding `{ x: 12, y: 6 }` |
-| `stage` | 圆角矩形，radius `8` | 流程中的处理或动作 | padding `8` |
-| `decision` | 扁菱形，宽高比 `1.8` | 条件或分支 | padding `{ x: 3, y: 2 }` |
-| `junction` | circle | 分叉、汇合或延续点 | minimum `8 × 8`，padding `0` |
+| `role`     | 默认 shape           | 逻辑职责           | 默认几何                                     |
+| ---------- | -------------------- | ------------------ | -------------------------------------------- |
+| `terminal` | capsule（圆角矩形）  | 流程起点或终点     | minimum `48 × 24`，padding `{ x: 12, y: 6 }` |
+| `stage`    | 圆角矩形，radius `8` | 流程中的处理或动作 | padding `8`                                  |
+| `decision` | 扁菱形，宽高比 `1.8` | 条件或分支         | padding `{ x: 3, y: 2 }`                     |
+| `junction` | circle               | 分叉、汇合或延续点 | minimum `8 × 8`，padding `0`                 |
 
 ## 视觉变体
 
 逻辑节点使用 Graph 自有的五值 `GraphNodeVariant`，不消费 Core 或 Viz 的全局 Theme Style。`variant` 是单个节点的显式基线；省略时使用最近 `GraphFrame.graphNodeVariant`，没有 Frame 作用域时使用 `default`
 
-| variant | 文本 | 边框 | 背景 |
-| --- | --- | --- | --- |
-| `default` | `currentColor` | `currentColor` | `none` |
-| `primary` | `contrast` | `currentColor` | `currentColor` |
-| `secondary` | `currentColor` | `none` | 主要色预合成 10% |
-| `outline` | `currentColor` | 主要色预合成 60% | `none` |
-| `vibrant` | `currentColor` | `currentColor` | 主要色预合成 15% |
+| variant     | 文本           | 边框             | 背景             |
+| ----------- | -------------- | ---------------- | ---------------- |
+| `default`   | `currentColor` | `currentColor`   | `none`           |
+| `primary`   | `contrast`     | `currentColor`   | `currentColor`   |
+| `secondary` | `currentColor` | `none`           | 主要色预合成 10% |
+| `outline`   | `currentColor` | 主要色预合成 60% | `none`           |
+| `vibrant`   | `currentColor` | `currentColor`   | 主要色预合成 15% |
 
 `secondary` 不带边框。10% / 15% / 60% 是在 Light 的 `#ffffff` 或 Dark 的 `#000000` 上预合成的颜色，不会生成 renderer opacity。显式 `textColor`、`stroke`、`fill` 按字段覆盖 variant 基线，`color` 是主要色；省略时 Light 为 `#000000`、Dark 为 `#ffffff`
 
@@ -79,10 +85,7 @@ const node = createGraphNode({
   color: '#2563eb',
   variant: 'primary',
 });
-const scene = compileToScene(
-  { version: 1, type: 'scene', children: [node] },
-  { composites: createGraphDefinitions() },
-);
+const scene = compileToScene({ version: 1, type: 'scene', children: [node] }, { composites: createGraphDefinitions() });
 ```
 
 ### 组合 recipe
@@ -95,24 +98,28 @@ const scene = compileToScene(
 
 ## 技术原理
 
-<ComponentAlert type="tip" title="上手阶段可跳过本节" description="需要理解 lowering 边界或排查颜色行为时再回来阅读。" />
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解 lowering 边界或排查颜色行为时再回来阅读。"
+/>
 
 GraphNode 拥有可持久化的图式身份、role、默认 shape、主要色解释和 `GraphNodeVariant`。它不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Core 负责 Node 布局、target、编译和 Scene 输出；Graph 只在 lowering 时把有效 variant 投影为普通 Node paint，role 在此边界被丢弃
 
 ## API 参考
 
-| API | 包 | 作用 |
-| --- | --- | --- |
-| `role: GraphNodeRoleValue` | `GraphNode` 与 IR | 区分 terminal、stage、decision 与 junction 语义 |
-| `variant?: GraphNodeVariantValue` | `GraphNode` 与 IR | 设置节点视觉变体；省略时继承 Frame 默认值或使用 `default` |
-| `shape?: NodeShapeInput` | `GraphNode` 与 IR | 覆盖 role 提供的默认 shape |
-| `graphNodeVariant?: GraphNodeVariantValue` | `GraphFrame` | 设置后代 GraphNode 的默认变体 |
-| `createGraphNode()` | `@retikz/graph` | 创建规范 GraphNode IR |
-| `createGraphDefinitions()` | `@retikz/graph` | 为直接 IR 创建完整的 Graph Definition 集合 |
-| `createGraphReactAdapters()` | `@retikz/graph-react` | 创建 GraphFrame、GraphNode、GraphConnector 三个 adapter |
-| `createGraphVanillaAdapters()` | `@retikz/graph-vanilla` | 创建 GraphFrame、GraphNode、GraphConnector 三个 adapter |
+| API                                        | 包                      | 作用                                                      |
+| ------------------------------------------ | ----------------------- | --------------------------------------------------------- |
+| `role: GraphNodeRoleValue`                 | `GraphNode` 与 IR       | 区分 terminal、stage、decision 与 junction 语义           |
+| `variant?: GraphNodeVariantValue`          | `GraphNode` 与 IR       | 设置节点视觉变体；省略时继承 Frame 默认值或使用 `default` |
+| `shape?: NodeShapeInput`                   | `GraphNode` 与 IR       | 覆盖 role 提供的默认 shape                                |
+| `graphNodeVariant?: GraphNodeVariantValue` | `GraphFrame`            | 设置后代 GraphNode 的默认变体                             |
+| `createGraphNode()`                        | `@retikz/graph`         | 创建规范 GraphNode IR                                     |
+| `createGraphDefinitions()`                 | `@retikz/graph`         | 为直接 IR 创建完整的 Graph Definition 集合                |
+| `createGraphReactAdapters()`               | `@retikz/graph-react`   | 创建 GraphFrame、GraphNode、GraphConnector 三个 adapter   |
+| `createGraphVanillaAdapters()`             | `@retikz/graph-vanilla` | 创建 GraphFrame、GraphNode、GraphConnector 三个 adapter   |
 
 ## 相关
 
-- [GraphFrame](/diagram/graph/frame/graph-frame)：可复用布局容器与 variant 作用域
-- [GraphConnector](/diagram/graph/unit/connector)：连接 authored identity
+- [GraphFrame](/schematic/graph/frame/graph-frame)：可复用布局容器与 variant 作用域
+- [GraphConnector](/schematic/graph/base/connector)：连接 authored identity

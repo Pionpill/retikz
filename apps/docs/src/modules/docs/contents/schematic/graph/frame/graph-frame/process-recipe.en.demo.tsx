@@ -1,13 +1,7 @@
 import type { FC } from 'react';
 
 import { FoldStepVia } from '@retikz/core';
-import {
-  GraphConnector,
-  GraphFrame,
-  GraphFrameHeader,
-  GraphFrameSection,
-  GraphNode,
-} from '@retikz/graph-react';
+import { GraphConnector, GraphFrame, GraphFrameHeader, GraphFrameSection, GraphNode } from '@retikz/graph-react';
 import { Layout, Node, Scope, Step } from '@retikz/react';
 
 /** Documentation-only Process recipe built from the public Graph vocabulary */
