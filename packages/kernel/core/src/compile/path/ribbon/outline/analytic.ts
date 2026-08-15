@@ -5,7 +5,8 @@ import { point } from '@retikz/math';
 import type { PathCommand } from '../../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../../schemas';
 import type { SegmentSample } from '../../../../shared/geometry';
-import type { NamespaceStack } from '../../../namespace';
+import type { PathTargetView } from '../../../../resolve/path';
+import type { Transform } from '../../../../contract';
 import type { RibbonAnalyticSegment, RibbonCrossSection, RibbonSegment, RibbonSegmentInput } from '../types';
 
 import { cubicSegmentSample, lineSegmentSample, quadSegmentSample } from '../../../../shared/geometry';
@@ -123,7 +124,8 @@ export type AnalyticOutlineCommandsInput = {
   align: RibbonAlignmentValue;
   startEndpointCap: IRRibbonCap;
   endEndpointCap: IRRibbonCap;
-  namespaceStack: NamespaceStack;
+  targetView: PathTargetView;
+  scopeChain?: ReadonlyArray<Transform>;
   round: (n: number) => number;
 };
 
@@ -142,7 +144,8 @@ export const analyticOutlineCommands = ({
   align,
   startEndpointCap,
   endEndpointCap,
-  namespaceStack,
+  targetView,
+  scopeChain = [],
   round,
 }: AnalyticOutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } | null => {
   if (inputs.length !== segments.length) return null;
@@ -278,7 +281,7 @@ export const analyticOutlineCommands = ({
       from: endLeft,
       to: endRight,
       endpoint: 'end',
-      namespaceStack,
+      targetView,
       round,
     })) {
       commands.push({ kind: 'line', to: capPoint });
@@ -307,7 +310,7 @@ export const analyticOutlineCommands = ({
       from: startRight,
       to: startLeft,
       endpoint: 'start',
-      namespaceStack,
+      targetView,
       round,
     })) {
       commands.push({ kind: 'line', to: capPoint });

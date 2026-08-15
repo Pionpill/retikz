@@ -32,8 +32,8 @@ const styles = {
       [11, 400, 15],
       [11, 500, 15],
     ],
-    light: { canvas: '#F8FAFC', slots: ['#172B4D', '#425466', '#66788A', '#66788A'] },
-    dark: { canvas: '#111827', slots: ['#FFFFFF', '#E2E8F0', '#94A3B8', '#94A3B8'] },
+    light: { canvas: 'none', slots: ['#172B4D', '#425466', '#66788A', '#66788A'] },
+    dark: { canvas: 'none', slots: ['#FFFFFF', '#E2E8F0', '#94A3B8', '#94A3B8'] },
   },
   clean: {
     padding: 20,

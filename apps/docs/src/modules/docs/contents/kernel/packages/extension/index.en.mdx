@@ -1,0 +1,26 @@
+---
+title: Extension packages
+description: Extension packages connect optional capabilities to Kernel contracts, including LaTeX formula lowering and compile observation.
+---
+
+Extension packages answer the question, “How can optional capabilities plug in without changing the Kernel main path?” `@retikz/tex` connects formulas to text lowering; `@retikz/inspect` provides selection, observation, and auxiliary-layer capabilities. Both remain optional and leave Core IR ownership unchanged.
+
+## Responsibilities
+
+| Package | Responsibility | Reach for it when |
+| --- | --- | --- |
+| `@retikz/tex` | Lowering LaTeX formulas into glyph paths | Rendering formulas inside node text |
+| `@retikz/inspect` | Compile-result selection, observation, and host wiring | Inspecting layout, paths, or auxiliary layers |
+
+## Start here
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/extension/tex">
+    <span className="font-semibold">tex</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Formula lowering and host injection</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/extension/inspect">
+    <span className="font-semibold">inspect</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Selection, observation, and auxiliary output</span>
+  </LinkedCard>
+</div>

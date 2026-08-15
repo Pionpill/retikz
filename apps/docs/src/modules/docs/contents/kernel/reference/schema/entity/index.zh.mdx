@@ -163,7 +163,7 @@ Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM �
   description="单行文本规格：字符串走默认样式，样式对象可覆盖颜色、透明度和字体，`{ runs }` 可按共享基线混排 text run 与 math run。"
 />
 
-字符串里的 `$...$` / `$$...$$` 是公式 sugar，会归一化为 `MathRunSchema`；显式 `{ tex, displayMode?, fill?, opacity? }` 也可作为 run。公式需要宿主注入 `CompileOptions.lowerTex`，完整接入见 [TeX 包](/kernel/packages/tex)。
+字符串里的 `$...$` / `$$...$$` 是公式 sugar，会归一化为 `MathRunSchema`；显式 `{ tex, displayMode?, fill?, opacity? }` 也可作为 run。公式需要宿主注入 `CompileOptions.lowerTex`，完整接入见 [TeX 包](/kernel/packages/extension/tex)。
 
 <span id="styledline"></span>
 

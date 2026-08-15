@@ -13,6 +13,39 @@ const scene = (children: IRScene['children']): IRScene => ({
 });
 
 describe('CompileOptions.onWarn', () => {
+  it('keeps PATH_TOO_SHORT ahead of unused arrow, generator, and ribbon profile lookup', () => {
+    const cases: Array<IRScene['children'][number]> = [
+      {
+        type: 'path',
+        marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'missing-arrow' } }],
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+      },
+      {
+        type: 'path',
+        ribbon: {
+          upper: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'generator', name: 'missing-generator', params: {} },
+          ],
+        },
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+      },
+      {
+        type: 'path',
+        ribbon: { width: { kind: 'profile', name: 'missing-profile' } },
+        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
+      },
+    ];
+
+    for (const child of cases) {
+      const warnings: Array<CompileWarning> = [];
+      const result = compileToScene(scene([child]), { onWarn: warning => warnings.push(warning) }).scene;
+      expect(result.primitives).toEqual([]);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toMatchObject({ code: CompileWarningCode.PathTooShort });
+    }
+  });
+
   it('PATH_TOO_SHORT：path 仅含 1 个 step → 触发 warning + path 字段含 IR locator', () => {
     const ir = scene([
       {

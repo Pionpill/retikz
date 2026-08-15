@@ -3,7 +3,7 @@ import type { ComponentType } from 'react';
 import type { DocDifficultyValue } from '@/modules/docs/data';
 
 /**
- * 侧边栏视图契约
+ * 侧栏视图契约
  * @description 三级层次：Category（分组）→ Module（一级，可带 Icon）→ SubModule（二级及以下，递归 children）
  */
 
@@ -11,9 +11,9 @@ import type { DocDifficultyValue } from '@/modules/docs/data';
 export type SidebarSubModuleData = {
   /** URL 路径段 */
   value: string;
-  /** 显示文字（已过 t()） */
+  /** 显示文字（已通过 t()） */
   label: string;
-  /** 叶子文档的可选阅读难度；分组不声明。 */
+  /** 叶子文档的可选阅读难度 */
   difficulty?: DocDifficultyValue;
   /** 子项；存在则当前节点渲染为可展开分组，否则为叶子 */
   children?: Array<SidebarSubModuleData>;
@@ -25,15 +25,15 @@ export type SidebarModuleData = SidebarSubModuleData & {
   Icon?: ComponentType<{ className?: string }>;
 };
 
-/** 分组（一个 SidebarGroup） */
+/** 侧栏分组（一个 SidebarGroup） */
 export type SidebarCategoryData = {
-  /** React key 用；分组的稳定标识，但 ungrouped 分组的 value 不会出现在 URL 中 */
+  /** React key 用；无 section 的分组 value 不会出现在 URL 中 */
   value: string;
-  /** 分组标题（已过 t()）；不填则该 Group 不渲染顶部 label，菜单项直接展示 */
+  /** 分组标题（已通过 t()）；不填写则菜单项直接展示 */
   label?: string;
-  /** 分组自身的文档路径；不存在时分组标题保持不可点击。 */
+  /** 分组自身的文档路径；不存在时分组标题不可点击 */
   path?: string;
-  /** 无分组：菜单项直挂 module 根（URL 跳过 category 段）。默认 false */
+  /** 无分组：菜单项直接挂在 module 根（URL 跳过 category 段）；默认 false */
   ungrouped?: boolean;
   /** 该分组下的菜单项 */
   modules: Array<SidebarModuleData>;

@@ -4,8 +4,8 @@ import type { LayoutAxisProposal, LayoutProposal } from '../../contract';
 import type { CompileOccurrenceLocator } from '../../contract';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
+import { CompositeContractError, isCompositeContractError } from '../../resolve/diagnostics';
 import { formatCompileOccurrence } from '../artifact';
-import { CompositeContractError, isCompositeContractError } from '../probe-failure';
 
 /** 把负零规范化为稳定的正零 */
 const canonicalizeZero = (value: number): number => (Object.is(value, -0) ? 0 : value);

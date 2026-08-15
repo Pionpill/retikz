@@ -1,4 +1,4 @@
-import { CompositeContractError } from '../probe-failure';
+import { CompositeContractError } from '../../resolve/diagnostics';
 import {
   assertProviderOutputKeys,
   providerOutputRecord,

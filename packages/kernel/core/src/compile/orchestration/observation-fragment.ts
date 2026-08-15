@@ -3,8 +3,8 @@ import type { IRChild } from '../../schemas';
 import type { CompileContext } from './context';
 import type { PendingCompileObservation } from './types';
 
+import { safeErrorMessage } from '../../resolve/diagnostics';
 import { CompileWarningCode } from '../constants';
-import { safeErrorMessage } from '../probe-failure';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { assertFiniteLayout, computeLayoutFromBounds } from '../scene';
 import { orderCompileWarnings } from './diagnostics';
@@ -27,8 +27,8 @@ export const compileObservedFragment = (
 ): CompiledSceneFragment => {
   const values = Array.isArray(children) ? children : [children];
   const warnings: Array<Parameters<CompileContext['onWarn']>[0]> = [];
-  const paint = createPaintRegistry(context.patterns, context.round);
-  const clip = createClipRegistry(context.round, context.clips);
+  const paint = createPaintRegistry(context.round);
+  const clip = createClipRegistry(context.round);
   const sandbox: CompileContext = {
     ...context,
     observation: undefined,

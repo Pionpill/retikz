@@ -30,7 +30,6 @@ const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
       value: { type: 'linear', name: 'x' },
       plotPath: ['scales', 0],
       patchablePaths: [],
-      sourcePath: '$recipe/scatter/scale.x',
     },
     {
       target: 'coordinate.main',
@@ -39,7 +38,6 @@ const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
       value: { type: 'cartesian2D', x: 'x' },
       plotPath: ['coordinate'],
       patchablePaths: [],
-      sourcePath: '$recipe/scatter/coordinate.main',
     },
     {
       target: 'mark.main',
@@ -48,7 +46,6 @@ const seedWith = (patches: ChartRecipeSeed['patches']): ChartRecipeSeed => ({
       value: { type: 'point', id: '__chart.scatter.mark', encoding: { x: { field: 'amount' } } },
       plotPath: ['marks', 0],
       patchablePaths: [['opacity']],
-      sourcePath: '$recipe/scatter/mark.main',
     },
   ],
   patches,
@@ -82,7 +79,6 @@ describe('mergeChartSeed malformed patch seam', () => {
         {
           target: 'mark.main',
           inputPath: ['components', 0],
-          sourcePath: '$spec/components/0',
           changes,
         },
       ]),
@@ -97,7 +93,6 @@ describe('mergeChartSeed malformed patch seam', () => {
         {
           target: 'missing',
           inputPath: ['components', 0],
-          sourcePath: '$spec/components/0',
           changes: [],
         },
       ]),
@@ -115,13 +110,11 @@ describe('mergeChartSeed malformed patch seam', () => {
         {
           target: 'mark.main',
           inputPath: ['mark'],
-          sourcePath: '$spec/mark',
           changes: [{ path: ['encoding'], value: {} }],
         },
         {
           target: 'missing',
           inputPath: ['components', 0],
-          sourcePath: '$spec/components/0',
           changes: [],
         },
       ]),
@@ -139,13 +132,11 @@ describe('mergeChartSeed malformed patch seam', () => {
         {
           target: 'mark.main',
           inputPath: ['mark'],
-          sourcePath: '$spec/mark',
           changes: [],
         },
         {
           target: 'mark.main',
           inputPath: ['components', 0],
-          sourcePath: '$spec/components/0',
           changes: [{ path: ['opacity'], value: 0.5 }],
         },
       ]),

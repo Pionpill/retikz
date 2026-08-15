@@ -1,0 +1,32 @@
+---
+title: 基础包
+description: 基础包提供跨包契约与零依赖几何计算，是 Kernel 其它能力共同复用的底座。
+---
+
+基础包解决的是“其它包可以共同依赖哪些稳定基础”。`@retikz/foundation` 维护跨包类型、断言和错误契约；`@retikz/math` 提供不依赖渲染器的几何原语与算法。它们不负责图形编排、编译流程或最终渲染。
+
+<ComponentPreview files="math-pipeline" size="xs" hideCode />
+
+## 职责一览
+
+| 包                   | 职责                               | 适合何时查阅                         |
+| -------------------- | ---------------------------------- | ------------------------------------ |
+| `@retikz/foundation` | 跨包类型、schema、断言和错误基础   | 需要复用公共契约或定位底层输入错误时 |
+| `@retikz/math`       | 点、向量、变换、曲线和交集等纯计算 | 需要构造或推导几何数据时             |
+
+## 从哪里开始
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/base/foundation">
+    <span className="font-semibold">foundation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">跨包原子契约与基础 schema</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/base/math-primitives">
+    <span className="font-semibold">math · 几何原语</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">点、向量、范围、椭圆和圆弧</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/base/math-algorithms">
+    <span className="font-semibold">math · 几何算法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">求交、包围、凸包和曲线算法</span>
+  </LinkedCard>
+</div>

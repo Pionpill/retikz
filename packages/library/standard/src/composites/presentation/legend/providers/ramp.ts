@@ -19,7 +19,7 @@ export type MeasuredLegendRampTick = Readonly<{
   label?: LayoutChildResult;
 }>;
 
-/** normalized ramp tick 的结构 anchor 与可选 label slot */
+/** canonical ramp tick 的结构 anchor 与可选 label slot */
 export type LegendRampTickStructure = Readonly<{
   /** tick 的稳定 authored identity */
   key: string;
@@ -31,7 +31,7 @@ export type LegendRampTickStructure = Readonly<{
   labelSlot: LayoutRect | null;
 }>;
 
-/** ramp sample 与 tick labels 的 normalized body-local structure */
+/** ramp sample 与 tick labels 的 canonical body-local structure */
 export type LegendRampStructure = Readonly<{
   /** sample 与所有 tick label 的整体结构边界 */
   bounds: LayoutRect;
@@ -100,7 +100,7 @@ export const createLegendRampStructure = (
       width: rect.width,
       height: rect.height,
     });
-  const normalizedTicks = provisionalTicks.map(tick =>
+  const canonicalTicks = provisionalTicks.map(tick =>
     Object.freeze({
       ...tick,
       anchor: Object.freeze({ x: tick.anchor.x + translation.x, y: tick.anchor.y + translation.y }),
@@ -110,11 +110,11 @@ export const createLegendRampStructure = (
   return Object.freeze({
     bounds: Object.freeze({ x: 0, y: 0, width: provisionalUnion.width, height: provisionalUnion.height }),
     sampleSlot: translateRect(provisionalSample),
-    ticks: Object.freeze(normalizedTicks),
+    ticks: Object.freeze(canonicalTicks),
   });
 };
 
-/** 把 normalized ramp structure 整体平移到最终 body origin */
+/** 把 canonical ramp structure 整体平移到最终 body origin */
 export const translateLegendRampStructure = (
   structure: LegendRampStructure,
   origin: Readonly<{ x: number; y: number }>,

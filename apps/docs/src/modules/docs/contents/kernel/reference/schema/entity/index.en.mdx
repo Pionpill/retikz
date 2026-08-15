@@ -89,7 +89,7 @@ Core parses only deterministic named, hex, `rgb()`, and `hsl()` colors; it never
 
 <ZodSchema name="LineSpecSchema" />
 
-`$...$` / `$$...$$` inside strings is formula sugar normalized to `MathRunSchema`; an explicit `{ tex, displayMode?, fill?, opacity? }` object may also be used as a run. Formula rendering requires the host to inject `CompileOptions.lowerTex`; see the [TeX package](/kernel/packages/tex) for integration details.
+`$...$` / `$$...$$` inside strings is formula sugar normalized to `MathRunSchema`; an explicit `{ tex, displayMode?, fill?, opacity? }` object may also be used as a run. Formula rendering requires the host to inject `CompileOptions.lowerTex`; see the [TeX package](/kernel/packages/extension/tex) for integration details.
 
 <span id="styledline"></span>
 

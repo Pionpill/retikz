@@ -84,7 +84,7 @@ import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 </LayoutInspectLayout>;
 ```
 
-需要只检查一段 authored 子树时使用 `LayoutInspectScope`；只检查一个 Layout 容器时使用 `InspectFlexLayout`、`InspectGridLayout` 或 `InspectOverlayLayout`。通用机制见 [`@retikz/inspect`](/kernel/packages/inspect)，布局选项与选择规则见 [Layout 布局检查器](/library/layout/reference/runtime#布局检查器)。
+需要只检查一段 authored 子树时使用 `LayoutInspectScope`；只检查一个 Layout 容器时使用 `InspectFlexLayout`、`InspectGridLayout` 或 `InspectOverlayLayout`。通用机制见 [`@retikz/inspect`](/kernel/packages/extension/inspect)，布局选项与选择规则见 [Layout 布局检查器](/library/layout/reference/runtime#布局检查器)。
 
 ### 输出边界
 
@@ -292,7 +292,7 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 | `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)                    |
 | `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —      | 注入 ribbon 宽度曲线；见[编译选项](/kernel/reference/runtime/compile)                  |
 | `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/concepts/design/composite) |
-| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                                  |
+| `lowerTex`            | `LowerTex`                                            | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/extension/tex)                        |
 
 ### 全图默认值
 
@@ -305,17 +305,17 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 渲染与宿主
 
-| 属性                     | 类型                                             | 默认值            | 描述                                                                        |
-| ------------------------ | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------- |
-| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | 输出后端；缺省时读取最近的 `RendererModeProvider`                           |
-| `className`              | `string`                                         | —                 | 透传到 SVG / Canvas 根元素                                                  |
-| `style`                  | `CSSProperties`                                  | —                 | 透传到 SVG / Canvas 根元素                                                  |
-| `idPrefix`               | `string`                                         | —                 | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
-| `handlers`               | `LayoutProps['handlers']`                        | —                 | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
-| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | 选择 retained / static processing 与 auto / full Program 更新策略           |
-| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | retained 创建 Vanilla controller；static 直接完整物化且不提供事务回滚       |
-| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | retained Program 走自动增量 / fallback，或强制 full                         |
-| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | 仅 retained；按 Runtime queue 顺序接收 diagnostic                           |
+| 属性                     | 类型                                             | 默认值            | 描述                                                                               |
+| ------------------------ | ------------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------- |
+| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | 输出后端；缺省时读取最近的 `RendererModeProvider`                                  |
+| `className`              | `string`                                         | —                 | 透传到 SVG / Canvas 根元素                                                         |
+| `style`                  | `CSSProperties`                                  | —                 | 透传到 SVG / Canvas 根元素                                                         |
+| `idPrefix`               | `string`                                         | —                 | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                                      |
+| `handlers`               | `LayoutProps['handlers']`                        | —                 | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/render-hydration) |
+| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | 选择 retained / static processing 与 auto / full Program 更新策略                  |
+| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | retained 创建 Vanilla controller；static 直接完整物化且不提供事务回滚              |
+| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | retained Program 走自动增量 / fallback，或强制 full                                |
+| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | 仅 retained；按 Runtime queue 顺序接收 diagnostic                                  |
 
 `runtime.mode: 'static'` 与其余三个 runtime 字段互斥。retained 的 `onDiagnostic` callback 自身抛错会被隔离，不改变 Runtime 的提交或失败结果。
 

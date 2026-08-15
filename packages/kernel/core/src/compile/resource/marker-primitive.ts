@@ -1,6 +1,6 @@
 import type { MarkerPrimitive } from '../../contract';
 
-import { CompositeContractError } from '../probe-failure';
+import { CompositeContractError } from '../../resolve/diagnostics';
 import {
   assertProviderOutputDashPattern,
   assertProviderOutputFinite,

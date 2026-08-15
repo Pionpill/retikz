@@ -2,7 +2,8 @@ import type { Vector2 } from '@retikz/math';
 
 import type { PathCommand } from '../../../../contract';
 import type { IRPosition, IRRibbonCap, RibbonAlignmentValue } from '../../../../schemas';
-import type { NamespaceStack } from '../../../namespace';
+import type { PathTargetView } from '../../../../resolve/path';
+import type { Transform } from '../../../../contract';
 import type { RibbonSegment } from '../types';
 
 import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from '../caps';
@@ -18,7 +19,8 @@ export type OutlineCommandsInput = {
   align: RibbonAlignmentValue;
   startEndpointCap: IRRibbonCap;
   endEndpointCap: IRRibbonCap;
-  namespaceStack: NamespaceStack;
+  targetView: PathTargetView;
+  scopeChain?: ReadonlyArray<Transform>;
   round: (n: number) => number;
 };
 
@@ -35,7 +37,8 @@ export const outlineCommands = ({
   align,
   startEndpointCap,
   endEndpointCap,
-  namespaceStack,
+  targetView,
+  scopeChain = [],
   round,
 }: OutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
   const left: Array<IRPosition> = [];
@@ -75,7 +78,8 @@ export const outlineCommands = ({
       from: left[last],
       to: right[last],
       endpoint: 'end',
-      namespaceStack,
+      targetView,
+      scopeChain,
       round,
     })) {
       commands.push({ kind: 'line', to: point });
@@ -101,7 +105,8 @@ export const outlineCommands = ({
       from: right[0],
       to: left[0],
       endpoint: 'start',
-      namespaceStack,
+      targetView,
+      scopeChain,
       round,
     })) {
       commands.push({ kind: 'line', to: point });

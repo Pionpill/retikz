@@ -1,0 +1,228 @@
+---
+title: '@retikz/runtime'
+description: 用结构化 identity、typed Owner / Program Definition、同步 Session 与隔离 trace 管理跨 revision 的状态所有权和增量执行。
+---
+
+`@retikz/runtime` 是零领域依赖的执行底座。它不理解 Core IR、Scene、DOM 或 Plot 数据，而是让各领域声明“谁拥有一份完整状态、怎样读取、怎样比较和怎样释放”。
+
+当前公开能力覆盖 identity、Owner / Program Definition、registry、同步 transaction 与执行 trace。Core program 和 retained renderer 在同一 Session 契约上组合，不需要各 adapter 自建生命周期。
+
+下图先把边界拆开：领域包提供完整输入与 Definition，Runtime registry 约束所有权和依赖图，Session 负责 transaction 与 revision，最终只发布 Snapshot 和 artifact。
+
+<ComponentPreview files="runtime-architecture" size="xl" hideCode />
+
+主链上的 `commands → Session → publish` 是产品数据流；registry 是执行依赖，trace 与 diagnostics 则是虚线表示的观测旁路。观测失败不会改写已发布结果。
+
+## 职责一览
+
+| 主题               | 职责                                      | 何时查阅                          |
+| ------------------ | ----------------------------------------- | --------------------------------- |
+| Identity 与 Owner  | 定义完整状态的身份、所有权、读取和释放    | 接入新的领域状态或 immutable view |
+| Program 与 Session | 组织依赖 DAG、revision 与原子 transaction | 增量更新多份状态及其派生产物      |
+| Trace              | 校验并隔离执行观测，不改变产品结果        | 统计工作量或诊断 trace sink       |
+
+## 安装与边界
+
+```bash
+pnpm add @retikz/runtime
+```
+
+| Runtime 负责                         | Runtime 不负责                     |
+| ------------------------------------ | ---------------------------------- |
+| 稳定 owner、结构化 identity 与索引   | Core IR、Scene、几何和 layout      |
+| 完整 Snapshot 的 capture/read/equals | 根据领域 operation 猜测下一状态    |
+| typed Definition 与统一 registry     | React / Vanilla authoring          |
+| Program DAG、revision 与原子 Session | 领域 Diff、Scene Patch 或 DOM 操作 |
+| 同步 trace 校验与非致命 diagnostic   | 远程 telemetry、analytics 或存储   |
+
+`@retikz/runtime` 没有运行时依赖，也不把 callback、handle 或 trace 写进 IR / Scene。
+
+## 创建结构化 Identity
+
+Identity 由 owner 和非空 segment path 组成。segment 保持原值，不对 `/`、`.`、`:` 或 Unicode 做规范化，因此 `['a', 'b/c']` 与 `['a/b', 'c']` 不会碰撞。
+
+```ts
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
+
+const title = createRuntimeIdentity('@retikz/core', ['layer/main', 'title']);
+const body = createRuntimeIdentity('@retikz/core', ['layer/main', 'body']);
+const lookup = createRuntimeIdentityLookup('@retikz/core', [body, title]);
+
+lookup.has(createRuntimeIdentity('@retikz/core', ['layer/main', 'title'])); // true
+runtimeIdentityEquals(title, body); // false
+```
+
+factory 会复制并冻结 path；index 再次验证所有 identity 属于同一 owner、segment path 唯一，并按 JavaScript code-unit 顺序返回 immutable copy。不要自行拼接字符串 key。
+
+## 定义 Owner
+
+`defineRuntimeOwner()` 是唯一作者入口。返回值只是带泛型的 opaque token；`capture`、`read`、`equals` 和 `dispose` 不会出现在 token 上。
+
+```ts
+import { createRuntimeIdentity, defineRuntimeOwner } from '@retikz/runtime';
+
+type LayerInput = Readonly<{ colors: ReadonlyMap<string, string> }>;
+type LayerValue = Readonly<{ colors: ReadonlyMap<string, string> }>;
+type LayerRead = ReadonlyArray<readonly [string, string]>;
+
+export const layerOwner = defineRuntimeOwner<LayerInput, LayerValue, LayerRead, never>({
+  key: 'example/layers',
+  value: {
+    capture: input => Object.freeze({ colors: new Map(input.colors) }),
+    read: value => Object.freeze([...value.colors.entries()].map(entry => Object.freeze(entry))),
+    equals: (left, right) =>
+      left.colors.size === right.colors.size &&
+      [...left.colors].every(([key, color]) => right.colors.get(key) === color),
+  },
+  collectIdentities: value =>
+    [...value.colors.keys()].map(key => createRuntimeIdentity('example/layers', ['layer', key])),
+});
+```
+
+`capture` 接收完整输入并取得 session-owned value；`read` 产生可安全共享的 immutable view；`equals` 比较完整语义。若 value 持有资源，再提供 `dispose(value)`。
+
+## 注入 Registry 与执行机制
+
+内置和自定义 owner 使用同一个 registry，没有覆盖优先级：
+
+```ts
+import { createRuntimeOwnerRegistry } from '@retikz/runtime';
+import { layerOwner } from './layer-owner';
+
+export const owners = createRuntimeOwnerRegistry({
+  builtins: [],
+  custom: [layerOwner],
+});
+
+owners.resolve(layerOwner); // 保留 LayerInput / LayerValue / LayerRead 泛型
+owners.find('example/layers'); // 只返回无 callback 的 RuntimeOwnerToken
+```
+
+Registry 先按 token object identity 验证 Definition，再按 exact key 合并并排序。Runtime 内部的 registry-bound executor 才能取得 author callbacks，执行顺序固定为 `capture → collect identities → read → compare / validate → retire`；未注册 token 不能进入 lifecycle。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Owner Definition 隐藏 author callbacks',
+      path: 'packages/kernel/runtime/src/owner/define.ts',
+      startLine: 6,
+      endLine: 59,
+    },
+    {
+      label: 'Registry 合并与 typed resolve',
+      path: 'packages/kernel/runtime/src/registry/owner-registry.ts',
+      startLine: 23,
+      endLine: 71,
+    },
+    {
+      label: 'Registry-bound lifecycle executor',
+      path: 'packages/kernel/runtime/src/owner/executor.ts',
+      startLine: 88,
+      endLine: 218,
+    },
+  ]}
+/>
+
+## 生命周期与 Mutable Alias 契约
+
+Owner 的关键不是保存一次输入，而是把 candidate 与 current 隔离到发布点。下图中 `Current value` 只参与完整语义比较；candidate 在 publish 前失败时释放自己，publish 成功后才释放 previous。
+
+<ComponentPreview files="owner-lifecycle" size="xl" hideCode />
+
+因此 change hint 只能参与 `validate`，不能跳过 `read`、`equals` 或完整 Snapshot。两个 retire 路径都由 Runtime 管理，合法路径中的同一资源只会 `dispose` 一次。
+
+| 回调                 | 作者必须保证                                                   |
+| -------------------- | -------------------------------------------------------------- |
+| `capture(input)`     | 不与调用方共享可变引用；复制 nested Array / Map / Set 或持久化 |
+| `read(value)`        | 不暴露 mutable method、外部引用或需要释放的 handle             |
+| `equals(left,right)` | 比较完整 Snapshot 语义，不把 change hint 当真源                |
+| `dispose(value)`     | 只释放传入 value；Runtime 保证合法路径 exactly-once            |
+
+Runtime 不可能为任意泛型值自动 deep-clone 或证明 immutability。这是 Definition author contract：内置 Definition 必须用 alias-attack 测试证明隔离；persistent immutable value 可以安全复用同一引用。
+
+Collector、首次 read 或 change-set validator 失败时，candidate 会立即释放。`dispose` 的 secondary failure 会成为 `RUNTIME_OWNER_DISPOSE_FAILED` diagnostic，不覆盖原始 lifecycle error。
+
+## 错误与限制
+
+| Code                                        | 触发条件                                       |
+| ------------------------------------------- | ---------------------------------------------- |
+| `RUNTIME_IDENTITY_INVALID`                  | 空 owner/path/segment、重复 path 或 owner 不符 |
+| `RUNTIME_OWNER_TOKEN_INVALID`               | Definition 不是当前 Runtime helper 创建        |
+| `RUNTIME_OWNER_DUPLICATE`                   | builtin/custom 出现相同 exact key              |
+| `RUNTIME_OWNER_UNKNOWN`                     | executor / resolve 收到未注册 token            |
+| `RUNTIME_OWNER_CAPTURE_FAILED`              | `capture` 抛错                                 |
+| `RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED`   | collector 抛错或返回无效集合                   |
+| `RUNTIME_OWNER_READ_FAILED`                 | `read` 抛错                                    |
+| `RUNTIME_OWNER_COMPARE_FAILED`              | `equals` 抛错                                  |
+| `RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED` | change-set validator 抛错                      |
+
+Program graph、同步 Session、revision 与 transaction 的主要错误见 [Program 与同步 Session](/kernel/packages/core/runtime-session)。Concurrent scheduler 和 renderer patch 不属于本页契约。
+
+## 执行 Trace
+
+`createRuntimeTraceReporter()` 创建 owner-bound reporter。调用方声明允许的 phase、unit 与 outcome；非法 record、sink throw 和 reporter reentry 不改变产品结果，而是进入 `diagnostics()` 的 drain queue。
+
+```ts
+import { createRuntimeTraceReporter } from '@retikz/runtime';
+
+const reporter = createRuntimeTraceReporter({
+  owner: 'example/program',
+  phases: [{ phase: 'update', unit: 'program', outcomes: ['incremental', 'fallback'] }],
+  sink: record => console.log(record),
+});
+```
+
+所有 count 必须是 finite nonnegative safe integer，并满足 `reused <= visited`、`changed <= visited`。Trace 是同步执行观测，不是远程 telemetry。
+
+## API 参考
+
+Definition 作者最常用的三个对象契约如下。函数签名里的泛型来自 `defineRuntimeOwner<TInput, TValue, TRead, TChange>()`：
+
+| 类型                                                          | 字段契约                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RuntimeOwnedValueDefinitionInput<TInput, TValue, TRead>`     | captured value 的完整 lifecycle<br />- `capture: (input: TInput) => TValue`：捕获 session-owned value<br />- `read: (value: TValue) => TRead`：产生 immutable read view<br />- `equals: (left: TValue, right: TValue) => boolean`：比较完整 Snapshot 语义<br />- `dispose?: (value: TValue) => void`：可选地释放 value                                                                                                          |
+| `RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>` | Definition 作者输入<br />- `key: string`：全局 exact owner key<br />- `value: RuntimeOwnedValueDefinitionInput<TInput, TValue, TRead>`：value lifecycle 契约<br />- `collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>`：可选完整 identity collector<br />- `validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' \| 'fallback'`：可选 change hint validator |
+| `RuntimeOwnerRegistryInput`                                   | registry 合并输入<br />- `builtins?: ReadonlyArray<RuntimeOwnerToken>`：内置 Definitions<br />- `custom?: ReadonlyArray<RuntimeOwnerToken>`：第三方或上层 Definitions                                                                                                                                                                                                                                                           |
+
+| API / 类型                         | 用途                                               |
+| ---------------------------------- | -------------------------------------------------- |
+| `RuntimeIdentity`                  | `{ owner, path }` 的结构化 identity                |
+| `createRuntimeIdentity`            | 校验、复制并冻结 identity                          |
+| `runtimeIdentityEquals`            | 按 owner 与 segment exact equality 比较            |
+| `RuntimeIdentityLookup`            | 单 owner validated identity lookup                 |
+| `createRuntimeIdentityLookup`      | 验证唯一性并建立稳定排序 lookup                    |
+| `RuntimeOwnedValueDefinitionInput` | captured value lifecycle 字段契约                  |
+| `RuntimeOwnerDefinitionInput`      | owner key、value lifecycle、collector 与 validator |
+| `RuntimeOwnerToken`                | dynamic lookup 返回的 opaque `{ key }` token       |
+| `RuntimeOwnerDefinition`           | 保留作者泛型的 opaque token                        |
+| `defineRuntimeOwner`               | 唯一 Definition 作者入口                           |
+| `RuntimeOwnerRegistryInput`        | builtin/custom token 集合                          |
+| `RuntimeOwnerRegistry`             | typed resolve、dynamic find 与 definitions         |
+| `createRuntimeOwnerRegistry`       | 统一合并 builtin/custom token                      |
+| `RuntimeOwnerLifecycleDiagnostic`  | dispose secondary failure 的稳定诊断               |
+| `RuntimeOwnerError`                | lifecycle primary error 与 secondary diagnostics   |
+| `RuntimeIdentityError`             | identity contract error                            |
+| `RuntimeOwnerRegistryError`        | token、duplicate 与 unknown registry error         |
+| `createRuntimeTraceReporter`       | 创建 owner-bound trace reporter                    |
+| `PerformanceTraceRecord`           | phase 工作量记录                                   |
+| `PerformanceTraceDiagnostic`       | 非致命 trace 诊断                                  |
+
+`RuntimeRevision` 与 `RuntimeChangeSet<TChange>` 由同步 Session factory 产生；不要自行断言或伪造 envelope。Program、transaction 与 Session API 见 [Program 与同步 Session](/kernel/packages/core/runtime-session)。
+
+## 相关
+
+- [内核包总览](/kernel/packages)
+- [Program 与同步 Session](/kernel/packages/core/runtime-session)
+- [扩展机制参考](/kernel/reference/runtime/extensions)
+- [编译入口](/kernel/reference/runtime/compile)
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/core/runtime-session">
+    <span className="font-semibold">Program 与同步 Session</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      定义 Program graph、revision-bound transaction、fallback、diagnostic 与资源生命周期
+    </span>
+  </LinkedCard>
+</div>

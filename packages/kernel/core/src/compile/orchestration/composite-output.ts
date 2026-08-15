@@ -11,9 +11,9 @@ import type { IRChild } from '../../schemas';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
 import { validateSpatialHandleDeclarations } from '../../contract';
+import { CompositeContractError } from '../../resolve/diagnostics';
 import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
-import { CompositeContractError } from '../probe-failure';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
 
 /** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */

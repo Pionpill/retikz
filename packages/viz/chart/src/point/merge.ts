@@ -12,10 +12,9 @@ import {
 } from '@retikz/plot';
 import { z } from 'zod';
 
-import type { ChartInspectionMemberInput } from '../shared';
 import type { ChartRecipeSeed, InternalChartSpecBound } from './recipe';
 
-import { ChartContributionSource, ChartInspectionMemberKind } from '../shared';
+import { ChartMemberKind } from '../shared';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
 
 /** merge 期间维护的 active semantic member */
@@ -23,76 +22,22 @@ export type MergedChartMember = {
   /** 稳定或 final-index extension target */
   target: string;
   /** Plot member collection kind */
-  kind: ChartInspectionMemberInput['kind'];
+  kind: ChartRecipeSeed['members'][number]['kind'];
   /** 是否属于 recipe 必需结构 */
   core: boolean;
   /** 当前 member JSON 值 */
   value: IRJsonObject;
   /** 允许 patch 的 member-relative 路径 */
   patchablePaths: ReadonlyArray<ReadonlyArray<string>>;
-  /** 按应用顺序累计的 contribution sources */
-  sources: ChartInspectionMemberInput['sources'];
 };
 
 /** collection merge 的内部结果 */
 export type ChartMergeResult = {
   /** 尚未执行最终 PlotSpec root parse 的 candidate */
   plotSpec: IRPlotSpec;
-  /** 与 candidate collection 顺序一致的 active members */
-  members: ReadonlyArray<MergedChartMember>;
-};
-
-/** 将 resolver 私有 member 转成 inspection 可消费的中立最终记录 */
-export const chartInspectionMemberInputsOf = (
-  plotSpec: IRPlotSpec,
-  members: ReadonlyArray<MergedChartMember>,
-): Array<ChartInspectionMemberInput> => {
-  const indexes: Record<string, number> = {
-    transform: 0,
-    scales: 0,
-    marks: 0,
-    guides: 0,
-  };
-  return members.map(member => {
-    let plotPath: ReadonlyArray<string | number>;
-    switch (member.kind) {
-      case ChartInspectionMemberKind.Transform:
-        plotPath = ['transform', indexes.transform++];
-        break;
-      case ChartInspectionMemberKind.Scale:
-        plotPath = ['scales', indexes.scales++];
-        break;
-      case ChartInspectionMemberKind.Coordinate:
-        plotPath = ['coordinate'];
-        break;
-      case ChartInspectionMemberKind.Composition:
-        plotPath = ['composition'];
-        break;
-      case ChartInspectionMemberKind.Mark:
-        plotPath = ['marks', indexes.marks++];
-        break;
-      case ChartInspectionMemberKind.Guide:
-        plotPath = ['guides', indexes.guides++];
-        break;
-    }
-    const located = valueAtPath(plotSpec, plotPath);
-    if (!located.found) {
-      throw new Error(`Chart inspection member "${member.target}" has no final Plot path`);
-    }
-    return {
-      target: member.target,
-      kind: member.kind,
-      core: member.core,
-      plotPath,
-      value: jsonObjectOf(located.value),
-      sources: member.sources,
-    };
-  });
 };
 
 const jsonObjectOf = (value: unknown): IRJsonObject => JsonObjectSchema.parse(value);
-
-const source = (kind: ChartInspectionMemberInput['sources'][number]['kind'], path: string) => ({ kind, path });
 
 const samePath = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   left.length === right.length && left.every((part, index) => part === right[index]);
@@ -111,31 +56,24 @@ const setJsonPath = (object: IRJsonObject, path: ReadonlyArray<string>, value: J
 const idOf = (member: IRJsonObject): string | undefined => (typeof member.id === 'string' ? member.id : undefined);
 
 /** 从显式 Plot extension 建立一个非核心 active member */
-const memberOf = (
-  target: string,
-  kind: MergedChartMember['kind'],
-  value: unknown,
-  contributionKind: ChartInspectionMemberInput['sources'][number]['kind'],
-  path: string,
-): MergedChartMember => ({
+const memberOf = (target: string, kind: MergedChartMember['kind'], value: unknown): MergedChartMember => ({
   target,
   kind,
   core: false,
   value: jsonObjectOf(value),
   patchablePaths: [],
-  sources: [source(contributionKind, path)],
 });
 
 const errorPath = (path: ReadonlyArray<string | number>, suffix?: string): ReadonlyArray<string | number> =>
   suffix === undefined ? path : [...path, suffix];
 
 const seedCollectionOfKind: Record<ChartRecipeSeed['members'][number]['kind'], string> = {
-  [ChartInspectionMemberKind.Transform]: 'transform',
-  [ChartInspectionMemberKind.Scale]: 'scales',
-  [ChartInspectionMemberKind.Coordinate]: 'coordinate',
-  [ChartInspectionMemberKind.Composition]: 'composition',
-  [ChartInspectionMemberKind.Mark]: 'marks',
-  [ChartInspectionMemberKind.Guide]: 'guides',
+  [ChartMemberKind.Transform]: 'transform',
+  [ChartMemberKind.Scale]: 'scales',
+  [ChartMemberKind.Coordinate]: 'coordinate',
+  [ChartMemberKind.Composition]: 'composition',
+  [ChartMemberKind.Mark]: 'marks',
+  [ChartMemberKind.Guide]: 'guides',
 };
 
 /** 深度比较两个 JSON-compatible 值 */
@@ -212,10 +150,10 @@ const initializeSeedMembers = (seed: ChartRecipeSeed): Array<MergedChartMember> 
   const members = seed.members.map(member => {
     const expectedRoot = seedCollectionOfKind[member.kind];
     const isCollection =
-      member.kind === ChartInspectionMemberKind.Transform ||
-      member.kind === ChartInspectionMemberKind.Scale ||
-      member.kind === ChartInspectionMemberKind.Mark ||
-      member.kind === ChartInspectionMemberKind.Guide;
+      member.kind === ChartMemberKind.Transform ||
+      member.kind === ChartMemberKind.Scale ||
+      member.kind === ChartMemberKind.Mark ||
+      member.kind === ChartMemberKind.Guide;
     const validShape =
       member.plotPath[0] === expectedRoot &&
       (isCollection
@@ -237,7 +175,6 @@ const initializeSeedMembers = (seed: ChartRecipeSeed): Array<MergedChartMember> 
       core: member.core,
       value: jsonObjectOf(located.value),
       patchablePaths: member.patchablePaths,
-      sources: [source(ChartContributionSource.TypeDefault, member.sourcePath)],
     };
   });
   const missingPath = seedPlotMemberPaths(seed.plot).find(path => !seenPaths.has(JSON.stringify(path)));
@@ -254,13 +191,7 @@ export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSe
   const userIds: Array<{ id: string; path: ReadonlyArray<string | number> }> = [];
 
   const userTransforms = (spec.transform ?? []).map((transform, index) =>
-    memberOf(
-      `extension.transform.${index}`,
-      ChartInspectionMemberKind.Transform,
-      transform,
-      ChartContributionSource.UserOverride,
-      `$spec/transform/${index}`,
-    ),
+    memberOf(`extension.transform.${index}`, ChartMemberKind.Transform, transform),
   );
   members = [...userTransforms, ...members];
 
@@ -271,89 +202,57 @@ export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSe
     }
     seenScaleNames.add(scale.name);
     const existingIndex = members.findIndex(
-      member => member.kind === ChartInspectionMemberKind.Scale && member.value.name === scale.name,
+      member => member.kind === ChartMemberKind.Scale && member.value.name === scale.name,
     );
     if (existingIndex >= 0) {
       const existing = members[existingIndex];
       members[existingIndex] = {
         ...existing,
         value: jsonObjectOf(scale),
-        sources: [...existing.sources, source(ChartContributionSource.UserOverride, `$spec/scales/${index}`)],
       };
     } else {
-      const finalIndex = members.filter(member => member.kind === ChartInspectionMemberKind.Scale).length;
-      members.push(
-        memberOf(
-          `extension.scale.${finalIndex}`,
-          ChartInspectionMemberKind.Scale,
-          scale,
-          ChartContributionSource.UserOverride,
-          `$spec/scales/${index}`,
-        ),
-      );
+      const finalIndex = members.filter(member => member.kind === ChartMemberKind.Scale).length;
+      members.push(memberOf(`extension.scale.${finalIndex}`, ChartMemberKind.Scale, scale));
     }
   }
 
   const spatialIndex = members.findIndex(
-    member =>
-      member.kind === ChartInspectionMemberKind.Coordinate || member.kind === ChartInspectionMemberKind.Composition,
+    member => member.kind === ChartMemberKind.Coordinate || member.kind === ChartMemberKind.Composition,
   );
   const spatial = spatialIndex >= 0 ? members[spatialIndex] : undefined;
   if (spec.coordinate !== undefined) {
-    if (spatial?.kind === ChartInspectionMemberKind.Composition) {
+    if (spatial?.kind === ChartMemberKind.Composition) {
       throw new ChartResolveError(ChartResolveErrorCode.CoordinateConflict, { path: ['coordinate'] });
     }
     const replacement =
       spatial === undefined
-        ? memberOf(
-            'extension.coordinate.0',
-            ChartInspectionMemberKind.Coordinate,
-            spec.coordinate,
-            ChartContributionSource.UserOverride,
-            '$spec/coordinate',
-          )
+        ? memberOf('extension.coordinate.0', ChartMemberKind.Coordinate, spec.coordinate)
         : {
             ...spatial,
             value: jsonObjectOf(spec.coordinate),
-            sources: [...spatial.sources, source(ChartContributionSource.UserOverride, '$spec/coordinate')],
           };
     if (spatialIndex >= 0) members[spatialIndex] = replacement;
     else members.push(replacement);
   }
   if (spec.composition !== undefined) {
-    if (spatial?.kind === ChartInspectionMemberKind.Coordinate) {
+    if (spatial?.kind === ChartMemberKind.Coordinate) {
       throw new ChartResolveError(ChartResolveErrorCode.CoordinateConflict, { path: ['composition'] });
     }
     const replacement =
       spatial === undefined
-        ? memberOf(
-            'extension.composition.0',
-            ChartInspectionMemberKind.Composition,
-            spec.composition,
-            ChartContributionSource.UserOverride,
-            '$spec/composition',
-          )
+        ? memberOf('extension.composition.0', ChartMemberKind.Composition, spec.composition)
         : {
             ...spatial,
             value: jsonObjectOf(spec.composition),
-            sources: [...spatial.sources, source(ChartContributionSource.UserOverride, '$spec/composition')],
           };
     if (spatialIndex >= 0) members[spatialIndex] = replacement;
     else members.push(replacement);
   }
 
   if (spec.guides !== undefined) {
-    members = members.filter(member => member.kind !== ChartInspectionMemberKind.Guide);
+    members = members.filter(member => member.kind !== ChartMemberKind.Guide);
     for (const [index, guide] of spec.guides.entries()) {
-      members.push(
-        memberOf(
-          `extension.guide.${index}`,
-          ChartInspectionMemberKind.Guide,
-          guide,
-          ChartContributionSource.UserOverride,
-          `$spec/guides/${index}`,
-        ),
-      );
+      members.push(memberOf(`extension.guide.${index}`, ChartMemberKind.Guide, guide));
       const guideId = idOf(jsonObjectOf(guide));
       if (guideId !== undefined) userIds.push({ id: guideId, path: ['guides', index, 'id'] });
     }
@@ -411,21 +310,12 @@ export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSe
     members[memberIndex] = {
       ...member,
       value: patch.changes.reduce((value, change) => setJsonPath(value, change.path, change.value), member.value),
-      sources: [...member.sources, source(ChartContributionSource.UserOverride, patch.sourcePath)],
     };
   }
 
   for (const [index, mark] of (spec.marks ?? []).entries()) {
-    const finalIndex = members.filter(member => member.kind === ChartInspectionMemberKind.Mark).length;
-    members.push(
-      memberOf(
-        `extension.mark.${finalIndex}`,
-        ChartInspectionMemberKind.Mark,
-        mark,
-        ChartContributionSource.PlotExtension,
-        `$spec/marks/${index}`,
-      ),
-    );
+    const finalIndex = members.filter(member => member.kind === ChartMemberKind.Mark).length;
+    members.push(memberOf(`extension.mark.${finalIndex}`, ChartMemberKind.Mark, mark));
     const markId = idOf(jsonObjectOf(mark));
     if (markId !== undefined) userIds.push({ id: markId, path: ['marks', index, 'id'] });
   }
@@ -454,18 +344,18 @@ export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSe
   }
 
   const transforms = members
-    .filter(member => member.kind === ChartInspectionMemberKind.Transform)
+    .filter(member => member.kind === ChartMemberKind.Transform)
     .map((member, index) => parseMemberAtPath(TransformSchema, member.value, ['transform', index]));
   const scales = members
-    .filter(member => member.kind === ChartInspectionMemberKind.Scale)
+    .filter(member => member.kind === ChartMemberKind.Scale)
     .map((member, index) => parseMemberAtPath(ScaleOperationSchema, member.value, ['scales', index]));
-  const coordinateMember = members.find(member => member.kind === ChartInspectionMemberKind.Coordinate);
-  const compositionMember = members.find(member => member.kind === ChartInspectionMemberKind.Composition);
+  const coordinateMember = members.find(member => member.kind === ChartMemberKind.Coordinate);
+  const compositionMember = members.find(member => member.kind === ChartMemberKind.Composition);
   const marks = members
-    .filter(member => member.kind === ChartInspectionMemberKind.Mark)
+    .filter(member => member.kind === ChartMemberKind.Mark)
     .map((member, index) => parseMemberAtPath(MarkOperationSchema, member.value, ['marks', index]));
   const guides = members
-    .filter(member => member.kind === ChartInspectionMemberKind.Guide)
+    .filter(member => member.kind === ChartMemberKind.Guide)
     .map((member, index) => parseMemberAtPath(GuideSchema, member.value, ['guides', index]));
   const {
     transform: seedTransform,
@@ -496,5 +386,5 @@ export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSe
     guides,
   };
 
-  return { plotSpec, members };
+  return { plotSpec };
 };

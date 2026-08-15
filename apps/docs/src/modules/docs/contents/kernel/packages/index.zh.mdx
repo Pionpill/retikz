@@ -1,58 +1,41 @@
 ---
-title: 能力包
-description: 按真实包名选择 Inspector、Runtime、React、无框架、公式、计算几何和渲染入口，并理解它们如何围绕 core 协作。
+title: 内核包
+description: 按职责选择 Kernel 的基础、核心、拓展、框架与渲染包，并从对应分组页开始阅读
 ---
 
-能力包分组面向需要选择安装入口或理解包职责的读者。`@retikz/core` 是领域中立编译真源；其它包围绕同一份 Core 契约提供可选观测、宿主、计算与渲染能力。
+内核包按职责分成五组。先选择你要解决的问题，再进入分组页了解包之间的边界、依赖关系和推荐阅读顺序
 
-## 职责一览
+## 分组一览
 
-| 能力包               | 职责                                     | 何时查阅                                     |
-| -------------------- | ---------------------------------------- | -------------------------------------------- |
-| `@retikz/foundation` | 跨包类型、断言与结构化错误基础契约       | 复用原子契约或迁移底层导入                   |
-| `@retikz/inspect`    | 编译结果选择、辅助内容与宿主接线         | 显示路径控制点或布局辅助层                   |
-| `@retikz/runtime`    | identity、ownership 与执行观测           | 定义跨 revision 状态所有权                   |
-| `@retikz/react`      | JSX 组件、IR 适配与 React 宿主           | 在 React 中声明并渲染图形                    |
-| `@retikz/vanilla`    | InputScene、processing、浏览器挂载与 SSR | 不使用 React、需要服务端字符串或实现框架适配 |
-| `@retikz/tex`        | LaTeX 公式到字形路径的 lowering          | 在节点文字中渲染数学公式                     |
-| `@retikz/math`       | 零依赖纯计算几何                         | 复用向量、仿射、弧与求交算法                 |
-| `@retikz/render`     | Scene 到 SVG / Canvas 与水合能力         | 自己选择或集成渲染后端                       |
+| 分组   | 职责                            | 适合何时查阅                             |
+| ------ | ------------------------------- | ---------------------------------------- |
+| 基础包 | 跨包契约与零依赖几何计算        | 复用基础类型、schema 或几何算法          |
+| 核心包 | IR、Scene 编译与增量运行时      | 理解图形如何编译、执行和管理状态         |
+| 拓展包 | 可选的公式与检查能力            | 接入 TeX 公式或运行时 Inspector          |
+| 框架包 | React 与无框架宿主适配          | 在 React 或原生 JavaScript 中使用 Kernel |
+| 渲染包 | Scene 的 SVG、Canvas 物化与水合 | 选择后端或绑定客户端交互                 |
 
-## 章节内容
+## 从分组开始
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/foundation">
-    <span className="font-semibold">@retikz/foundation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">跨包原子契约、非空断言与错误骨架</span>
+  <LinkedCard href="/kernel/packages/base">
+    <span className="font-semibold">基础包</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">foundation 与 math 的基础契约和几何计算</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/inspect">
-    <span className="font-semibold">@retikz/inspect</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">可选 Inspector 注册、选择与宿主接线</span>
+  <LinkedCard href="/kernel/packages/core">
+    <span className="font-semibold">核心包</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">core 与 runtime 的编译和增量执行</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/runtime">
-    <span className="font-semibold">@retikz/runtime</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Identity、owner registry 与执行 trace</span>
+  <LinkedCard href="/kernel/packages/extension">
+    <span className="font-semibold">拓展包</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">tex 与 inspect 的可选能力</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/react">
-    <span className="font-semibold">@retikz/react</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">JSX 组件、SVG / Canvas 宿主与 React 接线</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/vanilla">
-    <span className="font-semibold">@retikz/vanilla</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      InputScene、processing、SVG / Canvas 挂载与 SSR
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex">
-    <span className="font-semibold">@retikz/tex</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">MathJax SVG lowering 与 React 接入</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/math">
-    <span className="font-semibold">@retikz/math</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">几何原语与通用算法</span>
+  <LinkedCard href="/kernel/packages/framework">
+    <span className="font-semibold">框架包</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">vanilla 与 react 的宿主适配</span>
   </LinkedCard>
   <LinkedCard href="/kernel/packages/render">
-    <span className="font-semibold">@retikz/render</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">SVG、Canvas 与水合 runtime</span>
+    <span className="font-semibold">渲染包</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">render 的后端物化与水合</span>
   </LinkedCard>
 </div>

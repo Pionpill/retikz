@@ -8,7 +8,7 @@ import type { IRBubbleChartSpec } from '../bubble';
 import type { ChartPatchChange, ChartRecipeSeed, ChartRecipeStyleContext } from '../recipe';
 import type { IRScatterChartSpec } from '../scatter';
 
-import { ChartInspectionMemberKind, chartRecipeId } from '../../shared';
+import { ChartMemberKind, chartRecipeId } from '../../shared';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from '../recipe';
 import { createChartAxisGuides, createChartCartesian2DSeed, plotMarkValueOf } from './plot-seed';
 
@@ -108,30 +108,27 @@ export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
     spec.composition === undefined
       ? {
           target: 'coordinate.main',
-          kind: ChartInspectionMemberKind.Coordinate,
+          kind: ChartMemberKind.Coordinate,
           core: true,
           value: jsonObject(cartesian.coordinate),
           plotPath: ['coordinate'] as const,
           patchablePaths: [],
-          sourcePath: `$recipe/${options.type}/coordinate.main`,
         }
       : {
           target: 'composition.main',
-          kind: ChartInspectionMemberKind.Composition,
+          kind: ChartMemberKind.Composition,
           core: true,
           value: jsonObject(spec.composition),
           plotPath: ['composition'] as const,
           patchablePaths: [],
-          sourcePath: `$recipe/${options.type}/composition.main`,
         };
   const guideMembers = guides.map((guide, index) => ({
     target: guide.type === PlotGuide.Legend ? 'guide.size' : guide.dimension === 'x' ? 'guide.x' : 'guide.y',
-    kind: ChartInspectionMemberKind.Guide,
+    kind: ChartMemberKind.Guide,
     core: false,
     value: jsonObject(guide),
     plotPath: ['guides', index] as const,
     patchablePaths: [],
-    sourcePath: `$recipe/${options.type}/${guide.type === PlotGuide.Legend ? 'guide.size' : `guide.${guide.dimension}`}`,
   }));
   const patchChanges = pointPatchChanges(spec.mark, options.patchPaths);
   return {
@@ -139,26 +136,24 @@ export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
     members: [
       {
         target: 'scale.x',
-        kind: ChartInspectionMemberKind.Scale,
+        kind: ChartMemberKind.Scale,
         core: true,
         value: jsonObject(cartesian.scales[0]),
         plotPath: ['scales', 0],
         patchablePaths: [],
-        sourcePath: `$recipe/${options.type}/scale.x`,
       },
       {
         target: 'scale.y',
-        kind: ChartInspectionMemberKind.Scale,
+        kind: ChartMemberKind.Scale,
         core: true,
         value: jsonObject(cartesian.scales[1]),
         plotPath: ['scales', 1],
         patchablePaths: [],
-        sourcePath: `$recipe/${options.type}/scale.y`,
       },
       spatialMember,
       {
         target: 'mark.main',
-        kind: ChartInspectionMemberKind.Mark,
+        kind: ChartMemberKind.Mark,
         core: true,
         value: jsonObject(mark),
         plotPath: ['marks', 0],
@@ -166,14 +161,10 @@ export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
           ...options.patchPaths.map(path => [path]),
           ...Object.keys(spec.mark?.encoding ?? {}).map(path => ['encoding', path]),
         ],
-        sourcePath: `$recipe/${options.type}/mark.main`,
       },
       ...guideMembers,
     ],
-    patches:
-      patchChanges.length === 0
-        ? []
-        : [{ target: 'mark.main', inputPath: ['mark'], sourcePath: '$spec/mark', changes: patchChanges }],
+    patches: patchChanges.length === 0 ? [] : [{ target: 'mark.main', inputPath: ['mark'], changes: patchChanges }],
   };
 };
 

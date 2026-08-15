@@ -5,7 +5,7 @@ import type { IRAxes } from './types';
 
 import { enumerateLattice } from '../shared/lattice';
 import { AxesArrowMode, AxesLabelEnd, AxesTickSide } from './constants';
-import { enumerateAxesTickValues, resolveAxesExtent } from './schemas/utils';
+import { enumerateAxesTickValues, normalizeAxesExtent } from './schemas/utils';
 
 type AxesChild = IRPath | IRNode;
 type AxesAxis = IRAxes['x'];
@@ -22,8 +22,8 @@ export const lowerAxes = (axes: IRAxes): IRScope => {
   void _type;
   const children: Array<AxesChild> = [];
   const [originX, originY] = origin.position;
-  const extentX = resolveAxesExtent(x.extent);
-  const extentY = resolveAxesExtent(y.extent);
+  const extentX = normalizeAxesExtent(x.extent);
+  const extentY = normalizeAxesExtent(y.extent);
   const minX = originX - extentX.negative;
   const maxX = originX + extentX.positive;
   const minY = originY - extentY.positive;
@@ -92,8 +92,8 @@ const appendAxisTicks = (
 
   const ticks = axis.ticks;
   const [originX, originY] = origin;
-  const tickLengths = resolveTickSideLengths(ticks.side, ticks.length);
-  enumerateAxesTickValues(ticks.source, resolveAxesExtent(extentInput), ticks.endpointGap).forEach(value => {
+  const tickLengths = normalizeTickSideLengths(ticks.side, ticks.length);
+  enumerateAxesTickValues(ticks.source, normalizeAxesExtent(extentInput), ticks.endpointGap).forEach(value => {
     if (axisName === 'x') {
       const x = originX + value;
       children.push(
@@ -119,7 +119,7 @@ const appendTickLabels = (
   const labels = ticks.labels;
   if (labels === undefined || labels === false) return;
   const [originX, originY] = origin;
-  const distance = resolveTickSideLengths(ticks.side, ticks.length).negative + labels.offset;
+  const distance = normalizeTickSideLengths(ticks.side, ticks.length).negative + labels.offset;
   labels.entries.forEach(entry => {
     const position: IRPosition =
       axisName === 'x' ? [originX + entry.value, originY + distance] : [originX - distance, originY - entry.value];
@@ -152,7 +152,7 @@ const createOriginLabel = (label: AxesOriginLabel, origin: IRPosition): IRNode =
 };
 
 /** 将刻度完整长度分配到轴线两侧 */
-const resolveTickSideLengths = (side: AxesTicks['side'], length: number): { negative: number; positive: number } => {
+const normalizeTickSideLengths = (side: AxesTicks['side'], length: number): { negative: number; positive: number } => {
   if (side === AxesTickSide.Positive) return { negative: 0, positive: length };
   if (side === AxesTickSide.Negative) return { negative: length, positive: 0 };
   return { negative: length / 2, positive: length / 2 };

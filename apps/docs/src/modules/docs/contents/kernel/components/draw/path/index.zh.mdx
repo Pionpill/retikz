@@ -102,7 +102,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 控制点检查
 
-安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect)。
+安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/extension/inspect)。
 
 <ComponentPreview files="path-inspector" size="sm" />
 
@@ -224,8 +224,8 @@ import { Path, Step } from '@retikz/react';
 
 | 属性             | 类型                                                | 默认值         | 描述                                                                                                                                                                                                              |
 | ---------------- | --------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                                   |
-| `on<Event>`      | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                                   |
+| `id`             | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/render-hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
+| `on<Event>`      | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/render-hydration)                                                                                            |
 | `meta`           | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | Path kind provider；内置 `'stroke'` 与 [`'ribbon'`](/kernel/components/draw/ribbon)，外部 kind 通过 Path kind contract 注册                                                                                       |
 | `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 传给自定义 Path kind provider 的 JSON 参数；内置 `stroke` / `ribbon` 不使用                                                                                                                                       |
