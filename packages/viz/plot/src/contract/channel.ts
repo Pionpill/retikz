@@ -136,7 +136,7 @@ export type MarkChannels = {
   descriptors?: ReadonlyArray<ScaleDescriptor>;
 };
 
-/** addChannel 接受的通道形态：普通 channel 或 MarkValueType 的字段 / 常量引用 */
+/** addChannel 接受的通道形态：普通 channel 或 mark 样式字段 / 常量引用 */
 export type FieldChannel = IRPlotChannel | { kind: 'field' | 'constant'; value: unknown };
 
 /** 字段收集器：把 mark / transform 声明中引用外部数据源的字段加入集合 */
@@ -145,7 +145,7 @@ export type FieldCollector = {
   addField: (field?: string) => void;
   /** 一次加入多个字段名；undefined 会被跳过 */
   addFields: (...fields: Array<string | undefined>) => void;
-  /** 加入普通 channel 或 MarkValueType 的字段引用；常量值不引用数据源 */
+  /** 加入普通 channel 或 mark 样式字段引用；常量值不引用数据源 */
   addChannel: (channel?: FieldChannel) => void;
 };
 

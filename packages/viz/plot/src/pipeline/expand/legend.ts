@@ -10,7 +10,7 @@ import type { ChannelResolveContext } from '../../resolve/channel';
 import type { EffectivePlotGuideTheme } from '../../resolve/theme';
 import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlotSpec, LegendChannelValue } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
-import type { LegendEntry, LegendInput } from '../guide';
+import type { LegendEntry, LowerLegendOptions } from '../guide';
 import type { MarkDataView } from './types';
 
 import { resolveLinearScale, resolveSqrtScale, scaleTicks } from '../../providers';
@@ -197,8 +197,8 @@ const resolveSqrtForLegend = (
   return value => scale(value);
 };
 
-/** legend baseInput 形状（lowerLegend 入参里与求值无关的固定部分） */
-type LegendBaseInput = {
+/** legend lowering 的固定公共字段（与具体形态和条目求值无关） */
+type LegendLoweringBase = {
   channel: LegendChannelValue;
   position: 'right' | 'left' | 'top' | 'bottom';
   orient: 'vertical' | 'horizontal';
@@ -206,7 +206,7 @@ type LegendBaseInput = {
   band: Rect;
   id: string;
   zIndex: number;
-  style: LegendInput['style'];
+  style: LowerLegendOptions['style'];
 };
 
 /**
@@ -218,9 +218,9 @@ type LegendBaseInput = {
 const resolveColorLegend = (
   descriptor: ScaleDescriptor,
   guide: IRPlotLegendGuide,
-  baseInput: LegendBaseInput,
+  base: LegendLoweringBase,
   showLabels: boolean,
-): LegendInput => {
+): LowerLegendOptions => {
   // 标题只在用户显式给时渲染（field 名仅作占位 fallback 的语义来源，不自动生成标题 Node，避免与条目标签混淆）
   const title = guide.title;
   const resolution = descriptor.colorScale;
@@ -240,7 +240,7 @@ const resolveColorLegend = (
       return { offset: t, color: resolution.of(lo + (hi - lo) * t) ?? '' };
     });
     const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
-    return { ...baseInput, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
+    return { ...base, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
   }
 
   // 分箱 swatch：quantize / threshold / quantile → 每档色块 + 区间标签（闭开口：[a, b)，末档闭）；edges = 档间内部边界
@@ -269,14 +269,14 @@ const resolveColorLegend = (
             : `${formatNumber(lower as number)}–${formatNumber(upper as number)}`;
       return { label, color };
     });
-    return { ...baseInput, form: 'swatch', title, entries };
+    return { ...base, form: 'swatch', title, entries };
   }
 
   // ordinal 离散 swatch：每类别一色块 + 类别标签（domain = 类别序、range = 对应色，与实绘同源）
   const entries: Array<LegendEntry> = resolution.domain.map(
     (category, index): LegendEntry => ({ label: showLabels ? String(category) : '', color: resolution.range[index] }),
   );
-  return { ...baseInput, form: 'swatch', title, entries };
+  return { ...base, form: 'swatch', title, entries };
 };
 
 /** 单个 legend 在其所在边的预留带宽 / 带高（user units）；无文字度量 → 固定估算，溢出可接受（plot-design §13.1） */
@@ -377,7 +377,7 @@ export const buildLegendLayers = (
       guide.orient ?? (guide.position === 'top' || guide.position === 'bottom' ? 'horizontal' : 'vertical');
     const id = legendLayerId(node.id, guide.channel, legendIndex, legendGuides.length);
     const style = resolveLegendGuideTokens(resolvedTheme, guide.style);
-    const baseInput: LegendBaseInput = {
+    const base: LegendLoweringBase = {
       channel: guide.channel,
       position: guide.position ?? 'right',
       orient,
@@ -391,8 +391,8 @@ export const buildLegendLayers = (
     const descriptor = selectLegendDescriptor(guide, channelDescriptors, scaleByName, scaleRegistry);
 
     if (descriptor?.colorScale !== undefined) {
-      const input = resolveColorLegend(descriptor, guide, baseInput, showLabels);
-      return lowerLegend(input);
+      const options = resolveColorLegend(descriptor, guide, base, showLabels);
+      return lowerLegend(options);
     }
     if (guide.channel === 'color') {
       throw new Error(
@@ -427,7 +427,7 @@ export const buildLegendLayers = (
         symbolSize: style.symbolSize,
         color: 'currentColor',
       }));
-      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (legendForm === 'size') {
       if (channelOutput?.outputKind !== 'number') {
@@ -453,7 +453,7 @@ export const buildLegendLayers = (
             ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)
             : radiusScale(tick.value)) * style.symbolScale,
       }));
-      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (legendForm === 'ramp') {
       if (channelOutput?.outputKind !== 'color' && channelOutput?.outputKind !== 'number') {
@@ -482,7 +482,7 @@ export const buildLegendLayers = (
           : stops;
       const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
       return lowerLegend({
-        ...baseInput,
+        ...base,
         form: 'ramp',
         title,
         entries: [],
@@ -494,7 +494,7 @@ export const buildLegendLayers = (
         label: showLabels ? String(category) : '',
         color: String(descriptor.range[index]),
       }));
-      return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+      return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (channelOutput?.outputKind !== 'number') {
       throw new Error(
@@ -510,6 +510,6 @@ export const buildLegendLayers = (
       const t = span === 0 ? 1 : (tick.value - lo) / span;
       return { label: showLabels ? tick.label : '', opacity: oMin + (oMax - oMin) * Math.max(0, Math.min(1, t)) };
     });
-    return lowerLegend({ ...baseInput, form: 'swatch', title, entries });
+    return lowerLegend({ ...base, form: 'swatch', title, entries });
   });
 };

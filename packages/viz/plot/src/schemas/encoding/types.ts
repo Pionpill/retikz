@@ -31,13 +31,13 @@ export type IRPlotMarkChannelEncoding = z.infer<typeof MarkChannelEncodingSchema
 /** Mark channel bindings: positional channels plus shared mark channels. */
 export type IRPlotEncoding = z.infer<typeof EncodingSchema>;
 
-/** Legacy size channel helper schema type. PointMark canonical size is top-level MarkValueType. */
+/** Legacy size channel helper schema type. PointMark canonical size is a schema-defined style field. */
 export type IRPlotSizeChannel = z.infer<typeof SizeChannelSchema>;
 
-/** Legacy opacity channel helper schema type. PointMark canonical opacity is top-level MarkValueType. */
+/** Legacy opacity channel helper schema type. PointMark canonical opacity is a schema-defined style field. */
 export type IRPlotOpacityChannel = z.infer<typeof OpacityChannelSchema>;
 
-/** Legacy shape channel helper schema type. PointMark canonical shape is top-level MarkValueType. */
+/** Legacy shape channel helper schema type. PointMark canonical shape is a schema-defined style field. */
 export type IRPlotShapeChannel = z.infer<typeof ShapeChannelSchema>;
 
 /** PointMark encoding: positional channels plus optional text only. */

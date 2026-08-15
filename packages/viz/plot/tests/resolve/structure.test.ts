@@ -61,4 +61,38 @@ describe('resolve source structure', () => {
       expect(source(path)).not.toMatch(/(?:channelRegistry|markRegistry)\.get\(/);
     }
   });
+
+  it('keeps guide tick IR schema-derived and internal context names stage-accurate', () => {
+    const sourcePaths = [
+      'src/schemas/guide/types.ts',
+      'src/schemas/mark/types.ts',
+      'src/schemas/encoding/types.ts',
+      'src/resolve/guide/ticks.ts',
+      'src/shared/layout.ts',
+      'src/pipeline/guide/guide.ts',
+      'src/pipeline/expand/legend.ts',
+      'src/pipeline/expand/frame/scoped.ts',
+      'src/providers/channel/shared/common.ts',
+      'src/providers/channel/features/node.ts',
+      'src/providers/channel/features/path.ts',
+      'src/providers/channel/features/scope.ts',
+      'src/providers/mark/features/relation.ts',
+    ];
+    const combined = sourcePaths.map(source).join('\n');
+    for (const legacyName of [
+      'GuideTickSourceInput',
+      'GuideTickLabelFormatInput',
+      'PlotAreaInput',
+      'PolarCoordinateInput',
+      'LegendInput',
+      'LegendBaseInput',
+      'ResolveScopedFramesInput',
+      'MarkValueType',
+      'ScaledMarkValueType',
+    ]) {
+      expect(combined).not.toMatch(new RegExp(`\\b${legacyName}\\b`));
+    }
+    expect(source('src/resolve/guide/ticks.ts')).toContain('IRPlotGuideTickSource');
+    expect(source('src/resolve/guide/ticks.ts')).toContain('IRPlotGuideTickLabelFormat');
+  });
 });

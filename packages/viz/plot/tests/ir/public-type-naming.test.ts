@@ -7,6 +7,8 @@ import type {
   IRPlotDomainPadding,
   IRPlotEncoding,
   IRPlotGuide,
+  IRPlotGuideTickLabelFormat,
+  IRPlotGuideTickSource,
   IRPlotMarkOperation,
   IRPlotPaletteResolution,
   IRPlotScaleOperation,
@@ -25,6 +27,8 @@ import type {
   DomainPaddingSchema,
   EncodingSchema,
   GuideSchema,
+  GuideTickLabelFormatSchema,
+  GuideTickSourceSchema,
   MarkOperationSchema,
   PlotPaletteResolutionSchema,
   PlotSpecSchema,
@@ -42,6 +46,8 @@ it('exports owner-qualified plot IR types from their schema truth', () => {
   expectTypeOf<IRPlotDomainPadding>().toEqualTypeOf<z.infer<typeof DomainPaddingSchema>>();
   expectTypeOf<IRPlotEncoding>().toEqualTypeOf<z.infer<typeof EncodingSchema>>();
   expectTypeOf<IRPlotGuide>().toEqualTypeOf<z.infer<typeof GuideSchema>>();
+  expectTypeOf<IRPlotGuideTickSource>().toEqualTypeOf<z.infer<typeof GuideTickSourceSchema>>();
+  expectTypeOf<IRPlotGuideTickLabelFormat>().toEqualTypeOf<z.infer<typeof GuideTickLabelFormatSchema>>();
   expectTypeOf<IRPlotMarkOperation>().toEqualTypeOf<z.infer<typeof MarkOperationSchema>>();
   expectTypeOf<IRPlotScaleOperation>().toEqualTypeOf<z.infer<typeof ScaleOperationSchema>>();
   expectTypeOf<IRPlotTransform>().toEqualTypeOf<z.infer<typeof TransformSchema>>();

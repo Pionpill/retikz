@@ -1,11 +1,16 @@
 ﻿import { resolveFieldPath } from '@retikz/data';
 import { type DataFieldTypeMap, type DataFieldTypeValue } from '@retikz/data';
 
+import type { IRPlotPointNumberStyle, MarkValueKind } from '../../../schemas';
+
 import { type ChannelResolution } from '../../../contract';
-import { type MarkValueType } from '../../../schemas';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
-/** MarkValueType 解析出的逐行 resolver 与字段元数据 */
+type MarkStyleValue<T> =
+  | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
+  | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
+
+/** mark 样式值解析出的逐行 resolver 与字段元数据 */
 export type MarkValueResolution<T> = ChannelResolution<T> & {
   /** 绑定的数据字段名；常量值没有字段名 */
   field?: string;
@@ -13,7 +18,7 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
   fieldType?: DataFieldTypeValue;
 };
 
-/** 创建 MarkValueType resolver 时的字段类型与常量处理策略 */
+/** 创建 mark 样式值 resolver 时的字段类型与常量处理策略 */
 export type MarkValueResolverOptions<T> = {
   /** 用于错误信息的属性 / 通道名 */
   channelName: string;
@@ -25,9 +30,9 @@ export type MarkValueResolverOptions<T> = {
   constants?: 'resolve' | 'skip';
 };
 
-/** 把 MarkValueType 解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用 */
+/** 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用 */
 export const makeMarkValueResolver = <T>(
-  value: MarkValueType<T> | undefined,
+  value: MarkStyleValue<T> | undefined,
   fieldTypes: DataFieldTypeMap,
   options: MarkValueResolverOptions<T>,
 ): MarkValueResolution<T> | undefined => {

@@ -41,7 +41,7 @@ import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from '../compo
 import { legendReserveOf } from '../legend';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
-export type ResolveScopedFramesInput = {
+export type ScopedFramesResolveContext = {
   node: IRPlotSpec;
   rows: Array<ExternalRow>;
   fieldTypes: DataFieldTypeMap;
@@ -78,7 +78,7 @@ export type ScopedFramesResolution = {
 };
 
 /** 解析 composition 中 root、overlay、track 与 scaffold 的共享 frame */
-export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFramesResolution => {
+export const resolveScopedFrames = (context: ScopedFramesResolveContext): ScopedFramesResolution => {
   const {
     node,
     rows,
@@ -97,7 +97,7 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
     coordinateScopes,
     allGuides,
     allGuidesWithCompositionGap,
-  } = input;
+  } = context;
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
   const coordinateResolveContextOf = (
@@ -124,12 +124,12 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
   });
   const scopeContextOf = (scope: CoordinateScopeRegistryEntry): IRJsonObject => {
     if (node.composition === undefined) return {};
-    const context: IRJsonObject = { coordinateView: scope.id };
+    const scopeMeta: IRJsonObject = { coordinateView: scope.id };
     if (scope.placement?.kind === 'track') {
-      context.arrangement = scope.placement.scaffold;
-      context.track = scope.placement.track;
+      scopeMeta.arrangement = scope.placement.scaffold;
+      scopeMeta.track = scope.placement.track;
     }
-    return context;
+    return scopeMeta;
   };
   const scaffoldById = new Map(compositionScaffolds.map(scaffold => [scaffold.id, scaffold] as const));
   const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
@@ -144,9 +144,9 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
     arrangementResolveOf(scopeArrangementOf(scope));
   const axisPolicyFor = (
     resolve: CompositionResolve | undefined,
-    context: { hasFacets: boolean; hasScaffolds: boolean },
+    compositionState: { hasFacets: boolean; hasScaffolds: boolean },
     dimension: DimensionRole,
-  ): CompositionAxisPolicyValue => compositionAxisPolicyOf(resolve, context, dimension);
+  ): CompositionAxisPolicyValue => compositionAxisPolicyOf(resolve, compositionState, dimension);
   const rolesOf = (coordinate: IRPlotCoordinateOperation): ReadonlySet<DimensionRole> => {
     return new Set(resolveCoordinateDefinition(coordinate, { coordinateRegistry }).roles);
   };
@@ -165,11 +165,11 @@ export const resolveScopedFrames = (input: ResolveScopedFramesInput): ScopedFram
   const roleRangeOf = (
     frameResolution: CoordinateFrameResolution,
     role: DimensionRole,
-    context: string,
+    scopeDescription: string,
   ): readonly [number, number] => {
     const range = frameResolution.frame.roleScales?.[role]?.range();
     if (range === undefined) {
-      throw new Error(`lowerPlots: ${context} does not expose a scale range for role "${role}"`);
+      throw new Error(`lowerPlots: ${scopeDescription} does not expose a scale range for role "${role}"`);
     }
     return range;
   };

@@ -76,14 +76,6 @@ export type IRPlotPointMark = z.infer<typeof PointMarkSchema>;
 /** mark 值来源变体 */
 export type MarkValueKindValue = ValueOf<typeof MarkValueKind>;
 
-/** mark 样式值；需要 scale 的属性在此基础上交叉 `{ scale?: string }` */
-export type MarkValueType<T> =
-  | { kind: typeof MarkValueKind.Field; value: string }
-  | { kind: typeof MarkValueKind.Constant; value: T };
-
-/** mark 样式值，字段变体可绑定 scale */
-export type ScaledMarkValueType<T> = MarkValueType<T> & { scale?: string };
-
 /** PointMark 颜色样式值（field / constant） */
 export type IRPlotPointColorStyle = z.infer<typeof PointColorStyleSchema>;
 
