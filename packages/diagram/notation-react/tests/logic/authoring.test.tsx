@@ -10,7 +10,17 @@ import { normalizeScene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { Connector, Decision, Junction, LogicFrame, LogicFrameHeader, Stage, Terminal } from '../../src';
+import {
+  Connector,
+  createNotationReactAdapters,
+  Decision,
+  Junction,
+  LogicFrame,
+  LogicFrameHeader,
+  LogicFrameSection,
+  Stage,
+  Terminal,
+} from '../../src';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
 const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
@@ -37,6 +47,60 @@ describe('Notation React semantic unit authoring', () => {
     );
 
     expect(result.ir.children[0]).toMatchObject({ namespace: 'notation', type: 'logicFrame', id: 'order' });
+  });
+
+  it('creates all six adapters and preserves LogicNodeVariant authoring fields', () => {
+    const adapters = createNotationReactAdapters();
+    const stageAdapter = adapters.find(adapter => adapter.kind === 'notation.stage');
+
+    expect(adapters.map(adapter => adapter.kind)).toEqual([
+      'notation.logicFrame',
+      'notation.terminal',
+      'notation.stage',
+      'notation.decision',
+      'notation.junction',
+      'notation.connector',
+    ]);
+    expect(stageAdapter).toBeDefined();
+    const contribution = stageAdapter!.lower(
+      { position: [0, 0], color: '#123456', variant: 'vibrant' },
+      {
+        id: 'vibrant',
+        kind: stageAdapter!.kind,
+        layerId: 'layer',
+        identityPath: ['layer', 'brand'],
+      },
+    );
+    expect(contribution.node).toMatchObject({ color: '#123456' });
+    expect(contribution.node).toMatchObject({ variant: 'vibrant' });
+    expect(adapters[0]?.kind).toBe('notation.logicFrame');
+    expect(adapters[5]?.kind).toBe('notation.connector');
+    expect(contribution.providerDependencies.roots[0]).toEqual(StageProvider.key);
+  });
+
+  it('preserves a LogicFrame default and explicit child override in the semantic IR', () => {
+    const result = normalizeReactInput(
+      createElement(
+        LogicFrame,
+        { id: 'variant-frame', logicNodeVariant: 'secondary' },
+        createElement(LogicFrameSection, {
+          sectionKey: 'body',
+          children: createElement(Stage, { id: 'variant-stage', position: [0, 0], variant: 'primary' }),
+        }),
+      ),
+    );
+
+    expect(result.ir.children[0]).toMatchObject({
+      namespace: 'notation',
+      type: 'logicFrame',
+      id: 'variant-frame',
+      logicNodeVariant: 'secondary',
+      sections: [
+        {
+          child: { namespace: 'notation', type: 'stage', id: 'variant-stage', variant: 'primary' },
+        },
+      ],
+    });
   });
 
   it('keeps semantic IR while supporting the same text children as Core Node', () => {

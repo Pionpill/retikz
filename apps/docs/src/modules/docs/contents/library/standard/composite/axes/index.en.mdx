@@ -51,7 +51,7 @@ Four side-by-side cases show positive half-axes, a horizontal number line, asymm
 
 <ComponentPreview files="axes-variants" size="sm" />
 
-Axis labels, tick labels, and the origin label all accept Core `IRTextBlock`. Plain strings work directly; formula strings such as `'$x_1$'` and `'$\\pi/2$'` require the host to inject the [TeX capability](/kernel/packages/tex) through `lowerTex`.
+Axis labels, tick labels, and the origin label all accept Core `IRTextBlock`. Plain strings work directly; formula strings such as `'$x_1$'` and `'$\\pi/2$'` require the host to inject the [TeX capability](/kernel/packages/extension/tex) through `lowerTex`.
 
 ### Controls
 
@@ -185,5 +185,5 @@ When `label` is an object:
 - [Grid](/library/standard/composite/grid): baselines, borders, and a fuller regular-grid contract
 - [Tier 2 Composites](/kernel/concepts/design/composite): how Core registers and lowers high-level IR
 - [Path](/kernel/components/draw/path): axis, grid-line, and tick primitives emitted by Axes
-- [TeX](/kernel/packages/tex): LaTeX formulas in axis and tick labels
+- [TeX](/kernel/packages/extension/tex): LaTeX formulas in axis and tick labels
 - [Plot axis](/viz/plot/guide/axis): data scales, automatic ticks, formatters, and guide layout

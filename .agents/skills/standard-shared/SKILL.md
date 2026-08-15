@@ -5,7 +5,7 @@ description: Use when changing retikz shared layer code, dependency-free vocabul
 
 # Standard Shared
 
-`shared/` 是无依赖共享层，承载跨 schemas / contract / providers / pipeline / compile 复用的稳定词汇、纯函数、映射和工具类型。
+`shared/` 是无依赖共享层，承载跨 schemas / contract / providers / resolve / pipeline / compile 复用的稳定词汇、纯函数、映射和工具类型。
 
 进入 `shared/` 的内容必须已有明确的跨 owner 或跨层复用；单一 owner 专用内容留在 owner 内，预期未来可能复用不构成 shared 所有权。
 

@@ -79,7 +79,7 @@ const highlight = definePathKind({
 const registry = createInspectorRegistry([highlightInspector]);
 ```
 
-`ownerOutput.requested` is true only when an observer selected this owner. A non-null result must publish exactly one schema-valid value, while a null result must publish none. The Inspector's `subjectSchema` validates the external agreement again, and `inspect()` returns `IRChild | ReadonlyArray<IRChild>` without an `outputSchema`. See [`@retikz/inspect`](/kernel/packages/inspect) for registry, selection, and host wiring.
+`ownerOutput.requested` is true only when an observer selected this owner. A non-null result must publish exactly one schema-valid value, while a null result must publish none. The Inspector's `subjectSchema` validates the external agreement again, and `inspect()` returns `IRChild | ReadonlyArray<IRChild>` without an `outputSchema`. See [`@retikz/inspect`](/kernel/packages/extension/inspect) for registry, selection, and host wiring.
 
 ## Inject into the host
 

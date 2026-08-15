@@ -5,7 +5,7 @@ import { ChartScatter } from 'lucide-react';
 
 import type { DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
 
-import type { SidebarCategoryData, SidebarSubModuleData } from './sidebar';
+import type { SidebarCategoryData, SidebarModuleData, SidebarSubModuleData } from './sidebar';
 import type { DocLocation, LeafNode } from './types';
 
 /** Viz 内拥有独立更新日志的分区 */
@@ -28,7 +28,7 @@ export const isChangelogLocation = (loc: DocLocation | null): boolean =>
       ? loc.sectionId !== null && LIBRARY_CHANGELOG_SECTIONS.has(loc.sectionId)
       : loc.sectionId === 'releases');
 
-/** location -> URL / 文件路径所需的 segment 数组。 */
+/** location 到 URL / 文件路径所需的 segment 数组 */
 export const docPathSegments = (loc: DocLocation): Array<string> => {
   const parts = [loc.moduleId];
   if (loc.sectionId) parts.push(loc.sectionId);
@@ -37,7 +37,7 @@ export const docPathSegments = (loc: DocLocation): Array<string> => {
   return parts;
 };
 
-/** 组装文档页 URL path。 */
+/** 组装文档页面 URL path */
 export const buildDocPath = (
   moduleId: string,
   sectionId: string | null,
@@ -84,7 +84,7 @@ const collectFromPage = (moduleId: string, sectionId: string | null, page: Page,
   });
 };
 
-/** 按 sidebar 展示顺序拍平 sections 中的所有叶子节点。 */
+/** 按 sidebar 展示顺序拍平 sections 中的所有叶子节点 */
 export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
   for (const section of sections) {
@@ -112,7 +112,15 @@ const mapSidebarChildren = (t: TFunction, children?: Array<SubPage>): Array<Side
     children: mapSidebarChildren(t, child.children),
   }));
 
-/** 从 docs data 构建 sidebar 视图数据。 */
+const mapSidebarPage = (t: TFunction, page: Page): SidebarModuleData => ({
+  value: page.id,
+  label: t(page.label),
+  ...(page.difficulty === undefined ? {} : { difficulty: page.difficulty }),
+  ...(page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
+  children: mapSidebarChildren(t, page.children),
+});
+
+/** 从 docs data 构建 sidebar 视图数据 */
 export const buildSidebarCategories = (
   t: TFunction,
   moduleId: string,
@@ -123,11 +131,5 @@ export const buildSidebarCategories = (
     label: section.label ? t(section.label) : undefined,
     path: section.document && section.id ? buildDocPath(moduleId, section.id, null) : undefined,
     ungrouped: !section.label,
-    modules: section.pages.map(page => ({
-      value: page.id,
-      label: t(page.label),
-      ...(page.difficulty === undefined ? {} : { difficulty: page.difficulty }),
-      ...(page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
-      children: mapSidebarChildren(t, page.children),
-    })),
+    modules: section.pages.map(page => mapSidebarPage(t, page)),
   }));

@@ -11,7 +11,7 @@ retikz 的文档、架构说明和流程示例反复需要开始 / 结束、处�
 
 另一方面，完整 GraphModel、端口、拓扑、自动布局和编辑器状态属于 Diagram / Workspace 能力域。Standard 只能拥有移除具体业务与图模型词汇后仍成立、可独立绘制的局部语义组件。
 
-本 ADR 冻结 alpha.3 的共同 profile：identity、target、开放 role、外观覆盖、定位产物和能力边界。具体 Block、基础逻辑单元、Connector 与 Callout 由后续 ADR 冻结。
+本 ADR 冻结 alpha.3 的共同 profile：identity、target、开放 role、外观覆盖、定位产物和能力边界。具体 Block、基础逻辑节点、Connector 与 Callout 由后续 ADR 冻结。
 
 ## 决策：Standard 拥有局部语义组件，不拥有逻辑图模型
 
@@ -53,7 +53,7 @@ type LogicDiagramPoint = Position | LogicDiagramTarget;
 
 除 `Terminal.role` 明确闭合为 `start | end` 外，角色与分类使用非空开放字符串。内置常量只提供常见拼写和 authoring 便利；未知值合法并保持原样，在组件提供 typed artifact 时也原样保留，但不触发隐藏 provider lookup、布局、样式或验证分支。
 
-需要公开布局区域的 `LogicFrame`、基础逻辑单元与 `Callout` 输出 typed artifact，并共享以下不变量：
+需要公开布局区域的 `LogicFrame`、基础逻辑节点与 `Callout` 输出 typed artifact，并共享以下不变量：
 
 - artifact 带组件 kind、稳定 id、allocation / visual / visible bounds
 - 可寻址子区域保留 authored key / role 与 bounds
@@ -107,7 +107,7 @@ type LogicOuterArtifact = {
 ## 被否决方案
 
 - 只提供 diamond、capsule、bar 等 shape：视觉变化会丢失逻辑角色，工具仍需反推语义
-- 新建 `LogicUnitDefinition` / role registry：role 不改变执行算法，任意内容与 appearance 已覆盖扩展需求
+- 新建 `LogicNodeDefinition` / role registry：role 不改变执行算法，任意内容与 appearance 已覆盖扩展需求
 - 在 Standard 保存完整 nodes / edges：会复制未来 GraphModel，并引入拓扑与全局 identity owner
 - 让 renderer 识别逻辑组件：破坏 renderer-agnostic Scene 主链
 - 用 ReactNode 或 callback 自定义内容：无法 JSON round-trip，也会让 Vanilla 与直接 IR 失去等价性

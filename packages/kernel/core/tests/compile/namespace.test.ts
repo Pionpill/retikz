@@ -20,7 +20,12 @@ const makeLayout = (id: string, x = 0, y = 0): NodeLayout => ({
   align: 'middle',
   lineHeight: 0,
   fontSize: 0,
-  shapes: BUILTIN_SHAPES,
+  boundaryResolution: {
+    name: BUILTIN_SHAPES.rectangle.name,
+    definition: BUILTIN_SHAPES.rectangle,
+    params: {},
+    isShape: true,
+  },
 });
 
 describe('NamespaceStack 基本 register / lookup', () => {

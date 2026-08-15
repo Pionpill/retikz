@@ -8,8 +8,8 @@ import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { CompileWarningCode } from '../../src/compile/constants';
-import { CompositeContractError } from '../../src/compile/probe-failure';
 import { normalizeTextMetrics } from '../../src/compile/text';
+import { CompositeContractError } from '../../src/resolve/diagnostics';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

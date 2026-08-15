@@ -1,11 +1,11 @@
 import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
-import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotThemeToken } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import * as chart from '../../../src';
-import { ChartThemeToken, getDefaultChartThemePreset } from '../../../src/base/style';
+import { getDefaultChartThemePreset } from '../../../src/base/style';
 import { resolvePointChartSpec } from '../../../src/point';
 
 const base = {
@@ -32,7 +32,7 @@ type ResolveChartSpec = (
 ) => ReturnType<typeof resolvePointChartSpec>;
 
 describe('Chart style resolution', () => {
-  it('以同名 Chart 与 Plot style definitions 解析各自 owner token', () => {
+  it('以同名 Chart 与 Plot style definitions 驱动各自 owner 行为', () => {
     const define = (chart as Record<string, unknown>).defineChartThemeStyle as
       | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
       | undefined;
@@ -41,7 +41,7 @@ describe('Chart style resolution', () => {
     const plotBaseline = getDefaultPlotThemePreset(ThemeMode.Light);
     const chartStyle = define?.({
       name: 'brand',
-      resolve: () => ({ ...chartBaseline, [ChartThemeToken.ChartPadding]: 24 }),
+      resolve: () => ({ ...chartBaseline, 'chart.axis.enabled': false }),
     });
     const plotStyle = definePlotThemeStyle({
       name: 'brand',
@@ -67,15 +67,7 @@ describe('Chart style resolution', () => {
       { chartThemeStyles: [chartStyle], plotThemeStyles: [plotStyle] },
     );
 
-    expect(result.inspection.style.chart.tokens[ChartThemeToken.ChartPadding]).toBe(24);
-    expect(
-      result.inspection.style.chart.tokenSources.find(source => source.token === ChartThemeToken.ChartPadding),
-    ).toEqual({
-      token: ChartThemeToken.ChartPadding,
-      kind: ThemeTokenSource.Local,
-      path: '$style/brand/light/chart.padding',
-    });
-    expect(result.inspection.style.plot.palette.series).toEqual(['#brand-series']);
+    expect(result.plotSpec.guides).toEqual([]);
   });
 
   it('分别报告缺失的 Chart 与 Plot style definition', () => {
@@ -108,21 +100,10 @@ describe('Chart style resolution', () => {
     const result = resolvePointChartSpec(base);
     expect(result.plotSpec.plotTheme).toBeUndefined();
     expect(result.plotSpec.plotThemeTokens).toBeUndefined();
-    expect(result.inspection.style.chart).toMatchObject({
-      mode: 'light',
-      tokens: { [ChartThemeToken.ChartCanvasFill]: '#FFFFFF' },
-    });
-    expect(result.inspection.style.chart.tokenSources).toHaveLength(27);
-    expect(result.inspection.style.chart.tokenSources[0]).toEqual({
-      token: ChartThemeToken.ChartCanvasFill,
-      kind: ThemeTokenSource.Local,
-      path: '$default/light/chart.canvas.fill',
-    });
-    expect(result.inspection.style.plot).toMatchObject({ mode: 'light' });
-    expect(result.inspection.style.plot.tokenSources).toHaveLength(43);
+    expect(result.plotSpec.guides).toHaveLength(2);
   });
 
-  it('分别解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
+  it('解析 Chart token 与 Plot cascade，并原样转发 Plot 输入', () => {
     const input = {
       ...base,
       chartThemeTokens: { 'chart.padding': 20 },
@@ -150,27 +131,6 @@ describe('Chart style resolution', () => {
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
     expect(result.plotSpec.plotThemeTokenRules).toEqual(input.plotThemeTokenRules);
     expect(result.plotSpec.plotTheme).toEqual(input.plotTheme);
-    expect(result.inspection.style.chart.tokens['chart.padding']).toBe(20);
-    expect(
-      result.inspection.style.chart.tokenSources.find(source => source.token === ChartThemeToken.ChartPadding),
-    ).toEqual({
-      token: ChartThemeToken.ChartPadding,
-      kind: ThemeTokenSource.Local,
-      path: '$spec/chartThemeTokens/chart.padding',
-    });
-    expect(result.inspection.style.plot.plotTheme.typography).toMatchObject({ font: { size: 14, weight: 700 } });
-    expect(result.inspection.style.plot.tokenRules.at(-1)).toMatchObject({
-      rule: input.plotThemeTokenRules[0],
-      path: '$spec/plotThemeTokenRules/0',
-    });
-    expect(result.inspection.style.plot.palette).toMatchObject({
-      categorical: ['#raw-categorical'],
-      series: ['#raw-series'],
-      sector: ['#raw-sector'],
-    });
-    expect(result.inspection.style.plot.authoredOverrides).toEqual([
-      { kind: ThemeTokenSource.Local, path: '$spec/plotTheme' },
-    ]);
   });
 
   it('topology token 只控制 recipe defaults，显式 guide 保持最高优先级', () => {
@@ -196,11 +156,7 @@ describe('Chart style resolution', () => {
       coordinate: result.plotSpec.coordinate,
       composition: result.plotSpec.composition,
       marks: result.plotSpec.marks,
-      chart: result.inspection.chart,
-      plot: result.inspection.plot,
-      memberTargets: result.inspection.members
-        .filter(member => member.kind !== 'guide')
-        .map(member => [member.kind, member.target]),
+      chart: result.chart,
     });
     expect(stableProjection(defaultDark)).toEqual(stableProjection(defaultLight));
   });

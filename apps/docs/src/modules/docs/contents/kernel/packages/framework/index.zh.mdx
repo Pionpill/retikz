@@ -1,0 +1,26 @@
+---
+title: 框架包
+description: 框架包为不同作者入口提供适配层：Vanilla 负责无框架输入，React 负责 JSX 与 React 宿主接线。
+---
+
+框架包解决的是“作者输入如何进入同一条 Kernel 处理链”。`@retikz/vanilla` 提供无框架的 InputScene、processing 和宿主入口；`@retikz/react` 收集 JSX 并接入同一份输入、编译与渲染契约。它们不重复定义 Core IR 或渲染语义。
+
+## 职责一览
+
+| 包 | 职责 | 适合何时查阅 |
+| --- | --- | --- |
+| `@retikz/vanilla` | 无框架输入、processing、SSR 和 DOM 挂载 | 使用普通 TypeScript 或实现其它适配器时 |
+| `@retikz/react` | JSX 组件、React adapter 与宿主接线 | 在 React 应用中声明和渲染图形时 |
+
+## 从哪里开始
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/framework/vanilla">
+    <span className="font-semibold">vanilla</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">InputScene、processing 与 DOM / SSR</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/framework/react">
+    <span className="font-semibold">react</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">JSX 输入与 React 宿主</span>
+  </LinkedCard>
+</div>

@@ -1,16 +1,11 @@
 ﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
-import type { PathCommand, PathGeneratorDefinition } from '../../../contract';
-import type { CanonicalStep } from '../../../normalize/path';
+import type { PathCommand } from '../../../contract';
+import type { PathGeneratorResolution } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 
-import { providerDefinitionOf } from '../../../providers/registry/index';
-import { JsonObjectSchema } from '../../../schemas';
-import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../probe-failure';
-import { parseProviderPayload } from '../../provider-payload';
+import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
-
-const EMPTY_PATH_GENERATORS: ReadonlyMap<string, PathGeneratorDefinition> = new Map();
 
 /** 校验 generator 命令并返回只含 canonical 字段的 detached command */
 const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
@@ -116,39 +111,15 @@ const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
 };
 
 export const lowerGeneratorStepToCommands = (args: {
-  step: Extract<CanonicalStep, { kind: 'generator' }>;
-  generators?: ReadonlyMap<string, PathGeneratorDefinition>;
+  resolution: PathGeneratorResolution;
   from: IRPosition;
   to?: IRPosition;
   round: (n: number) => number;
   resolveTargetParam: (value: unknown) => IRPosition | undefined;
-  irPath: string;
 }): Array<PathCommand> => {
-  const { step, from, to, round, resolveTargetParam, irPath } = args;
-  const generators = args.generators ?? EMPTY_PATH_GENERATORS;
-  const def = providerDefinitionOf(generators, step.name, {
-    capability: 'path generator',
-    optionName: 'pathGenerators',
-  });
-
-  const paramsPath = `${irPath}.params`;
-  const parsed = parseProviderPayload({
-    capability: 'path generator',
-    providerName: step.name,
-    irPath: paramsPath,
-    payloadName: 'params',
-    schema: def.paramsSchema,
-    value: step.params,
-  });
-  parseProviderPayload({
-    capability: 'path generator',
-    providerName: step.name,
-    irPath: paramsPath,
-    payloadName: 'params',
-    schema: JsonObjectSchema,
-    value: parsed,
-  });
-  const paramsObj = parsed;
+  const { resolution, from, to, round, resolveTargetParam } = args;
+  const def = resolution.definition;
+  const paramsObj = resolution.params;
 
   const resolvedTargets: Record<string, IRPosition> = {};
   for (const key of def.targetParams ?? []) {
@@ -157,7 +128,7 @@ export const lowerGeneratorStepToCommands = (args: {
     const raw = paramsObj[key];
     if (raw === null || (typeof raw !== 'string' && typeof raw !== 'object')) {
       throw new Error(
-        `path generator '${step.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,
+        `path generator '${resolution.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,
       );
     }
     const resolved = resolveTargetParam(raw);
@@ -174,17 +145,17 @@ export const lowerGeneratorStepToCommands = (args: {
       round,
     });
   } catch (e) {
-    throw new LayoutProbeRecoverableError(`path generator '${step.name}' threw: ${safeThrownDetail(e)}`, {
+    throw new LayoutProbeRecoverableError(`path generator '${resolution.name}' threw: ${safeThrownDetail(e)}`, {
       cause: e,
-      providerKey: `path-generator:${step.name}`,
+      providerKey: `path-generator:${resolution.name}`,
     });
   }
-  return withProviderOutputValidationBoundary(`path generator '${step.name}'`, () => {
+  return withProviderOutputValidationBoundary(`path generator '${resolution.name}'`, () => {
     if (!Array.isArray(produced)) {
       throw new CompositeContractError(
-        `path generator '${step.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
+        `path generator '${resolution.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
       );
     }
-    return Array.from(produced, command => parseGeneratedCommand(step.name, command));
+    return Array.from(produced, command => parseGeneratedCommand(resolution.name, command));
   });
 };

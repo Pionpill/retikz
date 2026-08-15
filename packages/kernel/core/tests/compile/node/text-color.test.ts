@@ -5,7 +5,7 @@ import type { TextPrim } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
-import { chooseBlackOrWhiteForLuminance } from '../../../src/compile/node/text-color';
+import { chooseBlackOrWhiteForLuminance } from '../../../src/resolve/node';
 import { flattenPrims } from '../../helpers/flatten';
 
 const AUTO_CONTRAST = 'contrast' as const;

@@ -1,0 +1,228 @@
+---
+title: '@retikz/runtime'
+description: Manage state ownership and incremental execution across revisions with structured identities, typed Owner / Program Definitions, synchronous Sessions, and isolated traces.
+---
+
+`@retikz/runtime` is the domain-neutral execution foundation. It does not understand Core IR, Scene, the DOM, or Plot data. Each domain declares who owns a complete state value and how that value is read, compared, and released.
+
+The current public surface covers identities, Owner / Program Definitions, registries, synchronous transactions, and execution tracing. Core programs and retained renderers compose on the same Session contract instead of creating adapter-specific lifecycles.
+
+The diagram separates the boundary first: domain packages supply complete inputs and Definitions, Runtime registries constrain ownership and the dependency graph, the Session owns transactions and revisions, and only Snapshots and artifacts are published.
+
+<ComponentPreview files="runtime-architecture" size="xl" hideCode />
+
+The solid `commands → Session → publish` path is product data flow. Registries are execution dependencies, while trace and diagnostics form the dashed observation side path. Observation failures do not rewrite published results.
+
+## Responsibilities At A Glance
+
+| Topic               | Responsibility                                                   | Reach for it when                               |
+| ------------------- | ---------------------------------------------------------------- | ----------------------------------------------- |
+| Identity and Owner  | Define complete-state identity, ownership, reads, and retirement | Integrating domain state or immutable views     |
+| Program and Session | Organize dependency DAGs, revisions, and atomic transactions     | Incrementally updating state and derived output |
+| Trace               | Validate and isolate execution observation from product results  | Measuring work or diagnosing a trace sink       |
+
+## Installation & Boundary
+
+```bash
+pnpm add @retikz/runtime
+```
+
+| Runtime owns                                 | Runtime does not own                        |
+| -------------------------------------------- | ------------------------------------------- |
+| Stable owners, structured identities/index   | Core IR, Scene, geometry, or layout         |
+| Complete Snapshot capture/read/equals        | Inferring next state from domain ops        |
+| Typed Definitions and one registry           | React / Vanilla authoring                   |
+| Program DAGs, revisions, and atomic Sessions | Domain Diff, Scene Patch, or DOM operations |
+| Synchronous trace validation/diagnostics     | Remote telemetry, analytics, or storage     |
+
+`@retikz/runtime` has no runtime dependencies and never writes callbacks, handles, or trace data into IR or Scene.
+
+## Create Structured Identities
+
+An identity consists of an owner and a non-empty segment path. Segments are preserved without normalizing `/`, `.`, `:`, or Unicode, so `['a', 'b/c']` never collides with `['a/b', 'c']`.
+
+```ts
+import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
+
+const title = createRuntimeIdentity('@retikz/core', ['layer/main', 'title']);
+const body = createRuntimeIdentity('@retikz/core', ['layer/main', 'body']);
+const lookup = createRuntimeIdentityLookup('@retikz/core', [body, title]);
+
+lookup.has(createRuntimeIdentity('@retikz/core', ['layer/main', 'title'])); // true
+runtimeIdentityEquals(title, body); // false
+```
+
+The factory copies and freezes the path. The index revalidates that every identity belongs to one owner, rejects duplicate segment paths, and returns immutable copies in JavaScript code-unit order. Do not build an index by joining strings.
+
+## Define An Owner
+
+`defineRuntimeOwner()` is the only author entry. Its result is an opaque typed token; `capture`, `read`, `equals`, and `dispose` are not properties on that token.
+
+```ts
+import { createRuntimeIdentity, defineRuntimeOwner } from '@retikz/runtime';
+
+type LayerInput = Readonly<{ colors: ReadonlyMap<string, string> }>;
+type LayerValue = Readonly<{ colors: ReadonlyMap<string, string> }>;
+type LayerRead = ReadonlyArray<readonly [string, string]>;
+
+export const layerOwner = defineRuntimeOwner<LayerInput, LayerValue, LayerRead, never>({
+  key: 'example/layers',
+  value: {
+    capture: input => Object.freeze({ colors: new Map(input.colors) }),
+    read: value => Object.freeze([...value.colors.entries()].map(entry => Object.freeze(entry))),
+    equals: (left, right) =>
+      left.colors.size === right.colors.size &&
+      [...left.colors].every(([key, color]) => right.colors.get(key) === color),
+  },
+  collectIdentities: value =>
+    [...value.colors.keys()].map(key => createRuntimeIdentity('example/layers', ['layer', key])),
+});
+```
+
+`capture` takes complete input and acquires a session-owned value. `read` produces an immutable view that is safe to share. `equals` compares complete semantics. Add `dispose(value)` when the captured value owns resources.
+
+## Inject A Registry & Execute
+
+Built-in and custom owners share one registry with no override priority:
+
+```ts
+import { createRuntimeOwnerRegistry } from '@retikz/runtime';
+import { layerOwner } from './layer-owner';
+
+export const owners = createRuntimeOwnerRegistry({
+  builtins: [],
+  custom: [layerOwner],
+});
+
+owners.resolve(layerOwner); // retains LayerInput / LayerValue / LayerRead
+owners.find('example/layers'); // only an opaque RuntimeOwnerToken
+```
+
+The registry first validates Definition object identity, then merges and sorts exact keys. Only Runtime's registry-bound executor can recover author callbacks. Its order is `capture → collect identities → read → compare / validate → retire`; an unregistered token cannot enter the lifecycle.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Owner Definition hides author callbacks',
+      path: 'packages/kernel/runtime/src/owner/define.ts',
+      startLine: 6,
+      endLine: 59,
+    },
+    {
+      label: 'Registry merge and typed resolve',
+      path: 'packages/kernel/runtime/src/registry/owner-registry.ts',
+      startLine: 23,
+      endLine: 71,
+    },
+    {
+      label: 'Registry-bound lifecycle executor',
+      path: 'packages/kernel/runtime/src/owner/executor.ts',
+      startLine: 88,
+      endLine: 218,
+    },
+  ]}
+/>
+
+## Lifecycle & Mutable Alias Contract
+
+An Owner does more than retain an input: it isolates the candidate from the current value until publish. In the diagram, `Current value` participates only in complete-semantic comparison. A candidate is retired after a pre-publish failure, while the previous value is retired only after publish succeeds.
+
+<ComponentPreview files="owner-lifecycle" size="xl" hideCode />
+
+A change hint may therefore participate in `validate`, but it cannot bypass `read`, `equals`, or the complete Snapshot. Runtime owns both retirement paths and calls `dispose` exactly once for a resource on every legal path.
+
+| Callback             | Definition author must guarantee                                              |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `capture(input)`     | No mutable caller alias; copy nested Array / Map / Set or use persistent data |
+| `read(value)`        | No mutable method, external reference, or disposable handle                   |
+| `equals(left,right)` | Compare complete Snapshot semantics, never treat a change hint as truth       |
+| `dispose(value)`     | Release only that value; Runtime guarantees exactly-once on valid paths       |
+
+Runtime cannot deep-clone arbitrary generic values or prove immutability. This is a Definition author contract. Built-in Definitions need alias-attack tests; persistent immutable values may safely reuse the same reference.
+
+When collection, the first read, or change-set validation fails, Runtime releases the candidate immediately. A secondary `dispose` failure becomes a `RUNTIME_OWNER_DISPOSE_FAILED` diagnostic without replacing the primary lifecycle error.
+
+## Errors & Limits
+
+| Code                                        | Trigger                                            |
+| ------------------------------------------- | -------------------------------------------------- |
+| `RUNTIME_IDENTITY_INVALID`                  | Empty owner/path/segment, duplicate path, mismatch |
+| `RUNTIME_OWNER_TOKEN_INVALID`               | Definition did not come from this Runtime helper   |
+| `RUNTIME_OWNER_DUPLICATE`                   | Built-in/custom entries share one exact key        |
+| `RUNTIME_OWNER_UNKNOWN`                     | Executor / resolve receives an unregistered token  |
+| `RUNTIME_OWNER_CAPTURE_FAILED`              | `capture` throws                                   |
+| `RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED`   | Collector throws or returns an invalid collection  |
+| `RUNTIME_OWNER_READ_FAILED`                 | `read` throws                                      |
+| `RUNTIME_OWNER_COMPARE_FAILED`              | `equals` throws                                    |
+| `RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED` | Change-set validator throws                        |
+
+See [Programs & Synchronous Sessions](/kernel/packages/core/runtime-session) for the main Program graph, revision, transaction, and error contracts. Concurrent schedulers and renderer patches are outside this page.
+
+## Execution Traces
+
+`createRuntimeTraceReporter()` creates an owner-bound reporter. Callers declare the allowed phase, unit, and outcomes. Invalid records, sink failures, and reporter reentry do not change product output; they enter the drain queue exposed by `diagnostics()`.
+
+```ts
+import { createRuntimeTraceReporter } from '@retikz/runtime';
+
+const reporter = createRuntimeTraceReporter({
+  owner: 'example/program',
+  phases: [{ phase: 'update', unit: 'program', outcomes: ['incremental', 'fallback'] }],
+  sink: record => console.log(record),
+});
+```
+
+Every count must be a finite nonnegative safe integer with `reused <= visited` and `changed <= visited`. Tracing is synchronous execution observability, not remote telemetry.
+
+## API Reference
+
+Definition authors primarily use the following three object contracts. Their generic parameters come from `defineRuntimeOwner<TInput, TValue, TRead, TChange>()`:
+
+| Type                                                          | Field contract                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `RuntimeOwnedValueDefinitionInput<TInput, TValue, TRead>`     | Complete captured-value lifecycle<br />- `capture: (input: TInput) => TValue`: capture a session-owned value<br />- `read: (value: TValue) => TRead`: produce an immutable read view<br />- `equals: (left: TValue, right: TValue) => boolean`: compare complete Snapshot semantics<br />- `dispose?: (value: TValue) => void`: optionally release the value                                                                                           |
+| `RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>` | Definition author input<br />- `key: string`: global exact owner key<br />- `value: RuntimeOwnedValueDefinitionInput<TInput, TValue, TRead>`: value lifecycle contract<br />- `collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>`: optional complete identity collector<br />- `validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' \| 'fallback'`: optional change-hint validator |
+| `RuntimeOwnerRegistryInput`                                   | Registry merge input<br />- `builtins?: ReadonlyArray<RuntimeOwnerToken>`: built-in Definitions<br />- `custom?: ReadonlyArray<RuntimeOwnerToken>`: third-party or upper-layer Definitions                                                                                                                                                                                                                                                             |
+
+| API / Type                         | Purpose                                           |
+| ---------------------------------- | ------------------------------------------------- |
+| `RuntimeIdentity`                  | Structured `{ owner, path }` identity             |
+| `createRuntimeIdentity`            | Validate, copy, and freeze an identity            |
+| `runtimeIdentityEquals`            | Compare owner and segments exactly                |
+| `RuntimeIdentityLookup`            | Validated identity lookup for one owner           |
+| `createRuntimeIdentityLookup`      | Validate uniqueness and build a sorted lookup     |
+| `RuntimeOwnedValueDefinitionInput` | Captured-value lifecycle field contract           |
+| `RuntimeOwnerDefinitionInput`      | Owner key, lifecycle, collector, and validator    |
+| `RuntimeOwnerToken`                | Opaque `{ key }` token returned by dynamic lookup |
+| `RuntimeOwnerDefinition`           | Opaque token retaining author generics            |
+| `defineRuntimeOwner`               | The only Definition author entry                  |
+| `RuntimeOwnerRegistryInput`        | Built-in/custom token collections                 |
+| `RuntimeOwnerRegistry`             | Typed resolve, dynamic find, and definitions      |
+| `createRuntimeOwnerRegistry`       | Merge built-in/custom tokens uniformly            |
+| `RuntimeOwnerLifecycleDiagnostic`  | Stable diagnostic for dispose secondary failure   |
+| `RuntimeOwnerError`                | Lifecycle primary error and secondary diagnostics |
+| `RuntimeIdentityError`             | Identity contract error                           |
+| `RuntimeOwnerRegistryError`        | Token, duplicate, and unknown registry error      |
+| `createRuntimeTraceReporter`       | Create an owner-bound trace reporter              |
+| `PerformanceTraceRecord`           | Phase work-count record                           |
+| `PerformanceTraceDiagnostic`       | Non-fatal trace diagnostic                        |
+
+`RuntimeRevision` and `RuntimeChangeSet<TChange>` come from synchronous Session factories. Do not assert or forge their envelopes. See [Programs & Synchronous Sessions](/kernel/packages/core/runtime-session) for Program, transaction, and Session APIs.
+
+## Related
+
+- [Packages overview](/kernel/packages)
+- [Programs & Synchronous Sessions](/kernel/packages/core/runtime-session)
+- [Extension mechanism reference](/kernel/reference/runtime/extensions)
+- [Compile entry](/kernel/reference/runtime/compile)
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/core/runtime-session">
+    <span className="font-semibold">Programs & Synchronous Sessions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Define Program graphs, revision-bound transactions, fallback, diagnostics, and resource lifecycles
+    </span>
+  </LinkedCard>
+</div>

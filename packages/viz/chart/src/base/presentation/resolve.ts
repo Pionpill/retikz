@@ -18,7 +18,6 @@ import type { IRChartPresentation, IRChartPresentationItem } from './types';
 
 import { ChartThemeToken } from '../style';
 import { ChartPresentationPreset } from './constants';
-import { ChartPresentationInspectionSchema } from './inspection';
 
 type PresentationPresetTokenKeys = {
   foreground: keyof IRChartResolvedThemeTokens;
@@ -105,27 +104,18 @@ export const resolveChartPresentation = (
   if (presentation === undefined) {
     return {
       content: plot,
-      inspection: ChartPresentationInspectionSchema.parse({
-        kind: 'plot',
-        items: [{ key: 'chart.plot', kind: 'plot', sourcePath: '$resolved/plot' }],
-      }),
     };
   }
 
-  const items = presentation.children.map((item, index) => ({
-    flex: {
-      ...flexFieldsOf(item),
-      kind: LayoutItemKind.Flex,
-      key: item.key,
-      child: item.kind === 'plot' ? plot : presetNode(item, tokens),
-    } satisfies FlexLayoutItemInput,
-    inspection: {
-      key: item.key,
-      kind: item.kind,
-      ...(item.kind === 'preset' ? { preset: item.preset } : {}),
-      sourcePath: `$spec/presentation/children/${index}`,
-    },
-  }));
+  const items = presentation.children.map(
+    item =>
+      ({
+        ...flexFieldsOf(item),
+        kind: LayoutItemKind.Flex,
+        key: item.key,
+        child: item.kind === 'plot' ? plot : presetNode(item, tokens),
+      }) satisfies FlexLayoutItemInput,
+  );
   return {
     content: createFlexLayout({
       direction: FlexLayoutDirection.Column,
@@ -133,11 +123,7 @@ export const resolveChartPresentation = (
       gap: { column: 0, row: tokens[ChartThemeToken.ChartGap] },
       justifyContent: LayoutDistribution.Start,
       alignContent: LayoutDistribution.Start,
-      children: items.map(item => item.flex),
-    }),
-    inspection: ChartPresentationInspectionSchema.parse({
-      kind: 'flex-layout',
-      items: items.map(item => item.inspection),
+      children: items,
     }),
   };
 };

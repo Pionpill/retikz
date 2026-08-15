@@ -1,6 +1,7 @@
 import type { PathCommand, PathPrim } from '../../../../contract';
+import type { PathStyleResolution } from '../../../../resolve/path';
 import type { IRPosition } from '../../../../schemas';
-import type { PaintResolver } from '../../../resource';
+import type { PaintInput, PaintResolver } from '../../../resource';
 import type { RibbonLike } from '../types';
 
 /**
@@ -11,20 +12,21 @@ export const styledPrimitiveFromOutline = (
   ribbon: RibbonLike,
   outline: { commands: Array<PathCommand>; points: Array<IRPosition> },
   resolvePaint: PaintResolver,
+  style: PathStyleResolution,
+  paint?: Readonly<{ fill?: PaintInput; stroke?: PaintInput }>,
 ): PathPrim => {
-  const outlineRequested = ribbon.stroke !== undefined || ribbon.strokeWidth !== undefined;
   const primitive: PathPrim = {
     type: 'path',
     commands: outline.commands,
-    fill: resolvePaint(ribbon.fill) ?? 'currentColor',
+    fill: resolvePaint(paint?.fill) ?? style.ribbonFillDefault,
     fillOpacity: ribbon.fillOpacity,
     opacity: ribbon.opacity,
     shadow: ribbon.shadow,
     blendMode: ribbon.blendMode,
   };
-  if (outlineRequested) {
-    primitive.stroke = resolvePaint(ribbon.stroke) ?? 'currentColor';
-    primitive.strokeWidth = ribbon.strokeWidth ?? 1;
+  if (style.strokeRequested) {
+    primitive.stroke = resolvePaint(paint?.stroke) ?? style.strokeDefault;
+    primitive.strokeWidth = style.strokeWidth;
     primitive.strokeOpacity = ribbon.strokeOpacity;
   }
   if (ribbon.id !== undefined) primitive.id = ribbon.id;

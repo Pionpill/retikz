@@ -130,7 +130,6 @@ describe('Scatter Chart recipe', () => {
       {
         target: 'mark.main',
         inputPath: ['mark'],
-        sourcePath: '$spec/mark',
         changes: [
           { path: ['color'], value: { kind: 'constant', value: '#dc2626' } },
           { path: ['strokeWidth'], value: { kind: 'constant', value: 2 } },
@@ -159,7 +158,6 @@ describe('Scatter Chart recipe', () => {
       {
         target: 'mark.main',
         inputPath: ['mark'],
-        sourcePath: '$spec/mark',
         changes: [
           { path: ['encoding', 'text'], value: { field: 'label' } },
           { path: ['encoding', 'color'], value: { field: 'group', scale: 'colors' } },

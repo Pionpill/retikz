@@ -1,15 +1,17 @@
 import type { BoundsInsets, Position } from '@retikz/math';
 
+import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve/node';
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { ResolveBoundaryContext } from './boundary';
 import type { NodeLayout } from './types';
 
-import { resolveBoundaryRegistry } from '../../providers/boundary';
+type NodeAnchorLayout = NodeLayout | NodeReferenceView;
+
+import { boundaryKey } from '../../resolve/node';
 import { CenterAnchor, isAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { snapshotProviderPosition } from '../scene-primitive';
-import { boundaryKey, fallbackBoundaryAnchor, resolveBoundary } from './boundary';
+import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 
 /** 空 shape params */
 const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
@@ -40,39 +42,64 @@ const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
 /** 取节点视觉 rect 外扩 margin 后的外边界 */
 export const outerRectOf = (layout: NodeLayout): Rect => inflateRect(layout.rect, layout.margin);
 
-const boundaryContextOf = (layout: NodeLayout): ResolveBoundaryContext => {
-  layout.connectionEnvelopeCache ??= new Map();
-  layout.connectionEnvelopeWarnings ??= new Set();
-  return {
+const shapeBoundaryResolutionOf = (layout: NodeAnchorLayout): BoundaryReferenceResolution => ({
+  name: layout.shapeName,
+  definition: layout.shapeDef,
+  params: layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
+  isShape: true,
+});
+
+const resolveBoundaryOf = (
+  layout: NodeAnchorLayout,
+  boundary: IRBoundary | undefined,
+  boundaryResolution?: BoundaryReferenceResolution,
+  warn?: (code: string, message: string) => void,
+) => {
+  const resolution =
+    boundaryResolution ??
+    (boundary === undefined || boundary === 'shape'
+      ? shapeBoundaryResolutionOf(layout)
+      : boundary === layout.boundary || boundaryKey(boundary) === boundaryKey(layout.boundary)
+        ? layout.boundaryResolution
+        : undefined);
+  if (resolution === undefined) {
+    throw new Error(`Boundary '${boundaryKey(boundary)}' was not resolved for node '${layout.id ?? '(unnamed)'}'`);
+  }
+  return resolveBoundaryGeometry(resolution, {
     visualDef: layout.shapeDef,
     visualRect: layout.rect,
     visualParams: layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
-    shapeRegistry: layout.shapes,
-    boundaryRegistry: layout.boundaries ?? resolveBoundaryRegistry(),
     irPath: layout.irPath,
-    connectionEnvelopeCache: layout.connectionEnvelopeCache,
-    connectionEnvelopeWarnings: layout.connectionEnvelopeWarnings,
-    warn: layout.warn,
-  };
+    ...('connectionEnvelopeCache' in layout && layout.connectionEnvelopeCache !== undefined
+      ? { connectionEnvelopeCache: layout.connectionEnvelopeCache }
+      : {}),
+    ...('connectionEnvelopeWarnings' in layout && layout.connectionEnvelopeWarnings !== undefined
+      ? { connectionEnvelopeWarnings: layout.connectionEnvelopeWarnings }
+      : {}),
+    ...('warn' in layout && layout.warn !== undefined ? { warn: layout.warn } : warn === undefined ? {} : { warn }),
+  });
 };
 
 /** 取节点 shape 在 toward 方向的附着点 */
 export const boundaryPointOf = (
-  layout: NodeLayout,
+  layout: NodeAnchorLayout,
   toward: Position,
-  boundary: IRBoundary | undefined = 'shape',
+  boundary?: IRBoundary,
+  boundaryResolution?: BoundaryReferenceResolution,
+  warn?: (code: string, message: string) => void,
 ): Position => {
-  const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution, warn);
   const raw = def.boundaryPoint(inflateRect(rect, layout.margin), toward, params);
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };
 
 /** 取节点 shape 的命名 anchor；标准 anchor 可选在 boundary 拟合后应用 margin */
 export const anchorOf = (
-  layout: NodeLayout,
+  layout: NodeAnchorLayout,
   name: string,
-  boundary: IRBoundary | undefined = 'shape',
+  boundary?: IRBoundary,
   applyMargin = false,
+  boundaryResolution?: BoundaryReferenceResolution,
 ): Position => {
   if (isAnchor(name)) {
     if (name === CenterAnchor.Center) {
@@ -91,14 +118,12 @@ export const anchorOf = (
         layout.shapeDef.anchor(shapeRect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS),
       );
       if (own !== undefined) return own;
-      const fallback = resolveBoundary('rectangle', boundaryContextOf(layout));
-      const fallbackRect = applyMargin ? inflateRect(fallback.rect, layout.margin) : fallback.rect;
-      const raw = fallback.def.anchor?.(fallbackRect, name, fallback.params);
-      const p = snapshotOptionalProviderPosition(`Boundary 'rectangle' anchor`, raw);
+      const fallbackRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
+      const p = fallbackBoundaryAnchor(fallbackRect, name);
       if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
       return p;
     }
-    const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
+    const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution);
     const anchorRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
     const raw = def.anchor?.(anchorRect, name, params);
     const p =
@@ -120,15 +145,16 @@ export const anchorOf = (
 
 /** 取节点 shape 在指定角度方向的边界点 */
 export const angleBoundaryOf = (
-  layout: NodeLayout,
+  layout: NodeAnchorLayout,
   angleDeg: number,
-  boundary: IRBoundary | undefined = 'shape',
+  boundary?: IRBoundary,
   applyMargin = false,
+  boundaryResolution?: BoundaryReferenceResolution,
 ): Position => {
   const rad = angleDeg * DEG_TO_RAD;
   const lx = Math.cos(rad);
   const ly = Math.sin(rad);
-  const { def, rect, params } = resolveBoundary(boundary, boundaryContextOf(layout));
+  const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution);
   const boundaryRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
   const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);

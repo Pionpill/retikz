@@ -45,13 +45,9 @@ import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
 import * as runtimeTopology from '../../src/compile/orchestration/runtime-topology';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
-import {
-  CompileInvariantError,
-  CompositeContractError,
-  isLayoutProbeRecoverableError,
-  normalizeLayoutProbeError,
-} from '../../src/compile/probe-failure';
+import { CompileInvariantError, normalizeLayoutProbeError } from '../../src/compile/probe-failure';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
+import { CompositeContractError, isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';
 import { arrowMarks } from '../helpers/arrow-marks';
 

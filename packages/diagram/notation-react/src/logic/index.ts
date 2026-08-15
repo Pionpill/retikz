@@ -1,3 +1,4 @@
+export * from './adapters';
 export * from './Connector';
 export * from './Decision';
 export * from './Junction';

@@ -11,7 +11,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 <ComponentPreview files="karl-circle-07-info" size="lg" />
 
-如果你是从 TikZ 迁移过来，这页重点看 5 个差异：retikz 坐标 y 向下；圆 / 网格 / 扇形现在可以直接用 sugar；投影 / 交点目前需要手算或命名 Coordinate；`foreach` 风格重复图元通常在 React 里用 `.map()` 生成；公式不再用纯文本兜底，而是 [@retikz/tex](/kernel/packages/tex) 的 `$...$` / `$$...$$` 行内公式（文字夹公式、逐 run 着色都支持）。
+如果你是从 TikZ 迁移过来，这页重点看 5 个差异：retikz 坐标 y 向下；圆 / 网格 / 扇形现在可以直接用 sugar；投影 / 交点目前需要手算或命名 Coordinate；`foreach` 风格重复图元通常在 React 里用 `.map()` 生成；公式不再用纯文本兜底，而是 [@retikz/tex](/kernel/packages/extension/tex) 的 `$...$` / `$$...$$` 行内公式（文字夹公式、逐 run 着色都支持）。
 
 ## 提示词
 
@@ -63,7 +63,7 @@ description: 学术 / 教材类绘图示例——30° 角下 sin / cos / tan 的
 
 ### 步骤 2：加坐标轴 + 端点标签 + 命名锚
 
-x 轴和 y 轴用 [Draw](/kernel/components/draw/overview) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 现在写成 [@retikz/tex](/kernel/packages/tex) 的 `$x$` / `$y$` 行内公式（[Node](/kernel/components/node/overview) 文本里的 `$...$`），渲染成数学斜体字母（`stroke="none"` 去掉默认外框）。这是本页第一处公式，所以**从这一步起每个 demo 都用 `useLowerTex()` 启动 MathJax、再注入 `<Layout lowerTex>`**；没注入时 `$...$` 一律字面、含公式的内容静默降级、不崩。[Coordinate](/kernel/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
+x 轴和 y 轴用 [Draw](/kernel/components/draw/overview) 配 `arrow="->"` 一键画带箭头的线段。轴端的 `x` / `y` 现在写成 [@retikz/tex](/kernel/packages/extension/tex) 的 `$x$` / `$y$` 行内公式（[Node](/kernel/components/node/overview) 文本里的 `$...$`），渲染成数学斜体字母（`stroke="none"` 去掉默认外框）。这是本页第一处公式，所以**从这一步起每个 demo 都用 `useLowerTex()` 启动 MathJax、再注入 `<Layout lowerTex>`**；没注入时 `$...$` 一律字面、含公式的内容静默降级、不崩。[Coordinate](/kernel/components/node/coordinate) 给两个端点命名（`x-axis` / `y-axis`），后续 step 可以用 id 字符串引用——本例其实没引用到，但保留以贴合 TikZ 的 `coordinate(x axis)` 风格习惯。
 
 <ComponentPreview files={{ file: 'karl-circle-02-axes', diffFrom: 'karl-circle-01-circle' }} size="lg" />
 
@@ -109,14 +109,14 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 
 ## 能力
 
-| 组件                                                                       | 在本例中扮演的角色                                                                                            | 主要 step                                                                                                                              |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [Circle](/kernel/components/shapes/circle-ellipse)                         | 单位圆                                                                                                        | [1](#步骤-1画单位圆), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签)                                                         |
-| [Sector](/kernel/components/shapes/arc-sector)                             | 30° 扇形                                                                                                      | [4](#步骤-4画-30-扇形--α-标签), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线)                                   |
-| [网格](/library/standard/composite/grid)                                   | 背景网格                                                                                                      | [3](#步骤-3加网格--刻度)                                                                                                               |
-| [Draw](/kernel/components/draw/overview)                                   | 坐标轴 + 刻度短线 + sin/cos/tan 三色线（边标注用 `$...$` 公式）+ 辅助射线                                     | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
-| [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/tex) | 轴端 x / y、刻度真分数、α（行内公式）+ 右侧说明框（多行 `{ runs }` 文字 + 公式混排、逐 run 着色，自带虚线框） | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框)       |
-| [Coordinate](/kernel/components/node/coordinate)                           | 命名 x/y 轴端点 + tan 交点 t                                                                                  | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线)                                                               |
+| 组件                                                                                 | 在本例中扮演的角色                                                                                            | 主要 step                                                                                                                              |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [Circle](/kernel/components/shapes/circle-ellipse)                                   | 单位圆                                                                                                        | [1](#步骤-1画单位圆), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签)                                                         |
+| [Sector](/kernel/components/shapes/arc-sector)                                       | 30° 扇形                                                                                                      | [4](#步骤-4画-30-扇形--α-标签), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线)                                   |
+| [网格](/library/standard/composite/grid)                                             | 背景网格                                                                                                      | [3](#步骤-3加网格--刻度)                                                                                                               |
+| [Draw](/kernel/components/draw/overview)                                             | 坐标轴 + 刻度短线 + sin/cos/tan 三色线（边标注用 `$...$` 公式）+ 辅助射线                                     | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [5](#步骤-5sin-α-红线--cos-α-蓝线), [6](#步骤-6tan-α-橙线--辅助射线) |
+| [Node](/kernel/components/node/overview) + [`$...$`](/kernel/packages/extension/tex) | 轴端 x / y、刻度真分数、α（行内公式）+ 右侧说明框（多行 `{ runs }` 文字 + 公式混排、逐 run 着色，自带虚线框） | [2](#步骤-2加坐标轴--端点标签--命名锚), [3](#步骤-3加网格--刻度), [4](#步骤-4画-30-扇形--α-标签), [7](#步骤-7右侧多色信息说明框)       |
+| [Coordinate](/kernel/components/node/coordinate)                                     | 命名 x/y 轴端点 + tan 交点 t                                                                                  | [2](#步骤-2加坐标轴--端点标签--命名锚), [6](#步骤-6tan-α-橙线--辅助射线)                                                               |
 
 ## 限制
 
@@ -125,10 +125,10 @@ tan 线从 (1, 0) 垂直到 (1, tan30°)。原图用 TikZ 的 named path + inter
 | 数学 y-up 坐标系                           | 🚧 未来支持 | 缩放本身可用 Scope 的 `scale` 变换；但还没有 Layout 级的「y 轴朝上」开关（`scale` 的 y 取负会连文字一起翻转），本例直接写像素坐标 + 手动给 y 加负号 |
 | 投影 target（`(A \|- B)`）                 | 🚧 未来支持 | 手算 `[cos30 * 100, 0]`                                                                                                                             |
 | named path + intersection target           | 🚧 未来支持 | 手算 `[100, -tan30 * 100]`                                                                                                                          |
-| LaTeX 公式（行内 / display / 带框 / 混排） | ✅ 已支持   | [@retikz/tex](/kernel/packages/tex)：文本里 `$...$` / `$$...$$`，或显式 `{ runs }` 逐 run 着色；本例用于 x / y、刻度、α、右侧图例                   |
+| LaTeX 公式（行内 / display / 带框 / 混排） | ✅ 已支持   | [@retikz/tex](/kernel/packages/extension/tex)：文本里 `$...$` / `$$...$$`，或显式 `{ runs }` 逐 run 着色；本例用于 x / y、刻度、α、右侧图例         |
 | 逐 run / 逐行着色                          | ✅ 已支持   | 显式 `{ runs: [{ tex, fill }, { text }] }`，每段单独 `fill`（如右侧图例）；`\color{}` 仍不生效，靠 run 的 `fill`                                    |
 
 ## 扩展阅读
 
-- [Path](/kernel/components/draw/path) · [Step](/kernel/components/draw/step) · [Draw](/kernel/components/draw/overview) · [Node](/kernel/components/node/overview) · [Coordinate](/kernel/components/node/coordinate) · [TeX 公式](/kernel/packages/tex)
+- [Path](/kernel/components/draw/path) · [Step](/kernel/components/draw/step) · [Draw](/kernel/components/draw/overview) · [Node](/kernel/components/node/overview) · [Coordinate](/kernel/components/node/coordinate) · [TeX 公式](/kernel/packages/extension/tex)
 - [定位](/kernel/concepts/basic/position) · [图元关系](/kernel/concepts/core/primitive-relations)

@@ -5,19 +5,17 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { PlotSpecSchema, resolvePlotTheme } from '@retikz/plot';
 import { z } from 'zod';
 
-import type { IRChartInspection } from '../base/inspection';
 import type { ChartPresentationAuthoringRecord, ChartPresentationShorthand } from '../base/presentation';
 import type { IRChart } from '../base/schemas';
 import type { ChartThemeStyleDefinition } from '../base/style';
 import type { InternalChartSpecBound } from './recipe';
 
-import { createChartInspection } from '../base/inspection';
-import { normalizeChartPresentation, resolveChartPresentation } from '../base/presentation';
+import { normalizeChartPresentation } from '../base/presentation';
 import { CHART_NAMESPACE, ChartSchema } from '../base/schemas';
 import { resolveChartStyle } from '../base/style';
 import { BUILTIN_POINT_CHART_RECIPES } from './catalog';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
-import { chartInspectionMemberInputsOf, ChartMemberParseError, mergeChartSeed } from './merge';
+import { ChartMemberParseError, mergeChartSeed } from './merge';
 import { ChartRecipeInvariantError } from './recipe';
 import { pointChartRecipeStyleContextOf } from './recipe';
 
@@ -27,8 +25,6 @@ export type PointChartResolution = {
   plotSpec: IRPlotSpec;
   /** 进入唯一 chart.chart Definition 的 canonical IR */
   chart: IRChart;
-  /** 与最终 Plot member 对齐的 resolution inspection */
-  inspection: IRChartInspection;
 };
 
 const DispatchEnvelopeSchema = z
@@ -165,14 +161,5 @@ export const resolvePointChartSpec = (
     plot: plotSpec,
     ...(canonicalPresentation === undefined ? {} : { presentation: canonicalPresentation }),
   });
-  const presentation = resolveChartPresentation(chart.presentation, plotSpec, style.tokens);
-  const inspection = createChartInspection(
-    { type: spec.type, ...(spec.id === undefined ? {} : { id: spec.id }) },
-    plotSpec,
-    chartInspectionMemberInputsOf(plotSpec, merged.members),
-    style,
-    plotStyle,
-    presentation.inspection,
-  );
-  return { plotSpec, chart, inspection };
+  return { plotSpec, chart };
 };

@@ -209,7 +209,7 @@ Pass a ref to `<Layout animationRef={ref}>` and after mount you get `AnimationCo
 
 <ComponentPreview files="manual-controls" size="sm" controls={{ animation: true }} />
 
-`animationRef` / vanilla `view.animation` is the Scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
+`animationRef` / vanilla `view.animation` is the Scene-level clock handle: SVG controls the diagram's interactive WAAPI handle, while Canvas controls the shared rAF clock. Inside a handler, use hydration's [`context.animation`](/kernel/packages/render/render-hydration#the-handler-context) to control the hit id; both backends expose per-id controls there.
 
 The playback switch has three states. React and Vanilla use different shapes but the same priority:
 

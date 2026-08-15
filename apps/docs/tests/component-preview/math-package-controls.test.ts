@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.controls';
+import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/intersection-playground.controls';
 import {
   circleCircleCenters,
   intersectionViewBox,
-} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.data';
+} from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/intersection-playground.data';
 
 describe('@retikz/math package controls', () => {
   it('circle-circle control extremes remain inside the fixed viewport', () => {
