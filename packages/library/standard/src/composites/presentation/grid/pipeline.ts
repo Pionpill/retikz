@@ -20,7 +20,7 @@ type GridLineBounds = GridBounds & {
   lineMaxY: number;
 };
 
-type NormalizedGrid = GridBounds & {
+type CanonicalGrid = GridBounds & {
   position?: Extract<IRGrid['bounds'], { position: unknown }>['position'];
 };
 
@@ -32,9 +32,9 @@ export const lowerGrid = (grid: IRGrid): IRScope => {
   const { namespace: _namespace, type: _type, bounds, line, border, ...scopeProps } = grid;
   void _namespace;
   void _type;
-  const normalized = normalizeGrid(bounds);
-  const { minX, minY, maxX, maxY } = normalized;
-  const resolvedLine = normalizeGridLine(line);
+  const canonical = normalizeGrid(bounds);
+  const { minX, minY, maxX, maxY } = canonical;
+  const canonicalLines = normalizeGridLines(line);
   const borderPadding = border?.padding ?? 0;
   const lineBounds: GridLineBounds = {
     minX,
@@ -52,9 +52,9 @@ export const lowerGrid = (grid: IRGrid): IRScope => {
     paths.push(createGridBorderPath(minX, minY, maxX, maxY, borderPadding, border.style));
   }
 
-  if (resolvedLine !== false) {
-    appendGridLines(paths, 'vertical', normalized, lineBounds, resolvedLine.vertical);
-    appendGridLines(paths, 'horizontal', normalized, lineBounds, resolvedLine.horizontal);
+  if (canonicalLines !== false) {
+    appendGridLines(paths, 'vertical', canonical, lineBounds, canonicalLines.vertical);
+    appendGridLines(paths, 'horizontal', canonical, lineBounds, canonicalLines.horizontal);
   }
 
   if (border !== undefined && border.order === GridBorderOrder.Front) {
@@ -62,24 +62,24 @@ export const lowerGrid = (grid: IRGrid): IRScope => {
   }
 
   const children: Array<IRPath | IRScope> =
-    normalized.position === undefined
+    canonical.position === undefined
       ? paths
       : [
           {
             type: 'scope',
-            transforms: [{ kind: 'offset-translate', of: normalized.position }],
+            transforms: [{ kind: 'offset-translate', of: canonical.position }],
             children: paths,
           },
         ];
   return { type: 'scope', ...scopeProps, children };
 };
 
-const normalizeGrid = (bounds: IRGrid['bounds']): NormalizedGrid => {
+const normalizeGrid = (bounds: IRGrid['bounds']): CanonicalGrid => {
   let minX: number;
   let minY: number;
   let maxX: number;
   let maxY: number;
-  let position: NormalizedGrid['position'];
+  let position: CanonicalGrid['position'];
 
   if ('start' in bounds) {
     const [startX, startY] = bounds.start;
@@ -105,7 +105,7 @@ const normalizeGrid = (bounds: IRGrid['bounds']): NormalizedGrid => {
   };
 };
 
-const normalizeGridLine = (line: IRGrid['line'] | undefined): GridLinePair | false => {
+const normalizeGridLines = (line: IRGrid['line'] | undefined): GridLinePair | false => {
   if (line === false) return false;
   if (line === true || line === undefined) {
     const defaultLine: GridLineConfig = {
@@ -121,16 +121,16 @@ const normalizeGridLine = (line: IRGrid['line'] | undefined): GridLinePair | fal
 const appendGridLines = (
   paths: Array<IRPath>,
   axis: 'vertical' | 'horizontal',
-  normalized: NormalizedGrid,
+  canonical: CanonicalGrid,
   bounds: GridLineBounds,
   line: GridLineConfig,
 ): void => {
   const isVertical = axis === 'vertical';
   const lattice = enumerateLattice({
-    min: isVertical ? normalized.minX : normalized.minY,
-    max: isVertical ? normalized.maxX : normalized.maxY,
+    min: isVertical ? canonical.minX : canonical.minY,
+    max: isVertical ? canonical.maxX : canonical.maxY,
     spacing: line.spacing,
-    origin: line.origin ?? (isVertical ? normalized.minX : normalized.minY),
+    origin: line.origin ?? (isVertical ? canonical.minX : canonical.minY),
     includeBoundary: line.includeBoundary,
   });
 

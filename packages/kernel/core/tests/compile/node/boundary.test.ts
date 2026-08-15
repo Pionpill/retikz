@@ -6,8 +6,10 @@ import { NamespaceStack } from '../../../src/compile/namespace';
 import { angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
-import { normalizeNode } from '../../../src/normalize/node';
+import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
+import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
+import { resolveNode } from '../../../src/resolve/node';
 import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
 import { NodeSchema } from '../../../src/schemas/node';
 import { NodeTargetSchema } from '../../../src/schemas/path/target';
@@ -56,7 +58,19 @@ const measureText = (): { width: number; height: number; ascent: number } => ({
 
 /** 供边界单元测试直接消费 Source IR 的 Node 布局边界 */
 const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
-  layoutNode(normalizeNode(node), { measureText, namespaceStack, shapes: BUILTIN_SHAPES });
+  (() => {
+    const boundaries = resolveBoundaryRegistry();
+    const resolution = resolveNode(node, {
+      styleFrames: [],
+      shapes: BUILTIN_SHAPES,
+      boundaries,
+      patterns: resolvePatternRegistry(),
+      round: value => value,
+      irPath: 'node',
+      warn: () => {},
+    });
+    return layoutNode(resolution, { measureText, namespaceStack });
+  })();
 
 describe('boundary-aware boundary/canonical', () => {
   it("boundaryPointOf 缺省参数等价于 'shape'", () => {

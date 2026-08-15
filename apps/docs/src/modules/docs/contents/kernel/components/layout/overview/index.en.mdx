@@ -84,7 +84,7 @@ import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 </LayoutInspectLayout>;
 ```
 
-Use `LayoutInspectScope` for one authored subtree, or `InspectFlexLayout`, `InspectGridLayout`, or `InspectOverlayLayout` for one Layout occurrence. See [`@retikz/inspect`](/kernel/packages/inspect) for the general mechanism and [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for layout options and selection rules.
+Use `LayoutInspectScope` for one authored subtree, or `InspectFlexLayout`, `InspectGridLayout`, or `InspectOverlayLayout` for one Layout occurrence. See [`@retikz/inspect`](/kernel/packages/extension/inspect) for the general mechanism and [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for layout options and selection rules.
 
 ### Output Boundary
 
@@ -296,7 +296,7 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)                      |
 | `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)                |
 | `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite) |
-| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/tex)                                        |
+| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                              |
 
 ### Whole-Figure Defaults
 
@@ -309,17 +309,17 @@ These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contr
 
 ### Rendering and Host Runtime
 
-| Prop                     | Type                                             | Default           | Description                                                                       |
-| ------------------------ | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------------- |
-| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | Output backend; falls back to the nearest `RendererModeProvider`                  |
-| `className`              | `string`                                         | —                 | Forwarded to the SVG / Canvas root                                                |
-| `style`                  | `CSSProperties`                                  | —                 | Forwarded to the SVG / Canvas root                                                |
-| `idPrefix`               | `string`                                         | —                 | Overrides resource ids for multi-instance or SSR hydration stability              |
-| `handlers`               | `LayoutProps['handlers']`                        | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration)  |
-| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | Selects retained / static processing and an auto / full Program update strategy   |
-| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | Retained creates a Vanilla controller; static materializes fully without rollback |
-| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | Uses retained automatic incremental / fallback dispatch or forces full execution  |
-| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | Retained only; receives diagnostics in Runtime queue order                        |
+| Prop                     | Type                                             | Default           | Description                                                                             |
+| ------------------------ | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------------------- |
+| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | Output backend; falls back to the nearest `RendererModeProvider`                        |
+| `className`              | `string`                                         | —                 | Forwarded to the SVG / Canvas root                                                      |
+| `style`                  | `CSSProperties`                                  | —                 | Forwarded to the SVG / Canvas root                                                      |
+| `idPrefix`               | `string`                                         | —                 | Overrides resource ids for multi-instance or SSR hydration stability                    |
+| `handlers`               | `LayoutProps['handlers']`                        | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/render-hydration) |
+| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | Selects retained / static processing and an auto / full Program update strategy         |
+| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | Retained creates a Vanilla controller; static materializes fully without rollback       |
+| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | Uses retained automatic incremental / fallback dispatch or forces full execution        |
+| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | Retained only; receives diagnostics in Runtime queue order                              |
 
 `runtime.mode: 'static'` is mutually exclusive with the other three runtime fields. Exceptions from a retained `onDiagnostic` callback are isolated and do not change the Runtime commit or failure result.
 

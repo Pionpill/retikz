@@ -1,64 +1,47 @@
 ---
-title: Packages
-description: Choose the Inspector, Runtime, React, framework-free, formula, geometry, or rendering entry by package name and see how each works around core.
+title: Kernel packages
+description: Choose among the Kernel base, core, extension, framework, and rendering groups, then start with the relevant group overview
 ---
 
-The packages section helps when choosing an installation entry or understanding ownership. `@retikz/core` owns domain-neutral compilation; the other packages add optional observation, hosts, geometry, and rendering around the same Core contract.
+Kernel packages are organized into five responsibility groups. Choose the problem you are solving first, then use the group overview to understand package boundaries, dependencies, and the recommended reading order
 
-## Responsibilities
+## Groups at a glance
 
-| Package              | Responsibility                              | Reach for it when                                                    |
-| -------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
-| `@retikz/foundation` | Cross-package types, assertions, errors     | Reusing primitives or migrating imports                              |
-| `@retikz/inspect`    | Selection, auxiliary content, host wiring   | Showing path controls or layout overlays                             |
-| `@retikz/runtime`    | Identity, ownership, execution tracing      | Defining state ownership across revisions                            |
-| `@retikz/react`      | JSX components, IR adapter, React host      | Authoring and rendering figures in React                             |
-| `@retikz/vanilla`    | InputScene, processing, browser mounts, SSR | Working without React, rendering strings, or implementing an adapter |
-| `@retikz/tex`        | Lower formulas into glyph paths             | Rendering mathematics inside node text                               |
-| `@retikz/math`       | Pure computational geometry                 | Reusing vectors, affine, arcs, and intersections                     |
-| `@retikz/render`     | Scene to SVG / Canvas and hydration         | Integrating or choosing a render backend                             |
+| Group     | Responsibility                                       | Reach for it when                                           |
+| --------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Base      | Cross-package contracts and dependency-free geometry | Reusing foundational types, schemas, or geometry algorithms |
+| Core      | IR, Scene compilation, and incremental runtime       | Understanding compilation, execution, and state ownership   |
+| Extension | Optional formula and inspection capabilities         | Adding TeX formulas or a runtime Inspector                  |
+| Framework | React and framework-free host adapters               | Using Kernel from React or plain JavaScript                 |
+| Rendering | SVG, Canvas, and hydration materialization           | Choosing a backend or binding client-side interaction       |
 
-## Chapters
+## Start with a group
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/foundation">
-    <span className="font-semibold">@retikz/foundation</span>
+  <LinkedCard href="/kernel/packages/base">
+    <span className="font-semibold">Base</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Cross-package primitives, non-empty assertions, and error skeleton
+      Foundational contracts and geometry from foundation and math
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/inspect">
-    <span className="font-semibold">@retikz/inspect</span>
+  <LinkedCard href="/kernel/packages/core">
+    <span className="font-semibold">Core</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Optional Inspector registry, selection, and host wiring
+      Compilation and incremental execution from core and runtime
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/runtime">
-    <span className="font-semibold">@retikz/runtime</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Identity, owner registry, and traces</span>
+  <LinkedCard href="/kernel/packages/extension">
+    <span className="font-semibold">Extension</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Optional capabilities from tex and inspect</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/react">
-    <span className="font-semibold">@retikz/react</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      JSX components, SVG / Canvas hosts, and React wiring
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/vanilla">
-    <span className="font-semibold">@retikz/vanilla</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      InputScene, processing, SVG / Canvas mounts, and SSR
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex">
-    <span className="font-semibold">@retikz/tex</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">MathJax SVG lowering and React integration</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/math">
-    <span className="font-semibold">@retikz/math</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Geometry primitives and reusable algorithms</span>
+  <LinkedCard href="/kernel/packages/framework">
+    <span className="font-semibold">Framework</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Host adapters from vanilla and react</span>
   </LinkedCard>
   <LinkedCard href="/kernel/packages/render">
-    <span className="font-semibold">@retikz/render</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">SVG, Canvas, and hydration runtime</span>
+    <span className="font-semibold">Rendering</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Backend materialization and hydration from render
+    </span>
   </LinkedCard>
 </div>

@@ -30,6 +30,7 @@ import * as core from '../../src';
 
 describe('core public compile exports', () => {
   it('keeps root runtime compile exports available', () => {
+    expect(core.compositeOpaqueColor).toBeDefined();
     expect(core.compileToScene).toBeDefined();
     expect(core.computeLayout).toBeDefined();
     expect(core.resolveCoreProviderDependencies).toBeDefined();

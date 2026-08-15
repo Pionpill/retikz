@@ -3,9 +3,10 @@ import type { Vector2 } from '@retikz/math';
 import { point } from '@retikz/math';
 
 import type { IRPosition, IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../../../schemas';
-import type { NamespaceStack } from '../../namespace';
+import type { Transform } from '../../../contract';
+import type { PathTargetView } from '../../../resolve/path';
 
-import { resolvePosition } from '../../position';
+import { pointOfTarget } from '../host';
 
 const ARC_CAP_POINT_COUNT = 8;
 
@@ -75,7 +76,8 @@ export type ArcCapPointsInput = {
   from: IRPosition;
   to: IRPosition;
   endpoint: 'start' | 'end';
-  namespaceStack: NamespaceStack;
+  targetView: PathTargetView;
+  scopeChain?: ReadonlyArray<Transform>;
   round: (n: number) => number;
 };
 
@@ -88,10 +90,11 @@ export const arcCapPoints = ({
   from,
   to,
   endpoint,
-  namespaceStack,
+  targetView,
+  scopeChain = [],
   round,
 }: ArcCapPointsInput): Array<IRPosition> => {
-  const resolvedCenter = resolvePosition(cap.center, { namespaceStack });
+  const resolvedCenter = pointOfTarget(cap.center, targetView, scopeChain);
   if (resolvedCenter === null) {
     throw new Error(`Ribbon ${endpoint} arc cap center could not be resolved.`);
   }

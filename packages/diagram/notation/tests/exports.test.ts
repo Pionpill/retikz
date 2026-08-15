@@ -42,13 +42,30 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('StandardTerminal');
   });
 
+  it('exposes LogicNodeVariant and removes the old ThemeStyle ownership', () => {
+    expect(notationExports.LogicNodeVariant).toEqual({
+      Default: 'default',
+      Primary: 'primary',
+      Secondary: 'secondary',
+      Outline: 'outline',
+      Vibrant: 'vibrant',
+    });
+    expect(notationExports.createNotationDefinitions).toBeDefined();
+    expect(notationExports).not.toHaveProperty('NotationThemeStyle');
+    expect(notationExports).not.toHaveProperty('defineNotationThemeStyle');
+    expect(notationExports).not.toHaveProperty('resolveNotationTheme');
+    expect(notationExports).not.toHaveProperty('ResolvedNotationThemeStyleSchema');
+    expect(notationExports).not.toHaveProperty('BUILTIN_NOTATION_THEME_STYLES');
+    expect(notationExports.createNotationDefinitions).toBeDefined();
+  });
+
   it('exposes cross-owner shared contracts and keeps implementation shapes private', () => {
     expect('NonBlankStringSchema' in notationExports).toBe(false);
     expect(notationExports.LogicSpacingSchema).toBeDefined();
     expect(notationExports.LogicNeutralStyleSchema).toBeDefined();
     expect(notationExports.LogicContentSizeDefault).toBeDefined();
     expect(notationExports).not.toHaveProperty('STANDARD_LAYOUT_NAMESPACE');
-    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceBaseShape');
+    expect(notationExports).not.toHaveProperty('LogicNodeAppearanceBaseShape');
     expect(notationExports).not.toHaveProperty('ConnectorAppearanceCanonicalSchema');
   });
 
@@ -64,7 +81,7 @@ describe('@retikz/notation package boundary', () => {
     expect(notationExports).not.toHaveProperty('ConnectorAppearanceSchema');
     expect(notationExports).not.toHaveProperty('createCallout');
     expect(notationExports).not.toHaveProperty('CalloutDefinition');
-    expect(notationExports).not.toHaveProperty('LogicUnitAppearanceSchema');
+    expect(notationExports).not.toHaveProperty('LogicNodeAppearanceSchema');
   });
 
   it('rejects the old Standard composite namespace', () => {

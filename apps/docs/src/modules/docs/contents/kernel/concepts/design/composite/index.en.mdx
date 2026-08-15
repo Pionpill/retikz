@@ -220,7 +220,7 @@ export const CardDefinition = defineComposite({
 const inspectorRegistry = createInspectorRegistry([CardInspector]);
 ```
 
-`inspect()` returns an ordinary `IRChild` or dense readonly array and declares no `outputSchema`. Core publishes only the validated artifact for a final occurrence; `@retikz/inspect` validates `subjectSchema` again and compiles auxiliary output in an isolated environment that does not recursively notify observers. Selection and registration do not enter the Composite Definition. See [`@retikz/inspect`](/kernel/packages/inspect).
+`inspect()` returns an ordinary `IRChild` or dense readonly array and declares no `outputSchema`. Core publishes only the validated artifact for a final occurrence; `@retikz/inspect` validates `subjectSchema` again and compiles auxiliary output in an isolated environment that does not recursively notify observers. Selection and registration do not enter the Composite Definition. See [`@retikz/inspect`](/kernel/packages/extension/inspect).
 
 `lowerIRToKernel()` only supports independently executable `expand` branches. It fails explicitly on a layout-aware composite because the correct result depends on the full compile environment.
 

@@ -1,28 +1,25 @@
-import type { ClipDefinition, ClipResource, ClipShape, PathClipShape, PathCommand } from '../../contract';
-import type { IRClipSpec } from '../../schemas';
+import type { ClipResource, ClipShape, PathClipShape, PathCommand } from '../../contract';
+import type { ClipResolution } from '../../resolve/resource';
 
-import { providerDefinitionOf } from '../../providers/registry/index';
-import { JsonObjectSchema, PathCommandSchema } from '../../schemas';
 import {
   CompositeContractError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   LayoutProbeRecoverableError,
   safeThrownDetail,
-} from '../probe-failure';
-import { parseProviderPayload } from '../provider-payload';
+} from '../../resolve/diagnostics';
+import { PathCommandSchema } from '../../schemas';
 import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../scene-primitive';
 
 export type ClipRegistry = {
+  /** compile resource 阶段调用已绑定 provider 生成 shape */
+  resolve: (clip: ClipResolution) => ClipShape;
   /** 解析 IR clip 为 canonical ClipShape，不登记资源 */
-  resolve: (clip: IRClipSpec) => ClipShape;
-  register: (clip: IRClipSpec) => string;
+  register: (clip: ClipResolution) => string;
   /** 提交 probe 已解析的 clip shape，不再次调用 clip provider */
   importResolved: (shape: ClipShape) => string;
   resources: () => Array<ClipResource>;
 };
-
-const clipKindOf = (clip: IRClipSpec): string => clip.kind;
 
 type ClipFieldInput = {
   kind: string;
@@ -340,32 +337,18 @@ const validateResolvedClipShape = (shape: unknown, owner: string, round: (n: num
     return guardAndRoundShape(snapshot, round);
   });
 
-export const createClipRegistry = (
-  round: (n: number) => number,
-  definitions: ReadonlyMap<string, ClipDefinition>,
-): ClipRegistry => {
+export const createClipRegistry = (round: (n: number) => number): ClipRegistry => {
   const idByKey = new Map<string, string>();
   const list: Array<ClipResource> = [];
   let counter = 0;
-  const resolveShape = (clip: IRClipSpec): ClipShape => {
-    const kind = clipKindOf(clip);
-    const definition = providerDefinitionOf(definitions, kind, { capability: 'clip', optionName: 'clips' });
-    const parsed = parseProviderPayload({
-      capability: 'clip',
-      providerName: kind,
-      irPath: 'clip',
-      payloadName: 'schema',
-      schema: definition.schema,
-      value: clip,
-    });
-    try {
-      JsonObjectSchema.parse(parsed);
-    } catch (cause) {
-      throw new CompositeContractError(`Clip '${kind}' schema returned a non-JSON payload.`, { cause });
-    }
+  const resolveShape = (resolution: ClipResolution): ClipShape => {
+    const { kind, definition, params } = resolution;
     let resolved: unknown;
     try {
-      resolved = definition.resolve(parsed, { round, resolve: resolveShape });
+      resolved = definition.resolve(params as { kind: string }, {
+        round,
+        resolve: nested => resolveShape(resolution.resolve(nested)),
+      });
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
       throw new LayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
@@ -386,6 +369,6 @@ export const createClipRegistry = (
     }
     return id;
   };
-  const register = (clip: IRClipSpec): string => importResolved(resolveShape(clip));
+  const register = (clip: ClipResolution): string => importResolved(resolveShape(clip));
   return { resolve: resolveShape, register, importResolved, resources: () => list };
 };

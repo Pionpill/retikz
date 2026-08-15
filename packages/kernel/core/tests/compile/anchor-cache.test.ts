@@ -36,7 +36,12 @@ const makeLayout = (
     align: 'middle',
     lineHeight: 0,
     fontSize: 0,
-    shapes: BUILTIN_SHAPES,
+    boundaryResolution: {
+      name: def.name,
+      definition: def,
+      params: shape === 'circle' ? { circumscribe: 'equal' } : shape === 'diamond' ? { sides: 4, rotate: 0 } : {},
+      isShape: true,
+    },
   };
 };
 
@@ -198,7 +203,7 @@ describe('resolveEdgePoint 边上比例点', () => {
       align: 'middle',
       lineHeight: 0,
       fontSize: 0,
-      shapes: BUILTIN_SHAPES,
+      boundaryResolution: { name: noEdge.name, definition: noEdge, params: {}, isShape: true },
     };
     expect(() => resolveEdgePoint(layout, 'top', 0.5)).toThrow(/does not support side anchors/);
   });

@@ -1,0 +1,245 @@
+---
+title: '@retikz/foundation'
+description: 为 Kernel、Standard、Viz 与 adapter 提供根入口唯一的类型工具、Zod 标量 schema、非空字符串断言和结构化错误基础契约。
+---
+
+`@retikz/foundation` 是跨包共享的最小基础契约。它让消费方直接复用同一份类型、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
+
+Foundation 不建立新的 IR、对象 / 数组 schema、Diagnostic、registry 或 renderer。调用方仍在自己的边界完成对象组合、默认值、领域 refine、诊断投影与恢复策略。
+
+## 安装与根入口
+
+```bash
+pnpm add @retikz/foundation
+```
+
+Foundation 只有包根入口，所有公开能力都从 `@retikz/foundation` 导入。`./types`、`./schema`、`./assert`、`./error` 等 subpath 不是公开 API。
+
+```ts
+import {
+  assertNonEmptyString,
+  NonBlankStringSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+  RetikzError,
+} from '@retikz/foundation';
+import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
+```
+
+TypeScript 层共有十三个根导出；四个类型导出在运行时会被擦除，因此 `Object.keys()` 会看到九个 runtime symbol。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Foundation 根入口',
+      path: 'packages/kernel/foundation/src/index.ts',
+      startLine: 1,
+      endLine: 4,
+    },
+    {
+      label: '根入口与 subpath 契约测试',
+      path: 'packages/kernel/foundation/tests/public-surface.test.ts',
+      startLine: 1,
+      endLine: 38,
+    },
+  ]}
+/>
+
+## 四类基础契约
+
+### 类型工具
+
+这三个工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
+
+| 导出                              | 语义                                     |
+| --------------------------------- | ---------------------------------------- |
+| `ValueOf<T>`                      | 取得对象所有 value 的联合类型            |
+| `AssertEqual<TActual, TExpected>` | 只有双向可赋值时才得到 `true`            |
+| `OpenString<T>`                   | 保留内置字面量提示，同时接受自定义字符串 |
+
+### Zod 标量 schema
+
+六个 schema 只校验标量，不 coercion、不 trim、不填默认值。完整对象、数组、领域区间和跨字段关系仍由消费包组合：
+
+| 导出                       | 接受范围                                 |
+| -------------------------- | ---------------------------------------- |
+| `NonBlankStringSchema`     | 至少含一个非空白字符；成功时保留原字符串 |
+| `PositiveNumberSchema`     | 大于 `0` 的有限数                        |
+| `NonNegativeNumberSchema`  | 大于等于 `0` 的有限数                    |
+| `PositiveIntegerSchema`    | 大于 `0` 的 safe integer                 |
+| `NonNegativeIntegerSchema` | 大于等于 `0` 的 safe integer             |
+| `NormalizedFractionSchema` | `0..1` 闭区间内的有限数，包含两个端点    |
+
+```ts
+NonBlankStringSchema.parse(' layer/main '); // 原样返回
+PositiveNumberSchema.parse(1.5);
+NormalizedFractionSchema.parse(0.5);
+```
+
+### Typed non-empty string
+
+`assertNonEmptyString(value, label)` 的参数已经由调用方约束为 `string`。它拒绝空串和运行时标准空白串，非空内容原样通过并返回 `void`。
+
+```ts
+assertNonEmptyString('layer/main', 'owner');
+// ''、' '、'\t'、'\n' 和 Unicode 空白都会抛出：
+// owner must be a non-empty string.
+```
+
+它不是 `unknown` 类型收窄器；需要 schema 结果时直接使用 `NonBlankStringSchema`。需要保留领域前缀、错误码或 class identity 的 owner 应捕获普通 `Error`，再在自己的边界构造领域错误。
+
+### 结构化错误骨架
+
+`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 为领域 owner 提供统一的最小形态。owner 自己决定 code、details 字段和恢复语义：
+
+```ts
+type Details = Readonly<{ source: string }>;
+
+class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
+  constructor(details: Details, cause?: unknown) {
+    super({ code: 'DOMAIN_FAILED', message: 'Domain failed', details, cause });
+  }
+}
+```
+
+基类保留 `code`、`message`、`details` 和 own `cause`。`details` 保持 owner 提供的对象身份，不会自动深拷贝或冻结；省略 `cause` 时仍拥有值为 `undefined` 的 own property。`isRetikzError()` 只识别正常的 class hierarchy，不是 hostile object、跨 realm 或 Runtime/Core 私有 identity 的安全边界。
+
+错误不是 Diagnostic 或 JSON IR：Foundation 不提供 `toJSON()`、`toDiagnostic()`，不定义全仓错误码，也不接管 Runtime 的 `WeakSet` / `WeakMap` brand、probe 隔离或恢复控制流。
+
+<SourceLinks
+  sources={[
+    {
+      label: '标量 schema 实现',
+      path: 'packages/kernel/foundation/src/schema.ts',
+      startLine: 1,
+      endLine: 31,
+    },
+    {
+      label: '类型工具实现',
+      path: 'packages/kernel/foundation/src/types.ts',
+      startLine: 1,
+      endLine: 10,
+    },
+    {
+      label: '非空字符串断言实现',
+      path: 'packages/kernel/foundation/src/assert.ts',
+      startLine: 1,
+      endLine: 8,
+    },
+    {
+      label: '标量 schema 测试',
+      path: 'packages/kernel/foundation/tests/schema.test.ts',
+      startLine: 1,
+      endLine: 71,
+    },
+    {
+      label: '结构化错误实现',
+      path: 'packages/kernel/foundation/src/error.ts',
+      startLine: 1,
+      endLine: 26,
+    },
+    {
+      label: '三类契约测试',
+      path: 'packages/kernel/foundation/tests/types.test.ts',
+      startLine: 1,
+      endLine: 31,
+    },
+    {
+      label: '非空断言测试',
+      path: 'packages/kernel/foundation/tests/assert.test.ts',
+      startLine: 1,
+      endLine: 17,
+    },
+    {
+      label: '结构化错误测试',
+      path: 'packages/kernel/foundation/tests/error.test.ts',
+      startLine: 16,
+      endLine: 51,
+    },
+  ]}
+/>
+
+## 固定包结构
+
+Foundation 的生产源码和测试都固定为五个文件，避免它演变成无边界的 `shared`、`utils` 或 `helpers` 收纳包。
+
+| 目录     | 固定文件                                                                                       |
+| -------- | ---------------------------------------------------------------------------------------------- |
+| `src/`   | `types.ts`、`schema.ts`、`assert.ts`、`error.ts`、`index.ts`                                   |
+| `tests/` | `types.test.ts`、`schema.test.ts`、`assert.test.ts`、`error.test.ts`、`public-surface.test.ts` |
+
+`index.ts` 只聚合四个 source owner 文件；测试分别锁定类型语义、标量边界、空白失败、错误兼容性和 root-only public surface。包只有 Zod 这一项 production dependency，没有 peerDependencies 或 subpath exports。
+
+## 何时可以下沉到 Foundation
+
+新增基础能力必须同时满足四项准入条件：
+
+1. 不依赖 Retikz 领域、平台或状态；schema 只能复用 Foundation 已接受的 Zod 依赖
+2. 有可独立命名的语义、不变量或失败边界
+3. 已被至少两个独立包以同义方式消费，或属于 Foundation 最小错误、类型、断言协议
+4. 不迫使上层包经由 Foundation 获得本应由 Core、Math、Runtime 或领域 owner 承担的能力
+
+不满足条件的 helper、对象 / 数组 schema、几何算法、Diagnostic、错误目录和领域 resolver 应留在当前 owner。重复出现时先重新判断语义 owner，而不是把逻辑汇总进 Foundation。
+
+## 迁移与直接依赖
+
+类型工具和六个基础 schema 的唯一真源已经迁到 Foundation；旧根出口和同义定义不保留 alias。`NormalizedFractionSchema` 改从 Foundation 导入，Notation 不再转发自己的 `NonBlankStringSchema`。每个真实 import 都必须在自己的 manifest 声明 Foundation direct dependency，并从包根入口导入。
+
+| 直接消费组 | 当前包                                                                                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kernel     | `@retikz/core`、`@retikz/inspect`、`@retikz/react`、`@retikz/render`、`@retikz/runtime`、`@retikz/tex`、`@retikz/vanilla`                                      |
+| Standard   | `@retikz/standard`                                                                                                                                             |
+| Viz        | `@retikz/chart`、`@retikz/data`、`@retikz/plot`、`@retikz/plot-react`、`@retikz/plot-vanilla`、`@retikz/table`、`@retikz/table-react`、`@retikz/table-vanilla` |
+
+`@retikz/math` 当前没有 Foundation import，因此继续保持真实的零依赖；未来只有出现实际消费时才补 direct dependency。Foundation 也不反向依赖任何上层或领域包。
+
+Runtime identity 的 owner 和 path segment 现在对空串、ASCII 空白及 Unicode 空白 fail-loud；包装后的 `RuntimeIdentityError` 保留原始 rejected value 为 `cause`。Runtime、Render、Plot declaration 与 Chart resolution 的领域错误在原 owner 内继承 `RetikzError`，保留既有 constructor、class name、code、message、顶层字段、`instanceof` 和 recovery；`details` 与统一 own `cause` 是 additive machine-readable surface。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Runtime identity 的空白失败与原始 cause',
+      path: 'packages/kernel/runtime/src/identity/identity.ts',
+      startLine: 8,
+      endLine: 23,
+    },
+    {
+      label: 'Runtime 领域错误继承 Foundation',
+      path: 'packages/kernel/runtime/src/error/errors.ts',
+      startLine: 38,
+      endLine: 82,
+    },
+    {
+      label: 'Core 删除旧类型 owner 后的 public surface',
+      path: 'packages/kernel/core/tests/compile/public-api.test.ts',
+      startLine: 1,
+      endLine: 28,
+    },
+  ]}
+/>
+
+## API 参考
+
+| 导出                       | 类型 / 用途                                     |
+| -------------------------- | ----------------------------------------------- |
+| `ValueOf`                  | 类型工具：对象 value 联合                       |
+| `AssertEqual`              | 类型工具：双向等价判断                          |
+| `OpenString`               | 类型工具：开放字符串                            |
+| `NonBlankStringSchema`     | 保留原值的非空白字符串 Zod schema               |
+| `PositiveNumberSchema`     | 正有限数 Zod schema                             |
+| `NonNegativeNumberSchema`  | 非负有限数 Zod schema                           |
+| `PositiveIntegerSchema`    | 正 safe integer Zod schema                      |
+| `NonNegativeIntegerSchema` | 非负 safe integer Zod schema                    |
+| `NormalizedFractionSchema` | `0..1` 闭区间 Zod schema                        |
+| `assertNonEmptyString`     | typed string 非空断言                           |
+| `RetikzErrorOptions`       | 结构化错误构造参数类型                          |
+| `RetikzError`              | 可继承的结构化错误基类                          |
+| `isRetikzError`            | Foundation class hierarchy 的普通分类 predicate |
+
+## 相关
+
+- [内核包总览](/kernel/packages)
+- [Core](/kernel/packages/core/core)
+- [Runtime](/kernel/packages/core/runtime)
+- [Math](/kernel/packages/base)
+- [Render](/kernel/packages/render/render)

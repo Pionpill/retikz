@@ -243,20 +243,20 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 
 ### Context and output
 
-| Prop             | Type                                    | Default       | Description                                                                                                        |
-| ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
-| `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                 |
-| `transforms`     | `Array<InputTransform>`                 | —             | Seven local transforms; the last acts first                                                                        |
-| `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                               |
-| `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |
-| `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                      |
-| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                        |
-| `clip`           | `IRClipSpec`                            | —             | Built-in or custom clip in local coordinates                                                                       |
-| `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                           |
-| `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                      |
-| `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                         |
-| `on<Event>`      | `ScopeProps['onClick']`                 | —             | Uses the `onClick` signature and requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
+| Prop             | Type                                    | Default       | Description                                                                                                               |
+| ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                                   |
+| `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                        |
+| `transforms`     | `Array<InputTransform>`                 | —             | Seven local transforms; the last acts first                                                                               |
+| `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                                      |
+| `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                             |
+| `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                             |
+| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                               |
+| `clip`           | `IRClipSpec`                            | —             | Built-in or custom clip in local coordinates                                                                              |
+| `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                                  |
+| `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                             |
+| `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                                |
+| `on<Event>`      | `ScopeProps['onClick']`                 | —             | Uses the `onClick` signature and requires `id`; see [Hydration](/kernel/packages/render/render-hydration) for every event |
 
 Inspection support comes from `LayoutInspectScope` in `@retikz/layout-react/inspect`. Its `request` accepts one or more Inspector requests; `request={false}` is the hard barrier descendants cannot cross. This runtime marker never enters `IRScope`. If a nested Scope contribution cannot be located precisely, inspection compilation fails loudly instead of attributing guides to the outer Scope. See [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for the complete rules.
 
@@ -276,4 +276,4 @@ Inspection support comes from `LayoutInspectScope` in `@retikz/layout-react/insp
 - [Node](/kernel/components/node/overview): The most common referenceable child in a Scope
 - [Coordinate](/kernel/components/node/coordinate): Named coordinates without visible geometry
 - [Custom Clips](/kernel/components/layout/custom-clip): Extend `clip.kind` through the shared registry path
-- [Hydration](/kernel/packages/render/hydration): Scope events and handler context
+- [Hydration](/kernel/packages/render/render-hydration): Scope events and handler context

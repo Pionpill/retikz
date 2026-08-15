@@ -1,2 +1,2 @@
 export * from './connector';
-export * from './logic-unit';
+export * from './logic-node';

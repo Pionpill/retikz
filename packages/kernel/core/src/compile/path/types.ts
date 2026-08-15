@@ -1,11 +1,11 @@
-﻿import type { PathGeneratorDefinition, Transform } from '../../contract';
+import type { Transform } from '../../contract';
 import type { ScenePrimitive } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
+import type { PathTargetView } from '../../resolve/path';
 import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';
 import type { CompileWarningInput } from '../warning';
-import type { ResolvedArrowRegistry } from './stroke';
 
 /** path emit 阶段产出的 Scene primitive 与 bbox 采样点 */
 export type PathPrimitiveEmitResult = {
@@ -34,10 +34,8 @@ export type PathEmitOptions = {
    * @default 透传字符串；无法解析的 spec 变为 undefined
    */
   resolvePaint?: PaintResolver;
-  /** 已解析 arrow 注册表 */
-  resolvedArrows?: ResolvedArrowRegistry;
-  /** 有效 path generator 表 */
-  effectivePathGenerators?: ReadonlyMap<string, PathGeneratorDefinition>;
+  /** resolving 阶段绑定的 target geometry view（由 emit context 提供） */
+  targetView?: PathTargetView;
   /** 注入的 TeX 降级能力 */
   lowerTex?: LowerTex;
   /** preset 与 rem 字号解析的根字号 */

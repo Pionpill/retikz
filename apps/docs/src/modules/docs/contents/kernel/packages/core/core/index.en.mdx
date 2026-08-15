@@ -1,0 +1,264 @@
+---
+title: '@retikz/core'
+description: Compile complete Core IR into a deterministic Scene, then publish compile results, Scene Snapshots, and Patch envelopes in one Session revision through the Core Runtime Program.
+---
+
+`@retikz/core` owns IR, Definitions, registries, compilation, and Scene semantics. `compileToScene()` remains the stateless full-compile entry; for state across revisions, `CoreOwnerDefinition` and `createCoreProgram()` connect the same compile semantics to `@retikz/runtime`.
+
+## Theme environment
+
+Core exports `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from the default light baseline, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand` and layout-aware `compile`.
+
+Published packages do not provide named styles. Define a custom style with `defineThemeStyle` and inject it through compile `themeStyles`. Its resolver generates shared colors during resolution, so functions and complete token maps never enter IR, snapshots, or JSON. An unregistered name fails loudly.
+
+Core only propagates selectors and creates a detached, frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
+
+Use `compositeOpaqueColor(foreground, backdrop, weight)` when a static color must be baked into an opaque backdrop at a fixed ratio. It parses static CSS colors, precomposes them with source-over sRGB, and returns lowercase six-digit hex. Dynamic colors and translucent backdrops fail loudly.
+
+## Complete Snapshots And The Core Program
+
+Callers always submit a complete IR Snapshot. The Core owner copies, freezes, and compares the document. The Core Program reads that typed Snapshot, produces a complete `CompileResult`, `SceneRuntimeSnapshot`, and optional `ScenePatch`, then lets the Runtime Session publish them atomically.
+
+<ComponentPreview files="core-runtime-program" size="xs" hideCode />
+
+Runtime does not interpret Nodes, Paths, Scopes, Composites, or Scenes. Core decides domain identities, compile diagnostics, and full-fallback `replaceScene` Patches; Runtime only constrains dependency order, candidate isolation, revisions, and publication.
+
+## Basic Wiring
+
+`CoreOwnerDefinition` and `createCoreProgram()` are ordinary Runtime Definitions, so they can share one Session with other domain Owners and Programs. The initial full run has no `patch`; a renderer mounts from the complete `snapshot`.
+
+```ts
+import { CORE_OWNER_KEY, CORE_PROGRAM_ID, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+} from '@retikz/runtime';
+
+const ir = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'hello', position: [0, 0], text: 'Hello' }],
+} as const;
+
+const coreProgram = createCoreProgram({ padding: 16 });
+const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, ir)],
+});
+
+const { output, snapshot, patch } = session.artifact(coreProgram).value;
+// output.result: complete CompileResult
+// snapshot.revision: 0
+// patch: undefined
+```
+
+The fixed identities are `CORE_OWNER_KEY = '@retikz/core/document'` and `CORE_PROGRAM_ID = { owner: CORE_OWNER_KEY, key: 'compile' }`. Do not copy the strings into a parallel owner.
+
+## Artifact Contract
+
+| Field                    | Role                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `output.result`          | Scene and typed artifacts equivalent to fresh `compileToScene()` for the same IR/options        |
+| `output.diagnostics`     | Core compile warnings in canonical order; dispatched to `onWarn` only after a successful commit |
+| `output.observerOutputs` | Explicit observer outputs from the same candidate revision as the primary result                |
+| `snapshot`               | Deeply immutable Scene, document root identity, and topology for the current Session revision   |
+| `patch`                  | Atomic Scene Patch relative to the base revision; absent on the initial full run                |
+
+Ordinary `compileToScene()` returns only the primary Scene and artifacts and creates no observation session. To read final occurrences, call `observeCompileToScene(ir, options, observers)`, or fix observer definitions in `createCoreProgram()` through `runtimeOptions.observers`. Every observer creates an exclusive session for one compile and runs `select`, `observe`, then `complete`.
+
+Core provides only domain-neutral observation. A Composite publishes its final output through the existing `artifactSchema`. A Path kind may declare `ownerOutput.schema` and call `publish()` when `context.ownerOutput.requested` is true. Only final committed occurrences trigger `observe()`; failed or discarded probes remain invisible. Each event includes the final occurrence, probe/replay provenance, and the transform from owner-local coordinates to the primary Scene.
+
+An observer can call `context.compileFragment()` to compile ordinary `IRChild` content in the current occurrence environment. The result contains an isolated static Scene, artifacts, and diagnostics; it never writes into the primary result and cannot reference public identities from the primary figure or another fragment. `complete()` chooses the observer's final output, which Core recursively freezes without prescribing a domain shape. Inspector registration, selection, colors, and readonly-layer assembly belong to the optional [`@retikz/inspect`](/kernel/packages/extension/inspect) package.
+
+The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
+
+Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. One unique `update` hint must cover each changed value owned by the Scene root or a stable entity. Add/remove/move hints must completely explain the next identity set and order under their parent, with `parent` and `before` pointing to final positions in the next Snapshot.
+
+The document root identity path is `['root']`. Each ordinary child with a unique non-empty `id` appends `[type, id]`. An identified Scope continues as a parent boundary and recursively indexes descendants, so a Node inside it can use `['root', 'scope', scopeId, 'node', nodeId]`. `localNamespace` only changes the reference frame, not this identity path. Moving an entity across Scopes changes its old and new paths, so the hint is remove + add rather than a move that retains the old identity. Scope add/remove hints do not cascade: every stable descendant must be covered by its own hint.
+
+Structural hints are checked as a set; their array order is not Patch execution order, and each parent's move set must be a minimum reorder. Anonymous entities, same-parent duplicates, Composites, missing or redundant hints, invalid parents or `before` identities, and hints that cannot rebuild the next sibling order are mismatches.
+
+The current local incremental path first covers one provably safe closed loop: the root contains only unique-id Nodes with absolute tuple positions, structure and order stay unchanged, exactly one Node changes only its solid-color `fill` string, and there are no custom shapes, resources, artifacts, or compile warnings. The Program recompiles only that Node contribution, reuses the other committed root contributions, and publishes one emitted-subtree `update` operation; the output remains equivalent to a fresh `compileToScene()`. References, resources, custom shapes, Scopes, Composites, multi-owner changes, and every other case without a local proof continue to full fallback.
+
+On a mismatch, `CORE_CHANGESET_MISMATCH` is published once as a Runtime diagnostic only after the fallback commits successfully. It never enters `output.diagnostics` or `onWarn`. A failed fallback compile publishes neither that diagnostic nor a new revision or artifact.
+
+The private Core Program read preserves the immutable source Snapshot and stable identity index for the next update; the committed full Scene Snapshot also serves as the contribution cache for the safe subset. Dependency Programs, participants, and `session.artifact()` only receive the public read above and cannot access the private source/index state.
+
+## Immutable Program Options
+
+`createCoreProgram(options, runtimeOptions?)` copies the option record, registry arrays, and Definition records at factory time while fixing callback references. Later mutations to the original arrays or Definition fields do not alter an existing Program.
+
+Changing an ordinary measurer, lowerer, provider callback, or option still requires disposing the old Session and creating a Program with new options. When a fixed Definition callback reads mutable external state, model that state as a Runtime owner and list it in `runtimeOptions.invalidationOwners`; its owner value invalidates the Core Program without entering IR or Scene.
+
+`invalidationOwners` does not replace the fixed Definition topology or update callback references automatically. A new Program always starts with a full run. Runtime injects tracing through the Program context, so `trace` is not part of `CoreProgramOptions`.
+
+The same invalidation owner must appear in the owner registry, Program runtime options, initial Snapshots, and every update transaction that changes its state:
+
+```ts
+import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import {
+  createRuntimeOwnerInput,
+  createRuntimeOwnerRegistry,
+  createRuntimeOwnerUpdate,
+  createRuntimeProgramRegistry,
+  createRuntimeSession,
+  defineRuntimeOwner,
+} from '@retikz/runtime';
+
+const MeasureRevisionOwner = defineRuntimeOwner({
+  key: 'app:measure-revision',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: Object.is,
+  },
+});
+
+const coreProgram = createCoreProgram({}, { invalidationOwners: [MeasureRevisionOwner] });
+const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, MeasureRevisionOwner] });
+const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+const session = createRuntimeSession({
+  owners,
+  programs,
+  initialSnapshots: [
+    createRuntimeOwnerInput(CoreOwnerDefinition, ir),
+    createRuntimeOwnerInput(MeasureRevisionOwner, 0),
+  ],
+});
+
+session.update({
+  baseRevision: session.revision(),
+  owners: [createRuntimeOwnerUpdate(MeasureRevisionOwner, 1)],
+});
+```
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Program-option isolation and freezing',
+      path: 'packages/kernel/core/src/compile/incremental/options.ts',
+      startLine: 6,
+      endLine: 27,
+    },
+    {
+      label: 'Register extra owners as Core Program dependencies',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 30,
+      endLine: 47,
+    },
+    {
+      label: 'Fall back fully when an extra owner changes',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 126,
+      endLine: 130,
+    },
+  ]}
+/>
+
+## Public API
+
+| Export                                                         | Role                                                                          |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                           | Fixed identities for the Core document owner and compile Program              |
+| `CoreOwnerDefinition`                                          | Capture/read/equality Definition for complete IR Snapshots                    |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                     | Built-in Theme vocabulary, strict IR schema, and Scene / Scope inheritance    |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`            | Sparse persisted override, complete frozen environment, and shared color view |
+| `ThemeStyleDefinition` / `defineThemeStyle`                    | Define a runtime Core style resolver and inject it with `themeStyles`         |
+| `compositeOpaqueColor()`                                       | Precompose a static foreground at a fixed weight into opaque six-digit hex    |
+| `createCoreProgram(options, runtimeOptions?)`                  | Create a Runtime Program Definition while preserving composite artifacts      |
+| `CoreChange`                                                   | `add` / `update` / `remove` / `move` change-hint union                        |
+| `CoreProgramOptions<TComposites>`                              | Program-lifetime `CompileOptions` without `trace`                             |
+| `CoreProgramRuntimeOptions`                                    | Extra Runtime owners that invalidate Core without entering IR or Scene        |
+| `CoreProgramOutput<TComposites>`                               | Complete compile result and warnings                                          |
+| `CoreProgramPublicRead<TComposites>`                           | Public `output`, `snapshot`, and optional `patch`                             |
+| `CoreProgramDefinition<TComposites>`                           | Artifact-input, owned-artifact, and private/public read generic relationship  |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`         | Deeply readonly Scene and atomic Patch DTOs                                   |
+| `observeCompileToScene()`                                      | Run an explicit full compile with observer sessions                           |
+| `defineCompileObserver()` / `CompileObserverDefinition`        | Define a compile observation session and its stable key                       |
+| `CompileObservation` / `CompileObservationContext`             | Final owner output, occurrence, transform, and isolated fragment compiler     |
+| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher` | Declare and publish optional final Path-kind output                           |
+| `ObservedCompileResult` / `CompileObserverOutput`              | Primary compile result and domain-defined outputs in definition order         |
+
+## Source
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Domain-neutral observer and owner-output contracts',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
+    },
+    {
+      label: 'Final-occurrence observation dispatch',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    {
+      label: 'Isolated compilation of ordinary child fragments',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-fragment.ts',
+    },
+    {
+      label: 'Core owner identity and change hints',
+      path: 'packages/kernel/core/src/contract/runtime/types.ts',
+      startLine: 3,
+      endLine: 39,
+    },
+    {
+      label: 'Core owner Snapshot lifecycle',
+      path: 'packages/kernel/core/src/contract/runtime/owner.ts',
+      startLine: 11,
+      endLine: 24,
+    },
+    {
+      label: 'Core Program public contract',
+      path: 'packages/kernel/core/src/compile/incremental/public.ts',
+      startLine: 10,
+      endLine: 42,
+    },
+    {
+      label: 'Core Program full run and public artifact',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 24,
+      endLine: 118,
+    },
+    {
+      label: 'Snapshot stable identity tree',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 11,
+      endLine: 81,
+    },
+    {
+      label: 'ChangeSet structural cross-check',
+      path: 'packages/kernel/core/src/compile/incremental/diff.ts',
+      startLine: 171,
+      endLine: 294,
+    },
+    {
+      label: 'root Node contribution reuse',
+      path: 'packages/kernel/core/src/compile/incremental/root-node-style.ts',
+      startLine: 49,
+      endLine: 238,
+    },
+    {
+      label: 'Mismatch fallback diagnostic',
+      path: 'packages/kernel/core/src/compile/incremental/program.ts',
+      startLine: 134,
+      endLine: 144,
+    },
+    {
+      label: 'Canonical Scene topology',
+      path: 'packages/kernel/core/src/compile/orchestration/runtime-topology.ts',
+      startLine: 44,
+      endLine: 172,
+    },
+  ]}
+/>
+
+## Related
+
+- [Programs & Synchronous Sessions](/kernel/packages/core/runtime-session)
+- [Layers](/kernel/concepts/design/layers)
+- [Compile entry](/kernel/reference/runtime/compile)

@@ -16,7 +16,7 @@ export const diagramSection: Array<Section> = [
         id: 'unit',
         label: 'diagram.baseUnits',
         children: [
-          { id: 'logic-unit', label: 'diagram.logicUnit', difficulty: DocDifficulty.Beginner },
+          { id: 'logic-node', label: 'diagram.logicNode', difficulty: DocDifficulty.Beginner },
           { id: 'connector', label: 'diagram.connector', difficulty: DocDifficulty.Beginner },
         ],
       },

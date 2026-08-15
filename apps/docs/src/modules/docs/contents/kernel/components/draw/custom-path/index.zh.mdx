@@ -79,7 +79,7 @@ const highlight = definePathKind({
 const registry = createInspectorRegistry([highlightInspector]);
 ```
 
-只有观察者选择当前 owner 时，`ownerOutput.requested` 才为 `true`。非空结果必须恰好发布一次符合 schema 的值；返回 `null` 时不得发布。Inspector 的 `subjectSchema` 再校验一次外部约定，`inspect()` 返回 `IRChild | ReadonlyArray<IRChild>`，没有 `outputSchema`。完整注册、选择与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect)。
+只有观察者选择当前 owner 时，`ownerOutput.requested` 才为 `true`。非空结果必须恰好发布一次符合 schema 的值；返回 `null` 时不得发布。Inspector 的 `subjectSchema` 再校验一次外部约定，`inspect()` 返回 `IRChild | ReadonlyArray<IRChild>`，没有 `outputSchema`。完整注册、选择与宿主接线见 [`@retikz/inspect`](/kernel/packages/extension/inspect)。
 
 ## 注入宿主
 
