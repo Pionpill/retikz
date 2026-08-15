@@ -1,6 +1,6 @@
 # @retikz/graph
 
-`@retikz/graph` provides framework-agnostic Diagram Graph elements. Its
+`@retikz/graph` provides framework-agnostic Schematic Graph elements. Its
 JSON-serializable semantic IR retains the `graph` namespace, then lowers
 through explicit Definitions to canonical Core IR.
 

@@ -17,6 +17,7 @@
 | [`../packages/kernel/_notes/`](../packages/kernel/_notes)   | kernel 七包（math / runtime / core / render / react / vanilla / tex）的 roadmap、ADR、架构与分析。 |
 | [`../packages/viz/_notes/`](../packages/viz/_notes)         | data、plot、table 等 viz 能力域与发布组的架构、roadmap、ADR、分析。                                |
 | [`../packages/library/_notes/`](../packages/library/_notes) | Standard 官方可选绘图库的架构、roadmap 与 ADR。                                                    |
+| [`../packages/diagram/_notes/`](../packages/diagram/_notes) | Schematic 领域 Graph / Diagram 能力的架构、roadmap 与 ADR。                                        |
 | [`../apps/eval/_notes/`](../apps/eval/_notes)               | eval 应用的评测设计、语料与 runner 方案。                                                          |
 
 ## 写到哪里
@@ -50,7 +51,7 @@
 - [`editor-design.md`](./architecture/editor-design.md)：无 UI 图形编辑运行时、candidate transaction 与领域 editor adapter 边界。
 - [`visual-theme-design.md`](./architecture/visual-theme-design.md)：renderer-neutral 视觉主题、公开 token、通用 preset 与跨包映射原则。
 - [`attached-space-composition.md`](./architecture/attached-space-composition.md)：跨域空间贴附与复用长期方向。
-- [`diagram-design.md`](./architecture/diagram-design.md)：Graph / Flow / Editor 制图能力长期边界。
+- [`schematic-design.md`](./architecture/schematic-design.md)：Schematic、Graph / Diagram 与 Editor 的长期边界。
 
 ### kernel 发布组
 

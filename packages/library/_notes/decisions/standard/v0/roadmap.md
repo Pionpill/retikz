@@ -47,7 +47,7 @@ Plot、Table 等领域 release group 可以使用兼容版本单向依赖 Standa
 - [Standard Drawing Library 设计](../../../architecture/standard-library-design.md)
 - [能力完备性与模块边界](../../../../../../notes/architecture/capability-design.md)
 - [Core 绘图完备设计](../../../../../kernel/_notes/architecture/core-drawing-complete.md)
-- [Diagram 制图能力域设计](../../../../../../notes/architecture/diagram-design.md)
+- [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
 
 ## ADR 约定
 

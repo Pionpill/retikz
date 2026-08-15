@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-15
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-graph-package-family.md) · [Diagram Graph 完备设计](../../../../../architecture/diagram-graph-complete.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-graph-package-family.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
 > 本 ADR 废弃“逻辑节点接入 Viz / Core Theme Style”的方案。GraphNode 的视觉变体由 Graph 自己拥有，最终仍投影为普通 Core Node paint
 
@@ -54,13 +54,13 @@ GraphNode 显式 variant
 
 `currentColor` 优先使用 authored `color`，省略时 Light 为 `#000000`、Dark 为 `#ffffff`。颜色预合成到 Light `#ffffff` 或 Dark `#000000`，结果保持不透明：
 
-| Variant | `textColor` | `stroke` | `fill` |
-| --- | --- | --- | --- |
-| `default` | `currentColor` | `currentColor` | `none` |
-| `primary` | `contrast` | `currentColor` | `currentColor` |
-| `secondary` | `currentColor` | `none` | `tintedColor(0.10)` |
-| `outline` | `currentColor` | `tintedColor(0.60)` | `none` |
-| `vibrant` | `currentColor` | `currentColor` | `tintedColor(0.15)` |
+| Variant     | `textColor`    | `stroke`            | `fill`              |
+| ----------- | -------------- | ------------------- | ------------------- |
+| `default`   | `currentColor` | `currentColor`      | `none`              |
+| `primary`   | `contrast`     | `currentColor`      | `currentColor`      |
+| `secondary` | `currentColor` | `none`              | `tintedColor(0.10)` |
+| `outline`   | `currentColor` | `tintedColor(0.60)` | `none`              |
+| `vibrant`   | `currentColor` | `currentColor`      | `tintedColor(0.15)` |
 
 `secondary` 明确不带边框。显式 `textColor`、`stroke` 与 `fill` 逐字段优先于 recipe；显式 `opacity`、`fillOpacity` 与 `strokeOpacity` 继续遵循 Core 输入，不由 variant 生成。需要静态颜色但无法解析 authored `color` 时 fail-loud，不把猜测留给 renderer 或 CSS
 

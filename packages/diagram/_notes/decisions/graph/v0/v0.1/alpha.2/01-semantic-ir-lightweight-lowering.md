@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-15
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Graph alpha.1 ADR-01](../alpha.1/01-graph-package-family.md) · [Graph alpha.1 ADR-02](../alpha.1/02-graph-node-variants.md) · [Diagram Graph 完备设计](../../../../../architecture/diagram-graph-complete.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [Graph alpha.1 ADR-01](../alpha.1/01-graph-package-family.md) · [Graph alpha.1 ADR-02](../alpha.1/02-graph-node-variants.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md)
 
 ## 背景
 

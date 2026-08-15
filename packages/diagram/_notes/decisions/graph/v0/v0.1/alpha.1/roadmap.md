@@ -1,6 +1,6 @@
 # Graph v0.1 alpha.1 Roadmap
 
-> 状态：已完成；ADR-01 与 ADR-02 为 Accepted。关联：[Graph v0.1 roadmap](../roadmap.md) · [Diagram Graph 完备设计](../../../../../architecture/diagram-graph-complete.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md)
+> 状态：已完成；ADR-01 与 ADR-02 为 Accepted。关联：[Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
 ## 目标
 
@@ -8,10 +8,10 @@
 
 ## ADR
 
-| ADR | 主题 | 依赖 | 状态 |
-| --- | --- | --- | --- |
-| [01](./01-graph-package-family.md) | Graph package family、owner 与公共边界 | Diagram design；Core composite contract | Accepted |
-| [02](./02-graph-node-variants.md) | GraphNode role、variant 与 GraphFrame 继承 | Core Node / color atom | Accepted |
+| ADR                                | 主题                                       | 依赖                                    | 状态     |
+| ---------------------------------- | ------------------------------------------ | --------------------------------------- | -------- |
+| [01](./01-graph-package-family.md) | Graph package family、owner 与公共边界     | Diagram design；Core composite contract | Accepted |
+| [02](./02-graph-node-variants.md)  | GraphNode role、variant 与 GraphFrame 继承 | Core Node / color atom                  | Accepted |
 
 ## 完成标准
 

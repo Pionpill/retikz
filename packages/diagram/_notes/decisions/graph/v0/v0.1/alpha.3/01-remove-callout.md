@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-10
-- 关联：[alpha.3 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Diagram Graph 完备设计](../../../../../architecture/diagram-graph-complete.md) · [Diagram 制图能力域设计](../../../../../../../../notes/architecture/diagram-design.md) · [alpha.1 ADR-01](../alpha.1/01-graph-package-family.md) · [alpha.2 ADR-01](../alpha.2/01-semantic-ir-lightweight-lowering.md)
+- 关联：[alpha.3 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [alpha.1 ADR-01](../alpha.1/01-graph-package-family.md) · [alpha.2 ADR-01](../alpha.2/01-semantic-ir-lightweight-lowering.md)
 
 ## 背景与目标
 

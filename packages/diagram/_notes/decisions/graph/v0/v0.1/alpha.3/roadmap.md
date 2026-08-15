@@ -1,6 +1,6 @@
 # Graph v0.1 alpha.3 Roadmap
 
-> 状态：Accepted；已完成。关联：[Graph v0.1 roadmap](../roadmap.md) · [Diagram Graph 完备设计](../../../../../architecture/diagram-graph-complete.md) · [alpha.2 roadmap](../alpha.2/roadmap.md)
+> 状态：Accepted；已完成。关联：[Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [alpha.2 roadmap](../alpha.2/roadmap.md)
 
 ## 目标
 
@@ -8,8 +8,8 @@
 
 ## ADR
 
-| ADR                          | 主题                            | 依赖                                       | 状态     |
-| ---------------------------- | ------------------------------- | ------------------------------------------ | -------- |
+| ADR                          | 主题                            | 依赖                                    | 状态     |
+| ---------------------------- | ------------------------------- | --------------------------------------- | -------- |
 | [01](./01-remove-callout.md) | 撤回 Callout 公共契约与完整闭环 | Diagram design；Graph alpha.1 / alpha.2 | Accepted |
 
 ## 完成标准

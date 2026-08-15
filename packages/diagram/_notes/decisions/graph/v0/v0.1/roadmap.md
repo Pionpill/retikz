@@ -1,6 +1,6 @@
 # Graph v0.1 Roadmap
 
-> 状态：Complete；alpha.1 至 alpha.3 已完成。关联：[Graph v0 roadmap](../roadmap.md) · [Diagram Graph 完备设计](../../../../architecture/diagram-graph-complete.md)
+> 状态：Complete；alpha.1 至 alpha.3 已完成。关联：[Graph v0 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md)
 
 ## 目标
 
@@ -8,11 +8,11 @@
 
 ## Milestone
 
-| Milestone                       | 主题                | 范围                                                              |
-| ------------------------------- | ------------------- | ----------------------------------------------------------------- |
+| Milestone                       | 主题             | 范围                                                              |
+| ------------------------------- | ---------------- | ----------------------------------------------------------------- |
 | [alpha.1](./alpha.1/roadmap.md) | Graph foundation | 三包、发布组、Standard 迁移、Layout composition、四种 Theme Style |
-| [alpha.2](./alpha.2/roadmap.md) | Semantic IR         | 语义身份、轻量 Node / Path lowering、GraphConnector 双作者语法         |
-| [alpha.3](./alpha.3/roadmap.md) | Surface pruning     | 撤回缺少用例验证的 Callout 公共契约                               |
+| [alpha.2](./alpha.2/roadmap.md) | Semantic IR      | 语义身份、轻量 Node / Path lowering、GraphConnector 双作者语法    |
+| [alpha.3](./alpha.3/roadmap.md) | Surface pruning  | 撤回缺少用例验证的 Callout 公共契约                               |
 
 ## 边界
 
