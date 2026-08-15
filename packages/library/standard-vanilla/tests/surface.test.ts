@@ -1,4 +1,5 @@
 import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard';
+import { PathClipProvider } from '@retikz/standard/clip';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -22,7 +23,7 @@ describe('surface()', () => {
     );
     expect(normalized.contributions[0]).toEqual({
       roots: [SurfaceProvider.key],
-      providers: [SurfaceProvider],
+      providers: [SurfaceProvider, PathClipProvider],
     });
   });
 
@@ -33,7 +34,7 @@ describe('surface()', () => {
     });
 
     expect(normalized.contributions[0]?.roots).toEqual([SurfaceProvider.key, FrameProvider.key]);
-    expect(normalized.contributions[0]?.providers).toEqual([SurfaceProvider, FrameProvider]);
+    expect(normalized.contributions[0]?.providers).toEqual([SurfaceProvider, PathClipProvider, FrameProvider]);
   });
 
   it('normalizes through the public Vanilla embed without leaking runtime child metadata into IR', () => {

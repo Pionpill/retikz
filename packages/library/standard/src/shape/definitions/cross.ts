@@ -56,8 +56,8 @@ type CrossGeometry = {
   offset: Position;
 };
 
-/** 解析 Cross 的轴向宽度，按轴向值再回退到 default */
-const axisValueOf = (
+/** 规范化 Cross 的轴向宽度，按轴向值再回退到 default */
+const normalizeCrossAxisValue = (
   value: number | CrossDimension | CrossHeight | undefined,
   axis: 'horizontal' | 'vertical',
   fallback: number,
@@ -66,8 +66,8 @@ const axisValueOf = (
   return value?.[axis] ?? value?.default ?? fallback;
 };
 
-/** 解析 Cross 的方向高度，按方向、轴向、default 的顺序回退 */
-const sideValueOf = (
+/** 规范化 Cross 的方向高度，按方向、轴向、default 的顺序回退 */
+const normalizeCrossSideValue = (
   value: number | CrossHeight | undefined,
   side: 'top' | 'right' | 'bottom' | 'left',
   axis: 'horizontal' | 'vertical',
@@ -83,12 +83,12 @@ const crossGeometry = (
   fallbackHalfWidth: number,
   fallbackHalfHeight: number,
 ): CrossGeometry => {
-  const horizontalWidth = axisValueOf(params.width, 'horizontal', (fallbackHalfHeight * 2) / 3);
-  const verticalWidth = axisValueOf(params.width, 'vertical', (fallbackHalfWidth * 2) / 3);
-  const topHeight = sideValueOf(params.height, 'top', 'vertical', fallbackHalfHeight);
-  const rightHeight = sideValueOf(params.height, 'right', 'horizontal', fallbackHalfWidth);
-  const bottomHeight = sideValueOf(params.height, 'bottom', 'vertical', fallbackHalfHeight);
-  const leftHeight = sideValueOf(params.height, 'left', 'horizontal', fallbackHalfWidth);
+  const horizontalWidth = normalizeCrossAxisValue(params.width, 'horizontal', (fallbackHalfHeight * 2) / 3);
+  const verticalWidth = normalizeCrossAxisValue(params.width, 'vertical', (fallbackHalfWidth * 2) / 3);
+  const topHeight = normalizeCrossSideValue(params.height, 'top', 'vertical', fallbackHalfHeight);
+  const rightHeight = normalizeCrossSideValue(params.height, 'right', 'horizontal', fallbackHalfWidth);
+  const bottomHeight = normalizeCrossSideValue(params.height, 'bottom', 'vertical', fallbackHalfHeight);
+  const leftHeight = normalizeCrossSideValue(params.height, 'left', 'horizontal', fallbackHalfWidth);
   const halfHorizontalWidth = horizontalWidth / 2;
   const halfVerticalWidth = verticalWidth / 2;
   const halfWidth = Math.max((leftHeight + rightHeight) / 2, halfVerticalWidth);
