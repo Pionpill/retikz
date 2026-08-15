@@ -1,6 +1,6 @@
 import type { CssColorValue, NonEmptyReadonlyArray } from '@retikz/core';
 
-import type { IRPlotResolvedThemeTokens } from '../../../schemas';
+import type { IRPlotThemeTokenResolution } from '../../../schemas';
 
 import { PlotThemeToken } from '../../../schemas';
 import { PlotColorScheme } from '../../scale/shared';
@@ -13,7 +13,7 @@ type PalettePresetSource = Readonly<{
 
 type PaletteTokenPreset = Readonly<
   Pick<
-    IRPlotResolvedThemeTokens,
+    IRPlotThemeTokenResolution,
     | typeof PlotThemeToken.PlotPaletteCategorical
     | typeof PlotThemeToken.PlotPaletteSeries
     | typeof PlotThemeToken.PlotPaletteSector

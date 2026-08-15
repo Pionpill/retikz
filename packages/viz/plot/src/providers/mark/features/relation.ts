@@ -21,7 +21,6 @@ import type {
   IRPlotRelationRoutingSpec,
   IRPlotRelationStepLabel,
   IRPlotTargetRef,
-  MarkValueType,
   RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
 
@@ -51,7 +50,7 @@ import {
   resolveGeometryMarkLabels,
 } from '../shared';
 
-type ResolvedTarget = {
+type TargetResolution = {
   target: IRTarget;
   coordinates: Array<IRCoordinate>;
 };
@@ -95,7 +94,7 @@ const resolveProjectedTarget = (
   transformedIndex: number,
   role: string,
   forceCoordinate: boolean,
-): ResolvedTarget | null => {
+): TargetResolution | null => {
   const values: Array<unknown> = [];
   for (const frameRole of frame.roles) {
     const field = (ref.project as Partial<Record<string, string>>)[frameRole];
@@ -142,7 +141,7 @@ const resolveTarget = (
   transformedIndex: number,
   role: string,
   forceCoordinate = false,
-): ResolvedTarget | null => {
+): TargetResolution | null => {
   if ('id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if ('project' in ref)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
@@ -172,9 +171,11 @@ const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
   return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 
-const resolveMarkValue = <T>(value: MarkValueType<T> | undefined, row: ExternalRow): T | undefined => {
+type MarkStyleValue = NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>;
+
+const resolveMarkValue = <T>(value: MarkStyleValue | undefined, row: ExternalRow): T | undefined => {
   if (value === undefined) return undefined;
-  if (value.kind === MarkValueKind.Constant) return value.value;
+  if (value.kind === MarkValueKind.Constant) return value.value as T;
   return resolveFieldPath(row, value.value) as T | undefined;
 };
 
@@ -184,7 +185,7 @@ const relationStyleValue = (
   row: ExternalRow,
 ): unknown =>
   resolveMarkValue(
-    (style as Partial<Record<keyof IRPlotRelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key],
+    (style as Partial<Record<keyof IRPlotRelationPrimitiveStyle, MarkStyleValue>> | undefined)?.[key],
     row,
   );
 

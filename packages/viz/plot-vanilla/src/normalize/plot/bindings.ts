@@ -15,7 +15,7 @@ import type {
   InputPlotMark,
   InputPlotScaffold,
   NormalizedPlotBindings,
-  NormalizePlotBindingsInput,
+  PlotBindingsNormalizationContext,
 } from './input';
 
 type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
@@ -23,7 +23,7 @@ type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
 type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
 type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
 type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;
-type FacetDimensionInput = string | NonNullable<FacetGridSpec['row']>;
+type InputPlotFacetDimension = string | NonNullable<FacetGridSpec['row']>;
 
 const AUTO_X = '__x';
 const AUTO_Y = '__y';
@@ -114,7 +114,7 @@ const assertGuideBindingCompatibility = (guide: InputPlotGuide): void => {
 
 /** 把 facet 简写维度转为 canonical field 声明 */
 const facetDimensionOf = (
-  dimension: FacetDimensionInput | undefined,
+  dimension: InputPlotFacetDimension | undefined,
 ): NonNullable<FacetGridSpec['row']> | undefined => {
   if (dimension === undefined) return undefined;
   if (typeof dimension === 'string') return { field: dimension };
@@ -414,8 +414,8 @@ const normalizeTopologyBindings = (
 };
 
 /** 把 authoring-only axis、facet 与 scaffold binding 展开为 Plot Source IR 字段 */
-export const normalizePlotBindings = (input: NormalizePlotBindingsInput): NormalizedPlotBindings => {
-  const { marks, guides, scales, coordinate, composition, facets, scaffolds } = input;
+export const normalizePlotBindings = (context: PlotBindingsNormalizationContext): NormalizedPlotBindings => {
+  const { marks, guides, scales, coordinate, composition, facets, scaffolds } = context;
   marks.forEach(assertMarkBindingCompatibility);
   guides.forEach(assertGuideBindingCompatibility);
 

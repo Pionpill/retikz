@@ -5,12 +5,12 @@ import { DataFieldType } from '@retikz/data';
 import { PlotScale } from '@retikz/plot';
 
 import type {
-  CoordinateInput,
+  InputPlotCoordinate,
+  InputPlotPolar2DCoordinate,
   MarkTransformShortcutDefinition,
   NormalizationState,
-  Polar2DCoordinateInput,
 } from './contracts';
-import type { PositionScaleType, ScaleDimension, ScaleProps } from './input-scales';
+import type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
 
 const AUTO_X = '__x';
 const AUTO_Y = '__y';
@@ -32,15 +32,15 @@ export const buildColorScale = (colorFields: Array<string>, model: IRDataModel |
   return { type: PlotScale.Ordinal, name: AUTO_COLOR };
 };
 
-type ContinuousScaleProps = Extract<ScaleProps, { type: Exclude<PositionScaleType, 'band' | 'point'> }>;
-type BandScaleProps = Extract<ScaleProps, { type: 'band' }>;
-type PointScaleProps = Extract<ScaleProps, { type: 'point' }>;
+type ContinuousScaleProps = Extract<InputPlotScale, { type: Exclude<InputPlotPositionScaleType, 'band' | 'point'> }>;
+type BandScaleProps = Extract<InputPlotScale, { type: 'band' }>;
+type PointScaleProps = Extract<InputPlotScale, { type: 'point' }>;
 type PositionScaleOptions = Pick<
   ContinuousScaleProps,
   'base' | 'constant' | 'domain' | 'domainPadding' | 'singleValueSpan'
 >;
 
-const isContinuousScaleProps = (options: ScaleProps | undefined): options is ContinuousScaleProps =>
+const isContinuousScaleProps = (options: InputPlotScale | undefined): options is ContinuousScaleProps =>
   options !== undefined && options.type !== 'band' && options.type !== 'point';
 
 const continuousPositionScaleOptions = (options: PositionScaleOptions | undefined): PositionScaleOptions => ({
@@ -69,7 +69,11 @@ const bandPositionScaleOptions = (
 });
 
 /** 按作者侧位置比例尺类型与选项构造规范 Plot 比例尺 */
-export const buildPositionScale = (name: string, type: PositionScaleType, options?: ScaleProps): IRPlotScale => {
+export const buildPositionScale = (
+  name: string,
+  type: InputPlotPositionScaleType,
+  options?: InputPlotScale,
+): IRPlotScale => {
   const scaleOptions = continuousPositionScaleOptions(isContinuousScaleProps(options) ? options : undefined);
   const bandOptions = bandPositionScaleOptions(options?.type === 'band' ? options : undefined);
   const pointOptions = pointPositionScaleOptions(options?.type === 'point' ? options : undefined);
@@ -91,7 +95,7 @@ export const buildPositionScale = (name: string, type: PositionScaleType, option
     case 'radial':
       return { type: PlotScale.Radial, name, ...scaleOptions };
     default: {
-      // 穷尽守卫：新增 PositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
+      // 穷尽守卫：新增 InputPlotPositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
       throw new Error(`buildPlotSpec: unsupported position scale type "${String(exhaustive)}"`);
     }
@@ -99,7 +103,7 @@ export const buildPositionScale = (name: string, type: PositionScaleType, option
 };
 
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
-export const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
+export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (forceBand && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> or set type="band"',
@@ -110,7 +114,7 @@ export const buildCartesianXScale = (forceBand: boolean, explicit: ScaleProps | 
 };
 
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
-export const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | undefined): IRPlotScale => {
+export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (hasRect && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
       'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> or set type="band"',
@@ -124,7 +128,7 @@ export const buildCartesianYScale = (hasRect: boolean, explicit: ScaleProps | un
  * polar 角向 scale 类型推断：IntervalMark angle → linear（连续累积角界）；IntervalMark x/y → band（径向柱分类）；
  *   闭合 line（雷达）→ point（类别落等距点）；否则 linear（极坐标折线）
  */
-export const buildAngleScale = (collected: Collected, explicit: ScaleProps | undefined): IRPlotScale => {
+export const buildAngleScale = (collected: Collected, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
       'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="x" /> or set type="band"',
@@ -145,9 +149,11 @@ export const buildAngleScale = (collected: Collected, explicit: ScaleProps | und
 type ScaleRole = 'x' | 'y' | 'angle' | 'radius';
 
 /** 按规范坐标角色索引的显式比例尺集合 */
-export type ExplicitScaleMap = Partial<Record<ScaleRole, ScaleProps>>;
+export type ExplicitScaleMap = Partial<Record<ScaleRole, InputPlotScale>>;
 
-const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>): ReadonlyArray<ScaleDimension> => {
+const validScaleDimensionsOf = (
+  coordKind: ReturnType<typeof coordinateTypeOf>,
+): ReadonlyArray<InputPlotScaleDimension> => {
   if (coordKind === 'cartesian2D') return ['x', 'y'];
   if (coordKind === 'polar2D') return ['x', 'y'];
   if (coordKind === 'cartesian1D') return ['x'];
@@ -156,7 +162,7 @@ const validScaleDimensionsOf = (coordKind: ReturnType<typeof coordinateTypeOf>):
 };
 
 const scaleRoleOf = (
-  dimension: ScaleDimension,
+  dimension: InputPlotScaleDimension,
   coordKind: ReturnType<typeof coordinateTypeOf>,
 ): ScaleRole | undefined => {
   if (coordKind === 'cartesian2D') return dimension;
@@ -171,7 +177,7 @@ const scaleRoleOf = (
 
 /** 校验显式比例尺维度并映射到当前坐标系的规范角色 */
 export const collectExplicitScales = (
-  declared: Array<ScaleProps>,
+  declared: Array<InputPlotScale>,
   coordKind: ReturnType<typeof coordinateTypeOf>,
 ): ExplicitScaleMap => {
   const out: ExplicitScaleMap = {};
@@ -214,7 +220,7 @@ export const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D',
 
 /** 把坐标入口归类为内置坐标类型或自定义坐标 */
 export const coordinateTypeOf = (
-  input: CoordinateInput | undefined,
+  input: InputPlotCoordinate | undefined,
 ): 'cartesian2D' | 'polar2D' | 'cartesian1D' | 'polar1D' | 'custom' => {
   if (input === undefined) return 'cartesian2D';
   const type = typeof input === 'string' ? input : input.type;
@@ -227,7 +233,7 @@ export const coordinateTypeOf = (
 export type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
 
 /** 提取并补全 polar2D 配置，其他坐标返回 `undefined` */
-export const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarConfig | undefined => {
+export const toPolarConfig = (coordinate: InputPlotCoordinate | undefined): PolarConfig | undefined => {
   if (coordinate === 'polar2D') {
     return {
       innerRadius: POLAR_DEFAULT_INNER_RADIUS,
@@ -236,7 +242,7 @@ export const toPolarConfig = (coordinate: CoordinateInput | undefined): PolarCon
     };
   }
   if (typeof coordinate === 'object' && coordinate.type === 'polar2D') {
-    const polar = coordinate as Polar2DCoordinateInput;
+    const polar = coordinate as InputPlotPolar2DCoordinate;
     return {
       innerRadius: polar.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
       startAngle: polar.startAngle ?? POLAR_DEFAULT_START_ANGLE,

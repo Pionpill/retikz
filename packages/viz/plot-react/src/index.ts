@@ -1,28 +1,16 @@
 // @retikz/plot-react public API barrel.
-export type {
-  BuildPlotSpecOptions,
-  CoordinateInput,
-  MarkTransformShortcutContext,
-  MarkTransformShortcutDefinition,
-  ResolveLabelMap,
-} from './adapter';
-export type { ResolvedPlotExtensionAuthoring } from './adapter';
-export { buildPlotSpec, collectPlotDeclarations, resolveLabelOf, resolvePlotExtensionAuthoring } from './adapter';
+export { buildPlotSpec, resolvePlotExtensionAuthoring } from './adapter';
 export type {
   AxisProps,
   DatumLabelProps,
-  FacetDimensionInput,
   FacetProps,
-  FieldName,
   IntervalMarkProps,
   LegendProps,
   PathMarkProps,
   PointMarkProps,
-  PositionScaleType,
   ReferenceMarkProps,
   RelationMarkProps,
   ScaffoldProps,
-  ScaleDimension,
   ScaleProps,
   TrackProps,
   TransformProps,

@@ -13,7 +13,12 @@ import type {
 import { PlotMark } from '@retikz/plot';
 
 import type { NormalizationState } from './contracts';
-import type { DatumLabelProps, PathMarkProps, ReferenceMarkProps, RelationMarkProps } from './input-marks';
+import type {
+  InputPlotDatumLabel,
+  InputPlotPathMark,
+  InputPlotReferenceMark,
+  InputPlotRelationMark,
+} from './input-marks';
 import type { StyleSugarContext } from './style-sugar';
 
 import {
@@ -50,7 +55,7 @@ export const recordMarkColor = (into: Collected, color: IRPlotPointColorStyle | 
  * @description label 顶层 string 默认按字段（content.field）；labelDisplayFormat 进 IR；labelPosition / labelDistance / labelPin
  *   摊进对齐 core NodeLabelSchema 的字段。无 label 字段 → undefined（不挂标签）
  */
-export const buildMarkLabel = (props: DatumLabelProps): IRPlotMarkNodeLabel | undefined => {
+export const buildMarkLabel = (props: InputPlotDatumLabel): IRPlotMarkNodeLabel | undefined => {
   const {
     label,
     labelDisplayFormat,
@@ -96,12 +101,12 @@ export const recordResolveLabel = (
 
 /** 把几何标签输入规范化为几何标签列表 */
 export const canonicalGeometryLabel = (
-  label: NonNullable<PathMarkProps['label'] | RelationMarkProps['label']>,
+  label: NonNullable<InputPlotPathMark['label'] | InputPlotRelationMark['label']>,
 ): IRPlotMarkGeometryLabelList => label;
 
 /** 按 reference mark 宿主形态规范化标签列表 */
 export const canonicalReferenceLabel = (
-  label: NonNullable<ReferenceMarkProps['label']>,
+  label: NonNullable<InputPlotReferenceMark['label']>,
   usesNodeHost: boolean,
 ): IRPlotMarkNodeLabelList | IRPlotMarkGeometryLabelList => {
   const entries = Array.isArray(label) ? label : [label];
@@ -117,7 +122,8 @@ export const canonicalReferenceLabel = (
 };
 
 /** 规范化 relation mark 的路径几何 */
-export const canonicalRelationPath = (path: NonNullable<RelationMarkProps['path']>): IRPlotRelationPathGeometry => path;
+export const canonicalRelationPath = (path: NonNullable<InputPlotRelationMark['path']>): IRPlotRelationPathGeometry =>
+  path;
 
 /** 把 x/y 字段装成位置 encoding */
 export const positionEncoding = (x: string, y: string): Pick<IRPlotEncoding, 'x' | 'y'> => ({
@@ -136,7 +142,11 @@ export const ruleChannel = (value: number | string): { value: number } | { field
  *   extent 须成对（单设 → fail-loud），且 region 不接收 extent
  *   常量 rule（x/y 为数字）→ color 作 value 常量；per-datum rule（x/y 为字段串）→ color 作 field（AUTO_COLOR）
  */
-export const collectReference = (props: ReferenceMarkProps, into: Collected, styleContext: StyleSugarContext): void => {
+export const collectReference = (
+  props: InputPlotReferenceMark,
+  into: Collected,
+  styleContext: StyleSugarContext,
+): void => {
   const {
     kind,
     x,

@@ -4,7 +4,7 @@ import type { IRJsonObject } from '@retikz/core';
  * 逻辑地址解析结果。
  * @description position 与 lowering 摆放一致；meta 与 per-datum meta 同构；id 仅在 datumIdField 命中并已绑定具名 id 时回填
  */
-export type ResolvedAnchor = {
+export type PlotAnchorResolution = {
   /** 该 datum / series 的锚点屏幕位置（user units） */
   position: [number, number];
   /** 来源 meta */
@@ -38,9 +38,9 @@ export type PlotLocatorOptions = {
 /** plot locator：把逻辑地址解析成 scene 锚点 */
 export type PlotLocator = {
   /** 按 transformedIndex 解析 datum 锚点 */
-  datum: (transformedIndex: number, opts?: PlotLocatorOptions) => ResolvedAnchor | null;
+  datum: (transformedIndex: number, opts?: PlotLocatorOptions) => PlotAnchorResolution | null;
   /** 按 series 值解析该 series 的区域锚点 */
-  series: (value: string | number, opts?: PlotLocatorOptions) => ResolvedAnchor | null;
+  series: (value: string | number, opts?: PlotLocatorOptions) => PlotAnchorResolution | null;
   /** 按点路径字符串解析锚点 */
-  resolve: (address: string) => ResolvedAnchor | null;
+  resolve: (address: string) => PlotAnchorResolution | null;
 };

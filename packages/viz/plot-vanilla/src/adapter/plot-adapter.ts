@@ -13,8 +13,8 @@ import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
 import type { InputPlotEmbed } from '../spec';
 
-import { normalizePlot } from '../normalize/plot';
 import { assertPlotVanillaNonEmptyString } from '../shared';
+import { plotSpecOf } from '../spec';
 
 /** 将 Plot 根节点包进可选的面板 Scope */
 const wrapPlotPanel = (node: IRPlotSpec, panel: InputPlotEmbed['panel']) => {
@@ -36,8 +36,8 @@ const wrapPlotPanel = (node: IRPlotSpec, panel: InputPlotEmbed['panel']) => {
   return normalizeScopeWithChildren(input, () => [node]);
 };
 
-/** 完整 PlotSpec 的 Vanilla contribution 输入 */
-export type PlotContributionInput = Readonly<{
+/** 完整 PlotSpec 的 Vanilla contribution request */
+export type PlotContributionRequest = Readonly<{
   /** 已完成的 PlotSpec */
   spec: IRPlotSpec;
   /** runtime-only dataset table */
@@ -50,7 +50,7 @@ export type PlotContributionInput = Readonly<{
 export type ResolvedPlotContribution = Readonly<{
   /** 已类型化的完整 Plot Source IR */
   spec: IRPlotSpec;
-  /** 包含 Plot 所需 Standard Shape 与 `plot.plot` 的完整 provider contribution */
+  /** Plot composite 及其 Standard shape 依赖的 provider contribution */
   contribution: CoreProviderContribution;
 }>;
 
@@ -61,9 +61,11 @@ export const createPlotProvider = (input: {
 }): CoreDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
 
 /** 将完整 PlotSpec 归一为 Plot-owned dependency contribution */
-export const resolvePlotContribution = (input: PlotContributionInput): ResolvedPlotContribution => {
-  const contribution = createPlotProviderContribution(input.datasets, input.lowerOptions);
-  return { spec: input.spec, contribution };
+export const resolvePlotContribution = (request: PlotContributionRequest): ResolvedPlotContribution => {
+  return {
+    spec: request.spec,
+    contribution: createPlotProviderContribution(request.datasets, request.lowerOptions),
+  };
 };
 
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
@@ -71,7 +73,7 @@ export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
   kind: PLOT_NAMESPACE,
   lower: (props, context) => {
     assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
-    const spec = normalizePlot(props.spec);
+    const spec = plotSpecOf(props);
     const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
     const node =
       props.preserveRootIdentity === true ? spec : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };

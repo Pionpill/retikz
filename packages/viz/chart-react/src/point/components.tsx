@@ -10,8 +10,7 @@ import type { FC, ReactNode } from 'react';
 
 import { DEFAULT_CHART_DATA_REFERENCE, PointChartType } from '@retikz/chart/point';
 import { PointChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
-import { collectPlotDeclarations, usePlotThemeStyles } from '@retikz/plot-react';
-import { resolvePlotExtensionAuthoring } from '@retikz/plot-vanilla';
+import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { createElement, useMemo } from 'react';
 
@@ -151,7 +150,7 @@ const createTypedPointChartInput = (
   void _theme;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
   const split = splitPresentationMarkers(children);
-  const extension = resolvePlotExtensionAuthoring(collectPlotDeclarations(split.plotChildren), {
+  const extension = resolvePlotExtensionAuthoring(split.plotChildren, {
     data: { reference },
     ...(transform === undefined ? {} : { dataTransforms: transform }),
     ...(scales === undefined ? {} : { scales: { value: scales, path: ['props', 'scales'] } }),

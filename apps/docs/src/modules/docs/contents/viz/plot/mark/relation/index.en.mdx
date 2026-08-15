@@ -137,23 +137,23 @@ The following flow stops at the RelationMark boundary: path and ribbon relations
 
 ## API Reference
 
-This table keeps only RelationMark-specific props and props whose meaning is redefined here. React users can import `RelationMarkProps` from `@retikz/plot-react`; the `IRPlot*` and `RelationPathGeometryInput` types in the table come from `@retikz/plot`. See [transforms](/viz/plot/transform) for local `transform` and `relate`, [channel bindings](/viz/plot/channel/binding) for extension channels, and [coordinates](/viz/plot/coordinate) for projected targets. Put color, stroke, opacity, shadow, and other shared path / ribbon styles in `style`; put ordinary-path-only marks, dashes, and corners in `path.options`.
+This table keeps only RelationMark-specific props and props whose meaning is redefined here. React users can import `RelationMarkProps` from `@retikz/plot-react`; the `IRPlot*` types in the table come from `@retikz/plot`, while Vanilla authoring uses `InputPlotRelationPathGeometry` from `@retikz/plot-vanilla`. See [transforms](/viz/plot/transform) for local `transform` and `relate`, [channel bindings](/viz/plot/channel/binding) for extension channels, and [coordinates](/viz/plot/coordinate) for projected targets. Put color, stroke, opacity, shadow, and other shared path / ribbon styles in `style`; put ordinary-path-only marks, dashes, and corners in `path.options`.
 
-| Prop                | Type                                      | Default             | Description                                                                        |
-| ------------------- | ----------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
-| `source` / `target` | `RelationMarkProps['source']`             | Required            | Start and end targets: direct id, row-generated anchor id, or projected coordinate |
-| `kind?`             | <ApiValues name="RelationGeometryKind" /> | `path`              | Create an ordinary Path or ribbon Path for each row                                |
-| `label?`            | `RelationMarkProps['label']`              | —                   | Geometry label for the whole relation                                              |
-| `path.via?`         | `RelationPathGeometryInput['via']`        | —                   | Intermediate targets for default or algorithmic routing                            |
-| `path.routing?`     | `RelationPathGeometryInput['routing']`    | `line`              | `line`, `bend`, or `orthogonal`; mutually exclusive with `path.route`              |
-| `path.route?`       | `RelationPathGeometryInput['route']`      | —                   | Explicit core-like steps; a final step without `to` points at target               |
-| `path.label?`       | `RelationPathGeometryInput['label']`      | —                   | Step-label shorthand for default or algorithmic paths                              |
-| `path.options?`     | `RelationPathGeometryInput['options']`    | —                   | Path-only marks, dashes, rounded corners, line caps, and joins                     |
-| `ribbon.width`      | `IRPlotRelationRibbonOptions['width']`    | Required for ribbon | Source width; also the full width when `endWidth` is absent                        |
-| `ribbon.endWidth?`  | `IRPlotRelationRibbonOptions['endWidth']` | —                   | Target width                                                                       |
-| `ribbon.options?`   | `IRPlotRelationRibbonOptions['options']`  | —                   | Alignment, sampling, and width interpolation                                       |
-| `style?`            | `RelationMarkProps['style']`              | —                   | Visual styles shared by path and ribbon                                            |
-| `color?`            | `RelationMarkProps['color']`              | —                   | Field-driven relation color channel                                                |
+| Prop                | Type                                                | Default             | Description                                                                                                      |
+| ------------------- | --------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `source` / `target` | `RelationMarkProps['source']`                       | Required            | Start and end targets: direct id, row-generated anchor id, or projected coordinate                               |
+| `kind?`             | <ApiValues name="RelationGeometryKind" />           | `path`              | Create an ordinary Path or ribbon Path for each row                                                              |
+| `label?`            | `RelationMarkProps['label']`                        | —                   | Geometry label for the whole relation                                                                            |
+| `path.via?`         | `NonNullable<RelationMarkProps['path']>['via']`     | —                   | Intermediate targets for default or algorithmic routing; Vanilla input is `InputPlotRelationPathGeometry['via']` |
+| `path.routing?`     | `NonNullable<RelationMarkProps['path']>['routing']` | `line`              | `line`, `bend`, or `orthogonal`; mutually exclusive with `path.route`                                            |
+| `path.route?`       | `NonNullable<RelationMarkProps['path']>['route']`   | —                   | Explicit core-like steps; a final step without `to` points at target                                             |
+| `path.label?`       | `NonNullable<RelationMarkProps['path']>['label']`   | —                   | Step-label shorthand for default or algorithmic paths                                                            |
+| `path.options?`     | `NonNullable<RelationMarkProps['path']>['options']` | —                   | Path-only marks, dashes, rounded corners, line caps, and joins                                                   |
+| `ribbon.width`      | `IRPlotRelationRibbonOptions['width']`              | Required for ribbon | Source width; also the full width when `endWidth` is absent                                                      |
+| `ribbon.endWidth?`  | `IRPlotRelationRibbonOptions['endWidth']`           | —                   | Target width                                                                                                     |
+| `ribbon.options?`   | `IRPlotRelationRibbonOptions['options']`            | —                   | Alignment, sampling, and width interpolation                                                                     |
+| `style?`            | `RelationMarkProps['style']`                        | —                   | Visual styles shared by path and ribbon                                                                          |
+| `color?`            | `RelationMarkProps['color']`                        | —                   | Field-driven relation color channel                                                                              |
 
 ## Related
 

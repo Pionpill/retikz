@@ -118,6 +118,16 @@ const sizeResolutionOf = (
     node,
     rows,
     fieldTypes: new Map([[size.value, options.fieldType ?? DataFieldType.Continuous]]),
+    resolveChannelScale: () => ({
+      of: () => undefined,
+      legendForm: 'swatch',
+      domain: [],
+      range: [],
+      scaleType: 'test',
+    }),
+    resolveCategoryDomain: values =>
+      values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+    resolveColorScheme: () => () => '#000000',
   })(node.marks[0]);
   expect(resolution).toBeDefined();
   if (resolution === undefined) throw new Error('expected field-bound size resolution');
@@ -381,6 +391,16 @@ describe('size channel 错误输入', () => {
       rows: [{ derivedSize: 4 }],
       fieldTypes: new Map(),
       fieldTypeEvidence: new Set(),
+      resolveChannelScale: () => ({
+        of: () => undefined,
+        legendForm: 'swatch',
+        domain: [],
+        range: [],
+        scaleType: 'test',
+      }),
+      resolveCategoryDomain: values =>
+        values.filter((value): value is string | number => typeof value === 'string' || typeof value === 'number'),
+      resolveColorScheme: () => () => '#000000',
     })(node.marks[0]);
 
     expect(resolution?.descriptor?.fieldType).toBe(DataFieldType.Continuous);

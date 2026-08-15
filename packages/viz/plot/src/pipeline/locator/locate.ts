@@ -1,5 +1,4 @@
 import type { IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
-import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 
 import { applyTransforms, readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
@@ -8,21 +7,29 @@ import { resolveFieldPath } from '@retikz/data';
 import type {
   CoordinateFrame,
   IntervalContext,
+  PlotAnchorResolution,
   PlotFacetLocatorOptions,
   PlotLocator,
   PlotLocatorOptions,
-  ResolvedAnchor,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { IRPlotMark, IRPlotMarkOperation, IRPlotSpec, IRPlotTransform } from '../../schemas';
+import type { CoordinateResolveContext } from '../../resolve/coordinate';
+import type { IRPlotMark, IRPlotMarkOperation, IRPlotSpec } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
 import { datumMeta } from '../../contract';
-import { buildIntervalContext, datumAnchor, intervalCellGeometry } from '../../providers';
-import { isBuiltinMark, PlotMark } from '../../schemas';
+import { buildIntervalContext, intervalCellGeometry } from '../../providers';
+import { resolveCoordinateRegistry } from '../../providers';
+import { resolveCoordinateScopeRegistry } from '../../resolve/composition';
+import { resolveCoordinateFrame } from '../../resolve/coordinate';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
+import { datumAnchor } from '../../resolve/mark';
+import { isBuiltinMark, PlotGuide, PlotMark } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
-import { lowerPlots, prepareRows, resolveFrame } from '../expand';
+import { applyMarkTransforms, lowerPlots, prepareRows } from '../expand';
+import { legendReserveOf } from '../expand/legend';
+import { lowerCustomAxis, lowerGuide } from '../guide';
 import { createDatumIdRegistrar } from '../provenance';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;
@@ -35,7 +42,7 @@ const seriesFieldOf = (mark: IRPlotMark): string | undefined =>
 const isDatumBearing = (mark: IRPlotMarkOperation): mark is IRPlotMark =>
   isBuiltinMark(mark) && (mark.type === PlotMark.Point || mark.type === PlotMark.Interval);
 
-type RenderDatumEntry = ResolvedAnchor & {
+type RenderDatumEntry = PlotAnchorResolution & {
   transformedIndex: number;
   markIndex: number;
 };
@@ -116,17 +123,6 @@ const contextMatches = (meta: IRJsonObject, opts: PlotLocatorOptions | undefined
   return facetMatches(meta, opts?.facet);
 };
 
-const resolveMarkRows = (
-  mark: IRPlotMarkOperation,
-  rows: Array<ExternalRow>,
-  transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
-  transformContext: TransformContext,
-): Array<ExternalRow> => {
-  const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
-  if (transform === undefined) return rows;
-  return applyTransforms(rows, transform, transformRegistry, transformContext);
-};
-
 /**
  * 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 resolveFrame，投影单一真源）
  * @description 行构造与 expandPlot 一致：先 tagSourceIndex（克隆、不污染入参）供 sourceIndex 回指，再 applyTransforms；
@@ -156,7 +152,7 @@ export const createPlotLocator = (
   // 与 expandPlot 共用 prepareRows（fieldMaps 校验 + 类型解析 + 归一化），保证 render 抛错 ⟺ locator 抛错
   // tagSourceIndex（clone，不动入参）→ prepareRows → applyTransforms，与 lowering 完全同序，否则 locator 落点漂移
   const ingested = tagSourceIndex(dataset);
-  const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry } = prepareRows(
+  const { fieldTypes, normalized, transformRegistry, transformContext, scaleRegistry, markRegistry } = prepareRows(
     spec,
     datasets,
     options,
@@ -165,14 +161,18 @@ export const createPlotLocator = (
   const rows = applyTransforms(normalized, spec.transform, transformRegistry, transformContext);
   const markDataViews: Array<MarkDataView> = spec.marks.map(mark => ({
     mark,
-    rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
+    rows: applyMarkTransforms(mark, rows, transformRegistry, transformContext),
   }));
   const rowsOfMark = (markIndex: number): Array<ExternalRow> => markDataViews[markIndex]?.rows ?? rows;
+  const coordinateScopes = resolveCoordinateScopeRegistry(spec);
+  const defaultCoordinate =
+    spec.coordinate ?? coordinateScopes.scopes.find(scope => scope.id === coordinateScopes.defaultScope)?.coordinate;
 
-  // frame 复用 resolveFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined
+  // frame 复用 resolveCoordinateFrame：投影几何与 provenance 无关（provenance 只影响 guide 层 id/meta），故传 undefined
   // scaleRegistry 与 lowering 同源（prepareRows 解析），保证 position 投影 parity
-  const { frame }: { frame: CoordinateFrame } = resolveFrame({
-    node: spec,
+  const coordinateGuides = spec.guides ?? [];
+  const coordinateContext: CoordinateResolveContext = {
+    coordinate: defaultCoordinate,
     rows,
     fieldTypes,
     width,
@@ -180,10 +180,16 @@ export const createPlotLocator = (
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
     margin: options.margin,
     provenance: undefined,
-    coordinates: options.coordinates,
+    coordinateRegistry: resolveCoordinateRegistry(options.coordinates),
     scaleRegistry,
     markDataViews,
-  });
+    legendReserve: legendReserveOf(coordinateGuides.flatMap(guide => (guide.type === PlotGuide.Legend ? [guide] : []))),
+    lowerGuide,
+    lowerCustomAxis,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
+  };
+  const { frame }: { frame: CoordinateFrame } = resolveCoordinateFrame(spec, coordinateContext);
 
   // 合成 meta 用的上下文（locator 始终按需合成同构 meta，与 lowering 是否开 datumProvenance 无关）
   const metaContext: ProvenanceContext = {
@@ -207,7 +213,7 @@ export const createPlotLocator = (
   const markOf = (markIndex: number): IRPlotMarkOperation | undefined => spec.marks[markIndex];
   const defaultMarkIndex = 0;
   const anchorFor = (mark: IRPlotMark, row: ExternalRow, ctx: IntervalContext | undefined): [number, number] | null => {
-    if (mark.type !== PlotMark.Interval) return datumAnchor(mark, row, frame, ctx);
+    if (mark.type !== PlotMark.Interval) return datumAnchor(mark, row, frame, { registry: markRegistry }, ctx);
     const geometry = intervalCellGeometry(mark, row, frame, ctx);
     if (geometry === null || !isRenderableCellGeometry(geometry)) return null;
     return cellGeometryAnchor(geometry);
@@ -252,7 +258,10 @@ export const createPlotLocator = (
     return renderEntriesCache;
   };
 
-  const contextualDatum = (transformedIndex: number, opts: PlotLocatorOptions | undefined): ResolvedAnchor | null => {
+  const contextualDatum = (
+    transformedIndex: number,
+    opts: PlotLocatorOptions | undefined,
+  ): PlotAnchorResolution | null => {
     if (!Number.isInteger(transformedIndex) || transformedIndex < 0) return null;
     const found = renderEntries().find(entry => {
       if (entry.transformedIndex !== transformedIndex) return false;
@@ -265,7 +274,10 @@ export const createPlotLocator = (
       : { position: found.position, meta: found.meta, id: found.id };
   };
 
-  const contextualSeries = (value: string | number, opts: PlotLocatorOptions | undefined): ResolvedAnchor | null => {
+  const contextualSeries = (
+    value: string | number,
+    opts: PlotLocatorOptions | undefined,
+  ): PlotAnchorResolution | null => {
     let sumX = 0;
     let sumY = 0;
     let count = 0;

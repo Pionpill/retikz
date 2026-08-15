@@ -3,35 +3,49 @@ import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
 import { JsonObjectSchema } from '@retikz/core';
 import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
-import type { DimensionRole, TickSet } from '../../../contract';
-import type { CategoryOrder } from '../../../providers';
+import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
 import type {
   IRPlotAxisGuide,
   IRPlotChannel,
+  IRPlotCoordinateOperation,
   IRPlotIntervalMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-} from '../../../schemas';
-import type { CoordinateFrameResolution, MarkDataView, ResolveFrameParams } from '../types';
+  IRPlotSpec,
+} from '../../schemas';
+import type { CategoryOrder } from '../scale';
+import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
-import { isBuiltinScaleOperation } from '../../../contract';
+import { isBuiltinScaleOperation } from '../../contract';
 import {
-  assertBaselineScaleCompatible,
-  assertScaleFieldCompatible,
   buildProportionalIntervals,
   channelValue,
   createPositionChannelDefinitions,
-  deriveScale,
-  orderedCategoryDomain,
   proportionalIntervalDomainValues,
-  resolveCoordinateRegistry,
   resolveIntervalBound,
+} from '../../providers';
+import { IntervalBoundKind, isBuiltinMark, PathClosureKind, PlotGuide, PlotMark, PlotScale } from '../../schemas';
+import {
+  assertBaselineScaleCompatible,
+  assertScaleFieldCompatible,
+  derivePositionScale,
+  orderedCategoryDomain,
   resolvePositionScale,
-} from '../../../providers';
-import { IntervalBoundKind, isBuiltinMark, PathClosureKind, PlotMark, PlotScale } from '../../../schemas';
-import { lowerCustomAxis, lowerGuide } from '../../guide';
-import { isAxisGuide, isLegendGuide, resolveCoordinateScopeRegistry } from '../composition';
-import { legendReserveOf } from '../legend';
+} from '../scale';
+
+/** 查找当前 coordinate operation 对应的 definition，并集中报告未注册坐标系 */
+export const resolveCoordinateDefinition = (
+  operation: IRPlotCoordinateOperation,
+  context: Pick<CoordinateResolveContext, 'coordinateRegistry'>,
+): AnyCoordinateDefinition => {
+  const definition = context.coordinateRegistry.get(operation.type);
+  if (definition === undefined) {
+    throw new Error(
+      `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
+    );
+  }
+  return definition;
+};
 
 /**
  * interval mark 在某位置 role 对 scale 域的贡献值（按 bounds 来源）
@@ -208,9 +222,11 @@ const assertRequiredPositionChannels = (
  * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
  *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移。
  */
-export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolution => {
+export const resolveCoordinateFrame = (
+  source: IRPlotSpec,
+  context: CoordinateResolveContext,
+): CoordinateFrameResolution => {
   const {
-    node,
     rows,
     fieldTypes,
     width,
@@ -221,28 +237,23 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     layoutReserve,
     plotAreaOverride,
     roleRangeOverrides,
-    provenance,
-    coordinates,
     scaleRegistry,
-  } = params;
-  const markDataViews = params.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
+    provenance,
+    coordinateRegistry,
+    lowerGuide,
+    lowerCustomAxis,
+  } = context;
+  const node = source;
+  const markDataViews = context.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
-    params.roleMarkDataViews?.[role] ?? markDataViews;
-  const registry = resolveCoordinateScopeRegistry(node);
-  const coordinateOperation =
-    node.coordinate ?? registry.scopes.find(scope => scope.id === registry.defaultScope)?.coordinate;
+    context.roleMarkDataViews?.[role] ?? markDataViews;
+  const coordinateOperation = context.coordinate ?? node.coordinate;
   if (coordinateOperation === undefined) {
-    throw new Error(`lowerPlots: default coordinate view "${registry.defaultScope}" is not registered`);
+    throw new Error('lowerPlots: default coordinate view is not registered');
   }
-  const coordinateRegistry = resolveCoordinateRegistry(coordinates);
-  const coordinateDefinition = coordinateRegistry.get(coordinateOperation.type);
-  if (coordinateDefinition === undefined) {
-    throw new Error(
-      `lowerPlots: coordinate type "${coordinateOperation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
-    );
-  }
+  const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, { coordinateRegistry });
   const roles = coordinateDefinition.roles;
-  const axisGuides = (node.guides ?? []).filter(isAxisGuide);
+  const axisGuides = (node.guides ?? []).filter((guide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis);
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   const positionChannels = createPositionChannelDefinitions(roles);
 
@@ -391,7 +402,8 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
       const found = scaleByName.get(scaleName);
       if (!found) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
       if (node.data.model !== undefined) {
-        for (const type of types) assertScaleFieldCompatible(role, found.type, type, scaleName, scaleRegistry);
+        for (const type of types)
+          assertScaleFieldCompatible(role, found.type, type, scaleName, { registry: scaleRegistry });
       }
       def = found;
     } else {
@@ -401,7 +413,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
           `lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`,
         );
       }
-      def = deriveScale(distinct[0], `__${role}`);
+      def = derivePositionScale(distinct[0], `__${role}`);
     }
     // order 注入：仅当字段有非默认 order 且该 scale 是内置 band/point 且 domain 未显式给（显式 domain 优先、压过 order）
     if (
@@ -432,8 +444,6 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
   ): IRPlotScaleOperation => resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
-  const legendReserve = legendReserveOf((node.guides ?? []).filter(isLegendGuide));
-
   JsonObjectSchema.parse(coordinateOperation);
   const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as never;
   JsonObjectSchema.parse(parsedCoordinateOperation);
@@ -444,7 +454,7 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     ...(labelGap !== undefined ? { labelGap } : {}),
     ...(margin !== undefined ? { margin } : {}),
     ...(layoutReserve !== undefined ? { layoutReserve } : {}),
-    legendReserve,
+    legendReserve: context.legendReserve ?? {},
     ...(plotAreaOverride !== undefined ? { plotAreaOverride } : {}),
     ...(roleRangeOverrides !== undefined ? { roleRangeOverrides } : {}),
     ...(provenance !== undefined ? { provenance } : {}),
@@ -453,9 +463,13 @@ export const resolveFrame = (params: ResolveFrameParams): CoordinateFrameResolut
     collectPositionValues: (role, opts) =>
       collectValues(role, opts?.axis, roleChannelOf(role), opts?.includeBaseline ?? false),
     collectAxisTicks,
+    resolveGuideTicks: context.resolveGuideTicks,
+    resolveVisibleGuideTicks: context.resolveVisibleGuideTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
-    buildPositionScale: (def, values, range) => resolvePositionScale(def, values, [range[0], range[1]], scaleRegistry),
-    assertBaselineScaleCompatible: (scaleType, marks) => assertBaselineScaleCompatible(scaleType, marks, scaleRegistry),
+    buildPositionScale: (def, values, range) =>
+      resolvePositionScale(def, values, [range[0], range[1]], { registry: scaleRegistry }),
+    assertBaselineScaleCompatible: (scaleType, marks) =>
+      assertBaselineScaleCompatible(scaleType, marks, { registry: scaleRegistry }),
     axisGuides,
     lowerGuide,
     lowerCustomAxis,

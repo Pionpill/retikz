@@ -1,6 +1,6 @@
 ---
 title: Plot
-description: Plot 模块总览：从 React、Vanilla Input 或 InputPlot 形成 Plot IR，接入外部数据，经 lowering 下沉到 Core IR、Scene 与渲染器。
+description: Plot 模块总览：从 React props、Vanilla InputPlot 或 Plot IR 进入统一输入路径，接入外部数据，经 lowering 下沉到 Core IR、Scene 与渲染器。
 ---
 
 `@retikz/plot` 是 Viz 组的绘图语义层。它用可序列化的 Plot IR 描述字段绑定、比例尺、坐标系、图元、辅助元素与组合关系，再把这些高层语义下沉为 Kernel 能编译的 Core IR。
@@ -15,7 +15,7 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 ## 从声明到 Scene
 
-1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla `plot()` 与完整 `InputPlot` 最终都形成同一份 JSON-safe `IRPlotSpec`。React DSL 只是 authoring 入口，不拥有另一套图表语义。
+1. **形成 Plot IR**：`<Plot>` 子组件、Vanilla `plot()` 与完整 `InputPlot` 最终都形成同一份 JSON-safe `IRPlotSpec`。`InputPlot` 是 `@retikz/plot-vanilla` 的 TypeScript authoring 输入；React DSL 只是桥接入口，不拥有另一套图表语义。
 2. **接入外部数据**：IR 通过 `data.reference` 指向运行时数据集。字段解析、通用变换与来源追溯由 Data 提供，数据行本身不进入 IR。
 3. **解析绘图语义**：lowering 依次处理数据变换、通道绑定、比例尺和坐标投影，再由 mark 与 guide definition 生成可下沉结果。内置与自定义能力走同一套 registry、resolver 与 consumer 路径。
 4. **下沉到 Core IR**：`lowerPlots` 作为 Tier 2 composite definition，把 Plot 节点展开为 `Scope`、`Node`、`Path` 等 Core IR；lineage、locator 和 diagnostics 作为运行时结果单独返回。
@@ -33,7 +33,7 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
       label: 'React 子组件收集后交给 Plot Vanilla 归一化',
       path: 'packages/viz/plot-react/src/adapter/build-plot-spec.ts',
       startLine: 14,
-      endLine: 22,
+      endLine: 20,
     },
     {
       label: 'Plot Vanilla 将 InputPlot 规范化为 Plot Source IR',
@@ -58,13 +58,13 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 ## 三个包怎样分工
 
-| 包                     | 拥有的职责                                                 | 典型入口                                                      |
-| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
-| `@retikz/plot`         | Plot IR schema、Definition / registry、领域解析与 lowering | `PlotSpecSchema`、`lowerPlots`                                |
-| `@retikz/plot-react`   | React props / children 收集与 React 宿主接线               | `<Plot>`                                                      |
-| `@retikz/plot-vanilla` | typed authoring、InputEmbed 接线、SSR 与无 DOM 渲染        | `InputPlot`、`normalizePlot()`、`embedPlot()`、`renderPlot()` |
+| 包                     | 拥有的职责                                                       | 典型入口                                                   |
+| ---------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| `@retikz/plot`         | `IRPlot*` schema、Definition / registry、领域解析与 lowering     | `PlotSpecSchema`、`lowerPlots`                             |
+| `@retikz/plot-react`   | React `XxxProps` / children 收集与 React 宿主接线                | `<Plot>`                                                   |
+| `@retikz/plot-vanilla` | `InputPlot*` 类型、normalize、InputEmbed 接线、SSR 与无 DOM 渲染 | `plot()`、`normalizePlot()`、`embedPlot()`、`renderPlot()` |
 
-三包共享 `@retikz/plot` 的 IR 与 lowering 真源。`@retikz/plot-vanilla` 是 framework-neutral 的 authoring owner：它把 `InputPlot` 的 `facets`、`scaffolds` 与 axis / topology binding 展开为 `IRPlotSpec`，但不会对已类型化输入重复 schema 校验。未知外部数据仍应通过 Plot schema 或 parser 进入 IR。
+三包共享 `@retikz/plot` 的 IR 与 lowering 真源。`@retikz/plot-vanilla` 是 framework-neutral 的 authoring owner：它拥有 TypeScript-only `InputPlot*`、`PlotSource` 与 `InputPlotEmbed`，把 `InputPlot` 的 `facets`、`scaffolds` 与 axis / topology binding 展开为 `IRPlotSpec`，但不会对已类型化输入重复 schema 校验。只有 `IRPlot*` 是持久化 schema 类型；未知外部数据仍应通过 Plot schema 或 parser 进入 IR。
 
 React 只负责收集 JSX / props 并调度 Plot Vanilla；它不维护平行的 Plot IR builder、schema parse 或 lowering。已经持有完整 `IRPlotSpec` 时，可以直接交给运行时，无需再次套 authoring helper。
 

@@ -6,15 +6,9 @@ import { describe, expect, it } from 'vitest';
 import type { IRPlotSpec } from '../../src';
 
 import * as plot from '../../src';
-import {
-  applyPlotThemeToTokens,
-  getDefaultPlotThemePreset,
-  PlotResolvedThemeTokensSchema,
-  plotThemeFromTokens,
-  PlotThemeResolutionSchema,
-  PlotThemeToken,
-  resolvePlotAxisThemeTokens,
-} from '../../src';
+import { getDefaultPlotThemePreset } from '../../src/providers/theme';
+import { applyPlotThemeToTokens, plotThemeFromTokens, resolvePlotAxisThemeTokens } from '../../src/resolve/theme';
+import { PlotThemeResolutionSchema, PlotThemeToken, PlotThemeTokenResolutionSchema } from '../../src/schemas';
 
 type PlotThemeResolution = {
   style: ResolvedTheme['style'];
@@ -164,14 +158,14 @@ describe('Plot theme resolver', () => {
     expect(getPreset).toBeDefined();
     for (const mode of Object.values(ThemeMode)) {
       const preset = getPreset?.(mode);
-      expect(PlotResolvedThemeTokensSchema.parse(preset)).toEqual(preset);
+      expect(PlotThemeTokenResolutionSchema.parse(preset)).toEqual(preset);
       expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitleEnabled]).toBe(true);
       expect((preset as Record<string, unknown>)[PlotThemeToken.AxisTitlePadding]).toBe(12);
       expect((preset as Record<string, unknown>)[PlotThemeToken.AxisGridIncludeDomain]).toBe(false);
 
       const incomplete = structuredClone(preset) as Record<string, unknown>;
       delete incomplete[PlotThemeToken.AxisGridIncludeDomain];
-      expect(PlotResolvedThemeTokensSchema.safeParse(incomplete).success).toBe(false);
+      expect(PlotThemeTokenResolutionSchema.safeParse(incomplete).success).toBe(false);
     }
   });
 
@@ -479,7 +473,7 @@ describe('Plot theme resolver', () => {
 
   it('让启用后的每个 canonical token 都经正式 native theme mapping 唯一投影', () => {
     const preset = getDefaultPlotThemePreset(ThemeMode.Light);
-    const enabled = PlotResolvedThemeTokensSchema.parse({
+    const enabled = PlotThemeTokenResolutionSchema.parse({
       ...preset,
       [PlotThemeToken.AxisGridEnabled]: true,
     });

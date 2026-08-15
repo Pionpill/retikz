@@ -15,8 +15,8 @@ import type {
   FacetTuple,
 } from './types';
 
-import { slug } from '../../../contract';
-import { FacetEmptyPolicy } from '../../../schemas';
+import { slug } from '../../contract';
+import { FacetEmptyPolicy } from '../../schemas';
 
 /** 判断 facet header 是否启用 */
 export const isFacetHeaderVisible = (facet: FacetGrid, dimension: FacetLabelDimension): boolean => {

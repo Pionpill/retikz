@@ -1,4 +1,4 @@
-import type { IRBoxSpacing, IRStepLabel } from '@retikz/core';
+import type { IRBoxSpacing } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
@@ -75,14 +75,6 @@ export type IRPlotPointMark = z.infer<typeof PointMarkSchema>;
 
 /** mark 值来源变体 */
 export type MarkValueKindValue = ValueOf<typeof MarkValueKind>;
-
-/** mark 样式值；需要 scale 的属性在此基础上交叉 `{ scale?: string }` */
-export type MarkValueType<T> =
-  | { kind: typeof MarkValueKind.Field; value: string }
-  | { kind: typeof MarkValueKind.Constant; value: T };
-
-/** mark 样式值，字段变体可绑定 scale */
-export type ScaledMarkValueType<T> = MarkValueType<T> & { scale?: string };
 
 /** PointMark 颜色样式值（field / constant） */
 export type IRPlotPointColorStyle = z.infer<typeof PointColorStyleSchema>;
@@ -192,18 +184,8 @@ export type IRPlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
 /** relation 路由步骤标签声明 */
 export type IRPlotRelationStepLabel = z.infer<typeof RelationStepLabelSchema>;
 
-/** relation 路由步骤标签输入，沿用 core step label 并替换文本字段 */
-export type RelationStepLabelInput = Omit<IRStepLabel, 'text'> & {
-  text: IRPlotRelationStepLabel['text'];
-};
-
 /** relation 路由中的单步声明 */
 export type IRPlotRelationRouteStep = z.infer<typeof RelationRouteStepSchema>;
-
-/** relation 路由单步输入，允许使用 adapter 侧标签输入 */
-export type RelationRouteStepInput = Omit<IRPlotRelationRouteStep, 'label'> & {
-  label?: RelationStepLabelInput;
-};
 
 /** mark 局部数据变换声明 */
 export type IRPlotMarkTransform = z.infer<typeof MarkTransformSchema>;
@@ -237,12 +219,6 @@ export type IRPlotRelationPathSpecificOptions = z.infer<typeof RelationPathSpeci
 
 /** relation path 几何声明 */
 export type IRPlotRelationPathGeometry = z.infer<typeof RelationPathGeometrySchema>;
-
-/** relation path 几何输入，允许 adapter 侧标签和路由输入 */
-export type RelationPathGeometryInput = Omit<IRPlotRelationPathGeometry, 'label' | 'route'> & {
-  label?: RelationStepLabelInput;
-  route?: Array<RelationRouteStepInput>;
-};
 
 /** relation ribbon 专属选项声明 */
 export type IRPlotRelationRibbonSpecificOptions = z.infer<typeof RelationRibbonSpecificOptionsSchema>;

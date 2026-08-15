@@ -3,7 +3,14 @@ import type { InputEmbedContext } from '@retikz/vanilla';
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { createPlotProvider, embedPlot, plot, PlotInputEmbedAdapter, resolvePlotContribution } from '../src';
+import {
+  createPlotProvider,
+  embedPlot,
+  plot,
+  PlotInputEmbedAdapter,
+  plotSpecOf,
+  resolvePlotContribution,
+} from '../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -55,11 +62,22 @@ const datasets = {
 };
 
 describe('Plot Vanilla Tier2 adapter', () => {
-  it('在 adapter 内将 Plot authoring Input 归一为 Core contribution', () => {
-    const input = { spec: salesInput('sales'), datasets };
+  it('plotSpecOf 只归一化显式 input 并原样返回显式 IR', () => {
+    const spec = salesSpec('sales');
 
-    expect(input.spec).not.toHaveProperty('namespace');
-    expect(input.spec).not.toHaveProperty('type');
+    expect(plotSpecOf({ spec })).toBe(spec);
+    expect(plotSpecOf({ input: salesInput('sales') })).toMatchObject({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'sales',
+    });
+  });
+
+  it('在 adapter 内将 Plot authoring Input 归一为 Core contribution', () => {
+    const input = { input: salesInput('sales'), datasets };
+
+    expect(input.input).not.toHaveProperty('namespace');
+    expect(input.input).not.toHaveProperty('type');
     expect(PlotInputEmbedAdapter.lower(input, contextOf('panel')).node).toMatchObject({
       namespace: 'plot',
       type: 'plot',
@@ -67,7 +85,17 @@ describe('Plot Vanilla Tier2 adapter', () => {
     });
   });
 
-  it('为完整 PlotSpec 贡献 Plot provider 及其 Standard Shape 依赖闭包', () => {
+  it('显式 PlotSpec source 直接复用原 IR 对象', () => {
+    const spec = salesSpec('sales');
+    const contribution = PlotInputEmbedAdapter.lower(
+      { spec, datasets, preserveRootIdentity: true },
+      contextOf('panel'),
+    );
+
+    expect(contribution.node).toBe(spec);
+  });
+
+  it('exposes one Plot-owned contribution builder for complete PlotSpec inputs', () => {
     const spec = salesSpec('sales');
     const result = resolvePlotContribution({ spec, datasets, lowerOptions: { width: 360, height: 200 } });
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
@@ -83,6 +111,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
       { capability: 'pathKind', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
+    expect(result.contribution.providers).toHaveLength(4);
     expect(result.contribution.providers[3]).toMatchObject({
       key: provider.key,
       dependencies: [
@@ -97,7 +126,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
     const inputScene = scene({
-      layers: [layer('chart', [embedPlot('sales-panel', spec, datasets, { width: 360, height: 200 })])],
+      layers: [layer('chart', [embedPlot('sales-panel', { spec }, datasets, { width: 360, height: 200 })])],
     });
     const svg = renderToSvgString(inputScene, {
       adapters: [PlotInputEmbedAdapter],
@@ -112,7 +141,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
   });
 
   it('保持 lineage 在 PlotSpec、Core IR 与 Scene meta 之外', () => {
-    const inputScene = scene([embedPlot('sales-panel', salesSpec('sales'), datasets)]);
+    const inputScene = scene([embedPlot('sales-panel', { spec: salesSpec('sales') }, datasets)]);
     const normalized = normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] });
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
@@ -175,6 +204,12 @@ describe('Plot Vanilla Tier2 adapter', () => {
       { capability: 'pathKind', name: 'ribbon' },
       { capability: 'composite', namespace: 'plot', type: 'plot' },
     ]);
+    expect(first.providerDependencies.providers).toHaveLength(4);
+    expect(first.providerDependencies.providers[3]?.key).toEqual({
+      capability: 'composite',
+      namespace: 'plot',
+      type: 'plot',
+    });
     expect(first.providerDependencies.providers[3]?.dependencies).toEqual([
       { capability: 'shape', name: 'sector' },
       { capability: 'shape', name: 'contour' },
@@ -185,13 +220,15 @@ describe('Plot Vanilla Tier2 adapter', () => {
   });
 
   it('缺失 dataset reference 时 fail-loud', () => {
-    const inputScene = scene([embedPlot('missing', salesSpec(), {})]);
+    const inputScene = scene([embedPlot('missing', { spec: salesSpec() }, {})]);
 
     expect(() => renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).toThrow(/sales/i);
   });
 
   it.each(['', '   ', '\u2003', '\ufeff'])('helper and adapter reject blank embed id %j with the Plot prefix', id => {
-    expect(() => embedPlot(id, salesSpec(), datasets)).toThrowError('plot vanilla: embed id must be non-empty');
+    expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(
+      'plot vanilla: embed id must be non-empty',
+    );
     expect(() => PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id))).toThrowError(
       'plot vanilla: embed id must be non-empty',
     );

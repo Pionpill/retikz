@@ -169,7 +169,7 @@ const textForLabel = (
   return labelOf(label.content, row);
 };
 
-const normalizeResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined => {
+const collapseResolvedLabels = <T>(labels: Array<T>): T | Array<T> | undefined => {
   if (labels.length === 0) return undefined;
   return labels.length === 1 ? labels[0] : labels;
 };
@@ -212,7 +212,7 @@ export const resolveNodeMarkLabels = (
     if (text === undefined) return [];
     return [normalizeNodeLabel({ ...omitContent(label), text })];
   });
-  return normalizeResolvedLabels(resolved);
+  return collapseResolvedLabels(resolved);
 };
 
 /** 把 plot geometry label 配置解析为 core Path label */
@@ -226,7 +226,7 @@ export const resolveGeometryMarkLabels = (
     if (text === undefined) return [];
     return [normalizeGeometryLabel({ ...omitContent(label), text })];
   });
-  return normalizeResolvedLabels(resolved);
+  return collapseResolvedLabels(resolved);
 };
 
 /**

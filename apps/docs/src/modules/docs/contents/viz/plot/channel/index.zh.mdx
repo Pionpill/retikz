@@ -14,31 +14,31 @@ description: '通道把字段或固定值连接到位置、颜色、大小等视
 
 ## 技术原理（首次阅读可跳过）
 
-React 图元属性会被整理成 PlotSpec（一份可以序列化和保存的绘图配置）。位置通道交给坐标系解释；其他通道通过统一的通道注册表查找处理规则，再转换为可见属性或图例信息。
+React 图元属性会被整理成 `IRPlotSpec`（一份可以序列化和保存的绘图配置）。位置通道交给坐标系解释；其他通道通过统一的通道注册表查找处理规则，再转换为可见属性或图例信息。
 
 <ComponentPreview files="channel-flow" size="lg" hideCode />
 
-PlotSpec 只保存字段或常量绑定，不保存函数。内置通道与通过 `channelDefinitions` 注入的自定义通道共用同一套注册、解析和交付流程，因此扩展通道不需要增加另一套配置格式。
+`IRPlotSpec` 只保存字段或常量绑定，不保存函数。内置通道与通过 `channelDefinitions` 注入的自定义通道共用同一套注册、解析和交付流程，因此扩展通道不需要增加另一套配置格式。
 
 <SourceLinks
   sources={[
     {
       label: '位置绑定按坐标系角色读取',
-      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
-      startLine: 244,
-      endLine: 256,
+      path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
+      startLine: 250,
+      endLine: 263,
     },
     {
       label: '内置与自定义通道合并到统一注册表',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 77,
-      endLine: 114,
+      startLine: 67,
+      endLine: 93,
     },
     {
       label: '绑定按通道类型解析和分派',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 120,
-      endLine: 190,
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 44,
+      endLine: 123,
     },
   ]}
 />

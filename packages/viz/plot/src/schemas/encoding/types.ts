@@ -1,4 +1,3 @@
-import type { IRGeometryLabel, IRNodeLabel } from '@retikz/core';
 import type { z } from 'zod';
 
 import type {
@@ -31,13 +30,13 @@ export type IRPlotMarkChannelEncoding = z.infer<typeof MarkChannelEncodingSchema
 /** Mark channel bindings: positional channels plus shared mark channels. */
 export type IRPlotEncoding = z.infer<typeof EncodingSchema>;
 
-/** Legacy size channel helper schema type. PointMark canonical size is top-level MarkValueType. */
+/** Legacy size channel helper schema type. PointMark canonical size is a schema-defined style field. */
 export type IRPlotSizeChannel = z.infer<typeof SizeChannelSchema>;
 
-/** Legacy opacity channel helper schema type. PointMark canonical opacity is top-level MarkValueType. */
+/** Legacy opacity channel helper schema type. PointMark canonical opacity is a schema-defined style field. */
 export type IRPlotOpacityChannel = z.infer<typeof OpacityChannelSchema>;
 
-/** Legacy shape channel helper schema type. PointMark canonical shape is top-level MarkValueType. */
+/** Legacy shape channel helper schema type. PointMark canonical shape is a schema-defined style field. */
 export type IRPlotShapeChannel = z.infer<typeof ShapeChannelSchema>;
 
 /** PointMark encoding: positional channels plus optional text only. */
@@ -52,33 +51,14 @@ export type IRPlotMarkLabelContent = z.infer<typeof MarkLabelContentSchema>;
 /** Host datum label config aligned with core NodeLabelSchema. */
 export type IRPlotMarkNodeLabel = z.infer<typeof MarkNodeLabelSchema>;
 
-/** Host datum label input using content instead of core text. */
-export type MarkNodeLabelInput = Omit<IRNodeLabel, 'text'> & {
-  content: IRPlotMarkLabelContent;
-};
-
 /** Host geometry label config aligned with core GeometryLabelSchema. */
 export type IRPlotMarkGeometryLabel = z.infer<typeof MarkGeometryLabelSchema>;
 
-/** Host geometry label input using content instead of core text. */
-export type MarkGeometryLabelInput = Omit<IRGeometryLabel, 'text'> & {
-  content: IRPlotMarkLabelContent;
-};
-
-/** Single or array node label input. */
+/** Single or array node label declaration. */
 export type IRPlotMarkNodeLabelList = z.infer<typeof MarkNodeLabelListSchema>;
 
-/** Public node label input shorthand accepted by mark adapters. */
-export type MarkNodeLabelListInput = MarkNodeLabelInput | Array<MarkNodeLabelInput>;
-
-/** Single or array geometry label input. */
+/** Single or array geometry label declaration. */
 export type IRPlotMarkGeometryLabelList = z.infer<typeof MarkGeometryLabelListSchema>;
-
-/** Public geometry label input shorthand accepted by mark adapters. */
-export type MarkGeometryLabelListInput = MarkGeometryLabelInput | Array<MarkGeometryLabelInput>;
 
 /** Host-inferred mark label config. */
 export type IRPlotMarkLabel = z.infer<typeof MarkLabelSchema>;
-
-/** Union of node and geometry label inputs before schema normalization. */
-export type MarkLabelInput = MarkNodeLabelInput | MarkGeometryLabelInput;

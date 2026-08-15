@@ -1,6 +1,7 @@
-import type { IRNode, IRPath, IRShapeValue } from '@retikz/core';
+import type { IRNode, IRPath } from '@retikz/core';
 
-import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotResolvedThemeTokens, IRPlotTheme } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotLegendGuide, IRPlotTheme, IRPlotThemeTokenResolution } from '../../schemas';
+import type { EffectiveLegendGuideTokens, EffectivePlotGuideTheme, EffectivePlotPalette } from './types';
 
 import { LegendSymbolFit } from '../../schemas';
 import { plotAxisThemeFromTokens } from './mapping';
@@ -18,60 +19,9 @@ type AxisTitleToken = Exclude<NonNullable<IRPlotAxisGuide['title']>, string>;
 type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
 type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 
-/** Plot palette 解析结果：所有默认配色入口收敛到一个对象 */
-export type ResolvedPlotPalette = {
-  /** 分类 scale 默认颜色 */
-  categorical: Array<string>;
-  /** 无 color 编码的 mark / series 默认颜色 */
-  series: Array<string>;
-  /** sector / pie 默认颜色 */
-  sector: Array<string>;
-  /** 连续单向色阶默认 scheme */
-  sequential: string;
-  /** 发散色阶默认 scheme */
-  diverging: string;
-  /** 分类 shape 通道默认形状 */
-  shape: Array<IRShapeValue>;
-};
-
-/** Plot legend 解析后的视觉 token */
-export type ResolvedLegendGuideTokens = Required<
-  Pick<
-    LegendStyle,
-    | 'swatchSize'
-    | 'swatchGap'
-    | 'entryGap'
-    | 'titleGap'
-    | 'rampLength'
-    | 'rampThickness'
-    | 'symbolSize'
-    | 'symbolScale'
-    | 'symbolFit'
-  >
-> & {
-  /** Legend title 文本样式 */
-  title: GuideTextStyle;
-  /** Legend label 文本样式 */
-  label: GuideTextStyle;
-};
-
-/** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme */
-export type ResolvedPlotGuideTheme = {
-  /** 绘图区视觉样式 */
-  plotArea?: IRPlotTheme['plotArea'];
-  /** 全局 guide 文本默认样式 */
-  typography: GuideTextStyle;
-  /** 解析后的 palette */
-  palette: ResolvedPlotPalette;
-  /** Axis 视觉默认值 */
-  axis: NonNullable<IRPlotTheme['axis']>;
-  /** Legend 视觉默认值 */
-  legend: ResolvedLegendGuideTokens;
-};
-
 const DEFAULT_TYPOGRAPHY: GuideTextStyle = { font: { size: 12 }, textColor: 'currentColor' };
 
-const DEFAULT_LEGEND: ResolvedLegendGuideTokens = {
+const DEFAULT_LEGEND: EffectiveLegendGuideTokens = {
   swatchSize: 14,
   swatchGap: 6,
   entryGap: 6,
@@ -107,7 +57,7 @@ const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefin
  * 把完整原生 Plot theme 解析为 guide lowering 消费态
  * @description token cascade 已由 resolvePlotTheme 完成；此处只补齐 guide 文本继承并保留正式 Plot theme 语义
  */
-export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotPalette): ResolvedPlotGuideTheme => {
+export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: EffectivePlotPalette): EffectivePlotGuideTheme => {
   const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme.typography);
   const legend = theme.legend;
   return {
@@ -133,9 +83,9 @@ export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: ResolvedPlotP
 
 /** 用某个 Axis dimension 的有效 token 替换 guide theme 中的 Axis token 字段 */
 export const resolvePlotAxisGuideTheme = (
-  theme: ResolvedPlotGuideTheme,
-  tokens: IRPlotResolvedThemeTokens,
-): ResolvedPlotGuideTheme => {
+  theme: EffectivePlotGuideTheme,
+  tokens: IRPlotThemeTokenResolution,
+): EffectivePlotGuideTheme => {
   const scoped = plotAxisThemeFromTokens(tokens);
   const global = theme.axis;
   return {
@@ -263,7 +213,7 @@ const mergeAxisGrid = (
  * 合并 axis guide 的主题 token。
  * @description 合并 line/tick line/tick label/title 的视觉字段，以及 grid 视觉与 domain endpoint 默认；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
  */
-export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
+export const resolveAxisGuideTokens = (theme: EffectivePlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
   ...guide,
   ...(theme.axis.line !== undefined
     ? {
@@ -312,9 +262,9 @@ export const resolveAxisGuideTokens = (theme: ResolvedPlotGuideTheme, guide: IRP
  * @description position、orient、channel、scale、ticks、tickLabels.format 等语义字段不参与合并
  */
 export const resolveLegendGuideTokens = (
-  theme: ResolvedPlotGuideTheme,
+  theme: EffectivePlotGuideTheme,
   local: LegendStyle | undefined,
-): ResolvedLegendGuideTokens => ({
+): EffectiveLegendGuideTokens => ({
   swatchSize: local?.swatchSize ?? theme.legend.swatchSize,
   swatchGap: local?.swatchGap ?? theme.legend.swatchGap,
   entryGap: local?.entryGap ?? theme.legend.entryGap,

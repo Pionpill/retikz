@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
-import { PlotColorPaletteSchema, PlotResolvedThemeTokensSchema, PlotShapePaletteSchema } from './style';
+import { PlotColorPaletteSchema, PlotShapePaletteSchema, PlotThemeTokenResolutionSchema } from './style';
 import { PlotAxisThemeTokenRuleSchema } from './token-rule';
 
 const PLOT_THEME_AUTHORED_OVERRIDE_PATHS = ['$spec/plotTheme'] as const;
@@ -40,7 +40,7 @@ export const PlotThemeAuthoredOverrideRecordSchema = z
   .describe('Authored Plot override entry applied after Plot token overrides');
 
 /** scale、mark 与 legend 共享的完整 Plot palette */
-export const ResolvedPlotPaletteSchema = z
+export const PlotPaletteResolutionSchema = z
   .strictObject({
     categorical: PlotColorPaletteSchema.describe('Resolved categorical palette'),
     series: PlotColorPaletteSchema.describe('Resolved mark and series palette'),
@@ -56,7 +56,7 @@ export const PlotThemeResolutionSchema = z
   .strictObject({
     style: z.string().min(1).optional().describe('Optional Theme style selecting a host-injected Plot definition'),
     mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
-    tokens: PlotResolvedThemeTokensSchema.describe('Complete resolved Plot theme token map'),
+    tokens: PlotThemeTokenResolutionSchema.describe('Complete resolved Plot theme token map'),
     tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
     tokenRules: z
       .array(PlotThemeTokenRuleSourceRecordSchema)
@@ -65,7 +65,7 @@ export const PlotThemeResolutionSchema = z
       .array(PlotThemeAuthoredOverrideRecordSchema)
       .describe('Authored native Plot theme inputs in cascade order'),
     plotTheme: PlotThemeSchema.describe('Complete resolved native Plot theme'),
-    palette: ResolvedPlotPaletteSchema.describe('Complete resolved Plot palette'),
+    palette: PlotPaletteResolutionSchema.describe('Complete resolved Plot palette'),
   })
   .superRefine((resolution, context) => {
     const canonical = Object.values(PlotThemeToken);

@@ -5,40 +5,20 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
-import type { PositionScale, TickSet } from '../../../contract';
-import type { GuideTickTimeUnitValue } from '../../../schemas';
+import type { PositionScale, TickSet } from '../../contract';
+import type {
+  GuideTickTimeUnitValue,
+  IRPlotAxisGuide,
+  IRPlotGuideTickLabelFormat,
+  IRPlotGuideTickSource,
+} from '../../schemas';
 
-import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../../schemas';
+import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../schemas';
 
 const MAX_INTERVAL_TICKS = 10_000;
 
-/** axis guide 的刻度来源配置 */
-export type GuideTickSourceInput = {
-  /** 目标刻度数；由 scale 自己决定最终刻度值 */
-  count?: number;
-  /** 显式刻度值；分类 scale 可用字符串，数值 / 时间 scale 会先校验并归一化 */
-  values?: Array<string | number>;
-  /** 固定间隔候选 tick source；优先级低于 values，高于 count */
-  interval?:
-    | { kind: typeof GuideTickIntervalKind.Number; step: number; anchor?: number }
-    | {
-        kind: typeof GuideTickIntervalKind.Time;
-        unit: GuideTickTimeUnitValue;
-        step?: number;
-        anchor?: string | number;
-      }
-    | { kind: typeof GuideTickIntervalKind.Category; step: number; offset?: number };
-  /** 候选 tick 到可见 tick 的抽样策略 */
-  density?:
-    | { kind: typeof AxisTickDensityKind.All }
-    | { kind: typeof AxisTickDensityKind.Sample; maxCount?: number; minGap?: number; preserveEnds?: boolean };
-};
-
-/** axis guide 的刻度标签格式化配置 */
-export type GuideTickLabelFormatInput = {
-  /** d3-format 或 d3-time-format 风格格式字符串；未知 tickKind 的自定义 scale 保留原标签 */
-  format?: string;
-};
+type GuideTickDensity = NonNullable<NonNullable<IRPlotAxisGuide['ticks']>['density']>;
+type GuideTickVisibilitySource = IRPlotGuideTickSource & { density?: GuideTickDensity };
 
 const normalizeExplicitTick = (scale: PositionScale, value: string | number): IRDataScalarValue => {
   if (scale.tickKind === 'category') return value;
@@ -211,7 +191,7 @@ const categoryIntervalTicks = (
 
 const resolveIntervalValues = (
   scale: PositionScale,
-  source: NonNullable<GuideTickSourceInput['interval']>,
+  source: NonNullable<IRPlotGuideTickSource['interval']>,
 ): Array<IRDataScalarValue> => {
   if (source.kind === GuideTickIntervalKind.Number) return numberIntervalTicks(scale, source.step, source.anchor);
   if (source.kind === GuideTickIntervalKind.Time)
@@ -225,8 +205,8 @@ const resolveIntervalValues = (
  */
 export const resolveGuideTicks = (
   scale: PositionScale,
-  source?: GuideTickSourceInput,
-  labelFormat?: GuideTickLabelFormatInput,
+  source?: IRPlotGuideTickSource,
+  labelFormat?: IRPlotGuideTickLabelFormat,
 ): TickSet => {
   if (source?.values !== undefined) {
     const values = source.values.map(value => normalizeExplicitTick(scale, value));
@@ -270,7 +250,7 @@ const pickSampleIndices = (indices: ReadonlyArray<number>, maxCount: number, pre
 /** 按 density 把候选 tick set 抽样成 visible tick set。 */
 export const resolveVisibleGuideTicks = (
   ticks: TickSet,
-  source: GuideTickSourceInput | undefined,
+  source: GuideTickVisibilitySource | undefined,
   coordinate: (value: IRDataScalarValue) => number,
 ): TickSet => {
   const density = source?.density;

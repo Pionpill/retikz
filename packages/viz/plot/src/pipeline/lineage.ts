@@ -1,21 +1,15 @@
 import type { JsonValue } from '@retikz/core';
-import type {
-  DataLineageOptions,
-  DataLineageRun,
-  DataSourceIdentity,
-  ExternalDatasets,
-  ExternalRow,
-} from '@retikz/data';
+import type { DataLineageRun, DataSourceIdentity, ExternalDatasets, ExternalRow } from '@retikz/data';
 
 import { applyTransformsWithLineage, resolveFieldPath, tagSourceIndex } from '@retikz/data';
 
 import type {
   PlotDatumLineage,
   PlotHostLineageMetadata,
+  PlotLineageAnchorResolution,
   PlotLineageLocator,
   PlotLineageLowerResult,
   PlotLineageOptions,
-  PlotLineageResolvedAnchor,
   PlotMarkDataLineage,
   PlotMarkLineage,
   PlotRowValueOptions,
@@ -25,6 +19,7 @@ import type {
 import type { IRPlotMarkOperation, IRPlotScaleOperation, IRPlotSpec, IRPlotTransform } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
 
+import { resolvePlotLineageOptions } from '../resolve/lineage';
 import { CoordinateArrangementKind } from '../schemas';
 import { lowerPlots, prepareRows } from './expand';
 import { createPlotLocator } from './locator';
@@ -35,59 +30,6 @@ export type PlotLineageLowerOptions = LowerPlotsOptions & {
   lineage?: false | PlotLineageOptions;
   /** 宿主提供的 JSON-safe lineage metadata */
   hostLineageMetadata?: PlotHostLineageMetadata;
-};
-
-type ResolvedPlotLineageOptions = {
-  data: DataLineageOptions;
-  markIdentity: boolean;
-  markEncoding: boolean;
-  transformScopes: boolean;
-  scaleMappings: boolean;
-  layoutContext: boolean;
-  locatorAnchors: boolean;
-  rowValues: false | PlotRowValueOptions;
-  hostMetadata: false | NonNullable<PlotLineageOptions['hostMetadata']>;
-};
-
-/** 校验 rowValues，避免默认记录整行 */
-const normalizeRowValueOptions = (value: false | PlotRowValueOptions | undefined): false | PlotRowValueOptions => {
-  if (value === undefined || value === false) return false;
-  if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
-    throw new Error('plot lineage: rowValues.maxRows must be a positive integer');
-  }
-  if (!Array.isArray(value.fields) || value.fields.length === 0) {
-    throw new Error('plot lineage: rowValues.fields must be a non-empty field whitelist');
-  }
-  return { maxRows: value.maxRows, fields: [...value.fields] };
-};
-
-/** 解析 plot lineage 开关默认值 */
-const normalizePlotLineageOptions = (options: false | PlotLineageOptions | undefined): ResolvedPlotLineageOptions => {
-  if (options === false) {
-    return {
-      data: { sourceIdentity: false, transformSteps: false },
-      markIdentity: false,
-      markEncoding: false,
-      transformScopes: false,
-      scaleMappings: false,
-      layoutContext: false,
-      locatorAnchors: false,
-      rowValues: false,
-      hostMetadata: false,
-    };
-  }
-  const value = options ?? {};
-  return {
-    data: value.data ?? {},
-    markIdentity: value.markIdentity ?? true,
-    markEncoding: value.markEncoding ?? true,
-    transformScopes: value.transformScopes ?? true,
-    scaleMappings: value.scaleMappings ?? false,
-    layoutContext: value.layoutContext ?? false,
-    locatorAnchors: value.locatorAnchors ?? false,
-    rowValues: normalizeRowValueOptions(value.rowValues),
-    hostMetadata: value.hostMetadata ?? false,
-  };
 };
 
 /** 把任意值裁剪成 JSON-safe metadata */
@@ -267,7 +209,7 @@ const buildPlotLineage = (
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions,
 ): PlotLineageLowerResult['lineage'] => {
-  const lineageOptions = normalizePlotLineageOptions(options.lineage);
+  const lineageOptions = resolvePlotLineageOptions(options.lineage);
   const dataset = datasets[spec.data.reference];
   const ingested = tagSourceIndex(dataset);
   const { normalized, transformRegistry, transformContext } = prepareRows(spec, datasets, options, ingested);
@@ -341,7 +283,7 @@ export const createPlotLineageLocator = (
 ): PlotLineageLocator => {
   const locator = createPlotLocator(spec, datasets, options);
   const { lineage } = lowerPlotWithLineage(spec, datasets, options);
-  const lineageOptions = normalizePlotLineageOptions(options.lineage);
+  const lineageOptions = resolvePlotLineageOptions(options.lineage);
 
   const withLocatorAnchor = <T extends PlotDatumLineage | PlotSeriesLineage>(
     value: T,
@@ -355,7 +297,7 @@ export const createPlotLineageLocator = (
   const wrapDatum = (
     address: string,
     anchor: ReturnType<typeof locator.datum> | null,
-  ): PlotLineageResolvedAnchor | null => {
+  ): PlotLineageAnchorResolution | null => {
     if (anchor === null) return null;
     const meta = anchor.meta as Record<string, unknown>;
     if (typeof meta.markIndex !== 'number' || typeof meta.transformedIndex !== 'number') return null;
@@ -373,7 +315,7 @@ export const createPlotLineageLocator = (
     address: string,
     seriesValue: string | number,
     anchor: ReturnType<typeof locator.series> | null,
-  ): PlotLineageResolvedAnchor | null => {
+  ): PlotLineageAnchorResolution | null => {
     if (anchor === null) return null;
     const markIndex = anchor.meta.markIndex;
     const seriesLineage: PlotSeriesLineage = {

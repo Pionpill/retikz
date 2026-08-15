@@ -4,37 +4,29 @@ import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } f
 import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type {
-  CoordinateFrameResolution,
-  CoordinateScopeRegistry,
-  CoordinateScopeRegistryEntry,
-  LowerPlotsOptions,
-  MarkDataView,
-  ResolveFrameParams,
-} from '../../src/pipeline/expand';
+import type { LowerPlotsOptions, MarkDataView } from '../../src/pipeline/expand';
+import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../src/resolve/composition';
+import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../src/resolve/coordinate';
 
-import {
-  coordinateScopeIdOf,
-  createPlotProviderContribution,
-  lowerPlots,
-  prepareRows,
-  resolveCoordinateScopeRegistry,
-  resolveFrame,
-  validateFieldMaps,
-} from '../../src/pipeline/expand';
+import * as expand from '../../src/pipeline/expand';
+import { createPlotProviderContribution } from '../../src/pipeline/expand';
+import { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from '../../src/resolve/composition';
+import { resolveCoordinateFrame } from '../../src/resolve/coordinate';
 
 describe('expand pipeline stable surface', () => {
   it('keeps the established runtime exports available', () => {
     expect(
       [
+        expand.lowerPlots,
+        expand.prepareRows,
+        expand.validateFieldMaps,
+        resolveCoordinateFrame,
         coordinateScopeIdOf,
-        lowerPlots,
-        prepareRows,
         resolveCoordinateScopeRegistry,
-        resolveFrame,
-        validateFieldMaps,
       ].every(value => typeof value === 'function'),
     ).toBe(true);
+    expect(expand).not.toHaveProperty('coordinateScopeIdOf');
+    expect(expand).not.toHaveProperty('resolveCoordinateScopeRegistry');
   });
 
   it('contributes the Standard Ribbon path kind and its profile dataset explicitly', () => {
@@ -76,6 +68,6 @@ describe('expand pipeline stable surface', () => {
     expectTypeOf<CoordinateScopeRegistryEntry>().toBeObject();
     expectTypeOf<LowerPlotsOptions>().toBeObject();
     expectTypeOf<MarkDataView>().toBeObject();
-    expectTypeOf<ResolveFrameParams>().toBeObject();
+    expectTypeOf<CoordinateResolveContext>().toBeObject();
   });
 });

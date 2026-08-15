@@ -69,9 +69,9 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
   sources={[
     {
       label: '轴 tick 的来源优先级与格式化',
-      path: 'packages/viz/plot/src/providers/scale/shared/guide-ticks.ts',
+      path: 'packages/viz/plot/src/resolve/guide/ticks.ts',
       startLine: 226,
-      endLine: 303,
+      endLine: 283,
     },
     {
       label: '网格来源、端点追加与投影去重',
@@ -116,7 +116,7 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
 | 属性          | 类型                      | 默认值   | 描述                                                                                            |
 | ------------- | ------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
 | `dimension`   | `AxisProps['dimension']`  | —        | 要解释的维度：cartesian / polar 使用 x / y；必须匹配当前坐标系                                  |
-| `scale?`      | `PositionScaleType`       | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`                      |
+| `scale?`      | `AxisProps['scale']`      | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`                      |
 | `placement?`  | `AxisProps['placement']`  | 自动推断 | 轴线摆放；分支 `kind` 见 <ApiValues name="AxisPlacementKind" />；`origin` 仅适用于 cartesian    |
 | `line?`       | `AxisProps['line']`       | 默认轴线 | 轴线样式与端点几何；`extent` 和 `arrow` 目前仅适用于 cartesian                                  |
 | `crossing?`   | `AxisProps['crossing']`   | 正常刻度 | 交叉值处的 tick / label 策略；`label:'corner'` 可把共享原点标签移到角落                         |

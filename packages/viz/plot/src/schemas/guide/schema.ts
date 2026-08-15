@@ -619,15 +619,15 @@ const FacetTargetValueSchema = z
   .union([z.string(), z.number(), z.boolean(), z.null()])
   .describe('JSON-safe facet value matched by an axis grid target selector');
 
-const FacetTargetValueInputSchema = z
+const FacetTargetValueOrTupleSchema = z
   .union([FacetTargetValueSchema, z.array(FacetTargetValueSchema).min(1)])
   .describe('Facet value or value tuple matched by an axis grid target selector');
 
 const FacetGridTargetSelectorSchema = z
   .strictObject({
     arrangement: z.string().min(1).optional().describe('Facet arrangement id to match; omit to match any facet'),
-    row: FacetTargetValueInputSchema.optional().describe('Facet row value to match; omit to match any row value'),
-    column: FacetTargetValueInputSchema.optional().describe(
+    row: FacetTargetValueOrTupleSchema.optional().describe('Facet row value to match; omit to match any row value'),
+    column: FacetTargetValueOrTupleSchema.optional().describe(
       'Facet column value to match; omit to match any column value',
     ),
   })
