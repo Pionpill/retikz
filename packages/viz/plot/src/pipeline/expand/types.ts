@@ -1,10 +1,7 @@
-import type { IRScope } from '@retikz/core';
 import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
   AnyTransformDefinition,
-  DataFieldTypeMap,
-  ExternalRow,
   FieldFormatDefinition,
   ResolveField,
 } from '@retikz/data';
@@ -15,44 +12,12 @@ import type {
   AnyCoordinateDefinition,
   AnyMarkDefinition,
   AnyScaleDefinition,
-  CoordinateFrame,
-  DimensionRole,
   PlotThemeStyleDefinition,
   ResolveLabel,
 } from '../../contract';
-import type { ProvenanceContext } from '../../contract';
-import type { IRPlotCoordinateOperation, IRPlotMarkOperation, IRPlotSpec } from '../../schemas';
-import type { CoordinateViewPlacementKind } from '../../schemas';
-import type { Margins, Rect } from '../../shared';
+import type { Margins } from '../../shared';
 
-/** 单个图元及其当前可见数据行的 lowering 视图 */
-export type MarkDataView = {
-  mark: IRPlotMarkOperation;
-  rows: Array<ExternalRow>;
-};
-
-/** 坐标 scope 在 composition 中的归一化放置结果 */
-export type CoordinateScopePlacement =
-  | Exclude<
-      NonNullable<NonNullable<NonNullable<IRPlotSpec['composition']>['views']>[number]['placement']>,
-      { kind: typeof CoordinateViewPlacementKind.Slot }
-    >
-  | { kind: 'track'; scaffold: string; track: string };
-
-/** 坐标视图 registry 中归一化后的单个视图条目 */
-export type CoordinateScopeRegistryEntry = {
-  id: string;
-  coordinate: IRPlotCoordinateOperation;
-  placement?: CoordinateScopePlacement;
-  scaffold?: string;
-  track?: string;
-};
-
-/** plot 内坐标视图及默认视图的解析结果 */
-export type CoordinateScopeRegistry = {
-  defaultScope: string;
-  scopes: Array<CoordinateScopeRegistryEntry>;
-};
+export type { CoordinateFrameResolution, MarkDataView } from '../../resolve/coordinate';
 
 /** lowerPlots 运行时选项；尺寸、registry 与 runtime resolver 均不进入 Plot IR */
 export type LowerPlotsOptions = {
@@ -113,36 +78,4 @@ export type LowerPlotsOptions = {
   markDefinitions?: Array<AnyMarkDefinition>;
   /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */
   formatDefinitions?: Array<FieldFormatDefinition>;
-};
-
-/** resolveFrame 产物：mark / guide 共用投影帧及已下沉的网格、轴层 */
-export type CoordinateFrameResolution = {
-  /** mark 与 guide 共用的坐标投影帧 */
-  frame: CoordinateFrame;
-  /** 网格层 */
-  gridLayers: Array<IRScope>;
-  /** 轴层 */
-  axisLayers: Array<IRScope>;
-  /** 已扣除 decoration 预留的绘图区 */
-  plotArea: Rect;
-};
-
-/** resolveFrame 入参：投影、scale 与 guide 下沉所需的完整上下文 */
-export type ResolveFrameParams = {
-  node: IRPlotSpec;
-  rows: Array<ExternalRow>;
-  fieldTypes: DataFieldTypeMap;
-  width: number;
-  height: number;
-  fontSize: number;
-  labelGap?: number;
-  margin?: Partial<Margins>;
-  layoutReserve?: Partial<Margins>;
-  plotAreaOverride?: Rect;
-  roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>;
-  provenance?: ProvenanceContext;
-  coordinates?: Array<AnyCoordinateDefinition>;
-  scaleRegistry: Map<string, AnyScaleDefinition>;
-  markDataViews?: Array<MarkDataView>;
-  roleMarkDataViews?: Record<string, Array<MarkDataView>>;
 };

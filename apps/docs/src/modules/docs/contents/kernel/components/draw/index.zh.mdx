@@ -11,17 +11,17 @@ description: 用 Draw 快速连接目标，或用 Path 与 Step 精确描述路�
 
 ## 职责一览
 
-| 组件       | 类型      | 职责                                                                  | 适合场景                           |
-| ---------- | --------- | --------------------------------------------------------------------- | ---------------------------------- |
-| Draw       | Sugar     | 用 way 数组声明目标、段算子、标注与整条路径样式，并展开为 Path + Step | 日常连线、流程图边、带箭头连接     |
-| Way        | Sugar     | 定义 Draw 数组里的目标、折角、闭合、曲线与相对坐标写法                | 查询 way 数组里能写什么            |
-| Path       | Kernel    | 路径容器，由 Step 子节点定义折线、曲线与弧形                          | 多次 move、逐段精确控制、贴近 IR   |
-| Ribbon     | Path kind | 用 Path 中心线或预计算边界生成可填充的可变宽带状关系                  | 流向、桑基关系或其它带宽编码       |
-| Step       | Kernel    | 一个 step = 一个动作：move / line / curve / arc / cycle 等            | 逐段控制每一段路径动作语义         |
-| Arrow      | 通用      | Path / Draw 共享的箭头方向与视觉规格                                  | 精细控制形状、尺寸、颜色与起末差异 |
-| 路径生成器 | 扩展      | 为 generator step 注册新的曲线生成器                                  | 添加波形、参数曲线等新曲线段       |
-| 自定义路径 | 扩展      | 注册接管整条 Path 的 kind provider                                    | 双线、高亮线或业务关系线           |
-| 自定义箭头 | 扩展      | 注册新的箭头端点样式                                                  | bracket 或领域专用箭头             |
+| 组件       | 类型               | 职责                                                                  | 适合场景                           |
+| ---------- | ------------------ | --------------------------------------------------------------------- | ---------------------------------- |
+| Draw       | Sugar              | 用 way 数组声明目标、段算子、标注与整条路径样式，并展开为 Path + Step | 日常连线、流程图边、带箭头连接     |
+| Way        | Sugar              | 定义 Draw 数组里的目标、折角、闭合、曲线与相对坐标写法                | 查询 way 数组里能写什么            |
+| Path       | Kernel             | 路径容器，由 Step 子节点定义折线、曲线与弧形                          | 多次 move、逐段精确控制、贴近 IR   |
+| Ribbon     | Standard Path kind | 用 Path 中心线或预计算边界生成可填充的可变宽带状关系                  | 流向、桑基关系或其它带宽编码       |
+| Step       | Kernel             | 一个 step = 一个动作：move / line / curve / arc / cycle 等            | 逐段控制每一段路径动作语义         |
+| Arrow      | 通用               | Path / Draw 共享的箭头方向与视觉规格                                  | 精细控制形状、尺寸、颜色与起末差异 |
+| 路径生成器 | 扩展               | 为 generator step 注册新的曲线生成器                                  | 添加波形、参数曲线等新曲线段       |
+| 自定义路径 | 扩展               | 注册接管整条 Path 的 kind provider                                    | 双线、高亮线或业务关系线           |
+| 自定义箭头 | 扩展               | 注册新的箭头端点样式                                                  | bracket 或领域专用箭头             |
 
 ## 章节内容
 
@@ -38,7 +38,7 @@ description: 用 Draw 快速连接目标，或用 Path 与 Step 精确描述路�
     <span className="font-semibold">Path</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Kernel 路径容器与整条路径能力</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/ribbon">
+  <LinkedCard href="/library/standard/extension/ribbon">
     <span className="font-semibold">Ribbon</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">可变宽带状关系与预计算边界</span>
   </LinkedCard>

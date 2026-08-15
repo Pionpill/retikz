@@ -1,13 +1,4 @@
-export { coordinateScopeIdOf, resolveCoordinateScopeRegistry } from './composition';
-export { prepareRows, validateFieldMaps } from './data';
-export { resolveFrame } from './frame';
+export { applyMarkTransforms, prepareRows, validateFieldMaps } from './data';
 export { lowerPlots } from './lower';
 export { createPlotProvider, createPlotProviderContribution, PlotProviderKey } from './provider';
-export type {
-  CoordinateFrameResolution,
-  CoordinateScopeRegistry,
-  CoordinateScopeRegistryEntry,
-  LowerPlotsOptions,
-  MarkDataView,
-  ResolveFrameParams,
-} from './types';
+export type { CoordinateFrameResolution, LowerPlotsOptions, MarkDataView } from './types';

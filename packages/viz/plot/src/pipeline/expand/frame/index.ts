@@ -1,3 +1,2 @@
-export type { CoordinateFrameResolution, ResolveFrameParams } from '../types';
-export * from './resolve';
+export type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
 export * from './scoped';

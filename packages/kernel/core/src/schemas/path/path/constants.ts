@@ -10,6 +10,4 @@ export const PathFillRule = {
 export const PathKind = {
   /** 标准描边路径 */
   Stroke: 'stroke',
-  /** Ribbon 带状路径 */
-  Ribbon: 'ribbon',
 } as const;

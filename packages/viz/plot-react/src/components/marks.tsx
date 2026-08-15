@@ -1,27 +1,23 @@
 import type {
-  InputCoreNodeChannels,
-  InputCorePathChannels,
-  InputDatumLabel,
-  InputExtensionChannel,
-  InputFieldName,
-  InputIntervalMark,
-  InputPathMark,
-  InputPointMark,
-  InputReferenceMark,
-  InputRelationMark,
+  InputPlotCoreNodeChannels,
+  InputPlotCorePathChannels,
+  InputPlotDatumLabel,
+  InputPlotIntervalMark,
+  InputPlotPathMark,
+  InputPlotPointMark,
+  InputPlotReferenceMark,
+  InputPlotRelationMark,
 } from '@retikz/plot-vanilla';
 import type { FC } from 'react';
 
-export type PathMarkProps = InputPathMark;
-export type PointMarkProps = InputPointMark;
-export type IntervalMarkProps = InputIntervalMark;
-export type ReferenceMarkProps = InputReferenceMark;
-export type RelationMarkProps = InputRelationMark;
-export type FieldName = InputFieldName;
-export type ExtensionChannelProp = InputExtensionChannel;
-export type CoreNodeChannelProps = InputCoreNodeChannels;
-export type CorePathChannelProps = InputCorePathChannels;
-export type DatumLabelProps = InputDatumLabel;
+export type PathMarkProps = InputPlotPathMark;
+export type PointMarkProps = InputPlotPointMark;
+export type IntervalMarkProps = InputPlotIntervalMark;
+export type ReferenceMarkProps = InputPlotReferenceMark;
+export type RelationMarkProps = InputPlotRelationMark;
+export type CoreNodeChannelProps = InputPlotCoreNodeChannels;
+export type CorePathChannelProps = InputPlotCorePathChannels;
+export type DatumLabelProps = InputPlotDatumLabel;
 
 /** 折线图层声明组件 */
 export const PathMark: FC<PathMarkProps> = () => null;

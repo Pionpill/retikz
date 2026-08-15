@@ -1,9 +1,10 @@
 import type { IRScene } from '@retikz/core';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { createRibbonProviderContribution, RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 import { renderToSvgString, toSceneResult } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -29,6 +30,16 @@ const source: IRScene = {
         { type: 'step', kind: 'line', to: [120, 0] },
       ],
     },
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: { width: 12 },
+      fill: '#60a5fa',
+      children: [
+        { type: 'step', kind: 'move', to: [-60, 40] },
+        { type: 'step', kind: 'line', to: [60, 40] },
+      ],
+    },
   ],
 };
 
@@ -36,6 +47,7 @@ const definitions = {
   shapes: [CrossShapeDefinition],
   arrows: [DiamondArrowDefinition],
   clips: [CompoundClipDefinition],
+  pathKinds: [RibbonPathKindDefinition],
 } as const;
 
 describe('Standard provider entry integration', () => {
@@ -49,6 +61,7 @@ describe('Standard provider entry integration', () => {
     expect(svg).toContain('optional shape');
     expect(svg).toContain('<clipPath');
     expect(svg).toContain('<marker');
+    expect(direct.scene.primitives.filter(primitive => primitive.type === 'path').length).toBeGreaterThan(1);
   });
 
   it('renders the same explicitly assembled capability set through React SSR', () => {
@@ -58,5 +71,19 @@ describe('Standard provider entry integration', () => {
     expect(markup).toContain('optional shape');
     expect(markup).toContain('<clipPath');
     expect(markup).toContain('<marker');
+  });
+
+  it('resolves the Standard Ribbon provider contribution into the same compile entry', () => {
+    const providerDefinitions = resolveCoreProviderDependencies({
+      contributions: [createRibbonProviderContribution()],
+      definitions: {
+        shapes: definitions.shapes,
+        arrows: definitions.arrows,
+        clips: definitions.clips,
+      },
+    });
+    const resolved = compileToScene(source, providerDefinitions);
+
+    expect(resolved.scene).toEqual(compileToScene(source, definitions).scene);
   });
 });

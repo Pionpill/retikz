@@ -576,7 +576,7 @@ describe('RelationMark and anchorId lowering', () => {
         { kind: 'move', to: [0, 100] },
         { kind: 'cubic', control1: [100, 100], control2: [100, 0], to: [200, 0] },
       ],
-      ribbon: {
+      kindOptions: {
         start: { width: 12, direction: 0 },
         end: { width: 8, direction: 0 },
         interpolation: 'smooth',

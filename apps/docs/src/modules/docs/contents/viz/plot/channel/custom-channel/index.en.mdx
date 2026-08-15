@@ -36,15 +36,20 @@ The `intensity` channel below maps field values into `[0.3, 1]` and also accepts
 
 Inject the definition with `<Plot channelDefinitions={[intensityChannel]}>`; the Vanilla source injects the same definition through `renderPlot` options.
 
-A string in the React DSL means a field name. Use `{ value }` or `MarkValueType` for a constant:
+A string in the React DSL means a field name. Typed authoring accepts `{ kind: 'constant', value }` for a constant; an already normalized raw IR binding uses `{ value }` for the same constant. The authoring normalizer converts the former to the latter:
 
 ```tsx
 <PointMark channels={{ intensity: 'score' }} />
-<PointMark channels={{ intensity: { value: 0.65 } }} />
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-These assemble to `{ field: 'score' }` and `{ value: 0.65 }`. The definition always stays in the runtime and never enters Plot IR.
+These assemble to `{ field: 'score' }` and `{ value: 0.65 }`. The raw IR form is valid wherever an `IRPlotSpec` binding is supplied:
+
+```ts
+const rawChannelBinding: IRPlotChannel = { value: 0.65 };
+```
+
+The definition always stays in the runtime and never enters Plot IR.
 
 ## Execution
 
@@ -66,14 +71,14 @@ A channel definition should not inspect `mark.type`. It owns resolution and deli
     {
       label: 'Merge built-in and custom channels into one registry',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 77,
-      endLine: 114,
+      startLine: 67,
+      endLine: 93,
     },
     {
       label: 'Channel lookup, resolve, and delivery dispatch',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 120,
-      endLine: 190,
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 44,
+      endLine: 123,
     },
   ]}
 />
@@ -98,14 +103,14 @@ encoding: {
 
 Public exports:
 
-| Import from `@retikz/plot` | Use                                                                                                 |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| `defineScopeChannel`       | Defines a channel delivered to a Core Scope                                                         |
-| `defineNodeChannel`        | Defines a channel delivered to a Core Node                                                          |
-| `definePathChannel`        | Defines a channel delivered to a Core Path                                                          |
-| `defineChannel`            | Defines a generic channel with explicit kind and delivery                                           |
-| `ChannelDefinition`        | Full channel, output, resolve, and deliver contract                                                 |
-| `ChannelContext`           | Shared rows, field types, and scale-registry context; Node / Scope / Path expose equivalent aliases |
+| Import from `@retikz/plot`        | Use                                                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `defineScopeChannel`              | Defines a channel delivered to a Core Scope                                                         |
+| `defineNodeChannel`               | Defines a channel delivered to a Core Node                                                          |
+| `definePathChannel`               | Defines a channel delivered to a Core Path                                                          |
+| `defineChannel`                   | Defines a generic channel with explicit kind and delivery                                           |
+| `ChannelDefinition`               | Full channel, output, resolve, and deliver contract                                                 |
+| `ChannelDefinitionResolveContext` | Shared rows, field types, and scale-registry context; Node / Scope / Path expose equivalent aliases |
 
 Host injection:
 

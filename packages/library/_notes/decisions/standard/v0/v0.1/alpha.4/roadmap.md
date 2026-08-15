@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.4 Roadmap
 
-> 状态：Layout owner 迁移与 ADR-01 Surface 已完成；当前 alpha.4 继续规划 Core 最小内置集合、Standard provider 子入口与 Ribbon Path Kind 迁移。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md)
+> 状态：Layout owner 迁移与 ADR-01～04 均已完成。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md)
 
 ## 目标
 
@@ -8,7 +8,7 @@
 
 在当前 `0.1.0-alpha.4` 版本内继续新增 renderer-neutral `standard.surface`，让 Chart canvas、Table panel 与一般信息面板可以用同一 JSON-safe composite 为任意 Core child 提供背景、padding、可选 border / corner radius、overflow 和完整 Scope 语义。Surface 只组合 Core layout-aware composite 与 Layout 公共 box / replay capability，不复制 solver，不改变 Standard Frame，也不在 Chart adapter 或 renderer 建立私有 surface。
 
-本 milestone 后续将收敛 Core 的官方内置集合：Core 继续拥有 Drawing IR、Definition / registry 契约、编译消费与诊断，只保留支撑基础绘图闭环的最小内置实现；可通过统一 define-registry 契约提供的可选官方实现迁入 Standard，并按 `@retikz/standard/<capability>` 子入口独立消费。Ribbon 作为体积较大的可选 Path Kind 整体迁入 Standard，Plot 等 Tier 2 通过显式依赖和能力装配获得所需定义，不依赖全局注册或副作用导入。
+本 milestone 已收敛 Core 的官方内置集合：Core 继续拥有 Drawing IR、Definition / registry 契约、编译消费与诊断，只保留支撑基础绘图闭环的最小内置实现；可选官方 Shape、Arrow、Clip 与 Ribbon 实现迁入 Standard，并按 `@retikz/standard/<capability>` 子入口独立消费。Plot 等 Tier 2 通过显式 provider contribution 闭包获得所需定义，不依赖全局注册或副作用导入。
 
 ## ADR 索引
 
@@ -16,10 +16,11 @@
 | ------------------------------------------------------------------------------- | -------- | -------------------------------------------- | ---------------------------------------------------------------------------- |
 | [ADR-01](./01-arbitrary-child-surface.md)                                       | Accepted | 任意 child Surface                           | 冻结单 child box、appearance、Scope、layout、Definition 与 spatial 边界      |
 | [Layout ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) | Accepted | Layout package family 迁移                   | 冻结现行布局 owner、canonical namespace、公共入口与兼容性                    |
-| [ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)       | Proposed | Core 最小内置集合与 Standard provider 子入口 | 冻结 Core / Standard provider 所有权、最小内置边界、能力子入口与显式装配契约 |
-| [ADR-03](./03-ribbon-as-standard-path-kind.md)                                  | Proposed | Ribbon 作为 Standard Path Kind 的完整迁移    | 冻结 Ribbon schema、Definition、profile、lowering、Tier 2 依赖与跨入口闭环   |
+| [ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)       | Accepted | Core 最小内置集合与 Standard provider 子入口 | 冻结 Core / Standard provider 所有权、最小内置边界、能力子入口与显式装配契约 |
+| [ADR-03](./03-ribbon-as-standard-path-kind.md)                                  | Accepted | Ribbon 作为 Standard Path Kind 的完整迁移    | 冻结 Ribbon schema、Definition、profile、lowering、Tier 2 依赖与跨入口闭环   |
+| [ADR-04](./04-sector-shape-unification.md)                                      | Accepted | Sector 统一弧形与扇形 Node shape             | 删除独立 Arc shape，以 Sector 厚度表达开放弧、扇形与环楔                     |
 
-ADR-02 与 ADR-03 已进入 `Proposed`，并分别建立镜像简略 plan 进入 Architecture Gate。ADR-02 以能力准入原则和每类最多 5 项的硬上限冻结当前迁移清单；后续扩充仍须经独立 ADR，不以数量替代所有权判断。
+ADR-02～04 均已按当前公开契约完成并进入 `Accepted`。ADR-02 以能力准入原则冻结 Core / Standard 边界，ADR-03 在该边界上完成 Ribbon 单一 owner 迁移，ADR-04 收口 Sector 表达。
 
 ## 后续定义拓展方向
 
@@ -36,12 +37,14 @@ ADR-02 与 ADR-03 已进入 `Proposed`，并分别建立镜像简略 plan 进入
 - Standard alpha.2 ADR-01～07 原地标记 Superseded；ADR-08 保持既有历史状态；ADR-09～10 继续 Accepted
 - Standard alpha.3 ADR-06 的直接 Definition loading 原则继续生效
 - 文档站进入 Library 顶级模块的 `Standard · 拓展` 分组，并与 `Layout · 布局` 分别维护 changelog
+- Standard Shape 收敛为 `cross`、`sector`、`star`、`contour`，不保留独立 Arc shape；Kernel React `<Arc>` Path Sugar 不变
+- `@retikz/standard/shape`、`@retikz/standard/arrow`、`@retikz/standard/clip` 与 `@retikz/standard/ribbon` 是已发布可选 provider 的唯一公共子入口，不发布空的 Path Generator 入口
 
 ## Surface 依赖 Gate
 
 - Core ADR-18 冻结跨 namespace Composite provider graph，确保 Surface 及其任意 child definitions 在 React、Vanilla 与直接工具链中统一装配
 - Core ADR-19 冻结 qualified spatial handle sidecar，确保 Surface 包裹后 descendant identity、geometry 与 provenance 不丢失
-- 两项 Core ADR 与本 milestone ADR-01 均已完成 Architecture Gate、Plan Gate 与人工确认，Surface 按冻结的实现计划与测试契约推进
+- 两项 Core ADR 与本 milestone ADR-01 均已完成 Architecture Gate、Plan Gate 与人工确认，Surface 已按冻结契约完成跨入口闭环
 
 ## Surface 交付边界
 
@@ -66,13 +69,14 @@ ADR-02 与 ADR-03 已进入 `Proposed`，并分别建立镜像简略 plan 进入
 - React、Vanilla、直接 JSON、SSR、SVG 与 Canvas 等价，且第三方 composite child 不走内置白名单
 - Surface 外层 handle 与 descendant qualified handles 同时存在，包裹前后的 child identity、payload、locator 与 provenance 连续
 - Frame 现有 Node-only 输入与行为不变；Standard 不新增 bundle、全局 registry、兼容 alias 或 renderer side channel
+- Core 默认 provider 集合符合 ADR-02，Standard 可选 Shape、Arrow、Clip 与 Ribbon 只从四个能力子入口显式装配
+- provider contribution 在直接 Core、React、Vanilla、SSR 与官方 Tier 2 中形成完整依赖闭包，缺失、冲突和循环在 dispatch 前 fail-loud
 
 ## 当前进度与执行顺序
 
 1. Layout owner 迁移已经完成，现行代码版本为 `0.1.0-alpha.4`
-2. ADR-01 Surface 已 Accepted，单 child box、appearance、Scope、layout、Definition 与 spatial 边界已经冻结
-3. Core provider graph 与 qualified spatial sidecar 已作为 Surface 的跨 namespace definition 与空间查询基础；Surface 的测试契约与实现计划保留在 ignored plan mirror
-4. Surface 在 Standard、React、Vanilla、文档与 Table consumer 中闭环；Chart 的独立实现计划负责补足第二个真实 consumer，再评估 alpha.4 完成状态与 release notes
-5. 建立 ADR-02，先冻结 Core 最小内置原则、Standard provider 子入口、显式能力装配与 Tier 2 依赖边界
-6. ADR-03 依赖 ADR-02 的装配契约；两份 ADR 经人工确认后，按顺序实施完整 Ribbon Path Kind 迁移，并保证直接 Core、React、Vanilla 与 Plot 消费链等价
-7. 两项迁移闭环后，再以独立 ADR 横向扩充箭头等 Standard 官方定义集合
+2. ADR-01 Surface 已 Accepted，并在 Standard、React、Vanilla、文档、Chart 与 Table consumer 中闭环
+3. ADR-02 已 Accepted：Core provider graph、最小内置集合、三个 Standard provider 子入口与 Tier 2 显式依赖闭包均已完成
+4. ADR-04 已 Accepted：Standard 不再维护独立 Arc shape，Sector 统一表达开放弧、扇形与环楔
+5. ADR-03 已 Accepted：Ribbon 的 schema、Path Kind、profile、几何编译、公开入口与跨入口闭环已完成
+6. 后续新增 Shape、Arrow、Clip 或其它官方定义时，继续按能力归属与真实复用需求独立决策，不恢复全局注册或根入口全集

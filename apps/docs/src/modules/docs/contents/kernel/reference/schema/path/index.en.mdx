@@ -43,7 +43,7 @@ Core also exposes five reusable strict fragments for Path fields: stroke, fill, 
 
 ## PathStructure
 
-`PathStructureSchema` selects the Path provider and ribbon options. The cross-field relationship among `kind`, `kindOptions`, and `ribbon` remains a refinement of the complete `PathSchema`.
+`PathStructureSchema` selects an open Path kind provider and its JSON-safe instance options. Kind-specific fields are added by the selected definition rather than by this Core fragment.
 
 <ZodSchema name="PathStructureSchema" />
 
@@ -51,15 +51,15 @@ Core also exposes five reusable strict fragments for Path fields: stroke, fill, 
 
 <ZodSchema name="PathSchema" />
 
-`PathSchema` remains the single complete, compile-valid Path entry. It combines the fragments above with the existing `DrawableInstanceSchema` and `DrawableStyleSchema`, then keeps its kind-specific refinement: the default `stroke` kind requires `children` and rejects `ribbon` / `kindOptions`; `ribbon` requires `ribbon`, with centerline and boundary modes constraining `children`, `upper`, and `lower`; only custom kinds may use `kindOptions`. Existing Path, Scene, and lowering behavior remains compatible.
+`PathSchema` is the open Core host schema for a Path. It combines the fragments above with `DrawableInstanceSchema` and `DrawableStyleSchema`, accepts an open `kind` name and JSON-safe `kindOptions`, and does not encode a closed list of Path kinds. During compile, Core resolves the selected `PathKindDefinition` and parses the complete subject with that definition's `schema`. Core's built-in `stroke` definition owns the complete `StrokePathSchema`, which requires `children` and rejects `kindOptions`; optional Standard Ribbon owns its own complete schema. The host schema remains reusable for custom definitions and Tier 2 owners.
 
-`PathDefaultSchema` is an explicit Core Scope-owner composition of `GraphicStyleSchema`, `PathStrokeSchema`, `PathFillSchema`, and `PathGeometrySchema` without `children`. It excludes instance, structure, decoration, and `children` fields; it is not an accidental projection of complete Path and is not an independent compile entry. The default `stroke` path consumes every applicable field, while `ribbon` inherits only the `GraphicStyleSchema` subset: dash, cap, join, fill rule, and path-geometry defaults remain accepted by the channel but are silently ignored for ribbons. Tier 2 owners may retain their own defaults and field restrictions when composing these fragments.
+`PathDefaultSchema` is an explicit Core Scope-owner composition of `GraphicStyleSchema`, `PathStrokeSchema`, `PathFillSchema`, and `PathGeometrySchema` without `children`. It excludes instance, structure, decoration, and `children` fields; it is not an accidental projection of complete Path and is not an independent compile entry. The default `stroke` path consumes every applicable field. Tier 2 owners may retain their own defaults and field restrictions when composing these fragments.
 
 React `<Path thickness>` is component / builder sugar that becomes `strokeWidth` before IR is produced, so it is not part of `PathSchema`. See [Path styling](/kernel/components/draw/path#styling) for the preset values.
 
 ## DrawableStyle
 
-`DrawableStyleSchema` is the shared geometry-style field set for Path kinds. The default `stroke` kind maps `color` to stroke; the built-in `ribbon` kind maps `color` to fill. `pathDefault` also uses this subset when it styles path-like drawables.
+`DrawableStyleSchema` is the shared geometry-style field set for Path kinds. The default `stroke` kind maps `color` to stroke; the optional Standard Ribbon definition maps its `color` to fill. `pathDefault` also uses this subset when it styles path-like drawables.
 
 <ZodSchema name="DrawableStyleSchema" />
 
@@ -68,12 +68,6 @@ React `<Path thickness>` is component / builder sugar that becomes `strokeWidth`
 `DrawableInstanceSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
 
 <ZodSchema name="DrawableInstanceSchema" />
-
-## PathRibbonOptions
-
-`PathRibbonOptionsSchema` configures the built-in `kind: 'ribbon'` path provider. Centerline mode reads normal Path children; boundary mode reads `upper` / `lower` step arrays from this object and does not use `children`.
-
-<ZodSchema name="PathRibbonOptionsSchema" />
 
 ## Step
 
@@ -143,7 +137,7 @@ The strict two-leg variants `-|` / `|-` reject `fraction`. Three-leg `-|-` / `|-
 
 ## GeometryLabel
 
-`GeometryLabelSchema` is the shared label contract for path-like hosts. `StepLabelSchema` is an alias of this schema; drawn steps and centerline ribbon labels reuse the same fields.
+`GeometryLabelSchema` is the shared label contract for path-like hosts. `StepLabelSchema` is an alias of this schema; drawn steps and optional Standard Ribbon centerline labels reuse the same fields.
 It describes label text, normalized position along the host segment or centerline, and tangent / normal-side placement.
 
 <ZodSchema name="GeometryLabelSchema" />

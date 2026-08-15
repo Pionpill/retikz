@@ -16,7 +16,6 @@ import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas
 import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
-import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../scale/shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Polar2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Polar2D }>;
@@ -253,10 +252,12 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
       ? (ctx.collectAxisTicks('x') ??
-        resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+        ctx.resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
     const layoutAngularTicks = angularAxis
-      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value =>
+          angleScale.coordinate(value),
+        )
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,
@@ -273,13 +274,17 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
     if (radiusRangeOverride !== undefined) radiusScale.setRange([radiusRangeOverride[0], radiusRangeOverride[1]]);
     const radialTicks: TickSet | undefined = radialAxis
       ? (ctx.collectAxisTicks('y') ??
-        resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
+        ctx.resolveGuideTicks(radiusScale, radialAxis.ticks, radialAxis.tickLabels || undefined))
       : undefined;
     const visibleAngularTicks = angularAxis
-      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value =>
+          angleScale.coordinate(value),
+        )
       : undefined;
     const visibleRadialTicks = radialAxis
-      ? resolveVisibleGuideTicks(radialTicks ?? EMPTY_TICKS, radialAxis.ticks, value => radiusScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(radialTicks ?? EMPTY_TICKS, radialAxis.ticks, value =>
+          radiusScale.coordinate(value),
+        )
       : undefined;
     const [radiusRangeStart, radiusRangeEnd] = radiusScale.range();
     const frameInnerRadius = Math.min(radiusRangeStart, radiusRangeEnd);
@@ -335,10 +340,12 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
     if (angleRangeOverride !== undefined) angleScale.setRange([angleRangeOverride[0], angleRangeOverride[1]]);
     const angularTicks: TickSet | undefined = angularAxis
       ? (ctx.collectAxisTicks('x') ??
-        resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
+        ctx.resolveGuideTicks(angleScale, angularAxis.ticks, angularAxis.tickLabels || undefined))
       : undefined;
     const visibleAngularTicks = angularAxis
-      ? resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value => angleScale.coordinate(value))
+      ? ctx.resolveVisibleGuideTicks(angularTicks ?? EMPTY_TICKS, angularAxis.ticks, value =>
+          angleScale.coordinate(value),
+        )
       : undefined;
     const layout = computePolarCoordinate(
       ctx.width,

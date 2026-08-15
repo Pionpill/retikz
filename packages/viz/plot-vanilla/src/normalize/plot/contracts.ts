@@ -11,10 +11,10 @@ import type {
 } from '@retikz/plot';
 
 import type { InputPlotMark } from './input';
-import type { ScaleProps } from './input-scales';
+import type { InputPlotScale } from './input-scales';
 
 /** `<Plot coordinate>` 入口形态：字符串简写、内置对象配置或自定义坐标配置 */
-export type CoordinateInput =
+export type InputPlotCoordinate =
   | 'polar2D'
   | 'cartesian1D'
   | 'polar1D'
@@ -62,7 +62,7 @@ export type CoordinateInput =
   | IRPlotCoordinateOperation;
 
 /** 2D 极坐标入口配置 */
-export type Polar2DCoordinateInput = Extract<CoordinateInput, { type: 'polar2D' }>;
+export type InputPlotPolar2DCoordinate = Extract<InputPlotCoordinate, { type: 'polar2D' }>;
 
 /** 单个 mark transform shortcut 的装配上下文 */
 export type MarkTransformShortcutContext = {
@@ -93,7 +93,7 @@ export type BuildPlotSpecOptions = {
   /** 坐标系选择
    * @default cartesian2D
    */
-  coordinate?: CoordinateInput;
+  coordinate?: InputPlotCoordinate;
   /** Plot 组合布局 */
   composition?: IRPlotSpec['composition'];
   /** 数据字段模型，声明后写入 `data.model`，并让未显式声明的位置比例尺按字段类型派生 */
@@ -141,7 +141,7 @@ export type PlotAuthoringContext = {
   /** 显式 scale 集合来源 */
   scales?: PlotDeclarationSource<ReadonlyArray<IRPlotScaleOperation>>;
   /** 显式坐标系来源 */
-  coordinate?: PlotDeclarationSource<CoordinateInput>;
+  coordinate?: PlotDeclarationSource<InputPlotCoordinate>;
   /** 显式组合布局来源 */
   composition?: PlotDeclarationSource<PlotComposition>;
   /** 显式 guide 集合来源 */
@@ -239,7 +239,7 @@ export type NormalizationState = {
   /** mark 简写自动装配的变换 */
   shortcutTransforms: Array<IRPlotTransform>;
   /** 显式声明的位置比例尺 */
-  scales: Array<ScaleProps>;
+  scales: Array<InputPlotScale>;
   /** 仅运行时使用的标签解析器 */
   resolveLabels: ResolveLabelMap;
   /** 是否使用颜色 */

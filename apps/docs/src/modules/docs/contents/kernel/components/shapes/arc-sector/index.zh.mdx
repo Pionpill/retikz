@@ -1,6 +1,6 @@
 ---
 title: Arc / Sector
-description: 弧和扇形——既能画一条 Path（Sugar），也能作为节点的扇形 / 弧形边界。
+description: 用 Kernel Sugar 绘制弧和扇形 Path，或用 Standard Sector shape 提供扇形、环楔与开放弧 Node 边界。
 ---
 
 弧和扇形都围绕「角度范围」工作：用 `<Arc>` / `<Sector>` 画一段角度片段（Sugar），或用 `shape={{ type: 'sector', params }}` 让节点拥有扇形、环楔或开放弧边界。Node 只保留一个 `sector` 定义；当 `innerRadius === outerRadius` 时自动退化为开放弧。完整定义见[形状](/kernel/components/shapes)。
@@ -113,7 +113,7 @@ Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法�
 
 ## 作为 Node 形状
 
-当你要的是一个扇形 / 弧形的**节点**（可被连线引用、可当图标 glyph）而不是一条线时，给 `<Node>` 设 `shape={{ type, params }}`。这类形状尺寸由 `params` 里的半径 / 角度定，**不依赖文字内容**。Node 版本是 Standard 的可选 shape；Sugar `<Arc>` / `<Sector>` 仍由 Kernel React 提供。使用 Node 版本时，要在当前 `<Layout>` 显式注入相应 Definition。
+当你要的是一个可被连线引用、可当图标 glyph 的 **Sector Node** 而不是一条线时，给 `<Node>` 设 `shape={{ type: 'sector', params }}`。它的尺寸由 `params` 里的半径 / 角度决定，**不依赖文字内容**；`innerRadius === outerRadius` 时，同一个 Sector definition 表达开放弧边界。Standard 只提供这一个可选 Sector Node shape；`<Arc>` / `<Sector>` 都只是 Kernel React Path Sugar。使用 Sector Node 时，要在当前 `<Layout>` 显式注入 `SectorShapeDefinition`。
 
 ### 用法
 

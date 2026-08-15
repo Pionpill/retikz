@@ -290,13 +290,12 @@ These props enter `CompileOptions` together. See each extension guide for defini
 
 ### Higher-Level Capabilities and Host Integration
 
-| Prop                  | Type                                                  | Default | Description                                                                                     |
-| --------------------- | ----------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `pathGenerators`      | `ReadonlyArray`<br />`<PathGeneratorDefinition>`      | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)           |
-| `pathKinds`           | `ReadonlyArray`<br />`<PathKindDefinition>`           | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path)                      |
-| `ribbonWidthProfiles` | `ReadonlyArray`<br />`<RibbonWidthProfileDefinition>` | —       | Inject ribbon profiles; see [Compile Options](/kernel/reference/runtime/compile)                |
-| `composites`          | `ReadonlyArray`<br />`<AnyCompositeDefinition>`       | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite) |
-| `lowerTex`            | `LowerTex`                                            | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                              |
+| Prop             | Type                                             | Default | Description                                                                                                                                  |
+| ---------------- | ------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pathGenerators` | `ReadonlyArray`<br />`<PathGeneratorDefinition>` | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)                                                        |
+| `pathKinds`      | `ReadonlyArray`<br />`<PathKindDefinition>`      | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path) or optional [Standard Ribbon](/library/standard/extension/ribbon) |
+| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite)                                              |
+| `lowerTex`       | `LowerTex`                                       | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                                                                           |
 
 ### Whole-Figure Defaults
 

@@ -7,6 +7,7 @@ import type {
   IRPlotPointSizeStyle,
   IRPlotPointZIndexStyle,
   IRPlotTextChannel,
+  IRPlotTransform,
 } from '@retikz/plot';
 
 import { IntervalBoundKind, PlotGuide, PlotMark, PlotTransform } from '@retikz/plot';
@@ -19,16 +20,15 @@ import type {
   ScaffoldTrackSpec,
   SharedScaffoldSpec,
 } from './contracts';
-import type { AxisProps, LegendProps } from './input-guides';
+import type { InputPlotAxis, InputPlotLegend } from './input-guides';
 import type {
-  IntervalMarkProps,
-  PathMarkProps,
-  PointMarkProps,
-  ReferenceMarkProps,
-  RelationMarkProps,
+  InputPlotIntervalMark,
+  InputPlotPathMark,
+  InputPlotPointMark,
+  InputPlotReferenceMark,
+  InputPlotRelationMark,
 } from './input-marks';
-import type { ScaleProps } from './input-scales';
-import type { TransformProps } from './input-transform';
+import type { InputPlotScale } from './input-scales';
 import type { StyleSugarContext } from './style-sugar';
 
 import {
@@ -143,7 +143,7 @@ export const applyDeclaration = (
     throw new Error('buildPlotSpec: <Track> must be declared inside <Scaffold>');
   }
   if (declaration.kind === 'path-mark') {
-    const props = child.props as PathMarkProps;
+    const props = child.props as InputPlotPathMark;
     const {
       x,
       y,
@@ -213,7 +213,7 @@ export const applyDeclaration = (
     recordResolveLabel(into, id, props.resolveLabel);
     if (closed || closure !== undefined) into.hasClosedLine = true;
   } else if (declaration.kind === 'point-mark') {
-    const props = child.props as PointMarkProps;
+    const props = child.props as InputPlotPointMark;
     const {
       x,
       y,
@@ -309,7 +309,7 @@ export const applyDeclaration = (
     recordMarkColor(into, colorStyle);
     recordResolveLabel(into, id, props.resolveLabel);
   } else if (declaration.kind === 'interval-mark') {
-    const props = child.props as IntervalMarkProps;
+    const props = child.props as InputPlotIntervalMark;
     const {
       x,
       y,
@@ -586,10 +586,10 @@ export const applyDeclaration = (
     recordColor(into, colorEnc);
     recordResolveLabel(into, id, props.resolveLabel);
   } else if (declaration.kind === 'reference-mark') {
-    collectReference(child.props as ReferenceMarkProps, into, styleContext);
+    collectReference(child.props as InputPlotReferenceMark, into, styleContext);
   } else if (declaration.kind === 'relation-mark') {
     const { id, kind, coordinateView, transform, layer, source, target, label, style, path, ribbon, color, channels } =
-      child.props as RelationMarkProps;
+      child.props as InputPlotRelationMark;
     const colorEnc = colorChannel(color, undefined);
     const encoding = { ...colorEnc, ...extensionChannelEncoding(channels) };
     into.marks.push({
@@ -625,7 +625,7 @@ export const applyDeclaration = (
       title,
       layer,
       id,
-    } = child.props as AxisProps;
+    } = child.props as InputPlotAxis;
     if (scale !== undefined) {
       if (dimension !== 'x' && dimension !== 'y') {
         throw new Error(
@@ -655,7 +655,7 @@ export const applyDeclaration = (
       ...(grid !== undefined ? { grid } : {}),
     });
   } else if (declaration.kind === 'legend') {
-    const { channel, scale, title, position, orient, ticks, tickLabels, style, layer } = child.props as LegendProps;
+    const { channel, scale, title, position, orient, ticks, tickLabels, style, layer } = child.props as InputPlotLegend;
     into.guides.push({
       type: PlotGuide.Legend,
       channel,
@@ -669,9 +669,9 @@ export const applyDeclaration = (
       ...(layer !== undefined ? { layer } : {}),
     });
   } else if (declaration.kind === 'scale') {
-    into.scales.push(child.props as ScaleProps);
+    into.scales.push(child.props as InputPlotScale);
   } else if (declaration.kind === 'transform') {
     // 通用 <Transform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
-    into.transforms.push(child.props as TransformProps);
+    into.transforms.push(child.props as IRPlotTransform);
   }
 };

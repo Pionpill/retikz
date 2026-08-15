@@ -1,12 +1,12 @@
 import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas';
+import type { ShapeResolution } from './types';
 
 import { providerDefinitionOf } from '../../providers/registry';
 import { BuiltinShape, JsonObjectSchema } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../provider-validation';
-import type { ShapeResolution } from './types';
 
 /** 节点 shape 解析输入 */
 export type NodeShapeResolveInput = {

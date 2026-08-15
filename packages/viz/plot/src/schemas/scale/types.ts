@@ -7,6 +7,7 @@ import type {
   CategoryValueSchema,
   CustomScaleSchema,
   DivergingColorScaleSchema,
+  DomainPaddingSchema,
   LinearScaleSchema,
   LogScaleSchema,
   OrdinalScaleSchema,
@@ -29,6 +30,9 @@ export type PlotScaleValue = ValueOf<typeof PlotScale>;
 
 /** 分类标量：类别取值 */
 export type IRPlotCategoryValue = z.infer<typeof CategoryValueSchema>;
+
+/** position scale 的 domain padding */
+export type IRPlotDomainPadding = z.infer<typeof DomainPaddingSchema>;
 
 /** 线性 scale */
 export type IRPlotLinearScale = z.infer<typeof LinearScaleSchema>;

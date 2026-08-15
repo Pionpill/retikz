@@ -46,7 +46,6 @@ const LAYOUT_OWN_PROPS = new Set([
   'patterns',
   'pathGenerators',
   'pathKinds',
-  'ribbonWidthProfiles',
   'animate',
   'animations',
   'easings',

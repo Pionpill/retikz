@@ -39,6 +39,30 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.4',
+          date: '2026-08-15',
+          summary: {
+            zh: 'BREAKING：Path Kind 收口为开放 host 与完整 subject schema，Ribbon 的 schema、profile 与几何 owner 迁入 Standard。',
+            en: 'BREAKING: Path Kind becomes an open host with complete subject schemas, while Ribbon schema, profiles, and geometry ownership move to Standard.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：Core 移除 Ribbon 专属公共面', en: 'BREAKING: Core Ribbon surface removed' },
+              content: {
+                zh: 'Core `PathSchema` 现只接受开放 `kind` 与 JSON-safe `kindOptions`，再由已注册 `PathKindDefinition.schema` 校验完整 Path。Core 不再导出 Ribbon schema、width profile、几何 emitter 或 `ribbonWidthProfiles`，内置 Path Kind 只保留 `stroke`。',
+                en: 'Core `PathSchema` now accepts an open `kind` plus JSON-safe `kindOptions`, then validates the complete Path through the registered `PathKindDefinition.schema`. Core no longer exports Ribbon schemas, width profiles, geometry emitters, or `ribbonWidthProfiles`; `stroke` is the only built-in Path Kind.',
+              },
+            },
+            {
+              label: { zh: '领域中立 Path Kind 服务', en: 'Domain-neutral Path Kind services' },
+              content: {
+                zh: '`PathKindDefinition` 以独立 `name` 作为 registry identity，并通过完整 subject schema 恢复 typed path。自定义 kind 可复用路径物化、Stroke 输出、host label、appearance 与 precision 服务，不依赖 Ribbon 私有状态。',
+                en: '`PathKindDefinition` uses an independent `name` as registry identity and restores a typed Path through its complete subject schema. Custom kinds can reuse path materialization, Stroke emission, host labels, appearance, and precision without depending on Ribbon-private state.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-08-09',
           summary: {
@@ -221,10 +245,24 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
-            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
+            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、通用 provider dependency graph、最小内置集合、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
+            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, a generic provider dependency graph, a minimal built-in set, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
           },
           items: [
+            {
+              label: { zh: '通用 provider dependency graph', en: 'Generic provider dependency graph' },
+              content: {
+                zh: '`CoreProviderContribution` 以 typed roots、providers、ordered dependencies 与 owner-local datasets 统一装配 Shape、Boundary、Clip、Arrow、Pattern、Path Generator、Path Kind 和 Composite。`resolveCoreProviderDependencies()` 只物化可达闭包，并在 dispatch 前报告缺失依赖、循环、maker / dependency 冲突与 dataset 冲突；React、Vanilla、SSR 与 Tier 2 共用同一 resolver。',
+                en: '`CoreProviderContribution` uses typed roots, providers, ordered dependencies, and owner-local datasets to assemble Shape, Boundary, Clip, Arrow, Pattern, Path Generator, Path Kind, and Composite capabilities. `resolveCoreProviderDependencies()` materializes only the reachable closure and reports missing dependencies, cycles, maker or dependency conflicts, and dataset conflicts before dispatch; React, Vanilla, SSR, and Tier 2 packages share the same resolver.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：最小内置 provider 集合', en: 'BREAKING: minimal built-in provider set' },
+              content: {
+                zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、rect / circle / ellipse Clip、lines / dots / grid Pattern、三种 Boundary，以及 stroke / ribbon Path Kind；Path Generator 默认为空。Ribbon 暂留 Core，后续由 Standard ADR-03 完成整体迁移。cross / sector / star / contour、diamond / openDiamond 和 polygon / path / compound 等可选官方 definitions 改由 `@retikz/standard/shape`、`/arrow`、`/clip` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',
+                en: 'Core defaults retain rectangle, ellipse, and polygon Shapes; six baseline Arrows; rect, circle, and ellipse Clips; lines, dots, and grid Patterns; three Boundaries; and the stroke and ribbon Path Kinds, while Path Generator defaults are empty. Ribbon remains in Core until Standard ADR-03 completes its whole-owner migration. Optional official Definitions such as cross, sector, star, contour, diamond, openDiamond, polygon, path, and compound now come explicitly from `@retikz/standard/shape`, `/arrow`, and `/clip`. Direct compilation injects them through the corresponding options, while adapters use complete provider contributions; migrated capabilities keep no Core re-export or automatic fallback.',
+              },
+            },
             {
               label: { zh: 'BREAKING：领域中立编译观测', en: 'BREAKING: Domain-neutral compile observation' },
               content: {

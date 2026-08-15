@@ -1,5 +1,5 @@
 import { createChart } from '@retikz/chart';
-import { normalizePlot } from '@retikz/plot-vanilla';
+import { plotSpecOf } from '@retikz/plot-vanilla';
 
 import type { InputChart, NormalizedChart } from './types';
 
@@ -17,7 +17,7 @@ export const normalizeChart = (input: InputChart): NormalizedChart => {
   void _lowerOptions;
   void _chartThemeStyles;
   void _panel;
-  const spec = normalizePlot(plot);
+  const spec = plotSpecOf(plot);
   return {
     chart: createChart({
       ...chart,

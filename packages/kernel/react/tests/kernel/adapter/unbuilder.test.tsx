@@ -1,4 +1,4 @@
-﻿import type { IRChild, IRPathBase, IRScene } from '@retikz/core';
+﻿import type { IRChild, IRClipSpec, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
@@ -226,7 +226,7 @@ describe('convertIRToReactNode', () => {
         {
           type: 'path',
           kind: 'ribbon',
-          ribbon: {
+          kindOptions: {
             start: { width: 8, direction: 0 },
             end: { width: 2, direction: [1, 0] },
             samples: true,
@@ -253,7 +253,7 @@ describe('convertIRToReactNode', () => {
           type: 'path',
           kind: 'ribbon',
           fill: '#bfdbfe',
-          ribbon: {
+          kindOptions: {
             mode: 'boundary',
             upper: [
               { type: 'step', kind: 'move', to: [0, 0] },
@@ -1155,17 +1155,17 @@ describe('convertIRToReactNode', () => {
     });
 
     it('round-trips Scope.clip：circle / rect / ellipse / polygon', () => {
-      const clips = [
+      const clips: Array<IRClipSpec> = [
         { kind: 'circle' as const, cx: 0, cy: 0, r: 80 },
         { kind: 'rect' as const, x: -10, y: -10, width: 40, height: 30 },
         { kind: 'ellipse' as const, cx: 0, cy: 0, rx: 30, ry: 20 },
         {
-          kind: 'polygon' as const,
+          kind: 'polygon',
           points: [
             [0, 0],
             [40, 0],
             [20, 40],
-          ] as Array<[number, number]>,
+          ],
         },
       ];
       for (const clip of clips) {

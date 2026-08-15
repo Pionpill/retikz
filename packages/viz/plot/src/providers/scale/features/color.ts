@@ -9,7 +9,7 @@ import {
   scaleThreshold as d3ScaleThreshold,
 } from 'd3-scale';
 
-import type { AnyScaleDefinition, ChannelResolveContext, ChannelScaleResolution } from '../../../contract';
+import type { AnyScaleDefinition, ChannelScaleResolution, ChannelScaleResolveContext } from '../../../contract';
 import type {
   IRPlotDivergingColorScale,
   IRPlotOrdinalScale,
@@ -285,13 +285,13 @@ export const discretizedBins = (
 // ── channel 族 scale definition ───────────────────────────────────────────────────
 
 /** 建 channel 取值用的数值序列：temporal 字段过 coerceTimestamp，其余取有限数 */
-const numericValuesOf = (values: Array<unknown>, ctx: ChannelResolveContext): Array<number> => {
+const numericValuesOf = (values: Array<unknown>, ctx: ChannelScaleResolveContext): Array<number> => {
   const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
   return values.map(toNumber).filter((value): value is number => value !== null);
 };
 
 const continuousColorOf = (
-  ctx: ChannelResolveContext,
+  ctx: ChannelScaleResolveContext,
   evaluate: ColorScaleEvaluator,
 ): ((value: unknown) => string | undefined) => {
   const toNumber = ctx.fieldType === DataFieldType.Temporal ? ctx.coerceTimestamp : ctx.toNumber;
@@ -303,7 +303,7 @@ const continuousColorOf = (
 
 const withSequentialTheme = <TDef extends { range?: unknown; scheme?: string }>(
   def: TDef,
-  ctx: ChannelResolveContext,
+  ctx: ChannelScaleResolveContext,
 ): TDef =>
   def.range !== undefined || def.scheme !== undefined || ctx.defaultSequentialScheme === undefined
     ? def
@@ -311,7 +311,7 @@ const withSequentialTheme = <TDef extends { range?: unknown; scheme?: string }>(
 
 const withDivergingTheme = <TDef extends { range?: unknown; scheme?: string }>(
   def: TDef,
-  ctx: ChannelResolveContext,
+  ctx: ChannelScaleResolveContext,
 ): TDef =>
   def.range !== undefined || def.scheme !== undefined || ctx.defaultDivergingScheme === undefined
     ? def
@@ -382,7 +382,7 @@ const discretizedResolution = (
   scaleType: string,
   def: IRPlotQuantizeColorScale | IRPlotThresholdColorScale | IRPlotQuantileColorScale,
   values: Array<unknown>,
-  ctx: ChannelResolveContext,
+  ctx: ChannelScaleResolveContext,
   evaluate: ColorScaleEvaluator,
 ): ChannelScaleResolution => {
   const numeric = numericValuesOf(values, ctx);

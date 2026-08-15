@@ -61,7 +61,7 @@ export const estimateLabelWidth = (text: string, fontSize: number): number =>
   text.length * fontSize * CHAR_WIDTH_FACTOR;
 
 /** computePlotArea 输入：哪些维度有 axis + 其刻度标签（估算占位用）+ legend 各边预留 */
-export type PlotAreaInput = {
+export type PlotAreaLayoutContext = {
   /** x 维度是否有坐标轴（决定是否留 bottom margin） */
   hasXAxis: boolean;
   /** y 维度是否有坐标轴（决定是否留 left margin） */
@@ -97,26 +97,26 @@ const maxLabelWidth = (labels: ReadonlyArray<string>, fontSize: number): number 
 export const computePlotArea = (
   width: number,
   height: number,
-  input: PlotAreaInput,
+  context: PlotAreaLayoutContext,
   options: PlotAreaOptions = {},
 ): { plotArea: Rect; margins: Margins } => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
-  const reserve = input.legendReserve ?? {};
+  const reserve = context.legendReserve ?? {};
   const layoutReserve = options.reserve ?? {};
   // legend 预留叠加在 axis margin 之外：legend 占某边 → 该边 margin += 预留带宽，plotArea 在该边收窄
   const auto: Margins = {
-    top: (input.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0) + (layoutReserve.top ?? 0),
+    top: (context.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0) + (layoutReserve.top ?? 0),
     right:
-      (input.hasXAxis ? maxLabelWidth(input.xLabels.slice(-1), fontSize) * 0.5 : 0) +
+      (context.hasXAxis ? maxLabelWidth(context.xLabels.slice(-1), fontSize) * 0.5 : 0) +
       (reserve.right ?? 0) +
       (layoutReserve.right ?? 0),
     bottom:
-      (input.hasXAxis ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + fontSize : 0) +
+      (context.hasXAxis ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + fontSize : 0) +
       (reserve.bottom ?? 0) +
       (layoutReserve.bottom ?? 0),
     left:
-      (input.hasYAxis
-        ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + maxLabelWidth(input.yLabels, fontSize)
+      (context.hasYAxis
+        ? DEFAULT_AXIS_TICK_LENGTH + DEFAULT_AXIS_LABEL_GAP + maxLabelWidth(context.yLabels, fontSize)
         : 0) +
       (reserve.left ?? 0) +
       (layoutReserve.left ?? 0),
@@ -144,7 +144,7 @@ export const computePlotArea = (
 };
 
 /** computePolarCoordinate 输入：哪个维度有角向轴 + 角向刻度标签（估算外圈标签留白用） */
-export type PolarCoordinateInput = {
+export type PolarLayoutContext = {
   /** 是否有角向坐标轴（决定是否为外圈角向标签预留留白） */
   hasAngularAxis: boolean;
   /** 角向刻度标签（估算最宽标签、为外圈留白） */
@@ -168,13 +168,13 @@ export type PolarLayout = {
 export const computePolarCoordinate = (
   width: number,
   height: number,
-  input: PolarCoordinateInput,
+  context: PolarLayoutContext,
   options: PlotAreaOptions = {},
 ): PolarLayout => {
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   // 角向标签贴外圈一圈，最坏在左右两侧吃掉一个最宽标签宽 + 一个字高（顶/底），故四向各按需预留
-  const labelReserve = input.hasAngularAxis
-    ? Math.max(maxLabelWidth(input.angularLabels, fontSize), fontSize) +
+  const labelReserve = context.hasAngularAxis
+    ? Math.max(maxLabelWidth(context.angularLabels, fontSize), fontSize) +
       DEFAULT_AXIS_TICK_LENGTH +
       DEFAULT_AXIS_LABEL_GAP
     : 0;

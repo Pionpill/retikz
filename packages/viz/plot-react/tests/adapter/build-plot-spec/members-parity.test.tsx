@@ -1,9 +1,10 @@
 import type { IRPlotSpec } from '@retikz/plot';
 import type { ReactNode } from 'react';
 
+import { resolveLabelOf } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec, resolveLabelOf } from '../../../src/adapter';
+import { buildPlotSpec } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';

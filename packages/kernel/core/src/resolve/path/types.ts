@@ -3,7 +3,6 @@ import type {
   ArrowDefinition,
   PathGeneratorDefinition,
   PatternDefinition,
-  RibbonWidthProfileDefinition,
   Transform,
 } from '../../contract';
 import type {
@@ -11,10 +10,7 @@ import type {
   IRGeometryLabel,
   IRJsonObject,
   IRPathBase,
-  IRPathRibbonOptions,
   IRPosition,
-  IRRibbonSampling,
-  IRRibbonWidth,
   IRStep,
   IRTarget,
   ResolvedDropShadow,
@@ -52,70 +48,12 @@ type CompleteCanonicalStep<TStep extends IRStep> = TStep extends {
 /** 展开折线、平滑路径与标签静态默认值后的路径步骤 */
 export type CanonicalStep = CompleteCanonicalStep<IRStep>;
 
-type WithoutCanonicalStepLabel<TStep extends CanonicalStep> = TStep extends unknown
-  ? 'label' extends keyof TStep
-    ? Omit<TStep, 'label'>
-    : TStep
-  : never;
-
-/** 流带复用描边输出器时使用的不带标签规范化步骤 */
-export type CanonicalStepWithoutLabel = WithoutCanonicalStepLabel<CanonicalStep>;
-
-type CanonicalRibbonStopsWidth = Omit<Extract<IRRibbonWidth, { kind: 'stops' }>, 'interpolation'> & {
-  /** 相邻停靠点的插值方式 */
-  interpolation: NonNullable<Extract<IRRibbonWidth, { kind: 'stops' }>['interpolation']>;
-};
-
-/** 已排序停靠点并补齐插值默认值的流带宽度规则 */
-export type CanonicalRibbonWidth = Exclude<IRRibbonWidth, { kind: 'stops' }> | CanonicalRibbonStopsWidth;
-
-type CanonicalRibbonAdaptiveSampling = Omit<Extract<IRRibbonSampling, { kind: 'adaptive' }>, 'maxSamples'> & {
-  /** 最大采样数量 */
-  maxSamples: number;
-};
-
-/** 已展开简写与自适应默认值的流带采样策略 */
-export type CanonicalRibbonSampling = Exclude<IRRibbonSampling, { kind: 'adaptive' }> | CanonicalRibbonAdaptiveSampling;
-
-/** 已补齐端点默认值的流带端点 */
-export type CanonicalRibbonEndpoint = Omit<NonNullable<IRPathRibbonOptions['start']>, 'cap'> & {
-  /** 端点闭合方式 */
-  cap: NonNullable<NonNullable<IRPathRibbonOptions['start']>['cap']>;
-};
-
-/** 内置流带输出器消费的完整静态选项 */
-export type CanonicalRibbonOptions = Omit<
-  IRPathRibbonOptions,
-  'mode' | 'align' | 'interpolation' | 'start' | 'end' | 'sampling' | 'samples' | 'width' | 'upper' | 'lower'
-> & {
-  /** 流带构造模式 */
-  mode: NonNullable<IRPathRibbonOptions['mode']>;
-  /** 中心线对齐方式 */
-  align: NonNullable<IRPathRibbonOptions['align']>;
-  /** 端点宽度插值方式 */
-  interpolation: NonNullable<IRPathRibbonOptions['interpolation']>;
-  /** 起始端点 */
-  start: CanonicalRibbonEndpoint;
-  /** 结束端点 */
-  end: CanonicalRibbonEndpoint;
-  /** 完整宽度规则 */
-  width?: CanonicalRibbonWidth;
-  /** 完整采样策略 */
-  sampling?: CanonicalRibbonSampling;
-  /** 边界流带的上边界 */
-  upper?: Array<CanonicalStep>;
-  /** 边界流带的下边界 */
-  lower?: Array<CanonicalStep>;
-};
-
 /** 内置路径输出器消费的完整静态路径形态 */
-export type CanonicalPath = Omit<IRPathBase, 'children' | 'label' | 'ribbon' | 'shadow'> & {
+export type CanonicalPath = Omit<IRPathBase, 'children' | 'label' | 'shadow'> & {
   /** 完整路径步骤 */
   children?: Array<CanonicalStep>;
   /** 统一为数组的宿主标签 */
   label?: Array<CanonicalGeometryLabel>;
-  /** 完整流带选项 */
-  ribbon?: CanonicalRibbonOptions;
   /** 已展开预设与静态默认值的投影 */
   shadow?: ResolvedDropShadow;
 };
@@ -124,7 +62,8 @@ export type CanonicalPath = Omit<IRPathBase, 'children' | 'label' | 'ribbon' | '
 export type PathKindResolution = Readonly<{
   name: string;
   definition: AnyPathKindDefinition;
-  options: unknown;
+  /** 通过该 definition 完整 schema 解析后的 source subject */
+  path: IRPathBase;
 }>;
 
 /** path generator step 在 resolving 阶段绑定后的定义与参数 */
@@ -167,14 +106,6 @@ export type ArrowMarkResolution = Readonly<{
   geometry: ArrowMarkGeometry;
 }>;
 
-/** ribbon width 在 resolving 阶段绑定的 profile 或静态宽度规则 */
-export type RibbonWidthResolution = Readonly<{
-  width: CanonicalRibbonWidth;
-  definition?: RibbonWidthProfileDefinition;
-  params?: IRJsonObject;
-  requiresSampling: boolean;
-}>;
-
 /** 解析阶段向 target/reference 提供的几何能力 */
 export type PathTargetResolver = Readonly<{
   /** 将 target 解析到当前 scope 的局部参考点 */
@@ -209,8 +140,6 @@ export type PathResolveContext = Readonly<{
   pathGenerators: ReadonlyMap<string, PathGeneratorDefinition>;
   /** arrow provider registry */
   arrows: ReadonlyMap<string, ArrowDefinition>;
-  /** ribbon width profile registry */
-  ribbonWidthProfiles: ReadonlyMap<string, RibbonWidthProfileDefinition>;
   /** pattern paint provider registry */
   patterns: ReadonlyMap<string, PatternDefinition>;
   /** paint resource dimensions rounding */
@@ -237,12 +166,10 @@ export type TargetResolution = Readonly<{
 export type PathStyleResolution = Readonly<{
   /** 最终描边宽度，缺省输入已解析为 1 */
   strokeWidth: number;
-  /** 用户或级联样式是否显式请求描边字段；ribbon emitter 据此写出 stroke */
+  /** 用户或级联样式是否显式请求描边字段 */
   strokeRequested: boolean;
   /** stroke emitter 未提供 fill 时的默认值 */
   strokeFillDefault: 'none';
-  /** ribbon emitter 未提供 fill 时的默认值 */
-  ribbonFillDefault: 'currentColor';
   /** emitter 未提供 stroke 时的默认值 */
   strokeDefault: 'currentColor';
 }>;
@@ -270,11 +197,4 @@ export type StrokePathResolution = PathResolution &
     generators: ReadonlyMap<CanonicalStep, PathGeneratorResolution>;
     /** 按 canonical arrow mark 对象索引的 arrow resolution */
     arrows: ReadonlyMap<IRArrowMark, ArrowMarkResolution>;
-  }>;
-
-/** ribbon emitter 消费的、已绑定 secondary provider 的 path resolution */
-export type RibbonPathResolution = StrokePathResolution &
-  Readonly<{
-    /** ribbon 顶层 width 的已绑定 profile resolution */
-    ribbonWidth?: RibbonWidthResolution;
   }>;

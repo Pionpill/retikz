@@ -2,16 +2,16 @@ import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue } from '@reti
 
 import { resolveDefaultCoreThemeColors } from '@retikz/core';
 
-import type { IRPlotResolvedThemeTokens } from '../../schemas';
+import type { IRPlotThemeTokenResolution } from '../../schemas';
 
-import { PlotResolvedThemeTokensSchema } from '../../schemas';
+import { PlotThemeTokenResolutionSchema } from '../../schemas';
 import { getAxisPreset, getLegendPreset, getPalettePreset, getPlotAreaPreset, getTypographyPreset } from './preset';
 
 const createPreset = (
   mode: ThemeModeValue,
   categorical: NonEmptyReadonlyArray<CssColorValue>,
-): IRPlotResolvedThemeTokens => {
-  return PlotResolvedThemeTokensSchema.parse({
+): IRPlotThemeTokenResolution => {
+  return PlotThemeTokenResolutionSchema.parse({
     ...getPlotAreaPreset(mode),
     ...getTypographyPreset(mode),
     ...getAxisPreset(mode),
@@ -24,4 +24,4 @@ const createPreset = (
 export const getDefaultPlotThemePreset = (
   mode: ThemeModeValue,
   categorical: NonEmptyReadonlyArray<CssColorValue> = resolveDefaultCoreThemeColors(mode).categorical,
-): IRPlotResolvedThemeTokens => structuredClone(createPreset(mode, categorical));
+): IRPlotThemeTokenResolution => structuredClone(createPreset(mode, categorical));

@@ -1,13 +1,12 @@
 import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope, ResolvedTheme } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 
 import { categoricalColorAt, defineComposite, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { applyTransforms, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
 import type { CoordinateFrame, DatumIdRegistrar, ProvenanceContext } from '../../contract';
-import type { IRPlotAxisGuide, IRPlotGuide, IRPlotSpec } from '../../schemas';
-import type { Rect } from '../../shared';
+import type { ChannelResolveContext } from '../../resolve/channel';
 import type {
   CompositionLayout,
   CompositionResolve,
@@ -17,38 +16,16 @@ import type {
   FacetPanel,
   FacetScalar,
   GridTargetSelector,
-  SharedScaffold,
-} from './composition';
+} from '../../resolve/composition';
+import type { CoordinateResolveContext } from '../../resolve/coordinate';
+import type { IRPlotAxisGuide, IRPlotGuide, IRPlotSpec } from '../../schemas';
+import type { Rect } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
 import { rootMeta, slug } from '../../contract';
-import {
-  isPolarCoordinateFrame,
-  resolveAxisGuideTokens,
-  resolvePlotAxisGuideTheme,
-  resolvePlotAxisThemeTokens,
-  resolvePlotGuideTheme,
-  resolvePlotTheme,
-} from '../../providers';
-import {
-  channelKindsForMark,
-  lowerMark,
-  makeColorSchemeResolver,
-  resolveChannelRegistry,
-  resolveMarkChannels,
-} from '../../providers';
-import {
-  AxisGridApplyTo,
-  CoordinateArrangementKind,
-  CoordinateViewPlacementKind,
-  PLOT_NAMESPACE,
-  PlotCoordinate,
-  PlotLayerZIndex,
-  PlotSpecSchema,
-} from '../../schemas';
-import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
-import { createAnchorRegistry } from '../anchors';
-import { createDatumIdRegistrar } from '../provenance';
+import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
+import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
+import { resolveMarkChannels } from '../../resolve/channel';
 import {
   axisGridApplyToOf,
   axisGridSelectorOf,
@@ -65,16 +42,38 @@ import {
   mergeCompositionMargin,
   resolveArrangementLayout,
   resolveArrangementPolicy,
+  resolveComposition,
   resolveFacetPanels,
   scalarSelectorIncludes,
   withAxisGapOffsets,
-  withEnabledAxisGrid,
-  withoutAxisGrid,
-  withScopeContext,
-} from './composition';
-import { prepareRows, resolveMarkRows } from './data';
-import { resolveFrame, resolveScopedFrames } from './frame';
-import { buildLegendLayers, collectChannelDescriptors, reserveLegendBands } from './legend';
+} from '../../resolve/composition';
+import { resolveCoordinateFrame } from '../../resolve/coordinate';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
+import { resolveMarkOperation } from '../../resolve/mark';
+import { orderedCategoryDomain, resolveChannelScale } from '../../resolve/scale';
+import {
+  resolveAxisGuideTokens,
+  resolvePlotAxisGuideTheme,
+  resolvePlotAxisThemeTokens,
+  resolvePlotGuideTheme,
+  resolvePlotTheme,
+} from '../../resolve/theme';
+import {
+  AxisGridApplyTo,
+  CoordinateViewPlacementKind,
+  PLOT_NAMESPACE,
+  PlotCoordinate,
+  PlotLayerZIndex,
+  PlotSpecSchema,
+} from '../../schemas';
+import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
+import { createAnchorRegistry } from '../anchors';
+import { lowerCustomAxis, lowerGuide } from '../guide';
+import { createDatumIdRegistrar } from '../provenance';
+import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from './composition';
+import { applyMarkTransforms, prepareRows } from './data';
+import { resolveScopedFrames } from './frame';
+import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
@@ -190,22 +189,18 @@ const expandPlot = (
   const rows = applyTransforms(normalized, node.transform, transformRegistry, transformContext);
   const markDataViews: Array<MarkDataView> = node.marks.map(mark => ({
     mark,
-    rows: resolveMarkRows(mark, rows, transformRegistry, transformContext),
+    rows: applyMarkTransforms(mark, rows, transformRegistry, transformContext),
   }));
 
-  const compositionLayout = node.composition?.spacing;
-  const compositionArrangements = node.composition?.arrangements ?? [];
-  const compositionFacets = compositionArrangements.filter(
-    (arrangement): arrangement is FacetGrid => arrangement.kind === CoordinateArrangementKind.Facet,
-  );
-  const compositionScaffolds = compositionArrangements.filter(
-    (arrangement): arrangement is SharedScaffold => arrangement.kind === CoordinateArrangementKind.Tracks,
-  );
-  const compositionResolve = node.composition?.resolve;
-  const compositionPolicyContext = {
-    hasFacets: compositionFacets.length > 0,
-    hasScaffolds: compositionScaffolds.length > 0,
-  };
+  const compositionResolution = resolveComposition(node);
+  const {
+    coordinateScopes,
+    layout: compositionLayout,
+    resolve: compositionResolve,
+    facets: compositionFacets,
+    scaffolds: compositionScaffolds,
+    policyContext: compositionPolicyContext,
+  } = compositionResolution;
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
@@ -222,7 +217,31 @@ const expandPlot = (
     return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolvedTheme, axisTokens), guide);
   });
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
-  const { coordinateScopes, scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
+  const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
+  const coordinateResolveContextOf = (
+    source: IRPlotSpec,
+    frameRows: Array<ExternalRow>,
+    guides: Array<IRPlotGuide>,
+    overrides: Partial<CoordinateResolveContext> = {},
+  ): CoordinateResolveContext => ({
+    coordinate: source.coordinate,
+    rows: frameRows,
+    fieldTypes,
+    width,
+    height,
+    fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
+    margin: options.margin,
+    provenance,
+    coordinateRegistry,
+    scaleRegistry,
+    legendReserve: legendReserveOf(guides.filter(isLegendGuide)),
+    lowerGuide,
+    lowerCustomAxis,
+    resolveGuideTicks,
+    resolveVisibleGuideTicks,
+    ...overrides,
+  });
+  const { scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
     resolveScopedFrames({
       node,
       rows,
@@ -238,6 +257,7 @@ const expandPlot = (
       compositionFacets,
       compositionScaffolds,
       compositionPolicyContext,
+      coordinateScopes,
       allGuides,
       allGuidesWithCompositionGap,
     });
@@ -247,20 +267,25 @@ const expandPlot = (
   const arrangementResolveOf = (arrangement: CoordinateArrangement | undefined): CompositionResolve | undefined =>
     resolveArrangementPolicy(compositionResolve, arrangement);
 
-  const channelCtx = {
-    node,
-    rows,
-    fieldTypes,
-    fieldTypeEvidence,
-    scaleRegistry,
-    resolveColorScheme,
-    palette: resolvedTheme.palette,
-  };
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
     custom: options.channelDefinitions,
     resolveLabel: options.resolveLabel,
   });
+  const channelCtx: ChannelResolveContext = {
+    node,
+    rows,
+    fieldTypes,
+    fieldTypeEvidence,
+    channelRegistry,
+    markRegistry,
+    defaultColor: categoricalColorAt(resolvedTheme.palette.series, 0),
+    resolveChannelScale: (operation, values, context) =>
+      resolveChannelScale(operation, values, context, { registry: scaleRegistry }),
+    resolveCategoryDomain: orderedCategoryDomain,
+    resolveColorScheme,
+    palette: resolvedTheme.palette,
+  };
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
   // 两 datum-bearing mark（point + bar）撞同 `<plotId>.datum.<value>` 即 fail loud（#2）。
@@ -482,7 +507,7 @@ const expandPlot = (
       const panelFrameGuides = facetFrameGuidesForPanel(panel);
       const panelMarkDataViews: Array<MarkDataView> = node.marks.map(mark => ({
         mark,
-        rows: resolveMarkRows(mark, panel.rows, transformRegistry, transformContext),
+        rows: applyMarkTransforms(mark, panel.rows, transformRegistry, transformContext),
       }));
       const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
       for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
@@ -496,59 +521,47 @@ const expandPlot = (
         guides: panelFrameGuides,
       };
       const panelLayout = arrangementLayoutOf(panel.facet);
-      const frameResolution = resolveFrame({
-        node: panelNode,
-        rows: panel.rows,
-        fieldTypes,
-        width: panelWidth,
-        height: panelHeight,
-        fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-        margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
-        labelGap: panelLayout?.labelGap,
-        provenance,
-        coordinates: options.coordinates,
-        scaleRegistry,
-        markDataViews,
-        roleMarkDataViews,
-      });
+      const frameResolution = resolveCoordinateFrame(
+        panelNode,
+        coordinateResolveContextOf(panelNode, panel.rows, panelFrameGuides, {
+          width: panelWidth,
+          height: panelHeight,
+          margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+          labelGap: panelLayout?.labelGap,
+          markDataViews,
+          roleMarkDataViews,
+        }),
+      );
       const axisResolution =
         panelAxisGuides.length === panelFrameGuides.length
           ? frameResolution
-          : resolveFrame({
-              node: { ...panelNode, guides: panelAxisGuides },
-              rows: panel.rows,
-              fieldTypes,
-              width: panelWidth,
-              height: panelHeight,
-              fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-              margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
-              labelGap: panelLayout?.labelGap,
-              plotAreaOverride: frameResolution.plotArea,
-              provenance,
-              coordinates: options.coordinates,
-              scaleRegistry,
-              markDataViews,
-              roleMarkDataViews,
-            });
+          : resolveCoordinateFrame(
+              { ...panelNode, guides: panelAxisGuides },
+              coordinateResolveContextOf({ ...panelNode, guides: panelAxisGuides }, panel.rows, panelAxisGuides, {
+                width: panelWidth,
+                height: panelHeight,
+                margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+                labelGap: panelLayout?.labelGap,
+                plotAreaOverride: frameResolution.plotArea,
+                markDataViews,
+                roleMarkDataViews,
+              }),
+            );
       const panelGridGuides = facetGridGuidesForPanel(panel);
       const gridResolution =
         panelGridGuides.length > 0
-          ? resolveFrame({
-              node: { ...panelNode, guides: panelGridGuides },
-              rows: panel.rows,
-              fieldTypes,
-              width: panelWidth,
-              height: panelHeight,
-              fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
-              margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
-              labelGap: panelLayout?.labelGap,
-              plotAreaOverride: frameResolution.plotArea,
-              provenance,
-              coordinates: options.coordinates,
-              scaleRegistry,
-              markDataViews,
-              roleMarkDataViews,
-            })
+          ? resolveCoordinateFrame(
+              { ...panelNode, guides: panelGridGuides },
+              coordinateResolveContextOf({ ...panelNode, guides: panelGridGuides }, panel.rows, panelGridGuides, {
+                width: panelWidth,
+                height: panelHeight,
+                margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+                labelGap: panelLayout?.labelGap,
+                plotAreaOverride: frameResolution.plotArea,
+                markDataViews,
+                roleMarkDataViews,
+              }),
+            )
           : undefined;
       const facetContext: IRJsonObject = { id: panel.facet.id };
       if (panel.row !== undefined) facetContext.row = panel.row;
@@ -562,24 +575,22 @@ const expandPlot = (
       const markLayers: Array<IRChild> = node.marks
         .map((mark, markIndex) => {
           const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
+          const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
           const layer = lowerMark(
-            mark,
+            operationResolution,
             markRows,
             frameResolution.frame,
-            resolveMarkChannels(
-              mark,
-              { ...channelCtx, rows: markRows },
-              channelRegistry,
-              categoricalColorAt(resolvedTheme.palette.series, markIndex),
-              channelKindsForMark(mark, markRegistry),
-            ),
+            resolveMarkChannels(mark, {
+              ...channelCtx,
+              rows: markRows,
+              defaultColor: categoricalColorAt(resolvedTheme.palette.series, markIndex),
+            }),
             {
               markIndex,
               plotId: node.id,
               ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
               anchors: anchorRegistry,
             },
-            markRegistry,
           );
           return layer === null ? null : withScopeContext(layer, panelContext);
         })
@@ -650,24 +661,22 @@ const expandPlot = (
       if (frame === undefined) {
         throw new Error(`lowerPlots: coordinateView "${coordinateScopeId}" is not registered`);
       }
+      const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
       const layer = lowerMark(
-        mark,
+        operationResolution,
         markRows,
         frame,
-        resolveMarkChannels(
-          mark,
-          { ...channelCtx, rows: markRows },
-          channelRegistry,
-          categoricalColorAt(resolvedTheme.palette.series, markIndex),
-          channelKindsForMark(mark, markRegistry),
-        ),
+        resolveMarkChannels(mark, {
+          ...channelCtx,
+          rows: markRows,
+          defaultColor: categoricalColorAt(resolvedTheme.palette.series, markIndex),
+        }),
         {
           markIndex,
           plotId: node.id,
           ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
           anchors: anchorRegistry,
         },
-        markRegistry,
       );
       if (layer === null) return null;
       const scope = scopeById.get(coordinateScopeId);
@@ -691,14 +700,7 @@ const expandPlot = (
   const legendGuides = allGuides.filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(
-      node,
-      channelCtx,
-      channelRegistry,
-      markRegistry,
-      categoricalColorAt(resolvedTheme.palette.series, 0),
-      markDataViews,
-    );
+    const channelDescriptors = collectChannelDescriptors(node, channelCtx, markDataViews);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(
       ...buildLegendLayers(

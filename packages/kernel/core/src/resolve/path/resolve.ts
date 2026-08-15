@@ -1,23 +1,10 @@
 import { arcEndPoint } from '@retikz/math';
 
 import type { Transform } from '../../contract';
-import type {
-  IRGeometryLabel,
-  IRPathBase,
-  IRPathRibbonOptions,
-  IRPosition,
-  IRRibbonSampling,
-  IRRibbonWidth,
-  IRStep,
-  IRTarget,
-} from '../../schemas';
+import type { IRGeometryLabel, IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
 import type {
   CanonicalGeometryLabel,
   CanonicalPath,
-  CanonicalRibbonEndpoint,
-  CanonicalRibbonOptions,
-  CanonicalRibbonSampling,
-  CanonicalRibbonWidth,
   CanonicalStep,
   PathResolution,
   PathResolveContext,
@@ -82,46 +69,6 @@ const canonicalizeStep = (step: IRStep): CanonicalStep => {
 const canonicalizeSteps = (steps: ReadonlyArray<IRStep> | undefined): Array<CanonicalStep> | undefined =>
   steps?.map(canonicalizeStep);
 
-const canonicalizeRibbonWidth = (width: IRRibbonWidth | undefined): CanonicalRibbonWidth | undefined => {
-  if (width === undefined || typeof width === 'number' || width.kind === 'profile') return width;
-  return {
-    ...width,
-    interpolation: width.interpolation ?? 'linear',
-    stops: [...width.stops].sort((a, b) => a.offset - b.offset),
-  };
-};
-
-const canonicalizeRibbonEndpoint = (
-  endpoint: NonNullable<IRPathRibbonOptions['start']> | undefined,
-): CanonicalRibbonEndpoint => ({ ...endpoint, cap: endpoint?.cap ?? 'butt' });
-
-const canonicalizeRibbonSampling = (
-  sampling: IRRibbonSampling | undefined,
-  samples: IRPathRibbonOptions['samples'],
-): CanonicalRibbonSampling | undefined => {
-  if (sampling?.kind === 'adaptive') return { ...sampling, maxSamples: sampling.maxSamples ?? 512 };
-  if (sampling !== undefined) return sampling;
-  if (samples === true) return { kind: 'fixed', samples: 64 };
-  if (typeof samples === 'number') return { kind: 'fixed', samples };
-  return undefined;
-};
-
-const canonicalizeRibbon = (ribbon: IRPathRibbonOptions): CanonicalRibbonOptions => {
-  const { samples, ...source } = ribbon;
-  return {
-    ...source,
-    mode: ribbon.mode ?? 'centerline',
-    align: ribbon.align ?? 'center',
-    interpolation: ribbon.interpolation ?? 'linear',
-    width: canonicalizeRibbonWidth(ribbon.width),
-    start: canonicalizeRibbonEndpoint(ribbon.start),
-    end: canonicalizeRibbonEndpoint(ribbon.end),
-    sampling: canonicalizeRibbonSampling(ribbon.sampling, samples),
-    upper: canonicalizeSteps(ribbon.upper),
-    lower: canonicalizeSteps(ribbon.lower),
-  };
-};
-
 const canonicalizePath = (path: IRPathBase): CanonicalPath => ({
   ...path,
   children: canonicalizeSteps(path.children),
@@ -129,7 +76,6 @@ const canonicalizePath = (path: IRPathBase): CanonicalPath => ({
     path.label === undefined
       ? undefined
       : (Array.isArray(path.label) ? path.label : [path.label]).map(canonicalizeLabel),
-  ribbon: path.ribbon === undefined ? undefined : canonicalizeRibbon(path.ribbon),
   shadow: resolveDropShadow(path.shadow),
 });
 
@@ -272,30 +218,16 @@ const resolveSteps = (
 
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
-  const canonicalPath = canonicalizePath(styled);
   const irPath = context.irPath ?? 'path';
-  const kind = resolvePathKind(canonicalPath, context, irPath);
+  const kind = resolvePathKind(styled, context, irPath);
+  const canonicalPath = canonicalizePath(kind.path);
   const targets = new Map<string, TargetResolution>();
   const scopeChain = context.scopeChain ?? [];
   const canonicalSteps =
     canonicalPath.children === undefined ? undefined : resolveSteps(canonicalPath.children, context, targets, irPath);
-  const ribbon = canonicalPath.ribbon;
-  const resolvedRibbon =
-    ribbon === undefined
-      ? undefined
-      : {
-          ...ribbon,
-          ...(ribbon.upper === undefined
-            ? {}
-            : { upper: resolveSteps(ribbon.upper, context, targets, `${irPath}.ribbon.upper`) }),
-          ...(ribbon.lower === undefined
-            ? {}
-            : { lower: resolveSteps(ribbon.lower, context, targets, `${irPath}.ribbon.lower`) }),
-        };
   const resolvedPath: CanonicalPath = {
     ...canonicalPath,
     ...(canonicalSteps === undefined ? {} : { children: canonicalSteps }),
-    ...(resolvedRibbon === undefined ? {} : { ribbon: resolvedRibbon }),
   };
   const paintContext = {
     patterns: context.patterns,
@@ -317,7 +249,6 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
       strokeWidth: resolvedPath.strokeWidth ?? 1,
       strokeRequested: resolvedPath.stroke !== undefined || resolvedPath.strokeWidth !== undefined,
       strokeFillDefault: 'none',
-      ribbonFillDefault: 'currentColor',
       strokeDefault: 'currentColor',
     },
   };

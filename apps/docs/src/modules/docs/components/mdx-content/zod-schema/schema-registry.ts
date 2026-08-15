@@ -7,6 +7,7 @@ import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as NotationIR from '@retikz/notation';
 import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
+import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import * as TableIR from '@retikz/table';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
@@ -192,10 +193,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'DrawableInstance',
     url: '/kernel/reference/schema/path#drawableinstance',
   },
-  PathRibbonOptionsSchema: {
-    schema: IR.PathRibbonOptionsSchema,
-    label: 'PathRibbonOptions',
-    url: '/kernel/reference/schema/path#pathribbonoptions',
+  RibbonPathOptionsSchema: {
+    schema: RibbonPathOptionsSchema,
+    label: 'RibbonPathOptions',
+    url: '/library/standard/extension/ribbon',
   },
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,
@@ -1380,10 +1381,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotAxisThemeTokenRules',
     url: '/viz/plot/reference/theme#plotaxisthemetokenrulesschema',
   },
-  PlotResolvedThemeTokensSchema: {
-    schema: PlotIR.PlotResolvedThemeTokensSchema,
-    label: 'PlotResolvedThemeTokens',
-    url: '/viz/plot/reference/theme#plotresolvedthemetokensschema',
+  PlotThemeTokenResolutionSchema: {
+    schema: PlotIR.PlotThemeTokenResolutionSchema,
+    label: 'PlotThemeTokenResolution',
+    url: '/viz/plot/reference/theme#plotthemetokenresolutionschema',
   },
   PlotThemeResolutionSchema: {
     schema: PlotIR.PlotThemeResolutionSchema,

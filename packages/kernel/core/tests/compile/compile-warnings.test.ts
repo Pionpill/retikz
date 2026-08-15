@@ -13,26 +13,11 @@ const scene = (children: IRScene['children']): IRScene => ({
 });
 
 describe('CompileOptions.onWarn', () => {
-  it('keeps PATH_TOO_SHORT ahead of unused arrow, generator, and ribbon profile lookup', () => {
+  it('keeps PATH_TOO_SHORT ahead of unused arrow and generator lookup', () => {
     const cases: Array<IRScene['children'][number]> = [
       {
         type: 'path',
         marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'missing-arrow' } }],
-        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
-      },
-      {
-        type: 'path',
-        ribbon: {
-          upper: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'missing-generator', params: {} },
-          ],
-        },
-        children: [{ type: 'step', kind: 'move', to: [0, 0] }],
-      },
-      {
-        type: 'path',
-        ribbon: { width: { kind: 'profile', name: 'missing-profile' } },
         children: [{ type: 'step', kind: 'move', to: [0, 0] }],
       },
     ];

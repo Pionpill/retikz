@@ -1,11 +1,11 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { IRPlotAxisThemeTokenRules, IRPlotResolvedThemeTokens } from '@retikz/plot';
+import type { IRPlotAxisThemeTokenRules, IRPlotThemeTokenResolution } from '@retikz/plot';
 
 import {
   definePlotThemeStyle,
   LegendSymbolFit,
   PlotColorScheme,
-  PlotResolvedThemeTokensSchema,
+  PlotThemeTokenResolutionSchema,
   PlotShapePaletteSchema,
   PlotThemeToken,
 } from '@retikz/plot';
@@ -101,14 +101,14 @@ const tokenRulesOf = (style: ReferenceStyle): IRPlotAxisThemeTokenRules => {
   ];
 };
 
-const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotResolvedThemeTokens => {
+const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotThemeTokenResolution => {
   const preset = styles[style];
   const tickMark =
     preset.axis.tick === false
       ? false
       : { kind: 'line' as const, length: preset.axis.tick, line: { stroke: 'currentColor' } };
   const categorical = [...theme.colors.categorical];
-  return PlotResolvedThemeTokensSchema.parse({
+  return PlotThemeTokenResolutionSchema.parse({
     [PlotThemeToken.PlotAreaFill]: preset.area[theme.mode],
     [PlotThemeToken.PlotTypographyForeground]: 'currentColor',
     [PlotThemeToken.PlotTypographyFontFamily]: preset.fontFamily,

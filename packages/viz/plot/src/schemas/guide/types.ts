@@ -26,7 +26,13 @@ import type {
   LegendSymbolFit,
   PlotGuide,
 } from './constants';
-import type { AxisGuideSchema, GuideSchema, LegendGuideSchema } from './schema';
+import type {
+  AxisGuideSchema,
+  GuideSchema,
+  GuideTickLabelFormatSchema,
+  GuideTickSourceSchema,
+  LegendGuideSchema,
+} from './schema';
 
 /** guide 类型 */
 export type PlotGuideValue = ValueOf<typeof PlotGuide>;
@@ -111,6 +117,12 @@ export type GuideDimensionValue = string;
 
 /** guide（axis 或 legend） */
 export type IRPlotGuide = z.infer<typeof GuideSchema>;
+
+/** guide 刻度来源声明 */
+export type IRPlotGuideTickSource = z.infer<typeof GuideTickSourceSchema>;
+
+/** guide 刻度标签格式声明 */
+export type IRPlotGuideTickLabelFormat = z.infer<typeof GuideTickLabelFormatSchema>;
 
 /** 坐标轴 guide（轴线 + 刻度 + 标签 + 可选网格） */
 export type IRPlotAxisGuide = z.infer<typeof AxisGuideSchema>;

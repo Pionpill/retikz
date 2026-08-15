@@ -22,7 +22,7 @@ description: 用 ShapeDefinition 扩展 Node 的占位、连接边界、anchor �
 
 `node.shape` 可以是字符串，也可以是 `{ type, params }`。两种写法都必须 100% JSON 可序列化；`ShapeDefinition` 含函数，不能写进 IR，也不能从 JSON 恢复。
 
-Core 默认 `rectangle` / `ellipse` / `polygon` 与自定义项经过同一套 registry、参数校验和消费流程。`circle` 与 `diamond` 是编译期 preset，分别归一到 `ellipse` 与 `polygon`；`star` / `sector` / `arc` / `contour` 等官方可选项从 `@retikz/standard/shape` 导入后，也走同一条路径。
+Core 默认 `rectangle` / `ellipse` / `polygon` 与自定义项经过同一套 registry、参数校验和消费流程。`circle` 与 `diamond` 是编译期 preset，分别归一到 `ellipse` 与 `polygon`；`star` / `sector` / `cross` / `contour` 等官方可选项从 `@retikz/standard/shape` 导入后，也走同一条路径。
 
 ## 定义能力
 

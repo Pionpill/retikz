@@ -8,8 +8,8 @@ import type { GuideContext } from '../../../src/contract';
 import type { IRPlotSpec } from '../../../src/schemas';
 
 import { createCoordinateFrame } from '../../../src/contract';
-import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */

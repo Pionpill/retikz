@@ -47,7 +47,7 @@ const Demo: FC = () => (
       cornerRadius={4}
       font={{ size: 14 }}
     >
-      ribbon: width → outline
+      optional ribbon: width → outline
     </Node>
     <Node
       id="custom-provider"

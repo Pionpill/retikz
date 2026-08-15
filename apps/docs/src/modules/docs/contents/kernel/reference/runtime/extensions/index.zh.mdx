@@ -30,11 +30,12 @@ Layout proposal 不是新的 registry：它是每个 layout-aware `CompositeDefi
 | Pattern            | pattern shape name | `CompileOptions.patterns`                              |
 | Path generator     | generator name     | `CompileOptions.pathGenerators`                        |
 | Path kind          | `Path.kind`        | `CompileOptions.pathKinds`                             |
-| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles`                   |
 | Composite          | `namespace + type` | `CompileOptions.composites`                            |
 | Easing             | easing name        | `<Layout easings>`                                     |
 | Animation property | property name      | `<Layout animationProperties>`（仅 Canvas 自定义属性） |
 | TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                              |
+
+Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `stroke` definition。Ribbon 等可选 kind 都是通过同一槽位装载的 Standard Definition；它们的 schema、几何和 runtime 数据集不属于 Core。
 
 ## 诊断约定
 
@@ -81,10 +82,10 @@ Layout proposal 不是新的 registry：它是每个 layout-aware `CompositeDefi
     <span className="font-semibold">路径生成器</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">PathGeneratorDefinition：参数化曲线命令</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/ribbon#自定义宽度-profile">
-    <span className="font-semibold">Ribbon 宽度 profile</span>
+  <LinkedCard href="/library/standard/extension/ribbon">
+    <span className="font-semibold">Standard Ribbon</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      RibbonWidthProfileDefinition：沿中心线解析动态带宽
+      RibbonPathKindDefinition 与 provider contribution：可选的带状路径
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/concepts/design/composite">

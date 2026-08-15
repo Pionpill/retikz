@@ -44,14 +44,6 @@ export const normalizePlot = (input: InputPlot): IRPlotSpec => {
   };
 };
 
-/** 从已归一化的 Plot Source IR 还原可再次归一化的 authoring Input */
-export const inputPlotFromSpec = (spec: IRPlotSpec): InputPlot => {
-  const { namespace: _namespace, type: _type, ...input } = spec;
-  void _namespace;
-  void _type;
-  return input;
-};
-
 /** 把 JSON-safe Plot declarations 归一化为 Plot member fragment 与 runtime sidecar */
 export const normalizePlotDeclarations = (
   collection: PlotDeclarationCollection,

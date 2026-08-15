@@ -43,7 +43,7 @@ describe('Chart React InputEmbed routing', () => {
     expect(Chart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
     expect(ScatterChart.inputEmbedAdapter).toBe(PointChartInputEmbedAdapter);
     expect(chart).not.toHaveProperty('chart');
-    expect(chart).toMatchObject({ plot: { data: { reference: 'people' } } });
+    expect(chart).toMatchObject({ plot: { spec: { data: { reference: 'people' } } } });
     expect(point).toMatchObject({ type: 'scatter' });
   });
 });

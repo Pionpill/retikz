@@ -1,6 +1,6 @@
 # ADR-03：将 Ribbon 完整迁移为 Standard Path Kind
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-13
 - 依赖：[ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)
 - 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Path Kind ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/alpha.6/07-path-kind-registry.md) · [Core Path Generator / Ribbon Profile ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/alpha.8/06-builtin-path-generator-ribbon-profile.md)
@@ -178,3 +178,9 @@ Core React 的通用 `<Path kind="ribbon" kindOptions={...}>`、Vanilla 通用 P
 - 未注册 profile、重复 profile、无效 params、非有限宽度、无效路径结构和采样失败由 Standard Ribbon definition fail-loud；Core 不增加 Ribbon 字符串特判
 - 相同 key 的不同 Ribbon Path Kind definitions 由 ADR-02 assembly / Core path-kind registry fail-loud；不允许 Standard 官方 definition 静默覆盖用户 definition
 - 不保留 Core Ribbon re-export、旧 `ribbon` 字段 alias、`ribbonWidthProfiles` compatibility mapping 或自动注入 Standard 的 fallback
+
+## 实施结果
+
+Core 已收口为开放 Path host、完整 subject schema 与领域中立编译服务；Ribbon 的 schema、Width Profile、几何编译、单项 Definition 与 provider contribution 均由 `@retikz/standard/ribbon` 单一拥有。Plot 通过显式 provider 闭包获得 Ribbon，React、Vanilla 与直接 Core compile 共用 `pathKinds + kindOptions` 装配语义。
+
+验收已覆盖开放 host、完整 schema 恢复、provider identity、路径物化与标签服务、Ribbon 两种模式、采样、端帽、profile 冲突与失败语义、Plot 与 adapter 闭环、renderer-neutral Scene 输出以及双语文档。迁移不保留旧公共字段、导出或自动 fallback。

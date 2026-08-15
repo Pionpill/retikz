@@ -12,7 +12,7 @@ import {
   resolvePlotAxisThemeTokens,
   resolvePlotGuideTheme,
   resolvePlotTheme,
-} from '../../src/providers';
+} from '../../src/resolve/theme';
 import { PlotSpecSchema, PlotThemeToken } from '../../src/schemas';
 
 const ROWS = [

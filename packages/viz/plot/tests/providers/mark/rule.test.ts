@@ -1,18 +1,20 @@
 import type { IRNode, IRScope, ScenePrimitive } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { Cell, PositionScale } from '../../../src/contract';
+import type { Cell, CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlotReferenceMark, IRPlotSpec } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { lowerMark } from '../../../src/providers';
+import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
+import { resolveMarkOperation } from '../../../src/resolve/mark';
 import { PlotSpecSchema } from '../../../src/schemas';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
@@ -36,6 +38,10 @@ type RulePath = {
  */
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
+
+const markRegistry = resolveMarkRegistry();
+const lowerMark = (mark: IRPlotReferenceMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
+  lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
 
 const WIDTH = 400;
 const HEIGHT = 400;
@@ -502,7 +508,10 @@ describe('rule polar', () => {
     expect(shape.params.startAngle).toBe(0);
     expect(shape.params.endAngle).toBe(360);
 
-    const scene = compileToScene({ version: 1, type: 'scene', children: [layer] }, { shapes: [SectorShapeDefinition] }).scene;
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [layer] },
+      { shapes: [SectorShapeDefinition] },
+    ).scene;
     const filledRing = flattenPrimitives(scene.primitives).find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path' && p.fill === '#fde68a',
     );

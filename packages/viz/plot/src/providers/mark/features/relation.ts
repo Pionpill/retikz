@@ -4,12 +4,12 @@ import type {
   IRNodeLabel,
   IRNodeTarget,
   IRPath,
-  IRPathRibbonOptions,
   IRStep,
   IRStepLabel,
   IRTarget,
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { IRRibbonPathOptions } from '@retikz/standard/ribbon';
 
 import { FoldStepVia } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
@@ -21,7 +21,6 @@ import type {
   IRPlotRelationRoutingSpec,
   IRPlotRelationStepLabel,
   IRPlotTargetRef,
-  MarkValueType,
   RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
 
@@ -51,7 +50,7 @@ import {
   resolveGeometryMarkLabels,
 } from '../shared';
 
-type ResolvedTarget = {
+type TargetResolution = {
   target: IRTarget;
   coordinates: Array<IRCoordinate>;
 };
@@ -95,7 +94,7 @@ const resolveProjectedTarget = (
   transformedIndex: number,
   role: string,
   forceCoordinate: boolean,
-): ResolvedTarget | null => {
+): TargetResolution | null => {
   const values: Array<unknown> = [];
   for (const frameRole of frame.roles) {
     const field = (ref.project as Partial<Record<string, string>>)[frameRole];
@@ -142,7 +141,7 @@ const resolveTarget = (
   transformedIndex: number,
   role: string,
   forceCoordinate = false,
-): ResolvedTarget | null => {
+): TargetResolution | null => {
   if ('id' in ref) return { target: { id: ref.id, ...targetExtras(ref) }, coordinates: [] };
   if ('project' in ref)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
@@ -172,9 +171,11 @@ const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
   return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 
-const resolveMarkValue = <T>(value: MarkValueType<T> | undefined, row: ExternalRow): T | undefined => {
+type MarkStyleValue = NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>;
+
+const resolveMarkValue = <T>(value: MarkStyleValue | undefined, row: ExternalRow): T | undefined => {
   if (value === undefined) return undefined;
-  if (value.kind === MarkValueKind.Constant) return value.value;
+  if (value.kind === MarkValueKind.Constant) return value.value as T;
   return resolveFieldPath(row, value.value) as T | undefined;
 };
 
@@ -184,7 +185,7 @@ const relationStyleValue = (
   row: ExternalRow,
 ): unknown =>
   resolveMarkValue(
-    (style as Partial<Record<keyof IRPlotRelationPrimitiveStyle, MarkValueType<unknown>>> | undefined)?.[key],
+    (style as Partial<Record<keyof IRPlotRelationPrimitiveStyle, MarkStyleValue>> | undefined)?.[key],
     row,
   );
 
@@ -488,7 +489,7 @@ export const lowerRelation = (
       const width = resolveMarkValue<number>(mark.ribbon?.width, row);
       if (width === undefined) continue;
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
-      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRPathRibbonOptions>;
+      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRRibbonPathOptions>;
       const direction = horizontalRibbonEndpointDirection(source.target, target.target);
       const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
       const ribbon: IRPath = applyPathChannelDeliveries(
@@ -497,7 +498,7 @@ export const lowerRelation = (
           kind: 'ribbon',
           ...style,
           ...(label !== undefined ? { label } : {}),
-          ribbon: {
+          kindOptions: {
             ...ribbonOptions,
             ...(endWidth === undefined
               ? {

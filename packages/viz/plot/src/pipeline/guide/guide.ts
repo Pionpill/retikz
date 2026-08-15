@@ -15,12 +15,13 @@ import type {
   TickSet,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { ResolvedLegendGuideTokens } from '../../providers';
+import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
 import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
 import type { Rect } from '../../shared';
 
 import { guideLayerId, guideLayerMeta } from '../../contract';
-import { defaultOriginAxisTickSideOf, resolveGuideTicks, resolveVisibleGuideTicks } from '../../providers';
+import { defaultOriginAxisTickSideOf } from '../../providers';
+import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -1618,7 +1619,7 @@ export type LegendRamp = {
  * @description 形态选择（swatch / ramp）与颜色 / 代表值由 expand 据 descriptor + scale 求好后传入；
  *   本函数只管几何摆放与 core 节点产出（关注点分离：求值在 expand、绘制在 guide）
  */
-export type LegendInput = {
+export type LowerLegendOptions = {
   /** 形态：swatch（离散 / 分箱 / size / opacity）或 ramp（连续色带） */
   form: 'swatch' | 'ramp';
   /** 绑定通道（决定 swatch 视觉量取色 / 形状 / 半径 / 透明度） */
@@ -1642,7 +1643,7 @@ export type LegendInput = {
   /** legend 语义图层的 core zIndex */
   zIndex?: number;
   /** 已按 built-in plotTheme < PlotSpec.plotTheme < LegendGuide.style 合并的视觉 token */
-  style: ResolvedLegendGuideTokens;
+  style: EffectiveLegendGuideTokens;
 };
 
 /**
@@ -1674,8 +1675,8 @@ const legendTextNode = (node: IRNode): IRNode => ({
  *   条目几何在传入 band 内从左上角起摆，受无文字度量约束（plot-design §13.1）：超 band 溢出可接受、不做测量自适应。
  *   下沉目标统一是 core Node（标签 / swatch / ramp 矩形 / size 圆点），纯 JSON
  */
-export const lowerLegend = (input: LegendInput): IRScope => {
-  const { fontSize, band, orient } = input;
+export const lowerLegend = (options: LowerLegendOptions): IRScope => {
+  const { fontSize, band, orient } = options;
   const {
     swatchSize,
     swatchGap,
@@ -1685,24 +1686,24 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     rampThickness,
     title: titleStyle,
     label: labelStyle,
-  } = input.style;
+  } = options.style;
   const children: Array<IRNode> = [];
   // 标题占一行（顶部），条目区从标题下方起
   let cursorY = band.y;
-  if (input.title !== undefined) {
-    const titleText = textBlockMeasureText(input.title);
+  if (options.title !== undefined) {
+    const titleText = textBlockMeasureText(options.title);
     children.push(
       legendTextNode({
         type: 'node',
         position: [band.x + estimateLabelWidth(titleText, fontSize) / 2, cursorY + fontSize / 2],
-        text: input.title,
+        text: options.title,
         ...titleStyle,
       }),
     );
     cursorY += fontSize + titleGap;
   }
 
-  if (input.form === 'ramp' && input.ramp) {
+  if (options.form === 'ramp' && options.ramp) {
     // 连续色带：一个矩形 Node 填 linearGradient（vertical → 自上而下、horizontal → 自左而右）
     const vertical = orient === 'vertical';
     const rampX = band.x;
@@ -1712,10 +1713,10 @@ export const lowerLegend = (input: LegendInput): IRScope => {
       : rectNode(rampX, rampY, rampLength, rampThickness);
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
-    ramp.fill = { kind: 'linearGradient', stops: input.ramp.stops, angle };
+    ramp.fill = { kind: 'linearGradient', stops: options.ramp.stops, angle };
     children.push(ramp);
     // 沿带刻度标签
-    for (const tick of input.ramp.ticks) {
+    for (const tick of options.ramp.ticks) {
       const position: [number, number] = vertical
         ? [
             rampX + rampThickness + swatchGap + estimateLabelWidth(tick.label, fontSize) / 2,
@@ -1729,7 +1730,7 @@ export const lowerLegend = (input: LegendInput): IRScope => {
     const vertical = orient === 'vertical';
     let cursorX = band.x;
     let rowY = cursorY;
-    for (const entry of input.entries) {
+    for (const entry of options.entries) {
       const symbolSide =
         entry.radius !== undefined
           ? Math.max(swatchSize, entry.radius * Math.SQRT2)
@@ -1784,9 +1785,9 @@ export const lowerLegend = (input: LegendInput): IRScope => {
 
   return {
     type: 'scope',
-    ...(input.id !== undefined ? { id: input.id } : {}),
-    zIndex: input.zIndex ?? PlotLayerZIndex.Legend,
-    meta: { source: 'plot', layer: 'legend', channel: input.channel },
+    ...(options.id !== undefined ? { id: options.id } : {}),
+    zIndex: options.zIndex ?? PlotLayerZIndex.Legend,
+    meta: { source: 'plot', layer: 'legend', channel: options.channel },
     // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）
     // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis
     nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },

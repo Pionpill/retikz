@@ -1,18 +1,24 @@
 ﻿import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
+import type { IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 
 import { defineScopeChannel } from '../../../contract';
-import { type IRPlotMarkOperation, type ScaledMarkValueType } from '../../../schemas';
+import { MarkValueKind } from '../../../schemas';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 
-const isScaledMarkValue = <T>(value: unknown): value is ScaledMarkValueType<T> =>
+type MarkStyleValue<T> =
+  | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
+  | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
+
+const isMarkStyleValue = <T>(value: unknown): value is MarkStyleValue<T> =>
   value !== null &&
   typeof value === 'object' &&
-  ((value as { kind?: unknown }).kind === 'field' || (value as { kind?: unknown }).kind === 'constant') &&
+  ((value as { kind?: unknown }).kind === MarkValueKind.Field ||
+    (value as { kind?: unknown }).kind === MarkValueKind.Constant) &&
   'value' in value;
 
 const pickConstantStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): T | undefined => {
   const value = (mark as Record<string, unknown>)[channel];
-  if (!isScaledMarkValue<T>(value) || value.kind !== 'constant') return undefined;
+  if (!isMarkStyleValue<T>(value) || value.kind !== MarkValueKind.Constant) return undefined;
   return value.value;
 };
 

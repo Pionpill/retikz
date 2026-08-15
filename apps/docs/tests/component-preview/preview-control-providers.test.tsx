@@ -2,6 +2,7 @@ import type { FC } from 'react';
 
 import { fadeIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlSlot } from '../../src/modules/docs/components/component-preview/types';
@@ -21,6 +22,12 @@ const StaticDemo: FC = () => (
 const AnimatedDemo: FC = () => (
   <Layout width={40} height={20}>
     <Node id="animated" position={[0, 0]} animations={[fadeIn()]} />
+  </Layout>
+);
+
+const RibbonDemo: FC = () => (
+  <Layout width={40} height={20} pathKinds={[RibbonPathKindDefinition]}>
+    <Node id="ribbon" position={[0, 0]} />
   </Layout>
 );
 
@@ -56,6 +63,10 @@ describe('preview control providers', () => {
     expect(
       resolveBuiltinControlSlots({ previewIr: buildPreviewIR(AnimatedDemo), options: { animation: false } }),
     ).toEqual([]);
+  });
+
+  it('retains generic path kind definitions while resolving preview controls', () => {
+    expect(buildPreviewIR(RibbonDemo).pathKinds).toEqual([RibbonPathKindDefinition]);
   });
 
   it('merges slot groups in input order', () => {

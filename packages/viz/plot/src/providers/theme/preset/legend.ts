@@ -2,7 +2,7 @@ import type { ThemeModeValue } from '@retikz/core';
 
 import { ThemeMode } from '@retikz/core';
 
-import type { IRPlotResolvedThemeTokens } from '../../../schemas';
+import type { IRPlotThemeTokenResolution } from '../../../schemas';
 
 import { LegendSymbolFit, PlotThemeToken } from '../../../schemas';
 
@@ -20,14 +20,14 @@ type LegendPresetSource = Readonly<{
   rampThickness: number;
   symbolSize: number;
   symbolScale: number;
-  symbolFit: IRPlotResolvedThemeTokens['legend.symbol.fit'];
+  symbolFit: IRPlotThemeTokenResolution['legend.symbol.fit'];
 }>;
 
 type LegendStylePreset = Omit<LegendPresetSource, 'titleForeground' | 'labelForeground' | 'symbolScale' | 'symbolFit'>;
 type LegendModePreset = Pick<LegendPresetSource, 'titleForeground' | 'labelForeground'>;
 type LegendTokenPreset = Readonly<
   Pick<
-    IRPlotResolvedThemeTokens,
+    IRPlotThemeTokenResolution,
     | typeof PlotThemeToken.LegendTitleForeground
     | typeof PlotThemeToken.LegendTitleFontSize
     | typeof PlotThemeToken.LegendTitleFontWeight

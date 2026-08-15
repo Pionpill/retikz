@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as root from '../../src';
 import * as clip from '../../src/clip';
+import * as ribbon from '../../src/ribbon';
 import * as shape from '../../src/shape';
 
 type PackageManifest = {
@@ -16,20 +17,21 @@ const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.me
 
 describe('Standard provider subpath exports', () => {
   it('keeps optional providers out of the root entry and makes each capability entry explicit', () => {
-    for (const name of ['CrossShapeDefinition', 'CompoundClipDefinition']) {
+    for (const name of ['CrossShapeDefinition', 'CompoundClipDefinition', 'RibbonPathKindDefinition']) {
       expect(root).not.toHaveProperty(name);
     }
     expect(shape.CrossShapeDefinition).toBeDefined();
     expect(clip.CompoundClipDefinition).toBeDefined();
+    expect(ribbon.RibbonPathKindDefinition).toBeDefined();
   });
 
-  it('declares the three Standard provider subpaths without a premature ribbon entry', () => {
-    const entries = ['.', './shape', './arrow', './clip'];
+  it('declares all four Standard provider subpaths', () => {
+    const entries = ['.', './shape', './arrow', './clip', './ribbon'];
     expect(Object.keys(manifest.exports)).toEqual(entries);
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(entries);
     expect(manifest.exports['./shape']).toEqual({ types: './src/shape/index.ts', default: './src/shape/index.ts' });
     expect(manifest.exports['./arrow']).toEqual({ types: './src/arrow/index.ts', default: './src/arrow/index.ts' });
     expect(manifest.exports['./clip']).toEqual({ types: './src/clip/index.ts', default: './src/clip/index.ts' });
-    expect(manifest.exports).not.toHaveProperty('./ribbon');
+    expect(manifest.exports['./ribbon']).toEqual({ types: './src/ribbon/index.ts', default: './src/ribbon/index.ts' });
   });
 });

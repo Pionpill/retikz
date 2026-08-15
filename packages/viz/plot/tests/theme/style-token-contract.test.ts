@@ -4,11 +4,11 @@ import * as plot from '../../src';
 import {
   PlotAxisThemeTokenOverridesSchema,
   PlotAxisThemeTokenRuleSchema,
-  PlotResolvedThemeTokensSchema,
   PlotSpecSchema,
   PlotThemeSchema,
   PlotThemeToken,
   PlotThemeTokenOverridesSchema,
+  PlotThemeTokenResolutionSchema,
 } from '../../src';
 
 const baseSpec = {
@@ -31,7 +31,9 @@ describe('Plot style token contract', () => {
     expect(api.PlotThemeToken).toBeDefined();
     expect(api.PlotThemeTokenOverridesSchema).toBeDefined();
     expect(api.PlotAxisThemeTokenRuleSchema).toBeDefined();
-    expect(api.PlotResolvedThemeTokensSchema).toBeDefined();
+    expect(api.PlotThemeTokenResolutionSchema).toBeDefined();
+    expect('PlotResolvedThemeTokensSchema' in api).toBe(false);
+    expect('ResolvedPlotPaletteSchema' in api).toBe(false);
     expect('PlotThemeTokenSource' in api).toBe(false);
   });
 
@@ -245,6 +247,6 @@ describe('Plot style token contract', () => {
 
     expect(JSON.parse(JSON.stringify(plotThemeTokens))).toEqual(plotThemeTokens);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PlotResolvedThemeTokensSchema.safeParse(plotThemeTokens).success).toBe(false);
+    expect(PlotThemeTokenResolutionSchema.safeParse(plotThemeTokens).success).toBe(false);
   });
 });

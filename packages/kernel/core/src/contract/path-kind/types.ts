@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 
-import type { IRJsonObject, IRPathBase, IRPosition, JsonValue } from '../../schemas';
+import type { IRGeometryLabel, IRPathBase, IRPosition, IRStep, JsonValue } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
-import type { ScenePrimitive } from '../scene';
+import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';
 
 /**
@@ -38,27 +38,71 @@ export type EmitStroke = {
   (path: IRPathBase | undefined, options: EmitStrokeOwnerOutputOptions): PathKindCompileResult | null;
 };
 
+/** Core 将 Path steps 物化后的 renderer-neutral 几何事实 */
+export type MaterializedPath = Readonly<{
+  commands: ReadonlyArray<PathCommand>;
+  boundsPoints: ReadonlyArray<IRPosition>;
+}>;
+
+/** Path kind 可消费的宿主外观，不包含领域专属字段 */
+export type ResolvedPathKindAppearance = Readonly<
+  Readonly<{
+    /** Effective host master color, retained until the selected kind consumes it */
+    color?: IRPathBase['color'];
+  }> &
+    Pick<
+      PathPrim,
+      | 'fill'
+      | 'stroke'
+      | 'fillOpacity'
+      | 'fillRule'
+      | 'strokeOpacity'
+      | 'strokeWidth'
+      | 'dashPattern'
+      | 'dashOffset'
+      | 'strokeLinecap'
+      | 'strokeLinejoin'
+      | 'opacity'
+      | 'shadow'
+      | 'blendMode'
+    >
+>;
+
+/** Path kind 请求宿主标签编译时提供的已定位几何信息 */
+export type PathKindLabel = Omit<IRGeometryLabel, 'position' | 'side' | 'distance'> & {
+  position: number;
+  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  distance: number;
+};
+
+/** Path kind 请求宿主标签编译时提供的已定位几何信息 */
+export type PathKindLabelInput = Readonly<{
+  labels: ReadonlyArray<PathKindLabel>;
+  samples: ReadonlyArray<Readonly<{ point: IRPosition; tangent: IRPosition; boundaryOffset?: number }>>;
+}>;
+
 /**
  * path kind 编译上下文
- * @description 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边或 ribbon 逻辑
+ * @description 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
  */
-export type PathKindCompileContext<TOptions = IRJsonObject, TOwnerOutput extends JsonValue = never> = {
-  /** 正在编译的 IR path */
-  path: IRPathBase;
-  /** 经 `optionsSchema` 解析后的 kind 配置项 */
-  options: TOptions;
+export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
+  /** 经该 definition 完整 schema 解析后的 path subject */
+  path: TPath;
   /** 当前 Path kind 的最终所属者产物 publisher */
   ownerOutput: CompileOwnerOutputPublisher<TOwnerOutput>;
+  /** 物化选定 steps，不应用 marker、dash、fill 或 kind-specific geometry */
+  materializePath: (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => MaterializedPath;
   /**
    * 复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`
    * @default 使用当前 `path`
    */
   emitStroke: EmitStroke;
-  /**
-   * 复用 core 标准 ribbon 编译逻辑；不传 path 时使用当前 `path`
-   * @default 使用当前 `path`
-   */
-  emitRibbon: (path?: IRPathBase) => PathKindCompileResult | null;
+  /** 编译共享宿主标签，并支持 kind 提供边界偏移 */
+  emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
+  /** 已解析的 renderer-neutral 宿主外观 */
+  appearance: ResolvedPathKindAppearance;
+  /** 与本次 compile 一致的取整函数 */
+  round: (value: number) => number;
 };
 
 /**
@@ -69,24 +113,21 @@ export type PathKindOwnerOutputBranch<TOwnerOutput extends JsonValue> = [TOwnerO
   ? Readonly<{ ownerOutput?: never }>
   : Readonly<{ ownerOutput: CompileOwnerOutputDefinition<TOwnerOutput> }>;
 
-export type PathKindDefinition<TOptions = IRJsonObject, TOwnerOutput extends JsonValue = never> = {
-  /** 该 path kind 的 IR schema；`kind` 字段必须是非空 `z.literal(...)` */
-  schema: z.ZodObject<{ kind: z.ZodLiteral<string> }>;
-  /**
-   * kind 配置项的额外校验 schema；缺省直接使用原始 `kindOptions ?? {}`
-   * @default 原始 `kindOptions ?? {}`
-   */
-  optionsSchema?: z.ZodType<TOptions>;
+export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
+  /** 非空 path kind registry key */
+  name: string;
+  /** 该 path kind 的完整 source subject schema */
+  schema: z.ZodType<TPath>;
   /** 把该 path kind 编译成 Scene primitive；返回 null 表示该 path 不产生输出 */
-  compile: (context: PathKindCompileContext<TOptions, TOwnerOutput>) => PathKindCompileResult | null;
+  compile: (context: PathKindCompileContext<TPath, TOwnerOutput>) => PathKindCompileResult | null;
 } & PathKindOwnerOutputBranch<TOwnerOutput>;
 
 /** registry 中擦除 subject 与 options 泛型后的 Path kind 定义 */
 export type AnyPathKindDefinition = Readonly<{
-  /** 该 Path kind 的 IR schema */
-  schema: z.ZodObject<{ kind: z.ZodLiteral<string> }>;
-  /** 可选 kind options schema */
-  optionsSchema?: z.ZodType;
+  /** 非空 path kind registry key */
+  name: string;
+  /** 该 Path kind 的完整 source subject schema */
+  schema: z.ZodType;
   /** 只在恢复当前 definition 后调用的擦除编译入口 */
   compile: (context: never) => AnyPathKindCompileResult | null;
   /** 可选最终所属者产物 schema */

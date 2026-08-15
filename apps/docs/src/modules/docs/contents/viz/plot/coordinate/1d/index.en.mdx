@@ -36,9 +36,9 @@ Within the same Plot, `PointMark` first uses `thingX` to map the single position
 | Full circle     | `coordinate="polar1D"`                                | `radius: 1`, angles from `0` to `360` |
 | Partial circle  | `{ type: 'polar1D', startAngle: 180, endAngle: 360 }` | Set `startAngle` and `endAngle`       |
 
-Both object forms belong to `CoordinateInput`, exported by `@retikz/plot-react`. `cartesian1D` is horizontal by default. For `polar1D`, `radius` defaults to `1`, meaning the full available outer radius; its range is `0 < radius <= 1`, not a pixel value. Angles use degrees and default to `0` through `360`.
+Both object forms are values of `<Plot>`'s `PlotDslProps['coordinate']` prop. The underlying TypeScript `InputPlotCoordinate` belongs to `@retikz/plot-vanilla`; Plot React does not define a second coordinate input type. `cartesian1D` is horizontal by default. For `polar1D`, `radius` defaults to `1`, meaning the full available outer radius; its range is `0 < radius <= 1`, not a pixel value. Angles use degrees and default to `0` through `360`.
 
-The playground's “Sweep angle” is a teaching control, not a `CoordinateInput` field. Internally it becomes `endAngle = startAngle + sweepAngle`.
+The playground's “Sweep angle” is a teaching control, not a `PlotDslProps['coordinate']` field. Internally it becomes `endAngle = startAngle + sweepAngle`.
 
 The number of coordinate dimensions does not restrict the scale type. The position field can still use linear, log, time, and other scales. This example explicitly fixes the hour domain to `[0, 24]`, so hour `22` lands at `330°` on a full circle.
 

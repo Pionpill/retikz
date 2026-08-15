@@ -1,0 +1,237 @@
+---
+title: Ribbon Extension
+description: Explicitly load the Ribbon Path kind from @retikz/standard/ribbon, generate fillable bands in Core's host-neutral Path pipeline, and add width profiles when needed.
+---
+
+Ribbon is an optional Standard Path kind. It turns an open centerline or two precomputed boundaries into a fillable band while reusing Core's Path host, labels, and Scene output.
+
+Standard is the optional owner: importing the subpath does not register Ribbon globally, so each figure must explicitly assemble a Definition or provider contribution. Core owns only host-neutral Path kind lookup, path materialization, host appearance, and label services; Ribbon width, profiles, and outline geometry stay in Standard.
+
+## Problem and minimal runnable result
+
+When a relation needs variable thickness, endpoint caps, or an inside label, an ordinary Stroke has only one centerline and cannot express a band area. The smallest React usage imports `RibbonPathKindDefinition` from the Standard subpath, passes it to `<Layout pathKinds>`, and puts Ribbon options in `<Path kindOptions>`:
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+
+<Layout pathKinds={[RibbonPathKindDefinition]}>
+  <Path kind="ribbon" kindOptions={{ start: { width: 32 }, end: { width: 12 } }} fill="#60a5fa">
+    <Step kind="move" to={[-120, 0]} />
+    <Step to={[120, 0]} />
+  </Path>
+</Layout>;
+```
+
+<ComponentPreview files="ribbon-basic" size="xs" />
+
+`kindOptions` contains Ribbon-specific JSON-safe data. `fill`, `stroke`, `label`, opacity, and transforms remain shared Path host fields.
+
+## Applicability boundary
+
+| Scenario       | Ribbon owns                                                                                    | It does not own                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `centerline`   | Materialize `children` and build an outline from fixed, endpoint, stop, or profile widths      | Core Step, target, generator, or Path-host semantics               |
+| `boundary`     | Materialize `kindOptions.upper` and `kindOptions.lower`, sample them, and close them with caps | Top-level `children` or centerline width rules                     |
+| Custom profile | Validate JSON-safe `params` and return a width at each runtime position                        | Functions, Definitions, and registries in IR, Scene, or a renderer |
+| Renderer       | Return an ordinary Core Scene Path plus shared label primitives                                | SVG / Canvas Ribbon-specific sampling or offset logic              |
+
+If the requirement is only a stroke, keep the default `stroke` kind. If a relation comes from Plot, Plot lowering should emit the same `kind: 'ribbon'` Path and explicitly contribute the Standard Ribbon provider.
+
+## Usage scenarios
+
+### Width, sampling, and appearance
+
+Switch among fixed width, endpoint interpolation, stops, and the built-in `bulge` profile while checking fill, outline, and shadow behavior:
+
+<ComponentPreview files="ribbon-geometry" size="md" />
+
+### Label placement
+
+Ribbon reuses the Path host label contract, so a label can follow the centerline and sit inside or outside the band:
+
+<ComponentPreview files="ribbon-label" size="sm" />
+
+### Endpoints and caps
+
+Configure width, direction, and cap independently at the start and end:
+
+<ComponentPreview files="ribbon-endpoints" size="md" />
+
+### Precomputed boundaries
+
+`boundary` mode reads `kindOptions.upper` and `kindOptions.lower` directly and does not read top-level `children`:
+
+<ComponentPreview files="ribbon-boundary" size="sm" />
+
+## Define the capability and profile
+
+### Use the official Definition
+
+For direct compilation, use `RibbonPathKindDefinition`. Definitions and IR stay separate: IR stores only `kind` and `kindOptions`, never a Definition or profile function.
+
+### Define a custom width profile
+
+For a domain-specific width curve, call `defineRibbonWidthProfile`, then call `createRibbonPathKindDefinition` to create the one Ribbon Definition containing that profile. The custom Definition follows the same `RibbonPathSchema`, profile registry, and geometry path as the built-in Definition:
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/standard/ribbon';
+import { z } from 'zod';
+
+const pulseProfile = defineRibbonWidthProfile({
+  name: 'pulse',
+  paramsSchema: z.strictObject({
+    base: z.number().nonnegative(),
+    peak: z.number().nonnegative(),
+  }),
+  widthAt: ({ offset, params }) => params.base + (params.peak - params.base) * Math.sin(Math.PI * offset),
+});
+
+const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
+
+<Layout pathKinds={[pulseRibbonDefinition]}>
+  <Path
+    kind="ribbon"
+    kindOptions={{
+      width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+      sampling: { kind: 'fixed', samples: 41 },
+    }}
+  >
+    <Step kind="move" to={[-180, 20]} />
+    <Step kind="curve" control={[0, -90]} to={[180, 20]} />
+  </Path>
+</Layout>;
+```
+
+`params` must remain JSON-safe and is validated by the profile's `paramsSchema` before sampling. `widthAt` must return a finite, non-negative width in user units.
+
+<ComponentPreview files="ribbon-custom-profile" size="sm" />
+
+## Inject into a host
+
+### Direct `Layout.pathKinds` injection
+
+React `<Layout>` is the direct path when the figure already knows which Definitions it needs. The official Definition, a Definition containing custom profiles, and other Path kind Definitions all enter through the same explicit `pathKinds` array:
+
+```tsx
+import { Layout } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+
+<Layout pathKinds={[RibbonPathKindDefinition]}>{/* Path kind="ribbon" */}</Layout>;
+```
+
+A Ribbon that is not in `pathKinds` does not become active merely because its module was imported.
+
+### Assemble a provider graph
+
+When an adapter or toolchain must collect runtime datasets before compilation, use `createRibbonProviderContribution`. It merges the built-in `bulge` profile and caller profiles into one `pathKind/ribbon` provider, then hands that contribution to Core's generic resolver:
+
+```ts
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { createRibbonProviderContribution } from '@retikz/standard/ribbon';
+
+const compileOptions = resolveCoreProviderDependencies({
+  contributions: [createRibbonProviderContribution([pulseProfile])],
+});
+
+const result = compileToScene(ir, compileOptions);
+```
+
+The provider only assembles Definitions and runtime profile datasets into ordinary Core compile options. It does not change the `Path` IR shape or create a second Ribbon lookup. Direct `pathKinds` injection and the provider graph share the same `createRibbonPathKindDefinition` construction path, schema, and compile implementation.
+
+## Execution mechanism
+
+The responsibilities in one compile are:
+
+1. Core reads the open Path host, looks up the Definition for `kind`, and parses the subject with that Definition's complete schema
+2. The Standard Ribbon Definition resolves `kindOptions`, calls Core `materializePath` for commands after target, anchor, generator, and Step lowering
+3. Standard applies width, sampling, alignment, caps, and profiles, then asks Core `emitHostLabels` to compile shared labels
+4. Core wraps Scope, transforms, bounds, provenance, and diagnostics; renderers consume an ordinary Scene Path
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Ribbon Definition and profile injection',
+      path: 'packages/library/standard/src/ribbon/definition.ts',
+      startLine: 11,
+      endLine: 34,
+    },
+    {
+      label: 'Ribbon provider contribution',
+      path: 'packages/library/standard/src/ribbon/provider.ts',
+      startLine: 8,
+      endLine: 49,
+    },
+    {
+      label: 'Core host-neutral Path kind services',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 41,
+      endLine: 105,
+    },
+    {
+      label: 'Core Path kind lookup and subject-schema parsing',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+    {
+      label: 'Core path materialization and host-label orchestration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 408,
+      endLine: 496,
+    },
+    {
+      label: 'Ribbon outline and label output',
+      path: 'packages/library/standard/src/ribbon/geometry/emit.ts',
+      startLine: 103,
+      endLine: 223,
+    },
+  ]}
+/>
+
+## Errors and limits
+
+- Without a registered `ribbon` Definition, Core reports an unknown-kind error during Path kind lookup; Standard does not inject one silently
+- Duplicate Path kind names or duplicate profile names with different identities fail during registry or provider-graph assembly instead of being overwritten by order
+- `centerline` requires top-level `children`, plus either a whole `width` or both `start.width` and `end.width`
+- `boundary` requires two valid open Step sequences in `upper` and `lower`, and rejects top-level `children` and centerline width fields
+- `boundary` currently rejects Path `label`; label placement depends on centerline samples and boundary offsets
+- `samples` and `sampling` are mutually exclusive; unknown profiles, invalid `params`, and negative or non-finite `widthAt` results fail with the path location
+- Multiple moves, close commands, zero-length whole paths, invalid arc caps, or unsatisfied boundary correspondence never silently produce an empty primitive
+
+## API reference
+
+### Public exports
+
+| Export                                         | Use                                                                                 |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `RibbonPathKindDefinition`                     | Official Ribbon Path kind Definition for `Layout.pathKinds` or direct compilation   |
+| `createRibbonPathKindDefinition`               | Create the one Ribbon Definition containing caller width profiles                   |
+| `defineRibbonWidthProfile`                     | Define JSON-safe parameters and a runtime `widthAt` sampler                         |
+| `createRibbonProviderContribution`             | Declare the `pathKind/ribbon` provider root and merge profiles for a provider graph |
+| `RibbonPathSchema` / `RibbonPathOptionsSchema` | Validate the complete Ribbon Path subject and `kindOptions`                         |
+| `IRRibbonPath` / `IRRibbonPathOptions`         | Schema-derived complete Path and options types                                      |
+
+### Path host and `kindOptions`
+
+| Field             | Type                                          | Description                                                          |
+| ----------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| `kind`            | `'ribbon'`                                    | Select the Standard Ribbon Path kind                                 |
+| `kindOptions`     | `IRRibbonPathOptions`                         | Ribbon mode, width, sampling, alignment, endpoint, and boundary data |
+| `children?`       | `Array<IRStep>`                               | Open centerline for `centerline`; rejected for `boundary`            |
+| `label?`          | `IRGeometryLabel` \| `Array<IRGeometryLabel>` | Shared Path label; Ribbon labels currently support `centerline` only |
+| `fill` / `stroke` | Core Path paint fields                        | Shared Path host fields applied after the outline is generated       |
+
+Ribbon options include `mode`, `width`, `start`, `end`, `interpolation`, `align`, `samples`, `sampling`, `upper`, and `lower`. `RibbonPathOptionsSchema` is the authority for complete fields and cross-field constraints.
+
+### Profile contract
+
+`RibbonWidthProfileDefinitionInput` contains `name`, an optional `paramsSchema`, and `widthAt`; `RibbonWidthProfileContext` supplies normalized `offset`, centerline `length`, and validated `params`. These functions belong only to runtime assembly and never enter persisted IR.
+
+## Related
+
+- [Path](/kernel/components/draw/path): Core Path host, shared styles, and Step semantics
+- [Capability Loading](/library/standard/extension/capability-loading): common Definition, adapter, and provider-graph assembly boundary
+- [Runtime Extensions](/kernel/reference/runtime/extensions): other Definition and registry contracts
+- [Standard Extensions](/library/standard/extension): browse the other optional Standard capabilities
