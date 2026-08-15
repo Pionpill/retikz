@@ -36,15 +36,20 @@ The `intensity` channel below maps field values into `[0.3, 1]` and also accepts
 
 Inject the definition with `<Plot channelDefinitions={[intensityChannel]}>`; the Vanilla source injects the same definition through `renderPlot` options.
 
-A string in the React DSL means a field name. Use `{ value }` or `MarkValueType` for a constant:
+A string in the React DSL means a field name. Typed authoring accepts `{ kind: 'constant', value }` for a constant; an already normalized raw IR binding uses `{ value }` for the same constant. The authoring normalizer converts the former to the latter:
 
 ```tsx
 <PointMark channels={{ intensity: 'score' }} />
-<PointMark channels={{ intensity: { value: 0.65 } }} />
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-These assemble to `{ field: 'score' }` and `{ value: 0.65 }`. The definition always stays in the runtime and never enters Plot IR.
+These assemble to `{ field: 'score' }` and `{ value: 0.65 }`. The raw IR form is valid wherever an `IRPlotSpec` binding is supplied:
+
+```ts
+const rawChannelBinding: IRPlotChannel = { value: 0.65 };
+```
+
+The definition always stays in the runtime and never enters Plot IR.
 
 ## Execution
 

@@ -11,7 +11,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
-React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把规格收集为 React Input Scene，并交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 InputEmbed，配合 `PlotInputEmbedAdapter` 完成归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
+React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlotEmbed`，交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 `InputEmbed`，配合 `PlotInputEmbedAdapter` 完成 `InputPlot -> IRPlotSpec` 归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
 `<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme：standalone 与 embedded 都把它包在 Plot node 外层，因此只覆盖该 Plot 的 `style`、`mode` 与 namespaced `tokens`。它不同于 Plot spec 内的 `plotThemeTokens` / `plotTheme`，后两者是 Plot owner 的视觉字段。Vanilla `renderPlot(spec, data, { theme })` 则把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotThemeTokens` 或 `spec.plotTheme`。
 
@@ -21,16 +21,18 @@ React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 
 
 <ComponentPreview files="plot-authoring-convergence" size="md" hideCode />
 
-React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` 接收 plain object。两者都由 `@retikz/plot-vanilla` 展开 axis、facet 与 scaffold binding，形成同一份 `IRPlotSpec`。已类型化的 authoring 输入不会重复 schema 校验；来自 JSON、文件或其它未知边界的配置应先通过 `PlotSpecSchema` 或 parser 进入 IR。
+React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` 接收 `InputPlot` plain object。两者都由 `@retikz/plot-vanilla` 展开 axis、facet 与 scaffold binding，形成同一份 `IRPlotSpec`。已类型化的 authoring 输入不会重复 schema 校验；只有 `IRPlot*` 使用 Plot schema，来自 JSON、文件或其它未知边界的配置应先通过 `PlotSpecSchema` 或 parser 进入 IR。
+
+对于 Vanilla runtime source，`{ input }` 会恰好执行一次 `normalizePlot`。`{ spec }` 已经是 `IRPlotSpec`：运行时保留它的对象 identity，并绕过 normalize。未知 JSON 必须在作为 `spec` 传入前先通过 Plot schema 或其它 parser；runtime 入口不会把未类型化 JSON 当作 IR。
 
 `IRPlotSpec` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
 
-| 输入层     | 典型入口                                         | 进入 `IRPlotSpec`      |
-| ---------- | ------------------------------------------------ | ---------------------- |
-| React DSL  | `<Plot>`、mark / guide / scale 子组件            | 共享规范化后进入       |
-| React spec | `<Plot spec={...} data={...}>`                   | `spec` 进入            |
-| Vanilla    | `plot({...})`、完整 `InputPlot`                  | 共享规范化或校验后进入 |
-| 运行时依赖 | datasets、field maps、resolver、各类 Definitions | 不进入                 |
+| 输入层     | 典型入口                                                            | 进入 `IRPlotSpec`                                                                     |
+| ---------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| React DSL  | `<Plot>`、mark / guide / scale 子组件                               | 共享规范化后进入                                                                      |
+| React spec | `<Plot spec={...} data={...}>`                                      | `spec` 进入                                                                           |
+| Vanilla    | `plot(InputPlot)`、`{ input: InputPlot }` 或 `{ spec: IRPlotSpec }` | InputPlot 形式单次 normalize；`spec` 直接进入；unknown JSON 须先经 Plot schema/parser |
+| 运行时依赖 | datasets、field maps、resolver、各类 Definitions                    | 不进入                                                                                |
 
 ## Lowering 与产物
 

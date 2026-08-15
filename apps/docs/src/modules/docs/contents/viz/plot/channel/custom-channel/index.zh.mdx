@@ -36,15 +36,20 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 
 通过 `<Plot channelDefinitions={[intensityChannel]}>` 注入 definition；Vanilla 源码使用 `renderPlot` options 注入同一 definition。
 
-React DSL 的字符串值表示字段名；常量使用 `{ value }` 或 `MarkValueType`：
+React DSL 的字符串值表示字段名。类型化 authoring 的常量使用 `{ kind: 'constant', value }`；已经归一化的 raw IR binding 使用 `{ value }` 表示同一个常量，前一种写法会由 authoring normalizer 转为后一种：
 
 ```tsx
 <PointMark channels={{ intensity: 'score' }} />
-<PointMark channels={{ intensity: { value: 0.65 } }} />
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。definition 始终留在运行时，不进入 Plot IR。
+它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。只要传入的是 `IRPlotSpec`，raw IR 形式就可以直接使用：
+
+```ts
+const rawChannelBinding: IRPlotChannel = { value: 0.65 };
+```
+
+definition 始终留在运行时，不进入 Plot IR。
 
 ## 执行机制
 

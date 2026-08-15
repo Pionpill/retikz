@@ -95,7 +95,7 @@ export const buildPositionScale = (
     case 'radial':
       return { type: PlotScale.Radial, name, ...scaleOptions };
     default: {
-      // 穷尽守卫：新增 PositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
+      // 穷尽守卫：新增 InputPlotPositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
       throw new Error(`buildPlotSpec: unsupported position scale type "${String(exhaustive)}"`);
     }

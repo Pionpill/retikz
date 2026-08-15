@@ -71,7 +71,7 @@ Axis creates candidate ticks with the priority `ticks.values > ticks.interval > 
       label: 'Axis tick source priority and formatting',
       path: 'packages/viz/plot/src/resolve/guide/ticks.ts',
       startLine: 226,
-      endLine: 303,
+      endLine: 283,
     },
     {
       label: 'Grid sources, endpoint appending, and projected deduplication',
@@ -116,7 +116,7 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 | Prop          | Type                      | Default       | Description                                                                                                                                    |
 | ------------- | ------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`   | `AxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
-| `scale?`      | `PositionScaleType`       | auto-derived  | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension                                         |
+| `scale?`      | `AxisProps['scale']`      | auto-derived  | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension                                         |
 | `placement?`  | `AxisProps['placement']`  | inferred      | Baseline placement; branch `kind` values are listed by <ApiValues name="AxisPlacementKind" />; `origin` only applies to Cartesian axes         |
 | `line?`       | `AxisProps['line']`       | default line  | Axis-line style and endpoint geometry; `extent` and `arrow` currently apply only to Cartesian axes                                             |
 | `crossing?`   | `AxisProps['crossing']`   | normal ticks  | Tick / label policy at a crossing value; `label:'corner'` can move a shared origin label to a corner                                           |

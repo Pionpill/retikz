@@ -6,9 +6,9 @@
 
 - **解决的问题**：用可扩展的 grammar-of-graphics 把数据与可视化语义确定性地映射为 Core IR，而不依赖 chart type、framework 或 renderer
 - **拥有的契约**：Plot IR / schema、channel / scale / coordinate / mark / guide / composition 领域解析与 registries、Plot surface / typography / Axis / Legend 视觉 token、palette、style definition / preset / resolver / mapping / inspection、plot-specific transform、lowering、visualization provenance / locator
-- **不拥有的能力**：Chart canvas / presentation / recipe token、宿主无关的数据模型与 transform 算法、跨领域 Legend 视觉结构 / 内部布局 / lowering、Core Theme 继承、Core IR / Scene 语义、SVG / Canvas 执行、React / Vanilla authoring、业务 dashboard 状态
-- **输入与输出**：接收 Plot IR、Data view / datasets、plot definitions 与 lowering options，向 Standard 产生已经解析好的通用绘图输入，并输出 Core IR contribution、plot lineage / locator 和 diagnostics；不直接输出 DOM、SVG 或 Canvas
-- **缺口流向**：通用数据能力下沉 `@retikz/data`；通用机制 / 几何能力下沉 core / math；被多个领域复用的绘图 composite 进入 `@retikz/standard`；完整图表 presentation 上移 Chart；authoring / runtime 进入对应 adapter；只有依赖可视化语法轴的能力才进入 plot
+- **不拥有的能力**：Chart canvas / presentation / recipe token、宿主无关的数据模型与 transform 算法、跨领域 Legend 视觉结构 / 内部布局 / lowering、Core Theme 继承、Core IR / Scene 语义、SVG / Canvas 执行、`InputPlot` authoring、React / Vanilla adapter 与业务 dashboard 状态
+- **输入与输出**：接收已形成的 `IRPlotSpec`、Data view / datasets、plot definitions 与 lowering options，向 Standard 产生已经解析好的通用绘图输入，并输出 Core IR contribution、plot lineage / locator 和 diagnostics；不直接输出 DOM、SVG 或 Canvas
+- **缺口流向**：通用数据能力下沉 `@retikz/data`；通用机制 / 几何能力下沉 core / math；被多个领域复用的绘图 composite 进入 `@retikz/standard`；完整图表 presentation 上移 Chart；`InputPlot` normalize、`PlotSource` / `InputPlotEmbed` 与输入接入进入 `@retikz/plot-vanilla`；React props / children 进入 `@retikz/plot-react`；只有依赖可视化语法轴的能力才进入 plot
 
 新增或迁移可视化能力前，先按 [`plot-visualization-complete.md`](../_notes/architecture/plot-visualization-complete.md) 确认 Visualization Complete 与 Data / Drawing Complete 的交界。
 
