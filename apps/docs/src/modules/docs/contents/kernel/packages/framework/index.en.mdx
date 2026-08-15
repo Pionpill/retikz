@@ -1,0 +1,26 @@
+---
+title: Framework packages
+description: Framework packages provide authoring adapters: Vanilla supplies framework-free input, while React supplies JSX and React host wiring.
+---
+
+Framework packages answer the question, “How does authored input enter the same Kernel processing path?” `@retikz/vanilla` provides framework-free InputScene, processing, and host entry points; `@retikz/react` collects JSX and connects it to the same input, compilation, and rendering contracts. Neither package redefines Core IR or rendering semantics.
+
+## Responsibilities
+
+| Package | Responsibility | Reach for it when |
+| --- | --- | --- |
+| `@retikz/vanilla` | Framework-free input, processing, SSR, and DOM mounts | Using ordinary TypeScript or implementing another adapter |
+| `@retikz/react` | JSX components, the React adapter, and host wiring | Authoring and rendering figures in React |
+
+## Start here
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/framework/vanilla">
+    <span className="font-semibold">vanilla</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">InputScene, processing, DOM, and SSR</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/framework/react">
+    <span className="font-semibold">react</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">JSX input and the React host</span>
+  </LinkedCard>
+</div>

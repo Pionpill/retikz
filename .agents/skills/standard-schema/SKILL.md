@@ -8,8 +8,8 @@ description: Use when changing retikz Zod/IR schema code, schema-derived public 
 ## IR 与 Canonical
 
 - 只有可持久化 Source IR 定义 Zod：`IRXxx = z.infer<typeof XxxSchema>`。`XxxSchema` 不加 IR 前缀，Canonical、Input 和 compile 消费态都不设平行 Zod schema
-- `CanonicalXxx` 是由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的内部完整形态，定义在 Core / Plot `normalize/<domain>/types.ts`。`InputXxx` 是 Vanilla 的 TypeScript authoring API，放 Vanilla，不设 schema，也不作为持久化格式
-- unknown JSON 在 schema / parse 边界显式 parse 一次；公开 compile 已接收 TypeScript 约束的 `IRXxx` 时不得重复 parse。Core / Plot domain `normalizeXxx` 负责 `IRXxx -> CanonicalXxx`
+- `CanonicalXxx` 是由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的内部完整形态，定义在纵向领域 `resolve/<domain>/types.ts`。`InputXxx` 是 Vanilla API 包的 TypeScript authoring API，不设 schema，也不作为持久化格式
+- unknown JSON 在 schema / parse 边界显式 parse 一次；公开 compile 已接收 TypeScript 约束的 `IRXxx` 时不得重复 parse。纵向领域 `resolveXxx` 负责 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution`
 
 retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序列化边界、派生 TS 类型和文档 API 表都应从 schema 出发。改 schema 前先确认这是 IR 层契约，不是 provider / compile / adapter 的运行时能力。
 
@@ -17,8 +17,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 - IR 必须 100% JSON 可序列化，不接收函数、ReactNode、class 实例或 renderer 专属对象。
 - 公开 IR 数据类型用 `z.infer<typeof XxxSchema>` 派生，不手写平行 interface。
-- schema 负责 Source IR 契约与可在 Source IR 表达的跨字段语义校验；Core / Plot `normalize/` 负责 Canonical 化后才出现的领域不变量和领域值转换；`resolve.ts` / compile 负责 context、registry、运行时能力、emit 和 renderer 策略
-- JSON、持久化配置等外部数据在 schema / parse 入口完成一次 parse，得到明确的 Source IR；Vanilla 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，Core / Plot 的 domain `normalizeXxx` 将 IR 转为 Canonical。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
+- schema 负责 Source IR 契约与可在 Source IR 表达的跨字段语义校验；纵向领域 `resolve/` 负责 context lookup、优先级、默认、Canonical 化后才出现的领域不变量和领域值转换；pipeline / compile 负责 context 生命周期、阶段调度、lowering、emit 和 renderer 策略
+- JSON、持久化配置等外部数据在 schema / parse 入口完成一次 parse，得到明确的 Source IR；Vanilla API 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，纵向领域 `resolveXxx` 将 IR 与当前 context 确定为 Canonical / Resolution。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
 - 只在 schema / parser 结果会直接暴露给外部或通过公开 API 返回时冻结；内部 canonical 数据和中间对象不额外使用 `Object.freeze`
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 字段级约束写在字段 schema 上；跨字段、跨 kind 规则放最终 schema 的 `.superRefine(...)`。
@@ -62,7 +62,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 同一概念出现多个同前缀一级字段时，优先收敛成一个对象字段；对象子字段用命名 schema/type 承载，并通过 `shape` spread、`.extend()` 或对象 spread 复用，不重复声明同一份字段 shape。
 
-当同一对象需要紧凑 Source IR 时，`XxxSchema` / `IRXxx` 可以保留 `number | object` 等等价联合，以维持持久化体积。schema parse 只校验并产出 Source IR；Vanilla `normalizeXxx` 把 authoring `InputXxx` 组装为 Source IR，Core / Plot `normalize/<domain>/normalize.ts` 展开为无等价联合的 `CanonicalXxx`。默认值、显式 `0`、字段 refinement 与 strict unknown-field 语义必须在 Source 与 Canonical 之间保持一致；pipeline / compile 只消费 Canonical。
+当同一对象需要紧凑 Source IR 时，`XxxSchema` / `IRXxx` 可以保留 `number | object` 等等价联合，以维持持久化体积。schema parse 只校验并产出 Source IR；Vanilla API `normalizeXxx` 把 authoring `InputXxx` 组装为 Source IR，纵向领域 `resolve/<domain>/resolve.ts` 结合当前 context 展开为无等价联合的 `CanonicalXxx`。默认值、显式 `0`、字段 refinement 与 strict unknown-field 语义必须在 Source 与 Canonical 之间保持一致；pipeline / compile 只消费 Canonical / Resolution。
 
 上层需要与允许依赖层完全同义的字段时，从该层公开的权威 schema 用 `.pick()`、`.omit()`、`.extend()` 或 `.shape` 精确复用。只选择所需字段，不从 primitive schema 重复拼装同一契约，也不整段引入包含无关字段的 BaseSchema；复用后验证默认值、refinement 与未知字段拒绝行为保持预期。
 
@@ -91,7 +91,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - `.describe(...)` 保持短而准确：字段含义、允许值 / custom 扩展、默认语义、compile/runtime 边界。
 - 避免重复 `.min()` / `.optional()` 等 schema 已表达的约束。
 - 对 discriminator 字段，说明它是 discriminator 以及该值对应的变体语义。
-- 对 provider 名称、custom key、fallback 策略，明确“可自定义”与“未注册在 compile/lowering 期处理”的边界。
+- 对 provider 名称、custom key、fallback 策略，明确“可自定义”与“未注册在领域 resolve 期处理”的边界。
 - 不写实现故事、历史背景、ADR、renderer 细节或长示例。
 - `schemas/**/schema.ts` 不写 JSDoc；schema 与字段的契约说明统一使用英文 `.describe(...)`。`types.ts`、`constants.ts` 的导出类型、非 schema 常量和重要 helper 默认写中文 JSDoc，纯推断 / 重命名别名（如 `ValueOf`、`z.infer`）可省略。
 - 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
@@ -103,7 +103,7 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 - refinement 错误 `path` 指向用户应修改的具体字段；message 写当前契约，不写实现细节。
 - 闭合枚举字段用 `z.enum(ConstObject)` 或 `z.literal(Const.Member)`，不用 `z.nativeEnum`。
-- 开放式 provider 名称只校验 JSON 形态和非空字符串；是否注册通常在 compile / lowering 阶段 fail-loud。
+- 开放式 provider 名称只校验 JSON 形态和非空字符串；是否注册通常在领域 resolve 阶段 fail-loud。
 - 消费 shared / schema vocabulary 时使用 const object enum 成员，不写裸字符串；只有输入样例、错误负例和文档说明可以保留字符串字面量。
 - 不要从当前 schema 模块转手 export shared vocabulary；消费方直接从 shared barrel 导入。
 
@@ -115,5 +115,5 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 4. `.describe(...)` 是否短而准确，且没有上下文膨胀？
 5. 对象字段顺序、shared spread、union 拆分是否符合规则？
 6. 是否能用 `BaseSchema + superRefine` 避免重复 object？
-7. `CanonicalXxx` 是否由 `IRXxx` 派生但定义在领域 `normalize/<domain>/types.ts`，且由 domain `normalizeXxx` 唯一展开紧凑 IR，避免下游重复处理等价联合？
+7. `CanonicalXxx` 是否由 `IRXxx` 派生但定义在领域 `resolve/<domain>/types.ts`，且由 `resolveXxx` 结合当前 context 唯一展开紧凑 IR，避免下游重复处理等价联合？
 8. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？

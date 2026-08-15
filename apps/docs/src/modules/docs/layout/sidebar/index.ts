@@ -1,4 +1,5 @@
 export * from './AppSidebar';
 export * from './AppSidebarMenu';
 export * from './AppSidebarMenuItem';
+export * from './AppSidebarModuleList';
 export * from './types';

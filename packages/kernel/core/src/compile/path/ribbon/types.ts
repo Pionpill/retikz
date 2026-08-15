@@ -1,7 +1,6 @@
 ﻿import type { Vector2 } from '@retikz/math';
 
-import type { RibbonWidthProfileDefinition } from '../../../contract';
-import type { CanonicalPath, CanonicalRibbonOptions } from '../../../normalize/path';
+import type { CanonicalPath, CanonicalRibbonOptions } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { PathEmitOptions } from '../types';
@@ -84,10 +83,4 @@ export type RibbonCrossSection = {
 };
 
 /** ribbon emit 额外需要的上下文 */
-export type RibbonEmitOptions = PathEmitOptions & {
-  /**
-   * ribbon 宽度 profile 注册表
-   * @default 空 Map
-   */
-  ribbonWidthProfiles?: ReadonlyMap<string, RibbonWidthProfileDefinition>;
-};
+export type RibbonEmitOptions = PathEmitOptions;

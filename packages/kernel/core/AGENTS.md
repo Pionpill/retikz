@@ -29,9 +29,9 @@ shared/      无业务依赖的常量、类型、纯工具、跨层纯几何 hel
 schemas/     Zod schema 与 IR 类型真源
 contract/    第三方作者实现的 Definition、defineXxx、Scene 输出契约、能力无关 helper
 providers/   内置 definition、BUILTIN_*、registry resolver
-compile/     IR 到 Scene 的编排、layout、lowering、registry 消费
+resolve/     Source IR 与当前 context 的默认、优先级、lookup 和值形态确定化，输出 Canonical / Resolution
+compile/     context 生命周期、IR 到 Scene 的调度、layout、lowering 与 emit
 parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
-normalize/   Source IR 的紧凑写法、领域默认与值形态规范化，输出 Canonical 内部形态
 ```
 
 改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
@@ -56,7 +56,7 @@ normalize/   Source IR 的紧凑写法、领域默认与值形态规范化，输
 - 扩展能力按 `contract/<能力>` + `providers/<能力>` 分层：contract 放 author-facing 类型和 define helper；providers 放内置实现和 registry 合并。
 - 内置 definition 不享有特殊入口。有效表应由内置表与 options 自定义表合并，冲突通过 warning 或明确策略处理。
 - 跨 namespace Composite 传递依赖按完整 `namespace + type` key 进入 Core provider graph；React / Vanilla 只收集 contribution，不各自实现拓扑、dataset 合并或 definition 去重。
-- `node.shape` 在 IR 中永远是字符串名；`ShapeDefinition` 不进 IR，经 `CompileOptions.shapes` 注入。schema 只校验字符串形状，未注册名在 compile 期处理。
+- `node.shape` 在 IR 中永远是字符串名；`ShapeDefinition` 不进 IR，经 `CompileOptions.shapes` 注入。schema 只校验字符串形状，未注册名在 resolve 期处理。
 - Shape 几何方法围绕外接 `Rect` 工作；`emit` 接轴对齐 rect，rotate 由外层 `GroupPrim` 统一施加。
 - 改内置 shape 几何或 emit 时，优先跑 shape baseline snapshot 和相关 compile 测试。
 
@@ -65,7 +65,7 @@ normalize/   Source IR 的紧凑写法、领域默认与值形态规范化，输
 - `IRScope` 表示分组、局部 transform 与样式默认作用域；scope transform 在 compile pass 中下沉到 Scene `GroupPrim.transforms`。
 - compile 使用 `NameStack` 做 id 查找：默认全局扁平；`localNamespace` 时隔离子 frame；`scope.id` 始终注册到父 frame，作为外部句柄。
 - lookup 按 inside-out；同 frame 重复 id 发 warning 并 last-wins，跨 frame 同名是 shadowing。
-- scope 的相对定位、bbox synthetic layout、样式继承和 `resetStyle` 属 compile 语义；改动前读相关代码与测试，不把规则复制到 renderer。
+- scope traversal、相对定位与 bbox synthetic layout 的阶段调度属于 compile；样式继承、`resetStyle` 和局部覆盖优先级由 resolve 结合当前 scope context 确定。改动前读相关代码与测试，不把规则复制到 renderer。
 
 ## Parse
 

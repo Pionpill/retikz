@@ -2,6 +2,8 @@ import type { Position } from '@retikz/math';
 
 import type { MarkerPrimitive, ScenePrimitive } from '../contract';
 
+import { CompositeContractError } from '../resolve/diagnostics';
+import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
 import {
   AnimationTrackSchema,
   BlendMode,
@@ -12,20 +14,13 @@ import {
   PathLineCap,
   PathLineJoin,
 } from '../schemas';
-import { CompositeContractError, isCompositeContractError, isFatalProbeError } from './probe-failure';
 
 /** provider output runtime validation 使用的 marker 子集验证入口 */
 export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
 
 /** 在 provider 返回后的统一边界把未知 validation failure 分类为 fatal contract error */
-export const withProviderOutputValidationBoundary = <T>(owner: string, validate: () => T): T => {
-  try {
-    return validate();
-  } catch (cause) {
-    if (isCompositeContractError(cause) || isFatalProbeError(cause)) throw cause;
-    throw new CompositeContractError(`${owner} output validation failed.`, { cause });
-  }
-};
+export const withProviderOutputValidationBoundary = <T>(owner: string, validate: () => T): T =>
+  validateProviderOutput(owner, validate);
 
 /** 校验并脱离 provider 返回的有限二维坐标 */
 export const snapshotProviderPosition = (owner: string, value: unknown): Position =>

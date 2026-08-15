@@ -1,17 +1,16 @@
 import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../../contract';
-import type { CanonicalPath } from '../../../normalize/path';
+import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve/path';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { ResolvedPathBaseProps } from '../host';
 import type { PathPrimitiveEmitResult } from '../types';
-import type { ResolvedArrowRegistry } from './shrink';
+import type { PathBasePropsWithStrokeWidth } from './output';
 
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { sampleRoundedCommands } from './rounded-corners';
 import { emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
 
 /** 端点箭头与中段 marks 分流结果 */
-export type ResolvedPathEndpointDecorations = {
+export type PathEndpointDecorations = {
   /** 起点 / 终点箭头规格与 shrink 信息 */
   arrows: {
     arrowStart?: ResolvedArrowEndSpec;
@@ -26,9 +25,9 @@ export type ResolvedPathEndpointDecorations = {
 };
 
 /** path 端点 mark 解析输入 */
-export type ResolvePathEndpointDecorationsContext = {
-  /** 已解析 arrow registry */
-  resolvedArrows: ResolvedArrowRegistry;
+export type EmitPathEndpointDecorationsContext = {
+  /** resolving 阶段绑定的 arrow resolutions */
+  arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
   /** 坐标取整函数 */
   round: (n: number) => number;
 };
@@ -37,12 +36,12 @@ export type ResolvePathEndpointDecorationsContext = {
  * 将 `path.marks` 分流为端点箭头与中段 marks
  * @description pos=0 / pos=1 的首个 mark 会成为端点箭头；其余 mark 保持为 inline mark
  */
-export const resolvePathEndpointDecorations = (
+export const emitPathEndpointDecorations = (
   path: Pick<CanonicalPath, 'marks'>,
-  context: ResolvePathEndpointDecorationsContext,
-): ResolvedPathEndpointDecorations => {
-  const { resolvedArrows, round } = context;
-  const arrows: ResolvedPathEndpointDecorations['arrows'] = {
+  context: EmitPathEndpointDecorationsContext,
+): PathEndpointDecorations => {
+  const { arrowResolutions, round } = context;
+  const arrows: PathEndpointDecorations['arrows'] = {
     shrinkStart: 0,
     shrinkEnd: 0,
     boundaryOuterInsetStart: 0,
@@ -51,14 +50,30 @@ export const resolvePathEndpointDecorations = (
   const inlineMarks: NonNullable<IRPathBase['marks']> = [];
   for (const item of path.marks ?? []) {
     if (item.pos === 0 && arrows.arrowStart === undefined) {
-      const resolved = emitEndpointArrowMark(item.mark, resolvedArrows, round);
+      const resolved = emitEndpointArrowMark(
+        arrowResolutions.get(item.mark) ??
+          (() => {
+            throw new Error(
+              `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
+            );
+          })(),
+        round,
+      );
       arrows.arrowStart = resolved.spec;
       arrows.shrinkStart = resolved.shrink;
       arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
       continue;
     }
     if (item.pos === 1 && arrows.arrowEnd === undefined) {
-      const resolved = emitEndpointArrowMark(item.mark, resolvedArrows, round);
+      const resolved = emitEndpointArrowMark(
+        arrowResolutions.get(item.mark) ??
+          (() => {
+            throw new Error(
+              `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
+            );
+          })(),
+        round,
+      );
       arrows.arrowEnd = resolved.spec;
       arrows.shrinkEnd = resolved.shrink;
       arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
@@ -80,9 +95,9 @@ export type EmitInlineMarkPrimitivesInput = {
   /** commands 是否已经被 roundedCorners 改写 */
   roundedCommands: boolean;
   /** 已解析 arrow registry */
-  resolvedArrows: ResolvedArrowRegistry;
+  arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
   /** PathPrim 公共样式属性 */
-  baseProps: ResolvedPathBaseProps;
+  baseProps: PathBasePropsWithStrokeWidth;
   /** 坐标取整函数 */
   round: (n: number) => number;
 };
@@ -96,7 +111,7 @@ export const emitInlineMarkPrimitives = ({
   inlineMarks,
   segmentSamplers,
   roundedCommands,
-  resolvedArrows,
+  arrowResolutions,
   baseProps,
   round,
 }: EmitInlineMarkPrimitivesInput): PathPrimitiveEmitResult => {
@@ -117,7 +132,11 @@ export const emitInlineMarkPrimitives = ({
           const localT = scaled - segIdx;
           return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
         })();
-    const spec = emitMarkArrowSpec(mark, resolvedArrows, round);
+    const resolution = arrowResolutions.get(mark);
+    if (resolution === undefined) {
+      throw new Error(`Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`);
+    }
+    const spec = emitMarkArrowSpec(resolution, round);
     primitives.push(
       buildMarkMarkerGroup(spec, sample, {
         strokeWidth,
@@ -132,7 +151,7 @@ export const emitInlineMarkPrimitives = ({
 
 /** 端点箭头字段：无箭头时不写 undefined key，保持 Scene 输出纯净 */
 export const pathEndpointArrowSpecs = (
-  arrows: ResolvedPathEndpointDecorations['arrows'],
+  arrows: PathEndpointDecorations['arrows'],
 ): { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } => {
   const endpointSpecs: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } = {};
   if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;

@@ -1,25 +1,22 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
-import type { CanonicalPath, CanonicalStep } from '../../../normalize/path';
-import type { IRPathBase, IRPosition, IRTarget } from '../../../schemas';
-import type { NamespaceStack } from '../../namespace';
+import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve/path';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
-import { normalizePath } from '../../../normalize/path';
-import { resolveArrowRegistry } from '../../../providers';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
 import { fallbackMeasurer } from '../../text';
-import { localPointOfTarget, normalizePathSteps, resolvePathBaseProps } from '../host';
+import { pointOfTarget } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
-import { emitInlineMarkPrimitives, pathEndpointArrowSpecs, resolvePathEndpointDecorations } from './decorations';
+import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrowSpecs } from './decorations';
 import { assertArrowCanInheritStroke } from './marks';
-import { wrapPathPrimitiveOutput } from './output';
+import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
 import { createStrokeSamplingCollector } from './sampling';
 import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
@@ -30,8 +27,8 @@ import { bboxCenter, buildPathOwnerOutputTransforms } from './transform';
 
 /** 普通 path emit 所需的编译上下文 */
 export type EmitPathPrimitiveContext = {
-  /** id 查询栈 */
-  namespaceStack: NamespaceStack;
+  /** 节点 id 与 target 几何解析视图 */
+  targetView: PathTargetView;
   /** 坐标取整函数 */
   round: (n: number) => number;
   /** 文本测量函数 */
@@ -41,32 +38,28 @@ export type EmitPathPrimitiveContext = {
 };
 
 /**
- * IR Path → PathPrim
+ * 将 IR Path 输出为 PathPrim
  * @description 解析失败返回 null，并通过 `PathEmitOptions.onWarn` 报告 warning
  */
 const emitCanonicalPathPrimitive = (
-  canonicalPath: CanonicalPath,
+  resolution: StrokePathResolution,
   context: EmitPathPrimitiveContext,
 ): PathPrimitiveEmitResult | null => {
-  const { namespaceStack, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
-  const path = canonicalPath;
+  const { targetView, round, measureText = fallbackMeasurer, options: pathEmitOptions = {} } = context;
+  const { path } = resolution;
+  const canonicalPath = path;
+  const canonicalSteps = path.children ?? [];
   const irPath = pathEmitOptions.irPath ?? 'path';
   const warn = (code: string, message: string, subPath = ''): void => {
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
   const scopeChain = pathEmitOptions.scopeChain ?? [];
-  // paint 解析：有 registry 走去重派 id；无（直调）时纯色透传、PaintSpec 退化为 undefined
+  // paint 解析：有 registry 走去重派 id；无 registry 时纯色透传、PaintSpec 退化为 undefined
   const resolvePaint: PaintResolver =
     pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
-  const canonicalChildren = canonicalPath.children;
-  if (canonicalChildren === undefined) {
-    throw new Error('Stroke path requires `children` steps.');
-  }
-  // 先把 relative/relativeAccumulate 解析为当前 scope 局部坐标，后续算法可统一按非 relative target 处理
-  const canonicalSteps = canonicalChildren;
-  const steps = normalizePathSteps(canonicalSteps, namespaceStack, scopeChain);
-  // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；
-  // 其余 step 需"起点 + 至少一段绘制"故最少 2 段
+  // relative/relativeAccumulate target 已由 resolving 阶段绑定为当前 scope 的局部坐标
+  const steps = [...canonicalSteps];
+  // 自包含 shape step（rectangle 自带 from/to 两对角、不依赖游标）单独成 path 合法；其余 step 至少需要起点和一段绘制
   const soloSelfContained = steps.length === 1 && steps[0].kind === 'rectangle';
   if (steps.length < 2 && !soloSelfContained) {
     warn(
@@ -77,9 +70,14 @@ const emitCanonicalPathPrimitive = (
     return null;
   }
 
-  const cursor = createStrokeCursor({ steps, namespaceStack, scopeChain, warn });
+  const cursor = createStrokeCursor({
+    steps,
+    targetView,
+    scopeChain,
+    warn,
+  });
 
-  /** 主循环每轮置为当前 step.kind，emit* 据此打 provenance 标 */
+  /** 主循环每轮置为当前 step.kind，emit* 据此标记 provenance */
   let currentStepKind = '';
   const commandEmitter = createPathCommandEmitter({ round, currentStepKind: () => currentStepKind });
   const { commands, provenance, boundsPoints, endpointSource } = commandEmitter;
@@ -151,7 +149,7 @@ const emitCanonicalPathPrimitive = (
           cursor.relativeBaseline[1] + originalStep.to.relativeAccumulate[1],
         ];
       } else {
-        generatorTarget = localPointOfTarget(originalStep.to, namespaceStack, scopeChain);
+        generatorTarget = pointOfTarget(originalStep.to, targetView, scopeChain);
       }
       if (generatorTarget) {
         if (!isFinitePoint(generatorTarget)) {
@@ -186,7 +184,7 @@ const emitCanonicalPathPrimitive = (
           smoothBaseline = resolved;
           continue;
         }
-        const resolved = localPointOfTarget(originalPoint, namespaceStack, scopeChain);
+        const resolved = pointOfTarget(originalPoint, targetView, scopeChain);
         if (!resolved) {
           points.push(originalPoint);
           continue;
@@ -198,8 +196,8 @@ const emitCanonicalPathPrimitive = (
       cursor.relativeBaseline = smoothBaseline;
     }
 
-    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用。
-    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride。
+    // move 自身不绘制；其 to 仅供下个绘制段的 findPrev 引用
+    // 显式 move 开启新游标，必须切断 arc/circle/ellipse/rectangle/generator 留给下一绘制段的 penOverride
     if (step.kind === 'move') {
       cursor.clearPenOverride();
       continue;
@@ -207,11 +205,10 @@ const emitCanonicalPathPrimitive = (
 
     if (isStrokeShapeStep(step)) {
       const lowered = lowerShapeStep(step, i, {
-        namespaceStack,
+        targetView,
         scopeChain,
         round,
-        irPath,
-        generators: pathEmitOptions.effectivePathGenerators,
+        generatorResolution: originalStep.kind === 'generator' ? resolution.generators.get(originalStep) : undefined,
         warn,
         commandEmitter,
         cursor,
@@ -240,7 +237,7 @@ const emitCanonicalPathPrimitive = (
     }
 
     if (step.kind === 'axis-line' && originalStep.kind === 'axis-line') {
-      const targetReference = localPointOfTarget(originalStep.to, namespaceStack, scopeChain);
+      const targetReference = pointOfTarget(originalStep.to, targetView, scopeChain);
       if (!targetReference) return null;
       const currentReference = cursor.getPenOverride() ?? prev.anchor;
       const projected: IRPosition =
@@ -259,8 +256,8 @@ const emitCanonicalPathPrimitive = (
     const currAnchor = cursor.anchorAt(i);
     if (!currAnchor) return null;
 
-    // arc/circlePath/ellipsePath 后 penOverride 决定下段起点（弧终点/圆心）；
-    // 普通段继续对 prev.step.to 做 boundary clip（节点 ref 段独立 clip）。用完即清空
+    // arc/circlePath/ellipsePath 后 penOverride 决定下段起点（弧终点或圆心）
+    // 普通段继续对 prev.step.to 做 boundary clip；用完即清空
     const usedOverride = cursor.takePenOverride();
 
     if (!isStrokeSegmentStep(step)) {
@@ -268,7 +265,7 @@ const emitCanonicalPathPrimitive = (
       return unhandledStep;
     }
     const lowered = lowerSegmentStep(step, {
-      namespaceStack,
+      targetView,
       scopeChain,
       previous: prev,
       currentAnchor: currAnchor,
@@ -279,14 +276,13 @@ const emitCanonicalPathPrimitive = (
     if (!lowered) return null;
   }
 
-  // 折线几何圆角：编译期对 line step ↔ line step 内接缝插切圆弧。
-  // 在 shrink / split / marks 之前作用于已 emit 的 commands（在未变换几何上）——故 marks 弧长、arrow shrink、
-  // rotate/scale 外层 group 都自动落在倒角后几何上（顺序硬契约）。缺省 / 0 → commands 逐字不变。
+  // 折线几何圆角：对 line step ↔ line step 的内接缝插入圆弧
+  // 在 shrink / split / marks 之前作用于未变换的 commands；缺省或 0 时逐字不变
   let roundedCommands = false;
   if (path.roundedCorners !== undefined && path.roundedCorners > 0) {
     const before = commands.length;
     const next = applyRoundedCorners({ commands, provenance, radius: path.roundedCorners, round });
-    // 原地替换 commands 内容（下游 applyArrowShrinks / split 直接消费此数组）
+    // 原地替换 commands 内容，下游 applyArrowShrinks / split 直接消费此数组
     if (next.length !== before || next.some((c, k) => c !== commands[k])) {
       commands.length = 0;
       commands.push(...next);
@@ -294,10 +290,16 @@ const emitCanonicalPathPrimitive = (
     }
   }
 
-  const baseProps = resolvePathBaseProps(canonicalPath, { resolvePaint });
+  const baseProps = emitPathBaseProps(canonicalPath, {
+    resolvePaint,
+    paint: resolution.paint,
+    style: resolution.style,
+  });
   const strokeWidth = baseProps.strokeWidth;
-  const resolvedArrows = pathEmitOptions.resolvedArrows ?? resolveArrowRegistry();
-  const { arrows, inlineMarks } = resolvePathEndpointDecorations(path, { resolvedArrows, round });
+  const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
+    arrowResolutions: resolution.arrows,
+    round,
+  });
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 
   const marks = emitInlineMarkPrimitives({
@@ -305,14 +307,14 @@ const emitCanonicalPathPrimitive = (
     inlineMarks,
     segmentSamplers,
     roundedCommands,
-    resolvedArrows,
+    arrowResolutions: resolution.arrows,
     baseProps,
     round,
   });
   boundsPoints.push(...marks.boundsPoints);
 
-  // shrink 在 compile 算（端点收缩与 emit 落点无关）：按 shape + 视觉输入把首/末段端点向内缩短，
-  // 让 line 端点接在 hollow arrow 尾部外缘、不贯穿 back outline；shrink=0 的实心 shape 跳过
+  // shrink 在 compile 阶段计算，与 emit 落点无关；按视觉输入把首末段端点向内缩短
+  // 让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
   const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
   const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
   applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
@@ -343,20 +345,8 @@ const emitCanonicalPathPrimitive = (
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
 
-/**
- * 将源 IR 路径输出为路径图元
- * @description 内置输出器入口统一执行一次规范化
- */
+/** 将已解析的 path 输出为路径图元 */
 export const emitPathPrimitive = (
-  path: IRPathBase,
+  resolution: StrokePathResolution,
   context: EmitPathPrimitiveContext,
-): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(normalizePath(path), context);
-
-/**
- * 将规范化路径输出为路径图元
- * @description 仅供流带等 Core 内部规范化消费方复用描边输出器
- */
-export const emitCanonicalPath = (
-  path: CanonicalPath,
-  context: EmitPathPrimitiveContext,
-): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(path, context);
+): PathPrimitiveEmitResult | null => emitCanonicalPathPrimitive(resolution, context);

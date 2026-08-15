@@ -178,7 +178,7 @@ Occurrence 的 `probe[index]` segment 表示候选 `layoutChild()` dispatch；�
 
 Composite 复用 `artifactSchema` 与 `compile` 返回的 `artifact`。Path kind 则显式声明 `ownerOutput: { schema }`，并只在 `context.ownerOutput.requested` 为真时调用 `publish(value)`；被选择却没有发布、重复发布或 schema 校验失败都会直接报错。失败和被丢弃的 probe 不触发 `observe()`，最终事件按 occurrence 与 owner 稳定排序。
 
-`context.compileFragment(children)` 可在当前 occurrence 的 Theme、Scope 样式与 provider 环境中编译普通 Core 子元素。片段返回独立 `scene`、artifacts 与 diagnostics，不写回主编译结果；跨片段或指向主图的公共身份引用会失败。Core 不约束 `complete()` 的结果结构，因此统计、分析和 [`@retikz/inspect`](/kernel/packages/inspect) 都能复用这条能力。
+`context.compileFragment(children)` 可在当前 occurrence 的 Theme、Scope 样式与 provider 环境中编译普通 Core 子元素。片段返回独立 `scene`、artifacts 与 diagnostics，不写回主编译结果；跨片段或指向主图的公共身份引用会失败。Core 不约束 `complete()` 的结果结构，因此统计、分析和 [`@retikz/inspect`](/kernel/packages/extension/inspect) 都能复用这条能力。
 
 ## 文字度量
 

@@ -19,12 +19,12 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
+import type { StyleResolveFrame } from '../../resolve/style';
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 import type { LayoutProbeFailureEntry } from '../probe-failure';
-import type { StyleFrame } from '../style';
 import type { CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
 import type { CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
@@ -34,6 +34,7 @@ import type { PendingSpatialHandle } from './spatial-handle';
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = {
   /** 已合并样式和动画过滤后的 path IR */
+  /** path Source IR，样式与动态 target 解析延迟到 resolving phase */
   path: IRPathBase;
   /** warning 与诊断使用的 IR locator */
   irPath: string;
@@ -56,7 +57,7 @@ export type PendingPathEmission = {
   /** Path occurrence 捕获的有效 Theme */
   theme: ResolvedTheme;
   /** Path occurrence 捕获的完整样式栈 */
-  styleStack: ReadonlyArray<StyleFrame>;
+  styleStack: ReadonlyArray<StyleResolveFrame>;
   /** 产生 path primitive 的语义 owner */
   semanticOwner?: RuntimeSemanticOwner;
   /** 编译期排序用 zIndex，不写入 Scene primitive */
@@ -92,7 +93,7 @@ export type TraversalResult = {
 /** layout-aware child probe 保存的全部可提交贡献 */
 export type CompositeReplayMaterializeContext = Readonly<{
   /** replay child 在最终 authored Scope 中继承的样式栈 */
-  styleStack: ReadonlyArray<StyleFrame>;
+  styleStack: ReadonlyArray<StyleResolveFrame>;
   /** replay child 在最终 authored Scope 中继承的 Theme */
   theme: ResolvedTheme;
   /** replay child 所处 Scope 的 preliminary transform chain */
@@ -199,7 +200,7 @@ export type TraversalCompileOptions = {
   /** probe 继承的当前 scope chain */
   scopeChain?: ReadonlyArray<Transform>;
   /** probe 继承的样式栈 */
-  styleStack?: ReadonlyArray<StyleFrame>;
+  styleStack?: ReadonlyArray<StyleResolveFrame>;
   /** 隔离 traversal 继承的完整 Theme */
   theme?: ResolvedTheme;
   /** 当前 child 根 occurrence；省略时按 canonical IR path 分配 */
@@ -252,6 +253,8 @@ export type TraversalContext = Pick<
   | 'rootFontSize'
   | 'shapes'
   | 'boundaries'
+  | 'patterns'
+  | 'clips'
   | 'arrows'
   | 'pathGenerators'
   | 'pathKinds'
@@ -292,7 +295,7 @@ export type TraversalFrame = {
   /** 当前层延迟 emit 的 path 任务 */
   pathSink: Array<PendingPathEmission>;
   /** 当前层样式继承栈 */
-  styleStack: ReadonlyArray<StyleFrame>;
+  styleStack: ReadonlyArray<StyleResolveFrame>;
   /** 当前层后代读取的完整 Theme */
   theme: ResolvedTheme;
   /** 当前层及后代注册的全局 layout 对象，供 Scope 收尾时原位升级到最终几何 */
@@ -436,7 +439,7 @@ export type PendingCompileObservation = {
   /** owner occurrence 捕获的有效 Theme */
   theme: ResolvedTheme;
   /** owner occurrence 捕获的完整样式栈 */
-  styleStack: ReadonlyArray<StyleFrame>;
+  styleStack: ReadonlyArray<StyleResolveFrame>;
 };
 
 /** 紧邻 schema parse 后可调用的 layout-aware composite 形态 */

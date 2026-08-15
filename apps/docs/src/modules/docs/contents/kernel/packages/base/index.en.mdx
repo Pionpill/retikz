@@ -1,0 +1,32 @@
+---
+title: Base packages
+description: Base packages provide cross-package contracts and zero-dependency geometry for the rest of Kernel.
+---
+
+Base packages answer the question, “Which stable primitives can every other package share?” `@retikz/foundation` owns cross-package types, assertions, and error contracts; `@retikz/math` provides renderer-independent geometry primitives and algorithms. Neither package owns figure composition, compilation orchestration, or final rendering.
+
+<ComponentPreview files="math-pipeline" size="xs" hideCode />
+
+## Responsibilities
+
+| Package              | Responsibility                                                              | Reach for it when                                              |
+| -------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `@retikz/foundation` | Cross-package types, schemas, assertions, and errors                        | Reusing a public contract or diagnosing low-level input errors |
+| `@retikz/math`       | Pure computation for points, vectors, transforms, curves, and intersections | Constructing or deriving geometry data                         |
+
+## Start here
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/base/foundation">
+    <span className="font-semibold">foundation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Cross-package primitives and schemas</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/base/math-primitives">
+    <span className="font-semibold">math · Primitives</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Points, vectors, bounds, ellipses, and arcs</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/base/math-algorithms">
+    <span className="font-semibold">math · Algorithms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Intersections, enclosures, hulls, and curves</span>
+  </LinkedCard>
+</div>
