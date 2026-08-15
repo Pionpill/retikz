@@ -1,5 +1,7 @@
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '@retikz/core';
 
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { RibbonWidthProfileDefinition } from './profile-types';
 
 import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
@@ -12,6 +14,7 @@ const profileDatasetsOf = (
 ): Readonly<Record<string, RibbonWidthProfileDefinition>> => {
   const datasets = Object.create(null) as Record<string, RibbonWidthProfileDefinition>;
   for (const profile of profiles) {
+    assertNonEmptyString(profile.name, 'Ribbon width profile name');
     if (Object.hasOwn(datasets, profile.name) && datasets[profile.name] !== profile) {
       throw new Error(`Ribbon width profile '${profile.name}' is defined more than once.`);
     }

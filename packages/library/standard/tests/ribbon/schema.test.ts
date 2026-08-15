@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import * as RibbonExports from '../../src/ribbon';
 import { RibbonPathSchema } from '../../src/ribbon';
 
 describe('Standard Ribbon schema', () => {
@@ -15,5 +16,10 @@ describe('Standard Ribbon schema', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('exports only the canonical Ribbon options schema name', () => {
+    expect(RibbonExports).toHaveProperty('RibbonPathOptionsSchema');
+    expect(RibbonExports).not.toHaveProperty('PathRibbonOptionsSchema');
   });
 });

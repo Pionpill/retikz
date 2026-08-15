@@ -17,12 +17,12 @@ Standard extends Core horizontally rather than replacing it:
 
 ## Three packages and capability subpaths
 
-| Entry                           | Responsibility                                                        | Use it when                                      |
-| ------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------ |
-| `@retikz/standard`              | Schemas, factories, Definitions, and lowering for Standard composites | Using Grid, Axes, Frame, Surface, or Legend      |
-| `@retikz/standard-react`        | React DSL for presentation components                                 | Authoring inside a React `Layout`                |
-| `@retikz/standard-vanilla`      | Plain-spec helpers and Vanilla Tier 2 adapters                        | Authoring in browsers or scripts without React   |
-| `@retikz/standard/<capability>` | Definitions for one optional drawing capability family                | A figure needs an optional shape, arrow, or clip |
+| Entry                           | Responsibility                                                        | Use it when                                              |
+| ------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- |
+| `@retikz/standard`              | Schemas, factories, Definitions, and lowering for Standard composites | Using Grid, Axes, Frame, Surface, or Legend              |
+| `@retikz/standard-react`        | React DSL for presentation components                                 | Authoring inside a React `Layout`                        |
+| `@retikz/standard-vanilla`      | Plain-spec helpers and Vanilla Tier 2 adapters                        | Authoring in browsers or scripts without React           |
+| `@retikz/standard/<capability>` | Definitions for one optional drawing capability family                | A figure needs an optional shape, arrow, clip, or ribbon |
 
 React and Vanilla only connect authoring inputs to the same capabilities. For optional drawing content, import a single Definition from the precise `@retikz/standard/<capability>` subpath and pass it to Core compile options; the `@retikz/standard` root does not forward it.
 

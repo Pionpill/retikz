@@ -5,7 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
 
-import { createRibbonPathKindDefinition, defineRibbonWidthProfile, RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
+import {
+  createRibbonPathKindDefinition,
+  defineRibbonWidthProfile,
+  RibbonPathKindDefinition,
+  RibbonPathSchema,
+} from '../../src/ribbon';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -643,19 +648,22 @@ describe('compile ribbon', () => {
     );
   });
 
-  it('throws when a registered width profile returns a non-finite width', () => {
-    const bad = defineRibbonWidthProfile({
-      name: 'bad',
-      widthAt: () => Number.NaN,
-    });
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])(
+    'throws when a registered width profile returns an invalid width (%s)',
+    invalidWidth => {
+      const bad = defineRibbonWidthProfile({
+        name: 'bad',
+        widthAt: () => invalidWidth,
+      });
 
-    expect(
-      () =>
-        compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
-          pathKinds: [createRibbonPathKindDefinition({ profiles: [bad] })],
-        }).scene,
-    ).toThrow(/profile "bad"/);
-  });
+      expect(
+        () =>
+          compileToScene(scene([ribbon({ width: { kind: 'profile', name: 'bad' } })]), {
+            pathKinds: [createRibbonPathKindDefinition({ profiles: [bad] })],
+          }).scene,
+      ).toThrow(/profile "bad"/);
+    },
+  );
 
   it('lowers explicit boundary ribbons from upper and lower open paths', () => {
     const boundary = ribbon({
@@ -722,6 +730,45 @@ describe('compile ribbon', () => {
           ]),
         ).scene,
     ).toThrow(/zero length/);
+  });
+
+  it.each([
+    [
+      'multiple subpaths',
+      [
+        { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [5, 0] as [number, number] },
+        { type: 'step' as const, kind: 'move' as const, to: [6, 0] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
+      ],
+    ],
+    [
+      'closed path',
+      [
+        { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [10, 0] as [number, number] },
+        { type: 'step' as const, kind: 'cycle' as const },
+      ],
+    ],
+    [
+      'zero-length path',
+      [
+        { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
+        { type: 'step' as const, kind: 'line' as const, to: [0, 0] as [number, number] },
+      ],
+    ],
+  ])('rejects a boundary with a %s', (_label, upper) => {
+    expect(() =>
+      compileToScene(
+        scene([
+          ribbon({
+            kind: 'boundary',
+            upper,
+            lower: defaultRibbonChildren,
+          }),
+        ]),
+      ),
+    ).toThrow(/upper boundary|open|zero|subpath/i);
   });
 
   it('resolves conic gradient fill through paint resources', () => {

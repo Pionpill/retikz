@@ -124,7 +124,7 @@ export const RibbonSamplingSchema = z
   .union([RibbonFixedSamplingSchema, RibbonAdaptiveSamplingSchema])
   .describe('Ribbon boundary sampling strategy; `samples` is retained as a shorthand for fixed sampling.');
 
-export const PathRibbonOptionsSchema = z
+export const RibbonPathOptionsSchema = z
   .object({
     mode: z.enum(RibbonMode).optional().describe('Ribbon construction mode; omitted means centerline.'),
     samples: z

@@ -32,8 +32,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、Clip providers；排版布局迁入独立 Layout 包族。',
-            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, and Clip providers, and moves layout composition to the independent Layout package family.',
+            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、Clip、Ribbon providers；排版布局迁入独立 Layout 包族。',
+            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, Clip, and Ribbon providers, and moves layout composition to the independent Layout package family.',
           },
           items: [
             {
@@ -69,6 +69,13 @@ export const standardV01: Release = {
               content: {
                 zh: 'Core 不再默认携带上述可选 definitions。直接编译须从对应 Standard 子入口注入所需 Definition；adapter 与 Tier 2 使用 `CoreProviderContribution` 携带完整依赖闭包。缺失依赖、循环或同 key 冲突在 compile dispatch 前 fail-loud，不提供旧 Core re-export、自动安装或兼容 fallback。',
                 en: 'Core no longer includes these optional Definitions by default. Direct compilation injects required Definitions from the corresponding Standard subpath, while adapters and Tier 2 packages carry complete dependency closures through `CoreProviderContribution`. Missing dependencies, cycles, and same-key conflicts fail before compile dispatch, with no legacy Core re-exports, auto-installation, or compatibility fallback.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：Ribbon 迁入 Standard', en: 'BREAKING: Ribbon moves to Standard' },
+              content: {
+                zh: 'Ribbon 的完整 Path schema、宽度 profile、几何编译与 provider contribution 现由 `@retikz/standard/ribbon` 提供。把 Path 顶层 `ribbon` 改为 `kindOptions`，并通过 `pathKinds` 显式注入 `RibbonPathKindDefinition`；Core Ribbon 导出、`ribbonWidthProfiles` 和自动 fallback 已删除。',
+                en: 'The complete Ribbon Path schema, width profiles, geometry compilation, and provider contribution now come from `@retikz/standard/ribbon`. Move the former top-level Path `ribbon` field to `kindOptions` and inject `RibbonPathKindDefinition` explicitly through `pathKinds`; Core Ribbon exports, `ribbonWidthProfiles`, and automatic fallback are removed.',
               },
             },
           ],

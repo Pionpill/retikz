@@ -4,8 +4,6 @@ import type { RibbonWidthProfileDefinition } from '../profile-types';
 import type { IRRibbonPath } from '../types';
 import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
 
-import { BUILTIN_RIBBON_WIDTH_PROFILES } from '../bulge';
-import { resolveRibbonWidthProfileRegistry } from '../profile-registry';
 import { resolveRibbonOptions, resolveRibbonWidth } from '../resolve';
 import {
   commandsToSegmentInputs,
@@ -107,11 +105,10 @@ const resultOf = (
 export const emitRibbonPrimitive = (
   path: IRRibbonPath,
   context: EmitRibbonPrimitiveContext,
-  profiles: ReadonlyArray<RibbonWidthProfileDefinition> = [],
+  profileRegistry: ReadonlyMap<string, RibbonWidthProfileDefinition>,
 ): PathKindCompileResult | null => {
   const options = resolveRibbonOptions(path.kindOptions);
   const ribbon: RibbonLike = { ...path, ...options };
-  const profileRegistry = resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
 
   if (ribbon.mode === 'boundary') {
     if (path.label !== undefined) {

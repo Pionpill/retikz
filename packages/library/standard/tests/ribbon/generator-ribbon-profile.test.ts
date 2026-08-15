@@ -4,6 +4,8 @@ import { BUILTIN_PATH_GENERATORS, compileToScene as compileCoreToScene, definePa
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import type { RibbonWidthProfileDefinition } from '../../src/ribbon';
+
 import {
   BUILTIN_RIBBON_WIDTH_PROFILES,
   createRibbonPathKindDefinition,
@@ -78,6 +80,22 @@ describe('builtin path generator and Standard Ribbon width profile', () => {
       { kind: 'line', to: [0, -2] },
       { kind: 'close' },
     ]);
+  });
+
+  it('builds the profile registry once and rejects an official-name collision at definition creation', () => {
+    const duplicateBulge = defineRibbonWidthProfile({
+      name: 'bulge',
+      widthAt: () => 4,
+    });
+
+    expect(() => createRibbonPathKindDefinition({ profiles: [duplicateBulge] })).toThrow(/defined more than once/);
+  });
+
+  it.each(['', '   '])('rejects an invalid profile name at definition and factory entry (%j)', name => {
+    expect(() => defineRibbonWidthProfile({ name, widthAt: () => 4 })).toThrow(/non-empty string/);
+
+    const invalidProfile: RibbonWidthProfileDefinition = { name, widthAt: () => 4 };
+    expect(() => createRibbonPathKindDefinition({ profiles: [invalidProfile] })).toThrow(/non-empty string/);
   });
 
   it('bulge_peak_equals_base_and_peak_less_than_base', () => {

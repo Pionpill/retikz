@@ -39,6 +39,30 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.4',
+          date: '2026-08-15',
+          summary: {
+            zh: 'BREAKING：Path Kind 收口为开放 host 与完整 subject schema，Ribbon 的 schema、profile 与几何 owner 迁入 Standard。',
+            en: 'BREAKING: Path Kind becomes an open host with complete subject schemas, while Ribbon schema, profiles, and geometry ownership move to Standard.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：Core 移除 Ribbon 专属公共面', en: 'BREAKING: Core Ribbon surface removed' },
+              content: {
+                zh: 'Core `PathSchema` 现只接受开放 `kind` 与 JSON-safe `kindOptions`，再由已注册 `PathKindDefinition.schema` 校验完整 Path。Core 不再导出 Ribbon schema、width profile、几何 emitter 或 `ribbonWidthProfiles`，内置 Path Kind 只保留 `stroke`。',
+                en: 'Core `PathSchema` now accepts an open `kind` plus JSON-safe `kindOptions`, then validates the complete Path through the registered `PathKindDefinition.schema`. Core no longer exports Ribbon schemas, width profiles, geometry emitters, or `ribbonWidthProfiles`; `stroke` is the only built-in Path Kind.',
+              },
+            },
+            {
+              label: { zh: '领域中立 Path Kind 服务', en: 'Domain-neutral Path Kind services' },
+              content: {
+                zh: '`PathKindDefinition` 以独立 `name` 作为 registry identity，并通过完整 subject schema 恢复 typed path。自定义 kind 可复用路径物化、Stroke 输出、host label、appearance 与 precision 服务，不依赖 Ribbon 私有状态。',
+                en: '`PathKindDefinition` uses an independent `name` as registry identity and restores a typed Path through its complete subject schema. Custom kinds can reuse path materialization, Stroke emission, host labels, appearance, and precision without depending on Ribbon-private state.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.2',
           date: '2026-08-09',
           summary: {

@@ -13,10 +13,10 @@ import type {
 } from './constants';
 import type { RibbonPathSchema as CompleteRibbonPathSchema } from './path-schema';
 import type {
-  PathRibbonOptionsSchema,
   RibbonArcCapSchema,
   RibbonCapSchema,
   RibbonEndpointSchema,
+  RibbonPathOptionsSchema,
   RibbonSamplingSchema,
   RibbonWidthSchema,
   RibbonWidthStopSchema,
@@ -36,7 +36,7 @@ export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
 
 export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
 
-export type IRRibbonPathOptions = z.infer<typeof PathRibbonOptionsSchema>;
+export type IRRibbonPathOptions = z.infer<typeof RibbonPathOptionsSchema>;
 
 export type RibbonModeValue = ValueOf<typeof RibbonMode>;
 

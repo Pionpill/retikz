@@ -5,11 +5,14 @@ import { definePathKind } from '@retikz/core';
 import type { RibbonWidthProfileDefinition } from './profile-types';
 import type { IRRibbonPath } from './types';
 
+import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
 import { emitRibbonPrimitive } from './geometry';
 import { RibbonPathSchema } from './path-schema';
+import { resolveRibbonWidthProfileRegistry } from './profile-registry';
 
-const createDefinition = (profiles: ReadonlyArray<RibbonWidthProfileDefinition>): PathKindDefinition<IRRibbonPath> =>
-  definePathKind<IRRibbonPath>({
+const createDefinition = (profiles: ReadonlyArray<RibbonWidthProfileDefinition>): PathKindDefinition<IRRibbonPath> => {
+  const profileRegistry = resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);
+  return definePathKind<IRRibbonPath>({
     name: 'ribbon',
     schema: RibbonPathSchema,
     compile: context =>
@@ -21,9 +24,10 @@ const createDefinition = (profiles: ReadonlyArray<RibbonWidthProfileDefinition>)
           materializePath: context.materializePath,
           emitHostLabels: context.emitHostLabels,
         },
-        profiles,
+        profileRegistry,
       ),
   });
+};
 
 /** 官方 Ribbon Path Kind definition，默认只注册 bulge profile */
 export const RibbonPathKindDefinition = createDefinition([]);
