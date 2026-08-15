@@ -20,9 +20,6 @@ import {
   PathLineJoin,
   PathThickness,
   PatternShape,
-  RibbonAlignment,
-  RibbonMode,
-  RibbonTaperInterpolation,
   ScopeBoundingShape,
   ShadowPreset,
   Side,
@@ -62,6 +59,7 @@ import {
   AxesTickSourceKind,
   GridBorderOrder,
 } from '@retikz/standard';
+import { RibbonAlignment, RibbonMode, RibbonTaperInterpolation } from '@retikz/standard/ribbon';
 import {
   TableBorderKind,
   TableBorderMode,

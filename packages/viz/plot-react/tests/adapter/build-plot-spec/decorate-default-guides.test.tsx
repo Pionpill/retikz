@@ -1,7 +1,8 @@
 import { PlotSpecSchema } from '@retikz/plot';
+import { decorateDefaultGuides } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec, decorateDefaultGuides } from '../../../src/adapter';
+import { buildPlotSpec } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 

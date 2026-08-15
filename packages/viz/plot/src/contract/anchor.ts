@@ -1,4 +1,4 @@
-import type { IRCoordinate, IRTarget } from '@retikz/core';
+import type { IRCoordinate } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 import type { IRPlotAnchorIdSpec } from '../schemas';
@@ -42,6 +42,3 @@ export type MarkLoweringContext = {
   provenance?: MarkProvenance;
   anchors?: AnchorRegistry;
 };
-
-/** 已解析到数据行与屏幕位置的 plot target */
-export type ResolvedPlotTarget = IRTarget;

@@ -12,6 +12,7 @@ The Standard extension layer answers which optional official drawing Definitions
 | Shapes             | Supply optional node outlines                                 | A figure needs an outline beyond Core's basic shapes     |
 | Arrows             | Supply optional path endpoint markers                         | A figure needs a marker beyond Core's basic solid arrows |
 | Clips              | Supply optional recursive compound clipping                   | One clipping region combines child clips                 |
+| Ribbon             | Supply an optional band-shaped Path kind and width profiles   | A relation needs width, caps, or precomputed boundaries  |
 | Capability loading | Explain Definition, provider-graph, and host responsibilities | Integrating React, Vanilla, or a custom toolchain        |
 
 ## Chapters
@@ -33,6 +34,12 @@ The Standard extension layer answers which optional official drawing Definitions
     <span className="font-semibold">Clips</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Import compound clipping from `/clip` and inject `clips`
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/extension/ribbon">
+    <span className="font-semibold">Ribbon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Import the band-shaped Path kind from `/ribbon` and inject `pathKinds`
     </span>
   </LinkedCard>
   <LinkedCard href="/library/standard/extension/capability-loading">

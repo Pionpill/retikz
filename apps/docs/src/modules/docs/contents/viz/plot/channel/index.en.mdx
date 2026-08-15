@@ -14,31 +14,31 @@ A channel describes two things: where a value comes from and which visual result
 
 ## How It Works (Optional On A First Read)
 
-React mark props are assembled into PlotSpec, a serializable drawing configuration. Position channels are interpreted by the coordinate system. Other channels use a shared channel registry to find their handling rules, then resolve into visible properties or legend information.
+React mark props are assembled into `IRPlotSpec`, a serializable drawing configuration. Position channels are interpreted by the coordinate system. Other channels use a shared channel registry to find their handling rules, then resolve into visible properties or legend information.
 
 <ComponentPreview files="channel-flow" size="lg" hideCode />
 
-PlotSpec stores field or constant bindings, not functions. Built-ins and custom channels injected through `channelDefinitions` share the same registration, resolution, and delivery path, so extending channels does not require another configuration format.
+`IRPlotSpec` stores field or constant bindings, not functions. Built-ins and custom channels injected through `channelDefinitions` share the same registration, resolution, and delivery path, so extending channels does not require another configuration format.
 
 <SourceLinks
   sources={[
     {
       label: 'Position bindings are read through coordinate roles',
-      path: 'packages/viz/plot/src/pipeline/expand/frame/resolve.ts',
-      startLine: 244,
-      endLine: 256,
+      path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
+      startLine: 250,
+      endLine: 263,
     },
     {
       label: 'Built-in and custom channels merge into one registry',
       path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 77,
-      endLine: 114,
+      startLine: 67,
+      endLine: 93,
     },
     {
       label: 'Bindings resolve and dispatch by channel type',
-      path: 'packages/viz/plot/src/providers/channel/registry.ts',
-      startLine: 120,
-      endLine: 190,
+      path: 'packages/viz/plot/src/resolve/channel/resolve.ts',
+      startLine: 44,
+      endLine: 123,
     },
   ]}
 />

@@ -3,7 +3,7 @@ title: ReferenceMark
 description: 'ReferenceMark expresses reference constraints: constant or field values expanded into lines, one-axis bands, or coordinate regions.'
 ---
 
-`<ReferenceMark>` declares a reference constraint in data space. By default, bind `y` for a horizontal reference and bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a one-axis band. Set `kind="region"` and ReferenceMark uses `x` / `xTo` plus `y` / `yTo` to build a bounded 2D region. `number` means a constant, while `FieldName` means a data field name or field path and produces one reference per row.
+`<ReferenceMark>` declares a reference constraint in data space. By default, bind `y` for a horizontal reference and bind `x` for a vertical reference; a lower bound alone becomes a line, while `xTo` / `yTo` turns it into a one-axis band. Set `kind="region"` and ReferenceMark uses `x` / `xTo` plus `y` / `yTo` to build a bounded 2D region. A number is a constant; a field value in `ReferenceMarkProps` is read per row and produces one reference per row. The corresponding Vanilla field-name TypeScript type is `InputPlotFieldName`.
 
 It joins the same draw order as `<PointMark>` / `<IntervalMark>`, but it does not start from point, line, or interval dimensions. It first fixes one axis value, then expands along the opposite axis domain.
 
@@ -86,7 +86,7 @@ An extent changes only the coverage along the opposite axis; it does not change 
   description="Return when debugging line, band, or region inference, constant versus per-row output, or coordinate support."
 />
 
-`<ReferenceMark>` validates bound combinations before entering `PlotSpec`; invalid configurations are not guessed silently. Lowering then distinguishes line, band, and region geometry from the lower bounds, upper bounds, and `kind`.
+`<ReferenceMark>` validates bound combinations before entering `IRPlotSpec`; invalid configurations are not guessed silently. Lowering then distinguishes line, band, and region geometry from the lower bounds, upper bounds, and `kind`.
 
 The figure keeps to the ReferenceMark responsibility boundary and shows its two lowering paths: a line produces path steps directly, while a band or region first forms a logical Cell and asks the coordinate frame to project it.
 
@@ -132,10 +132,10 @@ This table keeps only ReferenceMark-specific props and props whose meaning is re
 
 | Prop                              | Type                                   | Default              | Description                                                                                                                   |
 | --------------------------------- | -------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `x?` / `y?`                       | `number` / `FieldName`                 | —                    | Reference-axis value for the default form; set exactly one. Numbers are constant, fields produce one reference per row        |
-| `xTo?` / `yTo?`                   | `number` / `FieldName`                 | —                    | Upper bound paired with the same lower-bound role; turns a line into a band                                                   |
+| `x?` / `y?`                       | `ReferenceMarkProps['x']`              | —                    | Reference-axis value for the default form; set exactly one. Numbers are constant, fields produce one reference per row        |
+| `xTo?` / `yTo?`                   | `ReferenceMarkProps['xTo']`            | —                    | Upper bound paired with the same lower-bound role; turns a line into a band                                                   |
 | `kind?`                           | <ApiValues name="ReferenceMarkKind" /> | —                    | Set `region` to build an area from bounds on multiple roles                                                                   |
-| `extentField?` / `extentToField?` | `FieldName`                            | Full opposite domain | Per-row start and end that shorten a line / band along the opposite role; set them together                                   |
+| `extentField?` / `extentToField?` | `ReferenceMarkProps['extentField']`    | Full opposite domain | Per-row start and end that shorten a line / band along the opposite role; set them together                                   |
 | `color?`                          | `string`                               | Default layer color  | A numeric lower `x` / `y` sets color directly; a field lower bound interprets the string as a per-row color field             |
 | `label?`                          | `ReferenceMarkProps['label']`          | —                    | Lowers to a geometry label for lines and a node label for bands / regions; content lives in `content.field` / `content.value` |
 

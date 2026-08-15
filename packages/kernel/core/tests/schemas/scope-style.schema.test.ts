@@ -139,7 +139,7 @@ describe('PathDefaultSchema（every path 默认）', () => {
       { animations: [] },
       { kind: 'stroke' },
       { kindOptions: {} },
-      { ribbon: { width: 1 } },
+      { unknownPathField: { width: 1 } },
       { label: { text: 'edge' } },
       { marks: [] },
     ]) {

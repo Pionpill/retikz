@@ -6,7 +6,6 @@ import { JsonObjectSchema } from '../../json';
 import { AngleDegreesSchema } from '../../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
-import { PathRibbonOptionsSchema } from '../ribbon';
 import { GeometryLabelSchema, StepSchema } from '../step';
 import { PathFillRule, PathKind } from './constants';
 
@@ -103,11 +102,10 @@ export const PathStructureSchema = z
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
     kind: z.string().min(1).optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
     kindOptions: JsonObjectSchema.optional().describe(
-      'JSON-safe option object for custom path kind providers. Built-in `stroke` and `ribbon` do not use this field.',
+      'JSON-safe option object consumed by the selected path kind provider.',
     ),
-    ribbon: PathRibbonOptionsSchema.optional().describe('Ribbon-specific options. Valid only when kind is `ribbon`.'),
   })
-  .describe('Path structure fields selecting the kind provider and ribbon options.');
+  .describe('Path structure fields selecting an open path kind provider.');
 
 export const PathBaseSchema = z
   .strictObject({
@@ -121,69 +119,36 @@ export const PathBaseSchema = z
   })
   .describe('Base fields for a path-like relation before kind-specific structural refinement.');
 
-export const PathSchema = PathBaseSchema.superRefine((path, ctx) => {
+export const PathSchema = PathBaseSchema.describe(
+  'A drawn path composed of a sequence of step actions (move / line / ...).',
+);
+
+/** Built-in stroke path subject schema with complete host constraints. */
+export const StrokePathSchema = PathBaseSchema.extend({
+  // Keep malformed step payloads on the compile-time diagnostic path. The stroke
+  // emitter owns geometric validity and emits the established warning/error.
+  children: z.array(z.unknown()).optional().describe('Sequence of source step actions for the stroke path.'),
+})
+  .superRefine((path, ctx) => {
   const kind = path.kind ?? PathKind.Stroke;
-  if (kind === PathKind.Stroke) {
-    if (path.children === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['children'],
-        message: 'Stroke paths require `children` steps.',
-      });
-    }
-    if (path.ribbon !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['ribbon'],
-        message: '`ribbon` options are only valid when `kind` is `ribbon`.',
-      });
-    }
-    if (path.kindOptions !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['kindOptions'],
-        message: '`kindOptions` is only valid for custom path kinds.',
-      });
-    }
-    return;
-  }
-  if (kind === PathKind.Ribbon) {
-    if (path.ribbon === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['ribbon'],
-        message: 'Ribbon paths require a `ribbon` options object.',
-      });
-    }
-    if (path.kindOptions !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['kindOptions'],
-        message: '`kindOptions` is only valid for custom path kinds.',
-      });
-    }
-    if (path.ribbon?.mode === 'boundary') {
-      if (path.children !== undefined) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['children'],
-          message: 'Boundary ribbon paths use `ribbon.upper` and `ribbon.lower`, not top-level `children`.',
-        });
-      }
-    } else if (path.children === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['children'],
-        message: 'Centerline ribbon paths require top-level `children` steps.',
-      });
-    }
-    return;
-  }
-  if (path.ribbon !== undefined) {
+  if (kind !== PathKind.Stroke) {
     ctx.addIssue({
       code: 'custom',
-      path: ['ribbon'],
-      message: '`ribbon` options are only valid when `kind` is `ribbon`.',
+      path: ['kind'],
+      message: 'Stroke path schema requires kind `stroke` or an omitted kind.',
+    });
+    return;
+  }
+  if (path.children === undefined) {
+    ctx.addIssue({ code: 'custom', path: ['children'], message: 'Stroke paths require `children` steps.' });
+  }
+  if (path.kindOptions !== undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['kindOptions'],
+      message: '`kindOptions` is not valid for the built-in `stroke` path kind.',
     });
   }
-}).describe('A drawn path composed of a sequence of step actions (move / line / ...)');
+  })
+  .transform(path => path as z.infer<typeof PathBaseSchema>)
+  .describe('Complete source subject schema for the built-in stroke path kind.');

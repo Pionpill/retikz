@@ -38,7 +38,6 @@ export type TableLayoutHostProps = Pick<
   | 'patterns'
   | 'pathGenerators'
   | 'pathKinds'
-  | 'ribbonWidthProfiles'
   | 'lowerTex'
 > & {
   /** standalone Layout 宿主容器的 CSS 样式 */

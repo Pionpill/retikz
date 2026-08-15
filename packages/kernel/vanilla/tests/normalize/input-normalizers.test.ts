@@ -1,6 +1,5 @@
 import type { IRPathBase } from '@retikz/core';
 
-import { PathKind } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { InputNode, InputPath, InputScene } from '../../src';
@@ -143,8 +142,8 @@ describe('Vanilla Input normalizers', () => {
     const path: IRPathBase = {
       type: 'path',
       id: 'band',
-      kind: PathKind.Ribbon,
-      ribbon: {
+      kind: 'ribbon',
+      kindOptions: {
         mode: 'boundary',
         upper: [
           { type: 'step', kind: 'move', to: [0, 0] },

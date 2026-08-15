@@ -258,7 +258,6 @@ export type TraversalContext = Pick<
   | 'arrows'
   | 'pathGenerators'
   | 'pathKinds'
-  | 'ribbonWidthProfiles'
   | 'paint'
   | 'clip'
   | 'composites'
@@ -376,7 +375,7 @@ export type RuntimeTopologyTracker = Readonly<{
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
 export type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
 export type ScopeChild = Extract<IRChild, { type: 'scope' }>;
-export type PathChild = Extract<IRChild, { type: 'path' | 'ribbon' }>;
+export type PathChild = Extract<IRChild, { type: 'path' }>;
 
 /** scope.id layout 占位注册结果 */
 export type ScopeLayoutPlaceholder = {

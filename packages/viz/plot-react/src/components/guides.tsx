@@ -1,8 +1,8 @@
-import type { InputAxis, InputLegend } from '@retikz/plot-vanilla';
+import type { InputPlotAxis, InputPlotLegend } from '@retikz/plot-vanilla';
 import type { FC } from 'react';
 
-export type AxisProps = InputAxis;
-export type LegendProps = InputLegend;
+export type AxisProps = InputPlotAxis;
+export type LegendProps = InputPlotLegend;
 
 /** 坐标轴声明组件 */
 export const Axis: FC<AxisProps> = () => null;

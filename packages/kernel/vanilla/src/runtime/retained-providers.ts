@@ -77,7 +77,7 @@ export const VanillaProviderRevisionOwnerDefinition = defineRuntimeOwner<number,
 const definitionKey = (definition: ProviderDefinition): string => {
   if ('namespace' in definition && 'type' in definition)
     return `composite:${definition.namespace}\u0000${definition.type}`;
-  if ('schema' in definition && 'compile' in definition) return `pathKind:${definition.schema.shape.kind.value}`;
+  if ('name' in definition && 'schema' in definition && 'compile' in definition) return `pathKind:${definition.name}`;
   if ('kind' in definition && 'schema' in definition) return `clip:${definition.kind}`;
   return `${definition.name}`;
 };
@@ -109,8 +109,8 @@ const copyDefinition = (definition: ProviderDefinition): ProviderDefinition => {
   }
   if ('schema' in definition && 'compile' in definition) {
     return Object.freeze({
+      name: definition.name,
       schema: definition.schema,
-      ...(definition.optionsSchema === undefined ? {} : { optionsSchema: definition.optionsSchema }),
       compile: definition.compile,
       ...(definition.ownerOutput === undefined ? {} : { ownerOutput: definition.ownerOutput }),
     });
@@ -162,7 +162,6 @@ const assertCompatibleDefinition = (initial: ProviderDefinition, next: ProviderD
     }) ||
     ('schema' in initial && 'schema' in next && initial.schema !== next.schema) ||
     ('paramsSchema' in initial && 'paramsSchema' in next && initial.paramsSchema !== next.paramsSchema) ||
-    ('optionsSchema' in initial && 'optionsSchema' in next && initial.optionsSchema !== next.optionsSchema) ||
     ('artifactSchema' in initial && 'artifactSchema' in next && initial.artifactSchema !== next.artifactSchema) ||
     ('ownerOutput' in initial && 'ownerOutput' in next && initial.ownerOutput !== next.ownerOutput)
   ) {

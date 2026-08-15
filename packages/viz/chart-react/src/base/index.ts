@@ -141,7 +141,7 @@ const createChartInput = (props: Readonly<Record<string, unknown>>): InputChart 
   return {
     ...(id === undefined ? {} : { id }),
     ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
-    plot: plot.input,
+    plot: { spec: plot.spec },
     ...(title === undefined ? {} : { title }),
     ...(subtitle === undefined ? {} : { subtitle }),
     ...(note === undefined ? {} : { note }),

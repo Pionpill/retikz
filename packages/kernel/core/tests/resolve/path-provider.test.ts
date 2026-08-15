@@ -4,21 +4,15 @@ import { z } from 'zod';
 import type { IRPathBase } from '../../src/schemas';
 
 import {
-  compileToScene,
   defineArrow,
   definePathGenerator,
   definePathKind,
-  defineRibbonWidthProfile,
+  PathSchema,
   resolveArrowRegistry,
   resolvePathGeneratorRegistry,
   resolvePathKindRegistry,
-  resolveRibbonWidthProfileRegistry,
 } from '../../src';
-import {
-  resolvePathWithBuiltinProviders,
-  resolveRibbonPathWithBuiltinProviders,
-  resolveStrokePathWithBuiltinProviders,
-} from './path-helper';
+import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
 
 const steps = [
   { type: 'step' as const, kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -34,8 +28,11 @@ const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({
 describe('resolve/path provider bindings', () => {
   it('binds builtin and custom path kind definitions and parses options once', () => {
     const custom = definePathKind({
-      schema: z.object({ kind: z.literal('highlight') }),
-      optionsSchema: z.strictObject({ stroke: z.string() }),
+      name: 'highlight',
+      schema: PathSchema.extend({
+        kind: z.literal('highlight'),
+        kindOptions: z.strictObject({ stroke: z.string() }),
+      }),
       compile: () => null,
     });
     const resolution = resolvePathWithBuiltinProviders(path({ kind: 'highlight', kindOptions: { stroke: 'gold' } }), {
@@ -44,17 +41,17 @@ describe('resolve/path provider bindings', () => {
 
     expect(resolution.kind.name).toBe('highlight');
     expect(resolution.kind.definition).toBe(custom);
-    expect(resolution.kind.options).toEqual({ stroke: 'gold' });
+    expect(resolution.kind.path.kindOptions).toEqual({ stroke: 'gold' });
     expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
   });
 
   it('fails unknown path kinds through the resolver registry diagnostic', () => {
     expect(() =>
       resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathKinds: resolvePathKindRegistry() }),
-    ).toThrow(/Unknown path kind 'missing'.*available: ribbon, stroke/s);
+    ).toThrow(/Unknown path kind 'missing'.*available: stroke/s);
   });
 
-  it('reports unknown generator, arrow, and ribbon profile names from the resolver', () => {
+  it('reports unknown generator and arrow names from the resolver', () => {
     expect(() =>
       resolveStrokePathWithBuiltinProviders(
         path({
@@ -72,16 +69,6 @@ describe('resolve/path provider bindings', () => {
         },
       ),
     ).toThrow(/Unknown arrow shape 'missing-arrow'.*options\.arrows/s);
-
-    expect(() =>
-      resolveRibbonPathWithBuiltinProviders(
-        path({
-          kind: 'ribbon',
-          ribbon: { width: { kind: 'profile', name: 'missing-profile' }, samples: 2 },
-        }),
-        { irPath: 'children[0].path' },
-      ),
-    ).toThrow(/Unknown ribbon width profile 'missing-profile'.*options\.ribbonWidthProfiles/s);
   });
 
   it('reports provider payload failures with the source IR locator', () => {
@@ -99,23 +86,6 @@ describe('resolve/path provider bindings', () => {
       ),
     ).toThrow(
       /path generator 'locator-generator' failed params validation at children\[0\]\.path\.children\[1\]\.params/s,
-    );
-
-    const profile = defineRibbonWidthProfile({
-      name: 'locator-profile',
-      paramsSchema: z.strictObject({ base: z.number() }),
-      widthAt: ({ params }) => params.base,
-    });
-    expect(() =>
-      resolveRibbonPathWithBuiltinProviders(
-        path({
-          kind: 'ribbon',
-          ribbon: { width: { kind: 'profile', name: 'locator-profile', params: {} }, samples: 2 },
-        }),
-        { ribbonWidthProfiles: resolveRibbonWidthProfileRegistry([profile]), irPath: 'children[0].path' },
-      ),
-    ).toThrow(
-      /ribbon width profile 'locator-profile' failed params validation at children\[0\]\.path\.ribbon\.width\.params/s,
     );
   });
 
@@ -153,48 +123,11 @@ describe('resolve/path provider bindings', () => {
     const resolution = resolveStrokePathWithBuiltinProviders(path({ marks: [{ pos: 1, mark }] }), {
       arrows: resolveArrowRegistry([arrow]),
     });
-    const arrowResolution = resolution.arrows.get(mark);
+    const arrowResolution = resolution.arrows.get(resolution.path.marks?.[0]?.mark ?? mark);
 
     expect(arrowResolution?.definition).toBe(arrow);
     expect(arrowResolution?.visual.fill).toBeUndefined();
     expect(arrowResolution?.geometry.contactX).toBe(2 - 1.5 / 2);
     expect(arrowResolution?.geometry.shrink).toBeGreaterThan(0);
-  });
-
-  it('binds ribbon width profile params and keeps provider output validation at invocation', () => {
-    const profile = defineRibbonWidthProfile({
-      name: 'probe',
-      paramsSchema: z.strictObject({ base: z.number() }),
-      widthAt: ({ params }) => params.base,
-    });
-    const resolution = resolveRibbonPathWithBuiltinProviders(
-      path({
-        kind: 'ribbon',
-        ribbon: { width: { kind: 'profile', name: 'probe', params: { base: 4 } }, samples: 2 },
-      }),
-      { ribbonWidthProfiles: resolveRibbonWidthProfileRegistry([profile]) },
-    );
-
-    expect(resolution.ribbonWidth).toMatchObject({ definition: profile, params: { base: 4 }, requiresSampling: true });
-
-    const nonFinite = defineRibbonWidthProfile({ name: 'nonFinite', widthAt: () => Infinity });
-    expect(
-      () =>
-        compileToScene(
-          {
-            version: 1,
-            type: 'scene',
-            children: [
-              {
-                type: 'path',
-                kind: 'ribbon',
-                ribbon: { width: { kind: 'profile', name: 'nonFinite' }, sampling: { kind: 'fixed', samples: 2 } },
-                children: steps,
-              },
-            ],
-          },
-          { ribbonWidthProfiles: [nonFinite], padding: 0 },
-        ).scene,
-    ).toThrow(/Ribbon width profile "nonFinite" output validation failed/);
   });
 });

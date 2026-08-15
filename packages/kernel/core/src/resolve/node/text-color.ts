@@ -1,6 +1,6 @@
-import type { EffectiveLabelDefault } from '../style';
 import type { IRLineSpec, IRNode, IRNodeLabel } from '../../schemas';
 import type { ParsedCssColor } from '../../shared/color';
+import type { EffectiveLabelDefault } from '../style';
 
 import { NodeTextColor } from '../../schemas';
 import { parseStaticCssColor } from '../../shared';

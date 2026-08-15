@@ -1,4 +1,4 @@
-import { definePathKind } from '@retikz/core';
+import { definePathKind, PathBaseSchema } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
@@ -8,6 +8,10 @@ import type { LayoutProps, LayoutRuntimeOptions } from '../../../src';
 import { Layout, LayoutRuntimeMode, Node } from '../../../src';
 
 describe('Layout public API', () => {
+  it('does not expose the removed Ribbon profile prop', () => {
+    expectTypeOf<LayoutProps>().not.toHaveProperty('ribbonWidthProfiles');
+  });
+
   it('exports Layout and its public option types from package entry', () => {
     const runtime: LayoutRuntimeOptions = {};
     const props: LayoutProps = { width: 120, height: 80, runtime };
@@ -32,12 +36,12 @@ describe('Layout public API', () => {
     }).not.toMatchTypeOf<LayoutRuntimeOptions>();
   });
 
-  it('pathKinds 接受保留精确 options 泛型的自定义 Definition', () => {
-    const optionsSchema = z.strictObject({ width: z.number().positive() });
-    const definition = definePathKind<z.infer<typeof optionsSchema>>({
-      schema: z.strictObject({ kind: z.literal('precise-options') }),
-      optionsSchema,
-      compile: context => context.emitStroke({ ...context.path, strokeWidth: context.options.width }),
+  it('pathKinds 接受带完整 subject schema 的自定义 Definition', () => {
+    const schema = PathBaseSchema.extend({ kind: z.literal('precise-options') });
+    const definition = definePathKind<z.infer<typeof schema>>({
+      name: 'precise-options',
+      schema,
+      compile: context => context.emitStroke(context.path),
     });
     const pathKinds: NonNullable<LayoutProps['pathKinds']> = [definition];
 

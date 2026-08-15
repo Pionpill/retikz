@@ -58,6 +58,17 @@ export const librarySection: Array<Section> = [
             },
           },
           {
+            id: 'ribbon',
+            label: 'library.standardExtensionRibbon',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'standard.ribbon',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
             id: 'capability-loading',
             label: 'library.standardCapabilityLoading',
             difficulty: DocDifficulty.Advanced,

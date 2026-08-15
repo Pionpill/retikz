@@ -3,7 +3,6 @@
 import type { IRDrawableInstance, IRDrawableSharedStyle, IRDrawableStyle } from '../../src';
 
 import {
-  ChildSchema,
   DrawableInstanceSchema,
   DrawableStyleSchema,
   GeometryLabelSchema,
@@ -27,14 +26,6 @@ const fade = {
 
 const path = (overrides: Record<string, unknown> = {}) => ({
   type: 'path',
-  children: steps,
-  ...overrides,
-});
-
-const ribbonPath = (overrides: Record<string, unknown> = {}) => ({
-  type: 'path',
-  kind: 'ribbon',
-  ribbon: { width: 12 },
   children: steps,
   ...overrides,
 });
@@ -69,9 +60,11 @@ describe('Drawable shared schema', () => {
     });
   });
 
-  it('accepts shared drawable style and instance fields on path kind=ribbon', () => {
+  it('accepts shared drawable style and instance fields on a custom path kind', () => {
     const parsed = PathSchema.parse(
-      ribbonPath({
+      path({
+        kind: 'custom',
+        kindOptions: { width: 12 },
         id: 'flow-a',
         color: 'teal',
         fill: '#ccfbf1',
@@ -110,7 +103,7 @@ describe('Drawable shared schema', () => {
     const label = { text: '128', position: 0.75, placement: 'inside', sloped: true };
 
     expect(StepLabelSchema.parse(label)).toEqual(label);
-    expect(PathSchema.parse(ribbonPath({ label })).label).toEqual(label);
+    expect(PathSchema.parse(path({ label })).label).toEqual(label);
     expect(StepLabelSchema).toBe(GeometryLabelSchema);
   });
 
@@ -121,14 +114,16 @@ describe('Drawable shared schema', () => {
     expect(() => GeometryLabelSchema.parse({ text: 'x', side: 'above' })).toThrow();
   });
 
-  it('rejects path-only fields inside ribbon options', () => {
+  it('rejects unknown fields nested in kind options only when the custom schema rejects them', () => {
     for (const field of ['dashPattern', 'arrow', 'arrowDetail', 'lineCap', 'lineJoin', 'roundedCorners']) {
       const value = field === 'dashPattern' ? [4, 2] : 'round';
-      expect(PathSchema.safeParse(ribbonPath({ ribbon: { width: 12, [field]: value } })).success).toBe(false);
+      expect(PathSchema.safeParse(path({ kind: 'custom', kindOptions: { width: 12, [field]: value } })).success).toBe(
+        true,
+      );
     }
   });
 
-  it('rejects ribbon-only fields at the path host top level', () => {
+  it('rejects unknown fields at the path host top level', () => {
     for (const field of ['width', 'start', 'end', 'interpolation', 'align', 'samples', 'sampling', 'upper', 'lower']) {
       expect(PathSchema.safeParse(path({ [field]: field === 'width' ? 12 : {} })).success).toBe(false);
     }
@@ -142,9 +137,9 @@ describe('Drawable shared schema', () => {
     expect(DrawableInstanceSchema.safeParse({ zIndex: 1, meta: { ok: true } }).success).toBe(true);
   });
 
-  it('rejects private ribbon label fields', () => {
-    expect(PathSchema.safeParse(ribbonPath({ label: { text: 'x', side: 'upper' } })).success).toBe(false);
-    expect(PathSchema.safeParse(ribbonPath({ label: { text: 'x', rotate: 'sloped' } })).success).toBe(false);
+  it('rejects private label fields', () => {
+    expect(PathSchema.safeParse(path({ label: { text: 'x', side: 'upper' } })).success).toBe(false);
+    expect(PathSchema.safeParse(path({ label: { text: 'x', rotate: 'sloped' } })).success).toBe(false);
   });
 
   it('keeps shared style schema JSON round-trippable', () => {
@@ -161,9 +156,5 @@ describe('Drawable shared schema', () => {
     };
 
     expect(DrawableStyleSchema.parse(JSON.parse(JSON.stringify(style)))).toEqual(style);
-  });
-
-  it('removes standalone ribbon from the public child union', () => {
-    expect(ChildSchema.safeParse({ type: 'ribbon', width: 12, children: steps }).success).toBe(false);
   });
 });

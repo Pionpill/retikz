@@ -36,9 +36,9 @@ description: 一维坐标系把一个位置字段放到直线或圆周上，适�
 | 完整圆周 | `coordinate="polar1D"`                                | `radius: 1`、角度 `0` 到 `360`  |
 | 部分圆周 | `{ type: 'polar1D', startAngle: 180, endAngle: 360 }` | 使用 `startAngle` 和 `endAngle` |
 
-两种对象写法都属于 `@retikz/plot-react` 导出的 `CoordinateInput`。`cartesian1D` 默认横向；`polar1D` 的 `radius` 默认是 `1`，表示占满可用外半径，取值范围是 `0 < radius <= 1`，不是像素值。角度使用度数，默认从 `0` 到 `360`。
+两种对象写法都是 `<Plot>` 的 `PlotDslProps['coordinate']` 输入。底层 `InputPlotCoordinate` 是 `@retikz/plot-vanilla` 的 TypeScript 类型，不由 Plot React 重复定义；`cartesian1D` 默认横向，`polar1D` 的 `radius` 默认是 `1`，表示占满可用外半径，取值范围是 `0 < radius <= 1`，不是像素值。角度使用度数，默认从 `0` 到 `360`。
 
-试验场中的“扫过角度”是便于探索的教学控件，不是 `CoordinateInput` 字段。它在内部换算为 `endAngle = startAngle + sweepAngle`。
+试验场中的“扫过角度”是便于探索的教学控件，不是 `PlotDslProps['coordinate']` 字段。它在内部换算为 `endAngle = startAngle + sweepAngle`。
 
 坐标维度的数量不会限制比例尺类型；这个位置字段仍可使用 linear、log 或 time 等比例尺。示例显式把小时 domain 固定为 `[0, 24]`，因此 `22` 小时会落在完整圆周的 `330°`。
 

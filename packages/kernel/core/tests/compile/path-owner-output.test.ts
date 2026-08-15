@@ -27,7 +27,8 @@ describe('Core Path owner output', () => {
     let publishCount = 0;
     const ownerOutput = { schema: z.strictObject({ label: z.string() }) };
     const kind = core.definePathKind({
-      schema: z.object({ kind: z.literal('owner-output') }),
+      name: 'owner-output',
+      schema: core.PathSchema.extend({ kind: z.literal('owner-output') }),
       ownerOutput,
       compile: context => {
         requested = context.ownerOutput.requested;
@@ -69,7 +70,8 @@ describe('Core Path owner output', () => {
     let requested = true;
     let published = 0;
     const kind = core.definePathKind({
-      schema: z.object({ kind: z.literal('lazy-owner-output') }),
+      name: 'lazy-owner-output',
+      schema: core.PathSchema.extend({ kind: z.literal('lazy-owner-output') }),
       ownerOutput: { schema: z.strictObject({ value: z.number() }) },
       compile: context => {
         requested = context.ownerOutput.requested;
@@ -101,7 +103,8 @@ describe('Core Path owner output', () => {
     ],
   ])('fails loudly when a requested non-empty Path has %s', (_label, publishOutput) => {
     const kind = core.definePathKind({
-      schema: z.object({ kind: z.literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
+      name: `bad-owner-output-${_label.replace(' ', '-')}`,
+      schema: core.PathSchema.extend({ kind: z.literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
       ownerOutput: { schema: z.strictObject({ value: z.number() }) },
       compile: context => {
         publishOutput(context.ownerOutput.publish);
@@ -124,17 +127,16 @@ describe('Core Path owner output', () => {
     expect(compile).toBeTypeOf('function');
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
     expect(() =>
-      compile(
-        scene([{ type: 'path', kind: kind.schema.shape.kind.value, children: steps }]),
-        { pathKinds: [kind], padding: 0 },
-        [observe()],
-      ),
+      compile(scene([{ type: 'path', kind: kind.name, children: steps }]), { pathKinds: [kind], padding: 0 }, [
+        observe(),
+      ]),
     ).toThrow(/owner output|publish/i);
   });
 
   it('rejects owner output when a Path kind returns null', () => {
     const kind = core.definePathKind({
-      schema: z.object({ kind: z.literal('null-owner-output') }),
+      name: 'null-owner-output',
+      schema: core.PathSchema.extend({ kind: z.literal('null-owner-output') }),
       ownerOutput: { schema: z.strictObject({ value: z.number() }) },
       compile: context => {
         context.ownerOutput.publish({ value: 1 });

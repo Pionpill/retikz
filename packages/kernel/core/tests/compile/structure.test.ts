@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import type { NodeLabelLayout, NodeLayout, TexLoweringContext } from '../../src/compile/node';
-import type { RibbonEmitOptions } from '../../src/compile/path/ribbon';
 
 import * as compile from '../../src/compile';
 import * as nodeCompile from '../../src/compile/node';
@@ -235,17 +234,5 @@ describe('compile source structure', () => {
     expect(text).not.toContain('providerDefinitionOf');
     expect(text).not.toContain('resolveShapeRegistry');
     expect(text).not.toContain('resolveBoundaryRegistry');
-  });
-
-  it('ribbon compile implementation is directory based', () => {
-    expect(() => source('src/compile/path/ribbon.ts')).toThrow();
-    expect(() => source('src/compile/path/ribbon/outline.ts')).toThrow();
-    expect(source('src/compile/path/ribbon/index.ts')).toContain("export * from './emit';");
-    expect(source('src/compile/path/ribbon/outline/index.ts')).toContain("export * from './analytic';");
-    expect(source('src/compile/path/ribbon/outline/index.ts')).toContain("export * from './sampled';");
-
-    const options: RibbonEmitOptions = {};
-
-    expect(options).toEqual({});
   });
 });

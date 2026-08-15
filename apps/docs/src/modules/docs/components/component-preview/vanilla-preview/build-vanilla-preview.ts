@@ -703,7 +703,7 @@ const chartPresentationRecords = (chart: IRChart): Array<ChartPresentationAuthor
 const chartAuthoringInput = (chart: IRChart, datasets: ExternalDatasets): CreateChartInput => {
   const presentation = chartPresentationRecords(chart);
   return {
-    plot: chart.plot,
+    plot: { spec: chart.plot },
     datasets,
     ...(chart.id === undefined ? {} : { id: chart.id }),
     ...(chart.chartThemeTokens === undefined ? {} : { chartThemeTokens: chart.chartThemeTokens }),

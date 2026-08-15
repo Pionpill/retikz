@@ -1,21 +1,21 @@
 import type { IRPlotBandScale, IRPlotLogScale, IRPlotPointScale, IRPlotSymlogScale } from '@retikz/plot';
 
 /** 位置 scale 可配置的坐标维度 */
-export type ScaleDimension = 'x' | 'y';
+export type InputPlotScaleDimension = 'x' | 'y';
 
 /** React DSL 里当前暴露的位置 scale 类型 */
-export type PositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
+export type InputPlotPositionScaleType = 'linear' | 'time' | 'band' | 'point' | 'log' | 'sqrt' | 'symlog' | 'radial';
 
 /** 支持连续 domain 配置的位置 scale 类型 */
-export type ContinuousPositionScaleType = Exclude<PositionScaleType, 'band' | 'point'>;
+export type InputPlotContinuousPositionScaleType = Exclude<InputPlotPositionScaleType, 'band' | 'point'>;
 
 /** React DSL 中暴露的 position scale domain padding 输入 */
-export type DomainPaddingInput = number | { lower?: number; upper?: number };
+export type InputDomainPadding = number | { lower?: number; upper?: number };
 
 /** <Scale> 公共 props：声明某个坐标维度使用的 scale 类型 */
 type ScaleBaseProps = {
   /** 绑定哪个定位维度；polar 下 x 为角向，y 为径向 */
-  dimension: ScaleDimension;
+  dimension: InputPlotScaleDimension;
 };
 
 /** 连续位置 scale props */
@@ -23,7 +23,7 @@ type ContinuousScaleProps = ScaleBaseProps & {
   /** 显式数值 / 时间 domain；省略时从绑定数据推断 */
   domain?: [number, number];
   /** 额外值域留白；推断 domain 默认 0.05，显式 domain 默认 0 */
-  domainPadding?: DomainPaddingInput;
+  domainPadding?: InputDomainPadding;
   /** 单值 domain 展开跨度；省略时按 scale 类型默认 */
   singleValueSpan?: number;
 } & (
@@ -43,7 +43,7 @@ type ContinuousScaleProps = ScaleBaseProps & {
       }
     | {
         /** 除 log / symlog 外的连续位置 scale */
-        type: Exclude<ContinuousPositionScaleType, 'log' | 'symlog'>;
+        type: Exclude<InputPlotContinuousPositionScaleType, 'log' | 'symlog'>;
         base?: never;
         constant?: never;
       }
@@ -76,12 +76,9 @@ type BandScaleProps = ScaleBaseProps & {
 };
 
 /** <Scale> props：声明某个坐标维度使用的 scale 类型 */
-export type ScaleProps = ContinuousScaleProps | BandScaleProps | PointScaleProps;
+export type InputPlotScale = ContinuousScaleProps | BandScaleProps | PointScaleProps;
 
 /**
  * 位置 scale 声明组件
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec.scales
  */
-export type InputScale = ScaleProps;
-export type InputScaleDimension = ScaleDimension;
-export type InputPositionScaleType = PositionScaleType;

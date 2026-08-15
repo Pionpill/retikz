@@ -1,19 +1,18 @@
 import type { ExternalRow } from '@retikz/data';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
-import type { ReactNode } from 'react';
-
-import { isRetikzError, RetikzError } from '@retikz/foundation';
-import { describe, expect, it } from 'vitest';
-
 import type {
   PlotAuthoringContext,
   PlotComposition,
   PlotDeclarationPath,
   PlotDeclarationSource,
-} from '../../../src/adapter';
+} from '@retikz/plot-vanilla';
+import type { ReactNode } from 'react';
+
+import { isRetikzError, RetikzError } from '@retikz/foundation';
+import { PlotDeclarationError } from '@retikz/plot-vanilla';
+import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';
-import { PlotDeclarationError } from '../../../src/adapter';
 import { Axis, Facet, Legend, PointMark, Scale, Transform } from '../../../src/components';
 import { Plot } from '../../../src/Plot';
 

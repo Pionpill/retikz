@@ -1,4 +1,4 @@
-import type { CoordinateInput } from '@retikz/plot-react';
+import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
 
 import { Axis, Plot, PointMark, Scale } from '@retikz/plot-react';
 
@@ -15,7 +15,7 @@ import { oneDimensionalEvents } from './coordinate-1d-playground.data';
 export const previewControls = coordinate1DPlaygroundControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const coordinate: CoordinateInput =
+  const coordinate: InputPlotCoordinate =
     values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.coordinate] === 'cartesian1D'
       ? {
           type: 'cartesian1D',

@@ -11,17 +11,17 @@ The drawing family owns path structure, geometry, style, and endpoints. It does 
 
 ## What each part does
 
-| Component       | Type      | Responsibility                                                                                                | Use it when                                               |
-| --------------- | --------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Draw            | Sugar     | Declares targets, segment operators, labels, and whole-path style in a way array, then expands to Path + Step | Everyday connections, flowchart edges, and arrowed links  |
-| Way             | Sugar     | Defines target, fold, cycle, curve, and relative-coordinate forms in a Draw array                             | Looking up what a way array can contain                   |
-| Path            | Kernel    | Path container whose Step children define polylines, curves, and arcs                                         | Multiple moves, explicit per-step control, closest to IR  |
-| Ribbon          | Path kind | Builds a fillable variable-width relation from a Path centerline or precomputed boundaries                    | Flow magnitude, Sankey relations, or other width encoding |
-| Step            | Kernel    | One step = one action (move / line / curve / arc / cycle…)                                                    | Controlling each segment's path action semantics          |
-| Arrow           | Shared    | Direction and visual specifications shared by Path and Draw                                                   | Fine-grained shape, size, color, and per-end config       |
-| Path Generators | Extension | Register new curve generators for generator steps                                                             | Adding waves, parametric curves, or other segment types   |
-| Custom Paths    | Extension | Register a kind provider that owns the whole Path                                                             | Double lines, highlights, or domain-specific relations    |
-| Custom Arrows   | Extension | Register new endpoint arrow styles                                                                            | Brackets or domain-specific arrow tips                    |
+| Component       | Type               | Responsibility                                                                                                | Use it when                                               |
+| --------------- | ------------------ | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Draw            | Sugar              | Declares targets, segment operators, labels, and whole-path style in a way array, then expands to Path + Step | Everyday connections, flowchart edges, and arrowed links  |
+| Way             | Sugar              | Defines target, fold, cycle, curve, and relative-coordinate forms in a Draw array                             | Looking up what a way array can contain                   |
+| Path            | Kernel             | Path container whose Step children define polylines, curves, and arcs                                         | Multiple moves, explicit per-step control, closest to IR  |
+| Ribbon          | Standard Path kind | Builds a fillable variable-width relation from a Path centerline or precomputed boundaries                    | Flow magnitude, Sankey relations, or other width encoding |
+| Step            | Kernel             | One step = one action (move / line / curve / arc / cycle…)                                                    | Controlling each segment's path action semantics          |
+| Arrow           | Shared             | Direction and visual specifications shared by Path and Draw                                                   | Fine-grained shape, size, color, and per-end config       |
+| Path Generators | Extension          | Register new curve generators for generator steps                                                             | Adding waves, parametric curves, or other segment types   |
+| Custom Paths    | Extension          | Register a kind provider that owns the whole Path                                                             | Double lines, highlights, or domain-specific relations    |
+| Custom Arrows   | Extension          | Register new endpoint arrow styles                                                                            | Brackets or domain-specific arrow tips                    |
 
 ## In this section
 
@@ -44,7 +44,7 @@ The drawing family owns path structure, geometry, style, and endpoints. It does 
       Kernel path container and whole-path features
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/ribbon">
+  <LinkedCard href="/library/standard/extension/ribbon">
     <span className="font-semibold">Ribbon</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Variable-width relations and precomputed boundaries

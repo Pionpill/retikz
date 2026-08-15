@@ -26,6 +26,7 @@ import {
   definePathKind,
   LayoutChildProbeKind,
   NaturalLayoutProposal,
+  PathSchema,
 } from '../../../src';
 import { compileCoreSnapshot } from '../../../src/compile/compile';
 
@@ -83,7 +84,8 @@ describe('Core canonical Runtime topology', () => {
       height: 10,
     };
     const repeated = definePathKind({
-      schema: z.object({ kind: z.literal('repeated') }),
+      name: 'repeated',
+      schema: PathSchema.extend({ kind: z.literal('repeated') }),
       compile: () => ({
         primitives: [sharedPrimitive, sharedPrimitive],
         boundsPoints: [
@@ -101,7 +103,10 @@ describe('Core canonical Runtime topology', () => {
             type: 'path',
             id: 'repeated-path',
             kind: 'repeated',
-            children: [],
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0] },
+            ],
           },
         ] as IRScene['children'],
       },

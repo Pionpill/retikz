@@ -3,7 +3,7 @@ title: Capability Loading
 description: Choose between individual or complete Standard Definition imports first, then learn how React, Vanilla, and the provider graph pass them into Core compilation.
 ---
 
-Standard extensions are not registered automatically. When a figure uses a shape, arrow, or clip, import Definitions from the matching subpath and pass them to React `Layout` or the Vanilla compilation entry.
+Standard extensions are not registered automatically. When a figure uses a shape, arrow, clip, or Path kind, import Definitions from the matching subpath and pass them to React `Layout` or the Vanilla compilation entry.
 
 ## How to use
 
@@ -17,9 +17,15 @@ Import only the Definitions used by the current figure and pass them to the matc
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-<Layout shapes={[CrossShapeDefinition]} arrows={[DiamondArrowDefinition]} clips={[CompoundClipDefinition]}>
+<Layout
+  shapes={[CrossShapeDefinition]}
+  arrows={[DiamondArrowDefinition]}
+  clips={[CompoundClipDefinition]}
+  pathKinds={[RibbonPathKindDefinition]}
+>
   {/* Figure content */}
 </Layout>;
 ```
@@ -30,6 +36,7 @@ Vanilla uses the same Definitions:
 import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
 const svg = renderToSvgString(input, {
@@ -37,6 +44,7 @@ const svg = renderToSvgString(input, {
     shapes: [CrossShapeDefinition],
     arrows: [DiamondArrowDefinition],
     clips: [CompoundClipDefinition],
+    pathKinds: [RibbonPathKindDefinition],
   },
 });
 ```
@@ -73,12 +81,13 @@ const svg = renderToSvgString(input, {
 });
 ```
 
-| Style                    | Use it when                                     |
-| ------------------------ | ----------------------------------------------- |
-| Individual Definition    | The figure uses only selected capabilities      |
-| `StandardXxxDefinitions` | The figure can use every Definition in a family |
+| Style                      | Use it when                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Individual Definition      | The figure uses only selected capabilities                                                                         |
+| `RibbonPathKindDefinition` | Ribbon needs one direct Path kind Definition; Ribbon does not export a full `StandardRibbonDefinitions` collection |
+| `StandardXxxDefinitions`   | The figure can use every Definition in a family                                                                    |
 
-When an adapter assembles a provider graph before compilation, use the matching `StandardShapeProviders`, `StandardArrowProviders`, or `StandardClipProviders`. Providers assemble Definitions; they do not replace the `shapes`, `arrows`, or `clips` arrays accepted by `Layout` or `compile`.
+When an adapter assembles a provider graph before compilation, use the matching `StandardShapeProviders`, `StandardArrowProviders`, or `StandardClipProviders`, and use `createRibbonProviderContribution()` for Ribbon. Providers assemble Definitions; they do not replace the `shapes`, `arrows`, `clips`, or `pathKinds` arrays accepted by `Layout` or `compile`.
 
 ## How compilation works internally
 
@@ -88,13 +97,15 @@ Both Definition styles end up in the same Core compilation path:
 
 The individual Definition and complete collection on the left are simply two assembly inputs; both converge on the same Core compilation path. The provider graph organizes Definitions before compilation, while the IR only looks up already assembled capabilities by name during consumption.
 
-- With direct Definitions, Core places them in the corresponding `shapes`, `arrows`, or `clips` registry
-- With Providers, an adapter collects `CoreProviderContribution`; Core's `resolveCoreProviderDependencies()` resolves dependencies and groups the results into ordinary compile options
+- With direct Definitions, Core places them in the corresponding `shapes`, `arrows`, `clips`, or `pathKinds` registry
+- With Providers, an adapter collects `CoreProviderContribution` (for example, `createRibbonProviderContribution()`); Core's `resolveCoreProviderDependencies()` resolves dependencies and groups the results into ordinary compile options
 - Standard supplies Definitions and Providers only. It does not maintain a global registry or a second lookup rule
+
+Direct Definition input is the final compile option value. A provider contribution is a closure that declares roots, dependencies, and runtime datasets; Core resolves that contribution before producing the same ordinary `pathKinds` (or other capability) array.
 
 ## Persistence and limits
 
-IR stores figure data such as a node's `shape: 'cross'` or an arrow name on a path. Definitions, Providers, and makers are runtime assembly values; they never enter IR, Scene, or persisted JSON.
+IR stores figure data such as a node's `shape: 'cross'`, an arrow name, or a Path kind name. Definitions, Providers, and makers are runtime assembly values; they never enter IR, Scene, or persisted JSON.
 
 Importing a Standard subpath also has no effect on other compilations. Each compilation should explicitly receive the Definitions or collections it needs. If the IR refers to an unloaded capability, Core reports an error during registry lookup. Conflicting duplicate Definition or provider keys are also rejected explicitly.
 
@@ -103,4 +114,5 @@ Importing a Standard subpath also has no effect on other compilations. Each comp
 - [Shapes](/library/standard/extension/shape): optional node outlines
 - [Arrows](/library/standard/extension/arrow): optional endpoint markers
 - [Clips](/library/standard/extension/clip): recursive compound clipping
+- [Ribbon](/library/standard/extension/ribbon): optional Ribbon Path kind Definition and provider contribution
 - [Core compile reference](/kernel/reference/runtime/compile): full `CompileOptions` and provider-graph contracts

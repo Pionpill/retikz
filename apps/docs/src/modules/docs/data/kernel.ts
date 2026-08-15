@@ -100,7 +100,6 @@ export const kernelSection: Array<Section> = [
           { id: 'overview', label: 'kernel.drawOverview', difficulty: DocDifficulty.Beginner },
           { id: 'way', label: 'kernel.drawWay', difficulty: DocDifficulty.Advanced },
           { id: 'path', label: 'kernel.path', difficulty: DocDifficulty.Advanced },
-          { id: 'ribbon', label: 'kernel.ribbon', difficulty: DocDifficulty.Advanced },
           { id: 'step', label: 'kernel.step', difficulty: DocDifficulty.Advanced },
           { id: 'arrow', label: 'kernel.arrow', difficulty: DocDifficulty.Advanced },
           {

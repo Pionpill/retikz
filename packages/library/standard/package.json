@@ -49,6 +49,10 @@
     "./clip": {
       "types": "./src/clip/index.ts",
       "default": "./src/clip/index.ts"
+    },
+    "./ribbon": {
+      "types": "./src/ribbon/index.ts",
+      "default": "./src/ribbon/index.ts"
     }
   },
   "publishConfig": {
@@ -75,6 +79,11 @@
         "types": "./dist/types/clip/index.d.ts",
         "import": "./dist/clip/index.js",
         "default": "./dist/clip/index.js"
+      },
+      "./ribbon": {
+        "types": "./dist/types/ribbon/index.d.ts",
+        "import": "./dist/ribbon/index.js",
+        "default": "./dist/ribbon/index.js"
       }
     }
   },

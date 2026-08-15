@@ -46,7 +46,7 @@ describe('resolve style frame', () => {
       stroke: 'red',
       textColor: 'red',
     });
-    expect(resolveEffectivePath(pathOf(), [frame])).toMatchObject({ stroke: 'red' });
+    expect(resolveEffectivePath(pathOf(), [frame])).toMatchObject({ color: 'red' });
   });
 
   it('applies label font fields by per-field priority', () => {

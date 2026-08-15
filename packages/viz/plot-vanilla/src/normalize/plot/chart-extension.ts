@@ -4,7 +4,7 @@ import { PlotGuide } from '@retikz/plot';
 
 import type {
   AxisBoundGuide,
-  CoordinateInput,
+  InputPlotCoordinate,
   NormalizationState,
   PlotAuthoringContext,
   PlotAuthoringDeclaration,
@@ -15,7 +15,7 @@ import type {
   PlotDeclarationSource,
   PlotMemberFragment,
 } from './contracts';
-import type { ScaleProps } from './input-scales';
+import type { InputPlotScale } from './input-scales';
 
 import { normalizePlotBindings } from './bindings';
 import { PlotDeclarationError, PlotDeclarationErrorCode } from './errors';
@@ -102,7 +102,7 @@ const chartExtensionScalesOf = (collected: Collected, context: PlotAuthoringCont
   const coordinateKind = coordinateTypeOf(context.coordinate?.value);
   const explicitScales = collectExplicitScales(collected.scales, coordinateKind);
   const scales: Array<IRPlotScaleOperation> = [];
-  const append = (scale: ScaleProps | undefined, name: string): void => {
+  const append = (scale: InputPlotScale | undefined, name: string): void => {
     if (scale !== undefined) scales.push(buildPositionScale(name, scale.type, scale));
   };
   append(explicitScales.x, AUTO_X);
@@ -113,7 +113,7 @@ const chartExtensionScalesOf = (collected: Collected, context: PlotAuthoringCont
 };
 
 const chartExtensionCoordinateOf = (
-  source: PlotDeclarationSource<CoordinateInput> | undefined,
+  source: PlotDeclarationSource<InputPlotCoordinate> | undefined,
 ): IRPlotCoordinateOperation | undefined => {
   if (source === undefined) return undefined;
   const input = source.value;

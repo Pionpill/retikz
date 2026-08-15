@@ -1,7 +1,7 @@
 import type { ChartAuthoringInput, ChartThemeStyleDefinition, IRChart } from '@retikz/chart';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
-import type { InputPlot } from '@retikz/plot-vanilla';
+import type { PlotSource } from '@retikz/plot-vanilla';
 import type { InputScope } from '@retikz/vanilla';
 
 /** Chart 嵌入场景时可选的根 Scope 输入 */
@@ -15,8 +15,8 @@ export type InputChartPanel = Pick<InputScope, 'clip' | 'placement' | 'theme' | 
 /** Chart InputEmbed adapter 消费的无框架 authoring 输入 */
 export type InputChart = Omit<ChartAuthoringInput, 'plot'> &
   Readonly<{
-    /** 尚待 Plot Vanilla 归一化的 Plot authoring 输入 */
-    plot: InputPlot;
+    /** Plot Vanilla 的显式 Input 或 Source IR */
+    plot: PlotSource;
     /** Plot lowering 消费的运行时数据集 */
     datasets: ExternalDatasets;
     /** Plot lowering 选项 */

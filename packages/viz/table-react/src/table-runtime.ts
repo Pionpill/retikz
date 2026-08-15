@@ -60,7 +60,6 @@ export const TABLE_LAYOUT_HOST_PROP_KEYS = [
   'patterns',
   'pathGenerators',
   'pathKinds',
-  'ribbonWidthProfiles',
   'lowerTex',
 ] as const satisfies ReadonlyArray<keyof TableLayoutHostProps>;
 

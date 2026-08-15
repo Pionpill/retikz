@@ -1,6 +1,6 @@
-import type { FoldStepViaValue, IRPosition, IRTarget } from '../../../schemas';
 import type { Transform } from '../../../contract';
 import type { PathTargetView } from '../../../resolve/path';
+import type { FoldStepViaValue, IRPosition, IRTarget } from '../../../schemas';
 
 import { FoldStepVia } from '../../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
