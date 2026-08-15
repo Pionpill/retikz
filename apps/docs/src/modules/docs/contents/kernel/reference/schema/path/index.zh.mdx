@@ -75,16 +75,15 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
 
 ## 路径结构
 
-`PathStructureSchema` 选择 Path provider 与 ribbon 参数。`kind`、`kindOptions`、`ribbon` 的跨字段关系仍由完整 `PathSchema` refinement 负责。
+`PathStructureSchema` 选择开放的 Path kind provider 与 JSON-safe 实例参数。kind 专属字段由选中的 definition 提供，不由这个 Core fragment 固定。
 
 <ZodSchema
   name="PathStructureSchema"
-  description="Path kind provider 与 ribbon 选项的结构字段。"
+  description="选择开放 Path kind provider 与实例参数的结构字段。"
   descriptions={{
     type: '判别字段，标记此子节点为 path',
     kind: 'Path kind provider 名；省略时使用内置 `stroke`',
-    kindOptions: '自定义 Path kind provider 的 JSON-safe 参数对象；内置 `stroke` 与 `ribbon` 不使用',
-    ribbon: '带状路径专属选项；仅在 `kind` 为 `ribbon` 时有效',
+    kindOptions: '由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
   }}
 />
 
@@ -98,8 +97,7 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
   descriptions={{
     type: '判别字段，标记此子节点为 path',
     kind: 'Path kind provider 名；省略时使用内置 `stroke`',
-    kindOptions: '自定义 Path kind provider 的 JSON-safe 参数对象；内置 `stroke` 与 `ribbon` 不使用',
-    ribbon: '带状路径专属选项；仅在 `kind` 为 `ribbon` 时有效',
+    kindOptions: '由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
     color: '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
     stroke: '描边 paint：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；默认 currentColor',
     strokeWidth: '描边宽度（用户单位），默认 1',
@@ -127,9 +125,9 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
   }}
 />
 
-`PathSchema` 仍是唯一的完整、可提交 compile 的 Path 入口。它把上述 fragment 与现有 `DrawableInstanceSchema`、`DrawableStyleSchema` 组合，并继续由 refinement 校验 kind-specific 关系：默认 `stroke` 必须有 `children` 且不能带 `ribbon` / `kindOptions`；`ribbon` 必须有 `ribbon`，centerline 与 boundary 模式分别约束 `children`、`upper` 和 `lower`；custom kind 才能使用 `kindOptions`。这些完整 Path、Scene 与 lowering 行为保持兼容。
+`PathSchema` 是 Core 的开放 Path host schema。它把上述 fragment 与 `DrawableInstanceSchema`、`DrawableStyleSchema` 组合，接受开放的 `kind` 名和 JSON-safe `kindOptions`，不在 Core 中编码封闭的 Path kind 列表。编译时 Core 先解析选中的 `PathKindDefinition`，再用该 definition 的 `schema` 解析完整 subject。Core 内置 `stroke` definition 由完整的 `StrokePathSchema` 负责，要求 `children` 且拒绝 `kindOptions`；可选的 Standard Ribbon 则在 Standard 中拥有自己的完整 schema。这个 host schema 可继续被自定义 definition 与 Tier 2 owner 复用。
 
-`PathDefaultSchema` 是 Core Scope owner 显式由 `GraphicStyleSchema`、`PathStrokeSchema`、`PathFillSchema` 和去掉 `children` 的 `PathGeometrySchema` 组合出的默认通道。它排除 instance、structure、decoration 字段和 `children`，不从完整 Path 偶然投影，也不是独立 compile 入口。默认 `stroke` path 消费其中全部适用字段；`ribbon` 只继承 `GraphicStyleSchema` 子集，dash、cap、join、fillRule 和 path geometry 等字段即使被默认通道接受也不会应用，且保持静默忽略。各 Tier 2 owner 仍可在此基础上保留自己的默认值和字段限制。
+`PathDefaultSchema` 是 Core Scope owner 显式由 `GraphicStyleSchema`、`PathStrokeSchema`、`PathFillSchema` 和去掉 `children` 的 `PathGeometrySchema` 组合出的默认通道。它排除 instance、structure、decoration 字段和 `children`，不从完整 Path 偶然投影，也不是独立 compile 入口。默认 `stroke` path 消费其中全部适用字段。各 Tier 2 owner 仍可在此基础上保留自己的默认值和字段限制。
 
 React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换算成 `strokeWidth`，不属于 `PathSchema`；完整档位见 [Path 样式](/kernel/components/draw/path#样式)。
 
@@ -137,16 +135,16 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ## 可绘制几何样式
 
-`DrawableStyleSchema` 是 Path kind 共享的几何样式字段。默认 `stroke` kind 会把 `color` 映射到描边，内置 `ribbon` kind 会把 `color` 映射到填充；`pathDefault` 也按这组字段给 path-like 图元分发默认样式。
+`DrawableStyleSchema` 是 Path kind 共享的几何样式字段。默认 `stroke` kind 会把 `color` 映射到描边；可选的 Standard Ribbon definition 会把它映射到填充；`pathDefault` 也按这组字段给 path-like 图元分发默认样式。
 
 <ZodSchema
   name="DrawableStyleSchema"
   description="Path kind 共享的几何样式字段。"
   descriptions={{
-    color: '主色；Path 默认映射到 stroke，Ribbon 默认映射到 fill，标签和箭头也可跟随它',
-    fill: '填充 paint；Path 用于闭合区域，Ribbon 用于流带面',
+    color: '主色；Path 默认映射到 stroke，可选 Standard Ribbon 映射到 fill，标签和箭头也可跟随它',
+    fill: '填充 paint；Path 用于闭合区域，可选 Standard Ribbon 用于流带面',
     fillOpacity: '填充不透明度 0..1',
-    stroke: '描边 paint；Path 用于主线，Ribbon 用于可选外轮廓',
+    stroke: '描边 paint；Path 用于主线，可选 Standard Ribbon 可用于外轮廓',
     strokeWidth: '描边宽度（用户单位）',
     strokeOpacity: '描边不透明度 0..1',
     opacity: '主几何整体不透明度 0..1',
@@ -169,29 +167,6 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
     meta: 'provenance 元数据；原样透传到 Scene 图元，必须是 JSON 对象',
     animations: '声明式动画 track 数组；原样透传到 Scene 图元',
     zIndex: '同层子节点的显式栈序；大者在上，同值保持声明顺序',
-  }}
-/>
-
-<span id="pathribbonoptions"></span>
-
-## 带状路径选项
-
-`PathRibbonOptionsSchema` 配置内置 `kind: 'ribbon'` path provider。中心线模式读取 Path 的 `children`；boundary 模式读取这个对象里的 `upper` / `lower` 两条 step 数组，不再使用 `children`。
-
-<ZodSchema
-  name="PathRibbonOptionsSchema"
-  description="Path 内置 ribbon kind 的专属参数。"
-  descriptions={{
-    mode: 'Ribbon 构造模式：centerline 使用 Path children，boundary 使用 upper / lower 两条边界',
-    width: '中心线模式的带宽；可为固定数值、沿路径 stops 或 profile 引用（内置 `bulge`，也可运行时注册）',
-    start: '起点宽度、方向和 cap 配置',
-    end: '终点宽度、方向和 cap 配置',
-    interpolation: '起末宽度之间的插值方式',
-    align: '中心线在带宽中的对齐位置：center / left / right',
-    samples: '是否启用采样，或指定采样点数',
-    sampling: '显式采样策略',
-    upper: 'boundary 模式的上边界开放 step 序列',
-    lower: 'boundary 模式的下边界开放 step 序列',
   }}
 />
 
@@ -445,18 +420,19 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ## 几何标签
 
-`GeometryLabelSchema` 是 path-like 宿主共用的几何标签契约。`StepLabelSchema` 是这个 schema 的别名；除 move / cycle 之外的绘制 step 与 `centerline` ribbon 标签都复用同一套字段。
+`GeometryLabelSchema` 是 path-like 宿主共用的几何标签契约。`StepLabelSchema` 是这个 schema 的别名；除 move / cycle 之外的绘制 step 与可选 Standard Ribbon 的 `centerline` 标签都复用同一套字段。
 它描述标签文字、沿宿主中心线或段的归一化位置，以及相对切线 / 法线的偏移方式。
 
 <ZodSchema
   name="GeometryLabelSchema"
-  description="几何标签：附着在 path step 或 centerline ribbon 上的文本与定位规格。"
+  description="几何标签：附着在 path step 或可选 Standard Ribbon centerline 上的文本与定位规格。"
   descriptions={{
     text: '标签文字内容（单行；多行需 \\n）',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
     side: '标签相对锚点的方位：top / bottom / left / right；接受 compass 别名 north / south / east / west',
     sloped: '是否沿采样点切线旋转标签；为 true 时仍可用 side 控制方位',
-    placement: '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Ribbon 等面状宿主在未指定 side 时放在内部',
+    placement:
+      '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Standard Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
     textColor: '标签文字色；缺省回退 scope labelDefault → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',

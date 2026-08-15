@@ -174,27 +174,27 @@ As a result, path endpoints can refer to an id declared later in the same scope 
 
 ### How kind selects whole-path output
 
-`kind` is not a renderer switch. It names the provider that compiles the whole Path and defaults to `stroke`. The compiler resolves a definition from the shared registry. If that provider declares an `optionsSchema`, the compiler validates `kindOptions`; otherwise it keeps the original JSON object. The provider can then reuse standard stroke emission, reuse standard ribbon emission, or return custom Scene primitives directly.
+`kind` is not a renderer switch. It names the provider that compiles the whole Path and defaults to `stroke`. Core's Path host first accepts an open `kind` string and JSON-safe `kindOptions`; during compilation, the shared registry resolves a definition and that definition's complete subject schema validates the Path. The provider can then reuse standard stroke emission or return custom Scene primitives directly.
 
 The figure stops at the Path responsibility boundary: the input remains one `<Path>`, while every provider branch returns renderer-agnostic Scene primitives.
 
 <ComponentPreview files="path-kind-pipeline" size="sm" hideCode />
 
-Built-in `stroke` / [`ribbon`](/kernel/components/draw/ribbon) kinds and external kinds use the same registry and collision rules; renderers do not need to understand custom kinds. See [Custom Paths](/kernel/components/draw/custom-path) to own the whole path, or [Path Generators](/kernel/components/draw/path-generator) to extend one step.
+The built-in `stroke` kind and external kinds use the same registry and collision rules. Core does not auto-register optional capabilities, and renderers do not need to understand custom kinds. See [Custom Paths](/kernel/components/draw/custom-path) to own the whole path, or [Path Generators](/kernel/components/draw/path-generator) to extend one step. For a band-shaped relation, load the optional Standard [Ribbon Path kind](/library/standard/extension/ribbon).
 
 <SourceLinks
   sources={[
     {
       label: 'Path kind lookup and dispatch',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 93,
-      endLine: 145,
+      startLine: 339,
+      endLine: 377,
     },
     {
       label: 'Path kind provider contract',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
-      startLine: 18,
-      endLine: 50,
+      startLine: 65,
+      endLine: 115,
     },
   ]}
 />
@@ -208,14 +208,14 @@ The default stroke path first resolves relative targets, node references, and ge
     {
       label: 'Step resolution and path commands',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 57,
-      endLine: 147,
+      startLine: 60,
+      endLine: 277,
     },
     {
       label: 'Rounded geometry, marks, and arrow order',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 149,
-      endLine: 190,
+      startLine: 279,
+      endLine: 320,
     },
   ]}
 />
@@ -227,8 +227,8 @@ The default stroke path first resolves relative targets, node references, and ge
 | `id`             | `string`                                            | —              | Optional stable id: lets other elements anchor to the path and serves as the attach point for [hydration](/kernel/packages/render/render-hydration) event binding (a path needs an `id` before you can bind `onClick` and friends)                                                                                                                                  |
 | `on<Event>`      | `PathProps['onClick']`                              | —              | Hydration events with the same signature as `onClick`, including pointer events and wheel; requires `id`. See [Hydration](/kernel/packages/render/render-hydration) for the complete list                                                                                                                                                                           |
 | `meta`           | `IRPathBase['meta']`                                | —              | Provenance metadata, passed through verbatim onto the Scene primitives this path emits; ignored by renderers and never part of layout / style. Typically injected by a higher-level lowering (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
-| `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | Path kind provider. Built-ins are `'stroke'` and [`'ribbon'`](/kernel/components/draw/ribbon); custom kinds are registered through the Path kind contract                                                                                                                                                                                                           |
-| `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | JSON options passed to a custom Path kind provider. Built-in `stroke` / `ribbon` do not use it                                                                                                                                                                                                                                                                      |
+| `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | Open Path kind provider name. Core includes only `'stroke'`; other kinds are explicitly registered through the Path kind contract. See the optional Standard [Ribbon Path kind](/library/standard/extension/ribbon)                                                                                                                                                 |
+| `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | JSON-safe options for the selected Path kind. The Core host accepts this object first; the registered definition's complete subject schema validates it during resolution                                                                                                                                                                                           |
 | `color`          | `string`                                            | —              | Master color; `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`)                                                                                                                                                                                                                                          |
 | `stroke`         | `string` \| `IRPaintSpec`                           | `currentColor` | Stroke paint: CSS color or IRPaintSpec (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color                                                                                                                                                                                                                                  |
 | `strokeWidth`    | `number`                                            | `1`            | Stroke width                                                                                                                                                                                                                                                                                                                                                        |
@@ -252,12 +252,12 @@ The default stroke path first resolves relative targets, node references, and ge
 | `scale`          | `IRPathScale`                                       | —              | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center)                                                                                                                                                                                                                                                                      |
 | `marks`          | `IRPathBase['marks']`                               | —              | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point                                                                                                                                                                                                                                             |
 | `animations`     | `IRPathBase['animations']`                          | —              | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/kernel/components/effects/animation)                                                                                                                                                                                    |
-| `children`       | `PathProps['children']`                             | —              | Required by the default `stroke` kind. If the first isn't `move`, the compiler coerces it to `move`. See [Ribbon](/kernel/components/draw/ribbon) for centerline and boundary rules                                                                                                                                                                                 |
+| `children`       | `PathProps['children']`                             | —              | Required by the default `stroke` kind. If the first isn't `move`, the compiler coerces it to `move`; other kinds own their structural constraints in their definition schema                                                                                                                                                                                        |
 
 ## Related
 
 - [Draw](/kernel/components/draw/overview): Sugar preferred for everyday connections
 - [Step](/kernel/components/draw/step): Complete field and kind reference for `<Path>` children
-- [Ribbon](/kernel/components/draw/ribbon): Variable-width relations and precomputed boundaries
+- [Ribbon Path kind](/library/standard/extension/ribbon): Optional variable-width relations and width profiles
 - [Arrow](/kernel/components/draw/arrow): Detailed path arrow configuration
 - [Custom Paths](/kernel/components/draw/custom-path): Register a kind provider that owns the whole Path

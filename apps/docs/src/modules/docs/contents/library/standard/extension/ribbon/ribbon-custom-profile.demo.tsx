@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
-import { defineRibbonWidthProfile } from '@retikz/core';
 import { Layout, Path, Step } from '@retikz/react';
+import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/standard/ribbon';
 import { z } from 'zod';
 
 const pulseProfile = defineRibbonWidthProfile({
@@ -13,17 +13,19 @@ const pulseProfile = defineRibbonWidthProfile({
   widthAt: ({ offset, params }) => params.base + (params.peak - params.base) * Math.sin(Math.PI * offset),
 });
 
+const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
+
 /** 自定义 Ribbon 宽度 profile 的定义、注入与引用闭环 */
 const Demo: FC = () => (
   <Layout
     width={400}
     height={180}
     viewBox={{ x: -220, y: -100, width: 440, height: 200 }}
-    ribbonWidthProfiles={[pulseProfile]}
+    pathKinds={[pulseRibbonDefinition]}
   >
     <Path
       kind="ribbon"
-      ribbon={{
+      kindOptions={{
         width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
         sampling: { kind: 'fixed', samples: 41 },
       }}

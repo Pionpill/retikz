@@ -12,6 +12,7 @@ Standard 扩展层回答“这幅图要接入哪些官方可选绘图定义”�
 | 形状     | 承载可选节点轮廓                             | 需要基础 Core 形状以外的轮廓       |
 | 箭头     | 承载可选路径端点标记                         | 需要基础实心箭头以外的标记         |
 | 裁剪     | 承载可选的递归组合裁剪                       | 一个裁剪区域由多个子裁剪组合而成   |
+| Ribbon   | 承载可选的带状 Path kind 与宽度 profile      | 关系需要带宽、端帽或预计算边界时   |
 | 能力装载 | 说明 Definition、provider graph 与宿主的分工 | 集成 React、Vanilla 或自定义工具链 |
 
 ## 章节内容
@@ -28,6 +29,12 @@ Standard 扩展层回答“这幅图要接入哪些官方可选绘图定义”�
   <LinkedCard href="/library/standard/extension/clip">
     <span className="font-semibold">裁剪</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">从 `/clip` 导入组合裁剪并注入 `clips`</span>
+  </LinkedCard>
+  <LinkedCard href="/library/standard/extension/ribbon">
+    <span className="font-semibold">Ribbon</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      从 `/ribbon` 导入带状 Path kind 并注入 `pathKinds`
+    </span>
   </LinkedCard>
   <LinkedCard href="/library/standard/extension/capability-loading">
     <span className="font-semibold">能力装载</span>

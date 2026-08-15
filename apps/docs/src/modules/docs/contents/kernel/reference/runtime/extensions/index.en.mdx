@@ -30,11 +30,12 @@ Layout proposals are not a new registry. They are the closed, general child-eval
 | Pattern            | pattern shape name | `CompileOptions.patterns`                                         |
 | Path generator     | generator name     | `CompileOptions.pathGenerators`                                   |
 | Path kind          | `Path.kind`        | `CompileOptions.pathKinds`                                        |
-| Ribbon profile     | profile name       | `CompileOptions.ribbonWidthProfiles`                              |
 | Composite          | `namespace + type` | `CompileOptions.composites`                                       |
 | Easing             | easing name        | `<Layout easings>`                                                |
 | Animation property | property name      | `<Layout animationProperties>` (custom properties on Canvas only) |
 | TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                                         |
+
+Core's generic path-kind slot is `CompileOptions.pathKinds`, and Core supplies only the `stroke` definition. Optional path kinds such as Ribbon are Standard Definitions loaded through that same slot; their schemas, geometry, and runtime datasets stay outside Core.
 
 ## Diagnostics
 
@@ -91,10 +92,10 @@ Layout proposals are not a new registry. They are the closed, general child-eval
       PathGeneratorDefinition: parameterized curve commands
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/ribbon#custom-width-profiles">
-    <span className="font-semibold">Ribbon Width Profiles</span>
+  <LinkedCard href="/library/standard/extension/ribbon">
+    <span className="font-semibold">Standard Ribbon</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      RibbonWidthProfileDefinition: resolve dynamic width along a centerline
+      RibbonPathKindDefinition and provider contribution for optional band paths
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/concepts/design/composite">

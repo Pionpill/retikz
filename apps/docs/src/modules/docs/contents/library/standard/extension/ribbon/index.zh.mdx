@@ -1,0 +1,237 @@
+---
+title: Ribbon 扩展
+description: 从 @retikz/standard/ribbon 显式装载 Ribbon Path kind，在 Core 的通用 Path 宿主中生成可填充带状路径并扩展宽度 profile。
+---
+
+Ribbon 是 Standard 提供的可选 Path kind。它把一条开放中心线或两条预计算边界编译成可填充的带状路径，同时复用 Core 的 Path 宿主、标签和 Scene 输出。
+
+Standard 是可选 owner：导入子入口不会全局注册 Ribbon，当前图必须显式装配 Definition 或 provider contribution。Core 只负责 host-neutral 的 Path kind lookup、路径物化、宿主外观和标签服务，不拥有 Ribbon 的宽度、profile 或轮廓几何。
+
+## 问题与最小可运行结果
+
+当关系需要沿路径改变厚度、端点形状或内部标签时，普通 Stroke 只有一条描边中心线，不能表达带状面积。最小的 React 用法是从 Standard 子入口导入 `RibbonPathKindDefinition`，把它交给 `<Layout pathKinds>`，再把 Ribbon 选项放入 `<Path kindOptions>`：
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+
+<Layout pathKinds={[RibbonPathKindDefinition]}>
+  <Path kind="ribbon" kindOptions={{ start: { width: 32 }, end: { width: 12 } }} fill="#60a5fa">
+    <Step kind="move" to={[-120, 0]} />
+    <Step to={[120, 0]} />
+  </Path>
+</Layout>;
+```
+
+<ComponentPreview files="ribbon-basic" size="xs" />
+
+这里的 `kindOptions` 是 Ribbon 专属 JSON-safe 数据；`fill`、`stroke`、`label`、透明度和变换仍属于共享 Path host。
+
+## 适用边界
+
+| 场景           | Ribbon 负责                                                       | 不负责                                                    |
+| -------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
+| `centerline`   | 物化 `children`，按固定宽度、端点宽度、stops 或 profile 生成轮廓  | 不替代 Core 的 Step、target、generator 或 Path host       |
+| `boundary`     | 物化 `kindOptions.upper` 与 `kindOptions.lower`，采样并用端帽闭合 | 不接受顶层 `children` 或中心线宽度规则                    |
+| 自定义 profile | 解析 JSON-safe `params`，在运行时按位置返回宽度                   | 函数、Definition 和 registry 不进入 IR、Scene 或 renderer |
+| renderer       | 返回普通 Core Scene Path 与共享标签图元                           | SVG / Canvas 不识别 Ribbon，也不承担采样和偏移            |
+
+如果需求只是描边，应继续使用默认 `stroke` kind；如果关系来自 Plot，应由 Plot lowering 产出同一个 `kind: 'ribbon'` Path，再显式贡献 Standard Ribbon provider。
+
+## 使用场景
+
+### 宽度、采样与外观
+
+在固定宽度、端点插值、stops 和内置 `bulge` profile 之间切换，同时验证填充、轮廓与阴影：
+
+<ComponentPreview files="ribbon-geometry" size="md" />
+
+### 标签位置
+
+Ribbon 复用 Path host 的标签契约，可沿中心线定位并选择内侧或外侧：
+
+<ComponentPreview files="ribbon-label" size="sm" />
+
+### 端点与端帽
+
+起点和终点可独立配置宽度、方向与 cap：
+
+<ComponentPreview files="ribbon-endpoints" size="md" />
+
+### 预计算边界
+
+`boundary` 模式直接使用 `kindOptions.upper` 和 `kindOptions.lower`，不读取顶层 `children`：
+
+<ComponentPreview files="ribbon-boundary" size="sm" />
+
+## 定义能力与 profile
+
+### 使用官方 Definition
+
+直接编译时使用 `RibbonPathKindDefinition`。Definition 与 IR 分离：IR 只保存 `kind` 和 `kindOptions`，不会保存 Definition 或 profile 函数。
+
+### 定义自定义 width profile
+
+需要业务宽度曲线时，用 `defineRibbonWidthProfile` 创建一个 profile，再用 `createRibbonPathKindDefinition` 创建包含该 profile 的唯一 Ribbon definition。自定义 definition 必须和内置 definition 走同一 `RibbonPathSchema`、profile registry 与几何编译路径：
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/standard/ribbon';
+import { z } from 'zod';
+
+const pulseProfile = defineRibbonWidthProfile({
+  name: 'pulse',
+  paramsSchema: z.strictObject({
+    base: z.number().nonnegative(),
+    peak: z.number().nonnegative(),
+  }),
+  widthAt: ({ offset, params }) => params.base + (params.peak - params.base) * Math.sin(Math.PI * offset),
+});
+
+const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
+
+<Layout pathKinds={[pulseRibbonDefinition]}>
+  <Path
+    kind="ribbon"
+    kindOptions={{
+      width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+      sampling: { kind: 'fixed', samples: 41 },
+    }}
+  >
+    <Step kind="move" to={[-180, 20]} />
+    <Step kind="curve" control={[0, -90]} to={[180, 20]} />
+  </Path>
+</Layout>;
+```
+
+`params` 必须保持 JSON-safe，并由 profile 的 `paramsSchema` 在采样前校验。`widthAt` 只能返回有限的非负 user-unit 宽度。
+
+<ComponentPreview files="ribbon-custom-profile" size="sm" />
+
+## 注入宿主
+
+### 直接注入 `Layout.pathKinds`
+
+React `<Layout>` 适合已经知道当前图所需 Definition 的场景。官方 definition、带自定义 profile 的 definition，以及其它 Path kind 定义，都通过同一个 `pathKinds` 数组显式传入：
+
+```tsx
+import { Layout } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+
+<Layout pathKinds={[RibbonPathKindDefinition]}>{/* Path kind="ribbon" */}</Layout>;
+```
+
+没有被 `pathKinds` 装配的 Ribbon 不会因为 import 自动生效。
+
+### 组装 provider graph
+
+需要由 adapter 或工具链在编译前汇总 runtime datasets 时，使用 `createRibbonProviderContribution`。它把官方 `bulge` 和调用方 profiles 合并到同一个 `pathKind/ribbon` provider，再交给 Core 的通用 resolver：
+
+```ts
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { createRibbonProviderContribution } from '@retikz/standard/ribbon';
+
+const compileOptions = resolveCoreProviderDependencies({
+  contributions: [createRibbonProviderContribution([pulseProfile])],
+});
+
+const result = compileToScene(ir, compileOptions);
+```
+
+Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Core compile options；它不改变 `Path` 的 IR 结构，也不建立第二套 Ribbon lookup。直接 `pathKinds` 注入与 provider graph 共享同一套 `createRibbonPathKindDefinition` 构造路径、schema 和 compile 实现。
+
+## 执行机制
+
+一次编译中的职责边界如下：
+
+1. Core 读取开放的 Path host，按 `kind` 查找当前图装配的 definition，并用该 definition 的完整 schema 解析 subject
+2. Standard Ribbon definition 解析 `kindOptions`，调用 Core `materializePath` 得到已经完成 target、anchor、generator 和 step lowering 的 commands
+3. Standard 根据 width、sampling、alignment、cap 和 profile 生成闭合轮廓，并通过 Core `emitHostLabels` 编译共享标签
+4. Core 统一包裹 Scope、transform、bounds、provenance 与 diagnostics；renderer 只消费普通 Scene Path
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Ribbon definition 与 profile 注入',
+      path: 'packages/library/standard/src/ribbon/definition.ts',
+      startLine: 11,
+      endLine: 34,
+    },
+    {
+      label: 'Ribbon provider contribution',
+      path: 'packages/library/standard/src/ribbon/provider.ts',
+      startLine: 8,
+      endLine: 46,
+    },
+    {
+      label: 'Core Path kind 的通用 host 服务',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 41,
+      endLine: 105,
+    },
+    {
+      label: 'Core Path kind lookup 与 subject schema 解析',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 27,
+      endLine: 42,
+    },
+    {
+      label: 'Core 物化路径与宿主标签编排',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 408,
+      endLine: 496,
+    },
+    {
+      label: 'Ribbon 轮廓与标签输出',
+      path: 'packages/library/standard/src/ribbon/geometry/emit.ts',
+      startLine: 103,
+      endLine: 225,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- 未注册 `ribbon` definition 时，Core 会在 Path kind lookup 阶段报告未知 kind；Standard 不会偷偷自动注入
+- 同名 Path kind 或同名但不同 identity 的 profile 在 registry / provider graph 组装时失败，不按顺序覆盖
+- `centerline` 需要顶层 `children`，并且必须提供整体 `width`，或同时提供 `start.width` 与 `end.width`
+- `boundary` 需要 `upper` 与 `lower` 两条合法开放 step 序列，且禁止顶层 `children` 与中心线宽度字段
+- `boundary` 当前不支持 Path `label`；标签定位依赖 centerline 的采样位置与边界偏移
+- `samples` 与 `sampling` 互斥；未知 profile、非法 `params`、负数或非有限 `widthAt` 结果都会带路径位置 fail-loud
+- 多 move、close、零长度整体路径、无效 arc cap 或无法满足的边界对应关系不会静默生成空图元
+
+## API 参考
+
+### 公开导出
+
+| 导出                                           | 用途                                                                        |
+| ---------------------------------------------- | --------------------------------------------------------------------------- |
+| `RibbonPathKindDefinition`                     | 官方 Ribbon Path kind definition，供 `Layout.pathKinds` 或直接 compile 使用 |
+| `createRibbonPathKindDefinition`               | 创建包含调用方 width profiles 的唯一 Ribbon definition                      |
+| `defineRibbonWidthProfile`                     | 定义一个 JSON-safe 参数与运行时 `widthAt` 采样函数                          |
+| `createRibbonProviderContribution`             | 为 provider graph 声明 `pathKind/ribbon` root 并合并 profiles               |
+| `RibbonPathSchema` / `RibbonPathOptionsSchema` | 校验完整 Ribbon Path subject 与 `kindOptions`                               |
+| `IRRibbonPath` / `IRRibbonPathOptions`         | 从 Standard schema 派生的完整 Path 与 options 类型                          |
+
+### Path host 与 `kindOptions`
+
+| 字段              | 类型                                          | 说明                                                             |
+| ----------------- | --------------------------------------------- | ---------------------------------------------------------------- |
+| `kind`            | `'ribbon'`                                    | 选择 Standard Ribbon Path kind                                   |
+| `kindOptions`     | `IRRibbonPathOptions`                         | Ribbon 的 mode、width、sampling、alignment、端点和 boundary 数据 |
+| `children?`       | `Array<IRStep>`                               | `centerline` 模式的开放中心线；`boundary` 模式禁止               |
+| `label?`          | `IRGeometryLabel` \| `Array<IRGeometryLabel>` | 共享 Path 标签；当前 Ribbon 标签只支持 centerline                |
+| `fill` / `stroke` | Core Path paint fields                        | 轮廓生成后仍由共享 Path host 处理                                |
+
+`kindOptions` 的核心字段包括：`mode`、`width`、`start`、`end`、`interpolation`、`align`、`samples`、`sampling`、`upper` 和 `lower`。完整字段与跨字段约束以 `RibbonPathOptionsSchema` 为准。
+
+### Profile 契约
+
+`RibbonWidthProfileDefinitionInput` 包含 `name`、可选 `paramsSchema` 与 `widthAt`；`RibbonWidthProfileContext` 向函数提供归一化 `offset`、中心线 `length` 和校验后的 `params`。这些函数只属于当前运行时装配，不进入持久化 IR。
+
+## 相关
+
+- [Path](/kernel/components/draw/path)：Core Path host、共享样式与 Step 语义
+- [能力装载](/library/standard/extension/capability-loading)：Definition、adapter 与 provider graph 的共同装配边界
+- [运行时扩展](/kernel/reference/runtime/extensions)：查找其它 Definition 与 registry 契约
+- [Standard 扩展](/library/standard/extension)：浏览其它可选 Standard 能力

@@ -47,7 +47,7 @@ const Demo: FC = () => (
       cornerRadius={4}
       font={{ size: 14 }}
     >
-      ribbon：宽度 → 轮廓
+      可选 ribbon：宽度 → 轮廓
     </Node>
     <Node
       id="custom-provider"

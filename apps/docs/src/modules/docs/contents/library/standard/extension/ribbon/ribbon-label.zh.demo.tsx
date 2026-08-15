@@ -1,10 +1,11 @@
 import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, ribbonLabelControls } from './ribbon-label.en.controls';
+import { previewControlContract, ribbonLabelControls } from './ribbon-label.controls';
 
 export const previewControls = ribbonLabelControls;
 
@@ -13,10 +14,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     values.placement === 'inside' ? ({ placement: 'inside' } as const) : ({ side: values.side } as const);
 
   return (
-    <Layout width={400} height={186} viewBox={{ x: -280, y: -130, width: 560, height: 260 }} color="#172033">
+    <Layout
+      width={400}
+      height={186}
+      viewBox={{ x: -280, y: -130, width: 560, height: 260 }}
+      color="#172033"
+      pathKinds={[RibbonPathKindDefinition]}
+    >
       <Path
         kind="ribbon"
-        ribbon={{
+        kindOptions={{
           start: { width: 42 },
           end: { width: 20 },
           interpolation: 'smooth',
@@ -25,7 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         fill="#38bdf8"
         fillOpacity={0.62}
         label={{
-          text: '128 items',
+          text: '128 件',
           position: values.position,
           ...placement,
           sloped: values.sloped,
@@ -42,7 +49,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
 export const previewSource = controlledPreview.source;
 
-/** Ribbon label property playground */
+/** Ribbon 标注属性 playground */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

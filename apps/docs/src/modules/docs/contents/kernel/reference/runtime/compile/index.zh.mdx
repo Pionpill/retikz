@@ -57,16 +57,15 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 扩展注册表
 
-| Option                | Type                                          | Default       | 说明                                                                                           |
-| --------------------- | --------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------- |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | Core 基础集合 | 注入自定义或 Standard 可选节点形状。见 [形状扩展](/library/standard/extension/shape)           |
-| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | 内置集合      | 追加自定义连接面。见 [自定义连接面](/kernel/components/node/custom-boundary)                   |
-| `clips`               | `ReadonlyArray<ClipDefinition>`               | Core 基础集合 | 注入自定义或 Standard 组合裁剪。见 [裁剪扩展](/library/standard/extension/clip)                |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | Core 基础集合 | 注入自定义或 Standard 可选箭头。见 [箭头扩展](/library/standard/extension/arrow)               |
-| `patterns`            | `ReadonlyArray<PatternDefinition>`            | 内置集合      | 追加自定义填充图案。见 [自定义图案](/kernel/components/effects/custom-pattern)                 |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | 无            | 注入自定义路径生成器；Core 没有默认项。见 [路径生成器](/kernel/components/draw/path-generator) |
-| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | 内置集合      | 追加自定义 path kind provider                                                                  |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | 内置集合      | 追加 ribbon 宽度 profile；core 内置 `bulge`，profile 函数不进入 IR                             |
+| Option           | Type                                     | Default       | 说明                                                                                                                                                     |
+| ---------------- | ---------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shapes`         | `ReadonlyArray<ShapeDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选节点形状。见 [形状扩展](/library/standard/extension/shape)                                                                     |
+| `boundaries`     | `ReadonlyArray<BoundaryDefinition>`      | 内置集合      | 追加自定义连接面。见 [自定义连接面](/kernel/components/node/custom-boundary)                                                                             |
+| `clips`          | `ReadonlyArray<ClipDefinition>`          | Core 基础集合 | 注入自定义或 Standard 组合裁剪。见 [裁剪扩展](/library/standard/extension/clip)                                                                          |
+| `arrows`         | `ReadonlyArray<ArrowDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选箭头。见 [箭头扩展](/library/standard/extension/arrow)                                                                         |
+| `patterns`       | `ReadonlyArray<PatternDefinition>`       | 内置集合      | 追加自定义填充图案。见 [自定义图案](/kernel/components/effects/custom-pattern)                                                                           |
+| `pathGenerators` | `ReadonlyArray<PathGeneratorDefinition>` | 无            | 注入自定义路径生成器；Core 没有默认项。见 [路径生成器](/kernel/components/draw/path-generator)                                                           |
+| `pathKinds`      | `ReadonlyArray<PathKindDefinition>`      | 内置集合      | 追加自定义或可选 Standard path kind provider。见[自定义路径](/kernel/components/draw/custom-path)与[Standard Ribbon](/library/standard/extension/ribbon) |
 
 传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。Standard 可选内容也走同一条合并与诊断路径。
 
@@ -107,7 +106,7 @@ Provider graph 是编译前的纯装配协议，不是第二套 registry。React
 | `CoreProviderContribution`               | `roots`、`providers`                                                            | 声明当前 authored node 需要的根能力与已导入 provider 集合 |
 | `ResolveCoreProviderDependenciesOptions` | `contributions`、`definitions?`                                                 | 把 provider 结果与最终显式 Definitions 合并               |
 
-解析器先完成完整预检，再执行 maker：同 key 的 maker 引用与有序 dependencies 必须一致；同 provider key、同 dataset reference 只有 `Object.is` 同源才可去重；缺失 provider 和 cycle 会报告完整链。输出按 dependency-first、首次可达顺序物化，再按 `shapes`、`arrows`、`clips`、`pathGenerators`、`composites` 等匹配的 compile option 分组；每个 maker 只执行一次。
+解析器先完成完整预检，再执行 maker：同 key 的 maker 引用与有序 dependencies 必须一致；同 provider key、同 dataset reference 只有 `Object.is` 同源才可去重；缺失 provider 和 cycle 会报告完整链。输出按 dependency-first、首次可达顺序物化，再按 `shapes`、`arrows`、`clips`、`pathKinds`、`pathGenerators`、`composites` 等匹配的 compile option 分组；每个 maker 只执行一次。
 
 `options.composites` 是最终显式 Definition 通道，不是嵌套 adapter 的私有 sidecar。Provider 结果先加入，显式 Definition 保留 authored order 后追加；同 key 同对象去重，同 key 不同对象立即失败。直接调用 `compileToScene()` 的作者如果已经拥有完整 Definition 数组，可以跳过 provider graph，继续直接传 `CompileOptions.composites`。
 

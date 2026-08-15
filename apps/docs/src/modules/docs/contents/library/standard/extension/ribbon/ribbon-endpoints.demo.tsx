@@ -1,7 +1,8 @@
-import type { IRPathRibbonOptions } from '@retikz/core';
+import type { IRRibbonPathOptions } from '@retikz/standard/ribbon';
 import type { FC } from 'react';
 
 import { Layout, Path, Step } from '@retikz/react';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -20,7 +21,7 @@ const vectorOf = (angle: number): [number, number] => {
 };
 
 /** 把面板选择转换为 Ribbon 端点方向 */
-const directionOf = (values: RibbonEndpointValues): NonNullable<IRPathRibbonOptions['start']>['direction'] => {
+const directionOf = (values: RibbonEndpointValues): NonNullable<IRRibbonPathOptions['start']>['direction'] => {
   switch (values.direction) {
     case 'auto':
       return undefined;
@@ -36,16 +37,21 @@ const directionOf = (values: RibbonEndpointValues): NonNullable<IRPathRibbonOpti
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const resolvedValues = values as RibbonEndpointValues;
   const direction = directionOf(resolvedValues);
-  const cap: NonNullable<IRPathRibbonOptions['start']>['cap'] =
+  const cap: NonNullable<IRRibbonPathOptions['start']>['cap'] =
     resolvedValues.cap === 'arc'
       ? { type: 'arc', center: [-190, 20], radius: resolvedValues.width / 2 }
       : resolvedValues.cap;
 
   return (
-    <Layout width={400} height={200} viewBox={{ x: -260, y: -130, width: 520, height: 260 }}>
+    <Layout
+      width={400}
+      height={200}
+      viewBox={{ x: -260, y: -130, width: 520, height: 260 }}
+      pathKinds={[RibbonPathKindDefinition]}
+    >
       <Path
         kind="ribbon"
-        ribbon={{
+        kindOptions={{
           width: resolvedValues.width,
           align: resolvedValues.align,
           start: { ...(direction === undefined ? {} : { direction }), cap },

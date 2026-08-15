@@ -2,30 +2,30 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-/** Ribbon 端点 playground 的中文属性面板 */
+/** English controls for the Ribbon endpoints playground */
 export const ribbonEndpointsControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Ribbon 端点',
+  title: 'Ribbon endpoints',
   sections: [
     {
-      label: '方向与对齐',
+      label: 'Direction and alignment',
       controls: [
         {
           kind: 'select',
           id: 'direction',
-          label: '端点方向',
+          label: 'Endpoint direction',
           defaultValue: 'auto',
           options: [
-            { value: 'auto', label: '自动切线' },
-            { value: 'angle', label: '角度' },
-            { value: 'vector', label: '向量' },
-            { value: 'polar', label: '极坐标向量' },
+            { value: 'auto', label: 'Automatic tangent' },
+            { value: 'angle', label: 'Angle' },
+            { value: 'vector', label: 'Vector' },
+            { value: 'polar', label: 'Polar vector' },
           ],
         },
         {
           kind: 'range',
           id: 'angle',
-          label: '角度',
+          label: 'Angle',
           defaultValue: 0,
           min: -180,
           max: 180,
@@ -46,7 +46,7 @@ export const ribbonEndpointsControls = definePreviewControls({
       ],
     },
     {
-      label: '端帽',
+      label: 'Caps',
       controls: [
         {
           kind: 'select',
@@ -60,15 +60,15 @@ export const ribbonEndpointsControls = definePreviewControls({
             { value: 'arc', label: 'arc' },
           ],
         },
-        { kind: 'range', id: 'width', label: '宽度', defaultValue: 30, min: 8, max: 60, step: 2 },
+        { kind: 'range', id: 'width', label: 'Width', defaultValue: 30, min: 8, max: 60, step: 2 },
       ],
     },
   ],
 });
 
-/** 当前 controls 面板的稳定文档契约 */
+/** Stable documentation contract for the current controls */
 export const previewControlContract = {
   controls: ribbonEndpointsControls,
   canonicalValues: { direction: 'auto', angle: 0, align: 'center', cap: 'round', width: 30 },
-  relatedApis: ['Path.kind', 'Path.ribbon'],
+  relatedApis: ['Path.kind', 'Path.kindOptions'],
 } satisfies PreviewControlContract;

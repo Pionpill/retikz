@@ -174,27 +174,27 @@ import { Path, Step } from '@retikz/react';
 
 ### kind 如何选择整条路径的输出
 
-`kind` 不是 renderer 的绘制开关，而是整条 Path 的编译 provider（处理器）名称，缺省为 `stroke`。编译器从统一注册表找到 definition；如果该 provider 声明了 `optionsSchema`，就先校验 `kindOptions`，否则保留原始 JSON 对象。随后由 provider 决定复用标准描边、复用标准 Ribbon，还是直接生成自定义 Scene 图元。
+`kind` 不是 renderer 的绘制开关，而是整条 Path 的编译 provider（处理器）名称，缺省为 `stroke`。Core 的 Path host 先接受开放的 `kind` 字符串与 JSON-safe `kindOptions`；编译时从统一注册表找到 definition，再用该 definition 的完整 subject schema 校验当前 Path。随后由 provider 决定复用标准描边，或直接生成自定义 Scene 图元。
 
 下图在 Path 的职责边界停止：输入仍是一条 `<Path>`，provider 分派后只输出与 renderer 无关的 Scene 图元。
 
 <ComponentPreview files="path-kind-pipeline" size="sm" hideCode />
 
-内置 `stroke` / [`ribbon`](/kernel/components/draw/ribbon) 与外部 kind 走同一套注册和冲突规则；renderer 不需要认识自定义 kind。要接管整条路径时见[自定义路径](/kernel/components/draw/custom-path)，只扩展某一个 step 时则使用[路径生成器](/kernel/components/draw/path-generator)。
+内置 `stroke` 与外部 kind 走同一套注册和冲突规则；Core 不替可选能力自动注册 definition，renderer 也不需要认识自定义 kind。要接管整条路径时见[自定义路径](/kernel/components/draw/custom-path)，只扩展某一个 step 时则使用[路径生成器](/kernel/components/draw/path-generator)。需要带状关系时，可按需装载 Standard 的 [Ribbon Path kind](/library/standard/extension/ribbon)。
 
 <SourceLinks
   sources={[
     {
       label: 'Path kind 查找与分派',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 93,
-      endLine: 145,
+      startLine: 339,
+      endLine: 377,
     },
     {
       label: 'Path kind provider 契约',
       path: 'packages/kernel/core/src/contract/path-kind/types.ts',
-      startLine: 18,
-      endLine: 50,
+      startLine: 65,
+      endLine: 115,
     },
   ]}
 />
@@ -208,14 +208,14 @@ import { Path, Step } from '@retikz/react';
     {
       label: 'Step 解析与路径命令生成',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 57,
-      endLine: 147,
+      startLine: 60,
+      endLine: 277,
     },
     {
       label: '圆角、标记与箭头处理顺序',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 149,
-      endLine: 190,
+      startLine: 279,
+      endLine: 320,
     },
   ]}
 />
@@ -227,8 +227,8 @@ import { Path, Step } from '@retikz/react';
 | `id`             | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/render-hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
 | `on<Event>`      | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/render-hydration)                                                                                            |
 | `meta`           | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
-| `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | Path kind provider；内置 `'stroke'` 与 [`'ribbon'`](/kernel/components/draw/ribbon)，外部 kind 通过 Path kind contract 注册                                                                                       |
-| `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 传给自定义 Path kind provider 的 JSON 参数；内置 `stroke` / `ribbon` 不使用                                                                                                                                       |
+| `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
+| `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |
 | `color`          | `string`                                            | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
 | `stroke`         | `string` \| `IRPaintSpec`                           | `currentColor` | 描边 paint：CSS 颜色或 IRPaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                          |
 | `strokeWidth`    | `number`                                            | `1`            | 描边宽度                                                                                                                                                                                                          |
@@ -252,12 +252,12 @@ import { Path, Step } from '@retikz/react';
 | `scale`          | `IRPathScale`                                       | —              | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心）                                                                                                                                                      |
 | `marks`          | `IRPathBase['marks']`                               | —              | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线                                                                                                                                       |
 | `animations`     | `IRPathBase['animations']`                          | —              | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation)                                                                                            |
-| `children`       | `PathProps['children']`                             | —              | 默认 `stroke` kind 必填；首个非 `move` 时编译器会强制改成 `move`。Ribbon 的 centerline / boundary 规则见 [Ribbon](/kernel/components/draw/ribbon)                                                                 |
+| `children`       | `PathProps['children']`                             | —              | 默认 `stroke` kind 必填；首个非 `move` 时编译器会强制改成 `move`。其它 kind 的结构约束由各自 definition schema 负责                                                                                               |
 
 ## 相关
 
 - [Draw](/kernel/components/draw/overview)：日常连线优先使用的 Sugar
 - [Step](/kernel/components/draw/step)：`<Path>` 子节点的完整字段和 kind 说明
-- [Ribbon](/kernel/components/draw/ribbon)：可变宽带状关系与预计算边界
+- [Ribbon Path kind](/library/standard/extension/ribbon)：可选的带状关系与宽度 profile
 - [Arrow](/kernel/components/draw/arrow)：路径箭头的详细配置
 - [自定义路径](/kernel/components/draw/custom-path)：注册接管整条 Path 的 kind provider

@@ -57,16 +57,15 @@ Callers validate `value` with their owning schema first. `fallback` must be fini
 
 ### Provider Registries
 
-| Option                | Type                                          | Default        | Notes                                                                                                                   |
-| --------------------- | --------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `shapes`              | `ReadonlyArray<ShapeDefinition>`              | Core basic set | Inject custom or optional Standard node shapes. See [Shape Extensions](/library/standard/extension/shape)               |
-| `boundaries`          | `ReadonlyArray<BoundaryDefinition>`           | built-in set   | Append custom connection surfaces. See [Custom Boundaries](/kernel/components/node/custom-boundary)                     |
-| `clips`               | `ReadonlyArray<ClipDefinition>`               | Core basic set | Inject custom or Standard compound clips. See [Clip Extensions](/library/standard/extension/clip)                       |
-| `arrows`              | `ReadonlyArray<ArrowDefinition>`              | Core basic set | Inject custom or optional Standard arrows. See [Arrow Extensions](/library/standard/extension/arrow)                    |
-| `patterns`            | `ReadonlyArray<PatternDefinition>`            | built-in set   | Append custom fill pattern motifs. See [Custom Patterns](/kernel/components/effects/custom-pattern)                     |
-| `pathGenerators`      | `ReadonlyArray<PathGeneratorDefinition>`      | none           | Inject custom path generators; Core has no default entry. See [Path Generators](/kernel/components/draw/path-generator) |
-| `pathKinds`           | `ReadonlyArray<PathKindDefinition>`           | built-in set   | Append custom path kind providers                                                                                       |
-| `ribbonWidthProfiles` | `ReadonlyArray<RibbonWidthProfileDefinition>` | built-in set   | Append ribbon width profiles; core includes `bulge`, and profile functions never enter IR                               |
+| Option           | Type                                     | Default        | Notes                                                                                                                                                                     |
+| ---------------- | ---------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shapes`         | `ReadonlyArray<ShapeDefinition>`         | Core basic set | Inject custom or optional Standard node shapes. See [Shape Extensions](/library/standard/extension/shape)                                                                 |
+| `boundaries`     | `ReadonlyArray<BoundaryDefinition>`      | built-in set   | Append custom connection surfaces. See [Custom Boundaries](/kernel/components/node/custom-boundary)                                                                       |
+| `clips`          | `ReadonlyArray<ClipDefinition>`          | Core basic set | Inject custom or Standard compound clips. See [Clip Extensions](/library/standard/extension/clip)                                                                         |
+| `arrows`         | `ReadonlyArray<ArrowDefinition>`         | Core basic set | Inject custom or optional Standard arrows. See [Arrow Extensions](/library/standard/extension/arrow)                                                                      |
+| `patterns`       | `ReadonlyArray<PatternDefinition>`       | built-in set   | Append custom fill pattern motifs. See [Custom Patterns](/kernel/components/effects/custom-pattern)                                                                       |
+| `pathGenerators` | `ReadonlyArray<PathGeneratorDefinition>` | none           | Inject custom path generators; Core has no default entry. See [Path Generators](/kernel/components/draw/path-generator)                                                   |
+| `pathKinds`      | `ReadonlyArray<PathKindDefinition>`      | built-in set   | Append custom or optional Standard path kind providers. See [Custom Paths](/kernel/components/draw/custom-path) and [Standard Ribbon](/library/standard/extension/ribbon) |
 
 Definitions passed here merge with the matching Core basic collection. An empty key or a name that duplicates an item registered for the invocation throws immediately; providers are never overwritten. Optional Standard content follows this same merge and diagnostic path.
 
@@ -107,7 +106,7 @@ The provider graph is a pure pre-compile assembly protocol, not a second registr
 | `CoreProviderContribution`               | `roots`, `providers`                                                        | Declares roots required by an authored node and imported providers |
 | `ResolveCoreProviderDependenciesOptions` | `contributions`, `definitions?`                                             | Merges provider results with final explicit Definitions            |
 
-The resolver completes full preflight before running a maker. Repeated provider keys require the same maker reference and ordered dependencies. A repeated dataset reference under one provider key deduplicates only when its value is identical by `Object.is`. Missing providers and cycles report the complete chain. Output materializes in dependency-first, first-reachable order, then groups under matching compile options such as `shapes`, `arrows`, `clips`, `pathGenerators`, and `composites`; each maker runs once.
+The resolver completes full preflight before running a maker. Repeated provider keys require the same maker reference and ordered dependencies. A repeated dataset reference under one provider key deduplicates only when its value is identical by `Object.is`. Missing providers and cycles report the complete chain. Output materializes in dependency-first, first-reachable order, then groups under matching compile options such as `shapes`, `arrows`, `clips`, `pathKinds`, `pathGenerators`, and `composites`; each maker runs once.
 
 `options.composites` is the final explicit-Definition channel, not a private sidecar for nested adapters. Provider results come first; explicit Definitions append in authored order. The same object at the same key deduplicates, while a different object fails immediately. Authors calling `compileToScene()` with a complete Definition array may skip the provider graph and continue passing `CompileOptions.composites` directly.
 
