@@ -8,24 +8,24 @@ export const diagramSection: Array<Section> = [
     pages: [{ id: 'introduction', label: 'diagram.introduction', difficulty: DocDifficulty.Beginner }],
   },
   {
-    id: 'notation',
-    label: 'diagram.notation',
+    id: 'graph',
+    label: 'diagram.graph',
     document: true,
     pages: [
       {
         id: 'unit',
         label: 'diagram.baseUnits',
         children: [
-          { id: 'logic-node', label: 'diagram.logicNode', difficulty: DocDifficulty.Beginner },
-          { id: 'connector', label: 'diagram.connector', difficulty: DocDifficulty.Beginner },
+          { id: 'node', label: 'diagram.logicNode', difficulty: DocDifficulty.Beginner },
+          { id: 'connector', label: 'diagram.graphConnector', difficulty: DocDifficulty.Beginner },
         ],
       },
       {
         id: 'frame',
         label: 'diagram.frameUnits',
-        children: [{ id: 'logic-frame', label: 'diagram.logicFrame', difficulty: DocDifficulty.Advanced }],
+        children: [{ id: 'graph-frame', label: 'diagram.graphFrame', difficulty: DocDifficulty.Advanced }],
       },
-      { id: 'api-reference', label: 'diagram.notationApiReference' },
+      { id: 'api-reference', label: 'diagram.graphApiReference' },
     ],
   },
   {

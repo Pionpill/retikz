@@ -1,13 +1,13 @@
 import type { Localized, PackageId, Release } from '../types';
 
 import { PACKAGE_GROUPS } from '../types';
+import { graphV01 } from './graph-0-1';
 import { kernelV01 } from './kernel-0-1';
 import { kernelV02 } from './kernel-0-2';
 import { kernelV03 } from './kernel-0-3';
 import { kernelV04 } from './kernel-0-4';
 import { kernelV05 } from './kernel-0-5';
 import { layoutV01 } from './layout-0-1';
-import { notationV01 } from './notation-0-1';
 import { standardV01 } from './standard-0-1';
 import { vizV01 } from './viz-0-1';
 import { vizV02 } from './viz-0-2';
@@ -20,7 +20,7 @@ export const changelogPageDescription: Localized = {
 
 export const changelog: Array<Release> = [
   vizV02,
-  notationV01,
+  graphV01,
   layoutV01,
   standardV01,
   kernelV05,

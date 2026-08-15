@@ -158,13 +158,13 @@
   "diagram": {
     "label": "Diagram",
     "introduction": "Introduction",
-    "notation": "Notation",
+    "graph": "Graph",
     "baseUnits": "Base Units",
     "frameUnits": "Composite Units",
-    "logicFrame": "LogicFrame",
+    "graphFrame": "GraphFrame",
     "logicNode": "Logic Node",
-    "connector": "Connector",
-    "notationApiReference": "Notation API Reference",
+    "graphConnector": "GraphConnector",
+    "graphApiReference": "Graph API Reference",
     "releases": "Releases",
     "changelog": "Changelog",
     "changelogV01": "v0.1"

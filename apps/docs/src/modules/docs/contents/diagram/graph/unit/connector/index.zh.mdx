@@ -1,0 +1,98 @@
+---
+title: GraphConnector
+description: 用 Core Path Step 或 Draw way 编写关系，并保留可持久化的 GraphConnector 语义
+---
+
+`GraphConnector` 是保留 `graph` namespace 的轻量关系 IR。它直接复用 Core stroke Path 的 Step、target、label、mark、描边和变换能力，再通过 `GraphConnectorDefinition` 一对一下沉为同 id Core Path。它不维护平行路由模型，也不计算自动路由或障碍规避
+
+## 用法
+
+```tsx
+import { FoldStepVia } from '@retikz/core';
+import { Layout, Scope, Step } from '@retikz/react';
+import { GraphConnector, GraphNode } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={420} height={160}>
+  <Scope transforms={[{ kind: 'translate', x: 24, y: 56 }]}>
+    <GraphNode id="start" role="terminal" position={[0, 0]}>
+      Start
+    </GraphNode>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 220, y: 56 }]}>
+    <GraphNode id="step" role="stage" position={[0, 0]}>
+      Step
+    </GraphNode>
+  </Scope>
+  <GraphConnector id="start-to-step" role="flow">
+    <Step kind="move" to="start" />
+    <Step kind="fold" via={FoldStepVia.HorizontalThenVertical} to="step" label={{ text: 'next' }} />
+  </GraphConnector>
+</Layout>
+```
+
+React 的 `<Step>` children 就是 Path 作者语法，完整沿用 Core Step 约束。label 可以写在需要标注的具体 step 上，不再经过 GraphConnector 专属字段投影
+
+## 两套作者语法
+
+GraphConnector 支持两套互斥入口，但只保存一份 canonical IR：
+
+```ts
+import { DrawWay } from '@retikz/core';
+import { createGraphConnector } from '@retikz/graph';
+
+const bySteps = createGraphConnector({
+  id: 'edge-a',
+  role: 'flow',
+  children: [
+    { kind: 'move', to: 'start' },
+    { kind: 'line', to: 'step' },
+  ],
+});
+
+const byWay = createGraphConnector({
+  id: 'edge-b',
+  role: 'flow',
+  way: ['start', DrawWay.Hv, 'step'],
+});
+```
+
+- Path 语法传 `children: Array<IRStep>`，也是持久化 JSON 的唯一形式
+- Draw 语法传 `way: WayDSL`，factory、React 或 Vanilla 会立即复用 Core `parseWay()` 转成 `children`
+- `children` 与 `way` 必须且只能提供一个；同时提供或都省略会 fail-loud
+- `way` 不属于 `GraphConnectorSchema`，不会进入 JSON、Definition 或 Scene
+
+<ComponentPreview files="connector-routing" size="lg" />
+
+直接 JSON 必须写 canonical `children`，并显式注入 `GraphConnectorDefinition`。Vanilla 的 `graphConnector()` 返回 embed；`GraphConnectorInputEmbedAdapter` 以 embed id 创建同 id `IRGraphConnector`
+
+省略 `marks` 时 GraphConnector 默认添加一个终点箭头。显式 `marks` 会完整覆盖默认值，因此 `marks: []` 可以明确关闭箭头
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="日常使用可跳过"
+  description="只有排查 canonicalization、Definition 或 Core Path 行为时才需要阅读本节"
+/>
+
+`GraphConnectorDefinition` 只移除 `namespace`、语义 `type` 与 authored-only `role`，其余字段原样交给 Core stroke Path，并保留 authored `id`。GraphConnector 不生成 typed artifact、额外 wrapper、专用几何或 renderer 分支；Core Path 新增适用的公开字段后，可以通过复用的 schema surface 直接进入 GraphConnector
+
+`role` 只表达 authored 语义，不会隐式写入 Path `meta` 或 Scene primitive。target 完全遵循 Core Step：whole target、坐标和其它 Core target form 直接使用 Core 诊断；旧 GraphFrame section target、`from/to/routing/appearance` 与 GraphConnector 专属 route 常量已经移除
+
+## API 参考
+
+| 字段                | 类型                         | 默认值              | 说明                                                              |
+| ------------------- | ---------------------------- | ------------------- | ----------------------------------------------------------------- |
+| `id`                | `string`                     | —                   | 稳定的 authored GraphConnector identity，也是 lower 后 Core Path id    |
+| `role`              | `GraphConnectorRoleValue`    | —                   | 关系语义，只保留在 Graph IR                                    |
+| `children`          | `Array<IRStep>`              | —                   | canonical Core Path Step 序列，也是 JSON 中唯一的几何表达         |
+| `way`（仅作者输入） | `WayDSL`                     | —                   | 与 `children` 互斥，并在入口通过 `parseWay()` 归一                |
+| `marks?`            | Core Path mark placements    | `pos: 1` 的终点箭头 | 显式数组完整覆盖默认值；`[]` 关闭箭头                             |
+| 其它 Path 字段      | 适用的 Core stroke Path 字段 | 沿用 Core 默认值    | label、stroke、fill、dash、line cap/join、圆角、变换、meta 等能力 |
+
+## 相关
+
+- [GraphNode](/diagram/graph/unit/node)：可被 target 的图式单元
+- [Core Path](/kernel/components/draw/overview)：GraphConnector 直接复用的底层契约

@@ -1,0 +1,109 @@
+---
+title: GraphFrame
+description: Build a bordered logic block with an optional header and ordered authored sections.
+---
+
+`GraphFrame` is the generic shell for grouped base units. It accepts one optional header and zero or more keyed sections. The shell reuses Layout's FlexLayout engine for region measurement, padding, gaps, placement, clipping, and replay; it does not introduce a second layout system.
+
+## Usage
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { GraphFrame, GraphFrameHeader, GraphFrameSection } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={360} height={180}>
+  <GraphFrame id="order" graphNodeVariant="secondary">
+    <GraphFrameHeader>
+      <Node position={[0, 0]} text="Order" />
+    </GraphFrameHeader>
+    <GraphFrameSection sectionKey="input">
+      <Node position={[0, 0]} text="Input" />
+    </GraphFrameSection>
+    <GraphFrameSection sectionKey="output">
+      <Node position={[0, 0]} text="Output" />
+    </GraphFrameSection>
+  </GraphFrame>
+</Layout>
+```
+
+Marker children must be direct children of `GraphFrame`; each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props instead.
+
+`graphNodeVariant` only provides a default for descendant `GraphNode` values; it does not change the Frame shell or divider. A nested Frame shadows the outer scope, an explicit node `variant` wins, and `variant="default"` resets inherited styling. See [Logic Node](/diagram/graph/unit/node) for the five recipes
+
+## Examples
+
+<ComponentPreview files="graph-frame-basic" size="md" />
+
+Direct IR uses the same canonical child contract and an explicit Definition:
+
+```ts
+import { createGraphFrame, GraphFrameDefinition } from '@retikz/graph';
+
+const block = createGraphFrame({
+  id: 'order',
+  header: { child: { type: 'node', position: [0, 0], text: 'Order' } },
+  sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
+});
+const compile = { composites: [GraphFrameDefinition] };
+```
+
+Vanilla uses an embed id for authoring and derives the canonical `id` inside the adapter:
+
+```ts
+import { GraphFrameInputEmbedAdapter, graphFrame } from '@retikz/graph-vanilla';
+
+const embed = graphFrame('order', {
+  sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
+});
+const adapters = [GraphFrameInputEmbedAdapter];
+```
+
+The same shell can contain Core children, GraphNode values, or other nested composites. GraphNode retains its own Graph IR, so direct IR containing a `GraphNode` must inject both `GraphFrameDefinition` and `GraphNodeDefinition`. React components and Vanilla adapters contribute the matching Definitions for the elements they author.
+
+<ComponentPreview
+  files="process-recipe"
+  size="lg"
+  caption="A documentation-only Process recipe composed from GraphFrame, base units, and GraphConnectors."
+/>
+
+Recipes are examples, not package exports; Process, Class, and Data remain ordinary compositions of the public vocabulary.
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Read this section when diagnosing region measurement, divider geometry, or compile artifacts."
+/>
+
+### Canonical FlexLayout reuse
+
+The compiler creates a synthetic column FlexLayout region for the header and sections, then projects the Flex artifact into the block artifact. This reuses the canonical Flex proposal, size, gap, placement, clipping, and replay semantics rather than defining a second layout engine. Region children remain JSON-safe IR and enter the same Core compile path through their injected Definitions.
+
+### Divider artifact projection
+
+The shell and divider are emitted as Core visual primitives. Divider rectangles are projections in `dividerVisualBounds`; they do not become layout children or a second authored graph. A region child can be a `Node`, `Path`, another composite, or a nested block when its Definition is injected.
+
+## API Reference
+
+| Field               | Type                                     | Default                                              | Description                                            |
+| ------------------- | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| `id`                | `string`                                 | —                                                    | Stable authored block identity used by targets         |
+| `graphNodeVariant?` | `GraphNodeVariantValue`                  | omitted                                              | Default variant for descendant logic nodes             |
+| `header?`           | `{ child: IRChild; padding? }`           | omitted                                              | One optional header region                             |
+| `sections`          | `Array<{ key, role?, child, padding? }>` | `[]`                                                 | Ordered, uniquely keyed regions                        |
+| `size?`             | `LayoutSizeInput`                        | `{ x: { kind: 'content' }, y: { kind: 'content' } }` | Outer allocation policy                                |
+| `padding?`          | `number` or `IRBoxSpacing`               | `8`                                                  | Default region padding                                 |
+| `rowGap?`           | `number`                                 | `0`                                                  | Space between adjacent regions                         |
+| `overflow?`         | `'visible'` or `'clip'`                  | `'visible'`                                          | Outer content visibility policy                        |
+| `appearance?`       | `GraphFrameAppearanceInput`              | neutral shell, radius `8`, divider on, `zIndex: 0`   | Shell, divider, corner radius, and stacking appearance |
+
+Blank or duplicate section keys fail loudly. GraphConnector targets follow the Core Step contract; to connect the whole shell, use the GraphFrame authored `id` rather than a separate section-target syntax.
+
+## Related
+
+- [Logic Node](/diagram/graph/unit/node): content-bearing logic nodes
+- [GraphConnector](/diagram/graph/unit/connector): relationships between authored identities
+- [Layout containers](/library/layout): the generic layout family

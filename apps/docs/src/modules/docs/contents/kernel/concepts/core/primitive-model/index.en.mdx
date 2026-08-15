@@ -140,12 +140,12 @@ Complete names, per-shape semantic points, and boundary exceptions live on the N
 
 First edit the content and add a line break, then switch among rectangle, circle, ellipse, diamond, polygon, star, and sector to see one Node adopt different visual shapes. The first five derive their outer size from the content and inner frame; star and sector instead use representative geometry parameters supplied by the demo and place the text over that fixed geometry. The last two are optional Standard shapes; this demo injects them explicitly through `<Layout shapes>`, and ordinary use likewise imports their matching Definitions from `@retikz/standard/shape`. Sector uses equal inner and outer radii for its open-arc state.
 
-Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real connector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/overview), and [Shapes](/kernel/components/shapes) pages for the complete APIs.
+Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real graphConnector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/overview), and [Shapes](/kernel/components/shapes) pages for the complete APIs.
 
 <ComponentPreview
   files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
   size="md"
-  caption="The light-gray dashed contour is the current regular boundary, the dotted radius is only an orbit guide, and the gray solid line is the real connector. In shape mode, boundary coincides with the visual outline, so it is not drawn twice."
+  caption="The light-gray dashed contour is the current regular boundary, the dotted radius is only an orbit guide, and the gray solid line is the real graphConnector. In shape mode, boundary coincides with the visual outline, so it is not drawn twice."
 />
 
 <SourceLinks

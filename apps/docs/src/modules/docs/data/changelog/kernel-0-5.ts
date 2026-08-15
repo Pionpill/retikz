@@ -56,8 +56,8 @@ export const kernelV05: Release = {
             {
               label: { zh: 'BREAKING：标量 schema 迁移', en: 'BREAKING: Scalar schema migration' },
               content: {
-                zh: '六个无领域标量 schema 统一从 `@retikz/foundation` 根入口导入。Core 不再导出 `NormalizedFractionSchema`，Notation 不再导出自己的 `NonBlankStringSchema`；对象 schema、默认值和领域 refine 继续由消费包拥有。',
-                en: 'Import the six domain-free scalar schemas from the `@retikz/foundation` root. Core no longer exports `NormalizedFractionSchema`, and Notation no longer exports its former `NonBlankStringSchema`; consumers still own object schemas, defaults, and domain refinements.',
+                zh: '六个无领域标量 schema 统一从 `@retikz/foundation` 根入口导入。Core 不再导出 `NormalizedFractionSchema`，Graph 不再导出自己的 `NonBlankStringSchema`；对象 schema、默认值和领域 refine 继续由消费包拥有。',
+                en: 'Import the six domain-free scalar schemas from the `@retikz/foundation` root. Core no longer exports `NormalizedFractionSchema`, and Graph no longer exports its former `NonBlankStringSchema`; consumers still own object schemas, defaults, and domain refinements.',
               },
             },
           ],

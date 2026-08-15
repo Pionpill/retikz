@@ -2,9 +2,9 @@ import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
+import * as GraphIR from '@retikz/graph';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
-import * as NotationIR from '@retikz/notation';
 import * as PlotIR from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
 import * as TableIR from '@retikz/table';
@@ -508,35 +508,20 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/composite/surface#surfaceschema',
   },
 
-  LogicFrameSchema: {
-    schema: NotationIR.LogicFrameSchema,
-    label: 'LogicFrame',
-    url: '/diagram/notation/frame/logic-frame',
+  GraphFrameSchema: {
+    schema: GraphIR.GraphFrameSchema,
+    label: 'GraphFrame',
+    url: '/diagram/graph/frame/graph-frame',
   },
-  TerminalSchema: {
-    schema: NotationIR.TerminalSchema,
-    label: 'Terminal',
-    url: '/diagram/notation/unit/logic-node',
+  GraphNodeSchema: {
+    schema: GraphIR.GraphNodeSchema,
+    label: 'GraphNode',
+    url: '/diagram/graph/unit/node',
   },
-  StageSchema: {
-    schema: NotationIR.StageSchema,
-    label: 'Stage',
-    url: '/diagram/notation/unit/logic-node',
-  },
-  DecisionSchema: {
-    schema: NotationIR.DecisionSchema,
-    label: 'Decision',
-    url: '/diagram/notation/unit/logic-node',
-  },
-  JunctionSchema: {
-    schema: NotationIR.JunctionSchema,
-    label: 'Junction',
-    url: '/diagram/notation/unit/logic-node',
-  },
-  ConnectorSchema: {
-    schema: NotationIR.ConnectorSchema,
-    label: 'Connector',
-    url: '/diagram/notation/unit/connector',
+  GraphConnectorSchema: {
+    schema: GraphIR.GraphConnectorSchema,
+    label: 'GraphConnector',
+    url: '/diagram/graph/unit/connector',
   },
   TableSpecSchema: {
     schema: TableIR.TableSpecSchema,

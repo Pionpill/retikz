@@ -56,29 +56,29 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '历史里程碑：验证逻辑块、基础单元、连接器与标注；这些图式能力现已迁入 Notation 包族。',
-            en: 'Historical milestone: validated logic blocks, base units, connectors, and callouts; these diagram capabilities now live in the Notation package family.',
+            zh: '历史里程碑：验证逻辑块、基础单元、连接器与标注；这些图式能力现已迁入 Graph 包族。',
+            en: 'Historical milestone: validated logic blocks, base units, graphConnectors, and callouts; these diagram capabilities now live in the Graph package family.',
           },
           items: [
             {
               label: { zh: '逻辑块与基础单元', en: 'Logic blocks and base units' },
               content: {
-                zh: '`LogicFrame` 用任意 JSON-safe child 组合 header 与有序 section，并复用 canonical `FlexLayout` 编译；`Terminal`、`Stage`、`Decision` 与 `Junction` 以独立 discriminator 保存局部逻辑角色。',
-                en: '`LogicFrame` composes a header and ordered sections from arbitrary JSON-safe children through the canonical `FlexLayout` compiler. `Terminal`, `Stage`, `Decision`, and `Junction` preserve local logic roles with distinct discriminators.',
+                zh: '`GraphFrame` 用任意 JSON-safe child 组合 header 与有序 section，并复用 canonical `FlexLayout` 编译；`Terminal`、`Stage`、`Decision` 与 `Junction` 以独立 discriminator 保存局部逻辑角色。',
+                en: '`GraphFrame` composes a header and ordered sections from arbitrary JSON-safe children through the canonical `FlexLayout` compiler. `Terminal`, `Stage`, `Decision`, and `Junction` preserve local logic roles with distinct discriminators.',
               },
             },
             {
               label: { zh: '显式关系与标注', en: 'Explicit relations and callouts' },
               content: {
-                zh: '`Connector` 将直线、折线、正交和曲线路由下沉为同 id Core Path；`Callout` 复用 authored target 与 Scope placement。whole target 已闭环，section target 保留稳定输入并在 Core structured subtarget 就绪前明确失败。',
-                en: '`Connector` lowers straight, polyline, orthogonal, and curved routes to a same-id Core Path, while `Callout` reuses authored targets and Scope placement. Whole targets are supported; section targets retain stable input and fail explicitly until Core structured subtargets are available.',
+                zh: '`GraphConnector` 将直线、折线、正交和曲线路由下沉为同 id Core Path；`Callout` 复用 authored target 与 Scope placement。whole target 已闭环，section target 保留稳定输入并在 Core structured subtarget 就绪前明确失败。',
+                en: '`GraphConnector` lowers straight, polyline, orthogonal, and curved routes to a same-id Core Path, while `Callout` reuses authored targets and Scope placement. Whole targets are supported; section targets retain stable input and fail explicitly until Core structured subtargets are available.',
               },
             },
             {
               label: { zh: '三路径文档闭环', en: 'Three-path documentation' },
               content: {
-                zh: '对应文档与 Process、Class、Data recipe 已迁入 Diagram → Notation，并继续覆盖 React、直接 JSON IR 与 Vanilla。',
-                en: 'The docs and Process, Class, and Data recipes have moved to Diagram → Notation while retaining React, direct JSON IR, and Vanilla coverage.',
+                zh: '对应文档与 Process、Class、Data recipe 已迁入 Diagram → Graph，并继续覆盖 React、直接 JSON IR 与 Vanilla。',
+                en: 'The docs and Process, Class, and Data recipes have moved to Diagram → Graph while retaining React, direct JSON IR, and Vanilla coverage.',
               },
             },
           ],
@@ -199,15 +199,15 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '历史里程碑：验证七种逻辑组件 builder 与 adapters；这些入口现从 `@retikz/notation-vanilla` 提供。',
-            en: 'Historical milestone: validated seven logic builders and adapters; these entries now come from `@retikz/notation-vanilla`.',
+            zh: '历史里程碑：验证七种逻辑组件 builder 与 adapters；这些入口现从 `@retikz/graph-vanilla` 提供。',
+            en: 'Historical milestone: validated seven logic builders and adapters; these entries now come from `@retikz/graph-vanilla`.',
           },
           items: [
             {
               label: { zh: '逻辑组件 builders', en: 'Logic component builders' },
               content: {
-                zh: '`logicFrame()`、`terminal()`、`stage()`、`decision()`、`junction()`、`connector()` 与 `callout()` 已迁入 Notation 的 Schema、factory、Definition 与 adapter 目录。',
-                en: '`logicFrame()`, `terminal()`, `stage()`, `decision()`, `junction()`, `connector()`, and `callout()` have moved to the Notation schemas, factories, Definitions, and adapter catalog.',
+                zh: '`graphFrame()`、`terminal()`、`stage()`、`decision()`、`junction()`、`graphConnector()` 与 `callout()` 已迁入 Graph 的 Schema、factory、Definition 与 adapter 目录。',
+                en: '`graphFrame()`, `terminal()`, `stage()`, `decision()`, `junction()`, `graphConnector()`, and `callout()` have moved to the Graph schemas, factories, Definitions, and adapter catalog.',
               },
             },
             {
@@ -306,22 +306,22 @@ export const standardV01: Release = {
           version: 'alpha.3',
           date: '2026-08-08',
           summary: {
-            zh: '历史里程碑：验证 LogicFrame、四种基础单元、Connector 与 Callout；这些 JSX 入口现从 `@retikz/notation-react` 提供。',
-            en: 'Historical milestone: validated LogicFrame, four base units, Connector, and Callout; these JSX entries now come from `@retikz/notation-react`.',
+            zh: '历史里程碑：验证 GraphFrame、四种基础单元、GraphConnector 与 Callout；这些 JSX 入口现从 `@retikz/graph-react` 提供。',
+            en: 'Historical milestone: validated GraphFrame, four base units, GraphConnector, and Callout; these JSX entries now come from `@retikz/graph-react`.',
           },
           items: [
             {
               label: { zh: '逻辑组件 JSX', en: 'Logic component JSX' },
               content: {
-                zh: '`Terminal`、`Stage`、`Decision`、`Junction`、`Connector` 与 `Callout` 现归一为 canonical Notation / Core IR，并只在当前 Layout 局部贡献所需 Definition。',
-                en: '`Terminal`, `Stage`, `Decision`, `Junction`, `Connector`, and `Callout` now normalize into canonical Notation or Core IR and contribute only the Definitions used by the current Layout.',
+                zh: '`Terminal`、`Stage`、`Decision`、`Junction`、`GraphConnector` 与 `Callout` 现归一为 canonical Graph / Core IR，并只在当前 Layout 局部贡献所需 Definition。',
+                en: '`Terminal`, `Stage`, `Decision`, `Junction`, `GraphConnector`, and `Callout` now normalize into canonical Graph or Core IR and contribute only the Definitions used by the current Layout.',
               },
             },
             {
               label: { zh: 'Headless block markers', en: 'Headless block markers' },
               content: {
-                zh: '`LogicFrameHeader` 与 `LogicFrameSection` 只负责 JSX authoring 的 header / section 边界和顺序；marker 不进入持久化 IR、Scene 或独立 composite registry。',
-                en: '`LogicFrameHeader` and `LogicFrameSection` only express header and section boundaries and order during JSX authoring; markers do not enter persisted IR, Scene, or a separate composite registry.',
+                zh: '`GraphFrameHeader` 与 `GraphFrameSection` 只负责 JSX authoring 的 header / section 边界和顺序；marker 不进入持久化 IR、Scene 或独立 composite registry。',
+                en: '`GraphFrameHeader` and `GraphFrameSection` only express header and section boundaries and order during JSX authoring; markers do not enter persisted IR, Scene, or a separate composite registry.',
               },
             },
           ],

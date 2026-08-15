@@ -181,9 +181,9 @@ export const PACKAGE_IDS = [
   '@retikz/standard',
   '@retikz/standard-react',
   '@retikz/standard-vanilla',
-  '@retikz/notation',
-  '@retikz/notation-react',
-  '@retikz/notation-vanilla',
+  '@retikz/graph',
+  '@retikz/graph-react',
+  '@retikz/graph-vanilla',
   'docs',
 ] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
@@ -215,9 +215,9 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/standard': { zh: '@retikz/standard', en: '@retikz/standard' },
   '@retikz/standard-react': { zh: '@retikz/standard-react', en: '@retikz/standard-react' },
   '@retikz/standard-vanilla': { zh: '@retikz/standard-vanilla', en: '@retikz/standard-vanilla' },
-  '@retikz/notation': { zh: '@retikz/notation', en: '@retikz/notation' },
-  '@retikz/notation-react': { zh: '@retikz/notation-react', en: '@retikz/notation-react' },
-  '@retikz/notation-vanilla': { zh: '@retikz/notation-vanilla', en: '@retikz/notation-vanilla' },
+  '@retikz/graph': { zh: '@retikz/graph', en: '@retikz/graph' },
+  '@retikz/graph-react': { zh: '@retikz/graph-react', en: '@retikz/graph-react' },
+  '@retikz/graph-vanilla': { zh: '@retikz/graph-vanilla', en: '@retikz/graph-vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };
 
@@ -252,7 +252,7 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
   },
   {
     id: 'diagram',
-    members: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
+    members: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
   {
     id: 'viz',

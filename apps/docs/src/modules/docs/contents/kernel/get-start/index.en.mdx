@@ -1,4 +1,4 @@
-﻿---
+---
 title: Get Started
 description: Install retikz and build a minimal static diagram in 3 steps to learn the top-level container, Node, and Draw.
 ---
@@ -54,7 +54,7 @@ Add more `<Node>`s to place the entities in the diagram before drawing relations
 
 ### 3. Connect them with `<Draw />`
 
-`<Draw>` draws connector lines. The `way` array lists the node ids to pass through in order, and retikz attaches the line to node borders instead of text centers. `arrow="->"` adds an arrowhead at the end.
+`<Draw>` draws graphConnector lines. The `way` array lists the node ids to pass through in order, and retikz attaches the line to node borders instead of text centers. `arrow="->"` adds an arrowhead at the end.
 
 <ComponentPreview files="get-start-final" size="xs" />
 
@@ -64,7 +64,7 @@ Keep four rules in mind before moving on:
 
 - Canvas coordinates grow right on x and down on y; `[0, 0]` is the origin in retikz user units
 - `<Layout width height>` controls the rendered SVG size; it does not rewrite internal coordinates into CSS pixels
-- A node `id` is the name used by connectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
+- A node `id` is the name used by graphConnectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
 - Use **View Code → IR** to inspect the compiled diagram data; it is the quickest way to debug connections
 
 ## Next Steps

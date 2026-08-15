@@ -1,0 +1,64 @@
+---
+title: Graph API Reference
+description: Look up schemas, factories, Definitions, and adapters for GraphNode, GraphConnector, and GraphFrame.
+---
+
+Graph is split by responsibility: `@retikz/graph` provides canonical JSON, schemas, factories, and Definitions; `@retikz/graph-react` provides React authoring; `@retikz/graph-vanilla` provides embed-returning builders and explicit adapters. All three entries normalize to the same Graph IR and lower through the same Definitions
+
+## Public exports
+
+| Capability | Graph | React | Vanilla |
+| --- | --- | --- | --- |
+| GraphNode | `GraphNodeSchema`, `IRGraphNode`, `createGraphNode`, `GraphNodeDefinition` | `GraphNode` | `graphNode`, `GraphNodeInputEmbedAdapter` |
+| GraphConnector | `GraphConnectorSchema`, `IRGraphConnector`, `createGraphConnector`, `GraphConnectorDefinition` | `GraphConnector` | `graphConnector`, `GraphConnectorInputEmbedAdapter` |
+| GraphFrame | `GraphFrameSchema`, `IRGraphFrame`, `createGraphFrame`, `GraphFrameDefinition` | `GraphFrame`, markers | `graphFrame`, `GraphFrameInputEmbedAdapter` |
+
+All three public elements retain `namespace: 'graph'` and their semantic `type`. GraphNode uses `role` for the four base semantics. Definitions are explicit lowering contracts from Graph IR to Core IR and never enter persisted JSON
+
+## GraphNode inputs
+
+`GraphNode` reuses the applicable Core Node authoring surface. `id`, `role`, and `position` are required, string children or `<Text>` become Node text, `role` supplies a default shape, and explicit `shape` can replace it
+
+```tsx
+<GraphNode id="step" role="stage" position={[0, 0]}>Process</GraphNode>
+<GraphNode id="check" role="decision" position={[80, 0]}><Text>Ready?</Text></GraphNode>
+```
+
+The matching factory returns canonical Graph IR rather than a Core `IRNode`. Its Definition then lowers it one-to-one into a same-id Node:
+
+```ts
+const step = createGraphNode({ id: 'step', role: 'stage', position: [0, 0], text: 'Process' });
+// { namespace: 'graph', type: 'graphNode', role: 'stage', id: 'step', ... }
+```
+
+## GraphConnector inputs
+
+Canonical `IRGraphConnector` JSON uses Core Step `children`. `createGraphConnector`, React, and Vanilla also accept a Core `WayDSL` `way` authoring shorthand. The two forms are mutually exclusive, and `way` is normalized through `parseWay()` at the authoring boundary, so it is never persisted. `role` uses the closed GraphConnector relation vocabulary and is discarded during lowering
+
+Omitting `marks` adds a terminal arrow; an explicit `marks` value, including `[]`, completely replaces that default
+
+## Definition loading
+
+Direct IR must explicitly inject the Definition for every Graph element used by the figure. When one is missing, Core fails loudly with its unregistered-composite diagnostic:
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { GraphConnectorDefinition, GraphNodeDefinition } from '@retikz/graph';
+
+compileToScene(scene, {
+  composites: [GraphNodeDefinition, GraphConnectorDefinition],
+});
+```
+
+React components and Vanilla adapters contribute only the Definitions required by the authored elements and do not register global state
+
+## Vanilla identity
+
+`graphNode` and `graphConnector` return embeds and use their embed ids to create the corresponding Graph IR. GraphNode and GraphConnector lower to same-id Core Node / Path values; GraphFrame retains its derived ids under its multi-element composite contract
+
+## Related
+
+- [GraphNode](/diagram/graph/unit/node)
+- [GraphConnector](/diagram/graph/unit/connector)
+- [GraphFrame](/diagram/graph/frame/graph-frame)
+- [Definition loading](/library/standard/extension/capability-loading)
