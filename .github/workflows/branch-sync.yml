@@ -64,7 +64,6 @@ jobs:
           - next-library
           - next-schematic
           - next-viz
-          - next-diagram
     steps:
       - name: Create sync PR
         env:
@@ -115,7 +114,7 @@ jobs:
       pull-requests: write
     env:
       TARGET_BRANCH: next
-      DOWNSTREAM_BRANCHES: next-kernel next-library next-schematic next-viz next-diagram
+      DOWNSTREAM_BRANCHES: next-kernel next-library next-schematic next-viz
       ROLLUP_BRANCH_PREFIX: automation/next-rollup-
     steps:
       - name: Check for an existing rollup PR
