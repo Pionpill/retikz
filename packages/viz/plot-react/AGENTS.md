@@ -7,7 +7,7 @@
 - **解决的问题**：让 React 用户通过 spec wrapper 或 composition JSX 使用 Plot 能力，并把 runtime data 与 lineage 接入 React 生命周期
 - **拥有的契约**：`<Plot>` 与相关 React 组件、公开 `XxxProps`、React children 收集、dataset 注入、embedded runtime 和 React 侧 lineage 回调
 - **不拥有的能力**：`InputPlot*` 类型与 normalize（由 `@retikz/plot-vanilla` 拥有）、Data schema / transform、Plot IR 语义与 lowering 算法、Core 编译、SVG / Canvas renderer、通用 chart preset
-- **输入与输出**：接收 React props / children、完整 `IRPlotSpec`、datasets 与 runtime options，把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlot` / `PlotSource`，输出 ReactElement 与 adapter runtime 结果
+- **输入与输出**：接收 React props / children、完整 `IRPlot`、datasets 与 runtime options，把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlot` / `PlotSource`，输出 ReactElement 与 adapter runtime 结果
 - **缺口流向**：数据问题进入 `@retikz/data`；可视化表达和 lowering 进入 `@retikz/plot`；`InputPlot` normalize 与统一 InputEmbed 接入进入 `@retikz/plot-vanilla`；图形语义进入 core；只有 React authoring convenience、props 映射和生命周期接线进入本包
 
 ## 约束

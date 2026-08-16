@@ -1,12 +1,12 @@
 export type { ResolvedPlotExtensionAuthoring } from './build-plot-spec';
 export {
   decorateDefaultGuides,
-  normalizePlotSpec,
+  normalizePlotIR,
   resolveLabelOf,
   resolvePlotExtensionAuthoring,
 } from './build-plot-spec';
 export type {
-  BuildPlotSpecOptions,
+  BuildPlotOptions,
   CollectionContext,
   InputPlotCoordinate,
   MarkTransformShortcutContext,
@@ -23,7 +23,7 @@ export type {
   PlotDeclarationSource,
   PlotMemberFragment,
   ResolveLabelMap,
-  ScaffoldTrackSpec,
+  ScaffoldTrack,
 } from './contracts';
 export type { PlotDeclarationErrorCodeValue, PlotDeclarationErrorDetails } from './errors';
 export { PlotDeclarationError, PlotDeclarationErrorCode } from './errors';

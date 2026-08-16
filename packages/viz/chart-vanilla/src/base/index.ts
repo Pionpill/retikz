@@ -47,7 +47,7 @@ export type CreateChartInput = Readonly<{
     presentation?: ReadonlyArray<ChartPresentationAuthoringRecord>;
   };
 
-/** 从完整 PlotSpec 和 plain presentation authoring 创建 canonical Chart */
+/** 从完整 IRPlot 和 plain presentation authoring 创建 canonical Chart */
 export const createChart = (input: CreateChartInput): ChartAuthoringResult => {
   const { datasets, lowerOptions, chartThemeStyles, theme, themeStyles, ...authoring } = input;
   const normalized = normalizeChart({

@@ -122,12 +122,12 @@ Compile resolves the base style in `dashPattern > dashed > dotted` order. Direct
 
 | Prop     | Type                      | Default | Description                     |
 | -------- | ------------------------- | ------- | ------------------------------- |
-| `fill`   | `string` \| `IRPaintSpec` | —       | Fill a Node or closed Path      |
-| `stroke` | `string` \| `IRPaintSpec` | —       | Stroke with the same paint spec |
+| `fill`   | `string` \| `IRPaint` | —       | Fill a Node or closed Path      |
+| `stroke` | `string` \| `IRPaint` | —       | Stroke with the same paint spec |
 
 ### Pattern branch
 
-The `kind: 'pattern'` branch of `IRPaintSpec` has these fields:
+The `kind: 'pattern'` branch of `IRPaint` has these fields:
 
 | Prop              | Type                                          | Default                       | Description                              |
 | ----------------- | --------------------------------------------- | ----------------------------- | ---------------------------------------- |

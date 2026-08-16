@@ -1,13 +1,13 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { IRTableSpec, TableStructureOutput } from '@retikz/table';
+import type { IRTable, TableStructureOutput } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { Layout, ThemeProvider } from '@retikz/react';
 import {
-  createDetailTableSpec,
-  createManualTableSpec,
+  createDetailTableIR,
+  createManualTableIR,
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
@@ -50,8 +50,8 @@ const cleanTableTheme = defineTableThemeStyle({
   }),
 });
 
-const manualSpec = (id?: string): IRTableSpec =>
-  createManualTableSpec({
+const manualSpec = (id?: string): IRTable =>
+  createManualTableIR({
     ...(id === undefined ? {} : { id }),
     rows: [['Ada']],
   });
@@ -105,12 +105,12 @@ describe('Table React components', () => {
       schema: z.strictObject({ kind: z.literal('fixture') }),
       build: () => customOutput,
     });
-    const customSpec: IRTableSpec = {
+    const customSpec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: { kind: 'fixture' },
     };
-    const detailSpec = createDetailTableSpec({
+    const detailSpec = createDetailTableIR({
       dataRef: 'people',
       header: false,
       columns: [{ id: 'name', field: 'name' }],
@@ -134,7 +134,7 @@ describe('Table React components', () => {
         range: [context.categoricalColors[0]],
       }),
     });
-    const spec = createManualTableSpec({
+    const spec = createManualTableIR({
       id: 'encoded',
       rows: [[1]],
       tableThemeTokens: { 'data.categorical': ['#123456'] },
@@ -162,11 +162,11 @@ describe('Table React components', () => {
   });
 
   it('uses the effective Core Theme to select a different Table preset', () => {
-    const defaultTheme = renderToStaticMarkup(<Table spec={createManualTableSpec({ rows: [['Ada']] })} />);
+    const defaultTheme = renderToStaticMarkup(<Table spec={createManualTableIR({ rows: [['Ada']] })} />);
     const clean = renderToStaticMarkup(
       <ThemeProvider theme={{ style: 'clean', mode: 'light' }} themeStyles={[cleanCoreTheme]}>
         <TableThemeProvider tableThemeStyles={[cleanTableTheme]}>
-          <Table spec={createManualTableSpec({ rows: [['Ada']] })} />
+          <Table spec={createManualTableIR({ rows: [['Ada']] })} />
         </TableThemeProvider>
       </ThemeProvider>,
     );
@@ -189,7 +189,7 @@ describe('Table React components', () => {
           range: ['red'],
         }) as never,
     });
-    const spec = createManualTableSpec({
+    const spec = createManualTableIR({
       id: 'invalid-legend',
       rows: [[1]],
       encodings: [
@@ -222,14 +222,14 @@ describe('Table React components', () => {
     const manualContribution = contributionOf(ManualTable, manualProps, 'score-table');
 
     expect(detailContribution.node).toEqual(
-      createDetailTableSpec({
+      createDetailTableIR({
         id: 'people-table',
         dataRef: 'people',
         header: false,
         columns: [{ id: 'name', field: 'name', header: 'Name' }],
       }),
     );
-    expect(manualContribution.node).toEqual(createManualTableSpec(manualProps));
+    expect(manualContribution.node).toEqual(createManualTableIR(manualProps));
     expect(renderToStaticMarkup(<DetailTable {...detailProps} />)).toContain('Ada');
     expect(renderToStaticMarkup(<DetailTable {...detailProps} />)).not.toContain('Name');
     expect(renderToStaticMarkup(<ManualTable {...manualProps} />)).toContain('98');
@@ -387,7 +387,7 @@ describe('Table React components', () => {
       schema,
       expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
-    const spec = createManualTableSpec({
+    const spec = createManualTableIR({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
 

@@ -70,7 +70,7 @@ export const ConnectedPathPatchSchema = z
   .describe('Strict visual patch for the open Connected Scatter connection path');
 
 /** Connected Scatter 的完整 owner-private 输入 schema */
-export const ConnectedScatterChartSpecSchema = z
+export const ConnectedScatterChartSchema = z
   .strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart composite namespace discriminator'),
     type: z.literal(PointChartType.ConnectedScatter).describe('Connected Scatter Chart variant discriminator'),
@@ -96,8 +96,8 @@ export const ConnectedScatterChartSpecSchema = z
   .superRefine(assertChartSpatialRoot)
   .overwrite(omitUndefinedProperties);
 
-/** Connected Scatter 的 JSON-safe ChartSpec */
-export type IRConnectedScatterChartSpec = z.infer<typeof ConnectedScatterChartSpecSchema>;
+/** Connected Scatter 的 JSON-safe IRChart */
+export type IRConnectedScatterChart = z.infer<typeof ConnectedScatterChartSchema>;
 
 /** Connected Scatter points 的表现字段 patch */
 export type IRConnectedPointPatch = z.infer<typeof ConnectedPointPatchSchema>;

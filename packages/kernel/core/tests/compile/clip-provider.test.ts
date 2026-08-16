@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ClipDefinition, IRClipSpec, IRScene } from '../../src';
+import type { ClipDefinition, IRClip, IRScene } from '../../src';
 
 import { compileToScene, defineClip } from '../../src';
 
-const clippedIr = (clip: IRClipSpec): IRScene => ({
+const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
   type: 'scene',
   children: [

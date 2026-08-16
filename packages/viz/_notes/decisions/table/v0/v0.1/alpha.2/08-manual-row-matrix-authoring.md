@@ -44,7 +44,7 @@ type ManualTableCellSource = {
 };
 ```
 
-`createManualTableSpec()` 与 Vanilla `manualTable()` 接受同一个 `ManualTableSpecInput`。React `<ManualTable>` 提供互斥的两种模式：
+`createManualTableIR()` 与 Vanilla `manualTable()` 接受同一个 `ManualTableInput`。React `<ManualTable>` 提供互斥的两种模式：
 
 - props 模式直接传入 `rows` 与可选 `rowKinds`
 - marker 模式使用 `<Row>/<Cell>`；builder 按 span occupancy 推导最大宽度，并把未占位置补成 `null`

@@ -4,11 +4,11 @@ import type { z } from 'zod';
 
 import { defineComposite } from '@retikz/core';
 
-import type { IRTableSpec } from '../schemas';
+import type { IRTable } from '../schemas';
 import type { LowerTablesOptions } from './types';
 
 import { TableLayoutManifestSchema } from '../contract';
-import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../schemas';
+import { TABLE_NAMESPACE, TableComposite, TableSchema } from '../schemas';
 import { resolveTableTransaction } from './layout';
 
 /** 构造 Table 的 layout-aware composite definition，供 Core compile options 注入 */
@@ -17,7 +17,7 @@ export const lowerTables = (
   options: LowerTablesOptions = {},
 ): Array<
   LayoutCompositeDefinition<
-    IRTableSpec,
+    IRTable,
     typeof TABLE_NAMESPACE,
     typeof TableComposite.Table,
     z.output<typeof TableLayoutManifestSchema>
@@ -26,9 +26,9 @@ export const lowerTables = (
   defineComposite({
     namespace: TABLE_NAMESPACE,
     type: TableComposite.Table,
-    schema: TableSpecSchema,
+    schema: TableSchema,
     artifactSchema: TableLayoutManifestSchema,
-    compile: (spec: IRTableSpec, context) => {
+    compile: (spec: IRTable, context) => {
       const transaction = resolveTableTransaction(spec, datasets, options, context);
       return {
         children: transaction.children,

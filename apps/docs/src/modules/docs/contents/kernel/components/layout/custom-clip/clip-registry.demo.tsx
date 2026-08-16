@@ -14,9 +14,9 @@ const roundedRectClipSchema = z.strictObject({
   radius: z.number().nonnegative(),
 });
 
-type RoundedRectClipSpec = z.infer<typeof roundedRectClipSchema>;
+type RoundedRectClip = z.infer<typeof roundedRectClipSchema>;
 
-const roundedRectClip: ClipDefinition = defineClip<RoundedRectClipSpec>({
+const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
   resolve: spec => {

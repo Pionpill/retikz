@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '@retikz/core';
+import type { IRPaint } from '@retikz/core';
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
@@ -17,13 +17,13 @@ export type GradientBBox = {
 };
 
 /** Canvas 支持的 gradient paint */
-export type GradientSpec = Extract<IRPaintSpec, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
+export type GradientPaint = Extract<IRPaint, { kind: 'linearGradient' | 'radialGradient' | 'conicGradient' }>;
 
 type GradientCommonInput = {
   /** 目标 Canvas context */
   ctx: CanvasRenderingContext2D;
   /** 渐变定义 */
-  spec: GradientSpec;
+  spec: GradientPaint;
   /** 渐变映射的局部几何 bbox */
   bbox: GradientBBox;
   /** 解析 stop 的 currentColor 与 opacity */
@@ -70,7 +70,7 @@ const warnInvalidBBox = (warn: (message: string) => void): void => {
 
 const addStops = (
   gradient: CanvasGradient,
-  spec: GradientSpec,
+  spec: GradientPaint,
   resolveStopColor: GradientCommonInput['resolveStopColor'],
 ): CanvasGradient => {
   for (const stop of spec.stops) gradient.addColorStop(stop.offset, resolveStopColor(stop.color, stop.opacity));
@@ -80,7 +80,7 @@ const addStops = (
 /** 在当前 context 的单位方框坐标中创建 gradient */
 const buildUnitGradient = (
   ctx: CanvasRenderingContext2D,
-  spec: GradientSpec,
+  spec: GradientPaint,
   resolveStopColor: GradientCommonInput['resolveStopColor'],
   warn: GradientCommonInput['warn'],
 ): CanvasGradient | undefined => {
@@ -108,7 +108,7 @@ const buildUnitGradient = (
 /** 在 user-space bbox 中创建无需纹理的原生 gradient */
 const buildNativeGradient = (
   ctx: CanvasRenderingContext2D,
-  spec: GradientSpec,
+  spec: GradientPaint,
   bbox: GradientBBox,
   resolveStopColor: GradientCommonInput['resolveStopColor'],
   warn: GradientCommonInput['warn'],
@@ -169,7 +169,7 @@ const normalizedAngle = (angle: number | undefined): number => {
   return value < 0 ? value + 360 : value;
 };
 
-const requiresTexture = (spec: GradientSpec, bbox: GradientBBox): boolean => {
+const requiresTexture = (spec: GradientPaint, bbox: GradientBBox): boolean => {
   const bboxScale = Math.max(Math.abs(bbox.w), Math.abs(bbox.h));
   if (Math.abs(bbox.w - bbox.h) <= 1e-7 * bboxScale) return false;
   if (spec.kind !== 'linearGradient') return true;

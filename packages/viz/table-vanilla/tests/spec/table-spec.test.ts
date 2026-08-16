@@ -1,6 +1,6 @@
-import type { IRDetailTableSpec, IRManualTableSpec } from '@retikz/table';
+import type { IRDetailTable, IRManualTable } from '@retikz/table';
 
-import { createDetailTableSpec, createManualTableSpec, TableSpecSchema } from '@retikz/table';
+import { createDetailTableIR, createManualTableIR, TableSchema } from '@retikz/table';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { detailTable, embedTable, manualTable } from '../../src';
@@ -34,14 +34,14 @@ describe('Table Vanilla plain authoring', () => {
     const detailSpec = detailTable(detailInput);
     const manualSpec = manualTable(manualInput);
 
-    expectTypeOf(detailSpec).toEqualTypeOf<IRDetailTableSpec>();
-    expectTypeOf(manualSpec).toEqualTypeOf<IRManualTableSpec>();
-    expect(detailSpec).toEqual(createDetailTableSpec(detailInput));
-    expect(manualSpec).toEqual(createManualTableSpec(manualInput));
+    expectTypeOf(detailSpec).toEqualTypeOf<IRDetailTable>();
+    expectTypeOf(manualSpec).toEqualTypeOf<IRManualTable>();
+    expect(detailSpec).toEqual(createDetailTableIR(detailInput));
+    expect(manualSpec).toEqual(createManualTableIR(manualInput));
     expect(detailInput).toEqual(detailBefore);
     expect(manualInput).toEqual(manualBefore);
-    expect(TableSpecSchema.parse(detailSpec)).toEqual(detailSpec);
-    expect(TableSpecSchema.parse(manualSpec)).toEqual(manualSpec);
+    expect(TableSchema.parse(detailSpec)).toEqual(detailSpec);
+    expect(TableSchema.parse(manualSpec)).toEqual(manualSpec);
     expect(JSON.parse(JSON.stringify(detailSpec))).toEqual(detailSpec);
     expect(JSON.parse(JSON.stringify(manualSpec))).toEqual(manualSpec);
   });

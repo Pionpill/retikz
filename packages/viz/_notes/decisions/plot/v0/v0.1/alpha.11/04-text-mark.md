@@ -36,7 +36,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 - **`field`（进 IR）**：取该行字段值转字符串作标签。
 - **`value`（进 IR）**：常量串，所有行同一标签。
 - **`format`（进 IR）**：可选 JSON 安全格式串（数字 / 时间），仅在有 `field` 时有意义。串是声明、非函数，不破坏可序列化。方言对齐 d3-format / d3-time-format 风格，运行时按 field 值类型分派。
-- **运行时 `resolveLabel(row) => string`（不进 IR，逃生舱）**：任意模板 / 拼接。经 compile / render options 注入、不写进 IRPlotSpec，故不破坏 IR JSON 可序列化。是声明三层都覆盖不了的完全自定义出口。
+- **运行时 `resolveLabel(row) => string`（不进 IR，逃生舱）**：任意模板 / 拼接。经 compile / render options 注入、不写进 IRPlot，故不破坏 IR JSON 可序列化。是声明三层都覆盖不了的完全自定义出口。
 
 优先级（运行时高于声明、具体高于通用）：`resolveLabel` > `format`(套在 `field` 上) > `field` > `value`。`field` / `value` 互斥（schema refine）；`format` 仅与 `field` 同用。
 

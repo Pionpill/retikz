@@ -1,4 +1,4 @@
-﻿import { JsonObjectSchema } from '@retikz/core';
+import { JsonObjectSchema } from '@retikz/core';
 import {
   BuiltinTransformSchema as DataBuiltinTransformSchema,
   GroupBySchema,
@@ -242,7 +242,7 @@ export const JitterTransformSchema = z
     'Jitter transform: add a deterministic pseudo-random offset in data units to a continuous numeric positional field; row-preserving and JSON-serializable',
   );
 
-export const DensityBandwidthSpecSchema = z
+export const DensityBandwidthSchema = z
   .discriminatedUnion('kind', [
     z
       .strictObject({
@@ -267,7 +267,7 @@ export const DensityTransformSchema = z
     kind: z.literal(PlotTransform.Density).describe('Discriminator: sample one-dimensional KDE density rows'),
     field: z.string().min(1).describe('Continuous source field used as the one-dimensional KDE sample value'),
     groupBy: GroupBySchema,
-    bandwidth: DensityBandwidthSpecSchema.optional().describe(
+    bandwidth: DensityBandwidthSchema.optional().describe(
       'KDE bandwidth strategy; default Silverman rule of thumb',
     ),
     sampleCount: z
@@ -312,7 +312,7 @@ export const DensityTransformSchema = z
   })
   .describe('Density transform: sample one-dimensional Gaussian KDE rows consumable by PathMark');
 
-export const SmoothMethodSpecSchema = z
+export const SmoothMethodSchema = z
   .discriminatedUnion('kind', [
     z
       .strictObject({
@@ -330,7 +330,7 @@ export const SmoothTransformSchema = z
     x: z.string().min(1).describe('Continuous source field used as the independent x value'),
     y: z.string().min(1).describe('Continuous source field used as the dependent y value'),
     groupBy: GroupBySchema,
-    method: SmoothMethodSpecSchema.optional().describe(
+    method: SmoothMethodSchema.optional().describe(
       'Smooth method; default ordinary least-squares linear regression',
     ),
     sampleCount: z

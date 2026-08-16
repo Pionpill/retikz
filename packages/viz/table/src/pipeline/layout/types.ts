@@ -54,7 +54,7 @@ export type SolveTableTracksInput = Readonly<{
 }>;
 
 /** 已物化默认值的 Table layout 配置 */
-export type ResolvedTableLayoutSpec = Readonly<{
+export type ResolvedTableLayout = Readonly<{
   /** 默认 column 轨道尺寸 */
   columnSize: ResolvedTableTrackSize;
   /** 默认 body row 轨道尺寸 */

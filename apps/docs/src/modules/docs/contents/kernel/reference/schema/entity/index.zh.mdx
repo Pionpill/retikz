@@ -1,4 +1,4 @@
-﻿---
+---
 title: 实体
 description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 ---
@@ -26,9 +26,9 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
     align: '多行文本块内对齐，默认 `middle`',
     lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
     color: '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
-    fill: '形状背景填充：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）',
+    fill: '形状背景填充：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）',
     fillOpacity: '填充不透明度 0..1，只影响形状背景',
-    stroke: '形状边框 paint：任意 CSS color 字符串，或 PaintSpec（线性 / 径向渐变、pattern、image）；默认 currentColor',
+    stroke: '形状边框 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
     strokeOpacity: '描边不透明度 0..1，只影响边框',
     strokeWidth: '边框宽度（用户单位），默认 1',
     dashed: '边框样式：虚线预设；被 dashPattern 覆盖',
@@ -147,11 +147,11 @@ Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM �
 
 ## 文本块
 
-`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；非空数组表示多行。每个 `LineSpec` 可是普通字符串、行级样式对象，或 `{ runs }` 形式的混合文本 / 公式行。
+`TextBlockSchema` 是节点文本块的结构：单字符串表示单行；非空数组表示多行。每个 `IRLine` 可是普通字符串、行级样式对象，或 `{ runs }` 形式的混合文本 / 公式行。
 
 <ZodSchema
   name="TextBlockSchema"
-  description="文本块：单字符串表示单行，非空 LineSpec 数组表示多行；行可包含样式覆盖或混合文本 / 公式 runs。"
+  description="文本块：单字符串表示单行，非空 IRLine 数组表示多行；行可包含样式覆盖或混合文本 / 公式 runs。"
 />
 
 <span id="linespec"></span>
@@ -159,7 +159,7 @@ Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM �
 ### 行规格
 
 <ZodSchema
-  name="LineSpecSchema"
+  name="LineSchema"
   description="单行文本规格：字符串走默认样式，样式对象可覆盖颜色、透明度和字体，`{ runs }` 可按共享基线混排 text run 与 math run。"
 />
 

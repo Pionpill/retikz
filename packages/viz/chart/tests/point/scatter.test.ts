@@ -5,8 +5,8 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRScatterPointPatch } from '../../src/point/shared';
 
-import { PointChartSpecSchema, PointChartType } from '../../src/point';
-import { ScatterChartSpecSchema } from '../../src/point/scatter';
+import { PointChartSchema, PointChartType } from '../../src/point';
+import { ScatterChartSchema } from '../../src/point/scatter';
 import { ScatterPointPatchSchema, StrictColorChannelSchema, StrictSizeChannelSchema } from '../../src/point/shared';
 
 const minimalScatter = {
@@ -23,11 +23,11 @@ const scatterOwnedPointKeys = new Set(['type', 'id', 'transform', 'coordinateVie
 
 describe('Scatter Chart schema', () => {
   it('parses the minimal variant and survives a JSON round trip', () => {
-    const parsed = ScatterChartSpecSchema.parse(minimalScatter);
+    const parsed = ScatterChartSchema.parse(minimalScatter);
 
     expect(PointChartType.Scatter).toBe('scatter');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSpecSchema.parse(minimalScatter)).toEqual(parsed);
+    expect(PointChartSchema.parse(minimalScatter)).toEqual(parsed);
   });
 
   it.each([
@@ -39,7 +39,7 @@ describe('Scatter Chart schema', () => {
     ],
   ])('accepts strict color and size branches', (color, size) => {
     expect(
-      ScatterChartSpecSchema.parse({
+      ScatterChartSchema.parse({
         ...minimalScatter,
         encoding: { ...minimalScatter.encoding, color, size },
       }).encoding,
@@ -55,7 +55,7 @@ describe('Scatter Chart schema', () => {
     ['unknown encoding key', { unknown: { field: 'weight' } }],
   ])('rejects %s', (_label, invalidEncoding) => {
     expect(() =>
-      ScatterChartSpecSchema.parse({
+      ScatterChartSchema.parse({
         ...minimalScatter,
         encoding: { ...minimalScatter.encoding, ...invalidEncoding },
       }),
@@ -134,7 +134,7 @@ describe('Scatter Chart schema', () => {
       },
       mark: { opacity: undefined },
     };
-    const parsed = ScatterChartSpecSchema.parse(input);
+    const parsed = ScatterChartSchema.parse(input);
 
     expect(Object.hasOwn(parsed, 'id')).toBe(false);
     expect(Object.hasOwn(parsed.encoding, 'color')).toBe(false);
@@ -143,7 +143,7 @@ describe('Scatter Chart schema', () => {
     expect(Object.hasOwn(parsed.encoding.size ?? {}, 'value')).toBe(false);
     expect(parsed.mark).toEqual({});
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSpecSchema.parse(input)).toEqual(parsed);
+    expect(PointChartSchema.parse(input)).toEqual(parsed);
   });
 
   it('treats undefined opposite strict-channel keys as absent without accepting concrete conflicts', () => {
@@ -158,9 +158,9 @@ describe('Scatter Chart schema', () => {
   });
 
   it('rejects missing core channels and spatial-root conflicts', () => {
-    expect(() => ScatterChartSpecSchema.parse({ ...minimalScatter, encoding: { x: { field: 'amount' } } })).toThrow();
+    expect(() => ScatterChartSchema.parse({ ...minimalScatter, encoding: { x: { field: 'amount' } } })).toThrow();
     expect(() =>
-      ScatterChartSpecSchema.parse({
+      ScatterChartSchema.parse({
         ...minimalScatter,
         coordinate: { type: 'cartesian2D' },
         composition: {

@@ -1,6 +1,6 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlotTransform } from '@retikz/plot';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 type CartesianScaleNames = {
   x: string;
@@ -26,7 +26,7 @@ export const createPolarPieSpec = (
   reference = 'share',
   scales: PolarScaleNames = { angle: 'angle', radius: 'radius', color: 'color' },
   innerRadius = 0,
-): IRPlotSpec => ({
+): IRPlot => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },
@@ -54,7 +54,7 @@ export const createPolarPieSpec = (
   guides: [],
 });
 
-export const createPolarPulledSpec = (): IRPlotSpec => ({
+export const createPolarPulledSpec = (): IRPlot => ({
   ...createPolarPieSpec(),
   marks: [
     {
@@ -66,7 +66,7 @@ export const createPolarPulledSpec = (): IRPlotSpec => ({
   ],
 });
 
-export const createPolarRadialBarSpec = (): IRPlotSpec => ({
+export const createPolarRadialBarSpec = (): IRPlot => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'share' },
@@ -93,7 +93,7 @@ export const createHistogramSpec = (
   reference = 's',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },
   step = 2,
-): IRPlotSpec => ({
+): IRPlot => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },
@@ -122,14 +122,14 @@ export const densityData: ExternalDatasets = {
   ],
 };
 
-export type DensitySpecOptions = {
+export type DensityOptions = {
   bandwidth?: { kind: 'value'; value: number };
   fillOpacity?: number;
   sampleCount?: number;
   scales?: CartesianScaleNames;
 };
 
-export const createDensityAreaSpec = (reference = 'samples', options: DensitySpecOptions = {}): IRPlotSpec => {
+export const createDensityAreaSpec = (reference = 'samples', options: DensityOptions = {}): IRPlot => {
   const scales = options.scales ?? { x: 'x', y: 'y', color: 'color' };
   return {
     namespace: 'plot',
@@ -184,13 +184,13 @@ export const smoothData: ExternalDatasets = {
   ],
 };
 
-export type SmoothSpecOptions = {
+export type SmoothOptions = {
   method?: { kind: 'linear' };
   sampleCount?: number;
   scales?: Required<CartesianScaleNames>;
 };
 
-export const createSmoothTrendSpec = (reference = 'samples', options: SmoothSpecOptions = {}): IRPlotSpec => {
+export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOptions = {}): IRPlot => {
   const scales = options.scales ?? { x: 'x', y: 'y', color: 'color' };
   return {
     namespace: 'plot',
@@ -278,10 +278,10 @@ export const boxplotOutside: IRPlotTransform = {
   },
 };
 
-export const createBoxplotCompositionSpec = (
+export const createBoxplotComposition = (
   reference = 'samples',
   scales: CartesianScaleNames = { x: 'x', y: 'y' },
-): IRPlotSpec => ({
+): IRPlot => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference },

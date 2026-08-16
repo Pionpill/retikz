@@ -2,7 +2,7 @@
 
 Framework-neutral bindings for [`@retikz/table`](../table), retikz's renderer-agnostic Tier 2 table package.
 
-`detailTable()` and `manualTable()` create the persisted `IRDetailTableSpec` and `IRManualTableSpec`; `embedTable()` contributes one typed Table embed to a Vanilla scene. `TableInputEmbedAdapter` performs the domain lowering during Vanilla's single scene-normalization traversal. Browser mounting remains in `@retikz/vanilla/dom`.
+`detailTable()` and `manualTable()` create the persisted `IRDetailTable` and `IRManualTable`; `embedTable()` contributes one typed Table embed to a Vanilla scene. `TableInputEmbedAdapter` performs the domain lowering during Vanilla's single scene-normalization traversal. Browser mounting remains in `@retikz/vanilla/dom`.
 
 ```ts
 import { TableInputEmbedAdapter, detailTable, embedTable, renderTable } from '@retikz/table-vanilla';
@@ -22,7 +22,7 @@ result.svg;
 result.manifest;
 ```
 
-`manualTable()` accepts the same non-empty rectangular `rows` matrix as `createManualTableSpec()`. `null` leaves a coordinate empty, while `{ value: null }` creates a real null-valued cell.
+`manualTable()` accepts the same non-empty rectangular `rows` matrix as `createManualTableIR()`. `null` leaves a coordinate empty, while `{ value: null }` creates a real null-valued cell.
 
 Custom formatter, structure, presentation, visual-scale, and Table Theme style definitions enter through `lowerOptions`. The adapter does not own table structure, presentation, layout, a renderer, or a private Table IR.
 

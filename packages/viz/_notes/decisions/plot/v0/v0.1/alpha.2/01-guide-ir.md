@@ -3,7 +3,7 @@
 - 状态：Superseded
 - 替代：[alpha.15 ADR-02](../alpha.15/02-axis-guide-style.md) 与 [ADR-04](../alpha.15/04-legend-palette-guide-theme.md)；axis / legend 判别保留，公开 guide 字段已收敛为最终部件槽位
 - 决策日期：2026-06-04
-- 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.9 guide / §3.6 coordinate scope / §7 多坐标 / §14 anchor](../../../../../architecture/plot-design.md) · 根节点：[alpha.1 ADR-01 IRPlotSpec](../alpha.1/01-plot-spec-root.md) · 坐标系：[alpha.1 ADR-04 coordinate](../alpha.1/04-plot-coordinate.md) · 消费方：[ADR-04 guide lowering](./04-guide-lowering.md)
+- 关联：[plot v0.1-alpha.2 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.9 guide / §3.6 coordinate scope / §7 多坐标 / §14 anchor](../../../../../architecture/plot-design.md) · 根节点：[alpha.1 ADR-01 IRPlot](../alpha.1/01-plot-spec-root.md) · 坐标系：[alpha.1 ADR-04 coordinate](../alpha.1/04-plot-coordinate.md) · 消费方：[ADR-04 guide lowering](./04-guide-lowering.md)
 
 > 本 ADR 只定 guide 的 **IR 声明形态**（画什么轴、是否带网格、绑哪个维度），不含刻度怎么算（[ADR-02](./02-d3-scale.md)）、画在哪（[ADR-03](./03-plot-area-layout.md)）、怎么 lower（[ADR-04](./04-guide-lowering.md)）。
 
@@ -16,7 +16,7 @@
 
 ## 决策：guide 是顶层一等节点（与 marks 对称），经 `dimension` 关联坐标系的 x/y 轴；grid 是 axis 的子属性
 
-IRPlotSpec 顶层加 `guides`（可选数组），与 `marks` 对称——guide 是一等输出，不是 coordinate 的内部属性、也不是 mark 的细节。alpha.2 的 guide 只有 `axis`，带 `dimension`（`x` / `y`）声明它装饰哪根轴 + `grid?` 布尔表示「这根轴是否在 plot area 内画对齐的网格线」。`type` 判别位保留，便于后续把 `GuideSchema` 升成 `z.discriminatedUnion('type', [Axis, Legend, ReferenceLine…])`（非破坏）。alpha.2 唯一 coordinate，guide 经 `dimension` **隐式绑定**它；分面时演进为 guide 带可选 `coordinate` 引用（见「不在本 ADR 范围」）。
+IRPlot 顶层加 `guides`（可选数组），与 `marks` 对称——guide 是一等输出，不是 coordinate 的内部属性、也不是 mark 的细节。alpha.2 的 guide 只有 `axis`，带 `dimension`（`x` / `y`）声明它装饰哪根轴 + `grid?` 布尔表示「这根轴是否在 plot area 内画对齐的网格线」。`type` 判别位保留，便于后续把 `GuideSchema` 升成 `z.discriminatedUnion('type', [Axis, Legend, ReferenceLine…])`（非破坏）。alpha.2 唯一 coordinate，guide 经 `dimension` **隐式绑定**它；分面时演进为 guide 带可选 `coordinate` 引用（见「不在本 ADR 范围」）。
 
 `guides` 省略 / 为空 = 不画任何 guide（IR 显式所得）。**「默认自动出轴」是 [ADR-05](./05-guide-bindings-dsl.md) 的 DSL builder 行为**，不是 IR / lowering 的隐式默认——保证 vanilla 直写 spec 时显式可控、`bare` 易表达。
 

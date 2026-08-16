@@ -69,7 +69,7 @@ Nested layout-aware composite 原样收到父级双轴 constraint，并可用显
 ```ts
 type CompositeReplayWrapper = Readonly<{
   transforms?: ReadonlyArray<Transform>;
-  clip?: IRClipSpec;
+  clip?: IRClip;
 }>;
 
 context.replay(result, wrapper?);

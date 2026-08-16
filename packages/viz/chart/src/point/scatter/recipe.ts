@@ -1,18 +1,18 @@
 import { MarkValueKind } from '@retikz/plot';
 
 import type { ChartRecipe } from '../recipe';
-import type { IRScatterChartSpec } from './schema';
+import type { IRScatterChart } from './schema';
 
 import { PointChartType } from '../constants';
 import { createPointChartSeed, ScatterPointPatchSchema, validatePointChartCore } from '../shared';
-import { ScatterChartSpecSchema } from './schema';
+import { ScatterChartSchema } from './schema';
 
 const scatterPointPatchPaths = Object.keys(ScatterPointPatchSchema.shape).filter(path => path !== 'encoding');
 
 const scatterRecipeOptions = {
   type: PointChartType.Scatter,
   patchPaths: scatterPointPatchPaths,
-  finalSizeFieldOf: (spec: IRScatterChartSpec): { field: string; scale?: string } | undefined => {
+  finalSizeFieldOf: (spec: IRScatterChart): { field: string; scale?: string } | undefined => {
     if (spec.mark?.encoding?.text !== undefined) return undefined;
     if (spec.mark?.size?.kind === MarkValueKind.Field) {
       return {
@@ -32,9 +32,9 @@ const scatterRecipeOptions = {
 };
 
 /** Scatter canonical type 的内建 recipe */
-export const ScatterChartRecipe: ChartRecipe<IRScatterChartSpec> = {
+export const ScatterChartRecipe: ChartRecipe<IRScatterChart> = {
   type: PointChartType.Scatter,
-  schema: ScatterChartSpecSchema,
+  schema: ScatterChartSchema,
   createSeed: (spec, style) => createPointChartSeed(spec, style, scatterRecipeOptions),
   validateCore: (spec, plotSpec) => validatePointChartCore(spec, plotSpec, scatterRecipeOptions),
 };

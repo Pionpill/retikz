@@ -159,6 +159,6 @@ React/Vanilla 的嵌套 authoring result 只存在于 adapter runtime，不进�
 
 - 修改或替代 Standard Frame
 - 多 child arrangement、header / footer、overlay、alignment、gap、scroll、responsive 或 host chrome
-- Chart title、subtitle、note、source、PlotSpec、Table panel 数据或领域 theme token
+- Chart title、subtitle、note、source、IRPlot、Table panel 数据或领域 theme token
 - 新 Core primitive、renderer CSS box、DOM container 或 Canvas 私有 surface
 - shadow / filter 等新 appearance 能力；已有 Core style 原子若后续有真实跨领域需求再单独评估

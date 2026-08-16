@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../../src/compile/compile';
 import type {
@@ -11,15 +11,15 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../../src/contract';
-import type { IRPaintSpec, IRScene } from '../../../src/schemas';
+import type { IRPaint, IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { definePattern } from '../../../src/contract';
 import { BUILTIN_PATTERNS } from '../../../src/providers/pattern';
-import { PaintSpecSchema } from '../../../src/schemas';
+import { PaintSchema } from '../../../src/schemas';
 
 /** 含一个 pattern fill node 的 IR 工厂 */
-const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IRScene => ({
+const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -35,7 +35,7 @@ const firstPatternResource = (resources: Array<SceneResource> | undefined): Pain
   (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
 /** 从 Scene.resources 取首个 pattern 资源的 tile（已解析 motif） */
-const tileOf = (spec: IRPaintSpec, opts?: CompileOptions): ResolvedPatternTile | undefined =>
+const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
 /** 取 tile.motif 里首个 path 原语 */
@@ -134,7 +134,7 @@ describe('Pattern registry — happy path', () => {
   });
 
   it('pattern_dedup：同 pattern spec 多处 → 1 资源 1 tile', () => {
-    const spec: IRPaintSpec = { kind: 'pattern', shape: 'lines', size: 6 };
+    const spec: IRPaint = { kind: 'pattern', shape: 'lines', size: 6 };
     const scene = compileToScene(patternNodeIR(spec, spec)).scene;
     const patternResources = (scene.resources ?? []).filter(
       (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
@@ -418,14 +418,14 @@ describe('Pattern registry — boundary', () => {
   });
 
   it('pattern_coexist_gradient：同场景 pattern + gradient → resources 不撞、id 各异', () => {
-    const grad: IRPaintSpec = {
+    const grad: IRPaint = {
       kind: 'linearGradient',
       stops: [
         { offset: 0, color: '#4f8' },
         { offset: 1, color: '#08f' },
       ],
     };
-    const pat: IRPaintSpec = { kind: 'pattern', shape: 'grid' };
+    const pat: IRPaint = { kind: 'pattern', shape: 'grid' };
     const scene = compileToScene(patternNodeIR(grad, pat)).scene;
     expect(scene.resources).toHaveLength(2);
     const ids = (scene.resources ?? []).map(r => r.id);
@@ -501,8 +501,8 @@ describe('Pattern registry — interaction', () => {
       lineWidth: 2,
       rotation: 30,
     };
-    const original = PaintSpecSchema.parse(spec);
-    const roundTripped = PaintSpecSchema.parse(JSON.parse(JSON.stringify(original)));
+    const original = PaintSchema.parse(spec);
+    const roundTripped = PaintSchema.parse(JSON.parse(JSON.stringify(original)));
     expect(roundTripped).toEqual(original);
     // 开放 shape 名经 JSON 往返不丢
     expect(roundTripped.kind === 'pattern' && roundTripped.shape).toBe('myMotif');

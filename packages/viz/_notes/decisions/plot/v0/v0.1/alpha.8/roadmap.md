@@ -33,9 +33,9 @@
 - **③ 离散化 scale 输出域**：本轮 quantize / threshold / quantile 的 range **只做 color** 还是同时支持 size 档？倾向**仅 color**（与「高级 Scales 服务颜色」主线一致；离散 size 档即 alpha.7 顺延的 D1，需求驱动再做）。
 - **④ threshold 断点契约**：threshold 的 `breakpoints` 是否要求严格升序、`range` 长度须 = `breakpoints.length + 1`？倾向**强校验 fail-loud**（断点乱序 / 长度不匹配直接拒，不静默截断）。
 - **⑤ quantile 的 domain 来源**：quantile 按数据分位分箱——domain 必须从绑定数据现算（不像 linear 可显式给 `[min,max]`）；显式 domain 与 quantile 语义冲突时如何处理？倾向**quantile 不接受显式数值 domain，只接受分箱数 `count`**（分位由数据定），显式 domain → fail-loud。
-- **⑥ legend target 语义（评审 P1，关键）**：legend 绑什么？**只按 channel 绑定有歧义**——一张 plot 的 IR 可有多个 color scale，多个 mark 也可能各自绑 size/opacity/shape，且 alpha.7 的 size/opacity/shape 默认 scale **多在 resolver 内部合成、未必物化进 `PlotSpec.scales`**。倾向 legend target 支持 **`channel` + 可选 `scale`**（消歧到具体 scale），必要时再加可选 `mark`；**配套要求**：alpha.7 的通道 resolver 须产出**可被 legend 复用的 scale descriptor**（把内部合成 scale 暴露成可引用对象），否则 legend 拿不到 size/opacity/shape 的 domain/range 去渲染。这条会反向牵动 alpha.7 resolver 的产物形态，须在 ADR-03 起草期定。
-- **⑦ legend 显式声明 + 默认 axes 合并规则（评审 P1，关键）**：legend 倾向**显式声明出**（`<Legend channel="color" />`，与 axis 一致；自动派生留 theme 层 auto-guide）。**但当前 `buildPlotSpec.ts:293` 的规则是「只要有任何 guide 就不加默认 axes」——加 `<Legend>` 会让默认 x/y 轴消失**（真 bug）。本轮须把合并规则改成：**显式 `Axis` 才覆盖默认 `Axis`；`Legend` 不抑制默认 `Axis`**（按 guide 的 `type` 分别判断默认补齐，而非「有任何 guide 就清空」）。落点 `buildPlotSpec.ts` guide 合并 + vanilla 对应。
-- **⑧ React / vanilla 连续色阶入口（评审 P1，关键）**：当前 React 表面**无法承载连续色阶**——`buildPlotSpec.ts:102` 把所有 color 绑死 `AUTO_COLOR`、`:289` 固定 push **ordinal** scale。「continuous color 不再 fail-loud」必须有 React 入口才走得通。三选一（ADR-01 起草期定）：(a) 显式 `<ColorScale type="sequential" scheme=…>` 组件；(b) `<Plot colorScale=…>` prop；(c) **有 model 时 type-driven 自动派生**（continuous/temporal color field → sequential，categorical → ordinal，复用 alpha.6 type-driven 选型链）。倾向 **(c) 为主 + (a)/(b) 为显式覆盖**，与 alpha.6「类型驱动、可显式覆盖」一致。
+- **⑥ legend target 语义（评审 P1，关键）**：legend 绑什么？**只按 channel 绑定有歧义**——一张 plot 的 IR 可有多个 color scale，多个 mark 也可能各自绑 size/opacity/shape，且 alpha.7 的 size/opacity/shape 默认 scale **多在 resolver 内部合成、未必物化进 `IRPlot.scales`**。倾向 legend target 支持 **`channel` + 可选 `scale`**（消歧到具体 scale），必要时再加可选 `mark`；**配套要求**：alpha.7 的通道 resolver 须产出**可被 legend 复用的 scale descriptor**（把内部合成 scale 暴露成可引用对象），否则 legend 拿不到 size/opacity/shape 的 domain/range 去渲染。这条会反向牵动 alpha.7 resolver 的产物形态，须在 ADR-03 起草期定。
+- **⑦ legend 显式声明 + 默认 axes 合并规则（评审 P1，关键）**：legend 倾向**显式声明出**（`<Legend channel="color" />`，与 axis 一致；自动派生留 theme 层 auto-guide）。**但当前 `buildPlotIR.ts:293` 的规则是「只要有任何 guide 就不加默认 axes」——加 `<Legend>` 会让默认 x/y 轴消失**（真 bug）。本轮须把合并规则改成：**显式 `Axis` 才覆盖默认 `Axis`；`Legend` 不抑制默认 `Axis`**（按 guide 的 `type` 分别判断默认补齐，而非「有任何 guide 就清空」）。落点 `buildPlotIR.ts` guide 合并 + vanilla 对应。
+- **⑧ React / vanilla 连续色阶入口（评审 P1，关键）**：当前 React 表面**无法承载连续色阶**——`buildPlotIR.ts:102` 把所有 color 绑死 `AUTO_COLOR`、`:289` 固定 push **ordinal** scale。「continuous color 不再 fail-loud」必须有 React 入口才走得通。三选一（ADR-01 起草期定）：(a) 显式 `<ColorScale type="sequential" scheme=…>` 组件；(b) `<Plot colorScale=…>` prop；(c) **有 model 时 type-driven 自动派生**（continuous/temporal color field → sequential，categorical → ordinal，复用 alpha.6 type-driven 选型链）。倾向 **(c) 为主 + (a)/(b) 为显式覆盖**，与 alpha.6「类型驱动、可显式覆盖」一致。
 - **⑨ legend tick / label 契约（评审 P2）**：连续 ramp、时间色阶、quantize/threshold/quantile 分箱各需标签生成规则，至少定：`tickCount`（ramp 上标几个刻度）、数字格式、temporal 格式（复用 alpha.6 type-driven formatter）、**分箱区间标签的闭开口**（threshold `[a, b)` 还是 `a–b`）。复用 axis 已有的 tick formatter 链，不另造一套。
 - **⑩ legend 布局参数 + 占位（评审 P2）**：位置（`'right' / 'left' / 'top' / 'bottom'`）+ 朝向（vertical / horizontal）+ 与 plot area 的占位关系。**legend 占位不只是 `lower/guide.ts` 的事**——要先**估算 legend 尺寸再决定 plotArea**（否则 legend 只能 overlay 或画到边界外），牵动 `lower/layout.ts` / `expand.ts`（见前置 setup）。受**无文字度量**约束，宽度按 `fontSize` × 估算字符数算，标签过长会溢出——倾向**先做固定位置 + 估算布局 + 估算占位，溢出文档明示**，测量驱动自适应留后续（结构上限，见 plot-design §13.1）。
 
@@ -82,8 +82,8 @@
 - `plot/src/lower/guide.ts`（legend 派生 + 纯函数布局 → core Node/Path/Scope；标签复用 axis tick formatter 链，决策 ⑨）
 - `plot/src/lower/{layout,expand}.ts`（**legend 占位**：先估算 legend 尺寸再决定 plotArea，决策 ⑩；否则 legend 只能 overlay / 出界）
 - react/vanilla 表面：
-  - 连续色阶入口（决策 ⑧）——改 `buildPlotSpec.ts:102/289`（当前所有 color 绑死 `AUTO_COLOR` + 固定 push ordinal），加 type-driven 派生 sequential / 显式 color-scale 覆盖
-  - **默认 axes 合并规则**（决策 ⑦）——改 `buildPlotSpec.ts:293`（当前「有任何 guide 即不加默认 axes」），改成按 guide `type` 分别判断：显式 Axis 才覆盖默认 Axis、Legend 不抑制默认 Axis
+  - 连续色阶入口（决策 ⑧）——改 `buildPlotIR.ts:102/289`（当前所有 color 绑死 `AUTO_COLOR` + 固定 push ordinal），加 type-driven 派生 sequential / 显式 color-scale 覆盖
+  - **默认 axes 合并规则**（决策 ⑦）——改 `buildPlotIR.ts:293`（当前「有任何 guide 即不加默认 axes」），改成按 guide `type` 分别判断：显式 Axis 才覆盖默认 Axis、Legend 不抑制默认 Axis
   - 新增 `<Legend>` 组件 / vanilla spec 表面
 
 ## ADR 清单

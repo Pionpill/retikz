@@ -1,6 +1,6 @@
 type SankeyDatum = Record<string, string | number | undefined>;
 
-type NodeSpec = {
+type SankeyNode = {
   id: string;
   column: 'left' | 'middle' | 'right';
   label: string;
@@ -8,13 +8,13 @@ type NodeSpec = {
   fill: string;
 };
 
-type FlowSpec = {
+type SankeyFlow = {
   source: string;
   target: string;
   value: number;
 };
 
-type PositionedNode = NodeSpec & {
+type PositionedNode = SankeyNode & {
   x: number;
   y: number;
   top: number;
@@ -43,18 +43,18 @@ const buildNodeRows = (nodes: Array<PositionedNode>): Array<SankeyDatum> =>
     nodeLabel: node.label,
   }));
 
-const stackColumn = (specs: Array<NodeSpec>, x: number, top: number, gap: number): Array<PositionedNode> => {
+const stackColumn = (nodes: Array<SankeyNode>, x: number, top: number, gap: number): Array<PositionedNode> => {
   let cursor = top;
-  return specs.map(spec => {
+  return nodes.map(nodeData => {
     const node: PositionedNode = {
-      ...spec,
+      ...nodeData,
       x,
-      y: cursor + spec.value / 2,
+      y: cursor + nodeData.value / 2,
       top: cursor,
       sourceCursor: cursor,
       targetCursor: cursor,
     };
-    cursor += spec.value + gap;
+    cursor += nodeData.value + gap;
     return node;
   });
 };
@@ -69,7 +69,7 @@ const nextSlotY = (node: PositionedNode, side: 'source' | 'target', width: numbe
   return y;
 };
 
-const buildFlowRows = (flows: Array<FlowSpec>, nodesById: Map<string, PositionedNode>): Array<SankeyDatum> =>
+const buildFlowRows = (flows: Array<SankeyFlow>, nodesById: Map<string, PositionedNode>): Array<SankeyDatum> =>
   flows.map(flow => {
     const source = nodesById.get(flow.source);
     const target = nodesById.get(flow.target);
@@ -86,7 +86,7 @@ const buildFlowRows = (flows: Array<FlowSpec>, nodesById: Map<string, Positioned
     };
   });
 
-const leftNodes: Array<NodeSpec> = [
+const leftNodes: Array<SankeyNode> = [
   { id: 'a1', column: 'left', label: 'a1', value: 28, fill: '#3b82f6' },
   { id: 'a2', column: 'left', label: 'a2', value: 16, fill: '#f59e0b' },
   { id: 'a3', column: 'left', label: 'a3', value: 26, fill: '#ef4444' },
@@ -98,18 +98,18 @@ const leftNodes: Array<NodeSpec> = [
   { id: 'c3', column: 'left', label: 'c3', value: 16, fill: '#d97745' },
 ];
 
-const middleNodes: Array<NodeSpec> = [
+const middleNodes: Array<SankeyNode> = [
   { id: 'A', column: 'middle', label: 'A', value: 52, fill: '#0f62c8' },
   { id: 'B', column: 'middle', label: 'B', value: 62, fill: '#f7c873' },
   { id: 'C', column: 'middle', label: 'C', value: 60, fill: '#475569' },
 ];
 
-const rightNodes: Array<NodeSpec> = [
+const rightNodes: Array<SankeyNode> = [
   { id: 'AA', column: 'right', label: 'AA', value: 84, fill: '#f4a999' },
   { id: 'BB', column: 'right', label: 'BB', value: 90, fill: '#ea8a00' },
 ];
 
-const flows: Array<FlowSpec> = [
+const flows: Array<SankeyFlow> = [
   { source: 'a1', target: 'A', value: 18 },
   { source: 'a1', target: 'B', value: 10 },
   { source: 'a2', target: 'A', value: 16 },

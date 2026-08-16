@@ -76,5 +76,5 @@ export const previewControlContract = {
     [ClipGalleryControlId.LeftX]: -130,
     [ClipGalleryControlId.RightX]: 130,
   },
-  relatedApis: ['Layout.clips', 'Scope.clip', 'CompoundClipSpec.children'],
+  relatedApis: ['Layout.clips', 'Scope.clip', 'CompoundClip.children'],
 } satisfies PreviewControlContract;

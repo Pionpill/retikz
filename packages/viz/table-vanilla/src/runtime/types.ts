@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
+import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
 /** renderTable 共享选项 */
@@ -35,6 +35,6 @@ export type RenderTableArtifactResult = Readonly<{
 
 /** renderTable overload 合同 */
 export type RenderTable = {
-  (spec: IRTableSpec, options: RenderTableArtifactOptions): RenderTableArtifactResult;
-  (spec: IRTableSpec, options?: RenderTableOptions): string;
+  (spec: IRTable, options: RenderTableArtifactOptions): RenderTableArtifactResult;
+  (spec: IRTable, options?: RenderTableOptions): string;
 };

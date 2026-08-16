@@ -295,9 +295,9 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   }}
 />
 
-### RelationRoutingSpecSchema
+### RelationRoutingSchema
 
-<ZodSchema name="RelationRoutingSpecSchema" description="直线、弯曲或正交关系路由策略。" />
+<ZodSchema name="RelationRoutingSchema" description="直线、弯曲或正交关系路由策略。" />
 
 ### RelationRouteStepSchema
 
@@ -349,10 +349,10 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
 
 <ZodSchema name="MarkTransformSchema" description="在 Plot 根变换后执行、且只影响当前图元的变换数组。" />
 
-### AnchorIdSpecSchema
+### AnchorIdSchema
 
 <ZodSchema
-  name="AnchorIdSpecSchema"
+  name="AnchorIdSchema"
   description="为图元生成的 Core Node / Coordinate 建立稳定 id 的规则。"
   descriptions={{
     prefix: '当前 Plot 下的可选 id namespace；省略时回退到 mark id 或 mark.<index>。',

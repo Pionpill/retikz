@@ -1,15 +1,15 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 
-describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds）', () => {
+describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）', () => {
   const bandBounds = { x: { kind: 'band' }, y: { kind: 'band' } } as const;
 
   it('heatmap-react-build-plot-spec：显式双 band bounds → interval IR + 双 band 推断', () => {
-    const spec = buildPlotSpec(<IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />, '__plot');
+    const spec = buildPlotIR(<IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />, '__plot');
     expect(spec.marks).toEqual([
       {
         type: 'interval',
@@ -24,7 +24,7 @@ describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds�
   });
 
   it('heatmap 缺 color → 纯网格（无 color 编码），仍双 band', () => {
-    const spec = buildPlotSpec(<IntervalMark x="day" y="hour" bounds={bandBounds} />, '__plot');
+    const spec = buildPlotIR(<IntervalMark x="day" y="hour" bounds={bandBounds} />, '__plot');
     expect(spec.marks[0]).toEqual({
       type: 'interval',
       bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
@@ -35,7 +35,7 @@ describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds�
   });
 
   it('heatmap_explicit_band_scale_forwards_padding_on_forced_dimension', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <IntervalMark x="rowKey" y="colKey" bounds={bandBounds} />
         <Scale dimension="y" type="band" paddingInner={0.2} paddingOuter={0} />
@@ -53,7 +53,7 @@ describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds�
 
   it('heatmap + 显式 <Scale dimension="y"> → fail-loud（y 由 band bounds 强制 band）', () => {
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />
           <Scale dimension="y" type="linear" />
@@ -63,8 +63,8 @@ describe('buildPlotSpec heatmap interval mark（ADR-02 双 band，显式 bounds�
     ).toThrow(/band y scale/i);
   });
 
-  it('heatmap 装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(<IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />, '__plot');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  it('heatmap 装配产物过 PlotSchema', () => {
+    const spec = buildPlotIR(<IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />, '__plot');
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

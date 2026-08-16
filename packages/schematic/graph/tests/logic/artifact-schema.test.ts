@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { GraphLayoutItemArtifactSchema, GraphOuterArtifactSchema } from '../../src';
+import { ContainerLayoutItemArtifactSchema, ContainerOuterArtifactSchema } from '../../src';
 
 const rect = (x = 0, y = 0, width = 10, height = 10) => ({ x, y, width, height });
 
@@ -34,8 +34,8 @@ const zeroItem = {
 
 describe('logic artifact schemas', () => {
   beforeEach(() => {
-    expect(GraphOuterArtifactSchema).toBeDefined();
-    expect(GraphLayoutItemArtifactSchema).toBeDefined();
+    expect(ContainerOuterArtifactSchema).toBeDefined();
+    expect(ContainerLayoutItemArtifactSchema).toBeDefined();
   });
 
   it('parses strict outer and content placement artifacts and survives JSON round-trip', () => {
@@ -46,10 +46,10 @@ describe('logic artifact schemas', () => {
       visibleBounds: rect(0, 0, 120, 80),
     };
 
-    expect(GraphOuterArtifactSchema.parse(outer)).toEqual(outer);
-    expect(GraphLayoutItemArtifactSchema.parse(item)).toEqual(item);
-    expect(GraphOuterArtifactSchema.parse(JSON.parse(JSON.stringify(outer)))).toEqual(outer);
-    expect(GraphLayoutItemArtifactSchema.parse(JSON.parse(JSON.stringify(item)))).toEqual(item);
+    expect(ContainerOuterArtifactSchema.parse(outer)).toEqual(outer);
+    expect(ContainerLayoutItemArtifactSchema.parse(item)).toEqual(item);
+    expect(ContainerOuterArtifactSchema.parse(JSON.parse(JSON.stringify(outer)))).toEqual(outer);
+    expect(ContainerLayoutItemArtifactSchema.parse(JSON.parse(JSON.stringify(item)))).toEqual(item);
   });
 
   it('accepts canonical zero geometry and null visibility without inventing positive bounds', () => {
@@ -60,18 +60,18 @@ describe('logic artifact schemas', () => {
       visibleBounds: null,
     };
 
-    expect(GraphOuterArtifactSchema.parse(outer)).toEqual(outer);
-    expect(GraphLayoutItemArtifactSchema.parse(zeroItem)).toEqual(zeroItem);
+    expect(ContainerOuterArtifactSchema.parse(outer)).toEqual(outer);
+    expect(ContainerLayoutItemArtifactSchema.parse(zeroItem)).toEqual(zeroItem);
   });
 
   it('keeps authored identity outside the generic item placement artifact', () => {
-    expect(() => GraphLayoutItemArtifactSchema.parse({ ...item, key: 'content' })).toThrow();
-    expect(() => GraphLayoutItemArtifactSchema.parse({ ...item, sourceIndex: 0 })).toThrow();
+    expect(() => ContainerLayoutItemArtifactSchema.parse({ ...item, key: 'content' })).toThrow();
+    expect(() => ContainerLayoutItemArtifactSchema.parse({ ...item, sourceIndex: 0 })).toThrow();
   });
 
   it('rejects unknown artifact fields instead of silently widening the JSON contract', () => {
     expect(() =>
-      GraphOuterArtifactSchema.parse({
+      ContainerOuterArtifactSchema.parse({
         allocationBounds: rect(0, 0, 20, 20),
         shellVisualBounds: null,
         visualBounds: rect(0, 0, 20, 20),
@@ -79,15 +79,15 @@ describe('logic artifact schemas', () => {
         extra: true,
       }),
     ).toThrow();
-    expect(() => GraphLayoutItemArtifactSchema.parse({ ...item, extra: true })).toThrow();
+    expect(() => ContainerLayoutItemArtifactSchema.parse({ ...item, extra: true })).toThrow();
     expect(() =>
-      GraphLayoutItemArtifactSchema.parse({ ...item, overflow: { ...item.overflow, extra: true } }),
+      ContainerLayoutItemArtifactSchema.parse({ ...item, overflow: { ...item.overflow, extra: true } }),
     ).toThrow();
   });
 
   it('rejects negative or non-finite rectangles and translations at their authored geometry fields', () => {
     expect(() =>
-      GraphOuterArtifactSchema.parse({
+      ContainerOuterArtifactSchema.parse({
         allocationBounds: rect(0, 0, -1, 10),
         shellVisualBounds: null,
         visualBounds: rect(0, 0, 0, 0),
@@ -95,7 +95,7 @@ describe('logic artifact schemas', () => {
       }),
     ).toThrow();
     expect(() =>
-      GraphOuterArtifactSchema.parse({
+      ContainerOuterArtifactSchema.parse({
         allocationBounds: rect(0, 0, 10, 10),
         shellVisualBounds: rect(0, 0, Number.NaN, 10),
         visualBounds: rect(0, 0, 0, 0),
@@ -103,16 +103,16 @@ describe('logic artifact schemas', () => {
       }),
     ).toThrow();
     expect(() =>
-      GraphLayoutItemArtifactSchema.parse({ ...item, translation: { x: Number.POSITIVE_INFINITY, y: 0 } }),
+      ContainerLayoutItemArtifactSchema.parse({ ...item, translation: { x: Number.POSITIVE_INFINITY, y: 0 } }),
     ).toThrow();
     expect(() =>
-      GraphLayoutItemArtifactSchema.parse({ ...item, visualBounds: rect(0, 0, 10, Number.NEGATIVE_INFINITY) }),
+      ContainerLayoutItemArtifactSchema.parse({ ...item, visualBounds: rect(0, 0, 10, Number.NEGATIVE_INFINITY) }),
     ).toThrow();
   });
 
   it('rejects null allocation or visual geometry while retaining null only for optional visibility', () => {
     expect(() =>
-      GraphOuterArtifactSchema.parse({
+      ContainerOuterArtifactSchema.parse({
         allocationBounds: null,
         shellVisualBounds: null,
         visualBounds: rect(0, 0, 0, 0),
@@ -120,13 +120,13 @@ describe('logic artifact schemas', () => {
       }),
     ).toThrow();
     expect(() =>
-      GraphOuterArtifactSchema.parse({
+      ContainerOuterArtifactSchema.parse({
         allocationBounds: rect(0, 0, 0, 0),
         shellVisualBounds: null,
         visualBounds: null,
         visibleBounds: null,
       }),
     ).toThrow();
-    expect(() => GraphLayoutItemArtifactSchema.parse({ ...zeroItem, allocationBounds: null })).toThrow();
+    expect(() => ContainerLayoutItemArtifactSchema.parse({ ...zeroItem, allocationBounds: null })).toThrow();
   });
 });

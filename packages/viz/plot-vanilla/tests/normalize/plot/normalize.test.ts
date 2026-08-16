@@ -1,10 +1,10 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { normalizePlot } from '../../../src';
 
 describe('normalizePlot', () => {
-  it('从 plain authoring input 创建 schema-valid PlotSpec 并保留显式 identity', () => {
+  it('从 plain authoring input 创建 schema-valid IRPlot 并保留显式 identity', () => {
     const input = {
       id: 'sales',
       data: { reference: 'sales' },
@@ -33,7 +33,7 @@ describe('normalizePlot', () => {
       marks: [{ id: 'points' }],
       guides: [{ id: 'revenue-axis' }],
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
     expect(input).toEqual(snapshot);
   });
 

@@ -1,19 +1,19 @@
-﻿import type { ParsedFieldValue, ResolveField } from '@retikz/data';
+import type { ParsedFieldValue, ResolveField } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { applyFieldResolver, normalizeRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** cartesian point spec，model 可选（部分声明走 contract），无 scales → 走 type-driven 派生 */
-const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (model?: Array<{ name: string; type?: string }>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', ...(model ? { model } : {}) },
@@ -232,7 +232,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
 
   it('resolved_type_feeds_scale_compat', () => {
     // resolveField 把 x 盖成 categorical → 与显式 linear scale 不兼容 → 用覆盖后类型 fail-loud
-    const explicitSpec = PlotSpecSchema.parse({
+    const explicitSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

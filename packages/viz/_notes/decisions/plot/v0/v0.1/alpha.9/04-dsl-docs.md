@@ -12,7 +12,7 @@ ADR-01~03 把 cartesian1D / polar1D / ternary2D 的 IR + lowering 落齐，但�
 
 ## 决策
 
-**(1) React 表面**：`CoordinateInput` 扩 `'cartesian1D'` | `{ type:'cartesian1D', orientation? }` | `'polar1D'` | `{ type:'polar1D', radius?, startAngle?, endAngle? }` | `'ternary2D'`（字符串 + 对象双形态，同 polar2D）。`PointMarkProps` 的 x/y 转**可选**（承 ADR-01）+ 加 `a?` / `b?` / `c?`（承 ADR-03）。buildPlotSpec 按 coordinate 组装角色 encoding，缺必填角色 / 误用通道（cartesian 给 a/b/c）**全交 lowering fail-loud**，React 不重复校验。guide：`<Axis dimension="a"|"b"|"c" />`（三角轴）、cartesian1D 复用 `<Axis />`。
+**(1) React 表面**：`CoordinateInput` 扩 `'cartesian1D'` | `{ type:'cartesian1D', orientation? }` | `'polar1D'` | `{ type:'polar1D', radius?, startAngle?, endAngle? }` | `'ternary2D'`（字符串 + 对象双形态，同 polar2D）。`PointMarkProps` 的 x/y 转**可选**（承 ADR-01）+ 加 `a?` / `b?` / `c?`（承 ADR-03）。buildPlotIR 按 coordinate 组装角色 encoding，缺必填角色 / 误用通道（cartesian 给 a/b/c）**全交 lowering fail-loud**，React 不重复校验。guide：`<Axis dimension="a"|"b"|"c" />`（三角轴）、cartesian1D 复用 `<Axis />`。
 
 **(2) vanilla**：对等表面，字段派生自 core IR 类型，不手维护第二份。
 

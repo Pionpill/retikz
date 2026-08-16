@@ -5,9 +5,9 @@
 ## 包职责契约
 
 - **解决的问题**：让 React 用户通过通用 spec、detail 或 manual authoring 使用 Table，并将 datasets、registries 与 Table runtime 接入 React 生命周期
-- **拥有的契约**：`<Table>` / `<DetailTable>` / `<ManualTable>` 与对应 props，`<DetailColumn>` / `<Row>` / `<Cell>` React authoring marker、共享 TableSpec normalization 的 React 接线、dataset / registry 注入、React runtime 接线，以及后续虚拟滚动的 viewport / scroll host 接线
+- **拥有的契约**：`<Table>` / `<DetailTable>` / `<ManualTable>` 与对应 props，`<DetailColumn>` / `<Row>` / `<Cell>` React authoring marker、共享 IRTable normalization 的 React 接线、dataset / registry 注入、React runtime 接线，以及后续虚拟滚动的 viewport / scroll host 接线
 - **不拥有的能力**：Data schema / transform、Table IR 语义、结构操作、格式化、布局、lowering、Core 编译或 renderer
-- **输入与输出**：接收 React props / children、TableSpec、datasets 与 runtime options，构造规范 TableSpec 并交给 `@retikz/table` 与 `@retikz/react`
+- **输入与输出**：接收 React props / children、IRTable、datasets 与 runtime options，构造规范 IRTable 并交给 `@retikz/table` 与 `@retikz/react`
 - **缺口流向**：数据问题进入 `@retikz/data`；表格语义、布局与 lowering 进入 `@retikz/table`；通用 React 渲染与生命周期能力进入 `@retikz/react`
 
 ## 约束
@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-当前基线提供 `<Table>`、`<DetailTable>` 与 `<ManualTable>`。`<DetailColumn>`、`<Row>` 与 `<Cell>` 仅负责将 JSX authoring 收集为既有的 detail / manual 结构输入，不增加 Table 语义；`<ManualTable>` 的矩形 `rows` props 与 Row / Cell markers 归一化为同一持久化结构。三个根组件共享 standalone / embedded runtime；detail / manual sugar 委托 `@retikz/table` normalization 并保留精确 spec 变体，`<Table>` 接收聚合 `IRTableSpec`。embedded 入口要求稳定 spec id，standalone `onManifest` 只在内容变化时通知。后续虚拟滚动仍只在 adapter 维护 viewport 与滚动生命周期。
+当前基线提供 `<Table>`、`<DetailTable>` 与 `<ManualTable>`。`<DetailColumn>`、`<Row>` 与 `<Cell>` 仅负责将 JSX authoring 收集为既有的 detail / manual 结构输入，不增加 Table 语义；`<ManualTable>` 的矩形 `rows` props 与 Row / Cell markers 归一化为同一持久化结构。三个根组件共享 standalone / embedded runtime；detail / manual sugar 委托 `@retikz/table` normalization 并保留精确 spec 变体，`<Table>` 接收聚合 `IRTable`。embedded 入口要求稳定 spec id，standalone `onManifest` 只在内容变化时通知。后续虚拟滚动仍只在 adapter 维护 viewport 与滚动生命周期。
 
 ## 验证
 

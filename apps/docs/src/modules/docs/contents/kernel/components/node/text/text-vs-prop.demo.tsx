@@ -4,7 +4,7 @@ import { Layout, Node, Text } from '@retikz/react';
 
 /**
  * 两条等价路径
- * @description 左 <Text> Sugar、右 text prop 数组里写 LineSpec 对象，编译产物完全相同。
+ * @description 左 <Text> Sugar、右 text prop 数组里写 IRLine 对象，编译产物完全相同。
  */
 const Demo: FC = () => (
   <Layout width={420} height={140}>

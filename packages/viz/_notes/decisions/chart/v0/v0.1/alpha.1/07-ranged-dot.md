@@ -11,7 +11,7 @@ Ranged Dot 比较同一类别的起点与终点。它不需要把每行 reshape 
 ## 决策：每行生成 start、end 两个 Point 与一条 projected Relation
 
 ```ts
-type RangedDotChartSpec = ChartCommon & {
+type RangedDotChartIR = ChartCommon & {
   type: 'ranged-dot';
   encoding: {
     category: { field: string };
@@ -49,7 +49,7 @@ Shared 与 endpoint Point patch 都精确复用 ADR-04 `ScatterPointPatch`，并
 - start 与 end 不自动排序；start > end 时仍按 authored 角色连接
 - start === end 时保留两个重合 Point 与零长度 Relation，不由 Chart 删除
 - 非空输入中，每一行的 category / start / end 必须同时存在并能按正式 field 与 position contract 投影；任一角色缺失、为 null 或不可投影时整张 Chart 在 mark lowering 前 fail-loud，不允许留下孤立端点或只省略 Relation
-- 完全空 rows 是合法空结果，三个核心 members 都不产生 datum geometry，也不报 range-row 错误；它不改变 resolved PlotSpec、稳定目标或 inspection
+- 完全空 rows 是合法空结果，三个核心 members 都不产生 datum geometry，也不报 range-row 错误；它不改变 resolved IRPlot、稳定目标或 inspection
 - color 通过 Plot 正式 encoding 同时作用于两个 Point 与 Relation；Point / Relation local style 按各自 owner 规则覆盖
 - 缺省位置 scale 由 Plot 联合三个 marks 的 projected fields 推断
 - coordinate / composition 必须提供二维 role；三个 marks 与 axes 始终属于同一 active/default view
@@ -66,7 +66,7 @@ Shared 与 endpoint Point patch 都精确复用 ADR-04 `ScatterPointPatch`，并
 
 Ranged Dot 只有在 Plot owner 能对共享同一 row 的复合 Mark recipe 执行正式原子行校验后才能进入可执行 lowering。该校验必须在 Point / Relation 各自跳过不可投影值之前运行，复用 Plot 的 field resolution、data model、coordinate role projection 与诊断，不由 Chart 预扫描或清洗 rows；同一规则覆盖内置与自定义兼容 coordinate。失败必须定位 row identity 与 category / start / end 中的非法角色。
 
-该 gate 未解除时，可以构造并检查 Ranged Dot 的 owner-private ChartSpec 与完整 PlotSpec，但不得依赖当前三个 Mark 各自跳过非法值的行为执行 lowering。Chart 不增加私有 filter transform、不 reshape 数据，也不修改 Relation 几何来伪造原子性。
+该 gate 未解除时，可以构造并检查 Ranged Dot 的 owner-private IRChart 与完整 IRPlot，但不得依赖当前三个 Mark 各自跳过非法值的行为执行 lowering。Chart 不增加私有 filter transform、不 reshape 数据，也不修改 Relation 几何来伪造原子性。
 
 ## 架构验证
 

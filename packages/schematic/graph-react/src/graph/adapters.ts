@@ -2,9 +2,9 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { createGraphProviders } from '@retikz/graph';
 
-import { GraphConnector } from './GraphConnector';
-import { GraphFrame } from './GraphFrame';
-import { GraphNode } from './GraphNode';
+import { Container } from './Container';
+import { Entity } from './Entity';
+import { Relation } from './Relation';
 
 type GraphCompositeProvider = ReturnType<typeof createGraphProviders>[number];
 
@@ -30,10 +30,10 @@ const configureAdapter = <TProps>(
 
 /** 创建可一次性传给 React Input scene 的完整 Graph adapter 集合 */
 export const createGraphReactAdapters = (): Array<InputEmbedAdapter<unknown>> => {
-  const [graphFrame, graphNode, graphConnector] = createGraphProviders();
+  const [container, entity, relation] = createGraphProviders();
   return [
-    configureAdapter(GraphFrame.inputEmbedAdapter, graphFrame),
-    configureAdapter(GraphNode.inputEmbedAdapter, graphNode),
-    configureAdapter(GraphConnector.inputEmbedAdapter, graphConnector),
+    configureAdapter(Container.inputEmbedAdapter, container),
+    configureAdapter(Entity.inputEmbedAdapter, entity),
+    configureAdapter(Relation.inputEmbedAdapter, relation),
   ];
 };

@@ -1,32 +1,32 @@
 import type { FC } from 'react';
 
 import { FoldStepVia } from '@retikz/core';
-import { GraphConnector, GraphNode } from '@retikz/graph-react';
+import { Relation, Entity } from '@retikz/graph-react';
 import { Layout, Scope, Step } from '@retikz/react';
 
-/** 展示 straight、orthogonal、polyline 与带 label 的 GraphConnector 路由 */
+/** 展示 straight、orthogonal、polyline 与带 label 的 Relation 路由 */
 const Demo: FC = () => (
   <Layout width={560} height={260}>
     <Scope transforms={[{ kind: 'translate', x: 32, y: 52 }]}>
-      <GraphNode id="route-start" role="terminal" position={[0, 0]}>
+      <Entity id="route-start" role="terminal" position={[0, 0]}>
         Start
-      </GraphNode>
+      </Entity>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 230, y: 52 }]}>
-      <GraphNode id="route-stage" role="stage" position={[0, 0]}>
+      <Entity id="route-stage" role="stage" position={[0, 0]}>
         Stage
-      </GraphNode>
+      </Entity>
     </Scope>
     <Scope transforms={[{ kind: 'translate', x: 430, y: 52 }]}>
-      <GraphNode id="route-check" role="decision" position={[0, 0]}>
+      <Entity id="route-check" role="decision" position={[0, 0]}>
         Check
-      </GraphNode>
+      </Entity>
     </Scope>
-    <GraphConnector id="route-straight" role="flow">
+    <Relation id="route-straight" role="flow">
       <Step kind="move" to="route-start" />
       <Step to="route-stage" label={{ text: 'Path steps' }} />
-    </GraphConnector>
-    <GraphConnector
+    </Relation>
+    <Relation
       id="route-orthogonal"
       role="branch"
       way={[
@@ -36,12 +36,12 @@ const Demo: FC = () => (
         'route-check',
       ]}
     />
-    <GraphConnector id="route-polyline" role="flow">
+    <Relation id="route-polyline" role="flow">
       <Step kind="move" to="route-start" />
       <Step to={[60, 190]} />
       <Step to={[460, 190]} />
       <Step to="route-check" label={{ text: 'polyline' }} />
-    </GraphConnector>
+    </Relation>
   </Layout>
 );
 

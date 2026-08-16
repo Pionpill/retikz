@@ -126,9 +126,9 @@ Except for the explicitly marked React injection prop, import every type, functi
 
 ### Export Overview
 
-- `defineClip<TSpec>(definition)`: defines a custom clip, rejects an empty `kind`, and preserves concrete spec inference
-- `ClipSpecLike`: the minimum custom clip spec shape, requiring only a string `kind`
-- `ClipDefinitionInput<TSpec>`: the generic authoring contract that keeps `schema` and `resolve` on the same spec type
+- `defineClip<TClip>(definition)`: defines a custom clip, rejects an empty `kind`, and preserves concrete clip-input inference
+- `ClipLike`: the minimum custom clip spec shape, requiring only a string `kind`
+- `ClipDefinitionInput<TClip>`: the generic authoring contract that keeps `schema` and `resolve` on the same clip-input type
 - `ClipDefinition`: the unified Definition shape stored and consumed by the registry after its concrete spec type is erased
 - `ClipResolveContext`: runtime context passed to `resolve`, providing shared precision rounding and recursive clip resolution
 - `BUILTIN_CLIPS`: Core's three-entry read-only Definition collection, both iterable and addressable through names such as `.rect`
@@ -139,13 +139,13 @@ Except for the explicitly marked React injection prop, import every type, functi
 
 ### ClipDefinition
 
-`ClipDefinitionInput<TSpec>` is the strongly typed authoring input. `defineClip` returns the unified `ClipDefinition` consumed by the registry. Both have the same fields:
+`ClipDefinitionInput<TClip>` is the strongly typed authoring input. `defineClip` returns the unified `ClipDefinition` consumed by the registry. Both have the same fields:
 
-| Field     | Type                                                      | Required | Description                                                                 |
-| --------- | --------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
-| `kind`    | `TSpec['kind']`                                           | Yes      | Non-empty registry key that must match the IR `clip.kind`                   |
-| `schema`  | `ZodType<TSpec>`                                          | Yes      | Validates the complete JSON-safe spec and supplies valid input to `resolve` |
-| `resolve` | `(spec: TSpec, context: ClipResolveContext) => ClipShape` | Yes      | Converges valid input into a Scene-supported shape, never a renderer object |
+| Field     | Type                                                      | Required | Description                                                                       |
+| --------- | --------------------------------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `kind`    | `TClip['kind']`                                           | Yes      | Non-empty registry key that must match the IR `clip.kind`                         |
+| `schema`  | `ZodType<TClip>`                                          | Yes      | Validates the complete JSON-safe clip input and supplies valid input to `resolve` |
+| `resolve` | `(clip: TClip, context: ClipResolveContext) => ClipShape` | Yes      | Converges valid clip input into a Scene-supported shape, never a renderer object  |
 
 ### BUILTIN_CLIPS
 

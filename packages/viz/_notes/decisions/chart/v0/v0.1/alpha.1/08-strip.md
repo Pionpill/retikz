@@ -13,7 +13,7 @@ Strip Plot 展示分类分组内的一维观测分布。它需要保留 category
 ## 决策：冻结 Chart-level 语义，实现等待 Plot position-offset capability
 
 ```ts
-type StripChartSpec = ChartCommon & {
+type StripChartIR = ChartCommon & {
   type: 'strip';
   encoding: {
     category: { field: string };
@@ -32,7 +32,7 @@ type StripChartSpec = ChartCommon & {
 
 category / value 是严格 field-only roles；mark patch 只能调整 Point 表现，不能改写未来 offset consumer、identity、encoding、transform 或 coordinate view。Coordinate / composition 仍由 Plot 正式二维 role 与 offset contract 投影，Chart 不计算 renderer-specific dx / dy。
 
-上述结构只冻结未来 Chart-level 语义，不表示当前 ChartSpec 接受 `strip`。
+上述结构只冻结未来 Chart-level 语义，不表示当前 IRChart 接受 `strip`。
 
 ## 行为、Capability gate、失败语义与兼容性
 
@@ -45,12 +45,12 @@ category / value 是严格 field-only roles；mark patch 只能调整 Point 表�
 
 在 gate 解除前：
 
-- 当前 ChartSpec union 不包含 `strip`，输入继续得到既有 unknown-type / schema 诊断
+- 当前 IRChart union 不包含 `strip`，输入继续得到既有 unknown-type / schema 诊断
 - 不注册不可执行 variant，不提供 runtime fallback 或“缺少 capability”的新错误分支
 - 不新增 executable docs、adapter surface 或 release capability
 - 不允许 Chart 私有 TransformDefinition、Node translation 或 renderer pixel offset 冒充上游能力
 
-未来 implementation ADR 必须基于实际 Plot contract 重新冻结完整 PlotSpec recipe、核心不变量、capability dependency 与架构验证；本篇结论不能替代该设计决策。
+未来 implementation ADR 必须基于实际 Plot contract 重新冻结完整 IRPlot recipe、核心不变量、capability dependency 与架构验证；本篇结论不能替代该设计决策。
 
 ## 功能与包边界
 

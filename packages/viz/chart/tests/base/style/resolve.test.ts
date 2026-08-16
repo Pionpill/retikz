@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as chart from '../../../src';
 import { getDefaultChartThemePreset } from '../../../src/base/style';
-import { resolvePointChartSpec } from '../../../src/point';
+import { resolvePointChart } from '../../../src/point';
 
 const base = {
   namespace: 'chart',
@@ -22,21 +22,21 @@ const themeOf = (style: string | undefined, mode: ThemeModeValue): ResolvedTheme
   colors: resolveDefaultCoreThemeColors(mode),
 });
 
-type ResolveChartSpec = (
+type ResolveChartIR = (
   input: unknown,
   effectiveTheme?: ResolvedTheme,
   options?: Readonly<{
     chartThemeStyles?: ReadonlyArray<unknown>;
     plotThemeStyles?: ReadonlyArray<unknown>;
   }>,
-) => ReturnType<typeof resolvePointChartSpec>;
+) => ReturnType<typeof resolvePointChart>;
 
 describe('Chart style resolution', () => {
   it('以同名 Chart 与 Plot style definitions 驱动各自 owner 行为', () => {
     const define = (chart as Record<string, unknown>).defineChartThemeStyle as
       | ((definition: { name: string; resolve: (theme: ResolvedTheme) => Record<string, unknown> }) => unknown)
       | undefined;
-    const resolve = resolvePointChartSpec as unknown as ResolveChartSpec;
+    const resolve = resolvePointChart as unknown as ResolveChartIR;
     const chartBaseline = getDefaultChartThemePreset(ThemeMode.Light);
     const plotBaseline = getDefaultPlotThemePreset(ThemeMode.Light);
     const chartStyle = define?.({
@@ -71,7 +71,7 @@ describe('Chart style resolution', () => {
   });
 
   it('分别报告缺失的 Chart 与 Plot style definition', () => {
-    const resolve = resolvePointChartSpec as unknown as ResolveChartSpec;
+    const resolve = resolvePointChart as unknown as ResolveChartIR;
     const theme: ResolvedTheme = {
       style: 'brand',
       mode: ThemeMode.Light,
@@ -97,7 +97,7 @@ describe('Chart style resolution', () => {
   });
 
   it('默认解析 light baseline，并保持 Plot authoring 输入未物化', () => {
-    const result = resolvePointChartSpec(base);
+    const result = resolvePointChart(base);
     expect(result.plotSpec.plotTheme).toBeUndefined();
     expect(result.plotSpec.plotThemeTokens).toBeUndefined();
     expect(result.plotSpec.guides).toHaveLength(2);
@@ -126,7 +126,7 @@ describe('Chart style resolution', () => {
         },
       },
     } as const;
-    const result = resolvePointChartSpec(input, themeOf(undefined, ThemeMode.Dark));
+    const result = resolvePointChart(input, themeOf(undefined, ThemeMode.Dark));
 
     expect(result.plotSpec.plotThemeTokens).toEqual(input.plotThemeTokens);
     expect(result.plotSpec.plotThemeTokenRules).toEqual(input.plotThemeTokenRules);
@@ -135,10 +135,10 @@ describe('Chart style resolution', () => {
 
   it('topology token 只控制 recipe defaults，显式 guide 保持最高优先级', () => {
     expect(
-      resolvePointChartSpec({ ...base, chartThemeTokens: { 'chart.axis.enabled': false } }).plotSpec.guides,
+      resolvePointChart({ ...base, chartThemeTokens: { 'chart.axis.enabled': false } }).plotSpec.guides,
     ).toEqual([]);
     expect(
-      resolvePointChartSpec({
+      resolvePointChart({
         ...base,
         chartThemeTokens: { 'chart.axis.enabled': false, 'chart.axis.grid.enabled': false },
         guides: [{ type: 'axis', id: 'explicit', dimension: 'x', grid: true }],
@@ -147,8 +147,8 @@ describe('Chart style resolution', () => {
   });
 
   it('effective Theme 切换不改变 data、核心 recipe、空间根与 identity', () => {
-    const defaultLight = resolvePointChartSpec(base);
-    const defaultDark = resolvePointChartSpec(base, themeOf(undefined, ThemeMode.Dark));
+    const defaultLight = resolvePointChart(base);
+    const defaultDark = resolvePointChart(base, themeOf(undefined, ThemeMode.Dark));
     const stableProjection = (result: typeof defaultLight) => ({
       data: result.plotSpec.data,
       transform: result.plotSpec.transform,

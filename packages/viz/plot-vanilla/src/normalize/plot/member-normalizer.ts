@@ -13,12 +13,12 @@ import type {
 import { IntervalBoundKind, PlotGuide, PlotMark, PlotTransform } from '@retikz/plot';
 
 import type {
-  FacetGridSpec,
+  FacetGrid,
   NormalizationState,
   PlotAuthoringDeclaration,
   PlotComposition,
-  ScaffoldTrackSpec,
-  SharedScaffoldSpec,
+  ScaffoldTrack,
+  SharedScaffold,
 } from './contracts';
 import type { InputPlotAxis, InputPlotLegend } from './input-guides';
 import type {
@@ -59,22 +59,22 @@ import {
 } from './style-sugar';
 
 type Collected = NormalizationState;
-type CompositionSpec = PlotComposition;
+type Composition = PlotComposition;
 
 const facetDimensionOf = (
-  dimension: string | NonNullable<FacetGridSpec['row']> | undefined,
-): NonNullable<FacetGridSpec['row']> | undefined => {
+  dimension: string | NonNullable<FacetGrid['row']> | undefined,
+): NonNullable<FacetGrid['row']> | undefined => {
   if (dimension === undefined) return undefined;
   return typeof dimension === 'string' ? { field: dimension } : dimension;
 };
 
 const scaffoldTracksOf = (
   scaffoldId: string,
-  propTracks: Array<ScaffoldTrackSpec> | undefined,
-): Array<ScaffoldTrackSpec> => {
+  propTracks: Array<ScaffoldTrack> | undefined,
+): Array<ScaffoldTrack> => {
   const tracks = [...(propTracks ?? [])];
   if (tracks.length === 0) {
-    throw new Error(`buildPlotSpec: <Scaffold id="${scaffoldId}"> requires at least one track`);
+    throw new Error(`buildPlotIR: <Scaffold id="${scaffoldId}"> requires at least one track`);
   }
   return tracks;
 };
@@ -90,15 +90,15 @@ export const applyDeclaration = (
   if (declaration.kind === 'facet') {
     const { id, row, column, empty, coordinate, view, viewIdTemplate, header, spacing, resolve } = child.props as {
       id: string;
-      row?: string | NonNullable<FacetGridSpec['row']>;
-      column?: string | NonNullable<FacetGridSpec['column']>;
-      empty?: FacetGridSpec['empty'];
-      coordinate?: FacetGridSpec['coordinate'];
+      row?: string | NonNullable<FacetGrid['row']>;
+      column?: string | NonNullable<FacetGrid['column']>;
+      empty?: FacetGrid['empty'];
+      coordinate?: FacetGrid['coordinate'];
       view?: string;
       viewIdTemplate?: string;
-      header?: FacetGridSpec['header'];
-      spacing?: CompositionSpec['spacing'];
-      resolve?: CompositionSpec['resolve'];
+      header?: FacetGrid['header'];
+      spacing?: Composition['spacing'];
+      resolve?: Composition['resolve'];
     };
     into.facets.push({
       kind: 'facet',
@@ -118,13 +118,13 @@ export const applyDeclaration = (
   if (declaration.kind === 'scaffold') {
     const { id, coordinate, sharedRoles, frame, tracks, viewIdTemplate, spacing, resolve } = child.props as {
       id: string;
-      coordinate?: SharedScaffoldSpec['coordinate'];
-      sharedRoles: SharedScaffoldSpec['sharedRoles'];
-      frame?: SharedScaffoldSpec['frame'];
-      tracks?: Array<ScaffoldTrackSpec>;
-      viewIdTemplate?: SharedScaffoldSpec['viewIdTemplate'];
-      spacing?: CompositionSpec['spacing'];
-      resolve?: CompositionSpec['resolve'];
+      coordinate?: SharedScaffold['coordinate'];
+      sharedRoles: SharedScaffold['sharedRoles'];
+      frame?: SharedScaffold['frame'];
+      tracks?: Array<ScaffoldTrack>;
+      viewIdTemplate?: SharedScaffold['viewIdTemplate'];
+      spacing?: Composition['spacing'];
+      resolve?: Composition['resolve'];
     };
     into.scaffolds.push({
       kind: 'tracks',
@@ -140,7 +140,7 @@ export const applyDeclaration = (
     return;
   }
   if (declaration.kind === 'track') {
-    throw new Error('buildPlotSpec: <Track> must be declared inside <Scaffold>');
+    throw new Error('buildPlotIR: <Track> must be declared inside <Scaffold>');
   }
   if (declaration.kind === 'path-mark') {
     const props = child.props as InputPlotPathMark;
@@ -348,12 +348,12 @@ export const applyDeclaration = (
     const arrangementGroup = group ?? series;
     if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
       throw new Error(
-        'buildPlotSpec: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"',
+        'buildPlotIR: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"',
       );
     }
     if (stackOffset !== undefined && explicitArrangement === 'normalize-stack') {
       throw new Error(
-        'buildPlotSpec: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks',
+        'buildPlotIR: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks',
       );
     }
     const arrangement =
@@ -391,7 +391,7 @@ export const applyDeclaration = (
         explicitBounds !== undefined
       ) {
         throw new Error(
-          'buildPlotSpec: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds',
+          'buildPlotIR: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds',
         );
       }
       into.shortcutTransforms.push({
@@ -423,12 +423,12 @@ export const applyDeclaration = (
     if (explicitBounds !== undefined) {
       if (rawDirection !== undefined) {
         throw new Error(
-          'buildPlotSpec: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly',
+          'buildPlotIR: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly',
         );
       }
       if (width !== undefined) {
         throw new Error(
-          'buildPlotSpec: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly',
+          'buildPlotIR: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly',
         );
       }
       const colorEnc = colorChannel(color, series ?? group);
@@ -464,50 +464,50 @@ export const applyDeclaration = (
     const histogram = x0 !== undefined && x1 !== undefined;
     const proportional = width !== undefined;
     if (proportional && histogram) {
-      throw new Error('buildPlotSpec: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
+      throw new Error('buildPlotIR: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
     }
     if (proportional && arrangement !== undefined) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts',
+        'buildPlotIR: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts',
       );
     }
     if (proportional && stackOffset !== undefined) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts',
+        'buildPlotIR: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts',
       );
     }
     if (proportional && (group !== undefined || series !== undefined)) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping',
+        'buildPlotIR: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping',
       );
     }
     if (histogram && direction === 'horizontal') {
       throw new Error(
-        'buildPlotSpec: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds',
+        'buildPlotIR: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds',
       );
     }
     if (histogram && arrangement !== undefined) {
-      throw new Error('buildPlotSpec: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds');
+      throw new Error('buildPlotIR: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds');
     }
     if ((x0 === undefined) !== (x1 === undefined)) {
-      throw new Error('buildPlotSpec: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
+      throw new Error('buildPlotIR: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
     }
     if (!histogram && !proportional && x === undefined) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
+        'buildPlotIR: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
       );
     }
     const valueField = direction === 'horizontal' ? x : y;
     if (valueField === undefined) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form',
+        'buildPlotIR: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form',
       );
     }
     const colorEnc = colorChannel(color, series ?? group);
     const categoryField = direction === 'horizontal' ? y : x;
     if (!histogram && !proportional && categoryField === undefined) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
+        'buildPlotIR: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
       );
     }
     const bandRole = direction === 'horizontal' ? 'y' : 'x';
@@ -518,7 +518,7 @@ export const applyDeclaration = (
     };
     if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup === undefined) {
       throw new Error(
-        'buildPlotSpec: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments',
+        'buildPlotIR: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments',
       );
     }
     if (arrangement === 'normalize-stack') {
@@ -629,7 +629,7 @@ export const applyDeclaration = (
     if (scale !== undefined) {
       if (dimension !== 'x' && dimension !== 'y') {
         throw new Error(
-          `buildPlotSpec: <Axis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
+          `buildPlotIR: <Axis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
         );
       }
       into.scales.push({ dimension, type: scale });

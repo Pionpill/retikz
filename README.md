@@ -181,7 +181,7 @@ Local Retikz web services use fixed `7xxx` ports. Set one checkout slot in the i
 RETIKZ_DEV_SLOT=02
 ```
 
-Docs resolves to `7100 + slot` and Bench resolves to `7200 + slot`; slot `02`, for example, uses Docs `7102` and Bench `7202`. Long-lived checkout slots are `00` main, `01` next, `02` next-kernel, `03` next-library, `04` next-schematic, `05` next-viz, and `06` next-diagram. `RETIKZ_DOCS_PORT` or `RETIKZ_BENCH_PORT` can override one service when needed. Ports are strict and never auto-increment on conflicts.
+Docs resolves to `7100 + slot` and Bench resolves to `7200 + slot`; slot `02`, for example, uses Docs `7102` and Bench `7202`. Long-lived checkout slots are `00` main, `01` next, `02` next-kernel, `03` next-library, `04` next-schematic, and `05` next-viz. `RETIKZ_DOCS_PORT` or `RETIKZ_BENCH_PORT` can override one service when needed. Ports are strict and never auto-increment on conflicts.
 
 Useful links:
 

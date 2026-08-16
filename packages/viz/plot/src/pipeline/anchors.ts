@@ -4,7 +4,7 @@ import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import type { AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
-import type { IRPlotAnchorIdSpec } from '../schemas';
+import type { IRPlotAnchorId } from '../schemas';
 
 import { slug } from '../contract';
 
@@ -43,7 +43,7 @@ export const createAnchorRegistry = (options: {
     return options.plotId === undefined ? scoped : `${options.plotId}.${scoped}`;
   };
 
-  const makeId = (spec: IRPlotAnchorIdSpec, row: ExternalRow, owner: AnchorOwner): string => {
+  const makeId = (spec: IRPlotAnchorId, row: ExternalRow, owner: AnchorOwner): string => {
     const prefix = spec.prefix ?? defaultPrefix(owner);
     if (spec.field !== undefined) {
       const raw = resolveFieldPath(row, spec.field);

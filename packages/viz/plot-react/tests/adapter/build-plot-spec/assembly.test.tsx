@@ -1,21 +1,21 @@
-import type { IRPlotRelateTransform, IRPlotRelationRoutingSpec, IRPlotSpec } from '@retikz/plot';
+import type { IRPlotRelateTransform, IRPlotRelationRouting, IRPlot } from '@retikz/plot';
 
-import { lowerPlots, PlotSpecSchema } from '@retikz/plot';
+import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';
 
-describe('buildPlotSpec 装配', () => {
-  it('透传 Plot plotThemeTokens 到 canonical PlotSpec', () => {
-    const plotThemeTokens: NonNullable<IRPlotSpec['plotThemeTokens']> = { 'plot.palette.series': ['#2563eb'] };
-    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokens });
+describe('buildPlotIR 装配', () => {
+  it('透传 Plot plotThemeTokens 到 canonical IRPlot', () => {
+    const plotThemeTokens: NonNullable<IRPlot['plotThemeTokens']> = { 'plot.palette.series': ['#2563eb'] };
+    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokens });
     expect(spec.plotThemeTokens).toEqual(plotThemeTokens);
   });
 
-  it('透传 Plot plotThemeTokenRules 到 canonical PlotSpec', () => {
-    const plotThemeTokenRules: NonNullable<IRPlotSpec['plotThemeTokenRules']> = [
+  it('透传 Plot plotThemeTokenRules 到 canonical IRPlot', () => {
+    const plotThemeTokenRules: NonNullable<IRPlot['plotThemeTokenRules']> = [
       {
         select: { dimension: 'x' },
         tokens: {
@@ -24,13 +24,13 @@ describe('buildPlotSpec 装配', () => {
         },
       },
     ];
-    const spec = buildPlotSpec(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokenRules });
+    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokenRules });
     expect(spec.plotThemeTokenRules).toEqual(plotThemeTokenRules);
   });
 
-  it('单 line：装配出等价手写 IRPlotSpec（薄 Plot：无默认 guides）', () => {
-    const spec = buildPlotSpec(<PathMark x="month" y="revenue" order="month" />, '__plot');
-    const expected: IRPlotSpec = {
+  it('单 line：装配出等价手写 IRPlot（薄 Plot：无默认 guides）', () => {
+    const spec = buildPlotIR(<PathMark x="month" y="revenue" order="month" />, '__plot');
+    const expected: IRPlot = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },
@@ -46,12 +46,12 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('单 point：marks 等价手写', () => {
-    const spec = buildPlotSpec(<PointMark x="month" y="revenue" />, '__plot');
+    const spec = buildPlotIR(<PointMark x="month" y="revenue" />, '__plot');
     expect(spec.marks).toEqual([{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }]);
   });
 
   it('point size 字段 → size 通道', () => {
-    const spec = buildPlotSpec(<PointMark x="lng" y="lat" size="pop" />, '__plot', {
+    const spec = buildPlotIR(<PointMark x="lng" y="lat" size="pop" />, '__plot', {
       dataFieldNames: new Set(['pop']),
     });
     expect(spec.marks[0]).toEqual({
@@ -62,7 +62,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('point opacity 字段 → opacity 通道', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" opacity="density" />, '__plot', {
+    const spec = buildPlotIR(<PointMark x="x" y="y" opacity="density" />, '__plot', {
       dataFieldNames: new Set(['density']),
     });
     expect(spec.marks[0]).toEqual({
@@ -73,7 +73,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('point extension channels -> encoding.channels', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <PointMark x="x" y="y" channels={{ intensity: 'score', threshold: { kind: 'constant', value: 0.8 } }} />,
       '__plot',
     );
@@ -91,7 +91,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('layer prop forwards to marks and guides', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark x="x" y="y" layer={{ zIndex: 120 }} color="kind" />
         <Axis dimension="x" layer={{ zIndex: 240 }} />
@@ -109,7 +109,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('point shape 字段 → shape 通道', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" shape="category" />, '__plot', {
+    const spec = buildPlotIR(<PointMark x="x" y="y" shape="category" />, '__plot', {
       dataFieldNames: new Set(['category']),
     });
     expect(spec.marks[0]).toEqual({
@@ -120,7 +120,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('point stroke 字段 → stroke / strokeWidth 通道', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" stroke="region" strokeWidth="density" />, '__plot', {
+    const spec = buildPlotIR(<PointMark x="x" y="y" stroke="region" strokeWidth="density" />, '__plot', {
       dataFieldNames: new Set(['region', 'density']),
     });
     expect(spec.marks[0]).toEqual({
@@ -135,7 +135,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('point node style props pass through to mark IR', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <PointMark
         x="x"
         y="y"
@@ -169,7 +169,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('path core style props pass through to mark IR', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <PathMark
         x="x"
         y="y"
@@ -195,7 +195,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('interval core node style props pass through to mark IR', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <IntervalMark x="month" y="revenue" strokeWidth="weight" fillOpacity={0.5} opacity={0.9} />,
       '__plot',
       { dataFieldNames: new Set(['weight']) },
@@ -209,7 +209,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('interval padAngle forwards to interval mark', () => {
-    const spec = buildPlotSpec(<IntervalMark angle="value" padAngle={4} />, '__plot', { coordinate: 'polar2D' });
+    const spec = buildPlotIR(<IntervalMark angle="value" padAngle={4} />, '__plot', { coordinate: 'polar2D' });
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       padAngle: 4,
@@ -217,13 +217,13 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('interval pull forwards numeric and field values to interval mark', () => {
-    const numeric = buildPlotSpec(<IntervalMark angle="value" pull={12} />, '__plot', { coordinate: 'polar2D' });
+    const numeric = buildPlotIR(<IntervalMark angle="value" pull={12} />, '__plot', { coordinate: 'polar2D' });
     expect(numeric.marks[0]).toMatchObject({
       type: 'interval',
       pull: { kind: 'constant', value: 12 },
     });
 
-    const field = buildPlotSpec(<IntervalMark angle="value" pull="offset" />, '__plot', { coordinate: 'polar2D' });
+    const field = buildPlotIR(<IntervalMark angle="value" pull="offset" />, '__plot', { coordinate: 'polar2D' });
     expect(field.marks[0]).toMatchObject({
       type: 'interval',
       pull: { kind: 'field', value: 'offset' },
@@ -231,7 +231,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('relation mark assembles source-target refs, top-level label, path config, and color channel', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark x="x" y="y" anchorId={{ prefix: 'pt', field: 'id' }} />
         <RelationMark
@@ -257,7 +257,7 @@ describe('buildPlotSpec 装配', () => {
       path: { options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 6 } },
       encoding: { color: { field: 'kind', scale: '__color' } },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('relation mark forwards mark-scoped transform and routing strategy', () => {
@@ -269,8 +269,8 @@ describe('buildPlotSpec 装配', () => {
         measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
       },
     ];
-    const routing: IRPlotRelationRoutingSpec = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
-    const spec = buildPlotSpec(
+    const routing: IRPlotRelationRouting = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };
+    const spec = buildPlotIR(
       <RelationMark
         transform={transform}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
@@ -288,11 +288,11 @@ describe('buildPlotSpec 装配', () => {
       label: { content: { field: 'deltaLabel' }, position: 0.5 },
       path: { routing },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('relation mark assembles ribbon kind, shared style, and ribbon options', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <RelationMark
         kind="ribbon"
         source={{ project: { x: 'sourceX', y: 'sourceY' } }}
@@ -318,11 +318,11 @@ describe('buildPlotSpec 装配', () => {
         options: { interpolation: 'smooth' },
       },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('line + point 叠加：marks 两项、共享 scales/coordinate', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
         <PointMark x="m" y="r" />
@@ -335,13 +335,13 @@ describe('buildPlotSpec 装配', () => {
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
   });
 
-  it('装配产物是合法 IR（过 PlotSpecSchema）', () => {
-    const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  it('装配产物是合法 IR（过 PlotSchema）', () => {
+    const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('忽略非 mark 子节点（裸文本等）', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         hello
         <PathMark x="m" y="r" />
@@ -353,12 +353,12 @@ describe('buildPlotSpec 装配', () => {
 
   // 薄 Plot guide 装配（无默认 / 显式）
   it('dsl_no_axis_no_guides：无 <Axis> → guides 为空（薄 Plot 不补默认轴）', () => {
-    const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
+    const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
     expect(spec.guides).toEqual([]);
   });
 
   it('dsl_explicit_axis_only：写 <Axis dimension="x"/> → 仅该轴（显式所得、无默认）', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
         <Axis dimension="x" />
@@ -369,7 +369,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('dsl_axis_fields：<Axis> 字段逐一落位（含 grid）', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
         <Axis
@@ -397,7 +397,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('dsl_axis_with_grid：<Axis dimension="y" grid/> → grid:true', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
         <Axis dimension="y" grid />
@@ -408,7 +408,7 @@ describe('buildPlotSpec 装配', () => {
   });
 
   it('dsl_axis_grid_domain_endpoints：端点策略原样进入 canonical guide', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
         <Axis dimension="x" grid={{ includeDomain: true }} />
@@ -419,13 +419,13 @@ describe('buildPlotSpec 装配', () => {
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x', grid: { includeDomain: true } }]);
   });
 
-  it('dsl_built_guides_pass_schema：默认装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(<PathMark x="m" y="r" />, '__plot');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+  it('dsl_built_guides_pass_schema：默认装配产物过 PlotSchema', () => {
+    const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('dsl_axis_bad_dim_type：非法 dimension 经 lowering 按坐标系角色拒绝', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
         <Axis dimension="q" />
@@ -433,7 +433,7 @@ describe('buildPlotSpec 装配', () => {
       '__plot',
     );
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'q' }]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
     expect(() => lowerPlots({ __plot: [{ m: 1, r: 2 }] }, { width: 320, height: 200 })[0]?.expand(spec)).toThrow(
       /does not support axis dimension "q"/,
     );

@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
@@ -20,7 +20,7 @@ import { diamondMark } from './mark-custom.definition';
 export const previewControls = customMarkControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const spec: IRPlotSpec = {
+  const spec: IRPlot = {
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'glyphs' },

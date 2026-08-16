@@ -11,12 +11,12 @@ ADR-01~06 让 `@retikz/plot` 能「Plot IR + 数据 → core IR → 渲染」，
 
 ## 决策：建 plot-react / plot-vanilla 两包，各出一层薄包装
 
-**薄包装**：react 的 `<Plot spec data width height/>` 内部接 `lowerPlots` + `<Layout ir composites>`；vanilla 的 `renderPlot(spec, data, options?)` 经 `compileToScene` + `renderToSvgString` 产 SVG 串（SSR）。两路在转发前对 spec 做一次 **`PlotSpecSchema.parse`**（薄包装的唯一「语义」）：合法 spec 为恒等、渲染结果不变；非法 spec（缺 `namespace` / `type` 等判别字段，否则会绕过 composite 路由落到 core 内部崩出与 plot 无关的 TypeError）抛清晰 ZodError，对齐 plot-design §7「AI 可据报错自我修正」契约。
+**薄包装**：react 的 `<Plot spec data width height/>` 内部接 `lowerPlots` + `<Layout ir composites>`；vanilla 的 `renderPlot(spec, data, options?)` 经 `compileToScene` + `renderToSvgString` 产 SVG 串（SSR）。两路在转发前对 spec 做一次 **`PlotSchema.parse`**（薄包装的唯一「语义」）：合法 spec 为恒等、渲染结果不变；非法 spec（缺 `namespace` / `type` 等判别字段，否则会绕过 composite 路由落到 core 内部崩出与 plot 无关的 TypeError）抛清晰 ZodError，对齐 plot-design §7「AI 可据报错自我修正」契约。
 
 理由：
 
 1. **消除样板**：`<Plot spec data/>` / `renderPlot(spec, data)` 把「scene 包裹 + lowerPlots 注入 + Layout/compile」收进一处，文档示例从「`<Layout ir composites>` 那串」变干净。
-2. **薄 = 不改渲染语义**：除入口 `PlotSpecSchema.parse`（合法 spec 恒等）外只转发；数据仍走 `datasets` 注入、不进 IR。
+2. **薄 = 不改渲染语义**：除入口 `PlotSchema.parse`（合法 spec 恒等）外只转发；数据仍走 `datasets` 注入、不进 IR。
 3. **两包对称**：react 出组件、vanilla 出函数 + SSR，对齐库「双 runtime」定位（plot-design §6）。
 4. **lockstep 地基**：先把包建起来 + 最薄能渲染，ADR-08 的 DSL、后续 alpha 的新 mark/scale 都在这两包上长。
 

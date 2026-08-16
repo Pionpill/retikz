@@ -20,8 +20,8 @@ legend 是 GoG 一等 guide（plot-design §3.9）：与 axis 并列、由 scale
 
 以下约束必须在本 ADR 固定：
 
-- **P1 ⑥ target 歧义**：一张 plot 可有多个 color scale、多个 mark 各绑 size/opacity/shape，且 alpha.7 的 size/opacity/shape 默认 scale **在 resolver 内部合成、未必物化进 `IRPlotSpec.scales`**（`lower/channel.ts` 的 `makeSizeResolver` 等只返回逐行函数 `(row)=>radius`，无 domain/range descriptor）。legend 拿不到 domain/range 就画不出。
-- **P1 ⑦ 默认 axes 冲突**：`buildPlotSpec.ts:293` 现规则是「只要有任何 guide 就不加默认 axes」——加 `<Legend>` 会让默认 x/y 轴消失。
+- **P1 ⑥ target 歧义**：一张 plot 可有多个 color scale、多个 mark 各绑 size/opacity/shape，且 alpha.7 的 size/opacity/shape 默认 scale **在 resolver 内部合成、未必物化进 `IRPlot.scales`**（`lower/channel.ts` 的 `makeSizeResolver` 等只返回逐行函数 `(row)=>radius`，无 domain/range descriptor）。legend 拿不到 domain/range 就画不出。
+- **P1 ⑦ 默认 axes 冲突**：`buildPlotIR.ts:293` 现规则是「只要有任何 guide 就不加默认 axes」——加 `<Legend>` 会让默认 x/y 轴消失。
 - **P2 ⑨ 标签契约**：连续 ramp / 时间色 / 分箱区间各需标签规则。
 - **P2 ⑩ 占位**：legend 占空间，须先估尺寸再决定 plotArea，否则只能 overlay / 出界——牵动 `lower/layout.ts` / `expand.ts`。
 
@@ -50,7 +50,7 @@ export const LegendChannel = { Color: 'color', Size: 'size', Opacity: 'opacity',
 
 **(2) target = channel + 可选 scale**（决策 ⑥）：legend 按**它可视化哪个非位置通道**绑定（与 encoding 通道一一对应、用户心智一致）；`scale?` 在「同通道多 scale」时消歧（省略 = 该通道唯一 scale，多于一个且未指定 → fail-loud）。legend 渲染形态（swatch / ramp / 分箱）由 lowering **据绑定 scale 的类型自动选**，用户不手填形态。
 
-**(3) resolver 暴露可复用 scale descriptor**（决策 ⑥ 配套，修 P1 核心）：alpha.7 `lower/channel.ts` 的 `makeSizeResolver` / `makeOpacityResolver` / `makeShapeResolver` 改成不仅返回逐行 `XxxOf` 函数，**同时产出 `ScaleDescriptor`**——含 `{ channel, scaleType, domain, range, field?, fieldType? }`，legend 据此画刻度 / swatch。color 的 descriptor 从 `IRPlotSpec.scales` 里的具名 color scale 取（已物化）。统一一个 `LegendSource` 注册表（lowering 内部，不进 IR）：通道 → descriptor，供 `lowerLegend` 查。
+**(3) resolver 暴露可复用 scale descriptor**（决策 ⑥ 配套，修 P1 核心）：alpha.7 `lower/channel.ts` 的 `makeSizeResolver` / `makeOpacityResolver` / `makeShapeResolver` 改成不仅返回逐行 `XxxOf` 函数，**同时产出 `ScaleDescriptor`**——含 `{ channel, scaleType, domain, range, field?, fieldType? }`，legend 据此画刻度 / swatch。color 的 descriptor 从 `IRPlot.scales` 里的具名 color scale 取（已物化）。统一一个 `LegendSource` 注册表（lowering 内部，不进 IR）：通道 → descriptor，供 `lowerLegend` 查。
 
 ```ts
 // lower/channel.ts —— 概念伪码（resolver 双产出）
@@ -65,7 +65,7 @@ export type ScaleDescriptor = {
 // makeSizeResolver(...) → { of: SizeOf, descriptor: ScaleDescriptor }（domain=[0,maxPositive], range=[MIN,MAX]_RADIUS）
 ```
 
-**(4) 默认 axes 合并规则改 by-type**（决策 ⑦，修 P1）：`buildPlotSpec.ts:293` 从「有任何 guide 即清空默认」改成**按 guide `type` 分别判断默认补齐**——显式 `Axis` 才覆盖对应默认 `Axis`；`Legend` **不抑制**默认 axes。即：默认 axes 在「用户未显式声明同维 Axis」时仍补；Legend 与默认 axes 共存。
+**(4) 默认 axes 合并规则改 by-type**（决策 ⑦，修 P1）：`buildPlotIR.ts:293` 从「有任何 guide 即清空默认」改成**按 guide `type` 分别判断默认补齐**——显式 `Axis` 才覆盖对应默认 `Axis`；`Legend` **不抑制**默认 axes。即：默认 axes 在「用户未显式声明同维 Axis」时仍补；Legend 与默认 axes 共存。
 
 **(5) 估算布局 + 占位**（决策 ⑩，修 P2）：legend 占位牵动 `lower/layout.ts` 的 `computePlotArea`——按 position 在对应边**预留 legend 带宽**（宽度/高度用 `estimateLabelWidth`（已存在）+ swatch 尺寸估），再算 plotArea。`lowerLegend`（`lower/guide.ts` 新增）产 legend scope（swatch/ramp/分箱 + 标签），放在预留带内。标签 formatter **复用 axis 的 tick formatter 链**（决策 ⑨：数字格式 / temporal 格式 / 分箱区间标签），不另造。受**无文字度量**约束（plot-design §13.1）：估算式布局，标签过长溢出、文档明示，测量驱动自适应不做。
 

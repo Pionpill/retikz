@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -47,7 +47,7 @@ describe('Node multi-line text', () => {
     expect(t1?.measuredHeight).toBe(t2?.measuredHeight);
   });
 
-  it("行级 LineSpec 对象的 text 含 '\\n' 也硬拆，硬拆出的行继承该行样式", () => {
+  it("行级 IRLine 对象的 text 含 '\\n' 也硬拆，硬拆出的行继承该行样式", () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -211,7 +211,7 @@ describe('Node multi-line text', () => {
     expect(findText(compileToScene(ir).scene.primitives)).toBeUndefined();
   });
 
-  it('行级 LineSpec 对象可覆盖 fill / opacity（emit 写入对应字段）', () => {
+  it('行级 IRLine 对象可覆盖 fill / opacity（emit 写入对应字段）', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',

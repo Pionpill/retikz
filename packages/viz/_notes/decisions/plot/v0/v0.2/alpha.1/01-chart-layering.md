@@ -7,18 +7,18 @@
 
 ## 背景与目标
 
-Plot 是数据语义到 Core 图形语义的 Grammar-of-Graphics owner；Chart 是建立在 Plot 之上的封闭类型封装。当前 Chart 已不再是对裸 PlotSpec 做一次自动装饰的无 IR helper，而是拥有 JSON-safe ChartSpec、封闭 Canonical Type recipe、统一 resolution、结构化 inspection 和逐类型 Composite，并把图本体解析为完整 PlotSpec，把单图 presentation 交给 Standard 组合。
+Plot 是数据语义到 Core 图形语义的 Grammar-of-Graphics owner；Chart 是建立在 Plot 之上的封闭类型封装。当前 Chart 已不再是对裸 IRPlot 做一次自动装饰的无 IR helper，而是拥有 JSON-safe IRChart、封闭 Canonical Type recipe、统一 resolution、结构化 inspection 和逐类型 Composite，并把图本体解析为完整 IRPlot，把单图 presentation 交给 Standard 组合。
 
 这一实现证明了 Chart / Plot 的纵向分层，但早期主题实现把 Plot surface、axis、legend 与 palette token 统一定义在 Chart，再映射为 Plot theme。该顺序使直接使用的 Plot 无法独立响应 Core effective Theme，也让 Chart 实际拥有了 Plot guide 与 palette 的同义 token vocabulary，与 Visualization Complete 和原子 owner 规则冲突。
 
 本 ADR 解决两个长期问题：
 
-1. 以当前 ChartSpec 与封闭 recipe 主链重新冻结 Chart / Plot 的单向分层，不恢复早期“PlotSpec 装饰 helper”模型
+1. 以当前 IRChart 与封闭 recipe 主链重新冻结 Chart / Plot 的单向分层，不恢复早期“IRPlot 装饰 helper”模型
 2. 把 Plot 视觉 token、preset、解析和映射收回 `@retikz/plot`，让直接 Plot 与 Chart 内部 Plot 消费同一 Core Theme 环境和 Plot contract
 
 ## 决策：Chart 保持独立封装，Plot 先完成领域主题闭环
 
-Chart 保持独立 Tier 3 包：ChartSpec 选择封闭 Canonical Type，Chart recipe 生成完整 PlotSpec，并可把 Chart presentation 与 Plot body 组合为单一 renderer-neutral 结果。Chart 不拥有新的 GoG、Plot registry、Plot lowering 或 renderer 路径；Plot 也不解释 ChartSpec 或把 Chart 作为 Plot member。
+Chart 保持独立 Tier 3 包：IRChart 选择封闭 Canonical Type，Chart recipe 生成完整 IRPlot，并可把 Chart presentation 与 Plot body 组合为单一 renderer-neutral 结果。Chart 不拥有新的 GoG、Plot registry、Plot lowering 或 renderer 路径；Plot 也不解释 IRChart 或把 Chart 作为 Plot member。
 
 Plot 作为 Visualization Complete owner，拥有 Plot surface、guide、label 和 palette 的 canonical theme token vocabulary、四种通用 style 在 light / dark mode 下的领域 preset、token resolver、到 `IRPlotTheme` 与正式 guide / scale / lowering 输入的映射，以及相应 inspection。Chart 只拥有 Chart presentation 与 Chart recipe 表现性默认；需要配置内部 Plot 时，组合或传递 Plot 公开 token contract，不复制 Plot key、value schema、preset 或 merge 规则。
 
@@ -29,32 +29,32 @@ Core 继续只拥有 `ThemeStyle`、`ThemeMode`、Scene / Scope 继承与 Compos
 1. Axis、Legend、Plot label 与 palette 是 Plot 可视化语义，直接 Plot 与 Chart 内部 Plot 必须共享一个 owner 和一条消费主链
 2. Chart 的价值是封闭类型配方、稳定覆盖、presentation 与 inspection，不是替 Plot 建立主题前置层
 3. Core Theme context 已能向 Composite 提供完整 style / mode，领域包继续维护同义环境字段只会产生不一致默认
-4. Chart 生成的 PlotSpec 保持可独立校验和检查后，Plot 可以统一处理 direct、nested、React、Vanilla 与手写 JSON 输入
+4. Chart 生成的 IRPlot 保持可独立校验和检查后，Plot 可以统一处理 direct、nested、React、Vanilla 与手写 JSON 输入
 
 ## 基础数据结构与公开契约
 
 ### Chart / Plot resolution 边界
 
 ```text
-ChartSpec
+IRChart
   -> closed Chart recipe + invariant validation
-  -> complete PlotSpec + optional Chart presentation
+  -> complete IRPlot + optional Chart presentation
   -> Plot lowering + Standard presentation composition
   -> Core IR
 ```
 
-- ChartSpec 是独立、严格、JSON-safe 的封闭判别 union，不是 PlotSpec alias
+- IRChart 是独立、严格、JSON-safe 的封闭判别 union，不是 IRPlot alias
 - Chart recipe 可以复用、组合或提供符合现有 Plot contract 的具体 definition，但不能增加新的 GoG 能力轴或私有执行路径
 - Chart 可以包含显式 Plot members；Plot 不包含 Chart
-- 完整 PlotSpec 必须可独立校验与 inspection，Chart 最终组合不能吞掉 Plot 的 identity、provenance、locator 或空间 handle
+- 完整 IRPlot 必须可独立校验与 inspection，Chart 最终组合不能吞掉 Plot 的 identity、provenance、locator 或空间 handle
 - Chart type 核心配方不可被表现性配置撤销；theme token 只控制可撤销的视觉默认
 
 ### Plot theme token contract
 
-PlotSpec 在既有 `colors` shorthand 与原生 `IRPlotTheme` 之外，提供 Plot-owned sparse token override：
+IRPlot 在既有 `colors` shorthand 与原生 `IRPlotTheme` 之外，提供 Plot-owned sparse token override：
 
 ```ts
-type IRPlotSpec = {
+type IRPlot = {
   styleTokens?: IRPlotStyleTokenOverrides;
   colors?: ReadonlyArray<string>;
   theme?: IRPlotTheme;
@@ -136,20 +136,20 @@ Plot Composite 消费当前位置完整的 Core effective Theme，并固定以�
 ```text
 Core effective Theme
   -> Plot preset tokens
-  -> PlotSpec styleTokens
-  -> PlotSpec colors
-  -> PlotSpec theme
+  -> IRPlot styleTokens
+  -> IRPlot colors
+  -> IRPlot theme
   -> local guide / mark / scale config
 ```
 
-- effective Theme 的 `style` / `mode` 选择 Plot 的完整 preset；PlotSpec 不重复声明同义 style / mode
+- effective Theme 的 `style` / `mode` 选择 Plot 的完整 preset；IRPlot 不重复声明同义 style / mode
 - `styleTokens` 稀疏覆盖 canonical key；每个 key 都是原子替换，array 与 `axis.tick.mark` 等对象 token 不 deep merge 或 concat
 - `colors` 只作为 categorical / series / sector palette shorthand，不覆盖 sequential / diverging
 - 原生 `IRPlotTheme` 是更接近 Plot 正式结构的显式覆盖
 - 具体 guide、mark 与 scale 配置优先；显式 scale range / scheme 始终高于 theme palette
 - `IRPlotTheme` 合并中，数组、scalar、`false` 与带不同 discriminator 的对象按完整值替换；同一结构对象只合并其合法字段
 
-Chart Composite 从同一个 effective Theme 解析 Chart-owned token。ChartSpec 的主题 authoring surface 固定拆分为：
+Chart Composite 从同一个 effective Theme 解析 Chart-owned token。IRChart 的主题 authoring surface 固定拆分为：
 
 ```ts
 type IRChartShared = {
@@ -161,11 +161,11 @@ type IRChartShared = {
 ```
 
 - `styleTokens` 只接受 Chart presentation 与 Chart recipe token，不再接受任何 Plot key
-- `plotStyleTokens` 原样进入最终 `PlotSpec.styleTokens`；`colors` 与 `theme` 继续进入同名 PlotSpec 字段
-- ChartSpec 删除重复的 `style` / `themeMode`，Chart 与内部 Plot 都读取 Composite context 中同一个 effective Theme
-- Chart resolver 不把 resolved Plot token 或完整 materialized Plot theme 写回 PlotSpec；因 recipe identity 需要读取 series palette 等值时，调用 Plot 公开纯 resolver 取得瞬时结果，并让最终 Plot 再沿同一确定性主链消费原始输入
+- `plotStyleTokens` 原样进入最终 `IRPlot.styleTokens`；`colors` 与 `theme` 继续进入同名 IRPlot 字段
+- IRChart 删除重复的 `style` / `themeMode`，Chart 与内部 Plot 都读取 Composite context 中同一个 effective Theme
+- Chart resolver 不把 resolved Plot token 或完整 materialized Plot theme 写回 IRPlot；因 recipe identity 需要读取 series palette 等值时，调用 Plot 公开纯 resolver 取得瞬时结果，并让最终 Plot 再沿同一确定性主链消费原始输入
 
-Plot 公开纯 resolver 的稳定输入是 effective `ResolvedTheme` 与 PlotSpec 的 `styleTokens` / `colors` / `theme`，稳定输出至少包含 complete resolved token map、逐 token source 与经 schema 校验的 resolved native theme / palette。它不读取 dataset、Chart type、adapter 或 renderer 状态；直接 Plot、Chart inspection 与最终 Plot lowering 必须复用这一份解析语义。
+Plot 公开纯 resolver 的稳定输入是 effective `ResolvedTheme` 与 IRPlot 的 `styleTokens` / `colors` / `theme`，稳定输出至少包含 complete resolved token map、逐 token source 与经 schema 校验的 resolved native theme / palette。它不读取 dataset、Chart type、adapter 或 renderer 状态；直接 Plot、Chart inspection 与最终 Plot lowering 必须复用这一份解析语义。
 
 `axis.enabled`、`axis.grid.enabled` 与 `legend.enabled` 当前决定 Chart recipe 是否创建默认 guide，不是 Plot 对已有 guide 的视觉映射，因此不进入 Plot token map。它们继续属于 Chart-owned recipe token；具体 Chart key 由 Chart ADR 维护，但不得占用无 owner 的 `axis.*` / `legend.*` Plot namespace。
 
@@ -178,7 +178,7 @@ Token map 是闭合数据，不执行代码、不按名称 dispatch，因此本 
 ## 行为、失败语义与兼容性
 
 - Core 默认 `neutral + light` 下，直接 Plot 的既有视觉基线保持稳定；第一版 Plot preset 必须以当前 Plot resolver 默认作为兼容基线，不能机械复制 Chart 默认后改变 direct Plot
-- 非默认 Scene / Scope Theme 开始同时驱动直接 Plot、Chart 内部 Plot 与 Chart presentation；同一 PlotSpec 在相同 effective Theme 下不因是否位于 Chart 内而获得不同 Plot preset
+- 非默认 Scene / Scope Theme 开始同时驱动直接 Plot、Chart 内部 Plot 与 Chart presentation；同一 IRPlot 在相同 effective Theme 下不因是否位于 Chart 内而获得不同 Plot preset
 - 当前 Chart catalog 中已经映射到 Plot 的 palette、axis、legend 与 Plot surface 值作为非默认 style / mode 与 Chart 迁移的设计输入；迁移后由 Plot owner 维护，不因现有代码位置继续归 Chart。精确 hex、尺寸和 scheme 是 Plot preset 数据，可在不改变四种人格和上述兼容基线的前提下审阅调优
 - 已有 `IRPlotTheme`、`colors` 与具体 guide / scale 配置继续有效，并按本 ADR 的优先级获得更高覆盖权
 - Plot 新增 sparse token surface 是公开能力扩展；接入 Core Theme 后，非默认 Theme 环境下的视觉变化是有意的用户可观察行为
@@ -191,7 +191,7 @@ Token map 是闭合数据，不执行代码、不按名称 dispatch，因此本 
 | Owner                    | 拥有                                                                                | 不拥有                                                |
 | ------------------------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | `@retikz/plot`           | Plot token vocabulary、preset、resolver、mapping、inspection 与 lowering            | Chart presentation、Canonical Type、Core Theme 继承   |
-| `@retikz/chart`          | ChartSpec、封闭 recipe、Chart presentation / recipe token、resolution 与 inspection | Plot token、Plot registry / lowering、Standard solver |
+| `@retikz/chart`          | IRChart、封闭 recipe、Chart presentation / recipe token、resolution 与 inspection | Plot token、Plot registry / lowering、Standard solver |
 | `@retikz/standard`       | 去除领域词汇后的 presentation、layout、surface 与通用绘图 composite                 | Plot guide / palette、Chart type                      |
 | `@retikz/core`           | Theme style / mode、继承、Composite context、Core IR 与 Scene compile               | 领域 preset、Plot / Chart token、领域 cascade         |
 | React / Vanilla adapters | 等价 authoring、datasets / definitions 注入与 runtime 接线                          | 新 token、adapter-only preset、不同 merge             |
@@ -206,9 +206,9 @@ Chart 需要新的可视化语法能力时，先补 Plot schema / contract / pro
 - 主责包与协作包：Plot 主责；Chart、Standard、Core 与 adapters 协作
 - 是否可由现有能力组合：既有 `IRPlotTheme`、guide / scale schema、Plot lowering 与 Core effective Theme 可作为主链，但需要扩展 Plot-owned token contract 与 preset resolver
 - 是否需要下沉：Theme environment 已由 Core 提供；token value atom 继续复用 Core / Plot schema，不新增 Core 领域词汇
-- 内部表达链路：effective Theme 与 PlotSpec token / theme 输入解析为正式 guide、palette、label 与 surface 配置，再沿既有 Plot lowering 下沉
+- 内部表达链路：effective Theme 与 IRPlot token / theme 输入解析为正式 guide、palette、label 与 surface 配置，再沿既有 Plot lowering 下沉
 - 外部扩展链路：token vocabulary 闭合且不采用 registry；自定义 Mark、Scale、Coordinate、Channel 等能力仍沿 Plot define-registry，scheme name 继续沿 built-in + `options.colorSchemes` 的现有 resolver 扩展并在 Plot lowering 中诊断
-- 下游闭环：Chart 产生完整 PlotSpec，Plot 统一解析，Standard 处理通用呈现，Core / renderer 执行已物化结果；adapter 不建立旁路
+- 下游闭环：Chart 产生完整 IRPlot，Plot 统一解析，Standard 处理通用呈现，Core / renderer 执行已物化结果；adapter 不建立旁路
 - provenance / locator：Plot 的 identity、provenance、locator 与空间 handle 保持原 owner；theme inspection 作为独立可解释 sidecar，不改写数据 lineage
 - 本轮结论：扩展 Visualization Complete，并把已倒置的 Plot token 所有权从 Chart 收回 Plot
 
@@ -219,7 +219,7 @@ Chart 需要新的可视化语法能力时，先补 Plot schema / contract / pro
 - 在每个领域 spec 重复 `style` / `mode`：会绕开 Scene / Scope 继承并使嵌套结果不一致
 - 让 Chart 把 resolved Plot theme 完全物化后再交给 Plot：会遮蔽 Plot token 来源，使直接 Plot 与 nested Plot 的 inspection 和默认链分叉
 - 让 adapter、CSS 或 renderer 根据 preset 名称补默认：会破坏 JSON、React、Vanilla 与 renderer parity
-- 恢复早期无 ChartSpec 的 PlotSpec 装饰 helper：无法承载封闭 type identity、核心 recipe、presentation 与结构化 inspection
+- 恢复早期无 IRChart 的 IRPlot 装饰 helper：无法承载封闭 type identity、核心 recipe、presentation 与结构化 inspection
 
 ## 测试策略摘要
 
@@ -227,7 +227,7 @@ Chart 需要新的可视化语法能力时，先补 Plot schema / contract / pro
 
 - schema / type 证明 Plot token 的 sparse、resolved 与 preset 复用单一字段契约，未知 key、错误 value 与缺失 required token fail-loud
 - provider / pipeline 证明四 style × 两 mode 完整、cascade 确定、每个 token 都有正式 consumer，consumer 不按 preset 名称分支
-- Core / Composite 集成证明 Scene / Scope Theme 继承进入直接 Plot 与 Chart 内部 Plot，并保持相同 PlotSpec 的 Plot 结果等价
+- Core / Composite 集成证明 Scene / Scope Theme 继承进入直接 Plot 与 Chart 内部 Plot，并保持相同 IRPlot 的 Plot 结果等价
 - Chart resolution 证明 recipe 核心不变量与主题默认正交，Chart 只消费 Plot 公开 token / resolver
 - inspection 证明 effective environment、token 来源、原生覆盖和 owner mapping 可解释
 - React / Vanilla / JSON 与 renderer parity 证明 adapter、SVG、Canvas 不维护独立主题默认

@@ -4,14 +4,14 @@ import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
 import type {
   LowerTablesOptions,
-  ManualTableSpecInput,
+  ManualTableInput,
   TableDetailColumnInput,
   TableLayoutManifest,
 } from '@retikz/table';
-import type { InputDetailTable, InputManualTable, InputTable, InputTableSpec } from '@retikz/table-vanilla';
+import type { InputDetailTable, InputManualTable, InputTable, InputTableVariant } from '@retikz/table-vanilla';
 
 import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
-import { inputTableFromSpec, InputTableKind } from '@retikz/table-vanilla';
+import { inputTableFromIR, InputTableKind } from '@retikz/table-vanilla';
 
 import type { DetailTableProps } from './DetailTable';
 import type { ManualTableProps } from './ManualTable';
@@ -22,7 +22,7 @@ import { buildManualStructure } from './components/build-manual-structure';
 
 /** React Table runtime 的入口类型 */
 export const ReactTableRuntimeKind = {
-  /** 通用 TableSpec 入口 */
+  /** 通用 IRTable 入口 */
   Table: 'table',
   /** detail authoring 入口 */
   Detail: 'detail',
@@ -85,7 +85,7 @@ const assertTableReactNonEmptyString = (value: string, message: string): void =>
 /** 三个 React Table 组件共享的规范化运行时输入 */
 export type ReactTableRuntime = Readonly<{
   /** 尚待 Table Vanilla 归一化的根 authoring 输入 */
-  table: InputTableSpec;
+  table: InputTableVariant;
   /** Table lowering 消费的外部 datasets */
   datasets: ExternalDatasets;
   /** 保留原始引用的 dataset 输入，用于 standalone compile memo */
@@ -168,7 +168,7 @@ const detailColumnsOf = (props: DetailTableProps): Array<TableDetailColumnInput>
 };
 
 /** 统一 ManualTable 的 rows props 与 Row marker children authoring */
-const manualStructureOf = (props: ManualTableProps): Pick<ManualTableSpecInput, 'rows' | 'rowKinds'> => {
+const manualStructureOf = (props: ManualTableProps): Pick<ManualTableInput, 'rows' | 'rowKinds'> => {
   const structure = props as Pick<ManualTableProps, 'rows' | 'rowKinds' | 'children'>;
   if (structure.children !== undefined) {
     if (structure.rows !== undefined || structure.rowKinds !== undefined) {
@@ -229,13 +229,13 @@ export const resolveReactTableRuntime = (
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
   validateHostStyleMigration(props);
-  let table: InputTableSpec;
+  let table: InputTableVariant;
   let datasets: ExternalDatasets;
   let datasetSource: ExternalDatasets | Array<ExternalRow>;
   let datasetReference: string | undefined;
   if (kind === ReactTableRuntimeKind.Table) {
     const tableProps = props as TableProps;
-    table = inputTableFromSpec(tableProps.spec);
+    table = inputTableFromIR(tableProps.spec);
     datasets = tableProps.data ?? EMPTY_DATASETS;
     datasetSource = datasets;
   } else if (kind === ReactTableRuntimeKind.Detail) {

@@ -94,7 +94,7 @@ export const recordResolveLabel = (
 ): void => {
   if (resolveLabel === undefined) return;
   if (id === undefined) {
-    throw new Error('buildPlotSpec: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
+    throw new Error('buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
   }
   into.resolveLabels[id] = resolveLabel;
 };
@@ -113,10 +113,10 @@ export const canonicalReferenceLabel = (
   const hasNodeOnlyField = entries.some(entry => 'keepUpright' in entry || 'pin' in entry || 'rotate' in entry);
   const hasGeometryOnlyField = entries.some(entry => 'side' in entry || 'sloped' in entry);
   if (usesNodeHost && hasGeometryOnlyField) {
-    throw new Error('buildPlotSpec: reference band / region expects node label fields');
+    throw new Error('buildPlotIR: reference band / region expects node label fields');
   }
   if (!usesNodeHost && hasNodeOnlyField) {
-    throw new Error('buildPlotSpec: reference line expects geometry label fields');
+    throw new Error('buildPlotIR: reference line expects geometry label fields');
   }
   return label;
 };
@@ -172,32 +172,32 @@ export const collectReference = (
   if (region) {
     if (!hasX || !hasY || xTo === undefined || yTo === undefined) {
       throw new Error(
-        'buildPlotSpec: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area',
+        'buildPlotIR: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area',
       );
     }
     if (extentField !== undefined || extentToField !== undefined) {
       throw new Error(
-        'buildPlotSpec: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
+        'buildPlotIR: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
       );
     }
   } else if (hasX === hasY) {
     throw new Error(
-      'buildPlotSpec: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither',
+      'buildPlotIR: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither',
     );
   }
   if (!region && hasX && yTo !== undefined) {
     throw new Error(
-      'buildPlotSpec: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
+      'buildPlotIR: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
     );
   }
   if (!region && hasY && xTo !== undefined) {
     throw new Error(
-      'buildPlotSpec: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
+      'buildPlotIR: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
     );
   }
   if ((extentField === undefined) !== (extentToField === undefined)) {
     throw new Error(
-      'buildPlotSpec: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)',
+      'buildPlotIR: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)',
     );
   }
   // 常量 rule（数字常量轴）→ color 作 value；per-datum（字段串）→ color 作 field（AUTO_COLOR）

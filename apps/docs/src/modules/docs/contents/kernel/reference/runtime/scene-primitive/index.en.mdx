@@ -24,7 +24,7 @@ Scene primitives are the output contract of `compileToScene(...).scene`: after I
 
 | Resource        | Fields                | Notes                                                                              |
 | --------------- | --------------------- | ---------------------------------------------------------------------------------- |
-| `PaintResource` | `kind:'paint'` / `id` | `spec` stores `IRPaintSpec`; a pattern may also carry the compile-resolved `tile?` |
+| `PaintResource` | `kind:'paint'` / `id` | `spec` stores `IRPaint`; a pattern may also carry the compile-resolved `tile?` |
 | `ClipResource`  | `kind:'clip'` / `id`  | `shape` stores clipping geometry in user coordinates                               |
 
 `ClipResource.shape` selects one of these structures by `kind`:
@@ -104,7 +104,7 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 
 ## Arrows
 
-`PathPrim.arrowStart` / `arrowEnd` use `ResolvedArrowEndSpec`. Note: all visual inputs (`scale` / `length` / `width` / `color` / `fill` / `lineWidth`) are **consumed during the compile resolve phase** and do **not** appear in this structure. What gets attached is a "resolved marker description" — internal geometry plus wrapper params; the adapter only **materializes** it (embeds it in a `<marker>` or draws it on Canvas), with no switch, no `emit` call, and no arrows-registry lookup:
+`PathPrim.arrowStart` / `arrowEnd` use `ResolvedArrowEnd`. Note: all visual inputs (`scale` / `length` / `width` / `color` / `fill` / `lineWidth`) are **consumed during the compile resolve phase** and do **not** appear in this structure. What gets attached is a "resolved marker description" — internal geometry plus wrapper params; the adapter only **materializes** it (embeds it in a `<marker>` or draws it on Canvas), with no switch, no `emit` call, and no arrows-registry lookup:
 
 | Field          | Type                     | Notes                                                                                                                                |
 | -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -116,11 +116,11 @@ Coordinates use user units. Angles follow the screen-coordinate convention: `0 =
 | `opacity?`     | `number`                 | Marker element-level opacity 0..1; inherits the path opacity when omitted                                                            |
 | `marker`       | `Array<MarkerPrimitive>` | `def.emit` output: internal geometry in the local baseSize coordinate space (`fill` limited to `string \| { kind:'contextStroke' }`) |
 
-The compile layer has already resolved endpoint arrow entries from core IR `marks` into `ResolvedArrowEndSpec`: it looks up the effective arrow table, calls `def.emit` to produce geometry, and shrinks path endpoints. Renderers do not need to know the arrow registry or recompute visual sizes.
+The compile layer has already resolved endpoint arrow entries from core IR `marks` into `ResolvedArrowEnd`: it looks up the effective arrow table, calls `def.emit` to produce geometry, and shrinks path endpoints. Renderers do not need to know the arrow registry or recompute visual sizes.
 
 ### Marker primitive subset
 
-`ResolvedArrowEndSpec.marker` does not accept the full `ScenePrimitive` union. It uses a narrow subset in marker-local coordinates:
+`ResolvedArrowEnd.marker` does not accept the full `ScenePrimitive` union. It uses a narrow subset in marker-local coordinates:
 
 | Type                | Expresses                                 |
 | ------------------- | ----------------------------------------- |

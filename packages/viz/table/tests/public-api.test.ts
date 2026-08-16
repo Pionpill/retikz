@@ -40,7 +40,7 @@ type RemovedIRTableCell = TableTypes.IRTableCell;
 type RemovedIRTableCellAddress = TableTypes.IRTableCellAddress;
 
 // @ts-expect-error 阶段级 resolved layout 不从包根导出
-type RemovedResolvedTableLayoutSpec = TableTypes.ResolvedTableLayoutSpec;
+type RemovedResolvedTableLayout = TableTypes.ResolvedTableLayout;
 // @ts-expect-error 阶段级 track layout 不从包根导出
 type RemovedTableTrackLayout = TableTypes.TableTrackLayout;
 // @ts-expect-error 阶段级 Cell layout 不从包根导出
@@ -65,7 +65,7 @@ type RemovedTableBorderGraph = TableTypes.TableBorderGraph;
 type RemovedResolvedTableCellPlan = TableTypes.ResolvedTableCellPlan;
 
 type RemovedStageTypes = [
-  RemovedResolvedTableLayoutSpec,
+  RemovedResolvedTableLayout,
   RemovedTableTrackLayout,
   RemovedTableCellLayout,
   RemovedTableLayout,
@@ -131,7 +131,7 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('normalizeTableStructure');
     expect(Table).not.toHaveProperty('presentCellPayload');
     expect(Table).not.toHaveProperty('presentTable');
-    expect(Table).not.toHaveProperty('resolveTableLayoutSpec');
+    expect(Table).not.toHaveProperty('resolveTableLayout');
     expect(Table).not.toHaveProperty('resolveTableTrackSizes');
     expect(Table).not.toHaveProperty('solveTableTracks');
     expect(Table).not.toHaveProperty('propagateTableSpanContributions');

@@ -184,12 +184,12 @@ Composite 复用 `artifactSchema` 与 `compile` 返回的 `artifact`。Path kind
 `TextMeasurer` 是 compile 层唯一需要外部环境帮助的地方：
 
 ```ts
-type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+type TextMeasurer = (text: string, font: TextFont) => TextMetrics;
 ```
 
 | Type          | 字段                                        | 说明                                  |
 | ------------- | ------------------------------------------- | ------------------------------------- |
-| `FontSpec`    | `family?` / `size` / `weight?` / `style?`   | 传给 measurer 的字体信息；`size` 必填 |
+| `TextFont`    | `family?` / `size` / `weight?` / `style?`   | 传给 measurer 的字体信息；`size` 必填 |
 | `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | 文本盒尺寸；ascent / descent 可选     |
 
 如果不传 `measureText`，`fallbackMeasurer` 用 `text.length * size * 0.55` 估算宽度、`size * 1.2` 估算高度。它能保证编译可跑，但不适合做精确排版。

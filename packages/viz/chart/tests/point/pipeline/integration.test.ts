@@ -8,7 +8,7 @@ import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import { ChartProvider } from '../../../src';
-import { resolvePointChartSpec } from '../../../src/point';
+import { resolvePointChart } from '../../../src/point';
 
 const datasets: ExternalDatasets = {
   rows: [
@@ -17,7 +17,7 @@ const datasets: ExternalDatasets = {
   ],
 };
 
-const chart = resolvePointChartSpec(
+const chart = resolvePointChart(
   {
     namespace: 'chart',
     type: 'scatter',

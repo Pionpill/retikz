@@ -184,12 +184,12 @@ A Composite reuses its `artifactSchema` and `artifact` compile result. A Path ki
 `TextMeasurer` is the only compile-layer hook that needs help from the host environment:
 
 ```ts
-type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+type TextMeasurer = (text: string, font: TextFont) => TextMetrics;
 ```
 
 | Type          | Fields                                      | Notes                                                 |
 | ------------- | ------------------------------------------- | ----------------------------------------------------- |
-| `FontSpec`    | `family?` / `size` / `weight?` / `style?`   | Font input passed to the measurer; `size` is required |
+| `TextFont`    | `family?` / `size` / `weight?` / `style?`   | Font input passed to the measurer; `size` is required |
 | `TextMetrics` | `width` / `height` / `ascent?` / `descent?` | Text box metrics; ascent / descent are optional       |
 
 When `measureText` is omitted, `fallbackMeasurer` estimates width as `text.length * size * 0.55` and height as `size * 1.2`. It keeps compilation runnable, but it is not meant for precise typography.

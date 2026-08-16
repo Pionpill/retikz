@@ -24,14 +24,14 @@ describe('@retikz/graph package boundary', () => {
 
   it('exposes exactly the three Graph semantic elements without compatibility aliases', () => {
     expect(graphExports.GRAPH_NAMESPACE).toBe('graph');
-    expect(graphExports.GraphFrameDefinition).toBeDefined();
-    expect(graphExports.GraphNodeDefinition).toBeDefined();
-    expect(graphExports.GraphConnectorDefinition).toBeDefined();
-    expect(graphExports.GraphNodeSchema).toBeDefined();
-    expect(graphExports.GraphElementType).toEqual({
-      GraphFrame: 'graphFrame',
-      GraphNode: 'graphNode',
-      GraphConnector: 'graphConnector',
+    expect(graphExports.ContainerDefinition).toBeDefined();
+    expect(graphExports.EntityDefinition).toBeDefined();
+    expect(graphExports.RelationDefinition).toBeDefined();
+    expect(graphExports.EntitySchema).toBeDefined();
+    expect(graphExports.GraphType).toEqual({
+      Container: 'container',
+      Entity: 'entity',
+      Relation: 'relation',
     });
     expect(graphExports).not.toHaveProperty('TerminalSchema');
     expect(graphExports).not.toHaveProperty('StageSchema');
@@ -40,15 +40,15 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports).not.toHaveProperty('LogicFrameDefinition');
   });
 
-  it('exposes GraphNodeVariant and GraphConnectorRole as closed public vocabularies', () => {
-    expect(graphExports.GraphNodeVariant).toEqual({
+  it('exposes EntityVariant and RelationRole as closed public vocabularies', () => {
+    expect(graphExports.EntityVariant).toEqual({
       Default: 'default',
       Primary: 'primary',
       Secondary: 'secondary',
       Outline: 'outline',
       Vibrant: 'vibrant',
     });
-    expect(graphExports.GraphConnectorRole).toEqual({
+    expect(graphExports.RelationRole).toEqual({
       Flow: 'flow',
       Branch: 'branch',
       Dependency: 'dependency',
@@ -60,10 +60,10 @@ describe('@retikz/graph package boundary', () => {
 
   it('keeps implementation shapes private and rejects the old namespace', () => {
     expect('NonBlankStringSchema' in graphExports).toBe(false);
-    expect(graphExports.GraphSpacingSchema).toBeDefined();
-    expect(graphExports.GraphNeutralStyleSchema).toBeDefined();
+    expect(graphExports.ContainerSpacingSchema).toBeDefined();
+    expect(graphExports.ContainerNeutralStyleSchema).toBeDefined();
     expect(() =>
-      graphExports.GraphNodeSchema.parse({ namespace: 'notation', type: 'graphNode', id: 'legacy', role: 'stage' }),
+      graphExports.EntitySchema.parse({ namespace: 'notation', type: 'entity', id: 'legacy', role: 'stage' }),
     ).toThrow();
   });
 });

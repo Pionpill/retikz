@@ -1,4 +1,4 @@
-﻿import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
+import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
 
 import { applyTransforms as applyDataTransforms, collectTransformFields, defineTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
@@ -11,7 +11,7 @@ import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
 import { TransformSchema } from '../../../src/schemas';
-import { PlotSpecSchema } from '../../../src/schemas/plot';
+import { PlotSchema } from '../../../src/schemas/plot';
 
 const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 
@@ -223,7 +223,7 @@ describe('density transform behavior (contract)', () => {
   });
 
   it('strict model accepts density output fields as derived fields', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

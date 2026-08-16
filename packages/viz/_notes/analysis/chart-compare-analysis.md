@@ -44,7 +44,7 @@ Canonical Type
 - 模块化扩展可以扩大横向覆盖，而不要求所有能力进入单个 core
 - 单图展示内容与 plot area、交互模块可以分别配置
 
-对 retikz 的限制：Highcharts 的配置和 renderer runtime 强绑定，没有 `ChartSpec -> Plot / Standard -> Core` 的分层，也不以 React / Vanilla / JSON 同一 IR 为目标。
+对 retikz 的限制：Highcharts 的配置和 renderer runtime 强绑定，没有 `IRChart -> Plot / Standard -> Core` 的分层，也不以 React / Vanilla / JSON 同一 IR 为目标。
 
 ### 2.2 Apache ECharts：横向广度与 option 完整性
 
@@ -72,7 +72,7 @@ Canonical Type
 - 混合图通过 JSX composition 表达，探索成本低
 - Legend、Tooltip、LabelList、ReferenceLine / Area 等图内成员完整，但 title / caption / credits 通常由 React 宿主组合
 
-对 retikz 的限制：ReactNode、callback 和组件生命周期不能成为 framework-neutral、JSON-safe 的 IR。retikz 只能借鉴 authoring 手感，JSX children 必须落回正式 ChartSpec。
+对 retikz 的限制：ReactNode、callback 和组件生命周期不能成为 framework-neutral、JSON-safe 的 IR。retikz 只能借鉴 authoring 手感，JSX children 必须落回正式 IRChart。
 
 ### 2.4 Flint Chart Gallery：传统 family 与跨库名称对照
 
@@ -95,7 +95,7 @@ Canonical Type
 - gallery 名称与底层实现解耦，允许 Retikz 把某些条目实现为 Canonical Type，另一些实现为 Chart Pattern
 - Excel 的原生图表对照补充了 Web 图表库之外的业务软件认知
 
-对 retikz 的限制：Flint 的 gallery 是经过整理的展示目录，不是各后端的完整能力矩阵；它同时混合基础类型、常用变体和特定后端能力，不能把每一行直接复制为 `ChartSpec.type`。Retikz 只借鉴其 family、名称与跨库对照，不复制 Flint 的 assembler 或后端抽象。
+对 retikz 的限制：Flint 的 gallery 是经过整理的展示目录，不是各后端的完整能力矩阵；它同时混合基础类型、常用变体和特定后端能力，不能把每一行直接复制为 `IRChart.type`。Retikz 只借鉴其 family、名称与跨库对照，不复制 Flint 的 assembler 或后端抽象。
 
 ### 2.5 为什么仍不比较 Vega / G2 / VChart 的纵向能力
 
@@ -143,14 +143,14 @@ Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它�
 | 维度              | Highcharts                                                          | ECharts                                              | Recharts                                                 | retikz Chart 目标                                                            |
 | ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 第一心智模型      | 选择 series type，再填 chart options                                | 选择 series type，再组合 option components           | 选择 Chart 容器，再放 JSX children                       | 选择 Canonical Type，填写数据角色与差异配置                                  |
-| 最小配置          | 较短，默认完成度高                                                  | 基础图较短，series / axis 配置直观                   | JSX 直观，但完整图通常需要多个子组件                     | sparse ChartSpec；type 隐式补齐完整 Plot recipe                              |
+| 最小配置          | 较短，默认完成度高                                                  | 基础图较短，series / axis 配置直观                   | JSX 直观，但完整图通常需要多个子组件                     | sparse IRChart；type 隐式补齐完整 Plot recipe                              |
 | 完整配置表面      | style、axis、legend、tooltip、label、annotation 与 Chart shell 成熟 | option surface 极广，静态 component 与运行时能力并存 | 每个子组件 props 清晰，但 title / caption 等依赖宿主组合 | 图本体沿用 Plot 结构；单图展示使用 Chart 语义并复用 Standard，不裁剪底层能力 |
 | 默认质量          | 产品化程度高                                                        | 类型默认与主题成熟                                   | 默认较轻，常依赖应用样式                                 | type 提供结构配方与表现性默认；核心配方不可撤销，表现默认可关闭 / 替换       |
 | 类型专属配置      | series options 清晰但目录较大                                       | 各 series / component option 很丰富                  | 由组件 props 分散表达                                    | type 只暴露数据角色与允许调整范围，隐式内容不在 IR 重复声明                  |
 | 多系列 / 数据模型 | 多 series，可分别配置 data                                          | `dataset` + `series[]` 灵活但模型庞大                | 多 series children 直观                                  | 单一根 data；series / group / color 与额外 Mark 复用 Plot 语义               |
 | 混合与扩展        | custom series / module                                              | custom series / extension                            | JSX composition                                          | Chart 可包含 Plot members，并提供或消费 Plot definitions；Plot 不包含 Chart  |
-| Framework 范围    | JavaScript API 与 wrappers                                          | JavaScript API 与 wrappers                           | React-only 心智最自然                                    | JSON ChartSpec 是真源；React children 与 Vanilla builder 都是等价 sugar      |
-| 可序列化性        | option 大体可描述，但 callback / formatter 会越界                   | option 可包含函数与运行时状态                        | JSX / callback 非 JSON                                   | ChartSpec 100% JSON-safe，runtime definitions 与 datasets 通过 options 注入  |
+| Framework 范围    | JavaScript API 与 wrappers                                          | JavaScript API 与 wrappers                           | React-only 心智最自然                                    | JSON IRChart 是真源；React children 与 Vanilla builder 都是等价 sugar      |
+| 可序列化性        | option 大体可描述，但 callback / formatter 会越界                   | option 可包含函数与运行时状态                        | JSX / callback 非 JSON                                   | IRChart 100% JSON-safe，runtime definitions 与 datasets 通过 options 注入  |
 | 初次上手          | 低到中；类型和默认帮助明显                                          | 基础低、完整 option 中到高                           | React 用户低，非 React 不适用                            | 低；只学习 type、数据角色和常用样式                                          |
 | 深度学习          | 需要掌握 series / chart / module 体系                               | option 层级和 component 关系复杂                     | 需要掌握组件组合和数据处理                               | 有意转向 Plot；Chart 不复制第二套高级扩展体系                                |
 | 文档发现性        | 按 chart family 与 module 组织                                      | gallery、chart type 和 option manual 强              | 按组件 API 搜索                                          | 按分析目的导航，Canonical Type 为契约页，Chart Pattern 承担长尾名称          |
@@ -167,7 +167,7 @@ Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它�
 | legend                           | series / point 领域内容            | 独立 legend component                                 | `<Legend>`                        | Plot 解析领域语义，Standard 呈现，不复制进 Chart presentation                  |
 | axis / datum label、annotation   | plotOptions / annotations          | axisLabel、series label、markLine / markArea          | LabelList、Reference\*            | 与数据 / coordinate 强绑定，继续属于 Plot                                      |
 | tooltip                          | hover runtime                      | tooltip component / runtime                           | `<Tooltip>`                       | Plot 拥有 locator 与领域语义，adapter 承担运行时 UI                            |
-| export / toolbox / fullscreen    | exporting module                   | toolbox features                                      | 宿主自行实现                      | adapter / host chrome，不进入静态 ChartSpec                                    |
+| export / toolbox / fullscreen    | exporting module                   | toolbox features                                      | 宿主自行实现                      | adapter / host chrome，不进入静态 IRChart                                    |
 | loading / no-data                | loading overlay / no-data module   | instance `showLoading` / `hideLoading`                | 宿主状态                          | loading 属 runtime；no-data presentation 需以后单独设计状态 owner              |
 | accessibility description        | accessibility options              | aria label / decal                                    | accessibility layer / host markup | Chart 可保存 semantic metadata，adapter / renderer 执行；不与可见 caption 混用 |
 
@@ -177,7 +177,7 @@ retikz 不选择 Highcharts 的单体 option 大包，也不选择 Recharts 的 
 
 ### 5.1 Canonical Type：稳定且不可撤销的本体
 
-Canonical Type 是 `ChartSpec.type` 的稳定判别值，选择一套完整 Plot recipe。它不是一个生成后可任意改写的 preset。
+Canonical Type 是 `IRChart.type` 的稳定判别值，选择一套完整 Plot recipe。它不是一个生成后可任意改写的 preset。
 
 - type 核心配方必须始终存在
 - 用户只能在该 type 允许范围内调整核心成员参数
@@ -234,7 +234,7 @@ Plot recipe signature 是内部技术元数据和工程索引，例如 point、p
 
 - 适用问题与不适用场景
 - 必需 / 可选数据角色
-- 最小 ChartSpec
+- 最小 IRChart
 - 不可撤销的 type 核心配方
 - 表现性默认和允许调整范围
 - 常见 Chart Patterns
@@ -260,7 +260,7 @@ Plot recipe signature 是内部技术元数据和工程索引，例如 point、p
 - 不以扩大 public `type` union 代替 Pattern 文档和 Plot extension
 - 不允许扩展撤销 type 核心配方，把 Chart 降级成任意 Plot 容器
 - 不复制 ECharts `graphic` 或 Recharts 任意 React child 作为 Chart presentation 扩展面
-- 不把 export、toolbox、fullscreen、loading 等宿主状态写入 ChartSpec
+- 不把 export、toolbox、fullscreen、loading 等宿主状态写入 IRChart
 
 ### 7.3 完备标准
 
@@ -279,7 +279,7 @@ Chart 只评价“用户如何选图、配置和学习”。当某个 type 需�
 
 ## 9. 更新记录
 
-- **2026-07-30 初稿**：混合比较 GoG 与 type-first 项目，用于确定 ChartSpec、Canonical Type / Pattern 和 Plot extension 关系
+- **2026-07-30 初稿**：混合比较 GoG 与 type-first 项目，用于确定 IRChart、Canonical Type / Pattern 和 Plot extension 关系
 - **2026-07-30 重构**：移除 Vega-Lite、Observable Plot、AntV G2、VChart 的重复分析；聚焦 Highcharts、ECharts、Recharts 的横向覆盖、完整配置与学习成本
 - **2026-07-31 单图展示补充**：比较 title、caption、source、frame、accessibility 与 host chrome，确认 Chart presentation / Plot / Standard / adapter 的分层
 - **2026-07-31 Flint taxonomy 补充**：纳入 Vega-Lite / ECharts / Chart.js / Plotly / Excel gallery 对照，确认传统 family 为主导航、技术 signature 与用户意图为辅助索引

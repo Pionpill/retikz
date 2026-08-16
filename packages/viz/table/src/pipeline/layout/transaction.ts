@@ -28,7 +28,7 @@ import type {
   IRTableBorder,
   IRTableCellBorders,
   IRTableLayout,
-  IRTableSpec,
+  IRTable,
   IRTableThemeTokenBorder,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
@@ -50,7 +50,7 @@ import {
   TableCellAppearanceSchema,
   TableCellPayloadKind,
   TableRowKind,
-  TableSpecSchema,
+  TableSchema,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
@@ -62,7 +62,7 @@ import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../ru
 import { buildTableBorderGraph } from './border';
 import { computeTableCellBox, computeTableCellContentBox, computeTableCellOuterSize } from './cell';
 import { computeTableCellContentPlacement } from './content';
-import { resolveTableLayoutSpec, resolveTableTrackSizes } from './resolve';
+import { resolveTableLayout, resolveTableTrackSizes } from './resolve';
 import { propagateTableSpanContributions } from './span';
 import { solveTableTracks } from './track';
 
@@ -393,7 +393,7 @@ export const resolvePresentedTableTransaction = (
   const { tableId, meta, presented } = input;
   assertPresentedAlignment(presented);
   const semantic = presented.semantic;
-  const resolved = resolveTableLayoutSpec(input.layout);
+  const resolved = resolveTableLayout(input.layout);
   const manifestTheme =
     input.theme ??
     ({
@@ -639,12 +639,12 @@ export const resolvePresentedTableTransaction = (
 
 /** 解析 Table spec 与 definitions，并执行一次 layout-aware compile transaction */
 export const resolveTableTransaction = (
-  spec: IRTableSpec,
+  spec: IRTable,
   datasets: ExternalDatasets,
   options: LowerTablesOptions,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const parsed = TableSpecSchema.parse(spec);
+  const parsed = TableSchema.parse(spec);
   const semantic = normalizeTableStructure(parsed.structure, {
     data: parsed.data,
     datasets,

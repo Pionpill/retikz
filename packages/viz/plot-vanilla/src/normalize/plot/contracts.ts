@@ -6,7 +6,7 @@ import type {
   IRPlotMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlotSpec,
+  IRPlot,
   IRPlotTransform,
 } from '@retikz/plot';
 
@@ -82,9 +82,9 @@ export type MarkTransformShortcutDefinition = {
   build: (context: MarkTransformShortcutContext) => Array<IRPlotTransform> | undefined;
 };
 
-/** `buildPlotSpec` 的坐标、数据模型和根级装配选项 */
-export type BuildPlotSpecOptions = {
-  /** 作为整张图外部 anchor 句柄的 IRPlotSpec id */
+/** `buildPlotIR` 的坐标、数据模型和根级装配选项 */
+export type BuildPlotOptions = {
+  /** 作为整张图外部 anchor 句柄的 IRPlot id */
   id?: string;
   /** 组合场景下每张 Plot 自描述的固有宽度 */
   width?: number;
@@ -95,7 +95,7 @@ export type BuildPlotSpecOptions = {
    */
   coordinate?: InputPlotCoordinate;
   /** Plot 组合布局 */
-  composition?: IRPlotSpec['composition'];
+  composition?: IRPlot['composition'];
   /** 数据字段模型，声明后写入 `data.model`，并让未显式声明的位置比例尺按字段类型派生 */
   model?: IRDataModel;
   /** 直传的根级数据变换，装配在 `<Transform>` 收集结果与自动 mark shortcut 之前 */
@@ -103,11 +103,11 @@ export type BuildPlotSpecOptions = {
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** Plot-owned canonical theme token 稀疏覆盖 */
-  plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
+  plotThemeTokens?: IRPlot['plotThemeTokens'];
   /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
-  plotThemeTokenRules?: IRPlotSpec['plotThemeTokenRules'];
+  plotThemeTokenRules?: IRPlot['plotThemeTokenRules'];
   /** Plot 主题 */
-  plotTheme?: IRPlotSpec['plotTheme'];
+  plotTheme?: IRPlot['plotTheme'];
   /** 当前数据集可见字段名集合 */
   dataFieldNames?: ReadonlySet<string>;
   /** 是否省略未显式声明的位置比例尺绑定，让 lowering 按实际字段类型派生
@@ -117,7 +117,7 @@ export type BuildPlotSpecOptions = {
 };
 
 /** Plot composition 的规范 IR 形态 */
-export type PlotComposition = NonNullable<IRPlotSpec['composition']>;
+export type PlotComposition = NonNullable<IRPlot['composition']>;
 
 /** React declaration 的结构化来源路径 */
 export type PlotDeclarationPath = ReadonlyArray<string | number>;
@@ -195,19 +195,19 @@ export type AxisBoundGuide = IRPlotGuide & {
 };
 
 /** Plot composition arrangement */
-export type ArrangementSpec = NonNullable<PlotComposition['arrangements']>[number];
+export type Arrangement = NonNullable<PlotComposition['arrangements']>[number];
 
 /** facet arrangement */
-export type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
+export type FacetGrid = Extract<Arrangement, { kind: 'facet' }>;
 
 /** tracks arrangement */
-export type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;
+export type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
 
 /** scaffold track */
-export type ScaffoldTrackSpec = SharedScaffoldSpec['tracks'][number];
+export type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 /** normalization 中暂存的 facet */
-export type CollectedFacet = FacetGridSpec & {
+export type CollectedFacet = FacetGrid & {
   /** composition spacing */
   spacing?: PlotComposition['spacing'];
   /** composition resolve */
@@ -215,9 +215,9 @@ export type CollectedFacet = FacetGridSpec & {
 };
 
 /** normalization 中暂存的 scaffold */
-export type CollectedScaffold = Omit<SharedScaffoldSpec, 'coordinate'> & {
+export type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
   /** scaffold coordinate */
-  coordinate?: SharedScaffoldSpec['coordinate'];
+  coordinate?: SharedScaffold['coordinate'];
   /** composition spacing */
   spacing?: PlotComposition['spacing'];
   /** composition resolve */

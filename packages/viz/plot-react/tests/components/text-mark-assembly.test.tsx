@@ -1,8 +1,8 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { resolveLabelOf } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../src/adapter';
+import { buildPlotIR } from '../../src/adapter';
 import { IntervalMark, PointMark } from '../../src/components/marks';
 
 /**
@@ -13,7 +13,7 @@ import { IntervalMark, PointMark } from '../../src/components/marks';
 
 describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
   it('react-mark-label-assembly：IntervalMark label* → interval mark.label，与手写 IR 等价', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <IntervalMark
         x="month"
         y="revenue"
@@ -31,17 +31,17 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
       position: 'top',
       distance: 6,
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('labelPin → label.pin=true', () => {
-    const spec = buildPlotSpec(<PointMark x="px" y="py" label="lbl" labelPin />, '__plot');
+    const spec = buildPlotIR(<PointMark x="px" y="py" label="lbl" labelPin />, '__plot');
     const mark = spec.marks[0] as { label?: { pin?: boolean } };
     expect(mark.label?.pin).toBe(true);
   });
 
   it('label core style props pass through', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <IntervalMark
         x="month"
         y="revenue"
@@ -68,19 +68,19 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
   });
 
   it('无 label prop → mark 无 label 字段', () => {
-    const spec = buildPlotSpec(<IntervalMark x="m" y="r" />, '__plot');
+    const spec = buildPlotIR(<IntervalMark x="m" y="r" />, '__plot');
     expect(spec.marks[0]).not.toHaveProperty('label');
   });
 
   it('resolveLabel prop（配 id）→ 收进旁路、不落 IR', () => {
     const fn = (row: { revenue?: number }) => `$${row.revenue}`;
-    const spec = buildPlotSpec(<IntervalMark id="bars" x="month" y="revenue" resolveLabel={fn} />, '__plot');
+    const spec = buildPlotIR(<IntervalMark id="bars" x="month" y="revenue" resolveLabel={fn} />, '__plot');
     expect(JSON.stringify(spec)).not.toContain('resolveLabel');
     expect(resolveLabelOf(spec)).toEqual({ bars: fn });
   });
 
   it('resolveLabel prop 无 id → fail-loud', () => {
-    expect(() => buildPlotSpec(<IntervalMark x="month" y="revenue" resolveLabel={() => 'x'} />, '__plot')).toThrow(
+    expect(() => buildPlotIR(<IntervalMark x="month" y="revenue" resolveLabel={() => 'x'} />, '__plot')).toThrow(
       /mark id/i,
     );
   });
@@ -88,7 +88,7 @@ describe('priority-1 宿主 mark label 扁平 props → IR mark.label', () => {
 
 describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
   it('react-textmark-encoding-assembly：PointMark text → type point、encoding.text、x/y/color、dx/dy 落顶层', () => {
-    const spec = buildPlotSpec(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot', {
+    const spec = buildPlotIR(<PointMark x="month" y="revenue" text="revenue" color="cat" dy={-8} />, '__plot', {
       dataFieldNames: new Set(['cat']),
     });
     const mark = spec.marks[0] as {
@@ -105,18 +105,18 @@ describe('priority-2 PointMark text 扁平 props → IR point mark', () => {
     expect(mark.color).toEqual({ kind: 'field', value: 'cat', scale: '__color' });
     expect(mark.dy).toBe(-8);
     expect(mark).not.toHaveProperty('dx');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('PointMark text displayFormat → encoding.text.displayFormat', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" text="v" displayFormat=",.1f" />, '__plot');
+    const spec = buildPlotIR(<PointMark x="x" y="y" text="v" displayFormat=",.1f" />, '__plot');
     const mark = spec.marks[0] as { encoding: { text?: unknown } };
     expect(mark.encoding.text).toEqual({ field: 'v', displayFormat: ',.1f' });
   });
 
   it('PointMark text resolveLabel（配 id）→ 旁路收集、不落 IR', () => {
     const fn = (row: { label?: string }) => `<${row.label}>`;
-    const spec = buildPlotSpec(<PointMark id="t1" x="x" y="y" text="label" resolveLabel={fn} />, '__plot');
+    const spec = buildPlotIR(<PointMark id="t1" x="x" y="y" text="label" resolveLabel={fn} />, '__plot');
     expect(JSON.stringify(spec)).not.toContain('resolveLabel');
     expect(resolveLabelOf(spec)).toEqual({ t1: fn });
   });

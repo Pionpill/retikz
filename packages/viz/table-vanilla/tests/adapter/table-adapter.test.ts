@@ -1,13 +1,13 @@
-import type { IRDetailTableSpec } from '@retikz/table';
+import type { IRDetailTable } from '@retikz/table';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { createManualTableSpec, TableSpecSchema } from '@retikz/table';
+import { createManualTableIR, TableSchema } from '@retikz/table';
 import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { embedTable, inputTableFromSpec, TableInputEmbedAdapter } from '../../src';
+import { embedTable, inputTableFromIR, TableInputEmbedAdapter } from '../../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -16,7 +16,7 @@ const contextOf = (id: string): InputEmbedContext => ({
   identityPath: ['content', id],
 });
 
-const detailSpec = (): IRDetailTableSpec => ({
+const detailSpec = (): IRDetailTable => ({
   namespace: 'table',
   type: 'table',
   data: { reference: 'people' },
@@ -25,24 +25,24 @@ const detailSpec = (): IRDetailTableSpec => ({
 
 describe('Table Vanilla adapter', () => {
   it('validates handwritten embed ids and namespaces the Table root identity', () => {
-    const anonymous = createManualTableSpec({ rows: [[null]] });
-    const named = createManualTableSpec({ id: 'scores', rows: [[null]] });
+    const anonymous = createManualTableIR({ rows: [[null]] });
+    const named = createManualTableIR({ id: 'scores', rows: [[null]] });
 
     expect(
-      TableInputEmbedAdapter.lower({ table: inputTableFromSpec(anonymous) }, contextOf('panel')).node,
+      TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
     ).toMatchObject({
       id: 'panel/table',
     });
-    expect(TableInputEmbedAdapter.lower({ table: inputTableFromSpec(named) }, contextOf('panel')).node).toMatchObject({
+    expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
       id: 'panel/scores',
     });
-    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromSpec(anonymous) }, contextOf(''))).toThrow(
+    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrow(
       'table vanilla: embed id must be non-empty',
     );
   });
 
   it('contextualizes only the Table id and preserves root authoring fields', () => {
-    const spec = createManualTableSpec({
+    const spec = createManualTableIR({
       id: 'scores',
       rows: [[98]],
       rules: [{ selector: { cellIds: ['cell.r0.c0'] }, appearance: { content: { color: '#b91c1c' } } }],
@@ -58,8 +58,8 @@ describe('Table Vanilla adapter', () => {
       tableThemeTokens: { 'cell.content.color': '#fafafa' },
     });
 
-    const lowered = TableSpecSchema.parse(
-      TableInputEmbedAdapter.lower({ table: inputTableFromSpec(spec) }, contextOf('panel')).node,
+    const lowered = TableSchema.parse(
+      TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel')).node,
     );
 
     expect(lowered).toEqual({ ...spec, id: 'panel/scores' });
@@ -69,9 +69,9 @@ describe('Table Vanilla adapter', () => {
   });
 
   it('returns table.table roots and the shared stable provider maker for every lower call', () => {
-    const spec = createManualTableSpec({ rows: [[null]] });
-    const first = TableInputEmbedAdapter.lower({ table: inputTableFromSpec(spec) }, contextOf('first'));
-    const second = TableInputEmbedAdapter.lower({ table: inputTableFromSpec(spec) }, contextOf('second'));
+    const spec = createManualTableIR({ rows: [[null]] });
+    const first = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('first'));
+    const second = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('second'));
 
     expect(first).not.toHaveProperty('datasets');
     expect(first).not.toHaveProperty('makeComposites');
@@ -116,7 +116,7 @@ describe('Table Vanilla adapter', () => {
       schema,
       expand: node => ({ children: [{ type: 'node', position: [0, 0], text: node.label }] }),
     });
-    const spec = createManualTableSpec({
+    const spec = createManualTableIR({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
     const inputScene = scene([embedTable('nested', spec, { composites: [badge] })]);
@@ -125,8 +125,8 @@ describe('Table Vanilla adapter', () => {
   });
 
   it('rejects handwritten empty ids and duplicate embed identities through the standard runtime', () => {
-    const spec = createManualTableSpec({ rows: [[null]] });
-    const handwritten = embed('table', '', { table: inputTableFromSpec(spec) });
+    const spec = createManualTableIR({ rows: [[null]] });
+    const handwritten = embed('table', '', { table: inputTableFromIR(spec) });
 
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
       'table vanilla: embed id must be non-empty',

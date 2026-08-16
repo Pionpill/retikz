@@ -17,7 +17,7 @@ A positional scale answers where a field lands on the canvas, how long it is, or
 | Temporal field                                  | `time`            | Ticks land on human-readable boundaries       |
 | Categorical bars / categorical lines            | `band` / `point`  | A slot with width / a single point            |
 
-`pow` supplies a custom exponent, but the current React `<Scale>` does not expose that type; configure it through the full `IRPlotSpec.scales` surface.
+`pow` supplies a custom exponent, but the current React `<Scale>` does not expose that type; configure it through the full `IRPlot.scales` surface.
 
 ## Continuous numbers
 
@@ -127,7 +127,7 @@ The resolved scale serves both marks and guides: continuous scales output numeri
 
 ## API Reference
 
-React `<Scale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlotSpec.scales`. `Axis.scale` is a shortcut for common types on the same dimension.
+React `<Scale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlot.scales`. `Axis.scale` is a shortcut for common types on the same dimension.
 
 | Prop               | Type                            | Default        | Description                                                                    |
 | ------------------ | ------------------------------- | -------------- | ------------------------------------------------------------------------------ |

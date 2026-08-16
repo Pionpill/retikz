@@ -1,5 +1,5 @@
 import type { PatternDefinition } from '../../contract';
-import type { IRPaintSpec } from '../../schemas';
+import type { IRPaint } from '../../schemas';
 import type { PaintResolution, PatternResolution } from './types';
 
 import { providerDefinitionOf } from '../../providers/registry';
@@ -20,7 +20,7 @@ export type PaintResolveContext = Readonly<{
 
 /** 在 resolve 阶段选择 pattern provider、应用默认值并 shaping 样式 */
 const resolvePattern = (
-  spec: Extract<IRPaintSpec, { kind: 'pattern' }>,
+  spec: Extract<IRPaint, { kind: 'pattern' }>,
   context: PaintResolveContext,
 ): PatternResolution => {
   const definition = providerDefinitionOf(context.patterns, spec.shape, {
@@ -49,7 +49,7 @@ const resolvePattern = (
 
 /** 将 IR paint 值解析为纯色或已绑定的内部 paint resolution */
 export const resolvePaint = (
-  paint: string | IRPaintSpec | undefined,
+  paint: string | IRPaint | undefined,
   context: PaintResolveContext,
 ): string | PaintResolution | undefined => {
   if (paint === undefined || typeof paint === 'string') return paint;

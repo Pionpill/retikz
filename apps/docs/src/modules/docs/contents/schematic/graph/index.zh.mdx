@@ -3,17 +3,17 @@ title: Graph
 description: 从统一入口选用可复用的图式元素，并用逻辑外壳、基础单元与连接器表达局部结构和关系。
 ---
 
-Graph 是 Schematic 领域中可复用图式元素的统一入口。首批元素覆盖常见的逻辑链路：`GraphFrame` 管理可复用外壳与区域；`GraphNode` 通过 `role` 表达终点、步骤、判断与汇合；`GraphConnector` 表达关系。
+Graph 是 Schematic 领域中可复用图式元素的统一入口。首批元素覆盖常见的逻辑链路：`Container` 管理可复用外壳与区域；`Entity` 通过 `role` 表达终点、步骤、判断与汇合；`Relation` 表达关系。
 
 Graph 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或 Layout 布局放置单元，再用稳定的 `id` 表达显式 target。
 
 ## 职责一览
 
-| 成员             | 拥有                                        | 不拥有             |
-| ---------------- | ------------------------------------------- | ------------------ |
-| `GraphFrame`     | 外壳、header、有序 section 与可复用区域布局 | 图拓扑或自动放置   |
-| `GraphNode`      | 中性形状、content、尺寸与语义 role          | 领域状态机         |
-| `GraphConnector` | 一条 Core Path 路由和可选的末步 label       | 自动路由或自动避障 |
+| 成员        | 拥有                                        | 不拥有             |
+| ----------- | ------------------------------------------- | ------------------ |
+| `Container` | 外壳、header、有序 section 与可复用区域布局 | 图拓扑或自动放置   |
+| `Entity`    | 中性形状、content、尺寸与语义 role          | 领域状态机         |
+| `Relation`  | 一条 Core Path 路由和可选的末步 label       | 自动路由或自动避障 |
 
 所有成员都下沉为既有 Core 图元，可通过 React、直接 JSON/IR 或 Vanilla embed 编写。Definition 按 figure 注入，不进入持久化 JSON。
 
@@ -22,11 +22,11 @@ Graph 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自�
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/base">
     <span className="font-semibold">基础单元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">GraphNode 与 GraphConnector</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Entity 与 Relation</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/frame">
     <span className="font-semibold">复合单元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">GraphFrame 与后续可复用组合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Container 与后续可复用组合</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/api-reference">
     <span className="font-semibold">Graph API 参考</span>
@@ -40,4 +40,4 @@ Graph 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自�
 
 - [布局容器](/library/layout)：通用 Flex、Grid 与 Overlay 排列
 - [Schematic 简介](/schematic/introduction)：Graph 与 Diagram 能力的边界
-- [Core Path](/kernel/components/draw/overview)：GraphConnector 使用的底层图元
+- [Core Path](/kernel/components/draw/overview)：Relation 使用的底层图元

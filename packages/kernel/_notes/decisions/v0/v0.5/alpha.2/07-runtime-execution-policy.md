@@ -91,7 +91,7 @@ mountCanvas(container, spec, { runtime: { mode: 'retained', updateStrategy: 'ful
 mountSvg(container, ir); // retained + auto
 ```
 
-IR / plain spec 配 `mode: 'static'` 时，mount 与每次 `view.update(next)` 都经现有 normalization / `compileToScene` 后完整重绘，并返回 `mode: 'static'` view。与 retained view 一致，raw static view 的 update 统一接受 `IRScene | VanillaFigureSpec`，不锁死 initial 的具体 subtype。预编译 Scene 仍天然进入 static view，其 update 只接受 Scene，并继续拒绝整个 `runtime` 字段，调用方不需要重复声明 `mode: 'static'`。
+IR / plain spec 配 `mode: 'static'` 时，mount 与每次 `view.update(next)` 都经现有 normalization / `compileToScene` 后完整重绘，并返回 `mode: 'static'` view。与 retained view 一致，raw static view 的 update 统一接受 `IRScene | InputScene`，不锁死 initial 的具体 subtype。预编译 Scene 仍天然进入 static view，其 update 只接受 Scene，并继续拒绝整个 `runtime` 字段，调用方不需要重复声明 `mode: 'static'`。
 
 Static没有candidate、commit或rollback。compile / normalization在宿主写入前失败时旧画面与公开getter保持不变；SVG / Canvas materialization、动画或hydration切换在写宿主期间失败时错误同步抛出，但不承诺恢复旧画面，调用方必须dispose并remount。文档不得把static描述为事务安全模式。
 

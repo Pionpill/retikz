@@ -1,11 +1,11 @@
-import type { IRPaintSpec } from '@retikz/core';
+import type { IRPaint } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/components/marks';
 
-const gradientPaint: IRPaintSpec = {
+const gradientPaint: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [
@@ -14,9 +14,9 @@ const gradientPaint: IRPaintSpec = {
   ],
 };
 
-describe('buildPlotSpec paint props', () => {
+describe('buildPlotIR paint props', () => {
   it('point paint props pass through to mark IR', () => {
-    const spec = buildPlotSpec(<PointMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    const spec = buildPlotIR(<PointMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
       fill: { kind: 'constant', value: gradientPaint },
@@ -25,7 +25,7 @@ describe('buildPlotSpec paint props', () => {
   });
 
   it('path paint props pass through to mark IR', () => {
-    const spec = buildPlotSpec(<PathMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    const spec = buildPlotIR(<PathMark x="x" y="y" fill={gradientPaint} stroke={gradientPaint} />, '__plot');
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
       fill: { kind: 'constant', value: gradientPaint },
@@ -34,7 +34,7 @@ describe('buildPlotSpec paint props', () => {
   });
 
   it('path paint none passes through as constant paint', () => {
-    const spec = buildPlotSpec(<PathMark x="x" y="y" stroke="none" />, '__plot');
+    const spec = buildPlotIR(<PathMark x="x" y="y" stroke="none" />, '__plot');
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
       stroke: { kind: 'constant', value: 'none' },
@@ -42,7 +42,7 @@ describe('buildPlotSpec paint props', () => {
   });
 
   it('path connectNulls passes through to mark IR', () => {
-    const spec = buildPlotSpec(<PathMark x="x" y="y" connectNulls />, '__plot');
+    const spec = buildPlotIR(<PathMark x="x" y="y" connectNulls />, '__plot');
     expect(spec.marks[0]).toMatchObject({
       type: 'path',
       connectNulls: true,
@@ -50,7 +50,7 @@ describe('buildPlotSpec paint props', () => {
   });
 
   it('interval paint props pass through to mark IR', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <IntervalMark x="month" y="revenue" fill={gradientPaint} stroke={gradientPaint} />,
       '__plot',
     );
@@ -62,7 +62,7 @@ describe('buildPlotSpec paint props', () => {
   });
 
   it('reference paint props pass through to mark IR', () => {
-    const spec = buildPlotSpec(<ReferenceMark y={8} yTo={12} fill={gradientPaint} stroke={gradientPaint} />, '__plot');
+    const spec = buildPlotIR(<ReferenceMark y={8} yTo={12} fill={gradientPaint} stroke={gradientPaint} />, '__plot');
     expect(spec.marks[0]).toMatchObject({
       type: 'reference',
       fill: { kind: 'constant', value: gradientPaint },

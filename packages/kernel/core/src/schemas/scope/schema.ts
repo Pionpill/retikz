@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
-import { ClipSpecSchema } from '../clip';
+import { ClipSchema } from '../clip';
 import { FontSchema } from '../font';
 import { JsonObjectSchema } from '../json';
 import { NodeSchema } from '../node';
@@ -113,7 +113,7 @@ export const ScopePropsSchema = z
       .describe(
         'Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.',
       ),
-    clip: ClipSpecSchema.optional().describe(
+    clip: ClipSchema.optional().describe(
       'Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.',
     ),
     boundingShape: z

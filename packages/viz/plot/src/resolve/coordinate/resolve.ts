@@ -11,7 +11,7 @@ import type {
   IRPlotIntervalMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlotSpec,
+  IRPlot,
 } from '../../schemas';
 import type { CategoryOrder } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
@@ -223,7 +223,7 @@ const assertRequiredPositionChannels = (
  *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移。
  */
 export const resolveCoordinateFrame = (
-  source: IRPlotSpec,
+  source: IRPlot,
   context: CoordinateResolveContext,
 ): CoordinateFrameResolution => {
   const {

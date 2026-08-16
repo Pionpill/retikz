@@ -2,15 +2,15 @@ import { lowerPlots } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Facet, Scaffold, Track } from '../../../src/components/composition';
 import { Axis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 
 describe('React 与 framework-neutral authoring parity', () => {
-  it('单 facet 产出完全一致的 PlotSpec', () => {
-    const react = buildPlotSpec(
+  it('单 facet 产出完全一致的 IRPlot', () => {
+    const react = buildPlotIR(
       <>
         <Facet id="sales" row="channel" column="region" />
         <PathMark facetId="sales" x="month" y="revenue" order="month" />
@@ -40,8 +40,8 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(react).toEqual(plain);
   });
 
-  it('单 scaffold 产出完全一致的 PlotSpec', () => {
-    const react = buildPlotSpec(
+  it('单 scaffold 产出完全一致的 IRPlot', () => {
+    const react = buildPlotIR(
       <>
         <Scaffold id="ops" sharedRoles={['x']}>
           <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
@@ -91,7 +91,7 @@ describe('React 与 framework-neutral authoring parity', () => {
   });
 
   it('facet 在 model 驱动推断时不把分类位置字段固定为 linear scale', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Facet id="sales" column="region" />
         <PointMark facetId="sales" x="month" y="revenue" />
@@ -114,7 +114,7 @@ describe('React 与 framework-neutral authoring parity', () => {
   });
 
   it('facet 在 model 驱动推断时保留显式位置 scale', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Facet id="sales" column="region" />
         <Scale dimension="x" type="time" />
@@ -143,7 +143,7 @@ describe('React 与 framework-neutral authoring parity', () => {
   });
 
   it('scaffold 在延迟推断时不把分类位置字段固定为 linear scale', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Scaffold id="ops" sharedRoles={['x']}>
           <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
@@ -165,7 +165,7 @@ describe('React 与 framework-neutral authoring parity', () => {
   });
 
   it('scaffold viewIdTemplate 在 React 与 plain authoring 中派生相同 scope', () => {
-    const react = buildPlotSpec(
+    const react = buildPlotIR(
       <>
         <Scaffold id="ops" sharedRoles={['x']} viewIdTemplate="{arrangement}.panel.{track}">
           <Track id="load" band={{ role: 'y', start: 0, end: 0.42 }} />
@@ -212,8 +212,8 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(react).toEqual(plain);
   });
 
-  it('多轴绑定产出完全一致的 PlotSpec', () => {
-    const react = buildPlotSpec(
+  it('多轴绑定产出完全一致的 IRPlot', () => {
+    const react = buildPlotIR(
       <>
         <Axis dimension="x" />
         <Axis id="temperature" dimension="y" />
@@ -264,7 +264,7 @@ describe('React 与 framework-neutral authoring parity', () => {
         },
       ],
     };
-    const react = buildPlotSpec(
+    const react = buildPlotIR(
       <>
         <Scale dimension="x" type="linear" />
         <Scale dimension="y" type="linear" />
@@ -309,7 +309,7 @@ describe('React 与 framework-neutral authoring parity', () => {
         guides: [{ type: 'axis', id: 'right', dimension: 'y' }],
       });
     const react = () =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Facet id="sales" row="region" />
           <Axis id="right" dimension="y" />

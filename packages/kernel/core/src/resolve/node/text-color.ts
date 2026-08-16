@@ -1,4 +1,4 @@
-import type { IRLineSpec, IRNode, IRNodeLabel } from '../../schemas';
+import type { IRLine, IRNode, IRNodeLabel } from '../../schemas';
 import type { ParsedCssColor } from '../../shared/color';
 import type { EffectiveLabelDefault } from '../style';
 
@@ -6,7 +6,7 @@ import { NodeTextColor } from '../../schemas';
 import { parseStaticCssColor } from '../../shared';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
-const bodyLineInheritsNodeTextColor = (line: IRLineSpec): boolean => {
+const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {
   if (typeof line === 'string') return true;
   if ('runs' in line) return line.runs.some(run => run.fill === undefined);
   return line.fill === undefined;

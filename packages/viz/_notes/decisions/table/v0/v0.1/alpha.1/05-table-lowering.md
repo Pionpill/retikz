@@ -49,7 +49,7 @@ const emitTable = (presented: PresentedTableModel, layout: TableLayout): IRChild
 
 `presented.semantic` 是本次 layout 的同一 canonical model；`presented.cells` 与 `layout.cells` 必须和 semantic cells 长度相同、顺序相同且 `cellId` 逐项一致，否则以 `table: internal cell alignment` fail-loud。layout 不读取 presentation content，emit 不重新解析 structure 或计算轨道。
 
-`lowerTables()` 返回 `defineComposite({ namespace: 'table', type: 'table', schema: TableSpecSchema, expand })`；`expand` 只返回 `result.node`。`lowerTableWithArtifacts()` 返回同一次确定性计算的 sidecar，不通过隐藏状态穿过 Core compile。
+`lowerTables()` 返回 `defineComposite({ namespace: 'table', type: 'table', schema: TableSchema, expand })`；`expand` 只返回 `result.node`。`lowerTableWithArtifacts()` 返回同一次确定性计算的 sidecar，不通过隐藏状态穿过 Core compile。
 
 ### Core IR 输出
 

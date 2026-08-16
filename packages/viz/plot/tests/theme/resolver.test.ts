@@ -3,7 +3,7 @@ import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src';
+import type { IRPlot } from '../../src';
 
 import * as plot from '../../src';
 import { getDefaultPlotThemePreset } from '../../src/providers/theme';
@@ -16,12 +16,12 @@ type PlotThemeResolution = {
   tokens: Record<string, unknown>;
   tokenSources: Array<{ token: string; kind: string; path: string }>;
   tokenRules: Array<{
-    rule: NonNullable<IRPlotSpec['plotThemeTokenRules']>[number];
+    rule: NonNullable<IRPlot['plotThemeTokenRules']>[number];
     kind: string;
     path: string;
   }>;
   authoredOverrides: Array<{ kind: string; path: string }>;
-  plotTheme: IRPlotSpec['plotTheme'];
+  plotTheme: IRPlot['plotTheme'];
   palette: {
     categorical: Array<string>;
     series: Array<string>;
@@ -34,7 +34,7 @@ type PlotThemeResolution = {
 
 type ResolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input?: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
+  input?: Pick<IRPlot, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
   plotThemeStyles?: ReadonlyArray<unknown>,
 ) => PlotThemeResolution;
 

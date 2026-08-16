@@ -12,16 +12,16 @@ export type ClipFillRuleValue = ValueOf<typeof ClipFillRule>;
 export type IRClipFillRule = ClipFillRuleValue;
 
 /** 矩形裁切 IR 类型 */
-export type IRRectClipSpec = z.infer<typeof RectClipSchema>;
+export type IRRectClip = z.infer<typeof RectClipSchema>;
 
 /** 圆形裁切 IR 类型 */
-export type IRCircleClipSpec = z.infer<typeof CircleClipSchema>;
+export type IRCircleClip = z.infer<typeof CircleClipSchema>;
 
 /** 椭圆裁切 IR 类型 */
-export type IREllipseClipSpec = z.infer<typeof EllipseClipSchema>;
+export type IREllipseClip = z.infer<typeof EllipseClipSchema>;
 
 /** 自定义裁切 IR 类型：`kind` 对应 compile options 中注册的 clip provider */
-export type IRCustomClipSpec = IRJsonObject & { kind: string };
+export type IRCustomClip = IRJsonObject & { kind: string };
 
 /** 裁切 IR 类型：Core 仅提供基础分支，其余 kind 通过 provider 扩展 */
-export type IRClipSpec = IRRectClipSpec | IRCircleClipSpec | IREllipseClipSpec | IRCustomClipSpec;
+export type IRClip = IRRectClip | IRCircleClip | IREllipseClip | IRCustomClip;

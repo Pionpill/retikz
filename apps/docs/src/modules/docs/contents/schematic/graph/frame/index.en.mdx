@@ -5,13 +5,13 @@ description: Use reusable composite graph elements to organize multiple children
 
 Composite units organize multiple children into one reusable graph element. Each composite owns its composition meaning and internal structure while continuing to reuse Core primitives and Layout containers instead of introducing separate geometry or layout mechanisms.
 
-`GraphFrame` currently provides a logic shell with a header and ordered sections. Future compositions that reuse several foundational units also belong in this group.
+`Container` currently provides a logic shell with a header and ordered sections. Future compositions that reuse several foundational units also belong in this group.
 
 ## Pages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/frame/graph-frame">
-    <span className="font-semibold">GraphFrame</span>
+    <span className="font-semibold">Container</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Shells, headers, sections, and FlexLayout reuse
     </span>
@@ -20,5 +20,5 @@ Composite units organize multiple children into one reusable graph element. Each
 
 ## Related
 
-- [Base Units](/schematic/graph/base): use GraphNode and GraphConnector
+- [Base Units](/schematic/graph/base): use Entity and Relation
 - [Layout containers](/library/layout): generic arrangement reused by composites

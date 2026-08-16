@@ -2,7 +2,7 @@
 
 import type { FC } from 'react';
 
-import { buildPlotSpec } from '@retikz/plot-react';
+import { buildPlotIR } from '@retikz/plot-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createRoot } from 'react-dom/client';
@@ -189,7 +189,7 @@ describe('Viz Data model controls', () => {
     ];
 
     for (const { fields, id, plot } of plots) {
-      const spec = buildPlotSpec(plot.props.children, id, {
+      const spec = buildPlotIR(plot.props.children, id, {
         dataFieldNames: new Set(fields),
         model: plot.props.model,
       });

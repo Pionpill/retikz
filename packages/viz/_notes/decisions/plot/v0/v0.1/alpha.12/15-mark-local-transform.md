@@ -41,4 +41,4 @@ transform 是 Statistics 层能力，不是 relation 几何能力。把局部 tr
 - 不新增 transform kind。
 - 不引入 per-mark independent dataset、named data view 或 join。
 - 不把 `<Transform>` 子组件变成某个 mark 的子节点。
-- 不把 runtime callback 写进 IRPlotSpec。
+- 不把 runtime callback 写进 IRPlot。

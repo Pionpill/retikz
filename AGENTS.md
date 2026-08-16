@@ -144,9 +144,9 @@ Control: <human-directed|llm-autonomous>
 
 - `main`：稳定发布线，只接正式发布、hotfix、发布后文档补丁。
 - `next`：下版本集成真源，release 只从这里切。
-- `next-kernel`、`next-library`、`next-schematic`、`next-viz`、`next-diagram`：方向集成分支；功能改动先合 `next`，不直接进 `main`。
+- `next-kernel`、`next-library`、`next-schematic`、`next-viz`：方向集成分支；功能改动先合 `next`，不直接进 `main`。
 - `feature/*`、`release/*`、`hotfix/*` 按任务需要创建；创建 / 切换 / 合并 / 删除分支前确认确实需要。
-- 分支同步由 GitHub Actions 自动开 PR：`main -> next`，以及 `next -> next-kernel`、`next -> next-library`、`next -> next-schematic`、`next -> next-viz`、`next -> next-diagram`。冲突和 CI 在 PR 中处理，不静默强推目标分支。
+- 分支同步由 GitHub Actions 自动开 PR：`main -> next`，以及 `next -> next-kernel`、`next -> next-library`、`next -> next-schematic`、`next -> next-viz`。冲突和 CI 在 PR 中处理，不静默强推目标分支。
 
 ## 代码风格
 

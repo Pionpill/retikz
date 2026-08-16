@@ -50,7 +50,7 @@ type IRTableLegendLayout = {
   align?: 'start' | 'center' | 'end';
 };
 
-type IRTableSpec = {
+type IRTable = {
   legendLayout?: IRTableLegendLayout;
 };
 ```
@@ -172,7 +172,7 @@ const spec = {
 ## 影响
 
 - `@retikz/table` 增加 Standard 运行依赖
-- `TableSpec` 增加 `legendLayout`
+- `IRTable` 增加 `legendLayout`
 - compile/runtime contribution 显式携带 `LegendDefinition`/`FlexLayoutDefinition`
 - manifest 增加 legend lineage，compile result 增加同次 artifact links
 - Table 与 Standard release group 不 lockstep，但本能力进入实现前必须能消费稳定的 Standard Legend / Flex 公共契约

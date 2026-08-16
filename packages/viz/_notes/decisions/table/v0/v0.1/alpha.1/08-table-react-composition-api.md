@@ -29,14 +29,14 @@ Cell;
 
 根组件职责固定为：
 
-- `<Table>` 仍是完整 `IRTableSpec` 的底层入口，只接收 `spec` 与 runtime props，不收集结构 children
+- `<Table>` 仍是完整 `IRTable` 的底层入口，只接收 `spec` 与 runtime props，不收集结构 children
 - `<DetailTable>` 保留完整 `columns` props authoring，并增加 `<DetailColumn>` children authoring
 - `<ManualTable>` 保留完整 `cells` / `rowKinds` props authoring，并增加 `<Row>/<Cell>` children authoring
 - 未来表型使用独立根组件和自己的窄 grammar；明细表专属组件使用 `DetailXxx` 命名，跨表型的基础结构概念使用通用名称
 
 通用名称表示概念不绑定某一种业务表型，不表示每个根组件都必须接受该 marker；alpha.1 的 `<Row>/<Cell>` grammar 只由 `<ManualTable>` 收集。
 
-子组件都是同步声明 marker，返回 `null`。根组件在进入 runtime 前收集 props，生成现有 `DetailTableSpecInput` / `ManualTableSpecInput`，再分别调用 `createDetailTableSpec()` / `createManualTableSpec()`。ReactNode、组件实例和函数不得进入 Table IR。
+子组件都是同步声明 marker，返回 `null`。根组件在进入 runtime 前收集 props，生成现有 `DetailTableInput` / `ManualTableInput`，再分别调用 `createDetailTableIR()` / `createManualTableIR()`。ReactNode、组件实例和函数不得进入 Table IR。
 
 ### DetailTable
 
@@ -44,7 +44,7 @@ Cell;
 
 ```ts
 type DetailTableRootProps = TableCommonProps &
-  Omit<DetailTableSpecInput, 'columns'> & {
+  Omit<DetailTableInput, 'columns'> & {
     data: Array<ExternalRow>;
   };
 
@@ -72,7 +72,7 @@ builder 按 JSX 声明顺序生成 columns，递归穿透 Fragment、数组以�
 `ManualTableProps` 先从既有 manual 输入移除 `cells` / `rowKinds`，保留 `rows` / `columns` 为显式正整数，不从 JSX 推断或修改表格尺寸，再与以下模式组成 union：
 
 ```ts
-type ManualTableRootProps = TableCommonProps & Omit<ManualTableSpecInput, 'cells' | 'rowKinds'>;
+type ManualTableRootProps = TableCommonProps & Omit<ManualTableInput, 'cells' | 'rowKinds'>;
 
 type ManualTableCellPropsMode = {
   rowKinds?: Array<TableRowKindValue>;
@@ -96,7 +96,7 @@ type ManualTableProps = ManualTableRootProps & (ManualTableCellPropsMode | Manua
 
 children 模式要求 `<Row>` 数量与 `rows` 相等；`kind` 省略时使用现有 body 默认值。每个 Row 中的 `<Cell>` 按声明顺序从 column `0` 连续寻址，数量不得超过 `columns`；少于 `columns` 表示尾部地址没有显式 Cell，空 Row 合法。需要任意稀疏地址或非行序输入时继续使用完整 `cells` props。
 
-builder 允许 Fragment、数组和条件空节点，但未知 Row child、Row 外的 Cell、Cell 中的 React element 或超出显式 dimensions 都 fail-loud。生成的 rowKinds 与 cells 仍进入 `createManualTableSpec()`，地址唯一性、payload、location 和 roles 继续由既有 Table schema / pipeline 校验。
+builder 允许 Fragment、数组和条件空节点，但未知 Row child、Row 外的 Cell、Cell 中的 React element 或超出显式 dimensions 都 fail-loud。生成的 rowKinds 与 cells 仍进入 `createManualTableIR()`，地址唯一性、payload、location 和 roles 继续由既有 Table schema / pipeline 校验。
 
 ### Cell payload sugar
 
@@ -125,7 +125,7 @@ type CellProps = CellSharedProps &
 
 `<Cell>姓名</Cell>` 是 `{ kind: 'value', value: '姓名' }` 的 JSX 糖；`value` 仍供变量和程序化值使用，`content` 对应直接 Core / Tier 2 `IRChild`。children 只接受 `@retikz/data` 的 JSON scalar，不接受 React element、Fragment、函数或其它 ReactNode。三种输入同时出现时 fail-loud，不使用隐式优先级；需要直接提供完整 `IRTableCellPayload` 时继续使用根组件的 `cells` props。
 
-两个 runtime resolver 分支必须先把 props mode 或 children mode 规范化成同一个现有 plain input，再分别调用 `createDetailTableSpec()` / `createManualTableSpec()`；standalone render 与 embedded `contribute()` 不得各自实现 builder。
+两个 runtime resolver 分支必须先把 props mode 或 children mode 规范化成同一个现有 plain input，再分别调用 `createDetailTableIR()` / `createManualTableIR()`；standalone render 与 embedded `contribute()` 不得各自实现 builder。
 
 理由：
 
@@ -184,7 +184,7 @@ type CellProps = CellSharedProps &
 </ManualTable>
 ```
 
-`DetailTable` children 结果必须等于把收集到的 columns 传给 `createDetailTableSpec()`；`ManualTable` children 结果必须等于把按 Row 顺序生成的 rowKinds / addressed cells 传给 `createManualTableSpec()`。standalone 与 embedded 两条 runtime 路径消费同一个构造结果。
+`DetailTable` children 结果必须等于把收集到的 columns 传给 `createDetailTableIR()`；`ManualTable` children 结果必须等于把按 Row 顺序生成的 rowKinds / addressed cells 传给 `createManualTableIR()`。standalone 与 embedded 两条 runtime 路径消费同一个构造结果。
 
 ## 测试设计
 
@@ -211,7 +211,7 @@ marker traversal 保留 Fragment、数组与条件空节点中的有效声明顺
 - `DetailTableProps` / `ManualTableProps` 增加互斥 children authoring 分支；现有合法 columns / cells props 调用保持兼容，重复结构来源在类型和运行时均被拒绝
 - `@retikz/table-react` 新增 `DetailColumn`、`Row`、`Cell` 公开导出和两个窄 builder；现有三个根组件、embeddable adapter 与 runtime contract 保留
 - `@retikz/table` schema、authoring input、structure、layout、lowering、manifest 与 package exports 均不改变
-- `@retikz/table-vanilla` 不增加细粒度 helper；plain input 已完整表达同一 TableSpec，JSX sugar 对 Vanilla 不适用
+- `@retikz/table-vanilla` 不增加细粒度 helper；plain input 已完整表达同一 IRTable，JSX sugar 对 Vanilla 不适用
 - `@retikz/data`、`@retikz/core` 和 renderer 无改动
 - `@retikz/table-react` README 与 apps/docs 的明细表、表格模型/API 示例同步展示 props / children 两种写法；zh / en 同步
 - alpha.1 ADR-06 的 JSX DSL 非目标由本 ADR supersede，其余绑定与 adapter 决策继续有效
@@ -223,10 +223,10 @@ marker traversal 保留 Fragment、数组与条件空节点中的有效声明顺
 - 主责包与协作包：`@retikz/table` 继续主责 schema、plain authoring 与 pipeline；`@retikz/table-react` 主责 children traversal 和 runtime 接线；Vanilla 维持 plain authoring
 - 是否可由现有能力组合：可以；children 完全折叠为现有 `TableDetailColumnInput`、`IRTableCell` 与两个 create helper
 - 是否需要下沉到 data / core / math：不需要；不新增数据处理、IR、测量或 renderer 能力
-- 内部表达链路：React props / marker children → detail/manual 窄 builder → `createXxxTableSpec()` → 现有 runtime / lowering
+- 内部表达链路：React props / marker children → detail/manual 窄 builder → `createXxxTableIR()` → 现有 runtime / lowering
 - 外部扩展链路：custom structure 继续走通用 `<Table spec>` 与 definitions；本 ADR 不为 custom kind 自动生成 React marker
 - pipeline / lowering 与下游消费：无变化；standalone 与 embedded 都消费同一个规范 spec
-- React / Vanilla adapter 等价性：两侧最终 TableSpec 和 lowering 等价；JSX traversal 是 React-only authoring sugar，Vanilla plain input 已具备完整能力，因此无需镜像组件层级
+- React / Vanilla adapter 等价性：两侧最终 IRTable 和 lowering 等价；JSX traversal 是 React-only authoring sugar，Vanilla plain input 已具备完整能力，因此无需镜像组件层级
 - provenance / lineage / locator 是否适用：不改变现有 Cell source、manifest 或 identity；Data transform / lineage 延期到 roadmap 对应 milestone
 - 不支持边界与本轮结论：能力由现有 Table contract 组合表达，新增内容上移到 React adapter，不扩展 Table 能力域
 

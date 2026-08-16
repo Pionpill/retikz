@@ -1,11 +1,11 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { glyphRows } from './mark-custom.data';
 import { diamondMark } from './mark-custom.definition';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'glyphs' },

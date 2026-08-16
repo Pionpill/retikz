@@ -3,12 +3,12 @@ import type { DataFieldTypeMap, ExternalRow, IRDataFieldDefinition } from '@reti
 import type { AnyMarkDefinition, ChannelPaletteContext, ChannelScaleResolution } from '../../contract';
 import type { ChannelScaleResolveContext } from '../../contract';
 import type { ChannelRegistry } from '../../providers';
-import type { IRPlotScaleOperation, IRPlotSpec } from '../../schemas';
+import type { IRPlotScaleOperation, IRPlot } from '../../schemas';
 
 /** channel 领域 resolver 的窄上下文；provider definition context 由 resolver 在调用点投影 */
 export type ChannelResolveContext = {
   /** 当前 plot source，用于 definition 读取 scale / data model 等声明 */
-  node: IRPlotSpec;
+  node: IRPlot;
   /** 当前 mark 实际消费的数据行 */
   rows: Array<ExternalRow>;
   /** 已解析字段类型表 */

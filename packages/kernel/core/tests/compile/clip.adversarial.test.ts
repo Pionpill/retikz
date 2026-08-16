@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ClipResource, GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
+import type { ClipResource, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
 import { compileToScene, defineClip } from '../../src';
 
@@ -29,7 +29,7 @@ const allGroups = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> 
 const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
   (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
 
-const grad: IRPaintSpec = {
+const grad: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [
@@ -291,7 +291,7 @@ describe('clip 编译确定性：同 IR 编译两次产同 id', () => {
 
 describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => {
   it('多 paint + 多 clip 交错 → paint-N / clip-N 各自递增、全局 id 唯一', () => {
-    const grad2: IRPaintSpec = {
+    const grad2: IRPaint = {
       kind: 'linearGradient',
       angle: 0,
       stops: [

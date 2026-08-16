@@ -19,7 +19,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 | ------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | ADR-01 | **axis domain padding and tick strategy**          | 为连续 / 时间位置 scale 增加 domain 弹性、按 scale family 区分单值 domain 退化策略、tick 显式控制与 `nice` 顺序；解决点贴边和 tick 不可控问题                                                              | Accepted             |
 | ADR-02 | **axis guide structure and style tokens**          | 细化 line、ticks、tickLabels、title、grid 部件槽位的样式与几何 token；替换 guide lowering 中的硬编码常量                                                                                                   | Accepted             |
-| ADR-03 | **plot theme schema and merge priority**           | 新增 JSON-safe `PlotSpec.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构                                                                                         | Accepted             |
+| ADR-03 | **plot theme schema and merge priority**           | 新增 JSON-safe `IRPlot.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构                                                                                         | Accepted             |
 | ADR-04 | **legend, palette, and guide family theme**        | 收敛 categorical / sequential / diverging palette、series / sector 默认配色、legend swatch / ramp / label / title 样式                                                                                     | Accepted             |
 | ADR-05 | **axis line advanced geometry**                    | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段                                                | Accepted（已实现）   |
 | ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density                                                          | Accepted（已实现）   |
@@ -36,7 +36,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 
 1. **ADR-01 先行**：axis 的范围与 tick 是 guide 可读性的基础。Theme 只负责默认与样式，不能掩盖 scale domain 策略缺失。
 2. **ADR-02 跟进**：axis / grid 的几何与文字样式需要明确 token，再由 ADR-03 挂到 theme。
-3. **ADR-03 建 theme 总入口**：把 ADR-02 的视觉 token 与 ADR-04 的 legend / palette token 接进 `PlotSpec.theme`，并定义局部覆盖优先级；ADR-01 的 domain / tick 语义仍归 scale / guide，不归 theme。
+3. **ADR-03 建 theme 总入口**：把 ADR-02 的视觉 token 与 ADR-04 的 legend / palette token 接进 `IRPlot.theme`，并定义局部覆盖优先级；ADR-01 的 domain / tick 语义仍归 scale / guide，不归 theme。
 4. **ADR-04 收口 legend / palette**：legend 的样式和 palette 消费 theme，总体依赖 ADR-03 的 merge 规则。
 5. **ADR-05 补 axis line 进阶几何**：复用 ADR-02 的 axis line 槽位和 core path / arrow 能力，补齐 lineCap、静态 axis 箭头与 origin crossing；它不扩大 theme 的结构语义。
 6. **ADR-06 补 axis tick 来源、形态与密度**：复用 ADR-02 的 ticks 槽位和 ADR-01 的 tick source 语义，把候选 tick 生成、visible tick 抽稀、tick mark 形态分层；它不改变 theme 的 tick source 语义。
@@ -64,7 +64,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 - **axis 箭头复用 core Path marks**：axis line 需要箭头时，只把 positive / negative 方向语义 lowering 到 core `IRPath.marks`；箭头样式复用 core `ArrowEndDetail`，不在 plot 另造 arrow provider 或 renderer 语义。
 - **origin placement 与 theme 分离**：axis 穿过原点是 placement / coordinate 语义，不是 theme token。theme 不应通过 `axis.line` 给所有轴注入 arrow、extent 或 origin。
 - **theme JSON-safe**：theme 只能包含 plain data、token、颜色串、数值、枚举。formatter 函数、DOM、ReactNode、renderer 对象不进 theme。
-- **local override 胜过 theme**：用户在单个 Axis / Legend 上写的局部字段应覆盖 `PlotSpec.theme`；theme 覆盖 built-in visual default。scale 的 `domain` / `domainPadding` / `nice` / `ticks.values` 等语义字段不参与 theme 合并链。
+- **local override 胜过 theme**：用户在单个 Axis / Legend 上写的局部字段应覆盖 `IRPlot.theme`；theme 覆盖 built-in visual default。scale 的 `domain` / `domainPadding` / `nice` / `ticks.values` 等语义字段不参与 theme 合并链。
 - **三包 lockstep**：`@retikz/plot` 是 schema / lowering 真源；React / Vanilla 只提供等价 authoring 表面，不另造 theme 或 guide 语义。
 - **Interaction 顺延到 v0.2**：不设计 hover / selected token，不实现 tooltip、selection、brush、event callback。
 
@@ -133,11 +133,11 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 
 ### ADR-03：plot theme schema and merge priority
 
-目标是定义 `PlotSpec.theme` 与 theme 默认层，给 guide / legend / palette 提供统一入口。
+目标是定义 `IRPlot.theme` 与 theme 默认层，给 guide / legend / palette 提供统一入口。
 
 设计倾向：
 
-- 新增 `PlotThemeSchema`，挂到 PlotSpec：
+- 新增 `PlotThemeSchema`，挂到 IRPlot：
 
 ```ts
 type PlotTheme = {
@@ -153,7 +153,7 @@ type PlotTheme = {
 
 ```text
 built-in default theme
-  < PlotSpec.theme
+  < IRPlot.theme
   < local guide / legend override
 ```
 
@@ -341,9 +341,9 @@ built-in default theme
 - **axis components**：line / ticks / tickLabels / title / grid token 各自落到 core Path / Node / Scope 的正确 style。
 - **axis line advanced geometry**：lineCap lowering 到 core Path；positive / negative arrow lowering 到 core Path marks；origin placement 用 cross scale 投影 axis baseline；theme 不接受结构字段。
 - **coordinate coverage**：cartesian2D、polar2D、ternary2D、custom axis 至少覆盖样式不丢失；几何断言按各坐标系裁剪。
-- **theme merge**：built-in default、PlotSpec.theme、Axis local override、Legend local style 的优先级稳定；语义字段不进入 token merge。
+- **theme merge**：built-in default、IRPlot.theme、Axis local override、Legend local style 的优先级稳定；语义字段不进入 token merge。
 - **legend / palette**：categorical series 默认色、sector 默认色、sequential / quantize / threshold / quantile / diverging 默认 scheme、显式 range / scheme 覆盖 theme；mark 与 legend 消费同一 `ResolvedPlotPalette`。
-- **三包等价**：React / Vanilla authoring 表面生成的 PlotSpec 与手写 spec 等价。
+- **三包等价**：React / Vanilla authoring 表面生成的 IRPlot 与手写 spec 等价。
 - **docs demo**：单点散点留白、主题切换、axis/grid 样式、legend/palette 样式各至少一组。
 
 ## 本轮不做
@@ -367,7 +367,7 @@ alpha.15 封口时应满足：
 - tick 数量语义清晰：`count` 是候选数量 hint，`values` 是显式候选值，`interval` 是固定间隔候选值，`density` 控制 visible tick 抽稀，grid / mark 默认消费同一 visible tick set。
 - axis tick label 能默认自适应旋转和隐藏重叠 label；用户可以关闭自动旋转、关闭自动省略或关闭全部自适应，且 label 避让不改变 grid / tick mark。
 - cartesian axis line 能表达 lineCap、positive / negative 方向箭头与 origin crossing，且不污染 theme 结构语义。
-- `PlotSpec.theme` 能控制 axis、axis grid、legend、palette、typography、background 的默认样式。
-- React / Vanilla 能等价暴露 theme 与 guide 局部样式，不绕开 PlotSpec。
+- `IRPlot.theme` 能控制 axis、axis grid、legend、palette、typography、background 的默认样式。
+- React / Vanilla 能等价暴露 theme 与 guide 局部样式，不绕开 IRPlot。
 - docs 至少覆盖：单点散点留白、axis/grid 样式、theme 切换、legend/palette 样式、plot labels 与 layer zIndex。
 - roadmap 明确 Interaction 进入 v0.2 能力线，不与 alpha.15 混杂。

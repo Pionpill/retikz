@@ -1,5 +1,5 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { JsonObjectSchema } from '@retikz/core';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@retikz/plot';
 import { z } from 'zod';
 
-import type { ChartRecipeSeed, InternalChartSpecBound } from './recipe';
+import type { ChartRecipeSeed, InternalChartBound } from './recipe';
 
 import { ChartMemberKind } from '../shared';
 import { ChartResolveError, ChartResolveErrorCode } from './errors';
@@ -33,8 +33,8 @@ export type MergedChartMember = {
 
 /** collection merge 的内部结果 */
 export type ChartMergeResult = {
-  /** 尚未执行最终 PlotSpec root parse 的 candidate */
-  plotSpec: IRPlotSpec;
+  /** 尚未执行最终 IRPlot root parse 的 candidate */
+  plotSpec: IRPlot;
 };
 
 const jsonObjectOf = (value: unknown): IRJsonObject => JsonObjectSchema.parse(value);
@@ -134,7 +134,7 @@ const valueAtPath = (root: unknown, path: ReadonlyArray<string | number>): { fou
 };
 
 /** 枚举 seed Plot 中必须由语义 member 索引覆盖的全部 collection 路径 */
-const seedPlotMemberPaths = (plot: IRPlotSpec): Array<ReadonlyArray<string | number>> => [
+const seedPlotMemberPaths = (plot: IRPlot): Array<ReadonlyArray<string | number>> => [
   ...(plot.transform ?? []).map((_, index) => ['transform', index] as const),
   ...plot.scales.map((_, index) => ['scales', index] as const),
   ...(plot.coordinate === undefined ? [] : [['coordinate'] as const]),
@@ -185,7 +185,7 @@ const initializeSeedMembers = (seed: ChartRecipeSeed): Array<MergedChartMember> 
 };
 
 /** 把 recipe seed 与 Chart shared collections 确定性合并为 Plot candidate */
-export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSeed): ChartMergeResult => {
+export const mergeChartSeed = (spec: InternalChartBound, seed: ChartRecipeSeed): ChartMergeResult => {
   let members = initializeSeedMembers(seed);
   const recipeIds = new Set(members.map(member => idOf(member.value)).filter(id => id !== undefined));
   const userIds: Array<{ id: string; path: ReadonlyArray<string | number> }> = [];
@@ -372,7 +372,7 @@ export const mergeChartSeed = (spec: InternalChartSpecBound, seed: ChartRecipeSe
   void seedComposition;
   void seedMarks;
   void seedGuides;
-  const plotSpec: IRPlotSpec = {
+  const plotSpec: IRPlot = {
     ...passthrough,
     ...(transforms.length === 0 ? {} : { transform: transforms }),
     scales,

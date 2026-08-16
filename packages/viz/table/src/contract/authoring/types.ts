@@ -1,8 +1,8 @@
 import type { IRDataModel } from '@retikz/data';
 
 import type {
-  IRDetailTableSpec,
-  IRManualTableSpec,
+  IRDetailTable,
+  IRManualTable,
   IRManualTableStructure,
   IRTableCellPayload,
   IRTableDetailColumn,
@@ -15,7 +15,7 @@ export type TableDetailColumnInput = Omit<IRTableDetailColumn, 'header'> & {
 };
 
 /** detail Table 的 framework-neutral 作者输入 */
-export type DetailTableSpecInput = Omit<IRDetailTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
+export type DetailTableInput = Omit<IRDetailTable, 'namespace' | 'type' | 'data' | 'structure'> & {
   /** 运行时外部 dataset reference */
   dataRef: string;
   /** 可选数据字段模型 */
@@ -27,5 +27,5 @@ export type DetailTableSpecInput = Omit<IRDetailTableSpec, 'namespace' | 'type' 
 };
 
 /** manual Table 的 framework-neutral 作者输入 */
-export type ManualTableSpecInput = Omit<IRManualTableSpec, 'namespace' | 'type' | 'data' | 'structure'> &
+export type ManualTableInput = Omit<IRManualTable, 'namespace' | 'type' | 'data' | 'structure'> &
   Omit<IRManualTableStructure, 'kind'>;

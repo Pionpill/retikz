@@ -1,14 +1,14 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createDensityAreaSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { PathMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 
-describe('buildPlotSpec density transform forwarding', () => {
+describe('buildPlotIR density transform forwarding', () => {
   it('density_declared_to_ir', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform
           kind="density"
@@ -36,6 +36,6 @@ describe('buildPlotSpec density transform forwarding', () => {
 
     expect(spec.transform).toEqual(expected.transform);
     expect(spec.marks[0]).toMatchObject(expected.marks[0]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

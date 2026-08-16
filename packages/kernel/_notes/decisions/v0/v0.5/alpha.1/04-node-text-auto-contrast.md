@@ -26,7 +26,7 @@ export const NodeTextColor = {
 - `'contrast'` 是 Node 宿主保留关键字；由 NodeSchema 派生的 `Scope.nodeDefault.textColor` 同样接受
 - React / Vanilla 直接透传该字符串；缺省与其它 CSS color 字符串语义不变
 - 固定候选色为 `#000000` / `#ffffff`，固定 fallback 为 `currentColor`
-- 关键字不进入 PaintSpec 或 Scene；Path / edge / step label 不解释该语义
+- 关键字不进入 IRPaint 或 Scene；Path / edge / step label 不解释该语义
 
 ### 解析时机、消费者与优先级
 
@@ -56,7 +56,7 @@ Core 在 style cascade 后、Node content / label layout 前按每个 Node 解�
 对比算法固定为：
 
 1. 解析 cascade 后的 fill，并计算颜色 alpha × `fillOpacity`；`node.opacity` 不参与
-2. 只有 effective alpha `=== 1` 才继续；透明 / 缺省 fill、`none`、PaintSpec 或动态 / 非法字符串走 fallback
+2. 只有 effective alpha `=== 1` 才继续；透明 / 缺省 fill、`none`、IRPaint 或动态 / 非法字符串走 fallback
 3. 线性化通道：`c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4`
 4. 相对明度：`L = 0.2126R + 0.7152G + 0.0722B`
 5. 比较未 round 的 `(L + 0.05) / 0.05` 与 `1.05 / (L + 0.05)`；相等选黑
@@ -81,7 +81,7 @@ import { NodeTextColor } from '@retikz/core';
 
 ## 公开影响
 
-新增 `NodeTextColor.Contrast` 常量并保留字符串 IR；既有 CSS color、Scene、PaintSpec 与 renderer 契约不变。透明背景不猜测 backdrop，固定 warning + `currentColor`。
+新增 `NodeTextColor.Contrast` 常量并保留字符串 IR；既有 CSS color、Scene、IRPaint 与 renderer 契约不变。透明背景不猜测 backdrop，固定 warning + `currentColor`。
 
 ## 最终实现与验证摘要
 

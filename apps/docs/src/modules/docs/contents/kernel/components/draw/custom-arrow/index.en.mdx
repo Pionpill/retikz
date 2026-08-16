@@ -103,7 +103,7 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
 | Invalid `baseSize`, contact, or dimensions | Compile rejects invalid marker sizing                           |
 | Unknown primitive or non-finite geometry   | Marker validation prevents invalid Scene output                 |
 | Recursive arrows, clips, or text in marker | The narrow `MarkerPrimitive` contract rejects them              |
-| Path uses an IRPaintSpec stroke            | Marker cannot inherit a resource paint; set a solid arrow color |
+| Path uses an IRPaint stroke            | Marker cannot inherit a resource paint; set a solid arrow color |
 
 MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the same subset. Do not return SVG `<marker>` elements, Canvas objects, text layout, or external paint resource references.
 

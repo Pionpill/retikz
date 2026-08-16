@@ -15,18 +15,18 @@ roadmap P2-1 决定：alpha.4 的 ADR-01~04 是 core-internal（IR + lowering，
 
 现状（alpha.3 ADR-07 已建）：
 
-- `@retikz/plot-react`：`<Plot>` + `<BarMark>` / `<LineMark>` / `<PointMark>` / `<Axis>` + `buildPlotSpec`（JSX → IRPlotSpec builder，同步展开、不在 React render 栈）。
-- `@retikz/plot-vanilla`：`renderPlot(spec, data, options)`（IRPlotSpec → SVG 字符串，SSR）。
+- `@retikz/plot-react`：`<Plot>` + `<BarMark>` / `<LineMark>` / `<PointMark>` / `<Axis>` + `buildPlotIR`（JSX → IRPlot builder，同步展开、不在 React render 栈）。
+- `@retikz/plot-vanilla`：`renderPlot(spec, data, options)`（IRPlot → SVG 字符串，SSR）。
 
 这些表面只懂 cartesian。本 ADR 让它们表达 polar：coordinate 选 polar2D、新 mark（sector / area）、新 `closed` prop、polar axis（angle/radius 维度）。
 
 按 develop-design「适配器对等」：**react + vanilla 两套都要给**；按 AGENTS.md：**用户可见改动必须同一改动集同步文档站**。
 
-## 决策：Plot 加 coordinate 选择 + 新 mark/guide 组件（扁平 x/y props）；vanilla IRPlotSpec 对等；docs 概念页 + 组件页 + demo 全补
+## 决策：Plot 加 coordinate 选择 + 新 mark/guide 组件（扁平 x/y props）；vanilla IRPlot 对等；docs 概念页 + 组件页 + demo 全补
 
 ### 1. `@retikz/plot-react`
 
-- **`<Plot coordinate>`**：`<Plot>` 加 coordinate 选择（`coordinate="polar2D"` 或传 polar 配置 `{ startAngle, endAngle, innerRadius }`）；缺省 cartesian（向后兼容）。`buildPlotSpec` 产出对应 `coordinate` IR。
+- **`<Plot coordinate>`**：`<Plot>` 加 coordinate 选择（`coordinate="polar2D"` 或传 polar 配置 `{ startAngle, endAngle, innerRadius }`）；缺省 cartesian（向后兼容）。`buildPlotIR` 产出对应 `coordinate` IR。
 - **保持现有扁平 prop 形态（不引入 `encoding` 对象 / `transform` prop）**：现有 mark 组件 props 是扁平字段（`x` / `y` / `color` / `series` / `order` / `stack`，见 `marks.tsx`），DSL 入口 `data` 是 `Array<ExternalRow>`（非 map；map 仅 spec 入口）。本 ADR **沿用扁平形态**——新增的是扁平字段，不改成 `encoding={{}}` 对象、不加 `transform` prop（与 `<BarMark stack>` 自动装配 stack transform 的既有约定一致）。
 - **新 mark 组件**：`<SectorMark>`（饼/环；扁平 `angle`（值字段）+ `color`，**内建自动累积**——同 `<BarMark stack>` 自动装配 stack transform 的约定，DSL 层不暴露 transform）、`<AreaMark>`（扁平 `x`/`y`/`baseline`/`closed`/`color`/`series`）；`<LineMark>` 加扁平 `closed`（雷达）。`<BarMark>`（=interval）在 polar 下自动成径向柱（无需新组件，coordinate 决定几何）。
 - **位置通道仅 `x` / `y`（扁平、必填）**：无 angle/radius props——polar 下坐标系把 x→angle、y→radius 重解释（见 ADR-01）；`closed` 为扁平布尔。
@@ -34,7 +34,7 @@ roadmap P2-1 决定：alpha.4 的 ADR-01~04 是 core-internal（IR + lowering，
 
 ### 2. `@retikz/plot-vanilla`
 
-`renderPlot` 直接吃 IRPlotSpec → ADR-01~04 的 polar IR 落地后**零改动即支持 polar**（只转发）。补 builder 对等（若 vanilla 有命令式 builder 则加 polar coordinate / sector / area / closed；无则以「直接写 IRPlotSpec + renderPlot」为 vanilla authoring 路径，文档双视图给 IRPlotSpec 写法）。
+`renderPlot` 直接吃 IRPlot → ADR-01~04 的 polar IR 落地后**零改动即支持 polar**（只转发）。补 builder 对等（若 vanilla 有命令式 builder 则加 polar coordinate / sector / area / closed；无则以「直接写 IRPlot + renderPlot」为 vanilla authoring 路径，文档双视图给 IRPlot 写法）。
 
 - **概念页**：polar 坐标系（x/y 由坐标系重解释为 angle/radius、startAngle/endAngle/innerRadius、与 cartesian 一份 spec 切换）。
 - **demo**：径向柱 / 玫瑰、饼图、环图、雷达、极坐标折线、polar 轴+同心环——react + vanilla 双代码视图。
@@ -43,7 +43,7 @@ roadmap P2-1 决定：alpha.4 的 ADR-01~04 是 core-internal（IR + lowering，
 理由：
 
 1. **lockstep 收口**：单坐标系纵向加宽，authoring 一次性露出比逐 ADR 碎片露出连贯。
-2. **适配器对等**：react JSX + vanilla IRPlotSpec/builder 同源 IR，两套都给。
+2. **适配器对等**：react JSX + vanilla IRPlot/builder 同源 IR，两套都给。
 3. **coordinate 决定几何，组件不冗余**：`<BarMark>` 不分 cartesian/polar 两个组件——coordinate 切换即变几何（守 (i)，用户心智简单）。
 4. **文档同改动集**：用户可见改动与文档一体呈现（AGENTS.md 硬规则）。
 

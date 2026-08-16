@@ -1,17 +1,17 @@
 import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
-import { GraphConnectorProvider, GraphFrameProvider, GraphNodeProvider } from '@retikz/graph';
+import { ContainerProvider, EntityProvider,RelationProvider } from '@retikz/graph';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import {
+  container,
+  ContainerInputEmbedAdapter,
   createGraphVanillaAdapters,
-  graphConnector,
-  GraphConnectorInputEmbedAdapter,
-  graphFrame,
-  GraphFrameInputEmbedAdapter,
-  graphNode,
-  GraphNodeInputEmbedAdapter,
+  entity,
+  EntityInputEmbedAdapter,
+  relation,
+  RelationInputEmbedAdapter,
 } from '../src';
 
 const normalizeChildren = (children: ReadonlyArray<InputChild>) => {
@@ -41,9 +41,9 @@ describe('@retikz/graph-vanilla package boundary', () => {
   it('exports exactly the unified three Graph adapters', async () => {
     const graphVanilla = await import('../src');
 
-    expect(graphVanilla.GraphFrameInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.GraphNodeInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.GraphConnectorInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.ContainerInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.RelationInputEmbedAdapter).toBeDefined();
     expect(graphVanilla).not.toHaveProperty('stage');
     expect(graphVanilla).not.toHaveProperty('TerminalInputEmbedAdapter');
     expect(graphVanilla).not.toHaveProperty('DecisionInputEmbedAdapter');
@@ -51,81 +51,76 @@ describe('@retikz/graph-vanilla package boundary', () => {
 });
 
 describe('Graph Vanilla semantic authoring', () => {
-  it('creates three adapters and preserves GraphNode role and variant', () => {
+  it('creates three adapters and preserves Entity role and variant', () => {
     const adapters = createGraphVanillaAdapters();
-    const nodeAdapter = adapters.find(adapter => adapter.kind === 'graph.graphNode');
-    expect(adapters.map(adapter => adapter.kind)).toEqual([
-      'graph.graphFrame',
-      'graph.graphNode',
-      'graph.graphConnector',
-    ]);
+    const nodeAdapter = adapters.find(adapter => adapter.kind === 'graph.entity');
+    expect(adapters.map(adapter => adapter.kind)).toEqual(['graph.container', 'graph.entity', 'graph.relation']);
     expect(nodeAdapter).toBeDefined();
 
     const contribution = lower(
-      graphNode('vibrant', { role: 'stage', position: [0, 0], color: '#123456', variant: 'vibrant' }),
+      entity('vibrant', { role: 'stage', position: [0, 0], color: '#123456', variant: 'vibrant' }),
       nodeAdapter!,
     );
     expect(contribution.node).toMatchObject({
       namespace: 'graph',
-      type: 'graphNode',
+      type: 'entity',
       role: 'stage',
       color: '#123456',
       variant: 'vibrant',
     });
-    expect(contribution.providerDependencies.roots[0]).toEqual(GraphNodeProvider.key);
+    expect(contribution.providerDependencies.roots[0]).toEqual(EntityProvider.key);
   });
 
-  it('returns embeds for GraphFrame, GraphNode, and GraphConnector', () => {
-    expect(graphFrame('frame', { header: { child: { type: 'node', position: [0, 0] } } })).toMatchObject({
+  it('returns embeds for Container, Entity, and Relation', () => {
+    expect(container('frame', { header: { child: { type: 'node', position: [0, 0] } } })).toMatchObject({
       type: 'embed',
       id: 'frame',
-      kind: 'graph.graphFrame',
+      kind: 'graph.container',
     });
-    expect(graphNode('stage', { role: 'stage', position: [20, 0] })).toMatchObject({
+    expect(entity('stage', { role: 'stage', position: [20, 0] })).toMatchObject({
       type: 'embed',
       id: 'stage',
-      kind: 'graph.graphNode',
+      kind: 'graph.entity',
     });
-    expect(graphConnector('flow', { role: 'flow', way: ['start', 'stage'] })).toMatchObject({
+    expect(relation('flow', { role: 'flow', way: ['start', 'stage'] })).toMatchObject({
       type: 'embed',
       id: 'flow',
-      kind: 'graph.graphConnector',
+      kind: 'graph.relation',
     });
   });
 
   it.each([
     {
-      type: 'graphFrame',
+      type: 'container',
       id: 'frame',
       lower: () =>
         lower(
-          graphFrame('frame', { header: { child: { type: 'node', position: [0, 0] } } }),
-          GraphFrameInputEmbedAdapter,
+          container('frame', { header: { child: { type: 'node', position: [0, 0] } } }),
+          ContainerInputEmbedAdapter,
         ),
     },
     {
-      type: 'graphNode',
+      type: 'entity',
       id: 'node',
-      lower: () => lower(graphNode('node', { role: 'decision', position: [20, 0] }), GraphNodeInputEmbedAdapter),
+      lower: () => lower(entity('node', { role: 'decision', position: [20, 0] }), EntityInputEmbedAdapter),
     },
     {
-      type: 'graphConnector',
+      type: 'relation',
       id: 'connector',
-      lower: () =>
-        lower(graphConnector('connector', { role: 'flow', way: ['node', 'target'] }), GraphConnectorInputEmbedAdapter),
+      lower: () => lower(relation('connector', { role: 'flow', way: ['node', 'target'] }), RelationInputEmbedAdapter),
     },
   ] as const)('lowers $type to same-id Graph IR and contributes its Definition', ({ type, id, lower: runLower }) => {
     const contribution = runLower();
     const provider = {
-      graphFrame: GraphFrameProvider,
-      graphNode: GraphNodeProvider,
-      graphConnector: GraphConnectorProvider,
+      container: ContainerProvider,
+      entity: EntityProvider,
+      relation: RelationProvider,
     }[type];
 
     expect(contribution.node).toMatchObject({
       namespace: 'graph',
       type,
-      id: type === 'graphFrame' ? `${id}/graphFrame` : id,
+      id: type === 'container' ? `${id}/container` : id,
     });
     expect(contribution.providerDependencies).toEqual({ roots: [provider.key], providers: [provider] });
     expect(provider.makeDefinition({})).toMatchObject({ namespace: 'graph', type });

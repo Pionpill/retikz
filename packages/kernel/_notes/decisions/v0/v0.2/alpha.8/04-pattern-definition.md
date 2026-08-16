@@ -1,4 +1,4 @@
-﻿# ADR-04：PatternDefinition 注册面（自定义 pattern motif + 内置 3 降注册项）
+# ADR-04：PatternDefinition 注册面（自定义 pattern motif + 内置 3 降注册项）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
@@ -8,7 +8,7 @@
 
 ## 背景
 
-- alpha.7 的 pattern（`ir/paint.ts` `PaintSpecSchema` 的 `pattern` 分支）motif 是固定 enum `z.enum(['lines','dots','grid'])`，react `paintDefs.tsx` 用 `switch(spec.shape)` 写死渲染（lines = 横线、grid = 横竖、dots = circle）。用户无法自定义图案 motif（斜纹、砖墙、波点变体…），只能改 core / react。
+- alpha.7 的 pattern（`ir/paint.ts` `PaintSchema` 的 `pattern` 分支）motif 是固定 enum `z.enum(['lines','dots','grid'])`，react `paintDefs.tsx` 用 `switch(spec.shape)` 写死渲染（lines = 横线、grid = 横竖、dots = circle）。用户无法自定义图案 motif（斜纹、砖墙、波点变体…），只能改 core / react。
 - 与 ADR-01 的 arrow 同源——都是「renderer-agnostic 局部坐标 tile 几何」。开放自定义 motif 复用 ADR-01 的 `MarkerPrimitive` emit 契约 + emit-in-compile 落点。
 
 ## 决策：`PatternDefinition` + `CompileOptions.patterns`，内置 3 降注册项，emit-in-compile

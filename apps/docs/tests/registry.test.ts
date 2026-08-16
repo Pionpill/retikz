@@ -1,5 +1,5 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
-import { GraphConnectorSchema, GraphFrameSchema, GraphNodeSchema } from '@retikz/graph';
+import { ContainerSchema, EntitySchema, RelationSchema } from '@retikz/graph';
 import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
 import {
   CoordinateSchema as PlotCoordinateSchema,
@@ -8,13 +8,13 @@ import {
   MarkSchema,
   PlotAreaThemeSchema,
   PlotLayerSchema,
-  PlotSpecSchema,
+  PlotSchema,
   PlotThemeSchema,
   ScaleSchema,
   TransformSchema,
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard';
-import { TableSpecSchema } from '@retikz/table';
+import { TableSchema } from '@retikz/table';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -27,8 +27,8 @@ describe('SCHEMA_REGISTRY', () => {
     expect(SCHEMA_REGISTRY).toMatchObject({
       SceneSchema: { schema: SceneSchema },
       LayoutInspectSpacingOptionsInputSchema: { schema: LayoutInspectSpacingOptionsInputSchema },
-      TableSpecSchema: { schema: TableSpecSchema },
-      PlotSpecSchema: { schema: PlotSpecSchema },
+      TableSchema: { schema: TableSchema },
+      PlotSchema: { schema: PlotSchema },
       EncodingSchema: { schema: EncodingSchema },
       PlotTransformSchema: { schema: TransformSchema },
       MarkSchema: { schema: MarkSchema },
@@ -50,9 +50,9 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/composite/surface#surfaceschema',
       },
-      GraphFrameSchema: { schema: GraphFrameSchema, url: '/schematic/graph/frame/graph-frame' },
-      GraphNodeSchema: { schema: GraphNodeSchema, url: '/schematic/graph/base/code' },
-      GraphConnectorSchema: { schema: GraphConnectorSchema, url: '/schematic/graph/base/connector' },
+      ContainerSchema: { schema: ContainerSchema, url: '/schematic/graph/frame/graph-frame' },
+      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/base/code' },
+      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/base/connector' },
     });
   });
 
@@ -60,7 +60,7 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite|graph)\/.+/);
+      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite|extension|graph)\/.+/);
     }
   });
 
@@ -73,7 +73,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(LayoutInspectSpacingOptionsInputSchema)?.url).toBe(
       '/library/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
     );
-    expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
+    expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/composite/legend#legendschema');
     expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/composite/legend#legendartifactschema');
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/composite/surface#surfaceschema');

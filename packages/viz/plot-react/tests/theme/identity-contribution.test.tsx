@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type * as RetikzReact from '@retikz/react';
 
 import { ThemeMode } from '@retikz/core';
@@ -22,7 +22,7 @@ vi.mock('@retikz/react', async importOriginal => {
 
 import { Plot, PlotThemeProvider } from '../../src';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -73,7 +73,7 @@ describe('Plot React InputEmbed routing', () => {
   it('preserves the React panel identity and authoring props on the InputEmbed', () => {
     capturedLayouts.length = 0;
 
-    const namedSpec: IRPlotSpec = { ...spec, id: 'sales' };
+    const namedSpec: IRPlot = { ...spec, id: 'sales' };
     renderToStaticMarkup(<Plot spec={namedSpec} data={data} x={24} y={12} />);
 
     const child = capturedLayouts.at(-1)?.children as { props?: Record<string, unknown> };

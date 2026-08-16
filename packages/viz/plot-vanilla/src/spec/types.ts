@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
+import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
 
 import type { InputPlot } from '../normalize/plot';
@@ -17,12 +17,12 @@ export type PlotSource =
   | Readonly<{
       /** 需要由 Plot Vanilla 归一化的 framework-neutral authoring input */
       input: InputPlot;
-      /** 同一 source 不得同时提供 PlotSpec */
+      /** 同一 source 不得同时提供 IRPlot */
       spec?: never;
     }>
   | Readonly<{
       /** 已完成的 Plot Source IR */
-      spec: IRPlotSpec;
+      spec: IRPlot;
       /** 同一 source 不得同时提供 authoring input */
       input?: never;
     }>;

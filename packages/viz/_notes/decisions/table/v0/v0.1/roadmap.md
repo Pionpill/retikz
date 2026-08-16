@@ -5,7 +5,7 @@
 
 ## 版本目标
 
-同一份 JSON-safe TableSpec 能在 React / Vanilla 中表达，并沿统一 Table pipeline 进入 Core contextual compile；renderer 不需要认识 Table 私有类型。
+同一份 JSON-safe IRTable 能在 React / Vanilla 中表达，并沿统一 Table pipeline 进入 Core contextual compile；renderer 不需要认识 Table 私有类型。
 
 v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格形态，同时保持 Data、Core、adapter 和 data-grid 宿主边界清晰。
 
@@ -13,7 +13,7 @@ v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格
 
 | Milestone                       | 主题                           | 主要产出                                                                                                                                                           | Gating                                                                                                             | 状态                      |
 | ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------- |
-| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**               | TableSpec、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                                                                                         | Core composite 与 DataReference 已就绪                                                                             | 已完成                    |
+| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**               | IRTable、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                                                                                         | Core composite 与 DataReference 已就绪                                                                             | 已完成                    |
 | [alpha.2](./alpha.2/roadmap.md) | **二维布局与持久化 authoring** | auto/fraction/minmax、span、border、bounds-aware alignment、fit/overflow、manual row-major persistence                                                             | 通用 `IRChild` constrained layout                                                                                  | 已完成                    |
 | [alpha.3](./alpha.3/roadmap.md) | **呈现语法**                   | formatter、presentation、selector/rule、条件视觉 scale、Core inherited `tableThemeTokens`、shared categorical projection、Legend descriptor / Standard Legend 消费 | alpha.2 canonical model；Core ADR-13；Standard ADR-09；Core gradient-stop semantics / replayed-child artifact link | 进行中（ADR-05 Accepted） |
 | alpha.4                         | **分组与汇总**                 | group、hierarchy、subtotal、grand total                                                                                                                            | Data aggregate / lineage                                                                                           | 计划中                    |
@@ -23,7 +23,7 @@ v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格
 
 ## 贯穿原则
 
-- 数据集不进入 IR；TableSpec 只保存外部数据引用和可序列化配置
+- 数据集不进入 IR；IRTable 只保存外部数据引用和可序列化配置
 - Cell 是语义与布局槽位，内容以 Core `IRChild` 为边界
 - 显式 Plot 等 Tier 2 Cell 属于 v0.1；Table 负责其 Cell box、测量、fit、clip 与追溯，但不解析内容内部语义
 - 内置与自定义结构 / 呈现经过同一 Definition / registry 链路

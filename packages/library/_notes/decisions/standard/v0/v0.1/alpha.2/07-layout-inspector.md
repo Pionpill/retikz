@@ -29,7 +29,7 @@ Layout Inspector 支持三个入口：
 | 范围            | React                                 | Vanilla                            | 语义                                           |
 | --------------- | ------------------------------------- | ---------------------------------- | ---------------------------------------------- |
 | 整张图          | `<Layout inspect={{ layout: true }}>` | mount / SSR options 的 `inspect`   | 选择所有已注册且带 inspector 的布局 occurrence |
-| authored 子树   | `<Scope inspect={{ layout: true }}>`  | `VanillaScopeSpec.inspect`         | 只作用于该 Scope 的 authored 后代              |
+| authored 子树   | `<Scope inspect={{ layout: true }}>`  | `InputScope.inspect`         | 只作用于该 Scope 的 authored 后代              |
 | 当前 occurrence | `<FlexLayout inspect>` 等             | `flexLayout('id', input, true)` 等 | 只选择当前容器，不传播给 nested layout         |
 
 求值顺序固定为 Layout → 最近的 Scope → 当前组件。对象字段逐项稀疏合并，nested `bounds` 也逐字段合并；canonical 默认值只在最终求值时填充一次。
@@ -152,7 +152,7 @@ custom retained renderer 必须声明 `inspectionCapability`。不支持 inspect
 
 React `<Layout>`、`<Scope>` 和 Standard Layout component 只构造 sidecar。static、retained、SVG SSR 与 Canvas 均把 Core 输出交给 Render frame API，不在 adapter 中解释或绘制 primitive。
 
-Vanilla 顶层 `inspect` 是唯一公开根入口；`compile` 明确排除 `inspection`，避免调用方提交两份互相冲突的 Core policy。`VanillaScopeSpec.inspect` 控制 authored 子树，`VanillaEmbedSpec.inspect` 由 adapter 的第二泛型精确约束 family-local options，且不进入 props、IR 或 runtime metadata。
+Vanilla 顶层 `inspect` 是唯一公开根入口；`compile` 明确排除 `inspection`，避免调用方提交两份互相冲突的 Core policy。`InputScope.inspect` 控制 authored 子树，`InputEmbed.inspect` 由 adapter 的第二泛型精确约束 family-local options，且不进入 props、IR 或 runtime metadata。
 
 预编译 Scene 缺少 artifact、definition 与 authored occurrence，React / Vanilla 在配合 `inspect` 使用时同步 fail-loud，不从 Scene 反推布局。
 
@@ -165,7 +165,7 @@ retained 中修改 inspection options 可以完整重新 compile，但单次 com
 - Core：`InspectOptions`、`BaseLayoutInspectOptions`、resolved 类型、inspection primitive / plane schema 与类型、`CompileOptions.inspection`、`CompileResult.inspection`、`CompositeDefinition.inspector`
 - Render：`StaticRenderFrame`、`RenderFrameSnapshot`、`inspectionCapability`
 - React：`LayoutProps.inspect`、`ScopeProps.inspect`、三种 Standard Layout 的 `inspect`
-- Vanilla：顶层 `inspect`、`VanillaScopeSpec.inspect`、`VanillaEmbedSpec.inspect`
+- Vanilla：顶层 `inspect`、`InputScope.inspect`、`InputEmbed.inspect`
 - Standard：三种 family inspect input / resolved schema 与类型；Overlay artifact 的 resolved `position`
 
 本 ADR 不修改 authored Core / Standard IR schema。`0.x` 阶段不为旧 custom renderer 或手写 `CompileResult` 保留别名：它们需要补 `inspectionCapability` 和 `inspection` 字段。Scene-only renderer 调用继续可用，语义等价于 `inspection: null`。

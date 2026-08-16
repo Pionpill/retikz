@@ -1,11 +1,11 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { grid } from './coordinate-custom-bridge.data';
 import { bridgeCoordinate } from './coordinate-custom-bridge.definition';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'grid' },

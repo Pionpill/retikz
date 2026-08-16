@@ -1,8 +1,8 @@
 import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
-import type { IRFont, IRLineSpec } from '../../schemas';
+import type { IRFont, IRLine } from '../../schemas';
 import type { CompileWarningCodeValue } from '../warning';
 import type { IRInlineRun } from './inline';
-import type { FontSpec, TextMeasurer } from './metrics';
+import type { TextFont, TextMeasurer } from './metrics';
 import type { LoweredTexPaint, LoweredTexPath, LowerTex } from './tex';
 
 import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
@@ -23,7 +23,7 @@ export type LineLayoutContext = {
   /** TeX 降解能力 */
   lowerTex?: LowerTex;
   /** 块级字体 */
-  font: FontSpec;
+  font: TextFont;
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
   /**
@@ -57,16 +57,16 @@ export type LaidLine = {
   emit: (originX: number, baselineY: number, round: Round) => Array<ScenePrimitive>;
 };
 
-const mergeFont = (base: FontSpec, override: IRFont | undefined, rootFontSize: number): FontSpec => ({
+const mergeFont = (base: TextFont, override: IRFont | undefined, rootFontSize: number): TextFont => ({
   size: resolveFontSize(override?.size, { rootFontSize, inheritedFontSize: base.size }),
   family: override?.family ?? base.family,
   weight: override?.weight ?? base.weight,
   style: override?.style ?? base.style,
 });
 
-/** 解析一个 LineSpec 为 run 序列：line-object 把行级样式折进各 run；字符串 / MixedLine 直解析 */
+/** 解析一个 IRLine 为 run 序列：line-object 把行级样式折进各 run；字符串 / MixedLine 直解析 */
 export const resolveLineRuns = (
-  spec: IRLineSpec,
+  spec: IRLine,
   gatingOn: boolean,
 ): { runs: Array<IRInlineRun>; hasMath: boolean; warn: boolean } => {
   if (typeof spec === 'string') return parseInlineRuns(spec, gatingOn);
@@ -90,7 +90,7 @@ export const resolveLineRuns = (
 
 /** resolveLineRuns 的诊断包装：保留各个宿主自定义的 warning 文案 */
 export const resolveLineRunsWithWarning = (
-  spec: IRLineSpec,
+  spec: IRLine,
   context: {
     gatingOn: boolean;
     warn: (code: CompileWarningCodeValue, message: string) => void;
@@ -108,7 +108,7 @@ type TextPiece = {
   kind: 'text';
   x: number;
   text: string;
-  font: FontSpec;
+  font: TextFont;
   /**
    * 文本 run 填充色
    * @default LineLayoutContext.color

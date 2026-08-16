@@ -24,7 +24,7 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 />
 ```
 
-`dataRef` 是写入 TableSpec 的稳定引用；`data` 是当前运行时记录，不会进入可持久化 spec。`columns` 同时决定读取字段、显示顺序、列头和可选的 Cell presentation。
+`dataRef` 是写入 IRTable 的稳定引用；`data` 是当前运行时记录，不会进入可持久化 spec。`columns` 同时决定读取字段、显示顺序、列头和可选的 Cell presentation。
 
 在 JSX 中就近声明列时，推荐使用 `DetailColumn` children：
 
@@ -37,7 +37,7 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 `columns` 与 `DetailColumn` children 只能二选一；两种写法会得到相同的明细表 spec。除 `columns` 外，`DetailTable` 的根属性在两种写法中完全一致。
 
-Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 选择 Table preset，shared `colors.categorical` 提供视觉编码的公共分类色，spec-local `tableThemeTokens` 覆盖 Table token。列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值；只有 `tableThemeTokens` 会写入 JSON-safe TableSpec，宿主 `theme` 由 Core Scene / Scope 传播。
+Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 选择 Table preset，shared `colors.categorical` 提供视觉编码的公共分类色，spec-local `tableThemeTokens` 覆盖 Table token。列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值；只有 `tableThemeTokens` 会写入 JSON-safe IRTable，宿主 `theme` 由 Core Scene / Scope 传播。
 
 ## 例子
 
@@ -53,7 +53,7 @@ Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 
   type="tip"
   title="区分 Theme 与宿主 CSS"
   description={
-    'Core Theme 的 style/mode 决定 Table preset，tableThemeTokens 只覆盖当前 TableSpec 的 Table token；React standalone 宿主 CSS 继续使用 containerStyle。'
+    'Core Theme 的 style/mode 决定 Table preset，tableThemeTokens 只覆盖当前 IRTable 的 Table token；React standalone 宿主 CSS 继续使用 containerStyle。'
   }
 />
 
@@ -74,7 +74,7 @@ Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 
 <ComponentAlert
   type="tip"
   title="DetailTable 保持 record-per-row"
-  description="每条记录固定生成一行，DetailColumn 不 author 任意 span。需要显式跨行或跨列时，使用 Manual Table / TableSpec；span 的求解规则见表格模型与契约参考。"
+  description="每条记录固定生成一行，DetailColumn 不 author 任意 span。需要显式跨行或跨列时，使用 Manual Table / IRTable；span 的求解规则见表格模型与契约参考。"
 />
 
 ### Vanilla 与 SSR
@@ -234,8 +234,8 @@ result.manifest;
 | `rules?`                         | `DetailTableProps['rules']`                                               | `[]`       | 按声明顺序匹配并覆盖 formatter、presentation 或外观                 |
 | `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`       | 把选中 value Cell 的原始值映射到背景或内容颜色                      |
 | `theme?`                         | `DetailTableProps['theme']`                                               | —          | standalone 根 Core Theme；embedded 时由外层 `<Layout>` 提供         |
-| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`       | 当前 TableSpec 的稀疏 Table token 覆盖，优先于 Table style baseline |
-| `meta?`                          | `DetailTableProps['meta']`                                                | —          | 写入 TableSpec 的 JSON 元数据                                       |
+| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`       | 当前 IRTable 的稀疏 Table token 覆盖，优先于 Table style baseline |
+| `meta?`                          | `DetailTableProps['meta']`                                                | —          | 写入 IRTable 的 JSON 元数据                                       |
 | `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`       | 自定义 Cell formatter definitions                                   |
 | `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`       | 自定义结构 definitions                                              |
 | `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`       | 自定义 Cell presentation definitions                                |
@@ -262,7 +262,7 @@ result.manifest;
 | `headerLayout?` | `DetailColumnProps['headerLayout']` | —      | 列头 Cell 的布局与四边 border 策略    |
 | `bodyLayout?`   | `DetailColumnProps['bodyLayout']`   | —      | 正文 Cell 的布局与四边 border 策略    |
 
-`detailTable(input)` 接收同一组 spec 输入并返回 `IRDetailTableSpec`。完整的 `Table`、`ManualTable`、schema、adapter 和 lowering 契约见 [API 参考](/viz/table/reference)。
+`detailTable(input)` 接收同一组 spec 输入并返回 `IRDetailTable`。完整的 `Table`、`ManualTable`、schema、adapter 和 lowering 契约见 [API 参考](/viz/table/reference)。
 
 Formatter 与 presentation 只处理 value Cell。直接提供 `content` 的 Cell 已经持有可渲染 child，会绕过两者；同时声明 `content` 与 formatter/presentation 会 fail-loud。
 
@@ -271,5 +271,5 @@ Formatter 与 presentation 只处理 value Cell。直接提供 `content` 的 Cel
 - [表格模型](/viz/table/model)：Structure、Cell、Presentation、Layout 与 lowering 如何协作
 - [布局契约](/viz/table/reference/contract-layout)：轨道、Cell layout、span 与 border schema
 - [运行时参考](/viz/table/reference/runtime)：React、Vanilla、compile 与 typed manifest
-- [API 参考](/viz/table/reference)：完整 TableSpec、React、Vanilla 与 manifest 契约
+- [API 参考](/viz/table/reference)：完整 IRTable、React、Vanilla 与 manifest 契约
 - [数据模型](/viz/data/model)：外部记录、字段类型与引用

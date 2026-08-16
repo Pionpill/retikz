@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { IRPlotGuide, IRPlotScaleOperation, IRPlotSpec } from '@retikz/plot';
+import type { IRPlotGuide, IRPlotScaleOperation, IRPlot } from '@retikz/plot';
 
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
 import {
@@ -14,13 +14,13 @@ import {
 } from '@retikz/plot';
 
 import type { ChartPatchChange, ChartRecipe, ChartRecipeSeed, ChartRecipeStyleContext } from '../recipe';
-import type { IRConnectedScatterChartSpec } from './schema';
+import type { IRConnectedScatterChart } from './schema';
 
 import { ChartMemberKind, chartRecipeId } from '../../shared';
 import { PointChartType } from '../constants';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from '../recipe';
 import { createChartAxisGuides, createChartCartesian2DSeed, plotMarkValueOf } from '../shared';
-import { ConnectedPathPatchSchema, ConnectedPointPatchSchema, ConnectedScatterChartSpecSchema } from './schema';
+import { ConnectedPathPatchSchema, ConnectedPointPatchSchema, ConnectedScatterChartSchema } from './schema';
 
 const connectedPointPatchPaths = ConnectedPointPatchSchema.keyof().options;
 const connectedPathPatchPaths = ConnectedPathPatchSchema.keyof().options;
@@ -28,7 +28,7 @@ const connectedPathPatchPaths = ConnectedPathPatchSchema.keyof().options;
 const jsonObject = (value: unknown): IRJsonObject => JsonObjectSchema.parse(value);
 
 /** 把 Connected Scatter points patch 转成 resolution merge 的逐叶 change */
-const connectedPointPatchChanges = (patch: IRConnectedScatterChartSpec['mark']): Array<ChartPatchChange> => {
+const connectedPointPatchChanges = (patch: IRConnectedScatterChart['mark']): Array<ChartPatchChange> => {
   if (patch === undefined) return [];
   const changes: Array<ChartPatchChange> = [];
   for (const path of connectedPointPatchPaths) {
@@ -40,7 +40,7 @@ const connectedPointPatchChanges = (patch: IRConnectedScatterChartSpec['mark']):
 
 /** 把 Connected Scatter connection patch 转成 resolution merge 的逐叶 change */
 const connectedPathPatchChanges = (
-  patch: NonNullable<IRConnectedScatterChartSpec['components']>['connection'],
+  patch: NonNullable<IRConnectedScatterChart['components']>['connection'],
 ): Array<ChartPatchChange> => {
   if (patch === undefined) return [];
   const changes: Array<ChartPatchChange> = [];
@@ -53,7 +53,7 @@ const connectedPathPatchChanges = (
 
 /** 从 Connected Scatter 输入建立 resolver 消费的不可变 recipe seed */
 const createConnectedScatterSeed = (
-  spec: IRConnectedScatterChartSpec,
+  spec: IRConnectedScatterChart,
   style: ChartRecipeStyleContext,
 ): ChartRecipeSeed => {
   const cartesian = createChartCartesian2DSeed(PointChartType.ConnectedScatter);
@@ -117,7 +117,7 @@ const createConnectedScatterSeed = (
       ? { type: PlotGuide.Legend, channel: 'color', scale: colorScaleName }
       : undefined;
   const guides = [...axisGuides, ...(colorGuide === undefined ? [] : [colorGuide])];
-  const plot: IRPlotSpec = {
+  const plot: IRPlot = {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
     ...(spec.id === undefined ? {} : { id: `${spec.id}/plot` }),
@@ -227,8 +227,8 @@ const createConnectedScatterSeed = (
 
 const sameChannel = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
 
-/** 验证 merge 后的 PlotSpec 仍保留 Connected Scatter 的不可撤销语义 */
-const validateConnectedScatterCore = (spec: IRConnectedScatterChartSpec, plotSpec: IRPlotSpec): void => {
+/** 验证 merge 后的 IRPlot 仍保留 Connected Scatter 的不可撤销语义 */
+const validateConnectedScatterCore = (spec: IRConnectedScatterChart, plotSpec: IRPlot): void => {
   const requiredScaleNames = [
     chartRecipeId(PointChartType.ConnectedScatter, 'scale.x'),
     chartRecipeId(PointChartType.ConnectedScatter, 'scale.y'),
@@ -287,9 +287,9 @@ const validateConnectedScatterCore = (spec: IRConnectedScatterChartSpec, plotSpe
 };
 
 /** Connected Scatter canonical type 的内建 recipe */
-export const ConnectedScatterChartRecipe: ChartRecipe<IRConnectedScatterChartSpec> = {
+export const ConnectedScatterChartRecipe: ChartRecipe<IRConnectedScatterChart> = {
   type: PointChartType.ConnectedScatter,
-  schema: ConnectedScatterChartSpecSchema,
+  schema: ConnectedScatterChartSchema,
   createSeed: createConnectedScatterSeed,
   validateCore: validateConnectedScatterCore,
 };

@@ -2,20 +2,20 @@ import type { ClipDefinition, ClipResolveContext, ClipShape } from '@retikz/core
 
 import { defineClip } from '@retikz/core';
 
-import type { CompoundClipSpec, StandardPathClipSpec, StandardPolygonClipSpec } from './schema';
+import type { CompoundClip, StandardPathClip, StandardPolygonClip } from './schema';
 
 import { PathClipSchema, PolygonClipSchema } from './schema';
 import { CompoundClipSchema } from './schema';
 
 /** 判断开放 clip 规格是否为递归 Compound Clip */
-const isCompoundClipSpec = (clip: CompoundClipSpec['children'][number]): clip is CompoundClipSpec =>
+const isCompoundClip = (clip: CompoundClip['children'][number]): clip is CompoundClip =>
   clip.kind === 'compound' && 'children' in clip;
 
 /** 递归解析 Compound Clip 与其已注册的子 clip */
-const resolveCompoundClip = (spec: CompoundClipSpec, context: ClipResolveContext): ClipShape => ({
+const resolveCompoundClip = (spec: CompoundClip, context: ClipResolveContext): ClipShape => ({
   kind: 'compound',
   children: spec.children.map(child =>
-    isCompoundClipSpec(child) ? resolveCompoundClip(child, context) : context.resolve(child),
+    isCompoundClip(child) ? resolveCompoundClip(child, context) : context.resolve(child),
   ),
   fillRule: spec.fillRule,
 });
@@ -28,14 +28,14 @@ export const CompoundClipDefinition: ClipDefinition = defineClip({
 });
 
 /** Standard 提供的多边形裁剪 Definition */
-export const PolygonClipDefinition: ClipDefinition = defineClip<StandardPolygonClipSpec>({
+export const PolygonClipDefinition: ClipDefinition = defineClip<StandardPolygonClip>({
   kind: 'polygon',
   schema: PolygonClipSchema,
   resolve: spec => ({ kind: 'polygon', points: spec.points }),
 });
 
 /** Standard 提供的路径裁剪 Definition */
-export const PathClipDefinition: ClipDefinition = defineClip<StandardPathClipSpec>({
+export const PathClipDefinition: ClipDefinition = defineClip<StandardPathClip>({
   kind: 'path',
   schema: PathClipSchema,
   resolve: spec => ({ kind: 'path', commands: spec.commands, fillRule: spec.fillRule }),

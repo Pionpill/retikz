@@ -16,7 +16,7 @@ Table 家族是 viz 的 Tier 2 表格可视化能力：把外部数据或显式�
 
 ### v0.1：完整静态表格语法
 
-v0.1 建立从 TableSpec 到 Core IR 的完整静态表格闭环，覆盖：
+v0.1 建立从 IRTable 到 Core IR 的完整静态表格闭环，覆盖：
 
 - manual、detail、pivot、matrix 等基础 structure
 - group / hierarchy / summary / transpose 等可组合 operation

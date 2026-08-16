@@ -3,7 +3,7 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 const rows = [
   { eventX: 0, eventY: 0, volumeX: 10, volumeY: 100, angleA: 0, radiusA: 1, angleB: 300, radiusB: 10 },
@@ -74,11 +74,11 @@ const polarScaffoldSpec = {
   ],
 };
 
-const parsePlotSpec = (spec: unknown) => PlotSpecSchema.parse(spec);
+const parsePlotIR = (spec: unknown) => PlotSchema.parse(spec);
 
 const expandOf = (spec: unknown, provenance = false): IRScope => {
   const [definition] = lowerPlots({ d: rows }, { width: 480, height: 300, provenance });
-  return definition.expand(parsePlotSpec(spec)).children[0] as IRScope;
+  return definition.expand(parsePlotIR(spec)).children[0] as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -109,18 +109,18 @@ const distancesFromCenter = (scope: IRScope, center: [number, number]): Array<nu
 
 describe('shared scaffold tracks schema', () => {
   it('shared scaffold spec preserves JSON round trip', () => {
-    const parsed = parsePlotSpec(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
+    const parsed = parsePlotIR(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
     expect(parsed).toEqual(cartesianScaffoldSpec);
   });
 
   it('track view can inherit scaffold coordinate', () => {
-    const parsed = parsePlotSpec(cartesianScaffoldSpec);
+    const parsed = parsePlotIR(cartesianScaffoldSpec);
     const tracks = parsed.composition?.arrangements?.find(arrangement => arrangement.kind === 'tracks')?.tracks ?? [];
     expect(tracks.every(track => track.coordinate === undefined)).toBe(true);
   });
 
   it('band can touch scaffold edges', () => {
-    expect(() => parsePlotSpec(cartesianScaffoldSpec)).not.toThrow();
+    expect(() => parsePlotIR(cartesianScaffoldSpec)).not.toThrow();
   });
 
   it('bad band range is rejected', () => {
@@ -136,7 +136,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/band|start|end/i);
+    expect(() => parsePlotIR(spec)).toThrow(/band|start|end/i);
   });
 
   it('overlapping bands on the same role are rejected', () => {
@@ -155,7 +155,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/overlap|band/i);
+    expect(() => parsePlotIR(spec)).toThrow(/overlap|band/i);
   });
 
   it('duplicate track id is rejected', () => {
@@ -174,7 +174,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/duplicate track/i);
+    expect(() => parsePlotIR(spec)).toThrow(/duplicate track/i);
   });
 
   it('local band role must not be shared', () => {
@@ -190,7 +190,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/sharedRoles|band/i);
+    expect(() => parsePlotIR(spec)).toThrow(/sharedRoles|band/i);
   });
 });
 
