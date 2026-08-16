@@ -1,11 +1,11 @@
 ---
 title: Chart
-description: Plot 是基于 GoG 图形语法的纵向能力扩展，Chart 则在其上按图表类型做横向封装，并提供整图展示能力。
+description: Chart 以统一结构封装 Plot，通过图表类型补齐绘图语义，并提供整图展示能力。
 ---
 
 Plot 是基于 GoG（Grammar of Graphics，图形语法）的纵向能力扩展：沿着数据绑定、图元、通道、比例尺、坐标系、辅助元素和变换等语法维度，逐层补充“数据怎样被绘制”的能力。Chart 不再建立另一套绘图语法，而是在 Plot 之上按图表 `type` 做横向封装：把一个图形类型需要的 Plot 语义组合成完整图表，并补充整图展示。
 
-两者的关系可以这样理解：Plot 扩展图形语法本身，Chart 组织图形类型。比如 `ScatterChart` 和 `BubbleChart` 都是基于 Plot 的类型封装；它们可以提供各自的默认方案，同时继续接收 Plot 的图元、辅助元素、比例尺或变换扩展。
+`chart` 始终是命名空间，表示这个实体拥有整图展示、Chart 主题和画布等 Chart 能力。`base`、`scatter`、`bubble` 等值才是 Chart 类型：`base` 直接使用显式 Plot 描述，其它类型通过内置解析逻辑补齐对应的 Plot 结构。
 
 ## Plot 与 Chart 的功能定位
 
@@ -14,18 +14,43 @@ Plot 是基于 GoG（Grammar of Graphics，图形语法）的纵向能力扩展�
 | Plot  | 沿图形语法维度纵向扩展：字段、图元、编码、比例尺、坐标系、辅助元素与变换 | 持续补充和深化 Plot 的绘图语义与可组合能力           |
 | Chart | 基于 Plot 按图表 `type` 横向组合成完整图表，不另建一套绘图语法           | 持续扩展图表类型与类型方案，同时复用 Plot 的绘图能力 |
 
-需要扩展图形语法时使用 Plot 的 API；需要把 Plot 语义组织成某种图表类型时使用 Chart，并在此基础上提供以下 Chart 家族共用能力：
+## 一致的 Chart 结构
 
-| 能力              | 负责什么                                                       | 典型入口                                                     |
-| ----------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
-| 图表类型封装      | 按 `type` 组合一个图表类型需要的 Plot 语义，并提供完整图表入口 | `@retikz/chart-react` 的 `Chart`                             |
-| 类型化 Chart 方案 | 为特定图表类型提供默认方案，同时保留 Plot 的扩展能力           | `@retikz/chart-react/point` 的 `ScatterChart`、`BubbleChart` |
-| Plot 扩展         | 在 Chart 中继续使用图元、辅助元素、比例尺和变换等 Plot 能力    | `@retikz/plot-react` 的 Plot 子组件                          |
-| 整图展示          | 表达整张图的主题、范围、数据来源和阅读限制                     | `title` / `subtitle` / `source` / `note`，或对应标记         |
+基础 Chart 与各封装 Chart 遵循同一套字段布局，但分别拥有精确 schema：`BaseChartSchema`、`ScatterChartSchema`、`BubbleChartSchema` 与 `ConnectedScatterChartSchema`。Chart 不公开一个把所有类型合并起来的 `ChartSchema`；`namespace + type` 只负责选择对应的精确 schema。
+
+```ts
+{
+  namespace: 'chart',
+  type: 'base' | 'scatter' | 'bubble' | 'connected-scatter',
+  plot: {
+    // Plot 拥有的数据、变换、比例尺、坐标、辅助元素与显式图元
+  },
+  config: {
+    // 封装 type 独有、由对应解析逻辑消费的配置；base 不使用
+  },
+  presentation: {
+    // Chart 拥有的标题、副标题、来源与注记
+  },
+}
+```
+
+`plot` 是唯一的 Plot 描述字段；其中的字段直接复用 Plot 契约。`config` 只存在于封装类型中，保存当前 `type` 独有的数据，例如 Scatter 的二维编码、Bubble 的尺寸编码或 Connected Scatter 的顺序角色。Base Chart 使用完整 `PlotSchema`，不包含 `config`。
+
+`type` 决定如何解释 `config` 并补齐 `plot`。例如 `bubble` 隐含使用 `Point` 图元，因此用户不必在 `plot.marks` 中重复声明主 `Point` 图元；用户仍可通过 `plot` 添加 Plot 拥有的轴、图例、额外图元、比例尺或变换。`base` 不提供这类隐含语义，要求显式 Plot 描述能够形成完整图形。
+
+“点图”等分组用于文档导航、源码归置和多入口导入，但不形成额外的数据结构或运行时分组。Scatter、Bubble 与 Connected Scatter 继续从 `/point` 入口导入；未知 JSON 由 `type` 选择对应 schema，解析后绑定为内部 Chart，再统一解析成 `IRBaseChart`。
+
+需要扩展图形语法时使用 Plot 的 API；需要把 Plot 语义组织成某种图表类型时使用 Chart，并在此基础上提供以下共用能力：
+
+| 能力         | 负责什么                                                    | 典型入口                                             |
+| ------------ | ----------------------------------------------------------- | ---------------------------------------------------- |
+| 图表类型封装 | 按 `type` 解释 `config`，并把缺省语义补入 `plot`            | `Chart`、`ScatterChart`、`BubbleChart`               |
+| Plot 扩展    | 在 Chart 中继续使用图元、辅助元素、比例尺和变换等 Plot 能力 | `plot` 字段与 `@retikz/plot-react` 的 Plot 子组件    |
+| 整图展示     | 表达整张图的主题、范围、数据来源和阅读限制                  | `title` / `subtitle` / `source` / `note`，或对应标记 |
 
 ## 基础 Chart 能力
 
-`Chart` 组件提供 Chart 家族共用的基础能力：把 Plot 内容组织成完整图表，并提供整图展示。本节介绍基础 `Chart` 的 DSL 与 `spec` 两种编写入口；如果要使用具体图形类型，请参考[点图](/viz/chart/points)等其它目录下的文档。
+`Chart` 组件对应 `type: 'base'`，提供所有 Chart 共用的基础能力：把显式 Plot 内容组织成完整图表，并提供整图展示。本节介绍基础 `Chart` 的 DSL 与 `spec` 两种编写入口；如果要使用带内置解析逻辑的图形类型，请参考[点图](/viz/chart/points)等其它目录下的文档。
 
 基础 React 入口来自 `@retikz/chart-react`。在 DSL 模式下，直接把 Plot 的图元、辅助元素等子组件和 Chart 展示标记放在 `Chart` 内：
 
@@ -55,16 +80,22 @@ const rows = [
 <SourceLinks
   sources={[
     {
-      label: 'Chart React 导出基础 Chart 与展示标记',
-      path: 'packages/viz/chart-react/src/base/index.ts',
-      startLine: 15,
-      endLine: 44,
+      label: 'Chart React 导出基础 Chart 并接入共享适配器',
+      path: 'packages/viz/chart-react/src/_chart/index.ts',
+      startLine: 223,
+      endLine: 232,
     },
     {
-      label: 'Chart 将 Plot 编写入口归一并组装为 Chart 输入',
-      path: 'packages/viz/chart-react/src/base/index.ts',
-      startLine: 126,
-      endLine: 152,
+      label: 'Chart 将 Plot 编写入口组装为 Base Chart 输入',
+      path: 'packages/viz/chart-react/src/_chart/index.ts',
+      startLine: 129,
+      endLine: 155,
+    },
+    {
+      label: 'Chart React 导出整图展示标记',
+      path: 'packages/viz/chart-react/src/_chart/index.ts',
+      startLine: 15,
+      endLine: 26,
     },
   ]}
 />
@@ -75,7 +106,7 @@ const rows = [
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">点图</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      从散点图和气泡图开始，查看类型化 Chart 方案与 Plot 扩展的组合方式。
+      从散点图和气泡图开始，查看 Chart 类型、专属 `config` 与 Plot 扩展如何协作。
     </span>
   </LinkedCard>
 </div>

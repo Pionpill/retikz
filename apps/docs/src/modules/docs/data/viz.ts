@@ -125,6 +125,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'chart',
     label: 'viz.chart',
+    document: true,
     pages: [
       {
         id: 'points',
