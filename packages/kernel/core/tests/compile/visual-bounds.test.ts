@@ -224,7 +224,16 @@ describe('canonical visual bounds', () => {
           {
             kind: 'clip',
             id: 'clip-1',
-            shape: { kind: 'rect', x: 0, y: 0, width: 5, height: 5 },
+            path: {
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [5, 0] },
+                { kind: 'line', to: [5, 5] },
+                { kind: 'line', to: [0, 5] },
+                { kind: 'close' },
+              ],
+              fillRule: 'nonzero',
+            },
           },
         ],
       ),

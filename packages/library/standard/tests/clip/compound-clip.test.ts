@@ -1,4 +1,4 @@
-import type { ClipDefinition, IRScene } from '@retikz/core';
+import type { ClipDefinition, IRScene, PathCommand } from '@retikz/core';
 
 import { compileToScene, defineClip } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -23,15 +23,15 @@ const roundedRectClip = (): ClipDefinition =>
       height: z.number().positive(),
       radius: z.number().positive(),
     }),
-    resolve: spec => ({
-      kind: 'path',
-      commands: [
+    resolve: spec => {
+      const commands: Array<PathCommand> = [
         { kind: 'move', to: [spec.x, spec.y] },
         { kind: 'line', to: [spec.x + spec.width, spec.y] },
         { kind: 'line', to: [spec.x + spec.width, spec.y + spec.height] },
         { kind: 'close' },
-      ],
-    }),
+      ];
+      return { kind: 'path', commands };
+    },
   });
 
 describe('Standard compound clip definition', () => {
@@ -76,14 +76,21 @@ describe('Standard compound clip definition', () => {
     };
 
     const compiled = compileToScene(scene, { clips: [CompoundClipDefinition, roundedRectClip()] }).scene;
-    expect(compiled.resources?.[0]).toMatchObject({
-      kind: 'clip',
-      shape: {
-        kind: 'compound',
-        fillRule: 'evenodd',
-        children: [{ kind: 'circle' }, { kind: 'compound', children: [{ kind: 'ellipse' }] }, { kind: 'path' }],
-      },
-    });
+    const resource = compiled.resources?.[0];
+    expect(resource).toMatchObject({ kind: 'clip', path: { fillRule: 'evenodd' } });
+    if (resource?.kind !== 'clip') throw new Error('Expected canonical clip resource');
+    expect(resource.path.commands.map(command => command.kind)).toEqual([
+      'move',
+      'arc',
+      'close',
+      'move',
+      'ellipseArc',
+      'close',
+      'move',
+      'line',
+      'line',
+      'close',
+    ]);
   });
 
   it('keeps the compound provider isolated to its static definition', () => {

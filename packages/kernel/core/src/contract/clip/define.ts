@@ -1,5 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
+import type { ClipShape } from '../clip-shape';
 import type { ClipDefinition, ClipDefinitionInput, ClipLike } from './types';
 
 /**
@@ -7,7 +8,9 @@ import type { ClipDefinition, ClipDefinitionInput, ClipLike } from './types';
  * @remarks 当前只集中封装泛型擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
  * @throws 当 kind 为空字符串时
  */
-export const defineClip = <TClip extends ClipLike>(definition: ClipDefinitionInput<TClip>): ClipDefinition => {
+export const defineClip = <TClip extends ClipLike, TShape extends ClipShape = ClipShape>(
+  definition: ClipDefinitionInput<TClip, TShape>,
+): ClipDefinition => {
   assertNonEmptyString(definition.kind, 'clip provider key');
   return definition as unknown as ClipDefinition;
 };

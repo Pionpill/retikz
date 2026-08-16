@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import type { IRClip } from '../../schemas';
-import type { ClipShape } from '../scene';
+import type { ClipShape } from '../clip-shape';
 
 /** clip spec 的最小判别形态 */
 export type ClipLike = {
@@ -21,14 +21,17 @@ export type ClipResolveContext = {
 };
 
 /** clip definition 的作者侧输入形态 */
-export type ClipDefinitionInput<TClip extends ClipLike> = {
+export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> = {
   /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
   kind: TClip['kind'];
   /** 该 clip spec 的 zod schema */
   schema: z.ZodType<TClip>;
   /** 把 schema parse 后的 spec 解析为 Scene clip shape */
-  resolve: (spec: TClip, context: ClipResolveContext) => ClipShape;
+  resolve: (spec: TClip, context: ClipResolveContext) => TShape;
 };
 
 /** clip 定义的擦除形态：registry 存这个 */
-export type ClipDefinition = ClipDefinitionInput<ClipLike>;
+export type ClipDefinition<
+  TClip extends ClipLike = ClipLike,
+  TShape extends ClipShape = ClipShape,
+> = ClipDefinitionInput<TClip, TShape>;

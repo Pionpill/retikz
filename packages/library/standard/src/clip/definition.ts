@@ -17,7 +17,7 @@ const resolveCompoundClip = (spec: CompoundClip, context: ClipResolveContext): C
   children: spec.children.map(child =>
     isCompoundClip(child) ? resolveCompoundClip(child, context) : context.resolve(child),
   ),
-  fillRule: spec.fillRule,
+  ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
 });
 
 /** Standard 提供的 Compound Clip Definition */
@@ -38,5 +38,9 @@ export const PolygonClipDefinition: ClipDefinition = defineClip<StandardPolygonC
 export const PathClipDefinition: ClipDefinition = defineClip<StandardPathClip>({
   kind: 'path',
   schema: PathClipSchema,
-  resolve: spec => ({ kind: 'path', commands: spec.commands, fillRule: spec.fillRule }),
+  resolve: spec => ({
+    kind: 'path',
+    commands: spec.commands,
+    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
+  }),
 });

@@ -2198,10 +2198,10 @@ describe('layout-aware composite constraints and bounds', () => {
     const badClip = defineClip({
       kind: 'badResolvedClip',
       schema: z.strictObject({ kind: z.literal('badResolvedClip') }),
-      resolve: (() => ({
+      resolve: () => ({
         kind: 'compound',
         children: [{ kind: 'rect', x: 0, y: 0, width: -1, height: 2 }],
-      })) as unknown as () => ClipShape,
+      }),
     });
     const badGenerator = definePathGenerator({
       name: 'badGeneratedArc',
@@ -2264,7 +2264,7 @@ describe('layout-aware composite constraints and bounds', () => {
     for (const variant of ['shape', 'arrow', 'pattern', 'clip', 'pathGenerator'] as const) {
       expect(() =>
         compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
-      ).toThrow(/emit|primitive|invalid|root shape|path command/i);
+      ).toThrow(/emit|primitive|invalid|root shape|path command|output validation/i);
     }
   });
 
@@ -2763,7 +2763,16 @@ describe('layout-aware composite constraints and bounds', () => {
 
     expect(clip).toMatchObject({
       kind: 'clip',
-      shape: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+      path: {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [10, 0] },
+          { kind: 'line', to: [10, 10] },
+          { kind: 'line', to: [0, 10] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      },
     });
     expect(kindReads).toBe(0);
   });

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ClipDefinition, IRClip, IRScene } from '../../src';
+import type { AnyClipShapeDefinition, ClipDefinition, ClipShape, IRClip, IRScene, PathCommand } from '../../src';
 
-import { compileToScene, defineClip } from '../../src';
+import { compileToScene, defineClip, defineClipShape, PathCommandSchema } from '../../src';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -17,8 +17,23 @@ const clippedIr = (clip: IRClip): IRScene => ({
   ],
 });
 
+type RoundedRectClip = {
+  kind: 'roundedRect';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  r: number;
+};
+
+type RoundedPathClipShape = ClipShape & {
+  kind: 'roundedPath';
+  commands: Array<PathCommand>;
+  fillRule: 'evenodd';
+};
+
 const roundedRectClip = (): ClipDefinition =>
-  defineClip({
+  defineClip<RoundedRectClip, RoundedPathClipShape>({
     kind: 'roundedRect',
     schema: z.strictObject({
       kind: z.literal('roundedRect'),
@@ -32,23 +47,38 @@ const roundedRectClip = (): ClipDefinition =>
       const right = spec.x + spec.width;
       const bottom = spec.y + spec.height;
       const r = Math.min(spec.r, spec.width / 2, spec.height / 2);
+      const commands: Array<PathCommand> = [
+        { kind: 'move', to: [spec.x + r, spec.y] },
+        { kind: 'line', to: [right - r, spec.y] },
+        { kind: 'quad', control: [right, spec.y], to: [right, spec.y + r] },
+        { kind: 'line', to: [right, bottom - r] },
+        { kind: 'quad', control: [right, bottom], to: [right - r, bottom] },
+        { kind: 'line', to: [spec.x + r, bottom] },
+        { kind: 'quad', control: [spec.x, bottom], to: [spec.x, bottom - r] },
+        { kind: 'line', to: [spec.x, spec.y + r] },
+        { kind: 'quad', control: [spec.x, spec.y], to: [spec.x + r, spec.y] },
+        { kind: 'close' },
+      ];
       return {
-        kind: 'path',
+        kind: 'roundedPath',
         fillRule: 'evenodd',
-        commands: [
-          { kind: 'move', to: [spec.x + r, spec.y] },
-          { kind: 'line', to: [right - r, spec.y] },
-          { kind: 'quad', control: [right, spec.y], to: [right, spec.y + r] },
-          { kind: 'line', to: [right, bottom - r] },
-          { kind: 'quad', control: [right, bottom], to: [right - r, bottom] },
-          { kind: 'line', to: [spec.x + r, bottom] },
-          { kind: 'quad', control: [spec.x, bottom], to: [spec.x, bottom - r] },
-          { kind: 'line', to: [spec.x, spec.y + r] },
-          { kind: 'quad', control: [spec.x, spec.y], to: [spec.x + r, spec.y] },
-          { kind: 'close' },
-        ],
+        commands,
       };
     },
+  });
+
+const roundedRectShape = (): AnyClipShapeDefinition =>
+  defineClipShape<RoundedPathClipShape>({
+    kind: 'roundedPath',
+    schema: z.strictObject({
+      kind: z.literal('roundedPath'),
+      fillRule: z.literal('evenodd'),
+      commands: z.array(PathCommandSchema),
+    }),
+    lower: shape => ({
+      commands: shape.commands,
+      fillRule: shape.fillRule,
+    }),
   });
 
 describe('clip providers', () => {
@@ -62,16 +92,16 @@ describe('clip providers', () => {
     ).toThrowError('clip provider key must be a non-empty string.');
   });
 
-  it('custom clip kind compiles through options.clips into a path clip resource', () => {
+  it('custom operation and differently named custom shape compile through both registries', () => {
     const scene = compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }), {
       clips: [roundedRectClip()],
+      clipShapes: [roundedRectShape()],
     }).scene;
     expect(scene.resources ?? []).toHaveLength(1);
     expect((scene.resources ?? [])[0]).toMatchObject({
       kind: 'clip',
       id: 'clip-1',
-      shape: {
-        kind: 'path',
+      path: {
         fillRule: 'evenodd',
       },
     });
@@ -95,5 +125,4 @@ describe('clip providers', () => {
         compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }).scene,
     ).toThrow(/duplicate clip registration/i);
   });
-
 });

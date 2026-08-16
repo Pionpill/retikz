@@ -1,6 +1,6 @@
 import type { AnyPathKindDefinition } from '@retikz/core';
 
-import { PathBaseSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
+import { defineClipShape, PathBaseSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
 import { RetainedRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -22,6 +22,30 @@ const createDefinition = (
 ): AnyPathKindDefinition => ({ name, schema, compile, ownerOutput });
 
 describe('retained Path Kind definitions', () => {
+  it('captures and delegates ClipShape lower definitions as a first-class collection', () => {
+    const lower = () => ({
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [1, 1] as [number, number] },
+      ],
+      fillRule: 'nonzero' as const,
+    });
+    const definition = defineClipShape({
+      kind: 'retainedClipShape',
+      schema: z.strictObject({ kind: z.literal('retainedClipShape') }),
+      lower,
+    });
+    const captured = captureCoreProviderDefinitions({ clipShapes: [definition] });
+    expect(captured.clipShapes?.[0]).toMatchObject({ kind: 'retainedClipShape', schema: definition.schema, lower });
+
+    const retained = createRetainedProviderDefinitions({ clipShapes: [definition] });
+    const delegated = retained.definitions.clipShapes?.[0];
+    expect(delegated).toBeDefined();
+    if (delegated === undefined) throw new Error('Expected retained ClipShape definition.');
+    const delegatedLower = delegated.lower as unknown as typeof definition.lower;
+    expect(delegatedLower({ kind: 'retainedClipShape' }, { round: n => n, lower: () => lower() })).toEqual(lower());
+  });
+
   it('copies the Path Kind name, full schema, owner output, and compile branch', () => {
     const initial = createDefinition();
     const captured = captureCoreProviderDefinitions({ pathKinds: [initial] });

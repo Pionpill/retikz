@@ -211,7 +211,14 @@ describe('resolve/resource clip', () => {
     const resource = scene.resources?.find(item => item.kind === 'clip');
     expect(resource).toMatchObject({
       kind: 'clip',
-      shape: { kind: 'compound', children: [{ kind: 'circle', r: 3 }] },
+      path: {
+        commands: [
+          { kind: 'move', to: [3, 0] },
+          { kind: 'arc', center: [0, 0], radius: 3, startAngle: 0, endAngle: 360 },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      },
     });
     expect(wrapperResolve).toHaveBeenCalledTimes(1);
     expect(leafResolve).toHaveBeenCalledTimes(1);

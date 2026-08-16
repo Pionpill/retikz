@@ -1,4 +1,5 @@
 import type {
+  AnyClipShapeDefinition,
   AnyCompositeDefinition,
   AnyPathKindDefinition,
   ArrowDefinition,
@@ -17,6 +18,7 @@ type ProviderDefinition =
   | ShapeDefinition
   | BoundaryDefinition
   | ClipDefinition
+  | AnyClipShapeDefinition
   | ArrowDefinition
   | PatternDefinition
   | PathGeneratorDefinition
@@ -78,6 +80,7 @@ const definitionKey = (definition: ProviderDefinition): string => {
   if ('namespace' in definition && 'type' in definition)
     return `composite:${definition.namespace}\u0000${definition.type}`;
   if ('name' in definition && 'schema' in definition && 'compile' in definition) return `pathKind:${definition.name}`;
+  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return `clipShape:${definition.kind}`;
   if ('kind' in definition && 'schema' in definition) return `clip:${definition.kind}`;
   return `${definition.name}`;
 };
@@ -138,6 +141,7 @@ const providerCollections = [
   'shapes',
   'boundaries',
   'clips',
+  'clipShapes',
   'arrows',
   'patterns',
   'pathGenerators',

@@ -103,7 +103,10 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     expect(content?.clipRef).not.toBe(root?.clipRef);
     expect(root?.children.filter(child => child.type === 'path').every(path => !('clipRef' in path))).toBe(true);
     expect(clipResources).toHaveLength(2);
-    expect(clipResources.find(resource => resource.id === content?.clipRef)?.shape).toMatchObject({ kind: 'path' });
+    expect(clipResources.find(resource => resource.id === content?.clipRef)?.path).toMatchObject({
+      fillRule: 'nonzero',
+      commands: expect.any(Array),
+    });
   });
 
   it('applies complete outer Scope identity and transforms once while keeping internal style inheritance', () => {
@@ -234,9 +237,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     );
     const clip = (result.scene.resources ?? []).find(resource => resource.kind === 'clip');
 
-    expect(clip?.shape).toMatchObject({ kind: 'path' });
-    if (clip?.shape.kind === 'path') {
-      expect(JSON.stringify(clip.shape.commands)).not.toMatch(/NaN|Infinity/);
-    }
+    expect(clip?.path).toMatchObject({ fillRule: 'nonzero', commands: expect.any(Array) });
+    if (clip !== undefined) expect(JSON.stringify(clip.path.commands)).not.toMatch(/NaN|Infinity/);
   });
 });

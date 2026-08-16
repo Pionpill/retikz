@@ -5,6 +5,7 @@ import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey 
 describe('Core provider dependency contract', () => {
   it('exposes readonly keys, providers, and contributions for named and composite capabilities', () => {
     const shapeKey: CoreProviderKey = { capability: 'shape', name: 'cross' };
+    const clipShapeKey: CoreProviderKey = { capability: 'clipShape', name: 'ticket' };
     const compositeKey: CoreProviderKey = { capability: 'composite', namespace: 'third', type: 'card' };
     const provider: CoreDependencyProvider = {
       key: shapeKey,
@@ -15,7 +16,7 @@ describe('Core provider dependency contract', () => {
       },
     };
     const contribution: CoreProviderContribution = {
-      roots: [shapeKey, compositeKey],
+      roots: [shapeKey, clipShapeKey, compositeKey],
       providers: [provider],
     };
 
@@ -24,6 +25,7 @@ describe('Core provider dependency contract', () => {
     expectTypeOf(contribution.providers).toEqualTypeOf<ReadonlyArray<CoreDependencyProvider>>();
     expect(contribution.roots).toEqual([
       { capability: 'shape', name: 'cross' },
+      { capability: 'clipShape', name: 'ticket' },
       { capability: 'composite', namespace: 'third', type: 'card' },
     ]);
   });

@@ -76,6 +76,81 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
 };
 
 describe('Scene Patch validator', () => {
+  it('接受 canonical clip path，并在 full snapshot 拒绝旧 shape 与 malformed path', () => {
+    const valid = createRectSnapshot(0, ['a']);
+    const canonical: SceneRuntimeSnapshot = {
+      ...valid,
+      scene: {
+        ...valid.scene,
+        resources: [
+          {
+            kind: 'clip',
+            id: 'clip-1',
+            path: {
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [10, 10] },
+              ],
+              fillRule: 'nonzero',
+            },
+          },
+        ],
+      },
+    };
+    expect(() => validateSceneRuntimeSnapshot(canonical)).not.toThrow();
+
+    for (const resource of [
+      { kind: 'clip', id: 'clip-1', shape: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 } },
+      {
+        kind: 'clip',
+        id: 'clip-1',
+        path: { commands: [{ kind: 'line', to: [10, 10] }], fillRule: 'nonzero' },
+      },
+    ]) {
+      const invalid = {
+        ...valid,
+        scene: { ...valid.scene, resources: [resource] },
+      } as unknown as SceneRuntimeSnapshot;
+      expect(() => validateSceneRuntimeSnapshot(invalid)).toThrowError(
+        expect.objectContaining({ code: RetainedRenderErrorCode.SceneTopologyInvalid }),
+      );
+    }
+  });
+
+  it('在 setResources 与 replaceScene 边界拒绝旧 clip shape', () => {
+    const current = createRectSnapshot(0, ['a']);
+    const next = createRectSnapshot(1, ['a']);
+    const oldResources = [{ kind: 'clip', id: 'clip-1', shape: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 } }];
+
+    expect(() =>
+      validateScenePatch(
+        current,
+        {
+          baseRevision: current.revision,
+          nextRevision: next.revision,
+          operations: [{ kind: 'setResources', resources: oldResources }],
+        } as unknown as ScenePatch,
+        next,
+      ),
+    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchInvalid }));
+
+    const invalidReplacement = {
+      ...next,
+      scene: { ...next.scene, resources: oldResources },
+    } as unknown as SceneRuntimeSnapshot;
+    expect(() =>
+      validateScenePatch(
+        current,
+        {
+          baseRevision: current.revision,
+          nextRevision: next.revision,
+          operations: [{ kind: 'replaceScene', snapshot: invalidReplacement }],
+        },
+        invalidReplacement,
+      ),
+    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.SceneTopologyInvalid }));
+  });
+
   it('接受 Core canonical incremental Patch 与 config-only empty Patch', () => {
     const { current, next, patch } = createIncrementalPair();
     expect(() => validateSceneRuntimeSnapshot(current)).not.toThrow();

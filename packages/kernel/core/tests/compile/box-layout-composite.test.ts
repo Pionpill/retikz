@@ -537,7 +537,16 @@ describe('Box Layout Composite contract', () => {
       expect.objectContaining({
         kind: 'clip',
         id: 'clip-1',
-        shape: { kind: 'rect', x: 8, y: 18, width: 4, height: 4 },
+        path: {
+          commands: [
+            { kind: 'move', to: [8, 18] },
+            { kind: 'line', to: [12, 18] },
+            { kind: 'line', to: [12, 22] },
+            { kind: 'line', to: [8, 22] },
+            { kind: 'close' },
+          ],
+          fillRule: 'nonzero',
+        },
       }),
     ]);
     expect(primitive).toMatchObject({
@@ -618,7 +627,16 @@ describe('Box Layout Composite contract', () => {
     });
     expect(result.scene.resources?.[0]).toMatchObject({
       kind: 'clip',
-      shape: { kind: 'rect', x: -2, y: -2, width: 4, height: 4 },
+      path: {
+        commands: [
+          { kind: 'move', to: [-2, -2] },
+          { kind: 'line', to: [2, -2] },
+          { kind: 'line', to: [2, 2] },
+          { kind: 'line', to: [-2, 2] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      },
     });
   });
 

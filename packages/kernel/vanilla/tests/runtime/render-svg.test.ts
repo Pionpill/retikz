@@ -1,6 +1,7 @@
 ﻿import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
+import type { AnyClipShapeDefinition } from '@retikz/core';
 
-import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
+import { compileToScene, defineBoundary, defineClip, defineClipShape } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -52,12 +53,34 @@ const circleFrameClip = (): ClipDefinition =>
       inner: z.number().positive(),
     }),
     resolve: spec => ({
-      kind: 'compound',
-      fillRule: 'evenodd',
-      children: [
-        { kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.outer },
-        { kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.inner },
+      kind: 'circleFramePath',
+      cx: spec.cx,
+      cy: spec.cy,
+      outer: spec.outer,
+      inner: spec.inner,
+    }),
+  });
+
+const circleFrameShape = (): AnyClipShapeDefinition =>
+  defineClipShape({
+    kind: 'circleFramePath',
+    schema: z.strictObject({
+      kind: z.literal('circleFramePath'),
+      cx: z.number(),
+      cy: z.number(),
+      outer: z.number().positive(),
+      inner: z.number().positive(),
+    }),
+    lower: shape => ({
+      commands: [
+        { kind: 'move', to: [shape.cx + shape.outer, shape.cy] },
+        { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.outer, startAngle: 0, endAngle: 360 },
+        { kind: 'close' },
+        { kind: 'move', to: [shape.cx + shape.inner, shape.cy] },
+        { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.inner, startAngle: 0, endAngle: 360 },
+        { kind: 'close' },
       ],
+      fillRule: 'evenodd',
     }),
   });
 
@@ -127,7 +150,12 @@ describe('@retikz/vanilla renderToSvgString', () => {
 
   it('passes clip providers to compile options', () => {
     expect(() => renderToSvgString(clipIr)).toThrow(/options\.clips/i);
-    const svg = renderToSvgString(clipIr, { compile: { clips: [circleFrameClip()] } });
+    expect(() => renderToSvgString(clipIr, { compile: { clips: [circleFrameClip()] } })).toThrow(
+      /options\.clipShapes/i,
+    );
+    const svg = renderToSvgString(clipIr, {
+      compile: { clips: [circleFrameClip()], clipShapes: [circleFrameShape()] },
+    });
     expect(svg).toContain('<clipPath');
     expect(svg).toContain('clip-rule="evenodd"');
   });

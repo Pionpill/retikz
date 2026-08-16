@@ -221,6 +221,11 @@ export type CompileOptions<
   CompileLayoutOptions &
   CompileProviderOptions &
   CompileCompositeOptions<TComposites> & {
+    /**
+     * Clip operation resolve 与 ClipShape lower 共用的最大边数
+     * @default 32
+     */
+    maxClipDepth?: number;
     /** 本次 compile 请求的 opt-in artifacts */
     artifacts?: CompileArtifactOptions;
     /** 记录本次 full compile 的确定性 IRChild dispatch 工作量 */

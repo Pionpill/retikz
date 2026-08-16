@@ -114,7 +114,8 @@ describe('finite 守卫不误伤合法值', () => {
     const compiled = compileToScene(handcraftedScope({ kind: 'rect', x: -50, y: -40, width: 10, height: 10 })).scene;
     const clips = clipResources(compiled.resources);
     expect(clips).toHaveLength(1);
-    expect(clips[0].shape).toMatchObject({ kind: 'rect', x: -50, y: -40, width: 10, height: 10 });
+    expect(clips[0].path.commands[0]).toEqual({ kind: 'move', to: [-50, -40] });
+    expect(clips[0].path.commands[2]).toEqual({ kind: 'line', to: [-40, -30] });
   });
 
   it('circle / ellipse 极小正半径合法', () => {
@@ -160,14 +161,13 @@ describe('clip Scene JSON round-trip 不失真', () => {
     const json = JSON.stringify(compiled);
     // 关键契约：序列化产物里没有 null（非 finite 会序列化成 null）
     expect(json).not.toContain('null');
-    const shape = clipResources(compiled.resources)[0].shape;
-    expect(shape.kind).toBe('rect');
-    if (shape.kind === 'rect') {
-      // 数值等价（+0 === -0 为 true），不要求 Object.is 一致
-      expect(shape.x === 0).toBe(true);
-      expect(shape.y === 0).toBe(true);
-      expect(Number.isFinite(shape.x)).toBe(true);
-      expect(Number.isFinite(shape.y)).toBe(true);
+    const first = clipResources(compiled.resources)[0].path.commands[0];
+    expect(first.kind).toBe('move');
+    if (first.kind === 'move') {
+      expect(Object.is(first.to[0], -0)).toBe(false);
+      expect(Object.is(first.to[1], -0)).toBe(false);
+      expect(Number.isFinite(first.to[0])).toBe(true);
+      expect(Number.isFinite(first.to[1])).toBe(true);
     }
   });
 });
@@ -386,9 +386,9 @@ describe('clip 退化几何', () => {
     const compiled = compileToScene(handcraftedScope({ kind: 'polygon', points }), { clips: [polygonClip] }).scene;
     const clips = clipResources(compiled.resources);
     expect(clips).toHaveLength(1);
-    const shape = clips[0].shape;
-    expect(shape.kind).toBe('polygon');
-    if (shape.kind === 'polygon') expect(shape.points).toHaveLength(500);
+    expect(clips[0].path.commands).toHaveLength(501);
+    expect(clips[0].path.commands[0]).toEqual({ kind: 'move', to: points[0] });
+    expect(clips[0].path.commands.at(-1)).toEqual({ kind: 'close' });
   });
 
   it('polygon 全重复点（退化成一点）→ 不抛（finite 即接受）', () => {

@@ -136,7 +136,20 @@ describe('layout-aware composite runtime wrapper tree', () => {
       ],
     });
     expect(result.scene.resources).toEqual([
-      { kind: 'clip', id: 'clip-1', shape: { kind: 'rect', x: 0, y: 0, width: 30, height: 20 } },
+      {
+        kind: 'clip',
+        id: 'clip-1',
+        path: {
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [30, 0] },
+            { kind: 'line', to: [30, 20] },
+            { kind: 'line', to: [0, 20] },
+            { kind: 'close' },
+          ],
+          fillRule: 'nonzero',
+        },
+      },
     ]);
   });
 

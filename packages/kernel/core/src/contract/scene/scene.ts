@@ -8,7 +8,7 @@ import type { PathPrim } from './path';
 import type { RectPrim } from './rect';
 import type { TextPrim } from './text';
 
-export type { ClipResource, ClipShape } from './clip';
+export type { ClipResource, SceneClipPath } from './clip';
 export type { PaintResource, PaintValue, ResolvedPatternTile, SceneResource } from './paint';
 
 /**

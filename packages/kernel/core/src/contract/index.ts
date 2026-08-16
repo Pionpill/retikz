@@ -2,6 +2,7 @@ export * from './arrow';
 export * from './boundary';
 export * from './box-spacing';
 export * from './clip';
+export * from './clip-shape';
 export * from './composite';
 export * from './observation';
 export * from './occurrence';

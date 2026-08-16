@@ -1,6 +1,7 @@
 import type { ArrowDefinition } from '../arrow';
 import type { BoundaryDefinition } from '../boundary';
 import type { ClipDefinition } from '../clip';
+import type { AnyClipShapeDefinition } from '../clip-shape';
 import type { AnyCompositeDefinition } from '../composite';
 import type { PathGeneratorDefinition } from '../path-generator';
 import type { AnyPathKindDefinition } from '../path-kind';
@@ -36,6 +37,7 @@ type MutableCoreProviderDefinitions = {
   shapes: Array<ShapeDefinition>;
   boundaries: Array<BoundaryDefinition>;
   clips: Array<ClipDefinition>;
+  clipShapes: Array<AnyClipShapeDefinition>;
   arrows: Array<ArrowDefinition>;
   patterns: Array<PatternDefinition>;
   pathGenerators: Array<PathGeneratorDefinition>;
@@ -186,6 +188,7 @@ const buildProviderIndex = (
           ...(explicit.shapes === undefined ? {} : { shapes: [...explicit.shapes] }),
           ...(explicit.boundaries === undefined ? {} : { boundaries: [...explicit.boundaries] }),
           ...(explicit.clips === undefined ? {} : { clips: [...explicit.clips] }),
+          ...(explicit.clipShapes === undefined ? {} : { clipShapes: [...explicit.clipShapes] }),
           ...(explicit.arrows === undefined ? {} : { arrows: [...explicit.arrows] }),
           ...(explicit.patterns === undefined ? {} : { patterns: [...explicit.patterns] }),
           ...(explicit.pathGenerators === undefined ? {} : { pathGenerators: [...explicit.pathGenerators] }),
@@ -244,6 +247,7 @@ const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProv
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
   if ('name' in definition && 'emit' in definition) return CoreProviderCapability.Pattern;
   if ('paramsSchema' in definition && 'generate' in definition) return CoreProviderCapability.PathGenerator;
+  if ('kind' in definition && 'schema' in definition && 'lower' in definition) return CoreProviderCapability.ClipShape;
   if ('kind' in definition && 'schema' in definition && 'resolve' in definition) return CoreProviderCapability.Clip;
   if ('paramsSchema' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Boundary;
   if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.PathKind;
@@ -267,6 +271,8 @@ const definitionIdentity = (
       return { capability, name: (definition as BoundaryDefinition).name };
     case CoreProviderCapability.Clip:
       return { capability, name: (definition as ClipDefinition).kind };
+    case CoreProviderCapability.ClipShape:
+      return { capability, name: (definition as AnyClipShapeDefinition).kind };
     case CoreProviderCapability.Arrow:
       return { capability, name: (definition as ArrowDefinition).name };
     case CoreProviderCapability.Pattern:
@@ -307,6 +313,9 @@ const appendByCapability = (
       return;
     case CoreProviderCapability.Clip:
       definitions.clips.push(definition as ClipDefinition);
+      return;
+    case CoreProviderCapability.ClipShape:
+      definitions.clipShapes.push(definition as AnyClipShapeDefinition);
       return;
     case CoreProviderCapability.Arrow:
       definitions.arrows.push(definition as ArrowDefinition);
@@ -379,6 +388,7 @@ const appendExplicitDefinitions = (
     [CoreProviderCapability.Shape, explicit.shapes],
     [CoreProviderCapability.Boundary, explicit.boundaries],
     [CoreProviderCapability.Clip, explicit.clips],
+    [CoreProviderCapability.ClipShape, explicit.clipShapes],
     [CoreProviderCapability.Arrow, explicit.arrows],
     [CoreProviderCapability.Pattern, explicit.patterns],
     [CoreProviderCapability.PathGenerator, explicit.pathGenerators],
@@ -396,6 +406,7 @@ const freezeResolvedDefinitions = (definitions: MutableCoreProviderDefinitions):
     ...(definitions.shapes.length > 0 ? { shapes: Object.freeze(definitions.shapes) } : {}),
     ...(definitions.boundaries.length > 0 ? { boundaries: Object.freeze(definitions.boundaries) } : {}),
     ...(definitions.clips.length > 0 ? { clips: Object.freeze(definitions.clips) } : {}),
+    ...(definitions.clipShapes.length > 0 ? { clipShapes: Object.freeze(definitions.clipShapes) } : {}),
     ...(definitions.arrows.length > 0 ? { arrows: Object.freeze(definitions.arrows) } : {}),
     ...(definitions.patterns.length > 0 ? { patterns: Object.freeze(definitions.patterns) } : {}),
     ...(definitions.pathGenerators.length > 0 ? { pathGenerators: Object.freeze(definitions.pathGenerators) } : {}),
@@ -418,6 +429,7 @@ export const resolveCoreProviderDependencies = (
     shapes: [],
     boundaries: [],
     clips: [],
+    clipShapes: [],
     arrows: [],
     patterns: [],
     pathGenerators: [],

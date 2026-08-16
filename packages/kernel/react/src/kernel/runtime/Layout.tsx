@@ -1,4 +1,5 @@
 import type {
+  AnyClipShapeDefinition,
   AnyCompositeDefinition,
   AnyPathKindDefinition,
   ArrowDefinition,
@@ -189,6 +190,8 @@ export type LayoutProps = ScopeStyleProps & {
   boundaries?: ReadonlyArray<BoundaryDefinition>;
   /** 自定义裁剪定义 */
   clips?: ReadonlyArray<ClipDefinition>;
+  /** 自定义裁剪形状定义 */
+  clipShapes?: ReadonlyArray<AnyClipShapeDefinition>;
   /** 自定义箭头定义 */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /** 自定义 pattern 定义 */
@@ -325,6 +328,7 @@ export const Layout: FC<LayoutProps> = props => {
     shapes,
     boundaries,
     clips,
+    clipShapes,
     arrows,
     patterns,
     pathGenerators,
@@ -351,6 +355,7 @@ export const Layout: FC<LayoutProps> = props => {
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
+  const stableClipShapes = canonicalizeDefinitionArray(clipShapes);
   const stableArrows = canonicalizeDefinitionArray(arrows);
   const stablePatterns = canonicalizeDefinitionArray(patterns);
   const stablePathGenerators = canonicalizeDefinitionArray(pathGenerators);
@@ -447,6 +452,7 @@ export const Layout: FC<LayoutProps> = props => {
         shapes: stableShapes,
         boundaries: stableBoundaries,
         clips: stableClips,
+        clipShapes: stableClipShapes,
         arrows: stableArrows,
         patterns: stablePatterns,
         pathGenerators: stablePathGenerators,
@@ -467,6 +473,7 @@ export const Layout: FC<LayoutProps> = props => {
       stableShapes,
       stableBoundaries,
       stableClips,
+      stableClipShapes,
       stableArrows,
       stablePatterns,
       stablePathGenerators,

@@ -1,6 +1,7 @@
 export * from './arrow';
 export * from './boundary';
 export * from './clip';
+export * from './clip-shape';
 export * from './composite';
 export * from './path-generator';
 export * from './path-kind';
