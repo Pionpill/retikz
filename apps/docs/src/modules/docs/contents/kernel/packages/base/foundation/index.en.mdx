@@ -1,19 +1,13 @@
 ---
 title: '@retikz/foundation'
-description: Root-only type utilities, Zod scalar schemas, non-empty string assertions, and structured error primitives shared by Kernel, Standard, Viz, and adapters.
+description: Reusable type utilities, Zod scalar schemas, non-empty string assertions, and structured error primitives for all packages.
 ---
 
-`@retikz/foundation` is retikz's smallest cross-package contract. It gives consumers one owner for shared types, scalar validation, blank-string behavior, and error shape. Zod is its only production dependency.
+`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, scalar validation, blank-string semantics, and error shape in one place. Zod is its only production dependency.
 
-Foundation does not add an IR, object or array schema, Diagnostic, registry, or renderer. Each consumer still owns object composition, defaults, domain refinements, diagnostics, and recovery at its own boundary.
+## Install and use
 
-## Install and the root entry
-
-```bash
-pnpm add @retikz/foundation
-```
-
-Foundation has one package-root entry. Import every public capability from `@retikz/foundation`; `./types`, `./schema`, `./assert`, and `./error` are not public subpaths.
+<PackageManagerInstall packages="@retikz/react react react-dom" />
 
 ```ts
 import {
@@ -26,7 +20,7 @@ import {
 import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
 ```
 
-The TypeScript surface has thirteen root exports. Four type exports are erased at runtime, so `Object.keys()` contains nine runtime symbols.
+Developers usually do not need to use `@retikz/foundation` directly; it is a pure internal utility package created to share foundational capabilities across packages.
 
 <SourceLinks
   sources={[
@@ -45,7 +39,7 @@ The TypeScript surface has thirteen root exports. Four type exports are erased a
   ]}
 />
 
-## Four contract families
+## Contents
 
 ### Type utilities
 
@@ -57,7 +51,7 @@ These utilities work only at compile time. They emit no runtime code and carry n
 | `AssertEqual<TActual, TExpected>` | Return `true` only for bidirectionally assignable types    |
 | `OpenString<T>`                   | Keep built-in literal hints while accepting custom strings |
 
-### Zod scalar schemas
+### General contracts
 
 The six schemas validate scalars without coercion, trimming, transforms, or defaults. Consumers still compose complete objects, arrays, domain ranges, and cross-field relations:
 
@@ -76,7 +70,7 @@ PositiveNumberSchema.parse(1.5);
 NormalizedFractionSchema.parse(0.5);
 ```
 
-### Typed non-empty strings
+### Assertion utilities
 
 `assertNonEmptyString(value, label)` expects a value already narrowed to `string`. It rejects empty and runtime-standard whitespace-only strings, passes non-empty content unchanged, and returns `void`.
 
@@ -88,7 +82,7 @@ assertNonEmptyString('layer/main', 'owner');
 
 It is not an `unknown` type guard; use `NonBlankStringSchema` when a schema result is required. A consumer that needs a domain prefix, code, or class identity catches the ordinary `Error` and wraps it at its own boundary.
 
-### Structured error skeleton
+### Error handling
 
 `RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest common shape for domain owners. Each owner still decides its code, details fields, and recovery semantics:
 
@@ -102,9 +96,13 @@ class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
 }
 ```
 
-The base preserves `code`, `message`, `details`, and an own `cause`. `details` keeps the object identity supplied by the owner and is not deep-copied or frozen automatically. Omitting `cause` still creates an own property whose value is `undefined`. `isRetikzError()` recognizes the ordinary class hierarchy; it is not a hostile-object, cross-realm, or Core/Runtime private-identity security boundary.
-
-Errors are not Diagnostics or JSON IR: Foundation has no `toJSON()` or `toDiagnostic()`, defines no global error-code union, and does not replace Runtime `WeakSet` / `WeakMap` brands, probe isolation, or recovery control flow.
+| Member            | Type                                       | Semantics                                                                                                                                                                |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `code`            | `TCode`                                    | Structured-error classification code chosen by the owner                                                                                                                 |
+| `message`         | `string`                                   | Error message presented to the caller                                                                                                                                    |
+| `details`         | `TDetails`                                 | Structured details supplied by the owner; object identity is preserved and the value is not deep-copied or frozen automatically                                          |
+| `cause`           | `unknown`, optional                        | Original exception or value that caused the error; omitting it still creates an own property whose value is `undefined`                                                  |
+| `isRetikzError()` | `(value: unknown) => value is RetikzError` | Tests whether a value belongs to the ordinary `RetikzError` class hierarchy; it is not a hostile-object, cross-realm, or Core/Runtime private-identity security boundary |
 
 <SourceLinks
   sources={[
@@ -136,7 +134,7 @@ Errors are not Diagnostics or JSON IR: Foundation has no `toJSON()` or `toDiagno
       label: 'Structured error implementation',
       path: 'packages/kernel/foundation/src/error.ts',
       startLine: 1,
-      endLine: 26,
+      endLine: 32,
     },
     {
       label: 'Type utility tests',
@@ -159,18 +157,13 @@ Errors are not Diagnostics or JSON IR: Foundation has no `toJSON()` or `toDiagno
   ]}
 />
 
-## Fixed package shape
+## When to abstract
 
-Foundation keeps both production and test sources to five files, preventing it from becoming an unbounded `shared`, `utils`, or `helpers` bucket.
-
-| Directory | Fixed files                                                                                    |
-| --------- | ---------------------------------------------------------------------------------------------- |
-| `src/`    | `types.ts`, `schema.ts`, `assert.ts`, `error.ts`, `index.ts`                                   |
-| `tests/`  | `types.test.ts`, `schema.test.ts`, `assert.test.ts`, `error.test.ts`, `public-surface.test.ts` |
-
-`index.ts` only aggregates the four source owners. The tests lock type semantics, scalar boundaries, blank failures, error compatibility, and the root-only public surface. Zod is the only production dependency; the package has no peer dependencies or subpath exports.
-
-## Admission rules for future additions
+<ComponentAlert
+  type="tip"
+  title="Only retikz contributors need this"
+  description="Most developers can skip this section and return when adding or changing Foundation capabilities."
+/>
 
 Any new Foundation capability must satisfy all four conditions:
 
@@ -181,60 +174,23 @@ Any new Foundation capability must satisfy all four conditions:
 
 Helpers, object or array schemas, geometry algorithms, Diagnostics, error catalogs, and domain resolvers that fail these conditions remain with their current owner. When repetition appears, reassess the semantic owner instead of collecting code in Foundation.
 
-## Migration and direct dependencies
-
-The type utilities and six scalar schemas now have one source of truth in Foundation. Old root exports and equivalent definitions are removed without aliases. Import `NormalizedFractionSchema` from Foundation; Graph no longer forwards its former `NonBlankStringSchema`. Every real import declares a direct Foundation dependency and uses the package root.
-
-| Consumer group | Current packages                                                                                                                                               |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Kernel         | `@retikz/core`, `@retikz/inspect`, `@retikz/react`, `@retikz/render`, `@retikz/runtime`, `@retikz/tex`, `@retikz/vanilla`                                      |
-| Standard       | `@retikz/standard`                                                                                                                                             |
-| Viz            | `@retikz/chart`, `@retikz/data`, `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`, `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla` |
-
-`@retikz/math` has no Foundation import, so it keeps its genuine zero-dependency boundary; add a direct dependency only when a real import appears. Foundation never depends on an upper or domain package.
-
-Runtime identity owners and path segments now fail loudly for empty, ASCII-whitespace, and Unicode-whitespace values. The `RuntimeIdentityError` wrapper preserves the rejected value as `cause`. Runtime, Render, Plot declaration, and Chart resolution errors inherit `RetikzError` in their existing owners while keeping constructors, class names, codes, messages, top-level fields, `instanceof`, and recovery; `details` and the unified own `cause` are additive machine-readable fields.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Runtime identity blank failure and original cause',
-      path: 'packages/kernel/runtime/src/identity/identity.ts',
-      startLine: 8,
-      endLine: 23,
-    },
-    {
-      label: 'Runtime domain errors extending Foundation',
-      path: 'packages/kernel/runtime/src/error/errors.ts',
-      startLine: 38,
-      endLine: 82,
-    },
-    {
-      label: 'Core public-surface removal test',
-      path: 'packages/kernel/core/tests/compile/public-api.test.ts',
-      startLine: 1,
-      endLine: 28,
-    },
-  ]}
-/>
-
 ## API reference
 
-| Export                     | Type / use                                             |
-| -------------------------- | ------------------------------------------------------ |
-| `ValueOf`                  | Type utility: object-value union                       |
-| `AssertEqual`              | Type utility: bidirectional equality                   |
-| `OpenString`               | Type utility: open string                              |
-| `NonBlankStringSchema`     | Non-blank string Zod schema that preserves input       |
-| `PositiveNumberSchema`     | Positive finite-number Zod schema                      |
-| `NonNegativeNumberSchema`  | Non-negative finite-number Zod schema                  |
-| `PositiveIntegerSchema`    | Positive safe-integer Zod schema                       |
-| `NonNegativeIntegerSchema` | Non-negative safe-integer Zod schema                   |
-| `NormalizedFractionSchema` | Inclusive `0..1` Zod schema                            |
-| `assertNonEmptyString`     | Typed string non-empty assertion                       |
-| `RetikzErrorOptions`       | Structured-error constructor options                   |
-| `RetikzError`              | Extensible structured-error base class                 |
-| `isRetikzError`            | Ordinary classifier for the Foundation class hierarchy |
+| Category | Export                     | Type / use                                             |
+| -------- | -------------------------- | ------------------------------------------------------ |
+| type     | `ValueOf`                  | Object-value union                                     |
+|          | `AssertEqual`              | Bidirectional equality                                 |
+|          | `OpenString`               | Open string                                            |
+| schema   | `NonBlankStringSchema`     | Non-blank string Zod schema that preserves input       |
+|          | `PositiveNumberSchema`     | Positive finite-number Zod schema                      |
+|          | `NonNegativeNumberSchema`  | Non-negative finite-number Zod schema                  |
+|          | `PositiveIntegerSchema`    | Positive safe-integer Zod schema                       |
+|          | `NonNegativeIntegerSchema` | Non-negative safe-integer Zod schema                   |
+|          | `NormalizedFractionSchema` | Inclusive `0..1` Zod schema                            |
+| assert   | `assertNonEmptyString`     | Typed string non-empty assertion                       |
+| error    | `RetikzErrorOptions`       | Structured-error constructor options                   |
+|          | `RetikzError`              | Extensible structured-error base class                 |
+|          | `isRetikzError`            | Ordinary classifier for the Foundation class hierarchy |
 
 ## Related
 
