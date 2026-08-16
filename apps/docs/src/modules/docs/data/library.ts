@@ -71,7 +71,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'capability-loading',
             label: 'library.standardCapabilityLoading',
-            difficulty: DocDifficulty.Advanced,
+            difficulty: DocDifficulty.Internals,
             meta: {
               pageType: 'extension',
               audience: 'extension-author',

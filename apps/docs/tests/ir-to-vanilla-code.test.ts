@@ -380,7 +380,7 @@ describe('irToVanillaCode fallback', () => {
       ir([
         {
           namespace: 'graph',
-          type: 'graphNode',
+          type: 'entity',
           id: 'start',
           role: 'terminal',
           position: [0, 0],
@@ -388,17 +388,17 @@ describe('irToVanillaCode fallback', () => {
         },
         {
           namespace: 'graph',
-          type: 'graphNode',
+          type: 'entity',
           id: 'step',
           role: 'stage',
           position: [80, 0],
           text: 'Step',
         },
-        { namespace: 'graph', type: 'graphNode', role: 'decision', id: 'check', position: [160, 0], text: 'Check' },
-        { namespace: 'graph', type: 'graphNode', role: 'junction', id: 'join', position: [240, 0] },
+        { namespace: 'graph', type: 'entity', role: 'decision', id: 'check', position: [160, 0], text: 'Check' },
+        { namespace: 'graph', type: 'entity', role: 'junction', id: 'join', position: [240, 0] },
         {
           namespace: 'graph',
-          type: 'graphConnector',
+          type: 'relation',
           id: 'edge',
           role: 'flow',
           children: [
@@ -409,13 +409,13 @@ describe('irToVanillaCode fallback', () => {
       ] as never),
     );
 
-    expect(code).toContain("graphNode('preview-graphNode-1'");
-    expect(code).toContain("graphConnector('preview-graphConnector-1'");
-    expect(code).toContain("to: { id: 'preview-graphNode-1' }");
-    expect(code).toContain('GraphNodeInputEmbedAdapter');
-    expect(code).toContain('GraphConnectorInputEmbedAdapter');
+    expect(code).toContain("entity('preview-entity-1'");
+    expect(code).toContain("relation('preview-relation-1'");
+    expect(code).toContain("to: { id: 'preview-entity-1' }");
+    expect(code).toContain('EntityInputEmbedAdapter');
+    expect(code).toContain('RelationInputEmbedAdapter');
     expect(code).toContain("from '@retikz/graph-vanilla'");
-    expect(code).not.toContain("GraphConnectorInputEmbedAdapter } from '@retikz/standard-vanilla'");
+    expect(code).not.toContain("RelationInputEmbedAdapter } from '@retikz/standard-vanilla'");
     expect(code).not.toContain('TerminalDefinition');
     expect(code).not.toContain('Unsupported Standard composite');
   });
@@ -425,7 +425,7 @@ describe('irToVanillaCode fallback', () => {
       ir([
         {
           namespace: 'graph',
-          type: 'graphConnector',
+          type: 'relation',
           id: 'edge',
           role: 'flow',
           children: [
@@ -435,7 +435,7 @@ describe('irToVanillaCode fallback', () => {
         },
         {
           namespace: 'graph',
-          type: 'graphFrame',
+          type: 'container',
           id: 'block',
           sections: [
             {
@@ -454,6 +454,6 @@ describe('irToVanillaCode fallback', () => {
 
     expect(code).toContain("from '@retikz/graph-vanilla'");
     expect(code).toContain("import { GridDefinition } from '@retikz/standard';");
-    expect(code.match(/to: \{ id: 'preview-graphFrame-1\/graphFrame' \}/g)).toHaveLength(2);
+    expect(code.match(/to: \{ id: 'preview-container-1\/container' \}/g)).toHaveLength(2);
   });
 });

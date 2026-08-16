@@ -16,14 +16,14 @@ export const schematicSection: Array<Section> = [
         id: 'base',
         label: 'schematic.baseUnits',
         children: [
-          { id: 'code', label: 'schematic.logicNode', difficulty: DocDifficulty.Beginner },
-          { id: 'connector', label: 'schematic.graphConnector', difficulty: DocDifficulty.Beginner },
+          { id: 'code', label: 'schematic.entity', difficulty: DocDifficulty.Beginner },
+          { id: 'connector', label: 'schematic.relation', difficulty: DocDifficulty.Beginner },
         ],
       },
       {
         id: 'frame',
         label: 'schematic.frameUnits',
-        children: [{ id: 'graph-frame', label: 'schematic.graphFrame', difficulty: DocDifficulty.Advanced }],
+        children: [{ id: 'graph-frame', label: 'schematic.container', difficulty: DocDifficulty.Advanced }],
       },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
     ],

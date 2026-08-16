@@ -7,7 +7,7 @@ Schematic 组承载“图中画什么、这些元素表达什么，以及关系�
 
 ## 从 Graph 开始
 
-Graph 首批提供 `GraphFrame`、`GraphNode` 与 `GraphConnector` 三类统一入口。`GraphNode.role` 区分 terminal、stage、decision 与 junction；`GraphConnector.role` 区分 flow、branch、dependency 与 feedback。它们复用 Core 的 Node、Path、target 和 Scene，也复用 Layout 的通用布局；Graph 不复制几何、renderer 或布局算法。
+Graph 首批提供 `Container`、`Entity` 与 `Relation` 三类统一入口。`Entity.role` 区分 terminal、stage、decision 与 junction；`Relation.role` 区分 flow、branch、dependency 与 feedback。它们复用 Core 的 Node、Path、target 和 Scene，也复用 Layout 的通用布局；Graph 不复制几何、renderer 或布局算法。
 
 | 包                      | 负责什么                                    | 什么时候使用                          |
 | ----------------------- | ------------------------------------------- | ------------------------------------- |
@@ -31,5 +31,5 @@ Graph 拥有单个图式元素的语义、外观默认值和下沉方式，但�
 ## 下一步
 
 - [Graph](/schematic/graph)：查看现有元素、职责与使用入口
-- [Layout 布局容器](/library/layout)：排列 GraphFrame 与基础单元
+- [Layout 布局容器](/library/layout)：排列 Container 与基础单元
 - [Core 组件](/kernel/components)：使用底层 Node、Path、Scope 与 Layout

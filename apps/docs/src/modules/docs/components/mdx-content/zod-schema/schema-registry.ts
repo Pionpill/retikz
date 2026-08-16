@@ -509,19 +509,19 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/composite/surface#surfaceschema',
   },
 
-  GraphFrameSchema: {
-    schema: GraphIR.GraphFrameSchema,
-    label: 'GraphFrame',
+  ContainerSchema: {
+    schema: GraphIR.ContainerSchema,
+    label: 'Container',
     url: '/schematic/graph/frame/graph-frame',
   },
-  GraphNodeSchema: {
-    schema: GraphIR.GraphNodeSchema,
-    label: 'GraphNode',
+  EntitySchema: {
+    schema: GraphIR.EntitySchema,
+    label: 'Entity',
     url: '/schematic/graph/base/code',
   },
-  GraphConnectorSchema: {
-    schema: GraphIR.GraphConnectorSchema,
-    label: 'GraphConnector',
+  RelationSchema: {
+    schema: GraphIR.RelationSchema,
+    label: 'Relation',
     url: '/schematic/graph/base/connector',
   },
   TableSchema: {

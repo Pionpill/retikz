@@ -276,15 +276,11 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
-const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
-  'graphFrame',
-  'graphNode',
-  'graphConnector',
-];
+const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['container', 'entity', 'relation'];
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'GraphFrameInputEmbedAdapter',
-  'GraphNodeInputEmbedAdapter',
-  'GraphConnectorInputEmbedAdapter',
+  'ContainerInputEmbedAdapter',
+  'EntityInputEmbedAdapter',
+  'RelationInputEmbedAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -299,10 +295,7 @@ export type StandardPreviewDefinitionName =
 export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
 
 /** docs 预览能够显式注入的 Graph definition 名 */
-export type GraphPreviewDefinitionName =
-  | 'GraphFrameDefinition'
-  | 'GraphNodeDefinition'
-  | 'GraphConnectorDefinition';
+export type GraphPreviewDefinitionName = 'ContainerDefinition' | 'EntityDefinition' | 'RelationDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -319,9 +312,9 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
 };
 
 const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
-  graphFrame: 'GraphFrameDefinition',
-  graphNode: 'GraphNodeDefinition',
-  graphConnector: 'GraphConnectorDefinition',
+  container: 'ContainerDefinition',
+  entity: 'EntityDefinition',
+  relation: 'RelationDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
@@ -334,7 +327,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
-  if (child.namespace === 'graph' && child.type === 'graphFrame') {
+  if (child.namespace === 'graph' && child.type === 'container') {
     const owned: Array<IRChild> = [];
     const header = record.header as { child?: IRChild } | undefined;
     if (header?.child !== undefined) owned.push(header.child);
@@ -342,8 +335,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     sections?.forEach(section => owned.push(section.child));
     return owned;
   }
-  if (child.namespace === 'graph' && ['graphNode', 'graphConnector'].includes(child.type))
-    return [];
+  if (child.namespace === 'graph' && ['entity', 'relation'].includes(child.type)) return [];
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
@@ -442,7 +434,7 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
 };
 
 const graphCanonicalId = (kind: string, embedId: string): string =>
-  kind === 'graphFrame' ? `${embedId}/${kind}` : embedId;
+  kind === 'container' ? `${embedId}/${kind}` : embedId;
 
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
@@ -481,7 +473,7 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           const generatedId = graphCanonicalId(kind, embedId);
           ctx.generatedIds.set(authoredId, generatedId);
           ctx.generatedIds.set(generatedId, generatedId);
-          if (kind === 'graphFrame') {
+          if (kind === 'container') {
             ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
           }
         }
@@ -506,7 +498,7 @@ const rewriteGraphTarget = (value: unknown, ctx: Ctx): unknown => {
 };
 
 /** 只改写 Core Step 明确拥有的目标字段，不递归触碰 meta 或其它普通 JSON */
-const rewriteGraphConnectorStep = (value: unknown, ctx: Ctx): unknown => {
+const rewriteRelationStep = (value: unknown, ctx: Ctx): unknown => {
   if (typeof value !== 'object' || value === null) return value;
   const step = value as Record<string, unknown>;
   return {
@@ -519,11 +511,11 @@ const rewriteGraphConnectorStep = (value: unknown, ctx: Ctx): unknown => {
 };
 
 const rewriteGraphInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
-  if (kind === 'graphConnector') {
+  if (kind === 'relation') {
     return {
       ...input,
       ...(Array.isArray(input.children)
-        ? { children: input.children.map(step => rewriteGraphConnectorStep(step, ctx)) }
+        ? { children: input.children.map(step => rewriteRelationStep(step, ctx)) }
         : {}),
     };
   }

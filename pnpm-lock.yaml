@@ -1373,9 +1373,6 @@ importers:
       '@retikz/plot-react':
         specifier: workspace:^
         version: link:../plot-react
-      '@retikz/plot-vanilla':
-        specifier: workspace:^
-        version: link:../plot-vanilla
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react

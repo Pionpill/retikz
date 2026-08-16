@@ -13,7 +13,7 @@ describe('@retikz/chart public surface', () => {
       Note: 'note',
       Source: 'source',
     });
-    expect(chart.ChartProvider.key).toEqual({ namespace: 'chart', type: 'chart' });
+    expect(chart.ChartProvider.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'chart' });
     expect(chart).toHaveProperty('ChartDefinition');
     expect(chart).toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('PointChartType');
