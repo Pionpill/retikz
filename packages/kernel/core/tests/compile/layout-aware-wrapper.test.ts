@@ -8,7 +8,7 @@ import type {
   CompositeCompileScopeProps,
   IRAnimationTrack,
   IRChild,
-  IRPaintSpec,
+  IRPaint,
   IRScene,
   LayoutChildResult,
   LayoutCompositeCompileContext,
@@ -646,7 +646,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
   });
 
   it('imports nested replay paint and clip resources once and remaps primitive references', () => {
-    const paint: IRPaintSpec = {
+    const paint: IRPaint = {
       kind: 'linearGradient',
       stops: [
         { offset: 0, color: '#f00' },

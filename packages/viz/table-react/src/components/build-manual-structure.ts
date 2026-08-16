@@ -1,5 +1,5 @@
 import type { IRDataScalarValue } from '@retikz/data';
-import type { IRManualTableCell, ManualTableSpecInput, TableRowKindValue } from '@retikz/table';
+import type { IRManualTableCell, ManualTableInput, TableRowKindValue } from '@retikz/table';
 import type { ReactElement, ReactNode } from 'react';
 
 import { ScalarValueSchema } from '@retikz/data';
@@ -14,7 +14,7 @@ import { visitTableChildren } from './child-traversal';
 import { Row } from './row';
 
 /** ManualTable children 收集后交给 plain constructor 的矩形结构输入 */
-export type ManualStructureInput = Pick<ManualTableSpecInput, 'rows' | 'rowKinds'>;
+export type ManualStructureInput = Pick<ManualTableInput, 'rows' | 'rowKinds'>;
 
 /** 判断节点是否为 Row marker */
 const isRowElement = (child: ReactNode): child is ReactElement<RowProps, typeof Row> =>

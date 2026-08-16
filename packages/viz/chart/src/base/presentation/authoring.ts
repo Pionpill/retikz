@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import type { IRChart } from '../schemas/chart';
 import type {
@@ -22,7 +22,7 @@ import { ChartPresentationAuthoringRecordSchema, ChartPresentationSchema } from 
 export type ChartAuthoringInput = ChartPresentationShorthand & {
   id?: string;
   chartThemeTokens?: IRChart['chartThemeTokens'];
-  plot: IRPlotSpec;
+  plot: IRPlot;
   presentation?: ReadonlyArray<ChartPresentationAuthoringRecord>;
 };
 
@@ -87,7 +87,7 @@ export const normalizeChartPresentation = (
   });
 };
 
-/** 从完整 PlotSpec 与 presentation authoring 创建 canonical IRChart */
+/** 从完整 IRPlot 与 presentation authoring 创建 canonical IRChart */
 export const createChart = (input: ChartAuthoringInput): IRChart => {
   const { title, subtitle, note, source, presentation, ...chart } = input;
   const normalized = normalizeChartPresentation({ title, subtitle, note, source, presentation });

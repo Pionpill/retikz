@@ -13,7 +13,7 @@ plot 不应复制 data transform，也不应保存 SQL、权限或 AI prompt。p
 
 ## 决策
 
-新增 runtime-only `PlotLineageOptions`、`PlotLineageRun`、`lowerPlotWithLineage()` 与 `createPlotLineageLocator()`。完整图元链路只通过返回值暴露，不写入 IRPlotSpec，不塞进 Scene meta；Scene meta 继续只承载当前轻量 provenance。
+新增 runtime-only `PlotLineageOptions`、`PlotLineageRun`、`lowerPlotWithLineage()` 与 `createPlotLineageLocator()`。完整图元链路只通过返回值暴露，不写入 IRPlot，不塞进 Scene meta；Scene meta 继续只承载当前轻量 provenance。
 
 默认规则：
 

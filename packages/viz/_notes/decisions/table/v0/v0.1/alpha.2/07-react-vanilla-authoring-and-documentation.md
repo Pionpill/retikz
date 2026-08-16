@@ -17,7 +17,7 @@ alpha.2 保留完整 JSON-safe props / plain input，并用窄 marker 提供等�
 
 公开 `<Table spec>`、`<DetailTable>` 与 `<ManualTable>`：
 
-- `<Table>` 接受完整 `IRTableSpec` 与 datasets
+- `<Table>` 接受完整 `IRTable` 与 datasets
 - `<DetailTable>` 接受完整 columns props，或互斥的 `<DetailColumn>` children
 - `<ManualTable>` 接受非空矩形 rows / rowKinds props，或互斥的 `<Row>` / `<Cell>` children
 

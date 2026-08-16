@@ -18,7 +18,7 @@ import type {
   GridTargetSelector,
 } from '../../resolve/composition';
 import type { CoordinateResolveContext } from '../../resolve/coordinate';
-import type { IRPlotAxisGuide, IRPlotGuide, IRPlotSpec } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotGuide, IRPlot } from '../../schemas';
 import type { Rect } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
@@ -64,7 +64,7 @@ import {
   PLOT_NAMESPACE,
   PlotCoordinate,
   PlotLayerZIndex,
-  PlotSpecSchema,
+  PlotSchema,
 } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { createAnchorRegistry } from '../anchors';
@@ -127,7 +127,7 @@ const withFacetGuideContext = (
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id
  */
 const expandPlot = (
-  node: IRPlotSpec,
+  node: IRPlot,
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   effectiveTheme: ResolvedTheme,
@@ -219,7 +219,7 @@ const expandPlot = (
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const coordinateResolveContextOf = (
-    source: IRPlotSpec,
+    source: IRPlot,
     frameRows: Array<ExternalRow>,
     guides: Array<IRPlotGuide>,
     overrides: Partial<CoordinateResolveContext> = {},
@@ -513,7 +513,7 @@ const expandPlot = (
       for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
         if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
       }
-      const panelNode: IRPlotSpec = {
+      const panelNode: IRPlot = {
         ...node,
         coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
         composition: undefined,
@@ -760,8 +760,8 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
     defineComposite({
       namespace: PLOT_NAMESPACE,
       type: 'plot',
-      schema: PlotSpecSchema,
-      expand: (node: IRPlotSpec, context?) => ({
+      schema: PlotSchema,
+      expand: (node: IRPlot, context?) => ({
         children: [
           expandPlot(
             node,
@@ -775,4 +775,4 @@ export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOption
         ],
       }),
     }),
-  ] satisfies Array<ExpandCompositeDefinition<IRPlotSpec, typeof PLOT_NAMESPACE, 'plot'>>;
+  ] satisfies Array<ExpandCompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>>;

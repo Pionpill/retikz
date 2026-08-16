@@ -126,7 +126,7 @@ Table alpha.2 已通过 Core layout-aware composite 在同一次 compile 内完�
 
 当前 alpha.3 已在 alpha.2 布局基线上形成以下纵向闭环：
 
-- `TableSpecSchema` / `IRTableSpec` 聚合 manual、detail、custom 三种精确 spec 变体
+- `TableSchema` / `IRTable` 聚合 manual、detail、custom 三种精确 spec 变体
 - manual / detail / custom 结构共用 `SemanticTableModel`，Cell value / content 经 formatter / presentation contract 进入布局
 - auto / fraction / minmax 轨道、矩形 span、padding、alignment、fit / overflow / clip、文本换行、自动行高与 Border Graph 进入同一确定性约束布局
 - lowering 在同次 Core compile 中产出 Scene 与 typed manifest，React / Vanilla adapter 共用 runtime contribution 与 artifact contract

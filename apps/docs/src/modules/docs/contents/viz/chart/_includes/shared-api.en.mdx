@@ -4,13 +4,13 @@
 
 | Entry                   | Use it when                                                                        | Result                                                             |
 | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `Chart`                 | You already have a complete PlotSpec or need Plot JSX extensions in the chart body | Base Chart authoring                                               |
+| `Chart`                 | You already have a complete IRPlot or need Plot JSX extensions in the chart body | Base Chart authoring                                               |
 | `ScatterChart`          | You compare two continuous fields with points                                      | Built-in Scatter recipe with Plot extension entry points           |
 | `BubbleChart`           | You encode a quantitative area in addition to two-dimensional position             | Built-in Bubble recipe with Plot extension entry points            |
 | `ConnectedScatterChart` | You trace one ordered series through two-dimensional space                         | Built-in Connected Scatter recipe with Plot extension entry points |
-| `resolvePointChartSpec` | You need framework-neutral Point typed authoring or JSON integration               | Resolves Point typed input to `IRChart` and a complete PlotSpec    |
+| `resolvePointChart` | You need framework-neutral Point typed authoring or JSON integration               | Resolves Point typed input to `IRChart` and a complete IRPlot    |
 
-The root entries retain only every-family base capability: import `Chart` and presentation markers from `@retikz/chart-react`, or `createChart` and `renderChart` from `@retikz/chart-vanilla`. Import Point typed API from the matching `/point` entry: `@retikz/chart/point` provides schemas and `resolvePointChartSpec`; `@retikz/chart-react/point` provides `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`; `@retikz/chart-vanilla/point` provides `createScatterChart`, `createBubbleChart`, and `createConnectedScatterChart`. Every `/point` entry also includes its base exports.
+The root entries retain only every-family base capability: import `Chart` and presentation markers from `@retikz/chart-react`, or `createChart` and `renderChart` from `@retikz/chart-vanilla`. Import Point typed API from the matching `/point` entry: `@retikz/chart/point` provides schemas and `resolvePointChart`; `@retikz/chart-react/point` provides `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`; `@retikz/chart-vanilla/point` provides `createScatterChart`, `createBubbleChart`, and `createConnectedScatterChart`. Every `/point` entry also includes its base exports.
 
 A typed Chart receives row-array `data`, recipe fields through `encoding`, and JSON-safe mark values such as `{ kind: 'constant', value: 10 }`. Additional axes, legends, marks, scales, or transforms continue to use Plot's public authoring capability.
 

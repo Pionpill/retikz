@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /**
  * 通道绑定与处理规则汇入统一解析器的插图
- * @description IRPlotSpec 的位置绑定进入坐标投影，其余绑定与内置 / 自定义通道规则在解析器处汇合
+ * @description IRPlot 的位置绑定进入坐标投影，其余绑定与内置 / 自定义通道规则在解析器处汇合
  */
 const Demo: FC = () => (
   <Layout width={440} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
@@ -19,7 +19,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={16}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>IRPlotSpec 绑定</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>IRPlot 绑定</Text>
       <Text fill="gray" font={{ size: 12 }}>
         字段 / 常量
       </Text>

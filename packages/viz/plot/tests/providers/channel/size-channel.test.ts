@@ -6,11 +6,11 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -35,7 +35,7 @@ const deriveSizeValueTransform = defineTransform({
 });
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -44,7 +44,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -74,8 +74,8 @@ const pointSpec = (
   size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
   extraScales: Array<Record<string, unknown>> = [],
   model?: Array<{ name: string; type?: DataFieldTypeValue; format?: string }>,
-): IRPlotSpec =>
-  PlotSpecSchema.parse({
+): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', ...(model === undefined ? {} : { model }) },
@@ -84,8 +84,8 @@ const pointSpec = (
     marks: [{ type: 'point', ...(size ? { size } : {}), encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
   });
 
-const derivedSizePointSpec = (value: string | number): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const derivedSizePointSpec = (value: string | number): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -162,7 +162,7 @@ describe('size channel 映射节点半径', () => {
 
   // size 与 color 独立生效：半径逐节点解析，颜色按值分组
   it('size_with_color_both_apply', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -214,7 +214,7 @@ describe('size channel 边界输入', () => {
   });
 
   it('field_size_does_not_filter_generic_point_text_mode', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -455,7 +455,7 @@ describe('size channel 错误输入', () => {
   });
 
   it('mark_local_same_name_transform_keeps_source_type_evidence', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

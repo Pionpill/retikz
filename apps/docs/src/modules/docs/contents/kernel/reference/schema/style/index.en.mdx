@@ -3,7 +3,7 @@ title: Paint
 description: Shared visual fields for Node, Path, and Scope, plus JSON contracts for gradients, patterns, images, and shadows
 ---
 
-Core separates common appearance into two layers: `GraphicStyleSchema` defines fields used directly by a host, while `PaintSpecSchema` describes structured paints that a single CSS color cannot express. Node, Path, and Scope reuse these schemas instead of maintaining parallel color and opacity semantics.
+Core separates common appearance into two layers: `GraphicStyleSchema` defines fields used directly by a host, while `PaintSchema` describes structured paints that a single CSS color cannot express. Node, Path, and Scope reuse these schemas instead of maintaining parallel color and opacity semantics.
 
 The four schemas below are reusable strict field fragments. Standard, Plot, and other Tier 2 owners may compose them with their own defaults and field restrictions. They do not add drawing capability, a compile / lowering entry point, or a preset bundle; complete drawable entities still use their existing aggregate contracts.
 
@@ -65,13 +65,13 @@ The four schemas below are reusable strict field fragments. Standard, Plot, and 
 
 ## Paint value
 
-`fill` and `stroke` accept `PaintValueSchema`: keep solid colors as CSS color strings, and use a `kind`-discriminated `PaintSpec` object only for gradients, patterns, or images.
+`fill` and `stroke` accept `PaintValueSchema`: keep solid colors as CSS color strings, and use a `kind`-discriminated `IRPaint` object only for gradients, patterns, or images.
 
 <ZodSchema name="PaintValueSchema" />
 
-<span id="paintspec"></span>
+<span id="paint"></span>
 
-<ZodSchema name="PaintSpecSchema" />
+<ZodSchema name="PaintSchema" />
 
 <span id="gradientstop"></span>
 
@@ -83,31 +83,31 @@ The four schemas below are reusable strict field fragments. Standard, Plot, and 
 
 ### LinearGradient
 
-<ZodSchema name="LinearGradientPaintSpecSchema" />
+<ZodSchema name="LinearGradientPaintSchema" />
 
 <span id="radialgradient"></span>
 
 ### RadialGradient
 
-<ZodSchema name="RadialGradientPaintSpecSchema" />
+<ZodSchema name="RadialGradientPaintSchema" />
 
 <span id="conicgradient"></span>
 
 ### ConicGradient
 
-<ZodSchema name="ConicGradientPaintSpecSchema" />
+<ZodSchema name="ConicGradientPaintSchema" />
 
 <span id="pattern"></span>
 
 ### Pattern
 
-<ZodSchema name="PatternPaintSpecSchema" />
+<ZodSchema name="PatternPaintSchema" />
 
 <span id="image"></span>
 
 ### Image
 
-<ZodSchema name="ImagePaintSpecSchema" />
+<ZodSchema name="ImagePaintSchema" />
 
 <span id="dropshadow"></span>
 

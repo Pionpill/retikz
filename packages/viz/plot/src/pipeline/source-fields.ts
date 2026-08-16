@@ -1,11 +1,11 @@
-﻿import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
+import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
 
 import { collectTransformFields } from '@retikz/data';
 
 import { type AnyMarkDefinition } from '../contract';
 import { createFieldCollector, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
 import { collectMarkFields } from '../resolve/mark';
-import { type IRPlotMarkOperation, type IRPlotSpec, type IRPlotTransform } from '../schemas';
+import { type IRPlotMarkOperation, type IRPlot, type IRPlotTransform } from '../schemas';
 
 const markTransformOf = (mark: IRPlotMarkOperation): Array<IRPlotTransform> | undefined =>
   (mark as { transform?: Array<IRPlotTransform> }).transform;
@@ -36,7 +36,7 @@ const collectTransformPipelineFields = (
 
 /** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验 */
 export const collectSourceFields = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolvePlotTransformRegistry(),
   markRegistry: ReadonlyMap<string, AnyMarkDefinition> = resolveMarkRegistry(),
   transformContext?: TransformContext,

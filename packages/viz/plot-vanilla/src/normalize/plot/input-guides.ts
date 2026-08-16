@@ -35,7 +35,7 @@ export type InputPlotAxis = {
 
 /**
  * 坐标轴声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec.guides
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 IRPlot.guides
  */
 
 /** <Legend> props：图例配置；channel 指定非位置通道，颜色形态来自 scale，其它形态来自 ChannelDefinition.legend */
@@ -62,6 +62,6 @@ export type InputPlotLegend = {
 
 /**
  * 图例声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec.guides；
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 IRPlot.guides；
  *   <Legend> 不抑制默认坐标轴（与 <Axis> 区分），图例与默认轴共存
  */

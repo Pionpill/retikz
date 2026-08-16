@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
-import type { IRPaintSpec, IRScene } from '../../src/schemas';
+import type { IRPaint, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 
-const grad: IRPaintSpec = {
+const grad: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [
@@ -22,7 +22,7 @@ const rectsOf = (prims: Array<ScenePrimitive>): Array<RectPrim> =>
 const pathsOf = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
   flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path');
 
-describe('node PaintSpec fill → 资源表 + resourceRef', () => {
+describe('node IRPaint fill → 资源表 + resourceRef', () => {
   it('单 node gradient → primitive.fill = resourceRef + resources 1 条', () => {
     const ir: IRScene = {
       version: 1,
@@ -65,7 +65,7 @@ describe('去重 + 稳定 id', () => {
   });
 
   it('不同 gradient → 多条、不同 id', () => {
-    const grad2: IRPaintSpec = { kind: 'radialGradient', stops: grad.stops };
+    const grad2: IRPaint = { kind: 'radialGradient', stops: grad.stops };
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -89,7 +89,7 @@ describe('去重 + 稳定 id', () => {
   });
 });
 
-describe('path PaintSpec fill', () => {
+describe('path IRPaint fill', () => {
   it('path gradient fill → PathPrim.fill = resourceRef', () => {
     const ir: IRScene = {
       version: 1,
@@ -154,7 +154,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
   });
 });
 
-describe('stroke PaintSpec → 资源表 + resourceRef', () => {
+describe('stroke IRPaint → 资源表 + resourceRef', () => {
   it('path stroke linearGradient → PathPrim.stroke = resourceRef', () => {
     const ir: IRScene = {
       version: 1,
@@ -176,7 +176,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
   });
 
   it('node stroke radialGradient → RectPrim.stroke = resourceRef', () => {
-    const radial: IRPaintSpec = { kind: 'radialGradient', stops: grad.stops };
+    const radial: IRPaint = { kind: 'radialGradient', stops: grad.stops };
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -187,7 +187,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: radial }]);
   });
 
-  it('scope stroke PaintSpec 级联到 node/path，并共用同一个 resourceRef', () => {
+  it('scope stroke IRPaint 级联到 node/path，并共用同一个 resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -214,7 +214,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
     expect(scene.resources).toHaveLength(1);
   });
 
-  it('fill 与 stroke 使用同一 PaintSpec → 资源去重', () => {
+  it('fill 与 stroke 使用同一 IRPaint → 资源去重', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
@@ -294,7 +294,7 @@ describe('stroke PaintSpec → 资源表 + resourceRef', () => {
         },
       ],
     };
-    expect(() => compileToScene(ir).scene).toThrow(/arrow.*stroke.*PaintSpec|PaintSpec.*arrow/i);
+    expect(() => compileToScene(ir).scene).toThrow(/arrow.*stroke.*IRPaint|IRPaint.*arrow/i);
   });
 
   it('arrow × gradient stroke：显式 arrowDetail.color 时允许，marker 使用纯色', () => {

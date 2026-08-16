@@ -1,13 +1,13 @@
-﻿import { coerceTimestamp, inferFieldType, isIsoDateString } from '@retikz/data';
+import { coerceTimestamp, inferFieldType, isIsoDateString } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { prepareRows } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 单字段行 → 推断类型（无 model，纯抽样推断） */
 const inferOne = (values: Array<unknown>): string =>
@@ -17,8 +17,8 @@ const inferOne = (values: Array<unknown>): string =>
   );
 
 /** 构造引用逻辑字段 `v` 的最小 spec（绑 x），取 prepareRows 后 normalized[0].v */
-const specWithField = (field: { name: string } & Record<string, unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specWithField = (field: { name: string } & Record<string, unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', model: [field, { name: 'y', type: 'continuous' }] },
@@ -31,7 +31,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): IRPlo
   });
 
 const parseFirst = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = {},
 ): unknown => {

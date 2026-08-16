@@ -3,10 +3,10 @@ import type { IRChild, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * contract polar guide lowering 测试。
@@ -20,7 +20,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
@@ -69,8 +69,8 @@ const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number
 };
 
 /** angle 维 band scale + radius 维 linear scale 的 polar 折线 spec（角向轴=类别绕圈） */
-const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string, unknown> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const polarSpec = (guides: Array<Record<string, unknown>>, extra: Record<string, unknown> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -161,8 +161,8 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
 
 describe('lowerPlots polar guide — radial axis (contract)', () => {
   /** 径向轴（linear）spec：dimension=y；用 linear 角向使刻度沿辐条 */
-  const radialSpec = (guides: Array<Record<string, unknown>>): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const radialSpec = (guides: Array<Record<string, unknown>>): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -245,7 +245,7 @@ describe('lowerPlots polar guide — radial axis (contract)', () => {
 
 describe('lowerPlots polar guide — grid (contract)', () => {
   /** 径向轴 grid（同心环）：linear radius + grid:true */
-  const radiusGridSpec: IRPlotSpec = PlotSpecSchema.parse({
+  const radiusGridSpec: IRPlot = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -286,7 +286,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
   });
 
   /** 角向轴 grid（辐条）：band angle + grid:true */
-  const angleGridSpec: IRPlotSpec = PlotSpecSchema.parse({
+  const angleGridSpec: IRPlot = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -324,7 +324,7 @@ describe('lowerPlots polar guide — grid (contract)', () => {
 
 describe('lowerPlots polar guide — z-order (contract)', () => {
   it('grid_below_mark_axis_above', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -353,7 +353,7 @@ describe('lowerPlots polar guide — z-order (contract)', () => {
 
 describe('lowerPlots polar guide — 错误路径 (contract)', () => {
   it('duplicate_angle_axis_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -373,7 +373,7 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
 
   // hybrid 别名：x 与 angle 都映射到角向角色 → 应按角色判重抛错（Bug Hunter contract W）
   it('duplicate_angular_role_x_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -394,7 +394,7 @@ describe('lowerPlots polar guide — 错误路径 (contract)', () => {
 
 describe('lowerPlots cartesian guide 回归 (contract)', () => {
   // cartesian axis / grid 产物不变：直线轴（line/move，无 arc）
-  const cartGuidedSpec: IRPlotSpec = PlotSpecSchema.parse({
+  const cartGuidedSpec: IRPlot = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },

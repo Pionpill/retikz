@@ -1,4 +1,4 @@
-import type { IRPatternLineStyle, IRPatternPaintSpec } from '@retikz/core';
+import type { IRPatternLineStyle, IRPatternPaint } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
@@ -18,7 +18,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const lineStyle =
     values.lineStyle === 'dashed' ? { dashed: true } : values.lineStyle === 'dotted' ? { dotted: true } : {};
   const lineCap = values.shape === 'dots' ? {} : { lineCap: values.lineCap };
-  const lineStyleCycle: IRPatternPaintSpec['lineStyleCycle'] =
+  const lineStyleCycle: IRPatternPaint['lineStyleCycle'] =
     values.shape !== 'lines' || values.lineCycle === 'uniform'
       ? undefined
       : values.lineCycle === 'every-five'

@@ -5,10 +5,10 @@ import { SOURCE_INDEX } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 /**
  * scope-aware id 绑定 + meta 透传。
@@ -18,7 +18,7 @@ import { PlotSpecSchema } from '../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
@@ -31,7 +31,7 @@ const contentScope = (outer: IRScope): IRScope =>
   outer.id !== undefined && outer.localNamespace !== true ? (outer.children[0] as IRScope) : outer;
 
 /** 取第一个 mark 图层 scope（内容 scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   contentScope(expandOf(spec, datasets, options)).children[0] as IRScope;
 
 /** 递归收集 IRChild 树里所有带 meta 的元素（id 一并带出，便于断言） */
@@ -81,8 +81,8 @@ const SALES = [
 ];
 
 /** band-x interval(bar) spec；可带 root id / mark id */
-const barSpec = (over: { id?: string; markId?: string } = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const barSpec = (over: { id?: string; markId?: string } = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     ...(over.id ? { id: over.id } : {}),
@@ -102,8 +102,8 @@ const barSpec = (over: { id?: string; markId?: string } = {}): IRPlotSpec =>
   });
 
 /** linear point spec；可带 root id */
-const pointSpec = (over: { id?: string } = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (over: { id?: string } = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     ...(over.id ? { id: over.id } : {}),
@@ -162,7 +162,7 @@ describe('scope id/meta — happy path', () => {
       { t: 0, v: 2, city: 'Y' },
       { t: 1, v: 4, city: 'Y' },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'trend',
@@ -242,7 +242,7 @@ describe('scope id/meta — boundary', () => {
 
   it('provenance_off_polar_byte_identical', () => {
     // polar 代表（sector 饼图）同样：默认关 → 无 meta / 无合成 id
-    const pieSpec = PlotSpecSchema.parse({
+    const pieSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -290,7 +290,7 @@ describe('scope id/meta — boundary', () => {
       { t: 0, v: 2, region: 'south' },
       { t: 1, v: 4, region: 'south' },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'trend',
@@ -325,7 +325,7 @@ describe('scope id/meta — boundary', () => {
       { t: 0, v: 2, region: 'a_b' },
       { t: 1, v: 4, region: 'a_b' },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'trend',
@@ -347,7 +347,7 @@ describe('scope id/meta — boundary', () => {
       { month: 0, revenue: 10 }, // source 1
       { month: 1, revenue: 14 }, // source 2
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'sales',
@@ -415,7 +415,7 @@ describe('scope id/meta — errors', () => {
 describe('scope id/meta — interaction', () => {
   it('polar_id_meta_parity', () => {
     // polar 下 interval→sector 径向柱层 id / meta 与 cartesian 同构（layer scope id + meta layer:mark）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'rose',
@@ -439,7 +439,7 @@ describe('scope id/meta — interaction', () => {
 
   it('polar_sector_datum_meta', () => {
     // polar sector(饼图) datum node per-datum meta（datumProvenance 开）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'pie',
@@ -551,7 +551,7 @@ describe('scope id/meta — interaction', () => {
 
   it('guide_layer_id_meta', () => {
     // guide 层 scope → '<plotId>.' 前缀 id + meta {source:'plot',layer:'axis'|'grid',dimension}
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       id: 'sales',
@@ -575,8 +575,8 @@ describe('scope id/meta — interaction', () => {
   });
 
   it('legend_layer_id_is_plot_local_across_scene', () => {
-    const legendSpec = (id: string, dataReference: string): IRPlotSpec =>
-      PlotSpecSchema.parse({
+    const legendSpec = (id: string, dataReference: string): IRPlot =>
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         id,

@@ -12,7 +12,7 @@ import type {
   PlotComposite,
   ScaffoldFrameMode,
 } from './constants';
-import type { PlotSpecSchema } from './schema';
+import type { PlotSchema } from './schema';
 
 /** plot composite 类型 */
 export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
@@ -42,4 +42,4 @@ export type CoordinateArrangementKindValue = ValueOf<typeof CoordinateArrangemen
 export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
 
 /** Plot IR 根节点（plot composite 节点） */
-export type IRPlotSpec = z.infer<typeof PlotSpecSchema>;
+export type IRPlot = z.infer<typeof PlotSchema>;

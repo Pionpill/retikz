@@ -3,7 +3,7 @@ import type { z } from 'zod';
 import type {
   LabelTextContentSchema,
   LabelVisualStyleSchema,
-  LineSpecSchema,
+  LineSchema,
   MathRunSchema,
   MixedLineSchema,
   TextBlockSchema,
@@ -24,7 +24,7 @@ export type IRLabelTextContent = z.infer<typeof LabelTextContentSchema>;
 export type IRLabelVisualStyle = z.infer<typeof LabelVisualStyleSchema>;
 
 /** 行规格 IR 类型 */
-export type IRLineSpec = z.infer<typeof LineSpecSchema>;
+export type IRLine = z.infer<typeof LineSchema>;
 
-/** 文本块 IR 类型（单字符串或多行 LineSpec 数组） */
+/** 文本块 IR 类型（单字符串或多行 IRLine 数组） */
 export type IRTextBlock = z.infer<typeof TextBlockSchema>;

@@ -1,4 +1,4 @@
-import type { IRLineSpec, IRNode } from '@retikz/core';
+import type { IRLine, IRNode } from '@retikz/core';
 import type {
   AnyInputEmbedAdapter,
   InputChild,
@@ -117,7 +117,7 @@ const splitChildTextLines = (text: string): Array<string> => {
 };
 
 /** 将 <Text> 元素读取为一条节点文本行 */
-const textElementToLineSpec = (element: ReactElement): IRLineSpec | undefined => {
+const textElementToLineSpec = (element: ReactElement): IRLine | undefined => {
   const props = element.props as TextProps;
   if (typeof props.children !== 'string' && typeof props.children !== 'number') return undefined;
   const text = String(props.children);
@@ -131,8 +131,8 @@ const textElementToLineSpec = (element: ReactElement): IRLineSpec | undefined =>
 };
 
 /** 收集 Node children 中的作者文本行 */
-const collectChildLines = (children: unknown): Array<IRLineSpec> => {
-  const lines: Array<IRLineSpec> = [];
+const collectChildLines = (children: unknown): Array<IRLine> => {
+  const lines: Array<IRLine> = [];
   let buffer = '';
   let hasBuffer = false;
   const flush = (): void => {

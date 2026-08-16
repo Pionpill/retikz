@@ -1,30 +1,30 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
-import type { IRPlotGuide, IRPlotPointMark, IRPlotSpec } from '@retikz/plot';
+import type { IRPlotGuide, IRPlotPointMark, IRPlot } from '@retikz/plot';
 
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
 import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide, PlotMark, PointMarkSchema } from '@retikz/plot';
 
-import type { IRBubbleChartSpec } from '../bubble';
+import type { IRBubbleChart } from '../bubble';
 import type { ChartPatchChange, ChartRecipeSeed, ChartRecipeStyleContext } from '../recipe';
-import type { IRScatterChartSpec } from '../scatter';
+import type { IRScatterChart } from '../scatter';
 
 import { ChartMemberKind, chartRecipeId } from '../../shared';
 import { ChartRecipeInvariantError, ChartRecipeInvariantReason } from '../recipe';
 import { createChartAxisGuides, createChartCartesian2DSeed, plotMarkValueOf } from './plot-seed';
 
 /** 共享 Point recipe 可消费的封闭 Chart variant */
-type IRPointChartSpec = IRScatterChartSpec | IRBubbleChartSpec;
+type IRPointChart = IRScatterChart | IRBubbleChart;
 
 /** Point recipe 的 variant-specific identity、patch 与核心校验契约 */
-type PointChartRecipeOptions<TSpec extends IRPointChartSpec> = {
+type PointChartRecipeOptions<TVariant extends IRPointChart> = {
   /** 当前 canonical variant 的稳定判别值 */
-  type: TSpec['type'];
+  type: TVariant['type'];
   /** 主 Point 允许写入的顶层 patch 路径 */
   patchPaths: Array<string>;
   /** 返回实际参与 glyph 尺寸映射的最终字段；常量尺寸或 text mode 返回 undefined */
-  finalSizeFieldOf: (spec: TSpec) => { field: string; scale?: string } | undefined;
+  finalSizeFieldOf: (spec: TVariant) => { field: string; scale?: string } | undefined;
   /** 对 variant 独有的主 Point 核心语义执行额外复验 */
-  validateMainMark?: (spec: TSpec, mark: IRPlotPointMark) => boolean;
+  validateMainMark?: (spec: TVariant, mark: IRPlotPointMark) => boolean;
 };
 
 const jsonObject = (value: unknown): IRJsonObject => JsonObjectSchema.parse(value);
@@ -43,7 +43,7 @@ const strictVisualChannelOf = (channel: {
 };
 
 /** 把 Point Chart patch 转成 resolution merge 的逐叶 change */
-const pointPatchChanges = (patch: IRPointChartSpec['mark'], patchPaths: Array<string>): Array<ChartPatchChange> => {
+const pointPatchChanges = (patch: IRPointChart['mark'], patchPaths: Array<string>): Array<ChartPatchChange> => {
   if (patch === undefined) return [];
   const patchRecord = patch as Record<string, unknown>;
   const changes: Array<ChartPatchChange> = [];
@@ -59,10 +59,10 @@ const pointPatchChanges = (patch: IRPointChartSpec['mark'], patchPaths: Array<st
 };
 
 /** 从 Point Chart 输入建立 resolver 消费的不可变 recipe seed */
-export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
-  spec: TSpec,
+export const createPointChartSeed = <TVariant extends IRPointChart>(
+  spec: TVariant,
   style: ChartRecipeStyleContext,
-  options: PointChartRecipeOptions<TSpec>,
+  options: PointChartRecipeOptions<TVariant>,
 ): ChartRecipeSeed => {
   const cartesian = createChartCartesian2DSeed(options.type);
   const coordinateView = spec.composition?.defaultView;
@@ -91,7 +91,7 @@ export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
         }
       : undefined;
   const guides = [...axisGuides, ...(sizeGuide === undefined ? [] : [sizeGuide])];
-  const plot: IRPlotSpec = {
+  const plot: IRPlot = {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
     ...(spec.id === undefined ? {} : { id: `${spec.id}/plot` }),
@@ -170,11 +170,11 @@ export const createPointChartSeed = <TSpec extends IRPointChartSpec>(
 
 const sameChannel = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
 
-/** 验证 merge 后的 PlotSpec 仍保留 Point Chart 的不可撤销语义 */
-export const validatePointChartCore = <TSpec extends IRPointChartSpec>(
-  spec: TSpec,
-  plotSpec: IRPlotSpec,
-  options: PointChartRecipeOptions<TSpec>,
+/** 验证 merge 后的 IRPlot 仍保留 Point Chart 的不可撤销语义 */
+export const validatePointChartCore = <TVariant extends IRPointChart>(
+  spec: TVariant,
+  plotSpec: IRPlot,
+  options: PointChartRecipeOptions<TVariant>,
 ): void => {
   const requiredScaleNames = [chartRecipeId(options.type, 'scale.x'), chartRecipeId(options.type, 'scale.y')];
   if (requiredScaleNames.some(name => !plotSpec.scales.some(scale => scale.name === name))) {

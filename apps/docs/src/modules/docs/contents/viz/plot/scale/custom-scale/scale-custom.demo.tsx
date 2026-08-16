@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { FC } from 'react';
 
 import { Plot } from '@retikz/plot-react';
@@ -14,7 +14,7 @@ export const previewControls = customScaleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   // 自定义 scale 不参与 React 自动派生：经完整 spec 的 scales 引用，definition 走 scaleDefinitions 注入。
-  const spec: IRPlotSpec = {
+  const spec: IRPlot = {
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'pts' },

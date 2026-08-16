@@ -1,14 +1,14 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Facet, Scaffold, Track } from '../../../src/components/composition';
 import { Axis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotSpec alpha.14 topology binding sugar', () => {
+describe('buildPlotIR alpha.14 topology binding sugar', () => {
   it('track_binding_generates_shared_scaffold_composition', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Scaffold
           id="ops"
@@ -53,11 +53,11 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       { type: 'axis', dimension: 'x', coordinateView: 'incidents', grid: true },
       { type: 'axis', dimension: 'y', coordinateView: 'load' },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('track_binding_inherits_plot_coordinate_when_scaffold_coordinate_is_omitted', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Scaffold id="radar" sharedRoles={['x']}>
           <Track id="signal" band={{ role: 'y', start: 0.12, end: 0.48 }} />
@@ -79,11 +79,11 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
         radius: '__radius',
       },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('scaffold_track_container_scopes_child_axes_and_marks', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <Scaffold id="ops" sharedRoles={['x']}>
         <Axis dimension="x" grid title="week" />
         <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }}>
@@ -121,11 +121,11 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       { type: 'axis', dimension: 'y', coordinateView: 'incidents' },
       { type: 'axis', dimension: 'y', coordinateView: 'load' },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('facet_binding_generates_facet_composition', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Facet
           id="sales"
@@ -168,11 +168,11 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       { type: 'axis', dimension: 'x', coordinateView: 'salesPanel' },
       { type: 'axis', dimension: 'y', coordinateView: 'salesPanel', grid: true },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('facet_container_scopes_child_axes_and_marks', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <Facet id="sales" column="region">
         <Axis dimension="x" title="month" />
         <Axis dimension="y" grid title="revenue" />
@@ -195,11 +195,11 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       { type: 'axis', dimension: 'x', coordinateView: 'salesPanel' },
       { type: 'axis', dimension: 'y', coordinateView: 'salesPanel', grid: true },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('facet_container_accepts_multi_level_row_dimensions', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <Facet
         id="sales"
         row={[
@@ -232,12 +232,12 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
       ],
     });
     expect(spec.marks).toMatchObject([{ type: 'path', coordinateView: 'salesPanel' }]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('rejects missing topology binding targets and conflicting binding props', () => {
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Scaffold id="ops" sharedRoles={['x']}>
             <Track id="load" band={{ role: 'y', start: 0, end: 1 }} />
@@ -249,7 +249,7 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     ).toThrow(/missing.*track/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Facet id="sales" column="region" />
           <PathMark facetId="missing" x="month" y="revenue" />
@@ -259,7 +259,7 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     ).toThrow(/missing.*facet/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Facet id="sales" column="region" />
           <PathMark facetId="sales" coordinateView="salesPanel" x="month" y="revenue" />
@@ -269,7 +269,7 @@ describe('buildPlotSpec alpha.14 topology binding sugar', () => {
     ).toThrow(/coordinateView.*facetId/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Scaffold id="ops" sharedRoles={['x']}>
             <Track id="load" band={{ role: 'y', start: 0, end: 1 }} />

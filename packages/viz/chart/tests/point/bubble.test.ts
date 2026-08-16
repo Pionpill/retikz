@@ -2,8 +2,8 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRBubblePointPatch } from '../../src/point/shared';
 
-import { PointChartSpecSchema, PointChartType } from '../../src/point';
-import { BubbleChartSpecSchema } from '../../src/point/bubble';
+import { PointChartSchema, PointChartType } from '../../src/point';
+import { BubbleChartSchema } from '../../src/point/bubble';
 import { BubblePointPatchSchema, StrictSizeFieldChannelSchema } from '../../src/point/shared';
 
 const minimalBubble = {
@@ -19,17 +19,17 @@ const minimalBubble = {
 
 describe('Bubble Chart schema', () => {
   it('parses and round-trips a distinct Bubble variant', () => {
-    const parsed = BubbleChartSpecSchema.parse(minimalBubble);
+    const parsed = BubbleChartSchema.parse(minimalBubble);
 
     expect(PointChartType.Bubble).toBe('bubble');
     expect(parsed.type).toBe('bubble');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSpecSchema.parse(minimalBubble)).toEqual(parsed);
+    expect(PointChartSchema.parse(minimalBubble)).toEqual(parsed);
   });
 
   it('accepts datum labels and non-reserved Point capabilities', () => {
     expect(
-      BubbleChartSpecSchema.parse({
+      BubbleChartSchema.parse({
         ...minimalBubble,
         encoding: {
           ...minimalBubble.encoding,
@@ -70,7 +70,7 @@ describe('Bubble Chart schema', () => {
     ['unknown top-level key', { ...minimalBubble, unknown: true }],
     ['unknown mark key', { ...minimalBubble, mark: { unknown: true } }],
   ])('rejects %s', (_label, input) => {
-    expect(() => BubbleChartSpecSchema.parse(input)).toThrow();
+    expect(() => BubbleChartSchema.parse(input)).toThrow();
   });
 
   it('projects reserved Point paths as optional never fields', () => {
@@ -122,7 +122,7 @@ describe('Bubble Chart schema', () => {
       },
       mark: { opacity: undefined },
     };
-    const parsed = BubbleChartSpecSchema.parse(input);
+    const parsed = BubbleChartSchema.parse(input);
 
     expect(Object.hasOwn(parsed, 'id')).toBe(false);
     expect(Object.hasOwn(parsed.encoding, 'opacity')).toBe(false);
@@ -131,7 +131,7 @@ describe('Bubble Chart schema', () => {
     expect(Object.hasOwn(parsed.encoding.size, 'value')).toBe(false);
     expect(parsed.mark).toEqual({});
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSpecSchema.parse(input)).toEqual(parsed);
+    expect(PointChartSchema.parse(input)).toEqual(parsed);
   });
 
   it('treats an undefined constant-size key as absent without accepting a concrete conflict', () => {

@@ -77,7 +77,7 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 ### 2.5 参考体量（原型实测）
 
 - core：单文件 137KB → 13 个分片，最大 path 47KB / scope 43KB（这两个域本身复杂），其余 1–8KB。描述 414 条全保留。
-- plot：根 `PlotSpecSchema`，9 个分片（plot / mark / scale / encoding / guide / coordinate / data / transform），2.7–25KB。描述 474 条。
+- plot：根 `PlotSchema`，9 个分片（plot / mark / scale / encoding / guide / coordinate / data / transform），2.7–25KB。描述 474 条。
 
 ---
 

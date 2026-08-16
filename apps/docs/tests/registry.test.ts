@@ -8,13 +8,13 @@ import {
   MarkSchema,
   PlotAreaThemeSchema,
   PlotLayerSchema,
-  PlotSpecSchema,
+  PlotSchema,
   PlotThemeSchema,
   ScaleSchema,
   TransformSchema,
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard';
-import { TableSpecSchema } from '@retikz/table';
+import { TableSchema } from '@retikz/table';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -27,8 +27,8 @@ describe('SCHEMA_REGISTRY', () => {
     expect(SCHEMA_REGISTRY).toMatchObject({
       SceneSchema: { schema: SceneSchema },
       LayoutInspectSpacingOptionsInputSchema: { schema: LayoutInspectSpacingOptionsInputSchema },
-      TableSpecSchema: { schema: TableSpecSchema },
-      PlotSpecSchema: { schema: PlotSpecSchema },
+      TableSchema: { schema: TableSchema },
+      PlotSchema: { schema: PlotSchema },
       EncodingSchema: { schema: EncodingSchema },
       PlotTransformSchema: { schema: TransformSchema },
       MarkSchema: { schema: MarkSchema },
@@ -73,7 +73,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(LayoutInspectSpacingOptionsInputSchema)?.url).toBe(
       '/library/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
     );
-    expect(lookupSchema(TableSpecSchema)?.url).toBe('/viz/table/reference/contract-table#tablespecschema');
+    expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/composite/legend#legendschema');
     expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/composite/legend#legendartifactschema');
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/composite/surface#surfaceschema');

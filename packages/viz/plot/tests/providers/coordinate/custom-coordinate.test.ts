@@ -6,11 +6,11 @@ import { z } from 'zod';
 
 import type { AnyCoordinateDefinition, AxisFrame, CoordinateFrame, DimensionRole } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * 自定义坐标系（custom coordinate）lowering 测试。
@@ -20,12 +20,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -129,8 +129,8 @@ const bridgeCoordinate = defineCoordinate({
   },
 });
 
-const sineSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const sineSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -139,8 +139,8 @@ const sineSpec = (): IRPlotSpec =>
     marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
   });
 
-const bridgeSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const bridgeSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -257,7 +257,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
   });
 
   it('custom_role_names_survive_schema_and_drive_projection_and_axis', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -301,7 +301,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
   // 缺必填角色（roles 含 y、mark 缺 y）→ fail-loud（必填角色取 coordinate.roles）
   it('missing_required_role_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -316,7 +316,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
   // 非法 guide 维度：schema 接受任意非空 role 名，坐标系 definition.roles 在 lowering 阶段 fail-loud
   it('invalid_guide_dimension_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -331,7 +331,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
   });
 
   it('custom_open_path_uses_project_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -368,7 +368,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     ['baseline closure', { closure: { kind: 'baseline' } }],
     ['stack closure', { closure: { kind: 'stack', baselineField: 'baseline' } }],
   ])('custom_path_%s_remains_fail_loud', (_label, pathShape) => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -398,7 +398,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
   // 曲线轴：工厂回传 roleScales → <Axis> 沿投影画弯曲轴线（产出轴层 + 至少一条 path）
   it('custom_axis_guide_lowers_curved_axis', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -433,7 +433,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
   // custom × categorical color → 分色子 Scope（非位置通道仍工作）
   it('custom_with_color_groups_into_subscopes', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -534,8 +534,8 @@ const degenerateFramed = defineSineCoordinate(
   true,
 );
 
-const sineAxisSpec = (type = 'sineFramed'): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const sineAxisSpec = (type = 'sineFramed'): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -644,7 +644,7 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
 
   it('curved_axis_normal_uses_axis_tangent_even_when_custom_roles_are_2d', () => {
     // 2D custom（roles=['x','y']）的 x 轴仍是 1D 曲线：画成弯曲轴线 + 标签沿轴法向偏移、位置有限
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

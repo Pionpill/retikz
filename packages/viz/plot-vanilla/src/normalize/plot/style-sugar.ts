@@ -1,4 +1,4 @@
-import type { IRAxisScale, IRBoxSize, IRPaintSpec } from '@retikz/core';
+import type { IRAxisScale, IRBoxSize, IRPaint } from '@retikz/core';
 import type {
   IRPlotChannel,
   IRPlotEncoding,
@@ -82,7 +82,7 @@ const canUseCssColor = (value: string): boolean => {
 
 const warnSkippedStyle = (prop: string, value: string): void => {
   console.warn(
-    `buildPlotSpec: <PointMark ${prop}="${value}"> is neither a known data field nor a valid constant for ${prop}; skipped`,
+    `buildPlotIR: <PointMark ${prop}="${value}"> is neither a known data field nor a valid constant for ${prop}; skipped`,
   );
 };
 
@@ -129,7 +129,7 @@ export const extensionChannelEncoding = (
   return Object.keys(out).length > 0 ? { channels: out } : {};
 };
 
-type PaintStyleInput = string | IRPaintSpec | PlotMarkValue<string | IRPaintSpec> | undefined;
+type PaintStyleInput = string | IRPaint | PlotMarkValue<string | IRPaint> | undefined;
 
 /** 把 paint 样式解析为字段绑定或常量值 */
 export const paintStyleOf = <T extends IRPlotPointFillStyle | IRPlotPointStrokeStyle>(

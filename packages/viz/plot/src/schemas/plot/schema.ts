@@ -243,7 +243,7 @@ export const CoordinateCompositionSchema = z
     views: z
       .array(CoordinateViewSchema)
       .optional()
-      .describe('Explicit coordinate views registered by this PlotSpec; ids must be unique'),
+      .describe('Explicit coordinate views registered by this IRPlot; ids must be unique'),
     arrangements: z
       .array(CoordinateArrangementSchema)
       .optional()
@@ -423,7 +423,7 @@ export const CoordinateCompositionSchema = z
   })
   .describe('Plot-level coordinate view registry used by marks and axis guides');
 
-export const PlotSpecSchema = CompositeBaseSchema.extend({
+export const PlotSchema = CompositeBaseSchema.extend({
   namespace: z
     .literal(PLOT_NAMESPACE)
     .describe(
@@ -498,14 +498,14 @@ export const PlotSpecSchema = CompositeBaseSchema.extend({
       ctx.addIssue({
         code: 'custom',
         path: ['coordinate'],
-        message: 'PlotSpec requires either coordinate shorthand or composition',
+        message: 'IRPlot requires either coordinate shorthand or composition',
       });
     }
     if (spec.coordinate !== undefined && spec.composition !== undefined) {
       ctx.addIssue({
         code: 'custom',
         path: ['composition'],
-        message: 'PlotSpec cannot use coordinate shorthand and composition together',
+        message: 'IRPlot cannot use coordinate shorthand and composition together',
       });
     }
     const viewIds =

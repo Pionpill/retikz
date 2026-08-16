@@ -7,7 +7,7 @@
 
 ## 背景
 
-ADR-01 到 ADR-07 已经把 IRPlotSpec 内部的 `composition`、`coordinateScope`、overlay scope、guide binding 和 grid targeting 串起来。这个模型适合作为 IR 和程序化底层契约，但 React DSL 用户写常见双轴图时仍然要理解并手写：
+ADR-01 到 ADR-07 已经把 IRPlot 内部的 `composition`、`coordinateScope`、overlay scope、guide binding 和 grid targeting 串起来。这个模型适合作为 IR 和程序化底层契约，但 React DSL 用户写常见双轴图时仍然要理解并手写：
 
 - `composition.defaultScope`
 - `composition.scopes`
@@ -20,7 +20,7 @@ ADR-01 到 ADR-07 已经把 IRPlotSpec 内部的 `composition`、`coordinateScop
 
 ## 决策：adapter 生成 composition，用户绑定 axis id
 
-新增 adapter-level axis binding sugar。用户在 React / Vanilla authoring 层用 axis id 绑定 mark；adapter 在生成 IRPlotSpec 时展开为现有 `composition` 与 `coordinateScope`，不新增 IR schema。
+新增 adapter-level axis binding sugar。用户在 React / Vanilla authoring 层用 axis id 绑定 mark；adapter 在生成 IRPlot 时展开为现有 `composition` 与 `coordinateScope`，不新增 IR schema。
 
 第一版只支持 cartesian2D 下的“共享 x + 多 y axis overlay”。`xAxisId`、facet binding、track binding 进入后续 ADR；本 ADR 只新增 `yAxisId`。
 
@@ -39,7 +39,7 @@ React DSL：
 </Plot>
 ```
 
-展开后的 IRPlotSpec 仍然使用 composition：
+展开后的 IRPlot 仍然使用 composition：
 
 ```ts
 {
@@ -65,7 +65,7 @@ React DSL：
 }
 ```
 
-Vanilla builder 使用同一 sugar 字段，但只在 builder 输入层存在；`build()` 输出的 IRPlotSpec 不保留 `yAxisId`：
+Vanilla builder 使用同一 sugar 字段，但只在 builder 输入层存在；`build()` 输出的 IRPlot 不保留 `yAxisId`：
 
 ```ts
 const spec = plotBuilder({ data, scales: [] })
@@ -89,7 +89,7 @@ const spec = plotBuilder({ data, scales: [] })
    - 每个 y axis 使用独立 y scale name，建议为 `__y.<axisId>`。
    - 所有生成 scope 共享 x scale name `__x`。
 7. 未写 `yAxisId` 的 position mark 绑定默认 y axis。默认 y axis 可以是无 `id` 的 `<Axis dimension="y" />`，也可以是在 binding mode 中第一个 y axis。
-8. `Axis id` 在 adapter 中承担 binding id；在输出 IRPlotSpec 中仍保留为 guide handle，供 provenance / docs / future anchor 使用。
+8. `Axis id` 在 adapter 中承担 binding id；在输出 IRPlot 中仍保留为 guide handle，供 provenance / docs / future anchor 使用。
 9. 若同一 dimension 下出现重复 `Axis id`，adapter fail-loud。
 10. 若一个 mark 同时写 `coordinateScope` 和 `yAxisId`，adapter fail-loud，避免两个定位入口互相覆盖。
 

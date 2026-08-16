@@ -31,7 +31,7 @@
 ## 前置依赖
 
 - **「zod → 喂 LLM 的 JSON Schema 契约」导出尚未落地**（core-design §7 的设计意图）。eval 要测生成，先得有「喂给模型的 schema 契约」。
-- core 已升级 **zod v4**（见 [`v0.3 beta.2`](../../../packages/kernel/_notes/decisions/v0/v0.3/beta.2/roadmap.md)），内置 `z.toJSONSchema` 可**零额外依赖**产出 JSON Schema；`SceneSchema` / `PlotSpecSchema` 的导出能力已有测试锁定 → 导出做进 core（见 D2）只剩封装工作。
+- core 已升级 **zod v4**（见 [`v0.3 beta.2`](../../../packages/kernel/_notes/decisions/v0/v0.3/beta.2/roadmap.md)），内置 `z.toJSONSchema` 可**零额外依赖**产出 JSON Schema；`SceneSchema` / `PlotSchema` 的导出能力已有测试锁定 → 导出做进 core（见 D2）只剩封装工作。
 
 ## 首切定稿（L1 baseline · 端到端流水线）
 

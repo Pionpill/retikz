@@ -39,9 +39,9 @@ description: 用 MarkDefinition 登记源字段、声明通道消费并把数据
 自定义图元没有专属 React 组件，使用完整 spec 入口创作：
 
 ```tsx
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'glyphs' },

@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { z } from 'zod';
 
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ import { chartRecipeOf } from '../../src/point/catalog';
 import { ConnectedScatterChartRecipe } from '../../src/point/connected-scatter';
 import { ScatterChartRecipe } from '../../src/point/scatter';
 
-const minimalPlot = (field: string): IRPlotSpec => ({
+const minimalPlot = (field: string): IRPlot => ({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'rows' },

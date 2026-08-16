@@ -1,7 +1,7 @@
-﻿import type { IRPaintSpec } from '@retikz/core';
+import type { IRPaint } from '@retikz/core';
 import type { DataFieldTypeMap, IRDataFieldDefinition } from '@retikz/data';
 
-import { PaintSpecSchema } from '@retikz/core';
+import { PaintSchema } from '@retikz/core';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -21,16 +21,16 @@ export type ColorChannelDefinitionOptions = {
 };
 
 /** plot 通道可下沉到 core 的颜色或 paint 值 */
-export type PlotPaint = string | IRPaintSpec;
+export type PlotPaint = string | IRPaint;
 
 const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec: boolean): PlotPaint => {
   if (typeof value === 'string') return value;
   if (allowPaintSpec) {
-    const result = PaintSpecSchema.safeParse(value);
+    const result = PaintSchema.safeParse(value);
     if (result.success) return result.data;
   }
   throw new Error(
-    `lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core PaintSpec' : ''}`,
+    `lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core IRPaint' : ''}`,
   );
 };
 

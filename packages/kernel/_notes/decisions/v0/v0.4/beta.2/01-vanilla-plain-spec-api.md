@@ -18,7 +18,7 @@
 
 `figure()`、`node()`、`path()`、`coordinate()`、`scope()`、`layer()`、`embed()` 只返回 plain object。`Figure` class-like builder 及其链式 `.node()`、`.draw()`、`.mount()` API 从公共面删除，不保留 legacy alias。
 
-`VanillaFigureSpec` 的根结构只允许以下二选一：
+`InputScene` 的根结构只允许以下二选一：
 
 - `children`：单层图简写，规范化为隐式默认 layer。
 - `layers`：显式 authoring 分层，携带 `id`、`cache`、`zIndex` 和 children。
@@ -91,7 +91,7 @@ view.update(nextSpec);
 ## 最终实现
 
 - `packages/kernel/vanilla/src/spec/` 拥有 plain spec 类型、helpers、normalization、identity 与 Tier 2 contribution 聚合。
-- `packages/kernel/vanilla/src/runtime/` 统一消费 `Scene | IRScene | VanillaFigureSpec`，并由 SVG / Canvas view 保存 live Scene 与 runtime metadata。
+- `packages/kernel/vanilla/src/runtime/` 统一消费 `Scene | IRScene | InputScene`，并由 SVG / Canvas view 保存 live Scene 与 runtime metadata。
 - 旧 `builder/` 与 `Figure` 实现、测试和公共导出已删除；包根只聚合 `spec` 与 `runtime` owner。
 - Vanilla README、文档站中英文页面和 ComponentPreview 的 Vanilla codegen 已切换到 plain spec。
 

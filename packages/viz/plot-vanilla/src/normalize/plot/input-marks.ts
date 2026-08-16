@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   BlendModeValue,
   IRAxisScale,
   IRBoundary,
@@ -8,7 +8,7 @@
   IRFont,
   IRGeometryLabel,
   IRNodeLabel,
-  IRPaintSpec,
+  IRPaint,
   IRPathScale,
   IRShapeRef,
   IRStepLabel,
@@ -18,7 +18,7 @@
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type {
-  IRPlotAnchorIdSpec,
+  IRPlotAnchorId,
   IRPlotBlendModeStyle,
   IRPlotChannel,
   IRPlotIntervalBounds,
@@ -109,9 +109,9 @@ export type InputPlotMarkTransform = {
 export type InputPlotCoordinateScope = {
   /** 直接绑定的坐标视图 id */
   coordinateView?: string;
-  /** 分面声明 id；构建 PlotSpec 时展开为对应坐标视图 */
+  /** 分面声明 id；构建 IRPlot 时展开为对应坐标视图 */
   facetId?: string;
-  /** 共享轨道 id；构建 PlotSpec 时展开为对应坐标视图 */
+  /** 共享轨道 id；构建 IRPlot 时展开为对应坐标视图 */
   trackId?: string;
 };
 
@@ -150,9 +150,9 @@ export type InputPlotCoreNodeChannels = {
 /** 可通过通道逐 datum 下发到 core Path 的样式属性 */
 export type InputPlotCorePathChannels = {
   /** 路径填充；字符串优先按字段名解析 */
-  fill?: InputPlotFieldName | IRPaintSpec | IRPlotPointFillStyle;
+  fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
   /** 路径描边；字符串优先按字段名解析 */
-  stroke?: InputPlotFieldName | IRPaintSpec | IRPlotPointStrokeStyle;
+  stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
   /** 描边透明度 */
   strokeOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
   /** 路径绘制顺序提示 */
@@ -241,9 +241,9 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     x: InputPlotFieldName;
     /** 绑 y 位置通道的字段路径（polar 下坐标系重解释为径向值） */
     y: InputPlotFieldName;
-    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView` */
+    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 IRPlot 前会展开为 `coordinateView` */
     xAxisId?: string;
-    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView` */
+    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 IRPlot 前会展开为 `coordinateView` */
     yAxisId?: string;
     /** 驱动连接顺序的字段；缺省按数据数组顺序 */
     order?: InputPlotFieldName;
@@ -268,7 +268,7 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     curve?: PathCurveValue;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
-    anchorId?: IRPlotAnchorIdSpec;
+    anchorId?: IRPlotAnchorId;
     /** 扩展通道绑定，会转发到 `encoding.channels`；字符串值按字段名处理 */
     channels?: Record<string, InputPlotExtensionChannel>;
   };
@@ -287,17 +287,17 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     y?: InputPlotFieldName;
     /** 自定义坐标系可消费的第三位置 role；内置坐标系不使用 */
     z?: InputPlotFieldName;
-    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView` */
+    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 IRPlot 前会展开为 `coordinateView` */
     xAxisId?: string;
-    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView` */
+    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 IRPlot 前会展开为 `coordinateView` */
     yAxisId?: string;
     /** 颜色字段（→ color 通道 + 自动 ordinal 色 scale） */
     color?: InputPlotFieldName | IRPlotPointColorStyle;
     textColor?: InputPlotFieldName | IRPlotPointColorStyle;
     /** 填充：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
-    fill?: InputPlotFieldName | IRPaintSpec | IRPlotPointFillStyle;
+    fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
     /** 描边颜色：字符串优先按数据字段解析；需要强制常量时用 `{ kind: 'constant', value }` */
-    stroke?: InputPlotFieldName | IRPaintSpec | IRPlotPointStrokeStyle;
+    stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
     /** 描边宽度：字符串优先按数据字段解析，数字为常量糖；需要显式控制时用 `{ kind, value }` */
     strokeWidth?: InputPlotFieldName | number | IRPlotPointStrokeWidthStyle;
     /** 填充透明度：字符串按字段解析，数字为常量糖 */
@@ -328,7 +328,7 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     dy?: number;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
-    anchorId?: IRPlotAnchorIdSpec;
+    anchorId?: IRPlotAnchorId;
   };
 
 /**
@@ -344,9 +344,9 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     x?: InputPlotFieldName;
     /** 绑 y 位置通道的字段路径（数值；polar 下作径向值；直方下作箱高度 binCount 或自定义 metric 字段） */
     y?: InputPlotFieldName;
-    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 PlotSpec 前会展开为 `coordinateView` */
+    /** 适配器专用糖：把图元绑定到命名 x 轴；输出 IRPlot 前会展开为 `coordinateView` */
     xAxisId?: string;
-    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 PlotSpec 前会展开为 `coordinateView` */
+    /** 适配器专用糖：把图元绑定到命名 y 轴；输出 IRPlot 前会展开为 `coordinateView` */
     yAxisId?: string;
     /** polar 饼图 / 环图的份额值字段；设置后自动累积成角界（extent×full bounds），下沉为扇区 */
     angle?: InputPlotFieldName;
@@ -374,8 +374,8 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     stack?: boolean;
     /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
     bounds?: IRPlotIntervalBounds;
-    fill?: InputPlotFieldName | IRPaintSpec | IRPlotPointFillStyle;
-    stroke?: InputPlotFieldName | IRPaintSpec | IRPlotPointStrokeStyle;
+    fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
+    stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
     fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
@@ -385,7 +385,7 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     pull?: InputPlotMarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
-    anchorId?: IRPlotAnchorIdSpec;
+    anchorId?: IRPlotAnchorId;
   };
 
 /** <RelationMark> props：连接两个目标的路径或 ribbon 关系图层 */
@@ -457,7 +457,7 @@ export type InputPlotReferenceMark = InputPlotMarkTransform &
 
 /**
  * 折线图层声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 type + props 装配进 PlotSpec
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 type + props 装配进 IRPlot
  */
 
 /** 散点 / 文本图层声明组件（给 text → 无边框文本 Node） */

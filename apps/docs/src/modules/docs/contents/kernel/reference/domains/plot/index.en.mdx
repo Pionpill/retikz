@@ -46,7 +46,7 @@ The main flow starts with host authoring, performs data preparation, visual-gram
 
 <ComponentPreview files="plot-pipeline" size="sm" hideCode />
 
-1. **Build the specification**: the React composition DSL, Vanilla `plot()`, or a direct spec produces `IRPlotSpec`; the host keeps datasets separately, outside the IR.
+1. **Build the specification**: the React composition DSL, Vanilla `plot()`, or a direct spec produces `IRPlot`; the host keeps datasets separately, outside the IR.
 2. **Prepare data**: schemas validate Plot IR, the data model resolves fields, and general and Plot-specific transforms produce the row views required by each layer.
 3. **Resolve visual grammar**: registries resolve channel, scale, coordinate, mark, and guide definitions; built-ins and extensions use the same resolution and consumption paths.
 4. **Lower to Core IR**: `lowerPlots(datasets, options)` creates the Plot composite definition. Plot lowering expands grids, marks, axes, labels, and legends into Core `Scope`, `Node`, and `Path` values.

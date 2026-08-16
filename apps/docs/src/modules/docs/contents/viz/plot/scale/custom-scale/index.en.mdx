@@ -43,14 +43,14 @@ scales: [
 Named palettes use the separate `colorSchemes` injection point. IR stores the scheme name, while runtime resolves it into an interpolator:
 
 ```tsx
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 const points = [
   { x: 0, y: 1, score: 0.2 },
   { x: 1, y: 3, score: 0.9 },
 ];
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'points' },

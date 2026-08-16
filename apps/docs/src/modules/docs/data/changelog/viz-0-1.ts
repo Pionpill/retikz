@@ -179,15 +179,15 @@ export const vizV01: Release = {
       stableDate: null,
       version: 'v0.1',
       description: {
-        zh: 'Tier 3 Chart 封装层：以完整 PlotSpec 为数据与图形主链，在其外组合整图 presentation，并保持 renderer-neutral 的 canonical Chart 结果。',
-        en: 'The Tier 3 Chart wrapper: it keeps complete PlotSpec as the data-and-graphics path, composes whole-chart presentation around it, and preserves a renderer-neutral canonical Chart result.',
+        zh: 'Tier 3 Chart 封装层：以完整 IRPlot 为数据与图形主链，在其外组合整图 presentation，并保持 renderer-neutral 的 canonical Chart 结果。',
+        en: 'The Tier 3 Chart wrapper: it keeps complete IRPlot as the data-and-graphics path, composes whole-chart presentation around it, and preserves a renderer-neutral canonical Chart result.',
       },
       highlights: [
         {
           label: { zh: '单一 Chart 主链', en: 'One canonical Chart path' },
           content: {
-            zh: '基础 Chart 与已实现 typed Chart 在完整 PlotSpec 后汇合为 `IRChart`，由单一 `chart.chart` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body；不再存在 DOM-only 标题或按 adapter 分叉的执行路径。',
-            en: 'Base Chart and implemented typed Charts converge on `IRChart` after producing a complete PlotSpec. One `chart.chart` provider composes Standard Surface, optional Flex presentation, and the sole Plot body; there is no DOM-only title or adapter-specific execution path.',
+            zh: '基础 Chart 与已实现 typed Chart 在完整 IRPlot 后汇合为 `IRChart`，由单一 `chart.chart` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body；不再存在 DOM-only 标题或按 adapter 分叉的执行路径。',
+            en: 'Base Chart and implemented typed Charts converge on `IRChart` after producing a complete IRPlot. One `chart.chart` provider composes Standard Surface, optional Flex presentation, and the sole Plot body; there is no DOM-only title or adapter-specific execution path.',
           },
         },
         {
@@ -230,8 +230,8 @@ export const vizV01: Release = {
         {
           label: { zh: '基础与 typed JSX authoring', en: 'Base and typed JSX authoring' },
           content: {
-            zh: '`Chart` 保留完整 Plot authoring；`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart` 先生成各自 recipe 的完整 PlotSpec，再进入同一 Chart 主链。',
-            en: '`Chart` preserves complete Plot authoring. `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` first create each recipe’s complete PlotSpec, then enter the same Chart path.',
+            zh: '`Chart` 保留完整 Plot authoring；`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart` 先生成各自 recipe 的完整 IRPlot，再进入同一 Chart 主链。',
+            en: '`Chart` preserves complete Plot authoring. `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` first create each recipe’s complete IRPlot, then enter the same Chart path.',
           },
         },
       ],
@@ -288,8 +288,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'Plot IR + lowerPlots', en: 'Plot IR + lowerPlots' },
           content: {
-            zh: '一份 `IRPlotSpec`（坐标系 / 比例尺 / mark / 字段绑定）描述「画什么」，`lowerPlots`（core `lowerComposites` 钩子的实现）把它展开成 core 的 node / path，交给现有 svg / canvas / vanilla renderer。',
-            en: 'A single `IRPlotSpec` (coordinate system / scales / marks / field bindings) describes what to draw, and `lowerPlots` (the implementation of core’s `lowerComposites` hook) expands it into core `node` / `path` for the existing svg / canvas / vanilla renderers.',
+            zh: '一份 `IRPlot`（坐标系 / 比例尺 / mark / 字段绑定）描述「画什么」，`lowerPlots`（core `lowerComposites` 钩子的实现）把它展开成 core 的 node / path，交给现有 svg / canvas / vanilla renderer。',
+            en: 'A single `IRPlot` (coordinate system / scales / marks / field bindings) describes what to draw, and `lowerPlots` (the implementation of core’s `lowerComposites` hook) expands it into core `node` / `path` for the existing svg / canvas / vanilla renderers.',
           },
         },
         {
@@ -322,15 +322,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'runtime-only Plot lineage', en: 'Runtime-only Plot lineage' },
               content: {
-                zh: '`lowerPlotWithLineage()`、`PlotLineageRun` 与 locator lineage 把 Data 来源补充为 mark、encoding、scale 和 layout 语义；结果通过返回值或 adapter callback 交给宿主，不写入 `IRPlotSpec` 或 Scene meta。',
-                en: '`lowerPlotWithLineage()`, `PlotLineageRun`, and locator lineage enrich Data origins with mark, encoding, scale, and layout semantics. Hosts receive the result through return values or adapter callbacks; it is not written into `IRPlotSpec` or Scene metadata.',
+                zh: '`lowerPlotWithLineage()`、`PlotLineageRun` 与 locator lineage 把 Data 来源补充为 mark、encoding、scale 和 layout 语义；结果通过返回值或 adapter callback 交给宿主，不写入 `IRPlot` 或 Scene meta。',
+                en: '`lowerPlotWithLineage()`, `PlotLineageRun`, and locator lineage enrich Data origins with mark, encoding, scale, and layout semantics. Hosts receive the result through return values or adapter callbacks; it is not written into `IRPlot` or Scene metadata.',
               },
             },
             {
               label: { zh: '共享 plain authoring', en: 'Shared plain authoring' },
               content: {
-                zh: 'Plot Vanilla 的 `normalizePlot()` 统一 React / Vanilla 的 axis、facet、scaffold 和 track binding，展开 authoring-only 字段后返回 `IRPlotSpec`；已类型化输入不重复 schema 校验，未知外部数据继续由 Plot schema 或 parser 校验。',
-                en: 'Plot Vanilla `normalizePlot()` unifies React and Vanilla axis, facet, scaffold, and track bindings, expands authoring-only fields, and returns `IRPlotSpec`; typed input is not schema-parsed again, while unknown external data remains validated by the Plot schema or parser.',
+                zh: 'Plot Vanilla 的 `normalizePlot()` 统一 React / Vanilla 的 axis、facet、scaffold 和 track binding，展开 authoring-only 字段后返回 `IRPlot`；已类型化输入不重复 schema 校验，未知外部数据继续由 Plot schema 或 parser 校验。',
+                en: 'Plot Vanilla `normalizePlot()` unifies React and Vanilla axis, facet, scaffold, and track bindings, expands authoring-only fields, and returns `IRPlot`; typed input is not schema-parsed again, while unknown external data remains validated by the Plot schema or parser.',
               },
             },
             {
@@ -357,8 +357,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'BREAKING：IRPlotXxx 公开类型命名', en: 'BREAKING: Owner-qualified IRPlotXxx types' },
               content: {
-                zh: '`PlotSpec`、`MarkOperation`、`ScaleOperation`、`CoordinateOperation`、`Guide`、`Transform` 等 schema 派生公开类型统一改为 `IRPlotXxx`，旧名不保留兼容别名；schema 与运行时 JSON 值不变。',
-                en: 'Schema-derived public types such as `PlotSpec`, `MarkOperation`, `ScaleOperation`, `CoordinateOperation`, `Guide`, and `Transform` now use owner-qualified `IRPlotXxx` names without compatibility aliases; schemas and runtime JSON values are unchanged.',
+                zh: '`IRPlot`、`MarkOperation`、`ScaleOperation`、`CoordinateOperation`、`Guide`、`Transform` 等 schema 派生公开类型统一改为 `IRPlotXxx`，旧名不保留兼容别名；schema 与运行时 JSON 值不变。',
+                en: 'Schema-derived public types such as `IRPlot`, `MarkOperation`, `ScaleOperation`, `CoordinateOperation`, `Guide`, and `Transform` now use owner-qualified `IRPlotXxx` names without compatibility aliases; schemas and runtime JSON values are unchanged.',
               },
             },
             {
@@ -408,8 +408,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'plot-only transform 回到 plot', en: 'Plot-only transforms moved back to plot' },
               content: {
-                zh: 'plot 的默认 registry 组合 `@retikz/data` 共享 transform 与 plot 自己的统计 / 几何 transform，现有 IRPlotSpec 的 mark-local transform 与 lowering 行为保持不变。',
-                en: 'The plot default registry combines shared transforms from `@retikz/data` with plot-owned statistical / geometric transforms, preserving existing IRPlotSpec mark-local transform and lowering behavior.',
+                zh: 'plot 的默认 registry 组合 `@retikz/data` 共享 transform 与 plot 自己的统计 / 几何 transform，现有 IRPlot 的 mark-local transform 与 lowering 行为保持不变。',
+                en: 'The plot default registry combines shared transforms from `@retikz/data` with plot-owned statistical / geometric transforms, preserving existing IRPlot mark-local transform and lowering behavior.',
               },
             },
             {
@@ -425,8 +425,8 @@ export const vizV01: Release = {
           version: 'alpha.15',
           date: '2026-07-05',
           summary: {
-            zh: 'Guide + Theme 收口：axis domain / tick / line / title / grid、legend / palette / size symbol、plot labels 与 layer zIndex 进入稳定的 IRPlotSpec / theme 契约。',
-            en: 'Guide + Theme wrap-up: axis domain / ticks / lines / titles / grids, legends / palettes / size symbols, plot labels, and layer zIndex now share stable IRPlotSpec / theme contracts.',
+            zh: 'Guide + Theme 收口：axis domain / tick / line / title / grid、legend / palette / size symbol、plot labels 与 layer zIndex 进入稳定的 IRPlot / theme 契约。',
+            en: 'Guide + Theme wrap-up: axis domain / ticks / lines / titles / grids, legends / palettes / size symbols, plot labels, and layer zIndex now share stable IRPlot / theme contracts.',
           },
           items: [
             {
@@ -439,8 +439,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'grid / legend / theme', en: 'Grid / legend / theme' },
               content: {
-                zh: '`IRPlotSpec.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/plot/guide/legend)',
-                en: '`IRPlotSpec.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/plot/guide/legend)',
+                zh: '`IRPlot.theme` 统一 axis、grid、legend、palette、typography 与 background token；axis grid 支持独立 tick source、density、minor grid、bandPosition、dashOffset 与 lineCap；size legend 默认把大符号压入 symbol 盒子并按最终尺寸预留空间。 [图例](/viz/plot/guide/legend)',
+                en: '`IRPlot.theme` now unifies axis, grid, legend, palette, typography, and background tokens. Axis grids support independent tick sources, density, minor grids, bandPosition, dashOffset, and lineCap; size legends fit large symbols into symbol boxes and reserve space from the final size. [Legend](/viz/plot/guide/legend)',
               },
             },
             {
@@ -456,8 +456,8 @@ export const vizV01: Release = {
           version: 'alpha.14',
           date: '2026-07-03',
           summary: {
-            zh: 'Coordinate composition 坐标复合：IRPlotSpec 支持多个 coordinate view、arrangement、facet panel、same-panel 多轴 overlay 与 shared scaffold tracks；mark / guide / locator / provenance 都按同一 view identity 路由。',
-            en: 'Coordinate composition: IRPlotSpec now supports multiple coordinate views, arrangements, facet panels, same-panel multi-axis overlays, and shared-scaffold tracks; marks, guides, locators, and provenance all route through the same view identity.',
+            zh: 'Coordinate composition 坐标复合：IRPlot 支持多个 coordinate view、arrangement、facet panel、same-panel 多轴 overlay 与 shared scaffold tracks；mark / guide / locator / provenance 都按同一 view identity 路由。',
+            en: 'Coordinate composition: IRPlot now supports multiple coordinate views, arrangements, facet panels, same-panel multi-axis overlays, and shared-scaffold tracks; marks, guides, locators, and provenance all route through the same view identity.',
           },
           items: [],
         },
@@ -492,8 +492,8 @@ export const vizV01: Release = {
           version: 'alpha.10',
           date: '2026-06-13',
           summary: {
-            zh: 'Plot 容器封板配套：`IRPlotSpec` 增自描述 `width` / `height` 与默认调色板 `colors`，lowering 可在有 `id` 时暴露外部可见的面板 bbox 与 `plotArea` anchor，支撑同一 core `<Layout>` 中组合多张 plot。',
-            en: 'Plot-container wrap-up support: `IRPlotSpec` adds intrinsic `width` / `height` and a default `colors` palette, and lowering can expose an externally visible panel bbox plus `plotArea` anchor when `id` is present, enabling multiple plots inside one core `<Layout>`.',
+            zh: 'Plot 容器封板配套：`IRPlot` 增自描述 `width` / `height` 与默认调色板 `colors`，lowering 可在有 `id` 时暴露外部可见的面板 bbox 与 `plotArea` anchor，支撑同一 core `<Layout>` 中组合多张 plot。',
+            en: 'Plot-container wrap-up support: `IRPlot` adds intrinsic `width` / `height` and a default `colors` palette, and lowering can expose an externally visible panel bbox plus `plotArea` anchor when `id` is present, enabling multiple plots inside one core `<Layout>`.',
           },
           items: [],
         },
@@ -592,8 +592,8 @@ export const vizV01: Release = {
         {
           label: { zh: '<Plot> 两条入口', en: 'Two `<Plot>` entries' },
           content: {
-            zh: '`<Plot spec data>` 直喂完整 IR + 具名数据集;`<Plot data>` + `<LineMark>` / `<PointMark>` 子图层用组合 DSL 声明，`buildPlotSpec` 同步装配成规范化 Plot IR。',
-            en: '`<Plot spec data>` feeds a full IR + named datasets; `<Plot data>` + `<LineMark>` / `<PointMark>` children declare via the composition DSL, with `buildPlotSpec` assembling a normalized Plot IR.',
+            zh: '`<Plot spec data>` 直喂完整 IR + 具名数据集;`<Plot data>` + `<LineMark>` / `<PointMark>` 子图层用组合 DSL 声明，`buildPlotIR` 同步装配成规范化 Plot IR。',
+            en: '`<Plot spec data>` feeds a full IR + named datasets; `<Plot data>` + `<LineMark>` / `<PointMark>` children declare via the composition DSL, with `buildPlotIR` assembling a normalized Plot IR.',
           },
         },
       ],
@@ -633,8 +633,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'spec 入口支持 layout 覆盖', en: 'Spec entry supports layout overrides' },
               content: {
-                zh: '使用 `<Plot spec={...} layout={...}>` 时，layout 与 colors / theme 一样合并进传入的 IRPlotSpec，再交给 lowering。',
-                en: 'When using `<Plot spec={...} layout={...}>`, layout is merged into the supplied IRPlotSpec alongside colors and theme before lowering.',
+                zh: '使用 `<Plot spec={...} layout={...}>` 时，layout 与 colors / theme 一样合并进传入的 IRPlot，再交给 lowering。',
+                en: 'When using `<Plot spec={...} layout={...}>`, layout is merged into the supplied IRPlot alongside colors and theme before lowering.',
               },
             },
             {
@@ -643,8 +643,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Typed authoring no longer re-parses schema',
               },
               content: {
-                zh: 'React 与 Vanilla 的已类型化 authoring input 只归一为 `IRPlotSpec`，不在 adapter 重复调用 `PlotSpecSchema`；来自 JSON、文件或其它未知边界的配置仍应在 Plot schema 或 parser 入口校验。',
-                en: 'Typed React and Vanilla authoring input is only normalized into `IRPlotSpec` and does not call `PlotSpecSchema` again in an adapter; configuration from JSON, files, or another unknown boundary must still be validated at the Plot schema or parser entry.',
+                zh: 'React 与 Vanilla 的已类型化 authoring input 只归一为 `IRPlot`，不在 adapter 重复调用 `PlotSchema`；来自 JSON、文件或其它未知边界的配置仍应在 Plot schema 或 parser 入口校验。',
+                en: 'Typed React and Vanilla authoring input is only normalized into `IRPlot` and does not call `PlotSchema` again in an adapter; configuration from JSON, files, or another unknown boundary must still be validated at the Plot schema or parser entry.',
               },
             },
           ],
@@ -653,8 +653,8 @@ export const vizV01: Release = {
           version: 'beta.1',
           date: '2026-07-06',
           summary: {
-            zh: 'React adapter 直接依赖 `@retikz/data`，组合 DSL 继续只装配 IRPlotSpec，不接管 data 的纯处理层。',
-            en: 'The React adapter now depends directly on `@retikz/data`; the composition DSL still only assembles IRPlotSpec values and does not own the pure data-processing layer.',
+            zh: 'React adapter 直接依赖 `@retikz/data`，组合 DSL 继续只装配 IRPlot，不接管 data 的纯处理层。',
+            en: 'The React adapter now depends directly on `@retikz/data`; the composition DSL still only assembles IRPlot values and does not own the pure data-processing layer.',
           },
           items: [
             {
@@ -667,8 +667,8 @@ export const vizV01: Release = {
             {
               label: { zh: '<Transform> 仍属于宿主 DSL', en: '`<Transform>` remains host DSL' },
               content: {
-                zh: '没有新增 `@retikz/data-react`；React 侧的 `<Transform>` 仍只负责生成 IRPlotSpec 片段，运行时 transform pipeline 由 plot + data registry 组合处理。',
-                en: 'No `@retikz/data-react` package is added; React `<Transform>` still only generates IRPlotSpec fragments, while runtime transform pipelines are handled by the combined plot + data registries.',
+                zh: '没有新增 `@retikz/data-react`；React 侧的 `<Transform>` 仍只负责生成 IRPlot 片段，运行时 transform pipeline 由 plot + data registry 组合处理。',
+                en: 'No `@retikz/data-react` package is added; React `<Transform>` still only generates IRPlot fragments, while runtime transform pipelines are handled by the combined plot + data registries.',
               },
             },
           ],
@@ -684,8 +684,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'Axis / Legend props', en: 'Axis / Legend props' },
               content: {
-                zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 IRPlotSpec。 [坐标轴](/viz/plot/guide/axis)',
-                en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same IRPlotSpec. [Axis](/viz/plot/guide/axis)',
+                zh: '`<Axis>` 透传 line extent / arrow、crossing、ticks interval / density / mark、tickLabels layout、title placement / orientation / anchor / shift、grid source / minor / bandPosition 等字段；`<Legend>` 透传 size symbol fit 与 theme 样式入口，组件只装配同一份 IRPlot。 [坐标轴](/viz/plot/guide/axis)',
+                en: '`<Axis>` passes through line extent / arrows, crossing, tick interval / density / marks, tick-label layout, title placement / orientation / anchor / shift, and grid source / minor / bandPosition fields. `<Legend>` passes through size-symbol fit and theme styling entries while still assembling the same IRPlot. [Axis](/viz/plot/guide/axis)',
               },
             },
             {
@@ -701,8 +701,8 @@ export const vizV01: Release = {
           version: 'alpha.14',
           date: '2026-07-03',
           summary: {
-            zh: 'React DSL 暴露坐标复合 authoring 面：`<Facet>`、`<Scaffold>` / `<Track>`、axis id 绑定与 mark 级坐标选择都展开到同一 IRPlotSpec composition。',
-            en: 'The React DSL exposes coordinate-composition authoring: `<Facet>`, `<Scaffold>` / `<Track>`, axis-id binding, and mark-level coordinate selection all expand to the same IRPlotSpec composition.',
+            zh: 'React DSL 暴露坐标复合 authoring 面：`<Facet>`、`<Scaffold>` / `<Track>`、axis id 绑定与 mark 级坐标选择都展开到同一 IRPlot composition。',
+            en: 'The React DSL exposes coordinate-composition authoring: `<Facet>`, `<Scaffold>` / `<Track>`, axis-id binding, and mark-level coordinate selection all expand to the same IRPlot composition.',
           },
           items: [],
         },
@@ -710,8 +710,8 @@ export const vizV01: Release = {
           version: 'alpha.13',
           date: '2026-06-28',
           summary: {
-            zh: 'React DSL 透传 alpha.13 的 ribbon、统计 transform、host label 与 sector pull；仍保持薄适配，只装配同一份 IRPlotSpec。',
-            en: 'The React DSL exposes alpha.13 ribbons, statistic transforms, host labels, and sector pull while staying a thin adapter that assembles the same IRPlotSpec.',
+            zh: 'React DSL 透传 alpha.13 的 ribbon、统计 transform、host label 与 sector pull；仍保持薄适配，只装配同一份 IRPlot。',
+            en: 'The React DSL exposes alpha.13 ribbons, statistic transforms, host labels, and sector pull while staying a thin adapter that assembles the same IRPlot.',
           },
           items: [],
         },
@@ -818,8 +818,8 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-06-05',
           summary: {
-            zh: '首发：`<Plot>` 组件（spec 入口 + 组合 DSL）、`LineMark` / `PointMark`、`buildPlotSpec`;与 @retikz/plot lockstep。',
-            en: 'First release: the `<Plot>` component (spec entry + composition DSL), `LineMark` / `PointMark`, and `buildPlotSpec`; lockstep with @retikz/plot.',
+            zh: '首发：`<Plot>` 组件（spec 入口 + 组合 DSL）、`LineMark` / `PointMark`、`buildPlotIR`;与 @retikz/plot lockstep。',
+            en: 'First release: the `<Plot>` component (spec entry + composition DSL), `LineMark` / `PointMark`, and `buildPlotIR`; lockstep with @retikz/plot.',
           },
           items: [],
         },
@@ -837,8 +837,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'plain authoring 与 Tier 2', en: 'Plain authoring and Tier 2' },
           content: {
-            zh: '`plot()` 返回无方法的 `IRPlotSpec`；`embedPlot()` 与 `PlotInputEmbedAdapter` 将 Plot authoring 输入交给 Kernel Vanilla processing 统一下沉为场景。',
-            en: '`plot()` returns a method-free `IRPlotSpec`; `embedPlot()` and `PlotInputEmbedAdapter` hand Plot authoring input to Kernel Vanilla processing for unified Scene lowering.',
+            zh: '`plot()` 返回无方法的 `IRPlot`；`embedPlot()` 与 `PlotInputEmbedAdapter` 将 Plot authoring 输入交给 Kernel Vanilla processing 统一下沉为场景。',
+            en: '`plot()` returns a method-free `IRPlot`; `embedPlot()` and `PlotInputEmbedAdapter` hand Plot authoring input to Kernel Vanilla processing for unified Scene lowering.',
           },
         },
         {
@@ -885,8 +885,8 @@ export const vizV01: Release = {
             {
               label: { zh: '共享规范化与 Tier 2 嵌入', en: 'Shared normalization and Tier 2 embedding' },
               content: {
-                zh: '`plot()` 与 React DSL 都通过 `@retikz/plot-vanilla` 的 authoring normalization 生成同一 `IRPlotSpec`；`embedPlot()` 与 `PlotInputEmbedAdapter` 由 Kernel Vanilla processing 处理嵌入，datasets 仍留在运行时。',
-                en: '`plot()` and the React DSL both use `@retikz/plot-vanilla` authoring normalization to produce the same `IRPlotSpec`. `embedPlot()` and `PlotInputEmbedAdapter` are handled by Kernel Vanilla processing while datasets remain runtime-only.',
+                zh: '`plot()` 与 React DSL 都通过 `@retikz/plot-vanilla` 的 authoring normalization 生成同一 `IRPlot`；`embedPlot()` 与 `PlotInputEmbedAdapter` 由 Kernel Vanilla processing 处理嵌入，datasets 仍留在运行时。',
+                en: '`plot()` and the React DSL both use `@retikz/plot-vanilla` authoring normalization to produce the same `IRPlot`. `embedPlot()` and `PlotInputEmbedAdapter` are handled by Kernel Vanilla processing while datasets remain runtime-only.',
               },
             },
           ],
@@ -909,8 +909,8 @@ export const vizV01: Release = {
             {
               label: { zh: '无额外渲染语义', en: 'No additional rendering semantics' },
               content: {
-                zh: 'Vanilla 侧仍然只把 IRPlotSpec + datasets 送入共享 lowering；plot-only transform 的可用性来自 plot 默认 registry，而不是 vanilla 自己维护 provider。',
-                en: 'The vanilla side still sends IRPlotSpec values + datasets into shared lowering; plot-only transform availability comes from the plot default registry, not vanilla-owned providers.',
+                zh: 'Vanilla 侧仍然只把 IRPlot + datasets 送入共享 lowering；plot-only transform 的可用性来自 plot 默认 registry，而不是 vanilla 自己维护 provider。',
+                en: 'The vanilla side still sends IRPlot values + datasets into shared lowering; plot-only transform availability comes from the plot default registry, not vanilla-owned providers.',
               },
             },
           ],
@@ -926,8 +926,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'SSR 复用同一下沉路径', en: 'SSR reuses the same lowering path' },
               content: {
-                zh: '`renderPlot(spec, datasets)` 消费含 guide / theme / labels / layer 的 IRPlotSpec，经共享 lowering 自动输出轴线箭头、tick marker、adaptive tick label、minor grid、size legend 与 plot-level labels；vanilla 侧不引入独立渲染语义。',
-                en: '`renderPlot(spec, datasets)` consumes IRPlotSpec values with guide / theme / labels / layer fields and emits axis arrows, tick markers, adaptive tick labels, minor grids, size legends, and plot-level labels through shared lowering; vanilla introduces no separate rendering semantics.',
+                zh: '`renderPlot(spec, datasets)` 消费含 guide / theme / labels / layer 的 IRPlot，经共享 lowering 自动输出轴线箭头、tick marker、adaptive tick label、minor grid、size legend 与 plot-level labels；vanilla 侧不引入独立渲染语义。',
+                en: '`renderPlot(spec, datasets)` consumes IRPlot values with guide / theme / labels / layer fields and emits axis arrows, tick markers, adaptive tick labels, minor grids, size legends, and plot-level labels through shared lowering; vanilla introduces no separate rendering semantics.',
               },
             },
           ],
@@ -1056,12 +1056,12 @@ export const vizV01: Release = {
       stableDate: null,
       version: 'v0.1',
       description: {
-        zh: 'renderer-agnostic 的静态表格核心：用 JSON-safe TableSpec 表达结构、Cell、约束轨道与 border，并在同次 Core compile 中产出 Scene 与 typed manifest。',
-        en: 'The renderer-agnostic static-table core: JSON-safe TableSpecs describe structure, Cells, constrained tracks, and borders, producing Scene and a typed manifest in one Core compile.',
+        zh: 'renderer-agnostic 的静态表格核心：用 JSON-safe IRTable 表达结构、Cell、约束轨道与 border，并在同次 Core compile 中产出 Scene 与 typed manifest。',
+        en: 'The renderer-agnostic static-table core: JSON-safe TableIRs describe structure, Cells, constrained tracks, and borders, producing Scene and a typed manifest in one Core compile.',
       },
       highlights: [
         {
-          label: { zh: '统一 TableSpec 与语义模型', en: 'Unified TableSpec and semantic model' },
+          label: { zh: '统一 IRTable 与语义模型', en: 'Unified IRTable and semantic model' },
           content: {
             zh: 'manual、detail 与自定义 structure 经过同一 Definition / registry / pipeline，统一生成可追溯的 `SemanticTableModel`。',
             en: 'Manual, detail, and custom structures share one Definition / registry / pipeline and produce the same traceable `SemanticTableModel`.',
@@ -1104,8 +1104,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Table visuals move to Core Theme',
               },
               content: {
-                zh: 'TableSpec 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 preset，`tableThemeTokens` 提供 local overlay。未知 token key/value 仍会按 owner schema fail-loud。',
-                en: 'TableSpec and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the preset, and `tableThemeTokens` supplies the local overlay. Unknown token keys/values still fail loudly through the owner schema.',
+                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 preset，`tableThemeTokens` 提供 local overlay。未知 token key/value 仍会按 owner schema fail-loud。',
+                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the preset, and `tableThemeTokens` supplies the local overlay. Unknown token keys/values still fail loudly through the owner schema.',
               },
             },
             {
@@ -1138,8 +1138,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Manual Table uses two-dimensional rows',
               },
               content: {
-                zh: '`IRManualTableStructure`、`createManualTableSpec()` 与 `manualTable()` 删除 numeric `rows`、`columns`、flat `cells`、`address` 和 author-facing `payload`。改为传入非空矩形 `rows`；标量是 value Cell 简写，`null` 是空槽，真实 null scalar 写成 `{ value: null }`，rich object 继续承载 presentation、span、layout 与语义字段。',
-                en: '`IRManualTableStructure`, `createManualTableSpec()`, and `manualTable()` remove numeric `rows`, `columns`, flat `cells`, `address`, and author-facing `payload`. Pass a non-empty rectangular `rows` matrix instead: scalars are value-Cell shorthands, `null` is an empty slot, `{ value: null }` stores a real null scalar, and rich objects retain presentation, span, layout, and semantic fields.',
+                zh: '`IRManualTableStructure`、`createManualTableIR()` 与 `manualTable()` 删除 numeric `rows`、`columns`、flat `cells`、`address` 和 author-facing `payload`。改为传入非空矩形 `rows`；标量是 value Cell 简写，`null` 是空槽，真实 null scalar 写成 `{ value: null }`，rich object 继续承载 presentation、span、layout 与语义字段。',
+                en: '`IRManualTableStructure`, `createManualTableIR()`, and `manualTable()` remove numeric `rows`, `columns`, flat `cells`, `address`, and author-facing `payload`. Pass a non-empty rectangular `rows` matrix instead: scalars are value-Cell shorthands, `null` is an empty slot, `{ value: null }` stores a real null scalar, and rich objects retain presentation, span, layout, and semantic fields.',
               },
             },
             {
@@ -1155,8 +1155,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'BREAKING：约束轨道与 span', en: 'BREAKING: Constrained tracks and spans' },
               content: {
-                zh: '`TableSpec.layout` 现在接受 fixed / auto / fraction / minmax 默认轨道与 canonical index 稀疏覆盖；矩形 Cell span 参与 contribution、占位与 row-kind 校验。旧 `columnWidth` / `rowHeight` / `headerHeight` 分别迁移到 `columnSize` / `rowSize` / `headerRowSize`。',
-                en: '`TableSpec.layout` now accepts fixed / auto / fraction / minmax defaults and sparse canonical-index overrides. Rectangular Cell spans participate in contributions, occupancy, and row-kind validation. Migrate the old `columnWidth` / `rowHeight` / `headerHeight` fields to `columnSize` / `rowSize` / `headerRowSize`, respectively.',
+                zh: '`IRTable.layout` 现在接受 fixed / auto / fraction / minmax 默认轨道与 canonical index 稀疏覆盖；矩形 Cell span 参与 contribution、占位与 row-kind 校验。旧 `columnWidth` / `rowHeight` / `headerHeight` 分别迁移到 `columnSize` / `rowSize` / `headerRowSize`。',
+                en: '`IRTable.layout` now accepts fixed / auto / fraction / minmax defaults and sparse canonical-index overrides. Rectangular Cell spans participate in contributions, occupancy, and row-kind validation. Migrate the old `columnWidth` / `rowHeight` / `headerHeight` fields to `columnSize` / `rowSize` / `headerRowSize`, respectively.',
               },
             },
             {
@@ -1186,15 +1186,15 @@ export const vizV01: Release = {
             {
               label: { zh: 'JSON-safe 根契约', en: 'JSON-safe root contract' },
               content: {
-                zh: 'detail / manual / custom 各自拥有精确 schema 与类型，`TableSpecSchema` / `IRTableSpec` 聚合三种变体；真实 records 与带函数 definitions 继续在 runtime 注入。',
-                en: 'Detail, manual, and custom Tables each have a precise schema and type, while `TableSpecSchema` / `IRTableSpec` aggregate the three variants; records and function-bearing definitions stay in runtime inputs.',
+                zh: 'detail / manual / custom 各自拥有精确 schema 与类型，`TableSchema` / `IRTable` 聚合三种变体；真实 records 与带函数 definitions 继续在 runtime 注入。',
+                en: 'Detail, manual, and custom Tables each have a precise schema and type, while `TableSchema` / `IRTable` aggregate the three variants; records and function-bearing definitions stay in runtime inputs.',
               },
             },
             {
               label: { zh: '精确类型迁移', en: 'Precise variant migration' },
               content: {
-                zh: '`IRTableSpec` 现在是三个精确根对象的 union；只处理单类表格或对 spec 做对象展开的 TypeScript 代码应改用对应 `IRDetailTableSpec`、`IRManualTableSpec` 或 `IRCustomTableSpec`。持久化 JSON 无需迁移。',
-                en: '`IRTableSpec` is now a union of three precise root objects. TypeScript code that handles one category or spreads a spec should use the matching `IRDetailTableSpec`, `IRManualTableSpec`, or `IRCustomTableSpec`. Persisted JSON requires no migration.',
+                zh: '`IRTable` 现在是三个精确根对象的 union；只处理单类表格或对 spec 做对象展开的 TypeScript 代码应改用对应 `IRDetailTable`、`IRManualTable` 或 `IRCustomTable`。持久化 JSON 无需迁移。',
+                en: '`IRTable` is now a union of three precise root objects. TypeScript code that handles one category or spreads a spec should use the matching `IRDetailTable`, `IRManualTable`, or `IRCustomTable`. Persisted JSON requires no migration.',
               },
             },
             {
@@ -1251,8 +1251,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'BREAKING：Theme 与宿主 CSS 分层', en: 'BREAKING: Theme and host CSS are separated' },
               content: {
-                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`tableThemeTokens` 只属于 TableSpec local overlay。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
-                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `tableThemeTokens` remains a TableSpec-local overlay. Host capabilities continue through the same Layout runtime.',
+                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`tableThemeTokens` 只属于 IRTable local overlay。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
+                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `tableThemeTokens` remains a IRTable-local overlay. Host capabilities continue through the same Layout runtime.',
               },
             },
             {
@@ -1326,8 +1326,8 @@ export const vizV01: Release = {
             {
               label: { zh: '组合式 authoring', en: 'Composition authoring' },
               content: {
-                zh: '`<DetailColumn>` 可替代 columns，`<Row>` / `<Cell>` 可替代 cells 与 rowKinds；根组件仍保留完整 props，两种结构来源互斥并归一为同一 JSON-safe TableSpec。',
-                en: '`<DetailColumn>` can replace columns, while `<Row>` / `<Cell>` can replace cells and rowKinds. Root components retain their complete props; the two structure sources are exclusive and normalize to the same JSON-safe TableSpec.',
+                zh: '`<DetailColumn>` 可替代 columns，`<Row>` / `<Cell>` 可替代 cells 与 rowKinds；根组件仍保留完整 props，两种结构来源互斥并归一为同一 JSON-safe IRTable。',
+                en: '`<DetailColumn>` can replace columns, while `<Row>` / `<Cell>` can replace cells and rowKinds. Root components retain their complete props; the two structure sources are exclusive and normalize to the same JSON-safe IRTable.',
               },
             },
             {
@@ -1353,8 +1353,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'plain helper，不建 builder', en: 'Plain helpers without a builder' },
           content: {
-            zh: '`detailTable()` / `manualTable()` 分别返回无方法的 `IRDetailTableSpec` / `IRManualTableSpec`，与 React 共用 `@retikz/table` normalization。',
-            en: '`detailTable()` / `manualTable()` return method-free `IRDetailTableSpec` / `IRManualTableSpec` values and share `@retikz/table` normalization with React.',
+            zh: '`detailTable()` / `manualTable()` 分别返回无方法的 `IRDetailTable` / `IRManualTable`，与 React 共用 `@retikz/table` normalization。',
+            en: '`detailTable()` / `manualTable()` return method-free `IRDetailTable` / `IRManualTable` values and share `@retikz/table` normalization with React.',
           },
         },
         {

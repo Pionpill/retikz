@@ -5,7 +5,7 @@ description: 查询 Plot composition 使用的外边距 schema，并区分绘图
 
 Plot 的布局只服务绘图本体：composition 可以使用 `BoxPaddingSchema` 设置外围间距，Axis、Legend、Facet 等 owner 继续使用各自的放置与空间契约。
 
-`IRPlotSpec` 不接受顶层 `layout` 或 `labels`。标题、副标题、说明、来源等完整图表 presentation 由 Chart 声明，并通过 Standard 布局与唯一 Plot body 组合。
+`IRPlot` 不接受顶层 `layout` 或 `labels`。标题、副标题、说明、来源等完整图表 presentation 由 Chart 声明，并通过 Standard 布局与唯一 Plot body 组合。
 
 ## BoxPaddingSchema
 

@@ -11,7 +11,7 @@ Connected Scatter 用点表示观察值，并按稳定顺序连接它们以强�
 ## 决策：`connected-scatter` 固定 points 与 connection 两个核心 Mark
 
 ```ts
-type ConnectedScatterChartSpec = ChartCommon & {
+type ConnectedScatterChartIR = ChartCommon & {
   type: 'connected-scatter';
   encoding: {
     x: IRPlotChannel;

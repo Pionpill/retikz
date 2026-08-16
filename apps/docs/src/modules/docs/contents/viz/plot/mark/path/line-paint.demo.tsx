@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '@retikz/core';
+import type { IRPaint } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Axis, PathMark, Plot } from '@retikz/plot-react';
@@ -8,7 +8,7 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 import { revenue } from './line-basic.data';
 import { LINE_PAINT_CONTROL_IDS, previewControlContract } from './line-paint.controls';
 
-const strokeGradient: IRPaintSpec = {
+const strokeGradient: IRPaint = {
   kind: 'linearGradient',
   angle: 0,
   stops: [
@@ -18,7 +18,7 @@ const strokeGradient: IRPaintSpec = {
   ],
 };
 
-const fillGradient: IRPaintSpec = {
+const fillGradient: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [

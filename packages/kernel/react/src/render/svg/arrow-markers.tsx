@@ -1,4 +1,4 @@
-﻿import type { ResolvedArrowEndSpec } from '@retikz/core';
+import type { ResolvedArrowEnd } from '@retikz/core';
 import type { FC, ReactElement } from 'react';
 
 import { buildArrowMarker } from '@retikz/render/svg';
@@ -9,7 +9,7 @@ export type ArrowMarkerProps = {
   /** marker 元素 id，用于 path markerStart / markerEnd 引用 */
   id: string;
   /** 端点级已解析 marker 描述（compile 已 merge / 查表 / 调 def.emit 产几何 + wrapper 参数） */
-  spec: ResolvedArrowEndSpec;
+  spec: ResolvedArrowEnd;
 };
 
 /**

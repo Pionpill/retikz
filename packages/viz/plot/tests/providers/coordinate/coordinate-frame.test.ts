@@ -3,10 +3,10 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * Coordinate frame N 通道泛化、位置 encoding 角色化与维度校验测试。
@@ -18,12 +18,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -34,7 +34,7 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 describe('coordinate frame N 通道泛化回归 (contract)', () => {
   // Happy path：cartesian point 投影逐字不变（projectRoles=[x,y] 包装既有 project）
   it('cartesian_point_projection_unchanged', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -57,7 +57,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
 
   // Happy path：polar point 投影逐字不变（projectRoles=[angle,radius] 包装既有极坐标 project）
   it('polar_point_projection_unchanged', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -80,7 +80,7 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
   // 边界：encoding 只给 x（无 y）在 schema parse 通过（必填性在 lowering）
   it('encoding_x_only_parses', () => {
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -93,8 +93,8 @@ describe('coordinate frame N 通道泛化回归 (contract)', () => {
 });
 
 describe('coordinate 必填角色校验 fail-loud (contract)', () => {
-  const cartMissingY = (): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const cartMissingY = (): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -108,7 +108,7 @@ describe('coordinate 必填角色校验 fail-loud (contract)', () => {
   });
 
   it('polar_missing_x_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -126,7 +126,7 @@ describe('coordinate 必填角色校验 fail-loud (contract)', () => {
 describe('guide 维度校验 fail-loud', () => {
   // 错误路径：cartesian 下 dimension 'angle' 非法 → fail-loud（曾静默丢弃 / 杂散轴线）
   it('angle_dimension_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -143,7 +143,7 @@ describe('guide 维度校验 fail-loud', () => {
 
   // 错误路径：cartesian 下 dimension 'radius'（polar 维度）非法 → fail-loud
   it('radius_dimension_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -159,7 +159,7 @@ describe('guide 维度校验 fail-loud', () => {
   });
 
   it('unknown_encoding_role_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -175,8 +175,8 @@ describe('guide 维度校验 fail-loud', () => {
 
   // 边界：polar 下 x / y 合法；x 是角向，y 是径向
   it('polar_xy_dimensions_accepted', () => {
-    const makeSpec = (dimension: string): IRPlotSpec =>
-      PlotSpecSchema.parse({
+    const makeSpec = (dimension: string): IRPlot =>
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -195,7 +195,7 @@ describe('guide 维度校验 fail-loud', () => {
 
   // 交互：cartesian x/y 合法 + grid（非法维度抛、不渲杂散网格线）
   it('cartesian_xy_dimensions_with_grid_accepted', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

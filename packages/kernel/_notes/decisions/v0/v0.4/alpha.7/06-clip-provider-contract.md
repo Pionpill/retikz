@@ -18,25 +18,25 @@
 `Scope.clip` 保持 JSON-only operation object，`kind` 字段就是 registry key。内置 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound` 是普通 `ClipDefinition`；用户自定义的 `rounded-rect`、`ticket-stub`、`star-mask` 等 kind 也是普通 `ClipDefinition`。用户自定义 kind 不允许与内置 kind 重名，也不允许在同一 custom 数组内重复。
 
 ```ts
-export type IRClipSpecObject = IRJsonObject & {
+export type IRClipObject = IRJsonObject & {
   /** Registry key matched by `ClipDefinition.kind`. */
   kind: string;
 };
 
-export type ClipDefinitionInput<TSpec extends IRClipSpecObject> = {
+export type ClipDefinitionInput<TClip extends IRClipObject> = {
   /** Registry key matched against `Scope.clip.kind`. */
   kind: string;
   /** Schema for the full JSON operation object, including the same `kind` literal. */
-  schema: z.ZodType<TSpec>;
+  schema: z.ZodType<TClip>;
   /** Resolve a user-facing clip operation into renderer-agnostic Scene clip geometry. */
-  resolve: (spec: TSpec, ctx: ClipResolveContext) => ResolvedClipShape;
+  resolve: (spec: TClip, ctx: ClipResolveContext) => ResolvedClipShape;
 };
 
-export type ClipDefinition = ClipDefinitionInput<IRClipSpecObject>;
+export type ClipDefinition = ClipDefinitionInput<IRClipObject>;
 
 export type ClipResolveContext = {
   round: (n: number) => number;
-  resolve: (clip: IRClipSpec) => ResolvedClipShape;
+  resolve: (clip: IRClip) => ResolvedClipShape;
 };
 
 export type ResolvedClipShape =
@@ -53,7 +53,7 @@ export type CompileOptions = {
 };
 ```
 
-`ClipSpecSchema` 改为“内置精确分支 + custom operation object”模型：
+`ClipSchema` 改为“内置精确分支 + custom operation object”模型：
 
 - 内置分支继续精确校验 `rect` / `circle` / `ellipse` / `polygon` / `path` / `compound`。
 - custom 分支允许任意 JSON object，只要求 `kind` 是非空字符串，且不属于内置 kind 集合。
@@ -68,7 +68,7 @@ compile 阶段不再直接 `switch (clip.kind)`。`createClipRegistry(round, cli
 5. 对 resolved shape 做 finite / positive / path command 守卫与 precision round。
 6. 用 resolved shape 的 JSON 作为去重 key，分配稳定 `clip-N` id。
 
-内置 `compound` 的 `children` 是 `Array<IRClipSpec>`，compile 时递归走同一个 `ctx.resolve`，因此 compound 可以混合内置与自定义 clip。Scene 中只保存 `ResolvedClipShape`，不会把 runtime definition 或未解析的 custom kind 传给 renderer。
+内置 `compound` 的 `children` 是 `Array<IRClip>`，compile 时递归走同一个 `ctx.resolve`，因此 compound 可以混合内置与自定义 clip。Scene 中只保存 `ResolvedClipShape`，不会把 runtime definition 或未解析的 custom kind 传给 renderer。
 
 理由：
 

@@ -34,7 +34,7 @@ type IRTableLayout = {
 默认值由纯函数物化为消费态，不改写原始 IR：
 
 ```ts
-type ResolvedTableLayoutSpec = Readonly<{
+type ResolvedTableLayout = Readonly<{
   columnWidth: number;
   rowHeight: number;
   headerHeight: number;
@@ -42,11 +42,11 @@ type ResolvedTableLayoutSpec = Readonly<{
   rowGap: number;
 }>;
 
-const resolveTableLayoutSpec = (spec?: IRTableLayout): ResolvedTableLayoutSpec;
+const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout;
 const layoutTable = (model: SemanticTableModel, spec?: IRTableLayout): TableLayout;
 ```
 
-`layoutTable()` 只调用 `resolveTableLayoutSpec()` 后消费 canonical row/column/cell 顺序，不读取 structure kind、presentation content、provider 或 renderer。
+`layoutTable()` 只调用 `resolveTableLayout()` 后消费 canonical row/column/cell 顺序，不读取 structure kind、presentation content、provider 或 renderer。
 
 布局公式：
 
@@ -114,7 +114,7 @@ const spec = {
 
 ## 实现摘要与验证
 
-`resolveTableLayoutSpec()` 与 `layoutTable()` 已形成纯固定轨道布局边界，manual、detail 与 custom structure 都只按 canonical row semantics 计算 track、Cell box、content center 与 Table bounds，不读取内容或 renderer。
+`resolveTableLayout()` 与 `layoutTable()` 已形成纯固定轨道布局边界，manual、detail 与 custom structure 都只按 canonical row semantics 计算 track、Cell box、content center 与 Table bounds，不读取内容或 renderer。
 
 验证覆盖默认值、header/body 行高、gap、单格与多轨道、零行/零列退化 bounds、非法有限性和正负约束，以及输入不变性与重复计算确定性。
 

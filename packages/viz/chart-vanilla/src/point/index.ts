@@ -2,9 +2,9 @@ import type {
   ChartPresentationAuthoringRecord,
   ChartPresentationShorthand,
   ChartThemeStyleDefinition,
-  IRBubbleChartSpec,
-  IRConnectedScatterChartSpec,
-  IRScatterChartSpec,
+  IRBubbleChart,
+  IRConnectedScatterChart,
+  IRScatterChart,
   PointChartTypeValue,
 } from '@retikz/chart/point';
 import type { IRScene, ResolvedTheme, ThemeStyleDefinition } from '@retikz/core';
@@ -12,7 +12,7 @@ import type { ExternalRow } from '@retikz/data';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 
-import { DEFAULT_CHART_DATA_REFERENCE, PointChartType, resolvePointChartSpec } from '@retikz/chart/point';
+import { DEFAULT_CHART_DATA_REFERENCE, PointChartType, resolvePointChart } from '@retikz/chart/point';
 import { DEFAULT_RESOLVED_THEME, resolveTheme, resolveThemeStyleRegistry } from '@retikz/core';
 
 import type { InputChartPanel, NormalizedChart } from '../normalize/chart';
@@ -23,8 +23,8 @@ import { chartContributionOf, wrapChartPanel } from '../shared';
 export * from '../index';
 
 /** typed Point Chart 共享 Vanilla input algebra */
-export type CreateTypedPointChartInput<TSpec> = Omit<
-  TSpec,
+export type CreateTypedPointChartInput<TVariant> = Omit<
+  TVariant,
   'namespace' | 'type' | 'data' | 'transform' | 'scales' | 'coordinate' | 'composition' | 'guides' | 'marks'
 > &
   ChartPresentationShorthand & {
@@ -33,17 +33,17 @@ export type CreateTypedPointChartInput<TSpec> = Omit<
     /** 稳定 data reference；省略时固定为 chart.data */
     dataRef?: string;
     /** recipe 外追加的 Plot transforms */
-    transform?: IRScatterChartSpec['transform'];
+    transform?: IRScatterChart['transform'];
     /** recipe 外追加或替换的 Plot scales */
-    scales?: IRScatterChartSpec['scales'];
+    scales?: IRScatterChart['scales'];
     /** recipe 外 coordinate root */
-    coordinate?: IRScatterChartSpec['coordinate'];
+    coordinate?: IRScatterChart['coordinate'];
     /** recipe 外 composition root */
-    composition?: IRScatterChartSpec['composition'];
+    composition?: IRScatterChart['composition'];
     /** recipe 外 Plot guides */
-    guides?: IRScatterChartSpec['guides'];
+    guides?: IRScatterChart['guides'];
     /** recipe 外 Plot marks */
-    marks?: IRScatterChartSpec['marks'];
+    marks?: IRScatterChart['marks'];
     /** ordered plain presentation records */
     presentation?: ReadonlyArray<ChartPresentationAuthoringRecord>;
     /** Chart-owned runtime Theme definitions */
@@ -57,14 +57,14 @@ export type CreateTypedPointChartInput<TSpec> = Omit<
   };
 
 /** ScatterChart Vanilla input */
-export type CreateScatterChartInput = CreateTypedPointChartInput<IRScatterChartSpec>;
+export type CreateScatterChartInput = CreateTypedPointChartInput<IRScatterChart>;
 /** BubbleChart Vanilla input */
-export type CreateBubbleChartInput = CreateTypedPointChartInput<IRBubbleChartSpec>;
+export type CreateBubbleChartInput = CreateTypedPointChartInput<IRBubbleChart>;
 /** ConnectedScatterChart Vanilla input */
-export type CreateConnectedScatterChartInput = CreateTypedPointChartInput<IRConnectedScatterChartSpec>;
+export type CreateConnectedScatterChartInput = CreateTypedPointChartInput<IRConnectedScatterChart>;
 
-type InputTypedPointChartInput<TSpec> = Omit<
-  CreateTypedPointChartInput<TSpec>,
+type InputTypedPointChartInput<TVariant> = Omit<
+  CreateTypedPointChartInput<TVariant>,
   'theme' | 'themeStyles' | 'width' | 'height'
 > & {
   /** Chart host 传入的宽度，Recipe schema 仍在下沉时校验 */
@@ -79,9 +79,9 @@ export type InputPointChart = Readonly<{
   type: PointChartTypeValue;
   /** 不带 Core Scope Theme 的 typed Chart authoring 输入 */
   input:
-    | InputTypedPointChartInput<IRScatterChartSpec>
-    | InputTypedPointChartInput<IRBubbleChartSpec>
-    | InputTypedPointChartInput<IRConnectedScatterChartSpec>;
+    | InputTypedPointChartInput<IRScatterChart>
+    | InputTypedPointChartInput<IRBubbleChart>
+    | InputTypedPointChartInput<IRConnectedScatterChart>;
   /** 可选的 Chart 根 Scope */
   panel?: InputChartPanel;
 }>;
@@ -100,7 +100,7 @@ const resolveTypedChartTheme = (
 
 const createTypedChart = (
   type: PointChartTypeValue,
-  input: CreateTypedPointChartInput<IRScatterChartSpec>,
+  input: CreateTypedPointChartInput<IRScatterChart>,
   effectiveTheme: ResolvedTheme | undefined = undefined,
 ): ChartAuthoringResult => {
   const {
@@ -127,7 +127,7 @@ const createTypedChart = (
   } = input;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
   const resolvedTheme = effectiveTheme ?? resolveTypedChartTheme(theme, themeStyles);
-  const resolution = resolvePointChartSpec(
+  const resolution = resolvePointChart(
     {
       namespace: 'chart',
       type,
@@ -190,7 +190,7 @@ export const PointChartInputEmbedAdapter: InputEmbedAdapter<InputPointChart> = {
   lower: (props, context) => {
     const result = createTypedChart(
       props.type,
-      props.input as CreateTypedPointChartInput<IRScatterChartSpec>,
+      props.input as CreateTypedPointChartInput<IRScatterChart>,
       context.theme ?? DEFAULT_RESOLVED_THEME,
     );
     return {

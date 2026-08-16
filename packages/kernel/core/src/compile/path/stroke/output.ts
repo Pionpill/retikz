@@ -15,7 +15,7 @@ export type PathBasePropsWithStrokeWidth = PathBaseProps & {
 
 /** path 输出样式物化上下文 */
 export type EmitPathBasePropsContext = {
-  /** PaintSpec 物化器 */
+  /** IRPaint 物化器 */
   resolvePaint: PaintResolver;
   /** resolve 阶段已绑定的 paint */
   paint?: Readonly<{ fill?: PaintInput; stroke?: PaintInput }>;

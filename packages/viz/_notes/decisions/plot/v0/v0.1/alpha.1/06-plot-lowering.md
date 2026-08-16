@@ -10,7 +10,7 @@ ADR-01~05 定了 Plot IR（配置）但**零行为**。本 ADR 落「逻辑」�
 
 ## 决策：`lowerPlots(datasets, options?)` → `CompositeDefinition[]`，expand 投影下沉
 
-`lowerPlots(datasets, options?)` 返回 `defineComposite({ schema: PlotSpecSchema, expand })`，`expand(node)` 步骤：
+`lowerPlots(datasets, options?)` 返回 `defineComposite({ schema: PlotSchema, expand })`，`expand(node)` 步骤：
 
 1. `rows = datasets[node.data.ref]`；缺则抛含 ref 名的清晰错。
 2. 建 scale 求值：对 cartesian2D 的 `coordinate.x` / `coordinate.y` 找对应命名 scale；

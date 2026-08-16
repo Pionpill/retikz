@@ -40,7 +40,7 @@ export const TableBorderStyleTokenKeySchema = z
 const TableBorderStyleTokenProvenanceSchema = z.strictObject({
   key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
   source: z.enum(ThemeTokenSource).describe('Border token source relation to the Table owner.'),
-  path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
+  path: z.string().min(1).describe('Stable effective Theme or IRTable source path.'),
 });
 
 const TableBorderVertexSchema = z.strictObject({
@@ -220,7 +220,7 @@ export const TableCellManifestEntrySchema = z
 const TableThemeTokenSourceRecordSchema = z.strictObject({
   key: TableThemeTokenKeySchema.describe('Canonical Table theme token key.'),
   source: z.enum(ThemeTokenSource).describe('Resolved token source relation to the Table owner.'),
-  path: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
+  path: z.string().min(1).describe('Stable effective Theme or IRTable source path.'),
 });
 
 const TableManifestStyleSchema = z

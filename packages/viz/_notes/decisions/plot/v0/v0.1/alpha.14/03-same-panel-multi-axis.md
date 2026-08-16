@@ -35,16 +35,16 @@ type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
 
 type CoordinateScopePlacement = { kind: 'overlay'; target: string; zIndex?: number };
 
-type AxisPlacementSpec =
+type AxisPlacement =
   | { kind: 'auto' }
   | { kind: 'side'; side: AxisCardinalSideValue; offset?: number }
   | { kind: 'edge'; edge: string; offset?: number };
 
-type AxisGuideSpec = {
+type IRPlotAxisGuide = {
   type: 'axis';
   dimension: string;
   coordinateScope?: string;
-  placement?: AxisPlacementSpec;
+  placement?: AxisPlacement;
 };
 ```
 

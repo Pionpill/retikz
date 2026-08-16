@@ -198,7 +198,7 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 | `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                     | 极坐标 sector 沿中线方向的非负偏移；可按字段或常量驱动                                                                                   |
 | `label?`              | `IntervalMarkProps['label']`                                        | —                                                                                                                       | 把字段内容挂到每个 cell 的 `Node.label`                                                                                                  |
 | `resolveLabel?`       | `(row: ExternalRow) => string`                                      | —                                                                                                                       | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                             |
-| `anchorId?`           | `IRPlotAnchorIdSpec`                                                | —                                                                                                                       | 为每个有效 cell Node 生成稳定 id                                                                                                         |
+| `anchorId?`           | `IRPlotAnchorId`                                                | —                                                                                                                       | 为每个有效 cell Node 生成稳定 id                                                                                                         |
 
 ## 相关
 

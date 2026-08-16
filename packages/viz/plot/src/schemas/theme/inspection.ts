@@ -114,7 +114,7 @@ export const PlotThemeResolutionSchema = z
         context.addIssue({
           code: 'custom',
           path: ['tokenRules', index, 'path'],
-          message: 'Plot token rule source path must identify a style or PlotSpec rule entry',
+          message: 'Plot token rule source path must identify a style or IRPlot rule entry',
         });
       }
     });

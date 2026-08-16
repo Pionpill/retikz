@@ -1,18 +1,18 @@
-import type { IRCustomTableSpec, IRDetailTableSpec, IRManualTableSpec, IRTableSpec } from '@retikz/table';
+import type { IRCustomTable, IRDetailTable, IRManualTable, IRTable } from '@retikz/table';
 
-import { createDetailTableSpec, createManualTableSpec, TABLE_NAMESPACE, TableComposite } from '@retikz/table';
+import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 
-import type { InputTableSpec } from './types';
+import type { InputTableVariant } from './types';
 
 import { InputTableKind } from './types';
 
 /** 将 Table authoring 输入归一化为唯一的 Table Source IR */
-export const normalizeTable = (table: InputTableSpec): IRTableSpec => {
+export const normalizeTable = (table: InputTableVariant): IRTable => {
   switch (table.kind) {
     case InputTableKind.Detail:
-      return createDetailTableSpec(table.input);
+      return createDetailTableIR(table.input);
     case InputTableKind.Manual:
-      return createManualTableSpec(table.input);
+      return createManualTableIR(table.input);
     case InputTableKind.Custom:
       return {
         namespace: TABLE_NAMESPACE,
@@ -23,9 +23,9 @@ export const normalizeTable = (table: InputTableSpec): IRTableSpec => {
 };
 
 /** 将既有 Table Source IR 还原为可再次归一化的 authoring 输入 */
-export const inputTableFromSpec = (spec: IRTableSpec): InputTableSpec => {
+export const inputTableFromIR = (spec: IRTable): InputTableVariant => {
   if (spec.structure.kind === InputTableKind.Detail) {
-    const detail = spec as IRDetailTableSpec;
+    const detail = spec as IRDetailTable;
     const { namespace: _namespace, type: _type, data, structure, ...input } = detail;
     void _namespace;
     void _type;
@@ -41,7 +41,7 @@ export const inputTableFromSpec = (spec: IRTableSpec): InputTableSpec => {
     };
   }
   if (spec.structure.kind === InputTableKind.Manual) {
-    const manual = spec as IRManualTableSpec;
+    const manual = spec as IRManualTable;
     const { namespace: _namespace, type: _type, structure, ...input } = manual;
     void _namespace;
     void _type;
@@ -54,7 +54,7 @@ export const inputTableFromSpec = (spec: IRTableSpec): InputTableSpec => {
       },
     };
   }
-  const custom = spec as IRCustomTableSpec;
+  const custom = spec as IRCustomTable;
   const { namespace: _namespace, type: _type, ...input } = custom;
   void _namespace;
   void _type;

@@ -3,10 +3,10 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * contract polar 投影 lowering 测试。
@@ -17,13 +17,13 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
 /** 第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 取一个 point 图层里所有 node 的 position（point 无 color 时为单层 nodeDefault + 裸 node） */
@@ -33,8 +33,8 @@ const positionsOf = (layer: IRScope): Array<[number, number]> =>
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 /** 角向 a / 径向 r，均线性；用裸 x/y 通道（复用语义）或显式 angle/radius 通道 */
-const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record<string, unknown>> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record<string, unknown>> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -51,7 +51,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   it('polar_point_angle0_radiusmax_lands_right_of_center', () => {
     // 角向 domain 显式 [0,360]，行 angle=0 → θ=startAngle=0°；径向 domain [0,10]、值=10 → r=outerRadius
     // 期望屏幕点 [cx + outerRadius, cy]：x > cx、y ≈ cy（屏幕 y 不变）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -82,7 +82,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
   it('polar_quarter_turn_lands_below_center', () => {
     // angle=90 → θ=90° → cos=0、sin=1 → [cx, cy + r]（屏幕 y 向下，90° 在圆心下方）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -125,7 +125,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 0, value: 0 }, // 圆心，定 cx/cy
       { theta: 0.5, value: 10 }, // domain 中点
     ];
-    const fullSpec = PlotSpecSchema.parse({
+    const fullSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -136,7 +136,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' }, // endAngle=360
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
     });
-    const halfSpec = PlotSpecSchema.parse({
+    const halfSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -162,7 +162,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 0, value: 10 }, // radius domain max
     ];
     // 先求圆心：用 innerRadius=0 时 r=0 → 圆心
-    const solidSpec = PlotSpecSchema.parse({
+    const solidSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -175,7 +175,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     });
     const [solidMin] = positionsOf(firstLayer(solidSpec, { d: rows }, opts)); // = 圆心
     // donut：innerRadius=0.5 → radius domain min 映射到 frame.innerRadius（圆心右侧、非圆心）
-    const donutSpec = PlotSpecSchema.parse({
+    const donutSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -195,7 +195,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
   // 边界：band 角向 scale — 类别绕圆周
   it('band_angular_scale_distributes_categories_around_circle', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -253,7 +253,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
   // 交互：polar × color 编码 → 分色子 Scope（不受坐标系影响）
   it('polar_with_color_groups_into_subscopes', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -284,7 +284,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
   // 错误路径
   it('polar_angle_references_unknown_scale_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -300,7 +300,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
   it('ordinal_scale_as_angular_position_throws', () => {
     // ordinal 不可作位置通道（复用 resolvePositionScale 守卫）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -317,7 +317,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   // 位置通道完整性由 coordinate 级 lowering 校验——
   // x/y 在 parse 期合法（可选），缺角色在 lowering fail-loud（polar2D / cartesian2D 都需 x+y）
   it('polar_encoding_missing_y_fails_loud_at_lowering', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -332,7 +332,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
   });
 
   it('cartesian_encoding_missing_x_fails_loud_at_lowering', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -351,7 +351,7 @@ describe('lowerPlots cartesian 回归 (contract)', () => {
     { month: 1, revenue: 14 },
     { month: 2, revenue: 9 },
   ];
-  const cartPointSpec: IRPlotSpec = PlotSpecSchema.parse({
+  const cartPointSpec: IRPlot = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },

@@ -37,7 +37,7 @@ export type LowerPlotsOptions = {
   datumProvenance?: boolean;
   /** 数据属性名：把该字段值绑成 `<plotId>.datum.<值>` 的 Node.id（opt-in 可连接；缺字段 / 重复值 fail loud） */
   datumIdField?: string;
-  /** Runtime-only functions referenced by AnchorIdSpec.generator; PlotSpec stores only generator keys. */
+  /** Runtime-only functions referenced by AnchorId.generator; IRPlot stores only generator keys. */
   anchorIdGenerators?: Record<string, AnchorIdGenerator>;
   /** 逻辑字段 → 物理数据路径映射（按数据集 reference 键，不进 IR）；需 data.model；缺省恒等 */
   fieldMaps?: Record<string, Record<string, string>>;
@@ -54,7 +54,7 @@ export type LowerPlotsOptions = {
    * datum label 内容逃生舱（运行时函数，不进 IR）：按 mark id 映射的「行 → 完全自定义标签串」。
    * @description 优先级最高（resolveLabel > field+format > value），覆盖该 mark 的 label / text 内容声明。
    *   按 mark id 取（宿主 mark 的 priority-1 label / 独立 TextMark 的 priority-2 text 共用）；未命中的 mark 走声明层 field/value/format。
-   *   不进 PlotSpec，故不破坏 IR JSON 可序列化
+   *   不进 IRPlot，故不破坏 IR JSON 可序列化
    */
   resolveLabel?: Record<string, ResolveLabel>;
   /**

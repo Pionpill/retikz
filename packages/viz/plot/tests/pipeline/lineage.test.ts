@@ -3,14 +3,14 @@ import type { ExternalDatasets } from '@retikz/data';
 
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src';
+import type { IRPlot } from '../../src';
 
 import {
   createPlotLineageLocator,
   defineNodeChannel,
   lowerPlots,
   lowerPlotWithLineage,
-  PlotSpecSchema,
+  PlotSchema,
 } from '../../src';
 
 const SALES = [
@@ -52,8 +52,8 @@ const intensityChannel = defineNodeChannel<number>({
   },
 });
 
-const pointSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     id: 'salesPlot',
@@ -72,8 +72,8 @@ const pointSpec = (): IRPlotSpec =>
     ],
   });
 
-const summarySpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const summarySpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     id: 'summaryPlot',
@@ -100,8 +100,8 @@ const summarySpec = (): IRPlotSpec =>
     ],
   });
 
-const seriesSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const seriesSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     id: 'salesPlot',
@@ -121,8 +121,8 @@ const seriesSpec = (): IRPlotSpec =>
     ],
   });
 
-const extensionChannelSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const extensionChannelSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     id: 'extensionPlot',

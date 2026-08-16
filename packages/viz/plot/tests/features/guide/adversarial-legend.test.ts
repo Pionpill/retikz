@@ -4,10 +4,10 @@ import { ChildSchema, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * contract legend guide 对抗测试（Adversarial Bug Hunter）。
@@ -19,7 +19,7 @@ import { PlotSpecSchema } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Datasets,
   options: LowerPlotsOptions = { width: 480, height: 300 },
 ): IRScope => {
@@ -86,7 +86,7 @@ const ORDINAL_ROWS = [
 describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击面 1/3）', () => {
   it('[adversarial] ramp linearGradient stops 在退化 domain（单值数据）下 offset / color 仍有限且可序列化', () => {
     // 所有 temperature 相同 → sequential domain 退化 [v, v]，span === 0
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -129,7 +129,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
   });
 
   it('[adversarial] 整个 legend 产物经 core ChildSchema 校验（IR 100% 合法且无 descriptor 泄漏）', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -159,7 +159,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
   });
 
   it('[adversarial] 含 legend 的完整 plot 经 compileToScene 全程不抛、产 Scene', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -200,7 +200,7 @@ describe('[adversarial] legend — JSON round-trip / 非有限数泄漏（攻击
 
 describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', () => {
   it('[adversarial] 极小画布 + right legend：plotArea 收窄不产生负宽 / NaN 坐标（或 fail-loud）', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -249,7 +249,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
   });
 
   it('[adversarial] 多个 legend 同 right position 堆叠：band 不重叠失控、坐标有限', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -300,7 +300,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'c', ticks: { count: -3 } }],
     };
-    const parsed = PlotSpecSchema.safeParse(bad);
+    const parsed = PlotSchema.safeParse(bad);
     expect(parsed.success).toBe(false);
   });
 
@@ -317,7 +317,7 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend', channel: 'colour' }],
     };
-    const parsed = PlotSpecSchema.parse(bad);
+    const parsed = PlotSchema.parse(bad);
     expect(() => expandOf(parsed, { d: ORDINAL_ROWS })).toThrow(/legend channel "colour" has no bound scale/);
   });
 
@@ -334,13 +334,13 @@ describe('[adversarial] legend — zod / 占位边界（攻击面 2/6/10）', ()
       marks: [{ type: 'point', encoding: { x: { field: 'lon' }, y: { field: 'lat' } } }],
       guides: [{ type: 'legend' }],
     };
-    expect(PlotSpecSchema.safeParse(bad).success).toBe(false);
+    expect(PlotSchema.safeParse(bad).success).toBe(false);
   });
 });
 
 describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）', () => {
   it('[adversarial] legend channel=size 但无 mark 编码 size → 应 fail-loud（可定位）', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -356,7 +356,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
   });
 
   it('[adversarial] legend channel=color 但无任何 color 编码 → fail-loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -373,7 +373,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
 
   it('[adversarial] legend.scale 指向存在但通道不匹配的 scale（color legend 指向 x linear scale）', () => {
     // guide.scale='x' 存在（是个 linear 位置 scale），但不是 color scale
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -411,7 +411,7 @@ describe('[adversarial] legend — channel 未编码 / 消歧（攻击面 5）',
 
 describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻击面 7/8）', () => {
   it('[adversarial] threshold legend 无 range 无 scheme：分箱标签有限、可序列化', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -454,7 +454,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
   });
 
   it('[adversarial] quantize legend 全相同值（domain 退化）：分箱边界不产 NaN', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -498,7 +498,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 
   it('[adversarial] ordinal legend 50 大量类别：swatch 数正确、坐标有限', () => {
     const rows = Array.from({ length: 60 }, (_u, i) => ({ lon: i, lat: i % 5, kind: `cat${i % 50}` }));
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -529,7 +529,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
   });
 
   it('[adversarial] size legend 单一正值（domain 退化 [0,0] 或 [0,v]）：半径有限、无 NaN', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -558,7 +558,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
   });
 
   it('[adversarial] opacity legend domain 退化（span 0）：opacity 落 [0,1]', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -602,7 +602,7 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
 
 describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
   it('[adversarial] sequential ramp ticks.count=1：刻度不崩、stops 仍合法', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -650,7 +650,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
   });
 
   it('[adversarial] sequential ramp ticks.count 极大（1000）：刻度不死循环 / 不爆栈', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -687,7 +687,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
 
   it('[adversarial] 超长类别名（千字符）：legend 不崩、label 文本保留', () => {
     const longName = 'x'.repeat(2000);
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -722,7 +722,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
 
 describe('[adversarial] legend × 默认 axes / polar（攻击面 9）', () => {
   it('[adversarial] polar plot + legend：占位不崩、产合法 IR', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

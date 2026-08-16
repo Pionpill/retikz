@@ -1,5 +1,5 @@
 import type {
-  IRClipSpec,
+  IRClip,
   IRPath,
   LayoutAxisProposal,
   LayoutCompositeCompileContext,
@@ -70,7 +70,7 @@ const surfaceBoundaryPath = (
 });
 
 /** 构造与 Surface rounded boundary 一致的 content clip */
-const surfaceClip = (width: number, height: number, cornerRadius: number): IRClipSpec => ({
+const surfaceClip = (width: number, height: number, cornerRadius: number): IRClip => ({
   kind: 'path',
   commands: rectOutline([0, 0], [width, height], cornerRadius),
 });

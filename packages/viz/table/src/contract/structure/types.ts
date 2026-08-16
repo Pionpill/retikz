@@ -23,11 +23,11 @@ export type TableStructureContext = Readonly<{
 }>;
 
 /** Table structure provider 定义 */
-export type TableStructureDefinition<TSpec extends IRTableStructureOperation = IRTableStructureOperation> = {
+export type TableStructureDefinition<TStructure extends IRTableStructureOperation = IRTableStructureOperation> = {
   /** operation 的精确 runtime schema，kind 必须是非空 literal */
-  schema: ZodType<TSpec>;
+  schema: ZodType<TStructure>;
   /** 把 operation 构造为声明式 canonical 候选 output */
-  build: (spec: TSpec, context: TableStructureContext) => TableStructureOutput;
+  build: (spec: TStructure, context: TableStructureContext) => TableStructureOutput;
 };
 
 /** 异构 Table structure provider 定义 */

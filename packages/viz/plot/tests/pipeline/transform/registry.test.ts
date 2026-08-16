@@ -1,4 +1,4 @@
-﻿import type { AnyTransformDefinition } from '@retikz/data';
+import type { AnyTransformDefinition } from '@retikz/data';
 import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
@@ -8,12 +8,12 @@ import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
-import { PlotSpecSchema, PlotTransform } from '../../../src/schemas';
+import { PlotSchema, PlotTransform } from '../../../src/schemas';
 
 const doubleDefinition = defineTransform({
   schema: z.object({
@@ -58,7 +58,7 @@ const groupSumDefinition = defineTransform({
 });
 
 const compile = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   definitions = [doubleDefinition],
 ) =>
@@ -67,8 +67,8 @@ const compile = (
     { composites: lowerPlots(datasets, { transformDefinitions: definitions }) },
   ).scene;
 
-const pointSpec = (transform: IRPlotSpec['transform']): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (transform: IRPlot['transform']): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {

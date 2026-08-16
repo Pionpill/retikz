@@ -7,7 +7,7 @@ import type {
   PlotDeclarationCollection,
   PlotDeclarationKind,
   PlotDeclarationPath,
-  ScaffoldTrackSpec,
+  ScaffoldTrack,
 } from '@retikz/plot-vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
@@ -103,8 +103,8 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
     visit(value, [...path, 0], context);
   };
 
-  const childTrackSpecsOf = (value: unknown): Array<ScaffoldTrackSpec> => {
-    const tracks: Array<ScaffoldTrackSpec> = [];
+  const childTrackSpecsOf = (value: unknown): Array<ScaffoldTrack> => {
+    const tracks: Array<ScaffoldTrack> = [];
     const visitTrack = (slot: unknown): void => {
       if (Array.isArray(slot) || isRawIterable(slot)) {
         visitContainer(slot, [], {}, candidate => visitTrack(candidate));
@@ -116,7 +116,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
         return;
       }
       if (slot.type !== Track) return;
-      const props = slot.props as ScaffoldTrackSpec & { children?: ReactNode };
+      const props = slot.props as ScaffoldTrack & { children?: ReactNode };
       tracks.push({
         id: props.id,
         band: props.band,
@@ -197,7 +197,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
           return;
         }
         if (child.type === Track) {
-          const trackProps = child.props as ScaffoldTrackSpec & { children?: ReactNode };
+          const trackProps = child.props as ScaffoldTrack & { children?: ReactNode };
           visitContainer(
             trackProps.children,
             [...childPath, 'props', 'children'],

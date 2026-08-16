@@ -11,7 +11,7 @@
 
 ## 决策：`<Axis>` 配置子组件（网格走 `grid` prop）；无 axis 子组件→默认全套；有则显式所得；`bare`→纯绘图
 
-`<Axis>` 与 `<LineMark>`/`<PointMark>` 同构——**配置载体**（返回 `null`、不进 render 栈、无 hooks），由 `buildPlotSpec` 同步内省装配进 `IRPlotSpec.guides`。**网格不是独立组件**：它是这根轴的 `grid` 布尔 prop（`<Axis dimension="y" grid />`），与 IR `axis.grid` 一一对应。装配规则：
+`<Axis>` 与 `<LineMark>`/`<PointMark>` 同构——**配置载体**（返回 `null`、不进 render 栈、无 hooks），由 `buildPlotIR` 同步内省装配进 `IRPlot.guides`。**网格不是独立组件**：它是这根轴的 `grid` 布尔 prop（`<Axis dimension="y" grid />`），与 IR `axis.grid` 一一对应。装配规则：
 
 - **`bare`**：`<Plot bare>` → `guides: []` 且布局不留 margin（plot area = 整图）= alpha.1 行为；忽略任何 `<Axis>`（bare 优先、静默）。
 - **无任何 `<Axis>`**：默认填 `DEFAULT_GUIDES = [axis x, {axis y, grid:true}]`（双轴 + **仅 y 轴带网格**：横线读数值，对齐 d3 / Observable Plot 常规、不过密；x 网格写 `<Axis dimension="x" grid />`）。

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { ChartSharedSchema } from '../../../src/base/schemas';
-import { BubbleChartSpecSchema } from '../../../src/point/bubble';
-import { ConnectedScatterChartSpecSchema } from '../../../src/point/connected-scatter';
-import { ScatterChartSpecSchema } from '../../../src/point/scatter';
+import { BubbleChartSchema } from '../../../src/point/bubble';
+import { ConnectedScatterChartSchema } from '../../../src/point/connected-scatter';
+import { ScatterChartSchema } from '../../../src/point/scatter';
 
 const base = {
   data: { reference: 'd' },
@@ -48,7 +48,7 @@ describe('Chart theme token ownership', () => {
   it('让每个 strict Chart variant 拒绝 spec-local style 与 themeMode', () => {
     const variants = [
       [
-        ScatterChartSpecSchema,
+        ScatterChartSchema,
         {
           namespace: 'chart',
           type: 'scatter',
@@ -57,7 +57,7 @@ describe('Chart theme token ownership', () => {
         },
       ],
       [
-        BubbleChartSpecSchema,
+        BubbleChartSchema,
         {
           namespace: 'chart',
           type: 'bubble',
@@ -66,7 +66,7 @@ describe('Chart theme token ownership', () => {
         },
       ],
       [
-        ConnectedScatterChartSpecSchema,
+        ConnectedScatterChartSchema,
         {
           namespace: 'chart',
           type: 'connected-scatter',

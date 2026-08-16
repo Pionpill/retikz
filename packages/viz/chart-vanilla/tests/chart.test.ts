@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { InputPlot } from '@retikz/plot-vanilla';
 
 import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
@@ -13,7 +13,7 @@ import { getDefaultChartThemePreset } from '../../chart/src/base/style';
 import { createChart, renderChart } from '../src';
 import { createConnectedScatterChart, createScatterChart } from '../src/point';
 
-const plot: IRPlotSpec = {
+const plot: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'countries' },

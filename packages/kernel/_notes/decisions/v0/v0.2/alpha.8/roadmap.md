@@ -1,4 +1,4 @@
-﻿# v0.2.0-alpha.8 实施待办：Path / Step 能力完善
+# v0.2.0-alpha.8 实施待办：Path / Step 能力完善
 
 > 写于 2026-05-23。v0.2「能力补全阶段」第二段（gap §2 Path + §3 Step；Path 与 Step 同体，一段处理）。五块能力，**两块大的（自定义 arrow / 路径生成器注册面）拆独立 ADR、固定实现顺序**，其余三块（out/in·self-loop / 路径变换 / 中段 marking）为低成本搭车项。
 >
@@ -17,7 +17,7 @@ arrow shape 现状是**固定 7 枚举** `ARROW_SHAPES`（`packages/kernel/core/
 - compile 几何：`compile/path/arrow-geometry.ts:33` `resolveArrowShapeGeometry(spec)` —— `switch(spec.shape)` 出 `lineContactX` / `tipX` / `defaultLength` 等，供 `compile/path/shrink.ts` 算 path 收缩（避免线穿出箭头）。
 - render：`react/src/render/arrowMarkers.tsx:15` `renderInner(spec)` —— `switch(spec.shape)` 出写死的 SVG `<path>` / `<circle>`，`ArrowMarker` 包进 `<marker>`。
 
-数据流：IR `arrowDetail.shape`（`z.nativeEnum(ARROW_SHAPES)`，`arrow.ts:43`）→ compile `shrink.ts` resolve start/end merge → `ArrowEndSpec`（`primitive/path.ts:100`，挂 `PathPrim.arrowStart/arrowEnd`）→ react `ArrowMarker` 渲 `<marker>`。
+数据流：IR `arrowDetail.shape`（`z.nativeEnum(ARROW_SHAPES)`，`arrow.ts:43`）→ compile `shrink.ts` resolve start/end merge → `ResolvedArrowEnd`（`primitive/path.ts:100`，挂 `PathPrim.arrowStart/arrowEnd`）→ react `ArrowMarker` 渲 `<marker>`。
 
 痛点：用户无法自定义箭头。且 `<marker>` 是 SVG-only（`scene.ts:9` 明列 marker 为禁项）——现内置箭头把 SVG 写死在 react 包，是个渲染泄漏。
 
@@ -116,7 +116,7 @@ export type MarkerPrimitive =
 
 ### renderer-agnostic（评审 P1）
 
-`def.emit` 返回 `Iterable<ScenePrimitive>`（path / ellipse / rect prim，局部 marker 坐标）；**adapter** 把它们嵌进 `<marker>`。core / IR 不出现 `<marker>`（满足 `scene.ts` 契约）；`ArrowEndSpec` 仍是渲染无关的 `{ shape, 视觉字段 }`，marker 物化在 react。
+`def.emit` 返回 `Iterable<ScenePrimitive>`（path / ellipse / rect prim，局部 marker 坐标）；**adapter** 把它们嵌进 `<marker>`。core / IR 不出现 `<marker>`（满足 `scene.ts` 契约）；`ResolvedArrowEnd` 仍是渲染无关的 `{ shape, 视觉字段 }`，marker 物化在 react。
 
 ---
 
@@ -179,7 +179,7 @@ export const GeneratorStepSchema = z.object({
 
 > alpha.7 的 pattern（[ADR-04](../alpha.7/04-pattern-image-deferred.md)）motif 是**固定 enum**（`lines` / `dots` / `grid`，react 写死渲染）。开放自定义 motif 与 ArrowDefinition 同源——都是"renderer-agnostic 局部坐标 tile 几何"，**复用 alpha.8 的 `MarkerPrimitive` emit 契约**，故放本段。
 
-- IR：`PaintSpec` 的 `pattern.shape` 从 enum 开放为 `string`（同 `node.shape` / `arrow.shape` / generator name 开放）；未注册名编译期 throw。
+- IR：`IRPaint` 的 `pattern.shape` 从 enum 开放为 `string`（同 `node.shape` / `arrow.shape` / generator name 开放）；未注册名编译期 throw。
 - 注入：`CompileOptions.patterns?: Record<string, PatternDefinition>`；内置 3 motif（lines/dots/grid）降注册项（无特权，同内置 shape / arrow）。
 - `PatternDefinition`：
   ```ts
@@ -197,7 +197,7 @@ export const GeneratorStepSchema = z.object({
     round: (n: number) => number;
   };
   ```
-- compile：**零改动**——`createPaintRegistry`（alpha.7）已按 JSON 去重任意 `PaintSpec`，pattern 自定义 motif 自动进资源表 + 拿 resourceRef；只是 react 物化 `<pattern>` 时改为查 `{ ...BUILTIN_PATTERNS, ...patterns }` 取 `def.emit` 而非写死 switch。
+- compile：**零改动**——`createPaintRegistry`（alpha.7）已按 JSON 去重任意 `IRPaint`，pattern 自定义 motif 自动进资源表 + 拿 resourceRef；只是 react 物化 `<pattern>` 时改为查 `{ ...BUILTIN_PATTERNS, ...patterns }` 取 `def.emit` 而非写死 switch。
 - 颜色继承：`PatternEmitContext.color` 复用 `PaintValue`（含 `currentColor`），与 arrow 同。
 
 **实现顺序**：排在 ArrowDefinition 之后（共用 `MarkerPrimitive` + emit 契约，ArrowDefinition 先把契约跑通，pattern 复用）。可作为 ArrowDefinition ADR 的延伸切片，或独立 ADR-04（alpha.8）。

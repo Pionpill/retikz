@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import type { IRClipSpec } from '@retikz/core';
+import type { IRClip } from '@retikz/core';
 
 import { Layout, Node, Scope } from '@retikz/react';
 import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
@@ -13,7 +13,7 @@ export const previewControls = clipGalleryControls;
 
 type ClipChoice = 'rect' | 'circle' | 'ellipse' | 'polygon';
 
-const clipOf = (kind: ClipChoice, centerX: number): IRClipSpec => {
+const clipOf = (kind: ClipChoice, centerX: number): IRClip => {
   if (kind === 'rect') return { kind, x: centerX - 52, y: -48, width: 104, height: 96 };
   if (kind === 'ellipse') return { kind, cx: centerX, cy: 0, rx: 58, ry: 42 };
   if (kind === 'polygon') {

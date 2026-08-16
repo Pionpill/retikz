@@ -2,7 +2,7 @@
 import type { IRChild } from '@retikz/core';
 import type { CellPresentationInput, TableLayoutManifest } from '@retikz/table';
 
-import { createManualTableSpec, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
+import { createManualTableIR, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -69,7 +69,7 @@ describe('Table React manifest observation', () => {
         range: [context.categoricalColors[0]],
       }),
     });
-    const spec = createManualTableSpec({
+    const spec = createManualTableIR({
       id: 'encoded',
       rows: [[1]],
       tableThemeTokens: { 'data.categorical': ['#123456'] },
@@ -110,7 +110,7 @@ describe('Table React manifest observation', () => {
 
   it('selects the exact root artifact when a nested Table repeats the root id', async () => {
     const manifests: Array<TableLayoutManifest> = [];
-    const nested = createManualTableSpec({ id: 'repeated', rows: [[null], [null]] });
+    const nested = createManualTableIR({ id: 'repeated', rows: [[null], [null]] });
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);

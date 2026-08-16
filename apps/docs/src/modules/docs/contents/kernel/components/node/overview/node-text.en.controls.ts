@@ -169,5 +169,5 @@ export const previewControlContract = {
     restEmphasis: 'italic',
     restOpacity: 0.75,
   },
-  relatedApis: ['Node.text', 'Node.shape', 'Node.align', 'Node.maxTextWidth', 'Node.lineHeight', 'IRLineSpec'],
+  relatedApis: ['Node.text', 'Node.shape', 'Node.align', 'Node.maxTextWidth', 'Node.lineHeight', 'IRLine'],
 } satisfies PreviewControlContract;

@@ -1,5 +1,5 @@
-﻿import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { ExternalDatasets } from '@retikz/data';
+import type { IRPlot } from '@retikz/plot';
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ import { IntervalMark, Plot } from '../src';
  *   真正到达 lowerPlots 时才出现 → 作转发是否生效的可观测代理
  */
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   id: 'sales',

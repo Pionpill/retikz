@@ -80,5 +80,5 @@ export type InputPlotScale = ContinuousScaleProps | BandScaleProps | PointScaleP
 
 /**
  * 位置 scale 声明组件
- * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 PlotSpec.scales
+ * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 IRPlot.scales
  */

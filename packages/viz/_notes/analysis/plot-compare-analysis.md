@@ -116,7 +116,7 @@ VGrammar 提供 grammar、dataflow、interaction 与 animation 底座，VChart �
 | Composition / Facet        | facet 是标杆能力                      | layer、concat、repeat、facet 完整              | facet 与 layering 直接                   | composition / facet 广度强             | grammar layout 支撑 common chart     | facet、tracks、overlay、多轴与 resolve 共用 composition；继续补嵌套与 arrangement 扩展    |
 | Selection / Interaction    | 原生较弱，通常由外部生态补充          | selection / parameter 可进入 spec              | 交互偏轻，常由宿主组合                   | interaction 是显著强项                 | grammar interaction 与上层事件能力强 | locator / provenance 是基础；仍需 selection state、hit-test、事件与视觉编码闭环           |
 | Animation / Transition     | 非核心赛道                            | 支持有限，Vega signal 更底层                   | 非主要能力                               | 动画与运行时结合较成熟                 | animation 是主要强项                 | 应复用 Core animation，但需先定义数据身份及 enter / update / exit 语义                    |
-| Spec / Compiler / Lowering | 运行时对象，不以纯 JSON 为目标        | JSON spec 与 compiler 是标杆                   | JavaScript options 可含函数              | runtime API 与 spec 混合               | grammar spec 最终进入自有 runtime    | JSON-safe operation 与 runtime definition 分离，唯一出口为 PlotSpec → Core IR / Scene     |
+| Spec / Compiler / Lowering | 运行时对象，不以纯 JSON 为目标        | JSON spec 与 compiler 是标杆                   | JavaScript options 可含函数              | runtime API 与 spec 混合               | grammar spec 最终进入自有 runtime    | JSON-safe operation 与 runtime definition 分离，唯一出口为 IRPlot → Core IR / Scene     |
 | Extension mechanism        | ggproto / extension package 生态成熟  | compiler 内建为主，用户扩展相对受控            | JavaScript 函数组合灵活                  | runtime grammar extension 较强         | grammar component / transform 可扩展 | contract → definition → registry → pipeline → diagnostics → provenance 必须形成统一闭环   |
 
 ## 5. retikz Plot 纵向完备性审计
@@ -135,7 +135,7 @@ VGrammar 提供 grammar、dataflow、interaction 与 animation 底座，VChart �
 | Composition             | facet、tracks、overlay、多轴、resolve 与 provenance 已建立  | arrangement / composition 扩展仍有限           | 复杂嵌套、facet + tracks 协作、自定义布局 solver                         |
 | Selection / Interaction | locator 可反查 datum、series、view、facet、track            | 已有可追溯基础，尚无完整 interaction registry  | selection grammar、hover / tooltip / brush / zoom、事件到状态与编码闭环  |
 | Animation               | 可依赖 Core animation 能力                                  | Plot 尚未形成数据语义 contract                 | identity、interpolation、enter / update / exit 与 composition transition |
-| IR / Lowering           | React、Vanilla、JSON 共用 PlotSpec，统一 lower 到 Core      | runtime definition 不污染 JSON IR              | 复杂组合 diagnostics、definition 部署与完整 inspection 工具              |
+| IR / Lowering           | React、Vanilla、JSON 共用 IRPlot，统一 lower 到 Core      | runtime definition 不污染 JSON IR              | 复杂组合 diagnostics、definition 部署与完整 inspection 工具              |
 
 ## 6. 关键判断
 

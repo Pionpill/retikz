@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../../src/compile/compile';
 import type {
@@ -8,7 +8,7 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../../src/contract';
-import type { IRPaintSpec, IRScene } from '../../../src/schemas';
+import type { IRPaint, IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 
@@ -22,7 +22,7 @@ import { compileToScene } from '../../../src/compile/compile';
  * 可接受的边角（空 motif / dedup / override / 错误质量 / 交叉资源 / background 透传）保持稳定行为
  */
 
-const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IRScene => ({
+const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
@@ -36,10 +36,10 @@ const patternNodeIR = (spec: IRPaintSpec, second?: IRPaintSpec): IRScene => ({
 const firstPatternResource = (resources: Array<SceneResource> | undefined): PaintResource | undefined =>
   (resources ?? []).find((r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern');
 
-const tileOf = (spec: IRPaintSpec, opts?: CompileOptions): ResolvedPatternTile | undefined =>
+const tileOf = (spec: IRPaint, opts?: CompileOptions): ResolvedPatternTile | undefined =>
   firstPatternResource(compileToScene(patternNodeIR(spec), opts).scene.resources)?.tile;
 
-const compilePattern = (spec: IRPaintSpec, opts?: CompileOptions): void => {
+const compilePattern = (spec: IRPaint, opts?: CompileOptions): void => {
   compileToScene(patternNodeIR(spec), opts);
 };
 
@@ -77,7 +77,7 @@ describe('ADV — 非法 line style 字段抛', () => {
     emit: (): Array<MarkerPrimitive> => [{ type: 'ellipse', cx: 4, cy: 4, rx: 1, ry: 1, fill: 'red' }],
   };
   const compileIgnoringStyle = (spec: Record<string, unknown>): void =>
-    compilePattern(spec as unknown as IRPaintSpec, { patterns: [ignoreStyle] });
+    compilePattern(spec as unknown as IRPaint, { patterns: [ignoreStyle] });
 
   it('dashpattern_nonarray → 抛 invalid dashPattern', () => {
     expect(() => compileIgnoringStyle({ kind: 'pattern', shape: 'ignoreStyle', dashPattern: '4 2' })).toThrow(
@@ -372,15 +372,15 @@ describe('ADV — dedup / override / 交叉', () => {
   });
 
   it('cross_feature_ids：pattern + gradient + image 同场景 → id 不撞、仅 pattern 带 tile', () => {
-    const grad: IRPaintSpec = {
+    const grad: IRPaint = {
       kind: 'linearGradient',
       stops: [
         { offset: 0, color: '#000' },
         { offset: 1, color: '#fff' },
       ],
     };
-    const img: IRPaintSpec = { kind: 'image', href: 'data:image/png;base64,AAAA' };
-    const pat: IRPaintSpec = { kind: 'pattern', shape: 'grid' };
+    const img: IRPaint = { kind: 'image', href: 'data:image/png;base64,AAAA' };
+    const pat: IRPaint = { kind: 'pattern', shape: 'grid' };
     const ir: IRScene = {
       version: 1,
       type: 'scene',

@@ -1,4 +1,4 @@
-import type { FontSpec, TextMeasurer } from '../../text';
+import type { TextFont, TextMeasurer } from '../../text';
 
 /** 行高倍率 */
 export const DEFAULT_LINE_HEIGHT_FACTOR = 1.2;
@@ -22,7 +22,7 @@ const isCjk = (ch: string): boolean => {
  */
 export type WrapTextContext = {
   /** 文本字体 */
-  font: FontSpec;
+  font: TextFont;
   /** 最大行宽 */
   maxWidth: number;
   /** 文本测量函数 */

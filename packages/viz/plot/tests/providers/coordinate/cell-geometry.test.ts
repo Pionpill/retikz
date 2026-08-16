@@ -9,7 +9,7 @@ import { z } from 'zod';
 import type { Cell, CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
-import type { IRPlotIntervalMark, IRPlotSpec } from '../../../src/schemas';
+import type { IRPlotIntervalMark, IRPlot } from '../../../src/schemas';
 
 import {
   cellGeometryAnchor,
@@ -23,7 +23,7 @@ import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
-import { isBuiltinMark, PlotSpecSchema } from '../../../src/schemas';
+import { isBuiltinMark, PlotSchema } from '../../../src/schemas';
 
 /**
  * 区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
@@ -39,12 +39,12 @@ const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: Co
 const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
   resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -129,8 +129,8 @@ const WIDTH = 400;
 const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
-const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const cartesianBarSpec = (arrangement?: 'stack', series?: string): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -202,8 +202,8 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
   });
 });
 
-const polarBarSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const polarBarSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -215,8 +215,8 @@ const polarBarSpec = (): IRPlotSpec =>
     marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
   });
 
-const pieSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pieSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -281,8 +281,8 @@ const curvedFrame = (): CartesianCoordinateFrame => {
   };
 };
 
-const intervalMarkSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const intervalMarkSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -295,7 +295,7 @@ const intervalMarkSpec = (): IRPlotSpec =>
   });
 
 /** 取首个 interval mark（窄化为 IRPlotIntervalMark，供需 IRPlotIntervalMark 的 buildIntervalContext 用） */
-const firstIntervalMark = (spec: IRPlotSpec): IRPlotIntervalMark => {
+const firstIntervalMark = (spec: IRPlot): IRPlotIntervalMark => {
   const mark = spec.marks[0];
   if (!isBuiltinMark(mark) || mark.type !== 'interval') throw new Error('expected interval mark');
   return mark;
@@ -518,7 +518,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
 
   it('x0x1_histogram_end_to_end_renders_continuous_bars', () => {
     // 经 lowerPlots：bin transform + interval x0/x1（连续 x linear scale）→ 紧贴直方柱，可 compile
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -548,7 +548,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
 // ── fail-loud：无 projectCell 的坐标系 / 不支持的 cell bound ──────────────────────────────
 describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
   it('interval_1d_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -560,7 +560,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
   });
 
   it('interval_custom_without_projectcell_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -607,7 +607,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
   });
 
   it('interval_custom_with_projectcell_lowers_to_contour', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -668,7 +668,7 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
   });
 
   it('interval_custom_grouped_band_uses_subbands', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

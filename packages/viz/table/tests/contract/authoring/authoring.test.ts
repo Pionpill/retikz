@@ -1,18 +1,18 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { DetailTableSpecInput, IRDetailTableSpec, IRManualTableSpec, ManualTableSpecInput } from '../../../src';
+import type { DetailTableInput, IRDetailTable, IRManualTable, ManualTableInput } from '../../../src';
 
 import {
-  createDetailTableSpec,
-  createManualTableSpec,
+  createDetailTableIR,
+  createManualTableIR,
   TABLE_NAMESPACE,
   TableComposite,
-  TableSpecSchema,
+  TableSchema,
 } from '../../../src';
 
 describe('Table plain authoring', () => {
   it('normalizes detail string headers and keeps header false', () => {
-    const input: DetailTableSpecInput = {
+    const input: DetailTableInput = {
       id: 'sales',
       dataRef: 'sales-data',
       model: [{ name: 'score', type: 'continuous' }],
@@ -25,7 +25,7 @@ describe('Table plain authoring', () => {
       meta: { source: 'fixture' },
     };
 
-    expect(createDetailTableSpec(input)).toEqual({
+    expect(createDetailTableIR(input)).toEqual({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'sales',
@@ -47,27 +47,27 @@ describe('Table plain authoring', () => {
   });
 
   it('returns detached JSON-safe specs without modifying detail input', () => {
-    const columns: DetailTableSpecInput['columns'] = [{ id: 'name', field: 'name', header: 'Name' }];
-    const model: NonNullable<DetailTableSpecInput['model']> = [{ name: 'name' }];
-    const input: DetailTableSpecInput = { dataRef: 'people', columns, model };
+    const columns: DetailTableInput['columns'] = [{ id: 'name', field: 'name', header: 'Name' }];
+    const model: NonNullable<DetailTableInput['model']> = [{ name: 'name' }];
+    const input: DetailTableInput = { dataRef: 'people', columns, model };
     const before = structuredClone(input);
-    const spec = createDetailTableSpec(input);
+    const spec = createDetailTableIR(input);
 
-    expectTypeOf(spec).toEqualTypeOf<IRDetailTableSpec>();
+    expectTypeOf(spec).toEqualTypeOf<IRDetailTable>();
     expect(input).toEqual(before);
     expect(spec.structure.kind).toBe('detail');
     expect(spec.structure.columns).not.toBe(columns);
     expect(spec.data.model).not.toBe(model);
     expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);
-    expect(TableSpecSchema.parse(spec)).toEqual(spec);
+    expect(TableSchema.parse(spec)).toEqual(spec);
   });
 
   it('preserves and detaches detail formatter, rules, encodings, and Table tokens', () => {
     const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
-    const rules: NonNullable<DetailTableSpecInput['rules']> = [
+    const rules: NonNullable<DetailTableInput['rules']> = [
       { selector: { fields: ['score'] }, appearance: { content: { color: '#b91c1c' } } },
     ];
-    const encodings: NonNullable<DetailTableSpecInput['encodings']> = [
+    const encodings: NonNullable<DetailTableInput['encodings']> = [
       {
         id: 'score-color',
         selector: { fields: ['score'] },
@@ -77,14 +77,14 @@ describe('Table plain authoring', () => {
       },
     ];
     const tableThemeTokens = { 'cell.content.color': '#27272a' } as const;
-    const input: DetailTableSpecInput = {
+    const input: DetailTableInput = {
       dataRef: 'scores',
       columns: [{ id: 'score', field: 'score', formatter }],
       rules,
       encodings,
       tableThemeTokens,
     };
-    const spec = createDetailTableSpec(input);
+    const spec = createDetailTableIR(input);
 
     expect(spec).toMatchObject({
       structure: { columns: [{ id: 'score', field: 'score', formatter }] },
@@ -110,20 +110,20 @@ describe('Table plain authoring', () => {
   });
 
   it('assembles a row-major manual structure without modifying its input', () => {
-    const rows: ManualTableSpecInput['rows'] = [
+    const rows: ManualTableInput['rows'] = [
       ['Name', 'Score'],
       ['Ada', { id: 'score', value: 98, location: 'body', roles: ['data'] }],
     ];
-    const rowKinds: NonNullable<ManualTableSpecInput['rowKinds']> = ['columnHeader', 'body'];
-    const input: ManualTableSpecInput = {
+    const rowKinds: NonNullable<ManualTableInput['rowKinds']> = ['columnHeader', 'body'];
+    const input: ManualTableInput = {
       id: 'scores',
       rows,
       rowKinds,
     };
     const before = structuredClone(input);
-    const spec = createManualTableSpec(input);
+    const spec = createManualTableIR(input);
 
-    expectTypeOf(spec).toEqualTypeOf<IRManualTableSpec>();
+    expectTypeOf(spec).toEqualTypeOf<IRManualTable>();
     expect(spec).toEqual({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
@@ -136,17 +136,17 @@ describe('Table plain authoring', () => {
     expect(spec.structure.rows).not.toBe(rows);
     expect('data' in spec).toBe(false);
     expect(JSON.parse(JSON.stringify(spec))).toEqual(spec);
-    expect(TableSpecSchema.parse(spec)).toEqual(spec);
+    expect(TableSchema.parse(spec)).toEqual(spec);
   });
 
   it('preserves and detaches manual formatter, rules, encodings, and Table tokens', () => {
-    const rows: ManualTableSpecInput['rows'] = [
+    const rows: ManualTableInput['rows'] = [
       [{ value: 98, formatter: { name: 'number', options: { maximumFractionDigits: 0 } } }],
     ];
-    const rules: NonNullable<ManualTableSpecInput['rules']> = [
+    const rules: NonNullable<ManualTableInput['rules']> = [
       { selector: { cellIds: ['cell.r0.c0'] }, appearance: { background: { fill: '#fef2f2' } } },
     ];
-    const encodings: NonNullable<ManualTableSpecInput['encodings']> = [
+    const encodings: NonNullable<ManualTableInput['encodings']> = [
       {
         id: 'score-color',
         selector: { locations: ['body'] },
@@ -156,13 +156,13 @@ describe('Table plain authoring', () => {
       },
     ];
     const tableThemeTokens = { 'cell.background.fill': '#18181b' } as const;
-    const input: ManualTableSpecInput = {
+    const input: ManualTableInput = {
       rows,
       rules,
       encodings,
       tableThemeTokens,
     };
-    const spec = createManualTableSpec(input);
+    const spec = createManualTableIR(input);
 
     expect(spec).toMatchObject({
       structure: { rows },
@@ -193,10 +193,10 @@ describe('Table plain authoring', () => {
   });
 
   it('delegates invalid detail and manual inputs to the Table schema', () => {
-    expect(() => createDetailTableSpec({ dataRef: '', columns: [] })).toThrow();
-    expect(() => createManualTableSpec({ rows: [] })).toThrow();
+    expect(() => createDetailTableIR({ dataRef: '', columns: [] })).toThrow();
+    expect(() => createManualTableIR({ rows: [] })).toThrow();
     expect(() =>
-      createManualTableSpec({
+      createManualTableIR({
         rows: [['A']],
         rowKinds: ['body', 'body'],
       }),

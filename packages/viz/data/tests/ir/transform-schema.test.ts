@@ -6,12 +6,12 @@ import {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   OrderBySchema,
-  OutsideQuantileBandBoundarySpecSchema,
+  OutsideQuantileBandBoundarySchema,
   OutsideQuantileBandSelectorOperationSchema,
   QuantileBandOutputsSchema,
   QuantileBandPointOutputSchema,
   QuantileBandReducerOperationSchema,
-  QuantileBandWhiskerSpecSchema,
+  QuantileBandWhiskerSchema,
   ReducerOperationSchema,
   SelectorOperationSchema,
   SelectTransformSchema,
@@ -26,8 +26,8 @@ const closedObjectSchemaCases: Array<{
 }> = [
   { name: 'order-by', schema: OrderBySchema, value: { field: 'month', order: 'ascending' } },
   { name: 'quantile point', schema: QuantileBandPointOutputSchema, value: { p: 0.5, as: 'median' } },
-  { name: 'min/max whisker', schema: QuantileBandWhiskerSpecSchema, value: { kind: 'minMax' } },
-  { name: 'spread whisker', schema: QuantileBandWhiskerSpecSchema, value: { kind: 'spread', factor: 1.5 } },
+  { name: 'min/max whisker', schema: QuantileBandWhiskerSchema, value: { kind: 'minMax' } },
+  { name: 'spread whisker', schema: QuantileBandWhiskerSchema, value: { kind: 'spread', factor: 1.5 } },
   {
     name: 'quantile outputs',
     schema: QuantileBandOutputsSchema,
@@ -44,10 +44,10 @@ const closedObjectSchemaCases: Array<{
       outputs: { lower: 'q1', upper: 'q3' },
     },
   },
-  { name: 'band boundary', schema: OutsideQuantileBandBoundarySpecSchema, value: { kind: 'band' } },
+  { name: 'band boundary', schema: OutsideQuantileBandBoundarySchema, value: { kind: 'band' } },
   {
     name: 'spread boundary',
-    schema: OutsideQuantileBandBoundarySpecSchema,
+    schema: OutsideQuantileBandBoundarySchema,
     value: { kind: 'spread', factor: 1.5 },
   },
   {

@@ -5,7 +5,7 @@ import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRBoundary,
   IRJsonObject,
-  IRLineSpec,
+  IRLine,
   IRNode,
   IRNodeLabel,
   IRNodeLabelBoundaryPosition,
@@ -58,7 +58,7 @@ export type CanonicalNode = Omit<
   /** 完整轴向缩放 */
   scale: { x: number; y: number };
   /** 多行正文 */
-  text?: Array<IRLineSpec>;
+  text?: Array<IRLine>;
   /** 已按数组形态展开的附属标签 */
   label?: Array<CanonicalNodeLabel>;
   /** 正文对齐 */

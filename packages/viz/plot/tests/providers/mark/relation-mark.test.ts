@@ -3,11 +3,11 @@ import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { definePathChannel } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
 
@@ -35,7 +35,7 @@ const lineWeightChannel = definePathChannel<number>({
 });
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -97,8 +97,8 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const baseSpec = (marks: unknown): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const baseSpec = (marks: unknown): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },

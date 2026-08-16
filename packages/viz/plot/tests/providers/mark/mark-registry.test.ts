@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineMark, defineNodeChannel, extractMarkType } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
-import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSpecSchema } from '../../../src/schemas';
+import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
@@ -24,7 +24,7 @@ type DotMark = z.infer<typeof DotMarkSchema>;
 
 const BareMarkSchema = z.object({ type: z.literal('bare') });
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
@@ -73,8 +73,8 @@ const makeBareIntensityChannel = (delivered: { value?: number }) =>
     },
   });
 
-const dotSpec = (overrides?: Partial<IRPlotSpec>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const dotSpec = (overrides?: Partial<IRPlot>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -160,7 +160,7 @@ describe('mark registry（contract：自定义 mark）', () => {
   });
 
   it('extension_channels_are_validated_before_custom_schema_strips_them', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -178,7 +178,7 @@ describe('mark registry（contract：自定义 mark）', () => {
 
   it('registered_extension_channel_reads_source_mark_after_custom_schema_strips_it', () => {
     const delivered: { value?: number } = {};
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

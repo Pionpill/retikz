@@ -1,4 +1,4 @@
-﻿# ADR-02：maxTextWidth 自动换行（折行阈值 + 短文本收缩）
+# ADR-02：maxTextWidth 自动换行（折行阈值 + 短文本收缩）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
@@ -6,7 +6,7 @@
 
 ## 背景 / 约束
 
-- node 文本原本只能手动分行（`text` 是单行 `string` 或多行 `LineSpec[]`），长 label 无法按给定宽度自动折行（TikZ `[text width=3cm]`）。
+- node 文本原本只能手动分行（`text` 是单行 `string` 或多行 `IRLine[]`），长 label 无法按给定宽度自动折行（TikZ `[text width=3cm]`）。
 - 折行算法只能落在 core 文本布局层——node 布局靠编译期注入的 `TextMeasurer`（react canvas measureText / ssr fontkit）算每行宽高，度量在这里，折行就得在这里。本 ADR 不改度量接口，只在其上加贪心断行。
 - **语义岔路**：TikZ `text width` 是**固定段落宽度**（盒宽恒定，短文本也撑满 + 留白）。但 retikz 是通用图表库——居中节点带固定宽留白视觉别扭。
 
@@ -27,8 +27,8 @@
 
 - **贪心断行**：对每个逻辑行用 `TextMeasurer` 累加 token 宽度，> `maxTextWidth` 即换行。
 - **断行单位**：西文按**词**（空白分割）、CJK 按**字**（无空白连续段逐字可断），单一断行器处理中英混排。
-- **并入现有多行布局**：折出的物理行走现有 `LineSpec` / `align` / `lineHeight` 同管线；折出行**继承该逻辑行的 `LineSpec` 样式**（fill / opacity / font）。`align`（left/center/right）自动生效。
-- **`LineSpec[]`（已手动分行）+ `maxTextWidth` 同给**：各逻辑行**再各自折行**（正交、可叠加），不冲突报错。
+- **并入现有多行布局**：折出的物理行走现有 `IRLine` / `align` / `lineHeight` 同管线；折出行**继承该逻辑行的 `IRLine` 样式**（fill / opacity / font）。`align`（left/center/right）自动生效。
+- **`IRLine[]`（已手动分行）+ `maxTextWidth` 同给**：各逻辑行**再各自折行**（正交、可叠加），不冲突报错。
 - **长不可断 token**（单个超阈值的西文长词 / 无空白长串）：**溢出**（该行超阈值），不硬断破坏单词，文档说明。
 - **CJK 标点禁则**（行首不能是 `，。）` 等）：**不处理**（过细，非通用图表刚需），文档标注。
 

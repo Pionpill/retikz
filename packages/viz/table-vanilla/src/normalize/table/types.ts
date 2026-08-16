@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
-import type { DetailTableSpecInput, IRCustomTableSpec, LowerTablesOptions, ManualTableSpecInput } from '@retikz/table';
+import type { DetailTableInput, IRCustomTable, LowerTablesOptions, ManualTableInput } from '@retikz/table';
 
 /** Table authoring 输入的精确变体 */
 export const InputTableKind = {
@@ -19,28 +19,28 @@ export type InputTableKindValue = ValueOf<typeof InputTableKind>;
 /** Detail Table 的无框架 authoring 输入 */
 export type InputDetailTable = Readonly<{
   kind: typeof InputTableKind.Detail;
-  input: DetailTableSpecInput;
+  input: DetailTableInput;
 }>;
 
 /** Manual Table 的无框架 authoring 输入 */
 export type InputManualTable = Readonly<{
   kind: typeof InputTableKind.Manual;
-  input: ManualTableSpecInput;
+  input: ManualTableInput;
 }>;
 
 /** Custom Table 的无框架 authoring 输入 */
 export type InputCustomTable = Readonly<{
   kind: typeof InputTableKind.Custom;
-  input: Omit<IRCustomTableSpec, 'namespace' | 'type'>;
+  input: Omit<IRCustomTable, 'namespace' | 'type'>;
 }>;
 
 /** 尚待 Table Vanilla 归一化的 Table authoring 输入 */
-export type InputTableSpec = InputDetailTable | InputManualTable | InputCustomTable;
+export type InputTableVariant = InputDetailTable | InputManualTable | InputCustomTable;
 
 /** Table InputEmbed adapter 消费的完整无框架输入 */
 export type InputTable = Readonly<{
   /** 尚待归一化的 Table authoring 输入 */
-  table: InputTableSpec;
+  table: InputTableVariant;
   /** Table lowering 消费的外部 datasets */
   data?: ExternalDatasets;
   /** Table definitions 与其他 lowering 选项 */

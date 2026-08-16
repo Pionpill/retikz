@@ -133,7 +133,7 @@ const Demo: FC = () => (
     <Coordinate id="t" position={[100, -TAN30 * 100]} />
     <Draw way={[[0, 0], 't']} />
 
-    {/* 右侧信息说明框 —— LineSpec.fill 行级换色（行内片段着色暂不支持）。
+    {/* 右侧信息说明框 —— IRLine.fill 行级换色（行内片段着色暂不支持）。
         浅灰虚线边框 + 无填充：light/dark 主题都能看见，不抢主视觉；
         text 不放空 '' 分组行（空 tspan 的 dy advance 在浏览器间不稳，外框会撑出底部空白），
         视觉分组靠彩色公式行 + 默认色注释行的交替表达 */}

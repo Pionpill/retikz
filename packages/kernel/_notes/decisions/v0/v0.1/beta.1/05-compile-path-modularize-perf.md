@@ -29,7 +29,7 @@ THICKNESS 互锁（字面即决策）：`as const satisfies Record<NonNullable<I
 
 - builder / unbuilder 字段表化（TODO-12）→ ADR-06。
 - `_builder.ts` cast 收敛（TODO-13）→ ADR-07。
-- arrow marker `stableSpecKey` 字段表（TODO-17）→ 并入 ADR-06。
+- arrow marker `stableArrowKey` 字段表（TODO-17）→ 并入 ADR-06。
 
 ---
 

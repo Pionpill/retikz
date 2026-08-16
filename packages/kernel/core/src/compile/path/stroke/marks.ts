@@ -1,9 +1,9 @@
-﻿import type {
+import type {
   GroupPrim,
   MarkerFill,
   MarkerPrimitive,
   PaintValue,
-  ResolvedArrowEndSpec,
+  ResolvedArrowEnd,
   ScenePrimitive,
   Transform,
 } from '../../../contract';
@@ -23,7 +23,7 @@ const markerPrimUsesContextStroke = (prim: MarkerPrimitive): boolean => {
 
 export const assertArrowCanInheritStroke = (
   stroke: PaintValue | undefined,
-  arrows: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec },
+  arrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
 ): void => {
   if (stroke === undefined || typeof stroke === 'string') return;
   const usesContextStroke =
@@ -31,14 +31,14 @@ export const assertArrowCanInheritStroke = (
     (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
   if (!usesContextStroke) return;
   throw new Error(
-    'Path arrow cannot inherit a PaintSpec stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
+    'Path arrow cannot inherit a IRPaint stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
   );
 };
 
 export const markerContextStroke = (stroke: PaintValue | undefined): string => {
   if (stroke === undefined) return 'currentColor';
   if (typeof stroke === 'string') return stroke;
-  throw new Error('Path mark cannot inherit a PaintSpec stroke; set the mark or arrow color to an explicit CSS color.');
+  throw new Error('Path mark cannot inherit a IRPaint stroke; set the mark or arrow color to an explicit CSS color.');
 };
 
 /** marker 放置所需上下文 */
@@ -66,7 +66,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
  * @description marker 局部系：viewBox `0 0 baseSize baseSize`，参考点 (refX, baseSize/2)，尖端朝 +x
  */
 export const buildMarkMarkerGroup = (
-  spec: ResolvedArrowEndSpec,
+  spec: ResolvedArrowEnd,
   sample: SegmentSample,
   context: BuildMarkMarkerGroupContext,
 ): GroupPrim => {

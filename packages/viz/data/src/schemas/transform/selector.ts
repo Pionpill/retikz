@@ -56,7 +56,7 @@ const NthSelectorOperationSchema = z
   .describe('Nth row selector operation');
 
 /** outside-quantile-band selector 边界策略 schema */
-export const OutsideQuantileBandBoundarySpecSchema = z
+export const OutsideQuantileBandBoundarySchema = z
   .discriminatedUnion('kind', [
     z
       .strictObject({
@@ -79,7 +79,7 @@ export const OutsideQuantileBandSelectorOperationSchema = z
     field: z.string().min(1).describe('Numeric source field'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability'),
-    boundary: OutsideQuantileBandBoundarySpecSchema.optional().describe('Boundary strategy; default band'),
+    boundary: OutsideQuantileBandBoundarySchema.optional().describe('Boundary strategy; default band'),
   })
   .refine(operation => operation.lowerP < operation.upperP, {
     message: 'lowerP must be less than upperP',

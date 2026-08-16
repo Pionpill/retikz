@@ -40,7 +40,7 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 
 <ComponentAlert
   title="自动派生需要字段契约"
-  description="React 只有在 model 把 color 字段声明为 continuous 或 temporal 时才自动派生 sequential；字段类型未知时仍按 ordinal 处理。diverging 需要通过完整 IRPlotSpec 显式声明。"
+  description="React 只有在 model 把 color 字段声明为 continuous 或 temporal 时才自动派生 sequential；字段类型未知时仍按 ordinal 处理。diverging 需要通过完整 IRPlot 显式声明。"
 />
 
 ## 离散化：quantize / threshold / quantile
@@ -73,7 +73,7 @@ React 的自动入口覆盖两条常用路径：
 - 分类 color 字段自动派生 `ordinal`
 - 声明为 `continuous` 或 `temporal` 的 color 字段自动派生 `sequential`
 
-`diverging`、三种离散化 scale、显式 scheme / range / domain 等高级配置写入 `IRPlotSpec.scales`，再让 mark 的 color field binding 通过 `scale` 名称引用。`<Legend channel="color" />` 或 full spec 中的 legend guide 只负责展示已解析的映射。
+`diverging`、三种离散化 scale、显式 scheme / range / domain 等高级配置写入 `IRPlot.scales`，再让 mark 的 color field binding 通过 `scale` 名称引用。`<Legend channel="color" />` 或 full spec 中的 legend guide 只负责展示已解析的映射。
 
 自动派生和显式配置只是两个入口：它们最终都由同一套 scale definition 与 resolver 解析，不会形成两套颜色语义。
 
@@ -106,7 +106,7 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
 
 ## API 参考
 
-颜色 scale 在 full spec 中都需要 `name`，mark 的 color field binding 再通过 `scale` 引用它。自动派生只覆盖 `ordinal` 与 `sequential`；其余类型和显式 domain / scheme / range 写入 `IRPlotSpec.scales`。
+颜色 scale 在 full spec 中都需要 `name`，mark 的 color field binding 再通过 `scale` 引用它。自动派生只覆盖 `ordinal` 与 `sequential`；其余类型和显式 domain / scheme / range 写入 `IRPlot.scales`。
 
 | `type`       | 输入与分界                       | 配色与默认值                                 |
 | ------------ | -------------------------------- | -------------------------------------------- |

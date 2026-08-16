@@ -1,15 +1,15 @@
-import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
+import { isBuiltinMark, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 
-describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
+describe('buildPlotIR alpha.12 ADR-02（normalize / derive-interval / jitter 经同一 <Transform> 透传）', () => {
   it('normalize_then_stack_percentage_via_transform', () => {
     // 百分比堆叠：显式 [normalize, stack] 两步链 + <IntervalMark stack>（柱读累积界 y0/y1）；
     // 显式 stack 与 mark shortcut stack 同签名 → shortcut stack 被去重抑制（最终只一条 stack，不二次堆叠）
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="normalize" field="amount" groupBy={['quarter']} basis="percent" as="share" />
         <Transform kind="stack" x="quarter" y="share" groupBy="product" />
@@ -29,7 +29,7 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
   it('shortcut_stack_with_different_signature_is_kept', () => {
     // P1 回归：显式 stack 只去重「同签名」的 shortcut stack；签名不同的 <IntervalMark series stack> 的 shortcut stack 必须保留，
     // 否则该 mark 仍是 stacked interval 却无对应 y0/y1，lower 阶段读空累积界出错
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="stack" x="quarter" y="share" groupBy="product" />
         <IntervalMark x="quarter" y="share" series="product" stack />
@@ -50,7 +50,7 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
   });
 
   it('derive_interval_declared_to_ir', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="derive-interval" startFrom="start" endFrom="end" />
         <IntervalMark x="task" y="end" />
@@ -61,7 +61,7 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
   });
 
   it('jitter_declared_to_ir', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="jitter" axis="x" xField="dose" amount={0.3} seed={42} />
         <PointMark x="dose" y="response" />
@@ -71,14 +71,14 @@ describe('buildPlotSpec alpha.12 ADR-02（normalize / derive-interval / jitter �
     expect(spec.transform).toEqual([{ kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 }]);
   });
 
-  it('adr02 装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(
+  it('adr02 装配产物过 PlotSchema', () => {
+    const spec = buildPlotIR(
       <>
         <Transform kind="jitter" axis="both" amount={1} seed={7} />
         <PointMark x="x" y="y" />
       </>,
       '__plot',
     );
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

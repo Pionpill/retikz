@@ -1,13 +1,13 @@
 ---
 title: Contract - Table
-description: Look up TableSpec roots, Cell formatters, rules/encodings, Table theme tokens, and canonical payload JSON schemas.
+description: Look up IRTable roots, Cell formatters, rules/encodings, Table theme tokens, and canonical payload JSON schemas.
 ---
 
 Base Table contracts define the top-level identity and Cell content shared by every table type, plus precise manual and custom root variants. See [Detail Table contracts](/viz/table/reference/contract-detail) for detail-only data references and columns, or [Layout contracts](/viz/table/reference/contract-layout) for Cell boxes, tracks, and borders.
 
-## TableSpec root
+## IRTable root
 
-`IRTableSpec` aggregates `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
+`IRTable` aggregates `IRDetailTable | IRManualTable | IRCustomTable`. The three variants share `namespace + type` fields and constrain `data` and `structure` independently.
 
 | Field               | Type                                | Default        | Description                                              |
 | ------------------- | ----------------------------------- | -------------- | -------------------------------------------------------- |
@@ -18,23 +18,23 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 | `meta?`             | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
 | `rules?`            | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                       |
 | `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels             |
-| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this TableSpec            |
+| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this IRTable            |
 | `data?`             | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
 | `structure`         | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
 
-### TableSpecSchema
+### TableSchema
 
-<ZodSchema name="TableSpecSchema" />
+<ZodSchema name="TableSchema" />
 
-An LLM or tool that emits one table type should retain its precise schema. Use `TableSpecSchema` / `IRTableSpec` when one store, protocol, or pipeline accepts several variants.
+An LLM or tool that emits one table type should retain its precise schema. Use `TableSchema` / `IRTable` when one store, protocol, or pipeline accepts several variants.
 
-### ManualTableSpecSchema
+### ManualTableSchema
 
-<ZodSchema name="ManualTableSpecSchema" />
+<ZodSchema name="ManualTableSchema" />
 
-### CustomTableSpecSchema
+### CustomTableSchema
 
-<ZodSchema name="CustomTableSpecSchema" />
+<ZodSchema name="CustomTableSchema" />
 
 ## Cell content
 
@@ -84,7 +84,7 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ## Table Theme tokens
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table resolves an owner-local baseline through the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in TableSpec. Table therefore keeps neither a second shared-palette input nor a complete token map in Theme IR.
+Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table resolves an owner-local baseline through the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in IRTable. Table therefore keeps neither a second shared-palette input nor a complete token map in Theme IR.
 
 Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
 
@@ -100,7 +100,7 @@ Published packages do not pre-register named Core or Table definitions. This sit
 
 <ZodSchema name="TableThemeTokenPresetMapSchema" />
 
-Omitting `style` selects the default Core baseline. This site's `academic` reference follows a publication / booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every injected definition must provide a complete light/dark baseline. The Table resolver cascades the default or named style baseline → shared categorical → local `tableThemeTokens`; unknown keys, invalid values, or a missing definition identify the failing owner and fail loudly. The resolved manifest retains `style` when explicit, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a TableSpec input field.
+Omitting `style` selects the default Core baseline. This site's `academic` reference follows a publication / booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every injected definition must provide a complete light/dark baseline. The Table resolver cascades the default or named style baseline → shared categorical → local `tableThemeTokens`; unknown keys, invalid values, or a missing definition identify the failing owner and fail loudly. The resolved manifest retains `style` when explicit, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a IRTable input field.
 
 ## Related
 

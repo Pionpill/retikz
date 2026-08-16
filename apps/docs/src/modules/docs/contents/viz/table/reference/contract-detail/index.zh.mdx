@@ -3,21 +3,21 @@ title: 契约 - 明细表
 description: 查询外部数据引用、detail columns 与 record-per-row Structure 的精确 JSON schema。
 ---
 
-明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings 与 `tableThemeTokens`。Core Theme 的 `style` / `mode` 由宿主 Scene / Scope 提供，不写入 DetailTableSpec。
+明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings 与 `tableThemeTokens`。Core Theme 的 `style` / `mode` 由宿主 Scene / Scope 提供，不写入 IRDetailTable。
 
-## DetailTableSpec
+## IRDetailTable
 
-`IRDetailTableSpec` 是明细表的精确根类型。与聚合 `IRTableSpec` 相比，它明确要求 `data`，并把 `structure` 收窄为 `detail`。
+`IRDetailTable` 是明细表的精确根类型。与聚合 `IRTable` 相比，它明确要求 `data`，并把 `structure` 收窄为 `detail`。
 
 | 字段        | 类型                                                                                                                                                   | 默认值                                     | 描述                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `data`      | `IRDetailTableSpec['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                    | —<br />- —<br />- —                        | 必需的外部 dataset reference<br />- 运行时 dataset 名称<br />- 可选数据模型                         |
+| `data`      | `IRDetailTable['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                    | —<br />- —<br />- —                        | 必需的外部 dataset reference<br />- 运行时 dataset 名称<br />- 可选数据模型                         |
 | `structure` | `IRDetailTableStructure`<br />- `kind:` <ApiValues name="TableStructureKind" /><br />- `columns: Array<IRTableDetailColumn>`<br />- `header?: boolean` | —<br />- `'detail'`<br />- —<br />- `true` | record-per-row Structure<br />- Structure 判别值<br />- 至少一列，id 必须唯一<br />- 是否生成列头行 |
 
-### DetailTableSpecSchema
+### DetailTableSchema
 
 <ZodSchema
-  name="DetailTableSpecSchema"
+  name="DetailTableSchema"
   description="明细表精确根 spec：必须引用外部数据，并使用 record-per-row 的 detail Structure。"
   descriptions={{
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
@@ -26,7 +26,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    tableThemeTokens: '当前 DetailTableSpec 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
+    tableThemeTokens: '当前 IRDetailTable 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '明细表必需的外部数据引用；实际记录不写入 IR。',
     structure: '每条源记录生成一行的 detail Structure。',
@@ -50,7 +50,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
   }}
 />
 
-字段路径支持点号访问。运行时找不到声明字段时会报错；源记录始终保留在外部 dataset，不复制到 TableSpec。
+字段路径支持点号访问。运行时找不到声明字段时会报错；源记录始终保留在外部 dataset，不复制到 IRTable。
 
 ## Column
 
@@ -70,14 +70,14 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
   }}
 />
 
-作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableSpec()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
+作者侧 `TableDetailColumnInput` 额外允许把 `header` 写成字符串；`createDetailTableIR()`、`DetailTable` 和 `detailTable()` 会把它规范化为 `{ kind: 'value', value: header }`。
 `headerLayout` / `bodyLayout` 共用 [TableCellLayoutSchema](/viz/table/reference/contract-layout#tablecelllayoutschema)，可分别设置 padding、对齐、wrap、fit、overflow 与 border。
 
 列 `formatter` 是 body value Cell 的默认引用；根 `rules` 可以按 Cell selector 有序覆盖它。formatter 只改变显示 scalar，字段选择、visual encoding 和 value predicate 始终读取 formatter 前的原始值。
 
 ## 精确 schema 的使用边界
 
-只生成明细表的 LLM、表单或持久化接口应使用 `DetailTableSpecSchema`，这样不会暴露 manual/custom 无关字段。只有在同一协议需要接收多种 Table 根变体时，才切换到聚合 `TableSpecSchema`。
+只生成明细表的 LLM、表单或持久化接口应使用 `DetailTableSchema`，这样不会暴露 manual/custom 无关字段。只有在同一协议需要接收多种 Table 根变体时，才切换到聚合 `TableSchema`。
 
 ## 相关
 

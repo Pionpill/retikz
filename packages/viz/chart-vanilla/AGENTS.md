@@ -7,7 +7,7 @@
 - **解决的问题**：提供基础 Chart、typed Chart 与有序 presentation 的无框架 authoring、SSR 和运行时接线
 - **拥有的契约**：`createChart`、typed `createXxxChart` helper、plain presentation records、Vanilla runtime contribution 与 SSR convenience
 - **不拥有的能力**：Chart recipe/resolver、Plot lowering、数据处理、跨 adapter dependency aggregation、dataset bridge、identity bypass、Standard Surface / Layout Flex、renderer
-- **输入与输出**：接收完整 PlotSpec 或 typed Chart plain input 与数据，输出 canonical IRChart 和宿主 runtime contribution
+- **输入与输出**：接收完整 IRPlot 或 typed Chart plain input 与数据，输出 canonical IRChart 和宿主 runtime contribution
 - **缺口流向**：Chart 语义进入 `@retikz/chart`，Plot 语义进入 `@retikz/plot`，自动依赖聚合与 identity 能力进入 Kernel adapter owner
 
 ## 公开 authoring 约束

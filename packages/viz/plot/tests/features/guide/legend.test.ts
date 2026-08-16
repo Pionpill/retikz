@@ -5,10 +5,10 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * Legend guide lowering 契约测试。
@@ -24,7 +24,7 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions = opts): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
@@ -124,8 +124,8 @@ const QUANTILE_ROWS = [
 // ── spec 工厂 ─────────────────────────────────────────────────────────
 
 /** ordinal color 散点 + 显式 color legend（不声明 Axis） */
-const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -146,8 +146,8 @@ const ordinalColorLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpe
   });
 
 /** 连续 color 散点 + sequential color legend */
-const sequentialColorLegendSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const sequentialColorLegendSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {
@@ -175,8 +175,8 @@ const sequentialColorLegendSpec = (): IRPlotSpec =>
   });
 
 /** size 散点 + size legend */
-const sizeLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const sizeLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -205,9 +205,9 @@ const multiSizeLegendSpec = ({
   secondScale?: string;
   secondField?: string;
   guideScale?: string;
-} = {}): IRPlotSpec => {
+} = {}): IRPlot => {
   const sizeScaleNames = [...new Set([firstScale, secondScale])];
-  return PlotSpecSchema.parse({
+  return PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -236,8 +236,8 @@ const multiSizeLegendSpec = ({
 const MULTI_SIZE_ROWS = CONTINUOUS_ROWS.map(row => ({ ...row, secondaryPopulation: row.population }));
 
 /** shape 散点 + shape legend（categorical → glyph 调色板） */
-const shapeLegendSpec = (legend: Record<string, unknown> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const shapeLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -262,8 +262,8 @@ const SECTOR_SHARE = [
   { label: 'B', value: 5 },
   { label: 'C', value: 2 },
 ];
-const sectorColorLegendSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const sectorColorLegendSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -308,7 +308,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
 
   it('shape_legend_preserves_structured_shape_refs_from_plot_theme', () => {
     const pentagon = { type: 'polygon', params: { sides: 5, rotate: -90 } } as const;
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       ...shapeLegendSpec(),
       plotTheme: { palette: { shape: [pentagon, 'cross', 'circle'] } },
     });
@@ -439,7 +439,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   });
 
   it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
-    const themed = PlotSpecSchema.parse({
+    const themed = PlotSchema.parse({
       ...sizeLegendSpec({ style: { symbolSize: 10 } }),
       plotTheme: { legend: { symbolSize: 18 } },
     });
@@ -497,7 +497,7 @@ describe('lowerPlots legend — 边界（contract）', () => {
 
   // quantize / quantile 分箱标签：每档一区间标签
   it('quantile_legend_binned_labels', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -540,7 +540,7 @@ describe('lowerPlots legend — 边界（contract）', () => {
 describe('lowerPlots legend — 错误路径（contract）', () => {
   // 多 color scale 未给 scale 消歧 → fail-loud
   it('ambiguous_multiple_color_scales_fail_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -571,7 +571,7 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
 
   // legend 绑不存在的 scale name → fail-loud
   it('legend_unknown_scale_name_fail_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -597,8 +597,8 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
 describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥）', () => {
   // 修 P1 ⑦：Legend 不抑制默认 axes —— point mark + 只声明 Legend、无显式 Axis → 默认 x/y 轴仍在 + legend
   it('legend_does_not_suppress_default_axes', () => {
-    // 显式补两条默认 axis + legend，模拟 buildPlotSpec by-type 合并后的 spec：legend 与 axis 共存、互不抑制
-    const spec = PlotSpecSchema.parse({
+    // 显式补两条默认 axis + legend，模拟 buildPlotIR by-type 合并后的 spec：legend 与 axis 共存、互不抑制
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -629,7 +629,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
 
   // 显式 Axis + Legend 共存
   it('explicit_axis_and_legend_coexist', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -661,7 +661,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
   it('legend_right_narrows_plot_area', () => {
     // 对比：无 legend vs 有 right legend，mark 层的横向跨度应收窄（legend 预留右带）
     const noLegend = expandOf(
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -705,8 +705,8 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
 });
 
 /** quantile 分箱 color legend spec（ChildSchema 回归复用） */
-const quantileColorLegendSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const quantileColorLegendSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {
@@ -735,8 +735,8 @@ const quantileColorLegendSpec = (): IRPlotSpec =>
 
 describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
   // 数据 temperature 仅 [5,30]，显式 domain [0,100]；ramp 刻度应落 domain（取色基准同源），非数据 extent
-  const explicitDomainRampSpec = (): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const explicitDomainRampSpec = (): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -775,7 +775,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
   });
 
   it('temporal_ramp_explicit_string_ticks_keep_finite_label_positions', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

@@ -24,7 +24,7 @@ type IRPlotAxisThemeTokenRule = Readonly<{
   tokens: IRPlotAxisThemeTokenOverrides;
 }>;
 
-type IRPlotSpec = Readonly<{
+type IRPlot = Readonly<{
   plotThemeTokens?: IRPlotThemeTokenOverrides;
   plotThemeTokenRules?: ReadonlyArray<IRPlotAxisThemeTokenRule>;
 }>;
@@ -187,12 +187,12 @@ React、Vanilla 与 plain JSON 必须传递同一 `plotThemeTokenRules`；adapte
 - 主责包：`@retikz/plot` 拥有 Axis token vocabulary、selector、rule schema、style resolver、inspection 与 guide 消费
 - 协作包：Core 提供 effective Theme 与 renderer-neutral paint；Chart 只转发 Plot 输入；React / Vanilla 提供等价 authoring
 - 不拥有：Axis 创建、Chart recipe、tick 生成、minor tick 采样、composition projection、renderer selector、交互状态或 Chart presentation
-- 外部扩展：自定义 Plot style 经既有 definition / registry 返回 `tokens + tokenRules`；local rule 作为闭合 PlotSpec 数据走同一 resolver 与 guide lowering
+- 外部扩展：自定义 Plot style 经既有 definition / registry 返回 `tokens + tokenRules`；local rule 作为闭合 IRPlot 数据走同一 resolver 与 guide lowering
 
 ## 架构验证与能力完备性
 
 - 问题与归属：Axis dimension 是 Plot guide 语义，由 Plot owner 在 theme-to-guide 映射阶段解析，不下沉 Core 或 renderer
-- 内部表达：同一 Axis token subset 和 selector 贯通 style、local PlotSpec、inspection 与 guide lowering，不为 grid、tick 或 line 建立平行 scope 机制
+- 内部表达：同一 Axis token subset 和 selector 贯通 style、local IRPlot、inspection 与 guide lowering，不为 grid、tick 或 line 建立平行 scope 机制
 - 外部扩展：内建与自定义 style 复用同一 `PlotThemeStyleDefinition` registry；rule 是闭合数据，不需要新的 define-registry
 - 端到端闭环：Core effective Theme 选择 Plot style，Plot resolver 保留基础 token 与 rule layers，guide 按 dimension 物化正式视觉配置，之后继续进入既有 Standard / Core lowering
 - adapter 等价性：React、Vanilla 和 plain JSON 传递同一 schema-derived rule，不存在 adapter 私有选择器

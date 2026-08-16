@@ -1,4 +1,4 @@
-import type { PathCommand, ResolvedArrowEndSpec } from '@retikz/core';
+import type { PathCommand, ResolvedArrowEnd } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -9,13 +9,13 @@ type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /**
  * Arrow marker 物化对抗回归（marker 在 compile 阶段 emit）
- * @description 坏 ResolvedArrowEndSpec（NaN refX / Infinity baseSize / text 注入）已由 compile 运行时栅栏在源头拦下
+ * @description 坏 ResolvedArrowEnd（NaN refX / Infinity baseSize / text 注入）已由 compile 运行时栅栏在源头拦下
  *   （见 core 侧 builtin-registry.adversarial），react 作纯物化层不重复兜底。这里保留 marker 几何里 arc /
  *   ellipseArc 命令的物化回归——marker path 与 Scene `PathCommand` 同词汇，react 复用 buildPathD
  *   产 SVG A 段（曾经被静默丢弃，现已补齐）
  */
 
-const spec = (overrides: Partial<ResolvedArrowEndSpec> = {}): ResolvedArrowEndSpec => ({
+const spec = (overrides: Partial<ResolvedArrowEnd> = {}): ResolvedArrowEnd => ({
   shape: 'custom',
   baseSize: 10,
   refX: 0,
@@ -25,7 +25,7 @@ const spec = (overrides: Partial<ResolvedArrowEndSpec> = {}): ResolvedArrowEndSp
   ...overrides,
 });
 
-const render = (s: ResolvedArrowEndSpec, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as AnyEl;
+const render = (s: ResolvedArrowEnd, id = 'mk'): AnyEl => ArrowMarker({ id, spec: s }) as AnyEl;
 
 describe('arrow marker arc 物化', () => {
   it('marker path 用 arc 命令 → 物化出 SVG A 段（不再静默丢）', () => {

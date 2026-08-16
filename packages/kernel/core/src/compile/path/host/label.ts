@@ -2,7 +2,7 @@ import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
 import type { CanonicalGeometryLabel } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { FontSpec, LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
+import type { TextFont, LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import type { CompileWarningCodeValue } from '../../warning';
 
 import { RAD_TO_DEG } from '../../../shared/geometry';
@@ -72,7 +72,7 @@ export const emitLabelPrimitive = (
   const fontFamily = label.font?.family;
   const fontWeight = label.font?.weight;
   const fontStyle = label.font?.style;
-  const font: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
+  const font: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
   const side = label.side;
   const sloped = label.sloped === true;
   const sideDistance = label.distance;

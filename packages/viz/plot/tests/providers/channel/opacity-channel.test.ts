@@ -4,20 +4,20 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { OPACITY_MIN } from '../../../src/providers';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
@@ -35,8 +35,8 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 
 const opacityOf = (node: IRNode): number | undefined => (node as { opacity?: number }).opacity;
 
-const pointSpec = (opacity: Record<string, unknown> | undefined): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (opacity: Record<string, unknown> | undefined): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -64,7 +64,7 @@ describe('opacity channel (contract)', () => {
   });
 
   it('opacity_explicit_scale_ignores_position_domain_padding', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -139,7 +139,7 @@ describe('opacity channel (contract)', () => {
 
   // 交互：size + opacity 共存，各自 per-node
   it('opacity_with_size_both_per_node', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
