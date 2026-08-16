@@ -1,6 +1,6 @@
 # ADR-05：Standard 裁剪形状与两级 Provider
 
-- 状态：Accepted（2026-08-16，五种 Standard ClipShape 与两级 provider 迁移完成）
+- 状态：Superseded（由 [ADR-06](./06-single-clip-definition.md) 取代）
 - 决策日期：2026-08-16
 - 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core ADR-21](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/21-extensible-clip-shapes.md) · [ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)
 

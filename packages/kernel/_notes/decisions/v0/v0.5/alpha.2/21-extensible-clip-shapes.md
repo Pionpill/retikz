@@ -1,6 +1,6 @@
 # ADR-21：可扩展 ClipShape 与统一裁剪路径
 
-- 状态：Accepted
+- 状态：Superseded（由 [ADR-22](./22-single-clip-definition.md) 取代）
 - 决策日期：2026-08-16
 - 关联：[alpha.2 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard alpha.4 ADR-05](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/05-standard-clip-shapes.md) · [Core v0.4 alpha.7 ADR-06](../../v0.4/alpha.7/06-clip-provider-contract.md)
 

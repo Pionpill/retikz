@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Composite assembly、Spatial handles 与基础原子
 
-- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17、ADR-21 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～20 Proposed，ADR-13 Superseded，alpha.2 仍为 authored Scope output、轻量 Theme、Composite assembly、spatial transparency 与统一 authoring / processing 重新打开
+- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～20、ADR-22 Proposed，ADR-13、ADR-21 Superseded，alpha.2 为 authored Scope output、轻量 Theme、Composite assembly、spatial transparency、统一 authoring / processing 与单一 Clip 扩展契约重新打开
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md)
 
@@ -30,6 +30,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 本 milestone 另登记 ADR-21 可扩展 ClipShape。Core 将 Clip operation 与 ClipShape 拆成两级 Definition / registry，并统一降低为 renderer-neutral Scene clip path；Core 只保留矩形最小内置，其余官方 ClipShape 由 Standard 显式装配。
 
+本 milestone 另登记 ADR-22 单一 Clip Definition。它取代 ADR-21 的两级公开 registry，把 spec schema、JSON-safe shape schema、resolve 与 Scene path lowering 收敛到同一个 definition；Core、React、Vanilla 与 provider graph 只暴露 `clips`，canonical Scene path 与矩形最小内置保持不变。
+
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
 ## ADR 索引
@@ -56,7 +58,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-18](./18-composite-dependency-provider-graph.md) | Proposed   | Composite dependency provider graph    | 冻结完整 key、roots、传递依赖、dataset 合并、稳定拓扑与跨 adapter 同构                                            |
 | [ADR-19](./19-qualified-spatial-handles.md)           | Proposed   | Qualified spatial handle sidecar       | 冻结结构化 Composite 输出、owner path、world rect index、selector 与 Scene 边界                                   |
 | [ADR-20](./20-vanilla-authoring-normalization.md)     | Proposed   | Vanilla authoring 与处理链             | 收敛 Core Input 与 framework-neutral processing 至 Vanilla，React 依赖 Vanilla 并只保留 JSX / 生命周期 / 宿主桥接 |
-| [ADR-21](./21-extensible-clip-shapes.md)              | Accepted   | 可扩展 ClipShape 与统一裁剪路径        | 冻结两级 Definition、开放 shape、canonical Scene path、provider graph 与 Core 最小矩形内置                        |
+| [ADR-21](./21-extensible-clip-shapes.md)              | Superseded | 可扩展 ClipShape 与统一裁剪路径        | 历史两级 Definition、开放 shape、canonical Scene path 与 provider graph 设计                                      |
+| [ADR-22](./22-single-clip-definition.md)              | Proposed   | 单一 Clip Definition 扩展契约          | 冻结单一 definition、同 kind shape、唯一 clips registry/provider 与既有 canonical Scene path                      |
 
 ## 当前进度
 
@@ -79,6 +82,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-19 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 Composite callback、CompileResult、Plot handles 或 renderer。
 - ADR-20 已完成 Proposed 设计与 Architecture Gate，等待人工确认；未授权修改 Core、Vanilla、React 或下游 adapter。
 - ADR-21 已完成两级 Clip Definition / ClipShape Definition、canonical Scene path、provider graph、递归保护、renderer / adapter 消费、测试与双语文档，并于 2026-08-16 获人工接受；Standard ADR-05 随后完成五种可选 ClipShape 所有权迁移，Core 最小内置最终收敛为 `rect`。
+- ADR-22 已完成 Proposed 设计，取代 ADR-21 的两级公开扩展入口；等待 Architecture Gate 与人工确认，未授权修改 Core、React、Vanilla、Standard 或下游 consumer 产品代码。
 
 ## 执行批次
 
@@ -143,7 +147,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、领域 refinement 或 Diagnostic。
 - ADR-18 在接受前必须证明多个 roots 的传递闭包、共享 provider 单次物化、dataset `Object.is` 同源边界、缺失 / cycle / maker / definition 冲突，以及 React、Vanilla、SSR、直接 resolver 与第三方 provider 的同构行为。
 - ADR-19 在接受前必须证明 expand / layout-aware Composite 统一结构化输出，Scope / placement / replay transform 后的 world-space rect、owner path、origin / final occurrence、closed selector 与 retained revision 原子性稳定，且 Scene、SVG、Canvas 不承载该 sidecar。
-- ADR-21 已证明第三方 Clip operation 与 ClipShape 使用同一两级 registry 和 provider graph，canonical Scene clip path 可 JSON 往返并被 SVG、Canvas、Node Canvas、hit-test 与 visual bounds 等价消费；Standard ADR-05 已验收最终 owner 收敛，Core 默认仅保留矩形裁剪。
+- ADR-22 在接受前必须证明内置、Standard 与第三方 Clip 使用同一个完整 Definition、registry、provider capability 与递归消费路径，definition/spec/shape kind 一致；canonical Scene clip path 继续可 JSON 往返并被 SVG、Canvas、Node Canvas、hit-test 与 visual bounds 等价消费，Core 默认仅保留矩形裁剪。
 
 ## 后续性能遗留
 
