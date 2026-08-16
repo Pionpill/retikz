@@ -168,21 +168,9 @@ export const alignAllocationInSlot = (
   return slotStart - allocationStart;
 };
 
-/** 为 container allocation 构造正面积 rect 或零面积退化 path clip */
+/** 为 container allocation 构造 Core rect clip，零尺寸表示空裁剪区域 */
 export const layoutClipOf = (size: Readonly<{ width: number; height: number }>): IRClip => {
   finiteNonNegative(size.width, 'clip width');
   finiteNonNegative(size.height, 'clip height');
-  if (size.width > 0 && size.height > 0) {
-    return { kind: 'rect', x: 0, y: 0, width: size.width, height: size.height };
-  }
-  return {
-    kind: 'path',
-    commands: [
-      { kind: 'move', to: [0, 0] },
-      { kind: 'line', to: [size.width, 0] },
-      { kind: 'line', to: [size.width, size.height] },
-      { kind: 'line', to: [0, size.height] },
-      { kind: 'close' },
-    ],
-  };
+  return { kind: 'rect', x: 0, y: 0, width: size.width, height: size.height };
 };

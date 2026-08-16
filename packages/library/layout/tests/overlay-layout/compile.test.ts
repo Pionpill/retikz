@@ -529,7 +529,7 @@ describe('OverlayLayout compile contract', () => {
     ).toThrow(/rejected an exact proposal/);
   });
 
-  it('clips a zero-area container with a path while preserving final replay', () => {
+  it('clips a zero-area container with a rect while preserving final replay', () => {
     const result = compileOverlay(
       createOverlayLayout({
         size: { x: { kind: 'fixed', value: 0 }, y: { kind: 'fixed', value: 10 } },

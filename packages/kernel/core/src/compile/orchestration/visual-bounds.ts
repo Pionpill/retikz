@@ -297,6 +297,7 @@ const primitiveBounds = (
         );
       }
       const clip = pathGeometry(resource.path.commands);
+      if (clip !== undefined && (clip.width === 0 || clip.height === 0)) return undefined;
       if (clip !== undefined) bounds = intersect(bounds, clip);
       if (bounds === undefined) return undefined;
     }

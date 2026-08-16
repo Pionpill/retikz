@@ -29,6 +29,7 @@ import {
   defineArrow,
   defineBoundary,
   defineClip,
+  defineClipShape,
   defineComposite,
   definePathGenerator,
   definePathKind,
@@ -2198,9 +2199,17 @@ describe('layout-aware composite constraints and bounds', () => {
     const badClip = defineClip({
       kind: 'badResolvedClip',
       schema: z.strictObject({ kind: z.literal('badResolvedClip') }),
-      resolve: () => ({
-        kind: 'compound',
-        children: [{ kind: 'rect', x: 0, y: 0, width: -1, height: 2 }],
+      resolve: () => ({ kind: 'badClipShape', width: -1 }),
+    });
+    const badClipShape = defineClipShape({
+      kind: 'badClipShape',
+      schema: z.strictObject({ kind: z.literal('badClipShape'), width: z.number().positive() }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
       }),
     });
     const badGenerator = definePathGenerator({
@@ -2258,6 +2267,7 @@ describe('layout-aware composite constraints and bounds', () => {
       arrows: [badArrow],
       patterns: [badPattern],
       clips: [badClip],
+      clipShapes: [badClipShape],
       pathGenerators: [badGenerator],
     };
 

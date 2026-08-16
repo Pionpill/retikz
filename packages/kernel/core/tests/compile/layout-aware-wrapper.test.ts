@@ -245,7 +245,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
               fill: 'red',
               nodeDefault: { fill: 'white' },
               resetStyle: ['path'],
-              clip: { kind: 'circle', cx: 0, cy: 0, r: 20 },
+              clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
               zIndex: 2,
               boundingShape: 'circle',
               meta: { role: 'all' },
@@ -673,7 +673,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, {
           type: 'scope',
-          clip: { kind: 'circle', cx: 0, cy: 0, r: 20 },
+          clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
           children: [{ ...node('resource'), fill: paint }],
         });
         return {
@@ -887,7 +887,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     ['infinite zIndex', { zIndex: Infinity }],
     ['invalid boundingShape', { boundingShape: 'triangle' }],
     ['non-json meta', { meta: { bad: undefined } }],
-    ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: 0, height: 10 } }],
+    ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: -1, height: 10 } }],
     ['invalid animations', { animations: [{}] }],
     ['malformed transform', { transforms: [{ kind: 'translate', x: 0 }] }],
     ['non-finite transform', { transforms: [{ kind: 'scale', x: NaN }] }],

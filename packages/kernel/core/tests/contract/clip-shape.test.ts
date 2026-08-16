@@ -1,12 +1,25 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
 
-import type { AnyClipShapeDefinition, ClipShapeDefinition, PathClipShape, SceneClipPath } from '../../src';
+import type {
+  AnyClipShapeDefinition,
+  ClipShape,
+  ClipShapeDefinition,
+  IRClipFillRule,
+  PathCommand,
+  SceneClipPath,
+} from '../../src';
 
 import { defineClipShape } from '../../src';
 
-const PathShapeSchema: z.ZodType<PathClipShape> = z.strictObject({
-  kind: z.literal('path'),
+type TestPathShape = ClipShape & {
+  kind: 'testPath';
+  commands: Array<PathCommand>;
+  fillRule?: IRClipFillRule;
+};
+
+const PathShapeSchema: z.ZodType<TestPathShape> = z.strictObject({
+  kind: z.literal('testPath'),
   commands: z.array(
     z.discriminatedUnion('kind', [
       z.strictObject({ kind: z.literal('move'), to: z.tuple([z.number(), z.number()]) }),
@@ -34,8 +47,8 @@ describe('ClipShape definition contract', () => {
   });
 
   it('keeps one typed author boundary for builtin and custom shape definitions', () => {
-    const definition = defineClipShape<PathClipShape>({
-      kind: 'path',
+    const definition = defineClipShape<TestPathShape>({
+      kind: 'testPath',
       schema: PathShapeSchema,
       lower: shape => ({
         commands: shape.commands,
@@ -43,13 +56,13 @@ describe('ClipShape definition contract', () => {
       }),
     });
 
-    expectTypeOf(definition).toEqualTypeOf<ClipShapeDefinition<PathClipShape>>();
+    expectTypeOf(definition).toEqualTypeOf<ClipShapeDefinition<TestPathShape>>();
     const registryDefinitions: ReadonlyArray<AnyClipShapeDefinition> = [definition];
     expectTypeOf(registryDefinitions[0].lower).parameter(0).toBeNever();
-    expect(definition.kind).toBe('path');
+    expect(definition.kind).toBe('testPath');
     expect(
       definition.lower(
-        { kind: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
+        { kind: 'testPath', commands: [{ kind: 'move', to: [0, 0] }] },
         {
           round: value => value,
           lower: () => {

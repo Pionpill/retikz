@@ -643,7 +643,7 @@ describe('Box Layout Composite contract', () => {
   it.each([
     ['unknown field', { unknown: true }],
     ['non-finite transform', { transforms: [{ kind: 'translate', x: Number.NaN, y: 0 }] }],
-    ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: 0, height: 10 } }],
+    ['invalid clip', { clip: { kind: 'rect', x: 0, y: 0, width: -1, height: 10 } }],
   ])('rejects an invalid replay wrapper with occurrence context: %s', (_name, wrapper) => {
     const definition = defineComposite({
       namespace: 'test',

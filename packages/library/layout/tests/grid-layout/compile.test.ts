@@ -403,7 +403,7 @@ describe('GridLayout compile contract', () => {
     ).toThrow(/rejected an exact proposal/);
   });
 
-  it('uses a degenerate path clip without changing a zero-area allocation', () => {
+  it('uses a zero-size rect clip without changing a zero-area allocation', () => {
     const result = compileGrid(
       createGridLayout({
         size: { x: { kind: 'fixed', value: 0 }, y: { kind: 'fixed', value: 20 } },

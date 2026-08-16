@@ -1,9 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ClipDefinition, ClipResource, IRClip, IRScene, PathClipShape, PathCommand } from '../../src';
+import type { ClipDefinition, ClipResource, ClipShape, IRClip, IRClipFillRule, IRScene, PathCommand } from '../../src';
 
-import { compileToScene, defineClip } from '../../src';
+import { compileToScene, defineClip, defineClipShape, PathCommandSchema } from '../../src';
+
+type TestPathClipShape = ClipShape & {
+  kind: 'testPathShape';
+  commands: Array<PathCommand>;
+  fillRule?: IRClipFillRule;
+};
+
+const TestPathClipShapeSchema: z.ZodType<TestPathClipShape> = z.strictObject({
+  kind: z.literal('testPathShape'),
+  commands: z.array(PathCommandSchema),
+  fillRule: z.enum(['nonzero', 'evenodd']).optional(),
+});
+
+const TestPathClipShapeDefinition = defineClipShape<TestPathClipShape>({
+  kind: 'testPathShape',
+  schema: TestPathClipShapeSchema,
+  lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
+});
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -11,17 +29,13 @@ const clippedIr = (clip: IRClip): IRScene => ({
   children: [{ type: 'scope', clip, children: [{ type: 'node', position: [0, 0], text: 'A' }] }],
 });
 
-const pathOperation = (
-  kind: string,
-  commands: Array<PathCommand>,
-  fillRule?: PathClipShape['fillRule'],
-): ClipDefinition =>
+const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: IRClipFillRule): ClipDefinition =>
   defineClip({
     kind,
     schema: z.strictObject({ kind: z.literal(kind) }),
     resolve: () => {
-      const shape: PathClipShape = {
-        kind: 'path',
+      const shape: TestPathClipShape = {
+        kind: 'testPathShape',
         commands,
         ...(fillRule === undefined ? {} : { fillRule }),
       };
@@ -31,11 +45,12 @@ const pathOperation = (
 
 const compilePath = (
   commands: Array<PathCommand>,
-  options: Readonly<{ fillRule?: PathClipShape['fillRule']; precision?: number }> = {},
+  options: Readonly<{ fillRule?: IRClipFillRule; precision?: number }> = {},
 ): ClipResource['path'] => {
   const kind = 'testPath';
   const scene = compileToScene(clippedIr({ kind }), {
     clips: [pathOperation(kind, commands, options.fillRule)],
+    clipShapes: [TestPathClipShapeDefinition],
     ...(options.precision === undefined ? {} : { precision: options.precision }),
   }).scene;
   const resource = (scene.resources ?? []).find(entry => entry.kind === 'clip');
@@ -79,6 +94,7 @@ describe('canonical SceneClipPath', () => {
 
     const scene = compileToScene(ir, {
       clips: [pathOperation('pathA', commandsA), pathOperation('pathB', commandsB)],
+      clipShapes: [TestPathClipShapeDefinition],
     }).scene;
 
     expect((scene.resources ?? []).filter(entry => entry.kind === 'clip')).toHaveLength(1);
@@ -132,9 +148,9 @@ describe('canonical SceneClipPath', () => {
   });
 
   it.each([
-    { kind: 'circle', cx: 0, cy: 0, r: 0.004 },
-    { kind: 'ellipse', cx: 0, cy: 0, rx: 0.004, ry: 1 },
-  ] satisfies Array<IRClip>)('rejects a $kind radius that precision would collapse to zero', clip => {
-    expect(() => compileToScene(clippedIr(clip), { precision: 2 })).toThrow(/greater than 0/i);
+    { kind: 'arc', center: [0, 0], radius: 0.004, startAngle: 0, endAngle: 360 },
+    { kind: 'ellipseArc', center: [0, 0], radiusX: 0.004, radiusY: 1, startAngle: 0, endAngle: 360 },
+  ] satisfies Array<PathCommand>)('rejects a $kind radius that precision would collapse to zero', command => {
+    expect(() => compilePath([command], { precision: 2 })).toThrow(/greater than 0/i);
   });
 });

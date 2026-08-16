@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
-import type { IRClipFillRule, IRJsonObject, IRPosition } from '../../schemas';
-import type { PathCommand, SceneClipPath } from '../scene';
+import type { IRJsonObject } from '../../schemas';
+import type { SceneClipPath } from '../scene';
 
 /** 可由 ClipShape Definition 降低的开放 JSON 裁剪形状 */
 export type ClipShape = IRJsonObject & {
@@ -16,45 +16,6 @@ export type RectClipShape = IRJsonObject & {
   y: number;
   width: number;
   height: number;
-};
-
-/** 用户坐标系中的圆形裁剪形状 */
-export type CircleClipShape = IRJsonObject & {
-  kind: 'circle';
-  cx: number;
-  cy: number;
-  r: number;
-};
-
-/** 用户坐标系中的椭圆裁剪形状 */
-export type EllipseClipShape = IRJsonObject & {
-  kind: 'ellipse';
-  cx: number;
-  cy: number;
-  rx: number;
-  ry: number;
-};
-
-/** 用户坐标系中的多边形裁剪形状 */
-export type PolygonClipShape = IRJsonObject & {
-  kind: 'polygon';
-  points: Array<IRPosition>;
-};
-
-/** 使用结构化命令描述的路径裁剪形状 */
-export type PathClipShape = IRJsonObject & {
-  kind: 'path';
-  commands: Array<PathCommand>;
-  /** @default nonzero */
-  fillRule?: IRClipFillRule;
-};
-
-/** 按 authored 顺序累积子形状的复合裁剪形状 */
-export type CompoundClipShape = IRJsonObject & {
-  kind: 'compound';
-  children: Array<ClipShape>;
-  /** @default nonzero */
-  fillRule?: IRClipFillRule;
 };
 
 /** ClipShape lowering 的递归上下文 */

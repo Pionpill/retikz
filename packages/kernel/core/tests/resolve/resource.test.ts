@@ -158,10 +158,11 @@ describe('resolve/resource clip', () => {
 
   it('keeps recursive clip resolution in the bound registry closure', () => {
     const leafResolve = vi.fn((spec: { radius: number }) => ({
-      kind: 'circle' as const,
-      cx: 0,
-      cy: 0,
-      r: spec.radius,
+      kind: 'rect' as const,
+      x: 0,
+      y: 0,
+      width: spec.radius,
+      height: spec.radius,
     }));
     const leaf = defineClip({
       kind: 'leaf',
@@ -169,10 +170,8 @@ describe('resolve/resource clip', () => {
       resolve: leafResolve,
     });
     const wrapperResolve = vi.fn(
-      (spec: { child: { kind: 'leaf'; radius: number } }, context: ClipResolveContext): ClipShape => ({
-        kind: 'compound',
-        children: [context.resolve(spec.child as IRClip)],
-      }),
+      (spec: { child: { kind: 'leaf'; radius: number } }, context: ClipResolveContext): ClipShape =>
+        context.resolve(spec.child as IRClip),
     );
     const wrapper = defineClip({
       kind: 'wrapper',
@@ -213,8 +212,10 @@ describe('resolve/resource clip', () => {
       kind: 'clip',
       path: {
         commands: [
-          { kind: 'move', to: [3, 0] },
-          { kind: 'arc', center: [0, 0], radius: 3, startAngle: 0, endAngle: 360 },
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [3, 0] },
+          { kind: 'line', to: [3, 3] },
+          { kind: 'line', to: [0, 3] },
           { kind: 'close' },
         ],
         fillRule: 'nonzero',

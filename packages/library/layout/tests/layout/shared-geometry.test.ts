@@ -177,22 +177,13 @@ describe('shared layout Box geometry', () => {
     ).toEqual({ x: 52, y: 34, width: 20, height: 10 });
   });
 
-  it('uses a rect clip for positive area and a closed degenerate path for zero area', () => {
+  it('uses the Core rect clip for positive and zero-area allocations', () => {
     const positive = layoutClipOf({ width: 20, height: 10 });
     const zeroWidth = layoutClipOf({ width: 0, height: 10 });
 
     expect(positive).toEqual({ kind: 'rect', x: 0, y: 0, width: 20, height: 10 });
     expect(RectClipSchema.safeParse(positive).success).toBe(true);
-    expect(zeroWidth).toEqual({
-      kind: 'path',
-      commands: [
-        { kind: 'move', to: [0, 0] },
-        { kind: 'line', to: [0, 0] },
-        { kind: 'line', to: [0, 10] },
-        { kind: 'line', to: [0, 10] },
-        { kind: 'close' },
-      ],
-    });
-    expect(zeroWidth).toMatchObject({ kind: 'path' });
+    expect(zeroWidth).toEqual({ kind: 'rect', x: 0, y: 0, width: 0, height: 10 });
+    expect(RectClipSchema.safeParse(zeroWidth).success).toBe(true);
   });
 });
