@@ -15,23 +15,23 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ```tsx
 import { Layout, Step } from '@retikz/react';
-import { GraphConnector, GraphNode } from '@retikz/graph-react';
+import { Relation, Entity } from '@retikz/graph-react';
 
 <Layout>
-  <GraphNode id="start" role="terminal" position={[0, 0]}>
+  <Entity id="start" role="terminal" position={[0, 0]}>
     Start
-  </GraphNode>
-  <GraphNode id="step" role="stage" position={[160, 0]}>
+  </Entity>
+  <Entity id="step" role="stage" position={[160, 0]}>
     Process
-  </GraphNode>
-  <GraphConnector id="edge" role="flow">
+  </Entity>
+  <Relation id="edge" role="flow">
     <Step kind="move" to="start" />
     <Step to="step" />
-  </GraphConnector>
+  </Relation>
 </Layout>;
 ```
 
-`GraphConnector` accepts either Core `<Step>` children or a Core Draw `way`, never
+`Relation` accepts either Core `<Step>` children or a Core Draw `way`, never
 both. Components contribute Definitions only for the current `Layout`;
 importing this package does not create global state.
 

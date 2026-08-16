@@ -68,8 +68,8 @@ export const collectSemanticNodeInput = <TInput extends Readonly<Record<string, 
   return { input: { ...base, authoringNode: child }, adapters: nodeInput.adapters };
 };
 
-/** 收集 GraphConnector children 为等待 Vanilla 归一化的 Core Path 输入 */
-export const collectGraphConnectorPath = (
+/** 收集 Relation children 为等待 Vanilla 归一化的 Core Path 输入 */
+export const collectRelationPath = (
   children: ReactNode,
   embedIdPrefix: string,
 ): Readonly<{
@@ -79,7 +79,7 @@ export const collectGraphConnectorPath = (
   const pathInput = createInputScene(createElement(Path, null, children), { embedIdPrefix });
   const childrenInput = pathInput.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error('GraphConnector children must contain one Core Path authoring input.');
+    throw new Error('Relation children must contain one Core Path authoring input.');
   }
   return { child: childrenInput[0] as InputPath, adapters: pathInput.adapters };
 };

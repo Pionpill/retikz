@@ -1,4 +1,4 @@
 export * from './adapters';
-export * from './GraphConnector';
-export * from './GraphFrame';
-export * from './GraphNode';
+export * from './Container';
+export * from './Entity';
+export * from './Relation';
