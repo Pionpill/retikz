@@ -2,7 +2,7 @@
 
 > **状态：架构草案，`@retikz/editor` 名称与领域 sibling adapter 方向已确认，当前尚未实现。** 本文定义 `@retikz/editor`、Kernel Interaction、领域主包、领域 editor adapter 与宿主 UI 的长期边界。具体公开 API、包发布组、版本路线和首个实现范围仍需由 roadmap / ADR 确认。
 >
-> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`交互与增量运行时设计`](./interaction-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`跨域空间贴附与复用设计`](./attached-space-composition.md) · [`Diagram 制图能力域设计`](./diagram-design.md) · [`包拓扑`](./package-topology.md)
+> 关联：[`能力完备性与模块边界`](./capability-design.md) · [`交互与增量运行时设计`](./interaction-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`跨域空间贴附与复用设计`](./attached-space-composition.md) · [`Schematic 制图能力域设计`](./schematic-design.md) · [`包拓扑`](./package-topology.md)
 
 ---
 
@@ -198,7 +198,7 @@ Editor 拥有 transform gesture、约束键、snap session、候选排序、阈�
 例如：
 
 - Editor 知道用户正在平移 selection，并从候选点中选择当前 snap result。
-- Graph editor adapter 知道节点拖动是修改 manual geometry，或在 constraint 模式下生成 Flow constraint。
+- Graph editor adapter 知道节点拖动是修改 manual geometry，或在 constraint 模式下生成 Diagram constraint。
 - Plot editor adapter 知道某个 handle 对应 annotation、legend placement 还是 plot-area 配置。
 - Table editor adapter 知道列边界拖动如何形成合法的 column width change。
 

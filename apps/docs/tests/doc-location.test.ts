@@ -3,32 +3,32 @@ import { describe, expect, it } from 'vitest';
 import { resolveDocLocation } from '@/modules/docs/layout/useDocLocation';
 
 describe('resolveDocLocation', () => {
-  it('将 Notation 两段路径归一化为有落地页的 section', () => {
+  it('将 Graph 两段路径归一化为有落地页的 section', () => {
     expect(
       resolveDocLocation({
-        moduleId: 'diagram',
-        firstSeg: 'notation',
+        moduleId: 'schematic',
+        firstSeg: 'graph',
       }),
     ).toEqual({
-      moduleId: 'diagram',
-      sectionId: 'notation',
+      moduleId: 'schematic',
+      sectionId: 'graph',
       pageId: null,
     });
   });
 
-  it('保留 Notation 分组的 section + page + subPage 语义', () => {
+  it('保留 Graph 分组的 section + page + subPage 语义', () => {
     expect(
       resolveDocLocation({
-        moduleId: 'diagram',
-        sectionId: 'notation',
+        moduleId: 'schematic',
+        sectionId: 'graph',
         pageId: 'frame',
-        subPageId: 'logic-frame',
+        subPageId: 'graph-frame',
       }),
     ).toEqual({
-      moduleId: 'diagram',
-      sectionId: 'notation',
+      moduleId: 'schematic',
+      sectionId: 'graph',
       pageId: 'frame',
-      subPageId: 'logic-frame',
+      subPageId: 'graph-frame',
     });
   });
 

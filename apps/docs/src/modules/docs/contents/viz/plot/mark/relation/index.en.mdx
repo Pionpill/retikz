@@ -29,7 +29,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 ### When to Use
 
-RelationMark is the low-level relationship path mark. It does not reinvent arrows, labels, or routed lines; it turns relationship data into a core `Path.children` step sequence. Dependency lines, flow lines, reference lines, and labeled connectors are all different configurations of the same source-target path.
+RelationMark is the low-level relationship path mark. It does not reinvent arrows, labels, or routed lines; it turns relationship data into a core `Path.children` step sequence. Dependency lines, flow lines, reference lines, and labeled graphConnectors are all different configurations of the same source-target path.
 
 | Presentation            | Key props                           | Notes                                                                                                       |
 | ----------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -61,7 +61,7 @@ Sankey relations use the same `source` and `target` refs, but set `kind="ribbon"
 
 #### Bubble Relation
 
-The bubble layer generates reusable ids with `anchorId`. RelationMark's local `relate` then selects the bubbles with the largest `value` and highest `y`, derives both ids and the path label, and uses `boundary` to stop the connector at the bubble outlines.
+The bubble layer generates reusable ids with `anchorId`. RelationMark's local `relate` then selects the bubbles with the largest `value` and highest `y`, derives both ids and the path label, and uses `boundary` to stop the graphConnector at the bubble outlines.
 
 <ComponentPreview files={['relation-bubble', 'relation-bubble.data.ts']} size="lg" />
 

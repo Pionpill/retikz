@@ -38,13 +38,13 @@ Layout 不拥有 Core IR、Scene、renderer、字体测量实现、跨 compile c
 @retikz/layout-vanilla ─→ @retikz/layout + @retikz/vanilla
 ```
 
-三个包使用独立 release group `layout` 并保持组内 lockstep。Layout 不依赖 Standard、Notation、Plot、Table 或 renderer；Standard 和领域包按实际使用单向依赖 Layout。Layout adapter 不复制宿主无关 schema、solver、artifact 或 diagnostics。
+三个包使用独立 release group `layout` 并保持组内 lockstep。Layout 不依赖 Standard、Graph、Plot、Table 或 renderer；Standard 和领域包按实际使用单向依赖 Layout。Layout adapter 不复制宿主无关 schema、solver、artifact 或 diagnostics。
 
 ## 公共入口
 
 `@retikz/layout` 根入口面向直接作者，提供 FlexLayout、GridLayout、OverlayLayout、LayoutItem、对应 Definition / factory / schema、公开类型与 Layout artifact 契约。
 
-`@retikz/layout/compose` 面向 Standard、Notation 与其它 Tier 2 owner，提供稳定且最小的布局组合能力，包括 canonical layout compile、child measure / place / replay、spacing / slot / clip、artifact 几何和确有跨 owner 复用证据的排版算法。它是公开 capability，不是内部目录镜像；仅有单一调用点或暴露私有状态的 helper 继续留在包内。
+`@retikz/layout/compose` 面向 Standard、Graph 与其它 Tier 2 owner，提供稳定且最小的布局组合能力，包括 canonical layout compile、child measure / place / replay、spacing / slot / clip、artifact 几何和确有跨 owner 复用证据的排版算法。它是公开 capability，不是内部目录镜像；仅有单一调用点或暴露私有状态的 helper 继续留在包内。
 
 `@retikz/layout/inspect` 是可选 inspection 入口，消费独立 `@retikz/inspect` 契约而不污染 Layout 根入口。React 与 Vanilla 包提供对应 `/inspect` authoring 入口。
 
@@ -56,7 +56,7 @@ Standard 不接受、导出或生成 `standard.*Layout`，也不提供 re-export
 
 ## 组合与领域消费
 
-Standard Legend、Notation LogicFrame / Callout、Plot、Table 与未来 Tier 2 可以直接组合 Layout。调用方拥有自己的领域 schema、identity、artifact 与失败语义；Layout 只拥有排版输入和结果，不把领域 composite 强制 lower 成公开嵌套 Layout IR，也不隐式注册调用方未知的 Definition。
+Standard Legend、GraphFrame、Plot、Table 与未来 Tier 2 可以直接组合 Layout。调用方拥有自己的领域 schema、identity、artifact 与失败语义；Layout 只拥有排版输入和结果，不把领域 composite 强制 lower 成公开嵌套 Layout IR，也不隐式注册调用方未知的 Definition。
 
 同一布局输入必须经 canonical Layout schema、solver、Core probe / replay 与 artifact 主链处理。跨 owner 组合不得 deep import Layout internal、复制 solver、从 child 类型推断尺寸或为某一 renderer 建立特殊分支。
 

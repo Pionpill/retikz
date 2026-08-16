@@ -105,7 +105,7 @@ Vanilla 公开 `frame()`、`frameTitle()` 与 `frameDescription()`；两个 head
 
 - Standard 已实现 Node schema 复用、默认样式、两种 header anchor 链、box padding、圆角、稳定派生 id 与保留 id 诊断
 - React / Vanilla 对同一 Frame input 生成等价 IR；React 对重复 part、非法 child 与独立 part fail-loud
-- 双语 Frame 页面、默认 / 横向 / 纵向 demo、controls、API 表、AI JSX parser 与 `LogicFrame` dogfood 已同步
+- 双语 Frame 页面、默认 / 横向 / 纵向 demo、controls、API 表、AI JSX parser 与 `GraphFrame` dogfood 已同步
 - schema、lowering、Node 字段透传、z-index、scale / rotate / margin、圆角、错误路径与跨 composite 组合均有自动化证据
 - Standard 三包及 docs 的 lint、类型检查、测试与 build 已在 alpha.1 收尾验证通过
 

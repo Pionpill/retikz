@@ -1,7 +1,7 @@
 import type { Section } from './types';
 
 import { aboutSection } from './about';
-import { diagramSection } from './diagram';
+import { schematicSection } from './schematic';
 import { kernelSection } from './kernel';
 import { librarySection } from './library';
 import { vizSection } from './viz';
@@ -13,8 +13,8 @@ export const getSectionsByModule = (moduleId: string | undefined): Array<Section
       return kernelSection;
     case 'library':
       return librarySection;
-    case 'diagram':
-      return diagramSection;
+    case 'schematic':
+      return schematicSection;
     case 'viz':
       return vizSection;
     case 'about':

@@ -375,29 +375,32 @@ describe('irToVanillaCode fallback', () => {
     expect(code).not.toMatch(/\binspect\b/);
   });
 
-  it('generates Notation helpers and adapters for all lightweight semantic elements', () => {
+  it('generates Graph helpers and adapters for unified semantic elements', () => {
     const code = irToVanillaCode(
       ir([
         {
-          namespace: 'notation',
-          type: 'terminal',
+          namespace: 'graph',
+          type: 'graphNode',
           id: 'start',
+          role: 'terminal',
           position: [0, 0],
           text: 'Start',
         },
         {
-          namespace: 'notation',
-          type: 'stage',
+          namespace: 'graph',
+          type: 'graphNode',
           id: 'step',
+          role: 'stage',
           position: [80, 0],
           text: 'Step',
         },
-        { namespace: 'notation', type: 'decision', id: 'check', position: [160, 0], text: 'Check' },
-        { namespace: 'notation', type: 'junction', id: 'join', position: [240, 0] },
+        { namespace: 'graph', type: 'graphNode', role: 'decision', id: 'check', position: [160, 0], text: 'Check' },
+        { namespace: 'graph', type: 'graphNode', role: 'junction', id: 'join', position: [240, 0] },
         {
-          namespace: 'notation',
-          type: 'connector',
+          namespace: 'graph',
+          type: 'graphConnector',
           id: 'edge',
+          role: 'flow',
           children: [
             { type: 'step', kind: 'move', to: { id: 'start' } },
             { type: 'step', kind: 'line', to: { id: 'step' }, label: { text: 'next' } },
@@ -406,39 +409,33 @@ describe('irToVanillaCode fallback', () => {
       ] as never),
     );
 
-    expect(code).toContain("terminal('preview-terminal-1'");
-    expect(code).toContain("stage('preview-stage-1'");
-    expect(code).toContain("decision('preview-decision-1'");
-    expect(code).toContain("junction('preview-junction-1'");
-    expect(code).toContain("connector('preview-connector-1'");
-    expect(code).toContain("to: { id: 'preview-terminal-1' }");
-    expect(code).toContain("to: { id: 'preview-stage-1' }");
-    expect(code).toContain('TerminalInputEmbedAdapter');
-    expect(code).toContain('StageInputEmbedAdapter');
-    expect(code).toContain('DecisionInputEmbedAdapter');
-    expect(code).toContain('JunctionInputEmbedAdapter');
-    expect(code).toContain('ConnectorInputEmbedAdapter');
-    expect(code).toContain("from '@retikz/notation-vanilla'");
-    expect(code).not.toContain("ConnectorInputEmbedAdapter } from '@retikz/standard-vanilla'");
+    expect(code).toContain("graphNode('preview-graphNode-1'");
+    expect(code).toContain("graphConnector('preview-graphConnector-1'");
+    expect(code).toContain("to: { id: 'preview-graphNode-1' }");
+    expect(code).toContain('GraphNodeInputEmbedAdapter');
+    expect(code).toContain('GraphConnectorInputEmbedAdapter');
+    expect(code).toContain("from '@retikz/graph-vanilla'");
+    expect(code).not.toContain("GraphConnectorInputEmbedAdapter } from '@retikz/standard-vanilla'");
     expect(code).not.toContain('TerminalDefinition');
     expect(code).not.toContain('Unsupported Standard composite');
   });
 
-  it('splits Standard and Notation imports while preserving forward composite targets', () => {
+  it('splits Standard and Graph imports while preserving forward composite targets', () => {
     const code = irToVanillaCode(
       ir([
         {
-          namespace: 'notation',
-          type: 'connector',
+          namespace: 'graph',
+          type: 'graphConnector',
           id: 'edge',
+          role: 'flow',
           children: [
             { type: 'step', kind: 'move', to: { id: 'block' } },
             { type: 'step', kind: 'line', to: { id: 'block' } },
           ],
         },
         {
-          namespace: 'notation',
-          type: 'logicFrame',
+          namespace: 'graph',
+          type: 'graphFrame',
           id: 'block',
           sections: [
             {
@@ -455,8 +452,8 @@ describe('irToVanillaCode fallback', () => {
       ] as never),
     );
 
-    expect(code).toContain("from '@retikz/notation-vanilla'");
+    expect(code).toContain("from '@retikz/graph-vanilla'");
     expect(code).toContain("import { GridDefinition } from '@retikz/standard';");
-    expect(code.match(/to: \{ id: 'preview-logicFrame-1\/logicFrame' \}/g)).toHaveLength(2);
+    expect(code.match(/to: \{ id: 'preview-graphFrame-1\/graphFrame' \}/g)).toHaveLength(2);
   });
 });

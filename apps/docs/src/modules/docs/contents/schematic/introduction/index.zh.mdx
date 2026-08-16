@@ -1,0 +1,35 @@
+---
+title: 简介
+description: 了解 Schematic 如何把可复用图式元素与自动图示能力分层，并从 Graph 入口开始绘制。
+---
+
+Schematic 组承载“图中画什么、这些元素表达什么，以及关系如何自动组织”的领域能力。当前的 Graph 包族提供可独立绘制的图式元素；未来需要全局节点、边、拓扑或自动布局时，可由 Diagram 在 Graph 之上组合这些元素，而不改变它们的绘制契约。
+
+## 从 Graph 开始
+
+Graph 首批提供 `GraphFrame`、`GraphNode` 与 `GraphConnector` 三类统一入口。`GraphNode.role` 区分 terminal、stage、decision 与 junction；`GraphConnector.role` 区分 flow、branch、dependency 与 feedback。它们复用 Core 的 Node、Path、target 和 Scene，也复用 Layout 的通用布局；Graph 不复制几何、renderer 或布局算法。
+
+| 包                      | 负责什么                                    | 什么时候使用                          |
+| ----------------------- | ------------------------------------------- | ------------------------------------- |
+| `@retikz/graph`         | Schema、factory、Definition、lowering 与 IR | 校验或持久化 JSON，直接接入 Core      |
+| `@retikz/graph-react`   | React JSX authoring                         | 在 `@retikz/react` 的 `Layout` 中使用 |
+| `@retikz/graph-vanilla` | builder、adapter、SSR 与 mount authoring    | 在无 React 的浏览器或脚本中使用       |
+
+三个包使用同一套 canonical IR。React 与 Vanilla 只负责作者入口，不复制 Schema、默认值或 lowering。
+
+## 能力边界
+
+Graph 拥有单个图式元素的语义、外观默认值和下沉方式，但不拥有：
+
+- 全局 `GraphModel`、节点与边集合或拓扑约束
+- 自动布局、routing、避障或碰撞搜索；这些能力由上层 Diagram 负责
+- selection、viewport、history 等编辑器状态
+- UML 或状态机的执行模型
+
+因此你可以直接用 Graph 绘制局部逻辑结构，也可以在未来的 Diagram 能力中复用同一批元素。
+
+## 下一步
+
+- [Graph](/schematic/graph)：查看现有元素、职责与使用入口
+- [Layout 布局容器](/library/layout)：排列 GraphFrame 与基础单元
+- [Core 组件](/kernel/components)：使用底层 Node、Path、Scope 与 Layout
