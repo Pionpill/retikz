@@ -1,5 +1,5 @@
-/** GraphConnector 角色词汇 */
-export const GraphConnectorRole = {
+/** Relation 角色词汇 */
+export const RelationRole = {
   /** 流程顺序关系 */
   Flow: 'flow',
   /** 分支关系 */

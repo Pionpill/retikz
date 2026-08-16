@@ -30,8 +30,8 @@ type LayoutItemArtifact = Readonly<{
   }>;
 }>;
 
-type GraphFrameArtifact = Readonly<{
-  kind: 'graphFrame';
+type ContainerArtifact = Readonly<{
+  kind: 'container';
   id: string;
   outer: Readonly<{
     allocationBounds: Rect;
@@ -50,10 +50,10 @@ type GraphFrameArtifact = Readonly<{
   dividerVisualBounds: ReadonlyArray<Rect>;
 }>;
 
-const blockDefinitionOf = (): AnyCompositeDefinition => Graph.GraphFrameDefinition;
+const blockDefinitionOf = (): AnyCompositeDefinition => Graph.ContainerDefinition;
 
-const blockArtifactOf = (value: unknown): GraphFrameArtifact => {
-  return Graph.GraphFrameArtifactSchema.parse(value);
+const blockArtifactOf = (value: unknown): ContainerArtifact => {
+  return Graph.ContainerArtifactSchema.parse(value);
 };
 
 const child = (id: string, width = 24, height = 14): IRChild =>
@@ -86,16 +86,16 @@ const compileBlock = (
   records: Array<{ id: string; proposal: LayoutProposal }> = [],
 ) => {
   const result = compileInHarness(block, proposal, [blockDefinitionOf(), createProbeLeafDefinition(records)]);
-  return { ...result, artifact: blockArtifactOf(compositeArtifact(result.output, 'graphFrame').value) };
+  return { ...result, artifact: blockArtifactOf(compositeArtifact(result.output, 'container').value) };
 };
 
-const block = (input: Parameters<typeof Graph.createGraphFrame>[0]) => Graph.createGraphFrame(input);
+const block = (input: Parameters<typeof Graph.createContainer>[0]) => Graph.createContainer(input);
 
 const section = (
   key: string,
   id: string,
   options: Parameters<typeof child>[1] = 24,
-): Graph.GraphFrameSectionCreateOptions => ({
+): Graph.ContainerSectionCreateOptions => ({
   key,
   child: child(id, options),
 });
@@ -109,10 +109,10 @@ const compileGraphBlock = (root: IRChild) =>
     padding: 0,
   });
 
-describe('GraphFrame layout and artifact contract', () => {
+describe('Container layout and artifact contract', () => {
   beforeAll(() => {
-    expect(Graph.GraphFrameDefinition, 'production mutation required: GraphFrameDefinition').toBeDefined();
-    expect(Graph.GraphFrameArtifactSchema, 'production mutation required: GraphFrameArtifactSchema').toBeDefined();
+    expect(Graph.ContainerDefinition, 'production mutation required: ContainerDefinition').toBeDefined();
+    expect(Graph.ContainerArtifactSchema, 'production mutation required: ContainerArtifactSchema').toBeDefined();
   });
 
   it('keeps header optional, preserves authored section order, and rejects empty or duplicate sections', () => {
@@ -129,15 +129,15 @@ describe('GraphFrame layout and artifact contract', () => {
     expect(headerArtifact.sections).toEqual([]);
     expect(sectionsArtifact.header).toBeNull();
     expect(sectionsArtifact.sections.map(item => item.key)).toEqual(['first', 'second']);
-    expect(() => Graph.GraphFrameSchema.parse({ namespace: 'graph', type: 'graphFrame', id: 'empty' })).toThrow();
+    expect(() => Graph.ContainerSchema.parse({ namespace: 'graph', type: 'container', id: 'empty' })).toThrow();
     expect(() =>
-      Graph.GraphFrameSchema.parse({
+      Graph.ContainerSchema.parse({
         namespace: 'graph',
-        type: 'graphFrame',
+        type: 'container',
         id: 'duplicate',
         sections: [section('same', 'same-a'), section('same', 'same-b')],
       }),
-    ).toThrow(/Duplicate GraphFrame section key/);
+    ).toThrow(/Duplicate Container section key/);
   });
 
   it.each([
@@ -320,58 +320,58 @@ describe('GraphFrame layout and artifact contract', () => {
     expect(result.artifact.sections[0].geometry.allocationBounds.width).toBe(20);
   });
 
-  it('supports nested GraphFrame children through the same public definition registry', () => {
+  it('supports nested Container children through the same public definition registry', () => {
     const inner = block({ id: 'nested-inner', padding: 0, sections: [section('inner', 'nested-leaf', 12)] });
     const outer = block({ id: 'nested-outer', padding: 0, sections: [{ key: 'body', child: inner }] });
     const output = compileRoot(outer);
     const artifacts = output.artifacts
-      .filter(value => value.kind === 'composite' && value.namespace === 'graph' && value.type === 'graphFrame')
+      .filter(value => value.kind === 'composite' && value.namespace === 'graph' && value.type === 'container')
       .map(value => blockArtifactOf(value.value));
 
     expect(artifacts.map(value => value.id)).toEqual(expect.arrayContaining(['nested-inner', 'nested-outer']));
     expect(groupsOf(output.scene.primitives).some(group => group.id === 'nested-leaf')).toBe(true);
   });
 
-  it('inherits GraphNodeVariant through regions, nested frames, and Core scopes without sibling leakage', () => {
+  it('inherits EntityVariant through regions, nested frames, and Core scopes without sibling leakage', () => {
     const inner = block({
       id: 'variant-inner',
       padding: 0,
-      graphNodeVariant: 'outline',
+      entityVariant: 'outline',
       sections: [
         {
           key: 'inner-outline',
-          child: Graph.createGraphNode({ id: 'inner-outline', role: 'stage', position: [0, 0] }),
+          child: Graph.createEntity({ id: 'inner-outline', role: 'stage', position: [0, 0] }),
         },
         {
           key: 'inner-default',
-          child: Graph.createGraphNode({ id: 'inner-default', role: 'stage', position: [0, 0], variant: 'default' }),
+          child: Graph.createEntity({ id: 'inner-default', role: 'stage', position: [0, 0], variant: 'default' }),
         },
       ],
     });
     const outer = block({
       id: 'variant-outer',
       padding: 0,
-      graphNodeVariant: 'secondary',
-      header: { child: Graph.createGraphNode({ id: 'variant-header', role: 'stage', position: [0, 0] }) },
+      entityVariant: 'secondary',
+      header: { child: Graph.createEntity({ id: 'variant-header', role: 'stage', position: [0, 0] }) },
       sections: [
         {
           key: 'outer-secondary',
-          child: Graph.createGraphNode({ id: 'outer-secondary', role: 'stage', position: [0, 0] }),
+          child: Graph.createEntity({ id: 'outer-secondary', role: 'stage', position: [0, 0] }),
         },
         {
           key: 'outer-primary',
-          child: Graph.createGraphNode({ id: 'outer-primary', role: 'stage', position: [0, 0], variant: 'primary' }),
+          child: Graph.createEntity({ id: 'outer-primary', role: 'stage', position: [0, 0], variant: 'primary' }),
         },
         {
           key: 'scope',
           child: {
             type: 'scope',
-            children: [Graph.createGraphNode({ id: 'scope-secondary', role: 'stage', position: [0, 0] }), inner],
+            children: [Graph.createEntity({ id: 'scope-secondary', role: 'stage', position: [0, 0] }), inner],
           },
         },
         {
           key: 'outer-sibling',
-          child: Graph.createGraphNode({ id: 'outer-sibling', role: 'stage', position: [0, 0] }),
+          child: Graph.createEntity({ id: 'outer-sibling', role: 'stage', position: [0, 0] }),
         },
       ],
     });
@@ -394,7 +394,7 @@ describe('GraphFrame layout and artifact contract', () => {
       block({ id: 'direct-flex-reuse', padding: 0, sections: [section('body', 'direct-flex-child', 12)] }),
     );
 
-    expect(blockArtifactOf(compositeArtifact(output, 'graphFrame').value).id).toBe('direct-flex-reuse');
+    expect(blockArtifactOf(compositeArtifact(output, 'container').value).id).toBe('direct-flex-reuse');
     expect(groupsOf(output.scene.primitives).some(group => group.id === 'direct-flex-child')).toBe(true);
   });
 
@@ -487,8 +487,8 @@ describe('GraphFrame layout and artifact contract', () => {
       }),
     );
     const artifact = result.artifact;
-    const schema = Graph.GraphFrameArtifactSchema;
-    expect(artifact.kind).toBe('graphFrame');
+    const schema = Graph.ContainerArtifactSchema;
+    expect(artifact.kind).toBe('container');
     expect(artifact.id).toBe('block-artifact');
     expect(artifact.header).not.toBeNull();
     expect(artifact.sections.map(value => [value.key, value.role])).toEqual([

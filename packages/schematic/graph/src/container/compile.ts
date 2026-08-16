@@ -28,17 +28,16 @@ import {
   unionLayoutArtifactRects,
 } from '@retikz/layout/compose';
 
-import type { GraphNodeVariantValue } from '../../node';
-import type { GraphLayoutItemArtifact } from '../../shared';
-import type { GraphFrameArtifact, IRGraphFrame } from './types';
+import type { EntityVariantValue } from '../entity';
+import type { ContainerArtifact, ContainerLayoutItemArtifact, IRContainer } from './types';
 
-import { GRAPH_NAMESPACE, GraphElementType } from '../../shared';
+import { GRAPH_NAMESPACE, GraphType } from '../shared';
 
-type GraphFrameRegion = Readonly<{
+type ContainerRegion = Readonly<{
   key: string;
   role?: string;
   child: IRChild;
-  padding: IRGraphFrame['padding'];
+  padding: IRContainer['padding'];
 }>;
 
 type DividerReplay = Readonly<{
@@ -72,7 +71,7 @@ const requiredProbe = (
   return probe.result;
 };
 
-const stripItemIdentity = (item: LayoutArtifactItemBase & { line?: number }): GraphLayoutItemArtifact => {
+const stripItemIdentity = (item: LayoutArtifactItemBase & { line?: number }): ContainerLayoutItemArtifact => {
   const { key, sourceIndex, line, ...artifact } = item;
   void key;
   void sourceIndex;
@@ -93,7 +92,7 @@ const visibleUnion = (rects: ReadonlyArray<LayoutArtifactRect | null>): LayoutAr
   return positive.length === 0 ? null : unionLayoutArtifactRects(positive);
 };
 
-const shellNodeOf = (node: IRGraphFrame, allocation: LayoutRect): IRChild => ({
+const shellNodeOf = (node: IRContainer, allocation: LayoutRect): IRChild => ({
   type: 'node',
   id: node.id,
   position: [allocation.x + allocation.width / 2, allocation.y + allocation.height / 2],
@@ -106,7 +105,7 @@ const shellNodeOf = (node: IRGraphFrame, allocation: LayoutRect): IRChild => ({
   ...(node.appearance.dashOffset === undefined ? {} : { dashOffset: node.appearance.dashOffset }),
 });
 
-const dividerPathOf = (node: IRGraphFrame, x: number, y: number, width: number): IRChild => {
+const dividerPathOf = (node: IRContainer, x: number, y: number, width: number): IRChild => {
   const divider = node.appearance.divider;
   if (divider === false) throw new Error('Cannot construct a divider path when divider is disabled');
   return {
@@ -127,7 +126,7 @@ const dividerPathOf = (node: IRGraphFrame, x: number, y: number, width: number):
   };
 };
 
-const regionsOf = (node: IRGraphFrame): ReadonlyArray<GraphFrameRegion> => [
+const regionsOf = (node: IRContainer): ReadonlyArray<ContainerRegion> => [
   ...(node.header === undefined
     ? []
     : [
@@ -145,29 +144,29 @@ const regionsOf = (node: IRGraphFrame): ReadonlyArray<GraphFrameRegion> => [
   })),
 ];
 
-const graphNodeTypes = new Set<string>([GraphElementType.GraphNode]);
+const entityTypes = new Set<string>([GraphType.Entity]);
 
 const isGraphComposite = (child: IRChild): child is IRComposite => 'namespace' in child;
 
-/** 把最近的 GraphFrame variant 作用域递归投影到可承载逻辑节点的子容器 */
-const applyGraphNodeVariant = (child: IRChild, inheritedVariant: GraphNodeVariantValue | undefined): IRChild => {
+/** 把最近的 Container variant 作用域递归投影到可承载逻辑节点的子容器 */
+const applyEntityVariant = (child: IRChild, inheritedVariant: EntityVariantValue | undefined): IRChild => {
   if (isGraphComposite(child)) {
-    if (child.namespace === GRAPH_NAMESPACE && child.type === GraphElementType.GraphFrame) {
-      const frame = child as unknown as IRGraphFrame;
-      const frameVariant = frame.graphNodeVariant ?? inheritedVariant;
+    if (child.namespace === GRAPH_NAMESPACE && child.type === GraphType.Container) {
+      const frame = child as unknown as IRContainer;
+      const frameVariant = frame.entityVariant ?? inheritedVariant;
       return {
         ...frame,
         ...(frame.header === undefined
           ? {}
-          : { header: { ...frame.header, child: applyGraphNodeVariant(frame.header.child, frameVariant) } }),
+          : { header: { ...frame.header, child: applyEntityVariant(frame.header.child, frameVariant) } }),
         sections: frame.sections.map(section => ({
           ...section,
-          child: applyGraphNodeVariant(section.child, frameVariant),
+          child: applyEntityVariant(section.child, frameVariant),
         })),
       };
     }
-    if (child.namespace === GRAPH_NAMESPACE && graphNodeTypes.has(child.type)) {
-      const unit = child as IRComposite & { variant?: GraphNodeVariantValue };
+    if (child.namespace === GRAPH_NAMESPACE && entityTypes.has(child.type)) {
+      const unit = child as IRComposite & { variant?: EntityVariantValue };
       return unit.variant === undefined && inheritedVariant !== undefined
         ? { ...unit, variant: inheritedVariant }
         : unit;
@@ -175,12 +174,12 @@ const applyGraphNodeVariant = (child: IRChild, inheritedVariant: GraphNodeVarian
     return child;
   }
   if (child.type === 'scope') {
-    return { ...child, children: child.children.map(nested => applyGraphNodeVariant(nested, inheritedVariant)) };
+    return { ...child, children: child.children.map(nested => applyEntityVariant(nested, inheritedVariant)) };
   }
   return child;
 };
 
-const syntheticFlexOf = (node: IRGraphFrame, regions: ReadonlyArray<GraphFrameRegion>): IRFlexLayout => {
+const syntheticFlexOf = (node: IRContainer, regions: ReadonlyArray<ContainerRegion>): IRFlexLayout => {
   const divider = node.appearance.divider;
   const strokeWidth = divider === false ? 0 : divider.strokeWidth;
   const effectiveGap = node.rowGap + (divider === false ? 0 : strokeWidth);
@@ -209,19 +208,19 @@ const syntheticFlexOf = (node: IRGraphFrame, regions: ReadonlyArray<GraphFrameRe
   };
 };
 
-/** 通过规范的纵向 FlexLayout 编译器编译 GraphFrame */
-export const compileGraphFrame = (
-  node: IRGraphFrame,
+/** 通过规范的纵向 FlexLayout 编译器编译 Container */
+export const compileContainer = (
+  node: IRContainer,
   context: LayoutCompositeCompileContext,
-): LayoutCompositeCompileResult<GraphFrameArtifact> => {
+): LayoutCompositeCompileResult<ContainerArtifact> => {
   const regions = regionsOf(node).map(region => ({
     ...region,
-    child: applyGraphNodeVariant(region.child, node.graphNodeVariant),
+    child: applyEntityVariant(region.child, node.entityVariant),
   }));
   const synthetic = syntheticFlexOf(node, regions);
   const flexResult = compileFlexLayout(synthetic, context);
   const flexArtifact = flexResult.artifact;
-  if (flexArtifact === undefined) throw new Error('GraphFrame FlexLayout owner returned no artifact');
+  if (flexArtifact === undefined) throw new Error('Container FlexLayout owner returned no artifact');
   const allocation = flexResult.allocationBounds ?? flexArtifact.container.allocationBounds;
   const content = flexArtifact.container.contentBounds;
 
@@ -288,8 +287,8 @@ export const compileGraphFrame = (
     geometry: stripItemIdentity(itemsBySource[index + sectionOffset]),
   }));
 
-  const artifact: GraphFrameArtifact = Object.freeze({
-    kind: GraphElementType.GraphFrame,
+  const artifact: ContainerArtifact = Object.freeze({
+    kind: GraphType.Container,
     id: node.id,
     outer: Object.freeze({
       allocationBounds: allocation,

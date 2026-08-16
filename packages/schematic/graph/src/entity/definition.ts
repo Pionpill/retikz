@@ -8,74 +8,74 @@ import type {
 
 import { compositeOpaqueColor, defineComposite, NodeTextColor, ThemeMode } from '@retikz/core';
 
-import type { GraphSemanticNode, IRGraphNode } from './types';
+import type { Entity, IREntity } from './types';
 
-import { GRAPH_NAMESPACE, GraphElementType } from '../shared';
-import { GraphNodeRole, GraphNodeVariant } from './constants';
-import { GraphNodeSchema } from './schema';
+import { GRAPH_NAMESPACE, GraphType } from '../shared';
+import { EntityRole, EntityVariant } from './constants';
+import { EntitySchema } from './schema';
 
-type GraphNodeDefaults = Readonly<{
+type EntityDefaults = Readonly<{
   minimumSize?: NonNullable<IRNode['minimumSize']>;
   padding: NonNullable<IRNode['padding']>;
   shape: NonNullable<IRNode['shape']>;
 }>;
 
-const GRAPH_NODE_DEFAULTS: Readonly<Record<GraphSemanticNode['role'], GraphNodeDefaults>> = {
-  [GraphNodeRole.Terminal]: {
+const ENTITY_DEFAULTS: Readonly<Record<Entity['role'], EntityDefaults>> = {
+  [EntityRole.Terminal]: {
     minimumSize: { width: 48, height: 24 },
     padding: { x: 12, y: 6 },
     shape: { type: 'rectangle', params: { cornerRadius: 1_000_000 } },
   },
-  [GraphNodeRole.Stage]: {
+  [EntityRole.Stage]: {
     padding: 8,
     shape: { type: 'rectangle', params: { cornerRadius: 8 } },
   },
-  [GraphNodeRole.Decision]: {
+  [EntityRole.Decision]: {
     padding: { x: 3, y: 2 },
     shape: { type: 'diamond', params: { aspectRatio: 1.8 } },
   },
-  [GraphNodeRole.Junction]: {
+  [EntityRole.Junction]: {
     minimumSize: { width: 8, height: 8 },
     padding: 0,
     shape: 'circle',
   },
 };
 
-/** 返回 GraphNode authored 主要色或与当前模式对应的确定黑白默认值 */
-const primaryColorOf = (node: GraphSemanticNode, theme: ResolvedTheme): string =>
+/** 返回 Entity authored 主要色或与当前模式对应的确定黑白默认值 */
+const primaryColorOf = (node: Entity, theme: ResolvedTheme): string =>
   node.color ?? (theme.mode === ThemeMode.Light ? '#000000' : '#ffffff');
 
-/** 在下沉边界把 GraphNode variant 的 currentColor 绑定到最终主要色 */
+/** 在下沉边界把 Entity variant 的 currentColor 绑定到最终主要色 */
 const materializeThemePaint = (paint: string, primaryColor: string): string =>
   paint === 'currentColor' ? primaryColor : paint;
 
-/** 计算使用当前模式底色的 GraphNode 浅色预合成结果 */
+/** 计算使用当前模式底色的 Entity 浅色预合成结果 */
 const tintedColor = (primaryColor: string, theme: ResolvedTheme, weight: number): string =>
   compositeOpaqueColor(primaryColor, theme.mode === ThemeMode.Light ? '#ffffff' : '#000000', weight);
 
-/** 解析 GraphNode variant 的字段级默认外观 */
-const resolveGraphNodeVariant = (
-  variant: GraphSemanticNode['variant'],
+/** 解析 Entity variant 的字段级默认外观 */
+const resolveEntityVariant = (
+  variant: Entity['variant'],
   primaryColor: string,
   theme: ResolvedTheme,
 ): Readonly<{ textColor: string; stroke: string; fill: string }> => {
-  const effectiveVariant = variant ?? GraphNodeVariant.Default;
+  const effectiveVariant = variant ?? EntityVariant.Default;
   switch (effectiveVariant) {
-    case GraphNodeVariant.Default:
+    case EntityVariant.Default:
       return { textColor: primaryColor, stroke: primaryColor, fill: 'none' };
-    case GraphNodeVariant.Primary:
+    case EntityVariant.Primary:
       return { textColor: NodeTextColor.Contrast, stroke: primaryColor, fill: primaryColor };
-    case GraphNodeVariant.Secondary:
+    case EntityVariant.Secondary:
       return { textColor: primaryColor, stroke: 'none', fill: tintedColor(primaryColor, theme, 0.1) };
-    case GraphNodeVariant.Outline:
+    case EntityVariant.Outline:
       return { textColor: primaryColor, stroke: tintedColor(primaryColor, theme, 0.6), fill: 'none' };
-    case GraphNodeVariant.Vibrant:
+    case EntityVariant.Vibrant:
       return { textColor: primaryColor, stroke: primaryColor, fill: tintedColor(primaryColor, theme, 0.15) };
   }
 };
 
-/** 把 GraphNode 展开为固定角色默认值或显式 shape 的同标识 Core Node */
-const expandGraphNode = (node: IRGraphNode, context: CompositeExpandContext): CompositeExpandResult => {
+/** 把 Entity 展开为固定角色默认值或显式 shape 的同标识 Core Node */
+const expandEntity = (node: IREntity, context: CompositeExpandContext): CompositeExpandResult => {
   const {
     namespace: _namespace,
     type: _type,
@@ -89,9 +89,9 @@ const expandGraphNode = (node: IRGraphNode, context: CompositeExpandContext): Co
     zIndex: authoredZIndex,
     ...input
   } = node;
-  const defaults = GRAPH_NODE_DEFAULTS[role];
+  const defaults = ENTITY_DEFAULTS[role];
   const primaryColor = primaryColorOf(node, context.theme);
-  const baseline = resolveGraphNodeVariant(node.variant, primaryColor, context.theme);
+  const baseline = resolveEntityVariant(node.variant, primaryColor, context.theme);
   void _namespace;
   void _type;
   void _variant;
@@ -117,14 +117,11 @@ const expandGraphNode = (node: IRGraphNode, context: CompositeExpandContext): Co
   };
 };
 
-/** GraphNode 的 Core Composite Definition */
-export const GraphNodeDefinition: ExpandCompositeDefinition<
-  IRGraphNode,
-  typeof GRAPH_NAMESPACE,
-  typeof GraphElementType.GraphNode
-> = defineComposite({
-  namespace: GRAPH_NAMESPACE,
-  type: GraphElementType.GraphNode,
-  schema: GraphNodeSchema,
-  expand: expandGraphNode,
-});
+/** Entity 的 Core Composite Definition */
+export const EntityDefinition: ExpandCompositeDefinition<IREntity, typeof GRAPH_NAMESPACE, typeof GraphType.Entity> =
+  defineComposite({
+    namespace: GRAPH_NAMESPACE,
+    type: GraphType.Entity,
+    schema: EntitySchema,
+    expand: expandEntity,
+  });
