@@ -11,13 +11,13 @@ Custom clipping has two layers: `ClipDefinition` interprets `Scope.clip.kind`, w
 
 The contracts answer “how is this clip authored?” and “how does this geometry become a clipping path?” independently. Extend only the missing layer and reuse an existing Definition for the other layer.
 
-| Need                                      | Choose                                                                          |
-| ----------------------------------------- | ------------------------------------------------------------------------------- |
-| One-off rectangle, circle, or ellipse     | Write a Core built-in clip spec                                                 |
-| Polygon, path, or combined regions        | Assemble the operation from [Clip Extensions](/library/standard/extension/clip) |
-| New domain parameters over known geometry | Define only `ClipDefinition` and return a registered shape kind                 |
-| New static 2D clipping geometry           | Define `ClipShapeDefinition` and lower it to `SceneClipPath`                    |
-| Renderer-specific mask / filter behavior  | Outside ClipShape; use an explicit backend capability                           |
+| Need                                                | Choose                                                                                   |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| One-off rectangle                                   | Write the Core built-in `rect` clip spec                                                 |
+| Circle, ellipse, polygon, path, or combined regions | Assemble both Definition levels from [Clip Extensions](/library/standard/extension/clip) |
+| New domain parameters over known geometry           | Define only `ClipDefinition` and return a registered shape kind                          |
+| New static 2D clipping geometry                     | Define `ClipShapeDefinition` and lower it to `SceneClipPath`                             |
+| Renderer-specific mask / filter behavior            | Outside ClipShape; use an explicit backend capability                                    |
 
 IR stores only a JSON-safe clip spec with a `kind`. The `ClipShape` produced by an operation is also a JSON-safe snapshot. Zod schemas, callbacks, ReactNode values, Canvas objects, and SVG strings never enter IR or Scene.
 
@@ -82,7 +82,7 @@ Each registry performs its own lookup and schema validation, then Core converges
 
 Renderers, visual bounds, and hit testing never interpret custom kinds or receive Definitions. SVG always emits one `<path>`, while Canvas replays the same commands and fill rule.
 
-Core currently provides `rect`, `circle`, and `ellipse` operations. Standard provides the `polygon`, `path`, and `compound` operations. The six matching shape lowerers currently register through Core's `BUILTIN_CLIP_SHAPES`, sharing one registry with third-party shapes.
+Core's default operation and ClipShape collections contain only `rect`. Standard supplies operation and shape Definitions for `circle`, `ellipse`, `polygon`, `path`, and `compound` through `@retikz/standard/clip`. Third-party and official implementations share the same Core registry, validation, lowering, and diagnostic path.
 
 <SourceLinks
   sources={[
@@ -90,7 +90,7 @@ Core currently provides `rect`, `circle`, and `ellipse` operations. Standard pro
       label: 'ClipShape author contract',
       path: 'packages/kernel/core/src/contract/clip-shape/types.ts',
       startLine: 6,
-      endLine: 79,
+      endLine: 50,
     },
     {
       label: 'Two-stage resolution, lowering, and canonical paths',
@@ -162,7 +162,7 @@ Except for `<Layout>` props from `@retikz/react`, import every public type, func
 
 - [Scope](/kernel/components/layout/scope): Use `<Scope clip>` in local coordinates
 - [Layout](/kernel/components/layout/overview): React injection for both layers
-- [Clip Extensions](/library/standard/extension/clip): Official polygon / path / compound operations
+- [Clip Extensions](/library/standard/extension/clip): Two-stage official circle / ellipse / polygon / path / compound implementations
 - [Compile Options](/kernel/reference/runtime/compile): Core `clips`, `clipShapes`, and recursion limit
 - [Scene Primitives](/kernel/reference/runtime/scene-primitive): Canonical clip resources consumed by renderers
 - [Runtime Extensions](/kernel/reference/runtime/extensions): Index of Definition / registry capabilities

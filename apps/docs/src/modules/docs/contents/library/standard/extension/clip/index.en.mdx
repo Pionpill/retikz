@@ -1,21 +1,21 @@
 ---
 title: Clip Extensions
-description: Import the compound clip Definition from @retikz/standard/clip on demand, then pass it through the React or Vanilla compile entry point.
+description: Load both operation and ClipShape Definitions for five official clips from @retikz/standard/clip and assemble the two registries explicitly.
 ---
 
-Clip extensions build on Core's basic clips and add more optional content:
+Core keeps only the most common rectangular clip. Standard supplies the other five official clips through the same two-stage extension chain used by third parties:
 
-| Package         | Provided content              |
-| --------------- | ----------------------------- |
-| `core`          | `rect`, `circle`, `ellipse`   |
-| `standard/clip` | `polygon`, `path`, `compound` |
+| Package         | Provided content                                       |
+| --------------- | ------------------------------------------------------ |
+| `core`          | `rect`                                                 |
+| `standard/clip` | `circle`, `ellipse`, `polygon`, `path`, and `compound` |
 
 ## Usage
 
 This page supports two import styles:
 
-- Import specific Definitions on demand, such as `CompoundClipDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
-- Use the complete official extension set through `StandardClipDefinitions`, which includes every Standard Definition from this subpath; use `StandardClipProviders` when assembling a provider graph
+- Import the operation and shape Definition for one kind, such as `CircleClipDefinition` plus `CircleClipShapeDefinition`
+- Use `StandardClipDefinitions` plus `StandardClipShapeDefinitions` for the complete set; use `StandardClipProviders`, which contains both provider levels, when assembling a provider graph
 
 Both styles explicitly assemble capabilities for the current figure. Importing the package does not register clips globally.
 
@@ -25,9 +25,17 @@ Import the clip Definitions you need from `@retikz/standard/clip`, pass them to 
 
 ```tsx
 import { Layout, Node, Scope } from '@retikz/react';
-import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+import {
+  CircleClipDefinition,
+  CircleClipShapeDefinition,
+  CompoundClipDefinition,
+  CompoundClipShapeDefinition,
+} from '@retikz/standard/clip';
 
-<Layout clips={[CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition]}>
+<Layout
+  clips={[CompoundClipDefinition, CircleClipDefinition]}
+  clipShapes={[CompoundClipShapeDefinition, CircleClipShapeDefinition]}
+>
   <Scope
     clip={{
       kind: 'compound',
@@ -49,16 +57,22 @@ With `@retikz/vanilla`, put the Definition in `compile.clips`. `input` can be an
 
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
-import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+import {
+  CircleClipDefinition,
+  CircleClipShapeDefinition,
+  CompoundClipDefinition,
+  CompoundClipShapeDefinition,
+} from '@retikz/standard/clip';
 
 const svg = renderToSvgString(input, {
   compile: {
-    clips: [CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition],
+    clips: [CompoundClipDefinition, CircleClipDefinition],
+    clipShapes: [CompoundClipShapeDefinition, CircleClipShapeDefinition],
   },
 });
 ```
 
-The Definition exists only for the current Core registry assembly; it does not enter IR JSON or write global state as an import side effect. If IR uses `polygon`, `path`, or `compound` without injecting the corresponding Definition, Core reports an unregistered clip; after injection it validates the data through that Definition's schema.
+Definitions exist only for the current Core registry assembly; they do not enter IR JSON or write global state as an import side effect. A missing operation Definition points to `clips`; a resolved operation with no shape Definition points to `clipShapes`. With both present, Standard validates the spec and shape before Core emits one canonical path.
 
 ## Examples
 
@@ -74,17 +88,19 @@ The preview lays out two content regions horizontally. Each side uses a selectab
 
 `compound` recursively combines other registered clip specs through `children`. The example above uses two independently selectable child regions and suits cases where basic clips need to form one combined region.
 
-This subpath provides the individual Definitions, `StandardClipDefinitions`, `StandardClipProviders`, and their parameter types; the `@retikz/standard` root does not forward them.
+This subpath provides five schemas, `IRXxxClip` and `XxxClipShape` types, both Definition/provider levels, and three complete collections. The `@retikz/standard` root does not forward them.
 
 #### API
 
-`compound` uses `CompoundClip` and requires `CompoundClipDefinition` during compilation:
+`compound` uses `IRCompoundClip`. It and every actual child require both operation and shape Definitions:
 
-| Field       | Type                                    | Description                                                                                      |
-| ----------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `kind`      | `'compound'`                            | Discriminator for recursive compound clipping                                                    |
-| `children`  | `Array<IRClip \| CompoundClip>` | At least one child; each child can nest another `compound` or reference a Core / registered clip |
-| `fillRule?` | `'nonzero' \| 'evenodd'`                | Fill rule for the combined path; omitted values follow Core's default handling                   |
+| Field       | Type                     | Description                                                                                                                    |
+| ----------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `kind`      | `'compound'`             | Discriminator for recursive compound clipping                                                                                  |
+| `children`  | `Array<IRClip>`          | At least one child operation; each returns to the active Core Clip registry and may come from Core, Standard, or a third party |
+| `fillRule?` | `'nonzero' \| 'evenodd'` | Applies once to all accumulated child commands; defaults to `nonzero` and is not per-child geometric intersection              |
+
+Direct compilation passes the matching `XxxClipDefinition` and `XxxClipShapeDefinition` on demand. A provider graph uses the operation provider as a root and includes its shape dependency in the catalog. `StandardClipProviders` is a catalog, not an auto-install bundle: the resolver materializes only the root-reachable closure.
 
 ## Related
 

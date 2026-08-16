@@ -78,7 +78,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-18 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 React / Vanilla contribution 或 Core resolver。
 - ADR-19 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 Composite callback、CompileResult、Plot handles 或 renderer。
 - ADR-20 已完成 Proposed 设计与 Architecture Gate，等待人工确认；未授权修改 Core、Vanilla、React 或下游 adapter。
-- ADR-21 第一批已完成两级 Clip Definition / ClipShape Definition、canonical Scene path、provider graph、递归保护、renderer / adapter 消费、测试与双语文档，并于 2026-08-16 获人工接受；Core 最小内置收敛及 Standard 五种 ClipShape 所有权迁移留待 Standard ADR-05 第二批完成。
+- ADR-21 已完成两级 Clip Definition / ClipShape Definition、canonical Scene path、provider graph、递归保护、renderer / adapter 消费、测试与双语文档，并于 2026-08-16 获人工接受；Standard ADR-05 随后完成五种可选 ClipShape 所有权迁移，Core 最小内置最终收敛为 `rect`。
 
 ## 执行批次
 
@@ -143,7 +143,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、领域 refinement 或 Diagnostic。
 - ADR-18 在接受前必须证明多个 roots 的传递闭包、共享 provider 单次物化、dataset `Object.is` 同源边界、缺失 / cycle / maker / definition 冲突，以及 React、Vanilla、SSR、直接 resolver 与第三方 provider 的同构行为。
 - ADR-19 在接受前必须证明 expand / layout-aware Composite 统一结构化输出，Scope / placement / replay transform 后的 world-space rect、owner path、origin / final occurrence、closed selector 与 retained revision 原子性稳定，且 Scene、SVG、Canvas 不承载该 sidecar。
-- ADR-21 第一批已证明第三方 Clip operation 与 ClipShape 使用同一两级 registry 和 provider graph，canonical Scene clip path 可 JSON 往返并被 SVG、Canvas、Node Canvas、hit-test 与 visual bounds 等价消费；Core 默认仅保留矩形裁剪的最终 owner 收敛由 Standard ADR-05 第二批验收。
+- ADR-21 已证明第三方 Clip operation 与 ClipShape 使用同一两级 registry 和 provider graph，canonical Scene clip path 可 JSON 往返并被 SVG、Canvas、Node Canvas、hit-test 与 visual bounds 等价消费；Standard ADR-05 已验收最终 owner 收敛，Core 默认仅保留矩形裁剪。
 
 ## 后续性能遗留
 

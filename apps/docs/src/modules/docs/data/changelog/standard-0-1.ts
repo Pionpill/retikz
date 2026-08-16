@@ -32,8 +32,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、Clip、Ribbon providers；排版布局迁入独立 Layout 包族。',
-            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, Clip, and Ribbon providers, and moves layout composition to the independent Layout package family.',
+            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、两级 Clip、Ribbon providers；排版布局迁入独立 Layout 包族。',
+            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, two-stage Clip, and Ribbon providers, and moves layout composition to the independent Layout package family.',
           },
           items: [
             {
@@ -60,8 +60,15 @@ export const standardV01: Release = {
             {
               label: { zh: '按能力发布官方 providers', en: 'Capability-scoped official providers' },
               content: {
-                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 提供 polygon、path、compound。它们导出单项 Definition 与静态 provider，不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
-                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` provides polygon, path, and compound. These entries export individual Definitions and static providers without root aggregation or side-effect registration through Standard, React, or Vanilla.',
+                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 完整拥有 circle、ellipse、polygon、path、compound 的 schema、IR、ClipShape、两级 Definition 与静态 provider。它们不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
+                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` fully owns schemas, IR, ClipShapes, both Definition levels, and static providers for circle, ellipse, polygon, path, and compound. These entries are not aggregated through Standard, React, or Vanilla roots and never register by side effect.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：五种 ClipShape 迁入 Standard', en: 'BREAKING: five ClipShapes move to Standard' },
+              content: {
+                zh: 'Core 两级默认裁剪集合现在都只保留 `rect`。直接编译 Standard 裁剪必须同时向 `clips` / `clipShapes` 注入同 kind Definition；provider graph 以 operation 为 root，并通过静态依赖闭合 shape provider。Circle / Ellipse 与五种 ClipShape 的 Core 导出已删除，不保留 alias、自动安装或 fallback；Layout 零尺寸裁剪改用 Core 非负尺寸 rect。',
+                en: 'Both Core default clipping collections now retain only `rect`. Direct Standard clipping injects same-kind Definitions through `clips` and `clipShapes`; provider graphs root the operation and close over its shape provider through a static dependency. Core exports for Circle / Ellipse operations and all five ClipShapes are removed with no aliases, auto-installation, or fallback; zero-sized Layout clipping now uses Core non-negative rects.',
               },
             },
             {

@@ -36,7 +36,7 @@ Layout proposals are not a new registry. They are the closed, general child-eval
 | Animation property | property name                 | `<Layout animationProperties>` (custom properties on Canvas only) |
 | TeX lowerer        | math text payload             | `CompileOptions.lowerTex`                                         |
 
-Clip is a two-stage Definition capability: `ClipDefinition` resolves an authored spec into a JSON-safe `ClipShape`, then `ClipShapeDefinition` lowers it into a canonical `SceneClipPath`. The registry keys are independent; missing operations suggest `clips`, while missing shapes suggest `clipShapes`.
+Clip is a two-stage Definition capability: `ClipDefinition` resolves an authored spec into a JSON-safe `ClipShape`, then `ClipShapeDefinition` lowers it into a canonical `SceneClipPath`. The registry keys are independent; missing operations suggest `clips`, while missing shapes suggest `clipShapes`. Both Core default collections contain only `rect`; circle / ellipse / polygon / path / compound are assembled explicitly from `@retikz/standard/clip` or third-party entries.
 
 Core's generic path-kind slot is `CompileOptions.pathKinds`, and Core supplies only the `stroke` definition. Optional path kinds such as Ribbon are Standard Definitions loaded through that same slot; their schemas, geometry, and runtime datasets stay outside Core.
 

@@ -62,14 +62,14 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | ---------------- | ---------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `shapes`         | `ReadonlyArray<ShapeDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选节点形状。见 [形状扩展](/library/standard/extension/shape)                                                                     |
 | `boundaries`     | `ReadonlyArray<BoundaryDefinition>`      | 内置集合      | 追加自定义连接面。见 [自定义连接面](/kernel/components/node/custom-boundary)                                                                             |
-| `clips`          | `ReadonlyArray<ClipDefinition>`          | Core 基础集合 | 注入自定义或 Standard 组合裁剪。见 [裁剪扩展](/library/standard/extension/clip)                                                                          |
-| `clipShapes`     | `ReadonlyArray<AnyClipShapeDefinition>`  | Core 基础集合 | 注入自定义裁剪几何 lowerer；与 `clips` 构成两级 registry。见[自定义裁剪区](/kernel/components/layout/custom-clip)                                        |
+| `clips`          | `ReadonlyArray<ClipDefinition>`          | Core `rect`   | 注入自定义或 Standard 的 circle / ellipse / polygon / path / compound operation。见 [裁剪扩展](/library/standard/extension/clip)                         |
+| `clipShapes`     | `ReadonlyArray<AnyClipShapeDefinition>`  | Core `rect`   | 注入与 operation 输出匹配的裁剪几何 lowerer；与 `clips` 构成两级 registry。见[自定义裁剪区](/kernel/components/layout/custom-clip)                       |
 | `arrows`         | `ReadonlyArray<ArrowDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选箭头。见 [箭头扩展](/library/standard/extension/arrow)                                                                         |
 | `patterns`       | `ReadonlyArray<PatternDefinition>`       | 内置集合      | 追加自定义填充图案。见 [自定义图案](/kernel/components/effects/custom-pattern)                                                                           |
 | `pathGenerators` | `ReadonlyArray<PathGeneratorDefinition>` | 无            | 注入自定义路径生成器；Core 没有默认项。见 [路径生成器](/kernel/components/draw/path-generator)                                                           |
 | `pathKinds`      | `ReadonlyArray<PathKindDefinition>`      | 内置集合      | 追加自定义或可选 Standard path kind provider。见[自定义路径](/kernel/components/draw/custom-path)与[Standard Ribbon](/library/standard/extension/ribbon) |
 
-传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。`clips` 按 authored operation kind 解析 spec，`clipShapes` 按 operation 输出的 shape kind 校验并降低为 canonical path；两个 kind 不要求同名。Standard 可选内容也走同一条合并与诊断路径。
+传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。`clips` 按 authored operation kind 解析 spec，`clipShapes` 按 operation 输出的 shape kind 校验并降低为 canonical path；两个 kind 不要求同名。Core 两级默认集合都只含 `rect`，其余五种官方裁剪从 `@retikz/standard/clip` 成对显式装配，并走同一条合并与诊断路径。
 
 ### Theme token owner registry
 

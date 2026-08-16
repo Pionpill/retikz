@@ -86,7 +86,7 @@ import { Scope } from '@retikz/react';
 
 ### 裁剪与层级
 
-`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect` / `circle` / `ellipse`，以及从 Standard 注入的 `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
+`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及从 Standard 两级注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
 
 <ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 

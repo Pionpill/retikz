@@ -68,12 +68,12 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 ## Clip
 
-`ClipSchema` is the Core contract accepted by `Scope.clip`. Built-in geometry uses the JSON shapes below. Any other `kind` is a JSON-safe custom clip spec: Core preserves the serialized fields, then validates and resolves them through the matching Definition contributed to `CompileOptions.clips`.
+`ClipSchema` is the Core contract accepted by `Scope.clip`. Core precisely owns only `rect`; any other non-empty `kind` is an open JSON-safe clip spec validated and resolved by a Definition contributed to `CompileOptions.clips`.
 
-| Branch            | Discriminator            | Content                                                      |
-| ----------------- | ------------------------ | ------------------------------------------------------------ |
-| Built-in geometry | `rect` / `circle`, etc.  | Uses one of the fixed schemas below                          |
-| Custom Definition | Any other non-empty kind | JSON-safe fields are validated by its contributed Definition |
+| Branch               | Discriminator            | Content                                                      |
+| -------------------- | ------------------------ | ------------------------------------------------------------ |
+| Core built-in        | `rect`                   | Precisely validated by `RectClipSchema`                      |
+| Extension Definition | Any other non-empty kind | JSON-safe fields are validated by its contributed Definition |
 
 <span id="rectclip"></span>
 
@@ -85,16 +85,20 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 ### CircleClip
 
+`CircleClipSchema` comes from `@retikz/standard/clip`; it is not a Core built-in schema.
+
 <ZodSchema name="CircleClipSchema" />
 
 <span id="ellipseclip"></span>
 
 ### EllipseClip
 
+`EllipseClipSchema` comes from `@retikz/standard/clip`; it is not a Core built-in schema.
+
 <ZodSchema name="EllipseClipSchema" />
 
-Polygon and path clip schemas are provided by `@retikz/standard/clip` and are validated by their injected Definitions rather than by the Core schema registry. See [Clip extensions](/library/standard/extension/clip).
+Circle, ellipse, polygon, path, and compound clip schemas all come from `@retikz/standard/clip`. Their injected operation Definitions validate authored specs instead of Core owning those schemas; matching ClipShape Definitions also enter through `CompileOptions.clipShapes`. See [Clip extensions](/library/standard/extension/clip).
 
-`compound` is an optional Standard clip, not a Core schema branch. Import `CompoundClipDefinition` from `@retikz/standard/clip` and contribute it through `CompileOptions.clips`; that Definition owns the recursive `children` contract and resolves it with the same Core clip registry path as other custom kinds.
+Each `compound.children` entry returns to the active Core Clip registry. Inject `CompoundClipDefinition` and `CompoundClipShapeDefinition` from `@retikz/standard/clip`, plus both Definition levels for every actual child; Standard does not install all children implicitly.
 
 For the custom Definition, registry, and renderer boundary, see [Custom Clip](/kernel/components/layout/custom-clip).

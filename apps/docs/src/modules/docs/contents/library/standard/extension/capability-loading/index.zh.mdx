@@ -16,14 +16,15 @@ Standard 扩展不会自动注册。使用形状、箭头、裁剪或 Path kind 
 ```tsx
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition, CircleClipShapeDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
 <Layout
   shapes={[CrossShapeDefinition]}
   arrows={[DiamondArrowDefinition]}
-  clips={[CompoundClipDefinition]}
+  clips={[CircleClipDefinition]}
+  clipShapes={[CircleClipShapeDefinition]}
   pathKinds={[RibbonPathKindDefinition]}
 >
   {/* 图形内容 */}
@@ -35,7 +36,7 @@ Vanilla 使用同一组 Definition：
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition, CircleClipShapeDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
@@ -43,7 +44,8 @@ const svg = renderToSvgString(input, {
   compile: {
     shapes: [CrossShapeDefinition],
     arrows: [DiamondArrowDefinition],
-    clips: [CompoundClipDefinition],
+    clips: [CircleClipDefinition],
+    clipShapes: [CircleClipShapeDefinition],
     pathKinds: [RibbonPathKindDefinition],
   },
 });
@@ -56,10 +58,15 @@ const svg = renderToSvgString(input, {
 ```tsx
 import { Layout } from '@retikz/react';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
-import { StandardClipDefinitions } from '@retikz/standard/clip';
+import { StandardClipDefinitions, StandardClipShapeDefinitions } from '@retikz/standard/clip';
 import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-<Layout shapes={StandardShapeDefinitions} arrows={StandardArrowDefinitions} clips={StandardClipDefinitions}>
+<Layout
+  shapes={StandardShapeDefinitions}
+  arrows={StandardArrowDefinitions}
+  clips={StandardClipDefinitions}
+  clipShapes={StandardClipShapeDefinitions}
+>
   {/* 图形内容 */}
 </Layout>;
 ```
@@ -69,7 +76,7 @@ Vanilla 只需要把同样的集合传给 `compile`：
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
-import { StandardClipDefinitions } from '@retikz/standard/clip';
+import { StandardClipDefinitions, StandardClipShapeDefinitions } from '@retikz/standard/clip';
 import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
 const svg = renderToSvgString(input, {
@@ -77,6 +84,7 @@ const svg = renderToSvgString(input, {
     shapes: StandardShapeDefinitions,
     arrows: StandardArrowDefinitions,
     clips: StandardClipDefinitions,
+    clipShapes: StandardClipShapeDefinitions,
   },
 });
 ```
@@ -87,7 +95,9 @@ const svg = renderToSvgString(input, {
 | `RibbonPathKindDefinition` | Ribbon 只有一个直接 Path kind Definition，没有完整的 `StandardRibbonDefinitions` 集合 |
 | `StandardXxxDefinitions`   | 快速使用对应官方扩展包的全部 Definition                                               |
 
-如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`，Ribbon 则使用 `createRibbonProviderContribution()`。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips`、`pathKinds` 数组。
+裁剪是两级能力：`clips` 解析 authored operation，`clipShapes` 把解析后的几何降低为 canonical path。按需装载时必须为实际 kind 提供两级 Definition；完整集合也必须成对传入。
+
+如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`，Ribbon 则使用 `createRibbonProviderContribution()`。`StandardClipProviders` 同时包含 operation 与 shape provider，但仍只是 catalog；resolver 只物化 roots 可达闭包。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips`、`clipShapes`、`pathKinds` 数组。
 
 ## 内部编译逻辑
 
@@ -97,7 +107,7 @@ const svg = renderToSvgString(input, {
 
 图中左侧的单个 Definition 和完整集合只是两种装载入口；它们会汇入同一条 Core 编译路径。provider graph 负责在编译前组织 Definition，IR 只在消费阶段按名称查找已经装载的能力。
 
-- 直接传入 Definition 时，Core 将它们放入对应的 `shapes`、`arrows`、`clips` 或 `pathKinds` registry
+- 直接传入 Definition 时，Core 将它们放入对应的 `shapes`、`arrows`、`clips`、`clipShapes` 或 `pathKinds` registry
 - 使用 Provider 时，adapter 先收集 `CoreProviderContribution`（例如 `createRibbonProviderContribution()`），Core 的 `resolveCoreProviderDependencies()` 解析依赖，再把结果按能力分组为普通 compile options
 - Standard 只提供 Definition 和 Provider，不维护全局注册表，也不创建第二套 lookup 规则
 

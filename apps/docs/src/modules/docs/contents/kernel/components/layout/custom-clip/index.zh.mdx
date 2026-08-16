@@ -11,13 +11,13 @@ description: 用 ClipDefinition 解析业务裁剪，再用 ClipShapeDefinition 
 
 两级契约分别解决「怎么描述裁剪」与「这种几何怎么变成裁剪路径」。只有一层需要扩展时，可以复用另一层已有 Definition。
 
-| 需求                             | 选择                                                           |
-| -------------------------------- | -------------------------------------------------------------- |
-| 一次性矩形、圆或椭圆             | 直接写 Core 内置 clip spec                                     |
-| 多边形、路径或多个区域组合       | 从 [裁剪扩展](/library/standard/extension/clip) 装配 operation |
-| 新业务参数，但可复用已有几何     | 只定义 `ClipDefinition`，返回已注册的 shape kind               |
-| 新的静态二维裁剪几何             | 定义 `ClipShapeDefinition`，降低为 `SceneClipPath`             |
-| renderer 专属 mask / filter 行为 | 不属于 ClipShape；另建明确的后端能力                           |
+| 需求                             | 选择                                                                |
+| -------------------------------- | ------------------------------------------------------------------- |
+| 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                                   |
+| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/extension/clip) 装配两级 Definition |
+| 新业务参数，但可复用已有几何     | 只定义 `ClipDefinition`，返回已注册的 shape kind                    |
+| 新的静态二维裁剪几何             | 定义 `ClipShapeDefinition`，降低为 `SceneClipPath`                  |
+| renderer 专属 mask / filter 行为 | 不属于 ClipShape；另建明确的后端能力                                |
 
 IR 只保存带 `kind` 的 JSON-safe clip spec。operation 解析出的 `ClipShape` 也必须是 JSON-safe snapshot；Zod schema、callback、ReactNode、Canvas 对象和 SVG 字符串都不能进入 IR 或 Scene。
 
@@ -82,7 +82,7 @@ React `<Layout>` 转交相同的 Core options，不建立 adapter 私有 registr
 
 renderer、visual bounds 和 hit-test 不再解释自定义 kind，也不接收 Definition。SVG 始终生成一个 `<path>`；Canvas 重放相同 commands 与 fill rule。
 
-当前 Core operation 内置集合为 `rect`、`circle`、`ellipse`；Standard 提供 `polygon`、`path`、`compound` operation。对应六种 shape lowerer 当前都通过 Core 的 `BUILTIN_CLIP_SHAPES` 注册，第三方 shape 与它们共用同一 registry。
+Core 默认 operation 与 ClipShape 集合都只保留 `rect`。Standard 通过 `@retikz/standard/clip` 提供 `circle`、`ellipse`、`polygon`、`path`、`compound` 的 operation / shape Definition；第三方与这些官方实现共用同一套 Core registry、校验、lowering 与诊断路径。
 
 <SourceLinks
   sources={[
@@ -90,7 +90,7 @@ renderer、visual bounds 和 hit-test 不再解释自定义 kind，也不接收 
       label: 'ClipShape 作者契约',
       path: 'packages/kernel/core/src/contract/clip-shape/types.ts',
       startLine: 6,
-      endLine: 79,
+      endLine: 50,
     },
     {
       label: '两级解析、lowering 与 canonical path',
@@ -162,7 +162,7 @@ renderer、visual bounds 和 hit-test 不再解释自定义 kind，也不接收 
 
 - [Scope](/kernel/components/layout/scope)：使用 `<Scope clip>` 与局部坐标
 - [Layout](/kernel/components/layout/overview)：React 两级注入入口
-- [裁剪扩展](/library/standard/extension/clip)：官方 polygon / path / compound operation
+- [裁剪扩展](/library/standard/extension/clip)：官方 circle / ellipse / polygon / path / compound 两级实现
 - [编译选项](/kernel/reference/runtime/compile)：Core `clips`、`clipShapes` 与递归上限
 - [场景原语](/kernel/reference/runtime/scene-primitive)：renderer 消费的 canonical clip resource
 - [运行时扩展](/kernel/reference/runtime/extensions)：Definition / registry 能力总索引

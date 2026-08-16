@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.4 Roadmap
 
-> 状态：Layout owner 迁移与 ADR-01～04 均已完成；Core ADR-21 第一批能力已 Accepted，ADR-05 仍为 Proposed，milestone 等待第二批完成 Standard ClipShape 迁移。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [ADR-05](./05-standard-clip-shapes.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · [Core ADR-21](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/21-extensible-clip-shapes.md)
+> 状态：Layout owner 迁移与 ADR-01～05 均已完成，Standard v0.1 alpha.4 milestone 已收口。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [ADR-05](./05-standard-clip-shapes.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · [Core ADR-21](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/21-extensible-clip-shapes.md)
 
 ## 目标
 
@@ -21,9 +21,9 @@ ADR-05 进一步完成 ClipShape 实现迁移：Core 在 ADR-21 中把 operation
 | [ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)       | Accepted | Core 最小内置集合与 Standard provider 子入口 | 冻结 Core / Standard provider 所有权、最小内置边界、能力子入口与显式装配契约 |
 | [ADR-03](./03-ribbon-as-standard-path-kind.md)                                  | Accepted | Ribbon 作为 Standard Path Kind 的完整迁移    | 冻结 Ribbon schema、Definition、profile、lowering、Tier 2 依赖与跨入口闭环   |
 | [ADR-04](./04-sector-shape-unification.md)                                      | Accepted | Sector 统一弧形与扇形 Node shape             | 删除独立 Arc shape，以 Sector 厚度表达开放弧、扇形与环楔                     |
-| [ADR-05](./05-standard-clip-shapes.md)                                          | Proposed | Standard ClipShape 完整迁移                  | 冻结五种 Clip spec/shape、两级 Definition、provider dependency 与跨入口闭环  |
+| [ADR-05](./05-standard-clip-shapes.md)                                          | Accepted | Standard ClipShape 完整迁移                  | 冻结五种 Clip spec/shape、两级 Definition、provider dependency 与跨入口闭环  |
 
-ADR-02～04 均已按其公开契约完成并进入 `Accepted`。ADR-05 演进 ADR-02 的 Clip 行：Core 默认从 rect/circle/ellipse 收敛为 rect，Standard 完整接管其余五种 ClipShape；ADR-02 的子入口和显式装配原则不变。
+ADR-02～05 均已按其公开契约完成并进入 `Accepted`。ADR-05 演进 ADR-02 的 Clip 行：Core 默认从 rect/circle/ellipse 收敛为 rect，Standard 完整接管其余五种 ClipShape；ADR-02 的子入口和显式装配原则不变。
 
 ## 后续定义拓展方向
 
@@ -82,5 +82,5 @@ ADR-02～04 均已按其公开契约完成并进入 `Accepted`。ADR-05 演进 A
 3. ADR-02 已 Accepted：Core provider graph、最小内置集合、三个 Standard provider 子入口与 Tier 2 显式依赖闭包均已完成
 4. ADR-04 已 Accepted：Standard 不再维护独立 Arc shape，Sector 统一表达开放弧、扇形与环楔
 5. ADR-03 已 Accepted：Ribbon 的 schema、Path Kind、profile、几何编译、公开入口与跨入口闭环已完成
-6. Core ADR-21 第一批已 Accepted，开放两级 ClipShape 扩展与 canonical Scene path；ADR-05 第二批仍为 Proposed，Standard 五种 ClipShape 接入、Core owner 收敛与 Layout `path` provider 装配尚未执行
+6. Core ADR-21 与 Standard ADR-05 均已 Accepted：两级 ClipShape 扩展、canonical Scene path、Standard 五种 ClipShape、Core `rect` 最小内置与 Layout Core-only allocation clip 已形成最终闭环
 7. 后续新增 Shape、Arrow、Clip 或其它官方定义时，继续按能力归属与真实复用需求独立决策，不恢复全局注册或根入口全集

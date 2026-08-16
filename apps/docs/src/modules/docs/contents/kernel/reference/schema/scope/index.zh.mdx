@@ -105,12 +105,12 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
 
 ## 裁剪
 
-`ClipSchema` 是 `Scope.clip` 接受的 Core 契约。内置几何直接使用下面的 JSON 形状。其他任意 `kind` 都是 JSON-safe 的自定义裁剪 spec：Core 保留可序列化字段，再通过贡献给 `CompileOptions.clips` 的对应 Definition 校验和解析。
+`ClipSchema` 是 `Scope.clip` 接受的 Core 契约。Core 只精确内置 `rect`；其他任意非空 `kind` 都是 JSON-safe 的开放裁剪 spec，由贡献给 `CompileOptions.clips` 的 Definition 校验和解析。
 
-| 分支              | 判别方式               | 内容                                     |
-| ----------------- | ---------------------- | ---------------------------------------- |
-| 内置几何          | `rect` / `circle` 等   | 使用下方固定字段 schema                  |
-| 自定义 Definition | 其它非空 `kind` 字符串 | JSON-safe 字段由其贡献的 Definition 校验 |
+| 分支            | 判别方式               | 内容                                     |
+| --------------- | ---------------------- | ---------------------------------------- |
+| Core 内置       | `rect`                 | 使用 `RectClipSchema` 精确校验           |
+| 扩展 Definition | 其它非空 `kind` 字符串 | JSON-safe 字段由其贡献的 Definition 校验 |
 
 <span id="rectclip"></span>
 
@@ -123,14 +123,16 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
     kind: '判别字段 rect',
     x: '左上角 x，scope 局部坐标',
     y: '左上角 y，scope 局部坐标',
-    width: '矩形宽度，必须为正数',
-    height: '矩形高度，必须为正数',
+    width: '矩形宽度，必须为有限非负数；0 表示空裁剪区域',
+    height: '矩形高度，必须为有限非负数；0 表示空裁剪区域',
   }}
 />
 
 <span id="circleclip"></span>
 
 ### 圆
+
+`CircleClipSchema` 来自 `@retikz/standard/clip`，不是 Core 内置 schema。
 
 <ZodSchema
   name="CircleClipSchema"
@@ -147,6 +149,8 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
 
 ### 椭圆
 
+`EllipseClipSchema` 来自 `@retikz/standard/clip`，不是 Core 内置 schema。
+
 <ZodSchema
   name="EllipseClipSchema"
   description="椭圆裁剪区域。"
@@ -159,8 +163,8 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
   }}
 />
 
-多边形与路径裁剪 schema 由 `@retikz/standard/clip` 提供，并通过注入的 Definition 校验，不属于 Core schema registry。详见[裁剪扩展](/library/standard/extension/clip)。
+圆、椭圆、多边形、路径与组合裁剪 schema 都由 `@retikz/standard/clip` 提供，并通过注入的 operation Definition 校验，不属于 Core schema owner。对应 ClipShape Definition 还需通过 `CompileOptions.clipShapes` 注入。详见[裁剪扩展](/library/standard/extension/clip)。
 
-`compound` 是可选的 Standard 裁剪，不是 Core schema 分支。从 `@retikz/standard/clip` 导入 `CompoundClipDefinition` 并贡献给 `CompileOptions.clips`；该 Definition 拥有递归 `children` 契约，并与其他自定义 kind 一样走同一条 Core 裁剪 registry 解析路径。
+`compound` 的 `children` 会逐项回到当前 Core Clip registry。从 `@retikz/standard/clip` 注入 `CompoundClipDefinition` 与 `CompoundClipShapeDefinition`，并为实际 child 同样提供所需的两级 Definition；Standard 不隐式安装全部 child。
 
 自定义裁剪的 Definition、registry 与 renderer 边界见 [自定义裁剪](/kernel/components/layout/custom-clip)。

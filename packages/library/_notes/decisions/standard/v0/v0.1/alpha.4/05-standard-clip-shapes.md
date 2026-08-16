@@ -1,10 +1,8 @@
 # ADR-05：Standard 裁剪形状与两级 Provider
 
-- 状态：Proposed
+- 状态：Accepted（2026-08-16，五种 Standard ClipShape 与两级 provider 迁移完成）
 - 决策日期：2026-08-16
 - 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core ADR-21](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/21-extensible-clip-shapes.md) · [ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)
-
-> 实施阶段：Core ADR-21 第一批能力已 Accepted；本 ADR 所属的 Standard 第二批接入与所有权迁移尚未执行
 
 ## 背景与目标
 
@@ -14,7 +12,7 @@ Core ADR-21 建立 `ClipDefinition → ClipShapeDefinition → SceneClipPath` �
 
 ## 决策：五种官方 ClipShape 全部由 Standard 提供
 
-`@retikz/standard/clip` 提供 Circle、Ellipse、Polygon、Path 与 Compound 五种 ClipShape。前四种 operation spec 与 resolved shape 字段完全同义，复用各自唯一 schema；Compound operation 的 children 是开放 `IRClipSpec`，resolved Compound shape 的 children 是开放 `ClipShape`，因此分别拥有 spec schema 与 shape schema，但共享同一个 `kind: 'compound'` 和 fill rule 语义。
+`@retikz/standard/clip` 提供 Circle、Ellipse、Polygon、Path 与 Compound 五种 ClipShape。前四种 operation spec 与 resolved shape 字段完全同义，复用各自唯一 schema；Compound operation 的 children 是开放 `IRClip`，resolved Compound shape 的 children 是开放 `ClipShape`，因此分别拥有 spec schema 与 shape schema，但共享同一个 `kind: 'compound'` 和 fill rule 语义。
 
 每种能力同时提供 `XxxClipDefinition` 与 `XxxClipShapeDefinition`。Clip Definition 只把已校验 spec 解析成对应 JSON-safe shape；ClipShape Definition 负责降低到 Core `SceneClipPath`：Circle 使用完整圆弧，Ellipse 使用完整椭圆弧，Polygon 使用 authored 顶点顺序生成闭合子路径，Path 传递结构化 commands，Compound 按 authored child 顺序递归累积 commands 并以外层 fill rule 统一解释全部子路径。
 
@@ -23,6 +21,8 @@ Core ADR-21 建立 `ClipDefinition → ClipShapeDefinition → SceneClipPath` �
 Compound 的直接静态依赖只有 Compound ClipShape provider。它可以包含任意 Standard 或第三方 operation，因此调用方必须同时把实际 child operation roots 及其 provider catalog 作为 contribution 提供；Compound 不从 IR 反向扫描 package、不隐式安装全部 Standard clips。使用直接 compile options 时，调用方同样只注入实际需要的两级 definitions，或显式使用 Standard 全集合。
 
 本决策演进并取代 ADR-02 表格中 Clip 的内置所有权结论：Core 默认内置从 `rect`、`circle`、`ellipse` 收敛为仅 `rect`，Standard 官方扩展从 `polygon`、`path`、`compound` 扩展为五种形状。ADR-02 的能力子入口、无全局注册、显式 provider graph、冲突和跨入口装配原则保持有效。
+
+Core 保留的 `rect` 同时承载正面积与零尺寸裁剪；任一轴为零时表示空区域。Layout 因此始终使用 Core rect 表达 allocation clip，不依赖 Standard Path provider；Standard `path` 只服务显式选择该可选 operation 的作者和上层 composite。
 
 理由：
 
@@ -66,7 +66,7 @@ type CompoundClipShape = {
   fillRule?: IRClipFillRule;
 };
 
-declare const CircleClipDefinition: ClipDefinition<StandardCircleClipSpec, CircleClipShape>;
+declare const CircleClipDefinition: ClipDefinition<IRCircleClip, CircleClipShape>;
 declare const CircleClipShapeDefinition: ClipShapeDefinition<CircleClipShape>;
 
 declare const StandardClipDefinitions: ReadonlyArray<ClipDefinition>;
@@ -91,4 +91,11 @@ provider contribution 以 Path operation 为 root 时，provider catalog 必须�
 - Compound：children 非空并按 authored 顺序递归 resolve/lower；外层 `fillRule` 覆盖 child path/compound 自带规则，缺省为 `nonzero`。结果是单一累积路径的 winding/parity 区域，不是 child 几何交集；需要交集时使用嵌套 Scope clip
 - 失败与诊断：无效 spec 由对应 Standard schema 诊断；缺少 operation/shape provider、重复 kind、非法 shape output、递归 cycle/depth 与非法 canonical path 沿 Core ADR-21 的统一错误边界处理。Standard 不捕获后降级为 `rect`、跳过 clip 或偷偷安装定义
 - 兼容性 / breaking：`CircleClipShape`、`EllipseClipShape`、`PolygonClipShape`、`PathClipShape`、`CompoundClipShape` 改从 `@retikz/standard/clip` 导入；Circle/Ellipse Clip spec 与 definitions 也改从该子入口取得。旧 Core 导出和默认内置被删除，不保留 alias。既有 Standard Polygon/Path/Compound ClipDefinition 名称保持，但调用方必须同时装配 shape definitions/providers
+- Layout：零尺寸 allocation 继续裁掉全部内容，但统一通过 Core `rect` 表达；Layout 不声明 Standard provider root，也不要求宿主预装 `@retikz/standard/clip`
 - React / Vanilla 等价性：Standard React/Vanilla 不新增 ClipShape registry；它们与 Surface、Chart、Table 等 consumer 只声明 Core provider roots/catalog，并由同一个 Core resolver 物化两级 definitions。相同 IR 和 contribution 在直接 Core、React、Vanilla、SSR 与 retained processing 中得到相同 Scene 和诊断
+
+## 实施结论
+
+五种可选 ClipShape 的 schema、IR、shape、两级 definitions 与 providers 已统一由 `@retikz/standard/clip` 拥有，Core 默认裁剪集合已收敛为 `rect`。直接编译、provider contribution、React、Vanilla、Surface 及官方领域 consumer 均通过同一两级 registry 显式装配，Layout 的 allocation clip 保持 Core-only。
+
+验证覆盖公开导出、schema 与 definition 契约、provider 可达闭包、precision、Compound 递归与第三方 child、零尺寸 bounds、跨 adapter / Tier 2 接入及双语文档。迁移不保留旧 Core 导出、兼容 alias、隐式全量安装或 renderer 旁路。
