@@ -1,0 +1,81 @@
+---
+title: Chart
+description: Plot is a vertical extension of GoG, the Grammar of Graphics; Chart is a horizontal type-level wrapper on top of Plot with chart-level presentation.
+---
+
+Plot is a vertical extension of GoG (Grammar of Graphics): it expands the grammar along dimensions such as data bindings, marks, channels, scales, coordinates, guides, and transforms to describe how data is drawn. Chart does not introduce a second drawing grammar. It is a horizontal, chart-type wrapper on top of Plot: it combines the Plot semantics required by a `type` into a complete chart and adds chart-level presentation.
+
+The relationship is: Plot extends the grammar, while Chart organizes chart types. For example, `ScatterChart` and `BubbleChart` are type-level wrappers built on Plot. They can provide their own default recipes while still accepting Plot mark, guide, scale, or transform extensions.
+
+## Plot and Chart: roles and evolution
+
+| Layer | Role                                                                                                         | Evolution direction                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Plot  | Extends the grammar vertically through fields, marks, encodings, scales, coordinates, guides, and transforms | Continue expanding Plot's drawing semantics and composition     |
+| Chart | Combines Plot horizontally around a chart `type` without introducing a second drawing grammar                | Continue adding chart types and type recipes while reusing Plot |
+
+Use Plot APIs when you need to extend the drawing grammar, and use Chart when you need to organize Plot semantics into a chart type; on that basis, Chart provides the following capabilities shared by the Chart family:
+
+| Capability              | Responsibility                                                                           | Typical entry                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Chart-type packaging    | Combines the Plot semantics required by a chart type and provides a complete chart entry | `Chart` from `@retikz/chart-react`                                |
+| Typed Chart recipe      | Provides a default recipe for a specific chart type while retaining Plot extensions      | `ScatterChart` and `BubbleChart` from `@retikz/chart-react/point` |
+| Plot extensions         | Keeps Plot capabilities such as marks, guides, scales, and transforms available in Chart | Plot components from `@retikz/plot-react`                         |
+| Chart-wide presentation | Expresses the complete chart's subject, scope, data source, and reading constraints      | `title` / `subtitle` / `source` / `note`, or matching markers     |
+
+## Base Chart capabilities
+
+The `Chart` component provides the capabilities shared by the Chart family: it organizes Plot content into a complete chart and provides chart-wide presentation. This section covers the base `Chart` DSL and `spec` authoring paths. For a specific chart type, see the documentation in the corresponding section, such as [Scatter & Points](/viz/chart/points).
+
+The base React entry is `@retikz/chart-react`. In DSL mode, place Plot marks and guides together with Chart presentation markers directly inside `Chart`:
+
+```tsx
+import { Axis, PointMark } from '@retikz/plot-react';
+import { Chart, ChartSource, ChartTitle } from '@retikz/chart-react';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+<Chart data={rows} width={640} height={360}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" title="X" />
+  <Axis dimension="y" title="Y" />
+  <ChartTitle>Relationship between two variables</ChartTitle>
+  <ChartSource>Example data</ChartSource>
+</Chart>;
+```
+
+When you already have a complete `IRPlot`, use spec mode: `<Chart spec={plotSpec} title="..." source="..." />`. In this mode, the Plot content comes from `spec`; children are reserved for presentation markers such as `ChartTitle`, `ChartSubtitle`, `ChartSource`, and `ChartNote`. Put Plot components inside the Chart only when using DSL mode.
+
+`title`, `subtitle`, `source`, and `note` are marker shorthands. Use markers when you need custom text styling, position, or order; use each marker at most once in a chart. The detailed presentation ordering and text-child rules are covered with the Chart authoring material in the chart examples.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Chart React exports the base Chart and presentation markers',
+      path: 'packages/viz/chart-react/src/base/index.ts',
+      startLine: 15,
+      endLine: 44,
+    },
+    {
+      label: 'Chart normalizes Plot authoring into Chart input',
+      path: 'packages/viz/chart-react/src/base/index.ts',
+      startLine: 126,
+      endLine: 152,
+    },
+  ]}
+/>
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points">
+    <span className="font-semibold">Scatter &amp; Points</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Start with Scatter and Bubble to see typed Chart recipes combined with Plot extensions.
+    </span>
+  </LinkedCard>
+</div>

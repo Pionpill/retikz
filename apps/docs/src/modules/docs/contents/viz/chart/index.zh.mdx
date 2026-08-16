@@ -1,0 +1,81 @@
+---
+title: Chart
+description: Plot 是基于 GoG 图形语法的纵向能力扩展，Chart 则在其上按图表类型做横向封装，并提供整图展示能力。
+---
+
+Plot 是基于 GoG（Grammar of Graphics，图形语法）的纵向能力扩展：沿着数据绑定、图元、通道、比例尺、坐标系、辅助元素和变换等语法维度，逐层补充“数据怎样被绘制”的能力。Chart 不再建立另一套绘图语法，而是在 Plot 之上按图表 `type` 做横向封装：把一个图形类型需要的 Plot 语义组合成完整图表，并补充整图展示。
+
+两者的关系可以这样理解：Plot 扩展图形语法本身，Chart 组织图形类型。比如 `ScatterChart` 和 `BubbleChart` 都是基于 Plot 的类型封装；它们可以提供各自的默认方案，同时继续接收 Plot 的图元、辅助元素、比例尺或变换扩展。
+
+## Plot 与 Chart 的功能定位
+
+| 层次  | 功能定位                                                                 | 演进方向                                             |
+| ----- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Plot  | 沿图形语法维度纵向扩展：字段、图元、编码、比例尺、坐标系、辅助元素与变换 | 持续补充和深化 Plot 的绘图语义与可组合能力           |
+| Chart | 基于 Plot 按图表 `type` 横向组合成完整图表，不另建一套绘图语法           | 持续扩展图表类型与类型方案，同时复用 Plot 的绘图能力 |
+
+需要扩展图形语法时使用 Plot 的 API；需要把 Plot 语义组织成某种图表类型时使用 Chart，并在此基础上提供以下 Chart 家族共用能力：
+
+| 能力              | 负责什么                                                       | 典型入口                                                     |
+| ----------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
+| 图表类型封装      | 按 `type` 组合一个图表类型需要的 Plot 语义，并提供完整图表入口 | `@retikz/chart-react` 的 `Chart`                             |
+| 类型化 Chart 方案 | 为特定图表类型提供默认方案，同时保留 Plot 的扩展能力           | `@retikz/chart-react/point` 的 `ScatterChart`、`BubbleChart` |
+| Plot 扩展         | 在 Chart 中继续使用图元、辅助元素、比例尺和变换等 Plot 能力    | `@retikz/plot-react` 的 Plot 子组件                          |
+| 整图展示          | 表达整张图的主题、范围、数据来源和阅读限制                     | `title` / `subtitle` / `source` / `note`，或对应标记         |
+
+## 基础 Chart 能力
+
+`Chart` 组件提供 Chart 家族共用的基础能力：把 Plot 内容组织成完整图表，并提供整图展示。本节介绍基础 `Chart` 的 DSL 与 `spec` 两种编写入口；如果要使用具体图形类型，请参考[点图](/viz/chart/points)等其它目录下的文档。
+
+基础 React 入口来自 `@retikz/chart-react`。在 DSL 模式下，直接把 Plot 的图元、辅助元素等子组件和 Chart 展示标记放在 `Chart` 内：
+
+```tsx
+import { Axis, PointMark } from '@retikz/plot-react';
+import { Chart, ChartSource, ChartTitle } from '@retikz/chart-react';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+<Chart data={rows} width={640} height={360}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" title="X" />
+  <Axis dimension="y" title="Y" />
+  <ChartTitle>两个变量的关系</ChartTitle>
+  <ChartSource>示例数据</ChartSource>
+</Chart>;
+```
+
+如果已经有完整的 `IRPlot`，也可以使用 `spec` 模式：`<Chart spec={plotSpec} title="..." source="..." />`。此时 Plot 内容由 `spec` 提供，children 只用于放置 `ChartTitle`、`ChartSubtitle`、`ChartSource` 和 `ChartNote` 等展示标记；Plot 子组件应继续通过 Plot DSL 模式传入。
+
+`title`、`subtitle`、`source` 和 `note` 是标记的简写。需要自定义文字样式、位置或出现顺序时，使用标记；同一种标记在一张图中只使用一次。具体的展示顺序与文字子节点规则见各图表示例中的 Chart 编写说明。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Chart React 导出基础 Chart 与展示标记',
+      path: 'packages/viz/chart-react/src/base/index.ts',
+      startLine: 15,
+      endLine: 44,
+    },
+    {
+      label: 'Chart 将 Plot 编写入口归一并组装为 Chart 输入',
+      path: 'packages/viz/chart-react/src/base/index.ts',
+      startLine: 126,
+      endLine: 152,
+    },
+  ]}
+/>
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points">
+    <span className="font-semibold">点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      从散点图和气泡图开始，查看类型化 Chart 方案与 Plot 扩展的组合方式。
+    </span>
+  </LinkedCard>
+</div>
