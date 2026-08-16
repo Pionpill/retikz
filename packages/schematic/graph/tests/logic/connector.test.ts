@@ -50,9 +50,7 @@ describe('GraphConnector canonical semantic IR', () => {
   });
 
   it('requires exactly one authoring path source and a relation role', () => {
-    expect(() =>
-      Graph.createGraphConnector({ id: 'missing', role: 'flow' } as never),
-    ).toThrow(/exactly one/i);
+    expect(() => Graph.createGraphConnector({ id: 'missing', role: 'flow' } as never)).toThrow(/exactly one/i);
     expect(() =>
       Graph.createGraphConnector({ id: 'both', role: 'flow', children: steps, way: ['a', 'b'] } as never),
     ).toThrow(/exactly one/i);

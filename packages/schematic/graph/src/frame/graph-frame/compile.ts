@@ -30,7 +30,7 @@ import {
 
 import type { GraphNodeVariantValue } from '../../node';
 import type { GraphLayoutItemArtifact } from '../../shared';
-import type { GraphFrameArtifact,IRGraphFrame } from './types';
+import type { GraphFrameArtifact, IRGraphFrame } from './types';
 
 import { GRAPH_NAMESPACE, GraphElementType } from '../../shared';
 

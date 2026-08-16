@@ -2,7 +2,7 @@ import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/cor
 
 import { defineComposite } from '@retikz/core';
 
-import type { GraphFrameArtifact,IRGraphFrame } from './types';
+import type { GraphFrameArtifact, IRGraphFrame } from './types';
 
 import { GRAPH_NAMESPACE } from '../../shared';
 import { compileGraphFrame } from './compile';

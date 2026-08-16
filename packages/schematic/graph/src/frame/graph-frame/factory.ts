@@ -1,4 +1,4 @@
-import type { GraphFrameCreateOptions,IRGraphFrame } from './types';
+import type { GraphFrameCreateOptions, IRGraphFrame } from './types';
 
 import { GRAPH_NAMESPACE } from '../../shared';
 import { GraphFrameSchema } from './schema';

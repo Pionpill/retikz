@@ -84,9 +84,15 @@ describe('Graph React semantic authoring', () => {
   });
 
   it('keeps GraphNode text authoring equivalent to Core Node text authoring', () => {
-    const node = normalizeReactInput(createElement(GraphNode, { id: 'stage', role: 'stage', position: [0, 0] }, 'Process'));
+    const node = normalizeReactInput(
+      createElement(GraphNode, { id: 'stage', role: 'stage', position: [0, 0] }, 'Process'),
+    );
     const terminal = normalizeReactInput(
-      createElement(GraphNode, { id: 'terminal', role: 'terminal', position: [0, 0] }, createElement(Text, null, 'Start')),
+      createElement(
+        GraphNode,
+        { id: 'terminal', role: 'terminal', position: [0, 0] },
+        createElement(Text, null, 'Start'),
+      ),
     );
 
     expect(node.ir.children[0]).toMatchObject({
@@ -155,7 +161,9 @@ describe('Graph React GraphConnector authoring', () => {
   });
 
   it('supports Draw way input and rejects mixing it with Step children', () => {
-    const result = normalizeReactInput(createElement(GraphConnector, { id: 'draw', role: 'flow', way: ['source', 'target'] }));
+    const result = normalizeReactInput(
+      createElement(GraphConnector, { id: 'draw', role: 'flow', way: ['source', 'target'] }),
+    );
 
     expect(result.ir.children[0]).toMatchObject({
       namespace: 'graph',
@@ -186,7 +194,9 @@ describe('Graph React GraphConnector authoring', () => {
         createElement(GraphFrameHeader, null, createElement(Node, { position: [0, 0], text: 'Header' })),
       ),
     );
-    const connector = normalizeReactInput(createElement(GraphConnector, { id: 'connector', role: 'dependency', way: ['a', 'b'] }));
+    const connector = normalizeReactInput(
+      createElement(GraphConnector, { id: 'connector', role: 'dependency', way: ['a', 'b'] }),
+    );
 
     expect(frame.contributions[0]?.roots[0]).toEqual(GraphFrameProvider.key);
     expect(connector.contributions[0]?.roots[0]).toEqual(GraphConnectorProvider.key);

@@ -15,5 +15,4 @@ export const GraphNodeProvider: CoreDependencyProvider = Object.freeze({
 });
 
 /** 创建 GraphNode provider 集合 */
-export const createGraphNodeProviders = (): ReadonlyArray<CoreDependencyProvider> =>
-  Object.freeze([GraphNodeProvider]);
+export const createGraphNodeProviders = (): ReadonlyArray<CoreDependencyProvider> => Object.freeze([GraphNodeProvider]);

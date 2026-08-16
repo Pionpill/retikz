@@ -10,7 +10,6 @@ const GraphConnectorPathShape = PathBaseSchema.omit({
   id: true,
   kind: true,
   kindOptions: true,
-  ribbon: true,
   children: true,
 }).shape;
 

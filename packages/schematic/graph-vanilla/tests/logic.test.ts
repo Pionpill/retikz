@@ -97,7 +97,11 @@ describe('Graph Vanilla semantic authoring', () => {
     {
       type: 'graphFrame',
       id: 'frame',
-      lower: () => lower(graphFrame('frame', { header: { child: { type: 'node', position: [0, 0] } } }), GraphFrameInputEmbedAdapter),
+      lower: () =>
+        lower(
+          graphFrame('frame', { header: { child: { type: 'node', position: [0, 0] } } }),
+          GraphFrameInputEmbedAdapter,
+        ),
     },
     {
       type: 'graphNode',
@@ -107,7 +111,8 @@ describe('Graph Vanilla semantic authoring', () => {
     {
       type: 'graphConnector',
       id: 'connector',
-      lower: () => lower(graphConnector('connector', { role: 'flow', way: ['node', 'target'] }), GraphConnectorInputEmbedAdapter),
+      lower: () =>
+        lower(graphConnector('connector', { role: 'flow', way: ['node', 'target'] }), GraphConnectorInputEmbedAdapter),
     },
   ] as const)('lowers $type to same-id Graph IR and contributes its Definition', ({ type, id, lower: runLower }) => {
     const contribution = runLower();

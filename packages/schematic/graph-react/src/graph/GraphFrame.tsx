@@ -1,4 +1,8 @@
-import type { GraphFrameCreateOptions, GraphFrameRegionCreateOptions, GraphFrameSectionCreateOptions } from '@retikz/graph';
+import type {
+  GraphFrameCreateOptions,
+  GraphFrameRegionCreateOptions,
+  GraphFrameSectionCreateOptions,
+} from '@retikz/graph';
 import type { InputGraphFrame } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
