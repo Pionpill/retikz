@@ -9,7 +9,7 @@ Kernel 开发使用的 private 性能基准工具，不发布 npm 包。
 - `pnpm bench:report -- --compare-timing-baseline`：仅在完整 fingerprint 匹配时执行 tracked timing gate；不匹配会明确输出 `timing gate skipped`并以非零退出
 - `pnpm bench:update-baseline`：生成 ignored deterministic / timing baseline 候选，供人工审查后显式提交
 
-Retikz 本地 Web 服务统一使用 `7xxx`：Docs 使用 `71xx`，Bench 使用 `72xx`。每个 clone / worktree 在仓库根目录被 Git 忽略的 `.env.local` 中通过 `RETIKZ_DEV_SLOT` 设置两位槽位；Bench 端口为 `7200 + 槽位`，未配置时使用 next 槽位 `01`，即 `7201`。长期槽位固定为 main `00`、next `01`、next-kernel `02`、next-standard `03`、next-viz `04`、next-plot `05`、next-table `06`；feature / 临时 checkout 使用 `50–99`。进程或根 `.env.local` 中的 `RETIKZ_BENCH_PORT` 可精确覆盖槽位端口。开发服务与 browser runner 共用该配置，端口占用时不会自动递增。
+Retikz 本地 Web 服务统一使用 `7xxx`：Docs 使用 `71xx`，Bench 使用 `72xx`。每个 clone / worktree 在仓库根目录被 Git 忽略的 `.env.local` 中通过 `RETIKZ_DEV_SLOT` 设置两位槽位；Bench 端口为 `7200 + 槽位`，未配置时使用 next 槽位 `01`，即 `7201`。长期槽位固定为 main `00`、next `01`、next-kernel `02`、next-library `03`、next-schematic `04`、next-viz `05`、next-diagram `06`；feature / 临时 checkout 使用 `50–99`。进程或根 `.env.local` 中的 `RETIKZ_BENCH_PORT` 可精确覆盖槽位端口。开发服务与 browser runner 共用该配置，端口占用时不会自动递增。
 
 固定环境声明在 `environment.json`。已审查的确定性基线保存在 `baselines/deterministic.json`，按完整环境 fingerprint 区分的 wall-clock 基线保存在 `baselines/timing/`；`results/` 只存 ignored 报告和待人工审查的候选，不作为正式门禁输入。
 

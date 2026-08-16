@@ -109,7 +109,7 @@ pnpm --filter @retikz/docs lint
 
 Retikz 本地 Web 服务统一使用 `7xxx`：Docs 使用 `71xx`，Bench 使用 `72xx`。每个 clone / worktree 在仓库根目录被忽略的 `.env.local` 中用 `RETIKZ_DEV_SLOT` 设置两位槽位；Docs 端口为 `7100 + 槽位`，未配置时使用 next 槽位 `01`，即 `7101`。需要单独调整 Docs 时可用 `RETIKZ_DOCS_PORT` 精确覆盖。
 
-长期槽位固定为 main `00`、next `01`、next-kernel `02`、next-standard `03`、next-viz `04`、next-plot `05`、next-table `06`；feature / 临时 checkout 使用 `50–99`。启动前先检查并复用当前工作区已有服务。Vite 必须保持 `strictPort: true`，端口被占用时不得自动改用其它端口。
+长期槽位固定为 main `00`、next `01`、next-kernel `02`、next-library `03`、next-schematic `04`、next-viz `05`、next-diagram `06`；feature / 临时 checkout 使用 `50–99`。启动前先检查并复用当前工作区已有服务。Vite 必须保持 `strictPort: true`，端口被占用时不得自动改用其它端口。
 
 `apps/docs` 不发布 npm 包，可以用包内 build 脚本；packages 下仍按根 AGENTS 避免会污染源码树的 tsc 调用。
 
