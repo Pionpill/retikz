@@ -1,6 +1,6 @@
 # ADR-02：GraphNode 使用 GraphNodeVariant
 
-- 状态：Accepted
+- 状态：Superseded by ADR-06
 - 决策日期：2026-08-15
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-graph-package-family.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 

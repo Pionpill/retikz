@@ -1,8 +1,8 @@
-# ADR-01：统一 GraphNode / GraphConnector 的 semantic IR 与轻量 lowering
+# ADR-03：统一 GraphNode / GraphConnector 的 semantic IR 与轻量 lowering
 
 - 状态：Accepted
 - 决策日期：2026-08-15
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Graph alpha.1 ADR-01](../alpha.1/01-graph-package-family.md) · [Graph alpha.1 ADR-02](../alpha.1/02-graph-node-variants.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph alpha.1 ADR-01](./01-graph-package-family.md) · [Graph alpha.1 ADR-02](./02-graph-node-variants.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md)
 
 ## 背景
 

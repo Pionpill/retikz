@@ -1,8 +1,8 @@
-# ADR-01：撤回缺少用例验证的 Callout 公共契约
+# ADR-04：撤回缺少用例验证的 Callout 公共契约
 
 - 状态：Accepted
 - 决策日期：2026-08-10
-- 关联：[alpha.3 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [alpha.1 ADR-01](../alpha.1/01-graph-package-family.md) · [alpha.2 ADR-01](../alpha.2/01-semantic-ir-lightweight-lowering.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [alpha.1 ADR-01](./01-graph-package-family.md) · [alpha.1 ADR-03](./03-semantic-ir-lightweight-lowering.md)
 
 ## 背景与目标
 
@@ -28,7 +28,7 @@ Graph 的稳定元素判别集合只覆盖 GraphFrame、GraphNode 与 GraphConne
 
 ### 不改写历史事实
 
-本 ADR supersedes alpha.1 ADR-01 中 Callout 迁入 Graph、作为 layout-aware composite、保持 artifact 与 adapter 闭环的决策，也 supersedes alpha.2 ADR-01 中 Callout 继续保留在稳定判别集合且公开契约不受影响的部分。
+本 ADR supersedes alpha.1 ADR-01 中 Callout 迁入 Graph、作为 layout-aware composite、保持 artifact 与 adapter 闭环的决策，也 supersedes alpha.1 ADR-03 中 Callout 继续保留在稳定判别集合且公开契约不受影响的部分。
 
 已被 Graph supersede 的 Standard milestone 与历史 changelog 继续记录当时存在过 GraphConnector / Callout 设计，不被改写成从未发生。当前架构、roadmap、包职责与用户文档则必须以本 ADR 为准，不再把 Callout 描述为现有能力。
 
