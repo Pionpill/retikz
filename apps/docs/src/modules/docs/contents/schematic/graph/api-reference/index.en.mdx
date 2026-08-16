@@ -9,11 +9,12 @@ Graph is split by responsibility: `@retikz/graph` provides canonical JSON, schem
 
 | Capability | Graph                                                                      | React                | Vanilla                                   |
 | ---------- | -------------------------------------------------------------------------- | -------------------- | ----------------------------------------- |
+| GraphType  | `GraphType`, `GraphTypeValue`                                              | —                    | —                                         |
 | Entity     | `EntitySchema`, `IREntity`, `createEntity`, `EntityDefinition`             | `Entity`             | `entity`, `EntityInputEmbedAdapter`       |
 | Relation   | `RelationSchema`, `IRRelation`, `createRelation`, `RelationDefinition`     | `Relation`           | `relation`, `RelationInputEmbedAdapter`   |
 | Container  | `ContainerSchema`, `IRContainer`, `createContainer`, `ContainerDefinition` | `Container`, markers | `container`, `ContainerInputEmbedAdapter` |
 
-All three public elements retain `namespace: 'graph'` and their semantic `type`. Entity uses `role` for the four base semantics. Definitions are explicit lowering contracts from Graph IR to Core IR and never enter persisted JSON
+All three public elements retain `namespace: 'graph'`; `GraphType` provides the three semantic `type` values `entity`, `relation`, and `container`. Entity uses `role` for the four base semantics. Definitions are explicit lowering contracts from Graph IR to Core IR and never enter persisted JSON
 
 ## Entity inputs
 
@@ -33,7 +34,7 @@ const step = createEntity({ id: 'step', role: 'stage', position: [0, 0], text: '
 
 ## Relation inputs
 
-Canonical `IRRelation` JSON uses Core Step `children`. `createRelation`, React, and Vanilla also accept a Core `WayDSL` `way` authoring shorthand. The two forms are mutually exclusive, and `way` is normalized through `parseWay()` at the authoring boundary, so it is never persisted. `role` uses the closed Relation relation vocabulary and is discarded during lowering
+Canonical `IRRelation` JSON uses Core Step `children`. `createRelation`, React, and Vanilla also accept a Core `WayDSL` `way` authoring shorthand. The two forms are mutually exclusive, and `way` is normalized through `parseWay()` at the authoring boundary, so it is never persisted. `role` uses the closed Relation vocabulary and is discarded during lowering
 
 Omitting `marks` adds a terminal arrow; an explicit `marks` value, including `[]`, completely replaces that default
 
@@ -58,7 +59,7 @@ React components and Vanilla adapters contribute only the Definitions required b
 
 ## Related
 
-- [Entity](/schematic/graph/base/code)
-- [Relation](/schematic/graph/base/connector)
-- [Container](/schematic/graph/frame/graph-frame)
+- [Entity](/schematic/graph/entity/basic)
+- [Relation](/schematic/graph/relation/basic)
+- [Container](/schematic/graph/container/basic)
 - [Definition loading](/library/standard/extension/capability-loading)

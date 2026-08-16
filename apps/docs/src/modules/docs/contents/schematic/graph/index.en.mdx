@@ -1,9 +1,9 @@
 ---
 title: Graph
-description: Choose reusable diagram elements from one entry point, then express local structure and relationships with logic shells, Entity, and Relation.
+description: Choose Entity, Relation, and Container from one entry point, then learn their basic and extended usage.
 ---
 
-Graph is the unified entry point for reusable elements in the Schematic domain. Its first set covers common logic links: `Container` owns a reusable shell and regions; `Entity` uses `role` for terminals, stages, decisions, and junctions; `Relation` expresses relationships.
+Graph is the unified entry point for reusable elements in the Schematic domain. It currently provides three core elements: `Entity` represents targetable subjects, `Relation` represents relationships, and `Container` organizes a local structure with a shell.
 
 Graph owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Layout containers, then use stable `id` values for explicit targets.
 
@@ -20,13 +20,17 @@ All members lower to existing Core primitives and can be authored through React,
 ## Content groups
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/schematic/graph/base">
-    <span className="font-semibold">Base Units</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Entity and Relation</span>
+  <LinkedCard href="/schematic/graph/entity">
+    <span className="font-semibold">Entity</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Graph subjects, roles, and composition</span>
   </LinkedCard>
-  <LinkedCard href="/schematic/graph/frame">
-    <span className="font-semibold">Composite Units</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Container and future reusable compositions</span>
+  <LinkedCard href="/schematic/graph/relation">
+    <span className="font-semibold">Relation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Path steps, Draw ways, and targets</span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/graph/container">
+    <span className="font-semibold">Container</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Shells, headers, and ordered sections</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/api-reference">
     <span className="font-semibold">Graph API Reference</span>

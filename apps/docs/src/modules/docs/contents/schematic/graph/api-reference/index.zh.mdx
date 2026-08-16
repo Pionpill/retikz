@@ -9,11 +9,12 @@ Graph 按职责拆分：`@retikz/graph` 提供 canonical JSON、Schema、factory
 
 | 能力      | Graph                                                                      | React                | Vanilla                                   |
 | --------- | -------------------------------------------------------------------------- | -------------------- | ----------------------------------------- |
+| GraphType | `GraphType`、`GraphTypeValue`                                              | —                    | —                                         |
 | Entity    | `EntitySchema`、`IREntity`、`createEntity`、`EntityDefinition`             | `Entity`             | `entity`、`EntityInputEmbedAdapter`       |
 | Relation  | `RelationSchema`、`IRRelation`、`createRelation`、`RelationDefinition`     | `Relation`           | `relation`、`RelationInputEmbedAdapter`   |
 | Container | `ContainerSchema`、`IRContainer`、`createContainer`、`ContainerDefinition` | `Container`、markers | `container`、`ContainerInputEmbedAdapter` |
 
-三类公开元素都保留 `namespace: 'graph'` 与自己的语义 `type`。Entity 使用 `role` 区分四种基础语义；Definition 是从 Graph IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
+三类公开元素都保留 `namespace: 'graph'`，并由 `GraphType` 提供 `entity`、`relation`、`container` 三个语义 `type`。Entity 使用 `role` 区分四种基础语义；Definition 是从 Graph IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
 
 ## Entity 输入
 
@@ -58,7 +59,7 @@ React 组件与 Vanilla adapter 只为当前 authored 元素贡献对应 Definit
 
 ## 相关
 
-- [Entity](/schematic/graph/base/code)
-- [Relation](/schematic/graph/base/connector)
-- [Container](/schematic/graph/frame/graph-frame)
+- [Entity](/schematic/graph/entity/basic)
+- [Relation](/schematic/graph/relation/basic)
+- [Container](/schematic/graph/container/basic)
 - [Definition 加载](/library/standard/extension/capability-loading)

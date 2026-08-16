@@ -1,0 +1,81 @@
+---
+title: Entity 基础用法
+description: 用 role 和稳定的 id 表达终点、步骤、判断与汇合等图式对象。
+---
+
+`Entity` 表示流程图中的具体对象，例如起点、处理步骤、判断和汇合点。它在图中承担节点职能，承载对象的名称或说明，并作为 `Relation` 的连接对象
+
+## 用法
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Entity } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={360} height={140}>
+  <Entity id="start" role="terminal" position={[24, 56]}>
+    Start
+  </Entity>
+  <Entity id="step" role="stage" variant="primary" position={[180, 56]}>
+    Process
+  </Entity>
+</Layout>
+```
+
+`Entity` 基于 Core `Node` 封装，通过 `role` 明确对象在关系图中的职能，并通过 `variant` 选择视觉变体。它保留 Node 的位置、文本、尺寸和视觉能力；使用时提供稳定的 `id`、`role` 和 `position`，字符串 children 会成为节点文本
+
+Entity 的专有属性如下：
+
+| 属性      | 含义     | 用法                                                           |
+| --------- | -------- | -------------------------------------------------------------- |
+| `role`    | 图中职能 | 选择 `terminal`、`stage`、`decision` 或 `junction`             |
+| `variant` | 视觉变体 | 选择 `default`、`primary`、`secondary`、`outline` 或 `vibrant` |
+
+Entity 同时继承 Core `Node` 的 `meta` 元信息字段。`meta` 只能保存 JSON-safe 对象，会随节点保留到输出的 Scene primitive，但不参与编译；LLM、检查器等工具可以从 IR 或 Scene 中读取其中携带的业务上下文。其它位置、文本、尺寸和视觉属性可直接传递给 Node
+
+## 例子
+
+`role` 是 Entity 最重要的属性。它定义 Entity 在整个流程图中的职能；使用时要根据对象的真实语义选择对应的 role，不要只按外观或随意选择。LLM 在生成或理解流程图时也会依赖这个明确的 role 含义。`variant` 只改变视觉表达，不能替代 `role`
+
+### terminal：起点与终点
+
+`terminal` 表示流程的开始或结束，适合表达用户进入流程、任务完成或流程退出等位置。不要用它表示普通的处理步骤
+
+<ComponentPreview files="entity-terminal" size="sm" caption="调整 terminal 的 variant 和节点内部内容" />
+
+### stage：处理步骤
+
+`stage` 表示流程中执行处理、动作或状态转换的步骤。它通常是流程的主体节点，内部内容应描述一个可执行的工作或阶段
+
+<ComponentPreview files="entity-stage" size="sm" caption="调整 stage 的 variant 和节点内部内容" />
+
+### decision：条件判断
+
+`decision` 表示根据条件选择不同后续路径的判断点。它描述的是分支依据，而不是分支执行后的处理结果
+
+<ComponentPreview files="entity-decision" size="sm" caption="调整 decision 的 variant 和节点内部内容" />
+
+### junction：分叉与汇合点
+
+`junction` 表示多条关系汇入或从同一点分出的连接点，一般只承担拓扑作用；只有需要给连接点附加语义时才设置内部内容
+
+<ComponentPreview files="entity-junction" size="sm" caption="调整 junction 的 variant 和节点内部内容" />
+
+## API 参考
+
+Entity 的特殊属性是 `role` 和 `variant`；其它位置、文本和视觉属性沿用 Core `Node` 契约
+
+| 属性            | 类型                 | 默认值         | 描述                                            |
+| --------------- | -------------------- | -------------- | ----------------------------------------------- |
+| `id`            | `string`             | —              | 稳定的 authored identity，也是 target 名称      |
+| `role`          | `EntityRoleValue`    | —              | 选择 terminal、stage、decision 或 junction 语义 |
+| `variant?`      | `EntityVariantValue` | `default`      | 选择 Graph 视觉变体                             |
+| `shape?`        | `NodeShapeInput`     | 由 `role` 决定 | 覆盖 role 提供的默认 shape                      |
+| Core Node props | Core `Node` props    | Core 默认值    | 位置、文本、尺寸和视觉属性沿用 Node 契约        |
+
+## 相关
+
+- [Entity 扩展用法](/schematic/graph/entity/extension)：作用域继承、组合 recipe、直接 IR 与 Vanilla
+- [Relation 基础用法](/schematic/graph/relation/basic)：用 Step 连接 Entity
+- [Container 基础用法](/schematic/graph/container/basic)：组织多个子内容

@@ -1,17 +1,17 @@
 import type { IRChild, IRNode, Scene } from '@retikz/core';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { compileToScene, lowerIRToKernel, ThemeMode } from '@retikz/core';
 import {
-  createRelation,
-  createGraphDefinitions,
   createEntity,
-  RelationDefinition,
+  createGraphDefinitions,
+  createRelation,
   EntityDefinition,
+  RelationDefinition,
 } from '@retikz/graph';
-import { Relation, Entity } from '@retikz/graph-react';
-import { relation, RelationInputEmbedAdapter, entity, EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
+import { Entity, Relation } from '@retikz/graph-react';
+import { entity, EntityInputEmbedAdapter, relation, RelationInputEmbedAdapter } from '@retikz/graph-vanilla';
 import { Layout, Scope, Step } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
@@ -21,18 +21,24 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import ContainerBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.en.demo';
-import ContainerBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.zh.demo';
-import ProcessRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/process-recipe.en.demo';
-import ProcessRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/process-recipe.zh.demo';
-import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/schematic/graph/base/connector/connector-routing.en.demo';
-import ConnectorRoutingZhDemo from '../../src/modules/docs/contents/schematic/graph/base/connector/connector-routing.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/data-recipe.zh.demo';
-import EntityEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.en.demo';
-import EntityZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.zh.demo';
+import { previewSource as entityDecisionEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-decision.en.demo';
+import { previewSource as entityDecisionZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-decision.zh.demo';
+import { previewSource as entityJunctionEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-junction.en.demo';
+import { previewSource as entityJunctionZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-junction.zh.demo';
+import { previewSource as entityStageEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-stage.en.demo';
+import { previewSource as entityStageZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-stage.zh.demo';
+import { previewSource as entityTerminalEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-terminal.en.demo';
+import { previewSource as entityTerminalZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-terminal.zh.demo';
+import RelationRoutingEnDemo from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-routing.en.demo';
+import RelationRoutingZhDemo from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-routing.zh.demo';
+import ContainerBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/container/basic/container-basic.en.demo';
+import ContainerBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/container/basic/container-basic.zh.demo';
+import ProcessRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/container/extension/process-recipe.en.demo';
+import ProcessRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/container/extension/process-recipe.zh.demo';
 
 const definitions = [EntityDefinition, RelationDefinition] as const;
 
@@ -54,6 +60,9 @@ const collectNodes = (children: ReadonlyArray<IRChild>): Array<IRNode> =>
     if (child.type === 'scope' && 'children' in child) return collectNodes(child.children as ReadonlyArray<IRChild>);
     return [];
   });
+
+const canonicalComponentOf = (source: FC | { canonicalRender?: () => ReactNode }): FC =>
+  typeof source === 'function' ? source : () => source.canonicalRender?.();
 
 const directChildren = (): Array<IRChild> => [
   translated(
@@ -132,40 +141,46 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   ) as CanvasRenderingContext2D;
 
 describe('Graph renderer integration', () => {
-  it('lowers the real Entity demo with explicit ordinary Core paints', () => {
-    const preview = buildPreviewIR(EntityZhDemo);
+  it.each([
+    ['terminal', entityTerminalZhPreviewSource, 'Start'],
+    ['stage', entityStageZhPreviewSource, 'Process'],
+    ['decision', entityDecisionZhPreviewSource, 'Ready?'],
+    ['junction', entityJunctionZhPreviewSource, '+'],
+  ])('lowers the real %s Entity demo with controlled ordinary Core paints', (_role, source, text) => {
+    const preview = buildPreviewIR(canonicalComponentOf(source));
     const lowered = lowerIRToKernel(
       { ...preview.ir, theme: { mode: ThemeMode.Light } },
       { composites: createGraphDefinitions() },
     );
     const nodes = collectNodes(lowered.children);
 
-    expect(nodes).toHaveLength(4);
-    expect(nodes).toMatchObject([
-      { id: 'unit-start', color: '#2563eb', textColor: '#2563eb', stroke: '#2563eb', fill: 'none' },
-      { id: 'unit-stage', color: '#16a34a', textColor: 'contrast', stroke: '#16a34a', fill: '#16a34a' },
-      { id: 'unit-decision', color: '#d97706', textColor: '#d97706', stroke: 'none', fill: '#fbf1e6' },
-      { id: 'unit-junction', color: '#9333ea', textColor: '#9333ea', stroke: '#9333ea', fill: '#efe0fc' },
-    ]);
-    nodes.forEach(node => expect(node).not.toHaveProperty('variant'));
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]).toMatchObject({ color: '#2563eb', textColor: '#2563eb', stroke: '#2563eb', fill: 'none', text });
+    expect(nodes[0]).not.toHaveProperty('variant');
     expect(JSON.stringify(lowered)).not.toContain('notation');
   });
 
   it.each([
-    ['graph frame en', ContainerBasicEnDemo],
-    ['graph frame zh', ContainerBasicZhDemo],
-    ['graph node en', EntityEnDemo],
-    ['graph node zh', EntityZhDemo],
-    ['connector en', ConnectorRoutingEnDemo],
-    ['connector zh', ConnectorRoutingZhDemo],
+    ['container en', ContainerBasicEnDemo],
+    ['container zh', ContainerBasicZhDemo],
+    ['entity terminal en', entityTerminalEnPreviewSource],
+    ['entity terminal zh', entityTerminalZhPreviewSource],
+    ['entity stage en', entityStageEnPreviewSource],
+    ['entity stage zh', entityStageZhPreviewSource],
+    ['entity decision en', entityDecisionEnPreviewSource],
+    ['entity decision zh', entityDecisionZhPreviewSource],
+    ['entity junction en', entityJunctionEnPreviewSource],
+    ['entity junction zh', entityJunctionZhPreviewSource],
+    ['relation en', RelationRoutingEnDemo],
+    ['relation zh', RelationRoutingZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],
     ['process recipe zh', ProcessRecipeZhDemo],
     ['class recipe en', ClassRecipeEnDemo],
     ['class recipe zh', ClassRecipeZhDemo],
     ['data recipe en', DataRecipeEnDemo],
     ['data recipe zh', DataRecipeZhDemo],
-  ])('renders the canonical %s demo through the Vanilla converter', (_name, Component) => {
-    const vanilla = buildVanillaPreview(buildPreviewIR(Component));
+  ])('renders the canonical %s demo through the Vanilla converter', (_name, source) => {
+    const vanilla = buildVanillaPreview(buildPreviewIR(canonicalComponentOf(source)));
     expect(vanilla.code).not.toContain('Unsupported Graph composite');
     expect(vanilla.svg).toContain('<svg');
   });

@@ -1,0 +1,32 @@
+---
+title: Entity
+description: Use targetable graph subjects for terminals, stages, decisions, and junctions, then compose them into larger structures.
+---
+
+`Entity` is a targetable graph subject in Graph. Its `role` describes the subject's flow semantics, while a stable `id` lets `Relation` address it explicitly. The pages below separate first-use authoring from cross-element composition and non-React inputs
+
+## Responsibilities at a glance
+
+| Content        | Covers                                              | Use it when                                 |
+| -------------- | --------------------------------------------------- | ------------------------------------------- |
+| Basic usage    | Roles, default shapes, text, and common variants    | You need a first runnable graph subject     |
+| Extended usage | Scope inheritance, recipes, direct IR, and adapters | You compose elements or use non-React input |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/graph/entity/basic">
+    <span className="font-semibold">Basic usage</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Roles, shapes, text, and variants</span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/graph/entity/extension">
+    <span className="font-semibold">Extended usage</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Scopes, composition, direct IR, and Vanilla</span>
+  </LinkedCard>
+</div>
+
+## Related
+
+- [Relation](/schematic/graph/relation): connect authored Entity identities
+- [Container](/schematic/graph/container): organize Entity values and other children
+- [Graph API Reference](/schematic/graph/api-reference): inspect public Graph schemas and factories

@@ -13,17 +13,28 @@ export const schematicSection: Array<Section> = [
     document: true,
     pages: [
       {
-        id: 'base',
-        label: 'schematic.baseUnits',
+        id: 'entity',
+        label: 'schematic.entity',
         children: [
-          { id: 'code', label: 'schematic.entity', difficulty: DocDifficulty.Beginner },
-          { id: 'connector', label: 'schematic.relation', difficulty: DocDifficulty.Beginner },
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
-        id: 'frame',
-        label: 'schematic.frameUnits',
-        children: [{ id: 'graph-frame', label: 'schematic.container', difficulty: DocDifficulty.Advanced }],
+        id: 'relation',
+        label: 'schematic.relation',
+        children: [
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
+        ],
+      },
+      {
+        id: 'container',
+        label: 'schematic.container',
+        children: [
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
+        ],
       },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
     ],

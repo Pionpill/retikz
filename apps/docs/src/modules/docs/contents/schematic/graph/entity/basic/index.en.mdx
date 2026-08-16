@@ -1,0 +1,81 @@
+---
+title: Entity Basic Usage
+description: Express terminals, stages, decisions, and junctions with roles and stable authored identities.
+---
+
+`Entity` represents a concrete object in a flowchart, such as a start point, process step, decision, or junction. It serves as a graph node, carries the object's name or description, and participates in `Relation` connections
+
+## Usage
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Entity } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={360} height={140}>
+  <Entity id="start" role="terminal" position={[24, 56]}>
+    Start
+  </Entity>
+  <Entity id="step" role="stage" variant="primary" position={[180, 56]}>
+    Process
+  </Entity>
+</Layout>
+```
+
+`Entity` wraps the Core `Node` and uses `role` to make a subject's function in a relationship graph explicit, while `variant` selects its visual treatment. It keeps Node's position, text, sizing, and visual capabilities; provide a stable `id`, a `role`, and a `position`, and string children become node text
+
+Entity's special props are:
+
+| Prop      | Meaning        | Usage                                                             |
+| --------- | -------------- | ----------------------------------------------------------------- |
+| `role`    | Graph function | Choose `terminal`, `stage`, `decision`, or `junction`             |
+| `variant` | Visual variant | Choose `default`, `primary`, `secondary`, `outline`, or `vibrant` |
+
+Entity also inherits Core `Node`'s `meta` metadata field. `meta` accepts a JSON-safe object, is preserved on emitted Scene primitives, and does not affect compilation, so LLMs, inspectors, and other tools can read the domain context it carries from the IR or Scene. Other position, text, sizing, and visual props pass through to Node
+
+## Examples
+
+`role` is Entity's most important prop. It defines the Entity's function in the overall flowchart; choose it from the object's meaning rather than its appearance or at random. LLMs also rely on this explicit role meaning when generating or interpreting a flowchart. `variant` changes visual treatment only and must not replace `role`
+
+### terminal: start and end points
+
+`terminal` represents the beginning or end of a flow. Use it for entering a process, completing a task, or leaving a flow; do not use it for an ordinary processing step
+
+<ComponentPreview files="entity-terminal" size="sm" caption="Change the terminal variant and its inner content." />
+
+### stage: processing step
+
+`stage` represents a step that performs processing, an action, or a state transition. It is usually the main working node in a flow, so its inner content should describe an executable task or stage
+
+<ComponentPreview files="entity-stage" size="sm" caption="Change the stage variant and its inner content." />
+
+### decision: condition check
+
+`decision` represents a point where a condition selects different next paths. Its content should describe the branching criterion, not the processing that follows a branch
+
+<ComponentPreview files="entity-decision" size="sm" caption="Change the decision variant and its inner content." />
+
+### junction: split or merge point
+
+`junction` represents several relations merging into, or splitting from, the same point. It usually carries topology only; add inner content when the connection point itself needs semantic context
+
+<ComponentPreview files="entity-junction" size="sm" caption="Change the junction variant and its inner content." />
+
+## API Reference
+
+Entity's special props are `role` and `variant`; placement, text, and visual props follow the Core `Node` contract
+
+| Prop            | Type                 | Default       | Description                                               |
+| --------------- | -------------------- | ------------- | --------------------------------------------------------- |
+| `id`            | `string`             | —             | Stable authored identity and target name                  |
+| `role`          | `EntityRoleValue`    | —             | Selects terminal, stage, decision, or junction semantics  |
+| `variant?`      | `EntityVariantValue` | `default`     | Selects a Graph visual variant                            |
+| `shape?`        | `NodeShapeInput`     | from `role`   | Overrides the role-provided default shape                 |
+| Core Node props | Core `Node` props    | Core defaults | Reuses Node placement, text, sizing, and visual contracts |
+
+## Related
+
+- [Entity Extended Usage](/schematic/graph/entity/extension): scope inheritance, recipes, direct IR, and Vanilla
+- [Relation Basic Usage](/schematic/graph/relation/basic): connect Entity values with Steps
+- [Container Basic Usage](/schematic/graph/container/basic): organize several children

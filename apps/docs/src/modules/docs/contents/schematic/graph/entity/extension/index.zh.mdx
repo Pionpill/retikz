@@ -1,0 +1,103 @@
+---
+title: Entity 扩展用法
+description: 在 Container 作用域、组合 recipe、直接 IR 与 Vanilla 输入中复用 Entity 的同一份语义契约。
+---
+
+基础 role 和视觉变体足够表达单个对象；当 Entity 进入 Container、直接 IR 或 Vanilla 时，仍使用同一份 Graph IR 和 lowering 契约。本页说明这些入口如何组合，不新增平行的 Entity API
+
+## 扩展边界
+
+Entity 扩展用法解决三个问题：让 Container 为后代 Entity 提供默认变体、将 Entity 与 Relation / Container 组合成 recipe，以及在 React 以外的入口注入正确的 Definition。它不提供领域状态机、自动布局或自定义 registry
+
+## 作用域继承
+
+`Container.entityVariant` 为 header、sections、嵌套 Container 和 Core `Scope` 子树中的 Entity 提供默认变体。嵌套 Container 会建立新的作用域，显式 `variant` 优先，`variant="default"` 可以重置外层值
+
+```tsx
+import { Container, ContainerSection, Entity } from '@retikz/graph-react';
+
+<Container id="order" entityVariant="secondary">
+  <ContainerSection sectionKey="input">
+    <Entity id="load" role="stage" position={[0, 0]} />
+  </ContainerSection>
+  <ContainerSection sectionKey="important">
+    <Entity id="validate" role="stage" position={[0, 0]} variant="primary" />
+  </ContainerSection>
+</Container>;
+```
+
+Container 外壳、divider、Relation 和兄弟分支不受 `entityVariant` 影响
+
+## 组合 recipe
+
+Entity、Relation 与 Container 可以组合成 Class 或 Data 等文档 recipe；这些名称只是组合方式，不会新增 package export
+
+<ComponentPreview
+  files="class-recipe"
+  size="lg"
+  caption="使用 Container header 与 typed section 组合一个 Class recipe"
+/>
+
+<ComponentPreview files="data-recipe" size="lg" caption="使用 role、variant 与显式 Relation 组合一个 Data recipe" />
+
+## 直接 IR 与 Definition 注入
+
+直接 JSON / IR 只保存 JSON-safe 的 Entity 字段；编译时通过 Graph Definition 将它下沉为 Core `Node`
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createEntity, createGraphDefinitions } from '@retikz/graph';
+
+const entity = createEntity({
+  id: 'step',
+  role: 'stage',
+  position: [0, 0],
+  text: 'Process',
+  color: '#2563eb',
+  variant: 'primary',
+});
+
+const scene = compileToScene(
+  { version: 1, type: 'scene', children: [entity] },
+  { composites: createGraphDefinitions() },
+);
+```
+
+使用 Container 与 Entity 的直接 IR 时，同时注入两者的 Definition；Definition 只参与当前 figure 的编译，不进入持久化 JSON
+
+## React 与 Vanilla adapter
+
+React 组件和 Vanilla embed 会把各自使用的 Graph 元素接入同一条 lowering 路径。Vanilla 入口返回 embed，不需要手工构造额外的语义 IR
+
+```ts
+import { EntityInputEmbedAdapter, entity } from '@retikz/graph-vanilla';
+
+const embed = entity('step', { role: 'stage', position: [0, 0], text: 'Process' });
+const adapters = [EntityInputEmbedAdapter];
+```
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要排查 variant 继承或 Graph lower 边界时再回来阅读。"
+/>
+
+Entity 的 `role` 和 `variant` 保留在 Graph IR 中；lower 时 Graph 将有效变体投影成普通 Core `Node` 的 paint，`role` 在该边界被丢弃。Core 继续负责 Node 的布局、target、编译和 Scene 输出，因此 React、直接 IR 与 Vanilla 不会形成三套渲染语义
+
+## API 参考
+
+| API                        | 包                      | 作用                                     |
+| -------------------------- | ----------------------- | ---------------------------------------- |
+| `createEntity()`           | `@retikz/graph`         | 创建规范 Entity IR                       |
+| `createGraphDefinitions()` | `@retikz/graph`         | 创建直接 IR 所需的 Graph Definition 集合 |
+| `EntityInputEmbedAdapter`  | `@retikz/graph-vanilla` | 将 Entity embed 接入 Core compile        |
+| `entity()`                 | `@retikz/graph-vanilla` | 创建带 authored id 的 Entity embed       |
+| `entityVariant`            | `Container`             | 为后代 Entity 提供默认 variant           |
+
+## 相关
+
+- [Entity 基础用法](/schematic/graph/entity/basic)：role、shape、文本与 variant
+- [Container 扩展用法](/schematic/graph/container/extension)：Container 的嵌套与直接 IR
+- [Relation 扩展用法](/schematic/graph/relation/extension)：关系的其它作者入口

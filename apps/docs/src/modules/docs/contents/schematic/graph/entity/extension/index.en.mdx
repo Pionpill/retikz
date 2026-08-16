@@ -1,0 +1,107 @@
+---
+title: Entity Extended Usage
+description: Reuse Entity's single semantic contract across Container scopes, composition recipes, direct IR, and Vanilla input.
+---
+
+Basic roles and variants cover one subject. When an Entity enters a Container, direct IR, or Vanilla, it still uses the same Graph IR and lowering contract. This page explains those compositions without adding a parallel Entity API
+
+## Extension boundary
+
+Extended Entity usage provides Container defaults for descendants, combines Entity with Relation and Container in recipes, and injects the right Definition outside the React entry point. It does not provide domain state machines, automatic layout, or a custom registry
+
+## Scope inheritance
+
+`Container.entityVariant` provides a default for Entity values in its header, sections, nested Containers, and Core `Scope` descendants. A nested Container creates a new scope, explicit `variant` wins, and `variant="default"` resets an outer value
+
+```tsx
+import { Container, ContainerSection, Entity } from '@retikz/graph-react';
+
+<Container id="order" entityVariant="secondary">
+  <ContainerSection sectionKey="input">
+    <Entity id="load" role="stage" position={[0, 0]} />
+  </ContainerSection>
+  <ContainerSection sectionKey="important">
+    <Entity id="validate" role="stage" position={[0, 0]} variant="primary" />
+  </ContainerSection>
+</Container>;
+```
+
+The Container shell, divider, Relation, and sibling branches are unaffected by `entityVariant`
+
+## Composition recipes
+
+Entity, Relation, and Container can be composed into documentation recipes such as Class or Data. These names describe compositions; they do not add package exports
+
+<ComponentPreview
+  files="class-recipe"
+  size="lg"
+  caption="Compose a Class recipe with a Container header and typed sections."
+/>
+
+<ComponentPreview
+  files="data-recipe"
+  size="lg"
+  caption="Compose a Data recipe with roles, variants, and explicit Relations."
+/>
+
+## Direct IR and Definition injection
+
+Direct JSON / IR stores only JSON-safe Entity fields. The Graph Definition lowers it to a Core `Node` during compilation
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createEntity, createGraphDefinitions } from '@retikz/graph';
+
+const entity = createEntity({
+  id: 'step',
+  role: 'stage',
+  position: [0, 0],
+  text: 'Process',
+  color: '#2563eb',
+  variant: 'primary',
+});
+
+const scene = compileToScene(
+  { version: 1, type: 'scene', children: [entity] },
+  { composites: createGraphDefinitions() },
+);
+```
+
+When direct IR contains both Container and Entity, inject both Definitions. Definitions participate in the current figure's compilation and never enter persisted JSON
+
+## React and Vanilla adapters
+
+React components and Vanilla embeds contribute the Graph elements used by their entry point to the same lowering path. The Vanilla entry point returns an embed; it does not require a second semantic IR
+
+```ts
+import { EntityInputEmbedAdapter, entity } from '@retikz/graph-vanilla';
+
+const embed = entity('step', { role: 'stage', position: [0, 0], text: 'Process' });
+const adapters = [EntityInputEmbedAdapter];
+```
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit this section when diagnosing variant inheritance or the Graph lowering boundary."
+/>
+
+Entity `role` and `variant` remain in Graph IR. During lowering, Graph projects the effective variant into ordinary Core `Node` paints and discards `role` at that boundary. Core continues to own Node layout, targets, compilation, and Scene output, so React, direct IR, and Vanilla do not create three rendering semantics
+
+## API Reference
+
+| API                        | Package                 | Purpose                                        |
+| -------------------------- | ----------------------- | ---------------------------------------------- |
+| `createEntity()`           | `@retikz/graph`         | Creates canonical Entity IR                    |
+| `createGraphDefinitions()` | `@retikz/graph`         | Creates the Graph Definition set for direct IR |
+| `EntityInputEmbedAdapter`  | `@retikz/graph-vanilla` | Embeds Entity input into Core compilation      |
+| `entity()`                 | `@retikz/graph-vanilla` | Creates an Entity embed with an authored id    |
+| `entityVariant`            | `Container`             | Provides a default variant to descendants      |
+
+## Related
+
+- [Entity Basic Usage](/schematic/graph/entity/basic): roles, shapes, text, and variants
+- [Container Extended Usage](/schematic/graph/container/extension): Container nesting and direct IR
+- [Relation Extended Usage](/schematic/graph/relation/extension): other Relation authoring entries

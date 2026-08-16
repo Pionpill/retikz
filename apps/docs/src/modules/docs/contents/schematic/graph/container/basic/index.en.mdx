@@ -1,0 +1,57 @@
+---
+title: Container Basic Usage
+description: Organize several children into a bordered region with an optional header and ordered sections.
+---
+
+`Container` provides a shell for local graph structure. Basic usage combines an optional `ContainerHeader`, zero or more `ContainerSection` values, and common padding and gap props
+
+## Usage
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { Container, ContainerHeader, ContainerSection } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={360} height={180}>
+  <Container id="order">
+    <ContainerHeader>
+      <Node position={[0, 0]} text="Order" />
+    </ContainerHeader>
+    <ContainerSection sectionKey="input">
+      <Node position={[0, 0]} text="Input" />
+    </ContainerSection>
+  </Container>
+</Layout>
+```
+
+Markers must be direct children of `Container`, and each marker owns exactly one drawable child. Outside JSX, pass JSON-safe `header` and `sections` props
+
+## Examples
+
+### Header and ordered sections
+
+The header comes before sections; each section has a unique `sectionKey`, and Container places regions in declaration order
+
+<ComponentPreview files="container-basic" size="md" caption="Observe the header, sections, and divider order." />
+
+### Basic layout props
+
+`padding` controls the inset between the shell and region content, `rowGap` controls space between regions, and `overflow` controls whether content can draw outside the shell. Container reuses Layout capabilities rather than introducing a second layout DSL
+
+## API Reference
+
+| Prop        | Type                                     | Default     | Description                              |
+| ----------- | ---------------------------------------- | ----------- | ---------------------------------------- |
+| `id`        | `string`                                 | —           | Stable identity used by Relation targets |
+| `header?`   | `{ child: IRChild; padding? }`           | omitted     | One optional header region               |
+| `sections`  | `Array<{ key, role?, child, padding? }>` | `[]`        | Ordered, uniquely keyed regions          |
+| `padding?`  | `number` or `IRBoxSpacing`               | `8`         | Default region padding                   |
+| `rowGap?`   | `number`                                 | `0`         | Space between adjacent regions           |
+| `overflow?` | `'visible' \| 'clip'`                    | `'visible'` | Outer content visibility policy          |
+
+## Related
+
+- [Container Extended Usage](/schematic/graph/container/extension): Entity inheritance, nesting, direct IR, and Vanilla
+- [Entity Basic Usage](/schematic/graph/entity/basic): graph subjects commonly placed in a Container
+- [Layout containers](/library/layout): the generic arrangement family Container reuses
