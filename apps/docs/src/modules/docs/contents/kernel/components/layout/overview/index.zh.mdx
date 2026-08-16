@@ -276,13 +276,14 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 图元与资源注入
 
-| 属性         | 类型                                        | 默认值 | 描述                                                                  |
-| ------------ | ------------------------------------------- | ------ | --------------------------------------------------------------------- |
-| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`    | —      | 注入形状；见[自定义形状](/kernel/components/shapes/custom-shape)      |
-| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>` | —      | 注入连接面；见[自定义连接面](/kernel/components/node/custom-boundary) |
-| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`     | —      | 注入裁剪区；见[自定义裁剪区](/kernel/components/layout/custom-clip)   |
-| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`    | —      | 注入箭头；见[自定义箭头](/kernel/components/draw/custom-arrow)        |
-| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`  | —      | 注入图案；见[自定义图案](/kernel/components/effects/custom-pattern)   |
+| 属性         | 类型                                            | 默认值 | 描述                                                                  |
+| ------------ | ----------------------------------------------- | ------ | --------------------------------------------------------------------- |
+| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`        | —      | 注入形状；见[自定义形状](/kernel/components/shapes/custom-shape)      |
+| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>`     | —      | 注入连接面；见[自定义连接面](/kernel/components/node/custom-boundary) |
+| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`         | —      | 注入裁剪区；见[自定义裁剪区](/kernel/components/layout/custom-clip)   |
+| `clipShapes` | `ReadonlyArray`<br />`<AnyClipShapeDefinition>` | —      | 注入裁剪几何 lowerer；与 `clips` 组成两级扩展                         |
+| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`        | —      | 注入箭头；见[自定义箭头](/kernel/components/draw/custom-arrow)        |
+| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`      | —      | 注入图案；见[自定义图案](/kernel/components/effects/custom-pattern)   |
 
 ### 高级能力与宿主接入
 

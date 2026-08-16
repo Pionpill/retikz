@@ -257,6 +257,16 @@ export const kernelV05: Release = {
               },
             },
             {
+              label: {
+                zh: 'BREAKING：开放 ClipShape 与统一裁剪路径',
+                en: 'BREAKING: Extensible ClipShape and canonical clip paths',
+              },
+              content: {
+                zh: '裁剪现在通过 `ClipDefinition → ClipShapeDefinition → SceneClipPath` 两级扩展：第三方可注册 JSON-safe ClipShape 并降低为结构化路径，Scene clip resource 从 `shape` 改为 canonical `path`，Render、React 与 Vanilla 统一支持 `clipShapes`。旧 Scene / ScenePatch 不提供双读；当前 polygon / path / compound operation 仍从 `@retikz/standard/clip` 显式装配，circle / ellipse 与其余官方 ClipShape 的完整所有权迁移将在 Standard ADR-05 第二批完成。',
+                en: 'Clipping now uses a two-stage `ClipDefinition → ClipShapeDefinition → SceneClipPath` extension chain: third parties can register JSON-safe ClipShapes and lower them to structured paths, Scene clip resources replace `shape` with a canonical `path`, and Render, React, and Vanilla share `clipShapes` support. Legacy Scenes and ScenePatches have no dual-read path. Polygon, path, and compound operations still require explicit assembly from `@retikz/standard/clip`; full ownership migration for circle, ellipse, and the remaining official ClipShapes follows in Standard ADR-05 Batch 2.',
+              },
+            },
+            {
               label: { zh: 'BREAKING：最小内置 provider 集合', en: 'BREAKING: minimal built-in provider set' },
               content: {
                 zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、rect / circle / ellipse Clip、lines / dots / grid Pattern、三种 Boundary，以及 stroke / ribbon Path Kind；Path Generator 默认为空。Ribbon 暂留 Core，后续由 Standard ADR-03 完成整体迁移。cross / sector / star / contour、diamond / openDiamond 和 polygon / path / compound 等可选官方 definitions 改由 `@retikz/standard/shape`、`/arrow`、`/clip` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',

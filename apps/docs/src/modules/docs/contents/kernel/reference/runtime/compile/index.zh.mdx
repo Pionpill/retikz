@@ -50,6 +50,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | --------------- | ------------------------ | ------- | ----------------------------------------------------------------------------------------- |
 | `padding`       | `number`                 | `10`    | layout 外围留白，单位为 user units                                                        |
 | `precision`     | `number`                 | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
+| `maxClipDepth`  | `number`                 | `32`    | Clip operation resolve 与 ClipShape lower 共享的递归边预算；超限或 active cycle 会失败    |
 | `nodeDistance`  | `number`                 | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
 | `labelDistance` | `number`                 | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
 | `fontSize`      | `number`                 | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
@@ -62,12 +63,13 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | `shapes`         | `ReadonlyArray<ShapeDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选节点形状。见 [形状扩展](/library/standard/extension/shape)                                                                     |
 | `boundaries`     | `ReadonlyArray<BoundaryDefinition>`      | 内置集合      | 追加自定义连接面。见 [自定义连接面](/kernel/components/node/custom-boundary)                                                                             |
 | `clips`          | `ReadonlyArray<ClipDefinition>`          | Core 基础集合 | 注入自定义或 Standard 组合裁剪。见 [裁剪扩展](/library/standard/extension/clip)                                                                          |
+| `clipShapes`     | `ReadonlyArray<AnyClipShapeDefinition>`  | Core 基础集合 | 注入自定义裁剪几何 lowerer；与 `clips` 构成两级 registry。见[自定义裁剪区](/kernel/components/layout/custom-clip)                                        |
 | `arrows`         | `ReadonlyArray<ArrowDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选箭头。见 [箭头扩展](/library/standard/extension/arrow)                                                                         |
 | `patterns`       | `ReadonlyArray<PatternDefinition>`       | 内置集合      | 追加自定义填充图案。见 [自定义图案](/kernel/components/effects/custom-pattern)                                                                           |
 | `pathGenerators` | `ReadonlyArray<PathGeneratorDefinition>` | 无            | 注入自定义路径生成器；Core 没有默认项。见 [路径生成器](/kernel/components/draw/path-generator)                                                           |
 | `pathKinds`      | `ReadonlyArray<PathKindDefinition>`      | 内置集合      | 追加自定义或可选 Standard path kind provider。见[自定义路径](/kernel/components/draw/custom-path)与[Standard Ribbon](/library/standard/extension/ribbon) |
 
-传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。Standard 可选内容也走同一条合并与诊断路径。
+传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。`clips` 按 authored operation kind 解析 spec，`clipShapes` 按 operation 输出的 shape kind 校验并降低为 canonical path；两个 kind 不要求同名。Standard 可选内容也走同一条合并与诊断路径。
 
 ### Theme token owner registry
 
@@ -106,7 +108,7 @@ Provider graph 是编译前的纯装配协议，不是第二套 registry。React
 | `CoreProviderContribution`               | `roots`、`providers`                                                            | 声明当前 authored node 需要的根能力与已导入 provider 集合 |
 | `ResolveCoreProviderDependenciesOptions` | `contributions`、`definitions?`                                                 | 把 provider 结果与最终显式 Definitions 合并               |
 
-解析器先完成完整预检，再执行 maker：同 key 的 maker 引用与有序 dependencies 必须一致；同 provider key、同 dataset reference 只有 `Object.is` 同源才可去重；缺失 provider 和 cycle 会报告完整链。输出按 dependency-first、首次可达顺序物化，再按 `shapes`、`arrows`、`clips`、`pathKinds`、`pathGenerators`、`composites` 等匹配的 compile option 分组；每个 maker 只执行一次。
+解析器先完成完整预检，再执行 maker：同 key 的 maker 引用与有序 dependencies 必须一致；同 provider key、同 dataset reference 只有 `Object.is` 同源才可去重；缺失 provider 和 cycle 会报告完整链。输出按 dependency-first、首次可达顺序物化，再按 `shapes`、`arrows`、`clips`、`clipShapes`、`pathKinds`、`pathGenerators`、`composites` 等匹配的 compile option 分组；每个 maker 只执行一次。
 
 `options.composites` 是最终显式 Definition 通道，不是嵌套 adapter 的私有 sidecar。Provider 结果先加入，显式 Definition 保留 authored order 后追加；同 key 同对象去重，同 key 不同对象立即失败。直接调用 `compileToScene()` 的作者如果已经拥有完整 Definition 数组，可以跳过 provider graph，继续直接传 `CompileOptions.composites`。
 
@@ -369,8 +371,8 @@ selector 字段全部精确匹配。`owner` 只匹配声明者；`within` 按顺
     {
       label: 'failure ownership 与受控 raise',
       path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 154,
-      endLine: 208,
+      startLine: 61,
+      endLine: 115,
     },
     {
       label: '延迟解析 path 并回填原始输出位置',

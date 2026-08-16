@@ -1,7 +1,7 @@
-import type { ClipDefinition, PathCommand } from '@retikz/core';
+import type { ClipDefinition, ClipShapeDefinition, PathCommand } from '@retikz/core';
 import type { FC } from 'react';
 
-import { defineClip } from '@retikz/core';
+import { defineClip, defineClipShape } from '@retikz/core';
 import { Layout, Node, Scope } from '@retikz/react';
 import { z } from 'zod';
 
@@ -16,34 +16,44 @@ const roundedRectClipSchema = z.strictObject({
 
 type RoundedRectClip = z.infer<typeof roundedRectClipSchema>;
 
-const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip>({
+const roundedRectShapeSchema = roundedRectClipSchema.extend({
+  kind: z.literal('rounded-rect-path'),
+});
+
+type RoundedRectShape = z.infer<typeof roundedRectShapeSchema>;
+
+const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip, RoundedRectShape>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => {
-    const x = spec.x;
-    const y = spec.y;
-    const right = spec.x + spec.width;
-    const bottom = spec.y + spec.height;
-    const radius = Math.min(spec.radius, spec.width / 2, spec.height / 2);
+  resolve: spec => ({ ...spec, kind: 'rounded-rect-path' }),
+});
+
+const roundedRectShape: ClipShapeDefinition<RoundedRectShape> = defineClipShape<RoundedRectShape>({
+  kind: 'rounded-rect-path',
+  schema: roundedRectShapeSchema,
+  lower: shape => {
+    const right = shape.x + shape.width;
+    const bottom = shape.y + shape.height;
+    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
     const commands: Array<PathCommand> = [
-      { kind: 'move', to: [x + radius, y] },
-      { kind: 'line', to: [right - radius, y] },
-      { kind: 'quad', control: [right, y], to: [right, y + radius] },
+      { kind: 'move', to: [shape.x + radius, shape.y] },
+      { kind: 'line', to: [right - radius, shape.y] },
+      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
       { kind: 'line', to: [right, bottom - radius] },
       { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
-      { kind: 'line', to: [x + radius, bottom] },
-      { kind: 'quad', control: [x, bottom], to: [x, bottom - radius] },
-      { kind: 'line', to: [x, y + radius] },
-      { kind: 'quad', control: [x, y], to: [x + radius, y] },
+      { kind: 'line', to: [shape.x + radius, bottom] },
+      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
+      { kind: 'line', to: [shape.x, shape.y + radius] },
+      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
       { kind: 'close' },
     ];
 
-    return { kind: 'path', commands };
+    return { commands, fillRule: 'nonzero' };
   },
 });
 
 const Demo: FC = () => (
-  <Layout width={430} height={184} clips={[roundedRectClip]}>
+  <Layout width={430} height={184} clips={[roundedRectClip]} clipShapes={[roundedRectShape]}>
     <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
       <Node
         position={[-88, -8]}

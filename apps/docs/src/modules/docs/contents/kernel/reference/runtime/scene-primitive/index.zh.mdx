@@ -22,23 +22,19 @@ Scene primitive 是 `compileToScene(...).scene` 的输出合同：IR 经过布�
 
 `SceneResource = PaintResource | ClipResource`。primitive 的 `PaintValue.resourceRef` 与 `GroupPrim.clipRef` 只保存 id；renderer adapter 负责把资源表物化为平台对象并解析引用。
 
-| Resource        | 字段                  | 说明                                                               |
-| --------------- | --------------------- | ------------------------------------------------------------------ |
+| Resource        | 字段                  | 说明                                                           |
+| --------------- | --------------------- | -------------------------------------------------------------- |
 | `PaintResource` | `kind:'paint'` / `id` | `spec` 保存 `IRPaint`；pattern 还可带 compile 已解析的 `tile?` |
-| `ClipResource`  | `kind:'clip'` / `id`  | `shape` 保存用户坐标系中的裁剪几何                                 |
+| `ClipResource`  | `kind:'clip'` / `id`  | `path` 保存用户坐标系中的 canonical `SceneClipPath`            |
 
-`ClipResource.shape` 通过 `kind` 选择下列结构：
+`ClipResource.path` 只有一种 renderer-neutral 结构：
 
-| Shape      | 关键字段                                   |
-| ---------- | ------------------------------------------ |
-| `rect`     | `x` / `y` / `width` / `height`             |
-| `circle`   | `cx` / `cy` / `r`                          |
-| `ellipse`  | `cx` / `cy` / `rx` / `ry`                  |
-| `polygon`  | `points`                                   |
-| `path`     | `commands` / `fillRule?`                   |
-| `compound` | `children: Array<ClipShape>` / `fillRule?` |
+| 字段       | 类型                       | 说明                                                  |
+| ---------- | -------------------------- | ----------------------------------------------------- |
+| `commands` | `Array<PathCommand>`       | 已校验、按稳定字段顺序与 compile precision 规范的命令 |
+| `fillRule` | `'nonzero'` \| `'evenodd'` | 始终显式存在；provider 缺省时物化为 `nonzero`         |
 
-`fillRule` 缺省为 `nonzero`。renderer 不应回查 IR schema 或 provider registry，只消费这里已解析的 `spec`、`tile`、`shape` 与 primitive 引用。
+Clip operation 与自定义 ClipShape 已在 compile 阶段解析并 lower。renderer 不应回查 IR schema 或 provider registry，也不应解释自定义 shape kind；只消费这里已解析的 `spec`、`tile`、`path` 与 primitive 引用。旧的 `ClipResource.shape` 不再接受。
 
 ## 形状原语
 
@@ -168,8 +164,8 @@ compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ResolvedArrowEnd
     {
       label: '图元、marker、clip 与 group 的视觉边界',
       path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts',
-      startLine: 235,
-      endLine: 360,
+      startLine: 208,
+      endLine: 341,
     },
     {
       label: 'replay root 的逐项包装、排序与视觉边界提交',

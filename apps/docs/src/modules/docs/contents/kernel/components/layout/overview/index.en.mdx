@@ -280,13 +280,14 @@ These props enter `CompileOptions` together. See each extension guide for defini
 
 ### Primitive and Resource Injection
 
-| Prop         | Type                                        | Default | Description                                                                         |
-| ------------ | ------------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`    | —       | Inject shapes; see [Custom Shapes](/kernel/components/shapes/custom-shape)          |
-| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>` | —       | Inject boundaries; see [Custom Boundaries](/kernel/components/node/custom-boundary) |
-| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`     | —       | Inject clips; see [Custom Clips](/kernel/components/layout/custom-clip)             |
-| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`    | —       | Inject arrows; see [Custom Arrows](/kernel/components/draw/custom-arrow)            |
-| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`  | —       | Inject patterns; see [Custom Patterns](/kernel/components/effects/custom-pattern)   |
+| Prop         | Type                                            | Default | Description                                                                         |
+| ------------ | ----------------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `shapes`     | `ReadonlyArray`<br />`<ShapeDefinition>`        | —       | Inject shapes; see [Custom Shapes](/kernel/components/shapes/custom-shape)          |
+| `boundaries` | `ReadonlyArray`<br />`<BoundaryDefinition>`     | —       | Inject boundaries; see [Custom Boundaries](/kernel/components/node/custom-boundary) |
+| `clips`      | `ReadonlyArray`<br />`<ClipDefinition>`         | —       | Inject clips; see [Custom Clips](/kernel/components/layout/custom-clip)             |
+| `clipShapes` | `ReadonlyArray`<br />`<AnyClipShapeDefinition>` | —       | Inject clipping-geometry lowerers; forms the second extension stage after `clips`   |
+| `arrows`     | `ReadonlyArray`<br />`<ArrowDefinition>`        | —       | Inject arrows; see [Custom Arrows](/kernel/components/draw/custom-arrow)            |
+| `patterns`   | `ReadonlyArray`<br />`<PatternDefinition>`      | —       | Inject patterns; see [Custom Patterns](/kernel/components/effects/custom-pattern)   |
 
 ### Higher-Level Capabilities and Host Integration
 

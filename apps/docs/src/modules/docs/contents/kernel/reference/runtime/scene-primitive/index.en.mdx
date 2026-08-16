@@ -22,23 +22,19 @@ Scene primitives are the output contract of `compileToScene(...).scene`: after I
 
 `SceneResource = PaintResource | ClipResource`. A primitive's `PaintValue.resourceRef` and `GroupPrim.clipRef` store only an id; the renderer adapter materializes platform resources and resolves those references.
 
-| Resource        | Fields                | Notes                                                                              |
-| --------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| Resource        | Fields                | Notes                                                                          |
+| --------------- | --------------------- | ------------------------------------------------------------------------------ |
 | `PaintResource` | `kind:'paint'` / `id` | `spec` stores `IRPaint`; a pattern may also carry the compile-resolved `tile?` |
-| `ClipResource`  | `kind:'clip'` / `id`  | `shape` stores clipping geometry in user coordinates                               |
+| `ClipResource`  | `kind:'clip'` / `id`  | `path` stores a canonical `SceneClipPath` in user coordinates                  |
 
-`ClipResource.shape` selects one of these structures by `kind`:
+`ClipResource.path` has one renderer-neutral structure:
 
-| Shape      | Key fields                                 |
-| ---------- | ------------------------------------------ |
-| `rect`     | `x` / `y` / `width` / `height`             |
-| `circle`   | `cx` / `cy` / `r`                          |
-| `ellipse`  | `cx` / `cy` / `rx` / `ry`                  |
-| `polygon`  | `points`                                   |
-| `path`     | `commands` / `fillRule?`                   |
-| `compound` | `children: Array<ClipShape>` / `fillRule?` |
+| Field      | Type                       | Notes                                                                |
+| ---------- | -------------------------- | -------------------------------------------------------------------- |
+| `commands` | `Array<PathCommand>`       | Validated commands canonicalized to stable field order and precision |
+| `fillRule` | `'nonzero'` \| `'evenodd'` | Always explicit; an omitted provider value materializes as `nonzero` |
 
-`fillRule` defaults to `nonzero`. Renderers do not consult IR schemas or provider registries again; they consume the resolved `spec`, `tile`, `shape`, and primitive references here.
+Clip operations and custom ClipShapes have already been resolved and lowered during compile. Renderers neither consult IR schemas / provider registries nor interpret custom shape kinds; they consume only the resolved `spec`, `tile`, `path`, and primitive references here. The old `ClipResource.shape` contract is rejected.
 
 ## Shape Primitives
 
@@ -168,8 +164,8 @@ For platform materialization behavior, continue to the [SVG renderer](/kernel/pa
     {
       label: 'Primitive, marker, clip, and group visual bounds',
       path: 'packages/kernel/core/src/compile/orchestration/visual-bounds.ts',
-      startLine: 235,
-      endLine: 360,
+      startLine: 208,
+      endLine: 341,
     },
     {
       label: 'Per-root replay wrapping, ordering, and visual-bound commit',
