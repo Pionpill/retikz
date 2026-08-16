@@ -1,5 +1,4 @@
 ﻿import type {
-  AnyClipShapeDefinition,
   AnyCompositeDefinition,
   AnyPathKindDefinition,
   ArrowDefinition,
@@ -19,7 +18,6 @@ import type { CompileObservationRuntime } from './observation';
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveClipRegistry } from '../../providers/clip';
-import { resolveClipShapeRegistry } from '../../providers/clip-shape';
 import { resolveCompositeRegistry } from '../../providers/composite';
 import { resolvePathGeneratorRegistry } from '../../providers/path-generator';
 import { resolvePathKindRegistry } from '../../providers/path-kind';
@@ -77,8 +75,6 @@ export type CompileContext = {
   boundaries: ReadonlyMap<string, BoundaryDefinition>;
   /** clip provider 注册表 */
   clips: ReadonlyMap<string, ClipDefinition>;
-  /** ClipShape provider 注册表 */
-  clipShapes: ReadonlyMap<string, AnyClipShapeDefinition>;
   /** operation resolve 与 shape lower 共用的最大遍历边数 */
   maxClipDepth: number;
   /** arrow provider 注册表 */
@@ -116,7 +112,6 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
   const clips = resolveClipRegistry(options.clips);
-  const clipShapes = resolveClipShapeRegistry(options.clipShapes);
   const maxClipDepth = options.maxClipDepth ?? DEFAULT_MAX_CLIP_DEPTH;
   if (!Number.isSafeInteger(maxClipDepth) || maxClipDepth < 0) {
     throw new Error(`CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`);
@@ -145,13 +140,12 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,
-    clipShapes,
     maxClipDepth,
     arrows: resolveArrowRegistry(options.arrows),
     patterns,
     pathGenerators: resolvePathGeneratorRegistry(options.pathGenerators),
     pathKinds: resolvePathKindRegistry(options.pathKinds),
     paint: createPaintRegistry(round),
-    clip: createClipRegistry(round, clipShapes, maxClipDepth),
+    clip: createClipRegistry(round, clips, maxClipDepth),
   };
 };

@@ -5,12 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src';
-import {
-  PathClipDefinition,
-  PathClipProvider,
-  PathClipShapeDefinition,
-  PathClipShapeProvider,
-} from '../../../src/clip';
+import { PathClipDefinition, PathClipProvider } from '../../../src/clip';
 
 const node: IRChild = {
   type: 'node',
@@ -34,9 +29,7 @@ const pathsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<PathPrim> =>
 describe('Surface appearance, Scope, and spatial identity', () => {
   it('resolves the path clip dependency through the Surface provider graph', () => {
     const definitions = resolveCoreProviderDependencies({
-      contributions: [
-        { roots: [SurfaceProvider.key], providers: [SurfaceProvider, PathClipProvider, PathClipShapeProvider] },
-      ],
+      contributions: [{ roots: [SurfaceProvider.key], providers: [SurfaceProvider, PathClipProvider] }],
     });
     const surface = createSurface({
       namespace: 'standard',
@@ -48,7 +41,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
 
     expect(definitions.clips?.map(definition => definition.kind)).toEqual(['path']);
-    expect(definitions.clipShapes?.map(definition => definition.kind)).toEqual(['path']);
+    expect(definitions).toEqual({ composites: [SurfaceDefinition], clips: [PathClipDefinition] });
     expect(() =>
       compileToScene({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
     ).not.toThrow();
@@ -70,7 +63,6 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       {
         composites: [SurfaceDefinition],
         clips: [PathClipDefinition],
-        clipShapes: [PathClipShapeDefinition],
         padding: 0,
       },
     );
@@ -108,7 +100,6 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       {
         composites: [SurfaceDefinition],
         clips: [PathClipDefinition],
-        clipShapes: [PathClipShapeDefinition],
         padding: 0,
       },
     );
@@ -153,7 +144,6 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       {
         composites: [SurfaceDefinition],
         clips: [PathClipDefinition],
-        clipShapes: [PathClipShapeDefinition],
         padding: 0,
       },
     );
@@ -259,7 +249,6 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       {
         composites: [SurfaceDefinition],
         clips: [PathClipDefinition],
-        clipShapes: [PathClipShapeDefinition],
         padding: 0,
       },
     );

@@ -222,7 +222,7 @@ export type CompileOptions<
   CompileProviderOptions &
   CompileCompositeOptions<TComposites> & {
     /**
-     * Clip operation resolve 与 ClipShape lower 共用的最大边数
+     * Clip resolve 与 ClipShape lower 共用的最大边数
      * @default 32
      */
     maxClipDepth?: number;

@@ -1,23 +1,17 @@
 import type { ClipDefinition, IRScene, PathCommand } from '@retikz/core';
 
-import { compileToScene, defineClip } from '@retikz/core';
+import { compileToScene, defineClip, PathCommandSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
   CircleClipDefinition,
-  CircleClipShapeDefinition,
   CompoundClipDefinition,
   CompoundClipProvider,
   CompoundClipSchema,
-  CompoundClipShapeDefinition,
-  CompoundClipShapeProvider,
   EllipseClipDefinition,
-  EllipseClipShapeDefinition,
   PathClipDefinition,
-  PathClipShapeDefinition,
   PolygonClipDefinition,
-  PolygonClipShapeDefinition,
 } from '../../src/clip';
 
 const roundedRectClip = (): ClipDefinition =>
@@ -38,8 +32,13 @@ const roundedRectClip = (): ClipDefinition =>
         { kind: 'line', to: [spec.x + spec.width, spec.y + spec.height] },
         { kind: 'close' },
       ];
-      return { kind: 'path', commands };
+      return { kind: 'roundedRect', commands };
     },
+    shapeSchema: z.strictObject({
+      kind: z.literal('roundedRect'),
+      commands: z.array(PathCommandSchema),
+    }),
+    lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
   });
 
 describe('Standard compound clip definition', () => {
@@ -64,12 +63,7 @@ describe('Standard compound clip definition', () => {
         },
       ],
     };
-    expect(() =>
-      compileToScene(scene, {
-        clips: [PolygonClipDefinition],
-        clipShapes: [PolygonClipShapeDefinition],
-      }),
-    ).not.toThrow();
+    expect(() => compileToScene(scene, { clips: [PolygonClipDefinition] })).not.toThrow();
   });
 
   it('parses recursive compound children and delegates a custom child to Core registry resolution', () => {
@@ -90,12 +84,6 @@ describe('Standard compound clip definition', () => {
 
     const compiled = compileToScene(scene, {
       clips: [CompoundClipDefinition, CircleClipDefinition, EllipseClipDefinition, roundedRectClip()],
-      clipShapes: [
-        CompoundClipShapeDefinition,
-        CircleClipShapeDefinition,
-        EllipseClipShapeDefinition,
-        PathClipShapeDefinition,
-      ],
     }).scene;
     const resource = compiled.resources?.[0];
     expect(resource).toMatchObject({ kind: 'clip', path: { fillRule: 'evenodd' } });
@@ -114,12 +102,12 @@ describe('Standard compound clip definition', () => {
     ]);
   });
 
-  it('keeps the compound provider closed by its shape dependency', () => {
+  it('materializes one complete compound definition without shape dependencies', () => {
     expect(CompoundClipProvider.makeDefinition({})).toBe(CompoundClipDefinition);
-    expect(CompoundClipProvider.dependencies).toEqual([CompoundClipShapeProvider.key]);
+    expect(CompoundClipProvider.dependencies).toEqual([]);
   });
 
-  it('requires a third-party child shape to be present in the active shape registry', () => {
+  it('requires a third-party child definition to be present in the active clips registry', () => {
     const scene: IRScene = {
       type: 'scene',
       version: 1,
@@ -138,9 +126,12 @@ describe('Standard compound clip definition', () => {
     expect(() =>
       compileToScene(scene, {
         clips: [CompoundClipDefinition, roundedRectClip()],
-        clipShapes: [CompoundClipShapeDefinition],
       }),
-    ).toThrow(/Unknown clip shape 'path'.*options\.clipShapes/i);
+    ).not.toThrow();
+
+    expect(() => compileToScene(scene, { clips: [CompoundClipDefinition] })).toThrow(
+      /Unknown clip 'roundedRect'.*options\.clips/i,
+    );
   });
 
   it('reports the Standard compound schema diagnostic before compile when children are empty', () => {

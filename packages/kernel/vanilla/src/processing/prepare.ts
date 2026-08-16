@@ -51,7 +51,6 @@ const resolveCoreOptions = (
             shapes: compile.shapes,
             boundaries: compile.boundaries,
             clips: compile.clips,
-            clipShapes: compile.clipShapes,
             arrows: compile.arrows,
             patterns: compile.patterns,
             pathGenerators: compile.pathGenerators,

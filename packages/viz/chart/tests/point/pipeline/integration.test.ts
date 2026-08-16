@@ -4,7 +4,7 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { createPlotProviderContribution } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider, PathClipShapeProvider } from '@retikz/standard/clip';
+import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import { ChartProvider } from '../../../src';
@@ -46,7 +46,6 @@ describe('canonical Chart provider and compile integration', () => {
           providers: [
             SurfaceProvider,
             PathClipProvider,
-            PathClipShapeProvider,
             FlexLayoutProvider,
             ...plotContribution.providers,
             ChartProvider,
@@ -72,7 +71,6 @@ describe('canonical Chart provider and compile integration', () => {
           providers: [
             SurfaceProvider,
             PathClipProvider,
-            PathClipShapeProvider,
             FlexLayoutProvider,
             ...plotContribution.providers,
             ChartProvider,

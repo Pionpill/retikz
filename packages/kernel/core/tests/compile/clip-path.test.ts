@@ -3,25 +3,13 @@ import { z } from 'zod';
 
 import type { ClipDefinition, ClipResource, ClipShape, IRClip, IRClipFillRule, IRScene, PathCommand } from '../../src';
 
-import { compileToScene, defineClip, defineClipShape, PathCommandSchema } from '../../src';
+import { compileToScene, defineClip, PathCommandSchema } from '../../src';
 
 type TestPathClipShape = ClipShape & {
-  kind: 'testPathShape';
+  kind: string;
   commands: Array<PathCommand>;
   fillRule?: IRClipFillRule;
 };
-
-const TestPathClipShapeSchema: z.ZodType<TestPathClipShape> = z.strictObject({
-  kind: z.literal('testPathShape'),
-  commands: z.array(PathCommandSchema),
-  fillRule: z.enum(['nonzero', 'evenodd']).optional(),
-});
-
-const TestPathClipShapeDefinition = defineClipShape<TestPathClipShape>({
-  kind: 'testPathShape',
-  schema: TestPathClipShapeSchema,
-  lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
-});
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -35,12 +23,18 @@ const pathOperation = (kind: string, commands: Array<PathCommand>, fillRule?: IR
     schema: z.strictObject({ kind: z.literal(kind) }),
     resolve: () => {
       const shape: TestPathClipShape = {
-        kind: 'testPathShape',
+        kind,
         commands,
         ...(fillRule === undefined ? {} : { fillRule }),
       };
       return shape;
     },
+    shapeSchema: z.strictObject({
+      kind: z.literal(kind),
+      commands: z.array(PathCommandSchema),
+      fillRule: z.enum(['nonzero', 'evenodd']).optional(),
+    }),
+    lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
   });
 
 const compilePath = (
@@ -50,7 +44,6 @@ const compilePath = (
   const kind = 'testPath';
   const scene = compileToScene(clippedIr({ kind }), {
     clips: [pathOperation(kind, commands, options.fillRule)],
-    clipShapes: [TestPathClipShapeDefinition],
     ...(options.precision === undefined ? {} : { precision: options.precision }),
   }).scene;
   const resource = (scene.resources ?? []).find(entry => entry.kind === 'clip');
@@ -94,7 +87,6 @@ describe('canonical SceneClipPath', () => {
 
     const scene = compileToScene(ir, {
       clips: [pathOperation('pathA', commandsA), pathOperation('pathB', commandsB)],
-      clipShapes: [TestPathClipShapeDefinition],
     }).scene;
 
     expect((scene.resources ?? []).filter(entry => entry.kind === 'clip')).toHaveLength(1);

@@ -1825,7 +1825,7 @@ export const compileChildrenToPrimitives = (
         warnings.push(warning);
       };
       const paint = createPaintRegistry(context.round);
-      const clip = createClipRegistry(context.round, context.clipShapes, context.maxClipDepth);
+      const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
       const probeIdentityTracker =
         runtime.state.identityTracker === undefined
           ? undefined

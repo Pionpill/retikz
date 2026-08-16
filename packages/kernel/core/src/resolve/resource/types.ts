@@ -1,5 +1,4 @@
 import type {
-  AnyClipShapeDefinition,
   ClipDefinition,
   ClipShape,
   PatternDefinition,
@@ -61,14 +60,14 @@ export type ClipResolution = Readonly<{
   resolve: (clip: IRClip) => ClipResolution;
 }>;
 
-/** 已绑定 ClipShape provider 且完成 schema snapshot 解析的裁剪形状 */
+/** 已通过同 kind Clip Definition 完成 shape schema snapshot 解析的裁剪形状 */
 export type ClipShapeResolution = Readonly<{
-  /** provider 解析前的完整 shape snapshot */
+  /** definition 解析前的完整 shape snapshot */
   spec: ClipShape;
-  /** 实际绑定的 ClipShape provider key */
+  /** 实际绑定的 Clip provider key */
   kind: string;
-  /** 已绑定的 ClipShape provider */
-  definition: AnyClipShapeDefinition;
-  /** provider schema parse 后的 JSON shape */
+  /** 已绑定的完整 Clip Definition */
+  definition: ClipDefinition;
+  /** shapeSchema parse 后的 JSON shape */
   params: ClipShape;
 }>;

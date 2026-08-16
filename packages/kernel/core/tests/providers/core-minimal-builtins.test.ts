@@ -2,14 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRClip, IRScene } from '../../src';
 
-import {
-  BUILTIN_ARROWS,
-  BUILTIN_CLIP_SHAPES,
-  BUILTIN_CLIPS,
-  BUILTIN_PATH_GENERATORS,
-  BUILTIN_SHAPES,
-  compileToScene,
-} from '../../src';
+import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_PATH_GENERATORS, BUILTIN_SHAPES, compileToScene } from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
@@ -25,7 +18,15 @@ describe('Core minimal builtin providers', () => {
       'openCircle',
     ]);
     expect(BUILTIN_CLIPS.map(definition => definition.kind)).toEqual(['rect']);
-    expect(BUILTIN_CLIP_SHAPES.map(definition => definition.kind)).toEqual(['rect']);
+    expect(BUILTIN_CLIPS[0]).toEqual(
+      expect.objectContaining({
+        kind: 'rect',
+        schema: expect.anything(),
+        resolve: expect.any(Function),
+        shapeSchema: expect.anything(),
+        lower: expect.any(Function),
+      }),
+    );
     expect(BUILTIN_PATH_GENERATORS).toEqual([]);
   });
 

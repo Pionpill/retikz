@@ -1,13 +1,6 @@
-import type {
-  AnyClipShapeDefinition,
-  BoundaryDefinition,
-  ClipDefinition,
-  IRScene,
-  ScenePrimitive,
-  ShapeDefinition,
-} from '@retikz/core';
+import type { BoundaryDefinition, ClipDefinition, IRScene, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 
-import { defineBoundary, defineClip, defineClipShape, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { defineBoundary, defineClip, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -62,13 +55,8 @@ const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'customClip',
     schema: z.strictObject({ kind: z.literal('customClip') }),
-    resolve: () => ({ kind: 'customClipPath' }),
-  });
-
-const customClipShape = (): AnyClipShapeDefinition =>
-  defineClipShape({
-    kind: 'customClipPath',
-    schema: z.strictObject({ kind: z.literal('customClipPath') }),
+    resolve: () => ({ kind: 'customClip' }),
+    shapeSchema: z.strictObject({ kind: z.literal('customClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -143,17 +131,9 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
   });
 });
 
-describe('<Layout clips + clipShapes> two-level passthrough', () => {
-  it('forwards both registries to static Vanilla processing and SSR', () => {
-    const svg = renderToStaticMarkup(
-      <Layout ir={clippedIr} clips={[customClip()]} clipShapes={[customClipShape()]} runtime={{ mode: 'static' }} />,
-    );
+describe('<Layout clips> complete Clip definition passthrough', () => {
+  it('forwards one complete clips registry to static Vanilla processing and SSR', () => {
+    const svg = renderToStaticMarkup(<Layout ir={clippedIr} clips={[customClip()]} runtime={{ mode: 'static' }} />);
     expect(svg).toContain('<clipPath');
-  });
-
-  it('reports the missing shape registry independently', () => {
-    expect(() =>
-      renderToStaticMarkup(<Layout ir={clippedIr} clips={[customClip()]} runtime={{ mode: 'static' }} />),
-    ).toThrow(/options\.clipShapes/i);
   });
 });

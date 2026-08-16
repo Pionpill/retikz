@@ -11,27 +11,16 @@ import {
 import {
   CircleClipDefinition,
   CircleClipProvider,
-  CircleClipShapeDefinition,
-  CircleClipShapeProvider,
   CompoundClipDefinition,
   CompoundClipProvider,
-  CompoundClipShapeDefinition,
-  CompoundClipShapeProvider,
   EllipseClipDefinition,
   EllipseClipProvider,
-  EllipseClipShapeDefinition,
-  EllipseClipShapeProvider,
   PathClipDefinition,
   PathClipProvider,
-  PathClipShapeDefinition,
-  PathClipShapeProvider,
   PolygonClipDefinition,
   PolygonClipProvider,
-  PolygonClipShapeDefinition,
-  PolygonClipShapeProvider,
   StandardClipDefinitions,
   StandardClipProviders,
-  StandardClipShapeDefinitions,
 } from '../src/clip';
 import {
   ContourShapeDefinition,
@@ -75,23 +64,11 @@ describe('Standard extension collections', () => {
       PathClipDefinition,
       CompoundClipDefinition,
     ]);
-    expect(StandardClipShapeDefinitions).toEqual([
-      CircleClipShapeDefinition,
-      EllipseClipShapeDefinition,
-      PolygonClipShapeDefinition,
-      PathClipShapeDefinition,
-      CompoundClipShapeDefinition,
-    ]);
     expect(StandardClipProviders).toEqual([
-      CircleClipShapeProvider,
       CircleClipProvider,
-      EllipseClipShapeProvider,
       EllipseClipProvider,
-      PolygonClipShapeProvider,
       PolygonClipProvider,
-      PathClipShapeProvider,
       PathClipProvider,
-      CompoundClipShapeProvider,
       CompoundClipProvider,
     ]);
   });
@@ -109,8 +86,9 @@ describe('Standard extension collections', () => {
       });
     }
 
-    expect(new Set(StandardClipProviders.map(provider => provider.makeDefinition({})))).toEqual(
-      new Set([...StandardClipShapeDefinitions, ...StandardClipDefinitions]),
-    );
+    expect(StandardClipProviders).toHaveLength(StandardClipDefinitions.length);
+    StandardClipProviders.forEach((provider, index) => {
+      expect(provider.makeDefinition({})).toBe(StandardClipDefinitions[index]);
+    });
   });
 });

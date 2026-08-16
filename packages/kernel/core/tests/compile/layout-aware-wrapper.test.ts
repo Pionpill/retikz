@@ -416,8 +416,25 @@ describe('layout-aware composite runtime wrapper tree', () => {
       resolve: spec => {
         clipResolveCalls += 1;
         if (spec.fail) throw new Error('runtime Scope clip failed');
-        return { kind: 'rect', x: -10, y: -10, width: 20, height: 20 };
+        return { kind: 'conditionalPreflightClip', x: -10, y: -10, width: 20, height: 20 };
       },
+      shapeSchema: z.strictObject({
+        kind: z.literal('conditionalPreflightClip'),
+        x: z.number(),
+        y: z.number(),
+        width: z.number().nonnegative(),
+        height: z.number().nonnegative(),
+      }),
+      lower: shape => ({
+        commands: [
+          { kind: 'move', to: [shape.x, shape.y] },
+          { kind: 'line', to: [shape.x + shape.width, shape.y] },
+          { kind: 'line', to: [shape.x + shape.width, shape.y + shape.height] },
+          { kind: 'line', to: [shape.x, shape.y + shape.height] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     const artifactLeaf = defineComposite({
       namespace: 'test',

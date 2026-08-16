@@ -1,6 +1,6 @@
-import type { AnyClipShapeDefinition, ClipDefinition } from '@retikz/core';
+import type { ClipDefinition } from '@retikz/core';
 
-import { compileToScene, defineClip, defineClipShape } from '@retikz/core';
+import { compileToScene, defineClip } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -17,13 +17,8 @@ const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'ticketClip',
     schema: z.strictObject({ kind: z.literal('ticketClip') }),
-    resolve: () => ({ kind: 'ticketPath' }),
-  });
-
-const customClipShape = (): AnyClipShapeDefinition =>
-  defineClipShape({
-    kind: 'ticketPath',
-    schema: z.strictObject({ kind: z.literal('ticketPath') }),
+    resolve: () => ({ kind: 'ticketClip' }),
+    shapeSchema: z.strictObject({ kind: z.literal('ticketClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -45,9 +40,9 @@ const input: InputScene = {
   ],
 };
 
-describe('Vanilla ClipShape processing parity', () => {
-  it('preserves explicit clipShapes through InputScene static and retained processing', () => {
-    const compile = { clips: [customClip()], clipShapes: [customClipShape()] };
+describe('Vanilla Clip processing parity', () => {
+  it('preserves complete clips through InputScene static and retained processing', () => {
+    const compile = { clips: [customClip()] };
     const direct = compileToScene(normalizeScene(input).ir, compile).scene;
     const staticResult = processToStaticInputResult(input, { compile });
     const retained = createProcessingController(input, { compile });
@@ -61,17 +56,17 @@ describe('Vanilla ClipShape processing parity', () => {
     retained.dispose();
   });
 
-  it('includes explicit clipShapes in provider-graph conflict checks', () => {
-    const contributed = customClipShape();
+  it('includes explicit clips in provider-graph conflict checks', () => {
+    const contributed = customClip();
     const adapter: InputEmbedAdapter<Record<string, never>> = {
-      kind: 'ticketClipShape',
+      kind: 'ticketClip',
       lower: () => ({
-        node: { type: 'node', id: 'ticket-shape', position: [0, 0] },
+        node: { type: 'node', id: 'ticket', position: [0, 0] },
         providerDependencies: {
-          roots: [{ capability: 'clipShape', name: 'ticketPath' }],
+          roots: [{ capability: 'clip', name: 'ticketClip' }],
           providers: [
             {
-              key: { capability: 'clipShape', name: 'ticketPath' },
+              key: { capability: 'clip', name: 'ticketClip' },
               dependencies: [],
               datasets: {},
               makeDefinition: () => contributed,
@@ -81,14 +76,14 @@ describe('Vanilla ClipShape processing parity', () => {
       }),
     };
     const embedded: InputScene = {
-      children: [{ type: 'embed', kind: 'ticketClipShape', id: 'ticket-shape', props: {} }],
+      children: [{ type: 'embed', kind: 'ticketClip', id: 'ticket', props: {} }],
     };
 
     expect(() =>
       prepareProcessingInput(embedded, {
         adapters: [adapter],
-        compile: { clipShapes: [customClipShape()] },
+        compile: { clips: [customClip()] },
       }),
-    ).toThrow(/definition conflict for clipShape:ticketPath/i);
+    ).toThrow(/definition conflict for clip:ticketClip/i);
   });
 });

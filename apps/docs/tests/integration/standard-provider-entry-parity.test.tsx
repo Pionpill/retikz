@@ -3,12 +3,7 @@ import type { IRScene } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import {
-  CircleClipDefinition,
-  CircleClipShapeDefinition,
-  CompoundClipDefinition,
-  CompoundClipShapeDefinition,
-} from '@retikz/standard/clip';
+import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/standard/clip';
 import { createRibbonProviderContribution, RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 import { renderToSvgString, toSceneResult } from '@retikz/vanilla';
@@ -52,7 +47,6 @@ const definitions = {
   shapes: [CrossShapeDefinition],
   arrows: [DiamondArrowDefinition],
   clips: [CompoundClipDefinition, CircleClipDefinition],
-  clipShapes: [CompoundClipShapeDefinition, CircleClipShapeDefinition],
   pathKinds: [RibbonPathKindDefinition],
 } as const;
 
@@ -86,7 +80,6 @@ describe('Standard provider entry integration', () => {
         shapes: definitions.shapes,
         arrows: definitions.arrows,
         clips: definitions.clips,
-        clipShapes: definitions.clipShapes,
       },
     });
     const resolved = compileToScene(source, providerDefinitions);

@@ -3,16 +3,21 @@ import { z } from 'zod';
 
 import type { ClipResource, ClipShape, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
-import { compileToScene, defineClip, defineClipShape, PositionSchema } from '../../src';
+import { compileToScene, defineClip, PositionSchema } from '../../src';
 
 type TestPolygonClipShape = ClipShape & {
   kind: 'polygon';
   points: Array<[number, number]>;
 };
 
-const polygonClipShape = defineClipShape<TestPolygonClipShape>({
+const polygonClip = defineClip<{ kind: 'polygon'; points: Array<[number, number]> }, TestPolygonClipShape>({
   kind: 'polygon',
-  schema: z.strictObject({ kind: z.literal('polygon'), points: z.array(PositionSchema).min(3) }),
+  schema: z.strictObject({
+    kind: z.literal('polygon'),
+    points: z.array(z.tuple([z.number(), z.number()])).min(3),
+  }),
+  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+  shapeSchema: z.strictObject({ kind: z.literal('polygon'), points: z.array(PositionSchema).min(3) }),
   lower: shape => ({
     commands: [
       { kind: 'move', to: shape.points[0] },
@@ -23,16 +28,7 @@ const polygonClipShape = defineClipShape<TestPolygonClipShape>({
   }),
 });
 
-const polygonClip = defineClip({
-  kind: 'polygon',
-  schema: z.strictObject({
-    kind: z.literal('polygon'),
-    points: z.array(z.tuple([z.number(), z.number()])).min(3),
-  }),
-  resolve: spec => ({ kind: 'polygon', points: spec.points }),
-});
-
-const polygonOptions = { clips: [polygonClip], clipShapes: [polygonClipShape] } as const;
+const polygonOptions = { clips: [polygonClip] } as const;
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

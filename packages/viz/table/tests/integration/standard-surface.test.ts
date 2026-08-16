@@ -1,6 +1,6 @@
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { createSurface, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider, PathClipShapeProvider } from '@retikz/standard/clip';
+import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';
@@ -20,7 +20,7 @@ describe('Table inside Standard Surface', () => {
       contributions: [
         {
           roots: [SurfaceProvider.key, ...tableContribution.roots],
-          providers: [SurfaceProvider, PathClipProvider, PathClipShapeProvider, ...tableContribution.providers],
+          providers: [SurfaceProvider, PathClipProvider, ...tableContribution.providers],
         },
       ],
     });

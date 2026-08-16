@@ -1,8 +1,7 @@
 import type {
-  AnyClipShapeDefinition,
+  ClipDefinition,
   ClipResource,
   ClipShape,
-  ClipShapeLowerContext,
   PathCommand,
   SceneClipPath,
 } from '../../contract';
@@ -38,7 +37,7 @@ export type ClipRegistry = {
   resources: () => Array<ClipResource>;
 };
 
-/** Clip operation resolve 与 ClipShape lower 共用的默认边预算 */
+/** Clip resolve 与 ClipShape lower 共用的默认边预算 */
 export const DEFAULT_MAX_CLIP_DEPTH = 32;
 
 type ClipTraversalGuard = {
@@ -243,10 +242,10 @@ const canonicalizeClipPath = (path: unknown, owner: string, round: (n: number) =
     };
   });
 
-/** 创建一次 compile 隔离的两级 clip 资源注册表 */
+/** 创建一次 compile 隔离的单一 Clip Definition 资源注册表 */
 export const createClipRegistry = (
   round: (n: number) => number,
-  clipShapes: ReadonlyMap<string, AnyClipShapeDefinition>,
+  clips: ReadonlyMap<string, ClipDefinition>,
   maxClipDepth = DEFAULT_MAX_CLIP_DEPTH,
 ): ClipRegistry => {
   const idByKey = new Map<string, string>();
@@ -272,7 +271,13 @@ export const createClipRegistry = (
           providerKey: `clip:${kind}`,
         });
       }
-      return snapshotResolvedClipShape(resolved, `Clip '${kind}'`);
+      const shape = snapshotResolvedClipShape(resolved, `Clip provider 'clip:${kind}'`);
+      if (shape.kind !== kind) {
+        throw new CompositeContractError(
+          `Clip provider 'clip:${kind}' resolve returned kind '${shape.kind}' instead of '${kind}'.`,
+        );
+      }
+      return shape;
     } finally {
       leaveClipTraversalObjects(guard, entered);
     }
@@ -282,28 +287,28 @@ export const createClipRegistry = (
     const enteredShape = enterClipTraversalObjects(guard, [shape], 'clip shape');
     try {
       consumeClipTraversalEdge(guard, `clip shape '${shape.kind}'`);
-      const resolution = resolveClipShape(shape, { clipShapes });
+      const resolution = resolveClipShape(shape, { clips });
       const { kind, definition, params } = resolution;
       const enteredParams = params === shape ? [] : enterClipTraversalObjects(guard, [params], 'clip shape');
       try {
         let lowered: unknown;
         try {
-          const lower = definition.lower as unknown as (
-            shape: ClipShape,
-            context: ClipShapeLowerContext,
-          ) => SceneClipPath;
+          const lower = definition.lower;
           lowered = lower(params, {
             round,
             lower: nested => lowerShape(nested, guard),
           });
         } catch (thrown) {
           if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
-          throw new LayoutProbeRecoverableError(`Clip shape '${kind}' lower failed: ${safeThrownDetail(thrown)}`, {
-            cause: thrown,
-            providerKey: `clipShape:${kind}`,
-          });
+          throw new LayoutProbeRecoverableError(
+            `Clip provider 'clip:${kind}' lower failed: ${safeThrownDetail(thrown)}`,
+            {
+              cause: thrown,
+              providerKey: `clip:${kind}`,
+            },
+          );
         }
-        return canonicalizeClipPath(lowered, `Clip shape '${kind}'`, round);
+        return canonicalizeClipPath(lowered, `Clip provider 'clip:${kind}'`, round);
       } finally {
         leaveClipTraversalObjects(guard, enteredParams);
       }

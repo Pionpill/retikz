@@ -1,11 +1,24 @@
-import { ClipFillRuleSchema, defineClipShape, JsonObjectSchema, PathCommandSchema, PositionSchema } from '@retikz/core';
+import { ClipFillRuleSchema, defineClip, JsonObjectSchema, PathCommandSchema, PositionSchema } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import type { CircleClipShape, CompoundClipShape, EllipseClipShape, PathClipShape, PolygonClipShape } from './types';
+import type {
+  CircleClipShape,
+  CompoundClipShape,
+  EllipseClipShape,
+  IRCircleClip,
+  IRCompoundClip,
+  IREllipseClip,
+  IRPathClip,
+  IRPolygonClip,
+  PathClipShape,
+  PolygonClipShape,
+} from './types';
 
-const ClipShapeSchema = z.intersection(
-  z.object({ kind: z.string().min(1).describe('Clip shape registry discriminator.') }),
+import { CircleClipSchema, CompoundClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema } from './schema';
+
+const OpenClipShapeSchema = z.intersection(
+  z.object({ kind: z.string().min(1).describe('Clip definition discriminator.') }),
   JsonObjectSchema,
 );
 
@@ -37,14 +50,16 @@ const PathClipShapeSchema: z.ZodType<PathClipShape> = z.strictObject({
 
 const CompoundClipShapeSchema: z.ZodType<CompoundClipShape> = z.strictObject({
   kind: z.literal('compound'),
-  children: z.array(ClipShapeSchema).min(1),
+  children: z.array(OpenClipShapeSchema).min(1),
   fillRule: ClipFillRuleSchema.optional(),
 });
 
-/** Standard 圆形 ClipShape Definition */
-export const CircleClipShapeDefinition = defineClipShape<CircleClipShape>({
+/** Standard 提供的完整圆形裁剪 Definition */
+export const CircleClipDefinition = defineClip<IRCircleClip, CircleClipShape>({
   kind: 'circle',
-  schema: CircleClipShapeSchema,
+  schema: CircleClipSchema,
+  resolve: spec => ({ kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.r }),
+  shapeSchema: CircleClipShapeSchema,
   lower: (shape, context) => ({
     commands: [
       { kind: 'move', to: [context.round(shape.cx) + context.round(shape.r), context.round(shape.cy)] },
@@ -55,10 +70,12 @@ export const CircleClipShapeDefinition = defineClipShape<CircleClipShape>({
   }),
 });
 
-/** Standard 椭圆 ClipShape Definition */
-export const EllipseClipShapeDefinition = defineClipShape<EllipseClipShape>({
+/** Standard 提供的完整椭圆裁剪 Definition */
+export const EllipseClipDefinition = defineClip<IREllipseClip, EllipseClipShape>({
   kind: 'ellipse',
-  schema: EllipseClipShapeSchema,
+  schema: EllipseClipSchema,
+  resolve: spec => ({ kind: 'ellipse', cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry }),
+  shapeSchema: EllipseClipShapeSchema,
   lower: (shape, context) => ({
     commands: [
       { kind: 'move', to: [context.round(shape.cx) + context.round(shape.rx), context.round(shape.cy)] },
@@ -76,10 +93,12 @@ export const EllipseClipShapeDefinition = defineClipShape<EllipseClipShape>({
   }),
 });
 
-/** Standard 多边形 ClipShape Definition */
-export const PolygonClipShapeDefinition = defineClipShape<PolygonClipShape>({
+/** Standard 提供的完整多边形裁剪 Definition */
+export const PolygonClipDefinition = defineClip<IRPolygonClip, PolygonClipShape>({
   kind: 'polygon',
-  schema: PolygonClipShapeSchema,
+  schema: PolygonClipSchema,
+  resolve: spec => ({ kind: 'polygon', points: spec.points }),
+  shapeSchema: PolygonClipShapeSchema,
   lower: shape => ({
     commands: [
       { kind: 'move', to: shape.points[0] },
@@ -90,17 +109,29 @@ export const PolygonClipShapeDefinition = defineClipShape<PolygonClipShape>({
   }),
 });
 
-/** Standard 路径 ClipShape Definition */
-export const PathClipShapeDefinition = defineClipShape<PathClipShape>({
+/** Standard 提供的完整路径裁剪 Definition */
+export const PathClipDefinition = defineClip<IRPathClip, PathClipShape>({
   kind: 'path',
-  schema: PathClipShapeSchema,
+  schema: PathClipSchema,
+  resolve: spec => ({
+    kind: 'path',
+    commands: spec.commands,
+    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
+  }),
+  shapeSchema: PathClipShapeSchema,
   lower: shape => ({ commands: shape.commands, fillRule: shape.fillRule ?? 'nonzero' }),
 });
 
-/** Standard 复合 ClipShape Definition */
-export const CompoundClipShapeDefinition = defineClipShape<CompoundClipShape>({
+/** Standard 提供的完整复合裁剪 Definition */
+export const CompoundClipDefinition = defineClip<IRCompoundClip, CompoundClipShape>({
   kind: 'compound',
-  schema: CompoundClipShapeSchema,
+  schema: CompoundClipSchema,
+  resolve: (spec, context) => ({
+    kind: 'compound',
+    children: spec.children.map(child => context.resolve(child)),
+    ...(spec.fillRule === undefined ? {} : { fillRule: spec.fillRule }),
+  }),
+  shapeSchema: CompoundClipShapeSchema,
   lower: (shape, context) => ({
     commands: shape.children.flatMap(child => context.lower(child).commands),
     fillRule: shape.fillRule ?? 'nonzero',

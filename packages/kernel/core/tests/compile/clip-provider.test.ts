@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { AnyClipShapeDefinition, ClipDefinition, ClipShape, IRClip, IRScene, PathCommand } from '../../src';
+import type { ClipDefinition, ClipShape, IRClip, IRScene, PathCommand } from '../../src';
 
-import { compileToScene, defineClip, defineClipShape, PathCommandSchema } from '../../src';
+import { compileToScene, defineClip, PathCommandSchema, resolveCoreProviderDependencies } from '../../src';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -26,14 +26,20 @@ type RoundedRectClip = {
   r: number;
 };
 
-type RoundedPathClipShape = ClipShape & {
-  kind: 'roundedPath';
+type RoundedRectClipShape = ClipShape & {
+  kind: 'roundedRect';
   commands: Array<PathCommand>;
   fillRule: 'evenodd';
 };
 
+const RoundedRectClipShapeSchema: z.ZodType<RoundedRectClipShape> = z.strictObject({
+  kind: z.literal('roundedRect'),
+  fillRule: z.literal('evenodd'),
+  commands: z.array(PathCommandSchema),
+});
+
 const roundedRectClip = (): ClipDefinition =>
-  defineClip<RoundedRectClip, RoundedPathClipShape>({
+  defineClip<RoundedRectClip, RoundedRectClipShape>({
     kind: 'roundedRect',
     schema: z.strictObject({
       kind: z.literal('roundedRect'),
@@ -60,21 +66,12 @@ const roundedRectClip = (): ClipDefinition =>
         { kind: 'close' },
       ];
       return {
-        kind: 'roundedPath',
+        kind: 'roundedRect',
         fillRule: 'evenodd',
         commands,
       };
     },
-  });
-
-const roundedRectShape = (): AnyClipShapeDefinition =>
-  defineClipShape<RoundedPathClipShape>({
-    kind: 'roundedPath',
-    schema: z.strictObject({
-      kind: z.literal('roundedPath'),
-      fillRule: z.literal('evenodd'),
-      commands: z.array(PathCommandSchema),
-    }),
+    shapeSchema: RoundedRectClipShapeSchema,
     lower: shape => ({
       commands: shape.commands,
       fillRule: shape.fillRule,
@@ -87,15 +84,22 @@ describe('clip providers', () => {
       defineClip({
         kind,
         schema: z.strictObject({ kind: z.literal(kind) }),
-        resolve: () => ({ kind: 'circle', cx: 0, cy: 0, r: 1 }),
+        resolve: () => ({ kind }),
+        shapeSchema: z.strictObject({ kind: z.literal(kind) }),
+        lower: () => ({
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [1, 1] },
+          ],
+          fillRule: 'nonzero',
+        }),
       }),
     ).toThrowError('clip provider key must be a non-empty string.');
   });
 
-  it('custom operation and differently named custom shape compile through both registries', () => {
+  it('compiles one same-kind custom definition through options.clips only', () => {
     const scene = compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }), {
       clips: [roundedRectClip()],
-      clipShapes: [roundedRectShape()],
     }).scene;
     expect(scene.resources ?? []).toHaveLength(1);
     expect((scene.resources ?? [])[0]).toMatchObject({
@@ -118,11 +122,191 @@ describe('clip providers', () => {
     const rectOverride = defineClip({
       kind: 'rect',
       schema: z.strictObject({ kind: z.literal('rect') }),
-      resolve: () => ({ kind: 'circle', cx: 0, cy: 0, r: 1 }),
+      resolve: () => ({ kind: 'rect' }),
+      shapeSchema: z.strictObject({ kind: z.literal('rect') }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     expect(
       () =>
         compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }).scene,
     ).toThrow(/duplicate clip registration/i);
+  });
+
+  it('rejects a provider key whose complete definition has another kind', () => {
+    const definition = defineClip({
+      kind: 'other',
+      schema: z.strictObject({ kind: z.literal('other') }),
+      resolve: () => ({ kind: 'other' }),
+      shapeSchema: z.strictObject({ kind: z.literal('other') }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
+    });
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [
+          {
+            roots: [{ capability: 'clip', name: 'roundedRect' }],
+            providers: [
+              {
+                key: { capability: 'clip', name: 'roundedRect' },
+                dependencies: [],
+                datasets: {},
+                makeDefinition: () => definition,
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(/provider clip:roundedRect returned definition other/i);
+  });
+
+  it('rejects a provider schema that transforms the authored kind before resolve', () => {
+    const resolve = vi.fn(() => ({ kind: 'schemaTransform' }));
+    const definition = defineClip({
+      kind: 'schemaTransform',
+      schema: z.strictObject({ kind: z.literal('schemaTransform') }).transform(() => ({
+        kind: 'other' as const,
+      })) as unknown as z.ZodType<{ kind: 'schemaTransform' }>,
+      resolve,
+      shapeSchema: z.strictObject({ kind: z.literal('schemaTransform') }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
+    });
+
+    expect(() => compileToScene(clippedIr({ kind: 'schemaTransform' }), { clips: [definition] })).toThrow(
+      /clip:schemaTransform.*kind.*other/i,
+    );
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('rejects a resolved shape whose kind differs before lower', () => {
+    const lower = vi.fn(() => ({
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [1, 1] as [number, number] },
+      ],
+      fillRule: 'nonzero' as const,
+    }));
+    const definition = defineClip({
+      kind: 'resolvedMismatch',
+      schema: z.strictObject({ kind: z.literal('resolvedMismatch') }),
+      resolve: () => ({ kind: 'other' }),
+      shapeSchema: z.strictObject({ kind: z.string() }),
+      lower,
+    });
+
+    expect(() => compileToScene(clippedIr({ kind: 'resolvedMismatch' }), { clips: [definition] })).toThrow(
+      /clip:resolvedMismatch.*kind.*other/i,
+    );
+    expect(lower).not.toHaveBeenCalled();
+  });
+
+  it('rejects a shape schema that transforms the resolved kind before lower', () => {
+    const lower = vi.fn(() => ({
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [1, 1] as [number, number] },
+      ],
+      fillRule: 'nonzero' as const,
+    }));
+    const definition = defineClip({
+      kind: 'shapeTransform',
+      schema: z.strictObject({ kind: z.literal('shapeTransform') }),
+      resolve: () => ({ kind: 'shapeTransform' }),
+      shapeSchema: z.strictObject({ kind: z.literal('shapeTransform') }).transform(() => ({ kind: 'other' as const })),
+      lower,
+    });
+
+    expect(() => compileToScene(clippedIr({ kind: 'shapeTransform' }), { clips: [definition] })).toThrow(
+      /clip:shapeTransform.*kind.*other/i,
+    );
+    expect(lower).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-JSON provider schema output before resolve', () => {
+    const resolve = vi.fn(() => ({ kind: 'nonJsonSpec' }));
+    const definition = defineClip({
+      kind: 'nonJsonSpec',
+      schema: z
+        .strictObject({ kind: z.literal('nonJsonSpec') })
+        .transform(spec => ({ ...spec, callback: () => undefined })),
+      resolve,
+      shapeSchema: z.strictObject({ kind: z.literal('nonJsonSpec') }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
+    });
+
+    expect(() => compileToScene(clippedIr({ kind: 'nonJsonSpec' }), { clips: [definition] })).toThrow(
+      /JSON-safe|non-JSON/i,
+    );
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-JSON resolved shape output before shape parsing and lower', () => {
+    const lower = vi.fn(() => ({
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [1, 1] as [number, number] },
+      ],
+      fillRule: 'nonzero' as const,
+    }));
+    const definition = defineClip({
+      kind: 'nonJsonShape',
+      schema: z.strictObject({ kind: z.literal('nonJsonShape') }),
+      resolve: () => ({ kind: 'nonJsonShape', callback: () => undefined }) as unknown as ClipShape,
+      shapeSchema: z.strictObject({ kind: z.literal('nonJsonShape') }),
+      lower,
+    });
+
+    expect(() => compileToScene(clippedIr({ kind: 'nonJsonShape' }), { clips: [definition] })).toThrow(
+      /JSON-safe|non-JSON|function/i,
+    );
+    expect(lower).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-JSON shape schema output before lower', () => {
+    const lower = vi.fn(() => ({
+      commands: [
+        { kind: 'move' as const, to: [0, 0] as [number, number] },
+        { kind: 'line' as const, to: [1, 1] as [number, number] },
+      ],
+      fillRule: 'nonzero' as const,
+    }));
+    const definition = defineClip({
+      kind: 'nonJsonParsedShape',
+      schema: z.strictObject({ kind: z.literal('nonJsonParsedShape') }),
+      resolve: () => ({ kind: 'nonJsonParsedShape' }),
+      shapeSchema: z
+        .strictObject({ kind: z.literal('nonJsonParsedShape') })
+        .transform(shape => ({ ...shape, callback: () => undefined })),
+      lower,
+    });
+
+    expect(() => compileToScene(clippedIr({ kind: 'nonJsonParsedShape' }), { clips: [definition] })).toThrow(
+      /shapeSchema.*non-JSON/i,
+    );
+    expect(lower).not.toHaveBeenCalled();
   });
 });

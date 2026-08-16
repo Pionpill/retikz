@@ -1,7 +1,6 @@
 import type { ArrowDefinition } from '../arrow';
 import type { BoundaryDefinition } from '../boundary';
 import type { ClipDefinition } from '../clip';
-import type { AnyClipShapeDefinition } from '../clip-shape';
 import type { AnyCompositeDefinition } from '../composite';
 import type { PathGeneratorDefinition } from '../path-generator';
 import type { AnyPathKindDefinition } from '../path-kind';
@@ -13,7 +12,6 @@ export const CoreProviderCapability = {
   Shape: 'shape',
   Boundary: 'boundary',
   Clip: 'clip',
-  ClipShape: 'clipShape',
   Arrow: 'arrow',
   Pattern: 'pattern',
   PathGenerator: 'pathGenerator',
@@ -50,7 +48,6 @@ export type AnyCoreProviderDefinition =
   | ShapeDefinition
   | BoundaryDefinition
   | ClipDefinition
-  | AnyClipShapeDefinition
   | ArrowDefinition
   | PatternDefinition
   | PathGeneratorDefinition
@@ -65,8 +62,6 @@ export type CoreProviderDefinitions = Readonly<{
   boundaries?: ReadonlyArray<BoundaryDefinition>;
   /** 裁剪定义 */
   clips?: ReadonlyArray<ClipDefinition>;
-  /** 裁剪形状定义 */
-  clipShapes?: ReadonlyArray<AnyClipShapeDefinition>;
   /** 箭头定义 */
   arrows?: ReadonlyArray<ArrowDefinition>;
   /** 图案定义 */

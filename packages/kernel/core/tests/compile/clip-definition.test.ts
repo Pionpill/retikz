@@ -18,8 +18,8 @@ const rectCommands: Array<PathCommand> = [
   { kind: 'close' },
 ];
 
-describe('Core rect ClipShape definition', () => {
-  it('lowers rect through the default shape registry', () => {
+describe('Core rect Clip definition', () => {
+  it('resolves and lowers rect through the complete builtin definition', () => {
     const scene = compileToScene(clippedIr({ kind: 'rect', x: 1, y: 2, width: 3, height: 4 })).scene;
 
     expect(scene.resources).toEqual([

@@ -1,7 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { ClipShape } from '../clip-shape';
-import type { ClipDefinition, ClipDefinitionInput, ClipLike } from './types';
+import type { ClipDefinition, ClipDefinitionInput, ClipLike, ClipShape } from './types';
 
 /**
  * 定义 clip 注册项，并做最小 key 校验
@@ -10,7 +9,7 @@ import type { ClipDefinition, ClipDefinitionInput, ClipLike } from './types';
  */
 export const defineClip = <TClip extends ClipLike, TShape extends ClipShape = ClipShape>(
   definition: ClipDefinitionInput<TClip, TShape>,
-): ClipDefinition => {
+): ClipDefinition<TClip, TShape> => {
   assertNonEmptyString(definition.kind, 'clip provider key');
-  return definition as unknown as ClipDefinition;
+  return definition as unknown as ClipDefinition<TClip, TShape>;
 };

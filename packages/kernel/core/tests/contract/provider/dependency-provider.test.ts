@@ -2,10 +2,12 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '../../../src';
 
+import { CoreProviderCapability } from '../../../src';
+
 describe('Core provider dependency contract', () => {
   it('exposes readonly keys, providers, and contributions for named and composite capabilities', () => {
     const shapeKey: CoreProviderKey = { capability: 'shape', name: 'cross' };
-    const clipShapeKey: CoreProviderKey = { capability: 'clipShape', name: 'ticket' };
+    const clipKey: CoreProviderKey = { capability: 'clip', name: 'ticket' };
     const compositeKey: CoreProviderKey = { capability: 'composite', namespace: 'third', type: 'card' };
     const provider: CoreDependencyProvider = {
       key: shapeKey,
@@ -16,7 +18,7 @@ describe('Core provider dependency contract', () => {
       },
     };
     const contribution: CoreProviderContribution = {
-      roots: [shapeKey, clipShapeKey, compositeKey],
+      roots: [shapeKey, clipKey, compositeKey],
       providers: [provider],
     };
 
@@ -25,8 +27,9 @@ describe('Core provider dependency contract', () => {
     expectTypeOf(contribution.providers).toEqualTypeOf<ReadonlyArray<CoreDependencyProvider>>();
     expect(contribution.roots).toEqual([
       { capability: 'shape', name: 'cross' },
-      { capability: 'clipShape', name: 'ticket' },
+      { capability: 'clip', name: 'ticket' },
       { capability: 'composite', namespace: 'third', type: 'card' },
     ]);
+    expect(CoreProviderCapability).not.toHaveProperty('ClipShape');
   });
 });
