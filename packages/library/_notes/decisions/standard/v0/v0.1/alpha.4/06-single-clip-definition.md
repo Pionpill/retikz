@@ -1,6 +1,6 @@
 # ADR-06：Standard 单一 Clip Definition 接入
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-16
 - 关联：[alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [ADR-05](./05-standard-clip-shapes.md) · [Core ADR-22](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/22-single-clip-definition.md)
 

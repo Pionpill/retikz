@@ -1,7 +1,7 @@
-import type { ClipDefinition, ClipShapeDefinition, PathCommand } from '@retikz/core';
+import type { ClipDefinition, PathCommand } from '@retikz/core';
 import type { FC } from 'react';
 
-import { defineClip, defineClipShape } from '@retikz/core';
+import { defineClip } from '@retikz/core';
 import { Layout, Node, Scope } from '@retikz/react';
 import { z } from 'zod';
 
@@ -16,21 +16,11 @@ const roundedRectClipSchema = z.strictObject({
 
 type RoundedRectClip = z.infer<typeof roundedRectClipSchema>;
 
-const roundedRectShapeSchema = roundedRectClipSchema.extend({
-  kind: z.literal('rounded-rect-path'),
-});
-
-type RoundedRectShape = z.infer<typeof roundedRectShapeSchema>;
-
-const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip, RoundedRectShape>({
+const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip, RoundedRectClip>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => ({ ...spec, kind: 'rounded-rect-path' }),
-});
-
-const roundedRectShape: ClipShapeDefinition<RoundedRectShape> = defineClipShape<RoundedRectShape>({
-  kind: 'rounded-rect-path',
-  schema: roundedRectShapeSchema,
+  resolve: spec => spec,
+  shapeSchema: roundedRectClipSchema,
   lower: shape => {
     const right = shape.x + shape.width;
     const bottom = shape.y + shape.height;
@@ -53,7 +43,7 @@ const roundedRectShape: ClipShapeDefinition<RoundedRectShape> = defineClipShape<
 });
 
 const Demo: FC = () => (
-  <Layout width={430} height={184} clips={[roundedRectClip]} clipShapes={[roundedRectShape]}>
+  <Layout width={430} height={184} clips={[roundedRectClip]}>
     <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
       <Node
         position={[-88, -8]}

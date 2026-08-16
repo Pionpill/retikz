@@ -1,6 +1,6 @@
 # Standard v0.1 alpha.4 Roadmap
 
-> 状态：Layout owner 迁移与 ADR-01～04 已完成；ADR-05 Superseded，ADR-06 Proposed，Standard v0.1 alpha.4 为单一 Clip Definition 接入重新打开。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [ADR-06](./06-single-clip-definition.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-22](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/22-single-clip-definition.md)
+> 状态：Layout owner 迁移与 ADR-01～04、ADR-06 已完成；ADR-05 Superseded，Standard v0.1 alpha.4 已完成单一 Clip Definition 接入并重新收口。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-01](./01-arbitrary-child-surface.md) · [ADR-06](./06-single-clip-definition.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-22](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/22-single-clip-definition.md)
 
 ## 目标
 
@@ -24,7 +24,7 @@ ADR-06 取代 ADR-05 的两级公开装配，把五种 Standard 裁剪分别收�
 | [ADR-03](./03-ribbon-as-standard-path-kind.md)                                  | Accepted   | Ribbon 作为 Standard Path Kind 的完整迁移    | 冻结 Ribbon schema、Definition、profile、lowering、Tier 2 依赖与跨入口闭环   |
 | [ADR-04](./04-sector-shape-unification.md)                                      | Accepted   | Sector 统一弧形与扇形 Node shape             | 删除独立 Arc shape，以 Sector 厚度表达开放弧、扇形与环楔                     |
 | [ADR-05](./05-standard-clip-shapes.md)                                          | Superseded | Standard ClipShape 完整迁移                  | 历史五种 Clip spec/shape、两级 Definition 与 provider dependency 设计        |
-| [ADR-06](./06-single-clip-definition.md)                                        | Proposed   | Standard 单一 Clip Definition 接入           | 冻结五种完整 Definition、单一集合、五个 clip providers 与跨入口闭环          |
+| [ADR-06](./06-single-clip-definition.md)                                        | Accepted   | Standard 单一 Clip Definition 接入           | 冻结五种完整 Definition、单一集合、五个 clip providers 与跨入口闭环          |
 
 ADR-02～04 均已按其公开契约完成并进入 `Accepted`。ADR-05 已完成历史两级 ClipShape 迁移，现由 ADR-06 取代；Core 默认仅保留 rect、Standard 接管其余五种 Clip 与 ADR-02 的能力子入口和显式装配原则不变。
 
@@ -86,5 +86,5 @@ ADR-02～04 均已按其公开契约完成并进入 `Accepted`。ADR-05 已完�
 4. ADR-04 已 Accepted：Standard 不再维护独立 Arc shape，Sector 统一表达开放弧、扇形与环楔
 5. ADR-03 已 Accepted：Ribbon 的 schema、Path Kind、profile、几何编译、公开入口与跨入口闭环已完成
 6. Core ADR-21 与 Standard ADR-05 的两级 ClipShape 扩展已完成历史实现，现分别由 Core ADR-22 与 Standard ADR-06 取代
-7. ADR-06 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 Standard、adapters、Chart、Table、Surface 或 docs 产品代码
+7. ADR-06 已完成 Architecture Gate、Plan Gate、Standard / adapters / Chart / Table / Surface 实现、测试与双语文档，并由人工确认进入 Accepted
 8. 后续新增 Shape、Arrow、Clip 或其它官方定义时，继续按能力归属与真实复用需求独立决策，不恢复全局注册或根入口全集

@@ -21,22 +21,21 @@ Layout proposal 不是新的 registry：它是每个 layout-aware `CompositeDefi
 
 ## 能力索引
 
-| 能力               | IR 选择键                     | 注入入口                                               |
-| ------------------ | ----------------------------- | ------------------------------------------------------ |
-| Shape              | `Node.shape`                  | `CompileOptions.shapes`                                |
-| Boundary           | `Node.boundary`               | `CompileOptions.boundaries`                            |
-| Clip operation     | `Scope.clip.kind`             | `CompileOptions.clips`                                 |
-| ClipShape          | operation 输出的 `shape.kind` | `CompileOptions.clipShapes`                            |
-| Arrow              | arrow shape name              | `CompileOptions.arrows`                                |
-| Pattern            | pattern shape name            | `CompileOptions.patterns`                              |
-| Path generator     | generator name                | `CompileOptions.pathGenerators`                        |
-| Path kind          | `Path.kind`                   | `CompileOptions.pathKinds`                             |
-| Composite          | `namespace + type`            | `CompileOptions.composites`                            |
-| Easing             | easing name                   | `<Layout easings>`                                     |
-| Animation property | property name                 | `<Layout animationProperties>`（仅 Canvas 自定义属性） |
-| TeX lowerer        | math text payload             | `CompileOptions.lowerTex`                              |
+| 能力               | IR 选择键          | 注入入口                                               |
+| ------------------ | ------------------ | ------------------------------------------------------ |
+| Shape              | `Node.shape`       | `CompileOptions.shapes`                                |
+| Boundary           | `Node.boundary`    | `CompileOptions.boundaries`                            |
+| Clip               | `Scope.clip.kind`  | `CompileOptions.clips`                                 |
+| Arrow              | arrow shape name   | `CompileOptions.arrows`                                |
+| Pattern            | pattern shape name | `CompileOptions.patterns`                              |
+| Path generator     | generator name     | `CompileOptions.pathGenerators`                        |
+| Path kind          | `Path.kind`        | `CompileOptions.pathKinds`                             |
+| Composite          | `namespace + type` | `CompileOptions.composites`                            |
+| Easing             | easing name        | `<Layout easings>`                                     |
+| Animation property | property name      | `<Layout animationProperties>`（仅 Canvas 自定义属性） |
+| TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                              |
 
-Clip 是两级 Definition 能力：`ClipDefinition` 把 authored spec 解析为 JSON-safe `ClipShape`，`ClipShapeDefinition` 再将其降低为 canonical `SceneClipPath`。两个 registry key 独立，缺 operation 提示 `clips`，缺 shape 提示 `clipShapes`。Core 两级默认集合只保留 `rect`；circle / ellipse / polygon / path / compound 从 `@retikz/standard/clip` 或第三方入口显式装配。
+Clip 是单一 Definition 能力：一个 `ClipDefinition` 使用同一 kind 拥有 authored spec schema、JSON-safe shape schema、resolve 与 canonical `SceneClipPath` lowering。缺失 kind 统一提示 `clips`。Core 默认只保留完整 `rect`；circle / ellipse / polygon / path / compound 从 `@retikz/standard/clip` 或第三方入口显式装配。
 
 Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `stroke` definition。Ribbon 等可选 kind 都是通过同一槽位装载的 Standard Definition；它们的 schema、几何和 runtime 数据集不属于 Core。
 
@@ -68,7 +67,7 @@ Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `
   <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">自定义裁剪区</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      ClipDefinition + ClipShapeDefinition：命名 operation 与几何 lowering
+      ClipDefinition：在同一 kind 下绑定 spec、shape 与几何 lowering
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/custom-arrow">

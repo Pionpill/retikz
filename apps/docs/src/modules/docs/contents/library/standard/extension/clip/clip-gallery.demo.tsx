@@ -4,13 +4,9 @@ import type { FC } from 'react';
 import { Layout, Node, Scope } from '@retikz/react';
 import {
   CircleClipDefinition,
-  CircleClipShapeDefinition,
   CompoundClipDefinition,
-  CompoundClipShapeDefinition,
   EllipseClipDefinition,
-  EllipseClipShapeDefinition,
   PolygonClipDefinition,
-  PolygonClipShapeDefinition,
 } from '@retikz/standard/clip';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -64,12 +60,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       height={210}
       viewBox={{ x: -260, y: -105, width: 520, height: 210 }}
       clips={[CompoundClipDefinition, CircleClipDefinition, EllipseClipDefinition, PolygonClipDefinition]}
-      clipShapes={[
-        CompoundClipShapeDefinition,
-        CircleClipShapeDefinition,
-        EllipseClipShapeDefinition,
-        PolygonClipShapeDefinition,
-      ]}
     >
       {renderRegion(values.leftClip, values.leftX)}
       {renderRegion(values.rightClip, values.rightX)}

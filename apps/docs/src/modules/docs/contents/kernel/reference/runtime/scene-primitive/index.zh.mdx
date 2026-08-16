@@ -34,7 +34,7 @@ Scene primitive 是 `compileToScene(...).scene` 的输出合同：IR 经过布�
 | `commands` | `Array<PathCommand>`       | 已校验、按稳定字段顺序与 compile precision 规范的命令 |
 | `fillRule` | `'nonzero'` \| `'evenodd'` | 始终显式存在；provider 缺省时物化为 `nonzero`         |
 
-Clip operation 与自定义 ClipShape 已在 compile 阶段解析并 lower。renderer 不应回查 IR schema 或 provider registry，也不应解释自定义 shape kind；只消费这里已解析的 `spec`、`tile`、`path` 与 primitive 引用。旧的 `ClipResource.shape` 不再接受。
+完整 Clip Definition 已在 compile 阶段把 authored spec 解析并 lower 为 canonical path。renderer 不应回查 IR schema 或 provider registry，也不应解释自定义 clip kind；只消费这里已解析的 `spec`、`tile`、`path` 与 primitive 引用。旧的 `ClipResource.shape` 不再接受。
 
 ## 形状原语
 

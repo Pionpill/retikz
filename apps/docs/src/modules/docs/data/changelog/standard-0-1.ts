@@ -60,15 +60,18 @@ export const standardV01: Release = {
             {
               label: { zh: '按能力发布官方 providers', en: 'Capability-scoped official providers' },
               content: {
-                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 完整拥有 circle、ellipse、polygon、path、compound 的 schema、IR、ClipShape、两级 Definition 与静态 provider。它们不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
-                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` fully owns schemas, IR, ClipShapes, both Definition levels, and static providers for circle, ellipse, polygon, path, and compound. These entries are not aggregated through Standard, React, or Vanilla roots and never register by side effect.',
+                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 为 circle、ellipse、polygon、path、compound 分别提供一个拥有 spec、shape 与 lowering 的完整 Definition 和静态 provider。它们不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
+                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` provides one complete Definition and static provider owning spec, shape, and lowering for each of circle, ellipse, polygon, path, and compound. These entries are not aggregated through Standard, React, or Vanilla roots and never register by side effect.',
               },
             },
             {
-              label: { zh: 'BREAKING：五种 ClipShape 迁入 Standard', en: 'BREAKING: five ClipShapes move to Standard' },
+              label: {
+                zh: 'BREAKING：五种完整 Clip Definition 归入 Standard',
+                en: 'BREAKING: five complete Clip Definitions move to Standard',
+              },
               content: {
-                zh: 'Core 两级默认裁剪集合现在都只保留 `rect`。直接编译 Standard 裁剪必须同时向 `clips` / `clipShapes` 注入同 kind Definition；provider graph 以 operation 为 root，并通过静态依赖闭合 shape provider。Circle / Ellipse 与五种 ClipShape 的 Core 导出已删除，不保留 alias、自动安装或 fallback；Layout 零尺寸裁剪改用 Core 非负尺寸 rect。',
-                en: 'Both Core default clipping collections now retain only `rect`. Direct Standard clipping injects same-kind Definitions through `clips` and `clipShapes`; provider graphs root the operation and close over its shape provider through a static dependency. Core exports for Circle / Ellipse operations and all five ClipShapes are removed with no aliases, auto-installation, or fallback; zero-sized Layout clipping now uses Core non-negative rects.',
+                zh: 'Core 默认裁剪只保留完整 `rect` Definition。直接编译 Standard 裁剪只向 `clips` 注入实际 kind 的完整 Definition；provider graph 每个 clip root 直接物化同 kind Definition，不再维护 shape provider 依赖。独立 ClipShape Definition、provider、集合与 `clipShapes` 入口已删除，不保留 alias、自动安装或 fallback；Layout 零尺寸裁剪继续使用 Core 非负尺寸 rect。',
+                en: 'Core clipping defaults retain only the complete `rect` Definition. Direct Standard clipping injects complete Definitions for actual kinds through `clips`; each clip root in the provider graph materializes its same-kind Definition directly without a shape-provider dependency. Independent ClipShape Definitions, providers, collections, and the `clipShapes` entry are removed with no aliases, auto-installation, or fallback; zero-sized Layout clipping continues to use Core non-negative rects.',
               },
             },
             {

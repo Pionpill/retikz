@@ -163,8 +163,8 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
   }}
 />
 
-圆、椭圆、多边形、路径与组合裁剪 schema 都由 `@retikz/standard/clip` 提供，并通过注入的 operation Definition 校验，不属于 Core schema owner。对应 ClipShape Definition 还需通过 `CompileOptions.clipShapes` 注入。详见[裁剪扩展](/library/standard/extension/clip)。
+圆、椭圆、多边形、路径与组合裁剪 schema 都由 `@retikz/standard/clip` 提供，并由注入 `CompileOptions.clips` 的完整 Definition 校验和降低，不属于 Core schema owner。详见[裁剪扩展](/library/standard/extension/clip)。
 
-`compound` 的 `children` 会逐项回到当前 Core Clip registry。从 `@retikz/standard/clip` 注入 `CompoundClipDefinition` 与 `CompoundClipShapeDefinition`，并为实际 child 同样提供所需的两级 Definition；Standard 不隐式安装全部 child。
+`compound` 的 `children` 会逐项回到当前 Core Clip registry。从 `@retikz/standard/clip` 注入 `CompoundClipDefinition`，并为实际 child 提供对应的完整 Definition；Standard 不隐式安装全部 child。
 
 自定义裁剪的 Definition、registry 与 renderer 边界见 [自定义裁剪](/kernel/components/layout/custom-clip)。

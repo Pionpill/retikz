@@ -1,40 +1,33 @@
 ---
 title: 自定义裁剪区
-description: 用 ClipDefinition 解析业务裁剪，再用 ClipShapeDefinition 将自定义几何降低为统一 SceneClipPath，并通过 Core 或 Layout 注入两级 registry。
+description: 用一个完整 ClipDefinition 定义裁剪 spec、JSON-safe shape 与路径 lowering，并通过 Core 或 Layout 的 clips 入口注入
 ---
 
-自定义裁剪分为两层：`ClipDefinition` 解释 `Scope.clip.kind`，`ClipShapeDefinition` 决定解析后的几何如何降低为路径。下面的圆角矩形同时自定义 operation 与 shape，最终仍由 SVG、Canvas 和 hit-test 消费同一份 `SceneClipPath`。
+`ClipDefinition` 同时拥有裁剪输入与几何 lowering。下面的圆角矩形只注册一个 definition，SVG、Canvas、visual bounds 与 hit-test 最终都消费同一份 `SceneClipPath`。
 
 <ComponentPreview files="clip-registry" size="md" />
 
 ## 适用边界
 
-两级契约分别解决「怎么描述裁剪」与「这种几何怎么变成裁剪路径」。只有一层需要扩展时，可以复用另一层已有 Definition。
+| 需求                             | 选择                                                            |
+| -------------------------------- | --------------------------------------------------------------- |
+| 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                               |
+| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/extension/clip) 注入 Definition |
+| 新的静态二维裁剪                 | 定义一个完整 `ClipDefinition` 并降低为 `SceneClipPath`          |
+| renderer 专属 mask / filter 行为 | 不属于 Clip；另建明确的后端能力                                 |
 
-| 需求                             | 选择                                                                |
-| -------------------------------- | ------------------------------------------------------------------- |
-| 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                                   |
-| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/extension/clip) 装配两级 Definition |
-| 新业务参数，但可复用已有几何     | 只定义 `ClipDefinition`，返回已注册的 shape kind                    |
-| 新的静态二维裁剪几何             | 定义 `ClipShapeDefinition`，降低为 `SceneClipPath`                  |
-| renderer 专属 mask / filter 行为 | 不属于 ClipShape；另建明确的后端能力                                |
-
-IR 只保存带 `kind` 的 JSON-safe clip spec。operation 解析出的 `ClipShape` 也必须是 JSON-safe snapshot；Zod schema、callback、ReactNode、Canvas 对象和 SVG 字符串都不能进入 IR 或 Scene。
+IR 只保存带 `kind` 的 JSON-safe clip spec。`resolve` 产出的 `ClipShape` 也是 JSON-safe snapshot；Zod schema、callback、ReactNode、Canvas 对象和 SVG 字符串都不能进入 IR 或 Scene。
 
 ## 定义能力
 
-operation kind 与 shape kind 是两条独立身份。一个 operation 可以复用已有 shape，一个 shape 也可以被多个 operation 复用。
+一个 definition 使用同一个 `kind` 绑定 spec schema、shape schema、解析与 lowering：
 
 ```ts
-const roundedRectClip = defineClip<RoundedRectClip, RoundedRectShape>({
+const roundedRectClip = defineClip<RoundedRectClip, RoundedRectClip>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => ({ ...spec, kind: 'rounded-rect-path' }),
-});
-
-const roundedRectShape = defineClipShape<RoundedRectShape>({
-  kind: 'rounded-rect-path',
-  schema: roundedRectShapeSchema,
+  resolve: spec => spec,
+  shapeSchema: roundedRectClipSchema,
   lower: shape => ({
     commands: buildRoundedRectCommands(shape),
     fillRule: 'nonzero',
@@ -42,82 +35,81 @@ const roundedRectShape = defineClipShape<RoundedRectShape>({
 });
 ```
 
-`resolve(spec, context)` 可用 `context.round(value)` 采用当前编译精度，也可用 `context.resolve(otherSpec)` 递归解析另一段 operation。`lower(shape, context)` 可用相同的 `round`，或用 `context.lower(otherShape)` 组合已注册 shape。
+`resolve(spec, context)` 可以用 `context.round(value)` 采用当前编译精度，也可以用 `context.resolve(otherSpec)` 递归解析另一段 clip。`lower(shape, context)` 可以使用相同的 `round`，或通过 `context.lower(otherShape)` 组合当前 registry 中已注册的 shape。
+
+definition、spec schema 结果与 shape schema 结果的 `kind` 必须一致。若多个 kind 需要复用几何，可以共享普通 helper，但每个可独立装配的裁剪仍拥有自己的完整 definition。
 
 `lower` 必须返回至少含一个绘制段的结构化路径。Core 不自动闭合开放路径，也不接受 raw SVG `d`、Canvas callback 或非有限数值。
 
 ## 注入宿主
 
-直接调用 Core 时，分别注入两个 Definition 数组：
+直接调用 Core 时只注入 `clips`：
 
 ```ts
 const { scene } = compileToScene(ir, {
   clips: [roundedRectClip],
-  clipShapes: [roundedRectShape],
 });
 ```
 
-React `<Layout>` 转交相同的 Core options，不建立 adapter 私有 registry：
+React `<Layout>` 转交同一个 Core option，不建立 adapter 私有 registry：
 
 ```tsx
-<Layout clips={[roundedRectClip]} clipShapes={[roundedRectShape]}>
+<Layout clips={[roundedRectClip]}>
   <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
     {/* clipped children */}
   </Scope>
 </Layout>
 ```
 
-通过 provider graph 装配时，operation provider 应把它可能输出的非内置 shape 声明为 `clipShape` 静态依赖。缺少依赖会在 maker 执行前失败；显式 `clips` / `clipShapes` 仍作为最终 Definition 通道参与同 key 冲突检查。
+通过 provider graph 装配时，一个 `{ capability: 'clip', name: kind }` provider 直接创建完整 definition。显式 `clips` 仍作为最终 Definition 通道参与同 key 冲突检查。
 
 ## 执行机制
 
-两级 registry 各自完成 lookup 与 schema 校验，最后在 Core 内收敛为 canonical path。内置与自定义项走完全相同的路径。
+内置、Standard 与第三方裁剪经过同一个 registry：
 
 <ComponentPreview files="clip-registry-flow" size="sm" hideCode />
 
-1. `clip.kind` 在 Clip registry 中找到 operation，校验 spec 后调用 `resolve`
-2. 返回值复制为 JSON snapshot，再按 `ClipShape.kind` 查询 ClipShape registry
-3. shape schema 通过后调用 `lower`，Core 规范字段顺序、精度、`-0`、path grammar 与显式 `fillRule`
+1. `clip.kind` 在 Clip registry 中找到完整 definition，`schema` 校验 spec 后调用 `resolve`
+2. `resolve` 输出复制为 JSON snapshot，再由同一 definition 的 `shapeSchema` 校验
+3. `lower` 产出结构化路径，Core 规范字段顺序、精度、`-0`、path grammar 与显式 `fillRule`
 4. canonical path 去重后写入 `{ kind: 'clip', id, path }`，`GroupPrim.clipRef` 只保存 id
 
-renderer、visual bounds 和 hit-test 不再解释自定义 kind，也不接收 Definition。SVG 始终生成一个 `<path>`；Canvas 重放相同 commands 与 fill rule。
-
-Core 默认 operation 与 ClipShape 集合都只保留 `rect`。Standard 通过 `@retikz/standard/clip` 提供 `circle`、`ellipse`、`polygon`、`path`、`compound` 的 operation / shape Definition；第三方与这些官方实现共用同一套 Core registry、校验、lowering 与诊断路径。
+renderer、visual bounds 和 hit-test 不解释自定义 kind，也不接收 Definition。Core 默认只保留完整 `rect` definition；Standard 从 `@retikz/standard/clip` 提供其余五种官方实现。
 
 <SourceLinks
   sources={[
     {
-      label: 'ClipShape 作者契约',
-      path: 'packages/kernel/core/src/contract/clip-shape/types.ts',
-      startLine: 6,
-      endLine: 50,
+      label: '完整 ClipDefinition 作者契约',
+      path: 'packages/kernel/core/src/contract/clip/types.ts',
+      startLine: 31,
+      endLine: 76,
     },
     {
-      label: '两级解析、lowering 与 canonical path',
+      label: '单一 registry 的解析、lowering 与 canonical path',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 217,
-      endLine: 325,
+      startLine: 245,
+      endLine: 344,
     },
     {
-      label: 'React 两级 Definition 注入',
+      label: 'React clips 注入',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 443,
-      endLine: 456,
+      startLine: 187,
+      endLine: 193,
     },
   ]}
 />
 
 ## 错误与限制
 
-| 情况                                           | 结果                                                                      |
-| ---------------------------------------------- | ------------------------------------------------------------------------- |
-| 空字符串 key                                   | `defineClip` / `defineClipShape` 立即拒绝                                 |
-| 同一 capability 内重复 key                     | registry 报 definition conflict，不覆盖已有项                             |
-| 未注册的 `clip.kind`                           | 报 operation kind，并提示通过 `options.clips` 注入                        |
-| operation 返回未注册的 shape kind              | 报 shape kind，并提示通过 `options.clipShapes` 注入                       |
-| spec 或 shape 不符合各自 schema                | 报对应 capability、provider key 与校验 cause                              |
-| callback 输出函数、cycle、非法 path 或非有限值 | 作为 provider contract violation 失败，不被 layout probe 静默吞掉         |
-| operation / shape 递归超过 `maxClipDepth`      | 失败；默认共享 32 条 resolve/lower 边预算，active object cycle 也立即失败 |
+| 情况                                           | 结果                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| 空字符串 key                                   | `defineClip` 立即拒绝                                                 |
+| 重复 kind                                      | registry 报 definition conflict，不覆盖已有项                         |
+| 未注册的 `clip.kind`                           | 报 kind，并提示通过 `options.clips` 注入                              |
+| definition / spec / shape kind 不一致          | 在 `lower` 前作为 provider contract violation 失败                    |
+| spec 或 shape 不符合 schema                    | 报 provider key、对应 schema 阶段与校验 cause                         |
+| callback 输出函数、cycle、非法 path 或非有限值 | fail-loud，不被 layout probe 静默吞掉                                 |
+| 递归超过 `maxClipDepth`                        | 失败；默认共享 32 条 resolve/lower 边预算，active object cycle 也失败 |
 
 复合 shape 将 child commands 按 authored order 累积成一个 path，并使用外层 `fillRule`；它不是逐 child 的几何交集。需要交集时使用嵌套 `<Scope clip>`。
 
@@ -127,42 +119,34 @@ Core 默认 operation 与 ClipShape 集合都只保留 `rect`。Standard 通过 
 
 ### 导出概览
 
-- operation：`defineClip`、`ClipDefinitionInput`、`ClipDefinition`、`ClipResolveContext`
-- shape：`defineClipShape`、`ClipShapeDefinitionInput`、`ClipShapeDefinition`、`AnyClipShapeDefinition`、`ClipShapeLowerContext`
-- 输出：`SceneClipPath`、`ClipResource`
-- registry：`BUILTIN_CLIPS`、`BUILTIN_CLIP_SHAPES`、`resolveClipRegistry`、`resolveClipShapeRegistry`
-- 注入：`CompileOptions.clips`、`CompileOptions.clipShapes`、`<Layout clips>`、`<Layout clipShapes>`
+- definition：`defineClip`、`ClipDefinitionInput`、`ClipDefinition`
+- context：`ClipResolveContext`、`ClipLowerContext`
+- 数据与输出：`ClipShape`、`SceneClipPath`、`ClipResource`
+- registry：`BUILTIN_CLIPS`、`resolveClipRegistry`
+- 注入：`CompileOptions.clips`、`<Layout clips>`
 
 ### ClipDefinition
 
-| 字段      | 类型                                                   | 必填 | 描述                                                   |
-| --------- | ------------------------------------------------------ | ---- | ------------------------------------------------------ |
-| `kind`    | `TClip['kind']`                                        | 是   | operation registry key，必须与输入 `clip.kind` 一致    |
-| `schema`  | `ZodType<TClip>`                                       | 是   | 校验完整 JSON-safe spec                                |
-| `resolve` | `(clip: TClip, context: ClipResolveContext) => TShape` | 是   | 返回开放 `ClipShape`；其 kind 可与 operation kind 不同 |
-
-### ClipShapeDefinition
-
-`defineClipShape` 返回精确的 `ClipShapeDefinition<TShape>`，因此 `schema` 与 `lower` 始终关联同一种 shape。`CompileOptions.clipShapes` 和 `<Layout clipShapes>` 在异构 registry 边界接收擦除后的 `AnyClipShapeDefinition`；通常直接传入 `defineClipShape` 的返回值，无需手动转换。
-
-| 字段     | 类型                                                               | 必填 | 描述                                                   |
-| -------- | ------------------------------------------------------------------ | ---- | ------------------------------------------------------ |
-| `kind`   | `TShape['kind']`                                                   | 是   | shape registry key，必须与 shape snapshot 的 kind 一致 |
-| `schema` | `ZodType<TShape>`                                                  | 是   | 校验完整 JSON-safe shape                               |
-| `lower`  | `(shape: TShape, context: ClipShapeLowerContext) => SceneClipPath` | 是   | 降低为后端无关结构化路径                               |
+| 字段          | 类型                                                          | 必填 | 描述                                          |
+| ------------- | ------------------------------------------------------------- | ---- | --------------------------------------------- |
+| `kind`        | `TClip['kind'] & TShape['kind']`                              | 是   | 唯一 registry key，与 spec 和 shape kind 一致 |
+| `schema`      | `ZodType<TClip>`                                              | 是   | 校验完整 JSON-safe spec                       |
+| `resolve`     | `(clip: TClip, context: ClipResolveContext) => TShape`        | 是   | 解析为同 kind 的 JSON-safe `ClipShape`        |
+| `shapeSchema` | `ZodType<TShape>`                                             | 是   | 校验完整 shape snapshot                       |
+| `lower`       | `(shape: TShape, context: ClipLowerContext) => SceneClipPath` | 是   | 降低为后端无关结构化路径                      |
 
 ### SceneClipPath
 
-| 字段       | 类型                       | 必填 | 描述                                                   |
-| ---------- | -------------------------- | ---- | ------------------------------------------------------ |
-| `commands` | `Array<PathCommand>`       | 是   | 非空、有绘制段的结构化命令；合法开放路径保持开放       |
-| `fillRule` | `'nonzero'` \| `'evenodd'` | 是   | canonical 输出始终显式存在；输入缺省时物化为 `nonzero` |
+| 字段       | 类型                       | 必填 | 描述                                             |
+| ---------- | -------------------------- | ---- | ------------------------------------------------ |
+| `commands` | `Array<PathCommand>`       | 是   | 非空、有绘制段的结构化命令；合法开放路径保持开放 |
+| `fillRule` | `'nonzero'` \| `'evenodd'` | 是   | canonical 输出始终显式存在                       |
 
 ## 相关
 
 - [Scope](/kernel/components/layout/scope)：使用 `<Scope clip>` 与局部坐标
-- [Layout](/kernel/components/layout/overview)：React 两级注入入口
-- [裁剪扩展](/library/standard/extension/clip)：官方 circle / ellipse / polygon / path / compound 两级实现
-- [编译选项](/kernel/reference/runtime/compile)：Core `clips`、`clipShapes` 与递归上限
+- [Layout](/kernel/components/layout/overview)：React `clips` 注入入口
+- [裁剪扩展](/library/standard/extension/clip)：官方 circle / ellipse / polygon / path / compound definitions
+- [编译选项](/kernel/reference/runtime/compile)：Core `clips` 与递归上限
 - [场景原语](/kernel/reference/runtime/scene-primitive)：renderer 消费的 canonical clip resource
 - [运行时扩展](/kernel/reference/runtime/extensions)：Definition / registry 能力总索引

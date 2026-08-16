@@ -48,7 +48,7 @@ import { Surface } from '@retikz/standard-react';
 standard.surface → SurfaceDefinition → Core Scope(Path + child replay + Path)
 ```
 
-Persisted `standard.surface` IR without `SurfaceDefinition` produces `COMPOSITE_NOT_REGISTERED`. React and Vanilla contribute the complete `SurfaceProvider → PathClipProvider → PathClipShapeProvider` dependency chain; nested Tier 2 providers follow it in authored order and enter the same Core resolver. With a direct `compileToScene` call, `overflow: 'clip'` requires `PathClipDefinition` through `clips` and `PathClipShapeDefinition` through `clipShapes`, alongside `SurfaceDefinition`.
+Persisted `standard.surface` IR without `SurfaceDefinition` produces `COMPOSITE_NOT_REGISTERED`. React and Vanilla contribute the complete `SurfaceProvider → PathClipProvider` dependency chain; nested Tier 2 providers follow it in authored order and enter the same Core resolver. With a direct `compileToScene` call, `overflow: 'clip'` requires the complete `PathClipDefinition` through `clips`, alongside `SurfaceDefinition`.
 
 The authored outer Scope also publishes a qualified handle whose key is `surface`. It inherits settled placement and transforms. Descendant handles preserve their key, role, tags, and payload and only gain the real owner path.
 

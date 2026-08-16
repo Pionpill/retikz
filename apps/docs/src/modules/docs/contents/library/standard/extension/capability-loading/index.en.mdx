@@ -16,7 +16,7 @@ Import only the Definitions used by the current figure and pass them to the matc
 ```tsx
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CircleClipDefinition, CircleClipShapeDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
@@ -24,7 +24,6 @@ import { CrossShapeDefinition } from '@retikz/standard/shape';
   shapes={[CrossShapeDefinition]}
   arrows={[DiamondArrowDefinition]}
   clips={[CircleClipDefinition]}
-  clipShapes={[CircleClipShapeDefinition]}
   pathKinds={[RibbonPathKindDefinition]}
 >
   {/* Figure content */}
@@ -36,7 +35,7 @@ Vanilla uses the same Definitions:
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CircleClipDefinition, CircleClipShapeDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
@@ -45,7 +44,6 @@ const svg = renderToSvgString(input, {
     shapes: [CrossShapeDefinition],
     arrows: [DiamondArrowDefinition],
     clips: [CircleClipDefinition],
-    clipShapes: [CircleClipShapeDefinition],
     pathKinds: [RibbonPathKindDefinition],
   },
 });
@@ -58,15 +56,10 @@ When the figure can use every official extension in a capability family, import 
 ```tsx
 import { Layout } from '@retikz/react';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
-import { StandardClipDefinitions, StandardClipShapeDefinitions } from '@retikz/standard/clip';
+import { StandardClipDefinitions } from '@retikz/standard/clip';
 import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-<Layout
-  shapes={StandardShapeDefinitions}
-  arrows={StandardArrowDefinitions}
-  clips={StandardClipDefinitions}
-  clipShapes={StandardClipShapeDefinitions}
->
+<Layout shapes={StandardShapeDefinitions} arrows={StandardArrowDefinitions} clips={StandardClipDefinitions}>
   {/* Figure content */}
 </Layout>;
 ```
@@ -76,7 +69,7 @@ Vanilla passes the same collections to `compile`:
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
-import { StandardClipDefinitions, StandardClipShapeDefinitions } from '@retikz/standard/clip';
+import { StandardClipDefinitions } from '@retikz/standard/clip';
 import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
 const svg = renderToSvgString(input, {
@@ -84,7 +77,6 @@ const svg = renderToSvgString(input, {
     shapes: StandardShapeDefinitions,
     arrows: StandardArrowDefinitions,
     clips: StandardClipDefinitions,
-    clipShapes: StandardClipShapeDefinitions,
   },
 });
 ```
@@ -95,9 +87,9 @@ const svg = renderToSvgString(input, {
 | `RibbonPathKindDefinition` | Ribbon needs one direct Path kind Definition; Ribbon does not export a full `StandardRibbonDefinitions` collection |
 | `StandardXxxDefinitions`   | The figure can use every Definition in a family                                                                    |
 
-Clipping is a two-stage capability: `clips` resolves authored operations, while `clipShapes` lowers the resolved geometry into a canonical path. On-demand loading supplies both Definitions for each actual kind; the complete collections are also passed as a pair.
+Clipping uses one complete Definition. Every item in `clips` owns its spec schema, shape schema, resolve, and lowering stages. On-demand loading passes the actual `XxxClipDefinition`; the complete family needs only `StandardClipDefinitions`.
 
-When an adapter assembles a provider graph before compilation, use the matching `StandardShapeProviders`, `StandardArrowProviders`, or `StandardClipProviders`, and use `createRibbonProviderContribution()` for Ribbon. `StandardClipProviders` contains both operation and shape providers but remains a catalog; the resolver materializes only the root-reachable closure. Providers assemble Definitions; they do not replace the `shapes`, `arrows`, `clips`, `clipShapes`, or `pathKinds` arrays accepted by `Layout` or `compile`.
+When an adapter assembles a provider graph before compilation, use the matching `StandardShapeProviders`, `StandardArrowProviders`, or `StandardClipProviders`, and use `createRibbonProviderContribution()` for Ribbon. `StandardClipProviders` contains five complete clip providers but remains a catalog; the resolver materializes only the root-reachable closure. Providers assemble Definitions; they do not replace the `shapes`, `arrows`, `clips`, or `pathKinds` arrays accepted by `Layout` or `compile`.
 
 ## How compilation works internally
 
@@ -107,7 +99,7 @@ Both Definition styles end up in the same Core compilation path:
 
 The individual Definition and complete collection on the left are simply two assembly inputs; both converge on the same Core compilation path. The provider graph organizes Definitions before compilation, while the IR only looks up already assembled capabilities by name during consumption.
 
-- With direct Definitions, Core places them in the corresponding `shapes`, `arrows`, `clips`, `clipShapes`, or `pathKinds` registry
+- With direct Definitions, Core places them in the corresponding `shapes`, `arrows`, `clips`, or `pathKinds` registry
 - With Providers, an adapter collects `CoreProviderContribution` (for example, `createRibbonProviderContribution()`); Core's `resolveCoreProviderDependencies()` resolves dependencies and groups the results into ordinary compile options
 - Standard supplies Definitions and Providers only. It does not maintain a global registry or a second lookup rule
 

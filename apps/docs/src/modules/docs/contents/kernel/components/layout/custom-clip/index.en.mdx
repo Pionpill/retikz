@@ -1,40 +1,33 @@
 ---
 title: Custom Clips
-description: Resolve domain clip operations with ClipDefinition, lower custom geometry with ClipShapeDefinition into one SceneClipPath, and inject both registries through Core or Layout.
+description: Define clip specs, JSON-safe shapes, and path lowering in one complete ClipDefinition, then inject it through Core or Layout clips
 ---
 
-Custom clipping has two layers: `ClipDefinition` interprets `Scope.clip.kind`, while `ClipShapeDefinition` decides how the resolved geometry becomes a path. The rounded rectangle below customizes both the operation and the shape, yet SVG, Canvas, and hit testing still consume one `SceneClipPath`.
+`ClipDefinition` owns both clip input and geometry lowering. The rounded rectangle below registers one definition, while SVG, Canvas, visual bounds, and hit testing all consume the same `SceneClipPath`.
 
 <ComponentPreview files="clip-registry" size="md" />
 
 ## Applicability Boundary
 
-The contracts answer “how is this clip authored?” and “how does this geometry become a clipping path?” independently. Extend only the missing layer and reuse an existing Definition for the other layer.
+| Need                                                | Choose                                                                       |
+| --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| One-off rectangle                                   | Write the Core built-in `rect` clip spec                                     |
+| Circle, ellipse, polygon, path, or combined regions | Inject a Definition from [Clip Extensions](/library/standard/extension/clip) |
+| New static 2D clipping geometry                     | Define one complete `ClipDefinition` that lowers to `SceneClipPath`          |
+| Renderer-specific mask / filter behavior            | Outside Clip; use an explicit backend capability                             |
 
-| Need                                                | Choose                                                                                   |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| One-off rectangle                                   | Write the Core built-in `rect` clip spec                                                 |
-| Circle, ellipse, polygon, path, or combined regions | Assemble both Definition levels from [Clip Extensions](/library/standard/extension/clip) |
-| New domain parameters over known geometry           | Define only `ClipDefinition` and return a registered shape kind                          |
-| New static 2D clipping geometry                     | Define `ClipShapeDefinition` and lower it to `SceneClipPath`                             |
-| Renderer-specific mask / filter behavior            | Outside ClipShape; use an explicit backend capability                                    |
-
-IR stores only a JSON-safe clip spec with a `kind`. The `ClipShape` produced by an operation is also a JSON-safe snapshot. Zod schemas, callbacks, ReactNode values, Canvas objects, and SVG strings never enter IR or Scene.
+IR stores only a JSON-safe clip spec with a `kind`. The `ClipShape` returned by `resolve` is also a JSON-safe snapshot. Zod schemas, callbacks, ReactNode values, Canvas objects, and SVG strings never enter IR or Scene.
 
 ## Define the Capability
 
-Operation kind and shape kind are independent identities. One operation may reuse an existing shape, while several operations may share one shape.
+One definition binds the spec schema, shape schema, resolution, and lowering under the same `kind`:
 
 ```ts
-const roundedRectClip = defineClip<RoundedRectClip, RoundedRectShape>({
+const roundedRectClip = defineClip<RoundedRectClip, RoundedRectClip>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => ({ ...spec, kind: 'rounded-rect-path' }),
-});
-
-const roundedRectShape = defineClipShape<RoundedRectShape>({
-  kind: 'rounded-rect-path',
-  schema: roundedRectShapeSchema,
+  resolve: spec => spec,
+  shapeSchema: roundedRectClipSchema,
   lower: shape => ({
     commands: buildRoundedRectCommands(shape),
     fillRule: 'nonzero',
@@ -42,82 +35,81 @@ const roundedRectShape = defineClipShape<RoundedRectShape>({
 });
 ```
 
-`resolve(spec, context)` may use `context.round(value)` for current compile precision or `context.resolve(otherSpec)` to resolve another operation recursively. `lower(shape, context)` gets the same rounding function and may compose registered shapes through `context.lower(otherShape)`.
+`resolve(spec, context)` can use `context.round(value)` for current compile precision or `context.resolve(otherSpec)` to resolve another clip recursively. `lower(shape, context)` receives the same rounding function and may compose shapes registered in the current registry through `context.lower(otherShape)`.
 
-`lower` must return a structured path with at least one drawing segment. Core does not auto-close open paths and rejects raw SVG `d`, Canvas callbacks, or non-finite numbers.
+The definition, parsed spec, and parsed shape must all share one `kind`. Several kinds may reuse ordinary geometry helpers, but each independently assembled clip still owns a complete definition.
+
+`lower` must return a structured path with at least one drawing segment. Core does not auto-close open paths and rejects raw SVG `d`, Canvas callbacks, and non-finite numbers.
 
 ## Inject the Host
 
-Inject the two Definition arrays separately when calling Core directly:
+Direct Core calls inject only `clips`:
 
 ```ts
 const { scene } = compileToScene(ir, {
   clips: [roundedRectClip],
-  clipShapes: [roundedRectShape],
 });
 ```
 
-React `<Layout>` forwards the same Core options without an adapter-private registry:
+React `<Layout>` forwards the same Core option without an adapter-private registry:
 
 ```tsx
-<Layout clips={[roundedRectClip]} clipShapes={[roundedRectShape]}>
+<Layout clips={[roundedRectClip]}>
   <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
     {/* clipped children */}
   </Scope>
 </Layout>
 ```
 
-When assembling through the provider graph, an operation provider should declare every non-built-in shape it may produce as a static `clipShape` dependency. A missing dependency fails before maker execution. Explicit `clips` / `clipShapes` remain the final Definition channels and participate in same-key conflict checks.
+In provider-graph assembly, one `{ capability: 'clip', name: kind }` provider creates the complete definition. Explicit `clips` remains the final Definition channel and participates in same-key conflict checks.
 
 ## Execution Path
 
-Each registry performs its own lookup and schema validation, then Core converges both layers into a canonical path. Built-in and custom entries use exactly the same route.
+Built-in, Standard, and third-party clips use the same registry:
 
 <ComponentPreview files="clip-registry-flow" size="sm" hideCode />
 
-1. `clip.kind` selects an operation in the Clip registry; Core validates the spec and calls `resolve`
-2. The result is copied into a JSON snapshot, then `ClipShape.kind` selects the ClipShape registry entry
-3. After shape validation, `lower` runs; Core canonicalizes field order, precision, `-0`, path grammar, and explicit `fillRule`
+1. `clip.kind` selects a complete definition in the Clip registry; `schema` validates the spec before `resolve` runs
+2. Core copies the `resolve` output into a JSON snapshot and validates it with the same definition's `shapeSchema`
+3. `lower` produces a structured path; Core canonicalizes field order, precision, `-0`, path grammar, and explicit `fillRule`
 4. The canonical path is deduplicated into `{ kind: 'clip', id, path }`; `GroupPrim.clipRef` stores only the id
 
-Renderers, visual bounds, and hit testing never interpret custom kinds or receive Definitions. SVG always emits one `<path>`, while Canvas replays the same commands and fill rule.
-
-Core's default operation and ClipShape collections contain only `rect`. Standard supplies operation and shape Definitions for `circle`, `ellipse`, `polygon`, `path`, and `compound` through `@retikz/standard/clip`. Third-party and official implementations share the same Core registry, validation, lowering, and diagnostic path.
+Renderers, visual bounds, and hit testing never interpret custom kinds or receive Definitions. Core keeps only the complete `rect` definition by default; Standard supplies the other five official implementations through `@retikz/standard/clip`.
 
 <SourceLinks
   sources={[
     {
-      label: 'ClipShape author contract',
-      path: 'packages/kernel/core/src/contract/clip-shape/types.ts',
-      startLine: 6,
-      endLine: 50,
+      label: 'Complete ClipDefinition author contract',
+      path: 'packages/kernel/core/src/contract/clip/types.ts',
+      startLine: 31,
+      endLine: 76,
     },
     {
-      label: 'Two-stage resolution, lowering, and canonical paths',
+      label: 'Single-registry resolution, lowering, and canonical paths',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 217,
-      endLine: 325,
+      startLine: 245,
+      endLine: 344,
     },
     {
-      label: 'React injection for both Definition layers',
+      label: 'React clips injection',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 443,
-      endLine: 456,
+      startLine: 187,
+      endLine: 193,
     },
   ]}
 />
 
 ## Errors and Limits
 
-| Case                                                                   | Result                                                                                                |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Empty key                                                              | `defineClip` / `defineClipShape` rejects immediately                                                  |
-| Duplicate key within one capability                                    | Registry reports a definition conflict and never overwrites                                           |
-| Unknown `clip.kind`                                                    | Reports the operation kind and suggests `options.clips`                                               |
-| Operation returns an unknown shape kind                                | Reports the shape kind and suggests `options.clipShapes`                                              |
-| Spec or shape fails its schema                                         | Reports the capability, provider key, and validation cause                                            |
-| Callback returns a function, cycle, invalid path, or non-finite number | Fatal provider contract violation; layout probes cannot silently discard it                           |
-| Operation / shape recursion exceeds `maxClipDepth`                     | Fails; both stages share 32 resolve/lower edges by default, and active object cycles fail immediately |
+| Case                                                                   | Result                                                                 |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Empty key                                                              | `defineClip` rejects immediately                                       |
+| Duplicate kind                                                         | Registry reports a definition conflict and never overwrites            |
+| Unknown `clip.kind`                                                    | Reports the kind and suggests `options.clips`                          |
+| Definition / spec / shape kind mismatch                                | Fails as a provider contract violation before `lower`                  |
+| Spec or shape fails its schema                                         | Reports the provider key, schema stage, and validation cause           |
+| Callback returns a function, cycle, invalid path, or non-finite number | Fails loudly; layout probes cannot silently discard it                 |
+| Recursion exceeds `maxClipDepth`                                       | Fails; resolve/lower share 32 edges by default, and active cycles fail |
 
 A compound shape appends child commands in authored order and applies the outer `fillRule` to the single combined path. It is not a geometric intersection of children. Use nested `<Scope clip>` elements for intersection.
 
@@ -127,42 +119,34 @@ Except for `<Layout>` props from `@retikz/react`, import every public type, func
 
 ### Export Overview
 
-- operation: `defineClip`, `ClipDefinitionInput`, `ClipDefinition`, `ClipResolveContext`
-- shape: `defineClipShape`, `ClipShapeDefinitionInput`, `ClipShapeDefinition`, `AnyClipShapeDefinition`, `ClipShapeLowerContext`
-- output: `SceneClipPath`, `ClipResource`
-- registries: `BUILTIN_CLIPS`, `BUILTIN_CLIP_SHAPES`, `resolveClipRegistry`, `resolveClipShapeRegistry`
-- injection: `CompileOptions.clips`, `CompileOptions.clipShapes`, `<Layout clips>`, `<Layout clipShapes>`
+- definition: `defineClip`, `ClipDefinitionInput`, `ClipDefinition`
+- contexts: `ClipResolveContext`, `ClipLowerContext`
+- data and output: `ClipShape`, `SceneClipPath`, `ClipResource`
+- registry: `BUILTIN_CLIPS`, `resolveClipRegistry`
+- injection: `CompileOptions.clips`, `<Layout clips>`
 
 ### ClipDefinition
 
-| Field     | Type                                                   | Required | Description                                                          |
-| --------- | ------------------------------------------------------ | -------- | -------------------------------------------------------------------- |
-| `kind`    | `TClip['kind']`                                        | Yes      | Operation registry key; must match the input `clip.kind`             |
-| `schema`  | `ZodType<TClip>`                                       | Yes      | Validates the complete JSON-safe spec                                |
-| `resolve` | `(clip: TClip, context: ClipResolveContext) => TShape` | Yes      | Returns an open `ClipShape`; its kind may differ from operation kind |
-
-### ClipShapeDefinition
-
-`defineClipShape` returns an exact `ClipShapeDefinition<TShape>`, keeping `schema` and `lower` tied to the same shape. `CompileOptions.clipShapes` and `<Layout clipShapes>` accept the erased `AnyClipShapeDefinition` at the heterogeneous registry boundary. In normal code, pass the value returned by `defineClipShape` directly; no manual conversion is needed.
-
-| Field    | Type                                                               | Required | Description                                            |
-| -------- | ------------------------------------------------------------------ | -------- | ------------------------------------------------------ |
-| `kind`   | `TShape['kind']`                                                   | Yes      | Shape registry key; must match the shape snapshot kind |
-| `schema` | `ZodType<TShape>`                                                  | Yes      | Validates the complete JSON-safe shape                 |
-| `lower`  | `(shape: TShape, context: ClipShapeLowerContext) => SceneClipPath` | Yes      | Lowers into a renderer-agnostic structured path        |
+| Field         | Type                                                          | Required | Description                                         |
+| ------------- | ------------------------------------------------------------- | -------- | --------------------------------------------------- |
+| `kind`        | `TClip['kind'] & TShape['kind']`                              | Yes      | One registry key shared by the spec and shape       |
+| `schema`      | `ZodType<TClip>`                                              | Yes      | Validates the complete JSON-safe spec               |
+| `resolve`     | `(clip: TClip, context: ClipResolveContext) => TShape`        | Yes      | Resolves a JSON-safe `ClipShape` with the same kind |
+| `shapeSchema` | `ZodType<TShape>`                                             | Yes      | Validates the complete shape snapshot               |
+| `lower`       | `(shape: TShape, context: ClipLowerContext) => SceneClipPath` | Yes      | Lowers to a backend-neutral structured path         |
 
 ### SceneClipPath
 
-| Field      | Type                       | Required | Description                                                                        |
-| ---------- | -------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| `commands` | `Array<PathCommand>`       | Yes      | Non-empty structured commands with a drawing segment; valid open paths remain open |
-| `fillRule` | `'nonzero'` \| `'evenodd'` | Yes      | Always explicit in canonical output; omitted input materializes as `nonzero`       |
+| Field      | Type                       | Required | Description                                          |
+| ---------- | -------------------------- | -------- | ---------------------------------------------------- |
+| `commands` | `Array<PathCommand>`       | Yes      | Non-empty structured commands with a drawing segment |
+| `fillRule` | `'nonzero'` \| `'evenodd'` | Yes      | Always explicit in canonical output                  |
 
 ## Related
 
-- [Scope](/kernel/components/layout/scope): Use `<Scope clip>` in local coordinates
-- [Layout](/kernel/components/layout/overview): React injection for both layers
-- [Clip Extensions](/library/standard/extension/clip): Two-stage official circle / ellipse / polygon / path / compound implementations
-- [Compile Options](/kernel/reference/runtime/compile): Core `clips`, `clipShapes`, and recursion limit
-- [Scene Primitives](/kernel/reference/runtime/scene-primitive): Canonical clip resources consumed by renderers
-- [Runtime Extensions](/kernel/reference/runtime/extensions): Index of Definition / registry capabilities
+- [Scope](/kernel/components/layout/scope): use `<Scope clip>` in local coordinates
+- [Layout](/kernel/components/layout/overview): React `clips` injection
+- [Clip Extensions](/library/standard/extension/clip): official circle / ellipse / polygon / path / compound definitions
+- [Compile Options](/kernel/reference/runtime/compile): Core `clips` and recursion limits
+- [Scene Primitives](/kernel/reference/runtime/scene-primitive): canonical clip resources consumed by renderers
+- [Runtime Extensions](/kernel/reference/runtime/extensions): Definition and registry index

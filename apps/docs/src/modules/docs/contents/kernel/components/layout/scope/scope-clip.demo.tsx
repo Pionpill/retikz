@@ -4,15 +4,10 @@ import type { FC } from 'react';
 import { Layout, Node, Scope } from '@retikz/react';
 import {
   CircleClipDefinition,
-  CircleClipShapeDefinition,
   CompoundClipDefinition,
-  CompoundClipShapeDefinition,
   EllipseClipDefinition,
-  EllipseClipShapeDefinition,
   PathClipDefinition,
-  PathClipShapeDefinition,
   PolygonClipDefinition,
-  PolygonClipShapeDefinition,
 } from '@retikz/standard/clip';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -78,13 +73,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         PolygonClipDefinition,
         PathClipDefinition,
         CompoundClipDefinition,
-      ]}
-      clipShapes={[
-        CircleClipShapeDefinition,
-        EllipseClipShapeDefinition,
-        PolygonClipShapeDefinition,
-        PathClipShapeDefinition,
-        CompoundClipShapeDefinition,
       ]}
     >
       <Scope clip={CLIP_BY_KIND[values.clipKind]}>

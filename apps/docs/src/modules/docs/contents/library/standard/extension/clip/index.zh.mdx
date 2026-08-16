@@ -1,41 +1,54 @@
 ---
 title: 裁剪扩展
-description: 从 @retikz/standard/clip 按需引入五种官方裁剪的 operation 与 ClipShape Definition，并显式装配两级 registry。
+description: 从 @retikz/standard/clip 按需引入五种完整 Clip Definition，并通过唯一 clips 入口显式装配
 ---
 
-Core 只保留最常用的矩形裁剪；其余五种官方裁剪由 Standard 沿与第三方相同的两级扩展链提供：
+Core 只保留最常用的矩形裁剪；Standard 沿与第三方相同的完整 `ClipDefinition` 契约提供其余五种官方实现：
 
 | 包名            | 提供内容                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------- |
 | `core`          | `rect` — 矩形                                                                               |
 | `standard/clip` | `circle` — 圆形、`ellipse` — 椭圆、`polygon` — 多边形、`path` — 路径、`compound` — 组合裁剪 |
 
-## 用法
+下面横向展示两个内容区域如何使用基础裁剪，并由 `compound` 承载。控制项可以切换左右区域的裁剪类型和位置。
 
-本页支持两种导入方式：
+<ComponentPreview
+  files="clip-gallery"
+  size="sm"
+  caption="橙色网格是原内容；左右两侧的可见区域分别由所选裁剪类型决定。"
+/>
 
-- 按需导入同 kind 的 operation 与 shape Definition，例如 `CircleClipDefinition` + `CircleClipShapeDefinition`
-- 整体使用 `StandardClipDefinitions` + `StandardClipShapeDefinitions`；组装 provider graph 时使用同时包含两级 provider 的 `StandardClipProviders`
+## 适用边界
 
-两种方式都只是当前图的显式装配，不会因为 import 自动全局注册裁剪。
+- 当前图只用少量裁剪时，按需导入对应的 `XxxClipDefinition`
+- 希望一次装配全部官方裁剪时，使用 `StandardClipDefinitions`
+- adapter 或 Tier 2 组装 provider graph 时，使用 `StandardClipProviders` 作为 catalog
+
+以上方式都只影响当前编译，不会因为 import 自动注册全局能力。自定义新的 clip kind 请参阅 [自定义裁剪区](/kernel/components/layout/custom-clip)。
+
+## 定义能力
+
+每个 Standard definition 同时拥有 spec schema、JSON-safe shape schema、`resolve` 与 `lower`。例如 `CircleClipDefinition` 的 authored spec、resolved shape 与 registry key 都使用 `kind: 'circle'`。
+
+五种 definitions 都从 `@retikz/standard/clip` 导出：
+
+- `CircleClipDefinition`
+- `EllipseClipDefinition`
+- `PolygonClipDefinition`
+- `PathClipDefinition`
+- `CompoundClipDefinition`
+
+`StandardClipDefinitions` 按以上顺序包含完整集合；`@retikz/standard` 根入口不转发这些可选能力。
+
+## 注入宿主
 
 ### React 用法
 
-从 `@retikz/standard/clip` 导入所需的 clip Definition，传给 React `Layout` 的 `clips` 属性，再在 `Scope` 上写入裁剪 spec。
-
 ```tsx
 import { Layout, Node, Scope } from '@retikz/react';
-import {
-  CircleClipDefinition,
-  CircleClipShapeDefinition,
-  CompoundClipDefinition,
-  CompoundClipShapeDefinition,
-} from '@retikz/standard/clip';
+import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/standard/clip';
 
-<Layout
-  clips={[CompoundClipDefinition, CircleClipDefinition]}
-  clipShapes={[CompoundClipShapeDefinition, CircleClipShapeDefinition]}
->
+<Layout clips={[CompoundClipDefinition, CircleClipDefinition]}>
   <Scope
     clip={{
       kind: 'compound',
@@ -53,56 +66,72 @@ import {
 
 ### Vanilla 用法
 
-在 `@retikz/vanilla` 中，把 Definition 放进 `compile.clips`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
-
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
-import {
-  CircleClipDefinition,
-  CircleClipShapeDefinition,
-  CompoundClipDefinition,
-  CompoundClipShapeDefinition,
-} from '@retikz/standard/clip';
+import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/standard/clip';
 
 const svg = renderToSvgString(input, {
   compile: {
     clips: [CompoundClipDefinition, CircleClipDefinition],
-    clipShapes: [CompoundClipShapeDefinition, CircleClipShapeDefinition],
   },
 });
 ```
 
-Definition 只在当前 Core registry assembly 中有效，不进入 IR JSON，也不会通过 import 写入全局状态。缺 operation Definition 时 Core 提示 `clips`；operation 已解析但缺 shape Definition 时提示 `clipShapes`。两级都注入后，Standard schema 校验 spec 与 shape，Core 再统一生成 canonical path。
+Definition 只存在于当前 Core registry assembly，不进入 IR JSON，也不写全局状态。缺少实际 kind 时，Core 统一提示通过 `clips` 注入。
 
-## 例子
+## 执行机制
 
-下面横向展示两个内容区域如何分别使用基础裁剪，并由 `compound` 承载。通过控制项可以切换左右区域的裁剪类型，也可以分别移动两个区域。
+Standard definitions 与自定义 definitions 进入同一个 Core Clip registry。Core 依次执行 spec schema、`resolve`、shape schema、`lower` 与 canonical path 校验；renderer 只看到 `SceneClipPath`。
 
-<ComponentPreview
-  files="clip-gallery"
-  size="sm"
-  caption="橙色网格是原内容；左右两侧的可见区域分别由所选裁剪类型决定。"
+provider graph 中，每个 `XxxClipProvider` 都是无依赖的完整 clip provider。`StandardClipProviders` 只是 catalog；resolver 仍只物化 roots 可达的 definitions，不会自动安装全部裁剪。`compound` 的实际 child kinds 仍需由调用方作为 roots/catalog 显式贡献。
+
+<SourceLinks
+  sources={[
+    {
+      label: '五种完整 Standard Clip Definitions',
+      path: 'packages/library/standard/src/clip/definitions.ts',
+      startLine: 58,
+      endLine: 139,
+    },
+    {
+      label: '单一 Definition 与 provider 集合',
+      path: 'packages/library/standard/src/clip/collections.ts',
+      startLine: 19,
+      endLine: 34,
+    },
+  ]}
 />
 
-### 组合裁剪
+## 错误与限制
 
-`compound` 通过 `children` 递归组合其他已注册的裁剪 spec。上面的例子展示两个可独立切换类型的子区域，适合需要将基础裁剪组合为一个区域的场景。
+| 情况                            | 结果                                                   |
+| ------------------------------- | ------------------------------------------------------ |
+| 未注入当前 kind                 | Core 报未知 clip，并提示 `options.clips`               |
+| 重复注册同 kind                 | registry fail-loud，不覆盖已有 definition              |
+| 非法 spec 或 shape              | 同一个 definition 在对应 schema 阶段报告 provider 诊断 |
+| `compound` 缺少 child kind      | child 回到当前 Clip registry 时失败                    |
+| 非法 commands、cycle 或深度超限 | Core canonical path / traversal 边界 fail-loud         |
 
-该子入口提供五种 schema、`IRXxxClip`、`XxxClipShape`、两级 Definition / provider，以及三个完整集合；`@retikz/standard` 根入口不转发它们。
+`compound` 按 authored order 累积 child commands，并由外层 `fillRule` 统一解释单一组合路径；它不是逐 child 几何交集。几何交集使用嵌套 `<Scope clip>`。
 
-#### API
+## API 参考
 
-`compound` 使用 `IRCompoundClip`。它与每个实际 child 都需要 operation / shape 两级 Definition：
+### 导出概览
 
-| 字段        | 类型                     | 说明                                                                                    |
-| ----------- | ------------------------ | --------------------------------------------------------------------------------------- |
-| `kind`      | `'compound'`             | 递归组合裁剪的判别字段                                                                  |
-| `children`  | `Array<IRClip>`          | 至少一个子 operation；每项都回到当前 Core Clip registry，可来自 Core、Standard 或第三方 |
-| `fillRule?` | `'nonzero' \| 'evenodd'` | 统一解释累积后的全部 child commands；省略为 `nonzero`，不是逐 child 几何交集            |
+- schema / IR：五种 `XxxClipSchema`、`IRXxxClip` 与 `XxxClipShape`
+- definitions：五个 `XxxClipDefinition`、`StandardClipDefinitions`
+- providers：五个 `XxxClipProvider`、`StandardClipProviders`
 
-直接编译可按需传入对应 `XxxClipDefinition` 与 `XxxClipShapeDefinition`；provider graph 则以 operation provider 为 root，并在 catalog 中提供其 shape dependency。`StandardClipProviders` 是 catalog，不会因为传入完整数组就自动安装所有 clip，resolver 只物化 root 可达闭包。
+### IRCompoundClip
+
+| 字段        | 类型                       | 说明                                                                            |
+| ----------- | -------------------------- | ------------------------------------------------------------------------------- |
+| `kind`      | `'compound'`               | 递归组合裁剪的判别字段                                                          |
+| `children`  | `Array<IRClip>`            | 至少一个 child；每项回到当前 Core Clip registry，可来自 Core、Standard 或第三方 |
+| `fillRule?` | `'nonzero'` \| `'evenodd'` | 统一解释累积后的全部 child commands；省略为 `nonzero`，不是逐 child 几何交集    |
 
 ## 相关
 
 - [能力装载](/library/standard/extension/capability-loading)：直接注入与 provider graph 的边界
+- [自定义裁剪区](/kernel/components/layout/custom-clip)：完整 `ClipDefinition` 作者契约
 - [扩展](/library/standard/extension)：浏览其他可选能力
