@@ -1,12 +1,13 @@
 ---
 title: 几何算法
-description: 用 @retikz/math 从已有几何求交、包围、包含关系、凸包和过点平滑曲线。
+description: 用 @retikz/math 计算线、圆和圆弧求交，构造包围圆与凸包，并生成过点平滑曲线。
 ---
 
-几何算法从已有点、线和圆推导新的几何结果。它们不创建 IR，也不会抛出专门的几何异常；退化输入通过 `null`、空数组或布尔值表达。
+几何算法从已有点、线、圆和圆弧推导新的几何结果。它们不创建 IR，也不会抛出专门的几何异常；退化输入通过 `null`、空数组或布尔值表达。
 
 ```ts
-import { circle, convexHull, curve, intersect, polygon, triangle } from '@retikz/math';
+import { circle, convexHull, curve, intersect, polygon, rayArc, triangle } from '@retikz/math';
+import type { RayArcInput } from '@retikz/math';
 ```
 
 默认容差是朴素的 `DEFAULT_EPSILON = 1e-9`，适合绘图尺度坐标，但不是任意数量级下的鲁棒几何谓词。
@@ -16,6 +17,7 @@ import { circle, convexHull, curve, intersect, polygon, triangle } from '@retikz
 | 问题                       | API                       | 结果                       |
 | -------------------------- | ------------------------- | -------------------------- |
 | 两条线、线段或圆在哪里相交 | `intersect.*`             | 单个交点、交点数组或无结果 |
+| 射线与圆弧在哪里相交       | `rayArc`                  | 按升序排列的正向参数       |
 | 三角形的内切圆或外接圆     | `triangle.*`              | `Circle` 或 `null`         |
 | 覆盖一组点的最小圆         | `circle.minimalEnclosing` | `Circle` 或 `null`         |
 | 一个点是否位于多边形内部   | `polygon.containsPoint`   | `boolean`                  |
@@ -53,7 +55,7 @@ const circleHits = intersect.lineCircle({
 | `lineCircle`     | 0 或 2 个点；相切返回两个坐标相同的点                             |
 | `circleCircle`   | 0 或 2 个点；相离、内含或重合返回空数组，相切返回两个坐标相同的点 |
 
-射线与圆弧求交使用[几何原语](/kernel/packages/base/math-primitives)中的 `rayArc`；它返回射线参数而不是坐标点。
+射线与圆弧求交使用 `rayArc`；它返回射线参数而不是坐标点。
 
 ## 包围与包含
 
@@ -98,6 +100,7 @@ const segments = curve.catmullRomToCubic(
 | 分组       | 公开类型 / API                                                                        | 无结果或退化行为                                 |
 | ---------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | 求交       | 三种输入类型、`intersect.lineLine` / `segmentSegment` / `lineCircle` / `circleCircle` | `null` 或空数组；相切保留两个重合点              |
+| 射线与圆弧 | `RayArcInput`、`rayArc`                                                               | 零方向或无交点返回空数组；正向参数按升序返回     |
 | 圆与三角形 | `Circle`、`triangle.inCircle`、`triangle.circumCircle`、`circle.minimalEnclosing`     | 共线三角形与空点集返回 `null`                    |
 | 多边形     | `polygon.containsPoint`、`convexHull`                                                 | 少于三个顶点的包含判断为 `false`；凸包保留端点   |
 | 曲线       | `CubicSegment`、`curve.catmullRomToCubic`                                             | 少于两个 knot 返回空数组；重合 knot 保持有限结果 |
@@ -106,31 +109,37 @@ const segments = curve.catmullRomToCubic(
   sources={[
     {
       label: '求交实现',
-      path: 'packages/kernel/math/src/geometry/intersect.ts',
+      path: 'packages/kernel/math/src/algorithms/intersect.ts',
       startLine: 1,
       endLine: 115,
     },
     {
+      label: '弧求交实现',
+      path: 'packages/kernel/math/src/algorithms/arc-intersection.ts',
+      startLine: 1,
+      endLine: 48,
+    },
+    {
       label: '三角形圆实现',
-      path: 'packages/kernel/math/src/geometry/triangle.ts',
+      path: 'packages/kernel/math/src/algorithms/triangle.ts',
       startLine: 1,
       endLine: 41,
     },
     {
       label: '最小包围圆实现',
-      path: 'packages/kernel/math/src/geometry/circle.ts',
+      path: 'packages/kernel/math/src/algorithms/circle.ts',
       startLine: 1,
       endLine: 66,
     },
     {
       label: '多边形与凸包实现',
-      path: 'packages/kernel/math/src/geometry/polygon.ts',
+      path: 'packages/kernel/math/src/algorithms/polygon.ts',
       startLine: 1,
       endLine: 22,
     },
     {
       label: '凸包实现',
-      path: 'packages/kernel/math/src/geometry/hull.ts',
+      path: 'packages/kernel/math/src/algorithms/hull.ts',
       startLine: 1,
       endLine: 37,
     },

@@ -1,12 +1,13 @@
 ---
 title: Algorithms
-description: Derive intersections, enclosures, containment, convex hulls, and point-fitting curves with @retikz/math.
+description: Compute line, circle, and ray-arc intersections, enclosing circles, convex hulls, and smooth curves with @retikz/math.
 ---
 
-Algorithms derive new geometry from existing points, lines, and circles. They create no IR and throw no geometry-specific exceptions; degenerate inputs are expressed as `null`, empty arrays, or booleans.
+Algorithms derive new geometry from existing points, lines, circles, and arcs. They create no IR and throw no geometry-specific exceptions; degenerate inputs are expressed as `null`, empty arrays, or booleans.
 
 ```ts
-import { circle, convexHull, curve, intersect, polygon, triangle } from '@retikz/math';
+import { circle, convexHull, curve, intersect, polygon, rayArc, triangle } from '@retikz/math';
+import type { RayArcInput } from '@retikz/math';
 ```
 
 The default tolerance is a naive `DEFAULT_EPSILON = 1e-9`. It suits drawing-scale coordinates but is not a robust predicate at arbitrary magnitudes.
@@ -16,6 +17,7 @@ The default tolerance is a naive `DEFAULT_EPSILON = 1e-9`. It suits drawing-scal
 | Problem                                      | API                       | Result                                       |
 | -------------------------------------------- | ------------------------- | -------------------------------------------- |
 | Intersect lines, segments, or circles        | `intersect.*`             | One point, an array of points, or no result  |
+| Intersect a ray with an arc                  | `rayArc`                  | Positive ray parameters in ascending order   |
 | Find a triangle's in-circle or circum-circle | `triangle.*`              | `Circle` or `null`                           |
 | Find the smallest circle enclosing points    | `circle.minimalEnclosing` | `Circle` or `null`                           |
 | Test whether a point is inside a polygon     | `polygon.containsPoint`   | `boolean`                                    |
@@ -53,7 +55,7 @@ Use the panel to switch among line-line, line-circle, and circle-circle cases, t
 | `lineCircle`     | 0 or 2 points; tangency returns two points with identical coordinates                                                  |
 | `circleCircle`   | 0 or 2 points; disjoint, contained, or coincident circles return an empty array; tangency returns two identical points |
 
-For ray-arc intersections, use `rayArc` from [Primitives](/kernel/packages/base/math-primitives); it returns ray parameters rather than coordinates.
+For ray-arc intersections, use `rayArc`; it returns ray parameters rather than coordinates.
 
 ## Enclosure and containment
 
@@ -96,42 +98,49 @@ At least two knots are required. The function returns `knots.length - 1` segment
 
 ## API summary
 
-| Group         | Public types / APIs                                         | No-result or degenerate behavior                                     |
-| ------------- | ----------------------------------------------------------- | -------------------------------------------------------------------- |
-| Intersections | Three input types plus four `intersect` methods             | `null` or empty array; tangency preserves two coincident hits        |
-| Circles       | `Circle`, two `triangle` methods, `circle.minimalEnclosing` | Collinear triangles and empty point sets return `null`               |
-| Polygons      | `polygon.containsPoint`, `convexHull`                       | Containment is `false` below three vertices; hull keeps endpoints    |
-| Curves        | `CubicSegment`, `curve.catmullRomToCubic`                   | Below two knots returns an empty array; coincident knots stay finite |
+| Group         | Public types / APIs                                         | No-result or degenerate behavior                                                |
+| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Intersections | Three input types plus four `intersect` methods             | `null` or empty array; tangency preserves two coincident hits                   |
+| Ray-arc       | `RayArcInput`, `rayArc`                                     | Zero direction or no hit returns an empty array; positive parameters are sorted |
+| Circles       | `Circle`, two `triangle` methods, `circle.minimalEnclosing` | Collinear triangles and empty point sets return `null`                          |
+| Polygons      | `polygon.containsPoint`, `convexHull`                       | Containment is `false` below three vertices; hull keeps endpoints               |
+| Curves        | `CubicSegment`, `curve.catmullRomToCubic`                   | Below two knots returns an empty array; coincident knots stay finite            |
 
 <SourceLinks
   sources={[
     {
       label: 'Intersection implementation',
-      path: 'packages/kernel/math/src/geometry/intersect.ts',
+      path: 'packages/kernel/math/src/algorithms/intersect.ts',
       startLine: 1,
       endLine: 115,
     },
     {
+      label: 'Arc intersection implementation',
+      path: 'packages/kernel/math/src/algorithms/arc-intersection.ts',
+      startLine: 1,
+      endLine: 48,
+    },
+    {
       label: 'Triangle-circle implementation',
-      path: 'packages/kernel/math/src/geometry/triangle.ts',
+      path: 'packages/kernel/math/src/algorithms/triangle.ts',
       startLine: 1,
       endLine: 41,
     },
     {
       label: 'Minimal enclosing circle implementation',
-      path: 'packages/kernel/math/src/geometry/circle.ts',
+      path: 'packages/kernel/math/src/algorithms/circle.ts',
       startLine: 1,
       endLine: 66,
     },
     {
       label: 'Polygon implementation',
-      path: 'packages/kernel/math/src/geometry/polygon.ts',
+      path: 'packages/kernel/math/src/algorithms/polygon.ts',
       startLine: 1,
       endLine: 22,
     },
     {
       label: 'Convex hull implementation',
-      path: 'packages/kernel/math/src/geometry/hull.ts',
+      path: 'packages/kernel/math/src/algorithms/hull.ts',
       startLine: 1,
       endLine: 37,
     },

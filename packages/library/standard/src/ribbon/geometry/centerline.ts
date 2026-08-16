@@ -76,7 +76,7 @@ export const directionToTangent = (
     return vector2.fromAngleDegrees(direction);
   }
   if (isPositionTuple(direction)) {
-    return normalizeVector(vector2.fromPosition(direction), source);
+    return normalizeVector(direction, source);
   }
   try {
     return normalizeVector(polar.toPosition(direction), source);

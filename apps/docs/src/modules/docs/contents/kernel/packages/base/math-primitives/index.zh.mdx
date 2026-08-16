@@ -11,7 +11,7 @@ import { applyAffine, boundsOf, ellipse, point, vector2, type Position } from '@
 
 ## 点与向量
 
-`Position` 和 `Vector2` 都是 `[number, number]`。`point` 提供两者共享的加减、缩放、点积、叉积、距离与沿方向移动；`vector2` 补充角度构造、单位化和法向量。
+`Position` 和 `Vector2` 都是 `[number, number]`，但 API 按语义分组：`vector2` 负责加减、缩放、点积、叉积、长度、单位化和法向量；`point` 负责两点距离、沿方向移动、朝目标移动和精确相等判断。
 
 `DEFAULT_EPSILON = 1e-9` 是包内多个退化判断的默认容差。`isFiniteNumber` 排除 `NaN` 和正负无穷，`isInfiniteNumber` 只接受正负无穷；`isFinitePoint` 只接受恰好两个有限坐标组成的数组。
 
@@ -19,13 +19,13 @@ import { applyAffine, boundsOf, ellipse, point, vector2, type Position } from '@
 const origin: Position = [0, 0];
 const direction = vector2.fromAngleDegrees(-30);
 const end = point.along(origin, direction, 120);
-const normal = point.scale(vector2.normal(direction), 50);
+const normal = vector2.scale(vector2.normal(direction), 50);
 
-point.dot(direction, normal); // 接近 0
+vector2.dot(direction, normal); // 接近 0
 point.distance(origin, end); // 120
 ```
 
-拖动角度和长度可以观察向量与左手法向量始终正交。`normalize` 的零长回退值默认是 `[1, 0]`；`normalizeOrNull` 遇到零长或非有限向量返回 `null`。
+拖动角度和长度可以观察向量与左手法向量始终正交。`vector2.normalize` 的零长回退值默认是 `[1, 0]`；`vector2.normalizeOrNull` 遇到零长或非有限向量返回 `null`。
 
 <ComponentPreview files="vector-normal" size="sm" caption="向量与左手法向量" />
 
@@ -118,10 +118,7 @@ const candidates = arcBoundingPoints({
 
 `arcBoundingPoints` / `ellipseArcBoundingPoints` 返回端点和数值角度区间内的轴向极值候选点，不接受额外的 `sweep` 字段且不会去重。椭圆弧 helper 只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用坐标变换映射到世界坐标。
 
-<ComponentAlert
-  title="rayArc 返回参数而不是点"
-  description="返回值是方程 origin + s·dir 中按升序排列的正向标量 s。把 s 代回方程可得到命中点；算法页的 intersect.* 则直接返回坐标点。"
-/>
+需要射线与圆弧求交时，请使用[几何算法](/kernel/packages/base/math-algorithms)中的 `rayArc`。它返回方程 `origin + s·dir` 中按升序排列的正向标量 `s`，而不是坐标点。
 
 ## API 摘要
 
@@ -131,45 +128,45 @@ const candidates = arcBoundingPoints({
 | 坐标变换 | `CenteredShape`、`localToWorld`、`worldToLocal`                                             | 绕中心旋转后在局部与世界坐标间互转          |
 | 仿射矩阵 | `AffineMatrix`、`AFFINE_IDENTITY`、`multiplyAffine`、`applyAffine`                          | 六元组固定同序；先 inner 后 outer；输入不变 |
 | 边界     | 四种 bounds 类型、`boundsOf`、`mergeBounds`、转换 / 检查 / 中心 / 半轴 / 扩张 / 四角 helper | 空点集与全空合并返回 `undefined`            |
-| 椭圆与弧 | `Ellipse`、`CenteredBox`、`ellipse`、五种弧输入类型与点 / 区间 / 射线 / bbox helper         | 椭圆弧只支持轴对齐；bbox candidates 不去重  |
+| 椭圆与弧 | `Ellipse`、`CenteredBox`、`ellipse`、四种弧输入类型与点 / 区间 / bbox helper                | 椭圆弧只支持轴对齐；bbox candidates 不去重  |
 
 <SourceLinks
   sources={[
     {
       label: '点与向量实现',
-      path: 'packages/kernel/math/src/geometry/point.ts',
+      path: 'packages/kernel/math/src/primitives/point.ts',
       startLine: 1,
-      endLine: 88,
+      endLine: 79,
     },
     {
       label: '坐标变换实现',
-      path: 'packages/kernel/math/src/geometry/transform.ts',
+      path: 'packages/kernel/math/src/primitives/transform.ts',
       startLine: 1,
       endLine: 37,
     },
     {
       label: '仿射矩阵实现',
-      path: 'packages/kernel/math/src/geometry/affine.ts',
+      path: 'packages/kernel/math/src/primitives/affine.ts',
       startLine: 1,
       endLine: 26,
     },
     {
       label: '边界计算实现',
-      path: 'packages/kernel/math/src/geometry/bounds.ts',
+      path: 'packages/kernel/math/src/primitives/bounds.ts',
       startLine: 1,
       endLine: 131,
     },
     {
       label: '椭圆计算实现',
-      path: 'packages/kernel/math/src/geometry/ellipse.ts',
+      path: 'packages/kernel/math/src/primitives/ellipse.ts',
       startLine: 1,
       endLine: 73,
     },
     {
       label: '圆弧计算实现',
-      path: 'packages/kernel/math/src/geometry/arc.ts',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
       startLine: 1,
-      endLine: 199,
+      endLine: 137,
     },
   ]}
 />

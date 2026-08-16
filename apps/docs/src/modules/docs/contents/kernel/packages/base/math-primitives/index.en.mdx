@@ -11,7 +11,7 @@ import { applyAffine, boundsOf, ellipse, point, vector2, type Position } from '@
 
 ## Points and vectors
 
-Both `Position` and `Vector2` are `[number, number]`. `point` provides addition, subtraction, scaling, dot and cross products, distance, and directed movement. `vector2` adds angle construction, normalization, and normals.
+Both `Position` and `Vector2` are `[number, number]`, but the APIs are grouped by meaning: `vector2` owns addition, subtraction, scaling, dot and cross products, length, normalization, and normals; `point` owns point distance, directed movement, movement toward a target, and exact equality.
 
 `DEFAULT_EPSILON = 1e-9` is the default tolerance for several degeneracy checks in the package. `isFiniteNumber` rejects `NaN` and both infinities, while `isInfiniteNumber` accepts only the infinities; `isFinitePoint` accepts only an array of exactly two finite coordinates.
 
@@ -19,13 +19,13 @@ Both `Position` and `Vector2` are `[number, number]`. `point` provides addition,
 const origin: Position = [0, 0];
 const direction = vector2.fromAngleDegrees(-30);
 const end = point.along(origin, direction, 120);
-const normal = point.scale(vector2.normal(direction), 50);
+const normal = vector2.scale(vector2.normal(direction), 50);
 
-point.dot(direction, normal); // approximately 0
+vector2.dot(direction, normal); // approximately 0
 point.distance(origin, end); // 120
 ```
 
-Change the angle and length to see that the vector and its left-hand normal stay perpendicular. `normalize` defaults to `[1, 0]` for zero length, while `normalizeOrNull` returns `null` for zero-length or non-finite vectors.
+Change the angle and length to see that the vector and its left-hand normal stay perpendicular. `vector2.normalize` defaults to `[1, 0]` for zero length, while `vector2.normalizeOrNull` returns `null` for zero-length or non-finite vectors.
 
 <ComponentPreview files="vector-normal" size="sm" caption="A vector and its left-hand normal" />
 
@@ -118,10 +118,7 @@ const candidates = arcBoundingPoints({
 
 `arcBoundingPoints` / `ellipseArcBoundingPoints` return endpoints plus axis extrema in the numeric angular interval. They accept no extra `sweep` field and do not de-duplicate candidates. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the coordinate-transform helpers.
 
-<ComponentAlert
-  title="rayArc returns parameters, not points"
-  description="Each result is a positive scalar s from origin + s·dir, sorted in ascending order. Substitute s back into the equation to obtain a hit point; intersect.* on the Algorithms page returns coordinates directly."
-/>
+For ray-arc intersections, use `rayArc` on the [Algorithms](/kernel/packages/base/math-algorithms) page. It returns the positive scalar `s` from `origin + s·dir`, sorted in ascending order, rather than a coordinate point.
 
 ## API summary
 
@@ -131,45 +128,45 @@ const candidates = arcBoundingPoints({
 | Transforms        | `CenteredShape`, `localToWorld`, `worldToLocal`                                                           | Rotate about center and convert between local and world space                |
 | Affine matrices   | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`                                        | Fixed tuple order; inner before outer; inputs stay unchanged                 |
 | Bounds            | Four bounds types plus derivation, merge, conversion, guard, center, half-axis, expansion, corner helpers | Empty point sets and all-empty merges return `undefined`                     |
-| Ellipses and arcs | `Ellipse`, `CenteredBox`, `ellipse`, five arc input types, and point / interval / ray / bbox helpers      | Elliptical arcs are axis-aligned only; bbox candidates are not de-duplicated |
+| Ellipses and arcs | `Ellipse`, `CenteredBox`, `ellipse`, four arc input types, and point / interval / bbox helpers            | Elliptical arcs are axis-aligned only; bbox candidates are not de-duplicated |
 
 <SourceLinks
   sources={[
     {
       label: 'Point and vector implementation',
-      path: 'packages/kernel/math/src/geometry/point.ts',
+      path: 'packages/kernel/math/src/primitives/point.ts',
       startLine: 1,
-      endLine: 88,
+      endLine: 79,
     },
     {
       label: 'Coordinate transform implementation',
-      path: 'packages/kernel/math/src/geometry/transform.ts',
+      path: 'packages/kernel/math/src/primitives/transform.ts',
       startLine: 1,
       endLine: 37,
     },
     {
       label: 'Affine matrix implementation',
-      path: 'packages/kernel/math/src/geometry/affine.ts',
+      path: 'packages/kernel/math/src/primitives/affine.ts',
       startLine: 1,
       endLine: 26,
     },
     {
       label: 'Bounds implementation',
-      path: 'packages/kernel/math/src/geometry/bounds.ts',
+      path: 'packages/kernel/math/src/primitives/bounds.ts',
       startLine: 1,
       endLine: 131,
     },
     {
       label: 'Ellipse implementation',
-      path: 'packages/kernel/math/src/geometry/ellipse.ts',
+      path: 'packages/kernel/math/src/primitives/ellipse.ts',
       startLine: 1,
       endLine: 73,
     },
     {
       label: 'Arc implementation',
-      path: 'packages/kernel/math/src/geometry/arc.ts',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
       startLine: 1,
-      endLine: 199,
+      endLine: 137,
     },
   ]}
 />
