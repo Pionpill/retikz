@@ -1,4 +1,4 @@
-import type { Position } from '../geometry';
+import type { Position } from '../primitives';
 
 import { DEFAULT_EPSILON } from '../constants';
 

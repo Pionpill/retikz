@@ -1,7 +1,7 @@
 import type { Position } from '@retikz/math';
 import type { FC, ReactNode } from 'react';
 
-import { intersect, point, vector2 } from '@retikz/math';
+import { intersect, vector2 } from '@retikz/math';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -16,8 +16,8 @@ export const previewControls = intersectionPlaygroundControls;
 type IntersectionValues = PreviewControlValuesFor<typeof intersectionPlaygroundControls>;
 
 const lineEnds = (center: Position, angle: number): [Position, Position] => {
-  const direction = point.scale(vector2.fromAngleDegrees(angle), 190);
-  return [point.sub(center, direction), point.add(center, direction)];
+  const direction = vector2.scale(vector2.fromAngleDegrees(angle), 190);
+  return [vector2.sub(center, direction), vector2.add(center, direction)];
 };
 
 const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array<Position> } => {

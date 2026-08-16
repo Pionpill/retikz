@@ -1,7 +1,7 @@
-import type { Position } from './point';
+import type { Position } from '../primitives';
 
 import { DEFAULT_EPSILON } from '../constants';
-import { point } from './point';
+import { vector2 } from '../primitives';
 
 /** 两条无限直线求交参数 */
 export type LineLineInput = {
@@ -43,7 +43,7 @@ export type CircleCircleInput = {
 const lineLine = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
-  const det = point.cross(da, db);
+  const det = vector2.cross(da, db);
   if (Math.abs(det) < DEFAULT_EPSILON) return null;
   const dx = b1[0] - a1[0];
   const dy = b1[1] - a1[1];
@@ -98,7 +98,7 @@ const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput)
 const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
-  const det = point.cross(da, db);
+  const det = vector2.cross(da, db);
   if (Math.abs(det) < DEFAULT_EPSILON) return null;
   const dx = b1[0] - a1[0];
   const dy = b1[1] - a1[1];
@@ -110,6 +110,6 @@ const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
 
 /**
  * 求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）
- * @description ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc` 单独导出
+ * @description ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc-intersection` 单独导出
  */
 export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };

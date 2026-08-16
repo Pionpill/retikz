@@ -1,7 +1,7 @@
 import type { Position } from '@retikz/math';
 
 import { DEG_TO_RAD } from '../angle';
-import { point as pointOps } from '../point';
+import { point as pointOps, vector2 } from '../point';
 
 /*
  * 段几何采样工具：给边标注（step.label）算位置 / 切线。
@@ -42,14 +42,14 @@ const sampleEllipseArc = (
   const sweepSign = endAngleDeg >= startAngleDeg ? 1 : -1;
   return {
     point: [center[0] + rx * cos, center[1] + ry * sin],
-    tangent: pointOps.normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
+    tangent: vector2.normalize([-rx * sin * sweepSign, ry * cos * sweepSign]),
   };
 };
 
 /** 直线段 from → to */
 export const lineSegmentSample = (from: Position, to: Position, t: number): SegmentSample => ({
   point: [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t],
-  tangent: pointOps.normalize([to[0] - from[0], to[1] - from[1]]),
+  tangent: vector2.normalize([to[0] - from[0], to[1] - from[1]]),
 });
 
 /**
@@ -64,7 +64,7 @@ export const quadSegmentSample = (from: Position, control: Position, to: Positio
   ];
   const tx = 2 * u * (control[0] - from[0]) + 2 * t * (to[0] - control[0]);
   const ty = 2 * u * (control[1] - from[1]) + 2 * t * (to[1] - control[1]);
-  return { point, tangent: pointOps.normalize([tx, ty]) };
+  return { point, tangent: vector2.normalize([tx, ty]) };
 };
 
 /**
@@ -85,7 +85,7 @@ export const cubicSegmentSample = (
   ];
   const tx = 3 * u * u * (c1[0] - from[0]) + 6 * u * t * (c2[0] - c1[0]) + 3 * t * t * (to[0] - c2[0]);
   const ty = 3 * u * u * (c1[1] - from[1]) + 6 * u * t * (c2[1] - c1[1]) + 3 * t * t * (to[1] - c2[1]);
-  return { point, tangent: pointOps.normalize([tx, ty]) };
+  return { point, tangent: vector2.normalize([tx, ty]) };
 };
 
 /**

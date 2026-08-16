@@ -1,7 +1,7 @@
-import type { Position } from './point';
+import type { Position } from '../primitives';
 
 import { DEFAULT_EPSILON } from '../constants';
-import { point } from './point';
+import { vector2 } from '../primitives';
 import { triangle } from './triangle';
 
 /** 圆：圆心 + 半径 */
@@ -13,7 +13,7 @@ export type Circle = { center: Position; radius: number };
  */
 const circleFrom2 = (a: Position, b: Position): Circle => ({
   center: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
-  radius: point.length([a[0] - b[0], a[1] - b[1]]) / 2,
+  radius: vector2.length([a[0] - b[0], a[1] - b[1]]) / 2,
 });
 
 /**
@@ -36,7 +36,7 @@ const circleFrom3 = (a: Position, b: Position, c: Position): Circle => {
  * @description 使用 epsilon 扩张半径，抵消浮点误差对边界点的影响
  */
 const inCircle = (c: Circle, p: Position, epsilon: number): boolean =>
-  point.length([p[0] - c.center[0], p[1] - c.center[1]]) <= c.radius + epsilon;
+  vector2.length([p[0] - c.center[0], p[1] - c.center[1]]) <= c.radius + epsilon;
 
 /** 圆相关几何算法 */
 export const circle = {

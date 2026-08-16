@@ -1,4 +1,4 @@
-import type { Position } from './point';
+import type { Position } from '../primitives';
 
 /** 简单多边形运算 */
 export const polygon = {
