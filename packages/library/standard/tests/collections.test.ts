@@ -9,14 +9,29 @@ import {
   StandardArrowProviders,
 } from '../src/arrow';
 import {
+  CircleClipDefinition,
+  CircleClipProvider,
+  CircleClipShapeDefinition,
+  CircleClipShapeProvider,
   CompoundClipDefinition,
   CompoundClipProvider,
+  CompoundClipShapeDefinition,
+  CompoundClipShapeProvider,
+  EllipseClipDefinition,
+  EllipseClipProvider,
+  EllipseClipShapeDefinition,
+  EllipseClipShapeProvider,
   PathClipDefinition,
   PathClipProvider,
+  PathClipShapeDefinition,
+  PathClipShapeProvider,
   PolygonClipDefinition,
   PolygonClipProvider,
+  PolygonClipShapeDefinition,
+  PolygonClipShapeProvider,
   StandardClipDefinitions,
   StandardClipProviders,
+  StandardClipShapeDefinitions,
 } from '../src/clip';
 import {
   ContourShapeDefinition,
@@ -53,15 +68,38 @@ describe('Standard extension collections', () => {
   });
 
   it('groups all Standard clip definitions and providers', () => {
-    expect(StandardClipDefinitions).toEqual([CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition]);
-    expect(StandardClipProviders).toEqual([CompoundClipProvider, PolygonClipProvider, PathClipProvider]);
+    expect(StandardClipDefinitions).toEqual([
+      CircleClipDefinition,
+      EllipseClipDefinition,
+      PolygonClipDefinition,
+      PathClipDefinition,
+      CompoundClipDefinition,
+    ]);
+    expect(StandardClipShapeDefinitions).toEqual([
+      CircleClipShapeDefinition,
+      EllipseClipShapeDefinition,
+      PolygonClipShapeDefinition,
+      PathClipShapeDefinition,
+      CompoundClipShapeDefinition,
+    ]);
+    expect(StandardClipProviders).toEqual([
+      CircleClipShapeProvider,
+      CircleClipProvider,
+      EllipseClipShapeProvider,
+      EllipseClipProvider,
+      PolygonClipShapeProvider,
+      PolygonClipProvider,
+      PathClipShapeProvider,
+      PathClipProvider,
+      CompoundClipShapeProvider,
+      CompoundClipProvider,
+    ]);
   });
 
   it('keeps every provider paired with its Definition', () => {
     const pairs = [
       [StandardShapeProviders, StandardShapeDefinitions],
       [StandardArrowProviders, StandardArrowDefinitions],
-      [StandardClipProviders, StandardClipDefinitions],
     ] as const;
 
     for (const [providers, definitions] of pairs) {
@@ -70,5 +108,9 @@ describe('Standard extension collections', () => {
         expect(provider.makeDefinition({})).toBe(definitions[index]);
       });
     }
+
+    expect(new Set(StandardClipProviders.map(provider => provider.makeDefinition({})))).toEqual(
+      new Set([...StandardClipShapeDefinitions, ...StandardClipDefinitions]),
+    );
   });
 });
