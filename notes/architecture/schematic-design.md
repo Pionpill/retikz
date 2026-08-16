@@ -21,17 +21,17 @@ Graph 是 Schematic 的通用关系与呈现基础。长期拥有：
 - 节点、关系、分组、端口与稳定 identity 的 JSON-safe 数据契约
 - 关系端点、包含关系、领域默认、Definition、variant、metadata 与显式 style 的确定化
 - 可以脱离自动布局独立使用的 authored geometry，即由作者直接提供的位置和连接方式
-- 可复用的 GraphNode、GraphConnector、GraphFrame 等图式呈现能力
+- 可复用的 Entity、Relation、Container 等图式呈现能力
 
-Graph 的通用关系模型属于 Graph owner，不另设悬空的 GraphModel owner。单个 `GraphNode`、`GraphConnector` authoring IR 仍不等于全局关系模型；未来 milestone 必须为节点集合、关系集合、端口、分组及其 Canonical 形态建立独立且准确的模型契约，不能把现有元素 IR 当作模型数据库或编辑文档
+Graph 的通用关系模型属于 Graph owner，不另设悬空的 GraphModel owner。单个 `Entity`、`Relation` authoring IR 仍不等于全局关系模型；未来 milestone 必须为节点集合、关系集合、端口、分组及其 Canonical 形态建立独立且准确的模型契约，不能把现有元素 IR 当作模型数据库或编辑文档
 
 当前 v0.1 只实现了元素与呈现 foundation：
 
-- `GraphNode`：统一的节点入口，通过 `role` 区分 `terminal`、`stage`、`decision`、`junction`
-- `GraphConnector`：统一的关系入口，通过 `role` 区分 `flow`、`branch`、`dependency`、`feedback`
-- `GraphFrame`：带 header、section、divider 和局部布局的语义外壳
+- `Entity`：统一的节点入口，通过 `role` 区分 `terminal`、`stage`、`decision`、`junction`
+- `Relation`：统一的关系入口，通过 `role` 区分 `flow`、`branch`、`dependency`、`feedback`
+- `Container`：带 header、section、divider 和局部布局的语义外壳
 
-GraphNode 与 GraphConnector 保留 `namespace: 'graph'` 的 JSON-safe semantic IR。它们分别轻量下沉为一个 Core Node 和一个 Core stroke Path；role、variant 与 Graph discriminator 在 lowering 后丢弃。GraphFrame 复用 Layout 的公开 composition contract，不复制布局 solver 或几何算法
+Entity 与 Relation 保留 `namespace: 'graph'` 的 JSON-safe semantic IR。它们分别轻量下沉为一个 Core Node 和一个 Core stroke Path；role、variant 与 Graph discriminator 在 lowering 后丢弃。Container 复用 Layout 的公开 composition contract，不复制布局 solver 或几何算法
 
 Graph 不拥有 Diagram 自动布局、自动 routing、避障、命中测试、Editor 或 renderer。Graph 支持自由布局仅表示它接受 authored geometry，不表示它拥有拖拽、选择或自由布局求解器
 
@@ -99,7 +99,7 @@ Graph 拥有通用关系语义，但不拥有底层绘图或自动布局算法�
 - Diagram 拥有结构化关系图的布局意图、约束确定化、provider 选择、算法编排、自动 routing 与布局结果，不把这些能力下沉到 Graph
 - renderer 只消费最终 Scene，不识别 Graph 或 Diagram discriminator
 
-GraphFrame 在自身 layout-aware Definition 中可以直接调用 Layout 的公开 compiler；这不等于 Graph 拥有 Layout registry。独立 authored Layout 仍按 Layout 契约由宿主显式注入 Definition
+Container 在自身 layout-aware Definition 中可以直接调用 Layout 的公开 compiler；这不等于 Graph 拥有 Layout registry。独立 authored Layout 仍按 Layout 契约由宿主显式注入 Definition
 
 ## 6. Data、Resolve 与 Layout
 
@@ -159,4 +159,4 @@ Editor 是跨领域交互能力。它可以通过 Graph editor adapter 编辑 Gr
 
 ## 10. 版本关系
 
-本文定义长期边界；具体字段、默认值、role 词汇、关系模型、布局约束与版本迁移进入对应 milestone ADR。Graph v0.1 已完成三包与 GraphFrame、GraphNode、GraphConnector 的元素 foundation；通用 Graph 数据模型仍需新的 Graph milestone ADR。`@retikz/diagram` package family、布局 provider 与 Diagram Layout Result 必须由 Diagram roadmap / ADR 确认后建立，Editor 继续独立设计和审查
+本文定义长期边界；具体字段、默认值、role 词汇、关系模型、布局约束与版本迁移进入对应 milestone ADR。Graph v0.1 已完成三包与 Container、Entity、Relation 的元素 foundation；通用 Graph 数据模型仍需新的 Graph milestone ADR。`@retikz/diagram` package family、布局 provider 与 Diagram Layout Result 必须由 Diagram roadmap / ADR 确认后建立，Editor 继续独立设计和审查

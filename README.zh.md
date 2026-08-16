@@ -181,7 +181,7 @@ Retikz 本地 Web 服务统一使用固定的 `7xxx` 端口。在仓库根目录
 RETIKZ_DEV_SLOT=02
 ```
 
-Docs 端口为 `7100 + 槽位`，Bench 端口为 `7200 + 槽位`；例如槽位 `02` 对应 Docs `7102`、Bench `7202`。长期 checkout 槽位固定为 main `00`、next `01`、next-kernel `02`、next-standard `03`、next-viz `04`、next-plot `05`、next-table `06`。需要单独调整服务时可使用 `RETIKZ_DOCS_PORT` 或 `RETIKZ_BENCH_PORT` 覆盖。端口冲突会直接报错，不会自动递增。
+Docs 端口为 `7100 + 槽位`，Bench 端口为 `7200 + 槽位`；例如槽位 `02` 对应 Docs `7102`、Bench `7202`。长期 checkout 槽位固定为 main `00`、next `01`、next-kernel `02`、next-library `03`、next-schematic `04`、next-viz `05`。需要单独调整服务时可使用 `RETIKZ_DOCS_PORT` 或 `RETIKZ_BENCH_PORT` 覆盖。端口冲突会直接报错，不会自动递增。
 
 相关链接：
 

@@ -1,10 +1,10 @@
 import type {
-  GraphConnectorCreateOptions,
-  GraphFrameCreateOptions,
-  GraphFrameRegionCreateOptions,
-  GraphFrameSectionCreateOptions,
-  GraphNodeCreateOptions,
-  IRGraphConnector,
+  ContainerCreateOptions,
+  ContainerRegionCreateOptions,
+  ContainerSectionCreateOptions,
+  EntityCreateOptions,
+  IRRelation,
+  RelationCreateOptions,
 } from '@retikz/graph';
 import type {
   InputChild,
@@ -17,48 +17,48 @@ import type {
 } from '@retikz/vanilla';
 
 import {
-  createGraphConnector,
-  createGraphFrame,
-  createGraphNode,
+  ContainerProvider,
+  createContainer,
+  createEntity,
   createGraphProviders,
-  GraphConnectorProvider,
-  GraphFrameProvider,
-  GraphNodeProvider,
+  createRelation,
+  EntityProvider,
+  RelationProvider,
 } from '@retikz/graph';
 
-import { GraphConnectorEmbedKind, GraphFrameEmbedKind, GraphNodeEmbedKind } from './constants';
+import { ContainerEmbedKind, EntityEmbedKind,RelationEmbedKind } from './constants';
 
-/** GraphFrame region 的 framework-neutral authoring 输入 */
-export type InputGraphFrameRegion = Omit<GraphFrameRegionCreateOptions, 'child'> & {
+/** Container region 的 framework-neutral authoring 输入 */
+export type InputContainerRegion = Omit<ContainerRegionCreateOptions, 'child'> & {
   child: InputChild;
 };
 
-/** GraphFrame section 的 framework-neutral authoring 输入 */
-export type InputGraphFrameSection = Omit<GraphFrameSectionCreateOptions, 'child'> & {
+/** Container section 的 framework-neutral authoring 输入 */
+export type InputContainerSection = Omit<ContainerSectionCreateOptions, 'child'> & {
   child: InputChild;
 };
 
-/** GraphFrame 的 authoring 输入可显式指定稳定身份，省略时由 embed id 派生 */
-export type InputGraphFrame = Omit<GraphFrameCreateOptions, 'id' | 'header' | 'sections'> & {
-  /** 要持久化到 GraphFrame IR 的显式身份 */
+/** Container 的 authoring 输入可显式指定稳定身份，省略时由 embed id 派生 */
+export type InputContainer = Omit<ContainerCreateOptions, 'id' | 'header' | 'sections'> & {
+  /** 要持久化到 Container IR 的显式身份 */
   id?: string;
-  header?: InputGraphFrameRegion;
-  sections?: ReadonlyArray<InputGraphFrameSection>;
+  header?: InputContainerRegion;
+  sections?: ReadonlyArray<InputContainerSection>;
 };
 
-/** GraphNode 的 authoring 输入，embed id 提供稳定身份 */
-export type InputGraphNode = Omit<GraphNodeCreateOptions, 'id'> & {
+/** Entity 的 authoring 输入，embed id 提供稳定身份 */
+export type InputEntity = Omit<EntityCreateOptions, 'id'> & {
   /** 由框架 adapter 收集、等待 Vanilla 归一化的 Core Node 输入 */
   authoringNode?: InputNode;
 };
 
 type OmitId<T> = T extends unknown ? Omit<T, 'id'> : never;
-type GraphConnectorAuthoringInput = Omit<Extract<GraphConnectorCreateOptions, { way: unknown }>, 'id' | 'way'> & {
+type RelationAuthoringInput = Omit<Extract<RelationCreateOptions, { way: unknown }>, 'id' | 'way'> & {
   authoringPath: InputPath;
 };
 
-/** GraphConnector 的 authoring 输入，embed id 提供稳定身份 */
-export type InputGraphConnector = OmitId<GraphConnectorCreateOptions> | GraphConnectorAuthoringInput;
+/** Relation 的 authoring 输入，embed id 提供稳定身份 */
+export type InputRelation = OmitId<RelationCreateOptions> | RelationAuthoringInput;
 
 type CollectedInputDependencies = Readonly<{
   roots: Array<InputEmbedContribution['providerDependencies']['roots'][number]>;
@@ -85,43 +85,43 @@ const normalizeGraphChild = (
   return normalized.children[0];
 };
 
-/** 在当前根 Scene traversal 中归一化 GraphFrame region */
-const normalizeGraphFrameRegion = (
-  input: InputGraphFrameRegion,
+/** 在当前根 Scene traversal 中归一化 Container region */
+const normalizeContainerRegion = (
+  input: InputContainerRegion,
   label: string,
   context: InputEmbedContext,
   collected: CollectedInputDependencies,
-): GraphFrameRegionCreateOptions => ({
+): ContainerRegionCreateOptions => ({
   ...input,
   child: normalizeGraphChild(input.child, label, context, collected),
 });
 
-/** 在当前根 Scene traversal 中归一化 GraphFrame section */
-const normalizeGraphFrameSection = (
-  input: InputGraphFrameSection,
+/** 在当前根 Scene traversal 中归一化 Container section */
+const normalizeContainerSection = (
+  input: InputContainerSection,
   context: InputEmbedContext,
   collected: CollectedInputDependencies,
-): GraphFrameSectionCreateOptions => ({
+): ContainerSectionCreateOptions => ({
   ...input,
-  child: normalizeGraphChild(input.child, `GraphFrameSection '${input.key}'`, context, collected),
+  child: normalizeGraphChild(input.child, `ContainerSection '${input.key}'`, context, collected),
 });
 
-/** 将框架收集的 Core Node 输入收敛为 GraphNode 输入 */
-const normalizeGraphNode = <TInput extends Record<string, unknown>>(
+/** 将框架收集的 Core Node 输入收敛为 Entity 输入 */
+const normalizeEntity = <TInput extends Record<string, unknown>>(
   input: TInput,
   context: InputEmbedContext,
 ): Omit<TInput, 'authoringNode'> => {
   const { authoringNode, ...base } = input as TInput & { authoringNode?: InputNode };
   if (authoringNode === undefined) return base;
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('GraphNode inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) throw new Error('Entity inputs require Kernel Vanilla normalizeScene.');
   const normalized = normalizeChildren([authoringNode]);
   if (
     normalized.children.length !== 1 ||
     normalized.children[0].type !== 'node' ||
     'namespace' in normalized.children[0]
   ) {
-    throw new Error('GraphNode must normalize to exactly one Core Node.');
+    throw new Error('Entity must normalize to exactly one Core Node.');
   }
   const { type: _type, id: _id, ...node } = normalized.children[0];
   void _type;
@@ -129,93 +129,92 @@ const normalizeGraphNode = <TInput extends Record<string, unknown>>(
   return { ...base, ...node };
 };
 
-/** 使用 embed id 创建规范 GraphConnector IR */
-const createEmbeddedGraphConnector = (id: string, input: InputGraphConnector, context: InputEmbedContext) => {
+/** 使用 embed id 创建规范 Relation IR */
+const createEmbeddedRelation = (id: string, input: InputRelation, context: InputEmbedContext) => {
   if ('authoringPath' in input) {
     const { authoringPath, ...base } = input;
     const normalizeChildren = context.normalizeChildren;
-    if (normalizeChildren === undefined)
-      throw new Error('GraphConnector inputs require Kernel Vanilla normalizeScene.');
+    if (normalizeChildren === undefined) throw new Error('Relation inputs require Kernel Vanilla normalizeScene.');
     const normalized = normalizeChildren([authoringPath]);
     if (normalized.children.length !== 1 || normalized.children[0].type !== 'path') {
-      throw new Error('GraphConnector must normalize to exactly one Core Path.');
+      throw new Error('Relation must normalize to exactly one Core Path.');
     }
-    return createGraphConnector({
+    return createRelation({
       ...base,
       id,
-      children: normalized.children[0].children as IRGraphConnector['children'],
+      children: normalized.children[0].children as IRRelation['children'],
     });
   }
   if ('way' in input && input.way !== undefined) {
-    return createGraphConnector({ ...input, id, way: input.way });
+    return createRelation({ ...input, id, way: input.way });
   }
-  return createGraphConnector({ ...input, id, children: input.children });
+  return createRelation({ ...input, id, children: input.children });
 };
 
-/** GraphFrame 的 InputEmbed adapter */
-export const GraphFrameInputEmbedAdapter: InputEmbedAdapter<InputGraphFrame> = {
-  kind: GraphFrameEmbedKind,
+/** Container 的 InputEmbed adapter */
+export const ContainerInputEmbedAdapter: InputEmbedAdapter<InputContainer> = {
+  kind: ContainerEmbedKind,
   lower: (props, context) => {
     const { header, sections, id, ...input } = props;
     const collected: CollectedInputDependencies = { roots: [], providers: [], authoringSites: [] };
     return {
-      node: createGraphFrame({
+      node: createContainer({
         ...input,
-        id: id ?? `${context.id}/graphFrame`,
+        id: id ?? `${context.id}/container`,
         ...(header === undefined
           ? {}
-          : { header: normalizeGraphFrameRegion(header, 'GraphFrameHeader', context, collected) }),
+          : { header: normalizeContainerRegion(header, 'ContainerHeader', context, collected) }),
         ...(sections === undefined
           ? {}
-          : { sections: sections.map(section => normalizeGraphFrameSection(section, context, collected)) }),
+          : { sections: sections.map(section => normalizeContainerSection(section, context, collected)) }),
       }),
       providerDependencies: {
-        roots: [GraphFrameProvider.key, ...collected.roots],
-        providers: [GraphFrameProvider, ...collected.providers],
+        roots: [ContainerProvider.key, ...collected.roots],
+        providers: [ContainerProvider, ...collected.providers],
       },
       ...(collected.authoringSites.length === 0 ? {} : { authoringSites: collected.authoringSites }),
     };
   },
 };
 
-/** 创建 GraphFrame 的 authoring embed 节点 */
-export const graphFrame = (id: string, input: InputGraphFrame): InputEmbed<InputGraphFrame> => ({
+/** 创建 Container 的 authoring embed 节点 */
+export const container = (id: string, input: InputContainer): InputEmbed<InputContainer> => ({
   type: 'embed',
-  kind: GraphFrameEmbedKind,
+  kind: ContainerEmbedKind,
   id,
   props: input,
 });
 
-/** GraphNode 的 InputEmbed adapter */
-export const GraphNodeInputEmbedAdapter: InputEmbedAdapter<InputGraphNode> = {
-  kind: GraphNodeEmbedKind,
+/** Entity 的 InputEmbed adapter */
+export const EntityInputEmbedAdapter: InputEmbedAdapter<InputEntity> = {
+  kind: EntityEmbedKind,
   lower: (props, context) => ({
-    node: createGraphNode({ ...normalizeGraphNode(props, context), id: context.id }),
-    providerDependencies: { roots: [GraphNodeProvider.key], providers: [GraphNodeProvider] },
+    node: createEntity({ ...normalizeEntity(props, context), id: context.id }),
+    providerDependencies: { roots: [EntityProvider.key], providers: [EntityProvider] },
   }),
 };
 
-/** 创建 GraphNode 的 authoring embed 节点 */
-export const graphNode = (id: string, input: InputGraphNode): InputEmbed<InputGraphNode> => ({
+/** 创建 Entity 的 authoring embed 节点 */
+export const entity = (id: string, input: InputEntity): InputEmbed<InputEntity> => ({
   type: 'embed',
-  kind: GraphNodeEmbedKind,
+  kind: EntityEmbedKind,
   id,
   props: input,
 });
 
-/** GraphConnector 的 InputEmbed adapter */
-export const GraphConnectorInputEmbedAdapter: InputEmbedAdapter<InputGraphConnector> = {
-  kind: GraphConnectorEmbedKind,
+/** Relation 的 InputEmbed adapter */
+export const RelationInputEmbedAdapter: InputEmbedAdapter<InputRelation> = {
+  kind: RelationEmbedKind,
   lower: (props, context) => ({
-    node: createEmbeddedGraphConnector(context.id, props, context),
-    providerDependencies: { roots: [GraphConnectorProvider.key], providers: [GraphConnectorProvider] },
+    node: createEmbeddedRelation(context.id, props, context),
+    providerDependencies: { roots: [RelationProvider.key], providers: [RelationProvider] },
   }),
 };
 
-/** 创建 GraphConnector 的 authoring embed 节点 */
-export const graphConnector = (id: string, input: InputGraphConnector): InputEmbed<InputGraphConnector> => ({
+/** 创建 Relation 的 authoring embed 节点 */
+export const relation = (id: string, input: InputRelation): InputEmbed<InputRelation> => ({
   type: 'embed',
-  kind: GraphConnectorEmbedKind,
+  kind: RelationEmbedKind,
   id,
   props: input,
 });
@@ -242,10 +241,10 @@ const configureVanillaAdapter = <TProps>(
 
 /** 创建可一次性传给 Vanilla normalize 的完整 Graph adapter 集合 */
 export const createGraphVanillaAdapters = (): Array<InputEmbedAdapter<unknown>> => {
-  const [graphFrameProvider, graphNodeProvider, graphConnectorProvider] = createGraphProviders();
+  const [containerProvider, entityProvider, relationProvider] = createGraphProviders();
   return [
-    configureVanillaAdapter(GraphFrameInputEmbedAdapter, graphFrameProvider),
-    configureVanillaAdapter(GraphNodeInputEmbedAdapter, graphNodeProvider),
-    configureVanillaAdapter(GraphConnectorInputEmbedAdapter, graphConnectorProvider),
+    configureVanillaAdapter(ContainerInputEmbedAdapter, containerProvider),
+    configureVanillaAdapter(EntityInputEmbedAdapter, entityProvider),
+    configureVanillaAdapter(RelationInputEmbedAdapter, relationProvider),
   ];
 };

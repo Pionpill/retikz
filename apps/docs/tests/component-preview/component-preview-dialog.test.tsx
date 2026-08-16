@@ -157,7 +157,7 @@ describe('ComponentPreviewDialog', () => {
     );
 
     expect(markup).toContain('aria-label="Theme style"');
-    expect(markup).toContain('lucide-feather');
+    expect(markup).toContain('lucide-circle-dot');
   });
 
   it('按规定顺序渲染 header，并用弹窗 runtime 求值动作插槽', () => {

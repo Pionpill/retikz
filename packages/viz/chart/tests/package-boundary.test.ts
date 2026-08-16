@@ -100,13 +100,12 @@ const publishablePackageExpectations = {
     retikz: { domain: 'viz', layer: 'adapter', publishable: true, releaseGroup: 'chart' },
     dependencies: {
       '@retikz/chart': 'workspace:*',
+      '@retikz/chart-vanilla': 'workspace:^',
       '@retikz/core': 'workspace:^',
       '@retikz/data': 'workspace:^',
-      '@retikz/layout': 'workspace:^',
       '@retikz/plot': 'workspace:^',
       '@retikz/plot-react': 'workspace:^',
       '@retikz/react': 'workspace:^',
-      '@retikz/standard': 'workspace:^',
     },
   },
   vanilla: {

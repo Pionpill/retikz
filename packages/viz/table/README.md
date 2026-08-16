@@ -71,6 +71,6 @@ pnpm add @retikz/table
 This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
-See the [table architecture](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-design.md)
-and [table capability boundary](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-visualization-complete.md)
+See the [table architecture](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/table-design.md)
+and [table capability boundary](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/table-visualization-complete.md)
 for the model and ownership boundary.
