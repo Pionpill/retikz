@@ -12,7 +12,7 @@ import type {
   IRPlotMarkOperation,
   IRPlotPaletteResolution,
   IRPlotScaleOperation,
-  IRPlotSpec,
+  IRPlot,
   IRPlotThemeAuthoredOverrideRecord,
   IRPlotThemeTokenResolution,
   IRPlotThemeTokenRuleSourceRecord,
@@ -31,7 +31,7 @@ import type {
   GuideTickSourceSchema,
   MarkOperationSchema,
   PlotPaletteResolutionSchema,
-  PlotSpecSchema,
+  PlotSchema,
   PlotThemeAuthoredOverrideRecordSchema,
   PlotThemeTokenResolutionSchema,
   PlotThemeTokenRuleSourceRecordSchema,
@@ -41,7 +41,7 @@ import type {
 } from '../../src';
 
 it('exports owner-qualified plot IR types from their schema truth', () => {
-  expectTypeOf<IRPlotSpec>().toEqualTypeOf<z.infer<typeof PlotSpecSchema>>();
+  expectTypeOf<IRPlot>().toEqualTypeOf<z.infer<typeof PlotSchema>>();
   expectTypeOf<IRPlotCoordinateOperation>().toEqualTypeOf<z.infer<typeof CoordinateOperationSchema>>();
   expectTypeOf<IRPlotDomainPadding>().toEqualTypeOf<z.infer<typeof DomainPaddingSchema>>();
   expectTypeOf<IRPlotEncoding>().toEqualTypeOf<z.infer<typeof EncodingSchema>>();

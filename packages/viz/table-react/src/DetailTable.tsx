@@ -1,5 +1,5 @@
 import type { ExternalRow } from '@retikz/data';
-import type { DetailTableSpecInput, TableDetailColumnInput } from '@retikz/table';
+import type { DetailTableInput, TableDetailColumnInput } from '@retikz/table';
 import type { FC, ReactNode } from 'react';
 
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
@@ -10,7 +10,7 @@ import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime 
 import { TableRuntimeView } from './table-view';
 
 type DetailTableRootProps = TableCommonProps &
-  Omit<DetailTableSpecInput, 'columns'> & {
+  Omit<DetailTableInput, 'columns'> & {
     /** dataRef 对应的运行时数据行 */
     data: Array<ExternalRow>;
   };

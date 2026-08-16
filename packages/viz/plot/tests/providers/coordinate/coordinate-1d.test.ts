@@ -3,10 +3,10 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * 一维坐标系族 lowering 契约测试：cartesian1D（直线）+ polar1D（圆周）。
@@ -17,12 +17,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
@@ -42,8 +42,8 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 const dist = (a: [number, number], b: [number, number]): number => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 describe('cartesian1D 直线坐标系 (contract)', () => {
-  const rugSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const rugSpec = (extra: Record<string, unknown> = {}): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -78,7 +78,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 
   // 交互：1D × categorical color → 分色子 Scope（非位置通道仍工作）
   it('cartesian1d_with_color_groups_into_subscopes', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -104,7 +104,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 
   // 错误路径：interval（柱）在 cartesian1D 无几何意义 → fail-loud
   it('cartesian1d_interval_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -117,7 +117,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 
   // 错误路径：缺单维通道 → fail-loud（contract 必填角色校验）
   it('cartesian1d_missing_x_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -130,7 +130,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 
   // 错误路径：非法维度（cartesian1D 合法集 {x}）→ fail-loud
   it('cartesian1d_angle_dimension_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -144,7 +144,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 
   // 交互：1D 直线轴 guide 下沉（dimension x 合法、产出轴层）
   it('cartesian1d_axis_guide_lowers', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -159,7 +159,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   });
 
   it('cartesian1d_does_not_emit_grid_without_a_plot_area', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -177,8 +177,8 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   // 布局：480×300、无角向轴 → 圆心 [240,150]、outerRadius 150
   const CENTER: [number, number] = [240, 150];
 
-  const ringSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const ringSpec = (extra: Record<string, unknown> = {}): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -215,7 +215,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
 
   // 交互：polar1D 复用 angle（x 别名）+ 角向轴 guide 下沉
   it('polar1d_angular_axis_guide_lowers', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -229,7 +229,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   });
 
   it('polar1d_does_not_emit_grid_without_a_plot_area', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -246,7 +246,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
 
   // 错误路径：sector 在 polar1D 无几何意义 → fail-loud
   it('polar1d_sector_fails_loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -265,7 +265,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
 
   // 错误路径：非法维度（polar1D 合法集 {angle, x}）→ fail-loud
   it('polar1d_radius_dimension_rejected_by_coordinate_definition_roles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

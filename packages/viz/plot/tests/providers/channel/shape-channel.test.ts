@@ -4,20 +4,20 @@ import type { IRShapeValue } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
@@ -37,8 +37,8 @@ const shapeOf = (node: IRNode): IRShapeValue | undefined => node.shape;
 
 const pointSpec = (
   shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined,
-): IRPlotSpec =>
-  PlotSpecSchema.parse({
+): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -73,7 +73,7 @@ describe('shape channel 类别映射', () => {
 
   it('plotTheme_shape_palette_preserves_structured_refs', () => {
     const custom = [{ type: 'polygon', params: { sides: 5, rotate: -90 } }, 'cross'] satisfies Array<IRShapeValue>;
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       ...pointSpec({ kind: 'field', value: 'g' }),
       plotTheme: { palette: { shape: custom } },
     });
@@ -124,7 +124,7 @@ describe('shape channel 类别映射', () => {
 
   // shape、color 与 size 可以同时生效
   it('shape_with_color_and_size_coexist', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

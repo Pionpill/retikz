@@ -33,14 +33,14 @@ beta.1 直接采用破坏式迁移。现有 `<Plot data model dataTransforms>`�
 plot 入口保持 plot 自身 API：
 
 ```ts
-import { lowerPlots, type IRPlotSpec, type IRPlotTransform } from '@retikz/plot';
+import { lowerPlots, type IRPlot, type IRPlotTransform } from '@retikz/plot';
 ```
 
 data API 从 data 包获取：
 
 ```ts
 import { type ExternalDatasets, type IRDataTransform } from '@retikz/data';
-import { lowerPlots, type IRPlotSpec, type IRPlotTransform } from '@retikz/plot';
+import { lowerPlots, type IRPlot, type IRPlotTransform } from '@retikz/plot';
 ```
 
 `IRPlotTransform` 仍属于 plot schema：它包含共享 data transform、plot-only transform 与外部 transform passthrough。共享 transform definition helper 与外部数据集类型属于 data。

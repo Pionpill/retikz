@@ -15,14 +15,14 @@ ADR-01 已预留 `placement.kind = 'track'` 与 `scaffold` / `track` 引用。AD
 
 ## 决策：composition.scaffolds 声明共享坐标骨架，track scope 挂载到 scaffold track
 
-`IRPlotSpec.composition` 新增 `scaffolds`。每个 scaffold 声明一个基础 coordinate、共享 role 列表和 track 列表。track scope 通过 ADR-01 的 `placement: { kind: 'track', scaffold, track }` 挂载到某个 track。共享 role 的 scale/domain/range 由 scaffold 管理；local role 的 range 由 track band 管理。
+`IRPlot.composition` 新增 `scaffolds`。每个 scaffold 声明一个基础 coordinate、共享 role 列表和 track 列表。track scope 通过 ADR-01 的 `placement: { kind: 'track', scaffold, track }` 挂载到某个 track。共享 role 的 scale/domain/range 由 scaffold 管理；local role 的 range 由 track band 管理。
 
 ```ts
-type SharedScaffoldSpec = {
+type SharedScaffold = {
   id: string;
   coordinate: IRPlotCoordinateOperation;
   sharedRoles: Array<string>;
-  tracks: Array<ScaffoldTrackSpec>;
+  tracks: Array<ScaffoldTrack>;
   frame?: ScaffoldFrameModeValue;
 };
 
@@ -33,7 +33,7 @@ const ScaffoldFrameMode = {
 
 type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
 
-type ScaffoldTrackSpec = {
+type ScaffoldTrack = {
   id: string;
   band: {
     role: string;
@@ -43,8 +43,8 @@ type ScaffoldTrackSpec = {
   order?: number;
 };
 
-type CoordinateCompositionSpec = {
-  scaffolds?: Array<SharedScaffoldSpec>;
+type CoordinateComposition = {
+  scaffolds?: Array<SharedScaffold>;
 };
 ```
 

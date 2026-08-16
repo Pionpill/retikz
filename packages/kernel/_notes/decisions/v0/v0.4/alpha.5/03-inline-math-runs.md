@@ -12,7 +12,7 @@ alpha.5 早期草稿曾把独立公式和带框公式设计为 node 内容字段
 
 ## 决策
 
-`IRLineSpec` 增加 run 序列形态：
+`IRLine` 增加 run 序列形态：
 
 - `TextRun` 表示普通文字片段，保留 fill / opacity / font 等文字样式能力。
 - `MathRun` 使用 `{ tex, displayMode?, fill? }` 载荷，经注入的 `lowerTex` 降解为 glyph path。
@@ -37,7 +37,7 @@ alpha.5 早期草稿曾把独立公式和带框公式设计为 node 内容字段
 
 ## 影响
 
-- core 新增 `TexContentSchema`、`TextRunSchema`、`MathRunSchema`、`MixedLineSchema`，并扩展 `IRLineSpec`。
+- core 新增 `TexContentSchema`、`TextRunSchema`、`MathRunSchema`、`MixedLineSchema`，并扩展 `IRLine`。
 - core 新增 `parseInlineRuns` 和 `compile/text-layout.ts`，供 node text、node label、edge label 复用。
 - compile warn code 增加 `TEX_LOWERER_MISSING`、`TEX_INVALID`、`TEXT_TEX_PARSE_ERROR`。
 - React `Layout` 和 Vanilla `toScene` / `renderToString` 透传 `lowerTex`。

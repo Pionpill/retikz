@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 import type { FlexLayoutItemInput } from '@retikz/layout';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { NodeSchema } from '@retikz/core';
 import {
@@ -98,7 +98,7 @@ const presetNode = (
 /** 按 canonical children 顺序映射为 Layout Flex，绝不按 preset 二次排序 */
 export const resolveChartPresentation = (
   presentation: IRChartPresentation | undefined,
-  plot: IRPlotSpec,
+  plot: IRPlot,
   tokens: IRChartResolvedThemeTokens,
 ): ResolvedChartPresentation => {
   if (presentation === undefined) {

@@ -54,7 +54,7 @@ const yAxis = {
 
 Guide 文本统一使用 core 文本 vocabulary：内容使用 `TextBlockSchema`，字体使用 `FontSchema`，文本样式使用 `textColor` / `opacity` / `align` / `lineHeight` / `maxTextWidth`。Plot 不直接暴露完整 `NodeSchema`，因为 guide layout 必须控制 position、shape、padding、minimum size、label 等 Node 字段；但 title / tick label / legend label 的文本内容和文本样式必须与 core Node 文本保持同名同义。
 
-Guide 线条样式同样复用 core path vocabulary：`GuideLineStyleSchema` 只包含 `stroke`、`strokeWidth`、`drawOpacity`、`dashPattern`、`dashOffset`。IRPlotSpec schema 不新增 `dash` 这类平行 shorthand；如果 React / Vanilla 以后需要更短 authoring，可以在 adapter 入参层转换成 IRPlotSpec 的 `dashPattern` / `dashOffset`。
+Guide 线条样式同样复用 core path vocabulary：`GuideLineStyleSchema` 只包含 `stroke`、`strokeWidth`、`drawOpacity`、`dashPattern`、`dashOffset`。IRPlot schema 不新增 `dash` 这类平行 shorthand；如果 React / Vanilla 以后需要更短 authoring，可以在 adapter 入参层转换成 IRPlot 的 `dashPattern` / `dashOffset`。
 
 Guide tick 语义跨 axis 与 legend ramp 共用：`GuideTickSourceSchema` 拥有 `count` / `values`，`GuideTickLabelFormatSchema` 拥有 `format`，两者共同生成统一的 tick values 与 labels。Axis 的 `tickLabels` 只在此基础上追加 layout 和 text style。
 
@@ -67,7 +67,7 @@ Guide tick 语义跨 axis 与 legend ramp 共用：`GuideTickSourceSchema` 拥�
 
 ## 不在本 ADR 范围
 
-- `IRPlotSpec.theme` 的入口与 merge priority；由 ADR-03 处理。
+- `IRPlot.theme` 的入口与 merge priority；由 ADR-03 处理。
 - legend / palette token；由 ADR-04 处理。
 - 自动文字测量、tick label 防重叠、自动旋转、自动抽稀。
 - 新增 reference line / reference band guide。

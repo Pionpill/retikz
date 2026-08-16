@@ -11,7 +11,7 @@ coordinate、scale、transform 都已经朝 runtime definition / registry 方向
 
 ## 决策
 
-Plot IR 增加 custom mark passthrough，`IRPlotSpec.marks` 接收 `IRPlotMarkOperation`。内置 mark 继续走静态 union；未知 mark type 通过 custom schema 保留 JSON-serializable 配置。
+Plot IR 增加 custom mark passthrough，`IRPlot.marks` 接收 `IRPlotMarkOperation`。内置 mark 继续走静态 union；未知 mark type 通过 custom schema 保留 JSON-serializable 配置。
 
 新增 / 收敛 mark runtime definition：
 

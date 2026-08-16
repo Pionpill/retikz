@@ -3,7 +3,7 @@ title: API Reference
 description: Look up Table input contracts, layout configuration, Manifest outputs, and React, Vanilla, and compile runtime contracts.
 ---
 
-API Reference is a contract dictionary rather than an introductory guide. TableSpec and Cell content, detail-only structure, layout inputs, compile outputs, and runtime wiring each have a dedicated page.
+API Reference is a contract dictionary rather than an introductory guide. IRTable and Cell content, detail-only structure, layout inputs, compile outputs, and runtime wiring each have a dedicated page.
 
 > This is the reference layer. Start with [Detail Table](/viz/table/detail) to build a table, or [Table Model](/viz/table/model) to understand the shared abstractions.
 
@@ -12,7 +12,7 @@ API Reference is a contract dictionary rather than an introductory guide. TableS
 | Topic                   | Responsibility                                  | Reach for it when                         |
 | ----------------------- | ----------------------------------------------- | ----------------------------------------- |
 | Contract - Detail Table | Data references, columns, and detail Structure  | Generating or validating detail IR        |
-| Contract - Table        | TableSpec, manual Cells, and canonical payloads | Generating or validating Table IR         |
+| Contract - Table        | IRTable, manual Cells, and canonical payloads | Generating or validating Table IR         |
 | Contract - Layout       | Cell span/layout, tracks, and border inputs     | Configuring layout and content fitting    |
 | Contract - Artifact     | Resolved tracks, Cell boxes, borders, locators  | Reading same-compile layout artifacts     |
 | Runtime                 | React / Vanilla, compile, and artifact wiring   | Integrating a host, SSR, or Table runtime |
@@ -29,7 +29,7 @@ API Reference is a contract dictionary rather than an introductory guide. TableS
   <LinkedCard href="/viz/table/reference/contract-table">
     <span className="font-semibold">Contract - Table</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      TableSpec, manual Cells, payloads, and presentation references
+      IRTable, manual Cells, payloads, and presentation references
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/table/reference/contract-layout">

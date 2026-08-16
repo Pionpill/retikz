@@ -79,9 +79,9 @@ const CustomTableStructureSchema = z
 ### Definition / registry
 
 ```ts
-type TableStructureDefinition<TSpec extends IRTableStructureOperation = IRTableStructureOperation> = {
-  schema: ZodType<TSpec>;
-  build: (spec: TSpec, context: TableStructureContext) => TableStructureOutput;
+type TableStructureDefinition<TClip extends IRTableStructureOperation = IRTableStructureOperation> = {
+  schema: ZodType<TClip>;
+  build: (spec: TClip, context: TableStructureContext) => TableStructureOutput;
 };
 
 type AnyTableStructureDefinition = Omit<TableStructureDefinition, 'schema' | 'build'> & {
@@ -89,9 +89,9 @@ type AnyTableStructureDefinition = Omit<TableStructureDefinition, 'schema' | 'bu
   build: (spec: never, context: TableStructureContext) => TableStructureOutput;
 };
 
-const defineTableStructure = <TSpec extends IRTableStructureOperation>(
-  definition: TableStructureDefinition<TSpec>,
-): TableStructureDefinition<TSpec> => definition;
+const defineTableStructure = <TClip extends IRTableStructureOperation>(
+  definition: TableStructureDefinition<TClip>,
+): TableStructureDefinition<TClip> => definition;
 ```
 
 - `defineTableStructure()` 是作者侧 typed identity / future normalization hook

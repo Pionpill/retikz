@@ -8,7 +8,7 @@ import type {
   MarkerPrimitive,
   PatternDefinition,
 } from '../../src/contract';
-import type { IRClipSpec, IRPaintSpec, IRScene } from '../../src/schemas';
+import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/scene';
@@ -25,7 +25,7 @@ const patternContext = (patterns: ReadonlyArray<PatternDefinition> = []) => ({
   irPath: 'children[0].node.fill',
 });
 
-const sceneWithPaint = (paint: IRPaintSpec): IRScene => ({
+const sceneWithPaint = (paint: IRPaint): IRScene => ({
   version: 1,
   type: 'scene',
   children: [{ type: 'node', position: [0, 0], fill: paint }],
@@ -74,7 +74,7 @@ describe('resolve/resource paint', () => {
   });
 
   it('preserves dedupe boundary after compile consumes resolved paint', () => {
-    const paint: IRPaintSpec = {
+    const paint: IRPaint = {
       kind: 'linearGradient',
       stops: [
         { offset: 0, color: '#000' },
@@ -171,7 +171,7 @@ describe('resolve/resource clip', () => {
     const wrapperResolve = vi.fn(
       (spec: { child: { kind: 'leaf'; radius: number } }, context: ClipResolveContext): ClipShape => ({
         kind: 'compound',
-        children: [context.resolve(spec.child as IRClipSpec)],
+        children: [context.resolve(spec.child as IRClip)],
       }),
     );
     const wrapper = defineClip({

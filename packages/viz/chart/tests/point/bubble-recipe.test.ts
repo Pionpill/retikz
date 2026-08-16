@@ -1,10 +1,10 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeInvariantError, ChartRecipeStyleContext } from '../../src/point/recipe';
 
-import { BubbleChartRecipe, BubbleChartSpecSchema } from '../../src/point/bubble';
+import { BubbleChartRecipe, BubbleChartSchema } from '../../src/point/bubble';
 import { BUILTIN_POINT_CHART_RECIPES } from '../../src/point/catalog';
 import { ChartRecipeInvariantReason } from '../../src/point/recipe';
 
@@ -16,7 +16,7 @@ const visibleStyle: ChartRecipeStyleContext = {
 };
 
 const bubble = (overrides: Record<string, unknown> = {}) =>
-  BubbleChartSpecSchema.parse({
+  BubbleChartSchema.parse({
     namespace: 'chart',
     type: 'bubble',
     id: 'sales',
@@ -129,17 +129,17 @@ describe('Bubble Chart recipe', () => {
     {
       reason: ChartRecipeInvariantReason.RequiredScale,
       path: ['scales'],
-      mutate: (plot: IRPlotSpec): IRPlotSpec => ({ ...plot, scales: plot.scales.slice(1) }),
+      mutate: (plot: IRPlot): IRPlot => ({ ...plot, scales: plot.scales.slice(1) }),
     },
     {
       reason: ChartRecipeInvariantReason.CoreMark,
       path: ['marks'],
-      mutate: (plot: IRPlotSpec): IRPlotSpec => ({ ...plot, marks: [] }),
+      mutate: (plot: IRPlot): IRPlot => ({ ...plot, marks: [] }),
     },
     {
       reason: ChartRecipeInvariantReason.CoreMark,
       path: ['marks'],
-      mutate: (plot: IRPlotSpec): IRPlotSpec => ({
+      mutate: (plot: IRPlot): IRPlot => ({
         ...plot,
         marks: [{ ...plot.marks[0], size: { kind: 'constant', value: 8 } }],
       }),

@@ -80,7 +80,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 渐变描边
 
-`stroke` 除纯色字符串外还接 `IRPaintSpec`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。用面板调整线性渐变角度与三个色标，可直接观察同一条路径上的颜色分布。
+`stroke` 除纯色字符串外还接 `IRPaint`。线性 / 径向渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。用面板调整线性渐变角度与三个色标，可直接观察同一条路径上的颜色分布。
 
 <ComponentPreview files="path-stroke-paint" size="sm" />
 
@@ -230,7 +230,7 @@ import { Path, Step } from '@retikz/react';
 | `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
 | `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |
 | `color`          | `string`                                            | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
-| `stroke`         | `string` \| `IRPaintSpec`                           | `currentColor` | 描边 paint：CSS 颜色或 IRPaintSpec（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                          |
+| `stroke`         | `string` \| `IRPaint`                           | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                          |
 | `strokeWidth`    | `number`                                            | `1`            | 描边宽度                                                                                                                                                                                                          |
 | `dashPattern`    | `Array<number>`                                     | —              | dash/gap 长度序列（如 `[4, 2]`）                                                                                                                                                                                  |
 | `dashOffset`     | `number`                                            | —              | 虚线起点偏移，单位同路径 user units                                                                                                                                                                               |
@@ -240,7 +240,7 @@ import { Path, Step } from '@retikz/react';
 | `thickness`      | <ApiValues name="PathThickness" />                  | —              | 组件 / builder 语法糖：生成 IR 前解析成 `strokeWidth`；显式 `strokeWidth` 始终优先                                                                                                                                |
 | `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)）                                                                                                                                                     |
 | `arrowDetail`    | `IRArrowDetail`                                     | —              | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow)                                                                                                                                                 |
-| `fill`           | `string` \| `IRPaintSpec`                           | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaintSpec（渐变 / 图案 / 图片）                                                                                                                                                 |
+| `fill`           | `string` \| `IRPaint`                           | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaint（渐变 / 图案 / 图片）                                                                                                                                                 |
 | `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
 | `opacity`        | `number`                                            | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |
 | `fillOpacity`    | `number`                                            | —              | 仅 fill 透明度 0~1                                                                                                                                                                                                |

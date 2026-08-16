@@ -17,9 +17,9 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
     theme:
       '当前子树的稀疏 Theme 覆盖；style、mode 与 owner namespace token key 分别继承，只传给后代 Composite；Core 图元不会自动着色',
     color: '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
-    fill: '作用域级默认填充；CSS color 字符串或 PaintSpec',
+    fill: '作用域级默认填充；CSS color 字符串或 IRPaint',
     fillOpacity: '作用域级默认填充不透明度 0..1',
-    stroke: '作用域级默认描边；CSS color 字符串或 PaintSpec',
+    stroke: '作用域级默认描边；CSS color 字符串或 IRPaint',
     strokeWidth: '作用域级默认描边宽度（用户单位）',
     strokeOpacity: '作用域级默认描边不透明度 0..1',
     opacity: '作用域级默认整体不透明度 0..1',
@@ -101,11 +101,11 @@ Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿�
 
 `pivot` 缺省 `origin`，接受 [Scope 自身点](#scopeselfpoint)。v0.5 已移除 IR rotate 的 `cx` / `cy`；旧写法迁移为 `pivot: [cx, cy]`。Scene transform 的 `cx` / `cy` 仍是 lowering 输出。
 
-<span id="clipspec"></span>
+<span id="clip"></span>
 
 ## 裁剪
 
-`ClipSpecSchema` 是 `Scope.clip` 接受的 Core 契约。内置几何直接使用下面的 JSON 形状。其他任意 `kind` 都是 JSON-safe 的自定义裁剪 spec：Core 保留可序列化字段，再通过贡献给 `CompileOptions.clips` 的对应 Definition 校验和解析。
+`ClipSchema` 是 `Scope.clip` 接受的 Core 契约。内置几何直接使用下面的 JSON 形状。其他任意 `kind` 都是 JSON-safe 的自定义裁剪 spec：Core 保留可序列化字段，再通过贡献给 `CompileOptions.clips` 的对应 Definition 校验和解析。
 
 | 分支              | 判别方式               | 内容                                     |
 | ----------------- | ---------------------- | ---------------------------------------- |

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 const baseSpec = {
   namespace: 'plot',
@@ -20,7 +20,7 @@ const baseSpec = {
 
 describe('composition structure schema', () => {
   it('composition_views_round_trip_as_json', () => {
-    const parsed = PlotSpecSchema.parse(JSON.parse(JSON.stringify(baseSpec)));
+    const parsed = PlotSchema.parse(JSON.parse(JSON.stringify(baseSpec)));
 
     expect(parsed).toEqual(baseSpec);
   });
@@ -49,7 +49,7 @@ describe('composition structure schema', () => {
       },
     };
 
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+    expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
   it('tracks_arrangement_with_generated_view_template_parses', () => {
@@ -76,7 +76,7 @@ describe('composition structure schema', () => {
       },
     };
 
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+    expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
   it('mixed_facet_and_tracks_arrangements_are_rejected', () => {
@@ -102,7 +102,7 @@ describe('composition structure schema', () => {
       },
     };
 
-    expect(() => PlotSpecSchema.parse(spec)).toThrow(/cannot mix facet and track arrangements/i);
+    expect(() => PlotSchema.parse(spec)).toThrow(/cannot mix facet and track arrangements/i);
   });
 
   it('axis_grid_selected_selector_parses_with_new_view_and_arrangement_names', () => {
@@ -125,7 +125,7 @@ describe('composition structure schema', () => {
       ],
     };
 
-    expect(PlotSpecSchema.parse(spec)).toEqual(spec);
+    expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
   it('legacy_composition_fields_are_rejected', () => {
@@ -137,7 +137,7 @@ describe('composition structure schema', () => {
       },
     };
 
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => PlotSchema.parse(spec)).toThrow();
   });
 
   it('negative_spacing_is_rejected', () => {
@@ -149,6 +149,6 @@ describe('composition structure schema', () => {
       },
     };
 
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => PlotSchema.parse(spec)).toThrow();
   });
 });

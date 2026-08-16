@@ -6,7 +6,7 @@ import type {
   MarkerPrimitive,
   PathPrim,
   RectPrim,
-  ResolvedArrowEndSpec,
+  ResolvedArrowEnd,
   ScenePrimitive,
   TextPrim,
 } from '../../src/contract';
@@ -37,13 +37,13 @@ const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
   textsOf(ir).find(t => t.lines[0]?.text === content);
 
 /**
- * 从已解析 `ResolvedArrowEndSpec` 的 marker 几何里抽"主导箭头颜色"
- * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ResolvedArrowEndSpec`——解析后的颜色物化进
+ * 从已解析 `ResolvedArrowEnd` 的 marker 几何里抽"主导箭头颜色"
+ * @description 新契约下视觉输入（color）在 compile 被消费、不再挂 `ResolvedArrowEnd`——解析后的颜色物化进
  *   `marker[]` 内部几何的 fill / stroke（实心走 fill、空心走 stroke；contextStroke 表示继承 path stroke）。
  *   测断言箭头颜色优先级链时改读此处。递归穿 group 子原语，返回首个非 contextStroke 的纯色字符串；
  *   全部 contextStroke / 无 paint 时返回 undefined（= 走继承，未冻结颜色）
  */
-const markerPaintColor = (spec: ResolvedArrowEndSpec | undefined): string | undefined => {
+const markerPaintColor = (spec: ResolvedArrowEnd | undefined): string | undefined => {
   if (!spec) return undefined;
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
@@ -94,7 +94,7 @@ describe('Happy: 主色级联 / 四通道', () => {
     expect(textWith(ir, 'A')?.fill).toBe('blue');
     const path = linePathOf(ir);
     expect(path?.stroke).toBe('blue');
-    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ResolvedArrowEndSpec）
+    // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ResolvedArrowEnd）
     expect(markerPaintColor(path?.arrowEnd)).toBe('blue');
     expect(textWith(ir, 'e')?.fill).toBe('blue');
   });
@@ -157,7 +157,7 @@ describe('Happy: 主色级联 / 四通道', () => {
       ],
     };
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
-    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 6 × 1.5 = 9）；scale 不再挂 ResolvedArrowEndSpec
+    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 6 × 1.5 = 9）；scale 不再挂 ResolvedArrowEnd
     expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(9, 5);
   });
 });

@@ -1,29 +1,29 @@
 ---
 title: Logic Node
-description: Use one GraphNode component and role values for terminal, stage, decision, and junction semantics.
+description: Use one Entity component and role values for terminal, stage, decision, and junction semantics.
 ---
 
-`GraphNode` is a lightweight semantic IR value that retains the `graph` namespace. It uses `role` for terminal, stage, decision, and junction semantics, keeps that information visible to tools and LLMs, and lowers to one same-id Core `Node`
+`Entity` is a lightweight semantic IR value that retains the `graph` namespace. It uses `role` for terminal, stage, decision, and junction semantics, keeps that information visible to tools and LLMs, and lowers to one same-id Core `Node`
 
 ## Usage
 
 ```tsx
 import { Layout, Text } from '@retikz/react';
-import { GraphNode } from '@retikz/graph-react';
+import { Entity } from '@retikz/graph-react';
 ```
 
 ```tsx
 <Layout width={440} height={180}>
-  <GraphNode id="start" role="terminal" position={[20, 70]}>
+  <Entity id="start" role="terminal" position={[20, 70]}>
     Start
-  </GraphNode>
-  <GraphNode id="step" role="stage" position={[130, 70]}>
+  </Entity>
+  <Entity id="step" role="stage" position={[130, 70]}>
     Process
-  </GraphNode>
-  <GraphNode id="check" role="decision" position={[250, 70]}>
+  </Entity>
+  <Entity id="check" role="decision" position={[250, 70]}>
     <Text>Ready?</Text>
-  </GraphNode>
-  <GraphNode id="join" role="junction" position={[380, 80]} />
+  </Entity>
+  <Entity id="join" role="junction" position={[380, 80]} />
 </Layout>
 ```
 
@@ -38,7 +38,7 @@ String children become Node text, and `<Text>` works as it does with Core `Node`
 
 ## Visual variants
 
-Logic nodes use the five-value Graph-owned `GraphNodeVariant` vocabulary rather than Core or Viz global Theme Styles. `variant` is the explicit baseline for one node; when omitted, the nearest `GraphFrame.graphNodeVariant` applies, then `default`
+Logic nodes use the five-value Graph-owned `EntityVariant` vocabulary rather than Core or Viz global Theme Styles. `variant` is the explicit baseline for one node; when omitted, the nearest `Container.entityVariant` applies, then `default`
 
 | variant     | Text           | Border           | Fill                         |
 | ----------- | -------------- | ---------------- | ---------------------------- |
@@ -52,21 +52,21 @@ Logic nodes use the five-value Graph-owned `GraphNodeVariant` vocabulary rather 
 
 <ComponentPreview files="graph-node" size="lg" />
 
-## GraphFrame inheritance
+## Container inheritance
 
-`GraphFrame.graphNodeVariant` provides a default for GraphNode values in its header, sections, nested `GraphFrame`, and Core `Scope` descendants. A nested Frame creates a new scope, an explicit node `variant` wins, and `variant="default"` resets an outer value. The Frame shell, divider, GraphConnector, and sibling branches are unaffected
+`Container.entityVariant` provides a default for Entity values in its header, sections, nested `Container`, and Core `Scope` descendants. A nested Frame creates a new scope, an explicit node `variant` wins, and `variant="default"` resets an outer value. The Frame shell, divider, Relation, and sibling branches are unaffected
 
 ```tsx
-import { GraphFrame, GraphFrameSection, GraphNode } from '@retikz/graph-react';
+import { Container, ContainerSection, Entity } from '@retikz/graph-react';
 
-<GraphFrame id="order" graphNodeVariant="secondary">
-  <GraphFrameSection sectionKey="input">
-    <GraphNode id="load" role="stage" position={[0, 0]} />
-  </GraphFrameSection>
-  <GraphFrameSection sectionKey="important">
-    <GraphNode id="validate" role="stage" position={[0, 0]} variant="primary" />
-  </GraphFrameSection>
-</GraphFrame>;
+<Container id="order" entityVariant="secondary">
+  <ContainerSection sectionKey="input">
+    <Entity id="load" role="stage" position={[0, 0]} />
+  </ContainerSection>
+  <ContainerSection sectionKey="important">
+    <Entity id="validate" role="stage" position={[0, 0]} variant="primary" />
+  </ContainerSection>
+</Container>;
 ```
 
 ## Direct, React, and Vanilla wiring
@@ -75,9 +75,9 @@ All three entry points share the same Graph IR and variant lowering path. Direct
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createGraphDefinitions, createGraphNode } from '@retikz/graph';
+import { createGraphDefinitions, createEntity } from '@retikz/graph';
 
-const node = createGraphNode({
+const node = createEntity({
   id: 'step',
   role: 'stage',
   position: [0, 0],
@@ -95,7 +95,7 @@ The following recipes stay in docs. They demonstrate composition, not new `Proce
 <ComponentPreview
   files="class-recipe"
   size="lg"
-  caption="A Class recipe using a GraphFrame header and typed sections."
+  caption="A Class recipe using a Container header and typed sections."
 />
 
 <ComponentPreview
@@ -112,22 +112,22 @@ The following recipes stay in docs. They demonstrate composition, not new `Proce
   description="Revisit this section when you need to understand the lowering boundary or diagnose paint behavior."
 />
 
-GraphNode owns its persisted graph identity, role, default shape, primary-color interpretation, and `GraphNodeVariant`. It does not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Core owns Node layout, targets, compilation, and Scene output; Graph projects the effective variant into ordinary Node paints during lowering and discards role at that boundary
+Entity owns its persisted graph identity, role, default shape, primary-color interpretation, and `EntityVariant`. It does not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Core owns Node layout, targets, compilation, and Scene output; Graph projects the effective variant into ordinary Node paints during lowering and discards role at that boundary
 
 ## API Reference
 
-| API                                        | Package                 | Purpose                                                                         |
-| ------------------------------------------ | ----------------------- | ------------------------------------------------------------------------------- |
-| `role: GraphNodeRoleValue`                 | `GraphNode` and IR      | Selects terminal, stage, decision, or junction semantics                        |
-| `variant?: GraphNodeVariantValue`          | `GraphNode` and IR      | Selects a visual variant; omission inherits the Frame default or uses `default` |
-| `shape?: NodeShapeInput`                   | `GraphNode` and IR      | Overrides the role-provided default shape                                       |
-| `graphNodeVariant?: GraphNodeVariantValue` | `GraphFrame`            | Sets the default variant for descendant GraphNode values                        |
-| `createGraphNode()`                        | `@retikz/graph`         | Creates canonical GraphNode IR                                                  |
-| `createGraphDefinitions()`                 | `@retikz/graph`         | Creates the complete Graph Definition set for direct IR                         |
-| `createGraphReactAdapters()`               | `@retikz/graph-react`   | Creates the three GraphFrame, GraphNode, and GraphConnector adapters            |
-| `createGraphVanillaAdapters()`             | `@retikz/graph-vanilla` | Creates the three GraphFrame, GraphNode, and GraphConnector adapters            |
+| API                                  | Package                 | Purpose                                                                         |
+| ------------------------------------ | ----------------------- | ------------------------------------------------------------------------------- |
+| `role: EntityRoleValue`              | `Entity` and IR         | Selects terminal, stage, decision, or junction semantics                        |
+| `variant?: EntityVariantValue`       | `Entity` and IR         | Selects a visual variant; omission inherits the Frame default or uses `default` |
+| `shape?: NodeShapeInput`             | `Entity` and IR         | Overrides the role-provided default shape                                       |
+| `entityVariant?: EntityVariantValue` | `Container`             | Sets the default variant for descendant Entity values                           |
+| `createEntity()`                     | `@retikz/graph`         | Creates canonical Entity IR                                                     |
+| `createGraphDefinitions()`           | `@retikz/graph`         | Creates the complete Graph Definition set for direct IR                         |
+| `createGraphReactAdapters()`         | `@retikz/graph-react`   | Creates the three Container, Entity, and Relation adapters                      |
+| `createGraphVanillaAdapters()`       | `@retikz/graph-vanilla` | Creates the three Container, Entity, and Relation adapters                      |
 
 ## Related
 
-- [GraphFrame](/schematic/graph/frame/graph-frame): reusable layout container and variant scope
-- [GraphConnector](/schematic/graph/base/connector): connect authored identities
+- [Container](/schematic/graph/frame/graph-frame): reusable layout container and variant scope
+- [Relation](/schematic/graph/base/connector): connect authored identities

@@ -51,7 +51,7 @@ const PlotThemeToken = {
 - 层级：背景位于 grid、mark、axis 与 legend 之前，不遮挡绘图内容
 - 失败与诊断：非法 paint 继续由现有 schema 拒绝；未知 token 继续 fail-loud
 - 兼容性：顶层 `background`、`PlotSurfaceFill` 与 `plot.surface.fill` 直接删除，不保留 alias、双读或 fallback
-- React / Vanilla 等价性：adapter 继续传递同一 JSON-safe PlotSpec 与 token map，不新增 adapter 私有入口
+- React / Vanilla 等价性：adapter 继续传递同一 JSON-safe IRPlot 与 token map，不新增 adapter 私有入口
 
 ## 功能与包边界
 

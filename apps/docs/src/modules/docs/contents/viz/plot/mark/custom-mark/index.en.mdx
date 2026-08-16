@@ -39,9 +39,9 @@ Inject the definition with `<Plot markDefinitions={[diamondMark]}>`; the Vanilla
 Custom marks have no dedicated React component, so author them through the full spec entry:
 
 ```tsx
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'glyphs' },

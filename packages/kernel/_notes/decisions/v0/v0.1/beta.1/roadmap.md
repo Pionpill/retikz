@@ -20,7 +20,7 @@ v0.1 收尾两版分工（详见 `v0/roadmap.md` "拆分原则"）：
 | #   | 标题                                                                                                                                                                                   | 状态                                                                                                                       | 工作量                                 | 优先级              |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------- |
 | 1   | `FontSchema` 抽到 `ir/font.ts`                                                                                                                                                         | ✅ 完成（a254e09）                                                                                                         | 小                                     | P1                  |
-| 2   | `LineSpec` / `NodeText` 抽到 `ir/text.ts`                                                                                                                                              | ✅ 完成（a254e09）                                                                                                         | 小                                     | P1                  |
+| 2   | `IRLine` / `NodeText` 抽到 `ir/text.ts`                                                                                                                                              | ✅ 完成（a254e09）                                                                                                         | 小                                     | P1                  |
 | 3   | core 注释 / `.describe()` 去 SVG-imposing 语言                                                                                                                                         | ✅ 完成（0949079）                                                                                                         | 中                                     | P1                  |
 | 4   | `StepProps` 拆 10 个命名子类型                                                                                                                                                         | ✅ 完成（2445b8b）                                                                                                         | 中                                     | P1                  |
 | 5   | polar 角度方向 schema describe 修正                                                                                                                                                    | ✅ 完成（b7c01cb）                                                                                                         | 小                                     | P0（bug）           |
@@ -35,7 +35,7 @@ v0.1 收尾两版分工（详见 `v0/roadmap.md` "拆分原则"）：
 | 14  | `CompileOptions.onWarn` 收集器：路径解析 silent fail → 显式 warning                                                                                                                    | ✅ 完成（9f21775）                                                                                                         | 中                                     | P0                  |
 | 15  | 边界测试补：`parseWay` 形状算子错误路径 / `view-box` NaN-Infinity / `fallbackMeasurer` 极端值 / `buildPathD`/`buildTransform` throw message 契约 / 多 `<Tikz>` 实例 marker id 隔离 e2e | ✅ 完成（0a0bc74，含 schema .finite() 让 cross-test 全过）                                                                 | 中                                     | P2                  |
 | 16  | 改名 + 命名清理（`NodeTextSchema`→`TextBlockSchema`、`_builder` / `_unbuilder` 去 `_` 前缀、`renderPrim.tsx` 公开签名 `ctx`→`context`）                                                | ✅ 完成（b9eb378，beta 不考虑兼容性纳入 NodeTextSchema 改名）                                                              | 小-中                                  | P2，**含 BREAKING** |
-| 17  | arrow marker `stableSpecKey` 字段表与 `ArrowEndSpec` 类型互锁                                                                                                                          | ✅ 完成（ea9a58a）                                                                                                         | 小                                     | P1                  |
+| 17  | arrow marker `stableArrowKey` 字段表与 `ResolvedArrowEnd` 类型互锁                                                                                                                          | ✅ 完成（ea9a58a）                                                                                                         | 小                                     | P1                  |
 | 18  | core 测试 helper 去除 renderer mirror 漂移风险                                                                                                                                         | ✅ 完成（`6235835` 74 处 + 2 处 buildTransform 全迁移；删 helpers/path-d.ts / transform.ts；新建 path-command-factory.ts） | 中（74 处 `pathCommandsToD` / 8 文件） | P2                  |
 
 ---
@@ -44,10 +44,10 @@ v0.1 收尾两版分工（详见 `v0/roadmap.md` "拆分原则"）：
 
 ### 问题陈述
 
-`packages/kernel/core/src/ir/node.ts` 当前 321 行，混着 4 个 schema（`FontSchema` / `LineSpecSchema` / `NodeTextSchema` / `NodeLabelSchema` / `NodeSchema`）+ 5 个派生类型 + 1 个 const 集合。其中 `FontSchema` **不是节点专属属性**——它描述的是文字排印规格（family / size / weight / style），node.ts 里已经被 3 处复用：
+`packages/kernel/core/src/ir/node.ts` 当前 321 行，混着 4 个 schema（`FontSchema` / `LineSchema` / `NodeTextSchema` / `NodeLabelSchema` / `NodeSchema`）+ 5 个派生类型 + 1 个 const 集合。其中 `FontSchema` **不是节点专属属性**——它描述的是文字排印规格（family / size / weight / style），node.ts 里已经被 3 处复用：
 
 - `NodeSchema.font`（块级）
-- `LineSpecSchema.font`（行级覆盖）
+- `LineSchema.font`（行级覆盖）
 - `NodeLabelSchema.font`（label 级覆盖）
 
 v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}>`、edge label 字体等还会继续引用——`FontSchema` 是横切多个引用点的"工具型 schema"，不应该住在 `node.ts`。
@@ -80,7 +80,7 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ---
 
-## TODO-2 — `LineSpecSchema` + `NodeTextSchema` 从 `node.ts` 抽离到 `ir/text.ts` ✅ 完成（a254e09）
+## TODO-2 — `LineSchema` + `NodeTextSchema` 从 `node.ts` 抽离到 `ir/text.ts` ✅ 完成（a254e09）
 
 ### 问题陈述
 
@@ -88,12 +88,12 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 | schema           | 内容                                                       | 真的"node 专属"吗                                 |
 | ---------------- | ---------------------------------------------------------- | ------------------------------------------------- |
-| `LineSpecSchema` | 单行文字（`text` + 可选 `fill` / `opacity` / `font` 覆盖） | 否——通用样式化文本行                              |
-| `NodeTextSchema` | `string \| Array<LineSpec>` 多行包装                       | 名字带 Node，结构不 node-specific——就是个"文本块" |
+| `LineSchema` | 单行文字（`text` + 可选 `fill` / `opacity` / `font` 覆盖） | 否——通用样式化文本行                              |
+| `NodeTextSchema` | `string \| Array<IRLine>` 多行包装                       | 名字带 Node，结构不 node-specific——就是个"文本块" |
 
 未来潜在复用点：
 
-- `StepLabelSchema.text`（边标注）现在是 `z.string()`，想升级到多行 + 行级覆盖 → 复用 `LineSpecSchema`
+- `StepLabelSchema.text`（边标注）现在是 `z.string()`，想升级到多行 + 行级覆盖 → 复用 `LineSchema`
 - `NodeLabelSchema.text` 同上
 - 未来 `<Text>` standalone IR 节点 → 直接吃 `NodeTextSchema`
 
@@ -101,7 +101,7 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 ### 建议方案
 
-新建 `packages/kernel/core/src/ir/text.ts`，**`LineSpecSchema` + `NodeTextSchema` 一并搬过去**（两者绑死：`NodeTextSchema = z.union([z.string(), z.array(LineSpecSchema).min(1)])`，拆两文件互相 import 反而复杂）。
+新建 `packages/kernel/core/src/ir/text.ts`，**`LineSchema` + `NodeTextSchema` 一并搬过去**（两者绑死：`NodeTextSchema = z.union([z.string(), z.array(LineSchema).min(1)])`，拆两文件互相 import 反而复杂）。
 
 不开 `ir/text/` 文件夹——目前只 2 schema，跟 `ir/font.ts` 同级单文件足够。
 
@@ -111,7 +111,7 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 - `ir/text.ts` 管文本内容结构（行 + 块）
 - `ir/node.ts` 留专属于"节点"的 schema（NodeLabel 等）
 
-### 不改名 — 名字保持 `LineSpecSchema` / `NodeTextSchema`
+### 不改名 — 名字保持 `LineSchema` / `NodeTextSchema`
 
 长期看 `NodeTextSchema` 应该叫 `TextBlockSchema` 之类（名实相符），但**改名 = 破坏公开 API**（`core/src/index.ts` 导出 `NodeTextSchema`）——属于 alpha 窗口动作，beta.1 不能做。本条**只搬位置不改名**；改名意图见下方 `## 后续 alpha 待提案`。
 
@@ -119,14 +119,14 @@ v0.2 预备项里 Scope / Group 全局字体默认值、`<Tikz fontDefault={...}
 
 | 改动                                                                                                                                           | 文件                                                                                                                 |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 新建 `ir/text.ts`：搬迁 `LineSpecSchema` + `IRLineSpec` + `NodeTextSchema` + 关联 JSDoc；`LineSpec` 内部 `import { FontSchema } from './font'` | `packages/kernel/core/src/ir/text.ts`（新文件）                                                                      |
-| 从 `node.ts` 删两个 schema 的定义；改为 `import { LineSpecSchema, NodeTextSchema } from './text'`；`IRLineSpec` 不再在 node.ts 中重复声明      | `packages/kernel/core/src/ir/node.ts`                                                                                |
+| 新建 `ir/text.ts`：搬迁 `LineSchema` + `IRLine` + `NodeTextSchema` + 关联 JSDoc；`IRLine` 内部 `import { FontSchema } from './font'` | `packages/kernel/core/src/ir/text.ts`（新文件）                                                                      |
+| 从 `node.ts` 删两个 schema 的定义；改为 `import { LineSchema, NodeTextSchema } from './text'`；`IRLine` 不再在 node.ts 中重复声明      | `packages/kernel/core/src/ir/node.ts`                                                                                |
 | barrel 加 `export * from './text'`                                                                                                             | `packages/kernel/core/src/ir/index.ts`                                                                               |
-| 公开 API 不需要改                                                                                                                              | `packages/kernel/core/src/index.ts`（已 re-export `LineSpecSchema` / `IRLineSpec` / `NodeTextSchema`，链路自动跟随） |
+| 公开 API 不需要改                                                                                                                              | `packages/kernel/core/src/index.ts`（已 re-export `LineSchema` / `IRLine` / `NodeTextSchema`，链路自动跟随） |
 
 ### 前置依赖
 
-依赖 TODO-1 落地——`text.ts` 里的 `LineSpecSchema` 要 `import { FontSchema } from './font'`。两条按顺序提交，或一个 PR 里一并搬。
+依赖 TODO-1 落地——`text.ts` 里的 `LineSchema` 要 `import { FontSchema } from './font'`。两条按顺序提交，或一个 PR 里一并搬。
 
 ### 验证项
 
@@ -722,11 +722,11 @@ API 可选字段扩张。
 
 ---
 
-## TODO-17 — arrow marker `stableSpecKey` 字段表与 `ArrowEndSpec` 类型互锁
+## TODO-17 — arrow marker `stableArrowKey` 字段表与 `ResolvedArrowEnd` 类型互锁
 
 ### 问题陈述
 
-`packages/react/src/kernel/Tikz.tsx` 里的 `stableSpecKey(spec: ArrowEndSpec)` 手写枚举 `shape / scale / length / width / color / fill / opacity / lineWidth`，用于 marker dedup 与 hash。当前行为测试已经覆盖了相同 spec 复用、不同 shape/color 分离、字段顺序不影响 hash，但**没有类型级保护**：未来 `ArrowEndSpec` 新增字段时，如果忘记同步 `stableSpecKey`，两个视觉不同的 arrow 可能复用同一个 marker id。
+`packages/react/src/kernel/Tikz.tsx` 里的 `stableArrowKey(spec: ResolvedArrowEnd)` 手写枚举 `shape / scale / length / width / color / fill / opacity / lineWidth`，用于 marker dedup 与 hash。当前行为测试已经覆盖了相同 spec 复用、不同 shape/color 分离、字段顺序不影响 hash，但**没有类型级保护**：未来 `ResolvedArrowEnd` 新增字段时，如果忘记同步 `stableArrowKey`，两个视觉不同的 arrow 可能复用同一个 marker id。
 
 这类问题不会立刻被 TypeScript 或现有测试发现，属于“字段表漂移”风险，和 TODO-11 的 `THICKNESS_TO_WIDTH` / TODO-12 的 builder-unbuilder 字段镜像问题同类。
 
@@ -744,16 +744,16 @@ const ARROW_END_SPEC_KEY_FIELDS = [
   'fill',
   'opacity',
   'lineWidth',
-] as const satisfies ReadonlyArray<keyof ArrowEndSpec>;
+] as const satisfies ReadonlyArray<keyof ResolvedArrowEnd>;
 ```
 
-再配一个 `AssertEqual` / `Exclude` 类型检查，确保 `ArrowEndSpec` 的 key 集合与字段表一致。`stableSpecKey` 只遍历这张表，避免手写 if 链重复。
+再配一个 `AssertEqual` / `Exclude` 类型检查，确保 `ResolvedArrowEnd` 的 key 集合与字段表一致。`stableArrowKey` 只遍历这张表，避免手写 if 链重复。
 
 ### 改动清单
 
 | 改动                                                              | 文件                                                   |
 | ----------------------------------------------------------------- | ------------------------------------------------------ |
-| 新增 `ARROW_END_SPEC_KEY_FIELDS`，`stableSpecKey` 改为遍历字段表  | `packages/react/src/kernel/Tikz.tsx`                   |
+| 新增 `ARROW_END_SPEC_KEY_FIELDS`，`stableArrowKey` 改为遍历字段表  | `packages/react/src/kernel/Tikz.tsx`                   |
 | 加类型互锁工具（可局部声明，不必公开）                            | `packages/react/src/kernel/Tikz.tsx`                   |
 | 保留现有 marker hash 测试；补 1 条“全部 spec 字段参与 hash”的测试 | `packages/react/tests/kernel/Tikz-arrow-hash.test.tsx` |
 

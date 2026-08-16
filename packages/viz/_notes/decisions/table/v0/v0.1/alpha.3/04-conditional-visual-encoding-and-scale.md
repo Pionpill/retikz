@@ -35,7 +35,7 @@ type IRTableVisualScaleRef = {
   options?: IRJsonObject;
 };
 
-type IRTableSpec = {
+type IRTable = {
   encodings?: Array<IRTableCellVisualEncoding>;
 };
 ```
@@ -144,7 +144,7 @@ const encodings = [
 
 ## 影响
 
-- `TableSpec` 增加 `encodings` 与 opt-in Legend descriptor 的 root-id refinement
+- `IRTable` 增加 `encodings` 与 opt-in Legend descriptor 的 root-id refinement
 - runtime options 增加 visual scale definitions
 - resolved Cell plan 与 manifest 增加 encoding lineage，manifest 保存同次 resolution 产生的 descriptor seed
 - `@retikz/table` 使用 `d3-scale` 完成内置 sequential / threshold 求值，不依赖 Plot

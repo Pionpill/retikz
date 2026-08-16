@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChartSpec } from '../../src/point';
+import { resolvePointChart } from '../../src/point';
 
 describe('Connected Scatter Chart resolution', () => {
   it('keeps the connected path recipe inside canonical IRChart', () => {
-    const result = resolvePointChartSpec({
+    const result = resolvePointChart({
       namespace: 'chart',
       type: 'connected-scatter',
       data: { reference: 'rows' },

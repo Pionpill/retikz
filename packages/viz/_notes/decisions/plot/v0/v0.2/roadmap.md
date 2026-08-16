@@ -8,7 +8,7 @@
 
 **v0.2 先收回 Plot 领域主题所有权并重构空间映射关系，再在 Kernel 底层能力就绪后补性能与交互。**
 
-v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat / coordinate composition / guide / theme 都已进入 PlotSpec 语义。v0.2 先修正早期 Chart-owned Plot token 的所有权倒置，再按三条有依赖的能力轴推进：
+v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat / coordinate composition / guide / theme 都已进入 IRPlot 语义。v0.2 先修正早期 Chart-owned Plot token 的所有权倒置，再按三条有依赖的能力轴推进：
 
 - **领域主题闭环**：Plot 消费 Core effective Theme 与 `theme.tokens` 中继承的 Plot namespace，拥有 Plot surface、typography / label、Axis / Legend 视觉 token、palette、preset、resolver、mapping 与 inspection；Chart 只转发 Plot 公开 token / theme 输入。
 
@@ -16,7 +16,7 @@ v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat /
 - **性能优化**：待 Kernel 提供 identity、revision、transaction、incremental、retained Scene 等底层能力后，Plot 只负责自身领域依赖、最小失效边界、增量 lowering 与 provenance，不复制 Kernel Runtime。
 - **交互优化**：待 Kernel 提供 headless interaction 的事件、ownership、behavior、presentation 与 intent 基础后，Plot 负责 datum / series / view / panel 等领域交互语义，不复制事件归一化或通用行为状态机。
 
-`@retikz/chart v0.1` 与本 minor 并行迭代。Chart 需求不单独形成 Plot milestone：若需求暴露的是通用 Plot 缺口，就插入最匹配的 alpha；Chart-specific recipe、type、presentation 与默认值仍归 Chart。所有 Chart 能力必须继续 lower 成 PlotSpec，不能反向改变 Plot 的领域边界。
+`@retikz/chart v0.1` 与本 minor 并行迭代。Chart 需求不单独形成 Plot milestone：若需求暴露的是通用 Plot 缺口，就插入最匹配的 alpha；Chart-specific recipe、type、presentation 与默认值仍归 Chart。所有 Chart 能力必须继续 lower 成 IRPlot，不能反向改变 Plot 的领域边界。
 
 同时继续收敛 v0.1 的通用 decoration 呈现：Plot 拥有 axis / legend / label 的领域解析、coordinate view 绑定、guide resolve、provenance / locator 与交互意图；Standard alpha.2 就绪后，Plot 把外围 Box Layout 和 Legend 的视觉结构、内部布局与 layout-aware compile 迁到 `@retikz/standard`，不维护平行呈现主链。
 

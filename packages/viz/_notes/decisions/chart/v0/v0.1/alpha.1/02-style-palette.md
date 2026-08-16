@@ -11,13 +11,13 @@ Chart 是 Plot 之上的封闭类型封装。它需要为 Chart canvas、title /
 
 早期 Chart style contract 同时承载 Chart presentation 和 Plot surface、guide、label、palette，造成 Chart 与 Plot 的重复 token vocabulary。Core ADR-15 和 Plot v0.2-alpha.1 ADR-02 已冻结轻量 selector、owner-local style definition 与 Plot 解析边界；本 ADR 将 Chart 的输入、definition 注入和 owner 边界对齐到这条主链。
 
-本 ADR 对 Chart 基础设施 ADR-01 中“全部 variant 共享 forwarded `theme`”的字段表述作出替代：Plot-compatible 视觉轴仍由全部 variant 共享，但公开字段改为 `plotThemeTokens`、`colors` 与 `plotTheme`；旧 `theme` 不再属于 ChartSpec contract。
+本 ADR 对 Chart 基础设施 ADR-01 中“全部 variant 共享 forwarded `theme`”的字段表述作出替代：Plot-compatible 视觉轴仍由全部 variant 共享，但公开字段改为 `plotThemeTokens`、`colors` 与 `plotTheme`；旧 `theme` 不再属于 IRChart contract。
 
 ## 决策：Chart 拥有 presentation，Plot 拥有 Plot theme
 
 Chart 只拥有 Chart canvas、presentation 和 recipe-default token。Plot surface、typography、label、Axis / Legend visual token、palette 与 native theme 全部由 Plot owner 解析。Chart 不复制 Plot schema、preset、resolver、merge 或 resolved map。
 
-ChartSpec 不重复保存 Core 的 `style`、`mode` 或 `themeMode`。Chart Composite 从当前位置读取完整 Core effective Theme，并把同一环境分别交给 Chart resolver 与 Plot resolver。
+IRChart 不重复保存 Core 的 `style`、`mode` 或 `themeMode`。Chart Composite 从当前位置读取完整 Core effective Theme，并把同一环境分别交给 Chart resolver 与 Plot resolver。
 
 ## 基础数据结构与公开契约
 
@@ -27,13 +27,13 @@ Chart 的主题 authoring surface 固定为：
 type IRChartThemeInput = Readonly<{
   chartThemeTokens?: IRChartThemeTokenOverrides;
   plotThemeTokens?: IRPlotThemeTokenOverrides;
-  colors?: IRPlotSpec['colors'];
-  plotTheme?: IRPlotSpec['plotTheme'];
+  colors?: IRPlot['colors'];
+  plotTheme?: IRPlot['plotTheme'];
 }>;
 ```
 
 - `chartThemeTokens` 只接受 Chart-owned strict、flat、dot-namespaced token
-- `plotThemeTokens` 复用 Plot owner 的 strict sparse schema，并作为 Plot-local 输入进入最终 PlotSpec
+- `plotThemeTokens` 复用 Plot owner 的 strict sparse schema，并作为 Plot-local 输入进入最终 IRPlot
 - `colors` 是 Plot 的显式颜色 shorthand，仍由 Plot resolver 消费
 - `plotTheme` 是 Plot native structured theme，仍由 Plot resolver 消费
 - Chart 不提供 `styleTokens`、`plotStyleTokens`、`theme` 或 `themeMode` 的兼容别名
@@ -48,13 +48,13 @@ declare const defineChartThemeTokens: (
 ) => ThemeTokenContribution<'chart', IRChartThemeTokenOverrides>;
 ```
 
-当前 Chart 公开 owner-local `ChartThemeStyleDefinition`，Chart adapter 注入 Chart 与 Plot style definitions，因为每条 Chart lowering 主链都消费 Plot。standalone Chart、embedded Chart 与 direct headless 入口使用同一 owner registry 和 name lookup；plain JSON 只持久化 selector 与 ChartSpec 本地字段，Core 不静态导入 Chart / Plot 语义，也不隐式猜测 owner。
+当前 Chart 公开 owner-local `ChartThemeStyleDefinition`，Chart adapter 注入 Chart 与 Plot style definitions，因为每条 Chart lowering 主链都消费 Plot。standalone Chart、embedded Chart 与 direct headless 入口使用同一 owner registry 和 name lookup；plain JSON 只持久化 selector 与 IRChart 本地字段，Core 不静态导入 Chart / Plot 语义，也不隐式猜测 owner。
 
 Chart token 的长期语义包括 canvas surface、presentation slot 的 foreground / font / alignment、padding、gap，以及只控制 recipe 默认生成的 `chart.axis.enabled`、`chart.axis.grid.enabled`、`chart.legend.enabled`。这些开关不能过滤显式 guides，也不能撤销 Chart type 的核心 recipe。
 
 ## 行为、默认值、失败语义与兼容性
 
-未声明 Theme 时使用 Core `neutral + light` effective environment；Chart 使用与该环境相容的 Chart preset，Plot 使用 Plot owner 的对应 preset。ChartSpec 省略 theme fields 不产生第二套默认 environment，也不把 style / mode 写入 ChartSpec。
+未声明 Theme 时使用 Core `neutral + light` effective environment；Chart 使用与该环境相容的 Chart preset，Plot 使用 Plot owner 的对应 preset。IRChart 省略 theme fields 不产生第二套默认 environment，也不把 style / mode 写入 IRChart。
 
 Chart 与 Plot 的输入必须是 plain JSON-safe data。unknown Chart key、未知 presentation slot、非法 value、缺失同名 style definition、无法消费的 Chart token、Plot key / value 错误都 fail-loud，并指向可修改的输入层和 token path。Chart 不静默回退 renderer 默认、Chart palette 或旧字段。
 
@@ -63,7 +63,7 @@ Chart 与 Plot 的输入必须是 plain JSON-safe data。unknown Chart key、未
 - `styleTokens` → `chartThemeTokens`
 - `plotStyleTokens` → `plotThemeTokens`
 - forwarded Plot `theme` → `plotTheme`
-- ChartSpec 重复的 `style` / `themeMode` → 外层 Scene / Scope Theme
+- IRChart 重复的 `style` / `themeMode` → 外层 Scene / Scope Theme
 
 不保留 alias、双读或静默 bridge。主题只能调整可撤销的表现性默认，不能改变 Chart type 核心配方、数据角色、Plot lowering 或 Standard composition 的核心不变量。
 
@@ -88,14 +88,14 @@ Core effective Theme
   -> explicit Plot scale / channel / guide / mark config
 ```
 
-Chart 调用 Plot resolver 时传入同一 effective Theme 与 Chart-local `plotThemeTokens`；Chart 不把 Plot token 改写成 Chart token，也不把 resolved Plot map 物化回 ChartSpec。Chart recipe 需要默认 series color 时，只消费 Plot resolver 的最终 palette，绝不直接索引 Core shared categorical array。
+Chart 调用 Plot resolver 时传入同一 effective Theme 与 Chart-local `plotThemeTokens`；Chart 不把 Plot token 改写成 Chart token，也不把 resolved Plot map 物化回 IRChart。Chart recipe 需要默认 series color 时，只消费 Plot resolver 的最终 palette，绝不直接索引 Core shared categorical array。
 
 显式 Chart presentation / recipe config 只能覆盖 Chart-owned defaults；显式 Plot config 只能沿 Plot owner 的优先级覆盖 Plot palette 和 native theme。Chart-owned style baseline 与 `chartThemeTokens` 都记录为 Core `ThemeTokenSource.Local`，并由 `$style/...` 与 `$spec/chartThemeTokens/...` path 区分。Chart 不复制或重标 Plot source inspection；Plot 的 inherited value 仍由 Plot owner 记录。
 
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Chart Encapsulation Complete 的 presentation / recipe default resolution 与 Plot consumption boundary
-- `@retikz/chart` 拥有 ChartSpec、Canonical Type recipe、Chart token vocabulary、preset、resolver、mapping、inspection 与 Chart + Plot definition 注入
+- `@retikz/chart` 拥有 IRChart、Canonical Type recipe、Chart token vocabulary、preset、resolver、mapping、inspection 与 Chart + Plot definition 注入
 - `@retikz/plot` 拥有 Plot token vocabulary、shared categorical projection、Plot palette、named schemes、resolver、mapping 与 Plot inspection
 - `@retikz/core` 拥有 selector 继承、Core style registry、shared colors、`ThemeTokenSource` 与 Composite context
 - `@retikz/standard` 拥有领域无关 surface / layout / presentation composite；只消费已解析的正式输入与 `InspectionAppearance`
@@ -109,7 +109,7 @@ Chart 不拥有 Plot token、Plot preset / resolver、Plot native theme merge、
 - 现有 Core effective Theme、Plot resolver、Standard composition 与 Chart type recipe 足以组合本能力；Chart 新增的是 presentation token owner、Plot handoff 与 definition 注入，不新增 GoG 能力轴
 - Core 负责 selector、Core registry 与 shared colors；Chart 负责 Chart vocabulary / style registry / resolver / mapping；Plot 负责 Plot vocabulary / style registry / resolver / mapping；Standard 负责通用布局；adapter 只提供等价入口
 - Chart adapter 注入 Chart + Plot definitions，standalone、embedded 与 direct headless 都必须能在各自 owner registry 下得到同一 name lookup 与失败语义；Chart 不建立跨 owner theme registry
-- 闭环为 effective Theme → Chart / Plot style definition → 各自 resolver → Chart presentation + complete PlotSpec → Standard / Core lowering → Scene / manifest / inspection
+- 闭环为 effective Theme → Chart / Plot style definition → 各自 resolver → Chart presentation + complete IRPlot → Standard / Core lowering → Scene / manifest / inspection
 - Chart 默认 series color 的唯一入口是 Plot resolver 最终 palette；Core shared categorical 只经 Plot projection 进入 Plot palette，Standard Inspector 只消费 Core `InspectionAppearance`
 - 本轮结论：扩展 Chart Encapsulation 的主题编排边界，组合 Core / Plot / Standard 现有能力，不把 Plot 视觉语义吸回 Chart
 
@@ -129,13 +129,13 @@ Chart 不拥有 Plot token、Plot preset / resolver、Plot native theme merge、
 - Chart 继续维护 Plot token catalog：会使直接 Plot 与 Chart 内 Plot 分叉
 - Chart 直接读取 Core shared categorical：会绕过 Plot palette resolver 和 source inspection
 - Chart 先 materialize 完整 Plot theme 再交给 Plot：会遮蔽 inherited/local source 并复制 cascade
-- 在 ChartSpec 重复保存 style / mode：会绕开 Scene / Scope 继承并产生嵌套漂移
+- 在 IRChart 重复保存 style / mode：会绕开 Scene / Scope 继承并产生嵌套漂移
 - 让 adapter、CSS 或 renderer 根据 preset 名称补默认：会破坏 JSON、React、Vanilla、SVG 与 Canvas parity
 - 为了 definition 注入建立 Chart 私有跨 owner registry：会复制 Plot 的 provider extension contract
 
 ## 测试策略摘要
 
-需要 schema / type 证据证明 Chart token、Plot handoff、命名迁移与 ChartSpec JSON-safe 边界；registry 证据证明 Chart + Plot style definitions 在 standalone、embedded、React、Vanilla 与 direct headless 入口同路注入、查找和失败；resolution 证据证明 Chart-local token、Plot-local token、Plot inherited shared colors、Plot final palette 与 recipe defaults 的 owner isolation；inspection 证据证明 Chart 复用 Core `local` source 且不重标 Plot source；adapter / renderer parity 证据证明局部 React Theme 等价 Scope，Chart 默认 series color 不绕过 Plot resolver，最终 SVG / Canvas 只消费同一 Scene。详细矩阵属于后续 ignored implementation plan。
+需要 schema / type 证据证明 Chart token、Plot handoff、命名迁移与 IRChart JSON-safe 边界；registry 证据证明 Chart + Plot style definitions 在 standalone、embedded、React、Vanilla 与 direct headless 入口同路注入、查找和失败；resolution 证据证明 Chart-local token、Plot-local token、Plot inherited shared colors、Plot final palette 与 recipe defaults 的 owner isolation；inspection 证据证明 Chart 复用 Core `local` source 且不重标 Plot source；adapter / renderer parity 证据证明局部 React Theme 等价 Scope，Chart 默认 series color 不绕过 Plot resolver，最终 SVG / Canvas 只消费同一 Scene。详细矩阵属于后续 ignored implementation plan。
 
 ## 不在本 ADR 范围
 

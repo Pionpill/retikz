@@ -59,7 +59,6 @@ import {
   AxesTickSourceKind,
   GridBorderOrder,
 } from '@retikz/standard';
-import { RibbonAlignment, RibbonMode, RibbonTaperInterpolation } from '@retikz/standard/ribbon';
 import {
   TableBorderKind,
   TableBorderMode,
@@ -236,15 +235,6 @@ export const API_VALUE_REGISTRY = {
   },
   RelationGeometryKind: {
     values: Object.values(RelationGeometryKind),
-  },
-  RibbonAlignment: {
-    values: Object.values(RibbonAlignment),
-  },
-  RibbonMode: {
-    values: Object.values(RibbonMode),
-  },
-  RibbonTaperInterpolation: {
-    values: Object.values(RibbonTaperInterpolation),
   },
   ScopeBoundingShape: {
     values: Object.values(ScopeBoundingShape),

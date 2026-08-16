@@ -16,7 +16,7 @@ import type {
   PlotScaleLineage,
   PlotSeriesLineage,
 } from '../contract';
-import type { IRPlotMarkOperation, IRPlotScaleOperation, IRPlotSpec, IRPlotTransform } from '../schemas';
+import type { IRPlotMarkOperation, IRPlotScaleOperation, IRPlot, IRPlotTransform } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
 
 import { resolvePlotLineageOptions } from '../resolve/lineage';
@@ -118,7 +118,7 @@ const hostMetadataOf = (
 };
 
 /** 生成 layout lineage 摘要 */
-const layoutLineageOf = (spec: IRPlotSpec): NonNullable<PlotLineageLowerResult['lineage']['layout']> => {
+const layoutLineageOf = (spec: IRPlot): NonNullable<PlotLineageLowerResult['lineage']['layout']> => {
   const composition = spec.composition as
     | {
         views?: Array<{ id?: unknown }>;
@@ -150,14 +150,14 @@ const layoutLineageOf = (spec: IRPlotSpec): NonNullable<PlotLineageLowerResult['
 };
 
 /** 从坐标配置推断位置 channel 绑定的 scale */
-const coordinateScaleNameOf = (spec: IRPlotSpec, channel: string): string | undefined => {
+const coordinateScaleNameOf = (spec: IRPlot, channel: string): string | undefined => {
   const coordinate = spec.coordinate as Record<string, unknown> | undefined;
   const value = coordinate?.[channel];
   return typeof value === 'string' ? value : undefined;
 };
 
 /** 收集使用指定 scale 的 mark channel */
-const scaleChannelsOf = (spec: IRPlotSpec, scaleName: string): NonNullable<PlotScaleLineage['channels']> =>
+const scaleChannelsOf = (spec: IRPlot, scaleName: string): NonNullable<PlotScaleLineage['channels']> =>
   spec.marks.flatMap((mark, markIndex) =>
     (markEncodingFields(mark) ?? [])
       .filter(binding => (binding.scale ?? coordinateScaleNameOf(spec, binding.channel)) === scaleName)
@@ -169,7 +169,7 @@ const scaleChannelsOf = (spec: IRPlotSpec, scaleName: string): NonNullable<PlotS
   );
 
 /** 生成 scale lineage 摘要 */
-const scaleLineageOf = (spec: IRPlotSpec, scales: Array<IRPlotScaleOperation> | undefined): Array<PlotScaleLineage> =>
+const scaleLineageOf = (spec: IRPlot, scales: Array<IRPlotScaleOperation> | undefined): Array<PlotScaleLineage> =>
   (scales ?? []).map(scale => {
     const record = scale as { name?: unknown; type?: unknown; domain?: unknown; range?: unknown };
     const name = typeof record.name === 'string' ? record.name : '';
@@ -205,7 +205,7 @@ const sourceIdentityOfMeta = (meta: Record<string, unknown>): DataSourceIdentity
 
 /** 用 plot spec 与数据集生成 runtime-only lineage artifact */
 const buildPlotLineage = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions,
 ): PlotLineageLowerResult['lineage'] => {
@@ -266,7 +266,7 @@ const buildPlotLineage = (
 
 /** 下沉单个 plot spec 并返回 runtime-only lineage artifact */
 export const lowerPlotWithLineage = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions = {},
 ): PlotLineageLowerResult => {
@@ -277,7 +277,7 @@ export const lowerPlotWithLineage = (
 
 /** 创建带 lineage 的 plot locator */
 export const createPlotLineageLocator = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions = {},
 ): PlotLineageLocator => {

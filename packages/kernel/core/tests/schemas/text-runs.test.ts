@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LineSpecSchema, MathRunSchema, MixedLineSchema, NodeSchema, TextRunSchema } from '../../src/schemas';
+import { LineSchema, MathRunSchema, MixedLineSchema, NodeSchema, TextRunSchema } from '../../src/schemas';
 
 describe('[text-runs] run schemas', () => {
   it('accepts a text run with per-run style', () => {
@@ -24,8 +24,8 @@ describe('[text-runs] run schemas', () => {
     expect(MixedLineSchema.safeParse({ runs: [] }).success).toBe(false);
   });
 
-  it('admits a mixed line as a LineSpec', () => {
-    expect(LineSpecSchema.safeParse({ runs: [{ tex: 'x' }] }).success).toBe(true);
+  it('admits a mixed line as a IRLine', () => {
+    expect(LineSchema.safeParse({ runs: [{ tex: 'x' }] }).success).toBe(true);
   });
 
   it('round-trips a node whose text is an explicit run sequence', () => {

@@ -1,4 +1,4 @@
-import type { IRPaintSpec, PaintResource, ResolvedPatternTile } from '@retikz/core';
+import type { IRPaint, PaintResource, ResolvedPatternTile } from '@retikz/core';
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
@@ -73,7 +73,7 @@ const conicPoint = (cx: number, cy: number, radius: number, angleDeg: number): [
   return [cx + Math.cos(rad) * radius, cy + Math.sin(rad) * radius];
 };
 
-const buildConicGradient = (spec: Extract<IRPaintSpec, { kind: 'conicGradient' }>, id: string): SvgNode => {
+const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, id: string): SvgNode => {
   const [cx, cy] = spec.center ?? [0.5, 0.5];
   const radius =
     Math.max(Math.hypot(cx, cy), Math.hypot(1 - cx, cy), Math.hypot(cx, 1 - cy), Math.hypot(1 - cx, 1 - cy)) * 1.02;
@@ -132,7 +132,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
  *   `id` 已由 caller 加实例前缀。pattern 资源缺 `tile` 是不该出现的 compile bug → 产空 `<pattern id>` 兜底、不抛
  */
 export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
-  const spec: IRPaintSpec = resource.spec;
+  const spec: IRPaint = resource.spec;
   switch (spec.kind) {
     case 'linearGradient': {
       const gradientLine = gradientLineFromAngle(spec.angle);

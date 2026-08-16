@@ -10,12 +10,12 @@ Table 家族已经确定为与 Plot 平行的 Tier 2 能力，但当前只有包
 
 Core 已提供 `CompositeBaseSchema`、`CompositeDefinition` 与递归 composite lowering；Data 已提供 `DataReferenceSchema` 与 `ExternalDatasets`。Table 应直接复用这两条现有边界：IR 只记录外部数据引用，运行时 datasets 经 lowering options 注入。
 
-## 决策：建立 JSON-safe TableSpec composite 根节点
+## 决策：建立 JSON-safe IRTable composite 根节点
 
 新增 `@retikz/table` package scaffold，并定义根节点：
 
 ```ts
-type IRTableSpec = {
+type IRTable = {
   namespace: 'table';
   type: 'table';
   id?: string;
@@ -36,7 +36,7 @@ type IRTableSpec = {
 - `layout` 引用 ADR-04 的布局 spec；省略时由 pipeline 使用基础固定轨道默认值
 - `meta` 复用 Core `JsonObjectSchema`，只承载 JSON-safe opaque metadata
 
-`TableSpecSchema.superRefine` 对 alpha.1 内置结构执行：
+`TableSchema.superRefine` 对 alpha.1 内置结构执行：
 
 - `kind: 'detail'` 必须存在 `data`
 - `kind: 'manual'` 不消费 `data`；若提供则拒绝，避免未使用数据产生错误预期
@@ -66,7 +66,7 @@ package scaffold 同时完成首阶段仓库治理接入；ADR-01 先以单成�
 ## DSL 表面
 
 ```ts
-const spec: IRTableSpec = {
+const spec: IRTable = {
   namespace: 'table',
   type: 'table',
   id: 'sales-table',
@@ -83,7 +83,7 @@ const spec: IRTableSpec = {
 
 ## 实现摘要与验证
 
-`@retikz/table` 已以 `TableSpecSchema` 和 `IRTableSpec` 建立 `table.table` composite 根契约，外部数据继续通过 `DataReference` 与 runtime datasets 注入。三个 Table 包已纳入同一 `table` release group、viz 校验脚本与发布产物预算。
+`@retikz/table` 已以 `TableSchema` 和 `IRTable` 建立 `table.table` composite 根契约，外部数据继续通过 `DataReference` 与 runtime datasets 注入。三个 Table 包已纳入同一 `table` release group、viz 校验脚本与发布产物预算。
 
 验证覆盖 manual/detail 根节点、根判别字段、data 与 structure 的共现约束、JSON-safe metadata，以及 release-group / package boundary。非法根形态均在 schema 或 pipeline 入口 fail-loud。
 
@@ -103,10 +103,10 @@ const spec: IRTableSpec = {
 - 主责包与协作包：`@retikz/table` 主责；Data 提供引用，Core 提供 composite
 - 是否可由现有能力组合：Core composite 与 DataReference 可复用，但 Table 根语义必须扩展当前域
 - 是否需要下沉：不修改 Data / Core；任意内容测量另由 alpha.2 gating
-- 内部表达链路：TableSpecSchema → structure/layout schema → table pipeline
+- 内部表达链路：TableSchema → structure/layout schema → table pipeline
 - 外部扩展链路：structure 字段进入 ADR-02 Definition / registry
 - pipeline / lowering 与下游消费：ADR-05 注册 `lowerTables`，renderer 只接收 Core IR
-- React / Vanilla adapter 等价性：ADR-06 消费同一 IRTableSpec
+- React / Vanilla adapter 等价性：ADR-06 消费同一 IRTable
 - provenance / lineage / locator：根 id / data reference 从首版保留；完整 artifact 在 alpha.6
 - 本轮结论：扩展 Table 域；不在 adapter 或 renderer 建立根模型
 

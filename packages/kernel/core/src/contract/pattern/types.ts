@@ -1,4 +1,4 @@
-import type { IRPatternLineStyle, IRPatternPaintSpec } from '../../schemas';
+import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import type { MarkerPrimitive } from '../scene';
 
 /** Pattern definition 消费的已解析线条样式 */
@@ -44,15 +44,15 @@ export type PatternEmitContext = {
    * @description 仅当用户在 `pattern.lineWidth` 显式给值时存在；缺省时由 motif 自行决定默认值
    * @default motif 自定义默认值
    */
-  lineWidth?: IRPatternPaintSpec['lineWidth'];
+  lineWidth?: IRPatternPaint['lineWidth'];
   /** 解析后的描边 dash pattern；已应用显式值与 dashed / dotted 预设优先级 */
-  dashPattern?: IRPatternPaintSpec['dashPattern'];
+  dashPattern?: IRPatternPaint['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPatternPaintSpec['dashOffset'];
+  dashOffset?: IRPatternPaint['dashOffset'];
   /** 描边端点线帽 */
-  lineCap?: IRPatternPaintSpec['lineCap'];
+  lineCap?: IRPatternPaint['lineCap'];
   /** 描边拐角连接 */
-  lineJoin?: IRPatternPaintSpec['lineJoin'];
+  lineJoin?: IRPatternPaint['lineJoin'];
   /** 已继承基础字段并解析 preset 的横向线条样式 */
   horizontalStyle?: ResolvedPatternLineStyle;
   /** 已继承基础字段并解析 preset 的纵向线条样式 */

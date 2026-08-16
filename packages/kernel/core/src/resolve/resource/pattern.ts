@@ -1,5 +1,5 @@
 import type { ResolvedPatternLineStyle, ResolvedPatternLineStyleCycle } from '../../contract';
-import type { IRPatternLineStyle, IRPatternPaintSpec } from '../../schemas';
+import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import type { PatternStyleResolution } from './types';
 
 import { PatternLineStyleCycleSchema, PatternLineStyleSchema } from '../../schemas';
@@ -7,7 +7,7 @@ import { resolveDashPattern } from '../style';
 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
-const lineStyleInputOf = (spec: IRPatternPaintSpec): Record<string, unknown> => ({
+const lineStyleInputOf = (spec: IRPatternPaint): Record<string, unknown> => ({
   ...(spec.color === undefined ? {} : { color: spec.color }),
   ...(spec.lineWidth === undefined ? {} : { lineWidth: spec.lineWidth }),
   ...(spec.dashed === undefined ? {} : { dashed: spec.dashed }),
@@ -52,7 +52,7 @@ export const resolvePatternLineStyle = (
 };
 
 /** 解析 Pattern 顶层、方向和周期线型 */
-export const resolvePatternStyle = (spec: IRPatternPaintSpec, defaultColor: string): PatternStyleResolution => {
+export const resolvePatternStyle = (spec: IRPatternPaint, defaultColor: string): PatternStyleResolution => {
   const baseInput = parseLineStyle(spec.shape, lineStyleInputOf(spec));
   const base = resolvePatternLineStyle({ color: defaultColor }, baseInput);
   const resolved: {

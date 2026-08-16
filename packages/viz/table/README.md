@@ -4,12 +4,12 @@
 table structure and presentation contracts, two-dimensional constraint layout, Border Graph
 resolution, and lowering to `@retikz/core`.
 
-`DetailTableSpecSchema`, `ManualTableSpecSchema`, and `CustomTableSpecSchema` define precise public
-variants. `TableSpecSchema` and `IRTableSpec` aggregate them under the same `table.table` composite
+`DetailTableSchema`, `ManualTableSchema`, and `CustomTableSchema` define precise public
+variants. `TableSchema` and `IRTable` aggregate them under the same `table.table` composite
 root. A Table spec keeps actual dataset rows outside the IR, referring to host-supplied data through
 `data.reference` instead.
 
-Use `createDetailTableSpec()` for record-per-row tables and `createManualTableSpec()` for explicit
+Use `createDetailTableIR()` for record-per-row tables and `createManualTableIR()` for explicit
 row-major Cells. Manual `rows` is a non-empty rectangular matrix whose dimensions and Cell addresses
 are derived by Table. Scalar entries are value shorthands, `null` leaves a coordinate empty, and
 `{ value: null }` stores a real null Cell. Both helpers return plain, JSON-safe precise specs while
@@ -22,12 +22,12 @@ encodings, and ordered root rules then contribute in increasing priority. Value 
 winning formatter and presentation with that final appearance.
 The default baseline provides complete light/dark token maps when `style` is omitted. Named styles use the
 same public Core and Table definition registries; `theme.style` / `theme.mode` select the matching
-definitions, while `tableThemeTokens` is the local TableSpec overlay. Unknown token keys fail
+definitions, while `tableThemeTokens` is the local IRTable overlay. Unknown token keys fail
 loudly. Content Cells already own renderable children and therefore bypass formatter and
 presentation dispatch.
 
 `compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. `tableThemeTokens` stays
-in the JSON-safe TableSpec and is resolved by the Table owner. The resolved `TableLayoutManifest`
+in the JSON-safe IRTable and is resolved by the Table owner. The resolved `TableLayoutManifest`
 records effective `style`, `themeMode`, complete tokens, and per-token sources as output metadata.
 Custom styles register the same name in Core through `compile.themeStyles` and in Table through
 `lower.tableThemeStyles`; a consumed style without its Table definition fails loudly.
@@ -71,6 +71,6 @@ pnpm add @retikz/table
 This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
-See the [table architecture](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-design.md)
-and [table capability boundary](https://github.com/Pionpill/retikz/blob/next-table/packages/viz/_notes/architecture/table-visualization-complete.md)
+See the [table architecture](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/table-design.md)
+and [table capability boundary](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/table-visualization-complete.md)
 for the model and ownership boundary.

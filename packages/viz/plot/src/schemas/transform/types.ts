@@ -12,7 +12,7 @@ import type {
 } from './constants';
 import type {
   BinTransformSchema,
-  DensityBandwidthSpecSchema,
+  DensityBandwidthSchema,
   DensityTransformSchema,
   DeriveIntervalTransformSchema,
   EndpointProjectionSchema,
@@ -21,7 +21,7 @@ import type {
   PairMeasureOperationSchema,
   PlotBuiltinTransformSchema,
   RelateTransformSchema,
-  SmoothMethodSpecSchema,
+  SmoothMethodSchema,
   SmoothTransformSchema,
   StackTransformSchema,
   TransformSchema,
@@ -73,13 +73,13 @@ export type IRPlotRelateTransform = z.infer<typeof RelateTransformSchema>;
 export type IRPlotJitterTransform = z.infer<typeof JitterTransformSchema>;
 
 /** density 带宽策略（Silverman 默认或显式正数带宽） */
-export type IRPlotDensityBandwidthSpec = z.infer<typeof DensityBandwidthSpecSchema>;
+export type IRPlotDensityBandwidth = z.infer<typeof DensityBandwidthSchema>;
 
 /** density 变换（一维 KDE 采样，改行数） */
 export type IRPlotDensityTransform = z.infer<typeof DensityTransformSchema>;
 
 /** smooth 方法策略（首轮为线性回归） */
-export type IRPlotSmoothMethodSpec = z.infer<typeof SmoothMethodSpecSchema>;
+export type IRPlotSmoothMethod = z.infer<typeof SmoothMethodSchema>;
 
 /** smooth 变换（线性趋势线采样，改行数） */
 export type IRPlotSmoothTransform = z.infer<typeof SmoothTransformSchema>;

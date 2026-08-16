@@ -64,11 +64,11 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 `pivot` defaults to `origin` and accepts a [Scope self point](#scope-self-point). v0.5 removes IR rotate `cx` / `cy`; migrate to `pivot: [cx, cy]`. Scene transform `cx` / `cy` remain lowering output.
 
-<span id="clipspec"></span>
+<span id="clip"></span>
 
 ## Clip
 
-`ClipSpecSchema` is the Core contract accepted by `Scope.clip`. Built-in geometry uses the JSON shapes below. Any other `kind` is a JSON-safe custom clip spec: Core preserves the serialized fields, then validates and resolves them through the matching Definition contributed to `CompileOptions.clips`.
+`ClipSchema` is the Core contract accepted by `Scope.clip`. Built-in geometry uses the JSON shapes below. Any other `kind` is a JSON-safe custom clip spec: Core preserves the serialized fields, then validates and resolves them through the matching Definition contributed to `CompileOptions.clips`.
 
 | Branch            | Discriminator            | Content                                                      |
 | ----------------- | ------------------------ | ------------------------------------------------------------ |

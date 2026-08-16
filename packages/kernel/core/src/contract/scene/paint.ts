@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '../../schemas';
+import type { IRPaint } from '../../schemas';
 import type { ClipResource } from './clip';
 import type { MarkerPrimitive } from './marker';
 
@@ -36,7 +36,7 @@ export type ResolvedPatternTile = {
 export type PaintResource = {
   kind: 'paint';
   id: string;
-  spec: IRPaintSpec;
+  spec: IRPaint;
   /** 已解析 pattern tile；仅 pattern 资源有，gradient / image 资源缺省 */
   tile?: ResolvedPatternTile;
 };

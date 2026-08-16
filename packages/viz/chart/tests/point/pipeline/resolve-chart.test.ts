@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChartSpec } from '../../../src/point';
+import { resolvePointChart } from '../../../src/point';
 
 const base = {
   namespace: 'chart',
@@ -10,9 +10,9 @@ const base = {
   encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
 } as const;
 
-describe('resolvePointChartSpec merge', () => {
+describe('resolvePointChart merge', () => {
   it('按固定顺序合并 transform、scale、patch 与 Plot mark extension', () => {
-    const result = resolvePointChartSpec({
+    const result = resolvePointChart({
       ...base,
       transform: [{ kind: 'sort', field: 'margin', order: 'descending' }],
       scales: [
@@ -56,10 +56,10 @@ describe('resolvePointChartSpec merge', () => {
   });
 
   it('区分省略 guides、空 replacement 与显式 replacement', () => {
-    expect(resolvePointChartSpec(base).plotSpec.guides).toHaveLength(2);
-    expect(resolvePointChartSpec({ ...base, guides: [] }).plotSpec.guides).toEqual([]);
+    expect(resolvePointChart(base).plotSpec.guides).toHaveLength(2);
+    expect(resolvePointChart({ ...base, guides: [] }).plotSpec.guides).toEqual([]);
     expect(
-      resolvePointChartSpec({
+      resolvePointChart({
         ...base,
         guides: [{ type: 'axis', id: 'user.axis', dimension: 'x', grid: true }],
       }).plotSpec.guides,
@@ -68,7 +68,7 @@ describe('resolvePointChartSpec merge', () => {
 
   it('接受保持 recipe core 的同 kind coordinate replacement', () => {
     expect(
-      resolvePointChartSpec({
+      resolvePointChart({
         ...base,
         coordinate: { type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' },
       }).plotSpec.coordinate,

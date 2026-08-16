@@ -53,7 +53,7 @@ describe('未给 maxTextWidth 行为不变', () => {
   });
 });
 
-describe('折出物理行继承 LineSpec 样式', () => {
+describe('折出物理行继承 IRLine 样式', () => {
   it('[{text:"aaa bbb", fill:"red"}] + maxTextWidth=3 → ["aaa","bbb"] 均 fill red', () => {
     const t = compileNode({ text: [{ text: 'aaa bbb', fill: 'red' }], maxTextWidth: 3 });
     expect(t.lines.map(l => ({ text: l.text, fill: l.fill }))).toEqual([

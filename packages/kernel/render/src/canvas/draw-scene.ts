@@ -1,12 +1,12 @@
 import type {
   BlendModeValue,
   IRDropShadow,
-  IRPaintSpec,
+  IRPaint,
   MarkerFill,
   MarkerPrimitive,
   PaintValue,
   PathCommand,
-  ResolvedArrowEndSpec,
+  ResolvedArrowEnd,
   ResolvedPatternTile,
   Scene,
   ScenePrimitive,
@@ -236,7 +236,7 @@ const resolvePaintStyle = (
   return undefined;
 };
 
-type ImageSpec = Extract<IRPaintSpec, { kind: 'image' }>;
+type ImagePaint = Extract<IRPaint, { kind: 'image' }>;
 
 /** 取图片源的固有尺寸（HTMLImageElement 用 naturalWidth，其余回退 width/height） */
 const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
@@ -254,7 +254,7 @@ const imageNaturalSize = (img: CanvasImageSource): { w: number; h: number } => {
  */
 const fillImage = (
   ctx: CanvasRenderingContext2D,
-  spec: ImageSpec,
+  spec: ImagePaint,
   bbox: BBox,
   fillOpacity: number | undefined,
   options: DrawOptions,
@@ -659,7 +659,7 @@ const buildPattern = (
  */
 const drawArrowMarker = (
   ctx: CanvasRenderingContext2D,
-  spec: ResolvedArrowEndSpec,
+  spec: ResolvedArrowEnd,
   vertex: Point,
   angle: number,
   strokeWidth: number,

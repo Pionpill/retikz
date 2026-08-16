@@ -6,8 +6,8 @@
 
 ## 完工摘要
 
-- `IRPlotSpec.composition` 已收敛为 `defaultView` / `views` / `arrangements` / `spacing` / `resolve`，旧 `defaultScope` / `scopes` / `facets` / `scaffolds` / `layout` / `guidePolicy` 不再作为 schema 字段接受。
-- mark 与 axis 的底层绑定字段统一为 `coordinateView`；React / Vanilla DSL 继续提供 `xAxisId` / `yAxisId`、`facetId`、`trackId`、`scaffoldId` 等更贴近用户心智的糖，并在输出 IRPlotSpec 前展开。
+- `IRPlot.composition` 已收敛为 `defaultView` / `views` / `arrangements` / `spacing` / `resolve`，旧 `defaultScope` / `scopes` / `facets` / `scaffolds` / `layout` / `guidePolicy` 不再作为 schema 字段接受。
+- mark 与 axis 的底层绑定字段统一为 `coordinateView`；React / Vanilla DSL 继续提供 `xAxisId` / `yAxisId`、`facetId`、`trackId`、`scaffoldId` 等更贴近用户心智的糖，并在输出 IRPlot 前展开。
 - facet、overlay 多轴、共享轨道、grid targeting、locator / provenance 与文档 demo 已按同一 composition 结构对齐；多层 facet label 与 synchronized scale 也纳入当前实现。
 - ADR-01～08 的概念决策已实现，但字段命名与公开结构以本 ADR 为准；后续不得继续扩展旧结构。
 
@@ -25,7 +25,7 @@ retikz 仍然需要比这些库更底层：它要同时覆盖 cartesian、polar�
 
 ## 决策：保留 `composition` 顶层，但重构为 views + arrangements + resolve + spacing
 
-`IRPlotSpec.composition` 继续作为 Plot 内坐标复合的唯一入口，但内部字段破坏性重命名和分层：
+`IRPlot.composition` 继续作为 Plot 内坐标复合的唯一入口，但内部字段破坏性重命名和分层：
 
 - `composition.scopes` 改为 `composition.views`，表示可被 mark / guide 引用的坐标视图。
 - `composition.defaultScope` 改为 `composition.defaultView`，表示省略绑定时使用的默认坐标视图。
@@ -42,7 +42,7 @@ type CoordinateViewPlacement =
   | { kind: 'overlay'; target: CoordinateViewId; zIndex?: number }
   | { kind: 'slot'; arrangement: string; slot: string };
 
-type CoordinateViewSpec = {
+type CoordinateView = {
   id: CoordinateViewId;
   coordinate: IRPlotCoordinateOperation;
   placement?: CoordinateViewPlacement;
@@ -59,18 +59,18 @@ type GridTargetSelector = {
   track?: { arrangement?: string; id?: string };
 };
 
-type AxisGridSpec = {
+type AxisGridConfig = {
   applyTo?: GridResolveMode | 'selected';
   select?: GridTargetSelector;
 };
 
-type CompositionResolveSpec = {
+type CompositionResolve = {
   scale?: Record<string, ScaleResolveMode>;
   axis?: Record<string, AxisResolveMode>;
   grid?: Record<string, GridResolveMode>;
 };
 
-type CompositionSpacingSpec = {
+type CompositionSpacing = {
   panelGap?: number;
   trackGap?: number;
   axisGap?: number;
@@ -78,7 +78,7 @@ type CompositionSpacingSpec = {
   padding?: { top?: number; right?: number; bottom?: number; left?: number };
 };
 
-type FacetArrangementSpec = {
+type FacetArrangement = {
   kind: 'facet';
   id: string;
   view: CoordinateViewId;
@@ -86,12 +86,12 @@ type FacetArrangementSpec = {
   column?: FacetDimensionInput;
   empty?: FacetEmptyPolicyValue;
   header?: { row?: boolean; column?: boolean };
-  resolve?: CompositionResolveSpec;
-  spacing?: Pick<CompositionSpacingSpec, 'panelGap' | 'labelGap'>;
+  resolve?: CompositionResolve;
+  spacing?: Pick<CompositionSpacing, 'panelGap' | 'labelGap'>;
   viewIdTemplate?: string;
 };
 
-type TrackArrangementSpec = {
+type TrackArrangement = {
   kind: 'tracks';
   id: string;
   coordinate: IRPlotCoordinateOperation;
@@ -105,23 +105,23 @@ type TrackArrangementSpec = {
     coordinate?: IRPlotCoordinateOperation;
   }>;
   header?: { track?: boolean };
-  resolve?: CompositionResolveSpec;
-  spacing?: Pick<CompositionSpacingSpec, 'trackGap' | 'labelGap'>;
+  resolve?: CompositionResolve;
+  spacing?: Pick<CompositionSpacing, 'trackGap' | 'labelGap'>;
   viewIdTemplate?: string;
 };
 
-type CompositionArrangementSpec = FacetArrangementSpec | TrackArrangementSpec;
+type CompositionArrangement = FacetArrangement | TrackArrangement;
 
-type CoordinateCompositionSpec = {
+type CoordinateComposition = {
   defaultView: CoordinateViewId;
-  views: Array<CoordinateViewSpec>;
-  arrangements?: Array<CompositionArrangementSpec>;
-  resolve?: CompositionResolveSpec;
-  spacing?: CompositionSpacingSpec;
+  views: Array<CoordinateView>;
+  arrangements?: Array<CompositionArrangement>;
+  resolve?: CompositionResolve;
+  spacing?: CompositionSpacing;
 };
 
-type AxisGuideSpec = {
-  grid?: boolean | AxisGridSpec;
+type IRPlotAxisGuide = {
+  grid?: boolean | AxisGridConfig;
   coordinateView?: CoordinateViewId;
 };
 ```
@@ -147,7 +147,7 @@ type AxisGuideSpec = {
 2. facet panel 默认 view id 为 `{arrangementId}.panel.{rowKey}.{columnKey}`。`rowKey` / `columnKey` 来自对应 facet value tuple 的 canonical JSON key；缺失方向使用 `_`。`viewIdTemplate` 可覆盖默认模板，支持 `{arrangement}`、`{row}`、`{column}`、`{panel}` 占位符。
 3. tracks 默认 view id 为 `{arrangementId}.track.{trackId}`。单个 `tracks[].view` 可显式覆盖该 track 的 view id；`viewIdTemplate` 可作为 arrangement 级默认模板，支持 `{arrangement}`、`{track}` 占位符。
 4. 派生 view id 与 explicit view id 冲突、同一 arrangement 内重复生成、或模板缺少必要占位导致重复时，schema normalization / build 阶段必须 fail-loud。
-5. 手写 IRPlotSpec 的 mark / axis 可以引用派生 view id；React / Vanilla DSL 中 `<Facet>` 和 `<Track>` children 默认绑定到当前派生 view，不要求用户手写该 id。
+5. 手写 IRPlot 的 mark / axis 可以引用派生 view id；React / Vanilla DSL 中 `<Facet>` 和 `<Track>` children 默认绑定到当前派生 view，不要求用户手写该 id。
 
 理由：
 

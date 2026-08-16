@@ -3,7 +3,7 @@ import type {
   ChartPresentationFlexItem,
   ChartPresentationPresetValue,
 } from '@retikz/chart';
-import type { IRFont, IRLineSpec, IRNode, IRTextBlock } from '@retikz/core';
+import type { IRFont, IRLine, IRNode, IRTextBlock } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import { ChartPresentationPreset } from '@retikz/chart';
@@ -55,7 +55,7 @@ export const ChartSource = createPresentationMarker(ChartPresentationPreset.Sour
 const isPresentationMarker = (value: unknown): value is ChartPresentationMarkerComponent =>
   value === ChartTitle || value === ChartSubtitle || value === ChartNote || value === ChartSource;
 
-type ChartTextLine = IRLineSpec;
+type ChartTextLine = IRLine;
 
 const textLinesOf = (children: ReactNode): Array<ChartTextLine> => {
   const lines: Array<ChartTextLine> = [];

@@ -4,7 +4,7 @@ import { compileToScene } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { resolveScaleRegistry } from '../../../src/providers';
@@ -12,7 +12,7 @@ import {
   assertScaleFieldCompatible as assertScaleFieldCompatibleOp,
   derivePositionScale,
 } from '../../../src/resolve/scale';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
@@ -23,7 +23,7 @@ const assertScaleFieldCompatible = (
   scaleName: string,
 ) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, { registry: scaleRegistry });
 
-const compile = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>) =>
+const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) }).scene;
 
 /** cartesian spec，可选省略 coordinate 的 x/y 绑定（触发派生） */
@@ -31,8 +31,8 @@ const spec = (
   coordinate: Record<string, unknown>,
   model: Array<{ name: string; type: string }>,
   scales: Array<unknown> = [],
-): IRPlotSpec =>
-  PlotSpecSchema.parse({
+): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', model },
@@ -151,7 +151,7 @@ describe('type-driven scale 集成', () => {
 
   it('multi_mark_explicit_checks_all_field_types', () => {
     // 两 mark 共用 x：a=continuous、c=categorical，显式 linear + model → 第二个字段 categorical 触发兼容报错
-    const s = PlotSpecSchema.parse({
+    const s = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -177,7 +177,7 @@ describe('type-driven scale 集成', () => {
 
   it('derive_mixed_role_types_throws', () => {
     // 省略 x scale，两 mark 的 x 字段类型不一（continuous + categorical）→ 无从派生单一 scale，fail-loud
-    const s = PlotSpecSchema.parse({
+    const s = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

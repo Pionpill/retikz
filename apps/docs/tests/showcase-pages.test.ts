@@ -228,7 +228,7 @@ describe('collectShowcasePages', () => {
     expect(source).toContain('usage: distribution');
     expect(source).toContain("files: ['bubble-basic', 'bubble-basic.data.ts']");
     expect(source).toContain("size: 'xxl'");
-    expect(source).not.toMatch(/BubbleChartSpec|BubbleChartRecipe|@retikz\/chart-react|@retikz\/chart-vanilla/);
+    expect(source).not.toMatch(/BubbleChartIR|BubbleChartRecipe|@retikz\/chart-react|@retikz\/chart-vanilla/);
 
     const expanded = await expandMdxIncludes(source, lang);
     const headings = Array.from(expanded.matchAll(/^##\s+(.+)$/gm), match => `## ${match[1]}`);

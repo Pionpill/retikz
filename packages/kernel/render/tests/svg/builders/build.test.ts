@@ -2,7 +2,7 @@ import type { GroupPrim, MarkerPrimitive, PaintResource, RectPrim, ScenePrimitiv
 
 import { describe, expect, it } from 'vitest';
 
-import { collectArrowSpecs } from '../../../src/svg/builders/arrow-collect';
+import { collectArrowEnds } from '../../../src/svg/builders/arrow-collect';
 import { buildMarkerPrim } from '../../../src/svg/builders/marker-prim';
 import { buildPaintDef } from '../../../src/svg/builders/paint-defs';
 import { buildPrim } from '../../../src/svg/builders/prim';
@@ -172,7 +172,7 @@ describe('buildPaintDef —— 错误路径兜底', () => {
   });
 });
 
-describe('collectArrowSpecs —— 防御', () => {
+describe('collectArrowEnds —— 防御', () => {
   it('group-undefined-child：嵌套 group 含 undefined 槽位 → 跳过、不抛', () => {
     const prims: Array<ScenePrimitive> = [
       {
@@ -180,7 +180,7 @@ describe('collectArrowSpecs —— 防御', () => {
         children: [undefined as unknown as ScenePrimitive],
       },
     ];
-    expect(() => collectArrowSpecs(prims)).not.toThrow();
-    expect(collectArrowSpecs(prims)).toEqual([]);
+    expect(() => collectArrowEnds(prims)).not.toThrow();
+    expect(collectArrowEnds(prims)).toEqual([]);
   });
 });

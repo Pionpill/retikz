@@ -1,12 +1,12 @@
 import type { IRJsonObject, JsonValue } from '@retikz/core';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
 import type { CHART_NAMESPACE, IRChartShared } from '../../base/schemas';
 import type { ChartMemberKindValue } from '../../shared';
 
 /** 所有私有 Chart variant 共用的 namespace 与判别边界 */
-export type InternalChartSpecBound = IRChartShared & {
+export type InternalChartBound = IRChartShared & {
   /** Chart composite namespace */
   namespace: typeof CHART_NAMESPACE;
   /** 私有或公开 variant 判别值 */
@@ -49,8 +49,8 @@ export type ChartMemberPatch = {
 
 /** recipe 提供给通用 resolver 的 immutable pre-merge seed */
 export type ChartRecipeSeed = {
-  /** 完整的 recipe-owned PlotSpec seed */
-  plot: IRPlotSpec;
+  /** 完整的 recipe-owned IRPlot seed */
+  plot: IRPlot;
   /** seed 中由 recipe 拥有的 member 索引 */
   members: ReadonlyArray<ChartSeedMember>;
   /** 尚未应用的 type-specific patches */
@@ -70,25 +70,25 @@ export type ChartRecipeStyleContext = {
 };
 
 /** 保留具体 variant 类型的 Chart recipe */
-export type ChartRecipe<TSpec extends InternalChartSpecBound> = {
+export type ChartRecipe<TVariant extends InternalChartBound> = {
   /** 与 schema literal 一致的 variant type */
-  type: TSpec['type'];
+  type: TVariant['type'];
   /** variant 的精确输入 schema */
-  schema: ZodType<TSpec>;
+  schema: ZodType<TVariant>;
   /** 从已解析 variant 建立 pre-merge seed */
-  createSeed: (spec: TSpec, style: ChartRecipeStyleContext) => ChartRecipeSeed;
+  createSeed: (spec: TVariant, style: ChartRecipeStyleContext) => ChartRecipeSeed;
   /** merge 后验证 recipe 必需结构 */
-  validateCore: (spec: TSpec, plotSpec: IRPlotSpec) => void;
+  validateCore: (spec: TVariant, plotSpec: IRPlot) => void;
 };
 
 /** 一次 schema bind 后恢复精确 variant 的闭包集合 */
 export type BoundChartRecipe = {
   /** 已解析的公共 Chart bound */
-  spec: InternalChartSpecBound;
+  spec: InternalChartBound;
   /** 生成绑定 variant 的 seed */
   createSeed: (style: ChartRecipeStyleContext) => ChartRecipeSeed;
-  /** 验证绑定 variant 的最终 PlotSpec */
-  validateCore: (plotSpec: IRPlotSpec) => void;
+  /** 验证绑定 variant 的最终 IRPlot */
+  validateCore: (plotSpec: IRPlot) => void;
 };
 
 /** 冻结异构 tuple 中统一 lookup 的 recipe 表面 */

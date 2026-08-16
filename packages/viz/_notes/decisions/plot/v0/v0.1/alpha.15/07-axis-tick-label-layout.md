@@ -20,7 +20,7 @@ ADR-06 处理的是 ticks 本身：候选 tick source、visible tick density、t
 | 首尾保留                |      `labelFlush` / bound 相关 |                     手动 | `showMinLabel/showMaxLabel` |                           自动 |            `includeBounds` |               keepHeader / keepTail | 新增                |
 | 边界溢出                |    `labelBound` / `labelFlush` |      margins / text mark |             overflow 类配置 |        overflow justify/remove | labelOffset 注明会裁剪风险 |                           transform | 新增简化版          |
 | 省略号 / 换行           |                   `labelLimit` | text `lineWidth` 可 wrap |     overflow / width 类配置 | wrap by disabling autoRotation |             无通用自动换行 |             autoEllipsis / autoWrap | 延后，不在本 ADR    |
-| 函数 formatter / 表达式 |                    `labelExpr` |      `tickFormat` 可函数 |            formatter 可函数 |                      formatter |                   callback |               labelFormatter 可函数 | 不进 IRPlotSpec IR  |
+| 函数 formatter / 表达式 |                    `labelExpr` |      `tickFormat` 可函数 |            formatter 可函数 |                      formatter |                   callback |               labelFormatter 可函数 | 不进 IRPlot IR  |
 
 资料来源：[Vega axes](https://vega.github.io/vega/docs/axes/)、[Vega-Lite axis](https://vega.github.io/vega-lite/docs/axis.html)、[Observable Plot axis mark](https://observablehq.com/plot/marks/axis)、[ECharts axisLabel changelog](https://echarts.apache.org/zh/changelog.html)、[Highcharts axis labels autoRotation](https://api.highcharts.com/highcharts/xAxis.labels.autoRotation)、[Chart.js common tick options](https://www.chartjs.org/docs/latest/axes/cartesian/_common_ticks.html)、[G2 axis](https://g2.antv.antgroup.com/en/manual/component/axis)。
 
@@ -94,7 +94,7 @@ tickLabels: {
 - `overflow: 'flush'` 对首尾附近 label 做边缘对齐，减少被裁剪概率。
 - `tolerance` 省略为 1。
 
-自适应布局使用确定性的文本宽度估算与 font size，不依赖 renderer 真实测量，也不承诺与浏览器排版完全一致。未来如果 core 提供稳定 text measurement，可以在不改 IRPlotSpec 的前提下替换估算策略。
+自适应布局使用确定性的文本宽度估算与 font size，不依赖 renderer 真实测量，也不承诺与浏览器排版完全一致。未来如果 core 提供稳定 text measurement，可以在不改 IRPlot 的前提下替换估算策略。
 
 Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabels.format`、label 文本内容或 tick source 放进 theme。局部 guide 的 `tickLabels.layout` 覆盖 theme。
 
@@ -128,6 +128,6 @@ Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabel
 - label formatter 函数或表达式。
 - interaction state，例如 hover / selected label。
 - label 背景、描边、pin / leader line。
-- chart preset；后续 chart 可消费本 IRPlotSpec 能力。
+- chart preset；后续 chart 可消费本 IRPlot 能力。
 
 ---

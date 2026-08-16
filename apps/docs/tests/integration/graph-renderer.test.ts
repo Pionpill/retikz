@@ -4,19 +4,14 @@ import type { FC } from 'react';
 
 import { compileToScene, lowerIRToKernel, ThemeMode } from '@retikz/core';
 import {
-  createGraphConnector,
+  createRelation,
   createGraphDefinitions,
-  createGraphNode,
-  GraphConnectorDefinition,
-  GraphNodeDefinition,
+  createEntity,
+  RelationDefinition,
+  EntityDefinition,
 } from '@retikz/graph';
-import { GraphConnector, GraphNode } from '@retikz/graph-react';
-import {
-  graphConnector,
-  GraphConnectorInputEmbedAdapter,
-  graphNode,
-  GraphNodeInputEmbedAdapter,
-} from '@retikz/graph-vanilla';
+import { Relation, Entity } from '@retikz/graph-react';
+import { relation, RelationInputEmbedAdapter, entity, EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
 import { Layout, Scope, Step } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
@@ -26,8 +21,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import GraphFrameBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.en.demo';
-import GraphFrameBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.zh.demo';
+import ContainerBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.en.demo';
+import ContainerBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/graph-frame-basic.zh.demo';
 import ProcessRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/process-recipe.en.demo';
 import ProcessRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/frame/graph-frame/process-recipe.zh.demo';
 import ConnectorRoutingEnDemo from '../../src/modules/docs/contents/schematic/graph/base/connector/connector-routing.en.demo';
@@ -36,10 +31,10 @@ import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/b
 import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/class-recipe.zh.demo';
 import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/data-recipe.en.demo';
 import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/data-recipe.zh.demo';
-import GraphNodeEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.en.demo';
-import GraphNodeZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.zh.demo';
+import EntityEnDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.en.demo';
+import EntityZhDemo from '../../src/modules/docs/contents/schematic/graph/base/code/graph-node.zh.demo';
 
-const definitions = [GraphNodeDefinition, GraphConnectorDefinition] as const;
+const definitions = [EntityDefinition, RelationDefinition] as const;
 
 const sceneOf = (children: ReadonlyArray<IRChild>): Scene =>
   compileToScene(
@@ -64,10 +59,10 @@ const directChildren = (): Array<IRChild> => [
   translated(
     48,
     65,
-    createGraphNode({ id: 'start', role: 'terminal', position: [0, 0], text: 'Start', color: '#2563eb' }),
+    createEntity({ id: 'start', role: 'terminal', position: [0, 0], text: 'Start', color: '#2563eb' }),
   ),
-  translated(210, 65, createGraphNode({ id: 'step', role: 'stage', position: [0, 0], text: 'Step', color: '#16a34a' })),
-  createGraphConnector({
+  translated(210, 65, createEntity({ id: 'step', role: 'stage', position: [0, 0], text: 'Step', color: '#16a34a' })),
+  createRelation({
     id: 'edge',
     role: 'flow',
     children: [
@@ -84,15 +79,15 @@ const ReactGraph: FC = () =>
     createElement(
       Scope,
       { transforms: [{ kind: 'translate', x: 48, y: 65 }] },
-      createElement(GraphNode, { id: 'start', role: 'terminal', position: [0, 0], color: '#2563eb' }, 'Start'),
+      createElement(Entity, { id: 'start', role: 'terminal', position: [0, 0], color: '#2563eb' }, 'Start'),
     ),
     createElement(
       Scope,
       { transforms: [{ kind: 'translate', x: 210, y: 65 }] },
-      createElement(GraphNode, { id: 'step', role: 'stage', position: [0, 0], color: '#16a34a' }, 'Step'),
+      createElement(Entity, { id: 'step', role: 'stage', position: [0, 0], color: '#16a34a' }, 'Step'),
     ),
     createElement(
-      GraphConnector,
+      Relation,
       { id: 'edge', role: 'flow' },
       createElement(Step, { kind: 'move', to: 'start' }),
       createElement(Step, { kind: 'fold', via: '-|', to: 'step', label: { text: 'next' } }),
@@ -112,21 +107,18 @@ const vanillaChildren = (): Array<IRChild> => [
     48,
     65,
     lower(
-      GraphNodeInputEmbedAdapter,
-      graphNode('start', { role: 'terminal', position: [0, 0], text: 'Start', color: '#2563eb' }),
+      EntityInputEmbedAdapter,
+      entity('start', { role: 'terminal', position: [0, 0], text: 'Start', color: '#2563eb' }),
     ),
   ),
   translated(
     210,
     65,
-    lower(
-      GraphNodeInputEmbedAdapter,
-      graphNode('step', { role: 'stage', position: [0, 0], text: 'Step', color: '#16a34a' }),
-    ),
+    lower(EntityInputEmbedAdapter, entity('step', { role: 'stage', position: [0, 0], text: 'Step', color: '#16a34a' })),
   ),
   lower(
-    GraphConnectorInputEmbedAdapter,
-    graphConnector('edge', { role: 'flow', way: ['start', { label: { text: 'next' } }, '-|', 'step'] }),
+    RelationInputEmbedAdapter,
+    relation('edge', { role: 'flow', way: ['start', { label: { text: 'next' } }, '-|', 'step'] }),
   ),
 ];
 
@@ -140,8 +132,8 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   ) as CanvasRenderingContext2D;
 
 describe('Graph renderer integration', () => {
-  it('lowers the real GraphNode demo with explicit ordinary Core paints', () => {
-    const preview = buildPreviewIR(GraphNodeZhDemo);
+  it('lowers the real Entity demo with explicit ordinary Core paints', () => {
+    const preview = buildPreviewIR(EntityZhDemo);
     const lowered = lowerIRToKernel(
       { ...preview.ir, theme: { mode: ThemeMode.Light } },
       { composites: createGraphDefinitions() },
@@ -160,10 +152,10 @@ describe('Graph renderer integration', () => {
   });
 
   it.each([
-    ['graph frame en', GraphFrameBasicEnDemo],
-    ['graph frame zh', GraphFrameBasicZhDemo],
-    ['graph node en', GraphNodeEnDemo],
-    ['graph node zh', GraphNodeZhDemo],
+    ['graph frame en', ContainerBasicEnDemo],
+    ['graph frame zh', ContainerBasicZhDemo],
+    ['graph node en', EntityEnDemo],
+    ['graph node zh', EntityZhDemo],
     ['connector en', ConnectorRoutingEnDemo],
     ['connector zh', ConnectorRoutingZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],
@@ -184,7 +176,7 @@ describe('Graph renderer integration', () => {
     const vanilla = vanillaChildren();
     expect(react).toEqual(direct);
     expect(vanilla.slice(0, 2)).toEqual(direct.slice(0, 2));
-    expect(vanilla.find(child => child.type === 'graphConnector')).toMatchObject({ id: 'edge', role: 'flow' });
+    expect(vanilla.find(child => child.type === 'relation')).toMatchObject({ id: 'edge', role: 'flow' });
   });
 
   it('produces one renderer-agnostic Scene without Graph semantic discriminators', () => {
@@ -192,7 +184,7 @@ describe('Graph renderer integration', () => {
       { type: 'scene', version: 1, children: directChildren() },
       { composites: [...definitions], padding: 0 },
     );
-    expect(JSON.stringify(result.scene)).not.toContain('graphNode');
+    expect(JSON.stringify(result.scene)).not.toContain('entity');
     expect(result.scene.primitives.some(primitive => primitive.type === 'path')).toBe(true);
   });
 
@@ -207,13 +199,13 @@ describe('Graph renderer integration', () => {
   it('keeps a runnable Vanilla example with direct Graph nodes', () => {
     const input = scene({
       children: [
-        graphNode('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
-        graphNode('step', { role: 'stage', position: [80, 0], text: 'Step' }),
-        graphConnector('edge', { role: 'flow', way: ['start', { label: { text: 'next' } }, 'step'] }),
+        entity('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
+        entity('step', { role: 'stage', position: [80, 0], text: 'Step' }),
+        relation('edge', { role: 'flow', way: ['start', { label: { text: 'next' } }, 'step'] }),
       ],
     });
     const svg = renderVanillaToSvgString(input, {
-      adapters: [GraphNodeInputEmbedAdapter, GraphConnectorInputEmbedAdapter],
+      adapters: [EntityInputEmbedAdapter, RelationInputEmbedAdapter],
       output: { width: 220, height: 120 },
     });
     expect(svg).toContain('<svg');

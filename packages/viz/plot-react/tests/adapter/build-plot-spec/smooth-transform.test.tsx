@@ -1,13 +1,13 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createSmoothTrendSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotSpec smooth transform forwarding', () => {
+describe('buildPlotIR smooth transform forwarding', () => {
   it('smooth_declared_to_ir', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark x="time" y="value" color="series" />
         <PathMark
@@ -39,6 +39,6 @@ describe('buildPlotSpec smooth transform forwarding', () => {
     });
 
     expect(spec.marks[1]).toMatchObject(expected.marks[1]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

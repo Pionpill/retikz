@@ -5,7 +5,7 @@ export * from './incremental';
 export * from './lower';
 export { computeLayout } from './scene';
 export type {
-  FontSpec,
+  TextFont,
   LoweredTex,
   LoweredTexPaint,
   LoweredTexPath,

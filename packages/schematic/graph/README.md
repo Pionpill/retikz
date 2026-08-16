@@ -6,11 +6,12 @@ through explicit Definitions to canonical Core IR.
 
 The first release includes:
 
-- `GraphFrame` for authored headers and sections
-- `GraphNode` as one semantic IR entry whose `role` distinguishes `terminal`, `stage`, `decision`, and `junction`
-- `GraphConnector` as one semantic IR entry whose `role` distinguishes `flow`, `branch`, `dependency`, and `feedback`
+- `Container` for authored headers and sections
+- `Entity` as one semantic IR entry whose `role` distinguishes `terminal`, `stage`, `decision`, and `junction`
+- `Relation` as one semantic IR entry whose `role` distinguishes `flow`, `branch`, `dependency`, and `feedback`
 - one explicit `Definition` for each Graph element
-- five Graph-owned `GraphNodeVariant` values for node visual hierarchy
+- five Graph-owned `EntityVariant` values for node visual hierarchy
+- `GraphType` for the `entity`, `relation`, and `container` IR discriminators
 
 ## Install
 
@@ -23,15 +24,15 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ```ts
 import { DrawWay } from '@retikz/core';
-import { createGraphConnector, createGraphDefinitions, createGraphNode } from '@retikz/graph';
+import { createRelation, createGraphDefinitions, createEntity } from '@retikz/graph';
 
-const step = createGraphNode({
+const step = createEntity({
   id: 'step',
   role: 'stage',
   position: [160, 0],
   text: 'Process',
 });
-const edge = createGraphConnector({
+const edge = createRelation({
   id: 'edge',
   role: 'flow',
   way: [[0, 0], DrawWay.Hv, 'step'],
@@ -41,7 +42,7 @@ const composites = createGraphDefinitions();
 
 Omitted node `textColor`, `stroke`, and `fill` values are resolved during
 lowering from `variant`. `default`, `primary`, `secondary`, `outline`, and
-`vibrant` are closed Graph-owned values; `GraphFrame.graphNodeVariant`
+`vibrant` are closed Graph-owned values; `Container.entityVariant`
 provides an inherited default for descendants. Each unit's `color` is its
 primary color; omitting it uses black in Light mode or white in Dark mode.
 Fixed 10%, 15%, and 60% tints are precomposed against white in Light mode or
@@ -49,7 +50,7 @@ black in Dark mode and remain opaque. Explicit leaf paint and opacity fields
 pass through independently. Variant resolution does not read Core categorical
 colors or require a custom ThemeStyle registry.
 
-GraphConnector's `way` form is authoring-only and is normalized through Core
+Relation's `way` form is authoring-only and is normalized through Core
 `parseWay()` into canonical Step `children`. Persisted JSON contains only
 `children`. Imports do not mutate a global registry; pass only the Definitions
 selected for the current figure through Core compile options.

@@ -1,15 +1,15 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
-import { AxisGridApplyTo, PlotSpecSchema } from '@retikz/plot';
+import { AxisGridApplyTo, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Axis } from '../../../src/components/guides';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
 
-describe('buildPlotSpec composition adapter surface', () => {
-  const composition: NonNullable<IRPlotSpec['composition']> = {
+describe('buildPlotIR composition adapter surface', () => {
+  const composition: NonNullable<IRPlot['composition']> = {
     defaultView: 'temp',
     views: [
       { id: 'temp', coordinate: { type: 'cartesian2D', x: '__x', y: '__y' } },
@@ -22,7 +22,7 @@ describe('buildPlotSpec composition adapter surface', () => {
   };
 
   it('passes composition coordinateView and axis placement through schema', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark coordinateView="temp" x="day" y="temperature" />
         <IntervalMark coordinateView="rain" x="day" y="rainfall" />
@@ -41,11 +41,11 @@ describe('buildPlotSpec composition adapter surface', () => {
       placement: { kind: 'side', side: 'right' },
       title: 'Rainfall',
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('passes axis grid target selectors through schema', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark coordinateView="temp" x="day" y="temperature" />
         <Axis
@@ -69,11 +69,11 @@ describe('buildPlotSpec composition adapter surface', () => {
         select: { view: ['temp'] },
       },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('fills composition view coordinate scale bindings from declared scales', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Scale dimension="x" type="linear" />
         <Scale dimension="y" type="linear" />
@@ -99,11 +99,11 @@ describe('buildPlotSpec composition adapter surface', () => {
       { type: 'cartesian2D', x: '__x', y: '__y' },
       { type: 'cartesian2D', x: '__x', y: '__y' },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('fills shared scaffold coordinate scale bindings from declared scales', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Scale dimension="x" type="linear" />
         <Scale dimension="y" type="linear" />
@@ -130,6 +130,6 @@ describe('buildPlotSpec composition adapter surface', () => {
       kind: 'tracks',
       coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

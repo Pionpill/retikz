@@ -1,4 +1,4 @@
-﻿# ADR-01：ArrowDefinition 注册面（自定义 arrow + MarkerPrimitive + 内置 7 降注册项）
+# ADR-01：ArrowDefinition 注册面（自定义 arrow + MarkerPrimitive + 内置 7 降注册项）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
@@ -24,7 +24,7 @@
 ### 设计细节（具体决策）
 
 - **`MarkerPrimitive` 窄子集**（`core/src/primitive/marker.ts`）：仅 marker-local `path` / `ellipse` / `rect` / `group`；`fill` 收窄到 `string | { kind:'contextStroke' }`（无 `resourceRef` / 外部资源）；禁 `text`、`arrowStart/End`、`clipRef`。允许 `group`（嵌套 transform 做复合箭头），但禁再套 marker / text。
-- **emit 落点 = compile**（对齐 `ShapeDefinition.emit`，shape 几何也在 compile 产 ScenePrimitive）：compile 期调 `def.emit(ctx)` 产 `MarkerPrimitive[]` + 解析后 wrapper 参数（`baseSize` / `refX` / `markerWidth` / `markerHeight` / `opacity`），写进 Scene 的 `ArrowEndSpec`（升级为「已解析 marker 描述」，渲染无关）。adapter 只**物化**：react 把 `ArrowEndSpec.marker` 嵌进 `<marker viewBox refX refY=baseSize/2 markerWidth markerHeight orient="auto-start-reverse" markerUnits="strokeWidth">`，不再 `switch`、不调 emit、不需 arrows 注册表。`arrows` 像 `shapes` 一样只喂 `compileToScene`（react `<Layout>` 加 `arrows` prop 转发内部 compile），Canvas / PDF adapter 零 arrow 逻辑。
+- **emit 落点 = compile**（对齐 `ShapeDefinition.emit`，shape 几何也在 compile 产 ScenePrimitive）：compile 期调 `def.emit(ctx)` 产 `MarkerPrimitive[]` + 解析后 wrapper 参数（`baseSize` / `refX` / `markerWidth` / `markerHeight` / `opacity`），写进 Scene 的 `ResolvedArrowEnd`（升级为「已解析 marker 描述」，渲染无关）。adapter 只**物化**：react 把 `ResolvedArrowEnd.marker` 嵌进 `<marker viewBox refX refY=baseSize/2 markerWidth markerHeight orient="auto-start-reverse" markerUnits="strokeWidth">`，不再 `switch`、不调 emit、不需 arrows 注册表。`arrows` 像 `shapes` 一样只喂 `compileToScene`（react `<Layout>` 加 `arrows` prop 转发内部 compile），Canvas / PDF adapter 零 arrow 逻辑。
 - **视觉字段分工**：`scale` / `length` / `width` / `opacity` 由 framework（compile）统一处理；`hollow` / `lineWidth` / 几何交给 `def`。`ArrowEmitContext` 不传 `hollow`——`def` 自带 `hollow` 标志，framework 据此丢 fill / 启用 lineWidth / 对 `lineContactX` 减 `lineWidth/2`。
 - **compile 查表算 shrink**：`arrow-geometry` / `shrink` 不再 `switch(shape)`，改读 `def` 的 `lineContactX` / `tipX` / `defaultLength` 等。
 - **颜色继承**：`ArrowEmitContext.stroke` 无 override 时 = `{ kind:'contextStroke' }`（alpha.7 `PaintValue`）；adapter 映射 `context-stroke`。
@@ -42,6 +42,6 @@
 
 ---
 
-> **实现指针**：level `red`（动 `ir/path/arrow.ts` shape 开放 + 新 `arrows/` 注册面 + `primitive/marker.ts` + `compile/**` 查表 + `react/render` 物化 + 公开导出）、向后兼容非 breaking（`arrowDetail.shape` 从 7 枚举扩为 string，旧字面量仍合法；内置 7 行为零回归）。真源以代码为准——`ArrowDefinition` / `ArrowEmitContext`（`core/src/arrows/types.ts`）、`BUILTIN_ARROWS`（`core/src/arrows/index.ts`）、`MarkerPrimitive` 窄子集（`core/src/primitive/marker.ts`）、`ArrowEndSpec` 升级（`core/src/primitive/path.ts`）、`CompileOptions.arrows` + emit 调用（`core/src/compile/compile.ts`、`core/src/compile/path/{arrow-geometry,shrink}.ts`）、物化（`react/src/render/arrowMarkers.tsx`）、`<Layout arrows>`（`react/src/kernel/Layout.tsx`）。测试在 `core/tests/arrows/`、`react/tests/render/arrowMarkers*`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+> **实现指针**：level `red`（动 `ir/path/arrow.ts` shape 开放 + 新 `arrows/` 注册面 + `primitive/marker.ts` + `compile/**` 查表 + `react/render` 物化 + 公开导出）、向后兼容非 breaking（`arrowDetail.shape` 从 7 枚举扩为 string，旧字面量仍合法；内置 7 行为零回归）。真源以代码为准——`ArrowDefinition` / `ArrowEmitContext`（`core/src/arrows/types.ts`）、`BUILTIN_ARROWS`（`core/src/arrows/index.ts`）、`MarkerPrimitive` 窄子集（`core/src/primitive/marker.ts`）、`ResolvedArrowEnd` 升级（`core/src/primitive/path.ts`）、`CompileOptions.arrows` + emit 调用（`core/src/compile/compile.ts`、`core/src/compile/path/{arrow-geometry,shrink}.ts`）、物化（`react/src/render/arrowMarkers.tsx`）、`<Layout arrows>`（`react/src/kernel/Layout.tsx`）。测试在 `core/tests/arrows/`、`react/tests/render/arrowMarkers*`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:_notes/decisions/core/v0/v0.2/alpha.8/01-arrow-definition.md`。

@@ -1,10 +1,10 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { ReactNode } from 'react';
 
 import { resolveLabelOf } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
@@ -14,7 +14,7 @@ import { resolvePlotAuthoring } from '../../../src/plot-runtime';
 describe('Plot member extraction characterization', () => {
   it('preserves mixed members, automatic bindings, shortcuts, and runtime callbacks', () => {
     const resolvePointLabel = (row: Record<string, unknown>): string => String(row.category);
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="sort" field="y" order="descending" />
         <PointMark id="points" x="x" y="y" fill="category" resolveLabel={resolvePointLabel} />
@@ -36,7 +36,7 @@ describe('Plot member extraction characterization', () => {
         dataFieldNames: new Set(['x', 'y', 'value', 'category']),
       },
     );
-    const expected: IRPlotSpec = {
+    const expected: IRPlot = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'rows' },
@@ -99,8 +99,8 @@ describe('Plot member extraction characterization', () => {
       </>
     );
 
-    const nestedSpec = buildPlotSpec(nested, 'rows');
-    const flatSpec = buildPlotSpec(flat, 'rows');
+    const nestedSpec = buildPlotIR(nested, 'rows');
+    const flatSpec = buildPlotIR(flat, 'rows');
 
     expect(nestedSpec).toEqual(flatSpec);
     expect(nestedSpec.marks).toEqual([
@@ -112,7 +112,7 @@ describe('Plot member extraction characterization', () => {
 
   it('collects resolveLabel for polar interval marks through the runtime sidecar', () => {
     const resolveSectorLabel = (row: { category?: string }) => row.category ?? '';
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <IntervalMark id="sectors" angle="value" color="category" resolveLabel={resolveSectorLabel} />,
       'rows',
       { coordinate: 'polar2D' },
@@ -123,7 +123,7 @@ describe('Plot member extraction characterization', () => {
   });
 
   it('preserves explicit composition and multi-axis binding normalization', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis dimension="x" />
         <Axis id="temperature" dimension="y" />

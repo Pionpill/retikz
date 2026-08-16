@@ -7,7 +7,7 @@
 
 ## 背景
 
-ADR-01～05 让 Plot 内部出现多个 coordinate scope、facet panel、overlay axis 和 scaffold track。只让 renderer 画出来还不够：locator / provenance 必须能回答“这个 datum 属于哪个 panel、哪个 coordinate scope、哪个 track”；React / Vanilla authoring surface 也必须能表达同一份 IRPlotSpec，而不是只让手写 JSON 可用。
+ADR-01～05 让 Plot 内部出现多个 coordinate scope、facet panel、overlay axis 和 scaffold track。只让 renderer 画出来还不够：locator / provenance 必须能回答“这个 datum 属于哪个 panel、哪个 coordinate scope、哪个 track”；React / Vanilla authoring surface 也必须能表达同一份 IRPlot，而不是只让手写 JSON 可用。
 
 当前 locator 以 markIndex / transformedIndex / series 为主，默认假设单 coordinate frame。多 scope 后，同一个 datum key 可能在多个 panel 或 track 中出现；同一 mark 也可能被 facet 复制多次。若 locator 不带 scope identity，hit-test、外部连线、交互高亮都会歧义。
 
@@ -51,7 +51,7 @@ type PlotLocator = {
 React / Vanilla 只提供两类薄壳：
 
 1. 手写 `spec` 仍可完整传入。
-2. JSX / builder 的 mark、axis、plot composition props 只映射到同名 IRPlotSpec 字段，不引入 React-only 或 Vanilla-only 语义。
+2. JSX / builder 的 mark、axis、plot composition props 只映射到同名 IRPlot 字段，不引入 React-only 或 Vanilla-only 语义。
 
 理由：
 

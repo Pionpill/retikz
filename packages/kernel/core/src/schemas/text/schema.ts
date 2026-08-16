@@ -88,14 +88,14 @@ export const LabelVisualStyleSchema = z
   .strict()
   .describe('Shared visual style fields for node labels and geometry labels.');
 
-export const LineSpecSchema = z
+export const LineSchema = z
   .union([z.string(), StyledLineSchema, MixedLineSchema])
   .describe(
     'Single line of text: bare string for default styling (with `$...$` math sugar), an object with per-line `fill` / `opacity` / `font` overrides, or a `{ runs }` mixed text+math line.',
   );
 
 export const TextBlockSchema = z
-  .union([z.string(), z.array(LineSpecSchema).min(1)])
+  .union([z.string(), z.array(LineSchema).min(1)])
   .describe(
     'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ runs }` for mixed text+math).',
   );

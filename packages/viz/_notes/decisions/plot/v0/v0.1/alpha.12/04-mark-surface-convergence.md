@@ -22,17 +22,17 @@ v0.1 的 viz 三包采用 lockstep 发布，plot 本体、React adapter、Vanill
 | `<ReferenceMark>` | `<RuleMark>`                 | 参考线 / 参考带                                             |
 | `<RelationMark>`  | `<RibbonMark>`               | source-target path / ribbon 关系几何                        |
 
-`build-plot-spec` 负责把 React 便捷 props 展开为抽象 IRPlotSpec：`angle`、`stack`、`series`、`x0/x1`、双 band 等都编译为标准 transform + interval `bounds`，不引入平行 IR。
+`build-plot-spec` 负责把 React 便捷 props 展开为抽象 IRPlot：`angle`、`stack`、`series`、`x0/x1`、双 band 等都编译为标准 transform + interval `bounds`，不引入平行 IR。
 
 文档按抽象数据几何重组 grammar：point / path / region / interval / reference / custom / relation 等作为概念入口，bar / pie / heatmap / line / area 等保留为示例与解释。
 
 ## 最终状态
 
-自定义 mark 与 relation mark 分别成为 viz grammar 的扩展与关系入口。旧 mark 组件与旧 IR 形态不保留兼容壳；React 与 Vanilla 都生成同一个 canonical `IRPlotSpec`。
+自定义 mark 与 relation mark 分别成为 viz grammar 的扩展与关系入口。旧 mark 组件与旧 IR 形态不保留兼容壳；React 与 Vanilla 都生成同一个 canonical `IRPlot`。
 
 ## 最终形态
 
-- React mark components 与 `build-plot-spec` 的目标产物必须是抽象 IRPlotSpec。
+- React mark components 与 `build-plot-spec` 的目标产物必须是抽象 IRPlot。
 - Vanilla `renderPlot` 继续消费同一 spec，不另建 builder 体系。
 - docs 更新需同步 contents、data、i18n 与双语页面。
 - 便捷 props 属于 Sugar：展开后必须能用手写 transform + abstract mark IR 等价表达。

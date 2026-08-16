@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '@retikz/core';
+import type { IRPaint } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node, Path, Step } from '@retikz/react';
@@ -10,7 +10,7 @@ const pattern = {
   background: '#f5f3ff',
   size: 12,
   rotation: 20,
-} satisfies IRPaintSpec;
+} satisfies IRPaint;
 
 /** 同一份图案规格既可填充 Node，也可填充闭合 Path */
 const Demo: FC = () => (

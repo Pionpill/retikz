@@ -8,18 +8,18 @@
 
 Legend 是 guide family 的另一半。alpha.8 已经让 legend 能表达离散 swatch、连续 ramp、分箱、size / opacity / shape 等通道，但 legend 几何和默认配色仍散落在 lowering 常量与 scale 默认里。alpha.15 的 Theme 不能只覆盖 axis；否则图的解释性结构仍然分裂。
 
-当前 IRPlotSpec 有根级 `colors`，ordinal color scale 会把它作为默认 palette；连续色带使用 scheme 字段或内置默认。随着 `IRPlotSpec.theme.palette` 引入，需要明确 `colors`、theme palette、显式 scale `range` / `scheme` 的优先级，避免同一张图因为入口不同得到不同颜色。
+当前 IRPlot 有根级 `colors`，ordinal color scale 会把它作为默认 palette；连续色带使用 scheme 字段或内置默认。随着 `IRPlot.theme.palette` 引入，需要明确 `colors`、theme palette、显式 scale `range` / `scheme` 的优先级，避免同一张图因为入口不同得到不同颜色。
 
 Legend 外观同样需要分槽位 token：swatch size、entry gap、title gap、ramp length / thickness、title / label typography。它们应该通过 theme 提供默认，也允许单个 LegendGuide 本地覆盖。Legend title / label 的文本样式复用 ADR-02 的 `GuideTextStyleSchema`，title 内容复用 core `TextBlockSchema`。自定义 legend item template、HTML legend、交互筛选不属于静态 GoG v0.1 收口范围。
 
 ## 决策：palette 进入 theme，显式 scale 优先，LegendGuide 增加本地 style override
 
-`PlotTheme.palette` 固定为 plot 默认配色入口，覆盖 categorical / series / sector / sequential / diverging 等用途。显式 scale `range` / `scheme` 优先级最高；theme palette 次之；现有 `IRPlotSpec.colors` 作为兼容 shorthand，只在 categorical / series 对应槽位省略时参与默认；内置 palette 兜底。
+`PlotTheme.palette` 固定为 plot 默认配色入口，覆盖 categorical / series / sector / sequential / diverging 等用途。显式 scale `range` / `scheme` 优先级最高；theme palette 次之；现有 `IRPlot.colors` 作为兼容 shorthand，只在 categorical / series 对应槽位省略时参与默认；内置 palette 兜底。
 
 ```text
-ordinal categorical = explicit range ?? theme.palette.categorical ?? IRPlotSpec.colors ?? built-in categorical
-series color        = theme.palette.series ?? theme.palette.categorical ?? IRPlotSpec.colors ?? built-in categorical
-sector color        = theme.palette.sector ?? theme.palette.categorical ?? IRPlotSpec.colors ?? built-in categorical
+ordinal categorical = explicit range ?? theme.palette.categorical ?? IRPlot.colors ?? built-in categorical
+series color        = theme.palette.series ?? theme.palette.categorical ?? IRPlot.colors ?? built-in categorical
+sector color        = theme.palette.sector ?? theme.palette.categorical ?? IRPlot.colors ?? built-in categorical
 sequential scheme   = explicit range/scheme ?? theme.palette.sequential ?? built-in sequential
 quantize scheme     = explicit range/scheme ?? theme.palette.sequential ?? built-in sequential
 threshold scheme    = explicit range/scheme ?? theme.palette.sequential ?? built-in sequential

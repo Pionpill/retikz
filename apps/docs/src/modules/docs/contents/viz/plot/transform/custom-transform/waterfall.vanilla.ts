@@ -1,10 +1,10 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { waterfallRows } from './waterfall.data';
 import { waterfallTransform } from './waterfall.definition';
 
-const spec = PlotSpecSchema.parse({
+const spec = PlotSchema.parse({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'changes' },

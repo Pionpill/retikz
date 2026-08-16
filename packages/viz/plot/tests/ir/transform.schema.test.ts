@@ -1,7 +1,7 @@
 import { PlotBuiltinTransformSchema, TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 describe('TransformSchema sort / stack', () => {
   // Happy path
@@ -122,7 +122,7 @@ describe('TransformSchema external operations', () => {
       ],
       marks: [{ type: 'point', encoding: { x: { field: 'year' }, y: { field: 'value' } } }],
     };
-    expect(PlotSpecSchema.parse(spec).transform).toEqual(spec.transform);
+    expect(PlotSchema.parse(spec).transform).toEqual(spec.transform);
   });
 });
 

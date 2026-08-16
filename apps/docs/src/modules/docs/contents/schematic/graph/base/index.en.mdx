@@ -1,31 +1,31 @@
 ---
 title: Base Units
-description: Express logical subjects with GraphNode and relationships with GraphConnector.
+description: Express logical subjects with Entity and relationships with Relation.
 ---
 
-Logic nodes are foundational graph elements that can be placed directly in a diagram. `GraphNode` uses `role` for terminal, stage, decision, and junction semantics while keeping a stable `id`; `GraphConnector` links those authored identities. Use them independently or combine them into a complete local logic flow.
+Logic nodes are foundational graph elements that can be placed directly in a diagram. `Entity` uses `role` for terminal, stage, decision, and junction semantics while keeping a stable `id`; `Relation` links those authored identities. Use them independently or combine them into a complete local logic flow.
 
 ## Responsibilities
 
-| Member         | Expresses                                          | Useful for                                |
-| -------------- | -------------------------------------------------- | ----------------------------------------- |
-| `GraphNode`    | `role`: terminal, stage, decision, or junction     | Starts, ends, steps, decisions, and joins |
-| GraphConnector | Explicit relationships between authored identities | Flows, dependencies, and labeled links    |
+| Member   | Expresses                                          | Useful for                                |
+| -------- | -------------------------------------------------- | ----------------------------------------- |
+| `Entity` | `role`: terminal, stage, decision, or junction     | Starts, ends, steps, decisions, and joins |
+| Relation | Explicit relationships between authored identities | Flows, dependencies, and labeled links    |
 
 ## Pages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/base/code">
     <span className="font-semibold">Logic Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">GraphNode roles</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Entity roles</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/base/connector">
-    <span className="font-semibold">GraphConnector</span>
+    <span className="font-semibold">Relation</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">Path steps, Draw ways, and targets</span>
   </LinkedCard>
 </div>
 
 ## Related
 
-- [Composite Units](/schematic/graph/frame): organize reusable regions with GraphFrame
+- [Composite Units](/schematic/graph/frame): organize reusable regions with Container
 - [Graph API Reference](/schematic/graph/api-reference): inspect schemas, factories, and adapter identities

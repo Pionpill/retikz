@@ -1,6 +1,6 @@
 import type { IRChart } from '@retikz/chart';
 import type { InputChart } from '@retikz/chart-vanilla';
-import type { PlotDslProps, PlotProps, PlotSpecProps } from '@retikz/plot-react';
+import type { PlotDslProps, PlotProps, PlotIRProps } from '@retikz/plot-react';
 import type { FC, ReactNode } from 'react';
 
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
@@ -25,8 +25,8 @@ export { ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../shared';
 export type { ChartThemeProviderProps } from './theme-provider';
 export { ChartThemeProvider } from './theme-provider';
 
-/** 基础 Chart 的完整 PlotSpec authoring 入口 */
-export type ChartSpecProps = Omit<PlotSpecProps, keyof ChartCommonProps | 'children'> &
+/** 基础 Chart 的完整 IRPlot authoring 入口 */
+export type ChartIRProps = Omit<PlotIRProps, keyof ChartCommonProps | 'children'> &
   ChartCommonProps & {
     /** spec 入口只允许 presentation markers */
     children?: ReactNode;
@@ -44,9 +44,9 @@ export type ChartDslProps = Omit<PlotDslProps, keyof ChartCommonProps | 'childre
   };
 
 /** 基础 Chart 的两条 Plot authoring 入口 */
-export type ChartProps = ChartSpecProps | ChartDslProps;
+export type ChartProps = ChartIRProps | ChartDslProps;
 
-const isSpecProps = (props: ChartProps): props is ChartSpecProps => 'spec' in props && props.spec !== undefined;
+const isIRProps = (props: ChartProps): props is ChartIRProps => 'spec' in props && props.spec !== undefined;
 
 /** 从 Chart 根 props 组装可由 Chart Vanilla adapter 消费的根 Scope */
 const createChartPanelInput = (props: ChartProps): InputChart['panel'] => {
@@ -124,10 +124,10 @@ const createChartInput = (props: Readonly<Record<string, unknown>>): InputChart 
   void _clip;
   void _theme;
   const split = splitPresentationMarkers(children);
-  if (isSpecProps(chartProps) && hasPlotChild(split.plotChildren)) {
+  if (isIRProps(chartProps) && hasPlotChild(split.plotChildren)) {
     throw new Error('chart react: Chart spec mode only accepts presentation markers as children');
   }
-  const resolvedPlotProps = isSpecProps(chartProps)
+  const resolvedPlotProps = isIRProps(chartProps)
     ? ({ ...plotProps, width: _width, height: _height, children: undefined } as PlotProps)
     : ({
         ...plotProps,

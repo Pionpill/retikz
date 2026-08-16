@@ -5,7 +5,7 @@
 
 ## 定位
 
-alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@retikz/plot` 内部的坐标复合：一个 PlotSpec 可以生成多个局部坐标空间，这些空间可以按 facet grid 排开，可以叠在同一个 plot area 上，也可以共享一部分坐标基底后分成多个 track / ring / lane。
+alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@retikz/plot` 内部的坐标复合：一个 IRPlot 可以生成多个局部坐标空间，这些空间可以按 facet grid 排开，可以叠在同一个 plot area 上，也可以共享一部分坐标基底后分成多个 track / ring / lane。
 
 分面（facet）回答“按哪个字段把数据拆成多个小图”；双轴 / overlay 回答“同一个小图里，不同 mark 用哪套位置 scale / coordinate”；shared scaffold / track 回答“多个局部图层共享哪些坐标基底、哪些 range 自己管理”。三者共享底层机制，但用户语义不同，必须拆成不同 ADR，避免把 facet schema 写死成唯一的多坐标入口。
 
@@ -17,14 +17,14 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 
 | ADR    | 主题                                                      | 目标                                                                                                                                                                           | 状态                                                |
 | ------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
-| ADR-01 | **coordinate composition registry + guide binding**       | 给 PlotSpec 内部 coordinate view / composition 建立统一 identity、registry、layout slot 与 guide 绑定契约，为 facet、overlay、track 共用；不新增跨域容器                       | [Accepted](./01-coordinate-composition-registry.md) |
+| ADR-01 | **coordinate composition registry + guide binding**       | 给 IRPlot 内部 coordinate view / composition 建立统一 identity、registry、layout slot 与 guide 绑定契约，为 facet、overlay、track 共用；不新增跨域容器                       | [Accepted](./01-coordinate-composition-registry.md) |
 | ADR-02 | **facet grid data routing**                               | 按字段生成 facet panels，拆分 rows，确定 panel key / 排序 / 空 panel 策略；支持共享或独立 position scales；每个 panel lower 成 core `Scope`                                    | [Accepted](./02-facet-grid-data-routing.md)         |
 | ADR-03 | **same-panel multi-axis overlay**                         | 支持同一 panel 内多个位置 scale / coordinate 叠加，例如左右 y 轴；mark 可显式选择自己的 coordinate view / y scale；guide 绑定对应 axis                                         | [Accepted](./03-same-panel-multi-axis.md)           |
 | ADR-04 | **shared scaffold tracks**                                | 定义坐标系无关的共享骨架 + 局部 track：polar rings（共享 center / angle，不同 radius band）、cartesian lanes（共享 x，不同 y band）、混合 coordinate view 的共享 anchor / bbox | [Accepted](./04-shared-scaffold-tracks.md)          |
 | ADR-05 | **composition guides, axes, grid, spacing**               | 定义 facet panel、overlay axis、track guide 的轴 / 网格 / 间距 / 标题策略，先取可解释的最小形态；统一轴与 per-view guide 的取舍在 ADR 内拍板                                   | [Accepted](./05-composition-guides-layout.md)       |
-| ADR-06 | **locator, provenance, and adapters surface**             | 让 locator / provenance 带上 coordinate view / facet key / track key；收敛 React / Vanilla 表面与 docs 示例，证明 facet、dual-axis、shared scaffold 都映射到同一 PlotSpec      | [Accepted](./06-scope-provenance-surface.md)        |
+| ADR-06 | **locator, provenance, and adapters surface**             | 让 locator / provenance 带上 coordinate view / facet key / track key；收敛 React / Vanilla 表面与 docs 示例，证明 facet、dual-axis、shared scaffold 都映射到同一 IRPlot      | [Accepted](./06-scope-provenance-surface.md)        |
 | ADR-07 | **axis-level grid targeting**                             | 把 grid 是否生成收回 AxisGuide，composition 只提供默认投放策略；支持 view / facet / track selector，解决只给特定分面或 track 画 grid 的需求                                    | [Accepted](./07-axis-grid-targeting.md)             |
-| ADR-08 | **React axis binding sugar for overlay scopes**           | 借鉴 Recharts 的 axis id 绑定心智，让常见双 y 轴用 `yAxisId` 自动展开成 overlay composition；底层 PlotSpec 仍复用 ADR-01/03 的 view 机制                                       | [Accepted](./08-react-axis-binding-sugar.md)        |
+| ADR-08 | **React axis binding sugar for overlay scopes**           | 借鉴 Recharts 的 axis id 绑定心智，让常见双 y 轴用 `yAxisId` 自动展开成 overlay composition；底层 IRPlot 仍复用 ADR-01/03 的 view 机制                                       | [Accepted](./08-react-axis-binding-sugar.md)        |
 | ADR-09 | **composition data structure and authoring API redesign** | 不考虑兼容性重塑 composition：拆成 views / arrangements / resolve / spacing，并同步收敛 React / Vanilla 的 Facet、TrackGroup、Axis/Mark 绑定心智                               | [Accepted](./09-composition-api-structure.md)       |
 
 > 建议文件名：`01-coordinate-composition-registry.md`、`02-facet-grid-data-routing.md`、`03-same-panel-multi-axis.md`、`04-shared-scaffold-tracks.md`、`05-composition-guides-layout.md`、`06-scope-provenance-surface.md`、`07-axis-grid-targeting.md`、`08-react-axis-binding-sugar.md`、`09-composition-api-structure.md`。
@@ -43,7 +43,7 @@ alpha.14 不是跨域组合容器，也不是 chart preset 层。它只处理 `@
 
 ## 完工状态
 
-alpha.14 已按 ADR-09 的最终结构实现并文档化。底层 PlotSpec 使用 `composition.defaultView`、`views`、`arrangements`、`spacing`、`resolve`；React / Vanilla DSL 通过 axis id、`<Facet>`、`<Scaffold>` / `<Track>` 等糖写法展开到同一结构。旧 `scopes/facets/scaffolds/layout/guidePolicy` 结构仅保留在拒绝测试或历史 ADR 文本中，不再作为公开 schema。
+alpha.14 已按 ADR-09 的最终结构实现并文档化。底层 IRPlot 使用 `composition.defaultView`、`views`、`arrangements`、`spacing`、`resolve`；React / Vanilla DSL 通过 axis id、`<Facet>`、`<Scaffold>` / `<Track>` 等糖写法展开到同一结构。旧 `scopes/facets/scaffolds/layout/guidePolicy` 结构仅保留在拒绝测试或历史 ADR 文本中，不再作为公开 schema。
 
 ## 关键设计约束
 
@@ -87,7 +87,7 @@ alpha.14 已按 ADR-09 的最终结构实现并文档化。底层 PlotSpec 使�
 - **same-panel dual-axis**：两个 y scale / guide 叠在同一 plot area，不同 mark 选择不同 y 轴，左右 axis 输出不互相覆盖语义。
 - **shared scaffold tracks**：polar rings 共享 center / angle 且 radius band 独立；cartesian lanes 共享 x 且 y band 独立；混合 coordinate scope 共享 anchor / bbox 但投影各自独立。
 - **locator / provenance**：同一 datum key 出现在不同 panel、coordinate scope 或 track 时可区分；render 与 locator 使用同一 scope identity。
-- **三包等价**：React / Vanilla 产物与手写 PlotSpec 等价。
+- **三包等价**：React / Vanilla 产物与手写 IRPlot 等价。
 - **docs demo**：facet 小多图、dual-axis、shared scaffold tracks 示例各至少一组，明确三者概念边界。
 
 ## 本轮不做
@@ -105,7 +105,7 @@ alpha.14 已按 ADR-09 的最终结构实现并文档化。底层 PlotSpec 使�
 alpha.14 封口时应满足：
 
 - ADR-01～08 概念决策已 Accepted；最终字段命名与公开结构以 ADR-09 为准。
-- `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包已围绕同一 PlotSpec composition 结构对齐。
+- `@retikz/plot` / `@retikz/plot-react` / `@retikz/plot-vanilla` 三包已围绕同一 IRPlot composition 结构对齐。
 - docs 已覆盖 same-panel 多轴、多 x 轴、基础分面、共享 scale、独立 scale、多层分面、笛卡尔共享轨道和极坐标共享轨道。
 - 多 coordinate view / arrangement / track 下 guide、mark lowering、locator / provenance 使用同一 view identity。
 - docs 能让用户理解“分面”“双轴 / overlay”“shared scaffold tracks”不是同一概念，但都属于 plot 内坐标复合能力。

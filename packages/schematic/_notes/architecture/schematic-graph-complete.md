@@ -10,7 +10,7 @@ Graph 解决的是：
 
 > 用稳定、JSON-safe、renderer-neutral 的数据表达节点、关系、分组、端口与可复用图式呈现，使作者、工具与 LLM 能直接理解“图中有什么、对象如何关联”，并能在显式自由布局与未来自动布局之间复用同一语义真源
 
-Graph 是 Schematic foundation，长期拥有通用关系数据、Graph resolve、authored geometry 与可独立绘制的 presentation element。当前 v0.1 只实现 GraphFrame、GraphNode、GraphConnector 等元素 foundation；节点集合、关系集合、分组、端口及其 Canonical 模型必须由后续 Graph milestone ADR 落地
+Graph 是 Schematic foundation，长期拥有通用关系数据、Graph resolve、authored geometry 与可独立绘制的 presentation element。当前 v0.1 只实现 Container、Entity、Relation 等元素 foundation；节点集合、关系集合、分组、端口及其 Canonical 模型必须由后续 Graph milestone ADR 落地
 
 Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Graph 支持自由布局仅表示作者可以显式提供位置与连接方式；拖拽、selection、viewport、history 和交互 session 仍归 Editor
 
@@ -64,7 +64,7 @@ Graph resolve 消费 Source IR 与窄上下文，统一处理引用、包含关�
 
 Graph 不复制 Plot 的 Transform、Encoding、Scale 或 Coordinate 分层。根据任意字段声明视觉 channel 的能力只有在真实 Graph 数据可视化需求出现后才单独设计；固定 `kind`、`variant`、metadata 与 style 的确定化属于 Graph resolve
 
-单个 GraphNode 或 GraphConnector presentation IR 不等于全局关系模型。通用关系模型与元素呈现可以同属 Graph owner，但必须使用不同、准确的契约表达集合、引用和全局不变量，不能把 authoring element 数组当成模型数据库或编辑文档
+单个 Entity 或 Relation presentation IR 不等于全局关系模型。通用关系模型与元素呈现可以同属 Graph owner，但必须使用不同、准确的契约表达集合、引用和全局不变量，不能把 authoring element 数组当成模型数据库或编辑文档
 
 ## 5. Semantic identity 与 presentation 判定
 
@@ -92,7 +92,7 @@ Graph 不保存 Diagram layout provider、算法内部状态或自动几何。Di
 
 ## 7. Layout / Standard / Core 复用边界
 
-Graph 可以拥有“GraphFrame 是有序语义区域”“GraphConnector 是关系呈现”等职责，但不拥有它们依赖的通用布局和几何算法：
+Graph 可以拥有“Container 是有序语义区域”“Relation 是关系呈现”等职责，但不拥有它们依赖的通用布局和几何算法：
 
 - children 排布复用 Layout FlexLayout / GridLayout / OverlayLayout
 - spacing、axis sizing、allocation、clip、measurement 与 layout artifact 复用 Layout 公共 composition contract

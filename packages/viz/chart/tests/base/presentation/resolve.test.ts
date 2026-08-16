@@ -1,10 +1,10 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { normalizeChartPresentation, resolveChartPresentation } from '../../../src/base/presentation';
 import { getDefaultChartThemePreset } from '../../../src/base/style/catalog';
 
-const plot = PlotSpecSchema.parse({
+const plot = PlotSchema.parse({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'rows' },

@@ -5,7 +5,7 @@ description: Query the padding schema used by Plot composition and distinguish d
 
 Plot layout serves the drawing body only. Composition can use `BoxPaddingSchema` for outer spacing, while Axis, Legend, Facet, and other owners retain their own placement and space contracts.
 
-`IRPlotSpec` does not accept top-level `layout` or `labels`. Complete-chart presentation such as titles, subtitles, notes, and sources belongs to Chart, which composes it with the single Plot body through Standard layout.
+`IRPlot` does not accept top-level `layout` or `labels`. Complete-chart presentation such as titles, subtitles, notes, and sources belongs to Chart, which composes it with the single Plot body through Standard layout.
 
 ## BoxPaddingSchema
 

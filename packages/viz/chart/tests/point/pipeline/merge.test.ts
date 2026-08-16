@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeSeed } from '../../../src/point/recipe';
 
-import { ScatterChartSpecSchema } from '../../../src/point';
+import { ScatterChartSchema } from '../../../src/point';
 import { ChartResolveError } from '../../../src/point/errors';
 import { mergeChartSeed } from '../../../src/point/merge';
 
-const spec = ScatterChartSpecSchema.parse({
+const spec = ScatterChartSchema.parse({
   namespace: 'chart',
   type: 'scatter',
   data: { reference: 'rows' },

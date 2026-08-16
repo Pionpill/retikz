@@ -120,7 +120,7 @@ A multi-node path can become several subpaths during compile, but the start arro
 <ComponentAlert
   type="warn"
   title="Gradient strokes need an explicit arrow color"
-  description="When stroke is an IRPaintSpec, an arrow cannot inherit the gradient as one stroke color. Set arrowDetail.color, or set start.color / end.color to CSS colors."
+  description="When stroke is an IRPaint, an arrow cannot inherit the gradient as one stroke color. Set arrowDetail.color, or set start.color / end.color to CSS colors."
 />
 
 <SourceLinks
@@ -132,7 +132,7 @@ A multi-node path can become several subpaths during compile, but the start arro
       endLine: 56,
     },
     {
-      label: 'IRPaintSpec stroke-inheritance guard',
+      label: 'IRPaint stroke-inheritance guard',
       path: 'packages/kernel/core/src/compile/path/stroke/marks.ts',
       startLine: 24,
       endLine: 41,

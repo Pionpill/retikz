@@ -97,7 +97,7 @@ export const buildPositionScale = (
     default: {
       // 穷尽守卫：新增 InputPlotPositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
-      throw new Error(`buildPlotSpec: unsupported position scale type "${String(exhaustive)}"`);
+      throw new Error(`buildPlotIR: unsupported position scale type "${String(exhaustive)}"`);
     }
   }
 };
@@ -106,7 +106,7 @@ export const buildPositionScale = (
 export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (forceBand && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
   if (forceBand) return buildPositionScale(AUTO_X, 'band', explicit);
@@ -117,7 +117,7 @@ export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScal
 export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (hasRect && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> or set type="band"',
     );
   }
   if (hasRect) return buildPositionScale(AUTO_Y, 'band', explicit);
@@ -131,12 +131,12 @@ export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale 
 export const buildAngleScale = (collected: Collected, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="x" /> or set type="band"',
+      'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"',
+      'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"',
     );
   }
   if (explicit !== undefined) return buildPositionScale(AUTO_ANGLE, explicit.type, explicit);
@@ -186,11 +186,11 @@ export const collectExplicitScales = (
     const role = scaleRoleOf(scale.dimension, coordKind);
     if (role === undefined) {
       throw new Error(
-        `buildPlotSpec: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`,
+        `buildPlotIR: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`,
       );
     }
     if (out[role] !== undefined) {
-      throw new Error(`buildPlotSpec: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
+      throw new Error(`buildPlotIR: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
     }
     out[role] = scale;
   }
@@ -210,7 +210,7 @@ export const buildShortcutTransforms = (
   );
 };
 
-/** polar coordinate IR 的角向区间 / 内半径默认值（与 Polar2DSchema 的 .default() 一致，buildPlotSpec 即填满，等价手写无需再补） */
+/** polar coordinate IR 的角向区间 / 内半径默认值（与 Polar2DSchema 的 .default() 一致，buildPlotIR 即填满，等价手写无需再补） */
 const POLAR_DEFAULT_START_ANGLE = 0;
 const POLAR_DEFAULT_END_ANGLE = 360;
 const POLAR_DEFAULT_INNER_RADIUS = 0;

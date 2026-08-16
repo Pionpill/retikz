@@ -49,7 +49,7 @@ const polarPoint = (center: Position, angleDeg: number, radius: number): Positio
   isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? arcEndPoint(center, radius, angleDeg) : null;
 
 /** 创建二维极坐标运行时坐标帧所需的已解析参数 */
-export type PolarCoordinateSpec = {
+export type PolarCoordinateInput = {
   /** 圆心（屏幕坐标） */
   center: Position;
   /** 内半径（user units） */
@@ -74,7 +74,7 @@ export type PolarCoordinateSpec = {
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
  *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用
  */
-export const createPolarCoordinate = (input: PolarCoordinateSpec): PolarCoordinateFrame => {
+export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
     polarPoint(input.center, thetaDeg, radius);
   const project = (angleValue: unknown, radiusValue: unknown): Position | null => {
@@ -140,7 +140,7 @@ export type Polar1DCoordinateFrame = {
 };
 
 /** 创建一维极坐标运行时坐标帧所需的已解析参数 */
-export type Polar1DCoordinateSpec = {
+export type Polar1DCoordinateInput = {
   /** 圆心（屏幕坐标） */
   center: Position;
   /** 固定圆周半径（user units） */
@@ -160,7 +160,7 @@ export type Polar1DCoordinateSpec = {
  * @description 单一 x 角色被解释为角向值，并投影到固定 radius 的圆周上。该 frame 只表达点/路径位置，
  *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame
  */
-export const createPolar1DCoordinate = (input: Polar1DCoordinateSpec): Polar1DCoordinateFrame => {
+export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DCoordinateFrame => {
   const projectPolar = (thetaDeg: number, radius: number): Position | null =>
     polarPoint(input.center, thetaDeg, radius);
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {

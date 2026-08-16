@@ -4,16 +4,16 @@ import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 正方形画布 → outerRadius = min(w,h)/2 = 200、center = [200,200]（无角向轴 → margin 0） */
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -23,7 +23,7 @@ const expandOf = (
 
 /** 取第一个 mark 图层 scope */
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -64,8 +64,8 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
     { month: 'Feb', amount: 6 },
     { month: 'Mar', amount: 9 },
   ];
-  const roseSpec = (): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const roseSpec = (): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -142,7 +142,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
   });
 
   it('rose_color_splits_into_subscopes', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -167,7 +167,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
   });
 
   it('rose_sector_corner_radius_and_pad_angle_lower_into_shape_params', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -185,7 +185,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
         },
       ],
     });
-    const unpaddedSpec = PlotSpecSchema.parse({
+    const unpaddedSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -234,8 +234,8 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     { label: 'C', value: 2 },
   ];
   // 饼图：stack transform 产 y0/y1（单链）→ sector mark 读界、角度编码值
-  const pieSpec = (innerRadius = 0): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const pieSpec = (innerRadius = 0): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },
@@ -307,7 +307,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
   });
 
   it('pie_color_splits_into_subscopes', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },
@@ -344,7 +344,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
 
   // 错误路径：sector mark 读不到累积界字段（未跑 transform）→ 抛清晰错误
   it('pie_missing_cumulative_fields_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },
@@ -368,7 +368,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
   // 负值饼图：旧 sector mark 曾对负累积界 fail-loud；合并进 interval 后 extent bound 不再带此守卫，
   // stack transform 亦不校验负值 → 现不再 throw（行为变更，已上报）。此处仅锁定「不再抛 /non-negative/」的现状
   it('pie_negative_value_no_longer_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },

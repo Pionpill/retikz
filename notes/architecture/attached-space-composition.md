@@ -275,7 +275,7 @@ plot 层负责把“从 A 生成 B”的产品意图拆成两部分：空间组�
 
 ### 5.3 React DSL 心智模型
 
-React 层可以提供更接近人类 authoring 的结构组件；LLM 可以理解这套心智模型，但正式输出目标应是 JSON action、PlotSpec 或结构化 patch，而不是 React 代码：
+React 层可以提供更接近人类 authoring 的结构组件；LLM 可以理解这套心智模型，但正式输出目标应是 JSON action、IRPlot 或结构化 patch，而不是 React 代码：
 
 ```tsx
 <Facet id="main" row="category">
@@ -315,9 +315,9 @@ Chart
 
 Chart 外层 handle 由 Chart 生成，Plot 内部 handle 仍由 Plot 生成。Core 的 handle index 保存两者的 qualified 关系；Standard 在排列 presentation 与 Plot body 后写回最终 geometry。Chart 不复制 Plot handle registry，不重新生成内部 id，也不解释 facet / track payload。selector 可以先定位 Chart，再穿过 body / Plot namespace 委托给底层索引，因此 dashboard 或 attachment 既能选择整个 Chart，也能直接选择其内部某个 track、facet panel 或 plotArea。
 
-presentation 的加入会改变 Plot body 的最终全局 bbox，但不能改变内部 handle 的稳定 identity、相对选择语义、domain payload、locator 或 provenance。相同 PlotSpec 单独运行和被 Chart 包裹时，内部 handle 应保持同源；qualified namespace 只负责避免多个 Chart 中相同局部 id 冲突。
+presentation 的加入会改变 Plot body 的最终全局 bbox，但不能改变内部 handle 的稳定 identity、相对选择语义、domain payload、locator 或 provenance。相同 IRPlot 单独运行和被 Chart 包裹时，内部 handle 应保持同源；qualified namespace 只负责避免多个 Chart 中相同局部 id 冲突。
 
-Chart type 可以隐式生成复杂 Plot composition。例如价格轨道、成交量轨道与共享时间轴构成一个 type recipe 时，应展开为同一个 PlotSpec，并由 Plot 生成 view / track handles。只要多个视图共享 coordinate、scale、axis、track 或同一数据映射语义，就不应拆成多个 Chart 再由 Chart 私造同步。
+Chart type 可以隐式生成复杂 Plot composition。例如价格轨道、成交量轨道与共享时间轴构成一个 type recipe 时，应展开为同一个 IRPlot，并由 Plot 生成 view / track handles。只要多个视图共享 coordinate、scale、axis、track 或同一数据映射语义，就不应拆成多个 Chart 再由 Chart 私造同步。
 
 复合能力的 owner 保持分层：
 
@@ -415,7 +415,7 @@ meta 只描述事实，不能直接塞 `availableDerivations` 这类产品决策
 - `target`：稳定 selector，不是内部生成 id 字符串。
 - `placement` / `inherit`：空间贴附和尺寸继承参数。
 - `data`：可选数据引用、聚合或 transform spec。
-- `patchTarget`：该动作会修改 PlotSpec、编辑器 patch 还是生成独立片段。
+- `patchTarget`：该动作会修改 IRPlot、编辑器 patch 还是生成独立片段。
 - `diagnostics`：缺字段、缺 handle、能力不支持时的可读错误。
 
 LLM 生成的结果应是结构化操作，例如“给 selector 命中的每个 `facet.row` 分区右侧 attach 一个 bar view”，而不是绝对坐标 patch。bbox 数值只用于解释、冲突预览和用户确认，默认是只读观察值；绝对坐标只作为用户确认后的固化结果或低级 fallback。
@@ -486,7 +486,7 @@ Core ADR-19 已为首个 rect 子集固定 declaration、qualified owner path、
 
 ## 10. 待决策
 
-- attachment 属于 PlotSpec schema、core layout schema，还是编辑器 action / patch 层。
+- attachment 属于 IRPlot schema、core layout schema，还是编辑器 action / patch 层。
 - view group 的表达是否需要成为一等 IR，还是仅作为 composition normalization 的产物。
 - 派生数据 transform 是否复用现有 transform 管线，还是需要新增 derivation planner。
 - 产品选择态、locator、hit testing 与 provenance 的边界如何划分。

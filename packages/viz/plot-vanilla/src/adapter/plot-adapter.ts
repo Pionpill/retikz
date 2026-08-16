@@ -1,6 +1,6 @@
 import type { CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
+import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
 
 import {
@@ -14,10 +14,10 @@ import { normalizeScopeWithChildren } from '@retikz/vanilla';
 import type { InputPlotEmbed } from '../spec';
 
 import { assertPlotVanillaNonEmptyString } from '../shared';
-import { plotSpecOf } from '../spec';
+import { plotIROf } from '../spec';
 
 /** 将 Plot 根节点包进可选的面板 Scope */
-const wrapPlotPanel = (node: IRPlotSpec, panel: InputPlotEmbed['panel']) => {
+const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
   if (panel === undefined) return node;
   const { x, y, transforms, zIndex, clip, theme } = panel;
   const panelTransforms =
@@ -36,10 +36,10 @@ const wrapPlotPanel = (node: IRPlotSpec, panel: InputPlotEmbed['panel']) => {
   return normalizeScopeWithChildren(input, () => [node]);
 };
 
-/** 完整 PlotSpec 的 Vanilla contribution request */
+/** 完整 IRPlot 的 Vanilla contribution request */
 export type PlotContributionRequest = Readonly<{
-  /** 已完成的 PlotSpec */
-  spec: IRPlotSpec;
+  /** 已完成的 IRPlot */
+  spec: IRPlot;
   /** runtime-only dataset table */
   datasets: ExternalDatasets;
   /** Plot lowering runtime options */
@@ -49,7 +49,7 @@ export type PlotContributionRequest = Readonly<{
 /** Plot-owned Vanilla contribution 解析结果 */
 export type ResolvedPlotContribution = Readonly<{
   /** 已类型化的完整 Plot Source IR */
-  spec: IRPlotSpec;
+  spec: IRPlot;
   /** Plot composite 及其 Standard shape 依赖的 provider contribution */
   contribution: CoreProviderContribution;
 }>;
@@ -60,7 +60,7 @@ export const createPlotProvider = (input: {
   lowerOptions?: LowerPlotsOptions;
 }): CoreDependencyProvider => createPlotDependencyProvider(input.datasets, input.lowerOptions);
 
-/** 将完整 PlotSpec 归一为 Plot-owned dependency contribution */
+/** 将完整 IRPlot 归一为 Plot-owned dependency contribution */
 export const resolvePlotContribution = (request: PlotContributionRequest): ResolvedPlotContribution => {
   return {
     spec: request.spec,
@@ -73,7 +73,7 @@ export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
   kind: PLOT_NAMESPACE,
   lower: (props, context) => {
     assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
-    const spec = plotSpecOf(props);
+    const spec = plotIROf(props);
     const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
     const node =
       props.preserveRootIdentity === true ? spec : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };

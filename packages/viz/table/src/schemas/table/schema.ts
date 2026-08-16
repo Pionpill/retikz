@@ -9,7 +9,7 @@ import { CustomTableStructureSchema, DetailTableStructureSchema, ManualTableStru
 import { TableThemeTokenOverridesSchema } from '../style';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
-const TableSpecBaseSchema = CompositeBaseSchema.extend({
+const TableBaseSchema = CompositeBaseSchema.extend({
   namespace: z
     .literal(TABLE_NAMESPACE)
     .describe('Tier 2 namespace that routes this node to the Table composite definition.'),
@@ -47,7 +47,7 @@ const validateTableRoot = (spec: TableRootSemanticInput, context: z.RefinementCt
   }
 };
 
-export const DetailTableSpecSchema = TableSpecBaseSchema.extend({
+export const DetailTableSchema = TableBaseSchema.extend({
   data: DataReferenceSchema.describe(
     'External dataset reference required by this detail Table. Actual rows stay outside the IR.',
   ),
@@ -56,14 +56,14 @@ export const DetailTableSpecSchema = TableSpecBaseSchema.extend({
   .superRefine(validateTableRoot)
   .describe('JSON-safe detail Table composite specification bound to external data.');
 
-export const ManualTableSpecSchema = TableSpecBaseSchema.extend({
+export const ManualTableSchema = TableBaseSchema.extend({
   data: z.never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
   structure: ManualTableStructureSchema.describe('Explicit row-major Cell matrix for this manual Table.'),
 })
   .superRefine(validateTableRoot)
   .describe('JSON-safe manual Table composite specification with explicit content.');
 
-export const CustomTableSpecSchema = TableSpecBaseSchema.extend({
+export const CustomTableSchema = TableBaseSchema.extend({
   data: DataReferenceSchema.optional().describe(
     'Optional external dataset reference exposed to the selected custom structure definition at runtime.',
   ),
@@ -72,6 +72,6 @@ export const CustomTableSpecSchema = TableSpecBaseSchema.extend({
   .superRefine(validateTableRoot)
   .describe('JSON-safe custom Table composite specification resolved by a structure definition.');
 
-export const TableSpecSchema = z
-  .union([DetailTableSpecSchema, ManualTableSpecSchema, CustomTableSpecSchema])
+export const TableSchema = z
+  .union([DetailTableSchema, ManualTableSchema, CustomTableSchema])
   .describe('JSON-safe Table composite specification covering the supported precise root variants.');

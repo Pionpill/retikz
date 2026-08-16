@@ -50,7 +50,7 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 14, weight: 'bold' }}>validation</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        PlotSpecSchema
+        PlotSchema
       </Text>
     </Node>
     <Node
@@ -64,7 +64,7 @@ const Demo: FC = () => (
       align="middle"
       lineHeight={17}
     >
-      <Text font={{ size: 14, weight: 'bold' }}>IRPlotSpec</Text>
+      <Text font={{ size: 14, weight: 'bold' }}>IRPlot</Text>
       <Text fill="gray" font={{ size: 12 }}>
         JSON-safe
       </Text>

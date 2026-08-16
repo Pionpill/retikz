@@ -1,7 +1,7 @@
 import { PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import type { IRClipSpec } from './types';
+import type { IRClip } from './types';
 
 import { JsonObjectSchema } from '../json';
 import { ClipFillRule } from './constants';
@@ -39,7 +39,7 @@ export const EllipseClipSchema = z
 
 const RESERVED_CLIP_KINDS = new Set(['rect', 'circle', 'ellipse']);
 
-const CustomClipSpecSchema = z
+const CustomClipSchema = z
   .intersection(
     z.object({
       kind: z.string().min(1).describe('Custom clip discriminator registered through CompileOptions.clips.'),
@@ -57,8 +57,8 @@ const CustomClipSpecSchema = z
   })
   .describe('Custom clip spec. Its kind must be registered through CompileOptions.clips.');
 
-export const ClipSpecSchema: z.ZodType<IRClipSpec> = z
-  .lazy(() => z.union([RectClipSchema, CircleClipSchema, EllipseClipSchema, CustomClipSpecSchema]))
+export const ClipSchema: z.ZodType<IRClip> = z
+  .lazy(() => z.union([RectClipSchema, CircleClipSchema, EllipseClipSchema, CustomClipSchema]))
   .describe(
     'Clip region for `Scope.clip`: built-in rect/circle/ellipse, or a JSON-safe custom object registered by kind.',
   );

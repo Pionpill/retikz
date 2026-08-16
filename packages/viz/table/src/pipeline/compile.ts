@@ -3,10 +3,10 @@ import type { ExternalDatasets } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 
-import type { IRTableSpec } from '../schemas';
+import type { IRTable } from '../schemas';
 import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
-import { TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../schemas';
+import { TABLE_NAMESPACE, TableComposite, TableSchema } from '../schemas';
 import { lowerTables } from './resolve';
 
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
@@ -18,11 +18,11 @@ const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompil
 
 /** 编译 canonical 单根 Table Scene，并返回同次 compile 的精确根 manifest */
 export const compileTable = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
-  spec: IRTableSpec,
+  spec: IRTable,
   datasets: ExternalDatasets,
   options: CompileTableOptions<TComposites> = {},
 ): CompileTableResult<TComposites> => {
-  const parsed = TableSpecSchema.parse(spec);
+  const parsed = TableSchema.parse(spec);
   const compileOptions = options.compile ?? {};
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];

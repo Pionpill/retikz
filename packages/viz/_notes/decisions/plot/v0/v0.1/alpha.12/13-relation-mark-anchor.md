@@ -13,7 +13,7 @@ ADR-03/04 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代，
 
 新增 plot 层 anchor contract：维度 mark 负责声明和注册可引用 anchor，`RelationMark` 负责解析 target 并降低为 core `Path`。
 
-`AnchorIdSpec` 支持 `field`、`template`、`generator` 三种 id 来源，三者必须恰好选一；`prefix` 只负责命名空间。默认 id 挂在 plot local namespace 下，并通过 registry 查重。重复 id、缺失 generator、无法解析 anchor 都 fail-loud，错误包含 mark / row / id 上下文。
+`AnchorId` 支持 `field`、`template`、`generator` 三种 id 来源，三者必须恰好选一；`prefix` 只负责命名空间。默认 id 挂在 plot local namespace 下，并通过 registry 查重。重复 id、缺失 generator、无法解析 anchor 都 fail-loud，错误包含 mark / row / id 上下文。
 
 `PointMark`、`IntervalMark`、`PathMark` 增加 `anchorId`：
 
@@ -35,7 +35,7 @@ ADR-03/04 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代，
 ## 影响
 
 - supersede ADR-03/04 中 `LinkMark` / `link` 方向；不新增 `PlotMark.Link` 作为通用关系能力。
-- 新增 public `RelationMark`、`AnchorIdSpec`、`PlotTargetRef`、`RelationRouteStep` 等 schema / 类型。
+- 新增 public `RelationMark`、`AnchorId`、`PlotTargetRef`、`RelationRouteStep` 等 schema / 类型。
 - React 新增 `<RelationMark>`，并给 Point / Path / Interval props 增加 `anchorId`。
 - core 不改动；只消费 core Coordinate、Path、NodeTarget、StepLabel 等既有能力。
 

@@ -15,7 +15,7 @@ Plot 是把数据、scale、coordinate、mark 与 guide 映射为 Core 图形语
 
 ## 决策：删除 Plot presentation labels，统一交由 Chart 组合
 
-PlotSpec 删除通用静态 presentation labels 及只服务其外围占位的 Plot-level layout。Plot 不再接受 title、subtitle、caption、note、source、credit 或任意 frame-level custom text，也不为这些内容计算预留空间或生成 decoration layer。
+IRPlot 删除通用静态 presentation labels 及只服务其外围占位的 Plot-level layout。Plot 不再接受 title、subtitle、caption、note、source、credit 或任意 frame-level custom text，也不为这些内容计算预留空间或生成 decoration layer。
 
 Chart presentation 是这些内容的唯一领域入口。Chart 负责 presentation item 的语义、顺序、默认样式与唯一 Plot body；Standard 负责领域无关的布局、测量和组合；Core 负责 renderer-neutral text 与 Scene 执行。Plot 不解释 Chart presentation，也不提供简化别名、隐式转换或兼容桥接。
 
@@ -30,7 +30,7 @@ Plot 继续拥有与绘图本体直接相关的文字语义：axis title、tick 
 
 ## 基础数据结构与公开契约
 
-PlotSpec 不再包含 Plot-level `labels` 与只为其服务的 `layout`，也不增加替代字段。data、transform、scale、coordinate、mark、guide、composition 与 Plot theme 输入继续组成绘图本体契约。
+IRPlot 不再包含 Plot-level `labels` 与只为其服务的 `layout`，也不增加替代字段。data、transform、scale、coordinate、mark、guide、composition 与 Plot theme 输入继续组成绘图本体契约。
 
 Plot theme 收敛为绘图表面、文字基线、guide 与 palette，顶层成员固定为 `background`、`typography`、`axis`、`legend` 与 `palette`。这些保留成员继续复用现有 value contract，不因删除 presentation labels 改变数据形态。
 
@@ -38,7 +38,7 @@ Plot theme 收敛为绘图表面、文字基线、guide 与 palette，顶层成�
 
 Plot canonical token contract 删除 `plot.label.foreground` 与 `plot.label.font.size`。完整 Plot token map、内建 style definition、局部 token override、native Plot theme mapping 与 inspection 均不得继续声明、生成、接受或报告这两个 key；`IRPlotTheme` 同时删除 `labelText`。
 
-Chart 不再向完整 PlotSpec 转发 Plot-level `labels` 或 presentation `layout`。Chart-level title、subtitle、caption、note、source、credit 与 custom child 继续进入 Chart presentation；datum / mark label、axis、legend、facet 与 annotation 仍通过正式 Plot members 进入 PlotSpec。
+Chart 不再向完整 IRPlot 转发 Plot-level `labels` 或 presentation `layout`。Chart-level title、subtitle、caption、note、source、credit 与 custom child 继续进入 Chart presentation；datum / mark label、axis、legend、facet 与 annotation 仍通过正式 Plot members 进入 IRPlot。
 
 ## 行为、失败语义与兼容性
 
@@ -75,7 +75,7 @@ Chart 不再向完整 PlotSpec 转发 Plot-level `labels` 或 presentation `layo
 
 - 保留 Plot labels，只从 theme 删除 `labelText`：功能仍与 Chart 重复，并会失去明确默认样式 owner
 - 把 Plot labels 收窄成 title / caption shorthand：仍建立第二套 Chart presentation 入口与外围布局
-- 自动把旧 Plot labels 转换为 Chart presentation：PlotSpec 无法在不知道 Chart 宿主的情况下完成上移，并会形成 migration 主链
+- 自动把旧 Plot labels 转换为 Chart presentation：IRPlot 无法在不知道 Chart 宿主的情况下完成上移，并会形成 migration 主链
 - 把 facet、datum 或 annotation text 一并移交 Chart：这些内容依赖 Plot 数据、scale、coordinate、mark 或 composition，Chart 不拥有其语义
 - 让 adapter 或 renderer 补标题和来源：会破坏 JSON、React、Vanilla、SSR、SVG 与 Canvas 等价性
 

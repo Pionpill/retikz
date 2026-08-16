@@ -2,10 +2,10 @@
 
 React bindings for [`@retikz/table`](../table), retikz's renderer-agnostic Tier 2 table package.
 
-Use `Table` with a complete `IRTableSpec`, `DetailTable` for record-per-row data, or `ManualTable`
+Use `Table` with a complete `IRTable`, `DetailTable` for record-per-row data, or `ManualTable`
 for explicit row-major Cells. Detail and manual authoring delegate to `@retikz/table`, so all
 three entries use the same lowering and layout manifest. The sugar entries retain precise
-`IRDetailTableSpec` / `IRManualTableSpec` values; `Table` accepts the aggregate `IRTableSpec` union.
+`IRDetailTable` / `IRManualTable` values; `Table` accepts the aggregate `IRTable` union.
 
 ```tsx
 import { DetailTable } from '@retikz/table-react';
@@ -63,9 +63,9 @@ import { Cell, ManualTable, Row } from '@retikz/table-react';
 </ManualTable>;
 ```
 
-`DetailColumn`, `Row`, and `Cell` are React authoring markers: they compile to the same TableSpec
+`DetailColumn`, `Row`, and `Cell` are React authoring markers: they compile to the same IRTable
 forms as their respective plain props. `<Table>` remains the entry for callers that already hold a
-complete TableSpec.
+complete IRTable.
 
 For persisted or props-based authoring, scalar entries are value shorthands, `null` means no Cell,
 and `{ value: null }` means a real null-valued Cell. Rich value/content objects carry span, layout,
@@ -74,7 +74,7 @@ presentation references only apply to scalar value Cells; content Cells reject b
 already carry renderable children.
 
 Detail and manual roots forward the JSON-safe `rules`, `encodings`, and `tableThemeTokens` fields
-to the same TableSpec contract as plain authoring. Core `theme.style` / `theme.mode` selects the
+to the same IRTable contract as plain authoring. Core `theme.style` / `theme.mode` selects the
 Table preset, while inherited `theme.tokens.table` and local `tableThemeTokens` form the sparse
 Table token cascade. Standalone host CSS uses `containerStyle`; embedded Tables receive Theme and
 other host capabilities from the outer `Layout` and reject standalone-only host props.

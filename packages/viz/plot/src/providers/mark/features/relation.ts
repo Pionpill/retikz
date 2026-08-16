@@ -18,7 +18,7 @@ import type {
   IRPlotRelationMark,
   IRPlotRelationPrimitiveStyle,
   IRPlotRelationRouteStep,
-  IRPlotRelationRoutingSpec,
+  IRPlotRelationRouting,
   IRPlotRelationStepLabel,
   IRPlotTargetRef,
   RelationOrthogonalLabelStepValue,
@@ -298,7 +298,7 @@ const horizontalRibbonEndpointDirection = (source: IRTarget, target: IRTarget): 
 };
 
 const bendRoute = (
-  routing: Extract<IRPlotRelationRoutingSpec, { kind: typeof RelationRoutingKind.Bend }>,
+  routing: Extract<IRPlotRelationRouting, { kind: typeof RelationRoutingKind.Bend }>,
   targets: Array<IRTarget>,
 ): Array<IRStep> => [
   { type: 'step', kind: RelationRouteStepKind.Move, to: targets[0] },
@@ -340,7 +340,7 @@ const applyOrthogonalLabel = (
 };
 
 const orthogonalRoute = (
-  routing: Extract<IRPlotRelationRoutingSpec, { kind: typeof RelationRoutingKind.Orthogonal }>,
+  routing: Extract<IRPlotRelationRouting, { kind: typeof RelationRoutingKind.Orthogonal }>,
   targets: Array<IRTarget>,
   label: IRStepLabel | undefined,
 ): Array<IRStep> => {
@@ -370,7 +370,7 @@ const orthogonalRoute = (
 };
 
 const routedSteps = (
-  routing: IRPlotRelationRoutingSpec | undefined,
+  routing: IRPlotRelationRouting | undefined,
   source: IRTarget,
   via: Array<IRTarget>,
   target: IRTarget,

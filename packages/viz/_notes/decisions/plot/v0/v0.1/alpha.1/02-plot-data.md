@@ -3,7 +3,7 @@
 - 状态：Superseded
 - 替代：[Data beta.1 ADR-01](../../../../data/v0/v0.1/beta.1/01-plot-data-migration.md)；数据引用、模型、外部 datasets 与解析能力的最终 owner 为 `@retikz/data`
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 核心概念 / §8 lowering](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 消费方：[ADR-05 encoding+mark](./05-plot-encoding-mark.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3 核心概念 / §8 lowering](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlot](./01-plot-spec-root.md) · 消费方：[ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
 ## 背景 / 约束
 

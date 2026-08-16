@@ -61,7 +61,7 @@ export const PlotScale = {
 // ScaleSchema 追加二者进 discriminatedUnion('type', [...])
 ```
 
-**React / vanilla 入口**：当前 `buildPlotSpec.ts:102` 把所有 color 绑死 `AUTO_COLOR`、`:289` 固定 push **ordinal**。本轮改成 **type-driven 派生**——color 字段类型为 continuous/temporal 时（有 model 或推断得知），自动派生 `sequential`（连续）；categorical 仍 `ordinal`。显式覆盖（指定 scheme / diverging / midpoint）走后续 `<ColorScale>` DSL（与 alpha.7 `scaleX/scaleY` 同样「先自动、后显式」节奏；本轮 React 仅做自动派生 sequential，diverging / 自定义 scheme 经 vanilla IR 全量可用，React 显式表面顺延）。
+**React / vanilla 入口**：当前 `buildPlotIR.ts:102` 把所有 color 绑死 `AUTO_COLOR`、`:289` 固定 push **ordinal**。本轮改成 **type-driven 派生**——color 字段类型为 continuous/temporal 时（有 model 或推断得知），自动派生 `sequential`（连续）；categorical 仍 `ordinal`。显式覆盖（指定 scheme / diverging / midpoint）走后续 `<ColorScale>` DSL（与 alpha.7 `scaleX/scaleY` 同样「先自动、后显式」节奏；本轮 React 仅做自动派生 sequential，diverging / 自定义 scheme 经 vanilla IR 全量可用，React 显式表面顺延）。
 
 理由：
 

@@ -46,7 +46,7 @@ export const TableCellPlanSourceSchema = z
       kind: z.literal(TableCellPlanSourceKind.StyleToken).describe('Discriminator for a resolved Table token winner.'),
       tokenKey: TableThemeTokenKeySchema.describe('Appearance Table token that supplied the winning leaf.'),
       tokenSource: z.enum(ThemeTokenSource).describe('Winning token source relation to the Table owner.'),
-      tokenPath: z.string().min(1).describe('Stable effective Theme or TableSpec source path.'),
+      tokenPath: z.string().min(1).describe('Stable effective Theme or IRTable source path.'),
     }),
     z.strictObject({
       kind: z

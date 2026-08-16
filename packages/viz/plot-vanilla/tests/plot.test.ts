@@ -1,10 +1,10 @@
-import { AxisGridApplyTo, PlotSpecSchema } from '@retikz/plot';
+import { AxisGridApplyTo, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { plot } from '../src';
 
 describe('plot', () => {
-  it('组装 composition、mark 与 guide 为 plain PlotSpec', () => {
+  it('组装 composition、mark 与 guide 为 plain IRPlot', () => {
     const spec = plot({
       data: { reference: 'sales' },
       scales: [
@@ -30,7 +30,7 @@ describe('plot', () => {
     expect(spec.guides?.[0]).toMatchObject({ type: 'axis', coordinateView: 'main', title: 'Revenue' });
     expect('build' in spec).toBe(false);
     expect('mark' in spec).toBe(false);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('透传 axis grid selector', () => {
@@ -66,7 +66,7 @@ describe('plot', () => {
       dimension: 'y',
       grid: { applyTo: 'selected', select: { view: ['main'] } },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('透传 axis grid effective domain endpoint policy', () => {
@@ -86,7 +86,7 @@ describe('plot', () => {
       dimension: 'x',
       grid: { includeDomain: true },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('透传 theme 与 legend style', () => {
@@ -132,7 +132,7 @@ describe('plot', () => {
       tickLabels: { format: '~s' },
       style: { swatchSize: 10, title: { font: { weight: 600 } } },
     });
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('透传 Plot plotThemeTokens', () => {
@@ -146,8 +146,8 @@ describe('plot', () => {
     expect(spec.plotThemeTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
   });
 
-  it('plain PlotSpec 透传 Axis theme token rules', () => {
-    const spec = PlotSpecSchema.parse({
+  it('plain IRPlot 透传 Axis theme token rules', () => {
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -231,7 +231,7 @@ describe('plot', () => {
       { type: 'path', coordinateView: 'rainfall' },
     ]);
     expect(JSON.stringify(spec)).not.toContain('yAxisId');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('展开 xAxisId binding sugar 为 overlay composition', () => {
@@ -285,7 +285,7 @@ describe('plot', () => {
       { type: 'point', coordinateView: 'date' },
     ]);
     expect(JSON.stringify(spec)).not.toContain('xAxisId');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('把省略或 default yAxisId 的 mark 绑定到默认 scope', () => {
@@ -320,7 +320,7 @@ describe('plot', () => {
       { type: 'point', coordinateView: 'default' },
       { type: 'path', coordinateView: 'rainfall' },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('拒绝缺失的 y axis binding', () => {
@@ -404,7 +404,7 @@ describe('plot', () => {
       { type: 'axis', coordinateView: 'load' },
     ]);
     expect(JSON.stringify(spec)).not.toMatch(/trackId|scaffoldId/);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('展开 facet binding sugar 为 facet composition', () => {
@@ -454,6 +454,6 @@ describe('plot', () => {
     expect(spec.marks[0]).toMatchObject({ type: 'path', coordinateView: 'salesPanel' });
     expect(spec.guides?.[0]).toMatchObject({ type: 'axis', coordinateView: 'salesPanel', grid: true });
     expect(JSON.stringify(spec)).not.toContain('facetId');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

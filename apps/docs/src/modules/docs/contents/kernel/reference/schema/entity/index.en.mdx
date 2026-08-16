@@ -1,4 +1,4 @@
-﻿---
+---
 title: Entity
 description: Named members placed in a scene — Node and Coordinate
 ---
@@ -81,13 +81,13 @@ Core parses only deterministic named, hex, `rgb()`, and `hsl()` colors; it never
 
 ## TextBlock
 
-`TextBlockSchema` is the node text block shape: a single string for one line, or a non-empty array for multiple lines. Each `LineSpec` may be a plain string, a per-line style object, or a `{ runs }` mixed text / math line.
+`TextBlockSchema` is the node text block shape: a single string for one line, or a non-empty array for multiple lines. Each `IRLine` may be a plain string, a per-line style object, or a `{ runs }` mixed text / math line.
 
 <ZodSchema name="TextBlockSchema" />
 
-### LineSpec
+### IRLine
 
-<ZodSchema name="LineSpecSchema" />
+<ZodSchema name="LineSchema" />
 
 `$...$` / `$$...$$` inside strings is formula sugar normalized to `MathRunSchema`; an explicit `{ tex, displayMode?, fill?, opacity? }` object may also be used as a run. Formula rendering requires the host to inject `CompileOptions.lowerTex`; see the [TeX package](/kernel/packages/extension/tex) for integration details.
 

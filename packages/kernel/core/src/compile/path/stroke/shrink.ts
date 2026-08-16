@@ -1,11 +1,11 @@
-﻿import { arcEndPoint, ellipseArcPoint, point } from '@retikz/math';
+import { arcEndPoint, ellipseArcPoint, point } from '@retikz/math';
 
 import type {
   ArrowEmitContext,
   MarkerFill,
   MarkerPrimitive,
   PathCommand,
-  ResolvedArrowEndSpec,
+  ResolvedArrowEnd,
 } from '../../../contract';
 import type { ArrowMarkResolution } from '../../../resolve/path';
 import type { IRPosition } from '../../../schemas';
@@ -47,11 +47,11 @@ const buildEmitContext = (resolution: ArrowMarkResolution, round: (n: number) =>
 };
 
 /** 把箭头视觉输入物化为 Scene 端点箭头描述 */
-const emitArrowEndSpec = (resolution: ArrowMarkResolution, round: (n: number) => number): ResolvedArrowEndSpec => {
+const emitArrowEnd = (resolution: ArrowMarkResolution, round: (n: number) => number): ResolvedArrowEnd => {
   const { visual, geometry, definition } = resolution;
   const ctx = buildEmitContext(resolution, round);
   const marker = emitArrowMarkerPrimitives(visual.shape, definition, ctx);
-  const out: ResolvedArrowEndSpec = {
+  const out: ResolvedArrowEnd = {
     shape: visual.shape,
     baseSize: geometry.baseSize,
     refX: geometry.contactX,
@@ -66,7 +66,7 @@ const emitArrowEndSpec = (resolution: ArrowMarkResolution, round: (n: number) =>
 /** 已解析的端点箭头及对应 path 收缩量 */
 export type EndpointArrowMarkEmission = {
   /** 已物化的 Scene 端点箭头描述 */
-  spec: ResolvedArrowEndSpec;
+  spec: ResolvedArrowEnd;
   /** path 本体需要向内收缩的距离（未乘 strokeWidth） */
   shrink: number;
   /** auto boundary 端点为了避开空心箭头外缘需要额外内缩的距离 */
@@ -78,18 +78,18 @@ export const emitEndpointArrowMark = (
   round: (n: number) => number,
 ): EndpointArrowMarkEmission => {
   return {
-    spec: emitArrowEndSpec(resolution, round),
+    spec: emitArrowEnd(resolution, round),
     shrink: resolution.geometry.shrink,
     boundaryOuterInset: resolution.geometry.boundaryOuterInset,
   };
 };
 
 /** 解析中段 arrow mark 为 marker 描述 */
-export const emitMarkArrowSpec = (
+export const emitMarkArrow = (
   resolution: ArrowMarkResolution,
   round: (n: number) => number,
-): ResolvedArrowEndSpec => {
-  return emitArrowEndSpec(resolution, round);
+): ResolvedArrowEnd => {
+  return emitArrowEnd(resolution, round);
 };
 
 /** 取一个 PathCommand 末端 endpoint（move/line/quad/cubic → to；arc/ellipseArc → polar(end)；close 无端点） */

@@ -103,7 +103,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
   description="需要排查系列拆分、缺失值中断、极坐标默认闭合或 anchorId 产物时再回来读。"
 />
 
-`<PathMark>` 进入 `IRPlotSpec` 后由 mark registry 分派给 path lowering。它只接受 cartesian2D 与 polar2D，因为这两类坐标帧能为有序位置角色提供路径轨迹；不支持的坐标系会直接报错。
+`<PathMark>` 进入 `IRPlot` 后由 mark registry 分派给 path lowering。它只接受 cartesian2D 与 polar2D，因为这两类坐标帧能为有序位置角色提供路径轨迹；不支持的坐标系会直接报错。
 
 | 阶段       | 可观察行为                                                                                                   |
 | ---------- | ------------------------------------------------------------------------------------------------------------ |
@@ -162,7 +162,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 | `closure?`      | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />必填<br />0 或离 0 最近的值域边界<br />`stack` 必填 | 构造可填充边界<br />选择首尾闭合、常量基线或逐行基线<br />仅 `baseline` 使用的常量下边界<br />仅 `stack` 使用的逐行下边界字段 |
 | `label?`        | `PathMarkProps['label']`                                                                                                                  | —                                                          | 路径或路径段标签；内容与位置字段由 `PathMarkProps['label']` 的 TypeScript 输入契约定义                                        |
 | `resolveLabel?` | `(row: ExternalRow) => string`                                                                                                            | —                                                          | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                  |
-| `anchorId?`     | `IRPlotAnchorIdSpec`                                                                                                                      | —                                                          | 为每个有效路径顶点生成稳定的 core Coordinate id                                                                               |
+| `anchorId?`     | `IRPlotAnchorId`                                                                                                                      | —                                                          | 为每个有效路径顶点生成稳定的 core Coordinate id                                                                               |
 
 ## 相关
 

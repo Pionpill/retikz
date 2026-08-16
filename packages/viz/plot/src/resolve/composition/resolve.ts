@@ -1,5 +1,5 @@
 import type { DimensionRole } from '../../contract';
-import type { IRPlotAxisGuide, IRPlotGuide, IRPlotSpec } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotGuide, IRPlot } from '../../schemas';
 import type { Margins } from '../../shared';
 import type {
   CompositionAxisPolicyValue,
@@ -31,7 +31,7 @@ const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): strin
 };
 
 /** 解析 plot 的坐标简写或 composition 为统一坐标视图 registry */
-export const resolveCoordinateScopeRegistry = (node: IRPlotSpec): CoordinateScopeRegistry => {
+export const resolveCoordinateScopeRegistry = (node: IRPlot): CoordinateScopeRegistry => {
   if (node.composition !== undefined) {
     const scaffolds = (node.composition.arrangements ?? []).filter(
       (arrangement): arrangement is SharedScaffold => arrangement.kind === CoordinateArrangementKind.Tracks,
@@ -67,7 +67,7 @@ export const resolveCoordinateScopeRegistry = (node: IRPlotSpec): CoordinateScop
     };
   }
   if (node.coordinate === undefined) {
-    throw new Error('lowerPlots: PlotSpec requires either coordinate shorthand or composition');
+    throw new Error('lowerPlots: IRPlot requires either coordinate shorthand or composition');
   }
   return {
     defaultScope: DEFAULT_COORDINATE_SCOPE_ID,
@@ -80,7 +80,7 @@ export const coordinateScopeIdOf = (operation: { coordinateView?: string }, defa
   operation.coordinateView ?? defaultScope;
 
 /** 解析 plot composition 的有效 arrangement、scope 与策略上下文 */
-export const resolveComposition = (node: IRPlotSpec): CompositionResolution => {
+export const resolveComposition = (node: IRPlot): CompositionResolution => {
   const arrangements = node.composition?.arrangements ?? [];
   const facets = arrangements.filter(
     (arrangement): arrangement is FacetGrid => arrangement.kind === CoordinateArrangementKind.Facet,

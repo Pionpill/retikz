@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { PLOT_NAMESPACE, PlotComposite } from '@retikz/plot';
 
@@ -21,7 +21,7 @@ import { styleSugarContext } from './style-sugar';
 type Collected = NormalizationState;
 
 /** 将 Plot Vanilla 输入归一为唯一的 Plot Source IR */
-export const normalizePlot = (input: InputPlot): IRPlotSpec => {
+export const normalizePlot = (input: InputPlot): IRPlot => {
   const { marks, guides = [], facets = [], scaffolds = [], coordinate, composition, ...base } = input;
   const normalized = normalizePlotBindings({
     marks,
@@ -74,7 +74,7 @@ export const normalizePlotDeclarations = (
   }
   for (const source of collection.runtimeSources) {
     if (source.markId === undefined) {
-      throw new Error('buildPlotSpec: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
+      throw new Error('buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
     }
     collected.resolveLabels[source.markId] = source.resolveLabel;
   }

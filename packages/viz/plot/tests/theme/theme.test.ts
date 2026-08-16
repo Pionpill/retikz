@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotAxisGuide, IRPlotSpec } from '../../src/schemas';
+import type { IRPlotAxisGuide, IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
 import {
@@ -13,7 +13,7 @@ import {
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../src/resolve/theme';
-import { PlotSpecSchema, PlotThemeToken } from '../../src/schemas';
+import { PlotSchema, PlotThemeToken } from '../../src/schemas';
 
 const ROWS = [
   { x: 0, y: 1, city: 'A', value: 1 },
@@ -21,13 +21,13 @@ const ROWS = [
   { x: 2, y: 3, city: 'C', value: 3 },
 ];
 
-const expandOf = (spec: IRPlotSpec): IRScope => {
+const expandOf = (spec: IRPlot): IRScope => {
   const [def] = lowerPlots({ d: ROWS }, { width: 480, height: 300 });
   return def.expand(spec).children[0] as IRScope;
 };
 
-const baseSpec = (override: Partial<IRPlotSpec> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -100,7 +100,7 @@ const hasMinimumSize = (node: IRNode, width: number, height: number): boolean =>
 };
 
 const resolveAxis = (
-  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
+  input: Pick<IRPlot, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
   guide: IRPlotAxisGuide,
   style: string | undefined = undefined,
 ): IRPlotAxisGuide => {
@@ -118,7 +118,7 @@ const resolveAxis = (
 describe('plot theme schema and lowering', () => {
   it('accepts_json_safe_theme_and_rejects_unknown_keys', () => {
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             plotArea: { fill: '#ffffff' },
@@ -132,16 +132,16 @@ describe('plot theme schema and lowering', () => {
     ).not.toThrow();
 
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         ...baseSpec(),
         plotTheme: { background: '#ffffff' },
       }),
     ).toThrow();
 
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
-          plotTheme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlotSpec['plotTheme'],
+          plotTheme: { palette: { categorical: ['#2563eb'], unknown: true } } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
@@ -208,7 +208,7 @@ describe('plot theme schema and lowering', () => {
 
   it('facet_background_emits_one_plot_area_inside_each_panel', () => {
     const root = expandOf(
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         id: 'facet-background',
@@ -369,7 +369,7 @@ describe('plot theme schema and lowering', () => {
           },
         },
       ],
-    } satisfies Pick<IRPlotSpec, 'plotThemeTokenRules'>;
+    } satisfies Pick<IRPlot, 'plotThemeTokenRules'>;
 
     const x = resolveAxis(input, { type: 'axis', dimension: 'x', title: 'x' });
     const radius = resolveAxis(input, { type: 'axis', dimension: 'radius', title: 'r' });
@@ -408,7 +408,7 @@ describe('plot theme schema and lowering', () => {
       plotTheme: {
         axis: { grid: { stroke: '#f97316', dashPattern: [4, 2], includeDomain: false } },
       },
-    } satisfies Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>;
+    } satisfies Pick<IRPlot, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>;
 
     const y = resolveAxis(input, {
       type: 'axis',
@@ -441,7 +441,7 @@ describe('plot theme schema and lowering', () => {
         [PlotThemeToken.AxisGridEnabled]: false,
         [PlotThemeToken.AxisGridIncludeDomain]: true,
       },
-    } satisfies Pick<IRPlotSpec, 'plotThemeTokens'>;
+    } satisfies Pick<IRPlot, 'plotThemeTokens'>;
 
     expect(resolveAxis(disabled, { type: 'axis', dimension: 'x' }).grid).toBe(false);
     expect(resolveAxis(disabled, { type: 'axis', dimension: 'x', grid: true }).grid).toBe(true);
@@ -575,90 +575,90 @@ describe('plot theme schema and lowering', () => {
 
   it('theme_axis_rejects_structural_crossing_endpoint_and_title_controls', () => {
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               crossing: { tick: 'hide' },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               ticks: { endpoint: { hideWhenArrow: true } },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               title: { placement: 'at-end' },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               title: { orientation: 'horizontal' },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               title: { gap: 4 },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               title: { anchor: { align: 'end' } },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               title: { shift: { normal: 2 } },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse(
+      PlotSchema.parse(
         baseSpec({
           plotTheme: {
             axis: {
               title: { layout: false },
             },
-          } as IRPlotSpec['plotTheme'],
+          } as IRPlot['plotTheme'],
         }),
       ),
     ).toThrow();

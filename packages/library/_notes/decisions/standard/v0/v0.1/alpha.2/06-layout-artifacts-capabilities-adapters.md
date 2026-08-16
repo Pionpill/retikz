@@ -204,7 +204,7 @@ LayoutItem中的foreign Tier 2 React embeddable若产生额外contribution必须
 - `overlayLayout(id, input)` / `OverlayLayoutVanillaAdapter`
 - shallow-frozen `StandardLayoutVanillaAdapters`，顺序Flex/Grid/Overlay
 
-三个Vanilla adapter同样精确使用namespace `standard.layout`、同一个Vanilla包模块级`makeVanillaStandardLayoutComposites`引用与空datasets；maker每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` Array 副本并保持 Flex / Grid / Overlay 顺序。React与Vanilla只需各自在本包内共享稳定引用，不要求跨包函数identity相同。`StandardVanillaAdapters`在现有Grid/Axes/Frame后追加三项。Vanilla nested layout child只能是`createFlexLayout/createGridLayout/createOverlayLayout`返回的canonical IRChild；`VanillaEmbedSpec`只允许出现在宿主spec traversal层，不能塞进Layout item的JSON `child`。plain input/factory直接使用Standard schema；adapter不保存DOM、renderer或layout state。
+三个Vanilla adapter同样精确使用namespace `standard.layout`、同一个Vanilla包模块级`makeVanillaStandardLayoutComposites`引用与空datasets；maker每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` Array 副本并保持 Flex / Grid / Overlay 顺序。React与Vanilla只需各自在本包内共享稳定引用，不要求跨包函数identity相同。`StandardVanillaAdapters`在现有Grid/Axes/Frame后追加三项。Vanilla nested layout child只能是`createFlexLayout/createGridLayout/createOverlayLayout`返回的canonical IRChild；`InputEmbed`只允许出现在宿主spec traversal层，不能塞进Layout item的JSON `child`。plain input/factory直接使用Standard schema；adapter不保存DOM、renderer或layout state。
 
 foreign/custom canonical IR child的definitions仍由宿主compile options显式提供，Standard不扫描IR猜测registry。测试必须分别证明nested Standard只产生一组family definitions、foreign/custom IR加宿主definitions可compile，以及重复family definition仍由Core权威诊断。
 

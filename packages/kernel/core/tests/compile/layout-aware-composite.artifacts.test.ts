@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type {
   IRChild,
-  IRPaintSpec,
+  IRPaint,
   IRScene,
   LayoutChildResult,
   LayoutCompositeCompileContext,
@@ -39,7 +39,7 @@ const resolvedResultOf = (
   return probe.result;
 };
 
-const gradient = (first: string, second: string): IRPaintSpec => ({
+const gradient = (first: string, second: string): IRPaint => ({
   kind: 'linearGradient',
   stops: [
     { offset: 0, color: first },

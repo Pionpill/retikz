@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChartSpec } from '../../src/point';
+import { resolvePointChart } from '../../src/point';
 
 describe('Bubble Chart resolution', () => {
   it('resolves the required size role before producing canonical IRChart', () => {
-    const result = resolvePointChartSpec({
+    const result = resolvePointChart({
       namespace: 'chart',
       type: 'bubble',
       data: { reference: 'rows' },

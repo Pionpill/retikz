@@ -65,4 +65,4 @@ RibbonMarkSchema = {
 
 - 纯新增 mark，对外 API 非 breaking。
 - node id 跨 scope connector 走 core 级高阶 path / shape 接入，不改本 ADR 的字段端点形态——届时端点 schema 若需 union 判别，是加法而非替换。
-- vanilla 无代码改动：`renderPlot` mark 无关、纯 spec 驱动，ribbon 经 `PlotSpecSchema.parse → lowerPlots → compileToScene → renderToSvgString` 端到端出图。
+- vanilla 无代码改动：`renderPlot` mark 无关、纯 spec 驱动，ribbon 经 `PlotSchema.parse → lowerPlots → compileToScene → renderToSvgString` 端到端出图。

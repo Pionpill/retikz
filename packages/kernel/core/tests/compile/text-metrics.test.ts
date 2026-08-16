@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { FontSpec } from '../../src/compile/text';
+import type { TextFont } from '../../src/compile/text';
 
 import { fallbackMeasurer } from '../../src/compile/text';
 
-const font14: FontSpec = { size: 14 };
+const font14: TextFont = { size: 14 };
 
 describe('fallbackMeasurer', () => {
   it('空字符串：width=0，height 仍按 1.2×size', () => {

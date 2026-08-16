@@ -1,9 +1,9 @@
-﻿import { applyTransforms } from '@retikz/data';
+import { applyTransforms } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 import { TransformSchema } from '../../../src/schemas';
 
 describe('relate transform', () => {
@@ -100,7 +100,7 @@ describe('relate transform', () => {
   });
 
   it('reports input and output fields for strict model collection', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

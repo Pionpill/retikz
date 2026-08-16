@@ -30,6 +30,6 @@ plot mark label 改为 host-inferred schema：用户在 mark 上写 `label`，�
 ## 被否决方案
 
 - 给用户暴露 label `kind`：内置 mark 已知宿主，重复声明会制造无效组合。
-- 保留 flat label props 进入 IRPlotSpec schema：结构化 label 才能完整承载 core label contract；旧 sugar 如存在也只能在 React adapter 内转换。
+- 保留 flat label props 进入 IRPlot schema：结构化 label 才能完整承载 core label contract；旧 sugar 如存在也只能在 React adapter 内转换。
 - 让 PathMark.label 表示顶点级标签：path host label 与 vertex label 是不同语义，后者应另开字段或 ADR。
 - 用 PointMark 模拟说明文字：文字会脱离真实图元 host、locator 与 provenance。

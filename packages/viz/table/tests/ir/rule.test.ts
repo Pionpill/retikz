@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRTableCellRule, IRTableCellSelector, IRTableValuePredicate } from '../../src';
 
-import { TableCellRuleSchema, TableCellSelectorSchema, TableSpecSchema, TableValuePredicateSchema } from '../../src';
+import { TableCellRuleSchema, TableCellSelectorSchema, TableSchema, TableValuePredicateSchema } from '../../src';
 
 describe('Table Cell rule schema', () => {
   it('round-trips a strict selector and ordered root rules', () => {
@@ -20,7 +20,7 @@ describe('Table Cell rule schema', () => {
       formatter: { name: 'number', options: { specifier: '.1f' } },
       appearance: { background: { fill: '#ffffff' } },
     });
-    const spec = TableSpecSchema.parse({
+    const spec = TableSchema.parse({
       namespace: 'table',
       type: 'table',
       structure: { kind: 'manual', rows: [[1]] },
@@ -92,6 +92,6 @@ describe('Table Cell rule schema', () => {
       structure: { kind: 'manual', rows: [[1]] },
     } as const;
 
-    expect(TableSpecSchema.parse(spec)).toEqual(spec);
+    expect(TableSchema.parse(spec)).toEqual(spec);
   });
 });

@@ -1,4 +1,4 @@
-import type { IRPlotRelationRoutingSpec } from '@retikz/plot';
+import type { IRPlotRelationRouting } from '@retikz/plot';
 
 import { Axis, Plot, PointMark, RelationMark, Scale } from '@retikz/plot-react';
 
@@ -16,7 +16,7 @@ import { coordinate1DCompositionRows } from './coordinate-1d-composition.zh.data
 export const previewControls = coordinate1DCompositionControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const routing: IRPlotRelationRoutingSpec =
+  const routing: IRPlotRelationRouting =
     values[COORDINATE_1D_COMPOSITION_CONTROL_IDS.routing] === 'line'
       ? { kind: 'line' }
       : values[COORDINATE_1D_COMPOSITION_CONTROL_IDS.routing] === 'orthogonal'

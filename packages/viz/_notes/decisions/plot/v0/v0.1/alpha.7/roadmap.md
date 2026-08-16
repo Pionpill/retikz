@@ -14,7 +14,7 @@
 - **样式通道只有 color**：`StyleEncodingSchema` 仅 `color`，且 `EncodingSchema = PositionEncoding.merge(StyleEncoding)` 被**所有位置 mark 共享**、sector 直接复用 `StyleEncodingSchema`（`ir/encoding.ts` / `ir/mark.ts`）——直接往全局加通道会泄漏到语义不同的 mark。
 - **color 名为真通道、实为半成品**：`makeColorResolver` **恒走 ordinal、从不查字段类型**（`lower/expand.ts`），连续/temporal 字段会被静默当 ordinal 调色；单系列 line/area 的 `color.field` 被**静默丢弃**（`lower/mark.ts`）。
 - **scale 家族缺连续变体**：仅 linear / band / point / ordinal / time（`ir/scale.ts`），无 log / pow / sqrt。
-- **三表面未跟上**：React `DslScaleX` 仅 `'linear' | 'time' | 'point'`、mark props 无 `size`（`react/.../buildPlotSpec.ts` / `marks.tsx`），vanilla 同缺。
+- **三表面未跟上**：React `DslScaleX` 仅 `'linear' | 'time' | 'point'`、mark props 无 `size`（`react/.../buildPlotIR.ts` / `marks.tsx`），vanilla 同缺。
 
 三块（对齐 [v0.1 roadmap](../roadmap.md) line 40，延续「纵向薄片 + 三包 lockstep」）：
 

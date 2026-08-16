@@ -1,4 +1,4 @@
-﻿import type { IRPathScale, JsonValue } from '@retikz/core';
+import type { IRPathScale, JsonValue } from '@retikz/core';
 import type { PathThicknessValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
@@ -8,7 +8,7 @@ import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle, IRPlotSpec } from '../../../schemas';
+import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle, IRPlot } from '../../../schemas';
 
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { MarkValueKind, PlotScale } from '../../../schemas';
@@ -66,7 +66,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
   });
 
 const makeNumericPathResolver = (
-  node: IRPlotSpec,
+  node: IRPlot,
   rows: Array<ExternalRow>,
   fieldTypes: DataFieldTypeMap,
   pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,

@@ -1,13 +1,13 @@
-import type { IRNode, IRPaintSpec, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPaint, IRPath, IRScope } from '@retikz/core';
 
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -15,7 +15,7 @@ const SALES = [
   { month: 2, revenue: 9 },
 ];
 
-const paintGradient: IRPaintSpec = {
+const paintGradient: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [
@@ -24,7 +24,7 @@ const paintGradient: IRPaintSpec = {
   ],
 };
 
-const lineSpec: IRPlotSpec = PlotSpecSchema.parse({
+const lineSpec: IRPlot = PlotSchema.parse({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -36,8 +36,8 @@ const lineSpec: IRPlotSpec = PlotSpecSchema.parse({
   marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
 });
 
-const pointSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -50,7 +50,7 @@ const pointSpec = (): IRPlotSpec =>
   });
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -60,7 +60,7 @@ const expandOf = (
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -130,7 +130,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   it('lower_point_applies_constant_node_style', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -173,7 +173,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   it('drawing_semantic_layers_emit_default_zindex_scopes_without_presentation_decoration', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -211,7 +211,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   it('theme_grid_enables_every_existing_axis_without_local_grid', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       ...pointSpec(),
       id: 'theme-grid',
       guides: [
@@ -233,7 +233,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   it('layer_zindex_overrides_semantic_scope_without_reusing_mark_node_zindex', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -258,7 +258,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   it('lower_point_applies_stroke_channels_per_datum', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -355,7 +355,7 @@ describe('lowerPlots (contract)', () => {
 
   // 交互
   it('explicit_domain_range_respected', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -384,7 +384,7 @@ describe('lowerPlots (contract)', () => {
   });
 
   // contract：绘图区布局（margin convention）
-  const guidedLineSpec: IRPlotSpec = PlotSpecSchema.parse({
+  const guidedLineSpec: IRPlot = PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -422,7 +422,7 @@ describe('lowerPlots (contract)', () => {
 
   it('explicit_range_not_overridden_by_plot_area', () => {
     // 显式 range 的 scale 即便有 axis 也不被 plot area 覆盖（尊重用户手设）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -444,8 +444,8 @@ describe('lowerPlots (contract)', () => {
 });
 
 // contract：interval(bar) mark
-const barSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const barSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -501,7 +501,7 @@ describe('lowerPlots interval/bar (contract)', () => {
   });
 
   it('proportional_interval_axis_uses_role_channel_as_labels', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'labor' },
@@ -556,7 +556,7 @@ describe('lowerPlots interval/bar (contract)', () => {
   });
 
   it('bar_coexists_with_point', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -585,8 +585,8 @@ describe('lowerPlots color (contract)', () => {
     { gdp: 2, life: 80, continent: 'Europe' },
     { gdp: 3, life: 75, continent: 'Asia' },
   ];
-  const coloredPoint = (scales: Array<unknown>): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const coloredPoint = (scales: Array<unknown>): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'c' },
@@ -638,7 +638,7 @@ describe('lowerPlots color (contract)', () => {
 
   it('point_color_auto_synthesized_scale', () => {
     // color 有 field 无 scale ref → 自动合成 ordinal 色 scale（默认配色）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'c' },
@@ -661,7 +661,7 @@ describe('lowerPlots color (contract)', () => {
   });
 
   it('point_color_constant_single_subscope', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'c' },
@@ -702,7 +702,7 @@ describe('lowerPlots color (contract)', () => {
   });
 
   it('line_color_constant_to_stroke', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'c' },
@@ -723,7 +723,7 @@ describe('lowerPlots color (contract)', () => {
   });
 
   it('bar_color_groups_into_subscopes', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'c' },
@@ -753,7 +753,7 @@ describe('lowerPlots color (contract)', () => {
 
 describe('lowerPlots mark paint', () => {
   it('point_constant_paint_lowers_to_node_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -783,7 +783,7 @@ describe('lowerPlots mark paint', () => {
   });
 
   it('path_constant_stroke_paint_lowers_to_path_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -812,7 +812,7 @@ describe('lowerPlots mark paint', () => {
   });
 
   it('interval_constant_paint_lowers_to_node_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -842,7 +842,7 @@ describe('lowerPlots mark paint', () => {
   });
 
   it('path_closure_constant_paint_lowers_to_path_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -874,7 +874,7 @@ describe('lowerPlots mark paint', () => {
   });
 
   it('reference_band_constant_paint_lowers_to_node_default_and_compiles', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -917,7 +917,7 @@ describe('lowerPlots relation (contract)', () => {
     layer.children.flatMap(child => (child as IRScope).children as Array<IRNode>);
 
   it('dodge_subbands_equal_width_offset', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
@@ -953,7 +953,7 @@ describe('lowerPlots relation (contract)', () => {
   });
 
   it('stack_bars_from_transform', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
@@ -986,7 +986,7 @@ describe('lowerPlots relation (contract)', () => {
   });
 
   it('stack_without_transform_throws', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
@@ -1014,7 +1014,7 @@ describe('lowerPlots relation (contract)', () => {
       { t: 0, v: 2, city: 'Y' },
       { t: 1, v: 4, city: 'Y' },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 't' },
@@ -1044,7 +1044,7 @@ describe('lowerPlots relation (contract)', () => {
 
   it('series_omitted_single_bar_layer', () => {
     // 无 series → 退化普通柱（单层 nodeDefault）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
@@ -1060,7 +1060,7 @@ describe('lowerPlots relation (contract)', () => {
   });
 
   it('stacked_bar_compiles_to_scene', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },

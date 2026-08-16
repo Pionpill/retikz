@@ -43,7 +43,7 @@ type PlotLocator = {
 };
 
 /** 用与 lowerPlots 同一份 spec + datasets + options 建 locator（复用 ADR-01 resolveFrame，投影单一真源）*/
-const createPlotLocator: (spec: IRPlotSpec, datasets: ExternalDatasets, options?: LowerPlotsOptions) => PlotLocator;
+const createPlotLocator: (spec: IRPlot, datasets: ExternalDatasets, options?: LowerPlotsOptions) => PlotLocator;
 ```
 
 ### 一致性保证（命中预演的核心）

@@ -4,7 +4,7 @@ import type { z } from 'zod';
 import type { ImageFit, PatternShape } from './constants';
 import type {
   GradientStopSchema,
-  PaintSpecSchema,
+  PaintSchema,
   PatternLineStyleCycleSchema,
   PatternLineStyleSchema,
 } from './schema';
@@ -13,10 +13,10 @@ import type {
 export type IRGradientStop = z.infer<typeof GradientStopSchema>;
 
 /** Paint server 规格类型（渐变 / 图案 / 图片） */
-export type IRPaintSpec = z.infer<typeof PaintSpecSchema>;
+export type IRPaint = z.infer<typeof PaintSchema>;
 
 /** Pattern paint 的可序列化实例参数 */
-export type IRPatternPaintSpec = Extract<IRPaintSpec, { kind: 'pattern' }>;
+export type IRPatternPaint = Extract<IRPaint, { kind: 'pattern' }>;
 
 /** Pattern 单条线 motif 的可序列化样式覆盖 */
 export type IRPatternLineStyle = z.infer<typeof PatternLineStyleSchema>;

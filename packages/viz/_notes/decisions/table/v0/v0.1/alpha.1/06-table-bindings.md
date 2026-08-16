@@ -21,32 +21,32 @@ type TableDetailColumnInput = Omit<IRTableDetailColumn, 'header'> & {
   header?: IRTableCellPayload | string;
 };
 
-type DetailTableSpecInput = Omit<IRTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
+type DetailTableInput = Omit<IRTable, 'namespace' | 'type' | 'data' | 'structure'> & {
   dataRef: string;
   model?: IRDataModel;
   columns: Array<TableDetailColumnInput>;
   header?: boolean;
 };
 
-type ManualTableSpecInput = Omit<IRTableSpec, 'namespace' | 'type' | 'data' | 'structure'> & {
+type ManualTableInput = Omit<IRTable, 'namespace' | 'type' | 'data' | 'structure'> & {
   rows: number;
   columns: number;
   rowKinds?: Array<TableRowKindValue>;
   cells: Array<IRTableCell>;
 };
 
-const createDetailTableSpec = (input: DetailTableSpecInput): IRTableSpec;
-const createManualTableSpec = (input: ManualTableSpecInput): IRTableSpec;
+const createDetailTableIR = (input: DetailTableInput): IRTable;
+const createManualTableIR = (input: ManualTableInput): IRTable;
 ```
 
-- 两个函数都返回无方法、无 runtime data 的 plain `IRTableSpec`，不修改输入对象或数组，并以 `TableSpecSchema.parse()` 返回最终值
-- `createDetailTableSpec()` 只负责 string header sugar 与 detail 根字段装配；`header: false` 必须原样保留
-- `createManualTableSpec()` 不推断 dimensions、rowKinds、Cell 地址或语义，全部交已有 Table schema / pipeline 校验
+- 两个函数都返回无方法、无 runtime data 的 plain `IRTable`，不修改输入对象或数组，并以 `TableSchema.parse()` 返回最终值
+- `createDetailTableIR()` 只负责 string header sugar 与 detail 根字段装配；`header: false` 必须原样保留
+- `createManualTableIR()` 不推断 dimensions、rowKinds、Cell 地址或语义，全部交已有 Table schema / pipeline 校验
 - React 与 Vanilla 只收集各自入口输入并调用这两个函数，不复制 header sugar、默认值或错误语义
 
 ### React
 
-`@retikz/table-react` 提供一个通用入口与两个结构 sugar，三者最终都归一为同一个 `IRTableSpec + ExternalDatasets + LowerTablesOptions` runtime input：
+`@retikz/table-react` 提供一个通用入口与两个结构 sugar，三者最终都归一为同一个 `IRTable + ExternalDatasets + LowerTablesOptions` runtime input：
 
 ```tsx
 <Table spec={tableSpec} data={{ sales: rows }} composites={lowerPlots({ trend: trendRows })} />
@@ -84,23 +84,23 @@ type TableCommonProps = Pick<LayoutProps, 'width' | 'height' | 'className' | 'st
   };
 
 type TableProps = TableCommonProps & {
-  spec: IRTableSpec;
+  spec: IRTable;
   data?: ExternalDatasets;
 };
 
 type DetailTableProps = TableCommonProps &
-  DetailTableSpecInput & {
+  DetailTableInput & {
     data: Array<ExternalRow>;
   };
 
-type ManualTableProps = TableCommonProps & ManualTableSpecInput;
+type ManualTableProps = TableCommonProps & ManualTableInput;
 ```
 
 `TableCommonProps` 是共享宿主与 lowering props 的命名交集，不拥有结构字段。
 
 - 三个组件共享 `width`、`height`、`className`、`style`、`renderer`、`composites`、`onManifest` 与 Table lowering options；展示 props 透传 `<Layout>`，definition options 进入同一 Table runtime
-- `<Table>` 是唯一通用入口：接收 `spec: IRTableSpec` 与可选 `data: ExternalDatasets`；缺省 dataset map 为 `{}`，因此 manual spec 不需要传空对象，detail/custom 缺少所需 dataset 时仍由 Table pipeline fail-loud
-- `<DetailTable>` 是 detail-only sugar：在共享 `DetailTableSpecInput` 上增加 runtime `data: Array<ExternalRow>`；string header 与 `header: false` 均由 `createDetailTableSpec()` 统一处理
+- `<Table>` 是唯一通用入口：接收 `spec: IRTable` 与可选 `data: ExternalDatasets`；缺省 dataset map 为 `{}`，因此 manual spec 不需要传空对象，detail/custom 缺少所需 dataset 时仍由 Table pipeline fail-loud
+- `<DetailTable>` 是 detail-only sugar：在共享 `DetailTableInput` 上增加 runtime `data: Array<ExternalRow>`；string header 与 `header: false` 均由 `createDetailTableIR()` 统一处理
 - `<ManualTable>` 是 manual-only sugar：接收正整数 `rows` / `columns`、可选 `rowKinds`、`cells`、可选 `id` / `layout`；不接收 runtime data，也不推断 header、行列数量或 Cell 地址
 - `DetailTableProps` 不暴露 `spec` / manual 字段，`ManualTableProps` 不暴露 `spec` / detail data 字段；三组件分离后不再使用同一组件内的互斥 props union
 - custom structure/presentation definitions 仍作为三个组件共享的 lowering options；custom structure 本身只通过通用 `<Table spec>` 进入，不为每个 custom kind 生成 React 组件
@@ -108,11 +108,11 @@ type ManualTableProps = TableCommonProps & ManualTableSpecInput;
 - `composites` 是 nested Tier 2 的宿主逃生舱；standalone 合并为 `[...lowerTables(...), ...composites]` 后交 `<Layout>`，重复 namespace/type 由 Core registry fail-loud
 - 三个组件都实现 Tier 2 embeddable adapter，并复用 `resolveReactTableRuntime()` 与同一 render / contribute 实现；`DetailTable` / `ManualTable` 不能只在 render 中返回 `<Table>`，否则宿主在 render 前无法识别 embeddable adapter
 - 嵌入态把 `composites` 随 Table runtime envelope 一并聚合进 `makeComposites`
-- standalone 允许省略 Table spec id；嵌入 `<Layout>` 时三个组件归一后的 `IRTableSpec.id` 必须是非空且在当前 Layout 内唯一的字符串，并以它作为共享 contribution reference。匿名 embedded Table 直接 fail-loud，不使用数组序号、React key、全局计数器或 WeakMap 补 id
+- standalone 允许省略 Table spec id；嵌入 `<Layout>` 时三个组件归一后的 `IRTable.id` 必须是非空且在当前 Layout 内唯一的字符串，并以它作为共享 contribution reference。匿名 embedded Table 直接 fail-loud，不使用数组序号、React key、全局计数器或 WeakMap 补 id
 - `onManifest` 仅支持 standalone；嵌入 `<Layout>` 时 embeddable `contribute` 若看到该 prop 必须 fail-loud，并提示宿主对 spec 显式调用 `lowerTableWithArtifacts`
 - ReactNode 不进入 Table IR；alpha.1 不提供 JSX Cell children DSL
 
-三个组件通过 `resolveReactTableRuntime()` 归一 runtime input；`DetailTable` / `ManualTable` 分别调用 `createDetailTableSpec()` / `createManualTableSpec()`，组件不拥有 structure、layout 或 lowering 规则。
+三个组件通过 `resolveReactTableRuntime()` 归一 runtime input；`DetailTable` / `ManualTable` 分别调用 `createDetailTableIR()` / `createManualTableIR()`，组件不拥有 structure、layout 或 lowering 规则。
 
 #### Embedded 多实例聚合
 
@@ -141,20 +141,20 @@ runtime envelope 与 Symbol 不进入 Table IR、Scene 或用户 dataset；其�
 
 ```ts
 type TableEmbedProps = {
-  spec: IRTableSpec;
+  spec: IRTable;
   data?: ExternalDatasets;
   lowerOptions?: LowerTablesOptions;
   composites?: ReadonlyArray<CompositeDefinition>;
 };
 
-declare const detailTable: (input: DetailTableSpecInput) => IRTableSpec;
-declare const manualTable: (input: ManualTableSpecInput) => IRTableSpec;
+declare const detailTable: (input: DetailTableInput) => IRTable;
+declare const manualTable: (input: ManualTableInput) => IRTable;
 
 declare const embedTable: (
   id: string,
-  spec: IRTableSpec,
+  spec: IRTable,
   options?: Omit<TableEmbedProps, 'spec'>,
-) => VanillaEmbedSpec<TableEmbedProps>;
+) => InputEmbed<TableEmbedProps>;
 
 declare const createTableAdapter: () => VanillaTier2Adapter<TableEmbedProps>;
 
@@ -178,8 +178,8 @@ type RenderTableArtifactResult = Readonly<{
 }>;
 
 type RenderTable = {
-  (spec: IRTableSpec, options: RenderTableArtifactOptions): RenderTableArtifactResult;
-  (spec: IRTableSpec, options?: RenderTableOptions): string;
+  (spec: IRTable, options: RenderTableArtifactOptions): RenderTableArtifactResult;
+  (spec: IRTable, options?: RenderTableOptions): string;
 };
 
 declare const renderTable: RenderTable;
@@ -225,11 +225,11 @@ const result = renderTable(spec, {
 });
 ```
 
-- `detailTable()` / `manualTable()` 分别只委托 `createDetailTableSpec()` / `createManualTableSpec()`；返回值是无方法的 plain `IRTableSpec`，不新增细粒度 column / cell helper
-- `embedTable()` 只返回 `embed('table', id, props)` 的标准 `VanillaEmbedSpec`；不执行 lowering，不修改 spec，也不把 runtime data 写入 Table IR
+- `detailTable()` / `manualTable()` 分别只委托 `createDetailTableIR()` / `createManualTableIR()`；返回值是无方法的 plain `IRTable`，不新增细粒度 column / cell helper
+- `embedTable()` 只返回 `embed('table', id, props)` 的标准 `InputEmbed`；不执行 lowering，不修改 spec，也不把 runtime data 写入 Table IR
 - `embedTable()` 在构造前要求 `id` 为非空字符串；adapter `lower()` 也必须独立校验 `VanillaEmbedContext.id`，使手写 `embed('table', '', props)` 不能绕过稳定 identity 前置条件。两条错误均使用 `table vanilla: embed id must be non-empty`
 - `createTableAdapter()` 无 datasets/options 参数；同一 adapter 可服务多个 Table embed，并在 `mount().update(nextFigure)` 时从新 embed props 读取新 data、lower options 与 composites
-- adapter 的 `lower()` 必须重新执行 `TableSpecSchema.parse()`，使手写 `embed('table', ...)` 不能绕过 Table schema；嵌入副本的根 id 规范化为 `${embedId}/${spec.id ?? 'table'}`，且不得修改调用方 spec
+- adapter 的 `lower()` 必须重新执行 `TableSchema.parse()`，使手写 `embed('table', ...)` 不能绕过 Table schema；嵌入副本的根 id 规范化为 `${embedId}/${spec.id ?? 'table'}`，且不得修改调用方 spec
 - adapter 返回的 `makeComposites` 在创建 adapter 时固定为同一函数引用；多个 Table embed 的 datasets、lower options 与 extra composites 通过下述共享 contribution contract 聚合，不用 mutable Map 或 module-level side channel 保存本轮 props
 - `renderTable()` 是一次性 SSR + manifest convenience：先 parse spec，再以 `data ?? {}`、`lowerOptions ?? {}` 调用 Table lowering，最后经 `compileToScene` 与 `renderToSvgString` 输出；它不作为浏览器更新或性能优化边界
 - `composites` 与 Table definitions 合并后进入 `CompileOptions.composites`，语义与 React / embed adapter 相同
@@ -257,7 +257,7 @@ type TableRuntimeContribution = {
 declare const createTableRuntimeContribution: (input: TableRuntimeContributionInput) => TableRuntimeContribution;
 ```
 
-每个 contribution 增加保留 runtime reference `@@retikz/table/runtime/${encodeURIComponent(reference)}`，其值带 module-local `Symbol` marker 并承载 `lowerOptions` / `composites`；Vanilla 传已校验的非空 `VanillaEmbedContext.id`，React 传已校验的 `IRTableSpec.id`。helper 本身也要求 `reference` 非空，并拒绝用户 dataset 与该保留 reference 冲突。React 同一 Layout 内重复 Table id 会使两个独立 envelope 命中同一 reference，并由 Kernel dataset conflict fail-loud；Vanilla 的重复 embed id 由 Kernel identity 检查先拒绝。
+每个 contribution 增加保留 runtime reference `@@retikz/table/runtime/${encodeURIComponent(reference)}`，其值带 module-local `Symbol` marker 并承载 `lowerOptions` / `composites`；Vanilla 传已校验的非空 `VanillaEmbedContext.id`，React 传已校验的 `IRTable.id`。helper 本身也要求 `reference` 非空，并拒绝用户 dataset 与该保留 reference 冲突。React 同一 Layout 内重复 Table id 会使两个独立 envelope 命中同一 reference，并由 Kernel dataset conflict fail-loud；Vanilla 的重复 embed id 由 Kernel identity 检查先拒绝。
 
 `makeTableRuntimeComposites()` 聚合时剥离所有 envelope，再应用 React “Embedded 多实例聚合”一节的同一 dataset、definition、普通 option 和 extra composite 冲突规则。reference 只由显式稳定 identity 派生，因此组件重排、Strict Mode 重入或 SSR 重复执行不会改变它，也不需要进程级可变状态。该 envelope 不进入 Table IR、Core IR 或 Scene。
 
@@ -282,14 +282,14 @@ React `onManifest` 固定采用“render 中纯计算、effect 去重通知”�
 
 ## DSL 表面
 
-见“决策”中的 React 与 Vanilla 示例。React sugar、Vanilla helper 与共享 authoring normalization 最终必须得到相同 `IRTableSpec`：
+见“决策”中的 React 与 Vanilla 示例。React sugar、Vanilla helper 与共享 authoring normalization 最终必须得到相同 `IRTable`：
 
 ```ts
-expect(detailTable(detailInput)).toEqual(createDetailTableSpec(detailInput));
-expect(resolveReactDetailTableSpec(detailProps)).toEqual(createDetailTableSpec(detailInput));
+expect(detailTable(detailInput)).toEqual(createDetailTableIR(detailInput));
+expect(resolveReactDetailTableIR(detailProps)).toEqual(createDetailTableIR(detailInput));
 
-expect(manualTable(manualInput)).toEqual(createManualTableSpec(manualInput));
-expect(resolveReactManualTableSpec(manualProps)).toEqual(createManualTableSpec(manualInput));
+expect(manualTable(manualInput)).toEqual(createManualTableIR(manualInput));
+expect(resolveReactManualTableIR(manualProps)).toEqual(createManualTableIR(manualInput));
 ```
 
 ## 实现摘要与验证
@@ -303,23 +303,23 @@ expect(resolveReactManualTableSpec(manualProps)).toEqual(createManualTableSpec(m
 ## 影响
 
 - 初始化 `@retikz/table-react` 与 `@retikz/table-vanilla` npm packages
-- `@retikz/table` 新增共享 `createDetailTableSpec()` / `createManualTableSpec()` 与 runtime contribution contract
+- `@retikz/table` 新增共享 `createDetailTableIR()` / `createManualTableIR()` 与 runtime contribution contract
 - 新增用户可见 `<Table>`、`<DetailTable>`、`<ManualTable>`、`detailTable()`、`manualTable()`、`embedTable()`、`createTableAdapter()` 与 `renderTable()`
 - React embedded Table 新增稳定 id 前置条件；standalone 仍允许匿名 spec
 - alpha.1 需要在 `apps/docs` 建立 Table introduction / usage / API 基础页面和 demo，并同步 zh/en、导航与 i18n
 - docs package 同步加入 `@retikz/table`、`@retikz/table-react`、`@retikz/table-vanilla` 的 `workspace:*` dependencies，保证组件 demo、IR/API 示例和 Vanilla 示例均从真实公开包导入
 - 同步 viz、Table 与两个 adapter 的包职责文档：Table 明确拥有 framework-neutral spec normalization 和 adapter-shared contribution contract，但不拥有 React/Vanilla traversal/runtime；Vanilla 从 builder 改为 plain helper + Tier 2 embed adapter + SSR convenience；React 明确三个组件消费共享 normalization
-- `@retikz/table` README 与 Table API 文档列出 `createDetailTableSpec()` / `createManualTableSpec()`；共享 contribution 类型与 helper 作为 adapter extension contract 单独标注，不混入普通 Table authoring 示例
+- `@retikz/table` README 与 Table API 文档列出 `createDetailTableIR()` / `createManualTableIR()`；共享 contribution 类型与 helper 作为 adapter extension contract 单独标注，不混入普通 Table authoring 示例
 - 三包从 alpha.1 起 lockstep，后续能力必须保持 adapter 等价或明确不适用理由
 
 ## 能力完备性检查
 
 - 所属能力域与能力面：Tabular Visualization Complete / adapter 闭环
-- 解决的问题：让同一 TableSpec 在 React、Vanilla、SSR 与 renderer host 中可用
+- 解决的问题：让同一 IRTable 在 React、Vanilla、SSR 与 renderer host 中可用
 - 主责包与协作包：Table 主责领域；table-react/table-vanilla 主责接线；kernel adapters 执行宿主能力
 - 是否可由现有能力组合：复用 React Layout 与 Kernel Vanilla plain spec / Tier 2 adapter / mount / render；只新增 Table authoring 与领域 contribution 聚合
 - 是否需要下沉：无；通用 runtime 能力继续留 kernel adapter
-- 内部表达链路：Table spec props / DetailTable / ManualTable / Vanilla plain helper → IRTableSpec；standalone 或 embed runtime props → shared contribution → lowerTables → Core
+- 内部表达链路：Table spec props / DetailTable / ManualTable / Vanilla plain helper → IRTable；standalone 或 embed runtime props → shared contribution → lowerTables → Core
 - 外部扩展链路：Table definitions 透传到 `@retikz/table` options；nested Tier 2 definitions 经两套 adapter 的同名 `composites` 宿主通道注入
 - pipeline / lowering 与下游消费：两个 adapter 调同一公开 authoring 与 contribution API；Vanilla adapter 进入 Kernel normalize / compile / mount 链路
 - React / Vanilla adapter 等价性：通用 spec、detail/manual authoring、runtime contribution、renderer 与 artifact 行为有交叉测试

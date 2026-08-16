@@ -1,11 +1,11 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeInvariantError, ChartRecipeStyleContext } from '../../src/point/recipe';
 
 import { ChartRecipeInvariantReason } from '../../src/point/recipe';
-import { ScatterChartRecipe, ScatterChartSpecSchema } from '../../src/point/scatter';
+import { ScatterChartRecipe, ScatterChartSchema } from '../../src/point/scatter';
 
 const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,
@@ -15,7 +15,7 @@ const visibleStyle: ChartRecipeStyleContext = {
 };
 
 const scatter = (overrides: Record<string, unknown> = {}) =>
-  ScatterChartSpecSchema.parse({
+  ScatterChartSchema.parse({
     namespace: 'chart',
     type: 'scatter',
     id: 'sales',
@@ -236,17 +236,17 @@ describe('Scatter Chart recipe', () => {
     {
       reason: ChartRecipeInvariantReason.RequiredScale,
       path: ['scales'],
-      mutate: (plot: IRPlotSpec): IRPlotSpec => ({ ...plot, scales: plot.scales.slice(1) }),
+      mutate: (plot: IRPlot): IRPlot => ({ ...plot, scales: plot.scales.slice(1) }),
     },
     {
       reason: ChartRecipeInvariantReason.SpatialRoot,
       path: ['coordinate'],
-      mutate: (plot: IRPlotSpec): IRPlotSpec => ({ ...plot, coordinate: { type: 'cartesian1D' } }),
+      mutate: (plot: IRPlot): IRPlot => ({ ...plot, coordinate: { type: 'cartesian1D' } }),
     },
     {
       reason: ChartRecipeInvariantReason.CoreMark,
       path: ['marks'],
-      mutate: (plot: IRPlotSpec): IRPlotSpec => ({ ...plot, marks: [] }),
+      mutate: (plot: IRPlot): IRPlot => ({ ...plot, marks: [] }),
     },
   ])('rejects a broken $reason invariant', ({ reason, path, mutate }) => {
     const spec = scatter();

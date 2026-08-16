@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { AnyChannelDefinition } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { ChannelDefinitionKind, defineNodeChannel, definePathChannel, defineScopeChannel } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * 自定义 `intensity`（→ node.opacity）经 options.channelDefinitions 注册，
@@ -120,8 +120,8 @@ const opts = (defs?: Array<AnyChannelDefinition>): LowerPlotsOptions => ({
   channelDefinitions: defs,
 });
 
-const scatterSpec = (channels?: Record<string, unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const scatterSpec = (channels?: Record<string, unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -172,7 +172,7 @@ const scopesOf = (scope: IRScope): Array<IRScope> => {
 };
 
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -181,7 +181,7 @@ const firstLayer = (
 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -262,7 +262,7 @@ describe('custom node channel registry', () => {
 
   // 交互：自定义通道 + 内置 size 同图各自生效（size→radius、intensity→opacity）
   it('custom_channel_coexists_with_builtin_size', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -291,7 +291,7 @@ describe('custom node channel registry', () => {
   });
 
   it('custom_path_channel_delivers_to_path_stroke_width', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -322,7 +322,7 @@ describe('custom node channel registry', () => {
 
   // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape
   it('custom_channel_legend_lowers_from_registry_descriptor', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -355,7 +355,7 @@ describe('custom node channel registry', () => {
       { x: 0, y: 0, tone: 'warm' },
       { x: 1, y: 1, tone: 'cool' },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -408,7 +408,7 @@ describe('custom node channel registry', () => {
         node.minimumSize = value;
       },
     });
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       ...scatterSpec({ invalidSymbol: { field: 'score' } }),
       guides: [{ type: 'legend', channel: 'invalidSymbol' }],
     });
@@ -420,7 +420,7 @@ describe('custom node channel registry', () => {
   // JSON round-trip：encoding.channels 进 IR 不丢
   it('encoding_channels_survives_json_roundtrip', () => {
     const spec = scatterSpec({ intensity: { field: 'score' } });
-    const back = PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)));
+    const back = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
     const mark = back.marks[0] as { encoding: { channels?: Record<string, unknown> } };
     expect(mark.encoding.channels).toEqual({ intensity: { field: 'score' } });
   });

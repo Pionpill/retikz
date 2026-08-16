@@ -1,13 +1,13 @@
 ---
 title: 契约 - 表格
-description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme token 与 canonical payload 的 JSON schema。
+description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme token 与 canonical payload 的 JSON schema。
 ---
 
 基础表格契约定义所有表型共享的顶层身份与 Cell 内容，并提供 manual / custom 精确根变体。detail 专有的数据引用与列结构见[明细表契约](/viz/table/reference/contract-detail)；Cell box、轨道和 border 配置见[布局契约](/viz/table/reference/contract-layout)。
 
-## TableSpec 根
+## IRTable 根
 
-`IRTableSpec` 是 `IRDetailTableSpec | IRManualTableSpec | IRCustomTableSpec` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
+`IRTable` 是 `IRDetailTable | IRManualTable | IRCustomTable` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
 
 | 字段                | 类型                                | 默认值     | 描述                                   |
 | ------------------- | ----------------------------------- | ---------- | -------------------------------------- |
@@ -18,23 +18,23 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
 | `meta?`             | `IRJsonObject`                      | —          | lowering 原样保留的 JSON-safe 元数据   |
 | `rules?`            | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖             |
 | `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道           |
-| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`       | 当前 TableSpec 的稀疏 Table token 覆盖 |
+| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`       | 当前 IRTable 的稀疏 Table token 覆盖 |
 | `data?`             | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选  |
 | `structure`         | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure     |
 
-### TableSpecSchema
+### TableSchema
 
 <ZodSchema
-  name="TableSpecSchema"
+  name="TableSchema"
   description="Table 顶层规格的聚合 schema，联合 detail、manual 与 custom 三个精确根变体。"
 />
 
-只生成一种表格的 LLM 或工具应持有精确 schema；同一存储、协议或 pipeline 接收多种表格时，再使用 `TableSpecSchema` / `IRTableSpec`。
+只生成一种表格的 LLM 或工具应持有精确 schema；同一存储、协议或 pipeline 接收多种表格时，再使用 `TableSchema` / `IRTable`。
 
-### ManualTableSpecSchema
+### ManualTableSchema
 
 <ZodSchema
-  name="ManualTableSpecSchema"
+  name="ManualTableSchema"
   description="显式网格 spec：保存矩形行优先 Cell entries，不接受外部 data reference。"
   descriptions={{
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
@@ -43,7 +43,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    tableThemeTokens: '当前 TableSpec 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
+    tableThemeTokens: '当前 IRTable 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: 'manual Table 不接受外部数据引用。',
     structure: 'manual Table 的矩形行优先 Cell 结构。',
@@ -53,10 +53,10 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
   }}
 />
 
-### CustomTableSpecSchema
+### CustomTableSchema
 
 <ZodSchema
-  name="CustomTableSpecSchema"
+  name="CustomTableSchema"
   description="自定义结构 spec：通过 registry 解析 structure kind，并可选引用外部数据。"
   descriptions={{
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
@@ -65,7 +65,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    tableThemeTokens: '当前 TableSpec 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
+    tableThemeTokens: '当前 IRTable 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '可选外部数据引用，运行时会把对应 dataset 暴露给自定义 Structure definition。',
     structure: '由 registry 解析的自定义 Table Structure operation。',
@@ -213,7 +213,7 @@ description: 查询 TableSpec 根、Cell formatter、rule/encoding、Table theme
 
 ## Table Theme token
 
-Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按同名 `TableThemeStyleDefinition` 解析 owner-local baseline，再投影 Core shared `colors.categorical` 到 `data.categorical`，最后应用 TableSpec 的局部 sparse `tableThemeTokens`。因此 Table 不维护第二份 shared palette 输入，也不会把完整 token map 持久化进 Theme IR。
+Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 按同名 `TableThemeStyleDefinition` 解析 owner-local baseline，再投影 Core shared `colors.categorical` 到 `data.categorical`，最后应用 IRTable 的局部 sparse `tableThemeTokens`。因此 Table 不维护第二份 shared palette 输入，也不会把完整 token map 持久化进 Theme IR。
 
 发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
 
@@ -302,7 +302,7 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
   }}
 />
 
-省略 `style` 时使用发布包的默认 Core 基线；本站提供的 `academic` 偏出版 / booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个注入 definition 都必须提供完整 light/dark baseline；Table resolver 按默认或命名 style baseline → shared categorical → local `tableThemeTokens` 级联，未知 key、非法值或缺失 definition 会报告具体路径并 fail-loud。解析后的 manifest 仅在显式选择时保留 `style`，并保留 `themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 TableSpec 输入字段。
+省略 `style` 时使用发布包的默认 Core 基线；本站提供的 `academic` 偏出版 / booktabs，`vibrant` 使用鲜明颜色与浅底，`clean` 尽量移除非必要装饰。每个注入 definition 都必须提供完整 light/dark baseline；Table resolver 按默认或命名 style baseline → shared categorical → local `tableThemeTokens` 级联，未知 key、非法值或缺失 definition 会报告具体路径并 fail-loud。解析后的 manifest 仅在显式选择时保留 `style`，并保留 `themeMode`、完整 `tokens` 与每个 token 的 source；其中 `themeMode` 是输出元数据，不是 IRTable 输入字段。
 
 ## 相关
 

@@ -4,10 +4,10 @@ import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 // contract：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）
 
@@ -16,8 +16,8 @@ const SALES = [
   { month: 2, revenue: 9 },
 ];
 
-const pointSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (extra: Record<string, unknown> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -30,7 +30,7 @@ const pointSpec = (extra: Record<string, unknown> = {}): IRPlotSpec =>
     ...extra,
   });
 
-const expandOf = (spec: IRPlotSpec, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, options);
   return def.expand(spec).children[0] as IRScope;
 };
@@ -49,7 +49,7 @@ const nodeHeight = (node: IRNode): number => {
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-describe('contract L1-a · IRPlotSpec 自描述尺寸', () => {
+describe('contract L1-a · IRPlot 自描述尺寸', () => {
   it('node_width_overrides_global', () => {
     // node.width=200 应覆盖全局 opts.width=480：max-x 数据点落在 200，而非 480
     const layer = expandOf(pointSpec({ width: 200, height: 120 }), opts).children[0] as IRScope;
@@ -132,7 +132,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
   });
 
   // 兄弟 Path line 端点（compile 后从 path primitive 取第一个 line 命令的 to）
-  const lineEndpoint = (plotNode: IRPlotSpec, to: IRTarget): [number, number] | undefined => {
+  const lineEndpoint = (plotNode: IRPlot, to: IRTarget): [number, number] | undefined => {
     const scene: IRScene = {
       version: 1,
       type: 'scene',

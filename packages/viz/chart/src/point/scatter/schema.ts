@@ -7,7 +7,7 @@ import { PointChartType } from '../constants';
 import { ScatterPointPatchSchema, StrictColorChannelSchema, StrictSizeChannelSchema } from '../shared';
 
 /** Scatter 的完整 owner-private 输入 schema */
-export const ScatterChartSpecSchema = z
+export const ScatterChartSchema = z
   .strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart composite namespace discriminator'),
     type: z.literal(PointChartType.Scatter).describe('Scatter Chart variant discriminator'),
@@ -28,5 +28,5 @@ export const ScatterChartSpecSchema = z
   .superRefine(assertChartSpatialRoot)
   .overwrite(omitUndefinedProperties);
 
-/** Scatter 的 JSON-safe ChartSpec */
-export type IRScatterChartSpec = z.infer<typeof ScatterChartSpecSchema>;
+/** Scatter 的 JSON-safe IRChart */
+export type IRScatterChart = z.infer<typeof ScatterChartSchema>;

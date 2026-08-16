@@ -72,7 +72,7 @@ type IRTableCellRule = {
   appearance?: IRTableCellAppearance;
 };
 
-type IRTableSpec = {
+type IRTable = {
   rules?: Array<IRTableCellRule>;
 };
 ```
@@ -141,7 +141,7 @@ const rules = [
 
 ## 兼容性与影响
 
-- `TableSpec` additive 增加 `rules`
+- `IRTable` additive 增加 `rules`
 - formatter/presentation ref 可被 ordered rule 覆盖
 - source-kind vocabulary 必须由无依赖 owner 统一提供，避免 structure/rule/lineage 各自定义
 - manifest 后续公开 matched rule indices 与 leaf winner source

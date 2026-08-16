@@ -1,14 +1,14 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { IRPlotSpec, PlotThemeStyleDefinition } from '@retikz/plot';
+import type { IRPlot, PlotThemeStyleDefinition } from '@retikz/plot';
 
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
-import { PlotSpecSchema, resolvePlotTheme } from '@retikz/plot';
+import { PlotSchema, resolvePlotTheme } from '@retikz/plot';
 import { z } from 'zod';
 
 import type { ChartPresentationAuthoringRecord, ChartPresentationShorthand } from '../base/presentation';
 import type { IRChart } from '../base/schemas';
 import type { ChartThemeStyleDefinition } from '../base/style';
-import type { InternalChartSpecBound } from './recipe';
+import type { InternalChartBound } from './recipe';
 
 import { normalizeChartPresentation } from '../base/presentation';
 import { CHART_NAMESPACE, ChartSchema } from '../base/schemas';
@@ -21,8 +21,8 @@ import { pointChartRecipeStyleContextOf } from './recipe';
 
 /** Chart resolver 的内部成功结果 */
 export type PointChartResolution = {
-  /** merge 与最终 parse 后的 PlotSpec */
-  plotSpec: IRPlotSpec;
+  /** merge 与最终 parse 后的 IRPlot */
+  plotSpec: IRPlot;
   /** 进入唯一 chart.chart Definition 的 canonical IR */
   chart: IRChart;
 };
@@ -60,13 +60,13 @@ const issuePathOf = (error: z.ZodError): ReadonlyArray<string | number> => {
 
 /** 把 schema failure 转换为统一的 Chart resolver error */
 const invalidSchemaError = (
-  code: typeof ChartResolveErrorCode.InvalidChartSpec | typeof ChartResolveErrorCode.InvalidResolvedPlot,
+  code: typeof ChartResolveErrorCode.InvalidChartIR | typeof ChartResolveErrorCode.InvalidResolvedPlot,
   error: z.ZodError,
   cause: unknown = error,
 ): ChartResolveError => new ChartResolveError(code, { path: issuePathOf(error), cause });
 
 /** 通过封闭 recipe tuple 解析一个私有 Chart spec */
-export const resolvePointChartSpec = (
+export const resolvePointChart = (
   input: unknown,
   effectiveTheme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
   options: PointChartResolveOptions = {},
@@ -76,7 +76,7 @@ export const resolvePointChartSpec = (
   try {
     envelope = DispatchEnvelopeSchema.parse(input);
   } catch (error) {
-    if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartSpec, error);
+    if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartIR, error);
     throw error;
   }
 
@@ -89,7 +89,7 @@ export const resolvePointChartSpec = (
   try {
     bound = recipe.bind(input);
   } catch (error) {
-    if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartSpec, error);
+    if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidChartIR, error);
     throw error;
   }
   const style = resolveChartStyle(effectiveTheme, bound.spec, options.chartThemeStyles);
@@ -144,14 +144,14 @@ export const resolvePointChartSpec = (
     throw error;
   }
 
-  let plotSpec: IRPlotSpec;
+  let plotSpec: IRPlot;
   try {
-    plotSpec = PlotSpecSchema.parse(merged.plotSpec);
+    plotSpec = PlotSchema.parse(merged.plotSpec);
   } catch (error) {
     if (error instanceof z.ZodError) throw invalidSchemaError(ChartResolveErrorCode.InvalidResolvedPlot, error);
     throw error;
   }
-  const spec: InternalChartSpecBound = bound.spec;
+  const spec: InternalChartBound = bound.spec;
   const canonicalPresentation = normalizeChartPresentation(presentationAuthoring);
   const chart = ChartSchema.parse({
     namespace: CHART_NAMESPACE,

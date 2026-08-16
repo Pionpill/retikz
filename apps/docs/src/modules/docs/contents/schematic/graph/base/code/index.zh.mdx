@@ -1,29 +1,29 @@
 ---
 title: 逻辑节点
-description: 使用统一的 GraphNode 组件和 role 表达终点、步骤、判断与汇合语义
+description: 使用统一的 Entity 组件和 role 表达终点、步骤、判断与汇合语义
 ---
 
-`GraphNode` 是保留 `graph` namespace 的轻量语义 IR。它通过 `role` 区分 terminal、stage、decision 与 junction，持久化数据对工具和 LLM 保留这一层语义；lower 时每个节点下沉为同 id 的 Core `Node`
+`Entity` 是保留 `graph` namespace 的轻量语义 IR。它通过 `role` 区分 terminal、stage、decision 与 junction，持久化数据对工具和 LLM 保留这一层语义；lower 时每个节点下沉为同 id 的 Core `Node`
 
 ## 用法
 
 ```tsx
 import { Layout, Text } from '@retikz/react';
-import { GraphNode } from '@retikz/graph-react';
+import { Entity } from '@retikz/graph-react';
 ```
 
 ```tsx
 <Layout width={440} height={180}>
-  <GraphNode id="start" role="terminal" position={[20, 70]}>
+  <Entity id="start" role="terminal" position={[20, 70]}>
     Start
-  </GraphNode>
-  <GraphNode id="step" role="stage" position={[130, 70]}>
+  </Entity>
+  <Entity id="step" role="stage" position={[130, 70]}>
     Process
-  </GraphNode>
-  <GraphNode id="check" role="decision" position={[250, 70]}>
+  </Entity>
+  <Entity id="check" role="decision" position={[250, 70]}>
     <Text>Ready?</Text>
-  </GraphNode>
-  <GraphNode id="join" role="junction" position={[380, 80]} />
+  </Entity>
+  <Entity id="join" role="junction" position={[380, 80]} />
 </Layout>
 ```
 
@@ -38,7 +38,7 @@ import { GraphNode } from '@retikz/graph-react';
 
 ## 视觉变体
 
-逻辑节点使用 Graph 自有的五值 `GraphNodeVariant`，不消费 Core 或 Viz 的全局 Theme Style。`variant` 是单个节点的显式基线；省略时使用最近 `GraphFrame.graphNodeVariant`，没有 Frame 作用域时使用 `default`
+逻辑节点使用 Graph 自有的五值 `EntityVariant`，不消费 Core 或 Viz 的全局 Theme Style。`variant` 是单个节点的显式基线；省略时使用最近 `Container.entityVariant`，没有 Frame 作用域时使用 `default`
 
 | variant     | 文本           | 边框             | 背景             |
 | ----------- | -------------- | ---------------- | ---------------- |
@@ -52,21 +52,21 @@ import { GraphNode } from '@retikz/graph-react';
 
 <ComponentPreview files="graph-node" size="lg" />
 
-## GraphFrame 继承
+## Container 继承
 
-`GraphFrame.graphNodeVariant` 为 header、sections、嵌套 `GraphFrame` 和 Core `Scope` 子树中的 GraphNode 设置默认值。嵌套 Frame 建立新的作用域，节点显式 `variant` 优先；`variant="default"` 可以重置外层值。Frame 外壳、divider、GraphConnector 和兄弟分支不受影响
+`Container.entityVariant` 为 header、sections、嵌套 `Container` 和 Core `Scope` 子树中的 Entity 设置默认值。嵌套 Frame 建立新的作用域，节点显式 `variant` 优先；`variant="default"` 可以重置外层值。Frame 外壳、divider、Relation 和兄弟分支不受影响
 
 ```tsx
-import { GraphFrame, GraphFrameSection, GraphNode } from '@retikz/graph-react';
+import { Container, ContainerSection, Entity } from '@retikz/graph-react';
 
-<GraphFrame id="order" graphNodeVariant="secondary">
-  <GraphFrameSection sectionKey="input">
-    <GraphNode id="load" role="stage" position={[0, 0]} />
-  </GraphFrameSection>
-  <GraphFrameSection sectionKey="important">
-    <GraphNode id="validate" role="stage" position={[0, 0]} variant="primary" />
-  </GraphFrameSection>
-</GraphFrame>;
+<Container id="order" entityVariant="secondary">
+  <ContainerSection sectionKey="input">
+    <Entity id="load" role="stage" position={[0, 0]} />
+  </ContainerSection>
+  <ContainerSection sectionKey="important">
+    <Entity id="validate" role="stage" position={[0, 0]} variant="primary" />
+  </ContainerSection>
+</Container>;
 ```
 
 ## Direct、React 与 Vanilla 接线
@@ -75,9 +75,9 @@ import { GraphFrame, GraphFrameSection, GraphNode } from '@retikz/graph-react';
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { createGraphDefinitions, createGraphNode } from '@retikz/graph';
+import { createGraphDefinitions, createEntity } from '@retikz/graph';
 
-const node = createGraphNode({
+const node = createEntity({
   id: 'step',
   role: 'stage',
   position: [0, 0],
@@ -92,7 +92,7 @@ const scene = compileToScene({ version: 1, type: 'scene', children: [node] }, { 
 
 以下 recipe 仅存在于文档中，用于展示组合方式，不会新增 `Process`、`Class` 或 `Data` export
 
-<ComponentPreview files="class-recipe" size="lg" caption="使用 GraphFrame header 和 typed section 的 Class recipe" />
+<ComponentPreview files="class-recipe" size="lg" caption="使用 Container header 和 typed section 的 Class recipe" />
 
 <ComponentPreview files="data-recipe" size="lg" caption="使用不同 role、variant 和显式关系的 Data recipe" />
 
@@ -104,22 +104,22 @@ const scene = compileToScene({ version: 1, type: 'scene', children: [node] }, { 
   description="需要理解 lowering 边界或排查颜色行为时再回来阅读。"
 />
 
-GraphNode 拥有可持久化的图式身份、role、默认 shape、主要色解释和 `GraphNodeVariant`。它不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Core 负责 Node 布局、target、编译和 Scene 输出；Graph 只在 lowering 时把有效 variant 投影为普通 Node paint，role 在此边界被丢弃
+Entity 拥有可持久化的图式身份、role、默认 shape、主要色解释和 `EntityVariant`。它不拥有 graph store、自动布局、障碍规避、交互或领域 recipe。Core 负责 Node 布局、target、编译和 Scene 输出；Graph 只在 lowering 时把有效 variant 投影为普通 Node paint，role 在此边界被丢弃
 
 ## API 参考
 
-| API                                        | 包                      | 作用                                                      |
-| ------------------------------------------ | ----------------------- | --------------------------------------------------------- |
-| `role: GraphNodeRoleValue`                 | `GraphNode` 与 IR       | 区分 terminal、stage、decision 与 junction 语义           |
-| `variant?: GraphNodeVariantValue`          | `GraphNode` 与 IR       | 设置节点视觉变体；省略时继承 Frame 默认值或使用 `default` |
-| `shape?: NodeShapeInput`                   | `GraphNode` 与 IR       | 覆盖 role 提供的默认 shape                                |
-| `graphNodeVariant?: GraphNodeVariantValue` | `GraphFrame`            | 设置后代 GraphNode 的默认变体                             |
-| `createGraphNode()`                        | `@retikz/graph`         | 创建规范 GraphNode IR                                     |
-| `createGraphDefinitions()`                 | `@retikz/graph`         | 为直接 IR 创建完整的 Graph Definition 集合                |
-| `createGraphReactAdapters()`               | `@retikz/graph-react`   | 创建 GraphFrame、GraphNode、GraphConnector 三个 adapter   |
-| `createGraphVanillaAdapters()`             | `@retikz/graph-vanilla` | 创建 GraphFrame、GraphNode、GraphConnector 三个 adapter   |
+| API                                  | 包                      | 作用                                                      |
+| ------------------------------------ | ----------------------- | --------------------------------------------------------- |
+| `role: EntityRoleValue`              | `Entity` 与 IR          | 区分 terminal、stage、decision 与 junction 语义           |
+| `variant?: EntityVariantValue`       | `Entity` 与 IR          | 设置节点视觉变体；省略时继承 Frame 默认值或使用 `default` |
+| `shape?: NodeShapeInput`             | `Entity` 与 IR          | 覆盖 role 提供的默认 shape                                |
+| `entityVariant?: EntityVariantValue` | `Container`             | 设置后代 Entity 的默认变体                                |
+| `createEntity()`                     | `@retikz/graph`         | 创建规范 Entity IR                                        |
+| `createGraphDefinitions()`           | `@retikz/graph`         | 为直接 IR 创建完整的 Graph Definition 集合                |
+| `createGraphReactAdapters()`         | `@retikz/graph-react`   | 创建 Container、Entity、Relation 三个 adapter             |
+| `createGraphVanillaAdapters()`       | `@retikz/graph-vanilla` | 创建 Container、Entity、Relation 三个 adapter             |
 
 ## 相关
 
-- [GraphFrame](/schematic/graph/frame/graph-frame)：可复用布局容器与 variant 作用域
-- [GraphConnector](/schematic/graph/base/connector)：连接 authored identity
+- [Container](/schematic/graph/frame/graph-frame)：可复用布局容器与 variant 作用域
+- [Relation](/schematic/graph/base/connector)：连接 authored identity

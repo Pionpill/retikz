@@ -1,13 +1,13 @@
 ---
 title: Contract - Plot Spec
-description: Query the JSON schemas for the IRPlotSpec root, coordinate views, facets, and track composition.
+description: Query the JSON schemas for the IRPlot root, coordinate views, facets, and track composition.
 ---
 
-`PlotSpecSchema` is the root contract for the Plot Tier 2 composite. It references an external dataset and declares transforms, scales, coordinates, marks, and guides; lowering expands the result into Kernel IR.
+`PlotSchema` is the root contract for the Plot Tier 2 composite. It references an external dataset and declares transforms, scales, coordinates, marks, and guides; lowering expands the result into Kernel IR.
 
-## PlotSpecSchema
+## PlotSchema
 
-<ZodSchema name="PlotSpecSchema" />
+<ZodSchema name="PlotSchema" />
 
 Plot describes the drawing body and its Axis, Legend, Facet, mark, reference, and annotation text. Complete-chart titles, notes, and sources belong to Chart presentation, which composes them with the Plot body through Standard. The removed top-level `layout` and `labels` fields are rejected strictly.
 

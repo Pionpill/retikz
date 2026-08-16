@@ -1,6 +1,6 @@
 import type { ChartAuthoringInput, ChartThemeStyleDefinition, IRChart } from '@retikz/chart';
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
+import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { PlotSource } from '@retikz/plot-vanilla';
 import type { InputScope } from '@retikz/vanilla';
 
@@ -32,7 +32,7 @@ export type NormalizedChart = Readonly<{
   /** 已归一化的 Chart Source IR */
   chart: IRChart;
   /** 已归一化的 Plot Source IR */
-  spec: IRPlotSpec;
+  spec: IRPlot;
   /** 保留给后续 InputEmbed adapter 的原始 authoring 输入 */
   input: InputChart;
 }>;

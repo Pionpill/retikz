@@ -3,9 +3,9 @@ title: Runtime
 description: Look up how React, Vanilla, and direct compile entries share one Table layout transaction, Scene, and manifest artifact.
 ---
 
-TableSpec stores only JSON-safe structure. Datasets, Definitions, Core compile options, and host capabilities arrive at runtime. Table runtime has two jobs to explain: how different entries converge on one execution path, and how one layout-aware transaction produces both Scene and manifest.
+IRTable stores only JSON-safe structure. Datasets, Definitions, Core compile options, and host capabilities arrive at runtime. Table runtime has two jobs to explain: how different entries converge on one execution path, and how one layout-aware transaction produces both Scene and manifest.
 
-> This page explains runtime wiring and execution without repeating schema fields. See [Table contracts](/viz/table/reference/contract-table) for TableSpec and Cell content, [Layout contracts](/viz/table/reference/contract-layout) for track and border inputs, and [Artifact contracts](/viz/table/reference/manifest) for compile outputs.
+> This page explains runtime wiring and execution without repeating schema fields. See [Table contracts](/viz/table/reference/contract-table) for IRTable and Cell content, [Layout contracts](/viz/table/reference/contract-layout) for track and border inputs, and [Artifact contracts](/viz/table/reference/manifest) for compile outputs.
 
 ## How entries converge
 
@@ -106,17 +106,17 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
 
 ## React
 
-`@retikz/table-react` exposes three roots: `Table` accepts a complete `IRTableSpec`, `DetailTable` creates record-per-row specs, and `ManualTable` creates explicit-grid specs. All three share `TableCommonProps` and one runtime.
+`@retikz/table-react` exposes three roots: `Table` accepts a complete `IRTable`, `DetailTable` creates record-per-row specs, and `ManualTable` creates explicit-grid specs. All three share `TableCommonProps` and one runtime.
 
 | Entry         | Core input                              | Structure authoring                      |
 | ------------- | --------------------------------------- | ---------------------------------------- |
-| `Table`       | `spec`, optional `data`                 | An already constructed precise TableSpec |
+| `Table`       | `spec`, optional `data`                 | An already constructed precise IRTable |
 | `DetailTable` | `dataRef`, `data`, and `columns`        | `columns` or `DetailColumn` children     |
 | `ManualTable` | Rectangular `rows`, optional `rowKinds` | `rows` props or `Row` / `Cell` children  |
 
-The two `ManualTable` authoring modes are mutually exclusive. Props mode forwards the persisted row-major structure. Marker mode derives width from the maximum occupied position, pads with `null`, and then uses the same `createManualTableSpec()` and Table schema.
+The two `ManualTable` authoring modes are mutually exclusive. Props mode forwards the persisted row-major structure. Marker mode derives width from the maximum occupied position, pads with `null`, and then uses the same `createManualTableIR()` and Table schema.
 
-`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters TableSpec. See the authoritative [Layout API](/kernel/components/layout/overview) for complete field semantics. Scope styles, full `compile`, and `artifacts/onArtifacts` are not part of the Table-root public surface.
+`TableLayoutHostProps` precisely reuses the host fields currently supported by Kernel `<Layout ir>`: handlers, output size/viewBox, renderer, animation, resource ids, Core provider definitions, and the TeX lowerer. Standalone host CSS uses `containerStyle`; it is renamed to internal Layout `style` exactly once and never enters IRTable. See the authoritative [Layout API](/kernel/components/layout/overview) for complete field semantics. Scope styles, full `compile`, and `artifacts/onArtifacts` are not part of the Table-root public surface.
 
 | Shared prop                | Type                                            | Default | Description                                            |
 | -------------------------- | ----------------------------------------------- | ------- | ------------------------------------------------------ |
@@ -139,7 +139,7 @@ The five definition categories and composites merge by stable key and object ide
 | ------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------- |
 | `theme?`            | `IRScene['theme']`                | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>`   |
 | `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`    | Standalone Core style definitions; supplied by the outer host when embedded |
-| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`    | Local TableSpec token overlay above the Table style baseline                |
+| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`    | Local IRTable token overlay above the Table style baseline                |
 
 `theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; React subtrees may instead combine the Core `ThemeProvider` with `TableThemeProvider`. In embedded mode the outer Layout supplies the Core definition.
 
@@ -251,7 +251,7 @@ Top-level `composites` has been removed; use `compile.composites`. `renderTable(
 
 A layout-aware Table cannot persist its compile-local replay tree through pure Tier 1 `lowerIRToKernel()`. Use `compileTable()` for a standalone result. For an embedded Scene, pass `lowerTables()` definitions to host `compileToScene()`, React `<Layout>`, or the Vanilla adapter.
 
-The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See [Artifact contracts](/viz/table/reference/manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters TableSpec or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
+The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload. See [Artifact contracts](/viz/table/reference/manifest) for its fields and nested DTOs. Core compile traversal creates the root artifact occurrence; it never enters IRTable or the manifest. `tableId` is not an instance selector; exact occurrences distinguish anonymous roots, nested Tables, and repeated ids.
 
 ## Runtime entry boundaries
 
@@ -261,11 +261,11 @@ The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
 
-The Table preset comes from host Core `theme.style` / `theme.mode`; local `tableThemeTokens` overrides it at the TableSpec level. Host CSS remains `containerStyle` and does not enter TableSpec. An omitted `style` uses the default light baseline; the resolved manifest records `style` only when one was selected, together with `themeMode`, the complete token map, and token sources.
+The Table preset comes from host Core `theme.style` / `theme.mode`; local `tableThemeTokens` overrides it at the IRTable level. Host CSS remains `containerStyle` and does not enter IRTable. An omitted `style` uses the default light baseline; the resolved manifest records `style` only when one was selected, together with `themeMode`, the complete token map, and token sources.
 
 ## Related
 
-- [Table contracts](/viz/table/reference/contract-table) — TableSpec, manual Cells, and canonical payloads
+- [Table contracts](/viz/table/reference/contract-table) — IRTable, manual Cells, and canonical payloads
 - [Layout contracts](/viz/table/reference/contract-layout) — Cell layout, track, and border-input schemas
 - [Artifact contracts](/viz/table/reference/manifest) — resolved geometry, sources, and locator DTOs
 - [Detail Table contracts](/viz/table/reference/contract-detail) — columns and the detail Structure schema

@@ -104,7 +104,7 @@ Editor 拥有“当前选中了什么”以及 replace、append、toggle、range
 
 Editor 可以拥有当前编辑会话的 camera、pan、zoom、world / viewport 坐标换算和 viewport tool 状态。通用矩阵与几何计算复用 Math / Core；实际呈现和命中必须与 Kernel presentation 使用同一状态。
 
-领域文档只有在自身语义明确要求时才保存 camera 或 view 配置。Editor 不把瞬时 viewport 状态默认写入 Core IR、GraphDocument、PlotSpec 或 TableSpec。
+领域文档只有在自身语义明确要求时才保存 camera 或 view 配置。Editor 不把瞬时 viewport 状态默认写入 Core IR、GraphDocument、IRPlot 或 IRTable。
 
 ## 5. 编辑核心概念
 
@@ -134,7 +134,7 @@ Tool 决定一组输入在当前模式下如何解释；Gesture Session 保存�
 
 ### Edit Intent
 
-Edit Intent 表达领域中立的编辑意图，例如“平移当前 selection”“使用某个 handle 调整边界”“在两个 target 间尝试连接”。它携带稳定 target、参数、base revision 和上下文，但不是 PlotSpec patch、GraphModel patch 或 Table change。
+Edit Intent 表达领域中立的编辑意图，例如“平移当前 selection”“使用某个 handle 调整边界”“在两个 target 间尝试连接”。它携带稳定 target、参数、base revision 和上下文，但不是 IRPlot patch、GraphModel patch 或 Table change。
 
 Edit Intent 是 Kernel Interaction 可路由 intent 通道上的作者编辑语义，不替代 Kernel 的通用 intent envelope，也不替代领域 owner 的 change contract。
 
@@ -269,8 +269,8 @@ Editor 不保存一份与领域文档并行的长期 snapshot 栈。generation l
 Tier 2 的所有交互不自动进入 Editor：
 
 - Plot hover、tooltip、brush、linked selection / filter 可以是消费态 interaction，由 Plot 领域 intent、Kernel Interaction 和宿主 runtime 协作，不要求安装 Editor。
-- 拖动 Plot annotation、改变 legend placement、调整 authored layout 或修改 PlotSpec 属于作者编辑，由 `plot-editor` 接入 Editor。
-- Table viewport、virtual scrolling 和只读选择可以属于展示 runtime；持久列宽、规则或 TableSpec 结构修改由 `table-editor` 接入。面向 spreadsheet / data-grid 的任意单元格编辑、公式和依赖计算仍不属于 Table 或 Editor 基础包。
+- 拖动 Plot annotation、改变 legend placement、调整 authored layout 或修改 IRPlot 属于作者编辑，由 `plot-editor` 接入 Editor。
+- Table viewport、virtual scrolling 和只读选择可以属于展示 runtime；持久列宽、规则或 IRTable 结构修改由 `table-editor` 接入。面向 spreadsheet / data-grid 的任意单元格编辑、公式和依赖计算仍不属于 Table 或 Editor 基础包。
 - Graph 节点移动、连边、重连、waypoint 和 manual geometry 修改由 `graph-editor` 接入。
 
 判断标准是操作是否进入作者文档或 Editor history，而不是它是否由 pointer 触发。

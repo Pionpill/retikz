@@ -12,13 +12,13 @@ import type {
   IRPlotChannel,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlotSpec,
+  IRPlot,
   LegendChannelValue,
 } from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { ChannelScaleResolution, ChannelScaleResolveContext } from './scale';
 
-/** 通道解析可见的 palette 默认值；由 PlotSpec.plotTheme 在 lowering 前解析 */
+/** 通道解析可见的 palette 默认值；由 IRPlot.plotTheme 在 lowering 前解析 */
 export type ChannelPaletteContext = {
   /** 分类 scale 默认颜色 */
   categorical: ReadonlyArray<string>;
@@ -34,7 +34,7 @@ export type ChannelPaletteContext = {
 
 /**
  * 通道解析器的输出值。
- * @description 通道 definition 只产运行时值，不进入 PlotSpec / core IR；对象值若需要支持，必须先明确 JSON 契约与落点
+ * @description 通道 definition 只产运行时值，不进入 IRPlot / core IR；对象值若需要支持，必须先明确 JSON 契约与落点
  */
 export type ChannelValue = JsonValue;
 
@@ -195,7 +195,7 @@ export type ChannelOutputSpace =
 
 /** 通道解析上下文：spec + 规整后的数据行 + 字段类型表 */
 export type ChannelDefinitionResolveContext = {
-  node: IRPlotSpec;
+  node: IRPlot;
   rows: Array<ExternalRow>;
   fieldTypes: DataFieldTypeMap;
   /** 最终字段类型具有声明、resolver 或有效数据观测依据的字段；省略时由 definition 就地判断 */

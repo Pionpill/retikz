@@ -16,7 +16,7 @@ Schematic 是可复用图式语义、关系模型与算法布局的领域分组�
 | `@retikz/graph-react`   | 用 React 编写和运行 Graph              | JSX sugar、props → Graph 输入、React runtime 接线                                               | Graph schema、resolve、lowering、Layout、Core 语义 |
 | `@retikz/graph-vanilla` | 用无框架 API 编写和运行 Graph          | builder、SSR / mount 编排、Vanilla runtime 接线                                                 | Graph schema、resolve、lowering、Layout、Core 语义 |
 
-Graph 三包使用独立 release group `graph` 并保持 lockstep。当前 v0.1 只实现 GraphFrame、GraphNode、GraphConnector 等元素 foundation；通用节点、关系、分组、端口模型与 Graph resolve 仍需后续 Graph milestone ADR。未来 `@retikz/diagram` package family 可以按兼容版本单向依赖 `@retikz/graph`；Graph 不反向依赖 Diagram、Editor 或 renderer。
+Graph 三包使用独立 release group `graph` 并保持 lockstep。当前 v0.1 只实现 Container、Entity、Relation 等元素 foundation；通用节点、关系、分组、端口模型与 Graph resolve 仍需后续 Graph milestone ADR。未来 `@retikz/diagram` package family 可以按兼容版本单向依赖 `@retikz/graph`；Graph 不反向依赖 Diagram、Editor 或 renderer。
 
 ## 分层与依赖
 
@@ -30,7 +30,7 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。当前 v0.1 
 
 ## 当前状态
 
-Graph v0.1 alpha.1 建立三包与发布组，把 Standard alpha.3 已验证的逻辑图能力迁入当前 Schematic 分组，并统一为 `GraphFrame`、`GraphNode` 与 `GraphConnector` 三类入口。`GraphNode.role` 区分节点语义，`GraphConnector.role` 区分关系语义；alpha.3 撤回缺少真实场景验证的 Callout 完整契约。当前不保留旧组件、旧包、兼容别名或 fallback。
+Graph v0.1 alpha.1 建立三包与发布组，把 Standard alpha.3 已验证的逻辑图能力迁入当前 Schematic 分组，并统一为 `Container`、`Entity` 与 `Relation` 三类入口。`Entity.role` 区分节点语义，`Relation.role` 区分关系语义；alpha.3 撤回缺少真实场景验证的 Callout 完整契约。当前不保留旧组件、旧包、兼容别名或 fallback。
 
 ## 验证
 

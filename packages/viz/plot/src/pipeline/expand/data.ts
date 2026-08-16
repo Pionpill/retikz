@@ -20,7 +20,7 @@ import {
 } from '@retikz/data';
 
 import type { AnyMarkDefinition, AnyScaleDefinition } from '../../contract';
-import type { IRPlotMarkOperation, IRPlotSpec, IRPlotTransform } from '../../schemas';
+import type { IRPlotMarkOperation, IRPlot, IRPlotTransform } from '../../schemas';
 import type { LowerPlotsOptions } from './types';
 
 import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '../../providers';
@@ -43,7 +43,7 @@ export const applyMarkTransforms = (
  * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约
  */
 export const validateFieldMaps = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: ExternalDatasets,
   fieldMaps: LowerPlotsOptions['fieldMaps'],
 ): void => {
@@ -73,7 +73,7 @@ export const validateFieldMaps = (
  * @description 先校验 fieldMaps，再解析 model / format / resolver 并恒归一化；transform 由调用方在本函数之后执行
  */
 export const prepareRows = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: ExternalDatasets,
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
