@@ -15,25 +15,20 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ```ts
 import { DrawWay } from '@retikz/core';
-import {
-  graphConnector,
-  GraphConnectorInputEmbedAdapter,
-  graphNode,
-  GraphNodeInputEmbedAdapter,
-} from '@retikz/graph-vanilla';
+import { relation, RelationInputEmbedAdapter, entity, EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
 
 const children = [
-  graphNode('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
-  graphNode('step', { role: 'stage', position: [160, 0], text: 'Process' }),
-  graphConnector('edge', { role: 'flow', way: ['start', DrawWay.Hv, 'step'] }),
+  entity('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
+  entity('step', { role: 'stage', position: [160, 0], text: 'Process' }),
+  relation('edge', { role: 'flow', way: ['start', DrawWay.Hv, 'step'] }),
 ];
-const adapters = [GraphNodeInputEmbedAdapter, GraphConnectorInputEmbedAdapter];
+const adapters = [EntityInputEmbedAdapter, RelationInputEmbedAdapter];
 ```
 
-GraphFrame, GraphNode, and GraphConnector helpers and adapters cover the complete
-Graph family. GraphNode and GraphConnector reuse the embed id as the canonical
-Graph IR id; GraphFrame derives stable nested ids for its outer composite.
-GraphConnector accepts either canonical Step `children` or authoring-only `way`.
+Container, Entity, and Relation helpers and adapters cover the complete
+Graph family. Entity and Relation reuse the embed id as the canonical
+Graph IR id; Container derives stable nested ids for its outer composite.
+Relation accepts either canonical Step `children` or authoring-only `way`.
 Direct persisted IR uses selected Definitions from `@retikz/graph` through
 Core compile options.
 

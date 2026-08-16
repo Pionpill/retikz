@@ -1,8 +1,8 @@
-/** GraphFrame embed 的稳定 kind */
-export const GraphFrameEmbedKind = 'graph.graphFrame';
+/** Container embed 的稳定 kind */
+export const ContainerEmbedKind = 'graph.container';
 
-/** GraphNode embed 的稳定 kind */
-export const GraphNodeEmbedKind = 'graph.graphNode';
+/** Entity embed 的稳定 kind */
+export const EntityEmbedKind = 'graph.entity';
 
-/** GraphConnector embed 的稳定 kind */
-export const GraphConnectorEmbedKind = 'graph.graphConnector';
+/** Relation embed 的稳定 kind */
+export const RelationEmbedKind = 'graph.relation';

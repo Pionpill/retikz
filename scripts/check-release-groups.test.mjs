@@ -56,6 +56,11 @@ const baseGroups = {
     kind: 'foundation',
     packages: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
+  diagram: {
+    domain: 'schematic',
+    kind: 'feature',
+    packages: ['@retikz/diagram', '@retikz/diagram-react', '@retikz/diagram-vanilla'],
+  },
   plot: {
     domain: 'viz',
     kind: 'feature',
@@ -223,6 +228,58 @@ const basePackages = [
       },
       dependencies: {
         '@retikz/graph': 'workspace:*',
+        '@retikz/vanilla': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/schematic/diagram/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/diagram',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'schematic',
+        releaseGroup: 'diagram',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/graph': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/schematic/diagram-react/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/diagram-react',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'schematic',
+        releaseGroup: 'diagram',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/diagram': 'workspace:*',
+        '@retikz/diagram-vanilla': 'workspace:*',
+        '@retikz/react': 'workspace:^',
+        '@retikz/vanilla': 'workspace:^',
+      },
+    },
+  },
+  {
+    path: 'packages/schematic/diagram-vanilla/package.json',
+    manifest: {
+      ...createRootPublishContract(),
+      name: '@retikz/diagram-vanilla',
+      version: '0.1.0-alpha.1',
+      retikz: {
+        domain: 'schematic',
+        releaseGroup: 'diagram',
+        publishable: true,
+      },
+      dependencies: {
+        '@retikz/diagram': 'workspace:*',
         '@retikz/vanilla': 'workspace:^',
       },
     },
@@ -605,4 +662,26 @@ test('Foundation belongs to the kernel release group with its Zod-only publish c
   const kernelRecords = packageRecords.filter(({ manifest }) => releaseGroups.kernel.packages.includes(manifest.name));
   assert.ok(kernelRecords.length > 0);
   assert.ok(kernelRecords.every(({ manifest }) => manifest.version === foundationRecord.manifest.version));
+});
+
+test('Diagram is a Schematic feature release group above Graph', async () => {
+  assert.deepEqual(releaseGroups.diagram, {
+    domain: 'schematic',
+    kind: 'feature',
+    packages: ['@retikz/diagram', '@retikz/diagram-react', '@retikz/diagram-vanilla'],
+  });
+
+  const packageRecords = await readPackageRecords();
+  const diagramRecords = packageRecords.filter(({ manifest }) =>
+    releaseGroups.diagram.packages.includes(manifest.name),
+  );
+
+  assert.deepEqual(diagramRecords.map(({ manifest }) => manifest.name).sort(), [
+    '@retikz/diagram',
+    '@retikz/diagram-react',
+    '@retikz/diagram-vanilla',
+  ]);
+  assert.ok(diagramRecords.every(({ manifest }) => manifest.version === '0.1.0-alpha.1'));
+  assert.ok(diagramRecords.every(({ manifest }) => manifest.retikz?.domain === 'schematic'));
+  assert.ok(diagramRecords.every(({ manifest }) => manifest.retikz?.releaseGroup === 'diagram'));
 });
