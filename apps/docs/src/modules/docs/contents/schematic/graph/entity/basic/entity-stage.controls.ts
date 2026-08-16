@@ -17,7 +17,7 @@ export const entityStageControls = definePreviewControls({
     {
       label: '视觉与内容',
       controls: [
-        { kind: 'color', id: EntityStageControlId.Color, label: '颜色', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityStageControlId.Color, label: '颜色', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityStageControlId.Variant,
@@ -47,6 +47,6 @@ export const entityStageControls = definePreviewControls({
 /** stage playground 的稳定文档契约 */
 export const previewControlContract = {
   controls: entityStageControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: 'Process' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Process' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

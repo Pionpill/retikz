@@ -41,9 +41,13 @@ const ENTITY_DEFAULTS: Readonly<Record<Entity['role'], EntityDefaults>> = {
   },
 };
 
-/** 返回 Entity authored 主要色或与当前模式对应的确定黑白默认值 */
+/** 返回 Entity 主要色；currentColor 和缺省值按当前模式解析为确定黑白色 */
 const primaryColorOf = (node: Entity, theme: ResolvedTheme): string =>
-  node.color ?? (theme.mode === ThemeMode.Light ? '#000000' : '#ffffff');
+  node.color === undefined || node.color === 'currentColor'
+    ? theme.mode === ThemeMode.Light
+      ? '#000000'
+      : '#ffffff'
+    : node.color;
 
 /** 在下沉边界把 Entity variant 的 currentColor 绑定到最终主要色 */
 const materializeThemePaint = (paint: string, primaryColor: string): string =>

@@ -12,7 +12,7 @@ export const entityStageControls = definePreviewControls({
     {
       label: 'Visuals and content',
       controls: [
-        { kind: 'color', id: EntityStageControlId.Color, label: 'Color', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityStageControlId.Color, label: 'Color', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityStageControlId.Variant,
@@ -42,6 +42,6 @@ export const entityStageControls = definePreviewControls({
 /** Stable documentation contract for the stage playground */
 export const previewControlContract = {
   controls: entityStageControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: 'Process' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Process' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

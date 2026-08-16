@@ -12,7 +12,7 @@ export const entityDecisionControls = definePreviewControls({
     {
       label: 'Visuals and content',
       controls: [
-        { kind: 'color', id: EntityDecisionControlId.Color, label: 'Color', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityDecisionControlId.Color, label: 'Color', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityDecisionControlId.Variant,
@@ -42,6 +42,6 @@ export const entityDecisionControls = definePreviewControls({
 /** Stable documentation contract for the decision playground */
 export const previewControlContract = {
   controls: entityDecisionControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: 'Ready?' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Ready?' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

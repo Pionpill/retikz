@@ -17,7 +17,7 @@ export const entityJunctionControls = definePreviewControls({
     {
       label: '视觉与内容',
       controls: [
-        { kind: 'color', id: EntityJunctionControlId.Color, label: '颜色', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityJunctionControlId.Color, label: '颜色', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityJunctionControlId.Variant,
@@ -47,6 +47,6 @@ export const entityJunctionControls = definePreviewControls({
 /** junction playground 的稳定文档契约 */
 export const previewControlContract = {
   controls: entityJunctionControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: '+' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: '+' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

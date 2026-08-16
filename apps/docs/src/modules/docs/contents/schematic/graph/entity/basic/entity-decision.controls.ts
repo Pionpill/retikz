@@ -17,7 +17,7 @@ export const entityDecisionControls = definePreviewControls({
     {
       label: '视觉与内容',
       controls: [
-        { kind: 'color', id: EntityDecisionControlId.Color, label: '颜色', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityDecisionControlId.Color, label: '颜色', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityDecisionControlId.Variant,
@@ -47,6 +47,6 @@ export const entityDecisionControls = definePreviewControls({
 /** decision playground 的稳定文档契约 */
 export const previewControlContract = {
   controls: entityDecisionControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: 'Ready?' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Ready?' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

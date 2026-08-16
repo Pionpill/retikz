@@ -21,10 +21,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.zh.demo';
+import ContainerBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/container/basic/container-basic.en.demo';
+import ContainerBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/container/basic/container-basic.zh.demo';
+import ProcessRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/container/extension/process-recipe.en.demo';
+import ProcessRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/container/extension/process-recipe.zh.demo';
 import { previewSource as entityDecisionEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-decision.en.demo';
 import { previewSource as entityDecisionZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-decision.zh.demo';
 import { previewSource as entityJunctionEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-junction.en.demo';
@@ -33,12 +33,12 @@ import { previewSource as entityStageEnPreviewSource } from '../../src/modules/d
 import { previewSource as entityStageZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-stage.zh.demo';
 import { previewSource as entityTerminalEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-terminal.en.demo';
 import { previewSource as entityTerminalZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-terminal.zh.demo';
+import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.en.demo';
+import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.zh.demo';
+import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.en.demo';
+import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.zh.demo';
 import RelationRoutingEnDemo from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-routing.en.demo';
 import RelationRoutingZhDemo from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-routing.zh.demo';
-import ContainerBasicEnDemo from '../../src/modules/docs/contents/schematic/graph/container/basic/container-basic.en.demo';
-import ContainerBasicZhDemo from '../../src/modules/docs/contents/schematic/graph/container/basic/container-basic.zh.demo';
-import ProcessRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/container/extension/process-recipe.en.demo';
-import ProcessRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/container/extension/process-recipe.zh.demo';
 
 const definitions = [EntityDefinition, RelationDefinition] as const;
 
@@ -146,7 +146,7 @@ describe('Graph renderer integration', () => {
     ['stage', entityStageZhPreviewSource, 'Process'],
     ['decision', entityDecisionZhPreviewSource, 'Ready?'],
     ['junction', entityJunctionZhPreviewSource, '+'],
-  ])('lowers the real %s Entity demo with controlled ordinary Core paints', (_role, source, text) => {
+  ])('lowers the real %s Entity demo with controlled foreground Core paints', (_role, source, text) => {
     const preview = buildPreviewIR(canonicalComponentOf(source));
     const lowered = lowerIRToKernel(
       { ...preview.ir, theme: { mode: ThemeMode.Light } },
@@ -155,7 +155,7 @@ describe('Graph renderer integration', () => {
     const nodes = collectNodes(lowered.children);
 
     expect(nodes).toHaveLength(1);
-    expect(nodes[0]).toMatchObject({ color: '#2563eb', textColor: '#2563eb', stroke: '#2563eb', fill: 'none', text });
+    expect(nodes[0]).toMatchObject({ color: '#000000', textColor: '#000000', stroke: '#000000', fill: 'none', text });
     expect(nodes[0]).not.toHaveProperty('variant');
     expect(JSON.stringify(lowered)).not.toContain('notation');
   });

@@ -12,7 +12,7 @@ export const entityTerminalControls = definePreviewControls({
     {
       label: 'Visuals and content',
       controls: [
-        { kind: 'color', id: EntityTerminalControlId.Color, label: 'Color', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityTerminalControlId.Color, label: 'Color', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityTerminalControlId.Variant,
@@ -42,6 +42,6 @@ export const entityTerminalControls = definePreviewControls({
 /** Stable documentation contract for the terminal playground */
 export const previewControlContract = {
   controls: entityTerminalControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: 'Start' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Start' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

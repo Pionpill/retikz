@@ -17,7 +17,7 @@ export const entityTerminalControls = definePreviewControls({
     {
       label: '视觉与内容',
       controls: [
-        { kind: 'color', id: EntityTerminalControlId.Color, label: '颜色', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityTerminalControlId.Color, label: '颜色', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityTerminalControlId.Variant,
@@ -47,6 +47,6 @@ export const entityTerminalControls = definePreviewControls({
 /** terminal playground 的稳定文档契约 */
 export const previewControlContract = {
   controls: entityTerminalControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: 'Start' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Start' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

@@ -42,25 +42,41 @@ Entity also inherits Core `Node`'s `meta` metadata field. `meta` accepts a JSON-
 
 `terminal` represents the beginning or end of a flow. Use it for entering a process, completing a task, or leaving a flow; do not use it for an ordinary processing step
 
-<ComponentPreview files="entity-terminal" size="sm" caption="Change the terminal variant and its inner content." />
+<ComponentPreview
+  files="entity-terminal"
+  size="sm"
+  caption="Change the terminal color (including currentColor), variant, and inner content."
+/>
 
 ### stage: processing step
 
 `stage` represents a step that performs processing, an action, or a state transition. It is usually the main working node in a flow, so its inner content should describe an executable task or stage
 
-<ComponentPreview files="entity-stage" size="sm" caption="Change the stage variant and its inner content." />
+<ComponentPreview
+  files="entity-stage"
+  size="sm"
+  caption="Change the stage color (including currentColor), variant, and inner content."
+/>
 
 ### decision: condition check
 
 `decision` represents a point where a condition selects different next paths. Its content should describe the branching criterion, not the processing that follows a branch
 
-<ComponentPreview files="entity-decision" size="sm" caption="Change the decision variant and its inner content." />
+<ComponentPreview
+  files="entity-decision"
+  size="sm"
+  caption="Change the decision color (including currentColor), variant, and inner content."
+/>
 
 ### junction: split or merge point
 
 `junction` represents several relations merging into, or splitting from, the same point. It usually carries topology only; add inner content when the connection point itself needs semantic context
 
-<ComponentPreview files="entity-junction" size="sm" caption="Change the junction variant and its inner content." />
+<ComponentPreview
+  files="entity-junction"
+  size="sm"
+  caption="Change the junction color (including currentColor), variant, and inner content."
+/>
 
 ## API Reference
 

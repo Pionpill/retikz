@@ -44,7 +44,8 @@ Omitted node `textColor`, `stroke`, and `fill` values are resolved during
 lowering from `variant`. `default`, `primary`, `secondary`, `outline`, and
 `vibrant` are closed Graph-owned values; `Container.entityVariant`
 provides an inherited default for descendants. Each unit's `color` is its
-primary color; omitting it uses black in Light mode or white in Dark mode.
+primary color; omitting it or setting it to `currentColor` uses black in Light
+mode or white in Dark mode.
 Fixed 10%, 15%, and 60% tints are precomposed against white in Light mode or
 black in Dark mode and remain opaque. Explicit leaf paint and opacity fields
 pass through independently. Variant resolution does not read Core categorical

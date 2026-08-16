@@ -104,6 +104,26 @@ describe('EntityVariant lowering', () => {
     expect(lowered).toMatchObject(expected);
   });
 
+  it.each([
+    [ThemeMode.Light, '#000000', '#e6e6e6', '#666666', '#d9d9d9'],
+    [ThemeMode.Dark, '#ffffff', '#1a1a1a', '#999999', '#262626'],
+  ] as const)(
+    'resolves currentColor to the mode foreground for every variant in %s mode',
+    (mode, primary, secondary, outline, vibrant) => {
+      const lower = (variant: IREntity['variant']) =>
+        lowerNode(
+          Graph.createEntity({ id: variant ?? 'default', role: 'stage', position, color: 'currentColor', variant }),
+          mode,
+        );
+
+      expect(lower(undefined)).toMatchObject({ color: primary, textColor: primary, stroke: primary, fill: 'none' });
+      expect(lower('primary')).toMatchObject({ color: primary, stroke: primary, fill: primary });
+      expect(lower('secondary')).toMatchObject({ color: primary, textColor: primary, stroke: 'none', fill: secondary });
+      expect(lower('outline')).toMatchObject({ color: primary, textColor: primary, stroke: outline, fill: 'none' });
+      expect(lower('vibrant')).toMatchObject({ color: primary, textColor: primary, stroke: primary, fill: vibrant });
+    },
+  );
+
   it('gives explicit leaf paint precedence over the selected recipe', () => {
     const lowered = lowerNode(
       Graph.createEntity({

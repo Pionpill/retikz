@@ -52,7 +52,7 @@ GraphNode 显式 variant
 
 ### 五种 recipe
 
-`currentColor` 优先使用 authored `color`，省略时 Light 为 `#000000`、Dark 为 `#ffffff`。颜色预合成到 Light `#ffffff` 或 Dark `#000000`，结果保持不透明：
+`color` 省略或显式使用 `currentColor` 时，Light 解析为 `#000000`、Dark 解析为 `#ffffff`。其它 authored color 作为主要色。颜色预合成到 Light `#ffffff` 或 Dark `#000000`，结果保持不透明：
 
 | Variant     | `textColor`    | `stroke`            | `fill`              |
 | ----------- | -------------- | ------------------- | ------------------- |

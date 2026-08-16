@@ -12,7 +12,7 @@ export const entityJunctionControls = definePreviewControls({
     {
       label: 'Visuals and content',
       controls: [
-        { kind: 'color', id: EntityJunctionControlId.Color, label: 'Color', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityJunctionControlId.Color, label: 'Color', defaultValue: 'currentColor' },
         {
           kind: 'select',
           id: EntityJunctionControlId.Variant,
@@ -42,6 +42,6 @@ export const entityJunctionControls = definePreviewControls({
 /** Stable documentation contract for the junction playground */
 export const previewControlContract = {
   controls: entityJunctionControls,
-  canonicalValues: { color: '#2563eb', variant: 'default', content: '+' },
+  canonicalValues: { color: 'currentColor', variant: 'default', content: '+' },
   relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
 } satisfies PreviewControlContract;

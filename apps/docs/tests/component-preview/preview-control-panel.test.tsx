@@ -566,9 +566,11 @@ describe('PreviewControlPanel', () => {
     expect(markup).toContain('Node Properties');
     expect(markup).toContain('Appearance');
     expect(markup).toContain('data-slot="select-trigger"');
+    expect(markup).toContain('type="color"');
     expect(markup).toContain('data-slot="switch"');
     expect(markup).toContain('data-slot="slider"');
-    expect(markup.match(/data-slot="input"/g)).toHaveLength(4);
+    expect(markup.match(/data-slot="input"/g)).toHaveLength(3);
+    expect(markup).toContain('data-slot="toggle-group"');
     expect(markup).toContain('data-density="default"');
     expect(markup).toContain('data-slot="preview-control-columns"');
     expect(markup).toContain('data-column-count="1"');

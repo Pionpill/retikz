@@ -42,25 +42,41 @@ Entity 同时继承 Core `Node` 的 `meta` 元信息字段。`meta` 只能保存
 
 `terminal` 表示流程的开始或结束，适合表达用户进入流程、任务完成或流程退出等位置。不要用它表示普通的处理步骤
 
-<ComponentPreview files="entity-terminal" size="sm" caption="调整 terminal 的 variant 和节点内部内容" />
+<ComponentPreview
+  files="entity-terminal"
+  size="sm"
+  caption="调整 terminal 的颜色（支持 currentColor）、variant 和节点内部内容"
+/>
 
 ### stage：处理步骤
 
 `stage` 表示流程中执行处理、动作或状态转换的步骤。它通常是流程的主体节点，内部内容应描述一个可执行的工作或阶段
 
-<ComponentPreview files="entity-stage" size="sm" caption="调整 stage 的 variant 和节点内部内容" />
+<ComponentPreview
+  files="entity-stage"
+  size="sm"
+  caption="调整 stage 的颜色（支持 currentColor）、variant 和节点内部内容"
+/>
 
 ### decision：条件判断
 
 `decision` 表示根据条件选择不同后续路径的判断点。它描述的是分支依据，而不是分支执行后的处理结果
 
-<ComponentPreview files="entity-decision" size="sm" caption="调整 decision 的 variant 和节点内部内容" />
+<ComponentPreview
+  files="entity-decision"
+  size="sm"
+  caption="调整 decision 的颜色（支持 currentColor）、variant 和节点内部内容"
+/>
 
 ### junction：分叉与汇合点
 
 `junction` 表示多条关系汇入或从同一点分出的连接点，一般只承担拓扑作用；只有需要给连接点附加语义时才设置内部内容
 
-<ComponentPreview files="entity-junction" size="sm" caption="调整 junction 的 variant 和节点内部内容" />
+<ComponentPreview
+  files="entity-junction"
+  size="sm"
+  caption="调整 junction 的颜色（支持 currentColor）、variant 和节点内部内容"
+/>
 
 ## API 参考
 
