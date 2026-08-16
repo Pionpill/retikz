@@ -91,9 +91,9 @@ type Ctx = {
   layoutHelpers: Set<string>;
   layoutAdapters: Set<string>;
   layoutCounts: Map<string, number>;
-  notationHelpers: Set<string>;
-  notationAdapters: Set<string>;
-  notationCounts: Map<string, number>;
+  graphHelpers: Set<string>;
+  graphAdapters: Set<string>;
+  graphCounts: Map<string, number>;
   generatedIds: Map<string, string>;
 };
 
@@ -276,21 +276,15 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
-const NOTATION_HELPER_ORDER: ReadonlyArray<string> = [
-  'logicFrame',
-  'terminal',
-  'stage',
-  'decision',
-  'junction',
-  'connector',
+const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
+  'graphFrame',
+  'graphNode',
+  'graphConnector',
 ];
-const NOTATION_ADAPTER_ORDER: ReadonlyArray<string> = [
-  'LogicFrameInputEmbedAdapter',
-  'TerminalInputEmbedAdapter',
-  'StageInputEmbedAdapter',
-  'DecisionInputEmbedAdapter',
-  'JunctionInputEmbedAdapter',
-  'ConnectorInputEmbedAdapter',
+const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
+  'GraphFrameInputEmbedAdapter',
+  'GraphNodeInputEmbedAdapter',
+  'GraphConnectorInputEmbedAdapter',
 ];
 
 /** docs 预览能够显式注入的 Standard definition 名 */
@@ -304,14 +298,11 @@ export type StandardPreviewDefinitionName =
 /** docs 预览能够显式注入的 Layout definition 名 */
 export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
 
-/** docs 预览能够显式注入的 Notation definition 名 */
-export type NotationPreviewDefinitionName =
-  | 'LogicFrameDefinition'
-  | 'TerminalDefinition'
-  | 'StageDefinition'
-  | 'DecisionDefinition'
-  | 'JunctionDefinition'
-  | 'ConnectorDefinition';
+/** docs 预览能够显式注入的 Graph definition 名 */
+export type GraphPreviewDefinitionName =
+  | 'GraphFrameDefinition'
+  | 'GraphNodeDefinition'
+  | 'GraphConnectorDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -327,13 +318,10 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
   overlayLayout: 'OverlayLayoutDefinition',
 };
 
-const NOTATION_DEFINITION_BY_KIND: Readonly<Record<string, NotationPreviewDefinitionName>> = {
-  logicFrame: 'LogicFrameDefinition',
-  terminal: 'TerminalDefinition',
-  stage: 'StageDefinition',
-  decision: 'DecisionDefinition',
-  junction: 'JunctionDefinition',
-  connector: 'ConnectorDefinition',
+const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
+  graphFrame: 'GraphFrameDefinition',
+  graphNode: 'GraphNodeDefinition',
+  graphConnector: 'GraphConnectorDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
@@ -346,7 +334,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
-  if (child.namespace === 'notation' && child.type === 'logicFrame') {
+  if (child.namespace === 'graph' && child.type === 'graphFrame') {
     const owned: Array<IRChild> = [];
     const header = record.header as { child?: IRChild } | undefined;
     if (header?.child !== undefined) owned.push(header.child);
@@ -354,7 +342,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     sections?.forEach(section => owned.push(section.child));
     return owned;
   }
-  if (child.namespace === 'notation' && ['terminal', 'stage', 'decision', 'junction', 'connector'].includes(child.type))
+  if (child.namespace === 'graph' && ['graphNode', 'graphConnector'].includes(child.type))
     return [];
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
@@ -379,7 +367,7 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
 type PreviewDefinitions = {
   standard: Array<StandardPreviewDefinitionName>;
   layout: Array<LayoutPreviewDefinitionName>;
-  notation: Array<NotationPreviewDefinitionName>;
+  graph: Array<GraphPreviewDefinitionName>;
 };
 
 /** 从 Core child graph 递归收集 adapter 尚未提供的已知 definitions */
@@ -387,11 +375,11 @@ export const collectPreviewDefinitions = (
   children: ReadonlyArray<IRChild>,
   standardAdapterKinds: ReadonlySet<string>,
   layoutAdapterKinds: ReadonlySet<string>,
-  notationAdapterKinds: ReadonlySet<string>,
+  graphAdapterKinds: ReadonlySet<string>,
 ): PreviewDefinitions => {
   const standard = new Set<StandardPreviewDefinitionName>();
   const layout = new Set<LayoutPreviewDefinitionName>();
-  const notation = new Set<NotationPreviewDefinitionName>();
+  const graph = new Set<GraphPreviewDefinitionName>();
   const providedLayoutKinds = new Set(layoutAdapterKinds);
   if (LAYOUT_HELPER_ORDER.some(kind => layoutAdapterKinds.has(kind))) {
     LAYOUT_HELPER_ORDER.forEach(kind => providedLayoutKinds.add(kind));
@@ -414,14 +402,14 @@ export const collectPreviewDefinitions = (
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
         if (!providedLayoutKinds.has(child.type)) layout.add(definitionName);
-      } else if (child.namespace === 'notation') {
+      } else if (child.namespace === 'graph') {
         const definitionName = (
-          NOTATION_DEFINITION_BY_KIND as Readonly<Record<string, NotationPreviewDefinitionName | undefined>>
+          GRAPH_DEFINITION_BY_KIND as Readonly<Record<string, GraphPreviewDefinitionName | undefined>>
         )[child.type];
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
-        if (!notationAdapterKinds.has(child.type)) notation.add(definitionName);
+        if (!graphAdapterKinds.has(child.type)) graph.add(definitionName);
       } else {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
@@ -431,7 +419,7 @@ export const collectPreviewDefinitions = (
     if (child.type === 'scope') child.children.forEach(visit);
   };
   children.forEach(visit);
-  return { standard: Array.from(standard), layout: Array.from(layout), notation: Array.from(notation) };
+  return { standard: Array.from(standard), layout: Array.from(layout), graph: Array.from(graph) };
 };
 
 /** 从 Core child graph 收集 Standard definitions */
@@ -453,8 +441,8 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
   return embedId;
 };
 
-const notationCanonicalId = (kind: string, embedId: string): string =>
-  kind === 'logicFrame' ? `${embedId}/${kind}` : embedId;
+const graphCanonicalId = (kind: string, embedId: string): string =>
+  kind === 'graphFrame' ? `${embedId}/${kind}` : embedId;
 
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
@@ -483,17 +471,17 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           ctx.generatedIds.set(embedId, embedId);
         }
       }
-      if (child.namespace === 'notation' && typeof (child as { id?: unknown }).id === 'string') {
+      if (child.namespace === 'graph' && typeof (child as { id?: unknown }).id === 'string') {
         const kind = child.type;
-        if (NOTATION_HELPER_ORDER.includes(kind)) {
+        if (GRAPH_HELPER_ORDER.includes(kind)) {
           const authoredId = (child as unknown as { id: string }).id;
-          const count = (ctx.notationCounts.get(kind) ?? 0) + 1;
-          ctx.notationCounts.set(kind, count);
+          const count = (ctx.graphCounts.get(kind) ?? 0) + 1;
+          ctx.graphCounts.set(kind, count);
           const embedId = `preview-${kind}-${count}`;
-          const generatedId = notationCanonicalId(kind, embedId);
+          const generatedId = graphCanonicalId(kind, embedId);
           ctx.generatedIds.set(authoredId, generatedId);
           ctx.generatedIds.set(generatedId, generatedId);
-          if (kind === 'logicFrame') {
+          if (kind === 'graphFrame') {
             ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
           }
         }
@@ -507,10 +495,10 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
   // The counters are consumed again while emitting helpers.
   ctx.standardCounts.clear();
   ctx.layoutCounts.clear();
-  ctx.notationCounts.clear();
+  ctx.graphCounts.clear();
 };
 
-const rewriteNotationTarget = (value: unknown, ctx: Ctx): unknown => {
+const rewriteGraphTarget = (value: unknown, ctx: Ctx): unknown => {
   if (typeof value !== 'object' || value === null || !('id' in value)) return value;
   const target = value as { id: string; [key: string]: unknown };
   const id = ctx.generatedIds.get(target.id) ?? target.id;
@@ -518,24 +506,24 @@ const rewriteNotationTarget = (value: unknown, ctx: Ctx): unknown => {
 };
 
 /** 只改写 Core Step 明确拥有的目标字段，不递归触碰 meta 或其它普通 JSON */
-const rewriteConnectorStep = (value: unknown, ctx: Ctx): unknown => {
+const rewriteGraphConnectorStep = (value: unknown, ctx: Ctx): unknown => {
   if (typeof value !== 'object' || value === null) return value;
   const step = value as Record<string, unknown>;
   return {
     ...step,
-    ...('to' in step ? { to: rewriteNotationTarget(step.to, ctx) } : {}),
-    ...('from' in step ? { from: rewriteNotationTarget(step.from, ctx) } : {}),
-    ...('center' in step ? { center: rewriteNotationTarget(step.center, ctx) } : {}),
-    ...(Array.isArray(step.points) ? { points: step.points.map(point => rewriteNotationTarget(point, ctx)) } : {}),
+    ...('to' in step ? { to: rewriteGraphTarget(step.to, ctx) } : {}),
+    ...('from' in step ? { from: rewriteGraphTarget(step.from, ctx) } : {}),
+    ...('center' in step ? { center: rewriteGraphTarget(step.center, ctx) } : {}),
+    ...(Array.isArray(step.points) ? { points: step.points.map(point => rewriteGraphTarget(point, ctx)) } : {}),
   };
 };
 
-const rewriteNotationInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
-  if (kind === 'connector') {
+const rewriteGraphInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
+  if (kind === 'graphConnector') {
     return {
       ...input,
       ...(Array.isArray(input.children)
-        ? { children: input.children.map(step => rewriteConnectorStep(step, ctx)) }
+        ? { children: input.children.map(step => rewriteGraphConnectorStep(step, ctx)) }
         : {}),
     };
   }
@@ -584,18 +572,18 @@ const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };
 
-const notationCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
   const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
-  if (!NOTATION_HELPER_ORDER.includes(record.type) || !NOTATION_ADAPTER_ORDER.includes(adapterName)) {
+  if (!GRAPH_HELPER_ORDER.includes(record.type) || !GRAPH_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
-  const count = (ctx.notationCounts.get(record.type) ?? 0) + 1;
-  ctx.notationCounts.set(record.type, count);
-  ctx.notationHelpers.add(record.type);
-  ctx.notationAdapters.add(adapterName);
+  const count = (ctx.graphCounts.get(record.type) ?? 0) + 1;
+  ctx.graphCounts.set(record.type, count);
+  ctx.graphHelpers.add(record.type);
+  ctx.graphAdapters.add(adapterName);
   const generatedId = `preview-${record.type}-${count}`;
-  const input = rewriteNotationInput(record.type, stripKeys(record, ['namespace', 'type', 'id']), ctx);
+  const input = rewriteGraphInput(record.type, stripKeys(record, ['namespace', 'type', 'id']), ctx);
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };
 
@@ -603,7 +591,7 @@ const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
     if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
     if (child.namespace === 'layout') return layoutCompositeCode(child, indent, ctx);
-    if (child.namespace === 'notation') return notationCompositeCode(child, indent, ctx);
+    if (child.namespace === 'graph') return graphCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -637,9 +625,9 @@ export const irToVanillaCode = (ir: IRScene): string => {
     layoutHelpers: new Set(),
     layoutAdapters: new Set(),
     layoutCounts: new Map(),
-    notationHelpers: new Set(),
-    notationAdapters: new Set(),
-    notationCounts: new Map(),
+    graphHelpers: new Set(),
+    graphAdapters: new Set(),
+    graphCounts: new Map(),
     generatedIds: new Map(),
   };
   reservePreviewIds(ir.children, ctx);
@@ -661,13 +649,13 @@ export const irToVanillaCode = (ir: IRScene): string => {
   const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
   const layoutHelpers = LAYOUT_HELPER_ORDER.filter(name => ctx.layoutHelpers.has(name));
   const layoutAdapters = LAYOUT_ADAPTER_ORDER.filter(name => ctx.layoutAdapters.has(name));
-  const notationHelpers = NOTATION_HELPER_ORDER.filter(name => ctx.notationHelpers.has(name));
-  const notationAdapters = NOTATION_ADAPTER_ORDER.filter(name => ctx.notationAdapters.has(name));
+  const graphHelpers = GRAPH_HELPER_ORDER.filter(name => ctx.graphHelpers.has(name));
+  const graphAdapters = GRAPH_ADAPTER_ORDER.filter(name => ctx.graphAdapters.has(name));
   const definitions = collectPreviewDefinitions(
     ir.children,
     new Set(ctx.standardCounts.keys()),
     new Set(ctx.layoutCounts.keys()),
-    new Set(ctx.notationCounts.keys()),
+    new Set(ctx.graphCounts.keys()),
   );
   if (standardHelpers.length > 0) {
     imports.push(`import { ${[...standardHelpers, ...standardAdapters].join(', ')} } from '@retikz/standard-vanilla';`);
@@ -675,8 +663,8 @@ export const irToVanillaCode = (ir: IRScene): string => {
   if (layoutHelpers.length > 0) {
     imports.push(`import { ${[...layoutHelpers, ...layoutAdapters].join(', ')} } from '@retikz/layout-vanilla';`);
   }
-  if (notationHelpers.length > 0) {
-    imports.push(`import { ${[...notationHelpers, ...notationAdapters].join(', ')} } from '@retikz/notation-vanilla';`);
+  if (graphHelpers.length > 0) {
+    imports.push(`import { ${[...graphHelpers, ...graphAdapters].join(', ')} } from '@retikz/graph-vanilla';`);
   }
   if (definitions.standard.length > 0) {
     imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
@@ -684,13 +672,13 @@ export const irToVanillaCode = (ir: IRScene): string => {
   if (definitions.layout.length > 0) {
     imports.push(`import { ${definitions.layout.join(', ')} } from '@retikz/layout';`);
   }
-  if (definitions.notation.length > 0) {
-    imports.push(`import { ${definitions.notation.join(', ')} } from '@retikz/notation';`);
+  if (definitions.graph.length > 0) {
+    imports.push(`import { ${definitions.graph.join(', ')} } from '@retikz/graph';`);
   }
 
-  const adapters = [...standardAdapters, ...layoutAdapters, ...notationAdapters];
+  const adapters = [...standardAdapters, ...layoutAdapters, ...graphAdapters];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
-  const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.notation];
+  const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.graph];
   const compile =
     definitionNames.length > 0 ? `\nconst compile = { composites: [${definitionNames.join(', ')}] };\n` : '';
   return `${imports.join('\n')}\n\nconst input = scene(${figureArgs});\n${adapterCode}${compile}`;

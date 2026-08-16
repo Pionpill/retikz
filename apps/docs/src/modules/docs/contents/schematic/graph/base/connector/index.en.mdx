@@ -1,0 +1,98 @@
+---
+title: GraphConnector
+description: Author relationships with Core Path steps or Draw ways while retaining persisted GraphConnector semantics.
+---
+
+`GraphConnector` is a lightweight relationship IR that retains the `graph` namespace. It directly reuses Core stroke Path steps, targets, labels, marks, strokes, and transforms, then lowers one-to-one through `GraphConnectorDefinition` into a same-id Core Path. It does not maintain a parallel route model, compute automatic routes, or avoid obstacles
+
+## Usage
+
+```tsx
+import { FoldStepVia } from '@retikz/core';
+import { Layout, Scope, Step } from '@retikz/react';
+import { GraphConnector, GraphNode } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={420} height={160}>
+  <Scope transforms={[{ kind: 'translate', x: 24, y: 56 }]}>
+    <GraphNode id="start" role="terminal" position={[0, 0]}>
+      Start
+    </GraphNode>
+  </Scope>
+  <Scope transforms={[{ kind: 'translate', x: 220, y: 56 }]}>
+    <GraphNode id="step" role="stage" position={[0, 0]}>
+      Step
+    </GraphNode>
+  </Scope>
+  <GraphConnector id="start-to-step" role="flow">
+    <Step kind="move" to="start" />
+    <Step kind="fold" via={FoldStepVia.HorizontalThenVertical} to="step" label={{ text: 'next' }} />
+  </GraphConnector>
+</Layout>
+```
+
+React `<Step>` children are the Path authoring form and preserve the complete Core Step contract. Put a label on the exact step that should carry it instead of routing it through a GraphConnector-specific projection
+
+## Two authoring forms
+
+GraphConnector offers two mutually exclusive inputs but persists only one canonical IR:
+
+```ts
+import { DrawWay } from '@retikz/core';
+import { createGraphConnector } from '@retikz/graph';
+
+const bySteps = createGraphConnector({
+  id: 'edge-a',
+  role: 'flow',
+  children: [
+    { kind: 'move', to: 'start' },
+    { kind: 'line', to: 'step' },
+  ],
+});
+
+const byWay = createGraphConnector({
+  id: 'edge-b',
+  role: 'flow',
+  way: ['start', DrawWay.Hv, 'step'],
+});
+```
+
+- The Path form supplies `children: Array<IRStep>` and is the only persisted JSON form
+- The Draw form supplies `way: WayDSL`; the factory, React, or Vanilla authoring entry immediately reuses Core `parseWay()` to produce `children`
+- Exactly one of `children` or `way` is required; supplying both or neither fails loudly
+- `way` is not part of `GraphConnectorSchema` and never enters JSON, a Definition, or the Scene
+
+<ComponentPreview files="connector-routing" size="lg" />
+
+Direct JSON must contain canonical `children` and explicitly inject `GraphConnectorDefinition`. Vanilla `graphConnector()` returns an embed; `GraphConnectorInputEmbedAdapter` creates a same-id `IRGraphConnector` from the embed id
+
+When `marks` is omitted, GraphConnector adds one terminal arrow. An explicit `marks` array completely replaces that default, so `marks: []` explicitly disables arrows
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Read this section only when diagnosing canonicalization, Definitions, or Core Path behavior."
+/>
+
+`GraphConnectorDefinition` removes only `namespace`, semantic `type`, and the authored-only `role`, then passes every other field to a Core stroke Path while preserving the authored `id`. GraphConnector creates no typed artifact, wrapper, private geometry, or renderer branch. New applicable public Core Path fields can flow through the reused schema surface
+
+`role` expresses authored semantics only; it is not copied implicitly into Path `meta` or a Scene primitive. Targets follow Core Step behavior and diagnostics exactly. The former GraphFrame section target, `from/to/routing/appearance` surface, and GraphConnector-specific route constants have been removed
+
+## API Reference
+
+| Field                  | Type                               | Default               | Description                                                                |
+| ---------------------- | ---------------------------------- | --------------------- | -------------------------------------------------------------------------- |
+| `id`                   | `string`                           | —                     | Stable authored GraphConnector identity and lowered Core Path id           |
+| `role`                 | `GraphConnectorRoleValue`          | —                     | Relation semantic retained only in Graph IR                                |
+| `children`             | `Array<IRStep>`                    | —                     | Canonical Core Path Step sequence and the only JSON geometry form          |
+| `way` (authoring only) | `WayDSL`                           | —                     | Mutually exclusive with `children` and normalized through `parseWay()`     |
+| `marks?`               | Core Path mark placements          | terminal arrow at `1` | An explicit array fully replaces the default; `[]` disables arrows         |
+| Other Path fields      | Applicable Core stroke Path fields | Core defaults         | Labels, stroke, fill, dash, caps/joins, corners, transforms, metadata, etc |
+
+## Related
+
+- [GraphNode](/schematic/graph/base/code): targetable graph units
+- [Core paths](/kernel/components/draw/overview): the lower-level contract GraphConnector reuses directly

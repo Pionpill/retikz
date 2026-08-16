@@ -1,6 +1,6 @@
 # Standard v0 Roadmap
 
-> 图式语义后继：[Notation v0 roadmap](../../../../../diagram/_notes/decisions/notation/v0/roadmap.md) 独立演进；排版布局后继：[Layout v0 roadmap](../../layout/v0/roadmap.md) 独立演进；Standard 只保留跨领域绘图拓展能力
+> 图式语义后继：[Graph v0 roadmap](../../../../../schematic/_notes/decisions/graph/v0/roadmap.md) 独立演进；排版布局后继：[Layout v0 roadmap](../../layout/v0/roadmap.md) 独立演进；Standard 只保留跨领域绘图拓展能力
 
 > 更新于 2026-08-11。本文件记录 `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 的 v0 总体路线。具体 milestone 见对应 `v0.*/roadmap.md`，长期边界见 [`standard-library-design.md`](../../../architecture/standard-library-design.md)。
 
@@ -26,7 +26,7 @@ v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 - 由 Plot、Table 与直接作者共同消费的通用 Legend 呈现
 - 当前 alpha.4 在完成 Layout owner 迁移后，为 Chart canvas、Table panel 与一般面板提供单一任意 child 的 renderer-neutral Surface；完整 Scope、布局和空间透明继续复用 Core / Layout
 - React / Vanilla 等价 authoring、JSON-safe 语义输入、Core lowering、诊断、测试与双语文档
-- alpha.3 曾验证 LogicFrame、语义 Node、Connector 与 Callout；这些图式元素现由 [Notation v0](../../../../../diagram/_notes/decisions/notation/v0/roadmap.md) 独立拥有
+- alpha.3 曾验证逻辑图外壳、语义节点、连接与 Callout；这些图式元素现由 [Graph v0](../../../../../schematic/_notes/decisions/graph/v0/roadmap.md) 独立拥有，当前入口统一为 `GraphFrame`、`GraphNode` 与 `GraphConnector`
 
 具体阶段见 [`v0.1 roadmap`](./v0.1/roadmap.md)。
 
@@ -47,7 +47,7 @@ Plot、Table 等领域 release group 可以使用兼容版本单向依赖 Standa
 - [Standard Drawing Library 设计](../../../architecture/standard-library-design.md)
 - [能力完备性与模块边界](../../../../../../notes/architecture/capability-design.md)
 - [Core 绘图完备设计](../../../../../kernel/_notes/architecture/core-drawing-complete.md)
-- [Diagram 制图能力域设计](../../../../../../notes/architecture/diagram-design.md)
+- [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
 
 ## ADR 约定
 

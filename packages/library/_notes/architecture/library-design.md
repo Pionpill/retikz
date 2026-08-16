@@ -10,7 +10,7 @@
 
 Library 是 Retikz 在 Kernel 之上的官方可选能力库分组。它不替代 Core 的 IR、definition / registry、compile、Scene 或 renderer，而是通过这些公开机制提供可独立安装、被直接作者和多个领域包复用的能力。
 
-Library 不以“所有通用代码”作为收纳标准。进入本组的能力必须移除 Plot、Table、Notation、Graph、Flow、Workspace 等领域词汇后仍成立，拥有明确输入输出与扩展闭环，并且不会迫使 Core 反向依赖可选包。
+Library 不以“所有通用代码”作为收纳标准。进入本组的能力必须移除 Plot、Table、Graph、Flow、Workspace 等领域词汇后仍成立，拥有明确输入输出与扩展闭环，并且不会迫使 Core 反向依赖可选包。
 
 ## 两条能力轴
 
@@ -36,7 +36,7 @@ Core / Math / Foundation
           ▲
           ├───────────────┐
           │               │
-       Standard       Notation / Plot / Table / 其它领域包
+       Standard       Graph / Plot / Table / 其它领域包
           ▲
           └───────────────领域包按需直接消费
 ```

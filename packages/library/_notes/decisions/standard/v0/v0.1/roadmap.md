@@ -2,7 +2,7 @@
 
 > 状态：alpha.1～alpha.4 已完成。关联：[Standard v0 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 >
-> 图式语义后继：[Notation v0.1 roadmap](../../../../../../diagram/_notes/decisions/notation/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram。布局后继：[Layout v0.1 roadmap](../../../layout/v0/v0.1/roadmap.md) 已在 alpha.1 接管排版布局
+> 图式语义后继：[Graph v0.1 roadmap](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram。布局后继：[Layout v0.1 roadmap](../../../layout/v0/v0.1/roadmap.md) 已在 alpha.1 接管排版布局
 >
 > v0.1 是 Standard 包家族的首个版本。`Grid`、`Axes`、`Frame` 与 Legend 建立宿主无关 Tier 2 composite；alpha.2 曾验证的通用布局已在当前 alpha.4 迁入 Layout package family，Standard 回归横向绘图拓展边界，并在同一当前版本内增加任意 child Surface。
 
@@ -14,7 +14,7 @@
 4. 固化 Standard 按 Core 可扩展机制横向分域的代码范式，为后续 definition、composite 与 Sugar 增长留出稳定位置，不预建空目录或平行机制
 5. alpha.2 建立 renderer-agnostic Box Layout Profile，验证 Flex、Grid、Overlay、LayoutItem、layout artifact 与 Core layout-aware composite 的完整闭环
 6. 建立可由直接作者、Plot 与 Table 复用的通用 Legend 呈现；领域包保留 scale、visual encoding、formatter、provenance 与交互解析，Standard 统一 Legend schema、layout-aware compile 与领域无关 artifact
-7. alpha.3 验证 headless `LogicFrame`、语义 Node、Connector 与 Callout 后，将这些图式契约迁入 Notation
+7. alpha.3 验证 headless `GraphFrame`、统一 `GraphNode`、`GraphConnector` 与 Callout 后，将这些图式契约迁入 Graph
 8. alpha.4 配合 Layout v0.1 alpha.1 把排版布局迁入独立 owner，提供单一任意 `IRChild` 的 renderer-neutral Surface，并以独立能力子入口接管可选 Shape、Arrow、Clip 与 Ribbon
 
 ## 能力边界
@@ -25,7 +25,7 @@
 - **Core 保留**：IR、Scene、`CompileOptions`、definition / registry contract、compile、renderer 语义，以及 `Path` / `Step` 等基础图元
 - **语义真源**：Standard 拥有的 Tier 2 schema 以既有 Core composite IR 持久化；输入保留 Standard discriminator 与结构化引用，lowering 后的 Kernel IR / Scene 只是派生产物
 - **Standard composite**：`Grid`、`Axes`、`Frame`、Legend 与 Surface 复用 Core composite registry；排版 Layout 由独立 package family 通过同一 registry 接入
-- **领域边界**：Standard 不拥有 Diagram Notation、GraphModel、全局 nodes / edges、Port / Group 规则、拓扑校验、算法布局或编辑器状态
+- **领域边界**：Standard 不拥有 Diagram Graph、GraphModel、全局 nodes / edges、Port / Group 规则、拓扑校验、算法布局或编辑器状态
 - **Legend 边界**：Standard 拥有已经解析好的 title、`items | ramp`、任意 `IRChild` sample、Legend 排版规则与 artifact；Layout 提供领域无关排版 composition；Plot/Table 拥有 channel / scale、visual encoding、formatter、theme mapping、领域 provenance 与交互意图
 
 ## Milestones
@@ -34,7 +34,7 @@
 | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 Definition 接入** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、直接 Core Definition 注入、Vanilla adapter 数组、双语 docs / migration / changelog | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且按项 definitions 进入同一 Core option 路径 |
 | [alpha.2](./alpha.2/roadmap.md) | **通用 Box Layout 与 Legend**                         | Flex、Grid、Overlay、LayoutItem、layout artifact 与 inspector；领域无关 Legend items / ramp、任意 IRChild sample、typed artifact、直接 Definition 接入与 React / Vanilla authoring                      | Core layout-aware composite 主链；Legend 复用 Box Layout，领域包保留解析、provenance / locator 与交互                                                    |
-| [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件（历史）**                            | 验证 headless `LogicFrame`、语义 Node、Connector 与 Callout；现行 owner 与后续演进由 Notation alpha.1 接管                                                                                              | ADR-01～05 已 Superseded；直接 Definition 原则 ADR-06 继续约束 Standard 与 Notation                                                                      |
+| [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图组件（历史）**                            | 验证 headless `GraphFrame`、统一 `GraphNode`、`GraphConnector` 与 Callout；现行 owner 与后续演进由 Graph alpha.1 接管                                                                                   | ADR-01～05 已 Superseded；直接 Definition 原则 ADR-06 继续约束 Standard 与 Graph                                                                         |
 | [alpha.4](./alpha.4/roadmap.md) | **Layout owner 迁移与横向绘图拓展**                   | 完成 Layout owner 迁移、任意 child Surface、可选 Shape / Arrow / Clip providers、Sector 统一与 Standard Ribbon Path Kind 完整迁移                                                                       | ADR-01～04 均已 Accepted；Core 保留通用 provider graph、Path host 与 renderer-neutral compile 边界                                                       |
 | beta.1                          | **收口与发布准备**                                    | public API 审查、Definition 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、release / package checks                                                                          | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                             |
 
@@ -54,7 +54,7 @@ Grid、Axes、Frame、Legend 与 Surface 都通过 Core 既有 `CompositeDefinit
 
 ## Tier 2 语义约定
 
-- LogicFrame、语义 Node、Connector 与 Callout 的现行 owner、namespace 和图式职责由 [Notation v0.1](../../../../../../diagram/_notes/decisions/notation/v0/v0.1/roadmap.md) 维护；Standard 不保留对应 discriminator、Definition 或 adapter
+- GraphFrame、GraphNode、GraphConnector 与 Callout 的现行 owner、namespace 和图式职责由 [Graph v0.1](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/roadmap.md) 维护；Standard 不保留对应 discriminator、Definition 或 adapter
 - FlexLayout、GridLayout、OverlayLayout 与通用 LayoutItem 由 Layout v0.1 维护；Standard Legend 只通过 Layout `/compose` 复用排版，现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
 - Legend 以领域无关 Standard 输入保存 title、`items | ramp`、任意 `IRChild` sample 与呈现布局；Plot/Table 只把各自领域解析结果转换为该输入，不把 channel、scale、Cell selector、formatter 函数或 interaction state 注入 Standard schema
 - Surface 只保存单一任意 `IRChild`、box appearance 与完整 Scope props；Chart / Table 负责把领域 token 和内容解析为 Surface 输入，Standard 不读取 PlotSpec、Chart presentation 或 Table 语义
@@ -120,7 +120,7 @@ adapter 不持有 Standard schema、几何 helper、provider table 或 lowering�
 - `standard`：Grid、Axes、Frame、Legend 与 Surface 的 schema、JSON round-trip、输入错误、identity / Target、Legend artifact、Surface allocation / visual bounds / spatial handle、composite compile、Layout composition 消费与直接 Definition 选择不变量
 - `standard-react` / `standard-vanilla`：同一 composite input 的 IR 与 lowering 结果等价；同图多 capability 的稳定 roots / providers、React 静态按需贡献、Vanilla 部分 / 全量 adapter 数组与直接 IR Definition 接线；无副作用、重复 definition、dataset 与 provider key 冲突的诊断
 - Kernel 回归：`Path` / `Step`、Core compile 与 renderer 不因未安装 Standard 改变；`@retikz/react` 不再导出 Grid
-- Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例与从 `@retikz/react` 迁移 Grid 的指引；Diagram/Notation 单独维护图式元素、recipe、source preview 与 Schema 发现
+- Docs：zh/en 同步 Standard 包说明、组件页面、React / Vanilla 示例与从 `@retikz/react` 迁移 Grid 的指引；Diagram/Graph 单独维护图式元素、recipe、source preview 与 Schema 发现
 
 每个 alpha ADR 必须另附测试契约矩阵，并在实现前通过 Architecture Gate。
 

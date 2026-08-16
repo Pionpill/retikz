@@ -1,0 +1,133 @@
+---
+title: Logic Node
+description: Use one GraphNode component and role values for terminal, stage, decision, and junction semantics.
+---
+
+`GraphNode` is a lightweight semantic IR value that retains the `graph` namespace. It uses `role` for terminal, stage, decision, and junction semantics, keeps that information visible to tools and LLMs, and lowers to one same-id Core `Node`
+
+## Usage
+
+```tsx
+import { Layout, Text } from '@retikz/react';
+import { GraphNode } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={440} height={180}>
+  <GraphNode id="start" role="terminal" position={[20, 70]}>
+    Start
+  </GraphNode>
+  <GraphNode id="step" role="stage" position={[130, 70]}>
+    Process
+  </GraphNode>
+  <GraphNode id="check" role="decision" position={[250, 70]}>
+    <Text>Ready?</Text>
+  </GraphNode>
+  <GraphNode id="join" role="junction" position={[380, 80]} />
+</Layout>
+```
+
+String children become Node text, and `<Text>` works as it does with Core `Node`. Applicable Node props such as `color`, `fill`, `padding`, `minimumSize`, and `position` pass through. `role` supplies a default shape, while explicit `shape` overrides that role default
+
+| `role`     | Default shape                  | Logic responsibility               | Geometry defaults                            |
+| ---------- | ------------------------------ | ---------------------------------- | -------------------------------------------- |
+| `terminal` | Capsule (rounded rectangle)    | Start or end of a flow             | minimum `48 × 24`, padding `{ x: 12, y: 6 }` |
+| `stage`    | Rounded rectangle, radius `8`  | Process or action in a flow        | padding `8`                                  |
+| `decision` | Flattened diamond, ratio `1.8` | Condition or branch                | padding `{ x: 3, y: 2 }`                     |
+| `junction` | Circle                         | Fork, merge, or continuation point | minimum `8 × 8`, padding `0`                 |
+
+## Visual variants
+
+Logic nodes use the five-value Graph-owned `GraphNodeVariant` vocabulary rather than Core or Viz global Theme Styles. `variant` is the explicit baseline for one node; when omitted, the nearest `GraphFrame.graphNodeVariant` applies, then `default`
+
+| variant     | Text           | Border           | Fill                         |
+| ----------- | -------------- | ---------------- | ---------------------------- |
+| `default`   | `currentColor` | `currentColor`   | `none`                       |
+| `primary`   | `contrast`     | `currentColor`   | `currentColor`               |
+| `secondary` | `currentColor` | `none`           | 10% precomposed primary tint |
+| `outline`   | `currentColor` | 60% primary tint | `none`                       |
+| `vibrant`   | `currentColor` | `currentColor`   | 15% precomposed primary tint |
+
+`secondary` has no border. The 10% / 15% / 60% values are precomposed against `#ffffff` in Light mode or `#000000` in Dark mode; they do not create renderer opacity. Explicit `textColor`, `stroke`, and `fill` override the variant baseline independently. `color` is the primary color; omission uses `#000000` in Light and `#ffffff` in Dark
+
+<ComponentPreview files="graph-node" size="lg" />
+
+## GraphFrame inheritance
+
+`GraphFrame.graphNodeVariant` provides a default for GraphNode values in its header, sections, nested `GraphFrame`, and Core `Scope` descendants. A nested Frame creates a new scope, an explicit node `variant` wins, and `variant="default"` resets an outer value. The Frame shell, divider, GraphConnector, and sibling branches are unaffected
+
+```tsx
+import { GraphFrame, GraphFrameSection, GraphNode } from '@retikz/graph-react';
+
+<GraphFrame id="order" graphNodeVariant="secondary">
+  <GraphFrameSection sectionKey="input">
+    <GraphNode id="load" role="stage" position={[0, 0]} />
+  </GraphFrameSection>
+  <GraphFrameSection sectionKey="important">
+    <GraphNode id="validate" role="stage" position={[0, 0]} variant="primary" />
+  </GraphFrameSection>
+</GraphFrame>;
+```
+
+## Direct, React, and Vanilla wiring
+
+All three entry points share the same Graph IR and variant lowering path. Direct IR uses package assembly; React and Vanilla adapters do not accept ThemeStyle configuration or a separate variant registry
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createGraphDefinitions, createGraphNode } from '@retikz/graph';
+
+const node = createGraphNode({
+  id: 'step',
+  role: 'stage',
+  position: [0, 0],
+  text: 'Process',
+  color: '#2563eb',
+  variant: 'primary',
+});
+const scene = compileToScene({ version: 1, type: 'scene', children: [node] }, { composites: createGraphDefinitions() });
+```
+
+### Composition recipes
+
+The following recipes stay in docs. They demonstrate composition, not new `Process`, `Class`, or `Data` exports
+
+<ComponentPreview
+  files="class-recipe"
+  size="lg"
+  caption="A Class recipe using a GraphFrame header and typed sections."
+/>
+
+<ComponentPreview
+  files="data-recipe"
+  size="lg"
+  caption="A Data recipe using roles, variants, and explicit relationships."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit this section when you need to understand the lowering boundary or diagnose paint behavior."
+/>
+
+GraphNode owns its persisted graph identity, role, default shape, primary-color interpretation, and `GraphNodeVariant`. It does not own a graph store, automatic layout, obstacle avoidance, interaction, or domain recipes. Core owns Node layout, targets, compilation, and Scene output; Graph projects the effective variant into ordinary Node paints during lowering and discards role at that boundary
+
+## API Reference
+
+| API                                        | Package                 | Purpose                                                                         |
+| ------------------------------------------ | ----------------------- | ------------------------------------------------------------------------------- |
+| `role: GraphNodeRoleValue`                 | `GraphNode` and IR      | Selects terminal, stage, decision, or junction semantics                        |
+| `variant?: GraphNodeVariantValue`          | `GraphNode` and IR      | Selects a visual variant; omission inherits the Frame default or uses `default` |
+| `shape?: NodeShapeInput`                   | `GraphNode` and IR      | Overrides the role-provided default shape                                       |
+| `graphNodeVariant?: GraphNodeVariantValue` | `GraphFrame`            | Sets the default variant for descendant GraphNode values                        |
+| `createGraphNode()`                        | `@retikz/graph`         | Creates canonical GraphNode IR                                                  |
+| `createGraphDefinitions()`                 | `@retikz/graph`         | Creates the complete Graph Definition set for direct IR                         |
+| `createGraphReactAdapters()`               | `@retikz/graph-react`   | Creates the three GraphFrame, GraphNode, and GraphConnector adapters            |
+| `createGraphVanillaAdapters()`             | `@retikz/graph-vanilla` | Creates the three GraphFrame, GraphNode, and GraphConnector adapters            |
+
+## Related
+
+- [GraphFrame](/schematic/graph/frame/graph-frame): reusable layout container and variant scope
+- [GraphConnector](/schematic/graph/base/connector): connect authored identities
