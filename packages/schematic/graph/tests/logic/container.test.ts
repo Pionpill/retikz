@@ -1,6 +1,12 @@
-import type { AnyCompositeDefinition, IRChild, LayoutProposal, ScenePrimitive } from '@retikz/core';
+import type {
+  AnyCompositeDefinition,
+  IRChild,
+  LayoutProposal,
+  ResolvedThemeColors,
+  ScenePrimitive,
+} from '@retikz/core';
 
-import { compileToScene, LayoutAxisProposalKind } from '@retikz/core';
+import { compileToScene, defineThemeStyle, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -91,11 +97,7 @@ const compileBlock = (
 
 const block = (input: Parameters<typeof Graph.createContainer>[0]) => Graph.createContainer(input);
 
-const section = (
-  key: string,
-  id: string,
-  options: Parameters<typeof child>[1] = 24,
-): Graph.ContainerSectionCreateOptions => ({
+const section = (key: string, id: string, options: Parameters<typeof child>[1] = 24): Graph.ContainerSection => ({
   key,
   child: child(id, options),
 });
@@ -336,37 +338,37 @@ describe('Container layout and artifact contract', () => {
     const inner = block({
       id: 'variant-inner',
       padding: 0,
-      entityVariant: 'outline',
+      entityVariant: 'default',
       sections: [
         {
-          key: 'inner-outline',
-          child: Graph.createEntity({ id: 'inner-outline', role: 'stage', position: [0, 0] }),
+          key: 'inner-default',
+          child: Graph.createEntity({ id: 'inner-default', role: 'stage', position: [0, 0] }),
         },
         {
-          key: 'inner-default',
-          child: Graph.createEntity({ id: 'inner-default', role: 'stage', position: [0, 0], variant: 'default' }),
+          key: 'inner-reset',
+          child: Graph.createEntity({ id: 'inner-reset', role: 'stage', position: [0, 0], variant: 'default' }),
         },
       ],
     });
     const outer = block({
       id: 'variant-outer',
       padding: 0,
-      entityVariant: 'secondary',
+      entityVariant: 'fill',
       header: { child: Graph.createEntity({ id: 'variant-header', role: 'stage', position: [0, 0] }) },
       sections: [
         {
-          key: 'outer-secondary',
-          child: Graph.createEntity({ id: 'outer-secondary', role: 'stage', position: [0, 0] }),
+          key: 'outer-fill',
+          child: Graph.createEntity({ id: 'outer-fill', role: 'stage', position: [0, 0] }),
         },
         {
-          key: 'outer-primary',
-          child: Graph.createEntity({ id: 'outer-primary', role: 'stage', position: [0, 0], variant: 'primary' }),
+          key: 'outer-explicit-fill',
+          child: Graph.createEntity({ id: 'outer-explicit-fill', role: 'stage', position: [0, 0], variant: 'fill' }),
         },
         {
           key: 'scope',
           child: {
             type: 'scope',
-            children: [Graph.createEntity({ id: 'scope-secondary', role: 'stage', position: [0, 0] }), inner],
+            children: [Graph.createEntity({ id: 'scope-fill', role: 'stage', position: [0, 0] }), inner],
           },
         },
         {
@@ -380,13 +382,89 @@ describe('Container layout and artifact contract', () => {
     const primitives = primitivesOf(output.scene.primitives);
     const rectOf = (id: string) => primitives.find(primitive => primitive.type === 'rect' && primitive.id === id);
 
-    expect(rectOf('variant-header')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
-    expect(rectOf('outer-secondary')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
-    expect(rectOf('outer-primary')).toMatchObject({ fill: '#000000', stroke: '#000000' });
-    expect(rectOf('scope-secondary')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
-    expect(rectOf('inner-outline')).toMatchObject({ fill: 'none', stroke: '#666666' });
+    expect(rectOf('variant-header')).toMatchObject({ fill: '#000000', stroke: 'none' });
+    expect(rectOf('outer-fill')).toMatchObject({ fill: '#000000', stroke: 'none' });
+    expect(rectOf('outer-explicit-fill')).toMatchObject({ fill: '#000000', stroke: 'none' });
+    expect(rectOf('scope-fill')).toMatchObject({ fill: '#000000', stroke: 'none' });
+    expect(rectOf('inner-reset')).toMatchObject({ fill: 'none', stroke: '#000000' });
     expect(rectOf('inner-default')).toMatchObject({ fill: 'none', stroke: '#000000' });
-    expect(rectOf('outer-sibling')).toMatchObject({ fill: '#e6e6e6', stroke: 'none' });
+    expect(rectOf('outer-sibling')).toMatchObject({ fill: '#000000', stroke: 'none' });
+  });
+
+  it('uses configured custom role and variant definitions for an independent Container subtree', () => {
+    const service = Graph.defineEntityRole({
+      role: 'service',
+      shape: { type: 'rectangle', params: { cornerRadius: 4 } },
+      padding: 6,
+    });
+    const muted = Graph.defineEntityVariant({
+      variant: 'muted',
+      resolve: ({ color }) => ({
+        [Graph.GraphThemeToken.EntityTextForeground]: color,
+        [Graph.GraphThemeToken.EntityStroke]: 'none',
+        [Graph.GraphThemeToken.EntityFill]: '#f2f2f2',
+      }),
+    });
+    const root = block({
+      id: 'custom-container',
+      entityVariant: 'muted',
+      sections: [
+        {
+          key: 'service',
+          child: Graph.createEntity({ id: 'custom-service', role: 'service', position: [0, 0] }),
+        },
+      ],
+    });
+    const output = compileToScene(sceneOf([root]), {
+      composites: Graph.createGraphDefinitions({ entityRoles: [service], entityVariants: [muted] }),
+      padding: 0,
+    });
+    const serviceRect = primitivesOf(output.scene.primitives).find(
+      primitive => primitive.type === 'rect' && primitive.id === 'custom-service',
+    );
+
+    expect(serviceRect).toMatchObject({ fill: '#f2f2f2', stroke: 'none' });
+  });
+
+  it('carries Container variant through a themed Core Scope and resolves the new Graph Theme baseline', () => {
+    const colors = (mode: 'light' | 'dark'): ResolvedThemeColors => ({
+      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+      categorical: [mode === ThemeMode.Light ? '#336699' : '#99ccff'],
+    });
+    const coreStyle = defineThemeStyle({ name: 'brand', resolve: ({ mode }) => colors(mode) });
+    const graphStyle = Graph.defineGraphThemeStyle({
+      name: 'brand',
+      resolve: theme => ({
+        tokens: {
+          ...Graph.getDefaultGraphThemePreset(theme),
+          [Graph.GraphThemeToken.EntityColor]: '#00ff00',
+        },
+      }),
+    });
+    const root = block({
+      id: 'themed-container',
+      entityVariant: 'fill',
+      sections: [
+        {
+          key: 'theme',
+          child: {
+            type: 'scope',
+            theme: { style: 'brand', mode: ThemeMode.Dark },
+            children: [Graph.createEntity({ id: 'themed-service', role: 'stage', position: [0, 0] })],
+          },
+        },
+      ],
+    });
+    const output = compileToScene(sceneOf([root]), {
+      composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
+      themeStyles: [coreStyle],
+      padding: 0,
+    });
+    const serviceRect = primitivesOf(output.scene.primitives).find(
+      primitive => primitive.type === 'rect' && primitive.id === 'themed-service',
+    );
+
+    expect(serviceRect).toMatchObject({ fill: '#00ff00', stroke: 'none' });
   });
 
   it('reuses the canonical Flex compiler without requiring FlexLayoutDefinition', () => {

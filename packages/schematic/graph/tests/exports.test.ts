@@ -22,13 +22,24 @@ describe('@retikz/graph package boundary', () => {
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
   });
 
-  it('exposes exactly the three Graph semantic elements without compatibility aliases', () => {
+  it('exposes the Graph presentation root and three semantic elements without compatibility aliases', () => {
     expect(graphExports.GRAPH_NAMESPACE).toBe('graph');
     expect(graphExports.ContainerDefinition).toBeDefined();
     expect(graphExports.EntityDefinition).toBeDefined();
+    expect(graphExports.GraphDefinition).toBeDefined();
+    expect(graphExports.GraphProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'graph',
+    });
     expect(graphExports.RelationDefinition).toBeDefined();
     expect(graphExports.EntitySchema).toBeDefined();
+    expect(graphExports.GraphSchema).toBeDefined();
+    expect(graphExports.createGraph).toBeTypeOf('function');
+    expect(graphExports.createGraphDefinitions).toBeTypeOf('function');
+    expect(graphExports.createGraphProviders).toBeTypeOf('function');
     expect(graphExports.GraphType).toEqual({
+      Graph: 'graph',
       Container: 'container',
       Entity: 'entity',
       Relation: 'relation',
@@ -40,13 +51,11 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports).not.toHaveProperty('LogicFrameDefinition');
   });
 
-  it('exposes EntityVariant and RelationRole as closed public vocabularies', () => {
+  it('exposes builtin role and variant vocabularies alongside their extension hooks', () => {
     expect(graphExports.EntityVariant).toEqual({
       Default: 'default',
-      Primary: 'primary',
-      Secondary: 'secondary',
-      Outline: 'outline',
-      Vibrant: 'vibrant',
+      Fill: 'fill',
+      Mixed: 'mixed',
     });
     expect(graphExports.RelationRole).toEqual({
       Flow: 'flow',
@@ -55,7 +64,9 @@ describe('@retikz/graph package boundary', () => {
       Feedback: 'feedback',
     });
     expect(graphExports).not.toHaveProperty('GraphThemeStyle');
-    expect(graphExports).not.toHaveProperty('defineGraphThemeStyle');
+    expect(graphExports.defineEntityRole).toBeTypeOf('function');
+    expect(graphExports.defineEntityVariant).toBeTypeOf('function');
+    expect(graphExports.defineGraphThemeStyle).toBeTypeOf('function');
   });
 
   it('keeps implementation shapes private and rejects the old namespace', () => {

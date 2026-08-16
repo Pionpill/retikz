@@ -29,6 +29,18 @@ const flattenAuthoringNodes = (children: ReactNode): Array<ReactNode> => {
 export const hasAuthoringChildren = (children: ReactNode | undefined): boolean =>
   children !== undefined && flattenAuthoringNodes(children).length > 0;
 
+/** 收集一组 authored React children 与其递归使用的 Vanilla adapters */
+export const collectAuthoringChildren = (
+  children: ReactNode | undefined,
+  embedIdPrefix: string,
+): Readonly<{
+  children: ReadonlyArray<InputChild>;
+  adapters: ReturnType<typeof createInputScene>['adapters'];
+}> => {
+  const input = createInputScene(children, { embedIdPrefix });
+  return { children: input.scene.children ?? [], adapters: input.adapters };
+};
+
 /** 收集一个 authoring slot 的唯一 Input child */
 export const collectSingleChild = (
   children: ReactNode,
