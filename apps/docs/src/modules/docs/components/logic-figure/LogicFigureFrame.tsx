@@ -13,7 +13,7 @@ export type LogicFigureFrameTitleProps = FrameTitleProps;
 /** 文档逻辑图分组说明接受的 Standard FrameDescription 属性 */
 export type LogicFigureFrameDescriptionProps = FrameDescriptionProps;
 
-const logicFrameDefaults = {
+const graphFrameDefaults = {
   border: {
     style: {
       stroke: 'lightgray',
@@ -29,10 +29,10 @@ const logicFrameDefaults = {
 const resolveLogicFigureFrameBorder = (
   border: LogicFigureFrameProps['border'],
 ): NonNullable<LogicFigureFrameProps['border']> => ({
-  ...logicFrameDefaults.border,
+  ...graphFrameDefaults.border,
   ...border,
   style: {
-    ...logicFrameDefaults.border.style,
+    ...graphFrameDefaults.border.style,
     ...border?.style,
   },
 });
@@ -80,7 +80,7 @@ export const LogicFigureFrame: FC<LogicFigureFrameProps> = props => {
   const { children, border, ...frameProps } = props;
 
   return createElement(Frame, {
-    ...logicFrameDefaults,
+    ...graphFrameDefaults,
     ...frameProps,
     border: resolveLogicFigureFrameBorder(border),
     children: resolveLogicFigureFrameChildren(children),

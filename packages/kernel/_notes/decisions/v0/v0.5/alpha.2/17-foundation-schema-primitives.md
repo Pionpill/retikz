@@ -6,7 +6,7 @@
 
 ## 背景与目标
 
-Kernel、Standard、Notation、Data、Plot、Chart 与 Table 已反复定义相同的非空白字符串、正数、非负数、正整数、非负整数和归一化比例约束。部分重复已经产生语义分叉：有的 registry key 只拒绝空串却接受全空白，有的包重新声明 Core 已有的闭区间比例；相同 string / number 叶子约束也散落在完整对象 schema、provider 检查和 adapter wrapper 中。
+Kernel、Standard、Graph、Data、Plot、Chart 与 Table 已反复定义相同的非空白字符串、正数、非负数、正整数、非负整数和归一化比例约束。部分重复已经产生语义分叉：有的 registry key 只拒绝空串却接受全空白，有的包重新声明 Core 已有的闭区间比例；相同 string / number 叶子约束也散落在完整对象 schema、provider 检查和 adapter wrapper 中。
 
 ADR-14 把 Foundation 冻结为零生产依赖且排除 Zod schema，因此这些无绘图、IR 或领域词汇的原子无法由最低层 owner 统一提供。继续把它们留在 Core 会迫使不应由 Drawing Complete 拥有的通用校验依附绘图包，继续由各领域复制则无法形成单一真源。
 
@@ -63,7 +63,7 @@ Foundation 不为这些闭合原子建立 Definition、registry 或 provider。�
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Kernel 基础契约层；解决跨 Drawing、Data、Visualization 与 adapter 的无领域叶子校验重复，不新增独立 Drawing / Data / Visualization 能力域
-- 主责包与协作包：Foundation 主责六个基础 schema；Core、Standard、Notation、Data、Plot、Chart、Table 与 adapter 只按真实消费直接依赖并组合，继续拥有完整 schema、默认值、领域 refinement 与错误包装
+- 主责包与协作包：Foundation 主责六个基础 schema；Core、Standard、Graph、Data、Plot、Chart、Table 与 adapter 只按真实消费直接依赖并组合，继续拥有完整 schema、默认值、领域 refinement 与错误包装
 - 拥有：无领域、非变换的 string / number Zod 原子及其稳定边界；Zod 是唯一生产依赖
 - 不拥有：对象 / 数组 schema、IR / JSON 数据模型、parser / coercion、颜色、几何、Definition / registry、provider、compile / lowering、Scene / manifest、Diagnostic、领域错误和恢复语义
 - 外部扩展与下游闭环：闭合原子无需动态扩展；完整 owner schema 直接组合 Foundation 原子并继续进入原有 contract、provider、pipeline、adapter、docs 与 schema registry 链路
@@ -92,7 +92,7 @@ Foundation 不为这些闭合原子建立 Definition、registry 或 provider。�
 
 ## 完工摘要
 
-六个非变换标量 schema 已由 Foundation 根入口统一提供，Zod 是唯一生产依赖。Core 的归一化比例旧 owner 与 Notation 的非空白字符串旧公共出口均已移除；Kernel、Standard、Notation、Data、Plot、Chart 与 Table 只组合语义完全相同的叶子，领域对象、默认值、refinement、颜色与诊断边界保持在原 owner。
+六个非变换标量 schema 已由 Foundation 根入口统一提供，Zod 是唯一生产依赖。Core 的归一化比例旧 owner 与 Graph 的非空白字符串旧公共出口均已移除；Kernel、Standard、Graph、Data、Plot、Chart 与 Table 只组合语义完全相同的叶子，领域对象、默认值、refinement、颜色与诊断边界保持在原 owner。
 
 验证覆盖基础标量边界、旧公共面移除、消费方完整 schema、headless 与 adapter 等价性、发布产物入口、双语文档与 changelog。无已知遗留风险需要改变本 ADR 的公开契约或包边界。
 

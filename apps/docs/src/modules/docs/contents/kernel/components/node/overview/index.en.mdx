@@ -1,6 +1,6 @@
 ---
 title: Node
-description: Node declares a visible primitive with position, content, and a boundary, then exposes it by id for positioning and connectors.
+description: Node declares a visible primitive with position, content, and a boundary, then exposes it by id for positioning and graphConnectors.
 ---
 
 ## Usage
@@ -67,7 +67,7 @@ See each shape page for its parameters and shape-specific anchors:
 
 `boundary` defaults to `'shape'` and can also use `'circle'`, `'rectangle'`, `'ellipse'`, or a registered connection surface. It changes only automatic endpoints and standard anchors, never the node footprint or visual contour. All three built-in alternatives accept `{ fit, gap }`: `fit: 'tight'` (the default) uses the visual shape's safe envelope for a closer fit, while `fit: 'bounds'` encloses its visual AABB; `gap` then adjusts the radius or half-axes outward (positive) or inward (negative). Rectangle produces the same result for both fit modes.
 
-Switch A and B between fit modes and drag `gap` in the playground; the light dotted contour is the actual connection surface. A negative gap may cross the visual shape, but this usually makes connectors cover the node and is not recommended. Compilation fails if it reduces either effective half-axis to zero or below. An individual edge can override the node default in its endpoint object. See [Custom Boundaries](/kernel/components/node/custom-boundary) for registration and [Path](/kernel/components/draw/path) for endpoint syntax.
+Switch A and B between fit modes and drag `gap` in the playground; the light dotted contour is the actual connection surface. A negative gap may cross the visual shape, but this usually makes graphConnectors cover the node and is not recommended. Compilation fails if it reduces either effective half-axis to zero or below. An individual edge can override the node default in its endpoint object. See [Custom Boundaries](/kernel/components/node/custom-boundary) for registration and [Path](/kernel/components/draw/path) for endpoint syntax.
 
 ### Size & transforms
 

@@ -59,13 +59,13 @@
 
 ## 4. 当前能力域与包角色
 
-| 能力域                         | 主责包             | 解决的问题                                                      | 主要输入                             | 主要输出                                    | 关键协作包                                              |
-| ------------------------------ | ------------------ | --------------------------------------------------------------- | ------------------------------------ | ------------------------------------------- | ------------------------------------------------------- |
-| Drawing Complete               | `@retikz/core`     | 后端中立的二维图形表达、扩展与编译                              | Core IR、definition、compile options | Scene、headless manifest                    | `math`、`runtime`、`render`、Standard、adapters、Tier 2 |
-| Data Complete                  | `@retikz/data`     | 宿主无关的数据、字段、transform、statistics、输入解析与 lineage | Data IR、external data、definition   | data view、lineage / provenance             | plot、table、未来 chart / geo                           |
-| Visualization Complete         | `@retikz/plot`     | 把数据语义映射成 core 图形语义                                  | Plot IR、Data 能力、definitions      | Core IR、visualization provenance / locator | `data`、`standard`、`core`、plot adapters               |
-| Tabular Visualization Complete | `@retikz/table`    | 把数据或显式内容组织成具有二维语义结构的表格                    | Table IR、Data 能力、definitions     | Core IR、table manifest / lineage           | `data`、`standard`、`core`、table adapters              |
-| Diagram Notation Complete      | `@retikz/notation` | 提供可独立绘制并可被关系模型复用的图式语义元素                  | Notation schema、Core children       | Core IR、局部 artifact / identity           | `standard`、`core`、notation adapters、未来 graph       |
+| 能力域                         | 主责包          | 解决的问题                                                      | 主要输入                             | 主要输出                                      | 关键协作包                                                |
+| ------------------------------ | --------------- | --------------------------------------------------------------- | ------------------------------------ | --------------------------------------------- | --------------------------------------------------------- |
+| Drawing Complete               | `@retikz/core`  | 后端中立的二维图形表达、扩展与编译                              | Core IR、definition、compile options | Scene、headless manifest                      | `math`、`runtime`、`render`、Standard、adapters、Tier 2   |
+| Data Complete                  | `@retikz/data`  | 宿主无关的数据、字段、transform、statistics、输入解析与 lineage | Data IR、external data、definition   | data view、lineage / provenance               | plot、table、未来 chart / geo                             |
+| Visualization Complete         | `@retikz/plot`  | 把数据语义映射成 core 图形语义                                  | Plot IR、Data 能力、definitions      | Core IR、visualization provenance / locator   | `data`、`standard`、`core`、plot adapters                 |
+| Tabular Visualization Complete | `@retikz/table` | 把数据或显式内容组织成具有二维语义结构的表格                    | Table IR、Data 能力、definitions     | Core IR、table manifest / lineage             | `data`、`standard`、`core`、table adapters                |
+| Schematic Graph Complete       | `@retikz/graph` | 提供通用关系数据、语义确定化与可独立绘制的图式呈现              | Graph IR、definitions                | Canonical Graph、Core IR、artifact / identity | `standard`、`core`、graph adapters、未来 Diagram / Editor |
 
 对应设计：
 
@@ -73,14 +73,14 @@
 - [`Data 能力完备设计`](../../packages/viz/_notes/architecture/data-capability-complete.md)
 - [`Plot 可视化完备设计`](../../packages/viz/_notes/architecture/plot-visualization-complete.md)
 - [`Table 表格可视化完备设计`](../../packages/viz/_notes/architecture/table-visualization-complete.md)
-- [`Diagram 制图能力域设计`](./diagram-design.md)
-- `packages/diagram/_notes/architecture/diagram-notation-complete.md`（随首个 Notation ADR 建立）
+- [`Schematic 制图能力域设计`](./schematic-design.md)
+- `packages/schematic/_notes/architecture/schematic-graph-complete.md`（随首个 Graph ADR 建立）
 
 `@retikz/math`、`@retikz/runtime`、`@retikz/render`、React / Vanilla adapters 当前不定义独立完备目标。它们的职责由就近 `AGENTS.md` 约束，并在所属能力域中分别承担纯计算、领域中立增量执行、Scene 执行、等价暴露或宿主接入义务。未来 geo 等成为独立核心能力域时，必须先定义自己的问题边界和 completeness 文档。
 
-`@retikz/standard` 是 Drawing Complete 在 Core 之上的官方通用 Tier 2 能力层。它相对 Core 保持可选安装，但 Plot、Table、Notation 等官方领域包可以把已经去除领域词汇的绘图能力作为声明依赖消费；依赖只能从领域包指向 Standard，Standard 不得读取领域 IR、scale、数据模型、pipeline 或 runtime。领域包仍拥有从自身语义解析到 Standard 输入的过程，以及 provenance、locator、交互意图和领域诊断。
+`@retikz/standard` 是 Drawing Complete 在 Core 之上的官方通用 Tier 2 能力层。它相对 Core 保持可选安装，但 Plot、Table、Graph 等官方领域包可以把已经去除领域词汇的绘图能力作为声明依赖消费；依赖只能从领域包指向 Standard，Standard 不得读取领域 IR、scale、数据模型、pipeline 或 runtime。领域包仍拥有从自身语义解析到 Standard 输入的过程，以及 provenance、locator、交互意图和领域诊断。
 
-`@retikz/notation` 是 Diagram 领域的基础语义元素层。它拥有图式中的节点、容器、局部连接与说明语义，但不拥有 GraphModel、全局拓扑、算法布局或编辑状态。Core Sugar 直接输出 Core IR；需要局部布局、target 或 artifact 的元素通过公开 Standard / Core capability lowering。未来 Graph 可以单向依赖 Notation，Notation 不反向依赖 Graph、Flow 或 Editor。
+`@retikz/graph` 是 Schematic 领域的通用关系与呈现基础。它长期拥有 JSON-safe 的节点、关系、分组、端口、identity、authored geometry、Graph resolve 与可独立绘制的图式元素；当前 v0.1 只实现元素与呈现 foundation，通用关系模型仍需后续 milestone ADR。未来 `@retikz/diagram` 单向依赖 Graph，拥有结构化关系图的布局意图、约束确定化、provider 编排、自动 routing 与布局结果；Graph 不反向依赖 Diagram。`flow` 是 Diagram 的具体布局类型或 preset，不再作为独立 package owner。Core Sugar 直接输出 Core IR，需要局部布局、target 或 artifact 的元素继续通过公开 Layout / Standard / Core capability lowering；Graph 与 Diagram 都不拥有 Editor 交互状态或 renderer。
 
 ## 5. 完备性的三个维度
 

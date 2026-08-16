@@ -183,7 +183,7 @@ Foundation 的生产源码和测试都固定为五个文件，避免它演变成
 
 ## 迁移与直接依赖
 
-类型工具和六个基础 schema 的唯一真源已经迁到 Foundation；旧根出口和同义定义不保留 alias。`NormalizedFractionSchema` 改从 Foundation 导入，Notation 不再转发自己的 `NonBlankStringSchema`。每个真实 import 都必须在自己的 manifest 声明 Foundation direct dependency，并从包根入口导入。
+类型工具和六个基础 schema 的唯一真源已经迁到 Foundation；旧根出口和同义定义不保留 alias。`NormalizedFractionSchema` 改从 Foundation 导入，Graph 不再转发自己的 `NonBlankStringSchema`。每个真实 import 都必须在自己的 manifest 声明 Foundation direct dependency，并从包根入口导入。
 
 | 直接消费组 | 当前包                                                                                                                                                         |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |

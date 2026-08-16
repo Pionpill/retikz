@@ -1,0 +1,64 @@
+---
+title: Graph API 参考
+description: 查询 GraphNode、GraphConnector 与 GraphFrame 的 schema、factory、Definition 与 adapter
+---
+
+Graph 按职责拆分：`@retikz/graph` 提供 canonical JSON、Schema、factory 与 Definition；`@retikz/graph-react` 提供 React authoring；`@retikz/graph-vanilla` 提供返回 embed 的 builder 与显式 adapter。三种入口归一到相同 Graph IR，并通过相同 Definition 下沉到 Core
+
+## 公开导出
+
+| 能力           | Graph                                                                                          | React                 | Vanilla                                             |
+| -------------- | ---------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
+| GraphNode      | `GraphNodeSchema`、`IRGraphNode`、`createGraphNode`、`GraphNodeDefinition`                     | `GraphNode`           | `graphNode`、`GraphNodeInputEmbedAdapter`           |
+| GraphConnector | `GraphConnectorSchema`、`IRGraphConnector`、`createGraphConnector`、`GraphConnectorDefinition` | `GraphConnector`      | `graphConnector`、`GraphConnectorInputEmbedAdapter` |
+| GraphFrame     | `GraphFrameSchema`、`IRGraphFrame`、`createGraphFrame`、`GraphFrameDefinition`                 | `GraphFrame`、markers | `graphFrame`、`GraphFrameInputEmbedAdapter`         |
+
+三类公开元素都保留 `namespace: 'graph'` 与自己的语义 `type`。GraphNode 使用 `role` 区分四种基础语义；Definition 是从 Graph IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
+
+## GraphNode 输入
+
+`GraphNode` 复用适用的 Core Node authored surface。`id`、`role` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`role` 提供默认 shape，显式 `shape` 可以替换它
+
+```tsx
+<GraphNode id="step" role="stage" position={[0, 0]}>Process</GraphNode>
+<GraphNode id="check" role="decision" position={[80, 0]}><Text>Ready?</Text></GraphNode>
+```
+
+对应 factory 返回规范 Graph IR，而不是 Core `IRNode`。Definition 再把它一对一下沉为同 id Node：
+
+```ts
+const step = createGraphNode({ id: 'step', role: 'stage', position: [0, 0], text: 'Process' });
+// { namespace: 'graph', type: 'graphNode', role: 'stage', id: 'step', ... }
+```
+
+## GraphConnector 输入
+
+`IRGraphConnector` 的 canonical JSON 使用 Core Step `children`。`createGraphConnector`、React 与 Vanilla 还接受 Core `WayDSL` 的 `way` authoring shorthand；两者互斥，`way` 会在入口通过 `parseWay()` 归一为 `children`，不会被持久化。`role` 使用 GraphConnector 的闭合关系词汇，并在 lowering 后丢弃
+
+省略 `marks` 会添加终点箭头，显式 `marks`（包括 `[]`）完整覆盖默认值
+
+## Definition 加载
+
+直接 IR 必须显式注入图中实际使用的每个 Graph Definition。缺失 Definition 时，Core 按未注册 composite fail-loud：
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { GraphConnectorDefinition, GraphNodeDefinition } from '@retikz/graph';
+
+compileToScene(scene, {
+  composites: [GraphNodeDefinition, GraphConnectorDefinition],
+});
+```
+
+React 组件与 Vanilla adapter 只为当前 authored 元素贡献对应 Definition，不注册全局状态
+
+## Vanilla identity
+
+`graphNode` 与 `graphConnector` helper 返回 embed，并以 embed id 创建对应的 Graph IR。GraphNode 与 GraphConnector 会下沉为同 id Core Node / Path；GraphFrame 按多元素 composite 契约派生内部 id
+
+## 相关
+
+- [GraphNode](/schematic/graph/base/code)
+- [GraphConnector](/schematic/graph/base/connector)
+- [GraphFrame](/schematic/graph/frame/graph-frame)
+- [Definition 加载](/library/standard/extension/capability-loading)

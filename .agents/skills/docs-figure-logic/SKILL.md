@@ -71,11 +71,11 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 | 类别角色     | P2 类别色 stroke + 同色低透明 fill            | 用于读者必须区分的稳定角色类别；同色节点必须属于同一类别。                                                            |
 | 当前重点角色 | 保持所属类别颜色                              | 单行节点可加粗正文正在解释的一到两个角色；双行节点的标题加粗只表达层级，重点靠主链位置和正文指认                      |
 | 辅助角色     | `gray` / `lightgray` stroke + 同色低透明 fill | 用于配置、缓存、registry、旁路输入；仍使用 `cornerRadius={4}`，通过虚线连接退到次要层级。                             |
-| 分组边界     | `LogicFrame` + `LogicFrameTitle`              | 用于 layer、runtime、adapter、package、职责范围等语义分组；按 `docs-figure-contract` 紧密包裹内容并在框内预留标题行。 |
+| 分组边界     | `LogicFigureFrame` + `LogicFigureFrameTitle`  | 用于 layer、runtime、adapter、package、职责范围等语义分组；按 `docs-figure-contract` 紧密包裹内容并在框内预留标题行。 |
 
 彩色节点的 fill 必须来自 stroke 的同色系弱化：降低 opacity / saturation / lightness 后形成浅底，而不是换成无关背景色。节点内部文字按 `docs-figure-contract` 的双行节点规则组织；标题是稳定角色，第二行才放职责、输入输出或实现锚点。不要在一个节点里塞三行以上解释；放不下说明时，拆成正文。
 
-有框逻辑图不使用无边框 `Node` 承担注释或模拟分组标题；分组标题使用 `LogicFrameTitle`。短关系名放在 step label，文件路径、约束和补充解释移入图前后正文。
+有框逻辑图不使用无边框 `Node` 承担注释或模拟分组标题；分组标题使用 `LogicFigureFrameTitle`。短关系名放在 step label，文件路径、约束和补充解释移入图前后正文。
 
 有框模式中的节点形状承担语义：圆角矩形表示处理或组件，圆 / 小圆表示抽象单元或操作点，菱形表示判断，圆柱表示存储，虚线外框表示分组边界。不要只靠文字区分不同角色。
 
@@ -117,7 +117,7 @@ path label 是“关系名”，不是解释句。
 - 无分类需求且内容清晰简洁时，所有角色节点统一使用 `stroke="none"` 且不填充，依靠位置、文字、字重和连线区分结构。
 - 需要有框模式时，所有常规角色节点使用 `cornerRadius={4}` 与浅 fill：`fill = stroke color + low opacity`，让节点形成柔和面。
 - 中性节点用 `gray` / `lightgray` 的浅 fill，视觉层级低于彩色语义节点。
-- 语义分组统一使用 `LogicFrame` 的默认虚线浅灰边界；不要手写空边界 `Node`。几何 / 参考边界不套用此规则。
+- 语义分组统一使用 `LogicFigureFrame` 的默认虚线浅灰边界；不要手写空边界 `Node`。几何 / 参考边界不套用此规则。
 - 颜色只表达类别，当前重点只调整标题字重；不用高饱和 fill。
 - 不在同一图中混用有框与无框节点；采用无框模式时，整张图所有 `Node` 一并切换为 `stroke="none"`。
 - 同一语义不要同时改 stroke、fill、字体颜色和线型；一次只改一两个维度。
@@ -166,7 +166,7 @@ path label 是“关系名”，不是解释句。
 - 是否默认采用从左到右；若使用从上到下，是否能明确指出删减与压缩后仍存在的节点数量、分支 / 递归、交叉线、500px 可读性问题，或上下位置本身承载的层级语义？
 - 节点边框是否承担分类、分组、容器或复杂边界语义？内容清晰简洁且无需分类时，是否去掉了装饰性边框？
 - 是否只有一种节点边界模式，有框常规节点是否都使用 `cornerRadius={4}`？
-- 语义分组是否使用 `LogicFrame` + `LogicFrameTitle`，而不是手写空边界和标题 `Node`？
+- 语义分组是否使用 `LogicFigureFrame` + `LogicFigureFrameTitle`，而不是手写空边界和标题 `Node`？
 - 分组框是否紧密包裹标题与内容，标题是否位于框内左上角的预留标题行并使用灰色常规字重？
 - 同色节点是否属于同一角色类别，当前重点是否用加粗而不是颜色表达？
 - 双行节点是否保持统一标题 / 第二行层级，实现位置是否仍被误画成流程节点？

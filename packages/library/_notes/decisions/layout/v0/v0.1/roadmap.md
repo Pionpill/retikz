@@ -4,7 +4,7 @@
 
 ## 目标
 
-建立独立 Layout package family 和 release group，把 Standard 已验证的 FlexLayout、GridLayout、OverlayLayout、LayoutItem、artifact、inspection 与跨宿主 authoring 迁入正确 owner，并为 Standard、Notation 与其它 Tier 2 提供稳定 composition capability。
+建立独立 Layout package family 和 release group，把 Standard 已验证的 FlexLayout、GridLayout、OverlayLayout、LayoutItem、artifact、inspection 与跨宿主 authoring 迁入正确 owner，并为 Standard、Graph 与其它 Tier 2 提供稳定 composition capability。
 
 ## Milestone
 

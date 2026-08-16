@@ -369,6 +369,15 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../../packages/kernel/foundation
+      '@retikz/graph':
+        specifier: workspace:*
+        version: link:../../packages/schematic/graph
+      '@retikz/graph-react':
+        specifier: workspace:*
+        version: link:../../packages/schematic/graph-react
+      '@retikz/graph-vanilla':
+        specifier: workspace:*
+        version: link:../../packages/schematic/graph-vanilla
       '@retikz/inspect':
         specifier: workspace:*
         version: link:../../packages/kernel/inspect
@@ -384,15 +393,6 @@ importers:
       '@retikz/math':
         specifier: workspace:*
         version: link:../../packages/kernel/math
-      '@retikz/notation':
-        specifier: workspace:*
-        version: link:../../packages/diagram/notation
-      '@retikz/notation-react':
-        specifier: workspace:*
-        version: link:../../packages/diagram/notation-react
-      '@retikz/notation-vanilla':
-        specifier: workspace:*
-        version: link:../../packages/diagram/notation-vanilla
       '@retikz/plot':
         specifier: workspace:*
         version: link:../../packages/viz/plot
@@ -588,7 +588,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
-  packages/diagram/notation:
+  packages/schematic/graph:
     dependencies:
       '@retikz/core':
         specifier: workspace:^
@@ -622,14 +622,14 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
-  packages/diagram/notation-react:
+  packages/schematic/graph-react:
     dependencies:
-      '@retikz/notation':
+      '@retikz/graph':
         specifier: workspace:*
-        version: link:../notation
-      '@retikz/notation-vanilla':
+        version: link:../graph
+      '@retikz/graph-vanilla':
         specifier: workspace:^
-        version: link:../notation-vanilla
+        version: link:../graph-vanilla
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
@@ -668,11 +668,11 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
 
-  packages/diagram/notation-vanilla:
+  packages/schematic/graph-vanilla:
     dependencies:
-      '@retikz/notation':
+      '@retikz/graph':
         specifier: workspace:*
-        version: link:../notation
+        version: link:../graph
       '@retikz/vanilla':
         specifier: workspace:^
         version: link:../../kernel/vanilla
