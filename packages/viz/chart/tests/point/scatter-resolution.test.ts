@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChartSpec } from '../../src/point';
+import { resolvePointChart } from '../../src/point';
 
 describe('Scatter Chart resolution', () => {
-  it('resolves typed input to one canonical chart.chart over a complete PlotSpec', () => {
-    const result = resolvePointChartSpec(
+  it('resolves typed input to one canonical chart.chart over a complete IRPlot', () => {
+    const result = resolvePointChart(
       {
         namespace: 'chart',
         type: 'scatter',
@@ -34,7 +34,7 @@ describe('Scatter Chart resolution', () => {
   });
 
   it('keeps authored point channels and required x/y recipe members', () => {
-    const plot = resolvePointChartSpec({
+    const plot = resolvePointChart({
       namespace: 'chart',
       type: 'scatter',
       data: { reference: 'rows' },

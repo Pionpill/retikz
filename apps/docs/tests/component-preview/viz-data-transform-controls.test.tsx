@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { buildPlotSpec, Plot } from '@retikz/plot-react';
+import { buildPlotIR, Plot } from '@retikz/plot-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -223,7 +223,7 @@ describe('Viz Data transform controls', () => {
     ];
 
     for (const { fields, id, plot } of plots) {
-      const spec = buildPlotSpec(plot.props.children, id, {
+      const spec = buildPlotIR(plot.props.children, id, {
         dataFieldNames: new Set(fields),
       });
 
@@ -257,7 +257,7 @@ describe('Viz Data transform controls', () => {
     const plot = renderTransformSortPreview({ field: 'month', order: 'ascending' });
     expect(plot.type).toBe(Plot);
 
-    const spec = buildPlotSpec(plot.props.children, 'transform-sort', {
+    const spec = buildPlotIR(plot.props.children, 'transform-sort', {
       dataFieldNames: new Set(['month', 'revenue']),
     });
 

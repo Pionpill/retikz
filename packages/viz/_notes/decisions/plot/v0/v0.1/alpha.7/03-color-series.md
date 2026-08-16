@@ -10,7 +10,7 @@
 color 通道名义上是「真 scale 通道」，实则半成品，且 color 与 series 的边界含糊：
 
 1. **color resolver 恒走 ordinal、不查字段类型**：`makeColorResolver`（`lower/expand.ts:372`）无论字段是 categorical 还是 continuous/temporal，一律合成 ordinal scale 调色。数值字段会被**静默当分类**调色（错误编码），而连续色阶本应是 alpha.8 的事（[alpha.6 ADR-03](../alpha.6/03-type-driven-scale.md) 明确连续/temporal color 留 alpha.8）。
-2. **单系列 path 的 `color.field` 静默丢弃**：line/area 有 series 时取每组首行颜色（`lower/mark.ts:344` / `:395`）；**无 series 时 `color.field` 被忽略、回退 `currentColor`**（`lower/mark.ts:355`），而 React `<LineMark color>` 文档写成「颜色字段」（`marks.tsx:13`）、`buildPlotSpec` 也把 `color` 转 `{field, scale: __color}`（`buildPlotSpec.ts:97`）——表面承诺与行为不符。
+2. **单系列 path 的 `color.field` 静默丢弃**：line/area 有 series 时取每组首行颜色（`lower/mark.ts:344` / `:395`）；**无 series 时 `color.field` 被忽略、回退 `currentColor`**（`lower/mark.ts:355`），而 React `<LineMark color>` 文档写成「颜色字段」（`marks.tsx:13`）、`buildPlotIR` 也把 `color` 转 `{field, scale: __color}`（`buildPlotIR.ts:97`）——表面承诺与行为不符。
 3. **series 与 color 关系未定调**：retikz 的 `series` 是 mark 级显式字段（`ir/mark.ts:63`），color 是独立通道——但「单系列 + color 字段」该怎样、是否隐式分组，从未写死。
 
 同类库谱系：**ggplot2** 离散 `colour` 同时 = 分组 + 上色 + 图例（`group` 才是真分组键，通常隐式）；**Vega-Lite** `detail` 只分组不上色、`color` 分组+上色，二者可分离；**Observable Plot** `z` 分组、`fill/stroke` 上色，可分离；**Highcharts** 显式 `series` 数组。retikz 取「**显式 series 一等 + color 兜底拆分**」的折中——既修债，又不滑向 ggplot「所有离散 aesthetic 自动分组」。

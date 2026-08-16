@@ -42,7 +42,7 @@ export const QuantileBandPointOutputSchema = z
   .describe('Quantile-band point output');
 
 /** quantile-band reducer whisker 策略 schema */
-export const QuantileBandWhiskerSpecSchema = z
+export const QuantileBandWhiskerSchema = z
   .discriminatedUnion('kind', [
     z
       .strictObject({
@@ -113,7 +113,7 @@ export const QuantileBandReducerOperationSchema = z
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability'),
     outputs: QuantileBandOutputsSchema.describe('Output field names'),
-    whisker: QuantileBandWhiskerSpecSchema.optional().describe('Whisker strategy'),
+    whisker: QuantileBandWhiskerSchema.optional().describe('Whisker strategy'),
   })
   .refine(operation => operation.lowerP < operation.upperP, {
     message: 'lowerP must be less than upperP',

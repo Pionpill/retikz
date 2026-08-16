@@ -47,11 +47,11 @@ export const normalizePlotRoot = (
   const coordinateInput = context.coordinate?.value;
   const coordKind = coordinateTypeOf(coordinateInput);
   if (collected.hasSector && coordKind !== 'polar2D') {
-    throw new Error('buildPlotSpec: <IntervalMark angle> is only valid under coordinate="polar2D"');
+    throw new Error('buildPlotIR: <IntervalMark angle> is only valid under coordinate="polar2D"');
   }
   if (collected.hasHorizontalBar && coordKind !== 'cartesian2D') {
     throw new Error(
-      'buildPlotSpec: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"',
+      'buildPlotIR: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"',
     );
   }
   if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
@@ -60,7 +60,7 @@ export const normalizePlotRoot = (
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
-  // 直接调用 buildPlotSpec 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）
+  // 直接调用 buildPlotIR 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）
   const shouldDeferPositionScales = context.model !== undefined || rootContext.deferPositionScaleInference === true;
   let coordinate: IRPlotCoordinateOperation;
   let scales: Array<IRPlotScale>;
@@ -126,7 +126,7 @@ export const normalizePlotRoot = (
       coordinateInput.type === 'custom'
     ) {
       throw new Error(
-        'buildPlotSpec: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }',
+        'buildPlotIR: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }',
       );
     }
     coordinate = { ...coordinateInput };

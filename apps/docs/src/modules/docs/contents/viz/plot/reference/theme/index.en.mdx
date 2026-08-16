@@ -3,7 +3,7 @@ title: Contract - Theme
 description: Query Plot canonical tokens, preset cascade, native theme, and inspection contracts.
 ---
 
-Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position. When `style` is omitted, Plot uses its own mode-aware default baseline; an explicit `style` selects the complete domain definition with the same name. Published packages include no named styles; this site injects Academic, Vibrant, and Clean reference presets through the public Core and Plot definition contracts. `IRPlotSpec` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
+Plot reads `style` and `mode` from the Core effective Theme at its current Scene or Scope position. When `style` is omitted, Plot uses its own mode-aware default baseline; an explicit `style` selects the complete domain definition with the same name. Published packages include no named styles; this site injects Academic, Vibrant, and Clean reference presets through the public Core and Plot definition contracts. `IRPlot` does not repeat Core `style` or `mode`; themes affect visual defaults only, not data, coordinates, Axis creation, minor tick sources, or mark structure.
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
@@ -13,7 +13,7 @@ The site's Vibrant reference preset uses a light blue-gray Plot area in Light mo
 
 ## Extensible styles
 
-Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `IRPlotSpec`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring also needs the same-named Chart definition: pair `ChartThemeProvider` in React, or pass `chartThemeStyles` and `plotThemeStyles` to the Vanilla typed factory.
+Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `IRPlot`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring also needs the same-named Chart definition: pair `ChartThemeProvider` in React, or pass `chartThemeStyles` and `plotThemeStyles` to the Vanilla typed factory.
 
 ## Cascade and atomic replacement
 
@@ -22,9 +22,9 @@ Core effective Theme
   → Plot style base tokens
   → matching Plot style tokenRules
   → inherited Core categorical
-  → local IRPlotSpec.plotThemeTokens
-  → matching local IRPlotSpec.plotThemeTokenRules
-  → local IRPlotSpec.plotTheme
+  → local IRPlot.plotThemeTokens
+  → matching local IRPlot.plotThemeTokenRules
+  → local IRPlot.plotTheme
   → explicit guide / mark / scale config
 ```
 
@@ -79,14 +79,14 @@ Core effective Theme
 | `style` / `mode`    | Effective Core Theme environment selecting the preset           |
 | `tokens`            | Complete token map after the cascade                            |
 | `tokenSources`      | One winning source and stable path for every canonical token    |
-| `tokenRules`        | Style and IRPlotSpec Axis rules in effective cascade order      |
+| `tokenRules`        | Style and IRPlot Axis rules in effective cascade order      |
 | `authoredOverrides` | Record for the authored native `plotTheme` entry                |
 | `plotTheme`         | Complete mapped and validated native Plot theme                 |
 | `palette`           | Final palettes and schemes shared by scales, marks, and legends |
 
 `tokenSources[].kind` answers only whether a token is projected directly from the upper effective Theme (`inherit`) or built by the Plot style definition or current Plot input (`local`); it does not encode cascade priority. `tokenRules[].path` uses `$style/.../tokenRules/<index>` or `$spec/plotThemeTokenRules/<index>`. The `plotTheme` record in `authoredOverrides` is also `local`.
 
-Chart may call this resolver to read a transient series palette needed by a recipe, but it does not write the fully resolved theme back into `IRPlotSpec` or relabel Plot tokens as Chart-owned.
+Chart may call this resolver to read a transient series palette needed by a recipe, but it does not write the fully resolved theme back into `IRPlot` or relabel Plot tokens as Chart-owned.
 
 ## PlotThemeSchema
 

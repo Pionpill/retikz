@@ -1,4 +1,4 @@
-﻿# ADR-01：Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
+# ADR-01：Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
@@ -23,11 +23,11 @@ type PaintValue =
   | { kind: 'contextStroke' }; // 继承所在元素描边（adapter → SVG context-stroke；alpha.8 arrow 用）
 
 // SceneResource —— discriminated，便于后续加分支不破契约
-type SceneResource = { kind: 'paint'; id: string; spec: IRPaintSpec };
+type SceneResource = { kind: 'paint'; id: string; spec: IRPaint };
 // alpha.9 追加： | { kind: 'clip'; ... }
 ```
 
-`Scene.resources?: Array<SceneResource>`（渲染无关，adapter 物化为 SVG `<defs>`）；compile 把 IR 的 `PaintSpec` 收进资源表（去重 + 稳定 id），primitive 写 `{ kind: 'resourceRef', id }`；纯色仍 `string`。IR 侧 `fill` 升 `z.union([z.string(), PaintSpecSchema])`，`PaintSpec` 是 `linearGradient` / `radialGradient` 的 discriminated union。
+`Scene.resources?: Array<SceneResource>`（渲染无关，adapter 物化为 SVG `<defs>`）；compile 把 IR 的 `IRPaint` 收进资源表（去重 + 稳定 id），primitive 写 `{ kind: 'resourceRef', id }`；纯色仍 `string`。IR 侧 `fill` 升 `z.union([z.string(), PaintSchema])`，`IRPaint` 是 `linearGradient` / `radialGradient` 的 discriminated union。
 
 理由：
 
@@ -43,7 +43,7 @@ type SceneResource = { kind: 'paint'; id: string; spec: IRPaintSpec };
 - **radial center / radius 用 `objectBoundingBox`**（0..1 相对形状，随缩放）；缺省 center (0.5,0.5)、radius 0.5。
 - **stop `color` 支持 `currentColor`**（SVG `<stop stop-color>` 天然继承元素 color）。
 - **纯色与 `var()` 不进资源表**：`fill` 是 `string` 时不收集；`var(--x)` 仍走 react inline style。
-- **scope 级联 PaintSpec**：alpha.2 的 `fill` 级联默认值若是 `PaintSpec`，继承链解析后再进资源收集（去重兜底）。
+- **scope 级联 IRPaint**：alpha.2 的 `fill` 级联默认值若是 `IRPaint`，继承链解析后再进资源收集（去重兜底）。
 
 ### 被否决的选项
 
@@ -64,6 +64,6 @@ type SceneResource = { kind: 'paint'; id: string; spec: IRPaintSpec };
 
 ---
 
-> **实现指针**：level `red`（动 IR fill union + primitive 契约 + compile 资源收集 + core/react 公开导出）、additive 非 breaking（`fill` 类型扩张，`string` 仍合法；消费 Scene 的 adapter 需处理 `PaintValue`，本仓 react 同步改）。真源以代码为准——`PaintSpecSchema` / `GradientStopSchema` / `IRPaintSpec`（`core/src/ir/paint.ts`）、`PaintValue` / `SceneResource`（`core/src/primitive/paint.ts`，经 `primitive/scene.ts` re-export）、资源收集 / 去重 / 派 id（`core/src/compile/paint.ts` + `compile/{node,path,scope}.ts` 接入）、adapter 物化（`react/src/render/paintDefs.tsx` + `renderPrim.tsx` 按 `PaintValue` 分派）。测试在 `core/tests/{ir,compile}/paint.test.ts` 与 `react/tests/render/paintDefs.test.tsx`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+> **实现指针**：level `red`（动 IR fill union + primitive 契约 + compile 资源收集 + core/react 公开导出）、additive 非 breaking（`fill` 类型扩张，`string` 仍合法；消费 Scene 的 adapter 需处理 `PaintValue`，本仓 react 同步改）。真源以代码为准——`PaintSchema` / `GradientStopSchema` / `IRPaint`（`core/src/ir/paint.ts`）、`PaintValue` / `SceneResource`（`core/src/primitive/paint.ts`，经 `primitive/scene.ts` re-export）、资源收集 / 去重 / 派 id（`core/src/compile/paint.ts` + `compile/{node,path,scope}.ts` 接入）、adapter 物化（`react/src/render/paintDefs.tsx` + `renderPrim.tsx` 按 `PaintValue` 分派）。测试在 `core/tests/{ir,compile}/paint.test.ts` 与 `react/tests/render/paintDefs.test.tsx`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
 
 > 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:_notes/decisions/core/v0/v0.2/alpha.7/01-paint-basics.md`。

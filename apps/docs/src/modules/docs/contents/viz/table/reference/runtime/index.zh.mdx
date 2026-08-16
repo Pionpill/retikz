@@ -3,9 +3,9 @@ title: 运行时
 description: 查询 React、Vanilla 与直接编译入口如何共享一次 Table layout transaction、Scene 与 manifest artifact。
 ---
 
-TableSpec 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。Table runtime 需要回答两个问题：不同入口如何汇入同一执行链，以及一次 layout-aware transaction 如何同时产出 Scene 与 manifest。
+IRTable 只保存 JSON-safe 结构；datasets、Definitions、Core compile options 与宿主能力在运行时注入。Table runtime 需要回答两个问题：不同入口如何汇入同一执行链，以及一次 layout-aware transaction 如何同时产出 Scene 与 manifest。
 
-> 这里解释运行时接线与执行逻辑，不重复 schema 字段。TableSpec 与 Cell 内容见[表格契约](/viz/table/reference/contract-table)，轨道与 border 输入见[布局契约](/viz/table/reference/contract-layout)，compile 输出见[产物契约](/viz/table/reference/manifest)。
+> 这里解释运行时接线与执行逻辑，不重复 schema 字段。IRTable 与 Cell 内容见[表格契约](/viz/table/reference/contract-table)，轨道与 border 输入见[布局契约](/viz/table/reference/contract-layout)，compile 输出见[产物契约](/viz/table/reference/manifest)。
 
 ## 入口如何汇合
 
@@ -106,17 +106,17 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
 
 ## React
 
-`@retikz/table-react` 提供三个根入口：`Table` 接受完整 `IRTableSpec`，`DetailTable` 生成 record-per-row spec，`ManualTable` 生成显式网格 spec。三者共享 `TableCommonProps` 与同一 runtime。
+`@retikz/table-react` 提供三个根入口：`Table` 接受完整 `IRTable`，`DetailTable` 生成 record-per-row spec，`ManualTable` 生成显式网格 spec。三者共享 `TableCommonProps` 与同一 runtime。
 
 | 入口          | 核心输入                     | 结构 authoring                          |
 | ------------- | ---------------------------- | --------------------------------------- |
-| `Table`       | `spec`、可选 `data`          | 已构造的精确 TableSpec                  |
+| `Table`       | `spec`、可选 `data`          | 已构造的精确 IRTable                  |
 | `DetailTable` | `dataRef`、`data`、`columns` | `columns` 或 `DetailColumn` children    |
 | `ManualTable` | 矩形 `rows`、可选 `rowKinds` | `rows` props 或 `Row` / `Cell` children |
 
-`ManualTable` 的两种 authoring 模式互斥。props 模式直接转发行优先持久化结构；marker 模式根据最大占用位置推导列数并补 `null`，然后交给同一个 `createManualTableSpec()` 与 Table schema。
+`ManualTable` 的两种 authoring 模式互斥。props 模式直接转发行优先持久化结构；marker 模式根据最大占用位置推导列数并补 `null`，然后交给同一个 `createManualTableIR()` 与 Table schema。
 
-`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。standalone 宿主 CSS 使用 `containerStyle`，它只在进入内部 Layout 时改名为 `style`，绝不进入 TableSpec。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile` 与 `artifacts/onArtifacts` 不属于 Table 根组件公共面。
+`TableLayoutHostProps` 精确复用 Kernel `<Layout ir>` 当前支持的宿主字段：handlers、输出尺寸/viewBox、renderer、动画、资源 id、Core provider definitions 与 TeX lowerer。standalone 宿主 CSS 使用 `containerStyle`，它只在进入内部 Layout 时改名为 `style`，绝不进入 IRTable。完整字段与语义见 [Layout API](/kernel/components/layout/overview)；Scope style、完整 `compile` 与 `artifacts/onArtifacts` 不属于 Table 根组件公共面。
 
 | 共享属性                   | 类型                                            | 默认值 | 描述                                               |
 | -------------------------- | ----------------------------------------------- | ------ | -------------------------------------------------- |
@@ -139,7 +139,7 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 | ------------------- | --------------------------------- | ------ | ----------------------------------------------------------------- |
 | `theme?`            | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
 | `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`   | standalone Core style definitions；embedded 时由外层提供          |
-| `tableThemeTokens?` | `IRTableSpec['tableThemeTokens']` | `{}`   | TableSpec 局部 sparse token overlay，高于 Table style baseline    |
+| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`   | IRTable 局部 sparse token overlay，高于 Table style baseline    |
 
 `theme.style` / `theme.mode` 选择当前 Core 环境和同名 Table style definition。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。自定义 style 在 standalone 模式分别通过 `themeStyles` 与 `tableThemeStyles` 注入，也可在 React 子树中组合 Core `ThemeProvider` 与 `TableThemeProvider` ambient 注入；embedded 模式的 Core definition 由外层 Layout 提供。
 
@@ -251,7 +251,7 @@ result.manifest;
 
 layout-aware Table 不能通过纯 Tier 1 `lowerIRToKernel()` 保存 compile-local replay tree。需要 standalone 结果时使用 `compileTable()`；嵌入其它 Scene 时把 `lowerTables()` definitions 交给宿主 `compileToScene()`、React `<Layout>` 或 Vanilla adapter。
 
-manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[产物契约](/viz/table/reference/manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 TableSpec 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
+manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字段与嵌套 DTO 见[产物契约](/viz/table/reference/manifest)。根 artifact occurrence 由 Core compile traversal 生成，不进入 IRTable 或 manifest；`tableId` 不是实例 selector，匿名根、nested Table 与重复 id 都由 exact occurrence 区分。
 
 ## 运行时入口边界
 
@@ -261,11 +261,11 @@ manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
 
-Table 的 Core preset 来自 host `theme.style` / `theme.mode`；local `tableThemeTokens` 在 TableSpec 层级覆盖它。宿主 CSS 继续使用 `containerStyle`，不进入 TableSpec。省略 `style` 时使用默认的 light 基线；resolved manifest 仅在显式选择时记录 `style`，并记录 `themeMode`、完整 token map 与来源。
+Table 的 Core preset 来自 host `theme.style` / `theme.mode`；local `tableThemeTokens` 在 IRTable 层级覆盖它。宿主 CSS 继续使用 `containerStyle`，不进入 IRTable。省略 `style` 时使用默认的 light 基线；resolved manifest 仅在显式选择时记录 `style`，并记录 `themeMode`、完整 token map 与来源。
 
 ## 相关
 
-- [表格契约](/viz/table/reference/contract-table)：TableSpec、manual Cell 与 canonical payload
+- [表格契约](/viz/table/reference/contract-table)：IRTable、manual Cell 与 canonical payload
 - [布局契约](/viz/table/reference/contract-layout)：Cell layout、轨道与 border 输入 schema
 - [产物契约](/viz/table/reference/manifest)：resolved geometry、来源与 locator DTO
 - [明细表契约](/viz/table/reference/contract-detail)：columns 与 detail Structure schema

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRTableSpec } from '../../src';
+import type { IRTable } from '../../src';
 
 import {
   compileTable,
@@ -21,7 +21,7 @@ const expectDeepFrozen = (value: unknown): void => {
 
 describe('Table layout manifest', () => {
   it('publishes detached source and Table-local Cell bounds with semantic identity', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
@@ -93,7 +93,7 @@ describe('Table layout manifest', () => {
   });
 
   it('recursively freezes the artifact and remains deterministic without modifying input', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: {
@@ -117,7 +117,7 @@ describe('Table layout manifest', () => {
   });
 
   it('keeps canonical border geometry and per-atom provenance in the same manifest', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'grid',

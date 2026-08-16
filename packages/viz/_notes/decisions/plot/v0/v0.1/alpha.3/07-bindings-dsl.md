@@ -10,12 +10,12 @@
 塑造决策的硬约束：
 
 - ADR-01~06 已把 band/point/ordinal/time scale、interval mark、transform、color 通道、relation 做进 `@retikz/plot`（IR + lowering），但用户表面（`@retikz/plot-react` 的 `<Plot>{marks}</Plot>` 组合 DSL、`@retikz/plot-vanilla` builder）一个都没露出。
-- alpha.2 的 `buildPlotSpec` 只认 `<LineMark>` / `<PointMark>` / `<Axis>`，且**写死自动建两条 linear scale**——alpha.3 的 bar / band / color / time 无从声明。
+- alpha.2 的 `buildPlotIR` 只认 `<LineMark>` / `<PointMark>` / `<Axis>`，且**写死自动建两条 linear scale**——alpha.3 的 bar / band / color / time 无从声明。
 - 三包 lockstep（roadmap）要求 IR / lowering 加的能力即时随 react / vanilla / docs 同步露出，否则用户只能手写裸 IR spec。
 
 ## 决策：builder 升级——按 mark/props 推 scale 类型、装配 transform、补 color/series/arrangement；&lt;BarMark&gt; 新增；vanilla/docs 同步
 
-`buildPlotSpec` 从「写死 linear」升为**按收集到的 mark 推断 scale 类型**：x scale 类型 = 若存在 `<BarMark>` 则 band、否则按显式 `scaleX` prop（`linear`/`time`/`point`）、缺省 linear；y 缺省 linear；任一 mark 带 `color` → 自动加一条 ordinal scale 并把 color 通道 `scale` 指向它。`<BarMark stack>` 时同时往 `transform` 推一条 stack op（`x`/`y`/`groupBy` 取自该 mark 的 x/y/series），并给 mark 设 `arrangement:'stack'`；`<BarMark series>` 无 stack → `arrangement:'dodge'`。产出仍须**等价于手写 IRPlotSpec**（仿 core Sugar=Kernel；每能力配 `toEqual` 等价性测试）。
+`buildPlotIR` 从「写死 linear」升为**按收集到的 mark 推断 scale 类型**：x scale 类型 = 若存在 `<BarMark>` 则 band、否则按显式 `scaleX` prop（`linear`/`time`/`point`）、缺省 linear；y 缺省 linear；任一 mark 带 `color` → 自动加一条 ordinal scale 并把 color 通道 `scale` 指向它。`<BarMark stack>` 时同时往 `transform` 推一条 stack op（`x`/`y`/`groupBy` 取自该 mark 的 x/y/series），并给 mark 设 `arrangement:'stack'`；`<BarMark series>` 无 stack → `arrangement:'dodge'`。产出仍须**等价于手写 IRPlot**（仿 core Sugar=Kernel；每能力配 `toEqual` 等价性测试）。
 
 决策性的用户表面（字面即决策，完整示例见文档站）：
 
@@ -34,7 +34,7 @@
 1. **lockstep 要求能力即时露出**（roadmap）：IR / lowering 加的东西若不进 DSL，用户只能手写 spec，文档示例退化为低可读的裸 IR——违背 plot v0.1「authoring 绑定随 plot 同步」。
 2. **builder 推 scale 类型 = 免用户写 scale 样板**：alpha.2 已隐藏 scale（自动 linear）；alpha.3 延续——`<BarMark>` 自动 band x、`color` 自动 ordinal，用户只声明 mark + 字段。需要连续非 linear（time）时用 `scaleX` prop 显式点名（数据在 build 时不可见、time 无法从值自动判定，必须显式）。
 3. **`<BarMark stack>` 一处声明、装配 transform+arrangement+字段对齐**：避免用户手动保证 transform 的 `startField` 与 mark 的 `y0Field` 同名（[ADR-05](./05-relation.md) 待决策点的对齐风险由 builder 兜）。
-4. **等价性测试守 Sugar=Kernel**：DSL 不引入新能力，每条糖产出 = 手写 spec，回归靠 `buildPlotSpec` 的 `toEqual` 测试（沿用 alpha.1/alpha.2）。
+4. **等价性测试守 Sugar=Kernel**：DSL 不引入新能力，每条糖产出 = 手写 spec，回归靠 `buildPlotIR` 的 `toEqual` 测试（沿用 alpha.1/alpha.2）。
 
 ### 已拍板的取舍
 

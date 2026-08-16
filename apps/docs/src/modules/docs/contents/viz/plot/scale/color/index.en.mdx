@@ -40,7 +40,7 @@ Continuous color works only on marks colored independently per datum, such as po
 
 <ComponentAlert
   title="Auto-derivation needs a field contract"
-  description="React derives sequential only when the model declares the color field as continuous or temporal; an unknown field type still follows ordinal behavior. Diverging must be declared explicitly through a full IRPlotSpec."
+  description="React derives sequential only when the model declares the color field as continuous or temporal; an unknown field type still follows ordinal behavior. Diverging must be declared explicitly through a full IRPlot."
 />
 
 ## Discretization: quantize / threshold / quantile
@@ -73,7 +73,7 @@ React auto-derivation covers two common paths:
 - a categorical color field derives `ordinal`
 - a color field declared as `continuous` or `temporal` derives `sequential`
 
-Configure `diverging`, the three discretization scales, and explicit scheme / range / domain options in `IRPlotSpec.scales`, then reference the scale name from the mark's color field binding. `<Legend channel="color" />` or a full-spec legend guide only displays the resolved mapping.
+Configure `diverging`, the three discretization scales, and explicit scheme / range / domain options in `IRPlot.scales`, then reference the scale name from the mark's color field binding. `<Legend channel="color" />` or a full-spec legend guide only displays the resolved mapping.
 
 Auto-derivation and explicit configuration are only two entry points: both are resolved by the same scale definition and resolver path, rather than creating separate color semantics.
 
@@ -106,7 +106,7 @@ The resolver derives the domain, bin boundaries, and scheme / range for the sele
 
 ## API Reference
 
-Every color scale in a full spec needs a `name`, which a mark's color field binding references through `scale`. Auto-derivation covers only `ordinal` and `sequential`; other types and explicit domain / scheme / range options belong in `IRPlotSpec.scales`.
+Every color scale in a full spec needs a `name`, which a mark's color field binding references through `scale`. Auto-derivation covers only `ordinal` and `sequential`; other types and explicit domain / scheme / range options belong in `IRPlot.scales`.
 
 | `type`       | Input and boundaries                         | Palette and defaults                              |
 | ------------ | -------------------------------------------- | ------------------------------------------------- |

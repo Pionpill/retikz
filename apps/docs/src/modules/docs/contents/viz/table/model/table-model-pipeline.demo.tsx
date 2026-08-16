@@ -10,7 +10,7 @@ const Demo: FC = () => (
     <LogicFigureFrame id="table-group">
       <LogicFigureFrameTitle>@retikz/table</LogicFigureFrameTitle>
       <Node id="spec" position={[-280, 0]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} cornerRadius={4}>
-        TableSpec
+        IRTable
       </Node>
       <Node id="structure" position={[-175, 0]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
         Structure

@@ -3,9 +3,9 @@ title: Text
 description: Text 在 Node 内声明一整行文字，并按行覆盖颜色、透明度与字体。
 ---
 
-`<Text>` 给 `<Node>` 中的某一整行覆盖文字样式，并与普通字符串 children 按 JSX 顺序混排。它是 Sugar（语法糖）：写法只存在于 React DSL，随后会归一成 `Node.text` 中的一条 LineSpec（单行文本规格）。
+`<Text>` 给 `<Node>` 中的某一整行覆盖文字样式，并与普通字符串 children 按 JSX 顺序混排。它是 Sugar（语法糖）：写法只存在于 React DSL，随后会归一成 `Node.text` 中的一条 IRLine（单行文本规格）。
 
-它和直接把 LineSpec 对象写进 `text` prop 是**等价**的两条路径：
+它和直接把 IRLine 对象写进 `text` prop 是**等价**的两条路径：
 
 | 路径           | 写法                                                | 优点                                  |
 | -------------- | --------------------------------------------------- | ------------------------------------- |
@@ -17,7 +17,7 @@ description: Text 在 Node 内声明一整行文字，并按行覆盖颜色、�
 <ComponentAlert
   type="warn"
   title="一个 Text 是一整行，不是 inline span"
-  description="Text 本身不能表达同一行里的多段样式；需要一行多色时，改用 Node text prop 的 { runs } LineSpec。只有各段本就应独占一行时才拆成多个 Text。"
+  description="Text 本身不能表达同一行里的多段样式；需要一行多色时，改用 Node text prop 的 { runs } IRLine。只有各段本就应独占一行时才拆成多个 Text。"
 />
 
 ## 用法
@@ -55,7 +55,7 @@ import { Node, Text } from '@retikz/react';
 
 <ComponentPreview files="text-mix-string" size="xs" />
 
-### 与 LineSpec 对象等价
+### 与 IRLine 对象等价
 
 下面两个节点编译出来一模一样：
 
@@ -81,7 +81,7 @@ import { Node, Text } from '@retikz/react';
 | --------------- | -------------------------------------------- | ---------------- |
 | 字符串 / 数字   | 相邻内容拼接，按 Node 文本规则处理 `\n`      | 普通字符串行     |
 | 无样式 `<Text>` | 先结束当前普通行，再把自身作为独立一行       | 普通字符串行     |
-| 有样式 `<Text>` | 先结束当前普通行，再保留当前行的样式覆盖字段 | LineSpec 对象行  |
+| 有样式 `<Text>` | 先结束当前普通行，再保留当前行的样式覆盖字段 | IRLine 对象行  |
 
 这也解释了两个边界：`<Text>` 只能在 `<Node>` 内生效，而且它表达的是一整行，不是行内 span。
 
@@ -110,7 +110,7 @@ import { Node, Text } from '@retikz/react';
 
 当 Node 使用 `NodeTextColor.Contrast` 时，Core 在样式级联后读取最终 `fill`。只有静态且有效不透明度为 1 的颜色参与 WCAG 相对明度比较，并解析成 `#000000` 或 `#ffffff`；缺省、半透明、gradient、`var()` 等无法闭合求值的背景使用固定 `currentColor`，同时发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`。Node 的整体 `opacity` 不参与背景判断。
 
-行级 `font` 仍参与当前行的宽度测量；换行、`align` 与 `lineHeight` 继续由 Node 的块级配置负责。同一行需要多段样式时，使用 `text` prop 的 `{ runs }` LineSpec。
+行级 `font` 仍参与当前行的宽度测量；换行、`align` 与 `lineHeight` 继续由 Node 的块级配置负责。同一行需要多段样式时，使用 `text` prop 的 `{ runs }` IRLine。
 
 <SourceLinks
   sources={[
@@ -152,4 +152,4 @@ import { Node, Text } from '@retikz/react';
 
 ## 相关
 
-- [Node 文本](/kernel/components/node/overview#文本)：块级 `text` / `align` / `lineHeight`，以及 `text` 数组里的 LineSpec 写法
+- [Node 文本](/kernel/components/node/overview#文本)：块级 `text` / `align` / `lineHeight`，以及 `text` 数组里的 IRLine 写法

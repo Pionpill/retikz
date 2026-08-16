@@ -2,10 +2,10 @@ import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 const rows = [
   { day: 0, temperature: 10, rainfall: 0, x: 1, y: 0, z: 0 },
@@ -88,9 +88,9 @@ const sharedYOverlaySpec = {
   ],
 };
 
-const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
-const expandOf = (spec: IRPlotSpec): IRScope => {
+const expandOf = (spec: IRPlot): IRScope => {
   const [definition] = lowerPlots({ weather: rows }, { width: 480, height: 300, provenance: true });
   return definition.expand(spec).children[0] as IRScope;
 };
@@ -143,7 +143,7 @@ const spanOf = (values: ReadonlyArray<number>): number => Math.max(...values) - 
 
 describe('same-panel multi-axis overlay schema', () => {
   it('axis_placement_and_overlay_zindex_round_trip', () => {
-    const parsed = parsePlotSpec(JSON.parse(JSON.stringify(dualAxisSpec)));
+    const parsed = parsePlotIR(JSON.parse(JSON.stringify(dualAxisSpec)));
     expect(parsed).toEqual(dualAxisSpec);
   });
 
@@ -152,7 +152,7 @@ describe('same-panel multi-axis overlay schema', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'corner' } }],
     };
-    expect(() => parsePlotSpec(spec)).toThrow();
+    expect(() => parsePlotIR(spec)).toThrow();
   });
 
   it('axis_side_requires_cardinal_side', () => {
@@ -160,7 +160,7 @@ describe('same-panel multi-axis overlay schema', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'center' } }],
     };
-    expect(() => parsePlotSpec(spec)).toThrow();
+    expect(() => parsePlotIR(spec)).toThrow();
   });
 
   it('overlay_cycle_rejected', () => {
@@ -194,13 +194,13 @@ describe('same-panel multi-axis overlay schema', () => {
         { type: 'axis', dimension: 'y', coordinateView: 'b' },
       ],
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/cycle|overlay/i);
+    expect(() => parsePlotIR(spec)).toThrow(/cycle|overlay/i);
   });
 });
 
 describe('same-panel multi-axis overlay lowering', () => {
   it('left_and_right_y_axes_can_coexist', () => {
-    const outer = expandOf(parsePlotSpec(dualAxisSpec));
+    const outer = expandOf(parsePlotIR(dualAxisSpec));
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
     expect(yAxes).toHaveLength(2);
     expect(moveXOf(firstPathOf(yAxes[1]))).toBeGreaterThan(moveXOf(firstPathOf(yAxes[0])));
@@ -214,7 +214,7 @@ describe('same-panel multi-axis overlay lowering', () => {
         { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' } },
       ],
     };
-    expect(() => expandOf(parsePlotSpec(spec))).toThrow(/duplicate axis/i);
+    expect(() => expandOf(parsePlotIR(spec))).toThrow(/duplicate axis/i);
   });
 
   it('cartesian_rejects_incompatible_cardinal_side', () => {
@@ -222,7 +222,7 @@ describe('same-panel multi-axis overlay lowering', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'right' } }],
     };
-    expect(() => expandOf(parsePlotSpec(spec))).toThrow(/cartesian x axis.*top or bottom/i);
+    expect(() => expandOf(parsePlotIR(spec))).toThrow(/cartesian x axis.*top or bottom/i);
   });
 
   it('cartesian_rejects_unknown_native_edge', () => {
@@ -230,11 +230,11 @@ describe('same-panel multi-axis overlay lowering', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'y', placement: { kind: 'edge', edge: 'hypotenuse' } }],
     };
-    expect(() => expandOf(parsePlotSpec(spec))).toThrow(/cartesian axis edge.*top, right, bottom, or left/i);
+    expect(() => expandOf(parsePlotIR(spec))).toThrow(/cartesian axis edge.*top, right, bottom, or left/i);
   });
 
   it('overlay_scope_uses_target_plot_area_for_projection', () => {
-    const outer = expandOf(parsePlotSpec(dualAxisSpec));
+    const outer = expandOf(parsePlotIR(dualAxisSpec));
     const marks = markLayersOf(outer);
     const intervalNodes = allNodes(marks[1]);
     const pathYMin = Math.min(...allPaths(marks[0]).flatMap(pathYValues));
@@ -245,7 +245,7 @@ describe('same-panel multi-axis overlay lowering', () => {
   });
 
   it('overlay_scopes_with_the_same_scale_name_share_domain', () => {
-    const outer = expandOf(parsePlotSpec(sharedYOverlaySpec));
+    const outer = expandOf(parsePlotIR(sharedYOverlaySpec));
     const marks = markLayersOf(outer);
     const temperatureSpan = spanOf(pathYValues(firstPathOf(marks[0])));
     const rainfallSpan = spanOf(pathYValues(firstPathOf(marks[1])));
@@ -253,13 +253,13 @@ describe('same-panel multi-axis overlay lowering', () => {
   });
 
   it('overlay_zindex_changes_mark_layer_order', () => {
-    const outer = expandOf(parsePlotSpec(dualAxisSpec));
+    const outer = expandOf(parsePlotIR(dualAxisSpec));
     const marks = markLayersOf(outer);
     expect(marks.map(mark => mark.meta?.mark)).toEqual(['path', 'interval']);
   });
 
   it('x_axis_declared_only_on_target_scope_is_not_copied_to_overlay', () => {
-    const outer = expandOf(parsePlotSpec(dualAxisSpec));
+    const outer = expandOf(parsePlotIR(dualAxisSpec));
     const xAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x');
     expect(xAxes).toHaveLength(1);
   });

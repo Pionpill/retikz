@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineScale, extractScaleType } from '../../../src/contract';
@@ -18,7 +18,7 @@ import {
   resolveChannelScale,
   resolvePositionScale,
 } from '../../../src/resolve/scale';
-import { BUILTIN_SCALE_TYPES, PlotSpecSchema } from '../../../src/schemas';
+import { BUILTIN_SCALE_TYPES, PlotSchema } from '../../../src/schemas';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({
@@ -80,7 +80,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -211,7 +211,7 @@ describe('scale registry（contract spec）', () => {
   });
 
   it('custom_position_scale_lowers_in_plot', () => {
-    const spec: IRPlotSpec = {
+    const spec: IRPlot = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -241,7 +241,7 @@ describe('scale registry（contract spec）', () => {
   });
 
   it('custom_channel_scale_lowers_color_in_plot', () => {
-    const spec: IRPlotSpec = {
+    const spec: IRPlot = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -286,7 +286,7 @@ describe('scale registry（contract spec）', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };
-    const roundtrip = PlotSpecSchema.parse(JSON.parse(JSON.stringify(spec)));
+    const roundtrip = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
     expect(roundtrip.scales[0]).toMatchObject({ type: 'unit', name: 'x', foo: 7 });
   });
 });

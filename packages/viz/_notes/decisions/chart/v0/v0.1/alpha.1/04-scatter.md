@@ -6,12 +6,12 @@
 
 ## 背景与目标
 
-Scatter 与 Bubble 是用户心智、公开 API、ChartSpec 判别值和文档入口都平级的二维点图。Scatter 用两个位置角色比较观测关系，Bubble 进一步要求第三个定量尺寸角色并以面积表达量级。两者共享 Point Mark、scale、coordinate、guide 与 ChartCommon 能力，但必须分别保留 authored intent、稳定 identity、inspection 与 JSON round-trip，不能因为底层结构相近而把 Bubble 降为 Scatter 的文档别名或 adapter sugar。
+Scatter 与 Bubble 是用户心智、公开 API、IRChart 判别值和文档入口都平级的二维点图。Scatter 用两个位置角色比较观测关系，Bubble 进一步要求第三个定量尺寸角色并以面积表达量级。两者共享 Point Mark、scale、coordinate、guide 与 ChartCommon 能力，但必须分别保留 authored intent、稳定 identity、inspection 与 JSON round-trip，不能因为底层结构相近而把 Bubble 降为 Scatter 的文档别名或 adapter sugar。
 
 ## 决策：`scatter` 与 `bubble` 分别冻结二维关系和面积量级语义
 
 ```ts
-type ScatterChartSpec = ChartCommon & {
+type ScatterChartIR = ChartCommon & {
   namespace: 'chart';
   type: 'scatter';
   encoding: {
@@ -25,7 +25,7 @@ type ScatterChartSpec = ChartCommon & {
   mark?: ScatterPointPatch;
 };
 
-type BubbleChartSpec = ChartCommon & {
+type BubbleChartIR = ChartCommon & {
   namespace: 'chart';
   type: 'bubble';
   encoding: {
@@ -40,7 +40,7 @@ type BubbleChartSpec = ChartCommon & {
 };
 ```
 
-Scatter 与 Bubble 分别进入 `ChartSpec.type` 封闭 union，并各自拥有稳定 type identity。两者都固定生成一个 Point 主 Mark、二维 coordinate / composition root 以及 x / y axis 表现性 defaults；x / y 与主 Point identity 构成共同的不可撤销核心。Scatter 的 size 可缺省、绑定字段或使用常量；Bubble 的 size 是不可撤销的第三个定量角色，必须绑定字段并始终按面积感知语义解析。
+Scatter 与 Bubble 分别进入 `IRChart.type` 封闭 union，并各自拥有稳定 type identity。两者都固定生成一个 Point 主 Mark、二维 coordinate / composition root 以及 x / y axis 表现性 defaults；x / y 与主 Point identity 构成共同的不可撤销核心。Scatter 的 size 可缺省、绑定字段或使用常量；Bubble 的 size 是不可撤销的第三个定量角色，必须绑定字段并始终按面积感知语义解析。
 
 Bubble 不复制 Point、channel、scale、guide、merge 或 lowering 机制。它与 Scatter 复用同一份 Point 能力投影及 Plot size channel 主链，但使用独立严格 variant 和 recipe identity 冻结必需 size role、面积映射、默认 size legend 与 inspection 来源。用户可以调整 color、opacity、shape、Point 表现样式、scale 和 guides，也可以追加正式 Plot marks；不能替换主 Point、改写 x / y，或把 Bubble 的最终 size 降为常量。
 
@@ -110,16 +110,16 @@ Scatter 默认 size legend 以应用 `mark` 投影后的最终有效 Point size 
 - 追加成员产生第二个 field-bound size descriptor 且 size legend 无法消歧时沿 Plot 正式诊断 fail-loud；用户可以显式替换 guides 并省略 size legend，或避免歧义
 - `mark` 完整复用 Point 的非核心公开字段与非核心 encoding；不能携带 type、identity、transform、view ownership，也不能在 nested encoding 中改写核心 x / y。Bubble 还拒绝 nested encoding 中名为 `size` 的 role 及会替换 glyph 的 `text` mode；这些字段必须 fail-loud，color、channels、datum label 与其它兼容自定义 role 继续沿 Plot schema 接受
 - 缺 x / y、非法视觉值、非二维 coordinate、缺失自定义 definition、保留 identity 冲突或核心配方破坏均 fail-loud
-- 公开时首次形成包含 `scatter` 与 `bubble` 的 ChartSpec discriminated union；JSON、React、Vanilla 分别保留两个 type，并生成等价 ChartSpec、PlotSpec 与最终 composition
+- 公开时首次形成包含 `scatter` 与 `bubble` 的 IRChart discriminated union；JSON、React、Vanilla 分别保留两个 type，并生成等价 IRChart、IRPlot 与最终 composition
 - React 从 `@retikz/chart-react/point` 提供平级的 `ScatterChart` 与 `BubbleChart`，Vanilla 从 `@retikz/chart-vanilla/point` 提供平级的 `createScatterChart` 与 `createBubbleChart`；四个入口分别生成 `type: 'scatter'` 与 `type: 'bubble'`，不得把 Bubble 在 adapter 层改写成 Scatter。Point subpath 同时 re-export 基础 Chart API，两种 type root 复用同一套 Chart presentation children 与 runtime 接线，不建立 type-specific host
 
-框架无关的 variant authoring input 分别是 `Omit<ScatterChartSpec, 'namespace' | 'type'>` 与 `Omit<BubbleChartSpec, 'namespace' | 'type'>`。Vanilla `createScatterChart(input)` / `createBubbleChart(input)` 接受对应 input，并确定性补齐 `namespace: 'chart'` 与各自 `type` 后返回完整 canonical Chart result。React `ScatterChart` / `BubbleChart` 是平级的完整 headless Chart root：presentation 与 children 完整复用 ADR-03 的 `Chart` root 契约；组件只补齐判别值，再委托同一 canonical normalizer。两种写法生成同一 canonical variant，variant root 不能嵌套进另一个 `Chart` root。
+框架无关的 variant authoring input 分别是 `Omit<ScatterChartIR, 'namespace' | 'type'>` 与 `Omit<BubbleChartIR, 'namespace' | 'type'>`。Vanilla `createScatterChart(input)` / `createBubbleChart(input)` 接受对应 input，并确定性补齐 `namespace: 'chart'` 与各自 `type` 后返回完整 canonical Chart result。React `ScatterChart` / `BubbleChart` 是平级的完整 headless Chart root：presentation 与 children 完整复用 ADR-03 的 `Chart` root 契约；组件只补齐判别值，再委托同一 canonical normalizer。两种写法生成同一 canonical variant，variant root 不能嵌套进另一个 `Chart` root。
 
 ## Plot size / legend dependency contract
 
 field-bound size 与默认 size legend 依赖 Plot owner 持续满足以下 capability 闭环：
 
-1. 显式 size scale 的存在性、sqrt 类型及 scale 契约先于全零、空集等退化数据分支校验，使同一 ChartSpec 的合法性不随 runtime rows 改变
+1. 显式 size scale 的存在性、sqrt 类型及 scale 契约先于全零、空集等退化数据分支校验，使同一 IRChart 的合法性不随 runtime rows 改变
 2. size field 的 data-model type 必须与 quantitative magnitude 兼容；已知非 quantitative 类型在 descriptor 解析时 fail-loud；单行缺失、null 或非有限值必须通过正式 channel delivery 语义阻止该 datum 的 Point 生成，不能回落到默认尺寸
 3. 每个 field-bound size descriptor 都携带实际消费的稳定 scale identity，包括显式引用与确定性合成的默认 scale
 4. size legend 未指定 scale 且存在多个不同 scale identity 时 fail-loud；指定 scale 时精确选择对应 descriptor；相同 identity 的重复 descriptor 只有在契约等价时才能合并
@@ -130,10 +130,10 @@ Chart 不预扫描 rows、不复制 size scale 校验、不私造 descriptor、�
 
 - Chart 拥有平级的 `scatter` / `bubble` variants、各自数据角色、核心 Point recipe identity 与允许覆盖边界
 - Plot 拥有 Point、channel、scale inference、coordinate / composition、axis guide、lowering 与 trace
-- adapter 只暴露同一 ChartSpec；presentation 与 surface 继续由 ADR-02 / ADR-03 组合
+- adapter 只暴露同一 IRChart；presentation 与 surface 继续由 ADR-02 / ADR-03 组合
 - package 公开、release group、Chart adapter / schema API 文档只在 ADR-01 / ADR-03 gates 解除后原子完成；成为 publishable 不等于获得发布授权
 - capability gate 未解除时可以先提供基于已公开 Plot API 的 Scatter / Bubble 概念 Showcase，用真实 Point、size、scale 与 guide 组合展示 Canonical Type 的分类、用途和可观察视觉效果；这类页面必须具有明确的非契约概念预览身份，配置方式、demo 与 API 内容只能以当前公开 Plot / plot-react surface 为真源
-- 概念 Showcase 不得归类为 Chart runtime、schema 或 API 真源，不得把私有 ChartSpec 字段、Chart-owned defaults、recipe / patch / override 规则、adapter 或 runtime surface 描述为当前可用能力；Chart package、release surface、adapter 与 schema API 文档仍须在 ADR-01 / ADR-03 gates 解除后原子公开
+- 概念 Showcase 不得归类为 Chart runtime、schema 或 API 真源，不得把私有 IRChart 字段、Chart-owned defaults、recipe / patch / override 规则、adapter 或 runtime surface 描述为当前可用能力；Chart package、release surface、adapter 与 schema API 文档仍须在 ADR-01 / ADR-03 gates 解除后原子公开
 
 ## 架构验证
 
@@ -141,7 +141,7 @@ Chart 不预扫描 rows、不复制 size scale 校验、不私造 descriptor、�
 - 复用判定：两个 type 共享 Point、channel、coordinate、scale、guide、merge 与 lowering 主链，但分别保留 schema variant、recipe identity、inspection 与公开文档入口
 - 能力归属：完全组合 Plot 现有 Point、channel、coordinate、scale 与 guide 能力；主 Mark patch 是 Plot Point 契约的能力投影，不建立 Chart 平行类型
 - 外部扩展：自定义 coordinate、其它兼容角色的自定义 scale 与追加 mark 沿 Plot registry 与 ChartCommon 表面进入，不新增 Chart registry；Bubble 核心 size 在本 milestone 只接受 Plot 内建 sqrt scale，不把自定义 scale registry 扩展解释为任意面积 scale
-- 核心闭环：ChartSpec -> complete PlotSpec -> Plot lowering；presentation 可选地再由 Standard 包装
+- 核心闭环：IRChart -> complete IRPlot -> Plot lowering；presentation 可选地再由 Standard 包装
 - 依赖结论：field-bound size 的类型与 scale 校验、逐行缺值跳过和 legend descriptor identity 属于 Plot 正式 channel / guide 闭环，Chart 只消费该正式契约，不在局部绕过
 - trace：主 Point 的最终 size binding、Chart 默认 guide、显式 guide 替换及 Plot 实际 descriptor / scale identity 可沿统一 inspection 链区分来源；Chart 包裹不改变 Plot datum / series provenance 与 locator
 
@@ -149,7 +149,7 @@ Chart 不预扫描 rows、不复制 size scale 校验、不私造 descriptor、�
 
 - 只公开 `type + x + y`：会把 Chart 降为一次性 sugar，丢失 Plot 可调整能力
 - 手工维护 Scatter Point 字段 allowlist：会裁剪 Plot 能力，并在 Point Mark 演进时造成 Chart schema、文档和实际元素能力漂移
-- 把 Bubble 归一化为 `scatter + size` Pattern：会丢失用户明确选择的第三定量角色、类型级失败语义、inspection 与 JSON round-trip intent，并使公开 API 和文档身份与 ChartSpec 不一致
+- 把 Bubble 归一化为 `scatter + size` Pattern：会丢失用户明确选择的第三定量角色、类型级失败语义、inspection 与 JSON round-trip intent，并使公开 API 和文档身份与 IRChart 不一致
 - 为 Bubble 复制 Point、scale、guide、merge 或 lowering：平级公开身份不要求平行底层机制，复制会造成两个 point type 的能力与诊断漂移
 - 固定 Cartesian renderer 语义：会绕过 Plot coordinate contract
 - 允许 mark patch 整体替换 encoding、改写核心 x / y 或 coordinate view：会使 Point Chart type identity 可撤销；非核心 Point encoding 仍按能力投影开放
@@ -165,4 +165,4 @@ Chart 不预扫描 rows、不复制 size scale 校验、不私造 descriptor、�
 - 点间连接、拟合线、range 或 jitter
 - scatter matrix / facet type；相邻需求可直接使用 Plot composition
 - capability gate 未解除前的 public adapter、release surface 与自动混合嵌入
-- capability gate 未解除前以私有 ChartSpec、Chart-owned defaults、recipe / patch / override、Chart adapter 或 runtime surface 为真源的 API 文档
+- capability gate 未解除前以私有 IRChart、Chart-owned defaults、recipe / patch / override、Chart adapter 或 runtime surface 为真源的 API 文档

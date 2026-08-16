@@ -8,7 +8,7 @@ import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '..
 import type { ScaleDescriptor } from '../../providers';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import type { EffectivePlotGuideTheme } from '../../resolve/theme';
-import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlotSpec, LegendChannelValue } from '../../schemas';
+import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlot, LegendChannelValue } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
 import type { LegendEntry, LowerLegendOptions } from '../guide';
 import type { MarkDataView } from './types';
@@ -27,7 +27,7 @@ import { lowerLegend } from '../guide';
  *   legend 据 scale name 消歧；未具名的默认 scale 用 channel/field/type 签名区分
  */
 export const collectChannelDescriptors = (
-  node: IRPlotSpec,
+  node: IRPlot,
   channelCtx: ChannelResolveContext,
   markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
@@ -356,12 +356,12 @@ const legendLayerId = (plotId: string | undefined, channel: string, index: numbe
 
 /**
  * 解析所有 legend guide → core legend scope（据通道 + 绑定 scale 类型选 swatch / ramp / 分箱 / 梯度符号）
- * @description color descriptor 从 PlotSpec.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
+ * @description color descriptor 从 IRPlot.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
  *   其它通道从 resolver descriptor 与 channel definition 取值。形态由 definition.legend 决定，标签复用 axis formatter 链。
  *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内。
  */
 export const buildLegendLayers = (
-  node: IRPlotSpec,
+  node: IRPlot,
   channelDescriptors: ReadonlyArray<ScaleDescriptor>,
   legendGuides: Array<IRPlotLegendGuide>,
   fontSize: number,

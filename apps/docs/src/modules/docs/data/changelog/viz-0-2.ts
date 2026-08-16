@@ -54,8 +54,8 @@ export const vizV02: Release = {
                 en: 'BREAKING: PlotThemeToken and namespaced inputs',
               },
               content: {
-                zh: '`PlotSpec.plotThemeTokens` 使用 `PlotThemeTokenOverridesSchema`，覆盖 surface、typography、Axis、Legend 与 palette；Plot token Definition 注册为 `plot` namespace，未知 key、错误原子、空 palette 和显式 `undefined` 都会 fail-loud。',
-                en: '`PlotSpec.plotThemeTokens` uses `PlotThemeTokenOverridesSchema` across surface, typography, axes, legends, and palettes. The Plot token Definition registers the `plot` namespace, so unknown keys, invalid atoms, empty palettes, and explicit `undefined` fail loudly.',
+                zh: '`IRPlot.plotThemeTokens` 使用 `PlotThemeTokenOverridesSchema`，覆盖 surface、typography、Axis、Legend 与 palette；Plot token Definition 注册为 `plot` namespace，未知 key、错误原子、空 palette 和显式 `undefined` 都会 fail-loud。',
+                en: '`IRPlot.plotThemeTokens` uses `PlotThemeTokenOverridesSchema` across surface, typography, axes, legends, and palettes. The Plot token Definition registers the `plot` namespace, so unknown keys, invalid atoms, empty palettes, and explicit `undefined` fail loudly.',
               },
             },
             {
@@ -114,8 +114,8 @@ export const vizV02: Release = {
                 en: 'BREAKING: Plot presentation moves to Chart',
               },
               content: {
-                zh: '`PlotSpec` 删除顶层 `layout` 与 `labels`，Plot theme 删除 `labelText` 和 `plot.label.*`；标题、说明、来源等完整图表内容改由 Chart presentation 通过 Standard 与唯一 Plot body 组合。Axis、Legend、Facet、datum、mark、reference 与 annotation 文本保持 Plot-owned。',
-                en: '`PlotSpec` removes top-level `layout` and `labels`, while Plot theme removes `labelText` and `plot.label.*`. Complete-chart titles, notes, and sources now belong to Chart presentation, composed with the single Plot body through Standard. Axis, Legend, Facet, datum, mark, reference, and annotation text remain Plot-owned.',
+                zh: '`IRPlot` 删除顶层 `layout` 与 `labels`，Plot theme 删除 `labelText` 和 `plot.label.*`；标题、说明、来源等完整图表内容改由 Chart presentation 通过 Standard 与唯一 Plot body 组合。Axis、Legend、Facet、datum、mark、reference 与 annotation 文本保持 Plot-owned。',
+                en: '`IRPlot` removes top-level `layout` and `labels`, while Plot theme removes `labelText` and `plot.label.*`. Complete-chart titles, notes, and sources now belong to Chart presentation, composed with the single Plot body through Standard. Axis, Legend, Facet, datum, mark, reference, and annotation text remain Plot-owned.',
               },
             },
             {
@@ -141,15 +141,15 @@ export const vizV02: Release = {
       stableDate: null,
       version: 'v0.2',
       description: {
-        zh: 'Plot 的 React authoring 与 runtime 继续复用 canonical PlotSpec，并新增等价的主题 token 转发面。',
-        en: 'React authoring and runtime continue to use the canonical PlotSpec and add an equivalent theme-token forwarding surface.',
+        zh: 'Plot 的 React authoring 与 runtime 继续复用 canonical IRPlot，并新增等价的主题 token 转发面。',
+        en: 'React authoring and runtime continue to use the canonical IRPlot and add an equivalent theme-token forwarding surface.',
       },
       highlights: [
         {
           label: { zh: 'React PlotTheme parity', en: 'React PlotTheme parity' },
           content: {
-            zh: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` 与 spec 输入生成同一 canonical PlotSpec；standalone 与 embedded 都复用 Plot resolver，adapter 不维护 selector、preset 或 merge。',
-            en: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` and spec authoring produce the same canonical PlotSpec; standalone and embedded paths reuse the Plot resolver without adapter-owned selectors, presets, or merging.',
+            zh: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` 与 spec 输入生成同一 canonical IRPlot；standalone 与 embedded 都复用 Plot resolver，adapter 不维护 selector、preset 或 merge。',
+            en: '`<Plot plotThemeTokens={...} plotThemeTokenRules={...}>` and spec authoring produce the same canonical IRPlot; standalone and embedded paths reuse the Plot resolver without adapter-owned selectors, presets, or merging.',
           },
         },
       ],
@@ -187,8 +187,8 @@ export const vizV02: Release = {
           version: 'alpha.1',
           date: '2026-08-07',
           summary: {
-            zh: 'Vanilla/SSR 通过共享 PlotSpec 消费 namespaced token 主链，并同步拒绝已删除的 Plot-level `layout` 与 `labels`；`renderPlot(spec, data, { theme })` 的 `theme` 位于根 Scene。',
-            en: 'Vanilla and SSR consume the namespaced token pipeline through the shared PlotSpec and reject the removed Plot-level `layout` and `labels`; `renderPlot(spec, data, { theme })` applies `theme` to the root Scene.',
+            zh: 'Vanilla/SSR 通过共享 IRPlot 消费 namespaced token 主链，并同步拒绝已删除的 Plot-level `layout` 与 `labels`；`renderPlot(spec, data, { theme })` 的 `theme` 位于根 Scene。',
+            en: 'Vanilla and SSR consume the namespaced token pipeline through the shared IRPlot and reject the removed Plot-level `layout` and `labels`; `renderPlot(spec, data, { theme })` applies `theme` to the root Scene.',
           },
           items: [],
         },

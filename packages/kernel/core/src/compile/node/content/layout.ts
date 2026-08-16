@@ -1,5 +1,5 @@
 import type { TextLine } from '../../../contract';
-import type { FontSpec, LaidLine, LineLayoutContext, TextMeasurer } from '../../text';
+import type { TextFont, LaidLine, LineLayoutContext, TextMeasurer } from '../../text';
 import type { NodeTextLayoutContext } from '../types';
 
 import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
@@ -71,7 +71,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
     const anyMixed = rawLines.some(spec => typeof spec === 'object' && 'runs' in spec);
     const anyMath = resolved.some(r => r.hasMath);
     if (anyMath || anyMixed) {
-      const blockFont: FontSpec = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
+      const blockFont: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
       const ctx: LineLayoutContext = {
         measureText,
         lowerTex: texLowering?.lowerTex,
@@ -94,7 +94,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       textBaselineOffsets = blockLines.map(line => line.baselineOffset);
       textHeight = cursor;
     } else {
-      const metricsByFont = new Map<FontSpec, Map<string, ReturnType<TextMeasurer>>>();
+      const metricsByFont = new Map<TextFont, Map<string, ReturnType<TextMeasurer>>>();
       /** 在单次正文 layout 内复用同一 authored font/text 的真实测量结果 */
       const measurePhysicalText: TextMeasurer = (text, font) => {
         let metricsByText = metricsByFont.get(font);
@@ -116,7 +116,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           lineFont?.size !== undefined
             ? resolveFontSize(lineFont.size, { rootFontSize, inheritedFontSize: baseFontSize })
             : undefined;
-        const font: FontSpec = {
+        const font: TextFont = {
           size: lineFontSize !== undefined ? lineFontSize * fontScale : fontSize,
           family: lineFont?.family ?? fontFamily,
           weight: lineFont?.weight ?? fontWeight,

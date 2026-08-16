@@ -1,7 +1,7 @@
 import type * as RetikzReact from '@retikz/react';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
-import { createManualTableSpec } from '@retikz/table';
+import { createManualTableIR } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -21,7 +21,7 @@ vi.mock('@retikz/react', async importOriginal => {
 
 import { Table } from '../../src';
 
-const spec = createManualTableSpec({ id: 'scores', rows: [[null]] });
+const spec = createManualTableIR({ id: 'scores', rows: [[null]] });
 
 describe('Table React runtime style contract', () => {
   it('standalone Table does not inject removed theme token definitions into Layout', () => {

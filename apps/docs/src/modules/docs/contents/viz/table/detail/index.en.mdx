@@ -24,7 +24,7 @@ For programmatic column construction, pass the complete `columns` prop:
 />
 ```
 
-`dataRef` is the stable reference stored in TableSpec. `data` contains current runtime records and never enters the persistable spec. `columns` controls field access, display order, headers, and optional Cell presentations.
+`dataRef` is the stable reference stored in IRTable. `data` contains current runtime records and never enters the persistable spec. `columns` controls field access, display order, headers, and optional Cell presentations.
 
 For JSX-local column declarations, use `DetailColumn` children:
 
@@ -37,7 +37,7 @@ For JSX-local column declarations, use `DetailColumn` children:
 
 Choose either `columns` or `DetailColumn` children. Both forms produce the same detail-table spec, and every `DetailTable` root prop other than `columns` is available in both forms.
 
-Table first resolves the final plan for each Cell. Core Theme `style` / `mode` selects the Table preset, shared `colors.categorical` supplies the common categorical palette, and spec-local `tableThemeTokens` override Table tokens. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. Only `tableThemeTokens` enters the JSON-safe TableSpec; the host `theme` propagates through the Core Scene / Scope.
+Table first resolves the final plan for each Cell. Core Theme `style` / `mode` selects the Table preset, shared `colors.categorical` supplies the common categorical palette, and spec-local `tableThemeTokens` override Table tokens. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. Only `tableThemeTokens` enters the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
 
 ## Examples
 
@@ -74,7 +74,7 @@ With data and column order held constant, tracks determine each Cell box and Cel
 <ComponentAlert
   type="tip"
   title="DetailTable stays record-per-row"
-  description="Each record always generates one row, so DetailColumn does not author arbitrary spans. Use a Manual Table / TableSpec for explicit row or column spans; see Table Model and Contract Reference for the solving rules."
+  description="Each record always generates one row, so DetailColumn does not author arbitrary spans. Use a Manual Table / IRTable for explicit row or column spans; see Table Model and Contract Reference for the solving rules."
 />
 
 ### Vanilla and SSR
@@ -234,8 +234,8 @@ result.manifest;
 | `rules?`                         | `DetailTableProps['rules']`                                               | `[]`           | Declaration-ordered formatter, presentation, or appearance overrides              |
 | `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`           | Maps selected value-Cell raw values to background or content colors               |
 | `theme?`                         | `DetailTableProps['theme']`                                               | —              | Standalone root Core Theme; embedded mode uses the outer `<Layout>`               |
-| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse TableSpec token overlay above the Table style baseline                     |
-| `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in TableSpec                                                 |
+| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse IRTable token overlay above the Table style baseline                     |
+| `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in IRTable                                                 |
 | `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`           | Custom Cell formatter definitions                                                 |
 | `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                                      |
 | `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`           | Custom Cell presentation definitions                                              |
@@ -262,7 +262,7 @@ result.manifest;
 | `headerLayout?` | `DetailColumnProps['headerLayout']` | —       | Header Cell layout and four-sided border policy      |
 | `bodyLayout?`   | `DetailColumnProps['bodyLayout']`   | —       | Body Cell layout and four-sided border policy        |
 
-`detailTable(input)` accepts the same spec inputs and returns `IRDetailTableSpec`. See [API Reference](/viz/table/reference) for complete `Table`, `ManualTable`, schema, adapter, and lowering contracts.
+`detailTable(input)` accepts the same spec inputs and returns `IRDetailTable`. See [API Reference](/viz/table/reference) for complete `Table`, `ManualTable`, schema, adapter, and lowering contracts.
 
 Formatters and presentations only process value Cells. A Cell with direct `content` already owns a renderable child and bypasses both; pairing `content` with a formatter or presentation fails loudly.
 
@@ -271,5 +271,5 @@ Formatters and presentations only process value Cells. A Cell with direct `conte
 - [Table Model](/viz/table/model) — how Structure, Cells, Presentation, Layout, and lowering work together
 - [Layout Contract](/viz/table/reference/contract-layout) — track, Cell layout, span, and border schemas
 - [Runtime Reference](/viz/table/reference/runtime) — React, Vanilla, compile, and typed manifests
-- [API Reference](/viz/table/reference) — complete TableSpec, React, Vanilla, and manifest contracts
+- [API Reference](/viz/table/reference) — complete IRTable, React, Vanilla, and manifest contracts
 - [Data Model](/viz/data/model) — external records, field types, and references

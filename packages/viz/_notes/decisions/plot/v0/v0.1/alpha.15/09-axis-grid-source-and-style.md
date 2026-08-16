@@ -58,7 +58,7 @@ type AxisGridLineStyle = GuideLineStyle & {
 理由：
 
 1. `grid.ticks` 解决“axis tick 与背景网格不同密度”的需求，同时默认保持 grid 与 axis tick 同源。
-2. `grid.minor` 用显式 `ticks` 避免隐式 minor tick 规则；未来 chart preset 可以基于 scale family 自动生成，但底层 IRPlotSpec 保持可解释。
+2. `grid.minor` 用显式 `ticks` 避免隐式 minor tick 规则；未来 chart preset 可以基于 scale family 自动生成，但底层 IRPlot 保持可解释。
 3. `bandPosition` 比布尔 `offset` 更通用，能表达 band 起点、中心、终点以及 0.25 / 0.75 等比例位置。
 4. `lineCap` 与 axis line 能力对齐，且只复用 core Path 已有字段，不新增 renderer 语义。
 5. 本 ADR 不定义局部 grid 层级字段；全局 layer / z-order 模型已由 ADR-12 定型。
@@ -77,7 +77,7 @@ type AxisGridLineStyle = GuideLineStyle & {
 - data-driven / per-line style encoding，例如按 index 或 value 给不同 grid line 着色。
 - reference line / reference band / alternate plot bands；这些应是独立 mark 或 reference guide，不塞进 axis grid。
 - custom coordinate grid surface。
-- 自动 minor tick 生成规则。底层 IRPlotSpec 只接收显式 `grid.minor.ticks`；chart preset 可以后续生成该配置。
+- 自动 minor tick 生成规则。底层 IRPlot 只接收显式 `grid.minor.ticks`；chart preset 可以后续生成该配置。
 - grid label、grid interaction、hover highlight。
 - 修改 core Path / renderer 契约。
 

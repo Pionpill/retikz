@@ -1,5 +1,5 @@
 // @retikz/plot-react public API barrel.
-export { buildPlotSpec, resolvePlotExtensionAuthoring } from './adapter';
+export { buildPlotIR, resolvePlotExtensionAuthoring } from './adapter';
 export type {
   AxisProps,
   DatumLabelProps,
@@ -29,7 +29,7 @@ export {
   Track,
   Transform,
 } from './components';
-export type { PlotDslProps, PlotLineageProps, PlotPanelProps, PlotProps, PlotSpecProps } from './Plot';
+export type { PlotDslProps, PlotLineageProps, PlotPanelProps, PlotProps, PlotIRProps } from './Plot';
 export { Plot } from './Plot';
 export type { ResolvedPlotAuthoring, ResolvePlotAuthoringOptions } from './plot-runtime';
 export { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';

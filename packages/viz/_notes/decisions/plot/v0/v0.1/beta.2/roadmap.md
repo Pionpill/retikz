@@ -6,7 +6,7 @@ beta.2 收敛 Plot 的 runtime provenance 与无框架 authoring 公共面，并
 
 ## 阶段边界
 
-- ADR-01 完成 runtime-only 图元链路，不把完整 lineage 写入 PlotSpec 或 Scene meta
+- ADR-01 完成 runtime-only 图元链路，不把完整 lineage 写入 IRPlot 或 Scene meta
 - ADR-02 以 plain `plot()` 取代链式 `plotBuilder()`，并让 React / Vanilla 共用 `@retikz/plot` 的 authoring normalization
 - ADR-02 同时通过 `embedPlot()` / `createPlotAdapter()` 接入 Kernel Vanilla Tier2 协议；该公开增量由本 milestone 明确特批，不作为其它 Beta 新功能的先例
 - ADR-03 删除内置 `ternary2D` 的 IR、definition、专用 guide / mark lowering 与三包表面；三变量投影仍可通过统一 `CoordinateDefinition` 扩展链表达
@@ -32,7 +32,7 @@ beta.2 收敛 Plot 的 runtime provenance 与无框架 authoring 公共面，并
 
 1. `@retikz/plot` 拥有 framework-neutral authoring normalization，React 与 Vanilla 对 axis / facet / scaffold binding 产出一致且共享 `plot authoring:` 错误语义。
 2. `@retikz/plot-vanilla` 删除 `plotBuilder`、`PlotBuilder`、`PlotBuilderConfig`，公开 `plot()`、`embedPlot()`、`createPlotAdapter()` 与原签名 `renderPlot()`。
-3. Tier2 adapter 重新校验 PlotSpec、保持调用方输入不变、从 embed id 派生 root identity，并让同一 adapter 的多个 embed 共享 datasets 与稳定 composite maker。
+3. Tier2 adapter 重新校验 IRPlot、保持调用方输入不变、从 embed id 派生 root identity，并让同一 adapter 的多个 embed 共享 datasets 与稳定 composite maker。
 4. Plot / Plot React / Plot Vanilla 测试覆盖 plain object、输入不变性、adapter parity、错误路径、SSR 与 lineage；既有断言不因迁移而弱化。
 5. package README、docs zh/en、demo、BREAKING changelog 与 plot v0.2 deferred optimization 边界同步。
 6. 受影响包 lint、`tsc --noEmit`、测试和 docs 校验通过；与本 milestone 无关的既有基线失败单独记录，不伪装成 ADR 回归或完成。

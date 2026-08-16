@@ -44,9 +44,9 @@ plot 用户继续在 plot spec 中使用 data transform 与 plot transform 的�
 
 ```ts
 import { compileToScene } from '@retikz/core';
-import { lowerPlots, type IRPlotSpec } from '@retikz/plot';
+import { lowerPlots, type IRPlot } from '@retikz/plot';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   type: 'plot',
   data: { ref: 'sales' },
   transform: [

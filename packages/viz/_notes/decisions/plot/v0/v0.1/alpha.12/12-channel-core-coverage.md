@@ -17,7 +17,7 @@ plot channel coverage 以 core IR 既有能力为边界，但只纳入稳定 sca
 处理原则：
 
 - 位置、结构、id、provenance、animations、children、path geometry、clip、transform 等不做普通 data channel。
-- 复杂对象与数组，如 PaintSpec、Font、DropShadow、ArrowDetail、dashPattern、IRTransform 等，不进本轮内置 data channel。
+- 复杂对象与数组，如 IRPaint、Font、DropShadow、ArrowDetail、dashPattern、IRTransform 等，不进本轮内置 data channel。
 - `opacity`、`fillOpacity`、`drawOpacity`、`strokeWidth`、`zIndex` 等共享样式按同名共享 channel 处理，由 mark lowering 决定落到 Node、Path 或 Scope default。
 - point 专属的 `size`、`shape`、`padding`、`minimumSize`、`rotate` 等继续作为 Node channel。
 - path 专属的 `lineCap`、`lineJoin`、`roundedCorners` 等补 Path provider。
@@ -42,6 +42,6 @@ plot channel coverage 以 core IR 既有能力为边界，但只纳入稳定 sca
 ## 不在本 ADR 范围
 
 - 不把 `ChannelValue` 扩到 object / array / boolean。
-- 不做数据驱动 PaintSpec、Font、DropShadow、ArrowDetail、AnimationTrack。
+- 不做数据驱动 IRPaint、Font、DropShadow、ArrowDetail、AnimationTrack。
 - 不新增 core 渲染能力。
 - 不设计 React `<Channel>` 声明式糖。

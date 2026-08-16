@@ -1,5 +1,5 @@
 import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
-import type { IRPlotSpec, PlotLineageRun } from '@retikz/plot';
+import type { IRPlot, PlotLineageRun } from '@retikz/plot';
 
 import { lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
@@ -10,10 +10,10 @@ import * as plotReact from '../src';
 import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotAuthoring, resolvePlotLineage } from '../src';
 
 type InputEmbeddablePlotComponent = {
-  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => { spec: IRPlotSpec };
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => { spec: IRPlot };
 };
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'sales' },
@@ -38,7 +38,7 @@ const data: ExternalDatasets = {
 
 const plotThemeTokens = {
   'plot.area.fill': '#123456',
-} satisfies NonNullable<IRPlotSpec['plotThemeTokens']>;
+} satisfies NonNullable<IRPlot['plotThemeTokens']>;
 
 const revenue = [
   { quarter: 'Q1', value: 18 },
@@ -127,7 +127,7 @@ describe('<Plot spec data> 薄包装', () => {
   });
 
   it('spec 与 DSL 入口都透传 Axis theme token rules', () => {
-    const plotThemeTokenRules: NonNullable<IRPlotSpec['plotThemeTokenRules']> = [
+    const plotThemeTokenRules: NonNullable<IRPlot['plotThemeTokenRules']> = [
       {
         select: { dimension: 'x' },
         tokens: {

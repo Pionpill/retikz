@@ -14,7 +14,7 @@ import { fallbackMeasurer } from '../../text';
 import { pointOfTarget } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
-import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrowSpecs } from './decorations';
+import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
 import { assertArrowCanInheritStroke } from './marks';
 import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
@@ -54,7 +54,7 @@ const emitCanonicalPathPrimitive = (
     pathEmitOptions.onWarn?.({ code, message, path: subPath ? `${irPath}.${subPath}` : irPath });
   };
   const scopeChain = pathEmitOptions.scopeChain ?? [];
-  // paint 解析：有 registry 走去重派 id；无 registry 时纯色透传、PaintSpec 退化为 undefined
+  // paint 解析：有 registry 走去重派 id；无 registry 时纯色透传、IRPaint 退化为 undefined
   const resolvePaint: PaintResolver =
     pathEmitOptions.resolvePaint ?? (p => (typeof p === 'string' || p === undefined ? p : undefined));
   // relative/relativeAccumulate target 已由 resolving 阶段绑定为当前 scope 的局部坐标
@@ -339,7 +339,7 @@ const emitCanonicalPathPrimitive = (
     );
   }
 
-  const endpointSpecs = pathEndpointArrowSpecs(arrows);
+  const endpointSpecs = pathEndpointArrows(arrows);
   const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
   const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...marks.primitives];
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });

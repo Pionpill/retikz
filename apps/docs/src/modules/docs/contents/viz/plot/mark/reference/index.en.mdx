@@ -86,7 +86,7 @@ An extent changes only the coverage along the opposite axis; it does not change 
   description="Return when debugging line, band, or region inference, constant versus per-row output, or coordinate support."
 />
 
-`<ReferenceMark>` validates bound combinations before entering `IRPlotSpec`; invalid configurations are not guessed silently. Lowering then distinguishes line, band, and region geometry from the lower bounds, upper bounds, and `kind`.
+`<ReferenceMark>` validates bound combinations before entering `IRPlot`; invalid configurations are not guessed silently. Lowering then distinguishes line, band, and region geometry from the lower bounds, upper bounds, and `kind`.
 
 The figure keeps to the ReferenceMark responsibility boundary and shows its two lowering paths: a line produces path steps directly, while a band or region first forms a logical Cell and asks the coordinate frame to project it.
 

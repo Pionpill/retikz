@@ -43,14 +43,14 @@ scales: [
 命名配色使用独立的 `colorSchemes` 注入点。IR 保存 scheme 名称，runtime 才把它解析成 interpolator：
 
 ```tsx
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 const points = [
   { x: 0, y: 1, score: 0.2 },
   { x: 1, y: 3, score: 0.9 },
 ];
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'points' },

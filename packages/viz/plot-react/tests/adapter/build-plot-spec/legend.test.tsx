@@ -1,14 +1,14 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Axis, Legend } from '../../../src/components/guides';
 import { PointMark } from '../../../src/components/marks';
 
 // ADR-03：Legend 装配（不吞默认 axes / 收集 / 字段落位）
-describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
+describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
   it('legend_only_no_default_axes：只声明 <Legend> → 仅 legend（薄 Plot 无默认轴）', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
         <Legend channel="color" />
@@ -19,7 +19,7 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
   });
 
   it('explicit_axis_and_legend_coexist：显式 <Axis> + <Legend> → 该轴覆盖默认、legend 保留', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
         <Axis dimension="x" grid />
@@ -34,7 +34,7 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
   });
 
   it('legend_fields：<Legend> 字段逐一落位', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" size="pop" />
         <Legend
@@ -62,14 +62,14 @@ describe('buildPlotSpec legend 装配（ADR-03 alpha.8）', () => {
     });
   });
 
-  it('legend_built_pass_schema：legend 装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(
+  it('legend_built_pass_schema：legend 装配产物过 PlotSchema', () => {
+    const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
         <Legend channel="color" />
       </>,
       '__plot',
     );
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

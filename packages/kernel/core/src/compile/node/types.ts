@@ -1,4 +1,4 @@
-﻿import type { BoundsInsets, Position } from '@retikz/math';
+import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve/node';
@@ -9,11 +9,11 @@ import type {
   IRBoundary,
   IRFont,
   IRJsonObject,
-  IRPaintSpec,
+  IRPaint,
   ResolvedDropShadow,
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { FontSpec, LaidLine, LowerTex, TextMeasurer } from '../text';
+import type { TextFont, LaidLine, LowerTex, TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
@@ -72,7 +72,7 @@ export type NodeTextLayoutContext = {
   /** 继承字重 */
   fontWeight?: NodeFontWeight;
   /** 继承字体样式 */
-  fontStyle?: FontSpec['style'];
+  fontStyle?: TextFont['style'];
 };
 
 export type NodeLayout = {
@@ -129,7 +129,7 @@ export type NodeLayout = {
    * 节点背景填充
    * @default 'transparent'
    */
-  fill?: string | IRPaintSpec;
+  fill?: string | IRPaint;
   /** 已由 resolve/resource 解析的 fill */
   fillResolution?: PaintResolutionInput;
   /**
@@ -141,7 +141,7 @@ export type NodeLayout = {
    * 节点边框 paint
    * @default 'currentColor'
    */
-  stroke?: string | IRPaintSpec;
+  stroke?: string | IRPaint;
   /** 已由 resolve/resource 解析的 stroke */
   strokeResolution?: PaintResolutionInput;
   /**

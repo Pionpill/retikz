@@ -1,11 +1,11 @@
-import type { EllipsePrim, PathPrim, RectPrim, ResolvedArrowEndSpec, Scene } from '@retikz/core';
+import type { EllipsePrim, PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../../src/svg/serialize/to-string';
 
 /** 最小可渲染的端点箭头规格（用于断言箭头与主路径同元素受效果牵连） */
-const arrowEndSpec: ResolvedArrowEndSpec = {
+const arrowEndSpec: ResolvedArrowEnd = {
   shape: 'stealth',
   baseSize: 10,
   refX: 0,

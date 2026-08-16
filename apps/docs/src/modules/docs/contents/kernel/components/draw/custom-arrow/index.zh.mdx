@@ -103,7 +103,7 @@ Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都�
 | `baseSize`、接触点或尺寸非法               | 编译拒绝无效 marker 尺寸                        |
 | `emit` 产出未知 primitive 或无限坐标       | marker 校验拒绝，不让坏几何进入 Scene           |
 | marker 内递归箭头、clip 或文本             | `MarkerPrimitive` 窄契约拒绝                    |
-| Path 使用 IRPaintSpec 描边                 | marker 无法继承资源 paint；需显式给纯色箭头颜色 |
+| Path 使用 IRPaint 描边                 | marker 无法继承资源 paint；需显式给纯色箭头颜色 |
 
 MarkerPrimitive 只允许 `path`、`ellipse`、`rect` 与可递归包含这些图元的 `group`。不要返回 SVG `<marker>`、Canvas 对象、文本布局或外部 paint resource 引用。
 

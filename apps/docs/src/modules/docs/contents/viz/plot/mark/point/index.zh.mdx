@@ -89,7 +89,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
   description="需要排查无效数据为何被跳过、文本点为何替换圆点，或颜色分组如何下沉时再回来读。"
 />
 
-`<PointMark>` 只声明数据到点几何的映射，不直接渲染 DOM。它进入 `IRPlotSpec` 后由 mark registry 分派给 point lowering，并复用当前坐标系与 core `Node`。
+`<PointMark>` 只声明数据到点几何的映射，不直接渲染 DOM。它进入 `IRPlot` 后由 mark registry 分派给 point lowering，并复用当前坐标系与 core `Node`。
 
 | 阶段 | 可观察行为                                                                               |
 | ---- | ---------------------------------------------------------------------------------------- |
@@ -160,9 +160,9 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | `labelFont?`                         | `PointMarkProps['labelFont']`<br />- `family?: string`<br />- `size?: number`<br />- `weight?: 'normal' \| 'bold' \| number`<br />- `style?: 'normal' \| 'italic' \| 'oblique'` | 继承<br />继承<br />继承<br />继承<br />继承 | 标签字体覆盖<br />字体族<br />字号<br />字重<br />字形               |
 | `labelRotate?` / `labelKeepUpright?` | `'none' \| 'radial' \| 'tangent' \| number` / `boolean`                                                                                                                         | `none` / `false`                             | 标签旋转模式或角度，以及是否自动保持文字正立                         |
 | `resolveLabel?`                      | `(row: ExternalRow) => string`                                                                                                                                                  | —                                            | 运行时标签函数；不进入 IR，必须同时提供 `id`                         |
-| `anchorId?`                          | `IRPlotAnchorIdSpec`                                                                                                                                                            | —                                            | 为每个有效点生成稳定的 core Node id；以下三种来源必须恰选一种        |
+| `anchorId?`                          | `IRPlotAnchorId`                                                                                                                                                            | —                                            | 为每个有效点生成稳定的 core Node id；以下三种来源必须恰选一种        |
 | `anchorId.prefix?`                   | `string`                                                                                                                                                                        | mark id 或 `mark.<index>`                    | 当前 Plot 内的 id 命名空间                                           |
-| `anchorId.field?`                    | `IRPlotAnchorIdSpec['field']`                                                                                                                                                   | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
+| `anchorId.field?`                    | `IRPlotAnchorId['field']`                                                                                                                                                   | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
 | `anchorId.template?`                 | `string`                                                                                                                                                                        | —                                            | JSON-safe id 模板；支持 plot、mark、index 与字段占位符               |
 | `anchorId.generator?`                | `string`                                                                                                                                                                        | —                                            | 从 `LowerPlotsOptions.anchorIdGenerators` 解析的运行时生成器 key     |
 

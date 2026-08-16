@@ -34,7 +34,7 @@ description: 查询 Table compile 产出的轨道、Cell、视觉编码、图例
   }}
 />
 
-Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `tokens` 与逐 key `sources`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 preset；TableSpec 的输入字段仍是 host `theme` 与 `tableThemeTokens`，二者不是同一个层级。
+Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `tokens` 与逐 key `sources`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 preset；IRTable 的输入字段仍是 host `theme` 与 `tableThemeTokens`，二者不是同一个层级。
 
 ## 视觉编码与图例描述
 
@@ -273,7 +273,7 @@ Cell 来源保留 `cellId + row + column + side`；Table 默认来源使用 `sco
 
 ## 相关
 
-- [表格契约](/viz/table/reference/contract-table)：TableSpec 与 Cell 内容输入
+- [表格契约](/viz/table/reference/contract-table)：IRTable 与 Cell 内容输入
 - [布局契约](/viz/table/reference/contract-layout)：产生这些 resolved 结果的轨道与 border 配置
 - [运行时](/viz/table/reference/runtime)：exact root manifest 的取得方式
 - [表格模型](/viz/table/model)：Manifest 在完整 Table pipeline 中的职责

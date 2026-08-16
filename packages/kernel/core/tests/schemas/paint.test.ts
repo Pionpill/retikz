@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { NodeSchema, PaintSpecSchema, PathSchema, ScopeSchema } from '../../src/schemas';
+import { NodeSchema, PaintSchema, PathSchema, ScopeSchema } from '../../src/schemas';
 
-describe('PaintSpecSchema — linear gradient', () => {
+describe('PaintSchema — linear gradient', () => {
   it('接受 2 stops + angle', () => {
     const spec = {
       kind: 'linearGradient' as const,
@@ -12,12 +12,12 @@ describe('PaintSpecSchema — linear gradient', () => {
         { offset: 1, color: '#08f' },
       ],
     };
-    expect(PaintSpecSchema.parse(spec)).toEqual(spec);
+    expect(PaintSchema.parse(spec)).toEqual(spec);
   });
 
   it('angle 可省（缺省方向由 compile 定）', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'linearGradient',
         stops: [
           { offset: 0, color: 'red' },
@@ -29,7 +29,7 @@ describe('PaintSpecSchema — linear gradient', () => {
 
   it('stop 支持 opacity 与 currentColor', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'linearGradient',
         stops: [
           { offset: 0, color: 'currentColor', opacity: 0.5 },
@@ -40,10 +40,10 @@ describe('PaintSpecSchema — linear gradient', () => {
   });
 });
 
-describe('PaintSpecSchema — radial gradient', () => {
+describe('PaintSchema — radial gradient', () => {
   it('接受 2 stops（center / radius 可省）', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'radialGradient',
         stops: [
           { offset: 0, color: 'white' },
@@ -55,7 +55,7 @@ describe('PaintSpecSchema — radial gradient', () => {
 
   it('接受 center（objectBoundingBox 0..1）+ radius', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'radialGradient',
         center: [0.5, 0.5],
         radius: 0.75,
@@ -68,14 +68,14 @@ describe('PaintSpecSchema — radial gradient', () => {
   });
 });
 
-describe('PaintSpecSchema — 错误路径', () => {
+describe('PaintSchema — 错误路径', () => {
   it('stops 少于 2 被拒', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] })).toThrow();
   });
 
   it('offset 越界被拒（< 0 / > 1）', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'linearGradient',
         stops: [
           { offset: -0.1, color: 'red' },
@@ -84,7 +84,7 @@ describe('PaintSpecSchema — 错误路径', () => {
       }),
     ).toThrow();
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'linearGradient',
         stops: [
           { offset: 0, color: 'red' },
@@ -96,7 +96,7 @@ describe('PaintSpecSchema — 错误路径', () => {
 
   it('linear angle 非 finite 被拒', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'linearGradient',
         angle: Number.POSITIVE_INFINITY,
         stops: [
@@ -109,7 +109,7 @@ describe('PaintSpecSchema — 错误路径', () => {
 
   it('旧 type 判别字段被拒', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         type: 'linearGradient',
         stops: [
           { offset: 0, color: 'red' },
@@ -121,7 +121,7 @@ describe('PaintSpecSchema — 错误路径', () => {
 
   it('未知 kind 被拒', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'meshGradient',
         stops: [
           { offset: 0, color: 'red' },
@@ -132,10 +132,10 @@ describe('PaintSpecSchema — 错误路径', () => {
   });
 });
 
-describe('PaintSpecSchema — pattern', () => {
+describe('PaintSchema — pattern', () => {
   it('接受 lines / dots / grid（仅 shape 必填）', () => {
     for (const shape of ['lines', 'dots', 'grid'] as const) {
-      expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape })).not.toThrow();
+      expect(() => PaintSchema.parse({ kind: 'pattern', shape })).not.toThrow();
     }
   });
 
@@ -155,9 +155,9 @@ describe('PaintSpecSchema — pattern', () => {
       lineJoin: 'bevel' as const,
       rotation: 45,
     };
-    const parsed = PaintSpecSchema.parse(input);
+    const parsed = PaintSchema.parse(input);
     expect(parsed).toEqual(input);
-    expect(PaintSpecSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    expect(PaintSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
   it('保留横纵方向样式与稀疏线型周期，并通过 JSON 往返', () => {
@@ -186,9 +186,9 @@ describe('PaintSpecSchema — pattern', () => {
       },
     };
 
-    const parsed = PaintSpecSchema.parse(input);
+    const parsed = PaintSchema.parse(input);
     expect(parsed).toEqual(input);
-    expect(PaintSpecSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    expect(PaintSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
   it.each([
@@ -197,7 +197,7 @@ describe('PaintSpecSchema — pattern', () => {
     ['period 不是整数', { period: 2.5, overrides: [{ index: 0, style: {} }] }],
     ['period 不是 finite number', { period: Number.POSITIVE_INFINITY, overrides: [{ index: 0, style: {} }] }],
   ])('拒绝非法 lineStyleCycle：%s', (_label, lineStyleCycle) => {
-    const result = PaintSpecSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
+    const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -208,7 +208,7 @@ describe('PaintSpecSchema — pattern', () => {
   });
 
   it('拒绝空 lineStyleCycle overrides', () => {
-    const result = PaintSpecSchema.safeParse({
+    const result = PaintSchema.safeParse({
       kind: 'pattern',
       shape: 'lines',
       lineStyleCycle: { period: 3, overrides: [] },
@@ -236,7 +236,7 @@ describe('PaintSpecSchema — pattern', () => {
       },
     ],
   ])('拒绝非法 lineStyleCycle override：%s', (_label, lineStyleCycle) => {
-    const result = PaintSpecSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
+    const result = PaintSchema.safeParse({ kind: 'pattern', shape: 'lines', lineStyleCycle });
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -261,7 +261,7 @@ describe('PaintSpecSchema — pattern', () => {
     ['未知字段', { dashArray: [4, 2] }],
   ])('嵌套 Pattern line style 复用描边约束：%s', (_label, horizontalStyle) => {
     expect(
-      PaintSpecSchema.safeParse({
+      PaintSchema.safeParse({
         kind: 'pattern',
         shape: 'grid',
         horizontalStyle,
@@ -270,45 +270,45 @@ describe('PaintSpecSchema — pattern', () => {
   });
 
   it('shape 开放：接受任意非空 string（未注册名拒绝移到 compile 期）', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'zigzag' })).not.toThrow();
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'my-custom-motif' })).not.toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'zigzag' })).not.toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'my-custom-motif' })).not.toThrow();
     // 内置 3 字面量仍合法
     for (const shape of ['lines', 'dots', 'grid'] as const) {
-      expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape })).not.toThrow();
+      expect(() => PaintSchema.parse({ kind: 'pattern', shape })).not.toThrow();
     }
   });
 
   it('空串 shape / size 非正 被拒', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: '' })).toThrow();
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'dots', size: 0 })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: '' })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'dots', size: 0 })).toThrow();
   });
 
   it('非法 dash pattern 被拒', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [] })).toThrow();
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [2, -1] })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [] })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'lines', dashPattern: [2, -1] })).toThrow();
   });
 
   it('未知 line cap / join 被拒', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'lines', lineCap: 'triangle' })).toThrow();
-    expect(() => PaintSpecSchema.parse({ kind: 'pattern', shape: 'grid', lineJoin: 'curve' })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'lines', lineCap: 'triangle' })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'pattern', shape: 'grid', lineJoin: 'curve' })).toThrow();
   });
 });
 
-describe('PaintSpecSchema — image', () => {
+describe('PaintSchema — image', () => {
   it('接受 href + 可选 fit', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'image', href: 'https://x/y.png' })).not.toThrow();
+    expect(() => PaintSchema.parse({ kind: 'image', href: 'https://x/y.png' })).not.toThrow();
     for (const fit of ['fill', 'contain', 'cover'] as const) {
-      expect(() => PaintSpecSchema.parse({ kind: 'image', href: 'a.png', fit })).not.toThrow();
+      expect(() => PaintSchema.parse({ kind: 'image', href: 'a.png', fit })).not.toThrow();
     }
   });
 
   it('空 href / 未知 fit 被拒', () => {
-    expect(() => PaintSpecSchema.parse({ kind: 'image', href: '' })).toThrow();
-    expect(() => PaintSpecSchema.parse({ kind: 'image', href: 'a.png', fit: 'tile' })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'image', href: '' })).toThrow();
+    expect(() => PaintSchema.parse({ kind: 'image', href: 'a.png', fit: 'tile' })).toThrow();
   });
 });
 
-describe('PaintSpecSchema — JSON 可序列化', () => {
+describe('PaintSchema — JSON 可序列化', () => {
   it('parse 结果 round-trip JSON 不丢失', () => {
     const spec = {
       kind: 'radialGradient' as const,
@@ -319,12 +319,12 @@ describe('PaintSpecSchema — JSON 可序列化', () => {
         { offset: 1, color: 'black', opacity: 0.8 },
       ],
     };
-    const parsed = PaintSpecSchema.parse(spec);
+    const parsed = PaintSchema.parse(spec);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 });
 
-describe('stroke PaintSpec schema', () => {
+describe('stroke IRPaint schema', () => {
   const strokePaint = {
     kind: 'linearGradient',
     angle: 90,
@@ -334,7 +334,7 @@ describe('stroke PaintSpec schema', () => {
     ],
   } as const;
 
-  it('path-stroke-paint：PathSchema 接受 PaintSpec stroke', () => {
+  it('path-stroke-paint：PathSchema 接受 IRPaint stroke', () => {
     const parsed = PathSchema.parse({
       type: 'path',
       stroke: strokePaint,
@@ -346,12 +346,12 @@ describe('stroke PaintSpec schema', () => {
     expect(parsed.stroke).toEqual(strokePaint);
   });
 
-  it('node-stroke-paint：NodeSchema 接受 PaintSpec stroke', () => {
+  it('node-stroke-paint：NodeSchema 接受 IRPaint stroke', () => {
     const parsed = NodeSchema.parse({ type: 'node', position: [0, 0], stroke: strokePaint });
     expect(parsed.stroke).toEqual(strokePaint);
   });
 
-  it('scope-stroke-paint：ScopeSchema 接受 PaintSpec stroke 并保持 JSON round-trip', () => {
+  it('scope-stroke-paint：ScopeSchema 接受 IRPaint stroke 并保持 JSON round-trip', () => {
     const input = {
       type: 'scope',
       stroke: strokePaint,
@@ -361,7 +361,7 @@ describe('stroke PaintSpec schema', () => {
     expect(parsed).toEqual(input);
   });
 
-  it('invalid-stroke-paint：非法 PaintSpec stroke 被 schema 拒绝', () => {
+  it('invalid-stroke-paint：非法 IRPaint stroke 被 schema 拒绝', () => {
     expect(() =>
       PathSchema.parse({
         type: 'path',
@@ -374,7 +374,7 @@ describe('stroke PaintSpec schema', () => {
     ).toThrow();
   });
 
-  it('invalid-stroke-type：非字符串且非 PaintSpec 的 stroke 被 schema 拒绝', () => {
+  it('invalid-stroke-type：非字符串且非 IRPaint 的 stroke 被 schema 拒绝', () => {
     expect(() => NodeSchema.parse({ type: 'node', position: [0, 0], stroke: 123 })).toThrow();
   });
 });

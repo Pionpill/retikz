@@ -48,7 +48,7 @@ transform 仍是唯一统计入口；mark 只消费 transform 后的 rows。内�
 
 ## 不在本 ADR 范围
 
-- 不引入表达式语言或函数进入 IRPlotSpec。
+- 不引入表达式语言或函数进入 IRPlot。
 - 不做 named data view、join、facet scoped dataset。
 - 不设计 rolling window、lag / lead、moving average 等时间序列窗口能力。
 - 不做几何 routing；`relate` 只产 relation rows，routing 仍归 ADR-14。

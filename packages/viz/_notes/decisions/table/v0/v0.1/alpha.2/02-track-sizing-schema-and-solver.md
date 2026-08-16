@@ -90,7 +90,7 @@ column-first、受约束内容后的 row contribution、span 传播、最终 rep
 
 本 ADR 只新增 standalone primitives、resolver 与 solver，不改变当前 `TableLayoutSchema` 的解析结果。根 layout 仍使用 alpha.1 的 `columnWidth`、`rowHeight`、`headerHeight`、`columnGap` 与 `rowGap`。
 
-`columnSize`、`rowSize`、`headerRowSize`、`columns` 与 `rows` 的激活，以及旧三个固定字段的删除，必须与 `resolveTableLayoutSpec()`、`layoutTable()`、lowering、manifest 和 adapters 在 ADR-06 同一次原子迁移中完成，不提交半迁移状态。届时 `columns` / `rows` 省略值解析为 `[]`。
+`columnSize`、`rowSize`、`headerRowSize`、`columns` 与 `rows` 的激活，以及旧三个固定字段的删除，必须与 `resolveTableLayout()`、`layoutTable()`、lowering、manifest 和 adapters 在 ADR-06 同一次原子迁移中完成，不提交半迁移状态。届时 `columns` / `rows` 省略值解析为 `[]`。
 
 ## 被否决的方案
 
@@ -104,7 +104,7 @@ column-first、受约束内容后的 row contribution、span 传播、最终 rep
 
 - 新增 fixed / auto / fraction / minmax schema、公开 IR 类型与 `TableTrackSizeKind`
 - 新增 duplicate-aware sparse override schema、默认值 resolver 和确定性纯 solver
-- 公开变化为 additive；现有 alpha.1 `TableSpec.layout` JSON 与可见布局行为保持不变
+- 公开变化为 additive；现有 alpha.1 `IRTable.layout` JSON 与可见布局行为保持不变
 - subnormal residual、极端有限权重、输入冻结与非法 runtime discriminator 均有正式或 adversarial 证据
 - span、Cell box、fit / overflow / clip、wrap、border、manifest 与 adapter 接线继续由 ADR-03～07 完成
 

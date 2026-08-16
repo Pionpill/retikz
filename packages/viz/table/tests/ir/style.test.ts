@@ -3,7 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey, TableThemeTokenMap } from '../../src';
 
 import {
-  TableSpecSchema,
+  TableSchema,
   TableThemeTokenBorderSchema,
   TableThemeTokenKeySchema,
   TableThemeTokenMapSchema,
@@ -81,14 +81,14 @@ describe('Table theme token schema', () => {
 
   it('adds JSON-safe root Table tokens without materializing runtime defaults', () => {
     const base = { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [[1]] } };
-    expect(TableSpecSchema.parse(base)).toEqual(base);
-    const styled = TableSpecSchema.parse({
+    expect(TableSchema.parse(base)).toEqual(base);
+    const styled = TableSchema.parse({
       ...base,
       tableThemeTokens: { 'cell.content.color': '#f5f5f5' },
     });
     expect(JSON.parse(JSON.stringify(styled))).toEqual(styled);
-    expect(() => TableSpecSchema.parse({ ...base, style: 'striped' })).toThrow();
-    expect(() => TableSpecSchema.parse({ ...base, themeMode: 'system' })).toThrow();
-    expect(() => TableSpecSchema.parse({ ...base, styleTokens: { callback: () => null } })).toThrow();
+    expect(() => TableSchema.parse({ ...base, style: 'striped' })).toThrow();
+    expect(() => TableSchema.parse({ ...base, themeMode: 'system' })).toThrow();
+    expect(() => TableSchema.parse({ ...base, styleTokens: { callback: () => null } })).toThrow();
   });
 });

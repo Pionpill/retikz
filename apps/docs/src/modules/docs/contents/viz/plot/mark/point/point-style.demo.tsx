@@ -1,4 +1,4 @@
-import type { IRPaintSpec } from '@retikz/core';
+import type { IRPaint } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Axis, Plot, PointMark } from '@retikz/plot-react';
@@ -8,7 +8,7 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 import { points } from './point-api.data';
 import { POINT_STYLE_CONTROL_IDS, previewControlContract } from './point-style.controls';
 
-const gradientFill: IRPaintSpec = {
+const gradientFill: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [

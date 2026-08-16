@@ -3,16 +3,16 @@ import type { IRPath, IRScope, IRStep } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 笛卡尔默认画布：x [0,2]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
@@ -21,7 +21,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -42,8 +42,8 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
 const stepPoint = (step: IRStep): [number, number] => (step as { to: [number, number] }).to;
 
 /** 建单 line mark 的 cartesian spec，x linear、y 为给定连续 scale 定义 */
-const lineSpec = (yScale: Record<string, unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const lineSpec = (yScale: Record<string, unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -190,7 +190,7 @@ describe('scale family · radial', () => {
 
   // 端到端：polar2D 玫瑰图（角向 band 类别 + 径向 radial 值）整体 lower 产出每类别一扇区，半径随值单调增
   it('radial_drives_polar_rose_radius', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -227,7 +227,7 @@ describe('scale family · radial', () => {
 
   // radial allowsBaseline=true：可作 interval / area 值轴（面积编码值，玫瑰图扇区）
   it('radial_allows_interval_baseline', () => {
-    const barSpec = PlotSpecSchema.parse({
+    const barSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -247,8 +247,8 @@ describe('scale family · radial', () => {
 });
 
 describe('scale family · L1 baseline guard (contract)', () => {
-  const barSpec = (yScale: Record<string, unknown>): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const barSpec = (yScale: Record<string, unknown>): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -260,8 +260,8 @@ describe('scale family · L1 baseline guard (contract)', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
     });
 
-  const areaSpec = (yScale: Record<string, unknown>): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const areaSpec = (yScale: Record<string, unknown>): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

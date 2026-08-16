@@ -16,7 +16,7 @@ ADR-05 到 ADR-09 已经补齐 axis line、ticks、tick labels、title 和 grid 
 
 ## 决策：统一 decoration 占位与定位
 
-Plot 新增全局 decoration layout 模型。公开 IRPlotSpec 只暴露 JSON-safe 的 `layout` 和 `labels`；guide、legend、axis title、facet / track header 等已有槽位不搬家，但统一参与确定性的测量、占位、定位与避让。布局不负责决定 axis tick source、scale domain、legend 数据项或 mark 几何。
+Plot 新增全局 decoration layout 模型。公开 IRPlot 只暴露 JSON-safe 的 `layout` 和 `labels`；guide、legend、axis title、facet / track header 等已有槽位不搬家，但统一参与确定性的测量、占位、定位与避让。布局不负责决定 axis tick source、scale domain、legend 数据项或 mark 几何。
 
 ```ts
 type PlotLayout = {
@@ -64,7 +64,7 @@ type LayoutPlacement =
 
 语义固定如下：
 
-- `IRPlotSpec.layout` 是全局空间布局策略。`mode:'auto'` 表示 decoration 参与自动占位与避让；`mode:'fixed'` 表示只使用显式 `padding` / `margin` 类输入，不根据 decoration 反向收缩 plot area。省略时默认 `auto`。
+- `IRPlot.layout` 是全局空间布局策略。`mode:'auto'` 表示 decoration 参与自动占位与避让；`mode:'fixed'` 表示只使用显式 `padding` / `margin` 类输入，不根据 decoration 反向收缩 plot area。省略时默认 `auto`。
 - `layout.autoPadding` 控制 visible decoration 是否能自动扩大外侧 padding。省略为 `true`；设为 `false` 时仍会定位 decoration，但不会因为 decoration 自动改变 plot area。
 - `layout.padding` 替代零散 margin override，作为 frame 到可用布局区域的外层留白。已有 `composition.spacing.padding` 保留为 composition 内部 spacing，不能承担整图 title / caption 的外层占位。
 - `layout.maxIterations` 限制 layout solver 的稳定迭代次数，默认 `3`。实现必须确定性运行，不能依赖 renderer 回调、DOM 测量或随机数。
@@ -92,6 +92,6 @@ type LayoutPlacement =
 - legend item 的自动换行、分栏、滚动。
 - 通用 layer / z-index / draw order。本 ADR 只处理空间布局；绘制顺序仍按现有 guide / mark 规则或后续 layer ADR 处理。
 - HTML / DOM overlay 文案。
-- chart preset 默认规则。preset 可消费本 IRPlotSpec 能力，但不在本 ADR 实现。
+- chart preset 默认规则。preset 可消费本 IRPlot 能力，但不在本 ADR 实现。
 
 ---

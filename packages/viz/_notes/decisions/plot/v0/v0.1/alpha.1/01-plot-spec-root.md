@@ -27,7 +27,7 @@ export const PlotComposite = { Plot: 'plot' } as const;
 export type PlotNodeType = ValueOf<typeof PlotComposite>;
 ```
 
-- 根类型名取 `IRPlotSpec`（非 `PlotIR` / `Plot`）——「spec」表意「声明式规格」，与 Vega-Lite 习惯一致、对 AI 友好。
+- 根类型名取 `IRPlot`（非 `IRPlot` / `Plot`）——「spec」表意「声明式规格」，与 Vega-Lite 习惯一致、对 AI 友好。
 - composite `type` 取 `'plot'`（路由键 `plot.plot`，非 `'spec'`）——alpha.1 plot 只有一种顶层节点；alpha.2+ 若出 axis / legend 等独立 composite，用各自 `type`（`plot.axis`…），根仍是 `plot.plot`。
 - `namespace` / `type` 收窄为 literal，使根能作为 core open composite child 被 `lowerComposites` 按 `plot.plot` 路由展开。
 

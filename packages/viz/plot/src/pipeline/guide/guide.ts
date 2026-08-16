@@ -1642,7 +1642,7 @@ export type LowerLegendOptions = {
   id?: string;
   /** legend 语义图层的 core zIndex */
   zIndex?: number;
-  /** 已按 built-in plotTheme < PlotSpec.plotTheme < LegendGuide.style 合并的视觉 token */
+  /** 已按 built-in plotTheme < IRPlot.plotTheme < LegendGuide.style 合并的视觉 token */
   style: EffectiveLegendGuideTokens;
 };
 

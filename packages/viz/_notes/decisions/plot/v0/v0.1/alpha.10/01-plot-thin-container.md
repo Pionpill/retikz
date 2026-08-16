@@ -15,18 +15,18 @@
 
 `<Plot>` 收敛为底层绘图块：不自动生成可见装饰，轴 / 图例 / 网格由用户显式组合；开箱即用装饰留给 v0.2 `<Chart>`。
 
-1. **移除默认轴注入**：`buildPlotSpec` 不再 fallback 到 `DEFAULT_GUIDES`；不写 `<Axis>` 就没有轴 / 网格。
+1. **移除默认轴注入**：`buildPlotIR` 不再 fallback 到 `DEFAULT_GUIDES`；不写 `<Axis>` 就没有轴 / 网格。
 2. **保留不可见推断**：scale / coordinate / color scale 推断继续存在，用于 mark 定位与 `<Legend>` 绑定。
 3. **保留显式 guide**：`<Axis>` / `<Legend>` 正常收集、生效、留边距；网格仍通过 `<Axis grid>` 声明，不新增 `<Grid>`。
 4. **删除 `bare`**：薄 Plot 默认态已表达「不写 guide 就只画数据层」，保留 `bare` 会形成第二套忽略显式 guide / margin 的模式。
 5. **用 `<Scale>` 替代 `scaleX` / `scaleY`**：显式位置 scale 改由 `<Scale dimension="x|y|angle|radius" type="linear|time|point|log|sqrt" />` 声明；polar 下 `x/y` 可作为 `angle/radius` 别名。
-6. **新增 Plot 级调色板**：`IRPlotSpec.colors` / `<Plot colors>` 控制默认 mark 颜色与分类 color scale range；缺省仍用 `schemeCategory10`。
+6. **新增 Plot 级调色板**：`IRPlot.colors` / `<Plot colors>` 控制默认 mark 颜色与分类 color scale range；缺省仍用 `schemeCategory10`。
 7. **抽出装饰函数**：默认轴 / 网格补齐逻辑保留为 `decorateDefaultGuides(spec)`，本轮 `<Plot>` 不调用，由后续 v0.2 `<Chart>` 复用。
 
 定稿 schema：
 
 ```
-PlotSpecSchema.colors: z.array(z.string().min(1)).min(1).optional()
+PlotSchema.colors: z.array(z.string().min(1)).min(1).optional()
 // Plot 级默认调色板；分类 color scale 缺 range 时使用，
 // 无 color 编码的 mark 按 layer index 取色
 ```

@@ -1,7 +1,7 @@
 import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
-  IRPlotSpec,
+  IRPlot,
   LowerPlotsOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
@@ -42,21 +42,21 @@ export type RenderPlotLineageOptions = LowerPlotsOptions &
 export type RenderPlotLineageResult = {
   /** SSR 渲染得到的 SVG 字符串 */
   svg: string;
-  /** runtime-only 图元链路产物，不写入 IRPlotSpec 或 Scene meta */
+  /** runtime-only 图元链路产物，不写入 IRPlot 或 Scene meta */
   lineage: PlotLineageRun;
 };
 
 /** renderPlot 调用签名 */
 type RenderPlot = {
-  (spec: IRPlotSpec, data: ExternalDatasets, options: RenderPlotLineageOptions): RenderPlotLineageResult;
-  (spec: IRPlotSpec, data: ExternalDatasets, options?: RenderPlotOptions): string;
+  (spec: IRPlot, data: ExternalDatasets, options: RenderPlotLineageOptions): RenderPlotLineageResult;
+  (spec: IRPlot, data: ExternalDatasets, options?: RenderPlotOptions): string;
 };
 
 const isLineageOptions = (options: RenderPlotOptions | RenderPlotLineageOptions): options is RenderPlotLineageOptions =>
   options.lineage !== undefined && options.lineage !== false;
 
 const renderPlotImpl = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   data: ExternalDatasets,
   options: RenderPlotOptions | RenderPlotLineageOptions = {},
 ): string | RenderPlotLineageResult => {
@@ -79,8 +79,8 @@ const renderPlotImpl = (
 };
 
 /**
- * 把 PlotSpec 与外部数据渲染为 SVG 字符串或带 lineage 的 runtime 结果
- * @description 该入口不依赖 DOM；直接用已类型化的 PlotSpec 与外部 datasets 下沉并渲染。`width` / `height` 同时控制 Plot 绘图区与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
+ * 把 IRPlot 与外部数据渲染为 SVG 字符串或带 lineage 的 runtime 结果
+ * @description 该入口不依赖 DOM；直接用已类型化的 IRPlot 与外部 datasets 下沉并渲染。`width` / `height` 同时控制 Plot 绘图区与 SVG 输出尺寸；传入 lineage 配置时返回 `{ svg, lineage }`，否则返回 SVG 字符串
  * @throws 缺少引用的数据集或 lowering 失败时透传对应错误
  */
 export const renderPlot = renderPlotImpl as RenderPlot;

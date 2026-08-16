@@ -1,4 +1,4 @@
-﻿import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { applyTransforms, coerceValue, defineTransform, normalizeRows, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { readSourceIndex, tagSourceIndex } from '@retikz/data';
@@ -6,23 +6,23 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
-const specWithModel = (reference = 'd'): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specWithModel = (reference = 'd'): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {
@@ -40,8 +40,8 @@ const specWithModel = (reference = 'd'): IRPlotSpec =>
     marks: [{ type: 'path', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
   });
 
-const specNoModel = (reference = 'd'): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specNoModel = (reference = 'd'): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference },
@@ -295,8 +295,8 @@ describe('locator fieldMaps parity', () => {
 });
 
 describe('custom transform data portability（contract）', () => {
-  const customSpec = (): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const customSpec = (): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

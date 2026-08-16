@@ -1,5 +1,5 @@
 import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
-import type { ResolvedTableLayoutSpec, ResolvedTableTrackSize } from './types';
+import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
 
 import { TableLayoutSchema, TableTrackOverridesSchema, TableTrackSizeKind, TableTrackSizeSchema } from '../../schemas';
 import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
@@ -49,7 +49,7 @@ export const resolveTableTrackSizes = (
 };
 
 /** 解析 Table layout 并物化稳定默认值 */
-export const resolveTableLayoutSpec = (spec?: IRTableLayout): ResolvedTableLayoutSpec => {
+export const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout => {
   const parsed = TableLayoutSchema.parse(spec ?? {});
   const rowSize = resolveTableTrackSize(
     parsed.rowSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_ROW_HEIGHT },

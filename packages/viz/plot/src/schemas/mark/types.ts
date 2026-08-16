@@ -15,7 +15,7 @@ import type {
   RelationRoutingKind,
 } from './constants';
 import type {
-  AnchorIdSpecSchema,
+  AnchorIdSchema,
   BlendModeStyleSchema,
   CustomMarkSchema,
   IntervalBoundSchema,
@@ -57,7 +57,7 @@ import type {
   RelationRibbonOptionsSchema,
   RelationRibbonSpecificOptionsSchema,
   RelationRouteStepSchema,
-  RelationRoutingSpecSchema,
+  RelationRoutingSchema,
   RelationStepLabelSchema,
   RelationTransformSchema,
   ShadowStyleSchema,
@@ -176,7 +176,7 @@ export type IRPlotIntervalMark = z.infer<typeof IntervalMarkSchema>;
 export type IRPlotReferenceMark = z.infer<typeof ReferenceMarkSchema>;
 
 /** mark 锚点 id 声明 */
-export type IRPlotAnchorIdSpec = z.infer<typeof AnchorIdSpecSchema>;
+export type IRPlotAnchorId = z.infer<typeof AnchorIdSchema>;
 
 /** plot 内目标引用，可指向数据行、系列或锚点 */
 export type IRPlotTargetRef = z.infer<typeof PlotTargetRefSchema>;
@@ -209,7 +209,7 @@ export type RelationOrthogonalLabelStepValue = ValueOf<typeof RelationOrthogonal
 export type ReferenceMarkKindValue = ValueOf<typeof ReferenceMarkKind>;
 
 /** relation mark 的路由策略声明 */
-export type IRPlotRelationRoutingSpec = z.infer<typeof RelationRoutingSpecSchema>;
+export type IRPlotRelationRouting = z.infer<typeof RelationRoutingSchema>;
 
 /** relation primitive 的公共样式声明 */
 export type IRPlotRelationPrimitiveStyle = z.infer<typeof RelationPrimitiveStyleSchema>;

@@ -69,7 +69,7 @@ Table artifact 类型为 `CompositeCompileArtifact<'table', 'table', TableLayout
 
 ## 公开影响与兼容性
 
-- ⚠️ BREAKING：`TableSpec.layout.columnWidth`、`rowHeight`、`headerHeight` 删除，改为 track size、overrides 与 gaps
+- ⚠️ BREAKING：`IRTable.layout.columnWidth`、`rowHeight`、`headerHeight` 删除，改为 track size、overrides 与 gaps
 - ⚠️ BREAKING：manifest 根 `bounds` 改为 `allocationBounds`，并新增完整 Cell / border 几何
 - ⚠️ BREAKING：`lowerTableWithArtifacts()` 删除，改用 `compileTable()`
 - Structure / Presentation 的 Definition 与 registry 扩展路径不变；built-in 与 custom 继续同路

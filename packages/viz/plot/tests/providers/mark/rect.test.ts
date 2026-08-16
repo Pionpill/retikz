@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotIntervalMark, IRPlotSpec } from '../../../src/schemas';
+import type { IRPlotIntervalMark, IRPlot } from '../../../src/schemas';
 
 import { type Cell } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
@@ -14,7 +14,7 @@ import { buildIntervalContext, intervalCell } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * Rect mark（heatmap 双 band 正交 cell）下沉契约测试。
@@ -34,12 +34,12 @@ const WIDTH = 400;
 const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
@@ -111,8 +111,8 @@ const rectMark = (color?: string): IRPlotIntervalMark => ({
   bounds: { x: { kind: 'band' }, y: { kind: 'band' } },
 });
 
-const heatmapSpec = (color?: string): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const heatmapSpec = (color?: string): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -202,7 +202,7 @@ describe('rect 值 → color', () => {
   ];
 
   it('rect-value-to-color', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -240,7 +240,7 @@ describe('rect 值 → color', () => {
 
   it('rect-color-grouped-scope-equal-values-share-fill', () => {
     // v=5 出现两次 → 同色应分到同一子 Scope（按 fill 分组）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -318,7 +318,7 @@ describe('rect fail-loud', () => {
   });
 
   it('rect-y-linear-via-spec-degenerate-cell', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -354,7 +354,7 @@ describe('rect fail-loud', () => {
   });
 
   it('rect-1d-fail-loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -375,7 +375,7 @@ describe('rect fail-loud', () => {
 // ── 交互：rect + interval 共存（各自 cell 算法、同走 projectCell 装配）────────────────────
 describe('rect + interval 共存', () => {
   it('rect-with-interval-coexist', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -420,12 +420,12 @@ describe('rect + interval 共存', () => {
 // ── schema：rect mark accept / 判别分流 ─────────────────────────────────────────────────
 describe('rect schema', () => {
   it('rect-schema-accepts-with-and-without-color', () => {
-    expect(() => PlotSpecSchema.parse(heatmapSpec('v'))).not.toThrow();
-    expect(() => PlotSpecSchema.parse(heatmapSpec())).not.toThrow();
+    expect(() => PlotSchema.parse(heatmapSpec('v'))).not.toThrow();
+    expect(() => PlotSchema.parse(heatmapSpec())).not.toThrow();
   });
 
   it('rect-schema-discriminates', () => {
-    const spec = PlotSpecSchema.parse(heatmapSpec());
+    const spec = PlotSchema.parse(heatmapSpec());
     expect(spec.marks[0].type).toBe('interval');
   });
 });

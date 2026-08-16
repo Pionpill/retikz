@@ -1,13 +1,13 @@
-﻿import { compileToScene } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import { coerceValue, inferFieldType, normalizeRows, validateBoundData } from '@retikz/data';
 import { DataFieldType, ScalarValueSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * contract 待实现字段的本地类型扩展：`LowerPlotsOptions.invalid` 现在还不存在（实现 Agent 的活），
@@ -17,12 +17,12 @@ import { PlotSpecSchema } from '../../../src/schemas';
 type RobustOptions = LowerPlotsOptions & { invalid?: 'skip' | 'error' };
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
-const compile = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, options?: RobustOptions) =>
+const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: RobustOptions) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
 /** 无 model：纯推断路径（point mark，x/y 绑 a/b） */
-const specNoModel = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specNoModel = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -35,8 +35,8 @@ const specNoModel = (): IRPlotSpec =>
   });
 
 /** 有 model：x continuous / y continuous（point mark，x/y 绑 a/b） */
-const specWithModel = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specWithModel = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {
@@ -55,8 +55,8 @@ const specWithModel = (): IRPlotSpec =>
   });
 
 /** 无 model + 时间字段（推断 temporal，应归一化成 epoch ms） */
-const specTemporalNoModel = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specTemporalNoModel = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -69,8 +69,8 @@ const specTemporalNoModel = (): IRPlotSpec =>
   });
 
 /** stack transform spec：分组 m + 量 v（x continuous，验证非法值被 skip 但整行仍参与 stack） */
-const specStack = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specStack = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: {
@@ -96,7 +96,7 @@ const specStack = (): IRPlotSpec =>
   });
 
 /** 直接驱动 prepareRows（绕过 transform），取 normalized 行断言归一化产物 */
-const prepare = (spec: IRPlotSpec, rows: Array<Record<string, unknown>>, options: RobustOptions = {}) =>
+const prepare = (spec: IRPlot, rows: Array<Record<string, unknown>>, options: RobustOptions = {}) =>
   prepareRows(spec, { d: rows }, options, rows);
 
 describe('contract 数据健壮性 — bigint ingest', () => {

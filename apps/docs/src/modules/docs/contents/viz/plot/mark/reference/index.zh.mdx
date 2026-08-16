@@ -86,7 +86,7 @@ extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑�
   description="需要排查 line、band、region 的形态推断、常量与逐行参考的数量，或坐标系支持范围时再回来读。"
 />
 
-`<ReferenceMark>` 进入 `IRPlotSpec` 前先校验边界组合，错误配置不会被静默猜测。lowering 再根据下界、上界与 `kind` 区分 line、band 和 region。
+`<ReferenceMark>` 进入 `IRPlot` 前先校验边界组合，错误配置不会被静默猜测。lowering 再根据下界、上界与 `kind` 区分 line、band 和 region。
 
 下图在 ReferenceMark 的职责边界内展示两条下沉路径：line 直接生成路径 steps，band / region 则先形成逻辑 Cell，再交给坐标帧投影。
 

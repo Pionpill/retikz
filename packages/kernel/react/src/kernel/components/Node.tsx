@@ -7,7 +7,7 @@ import type {
   IRBoxSize,
   IRBoxSpacing,
   IRFont,
-  IRLineSpec,
+  IRLine,
   IRNode,
   IROffsetPosition,
   IRPosition,
@@ -54,10 +54,10 @@ export type NodeProps = HydrationEventProps & {
   children?: ReactNode;
   /**
    * 显式 text，优先级高于 children
-   * @description `string` 单行（可含 `$...$` 公式）/ `Array<string | LineSpec>` 多行可对单行覆盖 fill / opacity / font，
+   * @description `string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，
    *   或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）
    */
-  text?: string | Array<IRLineSpec>;
+  text?: string | Array<IRLine>;
   /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */
   align?: NodeTextAlignValue;
   /** 行高（user units）；不填走 `font.size × 1.2` 默认 */
@@ -99,7 +99,7 @@ export type NodeProps = HydrationEventProps & {
   scale?: number | IRAxisScale;
   /** 横向缩放，优先于 `scale` */
   /** 纵向缩放，优先于 `scale` */
-  /** 文字颜色（块级默认；行级 LineSpec.fill 可覆盖）；`NodeTextColor.Contrast` 按静态不透明 fill 选黑 / 白，不填走 `currentColor` */
+  /** 文字颜色（块级默认；行级 IRLine.fill 可覆盖）；`NodeTextColor.Contrast` 按静态不透明 fill 选黑 / 白，不填走 `currentColor` */
   textColor?: string;
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */
   opacity?: number;

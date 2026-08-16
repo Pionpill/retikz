@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { PaintSpecSchema } from '../../src/schemas';
+import { PaintSchema } from '../../src/schemas';
 
-describe('PaintSpecSchema conicGradient', () => {
+describe('PaintSchema conicGradient', () => {
   it('accepts stops, center and angle', () => {
     const spec = {
       kind: 'conicGradient' as const,
@@ -15,12 +15,12 @@ describe('PaintSpecSchema conicGradient', () => {
       ],
     };
 
-    expect(PaintSpecSchema.parse(spec)).toEqual(spec);
+    expect(PaintSchema.parse(spec)).toEqual(spec);
   });
 
   it('rejects non-finite center and angle', () => {
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'conicGradient',
         center: [0.5, Number.NaN],
         stops: [
@@ -31,7 +31,7 @@ describe('PaintSpecSchema conicGradient', () => {
     ).toThrow();
 
     expect(() =>
-      PaintSpecSchema.parse({
+      PaintSchema.parse({
         kind: 'conicGradient',
         angle: Number.POSITIVE_INFINITY,
         stops: [

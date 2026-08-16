@@ -43,7 +43,7 @@ React DSL 的字符串值表示字段名。类型化 authoring 的常量使用 `
 <PointMark channels={{ intensity: { kind: 'constant', value: 0.65 } }} />
 ```
 
-它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。只要传入的是 `IRPlotSpec`，raw IR 形式就可以直接使用：
+它们分别装配为 `{ field: 'score' }` 和 `{ value: 0.65 }`。只要传入的是 `IRPlot`，raw IR 形式就可以直接使用：
 
 ```ts
 const rawChannelBinding: IRPlotChannel = { value: 0.65 };

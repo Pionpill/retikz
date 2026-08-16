@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { ChartRecipeStyleContext } from '../../src/point/recipe';
 
 import { resolveChartStyle } from '../../src/base/style';
-import { ConnectedScatterChartRecipe, ConnectedScatterChartSpecSchema } from '../../src/point/connected-scatter';
+import { ConnectedScatterChartRecipe, ConnectedScatterChartSchema } from '../../src/point/connected-scatter';
 import { pointChartRecipeStyleContextOf } from '../../src/point/recipe';
 
 const visibleStyle: ChartRecipeStyleContext = {
@@ -16,7 +16,7 @@ const visibleStyle: ChartRecipeStyleContext = {
 };
 
 const connectedScatter = (overrides: Record<string, unknown> = {}) =>
-  ConnectedScatterChartSpecSchema.parse({
+  ConnectedScatterChartSchema.parse({
     namespace: 'chart',
     type: 'connected-scatter',
     id: 'journey',

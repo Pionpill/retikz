@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { ClipResource, GroupPrim, IRPaintSpec, IRScene, ScenePrimitive, SceneResource } from '../../src';
+import type { ClipResource, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
 import { defineClip } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
@@ -29,7 +29,7 @@ const firstGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim | unde
 const clipResources = (resources: Array<SceneResource> | undefined): Array<ClipResource> =>
   (resources ?? []).filter((r): r is ClipResource => r.kind === 'clip');
 
-const grad: IRPaintSpec = {
+const grad: IRPaint = {
   kind: 'linearGradient',
   angle: 90,
   stops: [

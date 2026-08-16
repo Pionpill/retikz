@@ -18,7 +18,7 @@
 1. **预设字符串** `shadow="md"`（`'sm'|'md'|'lg'|'xl'|'2xl'|'none'`）——Tailwind 风格档位，开箱即用、LLM 友好；字面等价于对象 `{ preset:'md' }`。
 2. **统一对象** `shadow={{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }}`——给 `preset` 则以该档位为默认基底、显式字段逐项覆盖（`{ preset:'md', color:'#3b82f6' }` = 快捷调色）；不给 `preset` 则须自定 `offsetX`+`offsetY`（完整显式）。「preset+覆盖」与「完整显式」是同一对象的两种填法，不是两套 schema。
 
-union 先例：`fill: string|PaintSpec`、`scale: number|{x,y}`。**IR 存原始（预设字符串 | 对象），compile 用单一真源表 `SHADOW_PRESETS` 把预设展开、再用显式字段覆盖合并成 canonical `DropShadow` 后才透传**（同 `thickness`→`strokeWidth` 展开模式）；renderer 只见解析后的对象。缺省不设 → Scene / 渲染逐字不变。
+union 先例：`fill: string|IRPaint`、`scale: number|{x,y}`。**IR 存原始（预设字符串 | 对象），compile 用单一真源表 `SHADOW_PRESETS` 把预设展开、再用显式字段覆盖合并成 canonical `DropShadow` 后才透传**（同 `thickness`→`strokeWidth` 展开模式）；renderer 只见解析后的对象。缺省不设 → Scene / 渲染逐字不变。
 
 已拍板的子决策：
 

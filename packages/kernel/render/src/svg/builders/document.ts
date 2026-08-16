@@ -1,4 +1,4 @@
-import type { IRDropShadow, ResolvedArrowEndSpec, Scene, ScenePrimitive } from '@retikz/core';
+import type { IRDropShadow, ResolvedArrowEnd, Scene, ScenePrimitive } from '@retikz/core';
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
@@ -13,7 +13,7 @@ import { countScenePrimitiveOccurrences } from '../../shared';
 import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
 import { formatViewBox } from '../view-box';
-import { collectArrowSpecs, hashKey, stableSpecKey } from './arrow-collect';
+import { collectArrowEnds, hashKey, stableArrowKey } from './arrow-collect';
 import { buildArrowMarker } from './arrow-markers';
 import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
@@ -52,14 +52,14 @@ const makeContext = (
   idPrefix: string,
 ): {
   context: BuildContext;
-  arrowMarkerIdFor: (spec: ResolvedArrowEndSpec) => string;
+  arrowMarkerIdFor: (spec: ResolvedArrowEnd) => string;
   paintIdFor: (id: string) => string;
   clipIdFor: (id: string) => string;
   shadowIdFor: (shadow: IRDropShadow) => string;
 } => {
   const safeIdPrefix = toSafeSvgToken(idPrefix);
-  const arrowMarkerIdFor = (spec: ResolvedArrowEndSpec): string =>
-    `retikz-arrow-${safeIdPrefix}-${hashKey(stableSpecKey(spec))}`;
+  const arrowMarkerIdFor = (spec: ResolvedArrowEnd): string =>
+    `retikz-arrow-${safeIdPrefix}-${hashKey(stableArrowKey(spec))}`;
   const paintIdFor = (id: string): string => `retikz-paint-${safeIdPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
   const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${safeIdPrefix}-${shadowHash(shadow)}`;
@@ -77,11 +77,11 @@ const makeContext = (
   };
 };
 
-/** 收集 + 按 stableSpecKey dedup arrow 端点 spec（保持首次出现顺序） */
-const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, ResolvedArrowEndSpec> => {
-  const uniqueByKey = new Map<string, ResolvedArrowEndSpec>();
-  for (const s of collectArrowSpecs(prims)) {
-    const k = stableSpecKey(s);
+/** 收集 + 按 stableArrowKey dedup arrow 端点 spec（保持首次出现顺序） */
+const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, ResolvedArrowEnd> => {
+  const uniqueByKey = new Map<string, ResolvedArrowEnd>();
+  for (const s of collectArrowEnds(prims)) {
+    const k = stableArrowKey(s);
     if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
   }
   return uniqueByKey;

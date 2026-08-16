@@ -10,7 +10,7 @@
 
 ## 目标
 
-建立 `@retikz/table` 的最薄可用闭环：外部数据或显式 Cell 经 manual / detail 结构形成语义模型，以固定基础轨道完成布局并 lowering 为 Core IR；React 组件与 Vanilla plain spec / Tier 2 adapter 能消费同一 TableSpec。
+建立 `@retikz/table` 的最薄可用闭环：外部数据或显式 Cell 经 manual / detail 结构形成语义模型，以固定基础轨道完成布局并 lowering 为 Core IR；React 组件与 Vanilla plain spec / Tier 2 adapter 能消费同一 IRTable。
 
 alpha.1 用固定 `columnWidth` / `rowHeight` 避开尚未冻结的任意 `IRChild` intrinsic measurement。auto/minmax、span、完整 border 与换行测量进入 alpha.2。
 
@@ -61,7 +61,7 @@ ADR 编号按概念阅读顺序组织，不等同于实现顺序；实现以依�
 - [x] manual / detail 两种结构共用 SemanticTableModel 与 lowering
 - [x] 内置 text presentation 与自定义 presentation 走同一 registry
 - [x] 固定轨道布局对非法尺寸、重复地址和缺失数据 fail-loud
-- [x] React / Vanilla 都能渲染同一 TableSpec；Vanilla 可通过 Kernel `mount().update()` 用新 embed props 更新数据
+- [x] React / Vanilla 都能渲染同一 IRTable；Vanilla 可通过 Kernel `mount().update()` 用新 embed props 更新数据
 - [x] alpha.2 需要的测量、span 与 border 缺口已明确，不以 alpha.1 私有补丁替代
 
 ## ADR 约定

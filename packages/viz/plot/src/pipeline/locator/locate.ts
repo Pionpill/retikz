@@ -14,7 +14,7 @@ import type {
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
 import type { CoordinateResolveContext } from '../../resolve/coordinate';
-import type { IRPlotMark, IRPlotMarkOperation, IRPlotSpec } from '../../schemas';
+import type { IRPlotMark, IRPlotMarkOperation, IRPlot } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
@@ -130,7 +130,7 @@ const contextMatches = (meta: IRJsonObject, opts: PlotLocatorOptions | undefined
  *   datumIdField 设时在构建期跑 plot 级 registrar（与 lowering 同序、同查重）→ 同 spec+options 下 locator-build 抛 iff lowering 抛（#3）
  */
 export const createPlotLocator = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
 ): PlotLocator => {

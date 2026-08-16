@@ -4,7 +4,7 @@ import type {
   IRNode,
   IRNodeDefault,
   IRNodeLabel,
-  IRPaintSpec,
+  IRPaint,
   IRPath,
   IRScope,
 } from '@retikz/core';
@@ -25,7 +25,7 @@ import type {
 
 import { ChannelDefinitionKind, datumMeta, markLayerId, markLayerMeta } from '../../../contract';
 import {
-  type IRPlotAnchorIdSpec,
+  type IRPlotAnchorId,
   type IRPlotIntervalMark,
   type IRPlotMark,
   type IRPlotMarkGeometryLabel,
@@ -43,7 +43,7 @@ export const LINE_STROKE_WIDTH = 2;
 export const DEFAULT_FILL = 'currentColor';
 
 /** mark lowering 可使用的字符串颜色或 core paint */
-export type MarkPaint = string | IRPaintSpec;
+export type MarkPaint = string | IRPaint;
 
 /** 按通道名读取逐行值 resolver */
 export const channelValueOf = <T extends ChannelValue>(
@@ -378,7 +378,7 @@ export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: Fiel
 };
 
 /** 收集锚点 id 配置引用的源字段。 */
-export const collectAnchorIdFields = (anchorId: IRPlotAnchorIdSpec | undefined, fields: FieldCollector): void => {
+export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fields: FieldCollector): void => {
   if (anchorId === undefined) return;
   fields.addField(anchorId.field);
   if (anchorId.template === undefined) return;

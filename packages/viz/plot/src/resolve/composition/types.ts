@@ -1,13 +1,13 @@
 import type { ExternalRow } from '@retikz/data';
 
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotSpec } from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlot } from '../../schemas';
 import type { CoordinateArrangementKind, CoordinateViewPlacementKind } from '../../schemas';
 
 /** Plot composition schema 的消费态 */
-export type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
+export type Composition = NonNullable<IRPlot['composition']>;
 
 /** composition arrangement 联合 */
-export type CoordinateArrangement = NonNullable<CompositionSpec['arrangements']>[number];
+export type CoordinateArrangement = NonNullable<Composition['arrangements']>[number];
 
 /** facet arrangement 消费态 */
 export type FacetGrid = Extract<CoordinateArrangement, { kind: typeof CoordinateArrangementKind.Facet }>;
@@ -19,10 +19,10 @@ export type SharedScaffold = Extract<CoordinateArrangement, { kind: typeof Coord
 export type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 /** composition layout 消费态 */
-export type CompositionLayout = NonNullable<CompositionSpec['spacing']>;
+export type CompositionLayout = NonNullable<Composition['spacing']>;
 
 /** composition resolve 消费态 */
-export type CompositionResolve = NonNullable<CompositionSpec['resolve']>;
+export type CompositionResolve = NonNullable<Composition['resolve']>;
 
 /** composition 中 facet / track arrangement 的存在性上下文 */
 export type CompositionPolicyContext = {
@@ -76,7 +76,7 @@ export type FacetPanel = {
 /** 坐标 scope 在 composition 中的确定放置结果 */
 export type CoordinateScopePlacement =
   | Exclude<
-      NonNullable<NonNullable<NonNullable<IRPlotSpec['composition']>['views']>[number]['placement']>,
+      NonNullable<NonNullable<NonNullable<IRPlot['composition']>['views']>[number]['placement']>,
       { kind: typeof CoordinateViewPlacementKind.Slot }
     >
   | { kind: 'track'; scaffold: string; track: string };

@@ -1,9 +1,9 @@
-import type { IRPlotGuide, IRPlotSpec } from '@retikz/plot';
+import type { IRPlotGuide, IRPlot } from '@retikz/plot';
 
 import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide } from '@retikz/plot';
 
 import type {
-  BuildPlotSpecOptions,
+  BuildPlotOptions,
   PlotAuthoringContext,
   PlotAuthoringRuntime,
   PlotDeclarationCollection,
@@ -14,7 +14,7 @@ import type {
 import { normalizePlotDeclarations } from './normalize';
 
 export type {
-  BuildPlotSpecOptions,
+  BuildPlotOptions,
   InputPlotCoordinate,
   MarkTransformShortcutContext,
   MarkTransformShortcutDefinition,
@@ -27,11 +27,11 @@ const DEFAULT_GUIDES: ReadonlyArray<IRPlotGuide> = [
   { type: PlotGuide.Axis, dimension: 'y' },
 ];
 
-/** buildPlotSpec 收集的 resolveLabel 运行时旁路 */
-const resolveLabelBySpec = new WeakMap<IRPlotSpec, ResolveLabelMap>();
+/** buildPlotIR 收集的 resolveLabel 运行时旁路 */
+const resolveLabelByPlotIR = new WeakMap<IRPlot, ResolveLabelMap>();
 
-/** 取某 PlotSpec 经 buildPlotSpec 收集的 resolveLabel 运行时表 */
-export const resolveLabelOf = (spec: IRPlotSpec): ResolveLabelMap | undefined => resolveLabelBySpec.get(spec);
+/** 取某 IRPlot 经 buildPlotIR 收集的 resolveLabel 运行时表 */
+export const resolveLabelOf = (spec: IRPlot): ResolveLabelMap | undefined => resolveLabelByPlotIR.get(spec);
 
 /** Chart typed extension 的 Plot-owned declaration 归一化结果 */
 export type ResolvedPlotExtensionAuthoring = Readonly<{
@@ -56,11 +56,11 @@ export const resolvePlotExtensionAuthoring = (
  * 把 React Plot children 构造成 Plot Source IR
  * @description 先收集 JSON-safe declarations 与 runtime sidecar，再统一归一化 Plot members 并组装根字段
  */
-export const normalizePlotSpec = (
+export const normalizePlotIR = (
   collection: PlotDeclarationCollection,
   dataRef: string,
-  options: BuildPlotSpecOptions = {},
-): IRPlotSpec => {
+  options: BuildPlotOptions = {},
+): IRPlot => {
   const data = options.model ? { reference: dataRef, model: options.model } : { reference: dataRef };
   const plotRootContext = {
     data,
@@ -82,7 +82,7 @@ export const normalizePlotSpec = (
   const { fragment, runtime } = normalizePlotDeclarations(collection, plotRootContext);
   const { composition, coordinate, guides, marks, scales, transform } = fragment;
   if (scales === undefined || marks === undefined || guides === undefined) {
-    throw new Error('normalizePlotSpec: plot-root normalization must provide scales, marks, and guides');
+    throw new Error('normalizePlotIR: plot-root normalization must provide scales, marks, and guides');
   }
   const coordinateRoot =
     composition !== undefined
@@ -90,7 +90,7 @@ export const normalizePlotSpec = (
       : coordinate !== undefined
         ? { coordinate }
         : (() => {
-            throw new Error('normalizePlotSpec: plot-root normalization must provide coordinate or composition');
+            throw new Error('normalizePlotIR: plot-root normalization must provide coordinate or composition');
           })();
   const spec = {
     namespace: PLOT_NAMESPACE,
@@ -107,8 +107,8 @@ export const normalizePlotSpec = (
     ...(options.plotTheme === undefined ? {} : { plotTheme: options.plotTheme }),
     ...(options.width === undefined ? {} : { width: options.width }),
     ...(options.height === undefined ? {} : { height: options.height }),
-  } satisfies IRPlotSpec;
-  if (runtime.resolveLabel !== undefined) resolveLabelBySpec.set(spec, runtime.resolveLabel);
+  } satisfies IRPlot;
+  if (runtime.resolveLabel !== undefined) resolveLabelByPlotIR.set(spec, runtime.resolveLabel);
   return spec;
 };
 
@@ -116,7 +116,7 @@ export const normalizePlotSpec = (
  * 给薄 Plot 产物补默认坐标轴
  * @description cartesian2D 且无任何显式 axis 时前置 x 轴与带网格的 y 轴，其余情况原样返回
  */
-export const decorateDefaultGuides = (spec: IRPlotSpec): IRPlotSpec => {
+export const decorateDefaultGuides = (spec: IRPlot): IRPlot => {
   if (spec.coordinate === undefined) return spec;
   if (spec.coordinate.type !== PlotCoordinate.Cartesian2D) return spec;
   const guides = spec.guides ?? [];

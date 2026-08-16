@@ -24,7 +24,7 @@ Scene primitive 是 `compileToScene(...).scene` 的输出合同：IR 经过布�
 
 | Resource        | 字段                  | 说明                                                               |
 | --------------- | --------------------- | ------------------------------------------------------------------ |
-| `PaintResource` | `kind:'paint'` / `id` | `spec` 保存 `IRPaintSpec`；pattern 还可带 compile 已解析的 `tile?` |
+| `PaintResource` | `kind:'paint'` / `id` | `spec` 保存 `IRPaint`；pattern 还可带 compile 已解析的 `tile?` |
 | `ClipResource`  | `kind:'clip'` / `id`  | `shape` 保存用户坐标系中的裁剪几何                                 |
 
 `ClipResource.shape` 通过 `kind` 选择下列结构：
@@ -104,7 +104,7 @@ renderer 不需要重新决定文字布局，只需要按 `TextPrim` 的锚点�
 
 ## 箭头
 
-`PathPrim.arrowStart` / `arrowEnd` 使用 `ResolvedArrowEndSpec`。注意：所有视觉输入（`scale` / `length` / `width` / `color` / `fill` / `lineWidth`）已在 **compile 解析阶段被消费**，**不**出现在本结构里。最终挂上的是「已解析 marker 描述」——内部几何 + wrapper 参数，adapter 只**物化**（嵌进 `<marker>` 或在 Canvas 上画），不再 switch、不调 emit、不查 arrows 注册表：
+`PathPrim.arrowStart` / `arrowEnd` 使用 `ResolvedArrowEnd`。注意：所有视觉输入（`scale` / `length` / `width` / `color` / `fill` / `lineWidth`）已在 **compile 解析阶段被消费**，**不**出现在本结构里。最终挂上的是「已解析 marker 描述」——内部几何 + wrapper 参数，adapter 只**物化**（嵌进 `<marker>` 或在 Canvas 上画），不再 switch、不调 emit、不查 arrows 注册表：
 
 | Field          | 类型                     | 说明                                                                                                |
 | -------------- | ------------------------ | --------------------------------------------------------------------------------------------------- |
@@ -116,11 +116,11 @@ renderer 不需要重新决定文字布局，只需要按 `TextPrim` 的锚点�
 | `opacity?`     | `number`                 | marker 元素级不透明度 0..1；缺省继承 path opacity                                                   |
 | `marker`       | `Array<MarkerPrimitive>` | `def.emit` 产物：局部 baseSize 坐标系下的内部几何（`fill` 限 `string \| { kind:'contextStroke' }`） |
 
-compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ResolvedArrowEndSpec`：查 effective arrow 表、调 `def.emit` 产几何，并完成路径端点收缩。renderer 不需要再理解箭头注册表或重新计算视觉尺寸。
+compile 层已经把 core IR 的 `marks` 端点箭头解析成 `ResolvedArrowEnd`：查 effective arrow 表、调 `def.emit` 产几何，并完成路径端点收缩。renderer 不需要再理解箭头注册表或重新计算视觉尺寸。
 
 ### Marker 原语子集
 
-`ResolvedArrowEndSpec.marker` 不接受完整的 `ScenePrimitive`，而是限制在 marker 局部坐标系中的窄子集：
+`ResolvedArrowEnd.marker` 不接受完整的 `ScenePrimitive`，而是限制在 marker 局部坐标系中的窄子集：
 
 | 类型                | 可表达内容                       |
 | ------------------- | -------------------------------- |

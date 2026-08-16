@@ -1,4 +1,4 @@
-import type { IRPlotLegendGuide, IRPlotScale, IRPlotSpec } from '@retikz/plot';
+import type { IRPlotLegendGuide, IRPlotScale, IRPlot } from '@retikz/plot';
 
 import { Plot } from '@retikz/plot-react';
 
@@ -54,7 +54,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           ? { rampLength: values.rampLength, rampThickness: values.rampThickness }
           : undefined,
   };
-  const spec: IRPlotSpec = {
+  const spec: IRPlot = {
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },

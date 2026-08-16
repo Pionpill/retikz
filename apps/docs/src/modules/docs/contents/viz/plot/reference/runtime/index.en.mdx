@@ -3,7 +3,7 @@ title: Runtime Overview
 description: Query how React, Vanilla, and direct Plot IR converge on one lowering path that produces Scene, rendered output, and separate runtime artifacts through Core.
 ---
 
-The Plot runtime separates how a chart is authored from how it executes. React, Vanilla, or generated tools first produce the same `IRPlotSpec`; datasets and function-bearing Definitions are injected at execution time; then `@retikz/plot` lowers high-level chart semantics to Core IR. Core compiles the Scene, and renderers consume only the Scene.
+The Plot runtime separates how a chart is authored from how it executes. React, Vanilla, or generated tools first produce the same `IRPlot`; datasets and function-bearing Definitions are injected at execution time; then `@retikz/plot` lowers high-level chart semantics to Core IR. Core compiles the Scene, and renderers consume only the Scene.
 
 > This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/concepts/design/principles) for the complete Kernel compilation boundary.
 
@@ -11,7 +11,7 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />
 
-React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `PlotInputEmbedAdapter` performs the `InputPlot -> IRPlotSpec` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
+React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `PlotInputEmbedAdapter` performs the `InputPlot -> IRPlot` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
 `<Plot theme>` is the local Core Scope Theme around the Plot panel: standalone and embedded paths both wrap the Plot node in that Scope, so it only overrides that Plot's `style`, `mode`, and namespaced `tokens`. It is distinct from the Plot-spec fields `plotThemeTokens` and `plotTheme`, which are Plot-owned visual inputs. Vanilla `renderPlot(spec, data, { theme })` instead writes `theme` to the root `IRScene.theme`, making it the Core Theme for the entire compiled Scene; it does not rewrite `spec.plotThemeTokens` or `spec.plotTheme`.
 
@@ -21,17 +21,17 @@ All three entries delegate data, scale, coordinate, mark, and guide semantics to
 
 <ComponentPreview files="plot-authoring-convergence" size="md" hideCode />
 
-The React DSL only collects JSX / props and dispatches Plot Vanilla, while Vanilla's `plot()` accepts an `InputPlot` plain object. Both use `@retikz/plot-vanilla` to expand axis, facet, and scaffold bindings into the same `IRPlotSpec`. Typed authoring input is not schema-parsed again; only `IRPlot*` values use Plot schemas, while configuration from JSON, files, or another unknown boundary must enter IR through `PlotSpecSchema` or a parser.
+The React DSL only collects JSX / props and dispatches Plot Vanilla, while Vanilla's `plot()` accepts an `InputPlot` plain object. Both use `@retikz/plot-vanilla` to expand axis, facet, and scaffold bindings into the same `IRPlot`. Typed authoring input is not schema-parsed again; only `IRPlot*` values use Plot schemas, while configuration from JSON, files, or another unknown boundary must enter IR through `PlotSchema` or a parser.
 
-For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ spec }` is already an `IRPlotSpec`: the runtime preserves its object identity and bypasses normalization. Unknown JSON must be parsed with the Plot schema or another parser before it is supplied as `spec`; runtime entry points do not treat untyped JSON as IR.
+For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ spec }` is already an `IRPlot`: the runtime preserves its object identity and bypasses normalization. Unknown JSON must be parsed with the Plot schema or another parser before it is supplied as `spec`; runtime entry points do not treat untyped JSON as IR.
 
-`IRPlotSpec` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, or mark Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
+`IRPlot` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, or mark Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
 
-| Input layer          | Typical entry                                                        | Enters `IRPlotSpec`                                                                                    |
+| Input layer          | Typical entry                                                        | Enters `IRPlot`                                                                                    |
 | -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | React DSL            | `<Plot>` plus mark, guide, and scale children                        | After shared normalization                                                                             |
 | React spec           | `<Plot spec={...} data={...}>`                                       | The `spec` does                                                                                        |
-| Vanilla              | `plot(InputPlot)`, `{ input: InputPlot }`, or `{ spec: IRPlotSpec }` | InputPlot forms normalize once; `spec` enters directly; unknown JSON requires Plot schema/parser first |
+| Vanilla              | `plot(InputPlot)`, `{ input: InputPlot }`, or `{ spec: IRPlot }` | InputPlot forms normalize once; `spec` enters directly; unknown JSON requires Plot schema/parser first |
 | Runtime dependencies | datasets, field maps, resolvers, and Definitions                     | No                                                                                                     |
 
 ## Lowering and Outputs
@@ -42,7 +42,7 @@ The main lowering path resolves transform, statistics, row-selector, scale, mark
 
 `lowerPlots()` returns the Definition consumed by Core composite compilation. It does not create DOM and does not select a renderer. `compileToScene()` consumes the lowered Core IR and produces a Scene; React `<Layout>` or a Vanilla renderer then chooses SVG, Canvas, or string output.
 
-Lineage and location are independent recomputation paths over shared inputs, not sidecars emitted directly by the main lowering path. `lowerPlotWithLineage()` returns Core IR children with a `PlotLineageRun`, while `createPlotLocator()` reuses data preparation and frame resolution to calculate datum and series anchors. Both accept the same spec, datasets, and lowering configuration without writing a complete runtime record into `IRPlotSpec` or Scene metadata. See [Plot Lineage](/viz/data/provenance/plot) for its options and data boundary.
+Lineage and location are independent recomputation paths over shared inputs, not sidecars emitted directly by the main lowering path. `lowerPlotWithLineage()` returns Core IR children with a `PlotLineageRun`, while `createPlotLocator()` reuses data preparation and frame resolution to calculate datum and series anchors. Both accept the same spec, datasets, and lowering configuration without writing a complete runtime record into `IRPlot` or Scene metadata. See [Plot Lineage](/viz/data/provenance/plot) for its options and data boundary.
 
 ## Entries and Results
 

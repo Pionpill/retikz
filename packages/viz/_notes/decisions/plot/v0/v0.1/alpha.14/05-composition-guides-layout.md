@@ -15,7 +15,7 @@ ADR-02～04 分别引入 facet panel、same-panel overlay 和 shared scaffold tr
 
 ## 决策：composition.layout 与 composition.guidePolicy 统一管理 spacing 和 guide 策略
 
-`IRPlotSpec.composition` 新增 `layout` 与 `guidePolicy`。`layout` 管 panel / track / axis 的固定间距；`guidePolicy` 管 axes / grid / labels 在多 scope 下的默认行为。单个 `AxisGuide` 仍可通过 `coordinateScope`、`placement`、`grid` 覆盖具体轴。
+`IRPlot.composition` 新增 `layout` 与 `guidePolicy`。`layout` 管 panel / track / axis 的固定间距；`guidePolicy` 管 axes / grid / labels 在多 scope 下的默认行为。单个 `AxisGuide` 仍可通过 `coordinateScope`、`placement`、`grid` 覆盖具体轴。
 
 ```ts
 const CompositionAxisPolicy = {
@@ -44,7 +44,7 @@ type CompositionGridPolicyValue = ValueOf<typeof CompositionGridPolicy>;
 type CompositionFacetLabelPolicyValue = ValueOf<typeof CompositionFacetLabelPolicy>;
 type CompositionTrackLabelPolicyValue = ValueOf<typeof CompositionTrackLabelPolicy>;
 
-type CompositionLayoutSpec = {
+type CompositionLayout = {
   panelGap?: number;
   trackGap?: number;
   axisGap?: number;
@@ -52,19 +52,19 @@ type CompositionLayoutSpec = {
   padding?: { top?: number; right?: number; bottom?: number; left?: number };
 };
 
-type CompositionGuidePolicySpec = {
+type CompositionGuidePolicy = {
   axes?: CompositionAxisPolicyValue;
   grid?: CompositionGridPolicyValue;
   facetLabels?: CompositionFacetLabelPolicyValue;
   trackLabels?: CompositionTrackLabelPolicyValue;
 };
 
-type CoordinateCompositionSpec = {
-  layout?: CompositionLayoutSpec;
-  guidePolicy?: CompositionGuidePolicySpec;
+type CoordinateComposition = {
+  layout?: CompositionLayout;
+  guidePolicy?: CompositionGuidePolicy;
 };
 
-type AxisGuideSpec = {
+type IRPlotAxisGuide = {
   title?: string;
 };
 ```

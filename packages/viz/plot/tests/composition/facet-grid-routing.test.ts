@@ -2,10 +2,10 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 const salesRows = [
   { region: 'north', channel: 'online', month: 0, revenue: 0 },
@@ -15,7 +15,7 @@ const salesRows = [
   { region: 'north', channel: 'store', month: 0, revenue: 4 },
 ];
 
-const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const facetArrangement = (arrangement: Record<string, unknown>): Record<string, unknown> => ({
   kind: 'facet',
@@ -46,7 +46,7 @@ const baseFacetSpec = {
 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   options: { width?: number; height?: number } = {},
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
@@ -88,11 +88,11 @@ const translateOf = (scope: IRScope): { x: number; y: number } => {
 
 describe('facet grid data routing schema', () => {
   it('facet_column_schema_parses', () => {
-    expect(parsePlotSpec(baseFacetSpec)).toEqual(baseFacetSpec);
+    expect(parsePlotIR(baseFacetSpec)).toEqual(baseFacetSpec);
   });
 
   it('facet_grid_round_trips_through_json', () => {
-    const parsed = parsePlotSpec(JSON.parse(JSON.stringify(baseFacetSpec)));
+    const parsed = parsePlotIR(JSON.parse(JSON.stringify(baseFacetSpec)));
     expect(parsed).toEqual(baseFacetSpec);
   });
 
@@ -112,7 +112,7 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(parsePlotSpec(spec)).toEqual(spec);
+    expect(parsePlotIR(spec)).toEqual(spec);
   });
 
   it('facet_multi_level_dimension_schema_parses', () => {
@@ -132,7 +132,7 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(parsePlotSpec(spec)).toEqual(spec);
+    expect(parsePlotIR(spec)).toEqual(spec);
   });
 
   it('facet_without_row_or_column_rejected', () => {
@@ -143,7 +143,7 @@ describe('facet grid data routing schema', () => {
         arrangements: [facetArrangement({ id: 'bad' })],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/row or column/);
+    expect(() => parsePlotIR(spec)).toThrow(/row or column/);
   });
 
   it('duplicate_facet_id_rejected', () => {
@@ -157,7 +157,7 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/duplicate arrangement/i);
+    expect(() => parsePlotIR(spec)).toThrow(/duplicate arrangement/i);
   });
 
   it('facet_id_conflicting_with_scope_id_rejected', () => {
@@ -168,7 +168,7 @@ describe('facet grid data routing schema', () => {
         arrangements: [facetArrangement({ id: 'root', column: { field: 'region' } })],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow(/arrangement/i);
+    expect(() => parsePlotIR(spec)).toThrow(/arrangement/i);
   });
 
   it('facet_scale_sharing_mode_rejected_when_unknown', () => {
@@ -181,13 +181,13 @@ describe('facet grid data routing schema', () => {
         ],
       },
     };
-    expect(() => parsePlotSpec(spec)).toThrow();
+    expect(() => parsePlotIR(spec)).toThrow();
   });
 });
 
 describe('facet grid data routing lowering', () => {
   it('column_facet_generates_panel_scopes_in_order', () => {
-    const outer = expandOf(parsePlotSpec(baseFacetSpec));
+    const outer = expandOf(parsePlotIR(baseFacetSpec));
     const panels = facetPanelsOf(outer);
     expect(panels.map(panelKeyOf)).toEqual(['south', 'north']);
     expect(panels.map(panel => allNodes(panel).length)).toEqual([2, 3]);
@@ -208,7 +208,7 @@ describe('facet grid data routing lowering', () => {
         ],
       },
     };
-    const outer = expandOf(parsePlotSpec(spec));
+    const outer = expandOf(parsePlotIR(spec));
     const panels = facetPanelsOf(outer);
     expect(panels).toHaveLength(4);
     expect(panels.map(panel => `${String(panel.meta?.row)}:${String(panel.meta?.column)}`)).toEqual([
@@ -236,7 +236,7 @@ describe('facet grid data routing lowering', () => {
         ],
       },
     };
-    const outer = expandOf(parsePlotSpec(spec));
+    const outer = expandOf(parsePlotIR(spec));
     const panels = facetPanelsOf(outer);
     expect(panels.map(panel => panel.meta?.row)).toEqual([
       ['north', 'online'],
@@ -274,7 +274,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(parsePlotSpec(spec));
+    const outer = expandOf(parsePlotIR(spec));
     const labelSummary = facetLabelsOf(outer).map(label => ({
       dimension: label.meta?.dimension,
       level: label.meta?.level,
@@ -334,7 +334,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const labels = facetLabelsOf(expandOf(parsePlotSpec(spec)));
+    const labels = facetLabelsOf(expandOf(parsePlotIR(spec)));
 
     expect(labels.map(label => label.meta?.dimension)).toEqual([expectedDimension, expectedDimension]);
   });
@@ -363,7 +363,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(parsePlotSpec(spec), { width: 660, height: 480 });
+    const outer = expandOf(parsePlotIR(spec), { width: 660, height: 480 });
     const panels = facetPanelsOf(outer);
     const firstPanel = panels.find(panel => {
       const meta = facetPanelMetaOf(panel);
@@ -400,7 +400,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(parsePlotSpec(spec), { width: 660, height: 480 });
+    const outer = expandOf(parsePlotIR(spec), { width: 660, height: 480 });
     const firstPanel = facetPanelsOf(outer).find(panel => {
       const meta = facetPanelMetaOf(panel);
       return tupleMetaMatches(meta.row, ['north']) && tupleMetaMatches(meta.column, ['north']);
@@ -432,7 +432,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const parsed = parsePlotSpec(spec);
+    const parsed = parsePlotIR(spec);
     const outer = expandOf(parsed);
     const rowLabelNodes = facetLabelsOf(outer)
       .filter(label => label.meta?.dimension === 'row')
@@ -470,7 +470,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(parsePlotSpec(spec));
+    const outer = expandOf(parsePlotIR(spec));
     const rowNodes = facetLabelsOf(outer)
       .filter(label => label.meta?.dimension === 'row')
       .flatMap(allNodes);
@@ -525,7 +525,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const parsed = parsePlotSpec(spec);
+    const parsed = parsePlotIR(spec);
     const outer = expandOf(parsed);
     const rowLabelNodes = facetLabelsOf(outer)
       .filter(label => label.meta?.dimension === 'row')
@@ -565,7 +565,7 @@ describe('facet grid data routing lowering', () => {
       },
     };
 
-    const outer = expandOf(parsePlotSpec(spec), { width: 660, height: 480 }, { sales: rows });
+    const outer = expandOf(parsePlotIR(spec), { width: 660, height: 480 }, { sales: rows });
     const panels = facetPanelsOf(outer);
     const southOnline = panels.find(panel => {
       const meta = facetPanelMetaOf(panel);
@@ -583,7 +583,7 @@ describe('facet grid data routing lowering', () => {
   });
 
   it('independent_y_scale_uses_panel_local_domain', () => {
-    const outer = expandOf(parsePlotSpec(baseFacetSpec));
+    const outer = expandOf(parsePlotIR(baseFacetSpec));
     const [south, north] = facetPanelsOf(outer);
     const southNodes = allNodes(south);
     const northNodes = allNodes(north);
@@ -606,7 +606,7 @@ describe('facet grid data routing lowering', () => {
         ],
       },
     };
-    const outer = expandOf(parsePlotSpec(spec));
+    const outer = expandOf(parsePlotIR(spec));
     const [south, north] = facetPanelsOf(outer);
     const southNodes = allNodes(south);
     const northNodes = allNodes(north);
@@ -639,7 +639,7 @@ describe('facet grid data routing lowering', () => {
       },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     };
-    const outer = expandOf(PlotSpecSchema.parse(spec));
+    const outer = expandOf(PlotSchema.parse(spec));
     const [south, north] = facetPanelsOf(outer);
     const southNodes = allNodes(south);
     const northNodes = allNodes(north);
@@ -656,6 +656,6 @@ describe('facet grid data routing lowering', () => {
         arrangements: [facetArrangement({ id: 'missing', column: { field: 'missingField' } })],
       },
     };
-    expect(() => expandOf(parsePlotSpec(spec))).toThrow(/missingField/);
+    expect(() => expandOf(parsePlotIR(spec))).toThrow(/missingField/);
   });
 });

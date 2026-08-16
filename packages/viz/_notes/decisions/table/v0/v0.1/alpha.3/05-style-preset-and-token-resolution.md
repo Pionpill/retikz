@@ -9,14 +9,14 @@
 
 Table 的 Cell、header、border 与 conditional encoding 需要稳定的视觉默认，但 Table 不应再维护一套独立的 style / mode environment。Core Theme 负责 Scene / Scope selector 继承、Core style registry、shared colors 与来源原子；Table 只负责自己的 token vocabulary、style definition、resolver、mapping 和消费。
 
-早期提议把 `style`、`themeMode` 和 `styleTokens` 作为 TableSpec 同级环境字段，导致 Table 与 Core Scope 之间出现两套 Theme 选择，也无法让同一 shared categorical array 同时服务 Table encoding、Plot palette 与 Core Inspector。本 ADR 冻结 Table 的迁移和 owner boundary。
+早期提议把 `style`、`themeMode` 和 `styleTokens` 作为 IRTable 同级环境字段，导致 Table 与 Core Scope 之间出现两套 Theme 选择，也无法让同一 shared categorical array 同时服务 Table encoding、Plot palette 与 Core Inspector。本 ADR 冻结 Table 的迁移和 owner boundary。
 
 ## 决策：Table 投影 Core shared colors，保留领域解析
 
-TableSpec 删除重复的 `style` 与 `themeMode`，局部 sparse token 改名为 `tableThemeTokens`：
+IRTable 删除重复的 `style` 与 `themeMode`，局部 sparse token 改名为 `tableThemeTokens`：
 
 ```ts
-type IRTableSpec = Readonly<{
+type IRTable = Readonly<{
   tableThemeTokens?: IRTableThemeTokenOverrides;
   // structure / presentation / rules / encoding
 }>;
@@ -50,7 +50,7 @@ declare const defineTableThemeTokens: (
 
 ## 行为、默认值、失败语义与兼容性
 
-未声明 Theme 时使用 Core `neutral + light` effective environment，Table 使用对应的 Table preset。TableSpec 不保存 style / mode identity，省略 `tableThemeTokens` 表示不添加局部 Table override，不产生第二份环境默认。
+未声明 Theme 时使用 Core `neutral + light` effective environment，Table 使用对应的 Table preset。IRTable 不保存 style / mode identity，省略 `tableThemeTokens` 表示不添加局部 Table override，不产生第二份环境默认。
 
 Table 在当前 Core effective Theme 上按以下顺序解析：
 
@@ -62,9 +62,9 @@ Table style/mode preset
   < explicit Cell / border configuration
 ```
 
-Theme token、TableSpec 与 encoding input 必须是 plain JSON-safe data。unknown key、缺失同名 style definition、非法 value、空 categorical / palette、无法 mapping 的 token 或未消费 token 都 fail-loud，并指向输入层与 token path。不得静默退回 renderer 默认、Plot palette 或旧字段。
+Theme token、IRTable 与 encoding input 必须是 plain JSON-safe data。unknown key、缺失同名 style definition、非法 value、空 categorical / palette、无法 mapping 的 token 或未消费 token 都 fail-loud，并指向输入层与 token path。不得静默退回 renderer 默认、Plot palette 或旧字段。
 
-这是 `0.x` 的破坏性迁移：`style` 与 `themeMode` 从 TableSpec 删除，`styleTokens` 改为 `tableThemeTokens`，不保留 alias、双读或静默 bridge。React 局部 `theme` 等价于在 Table 外建立一层 Core Scope Theme；plain JSON 使用外层 `IRScope.theme` 表达同一局部作用域；Vanilla、React、SSR、standalone 与 embedded 使用同一 selector IR、Table style registry、cascade 和诊断语义。
+这是 `0.x` 的破坏性迁移：`style` 与 `themeMode` 从 IRTable 删除，`styleTokens` 改为 `tableThemeTokens`，不保留 alias、双读或静默 bridge。React 局部 `theme` 等价于在 Table 外建立一层 Core Scope Theme；plain JSON 使用外层 `IRScope.theme` 表达同一局部作用域；Vanilla、React、SSR、standalone 与 embedded 使用同一 selector IR、Table style registry、cascade 和诊断语义。
 
 Table inspection 与 manifest 复用 Core `ThemeTokenSource`：style baseline 与 `tableThemeTokens` 为 `local`；Table resolver 将 Core `ResolvedTheme.colors.categorical` 投影为 Table-owned `data.categorical`，来源为 `inherit`，path 为 `$theme/colors/categorical`。`kind` 不编码 preset 或具体输入优先级；`$style/...`、`$theme/colors/categorical`、`$spec/tableThemeTokens/...` 等稳定 path 保留可诊断的 winning entry。
 
@@ -91,13 +91,13 @@ Table 不拥有 Core Theme 传播协议、Plot / Chart vocabulary、Plot categor
 
 ## 最终实现与验证摘要
 
-最终实现已闭合 Table owner style definition、resolver 与 shared categorical projection，并把有效 token 正式消费到 Cell / header appearance、Border Graph、visual encoding、Legend descriptor、manifest 与 inspection。TableSpec 只保留 `tableThemeTokens` 局部覆盖，Core Theme 继续作为 style / mode selector 与 shared colors 的唯一环境真源。
+最终实现已闭合 Table owner style definition、resolver 与 shared categorical projection，并把有效 token 正式消费到 Cell / header appearance、Border Graph、visual encoding、Legend descriptor、manifest 与 inspection。IRTable 只保留 `tableThemeTokens` 局部覆盖，Core Theme 继续作为 style / mode selector 与 shared colors 的唯一环境真源。
 
 验证覆盖 React、Vanilla、SSR、standalone、embedded 与 plain JSON 的 authoring / compile 等价，owner 隔离、旧字段和非法 token 的 fail-loud 语义，以及 appearance、border、encoding、manifest 与 Legend 的最终消费闭环；对抗验证与双语文档、浏览器验收均无遗留阻塞。
 
 ## 被否决方案
 
-- 保留 TableSpec `style` / `themeMode`：会绕开 Scene / Scope 继承并产生多套 environment
+- 保留 IRTable `style` / `themeMode`：会绕开 Scene / Scope 继承并产生多套 environment
 - 保留 `styleTokens` alias：会让迁移后的 owner-local 输入长期双读
 - 让 Table 复制 Core categorical array：会破坏 Plot、Chart、Inspector 与 Table 的单一 active palette
 - 让 Table 读取 Plot / Chart resolver：会反向耦合平行 Tier 2 owner，破坏 Table 独立性
@@ -106,7 +106,7 @@ Table 不拥有 Core Theme 传播协议、Plot / Chart vocabulary、Plot categor
 
 ## 测试策略摘要
 
-需要 schema / type 证据证明 TableSpec 删除旧字段、`tableThemeTokens` strict JSON-safe、shared categorical non-empty projection 与显式 encoding range precedence；registry 证据证明 Table style definition 在 standalone、embedded、React、Vanilla、plain JSON 与 direct headless 入口同路注入、查找和失败；pipeline 证据证明 inherited shared colors、local token、rules、encoding、Cell / border config 和 Legend descriptor 的 owner isolation 与正式消费；manifest 证据证明二元 source 与 path 保留 provenance；adapter / renderer parity 证据证明 React 局部 Theme 与外层 `IRScope.theme` 等价，Standard 只消费 `InspectionAppearance`，Table 不读取 Plot / Chart。详细矩阵属于后续 ignored implementation plan。
+需要 schema / type 证据证明 IRTable 删除旧字段、`tableThemeTokens` strict JSON-safe、shared categorical non-empty projection 与显式 encoding range precedence；registry 证据证明 Table style definition 在 standalone、embedded、React、Vanilla、plain JSON 与 direct headless 入口同路注入、查找和失败；pipeline 证据证明 inherited shared colors、local token、rules、encoding、Cell / border config 和 Legend descriptor 的 owner isolation 与正式消费；manifest 证据证明二元 source 与 path 保留 provenance；adapter / renderer parity 证据证明 React 局部 Theme 与外层 `IRScope.theme` 等价，Standard 只消费 `InspectionAppearance`，Table 不读取 Plot / Chart。详细矩阵属于后续 ignored implementation plan。
 
 ## 不在本 ADR 范围
 

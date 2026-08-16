@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
@@ -39,7 +39,7 @@ const brandPlotTheme = definePlotThemeStyle({
   }),
 });
 
-const plot: IRPlotSpec = {
+const plot: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   id: 'income-life',

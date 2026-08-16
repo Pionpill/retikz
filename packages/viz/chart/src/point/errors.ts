@@ -5,7 +5,7 @@ import { RetikzError } from '@retikz/foundation';
 /** Chart resolution 的稳定错误码 */
 export const ChartResolveErrorCode = {
   UnknownType: 'unknown-type',
-  InvalidChartSpec: 'invalid-chart-spec',
+  InvalidChartIR: 'invalid-chart-ir',
   InvalidPatch: 'invalid-patch',
   UnknownTarget: 'unknown-target',
   DuplicateTarget: 'duplicate-target',

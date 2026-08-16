@@ -3,13 +3,13 @@ import { createSurface, SurfaceProvider } from '@retikz/standard';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
-import type { IRTableSpec } from '../../src';
+import type { IRTable } from '../../src';
 
 import { createTableRuntimeContribution, TABLE_NAMESPACE, TableComposite } from '../../src';
 
 describe('Table inside Standard Surface', () => {
   it('closes provider, layout, Scene, artifact, and Surface spatial output with a real Table child', () => {
-    const table: IRTableSpec = {
+    const table: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',

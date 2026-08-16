@@ -2,7 +2,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRTableSpec } from '../../src';
+import type { IRTable } from '../../src';
 
 import {
   compileTable,
@@ -14,7 +14,7 @@ import {
 } from '../../src';
 import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
-const manualSpec = (id?: string): IRTableSpec => ({
+const manualSpec = (id?: string): IRTable => ({
   namespace: TABLE_NAMESPACE,
   type: TableComposite.Table,
   ...(id === undefined ? {} : { id }),
@@ -73,7 +73,7 @@ describe('Table layout-aware lowering', () => {
         children: [{ type: 'node' as const, position: [0, 0] as [number, number], text: node.label }],
       }),
     });
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
@@ -90,7 +90,7 @@ describe('Table layout-aware lowering', () => {
   });
 
   it('keeps empty fixed tracks observable through the allocation sentinel', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
@@ -116,13 +116,13 @@ describe('Table layout-aware lowering', () => {
   });
 
   it('fails loud for missing data, custom structure, and duplicate composite keys', () => {
-    const detail: IRTableSpec = {
+    const detail: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       data: { reference: 'missing' },
       structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
     };
-    const custom: IRTableSpec = {
+    const custom: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: { kind: 'unknownStructure' },
@@ -134,7 +134,7 @@ describe('Table layout-aware lowering', () => {
         return { rows: [], columns: [], cells: [] };
       },
     });
-    const requiresData: IRTableSpec = {
+    const requiresData: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: { kind: 'requiresData' },

@@ -115,7 +115,7 @@ const revenue = {
 - Table 拥有展示 scalar 的 formatter ref、Definition、registry 消费与诊断
 - Data 继续拥有输入解析、field format 与 scalar schema
 - Presentation 继续拥有 scalar 到 `IRChild` 的生成
-- adapters 只表达同一 TableSpec 并传递 definitions
+- adapters 只表达同一 IRTable 并传递 definitions
 
 Formatter 是具有算法 dispatch 的开放能力，因此采用 Definition / registry；不建立内置白名单与 custom 旁路。
 

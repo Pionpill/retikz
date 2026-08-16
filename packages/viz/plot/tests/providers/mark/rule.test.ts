@@ -8,14 +8,14 @@ import { z } from 'zod';
 
 import type { Cell, CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotReferenceMark, IRPlotSpec } from '../../../src/schemas';
+import type { IRPlotReferenceMark, IRPlot } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
 type RulePath = {
@@ -47,7 +47,7 @@ const WIDTH = 400;
 const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
@@ -169,7 +169,7 @@ describe('rule cartesian line 几何', () => {
 
   it('rule-per-datum-color-field-grouped-stroke', () => {
     // color field → 按色分子 Scope 上提 stroke
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -410,7 +410,7 @@ describe('rule fail-loud', () => {
   });
 
   it('rule-coord-1d-fail-loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -467,7 +467,7 @@ describe('rule polar', () => {
   });
 
   it('rule-band-polar-demo-categorical-angle-keeps-inner-radius', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -520,7 +520,7 @@ describe('rule polar', () => {
   });
 
   it('rule-polar-field-radius-rings-use-circle-path', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -553,7 +553,7 @@ describe('rule polar', () => {
   });
 
   it('rule-polar-field-radius-rings-stay-inside-scene-layout-with-legend', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -646,7 +646,7 @@ describe('rule polar', () => {
 
 describe('rule region projectCell 坐标系', () => {
   it('rule-region-custom-projectcell-contour', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -702,7 +702,7 @@ describe('rule region projectCell 坐标系', () => {
 describe('rule + bar z-order', () => {
   it('rule-zorder-with-bar', () => {
     // 同 scope 内 bar + rule（line）按声明序产出图层（z-order parity）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

@@ -1,10 +1,10 @@
-import { createManualTableSpec } from '@retikz/table';
+import { createManualTableIR } from '@retikz/table';
 
 import type { DetailTableProps } from '../../src';
 
 import { Cell, DetailTable, ManualTable, Table } from '../../src';
 
-const spec = createManualTableSpec({ rows: [[1]], tableThemeTokens: { 'cell.content.color': '#18181b' } });
+const spec = createManualTableIR({ rows: [[1]], tableThemeTokens: { 'cell.content.color': '#18181b' } });
 
 const rejectedDetailStyleTokensProps = {
   dataRef: 'people',

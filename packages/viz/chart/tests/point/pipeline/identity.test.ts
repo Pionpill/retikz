@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChartSpec } from '../../../src/point';
+import { resolvePointChart } from '../../../src/point';
 
 const base = {
   namespace: 'chart',
@@ -11,7 +11,7 @@ const base = {
 
 describe('Point Chart identity', () => {
   it('从显式 Chart id 确定性派生 canonical Chart 与 Plot id', () => {
-    const result = resolvePointChartSpec({ ...base, id: 'sales' });
+    const result = resolvePointChart({ ...base, id: 'sales' });
 
     expect(result.plotSpec.id).toBe('sales/plot');
     expect(result.chart).toEqual({
@@ -23,8 +23,8 @@ describe('Point Chart identity', () => {
   });
 
   it('匿名 Chart 不生成计数 id', () => {
-    const first = resolvePointChartSpec(base);
-    const second = resolvePointChartSpec(base);
+    const first = resolvePointChart(base);
+    const second = resolvePointChart(base);
 
     expect(first.plotSpec.id).toBeUndefined();
     expect(first.chart).toEqual({ namespace: 'chart', type: 'chart', plot: first.plotSpec });
@@ -38,8 +38,8 @@ describe('Point Chart identity', () => {
         { preset: 'title', position: 'bottom', text: 'Revenue' },
       ],
     } as const;
-    const identified = resolvePointChartSpec({ ...base, id: 'sales' }, undefined, {}, presentation);
-    const anonymous = resolvePointChartSpec(base, undefined, {}, presentation);
+    const identified = resolvePointChart({ ...base, id: 'sales' }, undefined, {}, presentation);
+    const anonymous = resolvePointChart(base, undefined, {}, presentation);
 
     expect(identified.chart).toMatchObject({
       namespace: 'chart',

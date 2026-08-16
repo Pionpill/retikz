@@ -3,16 +3,16 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = {},
 ): IRScope => {
@@ -22,7 +22,7 @@ const expandOf = (
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = {},
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -77,8 +77,8 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定连续色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>, plotTheme?: IRPlotSpec['plotTheme']): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (colorScale: Record<string, unknown>, plotTheme?: IRPlot['plotTheme']): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -134,7 +134,7 @@ describe('连续色 · sequential 求值（contract）', () => {
       { cat: 'b', v: 5 },
       { cat: 'c', v: 9 },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -284,8 +284,8 @@ describe('连续色 · domain 推断与退化（contract）', () => {
 });
 
 describe('连续色 · fail-loud 守卫（contract）', () => {
-  const pathColorSpec = (markType: 'line' | 'area'): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const pathColorSpec = (markType: 'line' | 'area'): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -344,7 +344,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
 
   // 错误路径：temporal 字段 + diverging → fail-loud（diverging 对 temporal 无意义）
   it('temporal + diverging fail-loud', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -373,7 +373,7 @@ describe('连续色 · fail-loud 守卫（contract）', () => {
 describe('连续色 · temporal sequential（contract）', () => {
   // 交互：时间字段经 sequential（时间戳当连续量）→ 时间渐变色，不 fail-loud
   it('temporal + sequential 时间渐变取色', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -405,7 +405,7 @@ describe('连续色 · temporal sequential（contract）', () => {
 
 describe('连续色 · 非有限 domain 端点 fail-loud（contract 越界一致性）', () => {
   // 非有限 domain 端点会被 scale schema 的 number 校验静态拦截；此处刻意绕过静态校验，验证 lowering 期的纵深防御（resolve* finite 守卫）
-  const infinitySpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
+  const infinitySpec = (colorScale: Record<string, unknown>): IRPlot =>
     ({
       namespace: 'plot',
       type: 'plot',
@@ -423,7 +423,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（contract 越界一致
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
       ],
-    }) as IRPlotSpec;
+    }) as IRPlot;
   const data = [
     { x: 0, y: 0, v: 1 },
     { x: 1, y: 1, v: 1e9 },
@@ -448,7 +448,7 @@ describe('连续色 · 非有限 domain 端点 fail-loud（contract 越界一致
 describe('连续色 · 回归：categorical 仍走 ordinal（contract）', () => {
   // 交互：categorical color 字段仍可正常着色（连续色阶不影响分类路径）
   it('categorical 字段不受连续色阶影响', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

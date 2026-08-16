@@ -8,7 +8,7 @@
 
 ## 背景与目标
 
-Plot ADR-01 已把 Plot surface、guide、label 与 palette 的语义 owner 收回 Plot，但早期输入名称仍把局部 token、native theme 与 Core effective Theme 分散在 PlotSpec 和 Chart forwarding 字段中。直接 Plot、Chart 内部 Plot 与嵌套 Scope 因此缺少同一条 inherited token context；颜色默认也可能在 Plot 与 Core shared colors 之间形成两套 active categorical array。
+Plot ADR-01 已把 Plot surface、guide、label 与 palette 的语义 owner 收回 Plot，但早期输入名称仍把局部 token、native theme 与 Core effective Theme 分散在 IRPlot 和 Chart forwarding 字段中。直接 Plot、Chart 内部 Plot 与嵌套 Scope 因此缺少同一条 inherited token context；颜色默认也可能在 Plot 与 Core shared colors 之间形成两套 active categorical array。
 
 本 ADR 冻结 Plot 如何把 Core shared categorical 投影到 Plot 领域、如何应用 owner-local style definition 与本地输入，以及哪些颜色能力继续留在 Plot。它不改变 ADR-01 已接受的 Plot / Chart owner 分界。早期 namespace bag 与 token contribution 入口由 Core ADR-15 取代。
 
@@ -29,7 +29,7 @@ Plot 局部输入使用破坏性重命名后的公开字段：
 ```ts
 type IRPlotThemeTokenOverrides = Readonly<Record<string, IRJsonValue>>;
 
-type IRPlotSpec = Readonly<{
+type IRPlot = Readonly<{
   plotThemeTokens?: IRPlotThemeTokenOverrides;
   plotTheme?: IRPlotTheme;
 }>;
@@ -47,7 +47,7 @@ declare const definePlotThemeTokens: (
 ) => ThemeTokenContribution<'plot', IRPlotThemeTokenOverrides>;
 ```
 
-当前 Plot 只公开 owner-local `PlotThemeStyleDefinition` 与 style registry。standalone、embedded、Chart 内部 Plot 和 direct headless lowering 必须注入同义的 Plot style definitions；plain JSON 只持久化 selector 和 PlotSpec 本地字段。没有 Plot consumer 的 Core-only Scene 不要求注册 Plot definition，也不因注册它而改变输出。
+当前 Plot 只公开 owner-local `PlotThemeStyleDefinition` 与 style registry。standalone、embedded、Chart 内部 Plot 和 direct headless lowering 必须注入同义的 Plot style definitions；plain JSON 只持久化 selector 和 IRPlot 本地字段。没有 Plot consumer 的 Core-only Scene 不要求注册 Plot definition，也不因注册它而改变输出。
 
 ## Cascade、颜色投影与行为
 

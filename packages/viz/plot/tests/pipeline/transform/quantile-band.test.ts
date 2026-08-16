@@ -1,11 +1,11 @@
-﻿import { applyTransforms, collectTransformFields } from '@retikz/data';
+import { applyTransforms, collectTransformFields } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
 import { TransformSchema } from '../../../src/schemas';
-import { PlotSpecSchema } from '../../../src/schemas/plot';
+import { PlotSchema } from '../../../src/schemas/plot';
 
 describe('quantile-band statistics schema (contract)', () => {
   it('accepts quantile-band reducer and preserves JSON round trip', () => {
@@ -382,7 +382,7 @@ describe('quantile-band statistics behavior (contract)', () => {
   });
 
   it('strict model accepts quantile-band output fields as derived fields', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

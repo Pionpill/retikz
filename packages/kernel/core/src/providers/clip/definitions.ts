@@ -1,5 +1,5 @@
 import type { ClipDefinition } from '../../contract';
-import type { IRCircleClipSpec, IREllipseClipSpec, IRRectClipSpec } from '../../schemas';
+import type { IRCircleClip, IREllipseClip, IRRectClip } from '../../schemas';
 
 import { defineClip } from '../../contract';
 import { CircleClipSchema, EllipseClipSchema, RectClipSchema } from '../../schemas';
@@ -20,21 +20,21 @@ const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName =
 };
 
 /** 矩形 clip provider：将 IR rect spec 直接映射为 Scene rect clip */
-const rectClip = defineClip<IRRectClipSpec>({
+const rectClip = defineClip<IRRectClip>({
   kind: 'rect',
   schema: RectClipSchema,
   resolve: spec => ({ kind: 'rect', x: spec.x, y: spec.y, width: spec.width, height: spec.height }),
 });
 
 /** 圆形 clip provider：将 IR circle spec 直接映射为 Scene circle clip */
-const circleClip = defineClip<IRCircleClipSpec>({
+const circleClip = defineClip<IRCircleClip>({
   kind: 'circle',
   schema: CircleClipSchema,
   resolve: spec => ({ kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.r }),
 });
 
 /** 椭圆 clip provider：将 IR ellipse spec 直接映射为 Scene ellipse clip */
-const ellipseClip = defineClip<IREllipseClipSpec>({
+const ellipseClip = defineClip<IREllipseClip>({
   kind: 'ellipse',
   schema: EllipseClipSchema,
   resolve: spec => ({ kind: 'ellipse', cx: spec.cx, cy: spec.cy, rx: spec.rx, ry: spec.ry }),

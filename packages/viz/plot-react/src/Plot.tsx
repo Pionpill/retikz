@@ -1,6 +1,6 @@
 import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
 import type {
-  IRPlotSpec,
+  IRPlot,
   IRPlotTransform,
   LowerPlotsOptions,
   PlotHostLineageMetadata,
@@ -45,18 +45,18 @@ export type PlotLineageProps = {
 /** Plot-owned theme 输入 */
 export type PlotThemeProps = {
   /** Plot-owned canonical theme token 稀疏覆盖 */
-  plotThemeTokens?: IRPlotSpec['plotThemeTokens'];
+  plotThemeTokens?: IRPlot['plotThemeTokens'];
   /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
-  plotThemeTokenRules?: IRPlotSpec['plotThemeTokenRules'];
+  plotThemeTokenRules?: IRPlot['plotThemeTokenRules'];
   /** Plot theme 的 JSON-safe 默认值 */
-  plotTheme?: IRPlotSpec['plotTheme'];
+  plotTheme?: IRPlot['plotTheme'];
 };
 
 /** 已构造 Plot Source IR 的薄包装入口 */
-export type PlotSpecProps = PlotCommonProps &
+export type PlotIRProps = PlotCommonProps &
   PlotThemeProps & {
     /** 完整 Plot Source IR 根节点 */
-    spec: IRPlotSpec;
+    spec: IRPlot;
     /** 由 Plot lowering 消费的外部数据集表 */
     data: ExternalDatasets;
     children?: never;
@@ -82,7 +82,7 @@ export type PlotDslProps = PlotCommonProps &
     /** 坐标系输入 */
     coordinate?: InputPlotCoordinate;
     /** Plot composition 输入 */
-    composition?: IRPlotSpec['composition'];
+    composition?: IRPlot['composition'];
     /** 组合 DSL 前插入的 Plot data transforms */
     dataTransforms?: Array<IRPlotTransform>;
     /** 由 mark 组件收集的 transform shortcut 定义 */
@@ -90,7 +90,7 @@ export type PlotDslProps = PlotCommonProps &
   };
 
 /** <Plot> props，spec 入口与组合 DSL 入口二选一 */
-export type PlotProps = PlotSpecProps | PlotDslProps;
+export type PlotProps = PlotIRProps | PlotDslProps;
 
 /** 从 React 面板 props 组装 Plot Vanilla Input 的 Scope 部分 */
 const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined => {

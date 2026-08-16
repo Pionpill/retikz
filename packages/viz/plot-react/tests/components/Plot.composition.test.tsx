@@ -1,4 +1,4 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -59,7 +59,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
       </Plot>,
     );
     // 薄 Plot DSL 不补默认 guides，等价 spec 也无 guides
-    const equivalentSpec: IRPlotSpec = {
+    const equivalentSpec: IRPlot = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },
@@ -274,7 +274,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark angle="value" color="label" />
       </Plot>,
     );
-    const equivalentSpec: IRPlotSpec = {
+    const equivalentSpec: IRPlot = {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },

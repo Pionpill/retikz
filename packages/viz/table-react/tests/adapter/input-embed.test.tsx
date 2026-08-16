@@ -1,7 +1,7 @@
 import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 
-import { createManualTableSpec } from '@retikz/table';
+import { createManualTableIR } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -25,7 +25,7 @@ const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProp
 
 describe('Table React InputEmbed routing', () => {
   it('maps all React authoring entries to the shared Table Vanilla adapter', () => {
-    const spec = createManualTableSpec({ id: 'generic', rows: [['Ada']] });
+    const spec = createManualTableIR({ id: 'generic', rows: [['Ada']] });
     const generic = inputOf(Table, { spec });
     const detail = inputOf(DetailTable, {
       id: 'detail',

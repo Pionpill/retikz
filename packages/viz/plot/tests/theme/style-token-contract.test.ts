@@ -4,7 +4,7 @@ import * as plot from '../../src';
 import {
   PlotAxisThemeTokenOverridesSchema,
   PlotAxisThemeTokenRuleSchema,
-  PlotSpecSchema,
+  PlotSchema,
   PlotThemeSchema,
   PlotThemeToken,
   PlotThemeTokenOverridesSchema,
@@ -37,8 +37,8 @@ describe('Plot style token contract', () => {
     expect('PlotThemeTokenSource' in api).toBe(false);
   });
 
-  it('让 PlotSpec 接受 strict flat plotThemeTokens', () => {
-    const parsed = PlotSpecSchema.safeParse({
+  it('让 IRPlot 接受 strict flat plotThemeTokens', () => {
+    const parsed = PlotSchema.safeParse({
       ...baseSpec,
       plotThemeTokens: {
         'plot.area.fill': 'none',
@@ -54,7 +54,7 @@ describe('Plot style token contract', () => {
     expect(Object.values(PlotThemeToken)).toContain('plot.area.fill');
     expect(Object.values(PlotThemeToken)).not.toContain('plot.surface.fill');
     expect(
-      PlotSpecSchema.safeParse({
+      PlotSchema.safeParse({
         ...baseSpec,
         plotThemeTokens: { plot: { surface: { fill: 'none' } } },
       }).success,
@@ -62,7 +62,7 @@ describe('Plot style token contract', () => {
   });
 
   it('拒绝已删除的顶层 colors 调色板简写', () => {
-    const result = PlotSpecSchema.safeParse({ ...baseSpec, colors: ['#2563eb', '#f97316'] });
+    const result = PlotSchema.safeParse({ ...baseSpec, colors: ['#2563eb', '#f97316'] });
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.issues[0]).toMatchObject({ code: 'unrecognized_keys', keys: ['colors'] });
@@ -223,19 +223,19 @@ describe('Plot style token contract', () => {
     expect(PlotAxisThemeTokenOverridesSchema.safeParse({ [PlotThemeToken.PlotAreaFill]: 'none' }).success).toBe(false);
   });
 
-  it('让 PlotSpec 中的 Axis rules 保持 JSON round-trip', () => {
+  it('让 IRPlot 中的 Axis rules 保持 JSON round-trip', () => {
     const plotThemeTokenRules = [
       {
         select: { dimension: ['x', 'y'] },
         tokens: { [PlotThemeToken.AxisGridEnabled]: true },
       },
     ];
-    const parsed = PlotSpecSchema.parse({ ...baseSpec, plotThemeTokenRules });
+    const parsed = PlotSchema.parse({ ...baseSpec, plotThemeTokenRules });
 
     expect(JSON.parse(JSON.stringify(parsed.plotThemeTokenRules))).toEqual(plotThemeTokenRules);
   });
 
-  it('让 sparse 与 PlotSpec token 输入保持 JSON round-trip，并让 required map 拒绝缺项', () => {
+  it('让 sparse 与 IRPlot token 输入保持 JSON round-trip，并让 required map 拒绝缺项', () => {
     const plotThemeTokens = PlotThemeTokenOverridesSchema.parse({
       [PlotThemeToken.PlotAreaFill]: 'none',
       [PlotThemeToken.AxisTickMark]: { kind: 'circle', size: 5 },
@@ -243,7 +243,7 @@ describe('Plot style token contract', () => {
       [PlotThemeToken.AxisTitlePadding]: 6,
       [PlotThemeToken.PlotPaletteSeries]: ['#2563eb', '#f97316'],
     });
-    const parsed = PlotSpecSchema.parse({ ...baseSpec, plotThemeTokens });
+    const parsed = PlotSchema.parse({ ...baseSpec, plotThemeTokens });
 
     expect(JSON.parse(JSON.stringify(plotThemeTokens))).toEqual(plotThemeTokens);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
