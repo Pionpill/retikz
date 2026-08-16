@@ -1,6 +1,6 @@
-import type { Position } from './point';
+import type { Position } from '../primitives';
 
-import { point } from './point';
+import { vector2 } from '../primitives';
 
 /**
  * 凸包（Andrew's monotone chain）
@@ -18,7 +18,7 @@ export const convexHull = (points: Array<Position>): Array<Position> => {
   if (uniq.length < 3) return uniq;
 
   const cross = (o: Position, a: Position, b: Position): number =>
-    point.cross([a[0] - o[0], a[1] - o[1]], [b[0] - o[0], b[1] - o[1]]);
+    vector2.cross([a[0] - o[0], a[1] - o[1]], [b[0] - o[0], b[1] - o[1]]);
 
   const lower: Array<Position> = [];
   for (const p of uniq) {

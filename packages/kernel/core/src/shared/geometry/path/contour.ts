@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcAngleInRange, arcEndPoint, DEFAULT_EPSILON, intersect, point, rayArc } from '@retikz/math';
+import { arcAngleInRange, arcEndPoint, DEFAULT_EPSILON, intersect, rayArc, vector2 } from '@retikz/math';
 
 import { alignAngleSweep, DEG_TO_RAD, normalizeSignedDegrees, RAD_TO_DEG } from '../angle';
 
@@ -85,11 +85,11 @@ const segmentEnd = (seg: ContourSegment): Position =>
  *   arc 切线垂直于半径，方向随 counterClockwise 翻转（CW: (-sinθ, cosθ)，CCW: (sinθ, -cosθ)）
  */
 const tangentAt = (seg: ContourSegment, atStart: boolean): Position => {
-  if (seg.kind === 'line') return point.normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
+  if (seg.kind === 'line') return vector2.normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
   const angleDeg = atStart ? seg.startAngle : seg.endAngle;
   const rad = angleDeg * DEG_TO_RAD;
   const sign = seg.counterClockwise ? -1 : 1;
-  return point.normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
+  return vector2.normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
 };
 
 /** arc 段的角跨度（带符号：CW 为正递增、CCW 为负），单位度 */
@@ -481,7 +481,7 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
   const originalSweep = Math.abs(seg.endAngle - seg.startAngle);
   if (
     originalSweep >= 360 - DEFAULT_EPSILON &&
-    point.length([start[0] - end[0], start[1] - end[1]]) < DEFAULT_EPSILON
+    vector2.length([start[0] - end[0], start[1] - end[1]]) < DEFAULT_EPSILON
   ) {
     const adjusted = alignAngleSweep(seg.startAngle, seg.endAngle, seg.counterClockwise ?? false);
     cmds.push({
@@ -522,7 +522,7 @@ export const boundaryFromContour = (
   fillets: Array<FilletSolution> = filletContour(segments, cornerRadius),
 ): Position | undefined => {
   const dirRaw: Position = [toward[0] - rayOrigin[0], toward[1] - rayOrigin[1]];
-  const dl = point.length(dirRaw);
+  const dl = vector2.length(dirRaw);
   if (dl < 1e-12) return undefined;
   const dir: Position = [dirRaw[0] / dl, dirRaw[1] / dl];
 

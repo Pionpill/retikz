@@ -8,8 +8,8 @@ import {
   contourToPathPrimitive,
   defineShape,
   localToWorld,
-  point,
   pointsConnectionEnvelope,
+  vector2,
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
@@ -41,7 +41,7 @@ const aabbCenterOf = (points: Array<Position>): Position => {
 /** 归一化局部顶点 */
 const centeredPoints = (params: ContourShapeParams): Array<Position> => {
   const center = aabbCenterOf(params.points);
-  return params.points.map(pointValue => point.sub(pointValue, center));
+  return params.points.map(pointValue => vector2.sub(pointValue, center));
 };
 
 /** 将 Contour 转为世界系闭合轮廓 */
