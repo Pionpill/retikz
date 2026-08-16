@@ -78,12 +78,12 @@ This subpath provides the individual Definitions, `StandardClipDefinitions`, `St
 
 #### API
 
-`compound` uses `CompoundClipSpec` and requires `CompoundClipDefinition` during compilation:
+`compound` uses `CompoundClip` and requires `CompoundClipDefinition` during compilation:
 
 | Field       | Type                                    | Description                                                                                      |
 | ----------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `kind`      | `'compound'`                            | Discriminator for recursive compound clipping                                                    |
-| `children`  | `Array<IRClipSpec \| CompoundClipSpec>` | At least one child; each child can nest another `compound` or reference a Core / registered clip |
+| `children`  | `Array<IRClip \| CompoundClip>` | At least one child; each child can nest another `compound` or reference a Core / registered clip |
 | `fillRule?` | `'nonzero' \| 'evenodd'`                | Fill rule for the combined path; omitted values follow Core's default handling                   |
 
 ## Related

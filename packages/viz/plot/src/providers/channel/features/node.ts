@@ -1,4 +1,4 @@
-﻿import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue, JsonValue } from '@retikz/core';
+import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue, JsonValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 
 import {
@@ -25,7 +25,7 @@ import type {
   IRPlotLinearScale,
   IRPlotMarkOperation,
   IRPlotPointNumberStyle,
-  IRPlotSpec,
+  IRPlot,
   IRPlotSqrtScale,
 } from '../../../schemas';
 
@@ -131,7 +131,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
  *   非 continuous 字段（temporal / categorical）fail-loud；constant 变体由 nodeDefault / node 本身处理，不在这里产 resolver
  */
 export const makeNumericNodeResolver = (
-  node: IRPlotSpec,
+  node: IRPlot,
   rows: Array<ExternalRow>,
   fieldTypes: DataFieldTypeMap,
   pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,

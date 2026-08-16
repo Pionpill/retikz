@@ -83,7 +83,7 @@ value presentation 的输出与 direct content 使用同一 appearance 路径：
 
 value 与 content 是互斥分支。只有 value Cell 拥有 raw/formatted value 与 formatter/presentation provider names；content Cell 只保留 appearance 与合法 `IRChild`。两类 Cell 都必须与 canonical model 保持相同 identity、顺序和 payload kind，非法混合状态 fail-loud。
 
-本 ADR 不给 React 或 Vanilla 增加 appearance prop、CSS callback 或旁路注入 API。非空 appearance 必须由后续 style/rule/encoding 通过同一 TableSpec pipeline 产生。
+本 ADR 不给 React 或 Vanilla 增加 appearance prop、CSS callback 或旁路注入 API。非空 appearance 必须由后续 style/rule/encoding 通过同一 IRTable pipeline 产生。
 
 ## DSL 表面
 

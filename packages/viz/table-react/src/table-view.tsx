@@ -1,7 +1,7 @@
 import type { CompileArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { TableCompileArtifact } from '@retikz/table';
-import type { InputTable, InputTableSpec } from '@retikz/table-vanilla';
+import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -39,7 +39,7 @@ const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompil
 export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({ runtime }) => {
   const { table, lowerOptions, composites, onManifest, display } = runtime;
   const tableKey = JSON.stringify(table);
-  const stableTable = useMemo<InputTableSpec>(() => JSON.parse(tableKey) as InputTableSpec, [tableKey]);
+  const stableTable = useMemo<InputTableVariant>(() => JSON.parse(tableKey) as InputTableVariant, [tableKey]);
   const { datasetReference, datasetSource } = runtime;
   const stableDatasets = useMemo<ExternalDatasets>(
     () =>

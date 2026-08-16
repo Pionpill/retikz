@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 关联方：[ADR-03 scale](./03-plot-scale.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.5](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlot](./01-plot-spec-root.md) · 关联方：[ADR-03 scale](./03-plot-scale.md) · [ADR-05 encoding+mark](./05-plot-encoding-mark.md)
 
 ## 背景 / 约束
 

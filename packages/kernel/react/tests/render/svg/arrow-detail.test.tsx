@@ -1,4 +1,4 @@
-import type { MarkerPrimitive, PathPrim, ResolvedArrowEndSpec } from '@retikz/core';
+import type { MarkerPrimitive, PathPrim, ResolvedArrowEnd } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -8,13 +8,13 @@ import { renderPrim } from '../../../src/render/svg';
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
 /** spec 转 marker id 的回调（按 detail 区分） */
-const markerIdFor = (spec: ResolvedArrowEndSpec): string => {
+const markerIdFor = (spec: ResolvedArrowEnd): string => {
   // 测试用简化 hash：JSON.stringify
   return `mk-${JSON.stringify(spec)}`;
 };
 
-/** 构造一个已解析 ResolvedArrowEndSpec（emit-in-compile 后的形态）；marker 颜色用来区分不同 detail */
-const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEndSpec => {
+/** 构造一个已解析 ResolvedArrowEnd（emit-in-compile 后的形态）；marker 颜色用来区分不同 detail */
+const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEnd => {
   const path: MarkerPrimitive = {
     type: 'path',
     commands: [{ kind: 'move', to: [0, 0] }],
@@ -23,7 +23,7 @@ const resolvedSpec = (shape: string, fill?: string): ResolvedArrowEndSpec => {
   return { shape, baseSize: 10, refX: 0, markerWidth: 6, markerHeight: 6, marker: [path] };
 };
 
-describe('renderPrim path: arrowStart / arrowEnd 是 ResolvedArrowEndSpec', () => {
+describe('renderPrim path: arrowStart / arrowEnd 是 ResolvedArrowEnd', () => {
   const base: PathPrim = {
     type: 'path',
     commands: [
@@ -75,7 +75,7 @@ describe('renderPrim path: arrowEnd 字段顺序不影响 id', () => {
   };
 
   it('renderPrim 把 arrowEnd spec 原样喂给 arrowMarkerIdFor', () => {
-    let captured: ResolvedArrowEndSpec | undefined;
+    let captured: ResolvedArrowEnd | undefined;
     const spec = resolvedSpec('stealth', 'red');
     renderPrim({ ...base, arrowEnd: spec }, 0, {
       arrowMarkerIdFor: s => {

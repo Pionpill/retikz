@@ -4,20 +4,20 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
-const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
@@ -47,8 +47,8 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 建 spec：x/y linear + ordinal 色 scale，单 mark */
-const specOf = (mark: Record<string, unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specOf = (mark: Record<string, unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -135,7 +135,7 @@ describe('color × series · B/C 收口（contract）', () => {
 
 describe('plot theme default palette', () => {
   it('mark_without_color_uses_shared_categorical_by_default', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -161,7 +161,7 @@ describe('plot theme default palette', () => {
   });
 
   it('mark_without_color_uses_plot_palette_by_layer_index', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -190,7 +190,7 @@ describe('plot theme default palette', () => {
   });
 
   it('categorical_color_uses_plot_palette_as_ordinal_range', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

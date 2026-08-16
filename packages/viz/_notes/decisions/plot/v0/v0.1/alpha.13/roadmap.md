@@ -13,7 +13,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 1. 数据经 root 或 mark-local transform 派生统计 rows。
 2. 派生 rows 被现有 `PointMark` / `PathMark` / `IntervalMark` / `ReferenceMark` 消费；密度面积走 `PathMark closure={{ kind: 'baseline' }}`。
-3. React / Vanilla 只提供薄适配与结构性等价表达，把能力映射到同一份 PlotSpec，不新增与 IR 平行的 chart 语义。
+3. React / Vanilla 只提供薄适配与结构性等价表达，把能力映射到同一份 IRPlot，不新增与 IR 平行的 chart 语义。
 
 ## 收敛边界
 
@@ -120,8 +120,8 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 
 设计倾向：
 
-- React 表面只做薄适配：组件 / props 必须能直接映射到 PlotSpec，不绕开 `@retikz/plot` lowering。
-- Vanilla SSR 继续消费同一 spec；如果提供 helper，也只生成同一 PlotSpec，不引入独立 builder 语义。
+- React 表面只做薄适配：组件 / props 必须能直接映射到 IRPlot，不绕开 `@retikz/plot` lowering。
+- Vanilla SSR 继续消费同一 spec；如果提供 helper，也只生成同一 IRPlot，不引入独立 builder 语义。
 - docs 按 Statistics 心智模型组织：先讲 transform 产出 rows，再讲 boxplot / density / smooth 是 stat + geom 的组合。
 - demo 以暴露底层组合关系为主；可读性服务于解释抽象，不承担 chart 级“少写代码”目标。
 
@@ -186,7 +186,7 @@ alpha.12 也把 Statistics 地基从零散 transform 收敛为 `summarize` / `se
 - **mark label 断言**：node / geometry label kind 与 Point / Interval / Path / Reference / Relation host 匹配；错误 kind fail-loud；field/value content 被解析到 core label text。
 - **lowering / geometry**：boxplot 组合下沉成 interval / reference / point；density area 下沉成 region；regression 下沉成 path。
 - **交互点**：locator 与 render 共用 transform registry；mark-local transform 与 root transform 组合一致。
-- **三包等价**：React 薄适配、Vanilla spec helper 与手写 PlotSpec 产物等价。
+- **三包等价**：React 薄适配、Vanilla spec helper 与手写 IRPlot 产物等价。
 - **docs demo**：示例数据、MDX import、双语页面与 API 表同步。
 
 ## 本轮不做

@@ -1,24 +1,24 @@
 # Chart 类型封装与 Plot-backed lowering 总设计
 
-> **状态：长期架构草案，已确认分层、IR、扩展与单图呈现边界。** 本文定义 `@retikz/chart` 的长期定位、ChartSpec 语义、默认解析、Plot 混合、可选展示外壳与 lowering 关系，不冻结具体字段、首批类型清单或版本排期。当前公开契约以后续 Accepted ADR、代码与用户文档为准。
+> **状态：长期架构草案，已确认分层、IR、扩展与单图呈现边界。** 本文定义 `@retikz/chart` 的长期定位、IRChart 语义、默认解析、Plot 混合、可选展示外壳与 lowering 关系，不冻结具体字段、首批类型清单或版本排期。当前公开契约以后续 Accepted ADR、代码与用户文档为准。
 >
 > 关联：[`Chart 封装完备设计`](./chart-encapsulation-complete.md) · [`Chart 横向分析对比`](../analysis/chart-compare-analysis.md) · [`Plot 总设计`](./plot-design.md) · [`Plot 可视化完备设计`](./plot-visualization-complete.md) · [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md) · [`chart v0.1 roadmap`](../decisions/chart/v0/v0.1/roadmap.md)
 
 ---
 
-本文只确定 Chart 的长期核心模型。ChartSpec 的精确 schema、Canonical Type 清单、默认值、错误 payload 与 provenance 产物由对应能力契约冻结。
+本文只确定 Chart 的长期核心模型。IRChart 的精确 schema、Canonical Type 清单、默认值、错误 payload 与 provenance 产物由对应能力契约冻结。
 
 ## 1. 核心判断
 
 `@retikz/chart` 是 Plot 之上的 **Chart 封装层**：
 
-> 基础 Chart 为完整 Plot authoring 增加 renderer-neutral 单图展示外壳；typed Chart 用稳定的 `type` 选择完整、隐式的 Grammar-of-Graphics 配方。两条入口都先形成完整 PlotSpec，再与可选 presentation 归一为同一个 canonical `IRChart`，并通过 Layout Flex 与 Standard Surface 组合成独立图表。
+> 基础 Chart 为完整 Plot authoring 增加 renderer-neutral 单图展示外壳；typed Chart 用稳定的 `type` 选择完整、隐式的 Grammar-of-Graphics 配方。两条入口都先形成完整 IRPlot，再与可选 presentation 归一为同一个 canonical `IRChart`，并通过 Layout Flex 与 Standard Surface 组合成独立图表。
 
 固定执行链路为：
 
 ```text
-base Chart -> complete Plot authoring -> PlotSpec
-typed ChartSpec -> type recipe resolution -> PlotSpec
+base Chart -> complete Plot authoring -> IRPlot
+typed IRChart -> type recipe resolution -> IRPlot
   -> canonical IRChart
   -> optional ordered presentation resolution
   -> standard.surface containing plot.plot or layout.flexLayout
@@ -29,7 +29,7 @@ typed ChartSpec -> type recipe resolution -> PlotSpec
 
 Chart 不直接实现 Core 几何或 renderer，也不建立与 Plot 平行的 Mark、Transform、Scale、Coordinate、Guide、Composition 或交互语义。Chart 只拥有基础 / typed authoring 的汇合、type recipe 与单图展示内容的高层语义；Plot 负责图本体，Layout 负责 Flex 排列，Standard 负责 Surface 呈现，Core 负责最终图形表达。
 
-Chart 的价值不是减少 Plot 能力。基础 Chart 让高级作者不离开完整 Plot authoring 就能获得 Chart-native presentation；typed Chart 减少用户必须显式学习和重复填写的 Plot 配置。typed ChartSpec 可以比 PlotSpec 稀疏，但其可达能力不能因封装层而被人为裁剪。
+Chart 的价值不是减少 Plot 能力。基础 Chart 让高级作者不离开完整 Plot authoring 就能获得 Chart-native presentation；typed Chart 减少用户必须显式学习和重复填写的 Plot 配置。typed IRChart 可以比 IRPlot 稀疏，但其可达能力不能因封装层而被人为裁剪。
 
 ## 2. 要解决的问题
 
@@ -50,12 +50,12 @@ Chart 不建立新的绘图、数据或运行时能力轴。若一个图表只�
 | 角色                | 包                          | 责任                                                                                                                                           | 不拥有                                                                       |
 | ------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 数据底座            | `@retikz/data`              | 数据引用、字段模型、通用 transform / statistics、lineage                                                                                       | Chart type、Mark、Scale、Guide                                               |
-| 可视化底座          | `@retikz/plot`              | PlotSpec、GoG 成员、Plot token / preset / resolver、definition / registry、lowering、provenance / locator                                      | Chart type、Chart presentation 与 recipe token                               |
-| Chart 核心          | `@retikz/chart`             | ChartSpec、封闭 Canonical Type 目录、类型配方、Chart canvas / presentation / recipe token、Plot 主题输入转发、具体 Plot definitions 与组合编排 | Plot token / preset / resolver、新 GoG 能力轴、renderer、Chart 扩展 registry |
+| 可视化底座          | `@retikz/plot`              | IRPlot、GoG 成员、Plot token / preset / resolver、definition / registry、lowering、provenance / locator                                      | Chart type、Chart presentation 与 recipe token                               |
+| Chart 核心          | `@retikz/chart`             | IRChart、封闭 Canonical Type 目录、类型配方、Chart canvas / presentation / recipe token、Plot 主题输入转发、具体 Plot definitions 与组合编排 | Plot token / preset / resolver、新 GoG 能力轴、renderer、Chart 扩展 registry |
 | 通用呈现            | `@retikz/standard`          | 被 Plot 或 Chart 解析后消费的领域无关 composite 与 Surface 呈现                                                                                | Layout solver、Chart / Plot IR、类型配方与字段角色                           |
 | 通用布局            | `@retikz/layout`            | FlexLayout schema / Definition、solver、artifact 与 composition                                                                                | Surface appearance、Chart / Plot 领域语义                                    |
 | 图形底座            | `@retikz/core`              | Core IR、Scene、manifest 与通用编译                                                                                                            | Chart / Plot 领域语义                                                        |
-| authoring / runtime | chart-react / chart-vanilla | 构造同一 typed ChartSpec / canonical IRChart、注入 datasets / definitions、接入宿主生命周期                                                    | Chart 配方、Plot 算法或私有 IR                                               |
+| authoring / runtime | chart-react / chart-vanilla | 构造同一 typed IRChart / canonical IRChart、注入 datasets / definitions、接入宿主生命周期                                                    | Chart 配方、Plot 算法或私有 IR                                               |
 
 依赖只能沿以下方向：
 
@@ -71,11 +71,11 @@ Data ──▶ Plot ──▶ Standard ──▶ Layout ──▶ Core
 
 Chart 可以依赖 Data、Plot、Standard 与 Layout 的公开契约，但不复制它们的 schema、definition、registry、pipeline、布局或算法。Standard 只通过 Layout 公开 capability 组合排版，不拥有或转发 FlexLayout。
 
-## 4. Typed ChartSpec 与 canonical `IRChart`
+## 4. Typed IRChart 与 canonical `IRChart`
 
-Chart 可以拥有自己的 `ChartSpec`，因为 Tier 3 需要用 `type` 区分常用图表语义、缩短人和 LLM 的学习路径，并持久化用户的高层意图。
+Chart 可以拥有自己的 `IRChart`，因为 Tier 3 需要用 `type` 区分常用图表语义、缩短人和 LLM 的学习路径，并持久化用户的高层意图。
 
-ChartSpec 必须满足：
+IRChart 必须满足：
 
 - 100% JSON 可序列化
 - 顶层 `type` 是 Canonical Type 判别值
@@ -83,9 +83,9 @@ ChartSpec 必须满足：
 - 实际数据集仍由 runtime / datasets 注入，不内联 rows
 - 同一 Chart 只有一个根 `data`，与 Plot 的单根数据模型保持一致
 - 多系列复用 Plot 的 series、group、color 等语义，不建立可独立绑定 dataset 的 ECharts 式 `series[]`
-- React、Vanilla 与手写 JSON 最终生成或消费同一份 typed ChartSpec
+- React、Vanilla 与手写 JSON 最终生成或消费同一份 typed IRChart
 
-ChartSpec 只负责 type-first authoring，不是完整 Chart 的最终执行契约。基础 Chart 直接从完整 Plot authoring 生成 PlotSpec；typed ChartSpec 经 recipe resolution 生成 PlotSpec；两者随后都归一为独立、完整、JSON-safe 的 canonical `IRChart`：
+IRChart 只负责 type-first authoring，不是完整 Chart 的最终执行契约。基础 Chart 直接从完整 Plot authoring 生成 IRPlot；typed IRChart 经 recipe resolution 生成 IRPlot；两者随后都归一为独立、完整、JSON-safe 的 canonical `IRChart`：
 
 ```ts
 type IRChart = {
@@ -93,14 +93,14 @@ type IRChart = {
   type: 'chart';
   id?: string;
   chartThemeTokens?: IRChartThemeTokenOverrides;
-  plot: IRPlotSpec;
+  plot: IRPlot;
   presentation?: IRChartPresentation;
 };
 ```
 
-`IRChart` 不进入 Canonical Type union。它保存整图 identity、Chart-owned token override、完整 PlotSpec 与可选 presentation，是 JSON、React、Vanilla、inspection 和 runtime 的共同汇合点；typed ChartSpec 仍保存稀疏高层意图。Plot-owned theme 与全部 Plot intrinsic contract 留在完整 PlotSpec 中，不在 Chart 根复制。canonical presentation 通过唯一 Plot placeholder 前后的 children 数组顺序表达位置，不保留 React / Vanilla authoring-only 的 `position`。
+`IRChart` 不进入 Canonical Type union。它保存整图 identity、Chart-owned token override、完整 IRPlot 与可选 presentation，是 JSON、React、Vanilla、inspection 和 runtime 的共同汇合点；typed IRChart 仍保存稀疏高层意图。Plot-owned theme 与全部 Plot intrinsic contract 留在完整 IRPlot 中，不在 Chart 根复制。canonical presentation 通过唯一 Plot placeholder 前后的 children 数组顺序表达位置，不保留 React / Vanilla authoring-only 的 `position`。
 
-ChartSpec 不是缩减版 PlotSpec。图本体配置应沿用 Plot 的结构轴，允许配置 data、transform、encoding、scales、coordinate / composition、mark、guides、Plot theme 输入、intrinsic size 和追加 marks，但不要求用户重写 `type` 已经确定的内容。Chart 另外拥有可选的单图展示语义，用于表达 Plot 本体之外的标题、说明、来源与外框；它们不是 Plot GoG 成员。首个公开 presentation 只声明唯一主 Plot 占位与 title、subtitle、note、source 四类文本 preset，排列复用 Layout FlexLayout，完整内容复用 Standard Surface，文本复用 Core TextBlock，不建立自己的通用布局或任意 child 系统。
+IRChart 不是缩减版 IRPlot。图本体配置应沿用 Plot 的结构轴，允许配置 data、transform、encoding、scales、coordinate / composition、mark、guides、Plot theme 输入、intrinsic size 和追加 marks，但不要求用户重写 `type` 已经确定的内容。Chart 另外拥有可选的单图展示语义，用于表达 Plot 本体之外的标题、说明、来源与外框；它们不是 Plot GoG 成员。首个公开 presentation 只声明唯一主 Plot 占位与 title、subtitle、note、source 四类文本 preset，排列复用 Layout FlexLayout，完整内容复用 Standard Surface，文本复用 Core TextBlock，不建立自己的通用布局或任意 child 系统。
 
 精确字段形态由 ADR 冻结；长期语义先保持：
 
@@ -123,7 +123,7 @@ ChartSpec 不是缩减版 PlotSpec。图本体配置应沿用 Plot 的结构轴�
 - Chart-level title、subtitle、note、source 属于首个公开单图展示外壳；caption、credit 不是首版契约
 - axis title、tick label、datum / mark label 与数据锚定 annotation 属于 Plot
 - accessibility description 可以由 Chart 保存语义 metadata，但不与可见 caption 共用一个含混字段；实际宿主映射由 adapter / renderer 契约决定
-- toolbar、export、fullscreen、loading 等宿主运行时状态不进入静态 ChartSpec
+- toolbar、export、fullscreen、loading 等宿主运行时状态不进入静态 IRChart
 
 ## 5. `type` 选择完整隐式配方
 
@@ -135,9 +135,9 @@ Canonical Type 不是主 Mark 的别名，而是一套完整 GoG 配方。它可
 - Scale 与 Coordinate / Composition
 - Guide、Plot Layout 与 Plot Label 等 type-specific 表现性默认
 
-`type` 是持续成立的语义契约，不是生成后即可任意改写的 preset。配方中定义类型身份的成员构成 **type 核心配方**：只要 ChartSpec 仍声明该 type，这些成员就必须保留并参与最终 PlotSpec，用户配置与追加内容都不能删除、关闭、替换或使其失效。
+`type` 是持续成立的语义契约，不是生成后即可任意改写的 preset。配方中定义类型身份的成员构成 **type 核心配方**：只要 IRChart 仍声明该 type，这些成员就必须保留并参与最终 IRPlot，用户配置与追加内容都不能删除、关闭、替换或使其失效。
 
-例如，`waterfall` 可以隐式表达主 Mark 是 Interval Mark，并需要 `derive-interval` Transform；股票图可以隐式表达主 Mark 是股票 Mark。它们可以复用 Plot 内建 definition，也可以由 Chart 随类型提供符合 Plot contract 的具体 definition，或消费宿主注入的 definition；无论来源如何，都必须进入 Plot registry 并由 Plot pipeline 统一执行。上述隐式 Plot 内容不需要在 Chart IR 中重复出现，只在 Chart 解析得到的完整 PlotSpec 中显式展开。可选单图展示内容独立解析，不写入 PlotSpec，也不属于 type 核心配方。
+例如，`waterfall` 可以隐式表达主 Mark 是 Interval Mark，并需要 `derive-interval` Transform；股票图可以隐式表达主 Mark 是股票 Mark。它们可以复用 Plot 内建 definition，也可以由 Chart 随类型提供符合 Plot contract 的具体 definition，或消费宿主注入的 definition；无论来源如何，都必须进入 Plot registry 并由 Plot pipeline 统一执行。上述隐式 Plot 内容不需要在 Chart IR 中重复出现，只在 Chart 解析得到的完整 IRPlot 中显式展开。可选单图展示内容独立解析，不写入 IRPlot，也不属于 type 核心配方。
 
 Chart type 的图本体配方只允许三种行为：
 
@@ -162,7 +162,7 @@ Chart 的解析模型是：
 完整 type recipe
   + 用户对隐式主成员的稀疏覆盖
   + 用户显式追加的 Plot 成员
-  -> 完整 PlotSpec
+  -> 完整 IRPlot
 
 可选 Chart presentation
   + Chart 展示样式与排列策略
@@ -186,9 +186,9 @@ Type 核心配方定义该 type 的身份，例如：
 
 表现性默认负责开箱可读性，例如 guide 可见性、Plot label、theme、palette、Plot spacing 和部分 scale 呈现。它们允许调整、关闭或替换。
 
-Chart 的视觉环境消费全仓 [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md)：Core Scene / Scope Theme 提供有效 style / mode，Chart 不在 ChartSpec 重复声明同义字段。Chart 只拥有 canvas、presentation 与 recipe-default token、对应 preset / resolver、到 Standard / recipe 的 mapping 和 inspection；Plot surface、guide、label 与 palette token、preset、resolver 和 native theme merge 由 Plot owner 独立维护。
+Chart 的视觉环境消费全仓 [`通用视觉主题设计`](../../../../notes/architecture/visual-theme-design.md)：Core Scene / Scope Theme 提供有效 style / mode，Chart 不在 IRChart 重复声明同义字段。Chart 只拥有 canvas、presentation 与 recipe-default token、对应 preset / resolver、到 Standard / recipe 的 mapping 和 inspection；Plot surface、guide、label 与 palette token、preset、resolver 和 native theme merge 由 Plot owner 独立维护。
 
-ChartSpec 的主题 authoring surface 分成两条 owner 明确的输入：`chartThemeTokens` 只接受 Chart-owned key；`plotThemeTokens` 复用 Plot 公开 sparse token contract，并与 `colors`、Plot `plotTheme` 原样进入最终 PlotSpec。Chart 不复制 Plot schema，不把 resolved Plot token 物化回 PlotSpec；recipe 必须读取 palette 等 Plot 结果时，只调用 Plot 公开纯 resolver。
+IRChart 的主题 authoring surface 分成两条 owner 明确的输入：`chartThemeTokens` 只接受 Chart-owned key；`plotThemeTokens` 复用 Plot 公开 sparse token contract，并与 `colors`、Plot `plotTheme` 原样进入最终 IRPlot。Chart 不复制 Plot schema，不把 resolved Plot token 物化回 IRPlot；recipe 必须读取 palette 等 Plot 结果时，只调用 Plot 公开纯 resolver。
 
 标题、说明、来源等单图展示内容没有值时不得由 type 凭空生成，也不构成 Canonical Type 身份。首个公开契约提供 title、subtitle、note、source 四类唯一文本 preset、默认 column Flex 参数和间距；显式 marker / plain record 在 top 或 bottom 区域保持 authored order，canonical children 数组是最终顺序真源。用户也可以省略整套展示外壳。
 
@@ -200,16 +200,16 @@ ChartSpec 的主题 authoring surface 分成两条 owner 明确的输入：`char
 不可撤销的 type 核心配方
   + (Core effective Theme
      < Chart preset tokens
-     < ChartSpec chartThemeTokens
-     < ChartSpec 允许的 presentation / recipe 覆盖)
+     < IRChart chartThemeTokens
+     < IRChart 允许的 presentation / recipe 覆盖)
 
-内部完整 PlotSpec
+内部完整 IRPlot
   + (Core effective Theme
      < Plot preset tokens
-     < ChartSpec plotThemeTokens
-     < ChartSpec colors
-     < ChartSpec plotTheme
-     < ChartSpec 允许的具体 GoG 成员覆盖)
+     < IRChart plotThemeTokens
+     < IRChart colors
+     < IRChart plotTheme
+     < IRChart 允许的具体 GoG 成员覆盖)
 ```
 
 Chart recipe toggle 只能决定默认 guide 是否生成，不能过滤显式 guides。具体 Mark、Scale 或 Guide 的显式配置优先于 Plot theme；追加的 Plot 成员遵守 Plot 自身的 token、theme 与局部配置规则，不继承主成员的局部覆盖。
@@ -240,11 +240,11 @@ typed Chart contains Plot extensions          ✅
 Plot contains Chart                           ❌
 ```
 
-基础 `<Chart>` 直接承载形成 PlotSpec 所需的完整 Plot props 与 PointMark、IntervalMark、Transform 等 Plot authoring children；它不接受 `type`，也不嵌套显式 `<Plot>`。Chart root 的 renderer host、外层 placement / transform / clip / theme 与 identity 作用于包含 presentation 的整图，而不是被复制成 Plot body 属性；Plot runtime options 由 adapter contribution 转交正式 Plot runtime，不进入 JSON-safe IR。spec 模式保留显式 `PlotSpec.id`，DSL 模式只在 Chart 有 id 时派生 `${chartId}/plot`，无 id 时不生成隐式 id。这些 Plot 输入必须先经过 Plot adapter 的正式构造链形成完整 PlotSpec，再进入 canonical `IRChart`。Vanilla 基础 helper 直接接受等价 PlotSpec。
+基础 `<Chart>` 直接承载形成 IRPlot 所需的完整 Plot props 与 PointMark、IntervalMark、Transform 等 Plot authoring children；它不接受 `type`，也不嵌套显式 `<Plot>`。Chart root 的 renderer host、外层 placement / transform / clip / theme 与 identity 作用于包含 presentation 的整图，而不是被复制成 Plot body 属性；Plot runtime options 由 adapter contribution 转交正式 Plot runtime，不进入 JSON-safe IR。spec 模式保留显式 `IRPlot.id`，DSL 模式只在 Chart 有 id 时派生 `${chartId}/plot`，无 id 时不生成隐式 id。这些 Plot 输入必须先经过 Plot adapter 的正式构造链形成完整 IRPlot，再进入 canonical `IRChart`。Vanilla 基础 helper 直接接受等价 IRPlot。
 
 typed `<XxxChart>` 中的 Plot 内容仍是围绕 type 核心配方的单向增强，不是把 typed Chart 当作任意 Plot 容器。无论追加多少 Plot members，resolution 都必须保留并执行 type 核心配方；若作者需要脱离该 recipe 的自由组合，应使用基础 `<Chart>` 或裸 Plot。
 
-不支持 `<Plot><Chart /></Plot>`，因为 Chart 是完整 PlotSpec 的单图展示外壳；把 Chart 作为 Plot 子成员会混淆根数据、presentation 与 lowering owner。组合多个完整 Chart / Plot 应使用 Standard 的通用外层组合能力，而不是让 Plot 解释 Chart。
+不支持 `<Plot><Chart /></Plot>`，因为 Chart 是完整 IRPlot 的单图展示外壳；把 Chart 作为 Plot 子成员会混淆根数据、presentation 与 lowering owner。组合多个完整 Chart / Plot 应使用 Standard 的通用外层组合能力，而不是让 Plot 解释 Chart。
 
 Chart 可以提供或消费自定义 Plot Mark、Transform、Scale、Coordinate 或 Channel。具体 definition 可以随 Chart 官方 type 提供，也可以由宿主注入；Chart IR 只引用对应 operation 与 JSON-safe 配置，definition 必须合入 Plot registry，并沿正常 Plot lowering 链解析和执行。所需 definition 缺失时沿用 Plot 的 fail-loud 诊断。
 
@@ -276,13 +276,13 @@ Chart result
 
 因此，外部组合或仪表板工具既可以选择整个 Chart 或它的 body，也可以通过稳定、qualified 的 selector 继续定位内部某个 track、facet panel 或 plotArea。qualified selector 的精确语法留给 Core 空间契约；Chart 不复制一份 Plot handle registry，也不把内部生成 id 暴露成新的 Chart 私有寻址体系。
 
-Canonical Type 的完整配方可以隐式生成复杂 Plot composition。例如股票图可以展开为价格轨道、成交量轨道与共享时间轴；只要这些视图共享 coordinate、scale、axis、track 或同一数据映射语义，它们就属于同一个完整 PlotSpec。该 composition 拓扑若构成类型身份，就属于不可撤销的 type 核心配方；用户可以在允许范围内调整或追加内容，但不能把共享骨架拆散后仍保留原 type 语义。
+Canonical Type 的完整配方可以隐式生成复杂 Plot composition。例如股票图可以展开为价格轨道、成交量轨道与共享时间轴；只要这些视图共享 coordinate、scale、axis、track 或同一数据映射语义，它们就属于同一个完整 IRPlot。该 composition 拓扑若构成类型身份，就属于不可撤销的 type 核心配方；用户可以在允许范围内调整或追加内容，但不能把共享骨架拆散后仍保留原 type 语义。
 
 复合需求按所有权分成三类：
 
 | 复合需求                                                                   | owner 与表达                                                                                   |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 一个 type 内共享数据映射、coordinate、scale、axis、facet 或 track 的复合图 | Chart type recipe 生成一个完整 PlotSpec，由 Plot composition 负责                              |
+| 一个 type 内共享数据映射、coordinate、scale、axis、facet 或 track 的复合图 | Chart type recipe 生成一个完整 IRPlot，由 Plot composition 负责                              |
 | 多个独立 Chart、Plot、Table 或其它内容的静态排列、对齐与空间贴附           | Layout 组合布局 + Standard Surface + Core spatial handles；Chart 只暴露可进入的外层 / 内层句柄 |
 | linked selection、filter、scroll、responsive state 等仪表板联动            | 更高层 dashboard / workspace runtime；Chart 不拥有 dashboard IR 或状态机                       |
 
@@ -292,7 +292,7 @@ Chart 不复制 Plot composition、Layout solver、Standard Surface 或 dashboar
 
 Chart 文档区分两层概念：
 
-- **Canonical Type**：进入 `ChartSpec.type` 的稳定、封闭判别值，选择完整隐式配方
+- **Canonical Type**：进入 `IRChart.type` 的稳定、封闭判别值，选择完整隐式配方
 - **Chart Pattern**：面向用户的常用图表名称，本质是 Canonical Type 加可复用 modifier、表现配置或 Plot 扩展
 
 例如 stacked bar、horizontal bar、smooth line 或 donut 可以先作为 Chart Pattern，而不必立即扩张公开 type union。
@@ -312,15 +312,15 @@ Canonical Type 的具体准入规则和首批清单尚未冻结。长期判断�
 
 Chart resolution / lowering 需要完成彼此可观察但最终合流的阶段：
 
-1. 基础 Chart 通过完整 Plot authoring 生成 PlotSpec，或 typed Chart 校验数据角色 / recipe 不变量并解析出 PlotSpec
-2. 验证完整 PlotSpec，并与归一化 presentation 组成 canonical `IRChart`
+1. 基础 Chart 通过完整 Plot authoring 生成 IRPlot，或 typed Chart 校验数据角色 / recipe 不变量并解析出 IRPlot
+2. 验证完整 IRPlot，并与归一化 presentation 组成 canonical `IRChart`
 3. 缺少 presentation 时直接使用裸 Plot；存在 presentation 时严格按 canonical children authored order 映射唯一 Plot placeholder 与文本 preset
-4. 通过 Layout FlexLayout 把 presentation 与 PlotSpec 组合为有序 content，再由 Standard Surface 包装完整 Chart 结果
+4. 通过 Layout FlexLayout 把 presentation 与 IRPlot 组合为有序 content，再由 Standard Surface 包装完整 Chart 结果
 5. 让 Plot 从同一 effective Theme 独立解析 Plot preset / token / native theme，并与 Layout、Standard 分别沿自身正式 lowering 链进入 Core
 
-Chart 的 canonical 执行入口是 `IRChart`，不能是 adapter 私下拼装的 DOM 外壳。缺少 presentation 时它以裸 Plot 作为 Surface content；存在 presentation 时以包含同一 PlotSpec 的 Layout FlexLayout 作为 Surface content。完整 PlotSpec、可选 Layout content 与完整 Standard Surface Chart 都必须可独立检查。
+Chart 的 canonical 执行入口是 `IRChart`，不能是 adapter 私下拼装的 DOM 外壳。缺少 presentation 时它以裸 Plot 作为 Surface content；存在 presentation 时以包含同一 IRPlot 的 Layout FlexLayout 作为 Surface content。完整 IRPlot、可选 Layout content 与完整 Standard Surface Chart 都必须可独立检查。
 
-Chart 不得自行测量文字、实现 layout solver、直接生成私有几何，或在 renderer 中特判文本 preset。相同基础 / typed authoring、datasets 与 definitions 必须解析出等价 PlotSpec 和 `IRChart`，并在 React、Vanilla、SSR 与手写 JSON 入口保持一致。
+Chart 不得自行测量文字、实现 layout solver、直接生成私有几何，或在 renderer 中特判文本 preset。相同基础 / typed authoring、datasets 与 definitions 必须解析出等价 IRPlot 和 `IRChart`，并在 React、Vanilla、SSR 与手写 JSON 入口保持一致。
 
 ## 10. 诊断、追溯与可解释性
 
@@ -331,7 +331,7 @@ Chart 的隐式配方不能成为不可观察黑盒。长期需要满足：
 - 删除、关闭、替换或使 type 核心成员失效时 fail-loud
 - 必需的 Plot definition 缺失时保留 Plot 的 capability 诊断
 - 生成 ID、默认成员与用户追加成员具有稳定来源
-- 工具可以区分 type default、用户 override 与显式 Plot extension 对 PlotSpec 的贡献
+- 工具可以区分 type default、用户 override 与显式 Plot extension 对 IRPlot 的贡献
 - 工具可以区分 Chart presentation、Plot guide / label 与宿主 UI，并检查最终组合树
 - Chart 外层 handle 与 Plot 内部 handle 的 namespace、qualified selector 和来源可检查
 - Plot 的 view / arrangement / facet panel / track / plotArea identity、provenance / locator / lineage 在 Chart lowering 后继续可用
@@ -373,7 +373,7 @@ Chart 不允许用“只服务一个 type”为由绕开能力 owner。符合既
 - 不内联真实数据集，不建立 series-local dataset 模型
 - 不封装 Table；geo-backed type 等 geo 边界确认后再决定
 - 不把 DOM 事件、函数 callback 或宿主状态写入 Chart IR
-- 不把 Chart presentation 塞回 PlotSpec，也不让 adapter 用 DOM-only 外壳补齐静态图表
+- 不把 Chart presentation 塞回 IRPlot，也不让 adapter 用 DOM-only 外壳补齐静态图表
 - 不让普通 ReactNode、DOM element 或 renderer object 进入 Chart IR；首版 presentation 不开放任意绘图 child
 - 不以类型数量作为完备目标，不追逐所有市场别名
 - 不在长期设计中冻结 v0.1 字段、文件结构、测试 case 或实现顺序
@@ -387,7 +387,7 @@ Chart 不允许用“只服务一个 type”为由绕开能力 owner。符合既
 3. 多个隐式同类成员的稳定覆盖定位
 4. 表现性默认的关闭 / 替换语法
 5. caption、credit、任意 presentation child、inline TextRun 与 accessibility metadata 是否进入后续版本
-6. 完整 PlotSpec inspection、presentation composition 与最终单一结果的 diagnostics / provenance
+6. 完整 IRPlot inspection、presentation composition 与最终单一结果的 diagnostics / provenance
 7. 基础 / typed React children、Vanilla helper 与 canonical JSON 的精确 parity
 8. Chart Pattern 的文档元数据、分组与搜索策略
 9. Chart 外层 handle、Plot 内部 handle forwarding 与 qualified selector 的长期空间契约

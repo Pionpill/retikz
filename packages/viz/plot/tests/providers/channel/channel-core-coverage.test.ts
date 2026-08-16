@@ -3,19 +3,19 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, opts);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 const collectNodes = (scope: IRScope): Array<IRNode> => {
@@ -60,7 +60,7 @@ const collectScopes = (scope: IRScope): Array<IRScope> => {
 
 describe('channel core coverage (contract)', () => {
   it('constant_style_channels_deliver_to_core_scope', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -95,7 +95,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('path_style_channels_deliver_to_core_path', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -134,7 +134,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('interval_node_channels_deliver_to_core_node', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -171,7 +171,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('datum_label_style_fields_deliver_to_core_node_label', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -213,7 +213,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('point_text_color_channel_delivers_to_core_text_node', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -242,7 +242,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('node_scalar_and_enum_channels_deliver_to_core_node', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -284,7 +284,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('mark_color_delivers_scaled_color_to_core_node_color', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -319,7 +319,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('node_json_channels_deliver_to_core_node', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -355,7 +355,7 @@ describe('channel core coverage (contract)', () => {
   });
 
   it('path_scalar_enum_and_json_channels_deliver_to_core_path', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

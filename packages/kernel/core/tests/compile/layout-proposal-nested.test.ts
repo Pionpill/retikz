@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type {
   CompileResult,
   CompileWarning,
-  IRPaintSpec,
+  IRPaint,
   IRScene,
   LayoutChildResult,
   LayoutProposal,
@@ -32,7 +32,7 @@ const fixedMeasurer: TextMeasurer = text => ({
   descent: 2,
 });
 
-const gradient = (first: string, second: string): IRPaintSpec => ({
+const gradient = (first: string, second: string): IRPaint => ({
   kind: 'linearGradient',
   stops: [
     { offset: 0, color: first },

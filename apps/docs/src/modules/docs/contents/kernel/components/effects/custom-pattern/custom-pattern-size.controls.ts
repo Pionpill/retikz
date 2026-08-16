@@ -72,5 +72,5 @@ export const previewControlContract = {
       values: { size: 12, rotation: 45, color: '#ea580c', background: '#fef3c7' },
     },
   ],
-  relatedApis: ['IRPaintSpec', 'PatternDefinition', 'Layout.patterns'],
+  relatedApis: ['IRPaint', 'PatternDefinition', 'Layout.patterns'],
 } satisfies PreviewControlContract;

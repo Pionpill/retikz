@@ -6,7 +6,7 @@ import {
 } from '../scene-primitive';
 
 /** 字体规格：传给 TextMeasurer 的最小信息 */
-export type FontSpec = {
+export type TextFont = {
   /**
    * 字体族
    * @default 'sans-serif'
@@ -119,7 +119,7 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
   });
 
 /** 文字度量函数接口 */
-export type TextMeasurer = (text: string, font: FontSpec) => TextMetrics;
+export type TextMeasurer = (text: string, font: TextFont) => TextMetrics;
 
 /**
  * 兜底文字度量

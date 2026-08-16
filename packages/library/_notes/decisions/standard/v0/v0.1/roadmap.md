@@ -57,7 +57,7 @@ Grid、Axes、Frame、Legend 与 Surface 都通过 Core 既有 `CompositeDefinit
 - GraphFrame、GraphNode、GraphConnector 与 Callout 的现行 owner、namespace 和图式职责由 [Graph v0.1](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/roadmap.md) 维护；Standard 不保留对应 discriminator、Definition 或 adapter
 - FlexLayout、GridLayout、OverlayLayout 与通用 LayoutItem 由 Layout v0.1 维护；Standard Legend 只通过 Layout `/compose` 复用排版，现有 Frame 继续使用已验证的 `expand` 主链，除非 ADR 证明必须迁移
 - Legend 以领域无关 Standard 输入保存 title、`items | ramp`、任意 `IRChild` sample 与呈现布局；Plot/Table 只把各自领域解析结果转换为该输入，不把 channel、scale、Cell selector、formatter 函数或 interaction state 注入 Standard schema
-- Surface 只保存单一任意 `IRChild`、box appearance 与完整 Scope props；Chart / Table 负责把领域 token 和内容解析为 Surface 输入，Standard 不读取 PlotSpec、Chart presentation 或 Table 语义
+- Surface 只保存单一任意 `IRChild`、box appearance 与完整 Scope props；Chart / Table 负责把领域 token 和内容解析为 Surface 输入，Standard 不读取 IRPlot、Chart presentation 或 Table 语义
 - 即使某个组件可以同步展开，只要其角色需要跨 JSON 持久化、工具链处理或 LLM 编辑保留，就不能仅作为 React / Vanilla Sugar
 - 保存、diff、LLM 修改和跨入口交换都针对 Standard composite 输入；不承诺从 lowering 后的 Kernel IR 或 Scene 恢复原始 Standard 语义
 

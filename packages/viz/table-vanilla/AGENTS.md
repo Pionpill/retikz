@@ -7,7 +7,7 @@
 - **解决的问题**：让无 UI 框架、SSR 与 build-time 用户用 plain API 构造并运行 Table，同时复用同一 Data / Table / Core 管线
 - **拥有的契约**：framework-free detail / manual helper、Tier 2 embed adapter、一次性 SSR convenience、dataset / registry / artifact options、后续虚拟滚动宿主接线与 `@retikz/vanilla` 协作
 - **不拥有的能力**：Data schema / transform、Table IR 语义、结构操作、格式化、布局、lowering、Core 编译、renderer 或 DOM runtime
-- **输入与输出**：接收 plain authoring input 或 TableSpec、datasets 与 runtime options，构造规范 TableSpec 并交给 `@retikz/table` 与 `@retikz/vanilla`
+- **输入与输出**：接收 plain authoring input 或 IRTable、datasets 与 runtime options，构造规范 IRTable 并交给 `@retikz/table` 与 `@retikz/vanilla`
 - **缺口流向**：数据问题进入 `@retikz/data`；表格语义、布局与 lowering 进入 `@retikz/table`；通用无框架挂载、SSR 与输出能力进入 `@retikz/vanilla`
 
 ## 约束
@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-当前基线提供 `detailTable()`、`manualTable()`、`embedTable()`、`TableInputEmbedAdapter` 与 `renderTable()`。前两者分别返回无方法的 plain `IRDetailTableSpec` / `IRManualTableSpec`，其中 `manualTable()` 与 `@retikz/table` 共用非空矩形 `rows` 持久化契约；embed 输入在 Vanilla 内归一化为 Table Source IR，`renderTable()` 通过同一次 Table compile 返回 SSR 产物与可选 manifest artifact。当前不提供 fluent builder、Table 私有 mount runtime 或 Figure 接线。
+当前基线提供 `detailTable()`、`manualTable()`、`embedTable()`、`TableInputEmbedAdapter` 与 `renderTable()`。前两者分别返回无方法的 plain `IRDetailTable` / `IRManualTable`，其中 `manualTable()` 与 `@retikz/table` 共用非空矩形 `rows` 持久化契约；embed 输入在 Vanilla 内归一化为 Table Source IR，`renderTable()` 通过同一次 Table compile 返回 SSR 产物与可选 manifest artifact。当前不提供 fluent builder、Table 私有 mount runtime 或 Figure 接线。
 
 ## 验证
 

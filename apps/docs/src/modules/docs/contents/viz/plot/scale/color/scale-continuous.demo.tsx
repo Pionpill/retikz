@@ -1,4 +1,4 @@
-import type { IRPlotScale, IRPlotSpec } from '@retikz/plot';
+import type { IRPlotScale, IRPlot } from '@retikz/plot';
 
 import { Plot } from '@retikz/plot-react';
 
@@ -29,7 +29,7 @@ const buildColorScale = (values: typeof previewControlContract.canonicalValues):
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const spec: IRPlotSpec = {
+  const spec: IRPlot = {
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },

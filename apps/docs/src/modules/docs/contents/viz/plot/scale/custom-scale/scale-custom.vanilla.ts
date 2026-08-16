@@ -1,11 +1,11 @@
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { scaleCustomRows } from './scale-custom.data';
 import { brandColorScale, easePositionScale } from './scale-custom.definition';
 
-const spec: IRPlotSpec = {
+const spec: IRPlot = {
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'points' },

@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { LayoutProps } from '@retikz/react';
-import type { IRTableSpec, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
+import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
@@ -56,7 +56,7 @@ export type TableCommonProps = TableLayoutHostProps &
 /** 通用 `<Table>` props */
 export type TableProps = TableCommonProps & {
   /** 已构造的完整 Table IR */
-  spec: IRTableSpec;
+  spec: IRTable;
   /** 按 spec data reference 索引的外部 datasets */
   data?: ExternalDatasets;
 };

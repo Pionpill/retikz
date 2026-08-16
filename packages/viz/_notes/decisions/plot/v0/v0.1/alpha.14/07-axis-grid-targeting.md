@@ -21,7 +21,7 @@ ADR-05 把 `composition.guidePolicy.grid` 设计成 `none | perScope | shared`�
 
 废弃 ADR-05 中 `composition.guidePolicy.grid` 的“是否画 grid”语义，改为 `composition.guidePolicy.gridPlacement`。`gridPlacement` 只作为 `Axis.grid: true` 或 `Axis.grid: {}` 时的默认投放策略，不会创建 grid，也不会关闭显式 axis grid。
 
-`AxisGuide.grid` 扩展为 `boolean | AxisGridSpec`：
+`AxisGuide.grid` 扩展为 `boolean | AxisGridConfig`：
 
 ```ts
 const AxisGridApplyTo = {
@@ -50,16 +50,16 @@ type GuideTargetSelector = {
   };
 };
 
-type AxisGridSpec = {
+type AxisGridConfig = {
   applyTo?: AxisGridApplyToValue;
   select?: GuideTargetSelector;
 };
 
-type AxisGuideSpec = {
-  grid?: boolean | AxisGridSpec;
+type IRPlotAxisGuide = {
+  grid?: boolean | AxisGridConfig;
 };
 
-type CompositionGuidePolicySpec = {
+type CompositionGuidePolicy = {
   axes?: CompositionAxisPolicyValue;
   gridPlacement?: CompositionGridPlacementValue;
   facetLabels?: CompositionFacetLabelPolicyValue;

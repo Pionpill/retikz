@@ -82,7 +82,6 @@
     "@retikz/data": "workspace:^",
     "@retikz/plot": "workspace:^",
     "@retikz/plot-react": "workspace:^",
-    "@retikz/plot-vanilla": "workspace:^",
     "@retikz/react": "workspace:^"
   },
   "peerDependencies": {

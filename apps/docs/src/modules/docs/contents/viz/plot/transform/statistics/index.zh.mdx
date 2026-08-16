@@ -27,7 +27,7 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 | -------------- | ---------------------------- | ------------ | ---------------------------- |
 | `field`        | `string`                     | —            | 一维连续输入字段             |
 | `groupBy?`     | `Array<string>`              | 全局单组     | 按组分别估计密度             |
-| `bandwidth?`   | `IRPlotDensityBandwidthSpec` | `silverman`  | KDE 带宽策略                 |
+| `bandwidth?`   | `IRPlotDensityBandwidth` | `silverman`  | KDE 带宽策略                 |
 | `sampleCount?` | `number`                     | `64`         | 每组输出的采样行数，至少为 2 |
 | `extent?`      | `[number, number]`           | 观测范围外扩 | 采样区间                     |
 | `xAs`          | `string`                     | —            | 密度采样位置输出字段         |
@@ -85,7 +85,7 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 | `x`            | `string`                 | —               | 回归自变量字段                   |
 | `y`            | `string`                 | —               | 回归因变量字段                   |
 | `groupBy?`     | `Array<string>`          | 全局单组        | 按组分别拟合趋势                 |
-| `method?`      | `IRPlotSmoothMethodSpec` | `linear`        | 平滑方法                         |
+| `method?`      | `IRPlotSmoothMethod` | `linear`        | 平滑方法                         |
 | `sampleCount?` | `number`                 | `64`            | 每组输出的预测采样行数，至少为 2 |
 | `extent?`      | `[number, number]`       | 有限 x 观测范围 | 采样区间；显式设置可外推         |
 | `xAs`          | `string`                 | —               | 预测位置输出字段                 |

@@ -1,4 +1,4 @@
-import type { IRFont, IRLineSpec } from '@retikz/core';
+import type { IRFont, IRLine } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
@@ -17,7 +17,7 @@ const fontOf = (emphasis: 'normal' | 'bold' | 'italic' | 'bold-italic'): IRFont 
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const lines = values.content.replaceAll('\r', '').split('\n');
-  const text = lines.map((line, index): IRLineSpec => {
+  const text = lines.map((line, index): IRLine => {
     const fill = index === 0 ? values.firstFill : index === 1 ? values.secondFill : values.restFill;
     const opacity = index === 0 ? values.firstOpacity : index === 1 ? values.secondOpacity : values.restOpacity;
     const emphasis = index === 0 ? values.firstEmphasis : index === 1 ? values.secondEmphasis : values.restEmphasis;

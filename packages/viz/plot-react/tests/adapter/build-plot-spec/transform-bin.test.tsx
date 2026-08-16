@@ -1,14 +1,14 @@
-import { isBuiltinMark, PlotSpecSchema } from '@retikz/plot';
+import { isBuiltinMark, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { createHistogramSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark } from '../../../src/components/marks';
 import { Transform } from '../../../src/components/transform';
 
-describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
+describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
   it('transform_bin_declared_to_ir', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="bin" field="measurement" count={20} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
@@ -19,7 +19,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
   });
 
   it('bar_x0x1_histogram_continuous_x_not_band', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="bin" field="m" step={5} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
@@ -40,7 +40,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
   });
 
   it('bar_width_proportional_keeps_x_as_axis_label_field', () => {
-    const spec = buildPlotSpec(<IntervalMark x="country" y="cost" width="gdp" color="country" />, '__plot');
+    const spec = buildPlotIR(<IntervalMark x="country" y="cost" width="gdp" color="country" />, '__plot');
     const mark = spec.marks[0];
     expect(mark).toMatchObject({
       type: 'interval',
@@ -51,7 +51,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
   });
 
   it('transform_summarize_declared_to_ir', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform
           kind="summarize"
@@ -73,7 +73,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
   });
 
   it('plot_transforms_option_direct_pass', () => {
-    const spec = buildPlotSpec(<IntervalMark x="region" y="total" />, '__plot', {
+    const spec = buildPlotIR(<IntervalMark x="region" y="total" />, '__plot', {
       transforms: [
         { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
       ],
@@ -85,7 +85,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
 
   it('explicit_stack_suppresses_shortcut_stack_no_double', () => {
     // 显式 <Transform kind="stack"> 存在时，<IntervalMark stack> 的 shortcut stack 不再注入（B4 去重）
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform kind="stack" x="month" y="revenue" groupBy="product" />
         <IntervalMark x="month" y="revenue" series="product" stack />
@@ -99,7 +99,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
   });
 
   it('options_transforms_with_stack_suppresses_shortcut_stack', () => {
-    const spec = buildPlotSpec(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
+    const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
       transforms: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
     });
     expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
@@ -107,7 +107,7 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
 
   it('transform_order_explicit_before_shortcut_stack', () => {
     // summarize（显式）在前、无显式 stack → shortcut stack 补在后
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Transform
           kind="summarize"
@@ -122,14 +122,14 @@ describe('buildPlotSpec <Transform> / bin / summarize / histogram x0x1', () => {
     expect(spec.transform?.[1]).toMatchObject({ kind: 'stack' });
   });
 
-  it('transform 装配产物过 PlotSpecSchema', () => {
-    const spec = buildPlotSpec(
+  it('transform 装配产物过 PlotSchema', () => {
+    const spec = buildPlotIR(
       <>
         <Transform kind="bin" field="m" count={10} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
     );
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

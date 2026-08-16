@@ -7,7 +7,7 @@ import { PointChartType } from '../constants';
 import { BubblePointPatchSchema, StrictColorChannelSchema, StrictSizeFieldChannelSchema } from '../shared';
 
 /** Bubble 的完整 owner-private 输入 schema */
-export const BubbleChartSpecSchema = z
+export const BubbleChartSchema = z
   .strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart composite namespace discriminator'),
     type: z.literal(PointChartType.Bubble).describe('Bubble Chart variant discriminator'),
@@ -28,5 +28,5 @@ export const BubbleChartSpecSchema = z
   .superRefine(assertChartSpatialRoot)
   .overwrite(omitUndefinedProperties);
 
-/** Bubble 的 JSON-safe ChartSpec */
-export type IRBubbleChartSpec = z.infer<typeof BubbleChartSpecSchema>;
+/** Bubble 的 JSON-safe IRChart */
+export type IRBubbleChart = z.infer<typeof BubbleChartSchema>;

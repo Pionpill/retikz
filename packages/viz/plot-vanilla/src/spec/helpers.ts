@@ -1,5 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec, LowerPlotsOptions } from '@retikz/plot';
+import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbed } from '@retikz/vanilla';
 
 import { PLOT_NAMESPACE } from '@retikz/plot';
@@ -12,10 +12,10 @@ import { normalizePlot } from '../normalize/plot';
 import { assertPlotVanillaNonEmptyString } from '../shared';
 
 /** 从 plain authoring input 创建 Plot Source IR */
-export const plot = (input: InputPlot): IRPlotSpec => normalizePlot(input);
+export const plot = (input: InputPlot): IRPlot => normalizePlot(input);
 
 /** 将显式 Plot source 收敛为 Plot Source IR；IR source 保持原对象身份 */
-export const plotSpecOf = (source: PlotSource): IRPlotSpec =>
+export const plotIROf = (source: PlotSource): IRPlot =>
   source.input === undefined ? source.spec : normalizePlot(source.input);
 
 /** 构造可由 Plot InputEmbedAdapter 消费的标准 embed */

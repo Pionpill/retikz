@@ -2,7 +2,7 @@ import type { ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRChild, IRClipSpec, IRScopeProps, JsonValue } from '../../schemas';
+import type { IRChild, IRClip, IRScopeProps, JsonValue } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';
@@ -146,7 +146,7 @@ export type CompositeReplayWrapper = Readonly<{
   /** replay root primitive 共享的已 lowering 数值变换 */
   transforms?: ReadonlyArray<Transform>;
   /** placement transform 后、parent allocation coordinate 中的裁剪区域 */
-  clip?: IRClipSpec;
+  clip?: IRClip;
 }>;
 
 /** layout-aware composite 可见的受限编译上下文 */

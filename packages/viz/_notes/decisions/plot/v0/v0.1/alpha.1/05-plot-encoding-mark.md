@@ -3,7 +3,7 @@
 - 状态：Superseded
 - 替代：[alpha.12 ADR-03](../alpha.12/03-mark-abstraction-registry.md) 与 [ADR-04](../alpha.12/04-mark-surface-convergence.md)；旧 shape-oriented mark / encoding surface 已收敛为抽象 mark 与 mark-local channels
 - 决策日期：2026-06-03
-- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 mark / §3.8 order](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlotSpec](./01-plot-spec-root.md) · 依赖：[ADR-02 data](./02-plot-data.md) · 关联：[ADR-04 coordinate](./04-plot-coordinate.md)
+- 关联：[plot v0.1-alpha.1 待办](./roadmap.md) · [plot v0.1 roadmap](../roadmap.md) · [plot-design.md §3.7 mark / §3.8 order](../../../../../architecture/plot-design.md) · 根节点：[ADR-01 IRPlot](./01-plot-spec-root.md) · 依赖：[ADR-02 data](./02-plot-data.md) · 关联：[ADR-04 coordinate](./04-plot-coordinate.md)
 
 ## 背景 / 约束
 

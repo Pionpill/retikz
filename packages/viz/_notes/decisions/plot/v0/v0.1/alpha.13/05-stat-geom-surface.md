@@ -16,7 +16,7 @@ plot alpha.13 采用“stat = transform / reducer / selector，geom = abstract m
 - 统计能力以 transform、summary reducer、selector 暴露。
 - 几何表达继续由 `PointMark`、`IntervalMark`、`PathMark`、`ReferenceMark`、`RelationMark` 等抽象 mark 承担。
 - 不新增 `BoxPlot`、`DensityPlot`、`RegressionPlot`、`BoxPlotMark`、`DensityMark`、`RegressionMark`。
-- React 与 Vanilla 都消费同一 IRPlotSpec；React 只做薄 authoring adapter。
+- React 与 Vanilla 都消费同一 IRPlot；React 只做薄 authoring adapter。
 - docs 以组合 demo 说明 boxplot、density、smooth，而不是宣传 chart preset。
 
 文档 IA 使用 transform / summary / statistics 页面承载统计能力；demo 名称保持 `transform-boxplot`、`transform-density`、`transform-smooth` 这类 grammar 取向。

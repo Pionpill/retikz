@@ -1,6 +1,6 @@
 import type * as RetikzCore from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
@@ -31,7 +31,7 @@ vi.mock('@retikz/vanilla', async importOriginal => {
 
 import { plot, PlotInputEmbedAdapter, renderPlot } from '../../src';
 
-const spec: IRPlotSpec = plot({
+const spec: IRPlot = plot({
   data: { reference: 'sales' },
   scales: [
     { type: 'linear', name: 'x' },

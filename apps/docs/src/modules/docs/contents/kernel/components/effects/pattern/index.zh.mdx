@@ -122,12 +122,12 @@ import { Node } from '@retikz/react';
 
 | 属性     | 类型                      | 默认值 | 描述                   |
 | -------- | ------------------------- | ------ | ---------------------- |
-| `fill`   | `string` \| `IRPaintSpec` | —      | 填充 Node 或闭合 Path  |
-| `stroke` | `string` \| `IRPaintSpec` | —      | 描边；支持相同图案规格 |
+| `fill`   | `string` \| `IRPaint` | —      | 填充 Node 或闭合 Path  |
+| `stroke` | `string` \| `IRPaint` | —      | 描边；支持相同图案规格 |
 
 ### Pattern 分支
 
-`IRPaintSpec` 中 `kind: 'pattern'` 的对象字段如下：
+`IRPaint` 中 `kind: 'pattern'` 的对象字段如下：
 
 | 属性              | 类型                                          | 默认值                   | 描述                       |
 | ----------------- | --------------------------------------------- | ------------------------ | -------------------------- |

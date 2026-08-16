@@ -3,15 +3,15 @@ import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -19,7 +19,7 @@ const expandOf = (
   return def.expand(spec).children[0] as IRScope;
 };
 
-const layerOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>, index: number): IRScope =>
+const layerOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, index: number): IRScope =>
   expandOf(spec, datasets, opts).children[index] as IRScope;
 
 describe('stat-geom composition surface (contract)', () => {
@@ -70,7 +70,7 @@ describe('stat-geom composition surface (contract)', () => {
   } as const;
 
   it('boxplot composition uses interval, reference, and point layers without a boxplot mark type', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'boxRows' },
@@ -130,7 +130,7 @@ describe('stat-geom composition surface (contract)', () => {
       { group: 'A', time: 1, value: 3 },
       { group: 'A', time: 2, value: 5 },
     ];
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'samples' },

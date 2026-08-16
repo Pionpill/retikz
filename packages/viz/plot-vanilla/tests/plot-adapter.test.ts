@@ -8,7 +8,7 @@ import {
   embedPlot,
   plot,
   PlotInputEmbedAdapter,
-  plotSpecOf,
+  plotIROf,
   resolvePlotContribution,
 } from '../src';
 
@@ -62,11 +62,11 @@ const datasets = {
 };
 
 describe('Plot Vanilla Tier2 adapter', () => {
-  it('plotSpecOf 只归一化显式 input 并原样返回显式 IR', () => {
+  it('plotIROf 只归一化显式 input 并原样返回显式 IR', () => {
     const spec = salesSpec('sales');
 
-    expect(plotSpecOf({ spec })).toBe(spec);
-    expect(plotSpecOf({ input: salesInput('sales') })).toMatchObject({
+    expect(plotIROf({ spec })).toBe(spec);
+    expect(plotIROf({ input: salesInput('sales') })).toMatchObject({
       namespace: 'plot',
       type: 'plot',
       id: 'sales',
@@ -85,7 +85,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     });
   });
 
-  it('显式 PlotSpec source 直接复用原 IR 对象', () => {
+  it('显式 IRPlot source 直接复用原 IR 对象', () => {
     const spec = salesSpec('sales');
     const contribution = PlotInputEmbedAdapter.lower(
       { spec, datasets, preserveRootIdentity: true },
@@ -95,7 +95,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(contribution.node).toBe(spec);
   });
 
-  it('exposes one Plot-owned contribution builder for complete PlotSpec inputs', () => {
+  it('exposes one Plot-owned contribution builder for complete IRPlot inputs', () => {
     const spec = salesSpec('sales');
     const result = resolvePlotContribution({ spec, datasets, lowerOptions: { width: 360, height: 200 } });
     const provider = createPlotProvider({ datasets, lowerOptions: { width: 360, height: 200 } });
@@ -140,7 +140,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     ]);
   });
 
-  it('保持 lineage 在 PlotSpec、Core IR 与 Scene meta 之外', () => {
+  it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {
     const inputScene = scene([embedPlot('sales-panel', { spec: salesSpec('sales') }, datasets)]);
     const normalized = normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] });
 

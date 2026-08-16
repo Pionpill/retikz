@@ -1,5 +1,5 @@
 import type { ClipDefinition } from '../../contract';
-import type { IRClipSpec, IRJsonObject } from '../../schemas';
+import type { IRClip, IRJsonObject } from '../../schemas';
 import type { ClipResolution } from './types';
 
 import { providerDefinitionOf } from '../../providers/registry';
@@ -16,7 +16,7 @@ export type ClipResolveContext = Readonly<{
 }>;
 
 /** 绑定 definition 并解析 provider params；provider resolve 保留到 compile resource 阶段执行 */
-export const resolveClip = (clip: IRClipSpec, context: ClipResolveContext): ClipResolution => {
+export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipResolution => {
   const kind = clip.kind;
   const definition = providerDefinitionOf(context.clips, kind, { capability: 'clip', optionName: 'clips' });
   const parsed = parseProviderPayload({
@@ -33,6 +33,6 @@ export const resolveClip = (clip: IRClipSpec, context: ClipResolveContext): Clip
   } catch (cause) {
     throw new CompositeContractError(`Clip '${kind}' schema returned a non-JSON payload.`, { cause });
   }
-  const resolve = (nested: IRClipSpec): ClipResolution => resolveClip(nested, context);
+  const resolve = (nested: IRClip): ClipResolution => resolveClip(nested, context);
   return { spec: clip, kind, definition, params, resolve };
 };

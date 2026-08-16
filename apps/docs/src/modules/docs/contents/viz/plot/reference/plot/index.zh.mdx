@@ -1,14 +1,14 @@
 ---
 title: 契约 - 规格
-description: 查询 IRPlotSpec 根、坐标视图、Facet 与 Tracks 组合的 JSON schema。
+description: 查询 IRPlot 根、坐标视图、Facet 与 Tracks 组合的 JSON schema。
 ---
 
-`PlotSpecSchema` 是 Plot Tier 2 composite 的根契约。它引用外部 dataset，声明变换、比例尺、坐标系、图元和辅助层；lowering 再将其展开为 Kernel IR。
+`PlotSchema` 是 Plot Tier 2 composite 的根契约。它引用外部 dataset，声明变换、比例尺、坐标系、图元和辅助层；lowering 再将其展开为 Kernel IR。
 
-## PlotSpecSchema
+## PlotSchema
 
 <ZodSchema
-  name="PlotSpecSchema"
+  name="PlotSchema"
   description="Plot IR 根：只保存 JSON-safe 语法与数据引用的 plot composite。"
   descriptions={{
     namespace: '固定为 plot，用于把 Tier 2 节点路由到 Plot lowering。',

@@ -15,7 +15,7 @@ import type {
 } from '../../../resolve/composition';
 import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../../resolve/composition';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlotSpec } from '../../../schemas';
+import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlot } from '../../../schemas';
 import type { Rect } from '../../../shared';
 import type { LowerPlotsOptions } from '../types';
 
@@ -42,7 +42,7 @@ import { legendReserveOf } from '../legend';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
 export type ScopedFramesResolveContext = {
-  node: IRPlotSpec;
+  node: IRPlot;
   rows: Array<ExternalRow>;
   fieldTypes: DataFieldTypeMap;
   width: number;
@@ -101,7 +101,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
   const coordinateResolveContextOf = (
-    source: IRPlotSpec,
+    source: IRPlot,
     guides: Array<IRPlotGuide>,
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
@@ -285,7 +285,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     const scaffoldMarkDataViews = markDataViews.filter(view =>
       scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
     );
-    const scaffoldNode: IRPlotSpec = {
+    const scaffoldNode: IRPlot = {
       ...node,
       coordinate: scaffold.coordinate,
       composition: undefined,
@@ -366,7 +366,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       scopedArrangement === undefined ? rawScopedGuides : withAxisGapOffsets(rawScopedGuides, scopedLayout?.axisGap),
     );
     const scopedGridGuides = gridGuidesForScope(scope);
-    const scopedNode: IRPlotSpec = {
+    const scopedNode: IRPlot = {
       ...node,
       coordinate: scope.coordinate,
       composition: undefined,

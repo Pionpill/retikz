@@ -1,4 +1,4 @@
-import type { FontSpec, TextMeasurer } from '../../text';
+import type { TextFont, TextMeasurer } from '../../text';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 
 import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
@@ -50,7 +50,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     const labStyle = labFont?.style ?? fontStyle;
     const labTextColor = lab.textColor ?? node.textColor;
     const labOpacity = lab.opacity;
-    const labFontSpec: FontSpec = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
+    const labTextFont: TextFont = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
     const resolved = resolveLineRunsWithWarning(lab.text, {
       gatingOn: texGatingOn,
       warn: inlineWarn,
@@ -62,7 +62,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
       ? layoutInlineLine(resolved.runs, {
           measureText: measureLabelText,
           lowerTex: texLowering?.lowerTex,
-          font: labFontSpec,
+          font: labTextFont,
           rootFontSize,
           color: labTextColor,
           opacity: labOpacity,
@@ -76,7 +76,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
           ascent: laid.ascent,
           descent: laid.descent,
         }
-      : normalizeTextMetrics(measureText(plainText, labFontSpec));
+      : normalizeTextMetrics(measureText(plainText, labTextFont));
     return {
       text: plainText,
       laid,

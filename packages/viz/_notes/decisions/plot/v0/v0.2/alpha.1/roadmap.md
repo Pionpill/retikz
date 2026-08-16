@@ -53,7 +53,7 @@ ADR-07～10 在既有 Plot 主链上继续收敛绘图区与 guide 契约：Plot
 - Plot 性能优化、增量 lowering、retained Scene、Runtime transaction 或缓存策略；这些进入 alpha.2，并等待 Kernel 底层能力。
 - Plot 交互优化、事件 / ownership / behavior / presentation 运行时；这些进入 alpha.3，并等待 Kernel headless interaction 能力。
 - 完整 tree、network、word cloud、treemap、circle packing、gauge、progress、pictogram 算法集合。
-- ChartSpec、`<Chart>`、Chart type、Chart-level presentation 的新增或重设计和业务默认值；ADR-03 只删除 Plot 中的重复入口并声明 owner。
+- IRChart、`<Chart>`、Chart type、Chart-level presentation 的新增或重设计和业务默认值；ADR-03 只删除 Plot 中的重复入口并声明 owner。
 - table / geo 的独立包设计，以及跨域 dashboard / workspace 状态。
 - 将所有映射统一为带 `unknown` 的万能 definition，或把 Structured Mapping 塞进 Data 的 row-only transform contract。
 
@@ -75,7 +75,7 @@ ADR-07～10 在既有 Plot 主链上继续收敛绘图区与 guide 契约：Plot
 
 - Plot 直接使用与 Chart 内部使用都从 Core effective Theme 解析同一 Plot preset / token / native theme 主链；Chart 不复制 Plot token、preset、resolver 或 merge。
 - `plotThemeTokens` 与 `plotTheme` 作为 Plot 局部输入，继承的 Plot namespace 通过 `theme.tokens` 进入同一 resolver；shared categorical projection 与 Plot-owned sequential / diverging scheme 保持清晰分界。
-- PlotSpec 不再承载 Chart-level title、caption、note、source 或 custom presentation，Plot theme 不再保留 `plot.label.*` 与 `labelText`；Axis、Legend、Facet、datum / mark / reference / annotation text 继续由 Plot owner 表达。
+- IRPlot 不再承载 Chart-level title、caption、note、source 或 custom presentation，Plot theme 不再保留 `plot.label.*` 与 `labelText`；Axis、Legend、Facet、datum / mark / reference / annotation text 继续由 Plot owner 表达。
 - Plot 可以用统一的 Spatial Mapping 语言描述 coordinate mapping 与 structured mapping 的关系，同时保留两类专门契约。
 - `nodes`、`links` 等命名内容可以作为结构化输入，不再被 rows-only transform 模型限制。
 - 映射可以改变数量、顺序或拓扑时，identity、provenance、失败语义和确定性边界仍然清楚。

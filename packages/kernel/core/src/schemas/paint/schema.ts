@@ -14,7 +14,7 @@ export const GradientStopSchema = z
   })
   .describe('A single gradient color stop');
 
-export const LinearGradientPaintSpecSchema = z
+export const LinearGradientPaintSchema = z
   .object({
     kind: z.literal('linearGradient').describe('Discriminator for linear gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
@@ -24,7 +24,7 @@ export const LinearGradientPaintSpecSchema = z
   })
   .describe('Linear gradient paint server');
 
-export const RadialGradientPaintSpecSchema = z
+export const RadialGradientPaintSchema = z
   .object({
     kind: z.literal('radialGradient').describe('Discriminator for radial gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
@@ -36,7 +36,7 @@ export const RadialGradientPaintSpecSchema = z
   })
   .describe('Radial gradient paint server');
 
-export const ConicGradientPaintSpecSchema = z
+export const ConicGradientPaintSchema = z
   .object({
     kind: z.literal('conicGradient').describe('Discriminator for conic gradient paint.'),
     stops: z.array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
@@ -107,7 +107,7 @@ export const PatternLineStyleCycleSchema = z
   })
   .describe('Sparse repeating line-style cycle.');
 
-export const PatternPaintSpecSchema = z
+export const PatternPaintSchema = z
   .object({
     kind: z.literal('pattern').describe('Discriminator for pattern paint.'),
     shape: z
@@ -147,7 +147,7 @@ export const PatternPaintSpecSchema = z
   })
   .describe('Pattern paint server (hatching / dots / grid)');
 
-export const ImagePaintSpecSchema = z
+export const ImagePaintSchema = z
   .object({
     kind: z.literal('image').describe('Discriminator for image paint.'),
     href: z.string().min(1).describe('Image URL (http(s) or data URI)'),
@@ -158,12 +158,12 @@ export const ImagePaintSpecSchema = z
   })
   .describe('Image paint server (fills the shape with an image)');
 
-export const PaintSpecSchema = z
+export const PaintSchema = z
   .discriminatedUnion('kind', [
-    LinearGradientPaintSpecSchema,
-    RadialGradientPaintSpecSchema,
-    ConicGradientPaintSpecSchema,
-    PatternPaintSpecSchema,
-    ImagePaintSpecSchema,
+    LinearGradientPaintSchema,
+    RadialGradientPaintSchema,
+    ConicGradientPaintSchema,
+    PatternPaintSchema,
+    ImagePaintSchema,
   ])
   .describe('Paint server spec: gradient / pattern / image. Solid color stays a plain string on `fill` / `stroke`.');

@@ -35,7 +35,7 @@
 - React / Vanilla 私有交互语义、DOM 事件读取、SVG / Canvas 后端分叉。
 - Chart-specific tooltip UI、图表默认交互、dashboard filter / scroll / responsive state 和 workspace history。
 - 依赖未经 Accepted Kernel 能力的 Plot 私有 fallback runtime。
-- 用交互层绕过 Plot owner 直接修改 PlotSpec、Data snapshot 或 Core Scene。
+- 用交互层绕过 Plot owner 直接修改 IRPlot、Data snapshot 或 Core Scene。
 
 ## 退出条件
 

@@ -3,9 +3,9 @@ title: Text
 description: Text declares one whole line inside Node and overrides that line's color, opacity, and font.
 ---
 
-`<Text>` overrides text styling for one whole line inside `<Node>` and mixes with plain string children in JSX order. It is Sugar: the syntax exists only in the React DSL and then normalizes into one `LineSpec` entry in `Node.text`.
+`<Text>` overrides text styling for one whole line inside `<Node>` and mixes with plain string children in JSX order. It is Sugar: the syntax exists only in the React DSL and then normalizes into one `IRLine` entry in `Node.text`.
 
-It's an **equivalent** alternative to writing LineSpec objects directly into the `text` prop:
+It's an **equivalent** alternative to writing IRLine objects directly into the `text` prop:
 
 | Path           | Form                                                | Strength                                      |
 | -------------- | --------------------------------------------------- | --------------------------------------------- |
@@ -17,7 +17,7 @@ It's an **equivalent** alternative to writing LineSpec objects directly into the
 <ComponentAlert
   type="warn"
   title="A Text is one whole line, not an inline span"
-  description="Text itself cannot express several styled runs on one line. For multi-color inline content, use a { runs } LineSpec through the Node text prop; split into Text elements only when each segment should occupy its own line."
+  description="Text itself cannot express several styled runs on one line. For multi-color inline content, use a { runs } IRLine through the Node text prop; split into Text elements only when each segment should occupy its own line."
 />
 
 ## Usage
@@ -55,7 +55,7 @@ String children can still be split on `'\n'` internally; each `<Text>` element c
 
 <ComponentPreview files="text-mix-string" size="xs" />
 
-### Equivalent to LineSpec objects
+### Equivalent to IRLine objects
 
 These two nodes compile to identical output:
 
@@ -81,7 +81,7 @@ An explicit `text` prop wins. When it is present, children do not participate in
 | ----------------- | ------------------------------------------------------ | -------------------- |
 | String / number   | Adjacent content joins; Node text rules handle `\n`    | Plain string line    |
 | Unstyled `<Text>` | Flush the current plain line, then add a separate line | Plain string line    |
-| Styled `<Text>`   | Flush the current plain line and retain line overrides | LineSpec object line |
+| Styled `<Text>`   | Flush the current plain line and retain line overrides | IRLine object line |
 
 This also explains both boundaries: `<Text>` only works inside `<Node>`, and it represents a whole line rather than an inline span.
 
@@ -110,7 +110,7 @@ After normalization, every line enters Core through the same color precedence. A
 
 When a Node uses `NodeTextColor.Contrast`, Core reads the final `fill` after style cascading. Only a static color with effective opacity 1 enters the WCAG relative-luminance comparison and resolves to `#000000` or `#ffffff`. Missing, translucent, gradient, `var()`, and other unresolved backgrounds use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`. The Node's overall `opacity` does not participate in this background decision.
 
-A per-line `font` still participates in that line's width measurement; wrapping, `align`, and `lineHeight` remain Node block-level responsibilities. Use a `{ runs }` LineSpec through `text` when one line needs multiple styles.
+A per-line `font` still participates in that line's width measurement; wrapping, `align`, and `lineHeight` remain Node block-level responsibilities. Use a `{ runs }` IRLine through `text` when one line needs multiple styles.
 
 <SourceLinks
   sources={[
@@ -152,4 +152,4 @@ A per-line `font` still participates in that line's width measurement; wrapping,
 
 ## Related
 
-- [Node text](/kernel/components/node/overview#text): block-level `text` / `align` / `lineHeight`, plus the in-array `LineSpec` form
+- [Node text](/kernel/components/node/overview#text): block-level `text` / `align` / `lineHeight`, plus the in-array `IRLine` form

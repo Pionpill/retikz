@@ -39,6 +39,6 @@ mark 投影从整图 range 改为 plot area range（改 alpha.1 `expand.ts`）�
 - **真实 measureText 精确布局** → 后续（需 core 支持 plot 两遍编译或 plot 自带 measurer）。
 - **plot area 作 `plot.plotArea` anchor 绑定**（§14）→ alpha.5（alpha.2 先内部算出来用）。
 - **非数字 label 的占位估算**（`CHAR_WIDTH_FACTOR=0.6` 是数字经验值，ordinal / 长文本偏窄会裁）→ alpha.3（band/ordinal 轴）。
-- **margin 配置进 IR（`IRPlotSpec.margin`，随 spec 持久化）** → 否决，当前放 `LowerPlotsOptions`（布局是渲染参数、非数据，与 width/height 一致）；如未来需持久化再议。
+- **margin 配置进 IR（`IRPlot.margin`，随 spec 持久化）** → 否决，当前放 `LowerPlotsOptions`（布局是渲染参数、非数据，与 width/height 一致）；如未来需持久化再议。
 
 ---

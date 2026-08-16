@@ -11,7 +11,7 @@ Regression 同时展示原始散点与拟合趋势。Plot 的 Smooth transform �
 ## 决策：Point 读取原始 rows，trend Path 读取 mark-local Smooth rows
 
 ```ts
-type RegressionChartSpec = ChartCommon & {
+type RegressionChartIR = ChartCommon & {
   type: 'regression';
   encoding: {
     x: { field: string };
@@ -60,7 +60,7 @@ const trendPath = {
 };
 ```
 
-省略的 optional 字段不写入最终 PlotSpec。`__chart.regression.trend.x` / `y` 是 Chart 保留的 mark-local output fields：二者不得相同，不得出现在 Smooth `groupBy`，ChartSpec root transform、显式 Plot extension 或声明数据模型若输出 / 占用这些保留字段必须 fail-loud，不能覆盖、重命名或自动选择替代名称。Point 永远读取 authored x / y fields；只有 trend Path 读取这两个派生字段。
+省略的 optional 字段不写入最终 IRPlot。`__chart.regression.trend.x` / `y` 是 Chart 保留的 mark-local output fields：二者不得相同，不得出现在 Smooth `groupBy`，IRChart root transform、显式 Plot extension 或声明数据模型若输出 / 占用这些保留字段必须 fail-loud，不能覆盖、重命名或自动选择替代名称。Point 永远读取 authored x / y fields；只有 trend Path 读取这两个派生字段。
 
 用户可以调整 Smooth method、sample count、extent 与两种 Mark 的表现样式，但不能移除 Smooth、改变其 kind / input / output、把 transform 移到 root，或改写核心 Point / Path identity 和 view。
 
@@ -102,10 +102,10 @@ field-bound color 在 default legend 允许时生成一个绑定实际共享 sca
 Regression 的保留输出字段只有在 Data / Plot owner 补齐正式 reservation preflight 后才能进入可执行 lowering：
 
 1. preflight 在完整 transform registry 已解析后运行，内置与自定义 definition 都通过同一 `outputFields` contract 声明实际写入字段
-2. Chart 保留字段随完整 PlotSpec 进入正式 Plot/Data 验证链；root transforms、显式 mark-local transforms、隐式 Smooth 之外的 Plot extensions 与声明 data model 统一参与冲突检查
+2. Chart 保留字段随完整 IRPlot 进入正式 Plot/Data 验证链；root transforms、显式 mark-local transforms、隐式 Smooth 之外的 Plot extensions 与声明 data model 统一参与冲突检查
 3. 冲突必须在 transform 执行和 mark lowering 前 fail-loud，并稳定定位保留字段与冲突 writer；lowering、lineage 与 locator 使用同一份验证结果
 
-该 gate 未解除时，可以构造并检查 Regression 的 owner-private ChartSpec 与完整 PlotSpec，但不得执行可能让外部 transform 静默覆盖保留字段的 lowering。Chart 不预扫描 operation 配置、不维护内置 transform 白名单、不禁用自定义 definition，也不复制 Data / Plot registry。
+该 gate 未解除时，可以构造并检查 Regression 的 owner-private IRChart 与完整 IRPlot，但不得执行可能让外部 transform 静默覆盖保留字段的 lowering。Chart 不预扫描 operation 配置、不维护内置 transform 白名单、不禁用自定义 definition，也不复制 Data / Plot registry。
 
 ## 架构验证
 

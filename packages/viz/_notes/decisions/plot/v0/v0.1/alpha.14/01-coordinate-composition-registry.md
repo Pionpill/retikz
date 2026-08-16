@@ -7,7 +7,7 @@
 
 ## 背景
 
-当前 `IRPlotSpec` 只有一个顶层 `coordinate`。这对普通单图足够，但无法表达 alpha.14 需要的三类复合图形：facet grid 需要多个 panel coordinate scope；same-panel dual-axis 需要同一 panel 内多个位置坐标或位置 scale 叠加；shared scaffold tracks 需要多个局部图层共享部分坐标基底，再各自管理局部 range。
+当前 `IRPlot` 只有一个顶层 `coordinate`。这对普通单图足够，但无法表达 alpha.14 需要的三类复合图形：facet grid 需要多个 panel coordinate scope；same-panel dual-axis 需要同一 panel 内多个位置坐标或位置 scale 叠加；shared scaffold tracks 需要多个局部图层共享部分坐标基底，再各自管理局部 range。
 
 这些需求不能分别在 facet、dual-axis、track 里各自发明字段。否则 mark 引用坐标、axis 绑定坐标、locator 返回 provenance、React / Vanilla authoring surface 都会出现三套相似但不兼容的机制，后续 v0.3 composite 也无法把高层复合图形稳定 lower 到 plot primitive。
 
@@ -17,7 +17,7 @@ alpha.2 的 guide IR 已明确暂缓 `guide.coordinate` 与双轴；alpha.10 的
 
 ## 决策：引入 coordinate composition registry 作为 Plot 内多坐标空间的唯一身份层
 
-`IRPlotSpec` 新增可选 `composition`。当 `composition` 存在时，Plot 内部的坐标空间由 `composition.scopes` 注册，每个 scope 拥有稳定 `id`、自己的 `coordinate`、可选 `placement`，并可被 mark 与 axis guide 通过 `coordinateScope` 引用。省略 `coordinateScope` 时绑定到 `composition.defaultScope`。
+`IRPlot` 新增可选 `composition`。当 `composition` 存在时，Plot 内部的坐标空间由 `composition.scopes` 注册，每个 scope 拥有稳定 `id`、自己的 `coordinate`、可选 `placement`，并可被 mark 与 axis guide 通过 `coordinateScope` 引用。省略 `coordinateScope` 时绑定到 `composition.defaultScope`。
 
 旧的单坐标写法仍作为 shorthand 保留：没有 `composition` 时，顶层 `coordinate` 会被规范化成一个隐式默认 scope。新写多 scope spec 时，`composition` 是 canonical surface，避免顶层 `coordinate` 与 `composition.scopes` 同时成为坐标真源。
 
@@ -30,26 +30,26 @@ type CoordinateScopePlacement =
   | { kind: 'overlay'; target: CoordinateScopeId }
   | { kind: 'track'; scaffold: string; track: string };
 
-type CoordinateScopeSpec = {
+type CoordinateScopeRegistryEntry = {
   id: CoordinateScopeId;
   coordinate: IRPlotCoordinateOperation;
   placement?: CoordinateScopePlacement;
   meta?: JsonObject;
 };
 
-type CoordinateCompositionSpec = {
+type CoordinateComposition = {
   defaultScope: CoordinateScopeId;
-  scopes: Array<CoordinateScopeSpec>;
+  scopes: Array<CoordinateScopeRegistryEntry>;
 };
 
-type IRPlotSpec = {
+type IRPlot = {
   coordinate?: IRPlotCoordinateOperation;
-  composition?: CoordinateCompositionSpec;
-  marks: Array<MarkSpec & { coordinateScope?: CoordinateScopeId }>;
-  guides?: Array<AxisGuideSpec | LegendGuideSpec>;
+  composition?: CoordinateComposition;
+  marks: Array<IRPlotMarkOperation & { coordinateScope?: CoordinateScopeId }>;
+  guides?: Array<IRPlotAxisGuide | IRPlotLegendGuide>;
 };
 
-type AxisGuideSpec = {
+type IRPlotAxisGuide = {
   type: 'axis';
   dimension: string;
   coordinateScope?: CoordinateScopeId;

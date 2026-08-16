@@ -1,4 +1,4 @@
-import type { PathCommand, ResolvedArrowEndSpec, ScenePrimitive } from '../../../contract';
+import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve/path';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
@@ -7,14 +7,14 @@ import type { PathBasePropsWithStrokeWidth } from './output';
 
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { sampleRoundedCommands } from './rounded-corners';
-import { emitEndpointArrowMark, emitMarkArrowSpec } from './shrink';
+import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
 
 /** 端点箭头与中段 marks 分流结果 */
 export type PathEndpointDecorations = {
   /** 起点 / 终点箭头规格与 shrink 信息 */
   arrows: {
-    arrowStart?: ResolvedArrowEndSpec;
-    arrowEnd?: ResolvedArrowEndSpec;
+    arrowStart?: ResolvedArrowEnd;
+    arrowEnd?: ResolvedArrowEnd;
     shrinkStart: number;
     shrinkEnd: number;
     boundaryOuterInsetStart: number;
@@ -136,7 +136,7 @@ export const emitInlineMarkPrimitives = ({
     if (resolution === undefined) {
       throw new Error(`Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`);
     }
-    const spec = emitMarkArrowSpec(resolution, round);
+    const spec = emitMarkArrow(resolution, round);
     primitives.push(
       buildMarkMarkerGroup(spec, sample, {
         strokeWidth,
@@ -150,10 +150,10 @@ export const emitInlineMarkPrimitives = ({
 };
 
 /** 端点箭头字段：无箭头时不写 undefined key，保持 Scene 输出纯净 */
-export const pathEndpointArrowSpecs = (
+export const pathEndpointArrows = (
   arrows: PathEndpointDecorations['arrows'],
-): { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } => {
-  const endpointSpecs: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec } = {};
+): { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } => {
+  const endpointSpecs: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } = {};
   if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
   if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
   return endpointSpecs;

@@ -1,4 +1,4 @@
-import type { IRClipSpec } from '@retikz/core';
+import type { IRClip } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node, Scope } from '@retikz/react';
@@ -15,7 +15,7 @@ export const previewControls = scopeClipControls;
 
 type ScopeClipValues = PreviewControlValuesFor<typeof scopeClipControls>;
 
-const CLIP_BY_KIND: Record<ScopeClipValues['clipKind'], IRClipSpec> = {
+const CLIP_BY_KIND: Record<ScopeClipValues['clipKind'], IRClip> = {
   rect: { kind: 'rect', x: -58, y: -40, width: 116, height: 80 },
   circle: { kind: 'circle', cx: 0, cy: 0, r: 52 },
   ellipse: { kind: 'ellipse', cx: 0, cy: 0, rx: 62, ry: 38 },

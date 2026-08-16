@@ -2,7 +2,7 @@
 
 Framework-neutral Plot authoring, unified Vanilla input wiring, and DOM-free SVG rendering for [`@retikz/plot`](../plot).
 
-`@retikz/plot` owns the persisted `IRPlot*` schema and lowering. This package owns TypeScript-only `InputPlot*`, `PlotSource`, and `normalizePlot(input)`, which expand authoring shorthand into an `IRPlotSpec`. Typed authoring input is not schema-parsed again; use the Plot schema or parser only for unknown external data.
+`@retikz/plot` owns the persisted `IRPlot*` schema and lowering. This package owns TypeScript-only `InputPlot*`, `PlotSource`, and `normalizePlot(input)`, which expand authoring shorthand into an `IRPlot`. Typed authoring input is not schema-parsed again; use the Plot schema or parser only for unknown external data.
 
 ## Install
 
@@ -37,7 +37,7 @@ const svg = renderPlot(spec, { sales }, { width: 360, height: 200 });
 ```
 
 An embed accepts one explicit source shape: `{ input: InputPlot }` for Vanilla
-authoring or `{ spec: IRPlotSpec }` for an already formed Plot IR. `plotSpecOf`
+authoring or `{ spec: IRPlot }` for an already formed Plot IR. `plotIROf`
 normalizes the former and preserves the latter.
 
 ## Compose in a Vanilla scene
@@ -53,7 +53,7 @@ const svg = renderToSvgString(input, {
 });
 ```
 
-Datasets and runtime callbacks stay outside `IRPlotSpec`. `PlotInputEmbedAdapter`
+Datasets and runtime callbacks stay outside `IRPlot`. `PlotInputEmbedAdapter`
 receives the typed `InputPlotEmbed` during the single Vanilla scene-normalization
 traversal, then delegates Plot IR lowering to `@retikz/plot`.
 

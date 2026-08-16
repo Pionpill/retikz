@@ -3,10 +3,10 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * Text mark / datum label 下沉契约测试。
@@ -21,7 +21,7 @@ const WIDTH = 400;
 const HEIGHT = 300;
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Datasets,
   options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
 ): IRScope => {
@@ -44,8 +44,8 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 最小 cartesian2D interval spec：x = month (band)、y = revenue (linear)，可选 label */
-const intervalSpec = (label?: Record<string, unknown>, id?: string): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const intervalSpec = (label?: Record<string, unknown>, id?: string): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -66,8 +66,8 @@ const intervalSpec = (label?: Record<string, unknown>, id?: string): IRPlotSpec 
   });
 
 /** 最小 cartesian2D text mark spec（priority-2 兜底自由文本） */
-const textSpec = (encoding: Record<string, unknown>, extra: Record<string, unknown> = {}): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const textSpec = (encoding: Record<string, unknown>, extra: Record<string, unknown> = {}): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -175,7 +175,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
 
   it('text-position-parity-with-point：同 x/y 的 TextMark 与 point 投影出的 Node.position 逐字节相等', () => {
     const textNodes = nodesOf(expandOf(textSpec({ text: { field: 'label' } }), POINT_ROWS));
-    const pointSpec = PlotSpecSchema.parse({
+    const pointSpec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -217,7 +217,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
   });
 
   it('text-color-grouped-scope：color 通道 → 文本色按色分子 Scope（textColor 落 nodeDefault，非 fill）', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -260,7 +260,7 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
   });
 
   it('text-polar-projection：polar2D 下 text 经 projectRoles 投影（坐标系无关，不 fail-loud）', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
@@ -305,7 +305,7 @@ describe('contract schema accept/reject', () => {
 
   // 行为变更（mark 模型重构）：text 已并入 point —— 没有 text 通道的 point 是合法的散点 glyph（非 text Node），不再被拒。
   it('point-without-text-channel-accepted-as-glyph：无 text 通道的 point 合法且下沉为 glyph Node（非 text Node）', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

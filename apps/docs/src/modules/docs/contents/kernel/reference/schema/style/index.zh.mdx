@@ -3,7 +3,7 @@ title: 绘制
 description: Node、Path 与 Scope 共用的视觉字段，以及渐变、图案、图片和阴影的 JSON 契约
 ---
 
-Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直接使用的字段，`PaintSpecSchema` 定义不能用单个 CSS color 表达的结构化 paint。Node、Path 与 Scope 复用这些 schema，不各自维护一套颜色和透明度语义。
+Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直接使用的字段，`PaintSchema` 定义不能用单个 CSS color 表达的结构化 paint。Node、Path 与 Scope 复用这些 schema，不各自维护一套颜色和透明度语义。
 
 以下四个 schema 是可复用的严格字段片段，用于让 Standard、Plot 和其它 Tier 2 owner 按自己的默认值与字段边界组合 Core 语义。它们不是新的绘图能力、compile / lowering 入口或 preset bundle；完整图元仍须使用对应的聚合契约。
 
@@ -18,8 +18,8 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
   description="主几何共用的颜色、填充和描边 paint 字段。"
   descriptions={{
     color: '主色；stroke、fill、label 与 arrow 未单独设置时可回退到它',
-    fill: '填充 paint：CSS color 字符串或 PaintSpec',
-    stroke: '描边 paint：CSS color 字符串或 PaintSpec',
+    fill: '填充 paint：CSS color 字符串或 IRPaint',
+    stroke: '描边 paint：CSS color 字符串或 IRPaint',
   }}
 />
 
@@ -49,7 +49,7 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
   name="GraphicEffectsSchema"
   description="主几何共用的阴影和混合模式字段。"
   descriptions={{
-    shadow: '阴影 preset，或显式 DropShadowSpec',
+    shadow: '阴影 preset，或显式 IRDropShadow',
     blendMode: '与已绘制内容的混合模式；省略或 normal 使用普通 source-over',
   }}
 />
@@ -89,13 +89,13 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
   description="单个 node / drawable 的共享视觉字段。"
   descriptions={{
     color: '主色；stroke、fill、label 与 arrow 未单独设置时可回退到它',
-    fill: '填充 paint：CSS color 字符串或 PaintSpec',
+    fill: '填充 paint：CSS color 字符串或 IRPaint',
     fillOpacity: '只作用于填充的透明度 0..1',
-    stroke: '描边 paint：CSS color 字符串或 PaintSpec',
+    stroke: '描边 paint：CSS color 字符串或 IRPaint',
     strokeWidth: '描边宽度（用户单位）',
     strokeOpacity: '只作用于描边的透明度 0..1',
     opacity: '作用于主要几何整体的透明度 0..1',
-    shadow: '阴影 preset，或显式 DropShadowSpec',
+    shadow: '阴影 preset，或显式 IRDropShadow',
     blendMode: '与已绘制内容的混合模式；省略或 normal 使用普通 source-over',
   }}
 />
@@ -122,13 +122,13 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 
 ## 绘制值
 
-`fill` 与 `stroke` 接收 `PaintValueSchema`：纯色保持 CSS color 字符串；需要渐变、pattern 或图片时才使用带 `kind` 的 `PaintSpec` 对象。
+`fill` 与 `stroke` 接收 `PaintValueSchema`：纯色保持 CSS color 字符串；需要渐变、pattern 或图片时才使用带 `kind` 的 `IRPaint` 对象。
 
-<ZodSchema name="PaintValueSchema" description="CSS color 字符串或结构化 PaintSpec。" />
+<ZodSchema name="PaintValueSchema" description="CSS color 字符串或结构化 IRPaint。" />
 
-<span id="paintspec"></span>
+<span id="paint"></span>
 
-<ZodSchema name="PaintSpecSchema" description="线性 / 径向 / 锥形渐变、pattern 或 image paint 的联合类型。" />
+<ZodSchema name="PaintSchema" description="线性 / 径向 / 锥形渐变、pattern 或 image paint 的联合类型。" />
 
 <span id="gradientstop"></span>
 
@@ -149,7 +149,7 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 ### 线性渐变
 
 <ZodSchema
-  name="LinearGradientPaintSpecSchema"
+  name="LinearGradientPaintSchema"
   description="按角度定义方向的线性渐变 paint。"
   descriptions={{
     kind: '判别字段 linearGradient',
@@ -163,7 +163,7 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 ### 径向渐变
 
 <ZodSchema
-  name="RadialGradientPaintSpecSchema"
+  name="RadialGradientPaintSchema"
   description="按中心与半径定义的径向渐变 paint。"
   descriptions={{
     kind: '判别字段 radialGradient',
@@ -178,7 +178,7 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 ### 锥形渐变
 
 <ZodSchema
-  name="ConicGradientPaintSpecSchema"
+  name="ConicGradientPaintSchema"
   description="绕中心旋转颜色 stop 的锥形渐变 paint。"
   descriptions={{
     kind: '判别字段 conicGradient',
@@ -193,7 +193,7 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 ### 图案
 
 <ZodSchema
-  name="PatternPaintSpecSchema"
+  name="PatternPaintSchema"
   description="由内置或注册 motif provider 生成的重复 pattern paint。"
   descriptions={{
     kind: '判别字段 pattern',
@@ -211,7 +211,7 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 ### 图片
 
 <ZodSchema
-  name="ImagePaintSpecSchema"
+  name="ImagePaintSchema"
   description="把图片映射到形状内部的 image paint。"
   descriptions={{
     kind: '判别字段 image',

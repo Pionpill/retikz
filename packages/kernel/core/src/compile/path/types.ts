@@ -30,7 +30,7 @@ export type PathEmitOptions = {
   /** 该 path 所属 scope 的累积 transform 链 */
   scopeChain?: ReadonlyArray<Transform>;
   /**
-   * paint 解析器（PaintSpec → resourceRef + 登记资源）；缺省时纯色透传、PaintSpec 退化为无填充 / currentColor
+   * paint 解析器（IRPaint → resourceRef + 登记资源）；缺省时纯色透传、IRPaint 退化为无填充 / currentColor
    * @default 透传字符串；无法解析的 spec 变为 undefined
    */
   resolvePaint?: PaintResolver;

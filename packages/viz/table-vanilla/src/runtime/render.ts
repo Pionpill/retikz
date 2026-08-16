@@ -1,4 +1,4 @@
-import type { IRTableSpec } from '@retikz/table';
+import type { IRTable } from '@retikz/table';
 
 import { compileTable } from '@retikz/table';
 import { renderToSvgString } from '@retikz/vanilla';
@@ -12,7 +12,7 @@ const requestsArtifacts = (
 
 /** 执行 Table schema 校验、lowering、Core compile 与 SVG 输出 */
 const renderTableImpl = (
-  spec: IRTableSpec,
+  spec: IRTable,
   options: RenderTableOptions | RenderTableArtifactOptions = {},
 ): string | RenderTableArtifactResult => {
   if (Object.hasOwn(options, 'composites')) {

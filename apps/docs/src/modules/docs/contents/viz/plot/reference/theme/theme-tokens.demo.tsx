@@ -13,7 +13,7 @@ const points = [
   { x: 3, y: 5, series: 'B' },
 ];
 
-/** Plot token override 通过 IRPlotSpec 局部 theme cascade 进入 Plot area、axis 与 palette */
+/** Plot token override 通过 IRPlot 局部 theme cascade 进入 Plot area、axis 与 palette */
 const plotThemeTokens = {
   [PlotThemeToken.PlotAreaFill]: '#F8FAFC',
   [PlotThemeToken.PlotPaletteCategorical]: ['#2563EB', '#F97316'],

@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { createCoordinateFrame } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
 const fakeScale = (coordinate: (value: number) => number, domain: ReadonlyArray<number> = [0, 1]): PositionScale => ({
@@ -1151,8 +1151,8 @@ const SALES = [
   { month: 2, revenue: 9 },
 ];
 
-const guidedSpec = (guides: Array<unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const guidedSpec = (guides: Array<unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -1165,7 +1165,7 @@ const guidedSpec = (guides: Array<unknown>): IRPlotSpec =>
     guides,
   });
 
-const expandOf = (spec: IRPlotSpec): IRScope => {
+const expandOf = (spec: IRPlot): IRScope => {
   const [def] = lowerPlots({ sales: SALES }, { width: 480, height: 300 });
   return def.expand(spec).children[0] as IRScope;
 };
@@ -1212,7 +1212,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
 
   it('explicit_range_axis_line_aligns_with_ticks', () => {
     // 显式 range 时轴线须随实际 range 走（而非 margin 的 plotArea），与刻度/mark 对齐
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },

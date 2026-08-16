@@ -1,35 +1,35 @@
 import { z } from 'zod';
 
 import { omitUndefinedProperties } from '../shared';
-import { BubbleChartSpecSchema } from './bubble';
-import { ConnectedScatterChartSpecSchema } from './connected-scatter';
-import { ScatterChartSpecSchema } from './scatter';
+import { BubbleChartSchema } from './bubble';
+import { ConnectedScatterChartSchema } from './connected-scatter';
+import { ScatterChartSchema } from './scatter';
 
-type PointChartSpec =
-  | z.infer<typeof ScatterChartSpecSchema>
-  | z.infer<typeof BubbleChartSpecSchema>
-  | z.infer<typeof ConnectedScatterChartSpecSchema>;
+type PointChartIR =
+  | z.infer<typeof ScatterChartSchema>
+  | z.infer<typeof BubbleChartSchema>
+  | z.infer<typeof ConnectedScatterChartSchema>;
 
 /** Chart owner 内建 typed variant 的封闭输入 union */
-export const PointChartSpecSchema: z.ZodType<PointChartSpec> = z
+export const PointChartSchema: z.ZodType<PointChartIR> = z
   .lazy(() =>
-    z.discriminatedUnion('type', [ScatterChartSpecSchema, BubbleChartSpecSchema, ConnectedScatterChartSpecSchema]),
+    z.discriminatedUnion('type', [ScatterChartSchema, BubbleChartSchema, ConnectedScatterChartSchema]),
   )
   .describe('Closed Chart typed authoring union')
   .overwrite(omitUndefinedProperties);
 
 /** Point family typed variant 的 JSON-safe 输入 */
-export type IRPointChartSpec = z.infer<typeof PointChartSpecSchema>;
+export type IRPointChart = z.infer<typeof PointChartSchema>;
 
-export { BubbleChartSpecSchema, type IRBubbleChartSpec } from './bubble';
+export { BubbleChartSchema, type IRBubbleChart } from './bubble';
 export {
   ConnectedPathPatchSchema,
   ConnectedPointPatchSchema,
-  ConnectedScatterChartSpecSchema,
+  ConnectedScatterChartSchema,
   type IRConnectedPathPatch,
   type IRConnectedPointPatch,
-  type IRConnectedScatterChartSpec,
+  type IRConnectedScatterChart,
 } from './connected-scatter';
 export type { PointChartTypeValue } from './constants';
 export { PointChartType } from './constants';
-export { type IRScatterChartSpec, ScatterChartSpecSchema } from './scatter';
+export { type IRScatterChart, ScatterChartSchema } from './scatter';

@@ -1,11 +1,11 @@
 import { isRetikzError, RetikzError } from '@retikz/foundation';
-import { MarkOperationSchema, PlotSpecSchema } from '@retikz/plot';
+import { MarkOperationSchema, PlotSchema } from '@retikz/plot';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type { ChartRecipeSeed } from '../../../src/point/recipe';
 
-import { resolvePointChartSpec } from '../../../src/point';
+import { resolvePointChart } from '../../../src/point';
 import { ChartResolveError } from '../../../src/point/errors';
 import { ChartMemberParseError } from '../../../src/point/merge';
 import { ChartRecipeInvariantError } from '../../../src/point/recipe';
@@ -37,13 +37,13 @@ const scatter = {
 
 const resolveErrorOf = (input: unknown): ChartResolveError => {
   try {
-    resolvePointChartSpec(input);
+    resolvePointChart(input);
   } catch (error) {
     expect(error).toBeInstanceOf(ChartResolveError);
     if (error instanceof ChartResolveError) return error;
     throw error;
   }
-  throw new Error('expected resolvePointChartSpec to fail');
+  throw new Error('expected resolvePointChart to fail');
 };
 
 describe('Chart resolution errors', () => {
@@ -95,10 +95,10 @@ describe('Chart resolution errors', () => {
 
   it.each([
     [{ namespace: 'chart', type: 'missing' }, 'unknown-type', ['type']],
-    [{ ...base, mark: { unknownKey: true } }, 'invalid-chart-spec', ['mark', 'unknownKey']],
+    [{ ...base, mark: { unknownKey: true } }, 'invalid-chart-ir', ['mark', 'unknownKey']],
     [
       { ...base, presentation: { children: [{ content: { kind: 'preset', preset: 'title', text: 'A' } }] } },
-      'invalid-chart-spec',
+      'invalid-chart-ir',
       ['presentation'],
     ],
     [
@@ -108,7 +108,7 @@ describe('Chart resolution errors', () => {
           children: [{ content: { kind: 'preset', preset: 'title', text: '' } }, { content: { kind: 'plot' } }],
         },
       },
-      'invalid-chart-spec',
+      'invalid-chart-ir',
       ['presentation'],
     ],
     [
@@ -119,12 +119,12 @@ describe('Chart resolution errors', () => {
           children: [{ content: { kind: 'plot' } }],
         },
       },
-      'invalid-chart-spec',
+      'invalid-chart-ir',
       ['presentation'],
     ],
     [
       { ...base, presentation: { children: [{ key: 'main', content: { kind: 'plot' } }] } },
-      'invalid-chart-spec',
+      'invalid-chart-ir',
       ['presentation'],
     ],
     [
@@ -170,18 +170,18 @@ describe('Chart resolution errors', () => {
     [{ ...bubble, mark: { encoding: { y: { field: 'otherY' } } } }, ['mark', 'encoding', 'y']],
   ] as const)('为 Bubble 保留精确的无效输入路径 %s', (input, path) => {
     const error = resolveErrorOf(input);
-    expect({ code: error.code, path: error.path }).toEqual({ code: 'invalid-chart-spec', path });
+    expect({ code: error.code, path: error.path }).toEqual({ code: 'invalid-chart-ir', path });
   });
 
   it('把显式 undefined encoding patch 规范化为缺省值', () => {
     expect(() =>
-      resolvePointChartSpec({
+      resolvePointChart({
         ...bubble,
         mark: { encoding: { text: undefined, size: undefined } },
       }),
     ).not.toThrow();
     expect(() =>
-      resolvePointChartSpec({
+      resolvePointChart({
         ...scatter,
         mark: { encoding: { text: undefined } },
       }),
@@ -230,7 +230,7 @@ describe('Chart resolution errors', () => {
       throw providerError;
     });
     try {
-      expect(() => resolvePointChartSpec(base)).toThrow(providerError);
+      expect(() => resolvePointChart(base)).toThrow(providerError);
     } finally {
       validateCore.mockRestore();
     }
@@ -242,7 +242,7 @@ describe('Chart resolution errors', () => {
       throw providerError;
     });
     try {
-      expect(() => resolvePointChartSpec(base)).toThrow(providerError);
+      expect(() => resolvePointChart(base)).toThrow(providerError);
     } finally {
       createSeed.mockRestore();
     }
@@ -255,7 +255,7 @@ describe('Chart resolution errors', () => {
     });
     let thrown: unknown;
     try {
-      resolvePointChartSpec(base);
+      resolvePointChart(base);
     } catch (error) {
       thrown = error;
     } finally {
@@ -276,7 +276,7 @@ describe('Chart resolution errors', () => {
     });
     let thrown: unknown;
     try {
-      resolvePointChartSpec(base);
+      resolvePointChart(base);
     } catch (error) {
       thrown = error;
     } finally {
@@ -310,11 +310,11 @@ describe('Chart resolution errors', () => {
     }
   });
 
-  it('把最终 PlotSpec parse failure 映射为 invalid-resolved-plot', () => {
-    const invalid = PlotSpecSchema.safeParse({});
+  it('把最终 IRPlot parse failure 映射为 invalid-resolved-plot', () => {
+    const invalid = PlotSchema.safeParse({});
     expect(invalid.success).toBe(false);
     if (invalid.success) return;
-    const parse = vi.spyOn(PlotSpecSchema, 'parse').mockImplementationOnce(() => {
+    const parse = vi.spyOn(PlotSchema, 'parse').mockImplementationOnce(() => {
       throw invalid.error;
     });
     try {

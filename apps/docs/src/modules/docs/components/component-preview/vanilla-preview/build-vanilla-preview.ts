@@ -2,27 +2,27 @@ import type { ChartPresentationAuthoringRecord, IRChart } from '@retikz/chart';
 import type { CreateChartInput } from '@retikz/chart-vanilla';
 import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotSpec } from '@retikz/plot';
-import type { IRTableSpec } from '@retikz/table';
+import type { IRPlot } from '@retikz/plot';
+import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
 import { ChartSchema } from '@retikz/chart';
 import { createChart, renderChart } from '@retikz/chart-vanilla';
 import {
-  GraphConnectorDefinition,
-  GraphConnectorSchema,
-  GraphFrameDefinition,
-  GraphFrameSchema,
-  GraphNodeDefinition,
-  GraphNodeSchema,
+  RelationDefinition,
+  RelationSchema,
+  ContainerDefinition,
+  ContainerSchema,
+  EntityDefinition,
+  EntitySchema,
 } from '@retikz/graph';
 import {
-  graphConnector,
-  GraphConnectorInputEmbedAdapter,
-  graphFrame,
-  GraphFrameInputEmbedAdapter,
-  graphNode,
-  GraphNodeInputEmbedAdapter,
+  relation,
+  RelationInputEmbedAdapter,
+  container,
+  ContainerInputEmbedAdapter,
+  entity,
+  EntityInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
 import {
   FlexLayoutDefinition,
@@ -40,7 +40,7 @@ import {
   overlayLayout,
   OverlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 import {
   AxesDefinition,
@@ -67,7 +67,7 @@ import {
   surfaceChild,
   SurfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla';
-import { TableSpecSchema, TableStructureKind } from '@retikz/table';
+import { TableSchema, TableStructureKind } from '@retikz/table';
 import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToSvgString, scene, scope } from '@retikz/vanilla';
 
@@ -130,7 +130,7 @@ type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
 type LibraryKind = StandardKind | LayoutKind;
 
-type GraphKind = 'graphFrame' | 'graphNode' | 'graphConnector';
+type GraphKind = 'container' | 'entity' | 'relation';
 
 type LibraryConversionState = {
   counts: Record<LibraryKind, number>;
@@ -158,7 +158,7 @@ const libraryCanonicalId = (kind: LibraryKind, embedId: string): string => {
 };
 
 const graphCanonicalId = (kind: GraphKind, embedId: string): string =>
-  kind === 'graphFrame' ? `${embedId}/${kind}` : embedId;
+  kind === 'container' ? `${embedId}/${kind}` : embedId;
 
 const nextLibraryId = (kind: LibraryKind, state: LibraryConversionState, authoredId?: string): string => {
   state.counts[kind] += 1;
@@ -183,7 +183,7 @@ const nextGraphId = (kind: GraphKind, state: GraphConversionState, authoredId?: 
     const generatedId = graphCanonicalId(kind, embedId);
     state.ids.set(authoredId, generatedId);
     state.ids.set(generatedId, generatedId);
-    if (kind === 'graphFrame') {
+    if (kind === 'container') {
       state.ids.set(`${authoredId}/${kind}`, generatedId);
     }
   }
@@ -198,7 +198,7 @@ const rewriteLogicTarget = (value: unknown, state: GraphConversionState): unknow
 };
 
 /** 只改写 Core Step 明确拥有的目标字段 */
-const rewriteGraphConnectorStep = (value: unknown, state: GraphConversionState): unknown => {
+const rewriteRelationStep = (value: unknown, state: GraphConversionState): unknown => {
   if (typeof value !== 'object' || value === null) return value;
   const step = value as Record<string, unknown>;
   return {
@@ -215,11 +215,11 @@ const rewriteLogicInput = (
   input: Record<string, unknown>,
   state: GraphConversionState,
 ): Record<string, unknown> => {
-  if (kind === 'graphConnector') {
+  if (kind === 'relation') {
     return {
       ...input,
       ...(Array.isArray(input.children)
-        ? { children: input.children.map(step => rewriteGraphConnectorStep(step, state)) }
+        ? { children: input.children.map(step => rewriteRelationStep(step, state)) }
         : {}),
     };
   }
@@ -253,7 +253,7 @@ const registerPreviewIds = (
       }
       if (child.namespace === 'graph' && typeof authoredId === 'string') {
         const kind = child.type as GraphKind;
-        if (['graphFrame', 'graphNode', 'graphConnector'].includes(kind)) {
+        if (['container', 'entity', 'relation'].includes(kind)) {
           nextGraphId(kind, graphState, authoredId);
           graphState.counts[kind] -= 1;
           graphState.adapters.delete(kind);
@@ -386,28 +386,28 @@ const convertLayoutChild = (
 const convertGraphChild = (child: CompositeChild, state: GraphConversionState): InputChild => {
   const childId = (child as { id?: string }).id;
   switch (child.type) {
-    case 'graphFrame': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = GraphFrameSchema.parse(child);
+    case 'container': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = ContainerSchema.parse(child);
       void _namespace;
       void _type;
       void _id;
-      return graphFrame(nextGraphId('graphFrame', state, childId), input);
+      return container(nextGraphId('container', state, childId), input);
     }
-    case 'graphNode': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = GraphNodeSchema.parse(child);
+    case 'entity': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = EntitySchema.parse(child);
       void _namespace;
       void _type;
       void _id;
-      return graphNode(nextGraphId('graphNode', state, childId), input);
+      return entity(nextGraphId('entity', state, childId), input);
     }
-    case 'graphConnector': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = GraphConnectorSchema.parse(child);
+    case 'relation': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = RelationSchema.parse(child);
       void _namespace;
       void _type;
       void _id;
-      return graphConnector(
-        nextGraphId('graphConnector', state, childId),
-        rewriteLogicInput('graphConnector', input, state) as Parameters<typeof graphConnector>[1],
+      return relation(
+        nextGraphId('relation', state, childId),
+        rewriteLogicInput('relation', input, state) as Parameters<typeof relation>[1],
       );
     }
     default:
@@ -450,9 +450,9 @@ const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEm
 ];
 
 const graphAdapters = (state: GraphConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
-  ...(state.adapters.has('graphFrame') ? [GraphFrameInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('graphNode') ? [GraphNodeInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('graphConnector') ? [GraphConnectorInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('container') ? [ContainerInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
 
 const standardDefinitionByName = {
@@ -470,9 +470,9 @@ const layoutDefinitionByName = {
 } as const;
 
 const graphDefinitionByName = {
-  GraphFrameDefinition,
-  GraphNodeDefinition,
-  GraphConnectorDefinition,
+  ContainerDefinition,
+  EntityDefinition,
+  RelationDefinition,
 } as const;
 
 const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
@@ -493,9 +493,9 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   };
   const graphState: GraphConversionState = {
     counts: {
-      graphFrame: 0,
-      graphNode: 0,
-      graphConnector: 0,
+      container: 0,
+      entity: 0,
+      relation: 0,
     },
     adapters: new Set(),
     ids,
@@ -530,11 +530,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   return {
     code: irToVanillaCode(preview.ir),
     svg: renderToSvgString(input, {
-      adapters: [
-        ...standardAdapters(libraryState),
-        ...layoutAdapters(libraryState),
-        ...graphAdapters(graphState),
-      ],
+      adapters: [...standardAdapters(libraryState), ...layoutAdapters(libraryState), ...graphAdapters(graphState)],
       output: outputSize(preview),
       ...(compile === undefined ? {} : { compile }),
     }),
@@ -570,10 +566,10 @@ const findProviderDataset = (
 };
 
 /** 读取 Plot provider-local dataset */
-const findPlotDataset = (preview: PreviewIR, spec: IRPlotSpec): ExternalDatasets | null =>
+const findPlotDataset = (preview: PreviewIR, spec: IRPlot): ExternalDatasets | null =>
   findProviderDataset(preview, 'plot', spec.data.reference, 'Plot');
 
-const buildPlotCode = (spec: IRPlotSpec, datasets: ExternalDatasets, preview: PreviewIR): string => {
+const buildPlotCode = (spec: IRPlot, datasets: ExternalDatasets, preview: PreviewIR): string => {
   const size = outputSize(preview);
   const options = Object.keys(size).length > 0 ? `, ${formatVanillaValue(size)}` : '';
   return `import { renderPlot } from '@retikz/plot-vanilla';\n\nconst spec = ${formatVanillaValue(spec)};\nconst datasets = ${formatVanillaValue(datasets)};\n\nexport const svg = renderPlot(spec, datasets${options});\n`;
@@ -584,7 +580,7 @@ const buildPlotPreview = (
   composite: CompositeChild,
   options: BuildVanillaPreviewOptions,
 ): VanillaPreviewArtifact => {
-  const spec = PlotSpecSchema.parse(composite);
+  const spec = PlotSchema.parse(composite);
   const datasets = findPlotDataset(preview, spec);
   if (datasets === null) {
     return diagnostic(`Cannot generate Vanilla preview: Plot dataset "${spec.data.reference}" was not captured.`);
@@ -599,7 +595,7 @@ const buildPlotPreview = (
   };
 };
 
-const findTableDatasets = (preview: PreviewIR, spec: IRTableSpec): ExternalDatasets | null => {
+const findTableDatasets = (preview: PreviewIR, spec: IRTable): ExternalDatasets | null => {
   if (spec.data === undefined) return {};
   return findProviderDataset(preview, 'table', spec.data.reference, 'Table');
 };
@@ -733,7 +729,7 @@ const buildChartPreview = (
 };
 
 const buildTableCode = (
-  spec: IRTableSpec,
+  spec: IRTable,
   datasets: ExternalDatasets,
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions,
@@ -764,7 +760,7 @@ const buildTablePreview = (
   composite: CompositeChild,
   options: BuildVanillaPreviewOptions,
 ): VanillaPreviewArtifact => {
-  const spec = TableSpecSchema.parse(composite);
+  const spec = TableSchema.parse(composite);
   if (spec.structure.kind !== TableStructureKind.Detail && spec.structure.kind !== TableStructureKind.Manual) {
     return diagnostic(
       `Cannot generate Vanilla preview: Table structure "${spec.structure.kind}" requires runtime definitions that cannot be serialized.`,

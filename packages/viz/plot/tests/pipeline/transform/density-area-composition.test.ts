@@ -3,15 +3,15 @@ import type { IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => {
@@ -20,7 +20,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options?: LowerPlotsOptions,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -34,7 +34,7 @@ describe('density area composition (contract)', () => {
   ];
 
   it('density rows can be consumed by PathMark baseline area without DensityMark', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'samples' },
@@ -79,7 +79,7 @@ describe('density area composition (contract)', () => {
   });
 
   it('density mark-local transform only affects the path layer that declares it', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'samples' },

@@ -4,8 +4,8 @@ import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, resolveDefaultCoreThemeColors } from '@retikz/core';
 import {
-  createDetailTableSpec,
-  createManualTableSpec,
+  createDetailTableIR,
+  createManualTableIR,
   defineCellFormatter,
   defineCellPresentation,
   defineTableStructure,
@@ -74,8 +74,8 @@ describe('Table React composition authoring collectors', () => {
       { id: 'name', field: 'name', header: 'Name', headerLayout: { padding: 2 } },
       { id: 'score', field: 'score', bodyLayout: { wrap: true } },
     ]);
-    expect(createDetailTableSpec({ dataRef: 'scores', header: false, columns })).toEqual(
-      createDetailTableSpec({
+    expect(createDetailTableIR({ dataRef: 'scores', header: false, columns })).toEqual(
+      createDetailTableIR({
         dataRef: 'scores',
         header: false,
         columns: [
@@ -110,8 +110,8 @@ describe('Table React composition authoring collectors', () => {
         [{ content }, { value: null }],
       ],
     });
-    expect(createManualTableSpec(structure)).toEqual(
-      createManualTableSpec({
+    expect(createManualTableIR(structure)).toEqual(
+      createManualTableIR({
         rowKinds: ['columnHeader', 'body'],
         rows: [
           [
@@ -525,7 +525,7 @@ describe('Table React composition root integration', () => {
 
   it('reports stable host-style migration diagnostics before schema construction', () => {
     const generic = {
-      spec: createManualTableSpec({ rows: [[1]] }),
+      spec: createManualTableIR({ rows: [[1]] }),
       style: { color: 'rebeccapurple' },
     } as unknown as TableProps;
     const detail = {
@@ -616,7 +616,7 @@ describe('Table React composition root integration', () => {
     const contribution = contributionOf(DetailTable, props, 'detail-runtime-reference');
 
     expect(contribution.node).toEqual(
-      createDetailTableSpec({
+      createDetailTableIR({
         id: 'detail-runtime-reference',
         dataRef: 'people',
         header: false,

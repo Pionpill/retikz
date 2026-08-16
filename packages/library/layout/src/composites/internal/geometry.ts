@@ -1,4 +1,4 @@
-import type { IRBoxSpacing, IRClipSpec, LayoutAxisProposal } from '@retikz/core';
+import type { IRBoxSpacing, IRClip, LayoutAxisProposal } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import { resolveBoxSpacing } from '@retikz/core';
@@ -169,7 +169,7 @@ export const alignAllocationInSlot = (
 };
 
 /** 为 container allocation 构造正面积 rect 或零面积退化 path clip */
-export const layoutClipOf = (size: Readonly<{ width: number; height: number }>): IRClipSpec => {
+export const layoutClipOf = (size: Readonly<{ width: number; height: number }>): IRClip => {
   finiteNonNegative(size.width, 'clip width');
   finiteNonNegative(size.height, 'clip height');
   if (size.width > 0 && size.height > 0) {

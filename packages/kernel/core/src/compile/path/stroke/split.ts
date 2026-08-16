@@ -1,4 +1,4 @@
-﻿import type { PathCommand, PathPrim, ResolvedArrowEndSpec, ScenePrimitive } from '../../../contract';
+import type { PathCommand, PathPrim, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
 
 /** baseProps：除 commands / endpoint arrows 外 PathPrim 公共属性集合（多 sub-path 复用） */
 export type PathBaseProps = Omit<PathPrim, 'type' | 'commands' | 'arrowStart' | 'arrowEnd'>;
@@ -10,7 +10,7 @@ export type PathBaseProps = Omit<PathPrim, 'type' | 'commands' | 'arrowStart' | 
 export const splitSubPathsForEndpointArrows = (
   commands: Array<PathCommand>,
   baseProps: PathBaseProps,
-  endpointArrows: { arrowStart?: ResolvedArrowEndSpec; arrowEnd?: ResolvedArrowEndSpec },
+  endpointArrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
 ): { primitive: ScenePrimitive; isGrouped: boolean } => {
   const hasArrows = !!endpointArrows.arrowStart || !!endpointArrows.arrowEnd;
   // 每个 sub-path 起始命令索引（每个 move 都是新 sub-path）

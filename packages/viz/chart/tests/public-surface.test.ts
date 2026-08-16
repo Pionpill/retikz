@@ -13,15 +13,15 @@ describe('@retikz/chart public surface', () => {
       Note: 'note',
       Source: 'source',
     });
-    expect(chart.ChartProvider.key).toEqual({ namespace: 'chart', type: 'chart' });
+    expect(chart.ChartProvider.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'chart' });
     expect(chart).toHaveProperty('ChartDefinition');
     expect(chart).toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('PointChartType');
-    expect(chart).not.toHaveProperty('PointChartSpecSchema');
-    expect(chart).not.toHaveProperty('ScatterChartSpecSchema');
-    expect(chart).not.toHaveProperty('BubbleChartSpecSchema');
-    expect(chart).not.toHaveProperty('ConnectedScatterChartSpecSchema');
-    expect(chart).not.toHaveProperty('resolvePointChartSpec');
+    expect(chart).not.toHaveProperty('PointChartSchema');
+    expect(chart).not.toHaveProperty('ScatterChartSchema');
+    expect(chart).not.toHaveProperty('BubbleChartSchema');
+    expect(chart).not.toHaveProperty('ConnectedScatterChartSchema');
+    expect(chart).not.toHaveProperty('resolvePointChart');
     expect(chart).not.toHaveProperty('ScatterChartDefinition');
     expect(chart).not.toHaveProperty('createChartComposites');
     expect(chart).not.toHaveProperty('ChartCaption');
@@ -36,11 +36,11 @@ describe('@retikz/chart public surface', () => {
       Bubble: 'bubble',
       ConnectedScatter: 'connected-scatter',
     });
-    expect(point).toHaveProperty('PointChartSpecSchema');
-    expect(point).toHaveProperty('ScatterChartSpecSchema');
-    expect(point).toHaveProperty('BubbleChartSpecSchema');
-    expect(point).toHaveProperty('ConnectedScatterChartSpecSchema');
-    expect(point).toHaveProperty('resolvePointChartSpec');
+    expect(point).toHaveProperty('PointChartSchema');
+    expect(point).toHaveProperty('ScatterChartSchema');
+    expect(point).toHaveProperty('BubbleChartSchema');
+    expect(point).toHaveProperty('ConnectedScatterChartSchema');
+    expect(point).toHaveProperty('resolvePointChart');
   });
 
   it('keeps canonical IR JSON-safe', () => {

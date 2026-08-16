@@ -118,7 +118,7 @@ type AxisOriginPlacement = {
 
 本 ADR 只要求 cartesian lowering 支持 `origin`。polar / ternary / custom coordinate 遇到 `placement.kind: 'origin'` 必须 fail-loud，并提示该 placement 只支持 cartesian axis。`line.arrow` 与 `line.extent` 可先支持 cartesian；非 cartesian axis 如需箭头，应在对应 coordinate provider 明确轴方向后另行接入，避免用屏幕 start/end 误导用户。
 
-Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字段改变 guide 结构和几何语义，不是纯视觉默认。`lineCap` 属于纯线条样式，可进入 theme 的 axis line 默认；theme 的 `axis.line` 只包含纯线条样式，避免 `IRPlotSpec.theme.axis.line.arrow` 这种全局结构开关静默生效。
+Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字段改变 guide 结构和几何语义，不是纯视觉默认。`lineCap` 属于纯线条样式，可进入 theme 的 axis line 默认；theme 的 `axis.line` 只包含纯线条样式，避免 `IRPlot.theme.axis.line.arrow` 这种全局结构开关静默生效。
 
 理由：
 
@@ -152,6 +152,6 @@ core 已经具备稳定 `dashOffset` / stroke dash offset 能力。plot 不需�
 - axis line 专用 dash offset 结构字段。`dashOffset` 已由 core 提供，plot 应通过 ADR-02 的 `GuideLineStyleSchema` 作为普通线条样式复用，不在 ADR-05 另造字段。
 - theme 级 axis arrow 默认。
 - 新增 arrow provider 或修改 core arrow registry。
-- chart preset；后续 chart 可消费本 IRPlotSpec 能力。
+- chart preset；后续 chart 可消费本 IRPlot 能力。
 
 ---

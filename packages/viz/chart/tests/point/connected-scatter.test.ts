@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { PointChartSpecSchema, PointChartType } from '../../src/point';
+import { PointChartSchema, PointChartType } from '../../src/point';
 import {
   ConnectedPathPatchSchema,
   ConnectedPointPatchSchema,
-  ConnectedScatterChartSpecSchema,
+  ConnectedScatterChartSchema,
 } from '../../src/point/connected-scatter';
 
 const minimalConnectedScatter = {
@@ -73,11 +73,11 @@ const connectedPathPatchKeys = [
 
 describe('Connected Scatter Chart schema', () => {
   it('parses the minimal variant and survives a JSON round trip', () => {
-    const parsed = ConnectedScatterChartSpecSchema.parse(minimalConnectedScatter);
+    const parsed = ConnectedScatterChartSchema.parse(minimalConnectedScatter);
 
     expect(PointChartType.ConnectedScatter).toBe('connected-scatter');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSpecSchema.parse(minimalConnectedScatter)).toEqual(parsed);
+    expect(PointChartSchema.parse(minimalConnectedScatter)).toEqual(parsed);
   });
 
   it.each([
@@ -89,7 +89,7 @@ describe('Connected Scatter Chart schema', () => {
     ['series and field color', { series: 'region', color: { field: 'group' } }],
   ])('accepts %s', (_label, encoding) => {
     expect(
-      ConnectedScatterChartSpecSchema.parse({
+      ConnectedScatterChartSchema.parse({
         ...minimalConnectedScatter,
         encoding: { ...minimalConnectedScatter.encoding, ...encoding },
       }).encoding,
@@ -103,7 +103,7 @@ describe('Connected Scatter Chart schema', () => {
     ['mixed color branches', { ...minimalConnectedScatter.encoding, color: { field: 'group', value: '#2563eb' } }],
     ['unknown encoding key', { ...minimalConnectedScatter.encoding, unknown: 'field' }],
   ])('rejects %s', (_label, encoding) => {
-    expect(() => ConnectedScatterChartSpecSchema.parse({ ...minimalConnectedScatter, encoding })).toThrow();
+    expect(() => ConnectedScatterChartSchema.parse({ ...minimalConnectedScatter, encoding })).toThrow();
   });
 
   it('keeps the point patch as the Scatter allowlist without layer', () => {
@@ -167,7 +167,7 @@ describe('Connected Scatter Chart schema', () => {
 
   it('rejects spatial-root conflicts', () => {
     expect(() =>
-      ConnectedScatterChartSpecSchema.parse({
+      ConnectedScatterChartSchema.parse({
         ...minimalConnectedScatter,
         coordinate: { type: 'cartesian2D' },
         composition: {

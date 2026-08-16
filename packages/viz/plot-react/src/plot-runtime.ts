@@ -1,9 +1,9 @@
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
-import type { IRPlotSpec, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
+import type { IRPlot, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
 import type { ResolveLabelMap } from '@retikz/plot-vanilla';
 
 import { lowerPlotWithLineage } from '@retikz/plot';
-import { normalizePlotSpec, resolveLabelOf } from '@retikz/plot-vanilla';
+import { normalizePlotIR, resolveLabelOf } from '@retikz/plot-vanilla';
 
 import type { PlotProps } from './Plot';
 
@@ -12,7 +12,7 @@ import { collectPlotDeclarations } from './adapter';
 /** `Plot` props 的完整 authoring 结果 */
 export type ResolvedPlotAuthoring = Readonly<{
   /** 完整 Plot Source IR */
-  spec: IRPlotSpec;
+  spec: IRPlot;
   /** runtime-only dataset table */
   datasets: ExternalDatasets;
   /** Plot lowering runtime options */
@@ -118,9 +118,9 @@ const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
 
 /** 将 React spec 入口的显式展示覆盖装配到 Plot Source IR */
 const applyPlotPropsToSpec = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   props: Pick<PlotProps, 'width' | 'height' | 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
-): IRPlotSpec => {
+): IRPlot => {
   const width = spec.width === undefined && props.width !== undefined ? props.width : undefined;
   const height = spec.height === undefined && props.height !== undefined ? props.height : undefined;
   if (
@@ -156,18 +156,18 @@ export const resolvePlotAuthoring = (
           ? embeddedDataRefFor(props.data)
           : DSL_DATA_REF))
     : DSL_DATA_REF;
-  let spec: IRPlotSpec;
+  let spec: IRPlot;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
-  // DSL 入口 buildPlotSpec 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
+  // DSL 入口 buildPlotIR 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
     spec = applyPlotPropsToSpec(props.spec, props);
     datasets = props.data;
   } else {
-    // DSL 入口：model 经 buildPlotSpec 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
+    // DSL 入口：model 经 buildPlotIR 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
-    spec = normalizePlotSpec(collectPlotDeclarations(props.children), dataRef, {
+    spec = normalizePlotIR(collectPlotDeclarations(props.children), dataRef, {
       id: props.id,
       width: props.width,
       height: props.height,

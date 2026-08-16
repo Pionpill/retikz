@@ -1,13 +1,13 @@
-import { PlotSpecSchema } from '@retikz/plot';
+import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { buildPlotSpec } from '../../../src/adapter';
+import { buildPlotIR } from '../../../src/adapter';
 import { Axis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
-describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
+describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('react_y_axis_binding_generates_overlay_composition', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis dimension="x" title="day" />
         <Axis id="temperature" dimension="y" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
@@ -51,11 +51,11 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       { type: 'axis', id: 'rainfall', dimension: 'y', coordinateView: 'rainfall', grid: true },
     ]);
     expect(JSON.stringify(spec)).not.toContain('yAxisId');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('y_axis_binding_supplies_scales_when_position_inference_is_deferred', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis dimension="x" title="day" />
         <Axis id="temperature" dimension="y" title="temperature" />
@@ -73,11 +73,11 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       { type: 'linear', name: '__y.temperature' },
       { type: 'linear', name: '__y.rainfall' },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('react_x_axis_binding_generates_overlay_composition', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
         <Axis id="date" dimension="x" placement={{ kind: 'side', side: 'top' }} title="date" />
@@ -121,11 +121,11 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       { type: 'axis', dimension: 'y' },
     ]);
     expect(JSON.stringify(spec)).not.toContain('xAxisId');
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('axis_binding_omitted_keeps_single_coordinate', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis dimension="x" />
         <Axis id="temperature" dimension="y" />
@@ -139,7 +139,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
   });
 
   it('marks_without_y_axis_id_bind_to_default_axis_in_binding_mode', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis id="temperature" dimension="y" />
         <Axis id="rainfall" dimension="y" />
@@ -156,7 +156,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
   });
 
   it('default_y_axis_id_binds_to_dimension_default_scope', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis id="rainfall" dimension="y" />
         <PathMark x="day" y="temperature" yAxisId="default" />
@@ -179,7 +179,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
   });
 
   it('explicit_composition_with_same_named_scope_accepts_y_axis_id', () => {
-    const spec = buildPlotSpec(
+    const spec = buildPlotIR(
       <>
         <Axis id="temperature" dimension="y" />
         <Axis id="rainfall" dimension="y" />
@@ -212,12 +212,12 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
       { type: 'axis', id: 'temperature', coordinateView: 'temperature' },
       { type: 'axis', id: 'rainfall', coordinateView: 'rainfall' },
     ]);
-    expect(() => PlotSpecSchema.parse(spec)).not.toThrow();
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
   it('rejects invalid y axis binding inputs', () => {
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Axis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="missing" />
@@ -227,7 +227,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     ).toThrow(/missing.*y axis/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Axis id="left" dimension="x" />
           <PathMark x="day" y="temperature" yAxisId="left" />
@@ -237,7 +237,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     ).toThrow(/dimension.*y/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Axis id="left" dimension="y" />
           <Axis id="left" dimension="y" />
@@ -248,7 +248,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     ).toThrow(/duplicate.*axis id/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Axis id="left" dimension="y" />
           <PathMark coordinateView="left" x="day" y="temperature" yAxisId="left" />
@@ -260,7 +260,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
 
   it('rejects axis binding outside cartesian2D and missing explicit scopes', () => {
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Axis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="left" />
@@ -271,7 +271,7 @@ describe('buildPlotSpec alpha.14 ADR-08 axis binding sugar', () => {
     ).toThrow(/cartesian2D/i);
 
     expect(() =>
-      buildPlotSpec(
+      buildPlotIR(
         <>
           <Axis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="left" />

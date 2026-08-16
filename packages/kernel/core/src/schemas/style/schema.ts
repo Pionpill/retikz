@@ -1,21 +1,21 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
-import { PaintSpecSchema } from '../paint';
+import { PaintSchema } from '../paint';
 import { StrokeStyleSchema } from '../stroke';
 import { CssColorSchema, OpacitySchema } from './primitives';
 
 export const PaintValueSchema = z
-  .union([CssColorSchema, PaintSpecSchema])
-  .describe('Paint value: a CSS color string or a PaintSpec object.');
+  .union([CssColorSchema, PaintSchema])
+  .describe('Paint value: a CSS color string or a IRPaint object.');
 
 export const GraphicPaintSchema = z
   .strictObject({
     color: CssColorSchema.optional().describe(
       'Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.',
     ),
-    fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: CSS color string or PaintSpec.'),
-    stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: CSS color string or PaintSpec.'),
+    fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: CSS color string or IRPaint.'),
+    stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: CSS color string or IRPaint.'),
   })
   .describe('Graphic paint fields shared by primary geometry.');
 

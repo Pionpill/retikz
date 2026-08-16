@@ -4,11 +4,11 @@ import { arcEndPoint } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
 
@@ -18,7 +18,7 @@ const share = [
 ];
 
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -27,7 +27,7 @@ const expandOf = (
 };
 
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -62,8 +62,8 @@ const vectorPosition = (node: IRNode): [number, number] => {
   return [position[0], position[1]];
 };
 
-const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerRadius = 0): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'share' },
@@ -129,7 +129,7 @@ describe('IntervalMark.pull sector geometry', () => {
   });
 
   it('cartesian interval rejects pull instead of ignoring it', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },

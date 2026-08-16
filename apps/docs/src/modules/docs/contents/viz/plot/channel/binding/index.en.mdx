@@ -38,7 +38,7 @@ If the data contains a field named `crimson`, `color="crimson"` therefore reads 
 <PointMark color={{ kind: 'constant', value: 'crimson' }} />
 ```
 
-This decision happens while the React DSL builds `IRPlotSpec`. It does not mean that a missing value in one row falls back to a constant. In Plot IR, a channel still chooses exactly one: read a field from every row or always use the same fixed value.
+This decision happens while the React DSL builds `IRPlot`. It does not mean that a missing value in one row falls back to a constant. In Plot IR, a channel still chooses exactly one: read a field from every row or always use the same fixed value.
 
 Strings on position props still mean fields directly. Strings in the custom `channels` bag also mean fields directly, while constants use an explicit `{ kind: 'constant', value }` binding. The complete build-time decision and runtime value path appears under “How It Works”.
 
@@ -64,7 +64,7 @@ Continue with [Built-In Channels](/viz/plot/channel/builtin) to see how style ch
 
 ## How It Works
 
-React mark props become serializable channel configuration while `IRPlotSpec` is built. A field is represented internally as `{ field: 'gdp' }`, while a constant becomes `{ value: 80 }`.
+React mark props become serializable channel configuration while `IRPlot` is built. A field is represented internally as `{ field: 'gdp' }`, while a constant becomes `{ value: 80 }`.
 
 The figure connects **build-time selection** for a built-in flat style prop with **runtime value resolution**. Its numbers are candidate priorities: a string first matches a field name and only after a miss tries a valid constant. If neither accepts it, the builder warns and skips the prop rather than processing a data row.
 

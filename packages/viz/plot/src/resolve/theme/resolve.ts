@@ -3,7 +3,7 @@ import type { ResolvedTheme } from '@retikz/core';
 import { ThemeTokenSource } from '@retikz/core';
 
 import type { PlotThemeStyleDefinition } from '../../contract';
-import type { IRPlotSpec, IRPlotThemeResolution, IRPlotThemeTokenResolution } from '../../schemas';
+import type { IRPlot, IRPlotThemeResolution, IRPlotThemeTokenResolution } from '../../schemas';
 
 import { getDefaultPlotThemePreset, resolvePlotThemeStyleRegistry } from '../../providers/theme';
 import { getAxisTokenRules } from '../../providers/theme/preset';
@@ -18,7 +18,7 @@ import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './m
 /** 按 Plot style、Plot token 与 native Plot theme 顺序解析主题 */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlotSpec, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'> = {},
+  input: Pick<IRPlot, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;

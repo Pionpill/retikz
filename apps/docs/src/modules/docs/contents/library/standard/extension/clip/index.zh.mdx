@@ -78,12 +78,12 @@ Definition 只在当前 Core registry assembly 中有效，不进入 IR JSON，�
 
 #### API
 
-`compound` 使用 `CompoundClipSpec`，并在编译时注入 `CompoundClipDefinition`：
+`compound` 使用 `CompoundClip`，并在编译时注入 `CompoundClipDefinition`：
 
 | 字段        | 类型                                    | 说明                                                                       |
 | ----------- | --------------------------------------- | -------------------------------------------------------------------------- |
 | `kind`      | `'compound'`                            | 递归组合裁剪的判别字段                                                     |
-| `children`  | `Array<IRClipSpec \| CompoundClipSpec>` | 至少一个子裁剪；子项可以继续嵌套 `compound`，或引用 Core / 其他已注册 clip |
+| `children`  | `Array<IRClip \| CompoundClip>` | 至少一个子裁剪；子项可以继续嵌套 `compound`，或引用 Core / 其他已注册 clip |
 | `fillRule?` | `'nonzero' \| 'evenodd'`                | 组合路径的填充规则；省略时沿 Core 的默认处理                               |
 
 ## 相关

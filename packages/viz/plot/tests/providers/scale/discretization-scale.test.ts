@@ -3,21 +3,21 @@ import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
   const [def] = lowerPlots(datasets, cartOpts);
   return def.expand(spec).children[0] as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（外层 plot scope 的第一个子 scope） */
-const firstLayer = (spec: IRPlotSpec, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>
   expandOf(spec, datasets).children[0] as IRScope;
 
 /**
@@ -57,8 +57,8 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定离散化色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const pointSpec = (colorScale: Record<string, unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
@@ -254,7 +254,7 @@ describe('离散色 · quantile 分位切档求值（contract）', () => {
       { x: 2, y: 2, v: 3 },
       { x: 3, y: 3, v: 4 },
     ];
-    // domain 在 PlotSpecSchema.parse 时已被 strip；lower 仍按数据分位求值
+    // domain 在 PlotSchema.parse 时已被 strip；lower 仍按数据分位求值
     expect(() => expandOf(pointSpec({ type: 'quantile', count: 2, domain: [0, 1000] }), { d: data })).not.toThrow();
     const withDomain = nodeFills(firstLayer(pointSpec({ type: 'quantile', count: 2, domain: [0, 1000] }), { d: data }));
     const without = nodeFills(firstLayer(pointSpec({ type: 'quantile', count: 2 }), { d: data }));
@@ -272,8 +272,8 @@ describe('离散色 · quantile 分位切档求值（contract）', () => {
 });
 
 describe('离散色 · fail-loud 守卫（contract）', () => {
-  const pathColorSpec = (markType: 'line' | 'area', colorScale: Record<string, unknown>): IRPlotSpec =>
-    PlotSpecSchema.parse({
+  const pathColorSpec = (markType: 'line' | 'area', colorScale: Record<string, unknown>): IRPlot =>
+    PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },

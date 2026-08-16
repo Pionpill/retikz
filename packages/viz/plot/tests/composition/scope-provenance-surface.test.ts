@@ -2,10 +2,10 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotSpec } from '../../src/schemas';
+import type { IRPlot } from '../../src/schemas';
 
 import { createPlotLocator, lowerPlots } from '../../src';
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 
 const weatherRows = [
   { region: 'north', day: 0, temperature: 10, rainfall: 100 },
@@ -95,9 +95,9 @@ const trackSpec = {
   guides: [{ type: 'axis', dimension: 'x', coordinateView: 'rain', grid: true }],
 };
 
-const parsePlotSpec = (spec: unknown): IRPlotSpec => PlotSpecSchema.parse(spec);
+const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
-const expandOf = (spec: IRPlotSpec): IRScope => {
+const expandOf = (spec: IRPlot): IRScope => {
   const [definition] = lowerPlots(
     { weather: weatherRows },
     { width: 480, height: 300, provenance: true, datumProvenance: true },
@@ -127,13 +127,13 @@ const gridLayersOf = (scope: IRScope): Array<IRScope> =>
 
 describe('scope provenance surface lowering', () => {
   it('mark_layer_meta_carries_coordinate_view', () => {
-    const outer = expandOf(parsePlotSpec(overlaySpec));
+    const outer = expandOf(parsePlotIR(overlaySpec));
     expect(markLayersOf(outer).map(layer => layer.meta?.coordinateView)).toEqual(['temp', 'rain']);
     expect(markLayersOf(outer).every(layer => layer.meta?.coordinateScope === undefined)).toBe(true);
   });
 
   it('facet_datum_meta_carries_facet_context', () => {
-    const outer = expandOf(parsePlotSpec(facetSpec));
+    const outer = expandOf(parsePlotIR(facetSpec));
     const datum = allNodes(outer).find(node => node.meta?.transformedIndex === 0);
     expect(datum?.meta).toMatchObject({
       coordinateView: 'region.panel._.north',
@@ -143,21 +143,21 @@ describe('scope provenance surface lowering', () => {
   });
 
   it('track_datum_meta_carries_arrangement_and_track_context', () => {
-    const outer = expandOf(parsePlotSpec(trackSpec));
+    const outer = expandOf(parsePlotIR(trackSpec));
     const datum = allNodes(outer).find(node => node.meta?.markIndex === 1 && node.meta.transformedIndex === 0);
     expect(datum?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
     expect(datum?.meta?.scaffold).toBeUndefined();
   });
 
   it('track_guide_meta_carries_arrangement_and_track_context', () => {
-    const outer = expandOf(parsePlotSpec(trackSpec));
+    const outer = expandOf(parsePlotIR(trackSpec));
     const rainGridLayer = gridLayersOf(outer).find(layer => layer.meta?.coordinateView === 'rain');
     expect(rainGridLayer?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
     expect(rainGridLayer?.meta?.scaffold).toBeUndefined();
   });
 
   it('grid_layer_uses_explicit_guide_owner_id', () => {
-    const spec = parsePlotSpec({
+    const spec = parsePlotIR({
       ...overlaySpec,
       guides: overlaySpec.guides.map((guide, index) => ({
         ...guide,
@@ -170,7 +170,7 @@ describe('scope provenance surface lowering', () => {
   });
 
   it('anonymous_grid_layer_uses_coordinate_view_owner_id', () => {
-    const spec = parsePlotSpec({
+    const spec = parsePlotIR({
       ...overlaySpec,
       guides: overlaySpec.guides.map(guide => ({ ...guide, grid: true })),
     });
@@ -182,7 +182,7 @@ describe('scope provenance surface lowering', () => {
 describe('scope provenance surface locator', () => {
   it('locator_by_coordinate_view_disambiguates_same_index', () => {
     const locator = createPlotLocator(
-      parsePlotSpec(overlaySpec),
+      parsePlotIR(overlaySpec),
       { weather: weatherRows },
       { width: 480, height: 300 },
     );
@@ -194,7 +194,7 @@ describe('scope provenance surface locator', () => {
   });
 
   it('locator_by_facet_key_disambiguates_panel', () => {
-    const locator = createPlotLocator(parsePlotSpec(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(parsePlotIR(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
     const north = locator.datum(0, { facet: { id: 'region', column: 'north' } });
     const south = locator.datum(0, { facet: { id: 'region', column: 'south' } });
     expect(north?.meta.facet).toEqual({ id: 'region', column: 'north' });
@@ -203,14 +203,14 @@ describe('scope provenance surface locator', () => {
   });
 
   it('locator_by_track_returns_track_context', () => {
-    const locator = createPlotLocator(parsePlotSpec(trackSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(parsePlotIR(trackSpec), { weather: weatherRows }, { width: 480, height: 300 });
     const rain = locator.datum(0, { track: 'rain' });
     expect(rain?.meta).toMatchObject({ coordinateView: 'rain', arrangement: 'lanes', track: 'rain' });
   });
 
   it('root_and_view_addresses_resolve', () => {
     const locator = createPlotLocator(
-      parsePlotSpec(overlaySpec),
+      parsePlotIR(overlaySpec),
       { weather: weatherRows },
       { width: 480, height: 300 },
     );
@@ -220,7 +220,7 @@ describe('scope provenance surface locator', () => {
   });
 
   it('unknown_view_or_invalid_facet_returns_null', () => {
-    const locator = createPlotLocator(parsePlotSpec(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
+    const locator = createPlotLocator(parsePlotIR(facetSpec), { weather: weatherRows }, { width: 480, height: 300 });
     expect(locator.datum(0, { coordinateView: 'missing' })).toBeNull();
     expect(locator.datum(0, { facet: { id: 'region', column: 'west' } })).toBeNull();
   });

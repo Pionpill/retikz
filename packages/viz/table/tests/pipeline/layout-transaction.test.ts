@@ -12,9 +12,9 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { IRTableSpec, TableCompileArtifact } from '../../src';
+import type { IRTable, TableCompileArtifact } from '../../src';
 
-import { compileTable, lowerTables, TABLE_NAMESPACE, TableComposite, TableSpecSchema } from '../../src';
+import { compileTable, lowerTables, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../src';
 import { resolveTableTransaction } from '../../src/pipeline/layout';
 import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
@@ -37,7 +37,7 @@ const errorChainOf = (error: unknown): Array<Error> => {
 
 describe('Table layout transaction', () => {
   it('solves span-aware tracks and publishes complete Cell boxes in canonical order', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
@@ -77,7 +77,7 @@ describe('Table layout transaction', () => {
   });
 
   it('applies replay-local scale before Table-local translation and keeps clip outside the transform', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
@@ -159,7 +159,7 @@ describe('Table layout transaction', () => {
         };
       },
     });
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
@@ -209,7 +209,7 @@ describe('Table layout transaction', () => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('outer'),
-      table: TableSpecSchema,
+      table: TableSchema,
     });
     const outer = defineComposite({
       namespace: 'fixture',
@@ -224,7 +224,7 @@ describe('Table layout transaction', () => {
         return { children: [context.replay(tableProbe.result)] };
       },
     });
-    const nested: IRTableSpec = {
+    const nested: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: { kind: 'manual', rows: [[null, null]] },
@@ -259,7 +259,7 @@ describe('Table layout transaction', () => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('limit-observer'),
-      table: TableSpecSchema,
+      table: TableSchema,
     });
     const outer = defineComposite({
       namespace: 'fixture',
@@ -274,7 +274,7 @@ describe('Table layout transaction', () => {
         return { children: [context.replay(tableProbe.result)] };
       },
     });
-    const nested: IRTableSpec = {
+    const nested: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: {
@@ -302,7 +302,7 @@ describe('Table layout transaction', () => {
   });
 
   it('keeps zero-size clipped Cell identity while omitting its selected replay', () => {
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: {
@@ -337,7 +337,7 @@ describe('Table layout transaction', () => {
   });
 
   it('selects the canonical root manifest when a nested Table reuses the same public id', () => {
-    const nested: IRTableSpec = {
+    const nested: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'same',
@@ -347,7 +347,7 @@ describe('Table layout transaction', () => {
         rowSize: { kind: 'fixed', value: 8 },
       },
     };
-    const root: IRTableSpec = {
+    const root: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'same',
@@ -390,7 +390,7 @@ describe('Table layout transaction', () => {
     const OuterSchema = CompositeBaseSchema.extend({
       namespace: z.literal('fixture'),
       type: z.literal('discard-table-probe'),
-      table: TableSpecSchema,
+      table: TableSchema,
     });
     const outer = defineComposite({
       namespace: 'fixture',
@@ -401,7 +401,7 @@ describe('Table layout transaction', () => {
         return { children: [] };
       },
     });
-    const table: IRTableSpec = {
+    const table: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       structure: {
@@ -436,7 +436,7 @@ describe('Table layout transaction', () => {
         throw rootCause;
       },
     });
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
@@ -484,7 +484,7 @@ describe('Table layout transaction', () => {
         throw rootCause;
       },
     });
-    const table: IRTableSpec = {
+    const table: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
@@ -500,7 +500,7 @@ describe('Table layout transaction', () => {
       schema: CompositeBaseSchema.extend({
         namespace: z.literal('fixture'),
         type: z.literal('nested-table-failure-outer'),
-        table: TableSpecSchema,
+        table: TableSchema,
       }),
       compile: (node, context) => {
         const probe = context.layoutChild(node.table, NaturalLayoutProposal);
@@ -554,7 +554,7 @@ describe('Table layout transaction', () => {
         };
       },
     });
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
@@ -590,7 +590,7 @@ describe('Table layout transaction', () => {
 
   it('associates Border Scope layout failures with the Table while preserving the cause', () => {
     const rootCause = new Error('fixture border failure');
-    const spec: IRTableSpec = {
+    const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',

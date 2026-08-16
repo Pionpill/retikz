@@ -1,4 +1,4 @@
-import { BendDirection, BoxSpacingSchema, FoldStepVia, JsonObjectSchema, PaintSpecSchema } from '@retikz/core';
+import { BendDirection, BoxSpacingSchema, FoldStepVia, JsonObjectSchema, PaintSchema } from '@retikz/core';
 import {
   AnchorRefSchema,
   PathDecorationSchema,
@@ -67,7 +67,7 @@ const markBase = {
   ),
 };
 
-export const AnchorIdSpecSchema = z
+export const AnchorIdSchema = z
   .strictObject({
     prefix: z
       .string()
@@ -89,7 +89,7 @@ export const AnchorIdSpecSchema = z
       .min(1)
       .optional()
       .describe(
-        'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the PlotSpec',
+        'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
       ),
   })
   .superRefine((spec, ctx) => {
@@ -121,7 +121,7 @@ const DirectPlotTargetRefSchema = z
 
 const GeneratedAnchorPlotTargetRefSchema = z
   .strictObject({
-    anchorId: AnchorIdSpecSchema.describe('Anchor id rule evaluated against the current relation row'),
+    anchorId: AnchorIdSchema.describe('Anchor id rule evaluated against the current relation row'),
     ...anchorTargetFields,
   })
   .describe('Generated anchor target reference evaluated from the current relation row');
@@ -131,7 +131,7 @@ const ProjectedPlotTargetRefSchema = z
     project: z
       .record(z.string().min(1), z.string().min(1))
       .describe('Coordinate-role to data-field map projected in the relation mark coordinate frame'),
-    anchorId: AnchorIdSpecSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
+    anchorId: AnchorIdSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
     ...anchorTargetFields,
   })
   .describe('Projected coordinate target from the current relation row');
@@ -237,7 +237,7 @@ const RelationOrthogonalRoutingSchema = z
   })
   .describe('Orthogonal relation routing strategy');
 
-export const RelationRoutingSpecSchema = z
+export const RelationRoutingSchema = z
   .discriminatedUnion('kind', [RelationLineRoutingSchema, RelationBendRoutingSchema, RelationOrthogonalRoutingSchema])
   .describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
 
@@ -282,7 +282,7 @@ const markValueSchema = <T extends z.ZodTypeAny>(
     ])
     .describe(`${schemaDescription}: field-bound datum value or constant value`);
 
-const StylePaintSchema = z.union([z.string(), PaintSpecSchema]);
+const StylePaintSchema = z.union([z.string(), PaintSchema]);
 const StyleNumberSchema = z.number();
 const StyleNonnegativeNumberSchema = NonNegativeNumberSchema;
 const StylePositiveNumberSchema = PositiveNumberSchema;
@@ -458,13 +458,13 @@ export const RelationPrimitiveStyleSchema = z
       'Shared relation master color: field-bound datum channel or constant color',
     ),
     fill: PointFillStyleSchema.optional().describe(
-      'Shared relation fill paint: field-bound datum channel or constant CSS color / PaintSpec',
+      'Shared relation fill paint: field-bound datum channel or constant CSS color / IRPaint',
     ),
     fillOpacity: PointOpacityStyleSchema.optional().describe(
       'Shared relation fill opacity: field-bound datum channel or constant opacity 0..1',
     ),
     stroke: PointStrokeStyleSchema.optional().describe(
-      'Shared relation stroke paint: field-bound datum channel or constant CSS color / PaintSpec',
+      'Shared relation stroke paint: field-bound datum channel or constant CSS color / IRPaint',
     ),
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
       'Shared relation stroke width: field-bound datum channel or constant non-negative value',
@@ -571,10 +571,10 @@ const coreNodeStyle = {
 
 const corePathStyle = {
   fill: PointFillStyleSchema.optional().describe(
-    'Core Path fill paint: field-bound datum channel or constant CSS color / PaintSpec',
+    'Core Path fill paint: field-bound datum channel or constant CSS color / IRPaint',
   ),
   stroke: PointStrokeStyleSchema.optional().describe(
-    'Core Path stroke paint: field-bound datum channel or constant CSS color / PaintSpec',
+    'Core Path stroke paint: field-bound datum channel or constant CSS color / IRPaint',
   ),
   strokeOpacity: PointOpacityStyleSchema.optional().describe(
     'Core Path strokeOpacity: field-bound datum channel or constant opacity 0..1',
@@ -661,7 +661,7 @@ export const PointMarkSchema = z
       .describe(
         'Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0',
       ),
-    anchorId: AnchorIdSpecSchema.optional().describe(
+    anchorId: AnchorIdSchema.optional().describe(
       'Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id',
     ),
     ...markBase,
@@ -719,7 +719,7 @@ export const PathMarkSchema = z
       'Path geometric corner radius: field-bound datum channel or constant core Path roundedCorners',
     ),
     ...corePathStyle,
-    anchorId: AnchorIdSpecSchema.optional().describe(
+    anchorId: AnchorIdSchema.optional().describe(
       'Stable id rule for generated per-datum core Coordinates along this path',
     ),
     ...markBase,
@@ -826,10 +826,10 @@ export const IntervalMarkSchema = z
       'Interval cell stroke width: field-bound datum channel or constant core Node stroke width',
     ),
     fill: PointFillStyleSchema.optional().describe(
-      'Interval cell fill paint: field-bound datum channel or constant CSS color / PaintSpec',
+      'Interval cell fill paint: field-bound datum channel or constant CSS color / IRPaint',
     ),
     stroke: PointStrokeStyleSchema.optional().describe(
-      'Interval cell stroke paint: field-bound datum channel or constant CSS color / PaintSpec',
+      'Interval cell stroke paint: field-bound datum channel or constant CSS color / IRPaint',
     ),
     opacity: PointOpacityStyleSchema.optional().describe(
       'Interval cell whole opacity: field-bound datum channel or constant opacity 0..1',
@@ -843,7 +843,7 @@ export const IntervalMarkSchema = z
     pull: PointNonnegativeNumberStyleSchema.optional().describe(
       'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
     ),
-    anchorId: AnchorIdSpecSchema.optional().describe(
+    anchorId: AnchorIdSchema.optional().describe(
       'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
     ),
     ...coreNodeStyle,
@@ -945,7 +945,7 @@ export const RelationPathGeometrySchema = z
       .min(1)
       .optional()
       .describe('Explicit route steps after the initial move(source) step'),
-    routing: RelationRoutingSpecSchema.optional().describe(
+    routing: RelationRoutingSchema.optional().describe(
       'Optional algorithmic route strategy; omitted means straight line routing',
     ),
     label: RelationStepLabelSchema.optional().describe(

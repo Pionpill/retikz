@@ -105,7 +105,7 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 
 ## 架构验证
 
-- 是否可由现有能力组合：不能。现有 Vanilla 已有 FigureSpec normalize、compile driver 与 retained session，但 Node / Path / Scope helpers 直接使用 IR，React 仍直接组装 IR 并复制 compile driver、session 与 retained renderer 编排；仅靠约定无法删除平行 owner 路径
+- 是否可由现有能力组合：不能。现有 Vanilla 已有 InputScene normalize、compile driver 与 retained session，但 Node / Path / Scope helpers 直接使用 IR，React 仍直接组装 IR 并复制 compile driver、session 与 retained renderer 编排；仅靠约定无法删除平行 owner 路径
 - math / core / render / adapter 责任切分：Math 不变；Core 保持 IR 与编译语义；Vanilla 下沉作者输入并拥有 framework-neutral processing；Vanilla DOM 承担命令式浏览器 materializer；React 只保留框架转换与宿主桥接；Render 不改
 - 是否需要新 IR / contract / registry；不采用 registry 的理由：不需要新 IR 或 registry。Input normalize 是闭合的作者侧语法转换，能力扩展仍先由 Core IR / Definition contract 建立，再由 Vanilla 适配，不存在由第三方运行时发现 Input normalizer 的需求
 - Scene / manifest / renderer / diagnostics 如何闭环：Vanilla 以单次 `normalizeScene` 得到既有 IR、embed 的有效 Scope Theme 与 Core resolver 所需的显式 contribution 后交给 Core，并把同 revision 的 Scene、artifact、manifest、diagnostics 和只读 layers 作为 processing result 交给 DOM 或框架桥接；DOM 在 session 创建前提供固定 Render participant，因此 Core、result 与 renderer 一次 transaction 成功才提交，失败保持前一结果与宿主帧；renderer 无 Input 认知，React 只订阅该结果并映射自己的 host

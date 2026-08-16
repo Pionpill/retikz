@@ -5,17 +5,17 @@ import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 /** 下沉一个 plot spec，取外层 plot scope */
 const expandOf = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
@@ -25,7 +25,7 @@ const expandOf = (
 
 /** 取第一个 mark 图层 scope */
 const firstLayer = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => expandOf(spec, datasets, options).children[0] as IRScope;
@@ -34,8 +34,8 @@ const firstLayer = (
  * 构造一个 x=band 的散点 spec：x 绑 categorical 字段 cat（带 order）、y 绑 continuous 字段 val。
  * 省略 coordinate.x → 触发 type-driven 派生 band（order 注入派生 scale 的 domain）
  */
-const bandSpec = (model: Array<Record<string, unknown>>, scales: Array<unknown> = []): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const bandSpec = (model: Array<Record<string, unknown>>, scales: Array<unknown> = []): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', model },
@@ -215,7 +215,7 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
 describe('IRDataFieldDefinition.order — 错误契约', () => {
   it('order_on_continuous_throws', () => {
     // order 配 continuous 字段 → lowering fail-loud
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -237,7 +237,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
 
   it('conflicting_order_same_role_throws', () => {
     // 同一 x role 两字段给不同非默认 order → fail-loud
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -269,7 +269,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
 describe('IRDataFieldDefinition.order — 交互', () => {
   it('order_applies_to_position_and_color', () => {
     // 同一有序字段 cat 既作 x(band) 又作 color(ordinal) → 两处类别序一致
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -326,7 +326,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       { name: 'val', type: 'continuous' },
     ]);
     // 注意：bandSpec 省略 coordinate.x → 触发派生 band；y 仍需 scale，补一个
-    const withYScale = PlotSpecSchema.parse({
+    const withYScale = PlotSchema.parse({
       ...spec,
       scales: [{ type: 'linear', name: 'yv' }],
     });
@@ -342,7 +342,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
 
   it('explicit_domain_overrides_order', () => {
     // scale 显式 domain + 字段 order 同在 → 用显式 domain（order 被忽略）
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -369,7 +369,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
     };
     const layer = firstLayer(spec, rows);
     // 与「无 order、仅显式反序 domain」的布局逐一相同 → 证明 order 被忽略
-    const reference = PlotSpecSchema.parse({
+    const reference = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

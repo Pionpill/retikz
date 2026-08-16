@@ -6,11 +6,11 @@
 
 ## 背景与目标
 
-Formatter、rules、encodings、style tokens 与 Legend descriptor 都是用户可见能力。若只存在于 plain IR，React/Vanilla 作者会建立 callback、theme context 或私有样式映射，破坏同一 TableSpec 的持久化、SSR 与等价编译。
+Formatter、rules、encodings、style tokens 与 Legend descriptor 都是用户可见能力。若只存在于 plain IR，React/Vanilla 作者会建立 callback、theme context 或私有样式映射，破坏同一 IRTable 的持久化、SSR 与等价编译。
 
 alpha.2 已有 framework-neutral constructors、React marker components、Vanilla helpers、共享 runtime contribution 与 typed manifest。alpha.3 沿这些入口扩展，不新增 fluent builder、函数 selector、ReactNode formatter 或 adapter-local Legend。
 
-TableSpec 的领域 `style` 与 React 宿主 CSS 需要两个不同入口，不能让一个 JSX prop 同时承担两种语义。
+IRTable 的领域 `style` 与 React 宿主 CSS 需要两个不同入口，不能让一个 JSX prop 同时承担两种语义。
 
 ## 决策
 
@@ -20,7 +20,7 @@ ADR-01～05 的 formatter、presentation、rule、encoding、style 与 descripto
 
 ### Framework-neutral authoring
 
-`createDetailTableSpec()` 与 `createManualTableSpec()` 的 inputs 继续从 exact schema 派生，并表达：
+`createDetailTableIR()` 与 `createManualTableIR()` 的 inputs 继续从 exact schema 派生，并表达：
 
 - root `rules`、`encodings`、`style`、`themeMode`、`styleTokens`
 - detail column formatter
@@ -30,7 +30,7 @@ Constructors 返回 detached、JSON-safe plain data，不持有调用方数组/o
 
 ### React authoring
 
-通用 `<Table>` 继续接收完整 `spec: IRTableSpec`，不把 root fields 镜像成第二套 props。`DetailTable`/`ManualTable` 的 schema-derived root props 增加上述 alpha.3 fields，并逐项转交 framework-neutral constructors；host-only、definition-only 与 callback props 不得进入 IR。
+通用 `<Table>` 继续接收完整 `spec: IRTable`，不把 root fields 镜像成第二套 props。`DetailTable`/`ManualTable` 的 schema-derived root props 增加上述 alpha.3 fields，并逐项转交 framework-neutral constructors；host-only、definition-only 与 callback props 不得进入 IR。
 
 Runtime definition props 精确复用 Table lowering options 的四类开放 definitions：structure、formatter、presentation、visual scale。Style tokens 是 spec plain data，不进入 runtime definitions。
 
@@ -44,7 +44,7 @@ React 不提供函数 formatter/renderer、函数 selector、Cell/token style ca
 
 ### React `style` ownership
 
-TableSpec 的 `style` 保留领域名，在 Detail / Manual JSX 中表示 `neutral | academic | vibrant | clean`。standalone 宿主 CSS 使用 `containerStyle`：
+IRTable 的 `style` 保留领域名，在 Detail / Manual JSX 中表示 `neutral | academic | vibrant | clean`。standalone 宿主 CSS 使用 `containerStyle`：
 
 ```tsx
 <DetailTable style="neutral" containerStyle={{ maxWidth: 720 }} {...props} />
@@ -107,7 +107,7 @@ Demo 必须使用真实 public API 和 compile output，不手写伪 manifest �
 </DetailTable>
 ```
 
-React runtime rows 与 `containerStyle` 不进入 TableSpec；其余 authoring input 必须与 Vanilla/framework-neutral constructors 解析成 schema-equal TableSpec。
+React runtime rows 与 `containerStyle` 不进入 IRTable；其余 authoring input 必须与 Vanilla/framework-neutral constructors 解析成 schema-equal IRTable。
 
 ## 影响
 
@@ -137,7 +137,7 @@ React runtime rows 与 `containerStyle` 不进入 TableSpec；其余 authoring i
 
 - **所属能力域**：Tabular Visualization Complete / authoring、runtime、docs 闭环
 - **问题归属**：Table contract 位于主包，adapters 只等价暴露，docs 只说明真实行为
-- **内部闭环**：authoring → exact TableSpec → shared contribution → Table / Core pipeline → artifacts / manifest；Standard Legend join 由 alpha.6 ADR-01 后续扩展
+- **内部闭环**：authoring → exact IRTable → shared contribution → Table / Core pipeline → artifacts / manifest；Standard Legend join 由 alpha.6 ADR-01 后续扩展
 - **外部扩展**：custom definitions 在 direct/React/Vanilla/SSR 使用同一 contract 与 conflicts
 - **结论**：组合既有 adapters 与 docs，不新增 adapter-only Table capability
 

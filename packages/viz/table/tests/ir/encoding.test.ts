@@ -4,7 +4,7 @@ import type { IRTableCellVisualEncoding, IRTableVisualScaleRef } from '../../src
 
 import {
   TableCellVisualEncodingSchema,
-  TableSpecSchema,
+  TableSchema,
   TableVisualChannel,
   TableVisualScaleRefSchema,
 } from '../../src';
@@ -50,11 +50,11 @@ describe('Table visual encoding schema', () => {
       ],
     };
 
-    expect(TableSpecSchema.parse(spec).encodings?.map(encoding => encoding.id)).toEqual(['first', 'second']);
+    expect(TableSchema.parse(spec).encodings?.map(encoding => encoding.id)).toEqual(['first', 'second']);
     const withoutEncodings = Object.fromEntries(Object.entries(spec).filter(([key]) => key !== 'encodings'));
-    expect(TableSpecSchema.parse(withoutEncodings)).not.toHaveProperty('encodings');
+    expect(TableSchema.parse(withoutEncodings)).not.toHaveProperty('encodings');
     expect(() =>
-      TableSpecSchema.parse({ ...spec, encodings: [spec.encodings[0], { ...spec.encodings[1], id: 'first' }] }),
+      TableSchema.parse({ ...spec, encodings: [spec.encodings[0], { ...spec.encodings[1], id: 'first' }] }),
     ).toThrow(/encoding id/i);
   });
 
@@ -66,11 +66,11 @@ describe('Table visual encoding schema', () => {
     };
     const encoding = { id: 'score', selector, channel: 'contentColor', scale: { name: 'ordinal-color' } };
 
-    expect(() => TableSpecSchema.parse({ ...base, encodings: [{ ...encoding, legend: { title: 'Score' } }] })).toThrow(
+    expect(() => TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: { title: 'Score' } }] })).toThrow(
       /root id/i,
     );
-    expect(TableSpecSchema.parse({ ...base, encodings: [{ ...encoding, legend: false }] })).not.toHaveProperty('id');
-    expect(TableSpecSchema.parse({ ...base, id: 'table-1', encodings: [{ ...encoding, legend: {} }] })).toHaveProperty(
+    expect(TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: false }] })).not.toHaveProperty('id');
+    expect(TableSchema.parse({ ...base, id: 'table-1', encodings: [{ ...encoding, legend: {} }] })).toHaveProperty(
       'id',
       'table-1',
     );

@@ -4,7 +4,7 @@ import type {
   IRPlotGuide,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlotSpec,
+  IRPlot,
 } from '@retikz/plot';
 
 import { PlotCoordinate, PlotGuide, PlotMark, PlotScale } from '@retikz/plot';
@@ -18,12 +18,12 @@ import type {
   PlotBindingsNormalizationContext,
 } from './input';
 
-type CompositionSpec = NonNullable<IRPlotSpec['composition']>;
-type CoordinateViewSpec = NonNullable<CompositionSpec['views']>[number];
-type ArrangementSpec = NonNullable<CompositionSpec['arrangements']>[number];
-type FacetGridSpec = Extract<ArrangementSpec, { kind: 'facet' }>;
-type SharedScaffoldSpec = Extract<ArrangementSpec, { kind: 'tracks' }>;
-type InputPlotFacetDimension = string | NonNullable<FacetGridSpec['row']>;
+type Composition = NonNullable<IRPlot['composition']>;
+type CoordinateView = NonNullable<Composition['views']>[number];
+type Arrangement = NonNullable<Composition['arrangements']>[number];
+type FacetGrid = Extract<Arrangement, { kind: 'facet' }>;
+type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
+type InputPlotFacetDimension = string | NonNullable<FacetGrid['row']>;
 
 const AUTO_X = '__x';
 const AUTO_Y = '__y';
@@ -115,7 +115,7 @@ const assertGuideBindingCompatibility = (guide: InputPlotGuide): void => {
 /** 把 facet 简写维度转为 canonical field 声明 */
 const facetDimensionOf = (
   dimension: InputPlotFacetDimension | undefined,
-): NonNullable<FacetGridSpec['row']> | undefined => {
+): NonNullable<FacetGrid['row']> | undefined => {
   if (dimension === undefined) return undefined;
   if (typeof dimension === 'string') return { field: dimension };
   return Array.isArray(dimension) ? dimension.map(entry => ({ ...entry })) : { ...dimension };
@@ -229,9 +229,9 @@ const fillCoordinateScaleBindings = (
 
 /** 递归补齐显式 composition 中 view 与 track coordinate 的 scale 绑定 */
 const fillCompositionScaleBindings = (
-  composition: IRPlotSpec['composition'],
+  composition: IRPlot['composition'],
   defaults: IRPlotCoordinateOperation,
-): IRPlotSpec['composition'] => {
+): IRPlot['composition'] => {
   if (composition === undefined) return undefined;
   return {
     ...composition,
@@ -265,7 +265,7 @@ const fillCompositionScaleBindings = (
 };
 
 /** 把 facet authoring 输入转为 canonical facet arrangement */
-const normalizeFacet = (facet: InputPlotFacet): FacetGridSpec => {
+const normalizeFacet = (facet: InputPlotFacet): FacetGrid => {
   const { row, column, view, spacing, resolve, ...rest } = facet;
   return {
     ...rest,
@@ -289,7 +289,7 @@ const scaffoldTrackViewIdOf = (
 };
 
 /** 把 scaffold authoring 输入转为 canonical tracks arrangement */
-const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordinateOperation): SharedScaffoldSpec => {
+const normalizeScaffold = (scaffold: InputPlotScaffold, coordinate: IRPlotCoordinateOperation): SharedScaffold => {
   const { coordinate: scaffoldCoordinate, spacing, resolve, ...rest } = scaffold;
   return {
     ...rest,
@@ -307,14 +307,14 @@ const buildTopologyComposition = (
   scaffolds: ReadonlyArray<InputPlotScaffold>,
   coordinate: IRPlotCoordinateOperation,
 ): {
-  composition: CompositionSpec;
+  composition: Composition;
   facetViewById: Map<string, string>;
   trackViewById: Map<string, string>;
   scaffoldDefaultViewById: Map<string, string>;
 } => {
-  const views: Array<CoordinateViewSpec> = [];
-  const facetSpecs: Array<FacetGridSpec> = [];
-  const scaffoldSpecs: Array<SharedScaffoldSpec> = [];
+  const views: Array<CoordinateView> = [];
+  const facetSpecs: Array<FacetGrid> = [];
+  const scaffoldSpecs: Array<SharedScaffold> = [];
   const facetViewById = new Map<string, string>();
   const trackViewById = new Map<string, string>();
   const scaffoldDefaultViewById = new Map<string, string>();
@@ -588,7 +588,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
   const baseYScaleName = typeof effectiveCoordinate.y === 'string' ? effectiveCoordinate.y : AUTO_Y;
   const defaultXScaleName = hasXAxisBinding ? axisScaleNameOf(baseXScaleName, DEFAULT_AXIS_SCOPE) : baseXScaleName;
   const defaultYScaleName = hasYAxisBinding ? axisScaleNameOf(baseYScaleName, DEFAULT_AXIS_SCOPE) : baseYScaleName;
-  const xAxisScopes: Array<CoordinateViewSpec> = xAxisIds
+  const xAxisScopes: Array<CoordinateView> = xAxisIds
     .filter(axisId => axisId !== DEFAULT_AXIS_SCOPE)
     .map(axisId => ({
       id: axisId,
@@ -599,7 +599,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
       },
       placement: { kind: 'overlay', target: DEFAULT_AXIS_SCOPE },
     }));
-  const yAxisScopes: Array<CoordinateViewSpec> = yAxisIds
+  const yAxisScopes: Array<CoordinateView> = yAxisIds
     .filter(axisId => axisId !== DEFAULT_AXIS_SCOPE)
     .map(axisId => ({
       id: axisId,

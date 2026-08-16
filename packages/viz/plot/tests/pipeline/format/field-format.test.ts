@@ -1,4 +1,4 @@
-﻿import type { FieldFormatDefinition } from '@retikz/data';
+import type { FieldFormatDefinition } from '@retikz/data';
 
 import * as DataPublic from '@retikz/data';
 import { DataFieldFormat, defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
@@ -7,17 +7,17 @@ import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { prepareRows } from '../../../src/pipeline/expand';
-import { PlotSpecSchema } from '../../../src/schemas';
+import { PlotSchema } from '../../../src/schemas';
 
 /**
  * 构造一个引用单个逻辑字段 `v`（绑 x 通道）的最小 spec
  * @description format 的解析行为驱动 prepareRows → normalized 行；读 normalized[i].v 即拿到 canonical（已解析）值
  */
-const specWithField = (field: { name: string } & Record<string, unknown>): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const specWithField = (field: { name: string } & Record<string, unknown>): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd', model: [field, { name: 'y', type: 'continuous' }] },
@@ -31,7 +31,7 @@ const specWithField = (field: { name: string } & Record<string, unknown>): IRPlo
 
 /** 跑一次绑定准备，取首行 logical 字段的 canonical 值 */
 const parseFirst = (
-  spec: IRPlotSpec,
+  spec: IRPlot,
   datasets: Record<string, Array<Record<string, unknown>>>,
   logical: string,
   options: LowerPlotsOptions = {},
@@ -147,7 +147,7 @@ describe('IRDataFieldDefinition.format 自定义格式', () => {
 
   it('builtin_and_custom_share_registry', () => {
     // 同一 model 内内置 percent 与自定义 currency 并存，各按各自 definition 解析
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {
@@ -217,7 +217,7 @@ describe('IRDataFieldDefinition.format — 交互', () => {
 
   it('format_with_fieldmaps', () => {
     // format + fieldMaps：先按物理路径取值，再按 format 解析
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: {

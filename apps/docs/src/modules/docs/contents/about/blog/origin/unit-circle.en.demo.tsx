@@ -134,7 +134,7 @@ const Demo: FC = () => (
     <Coordinate id="t" position={[100, -TAN30 * 100]} />
     <Draw way={[[0, 0], 't']} />
 
-    {/* Right-hand info box — LineSpec.fill switches color per line (inline-span coloring not yet supported).
+    {/* Right-hand info box — IRLine.fill switches color per line (inline-span coloring not yet supported).
         Light-gray dashed border, no fill: visible in both light / dark themes without stealing focus;
         no empty '' separators (empty tspan dy advance is inconsistent across browsers, leaves a visible
         bottom strip); visual grouping comes from the alternating colored / default-color lines. */}

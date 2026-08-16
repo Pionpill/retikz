@@ -6,13 +6,13 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotSpec } from '../../../src/schemas';
+import type { IRPlot } from '../../../src/schemas';
 
 import { defineMark } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
-import { EncodingSchema, PlotSpecSchema, TransformSchema } from '../../../src/schemas';
+import { EncodingSchema, PlotSchema, TransformSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
@@ -26,16 +26,16 @@ type DotMark = z.infer<typeof DotMarkSchema>;
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
-const expandOf = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
+const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
   const [def] = lowerPlots(datasets, options);
   return def.expand(spec).children[0] as IRScope;
 };
 
-const firstLayer = (spec: IRPlotSpec, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
+const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
   expandOf(spec, datasets, options).children[0] as IRScope;
 
-const groupPointSpec = (): IRPlotSpec =>
-  PlotSpecSchema.parse({
+const groupPointSpec = (): IRPlot =>
+  PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'sales' },
@@ -102,7 +102,7 @@ describe('mark-local transform', () => {
   });
 
   it('mark_local_same_name_output_keeps_source_field', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -125,7 +125,7 @@ describe('mark-local transform', () => {
 
   it('custom_mark_receives_local_transform_rows', () => {
     const record = { rows: [] as Array<ExternalRow> };
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
@@ -165,7 +165,7 @@ describe('mark-local transform', () => {
 
   it('mark_local_transform_uses_custom_transform_registry', () => {
     const layer = firstLayer(
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'sales' },
@@ -195,7 +195,7 @@ describe('mark-local transform', () => {
   });
 
   it('mark_local_custom_transform_fields_use_same_registry', () => {
-    const spec = PlotSpecSchema.parse({
+    const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },

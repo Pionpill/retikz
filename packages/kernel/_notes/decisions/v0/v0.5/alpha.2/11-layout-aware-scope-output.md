@@ -34,8 +34,8 @@ type IRScopeProps = {
   transforms?: Array<IRTransform>;
   placement?: IRScopePlacement;
   color?: string;
-  stroke?: string | IRPaintSpec;
-  fill?: string | IRPaintSpec;
+  stroke?: string | IRPaint;
+  fill?: string | IRPaint;
   strokeWidth?: number;
   opacity?: number;
   fillOpacity?: number;
@@ -46,7 +46,7 @@ type IRScopeProps = {
   arrowDefault?: IRArrowDefault;
   resetStyle?: boolean | Array<StyleChannel>;
   zIndex?: number;
-  clip?: IRClipSpec;
+  clip?: IRClip;
   boundingShape?: ScopeBoundingShapeValue;
   meta?: IRJsonObject;
   animations?: Array<IRAnimationTrack>;
@@ -62,7 +62,7 @@ type CompositeCompileScopeProps = Readonly<IRScopeProps>;
 ```ts
 type CompositeReplayWrapper = Readonly<{
   transforms?: Array<Transform>;
-  clip?: IRClipSpec;
+  clip?: IRClip;
 }>;
 ```
 

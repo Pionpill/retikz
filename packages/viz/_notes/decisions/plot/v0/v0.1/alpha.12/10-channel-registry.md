@@ -39,4 +39,4 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 
 - 自定义 visual channel 的公开入口；由 ADR-11 处理。
 - path / scope channel coverage 对账；由 ADR-12 处理。
-- PaintSpec、Shadow、ArrowDetail 等对象值通道。
+- IRPaint、Shadow、ArrowDetail 等对象值通道。

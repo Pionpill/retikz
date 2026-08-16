@@ -49,5 +49,5 @@ RelationMark 获得两组能力：
 
 - 不新增 named dataset、join 或独立 relation table 数据源。
 - 不做 obstacle avoidance、edge bundling 或 graph layout。
-- 不把函数写入 IRPlotSpec。
+- 不把函数写入 IRPlot。
 - 不修 core fold label；plot 可在 lowering 策略上避开。

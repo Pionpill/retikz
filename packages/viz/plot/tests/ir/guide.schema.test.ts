@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PlotSpecSchema } from '../../src/schemas';
+import { PlotSchema } from '../../src/schemas';
 import { AxisGuideSchema, GuideSchema, LegendGuideSchema } from '../../src/schemas/guide';
 
 describe('GuideSchema contract', () => {
@@ -401,12 +401,12 @@ describe('GuideSchema contract', () => {
         },
       },
     };
-    expect(() => PlotSpecSchema.parse(spec)).toThrow();
+    expect(() => PlotSchema.parse(spec)).toThrow();
   });
 
   it('theme_axis_ticks_accepts_mark_but_rejects_tick_source_and_density', () => {
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -420,7 +420,7 @@ describe('GuideSchema contract', () => {
       }),
     ).not.toThrow();
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -434,7 +434,7 @@ describe('GuideSchema contract', () => {
       }),
     ).toThrow();
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -451,7 +451,7 @@ describe('GuideSchema contract', () => {
 
   it('theme_axis_tick_labels_accept_layout_but_reject_format', () => {
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -465,7 +465,7 @@ describe('GuideSchema contract', () => {
       }),
     ).not.toThrow();
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -482,7 +482,7 @@ describe('GuideSchema contract', () => {
 
   it('theme_axis_grid_accepts_line_cap_and_domain_endpoints_but_rejects_guide_only_fields', () => {
     expect(() =>
-      PlotSpecSchema.parse({
+      PlotSchema.parse({
         namespace: 'plot',
         type: 'plot',
         data: { reference: 'd' },
@@ -508,7 +508,7 @@ describe('GuideSchema contract', () => {
       { select: { view: 'main' } },
     ]) {
       expect(() =>
-        PlotSpecSchema.parse({
+        PlotSchema.parse({
           namespace: 'plot',
           type: 'plot',
           data: { reference: 'd' },

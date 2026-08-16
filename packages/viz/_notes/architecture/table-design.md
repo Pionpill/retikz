@@ -59,7 +59,7 @@ Table grammar 分为五个部分：
 Table 采用分阶段模型：
 
 ```text
-TableSpec
+IRTable
   ──structure / operations──▶ SemanticTableModel
   ──formatter / presentation / rules──▶ PresentedTableModel
   ──measure / layout──▶ TableLayout

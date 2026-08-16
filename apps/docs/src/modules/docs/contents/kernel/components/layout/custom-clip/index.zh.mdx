@@ -126,9 +126,9 @@ const { scene } = compileToScene(ir, {
 
 ### 导出概览
 
-- `defineClip<TSpec>(definition)`：定义自定义 clip，校验 `kind` 非空，并保留具体 spec 的类型推断
-- `ClipSpecLike`：自定义 clip spec 的最小形态，只要求提供字符串 `kind`
-- `ClipDefinitionInput<TSpec>`：Definition 作者侧的泛型输入契约，让 `schema` 与 `resolve` 使用同一种 spec
+- `defineClip<TClip>(definition)`：定义自定义 clip，校验 `kind` 非空，并保留具体 clip 输入的类型推断
+- `ClipLike`：自定义 clip spec 的最小形态，只要求提供字符串 `kind`
+- `ClipDefinitionInput<TClip>`：Definition 作者侧的泛型输入契约，让 `schema` 与 `resolve` 使用同一种 clip 输入类型
 - `ClipDefinition`：registry 存储和消费的统一 Definition 形态，具体 spec 类型已擦除
 - `ClipResolveContext`：传给 `resolve` 的运行时上下文，提供统一精度取整和递归 clip 解析
 - `BUILTIN_CLIPS`：Core 自带的三项只读 Definition 集合，既可遍历，也可通过 `.rect` 等名称索引
@@ -139,13 +139,13 @@ const { scene } = compileToScene(ir, {
 
 ### ClipDefinition
 
-`ClipDefinitionInput<TSpec>` 是作者侧的强类型输入；`defineClip` 返回的 `ClipDefinition` 是 registry 使用的统一形态。两者拥有相同字段：
+`ClipDefinitionInput<TClip>` 是作者侧的强类型输入；`defineClip` 返回的 `ClipDefinition` 是 registry 使用的统一形态。两者拥有相同字段：
 
-| 字段      | 类型                                                      | 必填 | 描述                                                              |
-| --------- | --------------------------------------------------------- | ---- | ----------------------------------------------------------------- |
-| `kind`    | `TSpec['kind']`                                           | 是   | 非空 registry key，必须与 IR 中的 `clip.kind` 一致                |
-| `schema`  | `ZodType<TSpec>`                                          | 是   | 校验完整的 JSON-safe spec，并为 `resolve` 提供合法输入            |
-| `resolve` | `(spec: TSpec, context: ClipResolveContext) => ClipShape` | 是   | 把合法 spec 收敛为 Scene 已支持的裁剪形状，不得输出 renderer 对象 |
+| 字段      | 类型                                                      | 必填 | 描述                                                                  |
+| --------- | --------------------------------------------------------- | ---- | --------------------------------------------------------------------- |
+| `kind`    | `TClip['kind']`                                           | 是   | 非空 registry key，必须与 IR 中的 `clip.kind` 一致                    |
+| `schema`  | `ZodType<TClip>`                                          | 是   | 校验完整的 JSON-safe clip 输入，并为 `resolve` 提供合法输入           |
+| `resolve` | `(clip: TClip, context: ClipResolveContext) => ClipShape` | 是   | 把合法 clip 输入收敛为 Scene 已支持的裁剪形状，不得输出 renderer 对象 |
 
 ### BUILTIN_CLIPS
 

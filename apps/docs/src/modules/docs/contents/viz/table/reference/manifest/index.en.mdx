@@ -11,7 +11,7 @@ description: Look up the track, Cell, visual-encoding, Legend-descriptor, border
 
 <ZodSchema name="TableLayoutManifestSchema" />
 
-The manifest `style` region also records effective Core `style`, `themeMode`, the complete resolved Table `tokens` map, and one `sources` entry per token. Here `themeMode` is output metadata from the same compile, identifying the selected preset; TableSpec inputs remain the host `theme` and local `tableThemeTokens`, which belong to a different layer.
+The manifest `style` region also records effective Core `style`, `themeMode`, the complete resolved Table `tokens` map, and one `sources` entry per token. Here `themeMode` is output metadata from the same compile, identifying the selected preset; IRTable inputs remain the host `theme` and local `tableThemeTokens`, which belong to a different layer.
 
 ## Visual encoding and Legend descriptor seeds
 
@@ -89,7 +89,7 @@ Cell sources retain `cellId + row + column + side`. Table defaults use `scope + 
 
 ## Related
 
-- [Table contracts](/viz/table/reference/contract-table) — TableSpec and Cell-content inputs
+- [Table contracts](/viz/table/reference/contract-table) — IRTable and Cell-content inputs
 - [Layout contracts](/viz/table/reference/contract-layout) — track and border configuration that produces these resolved outputs
 - [Runtime](/viz/table/reference/runtime) — how to obtain an exact-root manifest
 - [Table Model](/viz/table/model) — the Manifest's role in the complete Table pipeline

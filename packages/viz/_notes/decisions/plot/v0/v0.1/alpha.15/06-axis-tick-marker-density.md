@@ -182,6 +182,6 @@ type PlotAxisTheme = {
 - grid 独立 density。grid 继续使用 axis visible tick set。
 - legend ramp tick mark 形态。legend ramp 可以复用 tick density 的 helper，但不新增 ramp tick mark。
 - 新增 core shape provider 或修改 core shape registry。
-- chart preset；后续 chart 可消费本 IRPlotSpec 能力。
+- chart preset；后续 chart 可消费本 IRPlot 能力。
 
 ---

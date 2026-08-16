@@ -1,7 +1,7 @@
 import type {
-  IRBubbleChartSpec,
-  IRConnectedScatterChartSpec,
-  IRScatterChartSpec,
+  IRBubbleChart,
+  IRConnectedScatterChart,
+  IRScatterChart,
   PointChartTypeValue,
 } from '@retikz/chart/point';
 import type { InputPointChart } from '@retikz/chart-vanilla/point';
@@ -19,8 +19,8 @@ import type { ChartCommonProps, InputEmbeddableChartComponent } from '../shared'
 import { splitPresentationMarkers, useChartThemeStyles } from '../shared';
 
 /** typed Point Chart 共享的 React input algebra */
-export type TypedPointChartProps<TSpec> = Omit<
-  TSpec,
+export type TypedPointChartProps<TVariant> = Omit<
+  TVariant,
   | 'namespace'
   | 'type'
   | 'data'
@@ -40,25 +40,25 @@ export type TypedPointChartProps<TSpec> = Omit<
     /** Plot extension 与 Chart presentation marker 可混排 */
     children?: ReactNode;
     /** recipe 外的 Plot transform members */
-    transform?: IRScatterChartSpec['transform'];
+    transform?: IRScatterChart['transform'];
     /** recipe 外的 Plot scale members */
-    scales?: IRScatterChartSpec['scales'];
+    scales?: IRScatterChart['scales'];
     /** recipe 外的单 coordinate root */
-    coordinate?: IRScatterChartSpec['coordinate'];
+    coordinate?: IRScatterChart['coordinate'];
     /** recipe 外的 composition root */
-    composition?: IRScatterChartSpec['composition'];
+    composition?: IRScatterChart['composition'];
     /** recipe 外的 Plot guides */
-    guides?: IRScatterChartSpec['guides'];
+    guides?: IRScatterChart['guides'];
     /** recipe 外的 Plot marks */
-    marks?: IRScatterChartSpec['marks'];
+    marks?: IRScatterChart['marks'];
   };
 
 /** ScatterChart React props */
-export type ScatterChartProps = TypedPointChartProps<IRScatterChartSpec>;
+export type ScatterChartProps = TypedPointChartProps<IRScatterChart>;
 /** BubbleChart React props */
-export type BubbleChartProps = TypedPointChartProps<IRBubbleChartSpec>;
+export type BubbleChartProps = TypedPointChartProps<IRBubbleChart>;
 /** ConnectedScatterChart React props */
-export type ConnectedScatterChartProps = TypedPointChartProps<IRConnectedScatterChartSpec>;
+export type ConnectedScatterChartProps = TypedPointChartProps<IRConnectedScatterChart>;
 
 type AnyTypedPointChartProps = ScatterChartProps | BubbleChartProps | ConnectedScatterChartProps;
 

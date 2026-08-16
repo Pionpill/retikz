@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { walk, walkType } from '@/modules/docs/components';
@@ -199,7 +199,7 @@ describe('walker — top-level entry + object + optional + constraints', () => {
   });
 
   it('inline-expands anonymous object inside a union', () => {
-    // 对应 LineSpecSchema 那种"union 里夹一个匿名 object"
+    // 对应 LineSchema 那种"union 里夹一个匿名 object"
     const S = z.union([z.string(), z.object({ text: z.string(), color: z.string().optional() })]);
     const r = walkType(S);
     if (r.kind !== 'union') throw new Error('expected union');

@@ -91,7 +91,7 @@ type AxisTitle = {
 - axis title ellipsis、wrap、text truncation。
 - renderer 真实文本测量。
 - title 背景、边框、leader line、pin。
-- chart preset 默认规则；后续 chart 可以消费本 IRPlotSpec 能力。
+- chart preset 默认规则；后续 chart 可以消费本 IRPlot 能力。
 - 修改 core `GeometryLabelPosition` 的关键字集合。
 
 ---
