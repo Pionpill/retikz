@@ -7,7 +7,7 @@ import {
   ChartThemeSurfaceSchema,
   ChartThemeToken,
   ChartThemeTokenOverridesSchema,
-} from '../../../src/base/style';
+} from '../../../src/_shared/style';
 
 describe('Chart style schema', () => {
   it('只冻结 Chart-owned canonical token，不复制 Plot token', () => {

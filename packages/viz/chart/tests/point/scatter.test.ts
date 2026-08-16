@@ -3,19 +3,24 @@ import type { IRPlotPointEncoding } from '@retikz/plot';
 import { PointMarkSchema } from '@retikz/plot';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { IRScatterPointPatch } from '../../src/point/shared';
+import type { IRScatterPointPatch } from '../../src/point/scatter';
 
-import { PointChartSchema, PointChartType } from '../../src/point';
+import { PointChartType } from '../../src/point';
+import { ScatterPointPatchSchema } from '../../src/point/scatter';
 import { ScatterChartSchema } from '../../src/point/scatter';
-import { ScatterPointPatchSchema, StrictColorChannelSchema, StrictSizeChannelSchema } from '../../src/point/shared';
+import { StrictColorChannelSchema, StrictSizeChannelSchema } from '../../src/point/shared';
 
 const minimalScatter = {
   namespace: 'chart',
   type: 'scatter',
-  data: { reference: 'rows' },
-  encoding: {
-    x: { field: 'amount' },
-    y: { field: 'margin' },
+  plot: {
+    data: { reference: 'rows' },
+  },
+  config: {
+    encoding: {
+      x: { field: 'amount' },
+      y: { field: 'margin' },
+    },
   },
 } as const;
 
@@ -27,7 +32,6 @@ describe('Scatter Chart schema', () => {
 
     expect(PointChartType.Scatter).toBe('scatter');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSchema.parse(minimalScatter)).toEqual(parsed);
   });
 
   it.each([
@@ -41,8 +45,11 @@ describe('Scatter Chart schema', () => {
     expect(
       ScatterChartSchema.parse({
         ...minimalScatter,
-        encoding: { ...minimalScatter.encoding, color, size },
-      }).encoding,
+        config: {
+          ...minimalScatter.config,
+          encoding: { ...minimalScatter.config.encoding, color, size },
+        },
+      }).config.encoding,
     ).toMatchObject({ color, size });
   });
 
@@ -57,7 +64,10 @@ describe('Scatter Chart schema', () => {
     expect(() =>
       ScatterChartSchema.parse({
         ...minimalScatter,
-        encoding: { ...minimalScatter.encoding, ...invalidEncoding },
+        config: {
+          ...minimalScatter.config,
+          encoding: { ...minimalScatter.config.encoding, ...invalidEncoding },
+        },
       }),
     ).toThrow();
   });
@@ -126,24 +136,25 @@ describe('Scatter Chart schema', () => {
     const input = {
       ...minimalScatter,
       id: undefined,
-      encoding: {
-        ...minimalScatter.encoding,
-        x: { field: 'amount', scale: undefined },
-        size: { field: 'weight', scale: undefined, value: undefined },
-        color: undefined,
+      config: {
+        encoding: {
+          ...minimalScatter.config.encoding,
+          x: { field: 'amount', scale: undefined },
+          size: { field: 'weight', scale: undefined, value: undefined },
+          color: undefined,
+        },
+        mark: { opacity: undefined },
       },
-      mark: { opacity: undefined },
     };
     const parsed = ScatterChartSchema.parse(input);
 
     expect(Object.hasOwn(parsed, 'id')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding, 'color')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding.x, 'scale')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding.size ?? {}, 'scale')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding.size ?? {}, 'value')).toBe(false);
-    expect(parsed.mark).toEqual({});
+    expect(Object.hasOwn(parsed.config.encoding, 'color')).toBe(false);
+    expect(Object.hasOwn(parsed.config.encoding.x, 'scale')).toBe(false);
+    expect(Object.hasOwn(parsed.config.encoding.size ?? {}, 'scale')).toBe(false);
+    expect(Object.hasOwn(parsed.config.encoding.size ?? {}, 'value')).toBe(false);
+    expect(parsed.config.mark).toEqual({});
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSchema.parse(input)).toEqual(parsed);
   });
 
   it('treats undefined opposite strict-channel keys as absent without accepting concrete conflicts', () => {
@@ -158,14 +169,22 @@ describe('Scatter Chart schema', () => {
   });
 
   it('rejects missing core channels and spatial-root conflicts', () => {
-    expect(() => ScatterChartSchema.parse({ ...minimalScatter, encoding: { x: { field: 'amount' } } })).toThrow();
     expect(() =>
       ScatterChartSchema.parse({
         ...minimalScatter,
-        coordinate: { type: 'cartesian2D' },
-        composition: {
-          defaultView: 'main',
-          views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
+        config: { encoding: { x: { field: 'amount' } } },
+      }),
+    ).toThrow();
+    expect(() =>
+      ScatterChartSchema.parse({
+        ...minimalScatter,
+        plot: {
+          ...minimalScatter.plot,
+          coordinate: { type: 'cartesian2D' },
+          composition: {
+            defaultView: 'main',
+            views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
+          },
         },
       }),
     ).toThrow(/cannot use coordinate and composition together/);

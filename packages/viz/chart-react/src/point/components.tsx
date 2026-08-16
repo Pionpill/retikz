@@ -1,15 +1,18 @@
-import type {
-  IRBubbleChart,
-  IRConnectedScatterChart,
-  IRScatterChart,
-  PointChartTypeValue,
-} from '@retikz/chart/point';
-import type { InputPointChart } from '@retikz/chart-vanilla/point';
+import type { BoundChart, IRBaseChart } from '@retikz/chart';
+import type { IRBubbleChart, IRConnectedScatterChart, IRScatterChart } from '@retikz/chart/point';
 import type { ExternalRow } from '@retikz/data';
 import type { FC, ReactNode } from 'react';
 
-import { DEFAULT_CHART_DATA_REFERENCE, PointChartType } from '@retikz/chart/point';
-import { PointChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { DEFAULT_CHART_DATA_REFERENCE, normalizeChartPresentation } from '@retikz/chart';
+import {
+  BubbleChartRecipe,
+  BubbleChartSchema,
+  ConnectedScatterChartRecipe,
+  ConnectedScatterChartSchema,
+  ScatterChartRecipe,
+  ScatterChartSchema,
+} from '@retikz/chart/point';
+import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { createElement, useMemo } from 'react';
@@ -18,52 +21,39 @@ import type { ChartCommonProps, InputEmbeddableChartComponent } from '../shared'
 
 import { splitPresentationMarkers, useChartThemeStyles } from '../shared';
 
-/** typed Point Chart 共享的 React input algebra */
-export type TypedPointChartProps<TVariant> = Omit<
-  TVariant,
-  | 'namespace'
-  | 'type'
-  | 'data'
-  | 'transform'
-  | 'scales'
-  | 'coordinate'
-  | 'composition'
-  | 'guides'
-  | 'marks'
-  | keyof ChartCommonProps
-> &
-  ChartCommonProps & {
-    /** typed recipe 使用的外部 rows */
+type BoundChartAuthoring = Parameters<typeof ChartInputEmbedAdapter.lower>[0];
+type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
+
+type TypedChartCommonProps = ChartCommonProps &
+  Omit<IRScatterChart['plot'], 'data' | 'width' | 'height'> & {
+    /** 具体类型解析方案使用的外部数据行 */
     data: Array<ExternalRow>;
     /** 稳定的外部数据引用；省略时固定为 `chart.data` */
     dataRef?: string;
-    /** Plot extension 与 Chart presentation marker 可混排 */
+    /** 可选的 Plot 数据模型 */
+    dataModel?: IRScatterChart['plot']['data']['model'];
+    /** Plot 扩展与 Chart 展示标记可混排 */
     children?: ReactNode;
-    /** recipe 外的 Plot transform members */
-    transform?: IRScatterChart['transform'];
-    /** recipe 外的 Plot scale members */
-    scales?: IRScatterChart['scales'];
-    /** recipe 外的单 coordinate root */
-    coordinate?: IRScatterChart['coordinate'];
-    /** recipe 外的 composition root */
-    composition?: IRScatterChart['composition'];
-    /** recipe 外的 Plot guides */
-    guides?: IRScatterChart['guides'];
-    /** recipe 外的 Plot marks */
-    marks?: IRScatterChart['marks'];
+    /** Chart 自有令牌的稀疏覆盖 */
+    chartThemeTokens?: IRBaseChart['chartThemeTokens'];
   };
 
-/** ScatterChart React props */
-export type ScatterChartProps = TypedPointChartProps<IRScatterChart>;
-/** BubbleChart React props */
-export type BubbleChartProps = TypedPointChartProps<IRBubbleChart>;
-/** ConnectedScatterChart React props */
-export type ConnectedScatterChartProps = TypedPointChartProps<IRConnectedScatterChart>;
+/** ScatterChart React 属性 */
+export type ScatterChartProps = TypedChartCommonProps & IRScatterChart['config'];
 
-type AnyTypedPointChartProps = ScatterChartProps | BubbleChartProps | ConnectedScatterChartProps;
+/** BubbleChart React 属性 */
+export type BubbleChartProps = TypedChartCommonProps & IRBubbleChart['config'];
 
-/** 从 Point Chart 根 props 组装可由 Chart Vanilla adapter 消费的根 Scope */
-const createPointChartPanelInput = (props: AnyTypedPointChartProps): InputPointChart['panel'] => {
+/** ConnectedScatterChart React 属性 */
+export type ConnectedScatterChartProps = TypedChartCommonProps & IRConnectedScatterChart['config'];
+
+type TypedRecipe<TSource extends TypedChartSource> = Readonly<{
+  parse: (input: unknown) => TSource;
+  bind: (source: TSource) => BoundChart;
+}>;
+
+/** 从 Chart 根属性组装可由 Chart 适配器使用的根 Scope */
+const createChartPanelInput = (props: TypedChartCommonProps): BoundChartAuthoring['panel'] => {
   const { x, y, transforms, placement, zIndex, clip, theme } = props;
   if (
     x === undefined &&
@@ -87,25 +77,27 @@ const createPointChartPanelInput = (props: AnyTypedPointChartProps): InputPointC
   };
 };
 
-/** 将 typed Point Chart React props 转换为唯一的 Chart Vanilla 输入 */
-const createTypedPointChartInput = (
-  type: PointChartTypeValue,
-  props: Readonly<Record<string, unknown>>,
-): InputPointChart => {
-  const chartProps = props as AnyTypedPointChartProps;
+const createTypedChartInput = <TSource extends TypedChartSource>(
+  props: TypedChartCommonProps,
+  config: TSource['config'],
+  type: TSource['type'],
+  recipe: TypedRecipe<TSource>,
+): BoundChartAuthoring => {
   const {
     data,
     dataRef,
+    dataModel,
     title,
     subtitle,
     note,
     source,
+    chartThemeTokens,
     chartThemeStyles,
     plotThemeStyles,
     id,
     children,
-    width: _width,
-    height: _height,
+    width,
+    height,
     className: _className,
     style: _style,
     renderer: _renderer,
@@ -129,8 +121,8 @@ const createTypedPointChartInput = (
     composition,
     guides,
     marks,
-    ...recipeInput
-  } = chartProps;
+    ...plotFields
+  } = props;
   void _className;
   void _style;
   void _renderer;
@@ -151,7 +143,10 @@ const createTypedPointChartInput = (
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
   const split = splitPresentationMarkers(children);
   const extension = resolvePlotExtensionAuthoring(split.plotChildren, {
-    data: { reference },
+    data: {
+      reference,
+      ...(dataModel === undefined ? {} : { model: dataModel }),
+    },
     ...(transform === undefined ? {} : { dataTransforms: transform }),
     ...(scales === undefined ? {} : { scales: { value: scales, path: ['props', 'scales'] } }),
     ...(coordinate === undefined ? {} : { coordinate: { value: coordinate, path: ['props', 'coordinate'] } }),
@@ -159,30 +154,49 @@ const createTypedPointChartInput = (
     ...(guides === undefined ? {} : { guides: { value: guides, path: ['props', 'guides'] } }),
     ...(marks === undefined ? {} : { marks: { value: marks, path: ['props', 'marks'] } }),
   });
-  const input: InputPointChart['input'] = {
-    data,
-    ...(dataRef === undefined ? {} : { dataRef }),
-    ...(title === undefined ? {} : { title }),
-    ...(subtitle === undefined ? {} : { subtitle }),
-    ...(note === undefined ? {} : { note }),
-    ...(source === undefined ? {} : { source }),
+  const presentation = normalizeChartPresentation({
+    title,
+    subtitle,
+    note,
+    source,
+    ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
+  });
+  const spec = recipe.parse({
+    namespace: 'chart',
+    type,
+    ...(id === undefined ? {} : { id }),
+    ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
+    ...(presentation === undefined ? {} : { presentation }),
+    plot: {
+      data: {
+        reference,
+        ...(dataModel === undefined ? {} : { model: dataModel }),
+      },
+      ...plotFields,
+      ...extension.fragment,
+      ...(width === undefined ? {} : { width }),
+      ...(height === undefined ? {} : { height }),
+    },
+    config,
+  });
+  const panel = createChartPanelInput(props);
+  return {
+    bound: recipe.bind(spec),
+    datasets: { [reference]: data },
+    lowerOptions: {
+      ...(extension.runtime.resolveLabel === undefined ? {} : { resolveLabel: extension.runtime.resolveLabel }),
+      ...(plotThemeStyles === undefined ? {} : { plotThemeStyles }),
+    },
     ...(chartThemeStyles === undefined ? {} : { chartThemeStyles }),
     ...(plotThemeStyles === undefined ? {} : { plotThemeStyles }),
-    ...(id === undefined ? {} : { id }),
-    ...recipeInput,
-    ...extension.fragment,
-    ...(_width === undefined ? {} : { width: _width }),
-    ...(_height === undefined ? {} : { height: _height }),
-    ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
+    ...(panel === undefined ? {} : { panel }),
   };
-  const panel = createPointChartPanelInput(chartProps);
-  return { type, input, ...(panel === undefined ? {} : { panel }) };
 };
 
-const createTypedChartComponent = <TProps extends AnyTypedPointChartProps>(
-  type: PointChartTypeValue,
+const createTypedChartComponent = <TProps extends TypedChartCommonProps>(
   displayName: string,
-): InputEmbeddableChartComponent<TProps, InputPointChart, typeof PointChartInputEmbedAdapter> => {
+  createInput: (props: TProps) => BoundChartAuthoring,
+): InputEmbeddableChartComponent<TProps, BoundChartAuthoring, typeof ChartInputEmbedAdapter> => {
   const Component: FC<TProps> = props => {
     const {
       width,
@@ -238,29 +252,49 @@ const createTypedChartComponent = <TProps extends AnyTypedPointChartProps>(
       createElement(Component, effectiveProps),
     );
   };
-  const chart = Component as InputEmbeddableChartComponent<TProps, InputPointChart, typeof PointChartInputEmbedAdapter>;
+  const chart = Component as InputEmbeddableChartComponent<TProps, BoundChartAuthoring, typeof ChartInputEmbedAdapter>;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
-  chart.inputEmbedAdapter = PointChartInputEmbedAdapter;
-  chart.createInputEmbedProps = props => createTypedPointChartInput(type, props);
+  chart.inputEmbedAdapter = ChartInputEmbedAdapter;
+  chart.createInputEmbedProps = props => createInput(props as TProps);
   return chart;
 };
 
-/** Scatter typed Chart React component */
-export const ScatterChart: InputEmbeddableChartComponent<
-  ScatterChartProps,
-  InputPointChart,
-  typeof PointChartInputEmbedAdapter
-> = createTypedChartComponent<ScatterChartProps>(PointChartType.Scatter, 'ScatterChart');
-/** Bubble typed Chart React component */
-export const BubbleChart: InputEmbeddableChartComponent<
-  BubbleChartProps,
-  InputPointChart,
-  typeof PointChartInputEmbedAdapter
-> = createTypedChartComponent<BubbleChartProps>(PointChartType.Bubble, 'BubbleChart');
-/** Connected Scatter typed Chart React component */
-export const ConnectedScatterChart: InputEmbeddableChartComponent<
-  ConnectedScatterChartProps,
-  InputPointChart,
-  typeof PointChartInputEmbedAdapter
-> = createTypedChartComponent<ConnectedScatterChartProps>(PointChartType.ConnectedScatter, 'ConnectedScatterChart');
+/** Scatter 具体类型的 Chart React 组件 */
+export const ScatterChart = createTypedChartComponent<ScatterChartProps>('ScatterChart', props => {
+  const { encoding, mark, ...common } = props;
+  return createTypedChartInput(common, { encoding, ...(mark === undefined ? {} : { mark }) }, 'scatter', {
+    parse: value => ScatterChartSchema.parse(value),
+    bind: spec => ScatterChartRecipe.bind(spec),
+  });
+});
+
+/** Bubble 具体类型的 Chart React 组件 */
+export const BubbleChart = createTypedChartComponent<BubbleChartProps>('BubbleChart', props => {
+  const { encoding, mark, ...common } = props;
+  return createTypedChartInput(common, { encoding, ...(mark === undefined ? {} : { mark }) }, 'bubble', {
+    parse: value => BubbleChartSchema.parse(value),
+    bind: spec => BubbleChartRecipe.bind(spec),
+  });
+});
+
+/** Connected Scatter 具体类型的 Chart React 组件 */
+export const ConnectedScatterChart = createTypedChartComponent<ConnectedScatterChartProps>(
+  'ConnectedScatterChart',
+  props => {
+    const { encoding, mark, components, ...common } = props;
+    return createTypedChartInput(
+      common,
+      {
+        encoding,
+        ...(mark === undefined ? {} : { mark }),
+        ...(components === undefined ? {} : { components }),
+      },
+      'connected-scatter',
+      {
+        parse: value => ConnectedScatterChartSchema.parse(value),
+        bind: spec => ConnectedScatterChartRecipe.bind(spec),
+      },
+    );
+  },
+);

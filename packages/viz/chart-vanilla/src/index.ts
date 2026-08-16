@@ -1,2 +1,1 @@
-export * from './base';
-export * from './normalize/chart';
+export * from './_chart';

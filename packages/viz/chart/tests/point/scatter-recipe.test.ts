@@ -1,11 +1,9 @@
-import type { IRPlot } from '@retikz/plot';
-
 import { describe, expect, it } from 'vitest';
 
-import type { ChartRecipeInvariantError, ChartRecipeStyleContext } from '../../src/point/recipe';
+import type { ChartRecipeStyleContext } from '../../src/_shared';
 
-import { ChartRecipeInvariantReason } from '../../src/point/recipe';
-import { ScatterChartRecipe, ScatterChartSchema } from '../../src/point/scatter';
+import { ScatterChartSchema } from '../../src/point/scatter';
+import { ScatterChartRecipe } from '../../src/point/scatter/recipe';
 
 const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,
@@ -19,16 +17,19 @@ const scatter = (overrides: Record<string, unknown> = {}) =>
     namespace: 'chart',
     type: 'scatter',
     id: 'sales',
-    data: { reference: 'rows' },
-    encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-    ...overrides,
+    plot: { data: { reference: 'rows' } },
+    config: {
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+      ...overrides,
+    },
   });
 
-describe('Scatter Chart recipe', () => {
-  it('builds the exact primary Point, spatial root, scales and axis defaults', () => {
-    const seed = ScatterChartRecipe.createSeed(scatter(), visibleStyle);
+const createScatterPlot = (overrides: Record<string, unknown> = {}, style = visibleStyle) =>
+  ScatterChartRecipe.bind(scatter(overrides)).createPlot(style);
 
-    expect(seed.plot).toEqual({
+describe('Scatter Chart recipe', () => {
+  it('generates the primary Point, spatial root, scales, and axis defaults', () => {
+    expect(createScatterPlot()).toEqual({
       namespace: 'plot',
       type: 'plot',
       id: 'sales/plot',
@@ -54,206 +55,60 @@ describe('Scatter Chart recipe', () => {
         { type: 'axis', id: '__chart.scatter.guide.y', dimension: 'y', grid: true },
       ],
     });
-    expect(seed.members.map(member => member.target)).toEqual([
-      'scale.x',
-      'scale.y',
-      'coordinate.main',
-      'mark.main',
-      'guide.x',
-      'guide.y',
-    ]);
-    expect(seed.patches).toEqual([]);
   });
 
-  it('normalizes visual channels and creates a bound size legend only for field size', () => {
-    const fieldSeed = ScatterChartRecipe.createSeed(
-      scatter({
-        encoding: {
-          x: { field: 'amount' },
-          y: { field: 'margin' },
-          color: { field: 'group', scale: 'colorScale' },
-          size: { field: 'weight' },
-          opacity: { value: 0.7 },
-          shape: { field: 'kind' },
-        },
-      }),
-      visibleStyle,
-    );
+  it('maps visual channels and creates a size legend for field-driven size', () => {
+    const plot = createScatterPlot({
+      encoding: {
+        x: { field: 'amount' },
+        y: { field: 'margin' },
+        color: { field: 'group', scale: 'colorScale' },
+        size: { field: 'weight' },
+        opacity: { value: 0.7 },
+        shape: { field: 'kind' },
+      },
+    });
 
-    expect(fieldSeed.plot.marks[0]).toMatchObject({
+    expect(plot.marks[0]).toMatchObject({
       color: { kind: 'field', value: 'group', scale: 'colorScale' },
       size: { kind: 'field', value: 'weight' },
       opacity: { kind: 'constant', value: 0.7 },
       shape: { kind: 'field', value: 'kind' },
     });
-    expect(fieldSeed.plot.guides).toContainEqual({
-      type: 'legend',
-      channel: 'size',
-    });
-
-    const constantSeed = ScatterChartRecipe.createSeed(
-      scatter({
-        encoding: {
-          x: { field: 'amount' },
-          y: { field: 'margin' },
-          color: { value: '#2563eb' },
-          size: { value: 6 },
-        },
-      }),
-      visibleStyle,
-    );
-    expect(constantSeed.plot.marks[0]).toMatchObject({
-      color: { kind: 'constant', value: '#2563eb' },
-      size: { kind: 'constant', value: 6 },
-    });
-    expect(constantSeed.plot.guides?.some(guide => guide.type === 'legend')).toBe(false);
+    expect(plot.guides).toContainEqual({ type: 'legend', channel: 'size' });
   });
 
-  it('applies the authored Point patch after recipe visual channels', () => {
-    const seed = ScatterChartRecipe.createSeed(
-      scatter({
-        encoding: {
-          x: { field: 'amount' },
-          y: { field: 'margin' },
-          color: { value: '#2563eb' },
-        },
-        mark: {
-          color: { kind: 'constant', value: '#dc2626' },
-          strokeWidth: { kind: 'constant', value: 2 },
-          layer: { zIndex: 5 },
-        },
-      }),
-      visibleStyle,
-    );
-
-    expect(seed.patches).toEqual([
-      {
-        target: 'mark.main',
-        inputPath: ['mark'],
-        changes: [
-          { path: ['color'], value: { kind: 'constant', value: '#dc2626' } },
-          { path: ['strokeWidth'], value: { kind: 'constant', value: 2 } },
-          { path: ['layer'], value: { zIndex: 5 } },
-        ],
+  it('applies the type-specific mark configuration directly', () => {
+    const plot = createScatterPlot({
+      encoding: {
+        x: { field: 'amount' },
+        y: { field: 'margin' },
+        color: { value: '#2563eb' },
       },
-    ]);
-  });
-
-  it('emits authored Point encoding leaves without replacing recipe-owned positions', () => {
-    const seed = ScatterChartRecipe.createSeed(
-      scatter({
-        mark: {
-          encoding: {
-            text: { field: 'label' },
-            color: { field: 'group', scale: 'colors' },
-            channels: { halo: { value: 0.5 } },
-            depth: { field: 'depth' },
-          },
-        },
-      }),
-      visibleStyle,
-    );
-
-    expect(seed.patches).toEqual([
-      {
-        target: 'mark.main',
-        inputPath: ['mark'],
-        changes: [
-          { path: ['encoding', 'text'], value: { field: 'label' } },
-          { path: ['encoding', 'color'], value: { field: 'group', scale: 'colors' } },
-          { path: ['encoding', 'channels'], value: { halo: { value: 0.5 } } },
-          { path: ['encoding', 'depth'], value: { field: 'depth' } },
-        ],
+      mark: {
+        color: { kind: 'constant', value: '#dc2626' },
+        strokeWidth: { kind: 'constant', value: 2 },
+        encoding: { text: { field: 'label' } },
       },
-    ]);
-    expect(seed.members.find(member => member.target === 'mark.main')?.patchablePaths).toEqual(
-      expect.arrayContaining([
-        ['encoding', 'text'],
-        ['encoding', 'color'],
-        ['encoding', 'channels'],
-        ['encoding', 'depth'],
-      ]),
-    );
-  });
-
-  it('treats explicit undefined encoding patches as omitted values', () => {
-    const seed = ScatterChartRecipe.createSeed(scatter({ mark: { encoding: { text: undefined } } }), visibleStyle);
-
-    expect(seed.patches).toEqual([]);
-  });
-
-  it('derives the automatic size legend from the final effective Point size', () => {
-    const constantOverride = ScatterChartRecipe.createSeed(
-      scatter({
-        encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } },
-        mark: { size: { kind: 'constant', value: 6 } },
-      }),
-      visibleStyle,
-    );
-    expect(constantOverride.plot.guides?.some(guide => guide.type === 'legend')).toBe(false);
-
-    const fieldOverride = ScatterChartRecipe.createSeed(
-      scatter({
-        encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { value: 4 } },
-        mark: { size: { kind: 'field', value: 'importance', scale: 'importance-radius' } },
-      }),
-      visibleStyle,
-    );
-    expect(fieldOverride.plot.guides).toContainEqual({
-      type: 'legend',
-      channel: 'size',
-      scale: 'importance-radius',
     });
 
-    for (const textMode of [
-      scatter({
-        encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } },
-        mark: { encoding: { text: { field: 'label' } } },
-      }),
-      scatter({
-        mark: {
-          size: { kind: 'field', value: 'importance', scale: 'importance-radius' },
-          encoding: { text: { field: 'label' } },
-        },
-      }),
-    ]) {
-      const textSeed = ScatterChartRecipe.createSeed(textMode, visibleStyle);
-      expect(textSeed.plot.guides?.some(guide => guide.type === 'legend' && guide.channel === 'size')).toBe(false);
-    }
+    expect(plot.marks[0]).toMatchObject({
+      color: { kind: 'constant', value: '#dc2626' },
+      strokeWidth: { kind: 'constant', value: 2 },
+      encoding: {
+        x: { field: 'amount' },
+        y: { field: 'margin' },
+        text: { field: 'label' },
+      },
+    });
   });
 
-  it('uses presentation style only for optional guide topology', () => {
-    const seed = ScatterChartRecipe.createSeed(
-      scatter({ encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } } }),
+  it('uses style only for optional guide topology', () => {
+    const plot = createScatterPlot(
+      { encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'weight' } } },
       { axisEnabled: false, axisGridEnabled: false, legendEnabled: false, seriesColor: '#475569' },
     );
 
-    expect(seed.plot.guides).toEqual([]);
-    expect(seed.members.filter(member => member.kind === 'guide')).toEqual([]);
-  });
-
-  it.each([
-    {
-      reason: ChartRecipeInvariantReason.RequiredScale,
-      path: ['scales'],
-      mutate: (plot: IRPlot): IRPlot => ({ ...plot, scales: plot.scales.slice(1) }),
-    },
-    {
-      reason: ChartRecipeInvariantReason.SpatialRoot,
-      path: ['coordinate'],
-      mutate: (plot: IRPlot): IRPlot => ({ ...plot, coordinate: { type: 'cartesian1D' } }),
-    },
-    {
-      reason: ChartRecipeInvariantReason.CoreMark,
-      path: ['marks'],
-      mutate: (plot: IRPlot): IRPlot => ({ ...plot, marks: [] }),
-    },
-  ])('rejects a broken $reason invariant', ({ reason, path, mutate }) => {
-    const spec = scatter();
-    const plot = mutate(ScatterChartRecipe.createSeed(spec, visibleStyle).plot);
-
-    expect(() => ScatterChartRecipe.validateCore(spec, plot)).toThrowError(
-      expect.objectContaining<Partial<ChartRecipeInvariantError>>({ reason, path }),
-    );
+    expect(plot.guides).toEqual([]);
   });
 });

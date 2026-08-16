@@ -17,37 +17,52 @@ const sourceFilesUnder = async (directory: string): Promise<Array<string>> => {
 };
 
 describe('Chart semantic source layout', () => {
-  it('uses the base, shared, and Point family owners without legacy routes', async () => {
+  it('uses the _chart, _shared, and Point family owners without legacy routes', async () => {
     const paths = (await sourceFilesUnder(sourceRoot)).map(path => relative(sourceRoot, path).replaceAll('\\', '/'));
 
-    expect(paths.some(path => path.startsWith('base/'))).toBe(true);
-    expect(paths.some(path => path.startsWith('shared/'))).toBe(true);
+    expect(paths.some(path => path.startsWith('_chart/'))).toBe(true);
+    expect(paths.some(path => path.startsWith('_shared/'))).toBe(true);
     expect(paths.some(path => path.startsWith('point/'))).toBe(true);
-    expect(paths.some(path => path.startsWith('families/') || path.startsWith('resolution/'))).toBe(false);
+    expect(paths).toContain('point/shared/schema.ts');
+    expect(paths).toContain('point/shared/plot.ts');
+    expect(paths).toContain('point/shared/recipe.ts');
+    expect(paths).not.toContain('_shared/schemas/point.ts');
+    expect(paths).not.toContain('_shared/recipe/point.ts');
+    expect(paths).not.toContain('point/shared/plot-seed.ts');
+    expect(paths).not.toContain('_shared/recipe/plot-seed.ts');
+    expect(
+      paths.some(
+        path =>
+          path.startsWith('base/') ||
+          path.startsWith('shared/') ||
+          path.startsWith('schemas/') ||
+          path.startsWith('resolution/'),
+      ),
+    ).toBe(false);
     expect(
       paths.some(path => path.startsWith('schemas/') || path.startsWith('presentation/') || path.startsWith('style/')),
     ).toBe(false);
   });
 
-  it('keeps base independent from the Point family', async () => {
-    const baseFiles = await sourceFilesUnder(join(sourceRoot, 'base'));
-    const contents = await Promise.all(baseFiles.map(path => readFile(path, 'utf8')));
-
-    expect(contents.some(content => /from ['"].*\/point(?:\/|['"])/.test(content))).toBe(false);
-  });
-
-  it('keeps shared independent from base and Point owners', async () => {
-    const sharedFiles = await sourceFilesUnder(join(sourceRoot, 'shared'));
+  it('keeps _shared independent from _chart and Point owners', async () => {
+    const sharedFiles = await sourceFilesUnder(join(sourceRoot, '_shared'));
     const contents = await Promise.all(sharedFiles.map(path => readFile(path, 'utf8')));
 
-    expect(contents.some(content => /from ['"].*\/(base|point)(?:\/|['"])/.test(content))).toBe(false);
+    expect(contents.some(content => /from ['"](?:\.\.\/)+(_chart|point)(?:\/|['"])/.test(content))).toBe(false);
   });
 
-  it('lets the Point family consume base and shared through their owner barrels', async () => {
+  it('keeps _chart dispatch independent from Point recipes', async () => {
+    const chartFiles = await sourceFilesUnder(join(sourceRoot, '_chart'));
+    const contents = await Promise.all(chartFiles.map(path => readFile(path, 'utf8')));
+
+    expect(contents.some(content => /from ['"][^'"]*\/point(?:\/|['"])/.test(content))).toBe(false);
+  });
+
+  it('lets the Point family consume only _shared through its owner barrel', async () => {
     const pointFiles = await sourceFilesUnder(join(sourceRoot, 'point'));
     const contents = await Promise.all(pointFiles.map(path => readFile(path, 'utf8')));
 
-    expect(contents.some(content => /from ['"].*\/(base|shared)(?:\/|['"])/.test(content))).toBe(true);
-    expect(contents.some(content => /from ['"].*\/(base|shared)\/[^'"/]+\//.test(content))).toBe(false);
+    expect(contents.some(content => /from ['"].*\/_shared(?:\/|['"])/.test(content))).toBe(true);
+    expect(contents.some(content => /from ['"].*\/_chart(?:\/|['"])/.test(content))).toBe(false);
   });
 });
