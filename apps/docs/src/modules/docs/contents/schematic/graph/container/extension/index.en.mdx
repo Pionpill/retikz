@@ -79,13 +79,13 @@ The compiler creates a synthetic column FlexLayout region for the header and sec
 
 ## API Reference
 
-| Prop                  | Type                       | Default                               | Description                                            |
-| --------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------ |
-| `entityVariant?`      | `EntityVariantValue`       | omitted                               | Default variant for descendant Entity values           |
-| `size?`               | `LayoutSizeInput`          | content allocation                    | Outer allocation policy                                |
-| `appearance?`         | `ContainerAppearanceInput` | neutral shell, radius `8`, divider on | Shell, divider, corner radius, and stacking appearance |
-| `createContainer()`   | `@retikz/graph`            | —                                     | Creates canonical Container IR                         |
-| `ContainerDefinition` | `@retikz/graph`            | —                                     | Connects Container IR to compilation                   |
+| Prop                  | Type                       | Default                               | Description                                             |
+| --------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `entityVariant?`      | `string`                   | omitted                               | Registered default variant for descendant Entity values |
+| `size?`               | `LayoutSizeInput`          | content allocation                    | Outer allocation policy                                 |
+| `appearance?`         | `ContainerAppearanceInput` | neutral shell, radius `8`, divider on | Shell, divider, corner radius, and stacking appearance  |
+| `createContainer()`   | `@retikz/graph`            | —                                     | Creates canonical Container IR                          |
+| `ContainerDefinition` | `@retikz/graph`            | —                                     | Connects Container IR to compilation                    |
 
 ## Related
 

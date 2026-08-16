@@ -1,21 +1,22 @@
 ---
 title: Graph
-description: 从统一入口选用 Entity、Relation 与 Container，并按基础用法或扩展用法深入学习。
+description: 用 Graph presentation root 组织 Entity、Relation 与 Container，并按基础用法或扩展用法深入学习。
 ---
 
-Graph 是 Schematic 领域中可复用图式元素的统一入口。当前提供三类核心元素：`Entity` 表达可被引用的对象，`Relation` 表达对象之间的关系，`Container` 组织带外壳的局部结构。
+Graph 是 Schematic 领域中可复用图式元素的统一入口。`Graph` presentation root 提供全局 Entity variant 与 Theme token 作用域；`Entity` 表达可被引用的对象，`Relation` 表达对象之间的关系，`Container` 组织带外壳的局部结构。
 
 Graph 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或 Layout 布局放置单元，再用稳定的 `id` 表达显式 target。
 
 ## 职责一览
 
-| 成员        | 拥有                                        | 不拥有             |
-| ----------- | ------------------------------------------- | ------------------ |
-| `Container` | 外壳、header、有序 section 与可复用区域布局 | 图拓扑或自动放置   |
-| `Entity`    | 中性形状、content、尺寸与语义 role          | 领域状态机         |
-| `Relation`  | 一条 Core Path 路由和可选的末步 label       | 自动路由或自动避障 |
+| 成员        | 拥有                                        | 不拥有                |
+| ----------- | ------------------------------------------- | --------------------- |
+| `Graph`     | presentation scope、Entity 默认值与主题规则 | GraphModel 或自动布局 |
+| `Container` | 外壳、header、有序 section 与可复用区域布局 | 图拓扑或自动放置      |
+| `Entity`    | 中性形状、content、尺寸与语义 role          | 领域状态机            |
+| `Relation`  | 一条 Core Path 路由和可选的末步 label       | 自动路由或自动避障    |
 
-所有成员都下沉为既有 Core 图元，可通过 React、直接 JSON/IR 或 Vanilla embed 编写。Definition 按 figure 注入，不进入持久化 JSON。
+所有成员都下沉为既有 Core 图元，可通过 React、直接 JSON/IR 或 Vanilla embed 编写。内置与自定义 role / variant 共用 Definition registry；Definition 按 figure 注入，不进入持久化 JSON。
 
 ## 内容分组
 

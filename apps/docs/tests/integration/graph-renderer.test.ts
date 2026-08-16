@@ -1,10 +1,11 @@
-import type { IRChild, IRNode, Scene } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild, IRNode, IRScene, Scene, ThemeStyleDefinition } from '@retikz/core';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
-import type { FC, ReactNode } from 'react';
+import type { FC, ReactElement, ReactNode } from 'react';
 
 import { compileToScene, lowerIRToKernel, ThemeMode } from '@retikz/core';
 import {
   createEntity,
+  createGraph,
   createGraphDefinitions,
   createRelation,
   EntityDefinition,
@@ -33,10 +34,8 @@ import { previewSource as entityStageEnPreviewSource } from '../../src/modules/d
 import { previewSource as entityStageZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-stage.zh.demo';
 import { previewSource as entityTerminalEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-terminal.en.demo';
 import { previewSource as entityTerminalZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-terminal.zh.demo';
-import ClassRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.en.demo';
-import ClassRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/class-recipe.zh.demo';
-import DataRecipeEnDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.en.demo';
-import DataRecipeZhDemo from '../../src/modules/docs/contents/schematic/graph/entity/extension/data-recipe.zh.demo';
+import { previewSource as entityThemeSelectorEnPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/extension/entity-theme-selector.en.demo';
+import { previewSource as entityThemeSelectorZhPreviewSource } from '../../src/modules/docs/contents/schematic/graph/entity/extension/entity-theme-selector.zh.demo';
 import RelationRoutingEnDemo from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-routing.en.demo';
 import RelationRoutingZhDemo from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-routing.zh.demo';
 
@@ -155,7 +154,7 @@ describe('Graph renderer integration', () => {
     const nodes = collectNodes(lowered.children);
 
     expect(nodes).toHaveLength(1);
-    expect(nodes[0]).toMatchObject({ color: '#000000', textColor: '#000000', stroke: '#000000', fill: 'none', text });
+    expect(nodes[0]).toMatchObject({ color: '#000000', textColor: 'contrast', stroke: '#000000', fill: 'none', text });
     expect(nodes[0]).not.toHaveProperty('variant');
     expect(JSON.stringify(lowered)).not.toContain('notation');
   });
@@ -175,14 +174,52 @@ describe('Graph renderer integration', () => {
     ['relation zh', RelationRoutingZhDemo],
     ['process recipe en', ProcessRecipeEnDemo],
     ['process recipe zh', ProcessRecipeZhDemo],
-    ['class recipe en', ClassRecipeEnDemo],
-    ['class recipe zh', ClassRecipeZhDemo],
-    ['data recipe en', DataRecipeEnDemo],
-    ['data recipe zh', DataRecipeZhDemo],
   ])('renders the canonical %s demo through the Vanilla converter', (_name, source) => {
     const vanilla = buildVanillaPreview(buildPreviewIR(canonicalComponentOf(source)));
     expect(vanilla.code).not.toContain('Unsupported Graph composite');
     expect(vanilla.svg).toContain('<svg');
+  });
+
+  it('converts a built-in Graph presentation root through the Vanilla preview', () => {
+    const BuiltinGraphDemo: FC = () =>
+      createElement(Layout, {
+        ir: {
+          version: 1,
+          type: 'scene',
+          children: [
+            createGraph({
+              id: 'workflow',
+              entityVariant: 'default',
+              children: [createEntity({ id: 'step', role: 'stage', position: [0, 0], text: 'Step' })],
+            }),
+          ],
+        },
+        composites: createGraphDefinitions(),
+        width: 320,
+        height: 160,
+      });
+    const vanilla = buildVanillaPreview(buildPreviewIR(BuiltinGraphDemo));
+
+    expect(vanilla.code).toContain('graph(');
+    expect(vanilla.svg).toContain('<svg');
+  });
+
+  it.each([
+    ['entity theme selector en', entityThemeSelectorEnPreviewSource],
+    ['entity theme selector zh', entityThemeSelectorZhPreviewSource],
+  ])('lowers the runtime-configured %s demo with its own Definitions', (_name, source) => {
+    const element = source.canonicalRender?.() as ReactElement<{
+      ir: IRScene;
+      composites: ReadonlyArray<AnyCompositeDefinition>;
+      themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+    }>;
+    const lowered = lowerIRToKernel(element.props.ir, {
+      composites: element.props.composites,
+      ...(element.props.themeStyles === undefined ? {} : { themeStyles: element.props.themeStyles }),
+    });
+
+    expect(collectNodes(lowered.children)).not.toHaveLength(0);
+    expect(JSON.stringify(lowered)).not.toContain('"namespace":"graph"');
   });
 
   it('keeps direct, React, and Vanilla canonical IR plus connector identity in parity', () => {

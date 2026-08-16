@@ -81,7 +81,7 @@ const adapters = [ContainerInputEmbedAdapter];
 
 | 属性                  | 类型                       | 默认值                             | 说明                                |
 | --------------------- | -------------------------- | ---------------------------------- | ----------------------------------- |
-| `entityVariant?`      | `EntityVariantValue`       | 省略                               | 后代 Entity 的默认变体              |
+| `entityVariant?`      | `string`                   | 省略                               | 后代 Entity 的已注册默认变体        |
 | `size?`               | `LayoutSizeInput`          | content allocation                 | 外层 allocation 策略                |
 | `appearance?`         | `ContainerAppearanceInput` | 中性 shell、圆角 `8`、divider 开启 | 外壳、divider、圆角与 stacking 外观 |
 | `createContainer()`   | `@retikz/graph`            | —                                  | 创建规范 Container IR               |

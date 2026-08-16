@@ -25,10 +25,8 @@ export const entityStageControls = definePreviewControls({
           defaultValue: 'default',
           options: [
             { value: 'default', label: '默认' },
-            { value: 'primary', label: '主要' },
-            { value: 'secondary', label: '次要' },
-            { value: 'outline', label: '轮廓' },
-            { value: 'vibrant', label: '鲜明' },
+            { value: 'fill', label: '填充' },
+            { value: 'mixed', label: '混合' },
           ],
         },
         {

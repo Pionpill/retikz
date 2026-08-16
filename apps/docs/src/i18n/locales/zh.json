@@ -162,7 +162,7 @@
     "basicUsage": "基础用法",
     "extensionUsage": "扩展用法",
     "container": "容器",
-    "entity": "Entity",
+    "entity": "实体",
     "relation": "关系",
     "graphApiReference": "Graph API 参考",
     "releases": "发布",

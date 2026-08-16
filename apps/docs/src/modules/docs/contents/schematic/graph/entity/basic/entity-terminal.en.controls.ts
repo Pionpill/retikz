@@ -20,10 +20,8 @@ export const entityTerminalControls = definePreviewControls({
           defaultValue: 'default',
           options: [
             { value: 'default', label: 'Default' },
-            { value: 'primary', label: 'Primary' },
-            { value: 'secondary', label: 'Secondary' },
-            { value: 'outline', label: 'Outline' },
-            { value: 'vibrant', label: 'Vibrant' },
+            { value: 'fill', label: 'Fill' },
+            { value: 'mixed', label: 'Mixed' },
           ],
         },
         {

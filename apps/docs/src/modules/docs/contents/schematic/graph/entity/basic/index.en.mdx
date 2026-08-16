@@ -17,7 +17,7 @@ import { Entity } from '@retikz/graph-react';
   <Entity id="start" role="terminal" position={[24, 56]}>
     Start
   </Entity>
-  <Entity id="step" role="stage" variant="primary" position={[180, 56]}>
+  <Entity id="step" role="stage" variant="fill" position={[180, 56]}>
     Process
   </Entity>
 </Layout>
@@ -27,10 +27,10 @@ import { Entity } from '@retikz/graph-react';
 
 Entity's special props are:
 
-| Prop      | Meaning        | Usage                                                             |
-| --------- | -------------- | ----------------------------------------------------------------- |
-| `role`    | Graph function | Choose `terminal`, `stage`, `decision`, or `junction`             |
-| `variant` | Visual variant | Choose `default`, `primary`, `secondary`, `outline`, or `vibrant` |
+| Prop      | Meaning        | Usage                                                                                        |
+| --------- | -------------- | -------------------------------------------------------------------------------------------- |
+| `role`    | Graph function | Built-ins are `terminal`, `stage`, `decision`, and `junction`; custom keys can be registered |
+| `variant` | Visual variant | Built-ins are `default`, `fill`, and `mixed`; custom keys can be registered                  |
 
 Entity also inherits Core `Node`'s `meta` metadata field. `meta` accepts a JSON-safe object, is preserved on emitted Scene primitives, and does not affect compilation, so LLMs, inspectors, and other tools can read the domain context it carries from the IR or Scene. Other position, text, sizing, and visual props pass through to Node
 
@@ -78,20 +78,30 @@ Entity also inherits Core `Node`'s `meta` metadata field. `meta` accepts a JSON-
   caption="Change the junction color (including currentColor), variant, and inner content."
 />
 
+### Playground
+
+The playground switches between built-in `role` and `variant` values and independently adjusts the Node primary, stroke, and text colors, showing how explicit Node props override a visual variant
+
+<ComponentPreview
+  files="entity-playground"
+  size="lg"
+  caption="Switch role and variant, then adjust the primary, stroke, and text colors independently."
+/>
+
 ## API Reference
 
 Entity's special props are `role` and `variant`; placement, text, and visual props follow the Core `Node` contract
 
-| Prop            | Type                 | Default       | Description                                               |
-| --------------- | -------------------- | ------------- | --------------------------------------------------------- |
-| `id`            | `string`             | —             | Stable authored identity and target name                  |
-| `role`          | `EntityRoleValue`    | —             | Selects terminal, stage, decision, or junction semantics  |
-| `variant?`      | `EntityVariantValue` | `default`     | Selects a Graph visual variant                            |
-| `shape?`        | `NodeShapeInput`     | from `role`   | Overrides the role-provided default shape                 |
-| Core Node props | Core `Node` props    | Core defaults | Reuses Node placement, text, sizing, and visual contracts |
+| Prop            | Type              | Default       | Description                                               |
+| --------------- | ----------------- | ------------- | --------------------------------------------------------- |
+| `id`            | `string`          | —             | Stable authored identity and target name                  |
+| `role`          | `string`          | —             | Selects a registered Entity role                          |
+| `variant?`      | `string`          | `default`     | Selects a registered Entity variant                       |
+| `shape?`        | `NodeShapeInput`  | from `role`   | Overrides the role-provided default shape                 |
+| Core Node props | Core `Node` props | Core defaults | Reuses Node placement, text, sizing, and visual contracts |
 
 ## Related
 
-- [Entity Extended Usage](/schematic/graph/entity/extension): scope inheritance, recipes, direct IR, and Vanilla
+- [Entity Extensions](/schematic/graph/entity/extension): custom roles, variants, Graph Theme selectors, and injection
 - [Relation Basic Usage](/schematic/graph/relation/basic): connect Entity values with Steps
 - [Container Basic Usage](/schematic/graph/container/basic): organize several children

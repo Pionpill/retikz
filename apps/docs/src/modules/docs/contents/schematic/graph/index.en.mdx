@@ -1,9 +1,9 @@
 ---
 title: Graph
-description: Choose Entity, Relation, and Container from one entry point, then learn their basic and extended usage.
+description: Organize Entity, Relation, and Container under a Graph presentation root, then learn basic and extended usage.
 ---
 
-Graph is the unified entry point for reusable elements in the Schematic domain. It currently provides three core elements: `Entity` represents targetable subjects, `Relation` represents relationships, and `Container` organizes a local structure with a shell.
+Graph is the unified entry point for reusable elements in the Schematic domain. The `Graph` presentation root provides global Entity variant and Theme-token scope; `Entity` represents targetable subjects, `Relation` represents relationships, and `Container` organizes local structure with a shell.
 
 Graph owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Layout containers, then use stable `id` values for explicit targets.
 
@@ -11,11 +11,12 @@ Graph owns each element's diagram meaning and drawing contract. It does not own 
 
 | Member      | Owns                                                          | Does not own                            |
 | ----------- | ------------------------------------------------------------- | --------------------------------------- |
+| `Graph`     | Presentation scope, Entity defaults, and Theme rules          | A GraphModel or automatic layout        |
 | `Container` | A shell, header, ordered sections, and reusable region layout | Graph topology or automatic placement   |
 | `Entity`    | Neutral shape, content, sizing, and semantic role             | Domain-specific state machines          |
 | `Relation`  | One Core Path route and an optional final-step label          | Automatic routing or obstacle avoidance |
 
-All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Definitions are injected per figure; they never enter persisted JSON.
+All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Built-in and custom roles or variants share one Definition registry. Definitions are injected per figure and never enter persisted JSON.
 
 ## Content groups
 

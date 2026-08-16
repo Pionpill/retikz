@@ -17,7 +17,17 @@ export const schematicSection: Array<Section> = [
         label: 'schematic.entity',
         children: [
           { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'extension',
+            label: 'schematic.extensionUsage',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'graph.entity.registry',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {
