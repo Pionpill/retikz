@@ -14,6 +14,11 @@ export const releaseGroups = {
     kind: 'foundation',
     packages: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
+  diagram: {
+    domain: 'schematic',
+    kind: 'feature',
+    packages: ['@retikz/diagram', '@retikz/diagram-react', '@retikz/diagram-vanilla'],
+  },
   kernel: {
     domain: 'kernel',
     kind: 'foundation',
