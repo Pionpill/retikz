@@ -9,22 +9,22 @@
 alpha.1 证明基础 Chart 与 type-first Chart 可以在不裁剪 Plot 能力的前提下汇合为同一个公开 Chart 主链：
 
 1. 建立 `@retikz/chart`、`@retikz/chart-react`、`@retikz/chart-vanilla` 三包及封闭 type recipe 主链
-2. 让 typed IRChart 保持 JSON-safe、单根 data、结构轴与 Plot 自洽，并可确定性解析为完整 IRPlot；基础 Chart 直接承载完整 Plot authoring
+2. 让每个 typed Chart 精确 Source IR 保持 JSON-safe、单根 data、结构轴与 Plot 自洽，并可确定性解析为完整 IRPlot；Base Chart 直接承载完整 Plot authoring
 3. 消费 Core effective Theme；为 Chart canvas / presentation / recipe defaults 提供 owner-local Chart style definition 与严格 `chartThemeTokens`，并把 Plot-owned `plotThemeStyles`、`plotThemeTokens`、`colors`、Plot `plotTheme` 转发到完整 IRPlot
-4. 以 canonical `IRChart` 汇合基础 / typed Chart，并用 Layout FlexLayout 按 children authored order 组合唯一主 Plot 占位与 title、subtitle、note、source 四类唯一 TextBlock preset，再由 Standard Surface 包装完整内容
+4. 以 `IRBaseChart` 汇合 Base / typed Chart，并用 Layout FlexLayout 按 children authored order 组合唯一主 Plot 占位与 title、subtitle、note、source 四类唯一 TextBlock preset，再由 Standard Surface 包装完整内容
 5. 按 `scatter` / `bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 顺序逐 type 建立闭环；Scatter 与 Bubble 是共享 Point 能力但保留独立身份的平级 Canonical Type
-6. 保持手写 JSON、React JSX、Vanilla helper 的完整 IRPlot、canonical `IRChart` 与最终组合结果等价
+6. 保持手写 JSON、React JSX、Vanilla helper 的完整 IRPlot、`IRBaseChart` 与最终组合结果等价
 
 当前 public surface 按 family 拆分：三个包的根入口只公开基础 Chart 能力，`@retikz/chart/point`、`@retikz/chart-react/point` 与 `@retikz/chart-vanilla/point` 公开 Point typed contract，并同时包含各自 base export。该文件结构与导入面重组不新增 Chart 类型、IR 或解析行为。
 
-alpha.1 不在任何中间 ADR 后发包。基础设施允许内部 fragment 与 resolver 先落地，但公开 `ChartIRSchema`、`IRChart` 与基础 / typed adapters 只能随着 ADR-04 的 `scatter` / `bubble` variants 原子出现，禁止 schema 接受尚未实现的 type。
+alpha.1 不在任何中间 ADR 后发包。基础设施允许内部 fragment 与 resolver 先落地，但公开 `BaseChartSchema`、逐类型精确 schema 与 Base / typed adapters 只能随着 ADR-04 的 `scatter` / `bubble` variants 原子出现，禁止 schema 接受尚未实现的 type。
 
 ## 2. 固定链路
 
 ```text
 base Chart -> complete Plot authoring -> IRPlot
-typed IRChart -> closed recipe resolver -> IRPlot
-  -> canonical IRChart
+exact typed Chart Source IR -> closed recipe bind -> IRPlot
+  -> IRBaseChart
   -> optional ordered presentation resolver
   -> IRPlot | layout.flexLayout<TextBlock presets + exactly one Plot placeholder>
   -> Standard surface(content)
@@ -36,16 +36,16 @@ Chart 不提供 `defineChart`、Chart registry 或自定义 type。官方 recipe
 
 ## 3. ADR 顺序
 
-| ADR | 主题                             | 核心产出                                                                                                                                                   | 前置                                                                                                                                             | 实现状态                                                                   |
-| --- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| 01  | Chart 基础设施与封闭 recipe 主链 | 可实施内部 schema / resolver / inspection / authoring normalizer；typed recipe 统一归一为单一 `chart.chart` composite root；首个公开入口在 ADR-04 原子接线 | 内部子集依赖 Plot v0.1、Data v0.1；公开 adapter 依赖 Kernel gate                                                                                 | 内部完成 / 公开接线受门控                                                  |
-| 02  | Chart token 与 Plot token 转发   | Core effective Theme；同名 Chart / Plot style definition；`chartThemeTokens`；`plotThemeTokens` / `colors` / Plot `plotTheme` 转发；canvas surface gate    | ADR-01、Plot theme ownership ADR-01～02、Core ADR-15、Standard alpha.4 ADR-01 Surface                                                            | Proposed / owner-local 已实现；公开 adapter、surface、spatial、docs 仍阻塞 |
-| 03  | Chart authoring 与 presentation  | 基础 / typed Chart、canonical IRChart、四类唯一文本 preset、authoring-only position、共享 normalizer 与 authored-order Flex mapping                        | owner-local 依赖 ADR-01、ADR-02 与 Layout FlexLayout；公开渲染接线依赖 Core ADR-18 与 Standard alpha.4 ADR-01；空间透明 API 单独依赖 Core ADR-19 | Accepted / 公开 React、Vanilla、JSON、Surface、空间与真实数据文档已完成    |
-| 04  | Scatter 与 Bubble                | 首批两个平级 IRChart variants、共享 Point 主 Mark 能力、二维关系与必需面积量级角色                                                                       | ADR-01–03；owner-local Plot quantitative size dependency 已满足                                                                                  | Proposed / owner-local 已实现 / 公开接线受门控                             |
-| 05  | Connected Scatter                | Point + Path + 稳定 order                                                                                                                                  | ADR-04                                                                                                                                           | 待人工 Accept                                                              |
-| 06  | Regression                       | Point + mark-local Smooth + Path                                                                                                                           | ADR-05、Data / Plot transform output reservation                                                                                                 | **阻塞**                                                                   |
-| 07  | Ranged Dot                       | 两端 Point + projected Relation                                                                                                                            | ADR-06、Plot range-row atomicity                                                                                                                 | **阻塞**                                                                   |
-| 08  | Strip                            | 分类位置 + 数据驱动 offset + Point                                                                                                                         | ADR-07 + Plot offset capability                                                                                                                  | **阻塞**                                                                   |
+| ADR | 主题                             | 核心产出                                                                                                                                                              | 前置                                                                                                                                             | 实现状态                                                                   |
+| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| 01  | Chart 基础设施与封闭 recipe 主链 | 可实施逐类型精确 schema / bind / resolve / inspection / authoring normalizer；typed recipe 统一归一为单一 `chart.base` composite root；首个公开入口在 ADR-04 原子接线 | 内部子集依赖 Plot v0.1、Data v0.1；公开 adapter 依赖 Kernel gate                                                                                 | 内部完成 / 公开接线受门控                                                  |
+| 02  | Chart token 与 Plot token 转发   | Core effective Theme；同名 Chart / Plot style definition；`chartThemeTokens`；`plotThemeTokens` / `colors` / Plot `plotTheme` 转发；canvas surface gate               | ADR-01、Plot theme ownership ADR-01～02、Core ADR-15、Standard alpha.4 ADR-01 Surface                                                            | Proposed / owner-local 已实现；公开 adapter、surface、spatial、docs 仍阻塞 |
+| 03  | Chart authoring 与 presentation  | Base / typed Chart、`IRBaseChart`、四类唯一文本 preset、authoring-only position、共享 normalizer 与 authored-order Flex mapping                                       | owner-local 依赖 ADR-01、ADR-02 与 Layout FlexLayout；公开渲染接线依赖 Core ADR-18 与 Standard alpha.4 ADR-01；空间透明 API 单独依赖 Core ADR-19 | Accepted / 公开 React、Vanilla、JSON、Surface、空间与真实数据文档已完成    |
+| 04  | Scatter 与 Bubble                | 首批两个平级精确 Source schemas、共享 Point 主 Mark 能力、二维关系与必需面积量级角色                                                                                  | ADR-01–03；owner-local Plot quantitative size dependency 已满足                                                                                  | Proposed / owner-local 已实现 / 公开接线受门控                             |
+| 05  | Connected Scatter                | Point + Path + 稳定 order                                                                                                                                             | ADR-04                                                                                                                                           | 待人工 Accept                                                              |
+| 06  | Regression                       | Point + mark-local Smooth + Path                                                                                                                                      | ADR-05、Data / Plot transform output reservation                                                                                                 | **阻塞**                                                                   |
+| 07  | Ranged Dot                       | 两端 Point + projected Relation                                                                                                                                       | ADR-06、Plot range-row atomicity                                                                                                                 | **阻塞**                                                                   |
+| 08  | Strip                            | 分类位置 + 数据驱动 offset + Point                                                                                                                                    | ADR-07 + Plot offset capability                                                                                                                  | **阻塞**                                                                   |
 
 实施是严格串行链。类型 ADR 必须把自己的 variant 加入同一个 `ChartIRSchema` discriminated union 和同一个封闭 resolver，不复制 package、style、presentation、diagnostics 或 adapter 主链。
 
@@ -59,7 +59,7 @@ Chart 的长期结构、能力归属与跨 ADR 约束以 [`Chart 总设计`](../
 
 当前 Plot `JitterTransform` 只在数据单位中原地扰动连续 `xField` / `yField`；Plot 没有 `xOffset` / `yOffset` 等在 category band 内消费独立字段的位置 capability。Flint 的 Strip Plot 需要分类位置、数值位置和分类 band 内的 jitter offset 同时成立。
 
-因此 ADR-08 只冻结 Chart-level roles 与延期边界，不授权实现或把 `strip` 加入公开 `IRChart.type`。以下 Plot owner 能力完成后，必须新建 Strip implementation ADR，补 exact recipe / version contract / `validateCore` / 测试矩阵，并从 Architecture Gate Round 1 重新开始：
+因此 ADR-08 只冻结 Chart-level roles 与延期边界，不授权实现或增加公开 `StripChartSchema`。以下 Plot owner 能力完成后，必须新建 Strip implementation ADR，补 exact schema / recipe / version contract / `validateCore` / 测试矩阵，并从 Architecture Gate Round 1 重新开始：
 
 - Jitter 能把结果写入独立输出字段，不覆盖原分类 / 数值角色
 - position offset 能在坐标投影后、Mark lowering 前以数据驱动方式作用于 Point
@@ -82,9 +82,9 @@ Plot owner 已补齐退化数据前的显式 sqrt scale 校验、正式 data-mod
 
 ## 9. Embeddable dependency gate
 
-Chart 的 canonical result 是 `standard.surface` 直接包含 `plot.plot`，或在存在 presentation 时包含 `layout.flexLayout` 后再包含完整 `plot.plot`。当前 React / Vanilla embeddable protocol 按 adapter namespace 分组 datasets 与 composite maker，无法让独立 Chart、Plot、Standard、Layout contributions 同时共享唯一 Plot dataset group、注册单一 `chart.chart` definition 并确定性去重 Surface / Flex / Plot definitions。
+Chart 的 Base result 是 `standard.surface` 直接包含 `plot.plot`，或在存在 presentation 时包含 `layout.flexLayout` 后再包含完整 `plot.plot`。当前 React / Vanilla embeddable protocol 按 adapter namespace 分组 datasets 与 composite maker，无法让独立 Chart、Plot、Standard、Layout contributions 同时共享唯一 Plot dataset group、注册单一 `chart.base` definition 并确定性去重 Surface / Flex / Plot definitions。
 
-因此 ADR-04 的公开 adapter 接线前，需要 [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) 让唯一 `chart.chart` provider 直接依赖 `{ standard.surface, layout.flexLayout, plot.plot }` 三个完整 key：
+因此 ADR-04 的公开 adapter 接线前，需要 [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md) 让唯一 `chart.base` provider 直接依赖 `{ standard.surface, layout.flexLayout, plot.plot }` 三个完整 key：
 
 - contribution 显式声明 composite dependencies
 - Chart datasets 可进入同一 Plot lowering group
@@ -103,7 +103,7 @@ ADR-02 的完整 canvas 与 ADR-03 的公开组合入口因此等待 [Standard a
 - 不允许 Chart 私造 layout / bbox / background primitive 主链
 - 不允许 React / Vanilla 用 DOM / CSS 主题替代 JSON / Canvas 能力
 - 不允许只实现 `plot.area.fill` 就宣称完整 dark mode
-- ADR-04 不公开带未消费 token 的 IRChart surface
+- ADR-04 不公开带未消费 token 的 Chart Source surface
 
 ## 11. Spatial transparency capability gate
 
@@ -125,8 +125,8 @@ alpha.1 只有同时满足以下条件才可结束：
 
 1. ADR-01–07 已 Accepted 并实现；Regression transform output reservation 与 Ranged Dot row atomicity gates 已解除；ADR-08 的延期边界已确认，Plot capability gate 解除后新建的 Strip implementation ADR 也已 Accepted 并实现
 2. 六个 type 都由同一封闭 resolver 展开，不存在 type-specific adapter 或 renderer 路径；Scatter 与 Bubble 保留平级 identity 并共享 Point / size / guide 正式主链
-3. typed IRChart、resolved IRPlot、canonical `IRChart`、最终 Standard composition 与 inspection 均可单独观察；基础 Chart 与 typed Chart 在 IRPlot 之后进入同一主链
-4. Core effective Theme、Chart `chartThemeTokens`、Plot `plotThemeTokens`、`colors`、Plot `plotTheme` 与显式成员的两条 owner cascade 有精确测试；IRChart 不再包含 `style` / `themeMode`
+3. 精确 typed Chart Source IR、resolved IRPlot、`IRBaseChart`、最终 Standard composition 与 inspection 均可单独观察；Base Chart 与 typed Chart 在绑定后进入同一主链
+4. Core effective Theme、Chart `chartThemeTokens`、Plot `plotThemeTokens`、Plot `plotTheme` 与显式成员的两条 owner cascade 有精确测试；Chart Source IR 不包含 `style` / `themeMode`
 5. 没有 presentation 时不生成可见文本；有 presentation 时 canonical children 顺序不被 preset / position 重排，Plot 仍保持自己的 id、provenance、locator 与 lineage
 6. 完整 Chart canvas 由 renderer-neutral Standard surface 覆盖裸 Plot 与 presentation；若 Standard 依赖 Core 新底座，该 dependency 已先闭环；light / dark 切换不改变布局
 7. docs 为已实现 Canonical Type 提供最小配置、核心 recipe、允许覆盖、Plot 混合与不适用场景；Scatter 使用可识别真实数据并由 Chart 自身渲染 title、subtitle、source；主题页面区分 Chart / Plot token owner，并提供四 preset × 两 mode gallery 与各自 token explorer；Strip 在独立 implementation ADR 完成前只标记 planned

@@ -7,3 +7,7 @@ Charts. The base entry, `@retikz/chart-vanilla`, exports `createChart` and
 root `theme` and matching Core definitions to a factory, alongside Chart and
 Plot runtime Theme definitions; `renderChart` then consumes that self-contained
 authoring result.
+
+Each typed factory has its own exact input contract and binds directly to its
+matching Chart recipe. The package does not expose a generic Chart input union
+or a factory that accepts a `type` selector.
