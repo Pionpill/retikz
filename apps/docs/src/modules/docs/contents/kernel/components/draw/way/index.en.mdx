@@ -155,7 +155,7 @@ Finally, `<Draw>` passes `way`, stroke, fill, arrows, and related visual props t
 | Accumulate              | `{ position: [10, 0], type: DrawWay.Accumulate }` or `'++10,0'`                                 | Offset from the previous step endpoint and update prevEnd                                |
 | Single-axis operator    | `{ horizontalTo: 'a' }` / `{ verticalTo: [120, 0] }`                                            | Connect to the target along one local host axis                                          |
 | Two-leg fold operator   | `'-\|'` / `'\|-'`                                                                               | Turn previous-to-next into a two-leg fold                                                |
-| Three-leg fold operator | `'-\|-'` / `'\|-\|'` / `{ via: '-\|-', fraction: 0.3 }`                                         | Three-leg orthogonal connector; object form is strict and fraction is in `0..1`          |
+| Three-leg fold operator | `'-\|-'` / `'\|-\|'` / `{ via: '-\|-', fraction: 0.3 }`                                         | Three-leg orthogonal graphConnector; object form is strict and fraction is in `0..1`          |
 | Cycle                   | `DrawWay.Cycle`                                                                                 | Close back to the way start                                                              |
 | Curve / shape / label   | `{ curve }` / `{ cubic }` / `{ bend }` / `{ arc }` / `{ circle }` / `{ ellipse }` / `{ label }` | Covered by [Draw](/kernel/components/draw/overview)                                      |
 

@@ -155,16 +155,16 @@
     "changelog": "更新日志",
     "changelogV01": "v0.1"
   },
-  "diagram": {
-    "label": "流程库",
+  "schematic": {
+    "label": "流程图",
     "introduction": "简介",
-    "notation": "Notation · 图式",
+    "graph": "Graph · 图式",
     "baseUnits": "基础单元",
     "frameUnits": "复合单元",
-    "logicFrame": "LogicFrame",
+    "graphFrame": "GraphFrame",
     "logicNode": "逻辑节点",
-    "connector": "连接器",
-    "notationApiReference": "Notation API 参考",
+    "graphConnector": "连接器",
+    "graphApiReference": "Graph API 参考",
     "releases": "发布",
     "changelog": "更新日志",
     "changelogV01": "v0.1"

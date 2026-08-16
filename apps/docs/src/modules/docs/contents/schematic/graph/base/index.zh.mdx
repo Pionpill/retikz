@@ -1,0 +1,31 @@
+---
+title: 基础单元
+description: 使用逻辑节点表达逻辑对象，并以连接器表达关系。
+---
+
+逻辑节点是一组可以直接放进图中的基础图式元素。`GraphNode` 通过 `role` 承担终点、步骤、判断与汇合职责，并提供稳定的 `id`；`GraphConnector` 连接这些 authored identity。它们可以独立使用，也可以组合成完整的局部逻辑链路。
+
+## 职责一览
+
+| 成员           | 表达什么                                               | 适合场景                    |
+| -------------- | ------------------------------------------------------ | --------------------------- |
+| `GraphNode`    | 通过 `role` 区分 terminal、stage、decision 与 junction | 起止、步骤、判断与汇合      |
+| GraphConnector | authored identity 之间的显式关系                       | 流向、依赖与带 label 的连接 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/graph/base/code">
+    <span className="font-semibold">逻辑节点</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">GraphNode 与 role</span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/graph/base/connector">
+    <span className="font-semibold">GraphConnector</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Path Step、Draw way 与 target</span>
+  </LinkedCard>
+</div>
+
+## 相关
+
+- [复合单元](/schematic/graph/frame)：用 GraphFrame 组织可复用区域
+- [Graph API 参考](/schematic/graph/api-reference)：查看 Schema、factory 与 adapter identity

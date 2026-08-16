@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { Section, SubPage } from '@/modules/docs/data';
 
 import {
-  diagramSection,
+  schematicSection,
   DocDifficulty,
   isDocDifficultyVisible,
   kernelSection,
@@ -118,7 +118,7 @@ describe('current documentation difficulty assignments', () => {
   const modules = [
     ['kernel', kernelSection],
     ['library', librarySection],
-    ['diagram', diagramSection],
+    ['schematic', schematicSection],
     ['viz', vizSection],
   ] as const;
 

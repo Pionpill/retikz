@@ -98,7 +98,7 @@ Use `LayoutInspectScope` for one authored subtree, or `InspectFlexLayout`, `Insp
 
 ### Capability Injection
 
-A `ShapeDefinition` first supplies the folded file's footprint, connection boundary, and emitted primitives, then enters through `<Layout shapes>`. Both Nodes reference only the registered `drawio-file` name; the connector stops on the custom outline, showing that definition, registry, and compile share one path.
+A `ShapeDefinition` first supplies the folded file's footprint, connection boundary, and emitted primitives, then enters through `<Layout shapes>`. Both Nodes reference only the registered `drawio-file` name; the graphConnector stops on the custom outline, showing that definition, registry, and compile share one path.
 
 <ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
 

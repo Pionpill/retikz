@@ -32,7 +32,7 @@ Send the prompt bottom to the AI chat panel — the LLM will produce retikz IR /
   - Left sub-column x=316: \`Data Scientist\` y=245, \`Machine Learning\` y=306, \`Deep Learning\` y=366
   - Right sub-column x=495: \`Data Engineer\` y=245, \`Big Data Engineer\` y=306
 
-**Connectors** (all dodgerblue \`#1f6286\`, strokeWidth=2, arrow at end)
+**GraphConnectors** (all dodgerblue \`#1f6286\`, strokeWidth=2, arrow at end)
 
 - title → Fundamentals: vertical line
 - Fundamentals → Choose: vertical line
@@ -47,7 +47,7 @@ Send the prompt bottom to the AI chat panel — the LLM will produce retikz IR /
 - 1 red \`#ff0000\` X: two 4px-wide diagonals`}
   extensions={[
   'Swap the path buttons: replace the 5 path buttons with your team’s career tracks (e.g. "Frontend / Backend / Fullstack / DevOps / SRE"), keeping the rest of the layout.',
-  'Add more sections: add an "Advanced" dodgerblue stack below the Required column, connected to Choose with an orthogonal fold connector.',
+  'Add more sections: add an "Advanced" dodgerblue stack below the Required column, connected to Choose with an orthogonal fold graphConnector.',
   'Render a dark-mode variant: switch the background to dark, brighten the teals and dim the grays, invert the text colors, and render a second copy.',
   ]}
   />
@@ -81,7 +81,7 @@ Add the `Fundamentals` gray mini button and the `Choose your path` sub-header be
 - way array `[source id, target id]` — simplest form: two targets = one straight line
 - Node id strings are resolved at compile time to the nearest border anchor (not the node center)
 - `arrow="->"` adds an arrowhead at the end (`<-` at start / `<->` both ends)
-- `strokeWidth={2}` sets the connector thickness
+- `strokeWidth={2}` sets the graphConnector thickness
 
 <ComponentPreview files={{ file: 'learning-path-02-spine', diffFrom: 'learning-path-01-title' }} size="xxl" />
 
@@ -98,7 +98,7 @@ Add two independent stacks — 4 dodgerblue "required" buttons on the left, 2 le
 <RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
 ```
 
-This step only adds nodes — no new connectors. A first-time reader can treat it as "arrange the two button columns neatly" without having to think about edges yet.
+This step only adds nodes — no new graphConnectors. A first-time reader can treat it as "arrange the two button columns neatly" without having to think about edges yet.
 
 <ComponentPreview files={{ file: 'learning-path-03-stacks', diffFrom: 'learning-path-02-spine' }} size="xxl" />
 
@@ -123,7 +123,7 @@ The merge curve is a 2-segment quadratic Bezier — that maps directly to **2 co
 />
 ```
 
-The last target is the node id `'data-scientist'`, which retikz auto-anchors to the node border (not raw coords). The 3 short sub-column connectors also use node id refs:
+The last target is the node id `'data-scientist'`, which retikz auto-anchors to the node border (not raw coords). The 3 short sub-column graphConnectors also use node id refs:
 
 ```tsx
 <Draw way={['data-scientist', 'machine-learning']} stroke="#1f6286" strokeWidth={2} arrow="->" />
@@ -170,7 +170,7 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 | Component                                     | Role in this example                                                                                                                                                             | Main steps                                                                                                                                          |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Draw](/kernel/components/draw/overview)      | All 12 connectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
+| [Draw](/kernel/components/draw/overview)      | All 12 graphConnectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
 | [Way operators](/kernel/components/draw/way)  | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                    | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
 | [Node](/kernel/components/node/overview)      | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                             | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
 | [AtPosition](/kernel/concepts/basic/position) | Tight intra-stack stacking (`{ direction: 'bottom', of: prevId }` + global `nodeDistance`)                                                                                       | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |

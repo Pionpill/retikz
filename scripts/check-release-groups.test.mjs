@@ -51,10 +51,10 @@ const baseGroups = {
     kind: 'feature',
     packages: ['@retikz/layout', '@retikz/layout-react', '@retikz/layout-vanilla'],
   },
-  notation: {
-    domain: 'diagram',
+  graph: {
+    domain: 'schematic',
     kind: 'foundation',
-    packages: ['@retikz/notation', '@retikz/notation-react', '@retikz/notation-vanilla'],
+    packages: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
   },
   plot: {
     domain: 'viz',
@@ -176,14 +176,14 @@ const basePackages = [
     },
   },
   {
-    path: 'packages/diagram/notation/package.json',
+    path: 'packages/schematic/graph/package.json',
     manifest: {
       ...createRootPublishContract(),
-      name: '@retikz/notation',
+      name: '@retikz/graph',
       version: '0.1.0-alpha.1',
       retikz: {
-        domain: 'diagram',
-        releaseGroup: 'notation',
+        domain: 'schematic',
+        releaseGroup: 'graph',
         publishable: true,
       },
       dependencies: {
@@ -194,35 +194,35 @@ const basePackages = [
     },
   },
   {
-    path: 'packages/diagram/notation-react/package.json',
+    path: 'packages/schematic/graph-react/package.json',
     manifest: {
       ...createRootPublishContract(),
-      name: '@retikz/notation-react',
+      name: '@retikz/graph-react',
       version: '0.1.0-alpha.1',
       retikz: {
-        domain: 'diagram',
-        releaseGroup: 'notation',
+        domain: 'schematic',
+        releaseGroup: 'graph',
         publishable: true,
       },
       dependencies: {
-        '@retikz/notation': 'workspace:*',
+        '@retikz/graph': 'workspace:*',
         '@retikz/react': 'workspace:^',
       },
     },
   },
   {
-    path: 'packages/diagram/notation-vanilla/package.json',
+    path: 'packages/schematic/graph-vanilla/package.json',
     manifest: {
       ...createRootPublishContract(),
-      name: '@retikz/notation-vanilla',
+      name: '@retikz/graph-vanilla',
       version: '0.1.0-alpha.1',
       retikz: {
-        domain: 'diagram',
-        releaseGroup: 'notation',
+        domain: 'schematic',
+        releaseGroup: 'graph',
         publishable: true,
       },
       dependencies: {
-        '@retikz/notation': 'workspace:*',
+        '@retikz/graph': 'workspace:*',
         '@retikz/vanilla': 'workspace:^',
       },
     },
