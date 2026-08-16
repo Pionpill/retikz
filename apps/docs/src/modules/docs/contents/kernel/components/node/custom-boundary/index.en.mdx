@@ -1,11 +1,11 @@
 ---
 title: Custom Boundaries
-description: Define connector attachment and standard directional anchors with BoundaryDefinition, then inject them through the shared registry path.
+description: Define graphConnector attachment and standard directional anchors with BoundaryDefinition, then inject them through the shared registry path.
 ---
 
-`boundary` decides where a connector meets a node. It normally follows the visual `shape`; register a custom boundary only when “what the node looks like” and “where lines should attach” must be independent.
+`boundary` decides where a graphConnector meets a node. It normally follows the visual `shape`; register a custom boundary only when “what the node looks like” and “where lines should attach” must be independent.
 
-The rectangle below still renders with its original shape, while `horizontal-ports` restricts connectors to the left and right ports. Open the source to see the full definition, injection, and consumption loop.
+The rectangle below still renders with its original shape, while `horizontal-ports` restricts graphConnectors to the left and right ports. Open the source to see the full definition, injection, and consumption loop.
 
 <ComponentPreview files="boundary-registry" size="sm" />
 
@@ -20,7 +20,7 @@ Check whether an existing choice already solves the problem:
 | Reuse a registered shape's geometry    | Put the shape name in `boundary`      |
 | Add fixed directional ports or anchors | Register a `BoundaryDefinition`       |
 
-A boundary owns only “where the connector stops” and “where standard directional anchors sit.” It does not size the node or emit primitives; `shape` still owns visual geometry, layout bounds, and drawing. If the connection rule always matches a new visual shape, write a [custom shape](/kernel/components/shapes/custom-shape) instead of maintaining two geometries. Shape-specific custom anchors still belong to the visual shape, not the boundary extension.
+A boundary owns only “where the graphConnector stops” and “where standard directional anchors sit.” It does not size the node or emit primitives; `shape` still owns visual geometry, layout bounds, and drawing. If the connection rule always matches a new visual shape, write a [custom shape](/kernel/components/shapes/custom-shape) instead of maintaining two geometries. Shape-specific custom anchors still belong to the visual shape, not the boundary extension.
 
 ## Define the capability
 
@@ -43,7 +43,7 @@ export const horizontalPorts = defineBoundary({
 });
 ```
 
-`boundaryPoint` receives the boundary's final resolved `rect`. Without `resolveRect`, this is the node box already derived by the visual shape. `toward` is the connector target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
+`boundaryPoint` receives the boundary's final resolved `rect`. Without `resolveRect`, this is the node box already derived by the visual shape. `toward` is the graphConnector target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
 
 Implement optional `resolveRect(context, params)` when the surface needs to resize before intersection. `context.visualRect` is the visual AABB, while `context.connectionEnvelope(kind)` asks the visual shape for a safe circle / ellipse / rectangle envelope and shares a node-local cache. The returned rect must have finite coordinates and positive width and height, or compilation fails immediately.
 

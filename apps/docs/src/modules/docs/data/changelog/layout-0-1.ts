@@ -22,8 +22,8 @@ export const layoutV01: Release = {
         {
           label: { zh: '公共组合入口', en: 'Public composition entry' },
           content: {
-            zh: '`@retikz/layout/compose` 让 Standard、Notation 与其它 Tier 2 owner 复用 canonical compiler 和稳定布局原子，不需要 deep import 或复制 solver。',
-            en: '`@retikz/layout/compose` lets Standard, Notation, and other Tier 2 owners reuse canonical compilers and stable layout atoms without deep imports or copied solvers.',
+            zh: '`@retikz/layout/compose` 让 Standard、Graph 与其它 Tier 2 owner 复用 canonical compiler 和稳定布局原子，不需要 deep import 或复制 solver。',
+            en: '`@retikz/layout/compose` lets Standard, Graph, and other Tier 2 owners reuse canonical compilers and stable layout atoms without deep imports or copied solvers.',
           },
         },
       ],

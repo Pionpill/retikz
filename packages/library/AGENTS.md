@@ -27,7 +27,7 @@ Standard 与 Layout 分别使用独立 release group `standard`、`layout`，不
 
 - `layout` 只依赖 `@retikz/core`、必要的 `@retikz/math` / `@retikz/foundation` 与 schema 底座；不得依赖 Standard 或领域包
 - `standard` 可以依赖 Layout 的公开 composition capability，也可以直接依赖 Core / Math；不得 deep import Layout 私有 solver 或复制布局算法
-- Plot、Table、Notation 等官方 Tier 2 包按需直接依赖 `standard` 和 `layout` 的公开 capability；不得通过 Standard barrel 转手获得 Layout API
+- Plot、Table、Graph 等官方 Tier 2 包按需直接依赖 `standard` 和 `layout` 的公开 capability；不得通过 Standard barrel 转手获得 Layout API
 - `standard-react` 只消费 `standard` 与 `@retikz/react` 的公开能力；`standard-vanilla` 只消费 `standard` 与 `@retikz/vanilla` 的公开能力
 - `layout-react` 只消费 `layout` 与 `@retikz/react` 的公开能力；`layout-vanilla` 只消费 `layout` 与 `@retikz/vanilla` 的公开能力
 - 含独立持久化语义的 Tier 2 能力必须 JSON-safe，并通过 Core composite / lowering 下沉为 Core IR；不得建立平行 Scene 或 renderer 分支

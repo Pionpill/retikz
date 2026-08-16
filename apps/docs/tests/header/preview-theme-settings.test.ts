@@ -24,7 +24,7 @@ describe('preview theme settings icons', () => {
       PreviewThemeStyle.Clean,
     ]);
     expect(isPreviewThemeStyleDocument('viz')).toBe(true);
-    expect(isPreviewThemeStyleDocument('diagram')).toBe(false);
+    expect(isPreviewThemeStyleDocument('schematic')).toBe(false);
     expect(isPreviewThemeStyleDocument('kernel')).toBe(false);
     expect(isPreviewThemeStyleDocument(undefined)).toBe(false);
   });

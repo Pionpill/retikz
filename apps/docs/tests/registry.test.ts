@@ -1,6 +1,6 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
+import { GraphConnectorSchema, GraphFrameSchema, GraphNodeSchema } from '@retikz/graph';
 import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
-import { ConnectorSchema, DecisionSchema, LogicFrameSchema } from '@retikz/notation';
 import {
   CoordinateSchema as PlotCoordinateSchema,
   EncodingSchema,
@@ -50,9 +50,9 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/composite/surface#surfaceschema',
       },
-      LogicFrameSchema: { schema: LogicFrameSchema, url: '/diagram/notation/frame/logic-frame' },
-      DecisionSchema: { schema: DecisionSchema, url: '/diagram/notation/unit/logic-node' },
-      ConnectorSchema: { schema: ConnectorSchema, url: '/diagram/notation/unit/connector' },
+      GraphFrameSchema: { schema: GraphFrameSchema, url: '/schematic/graph/frame/graph-frame' },
+      GraphNodeSchema: { schema: GraphNodeSchema, url: '/schematic/graph/base/code' },
+      GraphConnectorSchema: { schema: GraphConnectorSchema, url: '/schematic/graph/base/connector' },
     });
   });
 
@@ -60,7 +60,7 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite|notation)\/.+/);
+      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite|graph)\/.+/);
     }
   });
 

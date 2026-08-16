@@ -10,7 +10,7 @@ export type ModuleEntry = {
 export const modules: Array<ModuleEntry> = [
   { id: 'kernel', label: 'kernel.label' },
   { id: 'library', label: 'library.label' },
-  { id: 'diagram', label: 'diagram.label' },
+  { id: 'schematic', label: 'schematic.label' },
   { id: 'viz', label: 'viz.label' },
   { id: 'about', label: 'about.label' },
 ];

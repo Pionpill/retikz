@@ -3,7 +3,7 @@ title: Layout · 布局
 description: 用独立的 Layout 包族提供 FlexLayout、GridLayout 与 OverlayLayout，组合可复用的领域无关排版。
 ---
 
-Layout 把“如何排布子图形”从手写坐标中提取出来。Flex、Grid 与 Overlay 分别处理线性分配、二维轨道和同一区域叠放，并能递归组合；Standard、Notation、Plot 等上层包可以复用这些能力，同时继续拥有自己的领域语义。
+Layout 把“如何排布子图形”从手写坐标中提取出来。Flex、Grid 与 Overlay 分别处理线性分配、二维轨道和同一区域叠放，并能递归组合；Standard、Graph、Plot 等上层包可以复用这些能力，同时继续拥有自己的领域语义。
 
 给定相同的可用空间与子图形测量结果，布局求解是确定的，并且不依赖具体渲染后端。文字尺寸仍取决于宿主提供的测量器、字体和字体加载状态。
 

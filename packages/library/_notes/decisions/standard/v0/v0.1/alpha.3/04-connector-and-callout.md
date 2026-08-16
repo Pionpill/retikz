@@ -1,9 +1,9 @@
 # ADR-04：Connector 路由与显式 Callout
 
-- 状态：Superseded（由 [Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 取代；2026-08-09）
+- 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md) · [ADR-03](./03-semantic-logic-nodes.md) · [Core Path contract](../../../../../../../kernel/_notes/decisions/v0/v0.5/roadmap.md)
-- 后继：[Notation alpha.1 ADR-01](../../../../../../../diagram/_notes/decisions/notation/v0/v0.1/alpha.1/01-notation-package-family.md) 已把 Connector 与 Callout 迁入 Notation，并保留 Core Path / target 主链
+- 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把连接语义统一迁入 `GraphConnector`，并保留 Core Path / target 主链；Callout 后续已由 Graph alpha.3 撤回
 
 ## 背景与目标
 
@@ -74,7 +74,7 @@ quadratic、cubic 与 bend 字段直接复用 Core curve / cubic / bend 的公�
 - appearance 只开放上方列出的 Core stroke Path 字段，不接受 fill、path kind、children、label、id、meta、animation、rotate 或 scale。默认是 1-unit solid currentColor stroke 与 Core 默认 end arrow mark，roundedCorners 为 0，zIndex 为 0；显式字段逐项覆盖默认值，其中 `marks` 替换默认 end arrow mark 而不是与其合并
 - label 完整复用 Core `IRGeometryLabelInput`：支持文本 / TeX、字体、颜色、side、sloped、distance 与 position，不增加 Connector 私有 label 字段，也不接受任意复合 `IRChild`
 - label 直接进入 lowered Core Path 的最后一个 drawable step；position 的默认值、归一化范围、该 step 的采样与失败语义完全沿用 Core step label，不由 Standard 重新测量或计算。straight、orthogonal、quadratic、cubic 与 bend 的最后一个 step 表示完整 route；polyline 的 label 明确定位于连接终点的最后一段
-- from / to 与中间整体 target 在所在 namespace 注册阶段闭合后随 Core pending Path 解析，可以引用同一可见 namespace 中位于 Connector 前后的目标；带 `section` 的 LogicFrame target 在当前 Core 下明确 fail-loud，不编码为扁平 id
+- from / to 与中间整体 target 在所在 namespace 注册阶段闭合后随 Core pending Path 解析，可以引用同一可见 namespace 中位于 GraphConnector 前后的目标；带 `section` 的 GraphFrame target 在当前 Core 下明确 fail-loud，不编码为扁平 id
 - appearance 复用 Core stroke、dash、mark 与 z-index，不创建 Connector paint registry
 - 同一个 from / to 可以出现多个 Connector；Standard 不去重或合并局部关系
 
@@ -161,7 +161,7 @@ artifact 使用 strict JSON schema；container、content、leader point 与 boun
 
 ## 架构验证
 
-- 是否可由现有能力组合：Core Path 提供几何与结构化文本 label，但不保存局部关系 role、LogicFrame section target 或 Callout artifact，需要 Standard 语义封装
+- 是否可由现有能力组合：Core Path 提供几何与结构化文本 label，但不保存局部关系 role、GraphFrame section target 或 Callout artifact，需要 Graph 语义封装
 - 责任切分：Standard 规范化 route 并组合 Core steps；Core 执行 fold / curve / cubic / bend 数学与 target resolution；renderer 只绘 path / children
 - 是否需要新 IR / contract / registry：新增 Connector / Callout composite IR；route 是闭合 union，复杂路径回到 Core Path，因此不增加 routing registry
 - pipeline / lowering / renderer / diagnostics 如何闭环：Connector canonical route → 带同 id、且最后一个 drawable step 挂 label 的 Core Path；Callout canonical input → target-aware placement + typed artifact → Scene；错误沿 Core target / layout contract 提升
@@ -174,7 +174,7 @@ alpha.3 不得用 Standard 私有 target resolver、派生全局 id 或路径采
 
 1. Connector 把 `IRGeometryLabelInput` 原样交给 built-in stroke Path 的最后一个 drawable step，并沿用 Core step label 的 position、side、sloped、文本 / TeX、样式、bounds 与诊断语义；不同时写入当前 stroke emitter 不消费的 Path-level label
 2. 普通单元与整体 Block 使用 Core 当前 string id、namespace、anchor 与 pending Path lookup；Callout 使用 authored Scope placement 的 previous-only target 语义
-3. `LogicFrameArtifact` 保留 authored section key 与 geometry，但 Core 提供 composite-owned structured subtarget 前，带 `section` 的 Connector / Callout target 明确 fail-loud
+3. `GraphFrameArtifact` 保留 authored section key 与 geometry，但 Core 提供 composite-owned structured subtarget 前，带 `section` 的 GraphConnector / Callout target 明确 fail-loud
 
 后续 Core 增加 structured subtarget 时，Standard 只替换这一消费映射并补齐对应测试，不改变 `LogicDiagramTarget` 公开输入。当前版本不得把 target geometry、source-order index 或派生 id 复制到 Standard、adapter 或 renderer。
 

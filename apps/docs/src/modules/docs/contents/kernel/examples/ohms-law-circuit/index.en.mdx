@@ -82,7 +82,7 @@ A resistor plus a voltmeter right bottom it, with both ends joined by elbow poly
   size="sm"
 />
 
-### Step 5: Wire a closed loop with elbow connectors
+### Step 5: Wire a closed loop with elbow graphConnectors
 
 Once the elements are placed, use [Draw](/kernel/components/draw/overview) to connect them in order: battery top → switch → ammeter → R1 → down the right side → R2 → rheostat → back to the battery bottom. The wires run at right angles by giving explicit corner coordinates in the `way` array (e.g. `[160, 200]`, `[1040, 200]`), with the endpoints referencing element terminals (`{ id, anchor }`) instead of guessed coordinates — this example does not use the `|-` / `-|` elbow operators; it places the corner points by hand to form straight segments.
 
@@ -115,7 +115,7 @@ Finish with the `E`, `S`, `R1` / `R2`, `U1` / `U2`, and rheostat-name text label
 | [Layout](/kernel/components/layout/overview)              | Fixes the 1280 x 760 view so every demo shares one coordinate system                             | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols), [3](#step-3-place-the-elements-on-the-circuit)                                                 |
 | [Scope](/kernel/components/layout/scope)                  | Sets style defaults and duplicates the measurement unit by translation                           | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope)                                                                                                                                    |
 | [Node](/kernel/components/node/overview)                  | Holds the meters, battery, switch, resistors, rheostat, and text labels                          | [1](#step-1-build-the-meter-as-a-custom-shape), [3](#step-3-place-the-elements-on-the-circuit), [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [6](#step-6-label-the-components) |
-| [Draw](/kernel/components/draw/overview)                  | Wires each measurement unit and joins the main loop with explicit corner points                  | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [5](#step-5-wire-a-closed-loop-with-elbow-connectors)                                                                             |
+| [Draw](/kernel/components/draw/overview)                  | Wires each measurement unit and joins the main loop with explicit corner points                  | [4](#step-4-compose-and-reuse-the-measurement-unit-with-scope), [5](#step-5-wire-a-closed-loop-with-elbow-graphConnectors)                                                                             |
 | [ShapeDefinition](/kernel/components/shapes/custom-shape) | Turns the meter, battery, switch, resistor, and rheostat into custom shapes with fixed terminals | [1](#step-1-build-the-meter-as-a-custom-shape), [2](#step-2-flatten-the-remaining-custom-symbols)                                                                                                 |
 
 ## Limitations
