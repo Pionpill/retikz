@@ -1,16 +1,16 @@
 # Graph v0 Roadmap
 
-> 状态：Complete；v0.1 已完成 package family、首批图式元素与 Theme Style 接入。关联：[Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
+> 状态：Complete；v0.1 已完成 Graph presentation scope、Entity registry 与 Theme token 扩展链路。关联：[Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
 
 ## 目标
 
-Graph v0 当前已完成的范围是 Schematic 领域的可复用图式元素 foundation：元素可以脱离全局关系模型独立绘制，也能被未来 Graph 数据模型与 presentation 复用；所有能力通过 Layout、Standard 与 Core 的公开 contract 下沉。v0.1 没有实现全局节点、关系、分组或端口模型，但这些通用关系契约的长期 owner 是 Graph，不另设悬空的 GraphModel owner；后续能力仍需新的 milestone ADR。
+Graph v0 当前范围是 Schematic 领域的可复用图式元素 foundation：元素可以脱离全局关系模型独立绘制，也能被可选的 Graph presentation scope、未来 Graph 数据模型与 Diagram presentation 复用；所有能力通过 Layout、Standard 与 Core 的公开 contract 下沉。v0.1 不实现全局节点、关系、分组或端口模型，但这些通用关系契约的长期 owner 是 Graph，不另设悬空的 GraphModel owner；后续能力仍需新的 milestone ADR。
 
 ## 版本方向
 
-| 版本                      | 主题                          | 长期边界                                                                                     |
-| ------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------- |
-| [v0.1](./v0.1/roadmap.md) | Package family 与首批图式元素 | 建立三包闭环与首批逻辑元素，冻结 owner、namespace、底层复用及四种 Theme Style 的基础单元映射 |
+| 版本                      | 主题                          | 长期边界                                                                            |
+| ------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| [v0.1](./v0.1/roadmap.md) | Package family 与首批图式元素 | 建立三包闭环、首批逻辑元素、可选展示作用域及 Entity registry / Theme token 扩展链路 |
 
 后续 UML、State 等元素按真实用例进入新的 minor / milestone；v0 roadmap 不预先冻结完整组件枚举。
 

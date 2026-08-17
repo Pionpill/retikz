@@ -1,0 +1,32 @@
+---
+title: Container
+description: 用可选 header 与有序 section 组织带外壳的局部图式结构。
+---
+
+`Container` 是 Graph 中组织局部结构的复合元素。它提供外壳、可选 header 与有序 section，但仍复用 Layout 的布局能力；基础用法关注外壳写法，扩展用法覆盖嵌套、继承、直接 IR 与 Vanilla
+
+## 职责一览
+
+| 内容     | 负责什么                                  | 适合场景                            |
+| -------- | ----------------------------------------- | ----------------------------------- |
+| 基础用法 | 外壳、header、section 与基础布局参数      | 将多个子内容组织成一个区域          |
+| 扩展用法 | Entity 继承、嵌套组合、直接 IR 与 adapter | 构建可复用 recipe 或接入非 JSX 输入 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/graph/container/basic">
+    <span className="font-semibold">基础用法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">外壳、header 与有序 section</span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/graph/container/extension">
+    <span className="font-semibold">扩展用法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">继承、嵌套、recipe 与 Vanilla</span>
+  </LinkedCard>
+</div>
+
+## 相关
+
+- [Entity](/schematic/graph/entity)：Container 可以组织的语义对象
+- [Relation](/schematic/graph/relation)：连接 authored identity
+- [布局容器](/library/layout)：Container 复用的通用排列能力

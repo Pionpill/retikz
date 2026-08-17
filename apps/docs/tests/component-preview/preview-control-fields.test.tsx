@@ -148,7 +148,10 @@ describe('PreviewControlFieldInput', () => {
     expect(number.container.querySelector('[data-slot="input"][type="number"]')).not.toBeNull();
     expect(select.container.querySelector('[data-slot="select-trigger"]')).not.toBeNull();
     expect(toggle.container.querySelector('[data-slot="switch"]')).not.toBeNull();
-    expect(color.container.querySelectorAll('[data-slot="input"]')).toHaveLength(2);
+    expect(color.container.querySelector('input[type="color"]')).not.toBeNull();
+    expect(color.container.querySelector('[data-slot="toggle-group"]')).not.toBeNull();
+    expect(color.container.querySelectorAll('[data-slot="toggle-group-item"]')).toHaveLength(2);
+    expect(color.container.querySelector('[role="radio"][aria-checked="true"] input[type="color"]')).not.toBeNull();
     expect(range.container.querySelector('[data-slot="slider"]')).not.toBeNull();
     expect(point.container.querySelector('[data-slot="preview-point-control"]')).not.toBeNull();
     expect(point.container.querySelectorAll('input[type="number"]')).toHaveLength(2);
@@ -204,12 +207,15 @@ describe('PreviewControlFieldInput', () => {
 
     const textInput = text.container.querySelector('[data-slot="input"]');
     const numberInput = number.container.querySelector('[data-slot="input"]');
-    const colorTextInput = color.container.querySelector('input[type="text"]');
+    const colorToggleGroup = color.container.querySelector('[data-slot="toggle-group"]');
 
     expect(textInput?.classList.contains('h-7')).toBe(true);
     expect(textInput?.classList.contains('w-full')).toBe(true);
     expect(numberInput?.classList.contains('w-full')).toBe(true);
-    expect(colorTextInput?.classList.contains('w-full')).toBe(true);
+    expect(colorToggleGroup?.getAttribute('data-size')).toBe('sm');
+    for (const toggle of color.container.querySelectorAll('[data-slot="toggle-group-item"]')) {
+      expect(toggle.classList.contains('h-7')).toBe(true);
+    }
     expect(select.container.querySelector('[data-slot="select-trigger"]')?.getAttribute('data-size')).toBe('sm');
     expect(select.container.querySelector('[data-slot="select-trigger"]')?.classList.contains('min-w-0')).toBe(true);
     for (const input of point.container.querySelectorAll('input[type="number"]')) {
@@ -315,14 +321,60 @@ describe('PreviewControlFieldInput', () => {
       '#ffffff',
       onColorChange,
     );
-    const colorText = color.container.querySelector<HTMLInputElement>('input[type="text"]');
-    expect(colorText).not.toBeNull();
-    await act(() => {
-      if (colorText) {
-        setInputValue(colorText, '#112233');
-      }
-    });
-    expect(onColorChange).toHaveBeenLastCalledWith('#112233');
+    const picker = color.container.querySelector<HTMLInputElement>('input[type="color"]');
+    const currentColor = color.container.querySelector<HTMLElement>('[role="radio"][aria-label="Foreground"]');
+    expect(picker).not.toBeNull();
+    expect(currentColor).not.toBeNull();
+    await act(() => currentColor?.click());
+    expect(onColorChange).toHaveBeenLastCalledWith('currentColor');
+  });
+
+  it('颜色控件用三个 toggle 表示自定义、currentColor 与 contrast 模式', async () => {
+    const onCurrentColorChange = vi.fn();
+    const color = await renderField(
+      { kind: 'color', id: 'fill', label: 'Fill', defaultValue: 'currentColor' },
+      'currentColor',
+      onCurrentColorChange,
+    );
+    const picker = color.container.querySelector<HTMLInputElement>('input[type="color"]');
+    const [custom, currentColor] = Array.from(color.container.querySelectorAll<HTMLElement>('[role="radio"]'));
+
+    expect(color.container.querySelector('input[type="text"]')).toBeNull();
+    expect(color.container.querySelector('datalist')).toBeNull();
+    expect(picker).not.toBeNull();
+    if (!picker) throw new Error('Expected color picker');
+    expect(picker.value).toBe('#000000');
+    expect(picker.disabled).toBe(false);
+    expect(custom.getAttribute('data-state')).toBe('off');
+    expect(currentColor.getAttribute('data-state')).toBe('on');
+    expect(color.container.querySelectorAll('[role="radio"]')).toHaveLength(2);
+
+    await act(() => custom.click());
+    expect(onCurrentColorChange).toHaveBeenLastCalledWith('#000000');
+
+    const disabledContrast = await renderField(
+      { kind: 'color', id: 'fill', label: 'Fill', defaultValue: '#ffffff', contrast: false },
+      '#ffffff',
+    );
+    expect(disabledContrast.container.querySelectorAll('[role="radio"]')).toHaveLength(2);
+  });
+
+  it('contrast 只有显式开启时才显示，并可从特殊值切换回自定义或 currentColor', async () => {
+    const onValueChange = vi.fn();
+    const color = await renderField(
+      { kind: 'color', id: 'textColor', label: 'Text color', defaultValue: '#ffffff', contrast: true },
+      'contrast',
+      onValueChange,
+    );
+    expect(color.container.querySelectorAll('[data-slot="toggle-group-item"]')).toHaveLength(3);
+    const modes = color.container.querySelectorAll<HTMLElement>('[role="radio"]');
+    expect(modes[1].getAttribute('data-state')).toBe('off');
+    expect(modes[2].getAttribute('data-state')).toBe('on');
+
+    await act(() => modes[1].click());
+    expect(onValueChange).toHaveBeenLastCalledWith('currentColor');
+    await act(() => modes[0].click());
+    expect(onValueChange).toHaveBeenLastCalledWith('#ffffff');
   });
 
   it('同一帧内合并 color picker 的连续输入并只提交最后值', async () => {
@@ -343,7 +395,6 @@ describe('PreviewControlFieldInput', () => {
       onValueChange,
     );
     const picker = color.container.querySelector<HTMLInputElement>('input[type="color"]');
-
     expect(picker).not.toBeNull();
     await act(() => {
       if (!picker) return;

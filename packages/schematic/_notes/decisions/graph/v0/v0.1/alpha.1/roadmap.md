@@ -1,6 +1,6 @@
 # Graph v0.1 alpha.1 Roadmap
 
-> 状态：已完成；ADR-01 与 ADR-02 为 Accepted。关联：[Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
+> 状态：已完成；ADR-01 至 ADR-06 为 Accepted。关联：[Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
 ## 目标
 
@@ -8,10 +8,14 @@
 
 ## ADR
 
-| ADR                                | 主题                                       | 依赖                                    | 状态     |
-| ---------------------------------- | ------------------------------------------ | --------------------------------------- | -------- |
-| [01](./01-graph-package-family.md) | Graph package family、owner 与公共边界     | Diagram design；Core composite contract | Accepted |
-| [02](./02-graph-node-variants.md)  | GraphNode role、variant 与 GraphFrame 继承 | Core Node / color atom                  | Accepted |
+| ADR                                            | 主题                                                        | 依赖                                                             | 状态     |
+| ---------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------- | -------- |
+| [01](./01-graph-package-family.md)             | Graph package family、owner 与公共边界                      | Diagram design；Core composite contract                          | Accepted |
+| [02](./02-graph-node-variants.md)              | GraphNode role、variant 与 GraphFrame 继承                  | Core Node / color atom                                           | Accepted |
+| [03](./03-semantic-ir-lightweight-lowering.md) | GraphNode / GraphConnector semantic IR 与轻量 lowering      | ADR-01～ADR-02                                                   | Accepted |
+| [04](./04-remove-callout.md)                   | 撤回 Callout 公共契约与完整闭环                             | ADR-01、ADR-03                                                   | Accepted |
+| [05](./05-graph-element-naming.md)             | Entity / Relation / Container 命名与 Graph 源码 owner 迁移  | ADR-01～ADR-04、Schematic Graph 完备设计                         | Accepted |
+| [06](./06-graph-entity-registry-theme.md)      | Graph 展示作用域、Entity role / variant registry 与领域主题 | ADR-01～ADR-05、Core Composite / Theme、Schematic Graph 完备设计 | Accepted |
 
 ## 完成标准
 

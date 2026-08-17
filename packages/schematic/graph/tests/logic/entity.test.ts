@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, ThemeModeValue } from '@retikz/core';
+import type { AnyCompositeDefinition, IRChild, IRNode, ThemeModeValue } from '@retikz/core';
 
 import { lowerIRToKernel, ThemeMode } from '@retikz/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
@@ -16,8 +16,12 @@ const sceneOf = (children: ReadonlyArray<IRChild>, mode: ThemeModeValue = ThemeM
   children: Array.from(children),
 });
 
-const lowerNode = (node: IREntity, mode: ThemeModeValue = ThemeMode.Light): IRNode => {
-  const lowered = lowerIRToKernel(sceneOf([node], mode), { composites: [Graph.EntityDefinition] });
+const lowerNode = (
+  node: IREntity,
+  mode: ThemeModeValue = ThemeMode.Light,
+  composites: ReadonlyArray<AnyCompositeDefinition> = [Graph.EntityDefinition],
+): IRNode => {
+  const lowered = lowerIRToKernel(sceneOf([node], mode), { composites });
   const child = lowered.children[0];
   if (child.type !== 'node') throw new Error('Expected Entity to lower to a Core Node');
   return child;
@@ -43,7 +47,7 @@ describe('Entity canonical semantic IR', () => {
     });
   });
 
-  it('rejects missing or unknown roles and the old per-role discriminators', () => {
+  it('rejects missing and old per-role discriminators while preserving open custom roles in Source IR', () => {
     expect(Graph.EntitySchema.safeParse({ namespace: 'graph', type: 'entity', id: 'missing', position }).success).toBe(
       false,
     );
@@ -51,11 +55,11 @@ describe('Entity canonical semantic IR', () => {
       Graph.EntitySchema.safeParse({
         namespace: 'graph',
         type: 'entity',
-        id: 'unknown',
+        id: 'custom',
         role: 'custom',
         position,
       }).success,
-    ).toBe(false);
+    ).toBe(true);
     expect(
       Graph.EntitySchema.safeParse({ namespace: 'graph', type: 'stage', id: 'legacy', role: 'stage', position })
         .success,
@@ -89,19 +93,73 @@ describe('Entity canonical semantic IR', () => {
     expect(node).toMatchObject({ type: 'entity', role: 'decision', shape: 'rectangle' });
     expect(lowerNode(node)).toMatchObject({ type: 'node', shape: 'rectangle' });
   });
+
+  it('lowers a custom role through the same configured definition registry', () => {
+    const service = Graph.defineEntityRole({
+      role: 'service',
+      shape: { type: 'rectangle', params: { cornerRadius: 4 } },
+      padding: { x: 10, y: 6 },
+      minimumSize: { width: 64, height: 32 },
+    });
+    const composites = Graph.createGraphDefinitions({ entityRoles: [service] });
+
+    expect(
+      lowerNode(Graph.createEntity({ id: 'service', role: 'service', position }), ThemeMode.Light, composites),
+    ).toMatchObject({
+      type: 'node',
+      shape: { type: 'rectangle', params: { cornerRadius: 4 } },
+      padding: { x: 10, y: 6 },
+      minimumSize: { width: 64, height: 32 },
+    });
+  });
+
+  it('preserves a custom role shape for the Core shape registry to resolve', () => {
+    const service = Graph.defineEntityRole({
+      role: 'service',
+      shape: 'service-shape',
+      padding: 6,
+    });
+
+    expect(
+      lowerNode(
+        Graph.createEntity({ id: 'service', role: 'service', position }),
+        ThemeMode.Light,
+        Graph.createGraphDefinitions({ entityRoles: [service] }),
+      ),
+    ).toMatchObject({ shape: 'service-shape' });
+  });
+
+  it('fails loudly when an open role is not registered', () => {
+    expect(() => lowerNode(Graph.createEntity({ id: 'unknown', role: 'service', position }))).toThrow(
+      /Entity role 'service'.*not registered|not registered.*service/i,
+    );
+  });
 });
 
 describe('EntityVariant lowering', () => {
   it.each([
-    ['default', ThemeMode.Light, { textColor: '#000000', stroke: '#000000', fill: 'none' }],
-    ['primary', ThemeMode.Light, { textColor: 'contrast', stroke: '#000000', fill: '#000000' }],
-    ['secondary', ThemeMode.Light, { textColor: '#000000', stroke: 'none', fill: '#e6e6e6' }],
-    ['outline', ThemeMode.Light, { textColor: '#000000', stroke: '#666666', fill: 'none' }],
-    ['vibrant', ThemeMode.Light, { textColor: '#000000', stroke: '#000000', fill: '#d9d9d9' }],
-    ['secondary', ThemeMode.Dark, { textColor: '#ffffff', stroke: 'none', fill: '#1a1a1a' }],
+    ['default', ThemeMode.Light, { textColor: 'contrast', stroke: '#000000', fill: 'none' }],
+    ['fill', ThemeMode.Light, { textColor: 'contrast', stroke: 'none', fill: '#000000' }],
+    ['mixed', ThemeMode.Light, { textColor: 'contrast', stroke: '#000000', fill: '#d9d9d9' }],
+    ['fill', ThemeMode.Dark, { textColor: 'contrast', stroke: 'none', fill: '#ffffff' }],
   ] as const)('applies the %s recipe in %s mode', (variant, mode, expected) => {
     const lowered = lowerNode(Graph.createEntity({ id: variant, role: 'stage', position, variant }), mode);
     expect(lowered).toMatchObject(expected);
+  });
+
+  it.each([
+    [ThemeMode.Light, '#000000', '#d9d9d9'],
+    [ThemeMode.Dark, '#ffffff', '#262626'],
+  ] as const)('resolves currentColor to the mode foreground for every variant in %s mode', (mode, primary, mixed) => {
+    const lower = (variant: IREntity['variant']) =>
+      lowerNode(
+        Graph.createEntity({ id: variant ?? 'default', role: 'stage', position, color: 'currentColor', variant }),
+        mode,
+      );
+
+    expect(lower(undefined)).toMatchObject({ color: primary, textColor: 'contrast', stroke: primary, fill: 'none' });
+    expect(lower('fill')).toMatchObject({ color: primary, textColor: 'contrast', stroke: 'none', fill: primary });
+    expect(lower('mixed')).toMatchObject({ color: primary, textColor: 'contrast', stroke: primary, fill: mixed });
   });
 
   it('gives explicit leaf paint precedence over the selected recipe', () => {
@@ -111,18 +169,59 @@ describe('EntityVariant lowering', () => {
         role: 'stage',
         position,
         color: '#cc3366',
-        variant: 'secondary',
+        variant: 'fill',
         textColor: '#111111',
         stroke: '#222222',
         fill: '#333333',
+        strokeWidth: 0,
+        fillOpacity: 0,
       }),
     );
 
-    expect(lowered).toMatchObject({ color: '#cc3366', textColor: '#111111', stroke: '#222222', fill: '#333333' });
+    expect(lowered).toMatchObject({
+      color: '#cc3366',
+      textColor: '#111111',
+      stroke: '#222222',
+      fill: '#333333',
+      strokeWidth: 0,
+      fillOpacity: 0,
+    });
+  });
+
+  it('resolves a custom variant through the same configured definition registry', () => {
+    const muted = Graph.defineEntityVariant({
+      variant: 'muted',
+      resolve: ({ color }) => ({
+        [Graph.GraphThemeToken.EntityTextForeground]: color,
+        [Graph.GraphThemeToken.EntityStroke]: 'none',
+        [Graph.GraphThemeToken.EntityFill]: '#f2f2f2',
+        [Graph.GraphThemeToken.EntityOpacity]: 0.75,
+      }),
+    });
+    const composites = Graph.createGraphDefinitions({ entityVariants: [muted] });
+    const lowered = lowerNode(
+      Graph.createEntity({ id: 'muted', role: 'stage', position, color: '#336699', variant: 'muted' }),
+      ThemeMode.Light,
+      composites,
+    );
+
+    expect(lowered).toMatchObject({
+      color: '#336699',
+      textColor: '#336699',
+      stroke: 'none',
+      fill: '#f2f2f2',
+      opacity: 0.75,
+    });
+  });
+
+  it('fails loudly when an open variant is not registered', () => {
+    expect(() =>
+      lowerNode(Graph.createEntity({ id: 'unknown-variant', role: 'stage', position, variant: 'muted' })),
+    ).toThrow(/Entity variant 'muted'.*not registered|not registered.*muted/i);
   });
 
   it('does not leak Graph semantic fields into the lowered Core Node', () => {
-    const lowered = lowerNode(Graph.createEntity({ id: 'lowered', role: 'decision', position, variant: 'primary' }));
+    const lowered = lowerNode(Graph.createEntity({ id: 'lowered', role: 'decision', position, variant: 'fill' }));
 
     expect(lowered).not.toHaveProperty('namespace');
     expect(lowered).not.toHaveProperty('role');

@@ -21,14 +21,14 @@ describe('resolveDocLocation', () => {
       resolveDocLocation({
         moduleId: 'schematic',
         sectionId: 'graph',
-        pageId: 'frame',
-        subPageId: 'graph-frame',
+        pageId: 'container',
+        subPageId: 'basic',
       }),
     ).toEqual({
       moduleId: 'schematic',
       sectionId: 'graph',
-      pageId: 'frame',
-      subPageId: 'graph-frame',
+      pageId: 'container',
+      subPageId: 'basic',
     });
   });
 

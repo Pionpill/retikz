@@ -9,20 +9,24 @@ import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import { ChartSchema } from '@retikz/chart';
 import { createChart, renderChart } from '@retikz/chart-vanilla';
 import {
-  RelationDefinition,
-  RelationSchema,
   ContainerDefinition,
   ContainerSchema,
   EntityDefinition,
   EntitySchema,
+  GraphDefinition,
+  GraphSchema,
+  RelationDefinition,
+  RelationSchema,
 } from '@retikz/graph';
 import {
-  relation,
-  RelationInputEmbedAdapter,
   container,
   ContainerInputEmbedAdapter,
   entity,
   EntityInputEmbedAdapter,
+  graph,
+  GraphInputEmbedAdapter,
+  relation,
+  RelationInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
 import {
   FlexLayoutDefinition,
@@ -130,7 +134,7 @@ type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
 type LibraryKind = StandardKind | LayoutKind;
 
-type GraphKind = 'container' | 'entity' | 'relation';
+type GraphKind = 'graph' | 'container' | 'entity' | 'relation';
 
 type LibraryConversionState = {
   counts: Record<LibraryKind, number>;
@@ -253,7 +257,7 @@ const registerPreviewIds = (
       }
       if (child.namespace === 'graph' && typeof authoredId === 'string') {
         const kind = child.type as GraphKind;
-        if (['container', 'entity', 'relation'].includes(kind)) {
+        if (['graph', 'container', 'entity', 'relation'].includes(kind)) {
           nextGraphId(kind, graphState, authoredId);
           graphState.counts[kind] -= 1;
           graphState.adapters.delete(kind);
@@ -383,9 +387,23 @@ const convertLayoutChild = (
   }
 };
 
-const convertGraphChild = (child: CompositeChild, state: GraphConversionState): InputChild => {
+const convertGraphChild = (
+  child: CompositeChild,
+  state: GraphConversionState,
+  libraryState: LibraryConversionState,
+): InputChild => {
   const childId = (child as { id?: string }).id;
   switch (child.type) {
+    case 'graph': {
+      const { namespace: _namespace, type: _type, id: _id, children, ...input } = GraphSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return graph(nextGraphId('graph', state, childId), {
+        ...input,
+        children: children.map(nested => convertPreviewChild(nested, libraryState, state)),
+      });
+    }
     case 'container': {
       const { namespace: _namespace, type: _type, id: _id, ...input } = ContainerSchema.parse(child);
       void _namespace;
@@ -423,7 +441,7 @@ const convertPreviewChild = (
   if (isComposite(child)) {
     if (child.namespace === 'standard') return convertStandardChild(child, libraryState, graphState);
     if (child.namespace === 'layout') return convertLayoutChild(child, libraryState, graphState);
-    if (child.namespace === 'graph') return convertGraphChild(child, graphState);
+    if (child.namespace === 'graph') return convertGraphChild(child, graphState, libraryState);
     throw new Error(`Unsupported composite "${child.namespace}.${child.type}".`);
   }
   if (child.type !== 'scope') return child;
@@ -450,6 +468,7 @@ const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEm
 ];
 
 const graphAdapters = (state: GraphConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
+  ...(state.adapters.has('graph') ? [GraphInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('container') ? [ContainerInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as AnyInputEmbedAdapter] : []),
@@ -470,6 +489,7 @@ const layoutDefinitionByName = {
 } as const;
 
 const graphDefinitionByName = {
+  GraphDefinition,
   ContainerDefinition,
   EntityDefinition,
   RelationDefinition,
@@ -493,6 +513,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   };
   const graphState: GraphConversionState = {
     counts: {
+      graph: 0,
       container: 0,
       entity: 0,
       relation: 0,

@@ -1,8 +1,4 @@
-import type {
-  ContainerCreateOptions,
-  ContainerRegionCreateOptions,
-  ContainerSectionCreateOptions,
-} from '@retikz/graph';
+import type { ContainerCreateOptions, ContainerRegion, ContainerSection as ContainerSectionType } from '@retikz/graph';
 import type { InputContainer } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
@@ -29,7 +25,7 @@ export type ContainerProps = Omit<ContainerCreateOptions, 'header' | 'sections'>
 
 /** Container header marker 的 React 参数 */
 export type ContainerHeaderProps = Readonly<{
-  padding?: ContainerRegionCreateOptions['padding'];
+  padding?: ContainerRegion['padding'];
   /** Header marker 的单个 React child */
   children: ReactNode;
 }>;
@@ -38,7 +34,7 @@ export type ContainerHeaderProps = Readonly<{
 export type ContainerSectionProps = Readonly<{
   sectionKey: string;
   role?: string;
-  padding?: ContainerSectionCreateOptions['padding'];
+  padding?: ContainerSectionType['padding'];
   /** Section marker 的单个 React child */
   children: ReactNode;
 }>;

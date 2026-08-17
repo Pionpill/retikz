@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
 
 import type { PreviewControlValue, PreviewRangeControlField, PreviewStateControlField } from '../types';
@@ -18,6 +19,12 @@ import { PreviewPointControlInput } from './PreviewPointControlInput';
 /** 判断运行时值是否是有限二维坐标 */
 const isPreviewControlPoint = (value: unknown): value is [number, number] =>
   Array.isArray(value) && value.length === 2 && value.every(coordinate => Number.isFinite(coordinate));
+
+/** 判断控件值是否是原生颜色输入可直接消费的六位十六进制颜色 */
+const isPreviewColorHex = (value: string): boolean => /^#[0-9a-fA-F]{6}$/.test(value);
+const PREVIEW_COLOR_CUSTOM_VALUE = 'custom';
+const PREVIEW_COLOR_CURRENT_VALUE = 'currentColor';
+const PREVIEW_COLOR_CONTRAST_VALUE = 'contrast';
 
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;
@@ -210,22 +217,70 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
       );
     case 'color': {
       const colorValue = typeof value === 'string' ? value : field.defaultValue;
+      const pickerValue = isPreviewColorHex(colorValue)
+        ? colorValue
+        : isPreviewColorHex(field.defaultValue)
+          ? field.defaultValue
+          : '#000000';
+      const colorMode =
+        colorValue === PREVIEW_COLOR_CURRENT_VALUE
+          ? PREVIEW_COLOR_CURRENT_VALUE
+          : colorValue === PREVIEW_COLOR_CONTRAST_VALUE && field.contrast === true
+            ? PREVIEW_COLOR_CONTRAST_VALUE
+            : PREVIEW_COLOR_CUSTOM_VALUE;
       return (
-        <div className={cn('flex w-full min-w-0 items-center gap-2', compact && 'gap-1.5')}>
-          <Input
-            type="color"
-            aria-label={`${field.label} picker`}
-            value={colorValue}
-            className={cn('h-9 w-12 shrink-0 p-1', compact && 'h-7 w-8')}
-            onChange={event => frameValueChange.schedule(event.currentTarget.value)}
-          />
-          <Input
-            type="text"
-            aria-label={field.label}
-            value={colorValue}
-            className={cn('min-w-0 font-mono', compact && 'h-7 w-full px-1 text-xs')}
-            onChange={event => onValueChange(event.currentTarget.value)}
-          />
+        <div className={cn('flex w-full min-w-0 items-center', compact && 'text-xs')}>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size={compact ? 'sm' : 'default'}
+            value={colorMode}
+            onValueChange={nextValue => {
+              if (nextValue === PREVIEW_COLOR_CURRENT_VALUE || nextValue === PREVIEW_COLOR_CONTRAST_VALUE) {
+                onValueChange(nextValue);
+              } else if (nextValue === PREVIEW_COLOR_CUSTOM_VALUE) {
+                onValueChange(pickerValue);
+              }
+            }}
+            aria-label={t('preview.colorMode')}
+            className="w-full"
+          >
+            <ToggleGroupItem
+              value={PREVIEW_COLOR_CUSTOM_VALUE}
+              asChild
+              aria-label={t('preview.colorCustom')}
+              title={t('preview.colorCustom')}
+              className={cn('h-9 w-12 cursor-pointer px-1', compact && 'h-7 w-10')}
+            >
+              <label>
+                <Input
+                  type="color"
+                  aria-label={t('preview.colorCustom')}
+                  value={pickerValue}
+                  className="h-full w-full cursor-pointer border-0 bg-transparent p-0 shadow-none"
+                  onChange={event => frameValueChange.schedule(event.currentTarget.value)}
+                />
+              </label>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value={PREVIEW_COLOR_CURRENT_VALUE}
+              aria-label={t('preview.colorCurrent')}
+              title={t('preview.colorCurrent')}
+              className={cn('cursor-pointer px-2', compact && 'h-7')}
+            >
+              {t('preview.colorCurrent')}
+            </ToggleGroupItem>
+            {field.contrast === true ? (
+              <ToggleGroupItem
+                value={PREVIEW_COLOR_CONTRAST_VALUE}
+                aria-label={t('preview.colorContrast')}
+                title={t('preview.colorContrast')}
+                className={cn('cursor-pointer px-2', compact && 'h-7')}
+              >
+                {t('preview.colorContrast')}
+              </ToggleGroupItem>
+            ) : null}
+          </ToggleGroup>
         </div>
       );
     }

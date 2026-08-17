@@ -1,10 +1,19 @@
-import { ContainerProvider, EntityProvider,RelationProvider } from '@retikz/graph';
+import {
+  ContainerProvider,
+  defineEntityRole,
+  EntityProvider,
+  GraphProvider,
+  GraphProviderKey,
+  GraphThemeToken,
+  RelationProvider,
+} from '@retikz/graph';
+import { createGraphVanillaAdapters, entity as vanillaEntity, graph as vanillaGraph } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { Container, ContainerHeader, ContainerSection, createGraphReactAdapters, Entity,Relation } from '../../src';
+import { Container, ContainerHeader, ContainerSection, Entity, Graph, Relation } from '../../src';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
 const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
@@ -13,12 +22,14 @@ const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) =
 };
 
 describe('@retikz/graph-react package boundary', () => {
-  it('exports only the unified Graph semantic components', async () => {
+  it('exports the Graph root and unified semantic components', async () => {
     const graphReact = await import('../../src');
 
     expect(graphReact.Entity).toBeDefined();
     expect(graphReact.Relation).toBeDefined();
     expect(graphReact.Container).toBeDefined();
+    expect(graphReact.Graph).toBeDefined();
+    expect(graphReact).not.toHaveProperty('createGraphReactAdapters');
     expect(graphReact).not.toHaveProperty('Stage');
     expect(graphReact).not.toHaveProperty('Terminal');
     expect(graphReact).not.toHaveProperty('Decision');
@@ -27,31 +38,70 @@ describe('@retikz/graph-react package boundary', () => {
 });
 
 describe('Graph React semantic authoring', () => {
-  it('creates exactly three adapters and preserves Entity role and variant', () => {
-    const adapters = createGraphReactAdapters();
-    const nodeAdapter = adapters.find(adapter => adapter.kind === 'graph.entity');
+  it('keeps the Graph input adapter available while reading direct Graph options', () => {
+    expect(Graph.inputEmbedAdapter.kind).toBe('graph.graph');
+    expect(Entity.inputEmbedAdapter.kind).toBe('graph.entity');
+  });
 
-    expect(adapters.map(adapter => adapter.kind)).toEqual(['graph.container', 'graph.entity', 'graph.relation']);
-    expect(nodeAdapter).toBeDefined();
-    const contribution = nodeAdapter!.lower(
-      { role: 'stage', position: [0, 0], color: '#123456', variant: 'vibrant' },
+  it('keeps React Graph authoring equivalent to Vanilla with configured providers', () => {
+    const service = defineEntityRole({ role: 'service', shape: 'rectangle', padding: 6 });
+    const reactInput = createInputScene(
+      createElement(
+        Graph,
+        {
+          id: 'workflow',
+          entityRoles: [service],
+          entityVariant: 'default',
+          graphThemeTokens: { [GraphThemeToken.EntityColor]: '#336699' },
+          graphThemeTokenRules: [
+            {
+              select: { role: 'service' },
+              tokens: { [GraphThemeToken.EntityStrokeWidth]: 2 },
+            },
+          ],
+        },
+        createElement(Entity, { id: 'service', role: 'service', position: [0, 0] }),
+        createElement(Entity, { id: 'stage', role: 'stage', position: [40, 0] }),
+      ),
+    );
+    const reactResult = normalizeScene(reactInput.scene, {
+      adapters: reactInput.adapters,
+    });
+    const vanillaResult = normalizeScene(
       {
-        id: 'vibrant',
-        kind: nodeAdapter!.kind,
-        layerId: 'layer',
-        identityPath: ['layer', 'brand'],
+        children: [
+          vanillaGraph('workflow', {
+            entityRoles: [service],
+            entityVariant: 'default',
+            graphThemeTokens: { [GraphThemeToken.EntityColor]: '#336699' },
+            graphThemeTokenRules: [
+              {
+                select: { role: 'service' },
+                tokens: { [GraphThemeToken.EntityStrokeWidth]: 2 },
+              },
+            ],
+            children: [
+              vanillaEntity('service', { role: 'service', position: [0, 0] }),
+              vanillaEntity('stage', { role: 'stage', position: [40, 0] }),
+            ],
+          }),
+        ],
       },
+      { adapters: createGraphVanillaAdapters() },
     );
 
-    expect(contribution.node).toMatchObject({ role: 'stage', color: '#123456', variant: 'vibrant' });
-    expect(contribution.providerDependencies.roots[0]).toEqual(EntityProvider.key);
+    expect(reactResult.ir).toEqual(vanillaResult.ir);
+    expect(reactResult.contributions[0]?.roots[0]).toEqual(GraphProviderKey);
+    expect(reactResult.contributions[0]?.providers).not.toContain(GraphProvider);
+    expect(reactResult.contributions[0]?.providers).not.toContain(EntityProvider);
+    expect(reactResult.contributions[0]?.providers).toContain(RelationProvider);
   });
 
   it('preserves a Container identity and inherited variant in semantic IR', () => {
     const result = normalizeReactInput(
       createElement(
         Container,
-        { id: 'variant-frame', entityVariant: 'secondary' },
+        { id: 'variant-frame', entityVariant: 'fill' },
         createElement(ContainerSection, {
           sectionKey: 'body',
           children: createElement(Entity, { id: 'variant-node', role: 'stage', position: [0, 0] }),
@@ -63,7 +113,7 @@ describe('Graph React semantic authoring', () => {
       namespace: 'graph',
       type: 'container',
       id: 'variant-frame',
-      entityVariant: 'secondary',
+      entityVariant: 'fill',
       sections: [
         {
           child: { namespace: 'graph', type: 'entity', id: 'variant-node', role: 'stage' },

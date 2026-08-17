@@ -1,0 +1,32 @@
+---
+title: Relation
+description: Express explicit relationships with Core Path authoring syntax, then connect direct IR or Vanilla when needed.
+---
+
+`Relation` connects authored identities in Graph. It reuses the Core Path contracts for Steps, targets, labels, and marks. Start with React `<Step>` children in basic usage, then move to Draw ways, direct IR, and Vanilla in extended usage
+
+## Responsibilities at a glance
+
+| Content        | Covers                                        | Use it when                           |
+| -------------- | --------------------------------------------- | ------------------------------------- |
+| Basic usage    | Steps, targets, labels, and common routes     | You connect Entity values in React    |
+| Extended usage | Draw ways, canonical IR, Definitions, Vanilla | You use another authoring entry point |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/graph/relation/basic">
+    <span className="font-semibold">Basic usage</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Steps, targets, labels, and routes</span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/graph/relation/extension">
+    <span className="font-semibold">Extended usage</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Draw ways, direct IR, and Vanilla</span>
+  </LinkedCard>
+</div>
+
+## Related
+
+- [Entity](/schematic/graph/entity): Graph subjects that Relation can target
+- [Container](/schematic/graph/container): use a Container id to connect the whole region
+- [Core paths](/kernel/components/draw/overview): the lower-level path contract Relation reuses
