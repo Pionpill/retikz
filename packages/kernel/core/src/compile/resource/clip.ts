@@ -1,4 +1,10 @@
-import type { ClipResource, ClipShape, PathClipShape, PathCommand } from '../../contract';
+import type {
+  ClipDefinition,
+  ClipResource,
+  ClipShape,
+  PathCommand,
+  SceneClipPath,
+} from '../../contract';
 import type { ClipResolution } from '../../resolve/resource';
 
 import {
@@ -8,17 +14,72 @@ import {
   LayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import { PathCommandSchema } from '../../schemas';
-import { snapshotProviderOutputJson, withProviderOutputValidationBoundary } from '../scene-primitive';
+import { resolveClipShape } from '../../resolve/resource';
+import {
+  assertProviderOutputKeys,
+  assertProviderOutputPathCommands,
+  providerOutputArray,
+  providerOutputRecord,
+  snapshotProviderOutputJson,
+  withProviderOutputValidationBoundary,
+} from '../scene-primitive';
 
 export type ClipRegistry = {
-  /** compile resource 阶段调用已绑定 provider 生成 shape */
+  /** 调用已绑定 operation provider 生成开放 ClipShape */
   resolve: (clip: ClipResolution) => ClipShape;
-  /** 解析 IR clip 为 canonical ClipShape，不登记资源 */
+  /** 解析 operation、降低 shape 并登记 canonical clip resource */
   register: (clip: ClipResolution) => string;
-  /** 提交 probe 已解析的 clip shape，不再次调用 clip provider */
+  /** 提交 probe 已解析的 ClipShape，并经 shape registry 降低 */
   importResolved: (shape: ClipShape) => string;
+  /** 提交 probe 已生成的 canonical SceneClipPath */
+  importPath: (path: SceneClipPath) => string;
+  /** 当前按首次登记顺序保存的 clip resources */
   resources: () => Array<ClipResource>;
+};
+
+/** Clip resolve 与 ClipShape lower 共用的默认边预算 */
+export const DEFAULT_MAX_CLIP_DEPTH = 32;
+
+type ClipTraversalGuard = {
+  visited: number;
+  readonly max: number;
+  readonly active: WeakSet<object>;
+};
+
+const createClipTraversalGuard = (max: number, visited = 0): ClipTraversalGuard => ({
+  visited,
+  max,
+  active: new WeakSet(),
+});
+
+const consumeClipTraversalEdge = (guard: ClipTraversalGuard, stage: string): void => {
+  if (guard.visited >= guard.max) {
+    throw new CompositeContractError(
+      `Clip traversal exceeded CompileOptions.maxClipDepth ${guard.max} while entering ${stage}.`,
+    );
+  }
+  guard.visited += 1;
+};
+
+const enterClipTraversalObjects = (
+  guard: ClipTraversalGuard,
+  values: ReadonlyArray<object>,
+  cycleName: string,
+): Array<object> => {
+  const entered: Array<object> = [];
+  for (const value of values) {
+    if (entered.includes(value)) continue;
+    if (guard.active.has(value)) {
+      throw new CompositeContractError(`Clip traversal detected a cyclic ${cycleName} object.`);
+    }
+    guard.active.add(value);
+    entered.push(value);
+  }
+  return entered;
+};
+
+const leaveClipTraversalObjects = (guard: ClipTraversalGuard, values: ReadonlyArray<object>): void => {
+  values.forEach(value => guard.active.delete(value));
 };
 
 type ClipFieldInput = {
@@ -40,7 +101,7 @@ type ClipPointInput = {
 
 const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positive?: boolean }): never => {
   throw new CompositeContractError(
-    `Clip '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
+    `Clip shape '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
       positive ? ' greater than 0' : ''
     }.`,
   );
@@ -48,12 +109,15 @@ const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positi
 
 const finite = ({ kind, field, value, round }: ClipRoundFieldInput): number => {
   if (!Number.isFinite(value)) bad({ kind, field, value });
-  return round(value);
+  const rounded = round(value);
+  return Object.is(rounded, -0) ? 0 : rounded;
 };
 
 const positive = ({ kind, field, value, round }: ClipRoundFieldInput): number => {
   if (!Number.isFinite(value) || value <= 0) bad({ kind, field, value, positive: true });
-  return round(value);
+  const rounded = round(value);
+  if (!Number.isFinite(rounded) || rounded <= 0) bad({ kind, field, value: rounded, positive: true });
+  return Object.is(rounded, -0) ? 0 : rounded;
 };
 
 const point = ({ kind, field, value, round }: ClipPointInput): [number, number] => [
@@ -107,268 +171,175 @@ const roundCommand = (command: PathCommand, round: (n: number) => number): PathC
   }
 };
 
-const assertResolvedClipShape: (shape: unknown, owner: string) => asserts shape is ClipShape = (shape, owner) => {
-  const fail = (detail: string): never => {
-    throw new CompositeContractError(`${owner} resolve returned ${detail}.`);
-  };
-  const ownStringKeys = (value: object, path: string, arrayLength = false): Array<string> => {
-    const keys = Reflect.ownKeys(value);
-    const stringKeys: Array<string> = [];
-    for (const key of keys) {
-      if (typeof key === 'symbol') {
-        fail(`${path} with an unsupported symbol field`);
-      }
-      const stringKey = key as string;
-      const descriptor = Object.getOwnPropertyDescriptor(value, stringKey);
-      if (
-        descriptor === undefined ||
-        ((!arrayLength || key !== 'length') && (!descriptor.enumerable || !('value' in descriptor)))
-      ) {
-        fail(`${path} with a hidden or accessor field '${stringKey}'`);
-      }
-      stringKeys.push(stringKey);
-    }
-    return stringKeys;
-  };
-  const object = (value: unknown, path: string): Record<string, unknown> => {
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) fail(`an invalid ${path}`);
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null) fail(`a non-plain ${path}`);
-    ownStringKeys(value as object, path);
-    return value as Record<string, unknown>;
-  };
-  const array = (value: unknown, path: string): Array<unknown> => {
-    if (!Array.isArray(value)) fail(`an invalid ${path}`);
-    if (Object.getPrototypeOf(value) !== Array.prototype) fail(`an invalid ${path}`);
-    const entries = value as Array<unknown>;
-    for (const key of ownStringKeys(entries, path, true)) {
-      if (key === 'length') continue;
-      if (!/^(?:0|[1-9]\d*)$/.test(key) || Number(key) >= entries.length) {
-        fail(`${path} with an unsupported field '${key}'`);
-      }
-    }
-    for (let index = 0; index < entries.length; index += 1) {
-      const descriptor = Object.getOwnPropertyDescriptor(entries, String(index));
-      if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-        fail(`a sparse or accessor ${path}`);
-      }
-    }
-    return entries;
-  };
-  const exactKeys = (value: Record<string, unknown>, allowed: ReadonlyArray<string>, path: string): void => {
-    const unsupported = ownStringKeys(value, path).filter(key => !allowed.includes(key));
-    if (unsupported.length > 0) fail(`${path} with unsupported field(s): ${unsupported.join(', ')}`);
-  };
-  const finiteNumber = (value: unknown, path: string, positiveValue = false): void => {
-    if (typeof value !== 'number' || !Number.isFinite(value) || (positiveValue && value <= 0)) {
-      fail(`an invalid ${path}`);
-    }
-  };
-  const pointValue = (value: unknown, path: string): void => {
-    const coordinates = array(value, path);
-    if (coordinates.length !== 2) fail(`an invalid ${path}`);
-    finiteNumber(coordinates[0], `${path}[0]`);
-    finiteNumber(coordinates[1], `${path}[1]`);
-  };
-  const jsonActive = new WeakSet<object>();
-  const assertJsonValue = (value: unknown, path: string): void => {
-    if (value === null || typeof value === 'string' || typeof value === 'boolean') return;
-    if (typeof value === 'number') {
-      finiteNumber(value, path);
-      return;
-    }
-    if (typeof value !== 'object') fail(`a non-JSON ${path}`);
-    const objectValue = value as object;
-    if (jsonActive.has(objectValue)) fail(`a cyclic ${path}`);
-    jsonActive.add(objectValue);
-    try {
-      if (Array.isArray(value)) {
-        array(value, path).forEach((entry, index) => assertJsonValue(entry, `${path}[${index}]`));
-      } else {
-        const record = object(value, path);
-        for (const key of ownStringKeys(record, path)) assertJsonValue(record[key], `${path}.${key}`);
-      }
-    } finally {
-      jsonActive.delete(objectValue);
-    }
-  };
-  const active = new WeakSet<object>();
-  const visit = (value: unknown, path: string): void => {
-    const candidate = object(value, path);
-    switch (candidate.kind) {
-      case 'rect':
-        exactKeys(candidate, ['kind', 'x', 'y', 'width', 'height'], path);
-        finiteNumber(candidate.x, `${path}.x`);
-        finiteNumber(candidate.y, `${path}.y`);
-        finiteNumber(candidate.width, `${path}.width`, true);
-        finiteNumber(candidate.height, `${path}.height`, true);
-        return;
-      case 'circle':
-        exactKeys(candidate, ['kind', 'cx', 'cy', 'r'], path);
-        finiteNumber(candidate.cx, `${path}.cx`);
-        finiteNumber(candidate.cy, `${path}.cy`);
-        finiteNumber(candidate.r, `${path}.r`, true);
-        return;
-      case 'ellipse':
-        exactKeys(candidate, ['kind', 'cx', 'cy', 'rx', 'ry'], path);
-        finiteNumber(candidate.cx, `${path}.cx`);
-        finiteNumber(candidate.cy, `${path}.cy`);
-        finiteNumber(candidate.rx, `${path}.rx`, true);
-        finiteNumber(candidate.ry, `${path}.ry`, true);
-        return;
-      case 'polygon': {
-        exactKeys(candidate, ['kind', 'points'], path);
-        const polygonPoints = array(candidate.points, `${path}.points`);
-        if (polygonPoints.length < 3) fail(`an invalid ${path}.points`);
-        polygonPoints.forEach((polygonPoint, index) => pointValue(polygonPoint, `${path}.points[${index}]`));
-        return;
-      }
-      case 'path': {
-        exactKeys(candidate, ['kind', 'commands', 'fillRule'], path);
-        const commands = array(candidate.commands, `${path}.commands`);
-        if (commands.length === 0) {
-          fail(`an invalid ${path}.commands`);
+/** 校验 canonical clip path 的有序子路径语法与最小可绘制性 */
+const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: string): void => {
+  let activeSubpath = false;
+  let hasDrawingSegment = false;
+  for (const [index, command] of commands.entries()) {
+    switch (command.kind) {
+      case 'move':
+        activeSubpath = true;
+        continue;
+      case 'line':
+      case 'quad':
+      case 'cubic':
+        if (!activeSubpath) {
+          throw new CompositeContractError(
+            `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
+          );
         }
-        commands.forEach((command, index) => {
-          assertJsonValue(command, `${path}.commands[${index}]`);
-          const parsed = PathCommandSchema.safeParse(command);
-          if (!parsed.success) {
-            throw new CompositeContractError(`${owner} resolve returned an invalid ${path}.commands[${index}].`, {
-              cause: parsed.error,
-            });
-          }
-        });
-        if (candidate.fillRule !== undefined && candidate.fillRule !== 'nonzero' && candidate.fillRule !== 'evenodd') {
-          fail(`an invalid ${path}.fillRule`);
+        hasDrawingSegment = true;
+        continue;
+      case 'arc':
+      case 'ellipseArc':
+        activeSubpath = true;
+        hasDrawingSegment = true;
+        continue;
+      case 'close':
+        if (!activeSubpath) {
+          throw new CompositeContractError(
+            `${owner} lower returned 'close' at command ${index} without an active subpath.`,
+          );
         }
-        return;
-      }
-      case 'compound': {
-        exactKeys(candidate, ['kind', 'children', 'fillRule'], path);
-        const children = array(candidate.children, `${path}.children`);
-        if (children.length === 0) {
-          fail(`an invalid ${path}.children`);
-        }
-        if (candidate.fillRule !== undefined && candidate.fillRule !== 'nonzero' && candidate.fillRule !== 'evenodd') {
-          fail(`an invalid ${path}.fillRule`);
-        }
-        if (active.has(candidate)) fail(`a cyclic ${path}`);
-        active.add(candidate);
-        try {
-          children.forEach((child, index) => visit(child, `${path}.children[${index}]`));
-        } finally {
-          active.delete(candidate);
-        }
-        return;
-      }
-      default:
-        fail(`an invalid or unknown ${path} kind '${String(candidate.kind)}'`);
+        activeSubpath = false;
+        continue;
     }
-  };
-  visit(shape, 'root shape');
-};
-
-const guardAndRoundShape = (shape: ClipShape, round: (n: number) => number): ClipShape => {
-  switch (shape.kind) {
-    case 'rect':
-      return {
-        kind: 'rect',
-        x: finite({ kind: shape.kind, field: 'x', value: shape.x, round }),
-        y: finite({ kind: shape.kind, field: 'y', value: shape.y, round }),
-        width: positive({ kind: shape.kind, field: 'width', value: shape.width, round }),
-        height: positive({ kind: shape.kind, field: 'height', value: shape.height, round }),
-      };
-    case 'circle':
-      return {
-        kind: 'circle',
-        cx: finite({ kind: shape.kind, field: 'cx', value: shape.cx, round }),
-        cy: finite({ kind: shape.kind, field: 'cy', value: shape.cy, round }),
-        r: positive({ kind: shape.kind, field: 'r', value: shape.r, round }),
-      };
-    case 'ellipse':
-      return {
-        kind: 'ellipse',
-        cx: finite({ kind: shape.kind, field: 'cx', value: shape.cx, round }),
-        cy: finite({ kind: shape.kind, field: 'cy', value: shape.cy, round }),
-        rx: positive({ kind: shape.kind, field: 'rx', value: shape.rx, round }),
-        ry: positive({ kind: shape.kind, field: 'ry', value: shape.ry, round }),
-      };
-    case 'polygon':
-      if (!Array.isArray(shape.points) || shape.points.length < 3) {
-        throw new CompositeContractError(
-          `Clip 'polygon' needs at least 3 points; got ${Array.isArray(shape.points) ? shape.points.length : 'non-array'}.`,
-        );
-      }
-      return {
-        kind: 'polygon',
-        points: shape.points.map(([x, y], index) => [
-          finite({ kind: shape.kind, field: `points[${index}][0]`, value: x, round }),
-          finite({ kind: shape.kind, field: `points[${index}][1]`, value: y, round }),
-        ]),
-      };
-    case 'path': {
-      if (!Array.isArray(shape.commands) || shape.commands.length === 0) {
-        throw new CompositeContractError("Clip 'path' needs at least 1 command.");
-      }
-      const rounded: PathClipShape = {
-        kind: 'path',
-        commands: shape.commands.map(command => roundCommand(command, round)),
-      };
-      if (shape.fillRule !== undefined) rounded.fillRule = shape.fillRule;
-      return rounded;
-    }
-    case 'compound':
-      if (!Array.isArray(shape.children) || shape.children.length === 0) {
-        throw new CompositeContractError("Clip 'compound' needs at least 1 child.");
-      }
-      return {
-        kind: 'compound',
-        children: shape.children.map(child => guardAndRoundShape(child, round)),
-        ...(shape.fillRule !== undefined ? { fillRule: shape.fillRule } : {}),
-      };
+  }
+  if (!hasDrawingSegment) {
+    throw new CompositeContractError(`${owner} lower returned a SceneClipPath without a drawing segment.`);
   }
 };
 
-/** 在统一 fatal boundary 内校验并规范化 Clip provider resolved output */
-const validateResolvedClipShape = (shape: unknown, owner: string, round: (n: number) => number): ClipShape =>
+/** 物化 operation provider 输出，并只收窄开放 ClipShape 的共同判别契约 */
+const snapshotResolvedClipShape = (shape: unknown, owner: string): ClipShape =>
   withProviderOutputValidationBoundary(owner, () => {
     const snapshot = snapshotProviderOutputJson(owner, shape, 'root shape');
-    assertResolvedClipShape(snapshot, owner);
-    return guardAndRoundShape(snapshot, round);
+    const record = providerOutputRecord(owner, snapshot, 'root shape');
+    if (typeof record.kind !== 'string' || record.kind.trim().length === 0) {
+      throw new CompositeContractError(`${owner} resolve returned a root shape without a non-empty string kind.`);
+    }
+    return record as ClipShape;
   });
 
-export const createClipRegistry = (round: (n: number) => number): ClipRegistry => {
+/** 物化并规范化 ClipShape lower 输出，建立唯一 SceneClipPath 字段顺序 */
+const canonicalizeClipPath = (path: unknown, owner: string, round: (n: number) => number): SceneClipPath =>
+  withProviderOutputValidationBoundary(owner, () => {
+    const snapshot = snapshotProviderOutputJson(owner, path, 'SceneClipPath');
+    const record = providerOutputRecord(owner, snapshot, 'SceneClipPath');
+    assertProviderOutputKeys(owner, record, ['commands', 'fillRule'], 'SceneClipPath');
+    const commands = providerOutputArray(owner, record.commands, 'SceneClipPath.commands');
+    if (commands.length === 0) {
+      throw new CompositeContractError(`${owner} lower returned an empty SceneClipPath.commands.`);
+    }
+    assertProviderOutputPathCommands(owner, commands, 'SceneClipPath.commands');
+    if (record.fillRule !== 'nonzero' && record.fillRule !== 'evenodd') {
+      throw new CompositeContractError(`${owner} lower returned an invalid SceneClipPath.fillRule.`);
+    }
+    assertClipPathGrammar(commands as Array<PathCommand>, owner);
+    return {
+      commands: (commands as Array<PathCommand>).map(command => roundCommand(command, round)),
+      fillRule: record.fillRule,
+    };
+  });
+
+/** 创建一次 compile 隔离的单一 Clip Definition 资源注册表 */
+export const createClipRegistry = (
+  round: (n: number) => number,
+  clips: ReadonlyMap<string, ClipDefinition>,
+  maxClipDepth = DEFAULT_MAX_CLIP_DEPTH,
+): ClipRegistry => {
   const idByKey = new Map<string, string>();
+  const visitedByResolvedShape = new WeakMap<object, number>();
   const list: Array<ClipResource> = [];
   let counter = 0;
-  const resolveShape = (resolution: ClipResolution): ClipShape => {
+
+  const resolveOperation = (resolution: ClipResolution, guard: ClipTraversalGuard): ClipShape => {
     const { kind, definition, params } = resolution;
-    let resolved: unknown;
+    const entered = enterClipTraversalObjects(guard, [resolution.spec, params], 'clip operation');
     try {
-      resolved = definition.resolve(params as { kind: string }, {
-        round,
-        resolve: nested => resolveShape(resolution.resolve(nested)),
-      });
-    } catch (thrown) {
-      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
-      throw new LayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
-        cause: thrown,
-        providerKey: `clip:${kind}`,
-      });
+      consumeClipTraversalEdge(guard, `clip operation '${kind}'`);
+      let resolved: unknown;
+      try {
+        resolved = definition.resolve(params as { kind: string }, {
+          round,
+          resolve: nested => resolveOperation(resolution.resolve(nested), guard),
+        });
+      } catch (thrown) {
+        if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+        throw new LayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
+          cause: thrown,
+          providerKey: `clip:${kind}`,
+        });
+      }
+      const shape = snapshotResolvedClipShape(resolved, `Clip provider 'clip:${kind}'`);
+      if (shape.kind !== kind) {
+        throw new CompositeContractError(
+          `Clip provider 'clip:${kind}' resolve returned kind '${shape.kind}' instead of '${kind}'.`,
+        );
+      }
+      return shape;
+    } finally {
+      leaveClipTraversalObjects(guard, entered);
     }
-    return validateResolvedClipShape(resolved, `Clip '${kind}'`, round);
   };
-  const importResolved = (shape: ClipShape): string => {
-    const key = JSON.stringify(shape);
+
+  const lowerShape = (shape: ClipShape, guard: ClipTraversalGuard): SceneClipPath => {
+    const enteredShape = enterClipTraversalObjects(guard, [shape], 'clip shape');
+    try {
+      consumeClipTraversalEdge(guard, `clip shape '${shape.kind}'`);
+      const resolution = resolveClipShape(shape, { clips });
+      const { kind, definition, params } = resolution;
+      const enteredParams = params === shape ? [] : enterClipTraversalObjects(guard, [params], 'clip shape');
+      try {
+        let lowered: unknown;
+        try {
+          const lower = definition.lower;
+          lowered = lower(params, {
+            round,
+            lower: nested => lowerShape(nested, guard),
+          });
+        } catch (thrown) {
+          if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+          throw new LayoutProbeRecoverableError(
+            `Clip provider 'clip:${kind}' lower failed: ${safeThrownDetail(thrown)}`,
+            {
+              cause: thrown,
+              providerKey: `clip:${kind}`,
+            },
+          );
+        }
+        return canonicalizeClipPath(lowered, `Clip provider 'clip:${kind}'`, round);
+      } finally {
+        leaveClipTraversalObjects(guard, enteredParams);
+      }
+    } finally {
+      leaveClipTraversalObjects(guard, enteredShape);
+    }
+  };
+
+  const importPath = (path: SceneClipPath): string => {
+    const key = JSON.stringify(path);
     let id = idByKey.get(key);
     if (id === undefined) {
       counter += 1;
       id = `clip-${counter}`;
       idByKey.set(key, id);
-      list.push({ kind: 'clip', id, shape });
+      list.push({ kind: 'clip', id, path });
     }
     return id;
   };
-  const register = (clip: ClipResolution): string => importResolved(resolveShape(clip));
-  return { resolve: resolveShape, register, importResolved, resources: () => list };
+  const importWithGuard = (shape: ClipShape, guard: ClipTraversalGuard): string => importPath(lowerShape(shape, guard));
+  const resolve = (clip: ClipResolution): ClipShape => {
+    const guard = createClipTraversalGuard(maxClipDepth);
+    const shape = resolveOperation(clip, guard);
+    visitedByResolvedShape.set(shape, guard.visited);
+    return shape;
+  };
+  const importResolved = (shape: ClipShape): string =>
+    importWithGuard(shape, createClipTraversalGuard(maxClipDepth, visitedByResolvedShape.get(shape) ?? 0));
+  const register = (clip: ClipResolution): string => {
+    const guard = createClipTraversalGuard(maxClipDepth);
+    return importWithGuard(resolveOperation(clip, guard), guard);
+  };
+  return { resolve, register, importResolved, importPath, resources: () => list };
 };

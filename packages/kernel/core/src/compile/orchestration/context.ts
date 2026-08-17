@@ -26,7 +26,7 @@ import { resolveShapeRegistry } from '../../providers/shape';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
-import { createClipRegistry, createPaintRegistry } from '../resource';
+import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
 import { formatCompileWarning } from '../warning';
@@ -75,6 +75,8 @@ export type CompileContext = {
   boundaries: ReadonlyMap<string, BoundaryDefinition>;
   /** clip provider 注册表 */
   clips: ReadonlyMap<string, ClipDefinition>;
+  /** operation resolve 与 shape lower 共用的最大遍历边数 */
+  maxClipDepth: number;
   /** arrow provider 注册表 */
   arrows: ReadonlyMap<string, ArrowDefinition>;
   /** pattern provider 注册表 */
@@ -110,6 +112,10 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
   const clips = resolveClipRegistry(options.clips);
+  const maxClipDepth = options.maxClipDepth ?? DEFAULT_MAX_CLIP_DEPTH;
+  if (!Number.isSafeInteger(maxClipDepth) || maxClipDepth < 0) {
+    throw new Error(`CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`);
+  }
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);
   const themeStyles = resolveThemeStyleRegistry(options.themeStyles);
@@ -134,11 +140,12 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     shapes: resolveShapeRegistry(options.shapes),
     boundaries: resolveBoundaryRegistry(options.boundaries),
     clips,
+    maxClipDepth,
     arrows: resolveArrowRegistry(options.arrows),
     patterns,
     pathGenerators: resolvePathGeneratorRegistry(options.pathGenerators),
     pathKinds: resolvePathKindRegistry(options.pathKinds),
     paint: createPaintRegistry(round),
-    clip: createClipRegistry(round),
+    clip: createClipRegistry(round, clips, maxClipDepth),
   };
 };

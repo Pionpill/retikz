@@ -2,15 +2,7 @@ import type { BoundsRect } from '@retikz/math';
 
 import { boundsOf, boundsToRect } from '@retikz/math';
 
-import type {
-  ClipShape,
-  GroupPrim,
-  PathCommand,
-  PathPrim,
-  ScenePrimitive,
-  SceneResource,
-  Transform,
-} from '../../contract';
+import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, SceneResource, Transform } from '../../contract';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 
 import { DEG_TO_RAD } from '../../shared/geometry';
@@ -125,26 +117,6 @@ const expandShadow = (rect: BoundsRect, shadow: ResolvedDropShadow | undefined):
     shadow,
   );
   return expanded === undefined ? rect : boundsToRect(expanded);
-};
-
-const clipBounds = (shape: ClipShape): BoundsRect | undefined => {
-  switch (shape.kind) {
-    case 'rect':
-      return { x: shape.x, y: shape.y, width: shape.width, height: shape.height };
-    case 'circle':
-      return { x: shape.cx - shape.r, y: shape.cy - shape.r, width: shape.r * 2, height: shape.r * 2 };
-    case 'ellipse':
-      return ellipseRect(shape.cx, shape.cy, shape.rx, shape.ry);
-    case 'polygon':
-      return rectOfPoints(shape.points);
-    case 'path':
-      return pathGeometry(shape.commands);
-    case 'compound':
-      return shape.children.reduce<BoundsRect | undefined>(
-        (current, child) => union(current, clipBounds(child)),
-        undefined,
-      );
-  }
 };
 
 type EndpointSample = { point: IRPosition; tangent: IRPosition };
@@ -324,7 +296,8 @@ const primitiveBounds = (
           `Cannot resolve clip resource '${primitive.clipRef}' for canonical visual bounds`,
         );
       }
-      const clip = clipBounds(resource.shape);
+      const clip = pathGeometry(resource.path.commands);
+      if (clip !== undefined && (clip.width === 0 || clip.height === 0)) return undefined;
       if (clip !== undefined) bounds = intersect(bounds, clip);
       if (bounds === undefined) return undefined;
     }

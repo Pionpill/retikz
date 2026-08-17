@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRScene } from '../../src';
+import type { IRClip, IRScene } from '../../src';
 
 import { BUILTIN_ARROWS, BUILTIN_CLIPS, BUILTIN_PATH_GENERATORS, BUILTIN_SHAPES, compileToScene } from '../../src';
 
@@ -17,7 +17,16 @@ describe('Core minimal builtin providers', () => {
       'circle',
       'openCircle',
     ]);
-    expect(BUILTIN_CLIPS.map(definition => definition.kind)).toEqual(['rect', 'circle', 'ellipse']);
+    expect(BUILTIN_CLIPS.map(definition => definition.kind)).toEqual(['rect']);
+    expect(BUILTIN_CLIPS[0]).toEqual(
+      expect.objectContaining({
+        kind: 'rect',
+        schema: expect.anything(),
+        resolve: expect.any(Function),
+        shapeSchema: expect.anything(),
+        lower: expect.any(Function),
+      }),
+    );
     expect(BUILTIN_PATH_GENERATORS).toEqual([]);
   });
 
@@ -70,6 +79,14 @@ describe('Core minimal builtin providers', () => {
         { padding: 0 },
       ),
     ).toThrow(/Unknown path generator 'parabola'.*options\.pathGenerators/i);
+  });
+
+  it.each(['circle', 'ellipse'])('requires an optional definition for the %s clip operation', kind => {
+    const clip: IRClip = kind === 'circle' ? { kind, cx: 0, cy: 0, r: 10 } : { kind, cx: 0, cy: 0, rx: 10, ry: 5 };
+
+    expect(() => compileToScene(scene([{ type: 'scope', clip, children: [] }]), { padding: 0 })).toThrow(
+      new RegExp(`Unknown clip '${kind}'.*options\\.clips`, 'i'),
+    );
   });
 
   it('compiles the built-in hollow stealth arrow without an injected definition', () => {

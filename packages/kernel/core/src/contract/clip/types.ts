@@ -1,7 +1,22 @@
 import type { z } from 'zod';
 
-import type { IRClip } from '../../schemas';
-import type { ClipShape } from '../scene';
+import type { IRClip, IRJsonObject } from '../../schemas';
+import type { SceneClipPath } from '../scene';
+
+/** Clip Definition 解析并降低的开放 JSON 裁剪形状 */
+export type ClipShape = IRJsonObject & {
+  /** 与 definition、spec 和 registry 一致的判别字段 */
+  kind: string;
+};
+
+/** 用户坐标系中的矩形裁剪形状 */
+export type RectClipShape = IRJsonObject & {
+  kind: 'rect';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 /** clip spec 的最小判别形态 */
 export type ClipLike = {
@@ -20,15 +35,42 @@ export type ClipResolveContext = {
   resolve: (clip: IRClip) => ClipShape;
 };
 
-/** clip definition 的作者侧输入形态 */
-export type ClipDefinitionInput<TClip extends ClipLike> = {
-  /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
-  kind: TClip['kind'];
-  /** 该 clip spec 的 zod schema */
-  schema: z.ZodType<TClip>;
-  /** 把 schema parse 后的 spec 解析为 Scene clip shape */
-  resolve: (spec: TClip, context: ClipResolveContext) => ClipShape;
+/** ClipShape lowering 的递归上下文 */
+export type ClipLowerContext = {
+  /** 与当前 compile 共享的 Scene 精度函数 */
+  round: (value: number) => number;
+  /** 通过当前 Clip registry 降低嵌套形状 */
+  lower: (shape: ClipShape) => SceneClipPath;
 };
 
-/** clip 定义的擦除形态：registry 存这个 */
-export type ClipDefinition = ClipDefinitionInput<ClipLike>;
+/** clip definition 的作者侧输入形态 */
+export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> = {
+  /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
+  kind: TClip['kind'] & TShape['kind'];
+  /** 该 clip spec 的 zod schema */
+  schema: z.ZodType<TClip>;
+  /** 把 schema parse 后的 spec 解析为同 kind 的 ClipShape */
+  resolve: {
+    bivarianceHack: (spec: TClip, context: ClipResolveContext) => TShape;
+  }['bivarianceHack'];
+  /** 完整 ClipShape snapshot 的 Zod schema */
+  shapeSchema: z.ZodType<TShape>;
+  /** 把已校验的同 kind ClipShape 降低为渲染无关路径 */
+  lower: {
+    bivarianceHack: (shape: TShape, context: ClipLowerContext) => SceneClipPath;
+  }['bivarianceHack'];
+};
+
+/** clip 定义的注册表形态：保留 schema 泛型并擦除 callback 参数 */
+export type ClipDefinition<TClip extends ClipLike = ClipLike, TShape extends ClipShape = ClipShape> = Readonly<{
+  /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
+  kind: TClip['kind'] & TShape['kind'];
+  /** 该 clip spec 的 zod schema */
+  schema: z.ZodType<TClip>;
+  /** registry 只在 spec schema parse 后调用的擦除解析入口 */
+  resolve: (spec: ClipLike, context: ClipResolveContext) => ClipShape;
+  /** 完整 ClipShape snapshot 的 Zod schema */
+  shapeSchema: z.ZodType<TShape>;
+  /** registry 只在 shapeSchema parse 后调用的擦除 lowering 入口 */
+  lower: (shape: ClipShape, context: ClipLowerContext) => SceneClipPath;
+}>;

@@ -32,8 +32,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、Clip、Ribbon providers；排版布局迁入独立 Layout 包族。',
-            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, Clip, and Ribbon providers, and moves layout composition to the independent Layout package family.',
+            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、两级 Clip、Ribbon providers；排版布局迁入独立 Layout 包族。',
+            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, two-stage Clip, and Ribbon providers, and moves layout composition to the independent Layout package family.',
           },
           items: [
             {
@@ -60,8 +60,18 @@ export const standardV01: Release = {
             {
               label: { zh: '按能力发布官方 providers', en: 'Capability-scoped official providers' },
               content: {
-                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 提供 polygon、path、compound。它们导出单项 Definition 与静态 provider，不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
-                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` provides polygon, path, and compound. These entries export individual Definitions and static providers without root aggregation or side-effect registration through Standard, React, or Vanilla.',
+                zh: '`@retikz/standard/shape` 提供 cross、sector、star、contour，`/arrow` 提供 diamond、openDiamond，`/clip` 为 circle、ellipse、polygon、path、compound 分别提供一个拥有 spec、shape 与 lowering 的完整 Definition 和静态 provider。它们不从 Standard、React 或 Vanilla 根入口聚合，也不通过副作用注册。',
+                en: '`@retikz/standard/shape` provides cross, sector, star, and contour; `/arrow` provides diamond and openDiamond; `/clip` provides one complete Definition and static provider owning spec, shape, and lowering for each of circle, ellipse, polygon, path, and compound. These entries are not aggregated through Standard, React, or Vanilla roots and never register by side effect.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：五种完整 Clip Definition 归入 Standard',
+                en: 'BREAKING: five complete Clip Definitions move to Standard',
+              },
+              content: {
+                zh: 'Core 默认裁剪只保留完整 `rect` Definition。直接编译 Standard 裁剪只向 `clips` 注入实际 kind 的完整 Definition；provider graph 每个 clip root 直接物化同 kind Definition，不再维护 shape provider 依赖。独立 ClipShape Definition、provider、集合与 `clipShapes` 入口已删除，不保留 alias、自动安装或 fallback；Layout 零尺寸裁剪继续使用 Core 非负尺寸 rect。',
+                en: 'Core clipping defaults retain only the complete `rect` Definition. Direct Standard clipping injects complete Definitions for actual kinds through `clips`; each clip root in the provider graph materializes its same-kind Definition directly without a shape-provider dependency. Independent ClipShape Definitions, providers, collections, and the `clipShapes` entry are removed with no aliases, auto-installation, or fallback; zero-sized Layout clipping continues to use Core non-negative rects.',
               },
             },
             {

@@ -28,7 +28,7 @@ export const compileObservedFragment = (
   const values = Array.isArray(children) ? children : [children];
   const warnings: Array<Parameters<CompileContext['onWarn']>[0]> = [];
   const paint = createPaintRegistry(context.round);
-  const clip = createClipRegistry(context.round);
+  const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
   const sandbox: CompileContext = {
     ...context,
     observation: undefined,

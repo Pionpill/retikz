@@ -257,10 +257,20 @@ export const kernelV05: Release = {
               },
             },
             {
+              label: {
+                zh: 'BREAKING：单一 Clip Definition 与统一裁剪路径',
+                en: 'BREAKING: single Clip Definition and canonical clip paths',
+              },
+              content: {
+                zh: '裁剪现在由一个完整 `ClipDefinition` 同时拥有 spec schema、JSON-safe shape schema、resolve 与 `SceneClipPath` lowering；Core、React、Vanilla 与 provider graph 只开放 `clips`。Scene clip resource 使用 canonical `path`，旧 Scene / ScenePatch 不提供双读。Core 默认只保留支持零尺寸空裁剪的 `rect`，circle、ellipse、polygon、path、compound 的完整所有权由 `@retikz/standard/clip` 承担。',
+                en: 'One complete `ClipDefinition` now owns the spec schema, JSON-safe shape schema, resolve, and `SceneClipPath` lowering; Core, React, Vanilla, and the provider graph expose only `clips`. Scene clip resources use canonical `path`, with no dual read for legacy Scenes or ScenePatches. Core keeps only `rect`, including zero-sized empty clipping, while `@retikz/standard/clip` fully owns circle, ellipse, polygon, path, and compound.',
+              },
+            },
+            {
               label: { zh: 'BREAKING：最小内置 provider 集合', en: 'BREAKING: minimal built-in provider set' },
               content: {
-                zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、rect / circle / ellipse Clip、lines / dots / grid Pattern、三种 Boundary，以及 stroke / ribbon Path Kind；Path Generator 默认为空。Ribbon 暂留 Core，后续由 Standard ADR-03 完成整体迁移。cross / sector / star / contour、diamond / openDiamond 和 polygon / path / compound 等可选官方 definitions 改由 `@retikz/standard/shape`、`/arrow`、`/clip` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',
-                en: 'Core defaults retain rectangle, ellipse, and polygon Shapes; six baseline Arrows; rect, circle, and ellipse Clips; lines, dots, and grid Patterns; three Boundaries; and the stroke and ribbon Path Kinds, while Path Generator defaults are empty. Ribbon remains in Core until Standard ADR-03 completes its whole-owner migration. Optional official Definitions such as cross, sector, star, contour, diamond, openDiamond, polygon, path, and compound now come explicitly from `@retikz/standard/shape`, `/arrow`, and `/clip`. Direct compilation injects them through the corresponding options, while adapters use complete provider contributions; migrated capabilities keep no Core re-export or automatic fallback.',
+                zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、完整 rect Clip Definition、lines / dots / grid Pattern、三种 Boundary，以及 stroke Path Kind；Path Generator 默认为空。cross / sector / star / contour、diamond / openDiamond、circle / ellipse / polygon / path / compound 裁剪与 Ribbon 分别由 `@retikz/standard/shape`、`/arrow`、`/clip`、`/ribbon` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',
+                en: 'Core defaults retain rectangle, ellipse, and polygon Shapes; six baseline Arrows; the complete rect Clip Definition; lines, dots, and grid Patterns; three Boundaries; and the stroke Path Kind, while Path Generator defaults are empty. Cross, sector, star, contour, diamond, openDiamond, circle / ellipse / polygon / path / compound clipping, and Ribbon now come explicitly from `@retikz/standard/shape`, `/arrow`, `/clip`, and `/ribbon`. Direct compilation injects them through the matching options, while adapters use complete provider contributions; migrated capabilities keep no Core re-export or automatic fallback.',
               },
             },
             {

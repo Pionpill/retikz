@@ -1,92 +1,131 @@
 ---
 title: Clip Extensions
-description: Import the compound clip Definition from @retikz/standard/clip on demand, then pass it through the React or Vanilla compile entry point.
+description: Import optional clips on demand from @retikz/standard/clip, then pass their Definitions through the React or Vanilla compile entry point.
 ---
 
-Clip extensions build on Core's basic clips and add more optional content:
+Clip Extensions add optional regions on top of Core's rectangular clip:
 
-| Package         | Provided content              |
-| --------------- | ----------------------------- |
-| `core`          | `rect`, `circle`, `ellipse`   |
-| `standard/clip` | `polygon`, `path`, `compound` |
+| Package         | Provided content                                       |
+| --------------- | ------------------------------------------------------ |
+| `core`          | `rect`                                                 |
+| `standard/clip` | `circle`, `ellipse`, `polygon`, `path`, and `compound` |
 
 ## Usage
 
 This page supports two import styles:
 
-- Import specific Definitions on demand, such as `CompoundClipDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
-- Use the complete official extension set through `StandardClipDefinitions`, which includes every Standard Definition from this subpath; use `StandardClipProviders` when assembling a provider graph
+- Import an individual Definition such as `CircleClipDefinition` and pass only what the current figure needs to `Layout` or `compile`
+- Use `StandardClipDefinitions` to include every Standard Definition from this subpath; use `StandardClipProviders` when assembling a provider graph
 
-Both styles explicitly assemble capabilities for the current figure. Importing the package does not register clips globally.
+Both styles assemble only the current figure. Importing the module never registers clips globally.
 
 ### React usage
 
-Import the clip Definitions you need from `@retikz/standard/clip`, pass them to the React `Layout` `clips` prop, and place the clip spec on a `Scope`.
+Import the Definition used by the current figure from `@retikz/standard/clip` and pass it to the React `Layout` through `clips`. A `Scope` clip stores only its `kind` and JSON-safe parameters.
 
 ```tsx
 import { Layout, Node, Scope } from '@retikz/react';
-import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition } from '@retikz/standard/clip';
 
-<Layout clips={[CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition]}>
-  <Scope
-    clip={{
-      kind: 'compound',
-      fillRule: 'nonzero',
-      children: [
-        { kind: 'circle', cx: -32, cy: 0, r: 56 },
-        { kind: 'circle', cx: 32, cy: 0, r: 56 },
-      ],
-    }}
-  >
-    <Node position={[0, 0]} minimumSize={{ width: 180, height: 110 }} />
+<Layout clips={[CircleClipDefinition]}>
+  <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 56 }}>
+    <Node position={[0, 0]} minimumSize={{ width: 160, height: 120 }} />
   </Scope>
 </Layout>;
 ```
 
+Core's `rect` needs no extra injection. A Standard Definition applies only to the current `Layout`.
+
 ### Vanilla usage
 
-With `@retikz/vanilla`, put the Definition in `compile.clips`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+With `@retikz/vanilla`, pass the same Definition through `compile.clips`. `input` may be existing Core IR or a Vanilla plain spec; `mount` uses the same `compile` configuration.
 
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
-import { CompoundClipDefinition, PathClipDefinition, PolygonClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition } from '@retikz/standard/clip';
 
 const svg = renderToSvgString(input, {
   compile: {
-    clips: [CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition],
+    clips: [CircleClipDefinition],
   },
 });
 ```
 
-The Definition exists only for the current Core registry assembly; it does not enter IR JSON or write global state as an import side effect. If IR uses `polygon`, `path`, or `compound` without injecting the corresponding Definition, Core reports an unregistered clip; after injection it validates the data through that Definition's schema.
+If a clip `kind` is neither a Core default nor registered through the current `clips`, Core reports the missing entry and points to the injection option. It never substitutes a rectangle or another nearby region.
 
 ## Examples
 
-The preview lays out two content regions horizontally. Each side uses a selectable basic clip inside `compound`; the controls also move the two regions independently.
+Each example below keeps the current section's clip `kind` fixed. Its controls change only parameters owned by that clip type.
+
+### Circles and ellipses
+
+`circle` uses one radius, while `ellipse` controls the horizontal and vertical radii independently. They work well for avatars, badges, spotlights, and rounded content windows.
 
 <ComponentPreview
-  files="clip-gallery"
+  files="circle-ellipse-clip"
   size="sm"
-  caption="The orange grids are the original content; each visible region follows its selected clip type."
+  caption="The dashed rectangles mark the source bounds. The left and right regions stay circle and ellipse while their radii change."
 />
 
-### Compound clipping
+| Type            | Required fields            | Description                                       |
+| --------------- | -------------------------- | ------------------------------------------------- |
+| `IRCircleClip`  | `cx`, `cy`, and `r`        | Center and a positive radius                      |
+| `IREllipseClip` | `cx`, `cy`, `rx`, and `ry` | Center and positive horizontal and vertical radii |
 
-`compound` recursively combines other registered clip specs through `children`. The example above uses two independently selectable child regions and suits cases where basic clips need to form one combined region.
+Inject `CircleClipDefinition` or `EllipseClipDefinition`, respectively.
 
-This subpath provides the individual Definitions, `StandardClipDefinitions`, `StandardClipProviders`, and their parameter types; the `@retikz/standard` root does not forward them.
+### Polygons
 
-#### API
+`polygon` joins at least three vertices in authored order and closes the region automatically. It covers regular and irregular straight-edged clips.
 
-`compound` uses `CompoundClip` and requires `CompoundClipDefinition` during compilation:
+<ComponentPreview
+  files="polygon-clip"
+  size="sm"
+  caption="The clip kind stays polygon; the three point controls write directly to points in order."
+/>
 
-| Field       | Type                                    | Description                                                                                      |
-| ----------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `kind`      | `'compound'`                            | Discriminator for recursive compound clipping                                                    |
-| `children`  | `Array<IRClip \| CompoundClip>` | At least one child; each child can nest another `compound` or reference a Core / registered clip |
-| `fillRule?` | `'nonzero' \| 'evenodd'`                | Fill rule for the combined path; omitted values follow Core's default handling                   |
+| Field    | Type                      | Description                                          |
+| -------- | ------------------------- | ---------------------------------------------------- |
+| `points` | `Array<[number, number]>` | At least three user-space vertices in authored order |
+
+Inject `PolygonClipDefinition` when using it.
+
+### Paths
+
+`path` accepts Core structured path commands directly. It covers curves and compound outlines that circles, ellipses, and polygons cannot express. The commands must form a valid fillable region.
+
+<ComponentPreview
+  files="path-clip"
+  size="md"
+  caption="The command structure stays fixed. Controls change only command coordinates and fillRule."
+/>
+
+| Field       | Type                       | Description                          |
+| ----------- | -------------------------- | ------------------------------------ |
+| `commands`  | `Array<PathCommand>`       | At least one structured path command |
+| `fillRule?` | `'nonzero'` \| `'evenodd'` | Fill rule; defaults to `nonzero`     |
+
+Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/draw/custom-path) for structured command authoring.
+
+### Compound clips
+
+`compound` appends child path commands in input order, then applies one `fillRule` to the final region. It combines outlines into one clip path but does not compute a geometric intersection between children.
+
+<ComponentPreview
+  files="compound-clip"
+  size="sm"
+  caption="The children remain two circles. Change their radius, center distance, and fillRule to inspect the combined region."
+/>
+
+| Field       | Type                       | Description                                                                       |
+| ----------- | -------------------------- | --------------------------------------------------------------------------------- |
+| `children`  | `Array<IRClip>`            | At least one child; every child Definition must also be available through `clips` |
+| `fillRule?` | `'nonzero'` \| `'evenodd'` | Fill rule for the final combined path; defaults to `nonzero`                      |
+
+Inject `CompoundClipDefinition` together with the Definitions used by its children. Use nested `<Scope clip>` elements when you need geometric intersections.
 
 ## Related
 
-- [Capability Loading](/library/standard/extension/capability-loading): boundary between direct injection and the provider graph
-- [Extensions](/library/standard/extension): browse the other optional capabilities
+- [Capability Loading](/library/standard/extension/capability-loading): direct injection and provider-graph boundaries
+- [Custom Clips](/kernel/components/layout/custom-clip): define a new clip kind with the complete `ClipDefinition` contract
+- [Extensions](/library/standard/extension): browse other optional capabilities

@@ -78,7 +78,15 @@ const definitionKey = (definition: ProviderDefinition): string => {
   if ('namespace' in definition && 'type' in definition)
     return `composite:${definition.namespace}\u0000${definition.type}`;
   if ('name' in definition && 'schema' in definition && 'compile' in definition) return `pathKind:${definition.name}`;
-  if ('kind' in definition && 'schema' in definition) return `clip:${definition.kind}`;
+  if (
+    'kind' in definition &&
+    'schema' in definition &&
+    'resolve' in definition &&
+    'shapeSchema' in definition &&
+    'lower' in definition
+  )
+    return `clip:${definition.kind}`;
+  if ('kind' in definition) return invalidDefinitions(definition);
   return `${definition.name}`;
 };
 
@@ -189,7 +197,10 @@ export const createRetainedProviderDefinitions = (
   const slotsByCollection = Object.fromEntries(
     providerCollections.map(collection => [
       collection,
-      (initialDefinitions[collection] ?? []).map(definition => ({ current: definition })),
+      (initialDefinitions[collection] ?? []).map(definition => {
+        definitionKey(definition);
+        return { current: definition };
+      }),
     ]),
   ) as { [K in keyof CoreProviderDefinitions]: Array<ProviderSlot> };
   const slots = (collection: keyof CoreProviderDefinitions): Array<ProviderSlot> => slotsByCollection[collection] ?? [];

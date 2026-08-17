@@ -1337,7 +1337,7 @@ export const compileChildrenToPrimitives = (
         }
         resourceIds.set(resource.id, imported.id);
       } else {
-        resourceIds.set(resource.id, runtime.context.clip.importResolved(resource.shape));
+        resourceIds.set(resource.id, runtime.context.clip.importPath(resource.path));
       }
     }
     const wrapperClipRef =
@@ -1828,7 +1828,7 @@ export const compileChildrenToPrimitives = (
         warnings.push(warning);
       };
       const paint = createPaintRegistry(context.round);
-      const clip = createClipRegistry(context.round);
+      const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
       const probeIdentityTracker =
         runtime.state.identityTracker === undefined
           ? undefined

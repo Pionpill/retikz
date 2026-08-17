@@ -41,6 +41,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
 
     expect(definitions.clips?.map(definition => definition.kind)).toEqual(['path']);
+    expect(definitions).toEqual({ composites: [SurfaceDefinition], clips: [PathClipDefinition] });
     expect(() =>
       compileToScene({ type: 'scene', version: 1, children: [surface] }, { ...definitions, padding: 0 }),
     ).not.toThrow();
@@ -59,7 +60,11 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
+      {
+        composites: [SurfaceDefinition],
+        clips: [PathClipDefinition],
+        padding: 0,
+      },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'surface-root');
     const paths = pathsOf(root?.children ?? []);
@@ -92,7 +97,11 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
+      {
+        composites: [SurfaceDefinition],
+        clips: [PathClipDefinition],
+        padding: 0,
+      },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'clipped-surface');
     const content = root?.children.find((child): child is GroupPrim => child.type === 'group');
@@ -103,7 +112,10 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     expect(content?.clipRef).not.toBe(root?.clipRef);
     expect(root?.children.filter(child => child.type === 'path').every(path => !('clipRef' in path))).toBe(true);
     expect(clipResources).toHaveLength(2);
-    expect(clipResources.find(resource => resource.id === content?.clipRef)?.shape).toMatchObject({ kind: 'path' });
+    expect(clipResources.find(resource => resource.id === content?.clipRef)?.path).toMatchObject({
+      fillRule: 'nonzero',
+      commands: expect.any(Array),
+    });
   });
 
   it('applies complete outer Scope identity and transforms once while keeping internal style inheritance', () => {
@@ -129,7 +141,11 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
+      {
+        composites: [SurfaceDefinition],
+        clips: [PathClipDefinition],
+        padding: 0,
+      },
     );
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'styled-surface');
     const border = pathsOf(root?.children ?? []).find(path => path.stroke !== undefined);
@@ -230,13 +246,15 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },
-      { composites: [SurfaceDefinition], clips: [PathClipDefinition], padding: 0 },
+      {
+        composites: [SurfaceDefinition],
+        clips: [PathClipDefinition],
+        padding: 0,
+      },
     );
     const clip = (result.scene.resources ?? []).find(resource => resource.kind === 'clip');
 
-    expect(clip?.shape).toMatchObject({ kind: 'path' });
-    if (clip?.shape.kind === 'path') {
-      expect(JSON.stringify(clip.shape.commands)).not.toMatch(/NaN|Infinity/);
-    }
+    expect(clip?.path).toMatchObject({ fillRule: 'nonzero', commands: expect.any(Array) });
+    if (clip !== undefined) expect(JSON.stringify(clip.path.commands)).not.toMatch(/NaN|Infinity/);
   });
 });

@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Composite assembly、Spatial handles 与基础原子
 
-- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～20 Proposed，ADR-13 Superseded，alpha.2 仍为 authored Scope output、轻量 Theme、Composite assembly、spatial transparency 与统一 authoring / processing 链路重新打开
+- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17、ADR-22 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～20 Proposed，ADR-13、ADR-21 Superseded，alpha.2 继续推进 authored Scope output、轻量 Theme、Composite assembly、spatial transparency 与统一 authoring / processing
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md)
 
@@ -28,32 +28,38 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 本 milestone 另登记 ADR-20 Vanilla 统一 Authoring 与框架无关处理。Vanilla 作为所有框架的唯一 typed Input-to-IR、Composite contribution 消费与 framework-neutral processing owner；React 直接依赖 Vanilla，只保留 JSX、生命周期与宿主桥接；Core 只保留 Source IR、Canonical normalize 与 compile / Scene。
 
+本 milestone 另登记 ADR-21 可扩展 ClipShape。Core 将 Clip operation 与 ClipShape 拆成两级 Definition / registry，并统一降低为 renderer-neutral Scene clip path；Core 只保留矩形最小内置，其余官方 ClipShape 由 Standard 显式装配。
+
+本 milestone 另登记 ADR-22 单一 Clip Definition。它取代 ADR-21 的两级公开 registry，把 spec schema、JSON-safe shape schema、resolve 与 Scene path lowering 收敛到同一个 definition；Core、React、Vanilla 与 provider graph 只暴露 `clips`，canonical Scene path 与矩形最小内置保持不变。
+
 本 milestone 不以极限大数据吞吐为目标，而以中等规模图形持续更新时减少无效工作、缩短更新延迟和 renderer commit 为验收重点。首次完整渲染不得明显退化。
 
 ## ADR 索引
 
-| ADR                                                   | 状态       | 主题                                   | 交付                                                                                                |
-| ----------------------------------------------------- | ---------- | -------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [ADR-01](./01-performance-observability-baseline.md)  | Accepted   | 性能观测与 baseline                    | 冻结场景、指标、tracing 与回归预算                                                                  |
-| [ADR-02](./02-runtime-identity-owner-registry.md)     | Accepted   | Runtime identity / owner               | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                                  |
-| [ADR-03](./03-program-transaction-lifecycle.md)       | Accepted   | Program / transaction lifecycle        | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                                  |
-| [ADR-04](./04-incremental-core-compile.md)            | Accepted   | Core 增量编译                          | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                                      |
-| [ADR-05](./05-scene-patch-retained-renderer.md)       | Accepted   | Scene Patch 与 retained renderer       | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                         |
-| [ADR-06](./06-box-layout-composite-contract.md)       | Accepted   | Box Layout Composite contract          | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper          |
-| [ADR-07](./07-runtime-execution-policy.md)            | Accepted   | Runtime 执行模式与更新策略             | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                           |
-| [ADR-08](./08-layout-proposal-probe-contract.md)      | Accepted   | Layout proposal / probe contract       | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay             |
-| [ADR-09](./09-inherited-theme-context.md)             | Accepted   | 可继承 Theme IR 与 Composite context   | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                                      |
-| [ADR-10](./10-core-atomic-contracts.md)               | Accepted   | Core 原子契约与 Tier 2 / Tier 3 组合   | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                |
-| [ADR-11](./11-layout-aware-scope-output.md)           | Proposed   | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排 |
-| [ADR-12](./12-extensible-inspector-content.md)        | Accepted   | 可选 Inspector 扩展包                  | 冻结 Core 观测底座、独立 Inspect 包、Standard `/inspect` 与 Path 控制点闭环                         |
-| [ADR-13](./13-theme-token-namespace-context.md)       | Superseded | Theme token namespace 与共享颜色       | 历史 namespaced bag、registry 与 shared colors 设计                                                 |
-| [ADR-14](./14-foundation-package.md)                  | Accepted   | Foundation 基础契约包与依赖归属        | 冻结跨包原子契约、direct dependency、非空字符串语义与结构化错误兼容边界                             |
-| [ADR-15](./15-lightweight-theme-resolution.md)        | Proposed   | 轻量 Theme IR 与领域 Token 解析        | 冻结 selector-only Theme、Core shared colors 与 owner-local token resolution                        |
-| [ADR-16](./16-affine-matrix-primitives.md)            | Accepted   | 二维仿射矩阵原子                       | 冻结六元组 ABI、运行时不可变单位矩阵、复合顺序、点映射与 Math / Render / TeX 边界                   |
-| [ADR-17](./17-foundation-schema-primitives.md)        | Accepted   | Foundation 基础 Schema 原子            | 冻结唯一 Zod 依赖、基础 string / number schema、旧 owner 迁移与领域组合边界                         |
-| [ADR-18](./18-composite-dependency-provider-graph.md) | Proposed   | Composite dependency provider graph    | 冻结完整 key、roots、传递依赖、dataset 合并、稳定拓扑与跨 adapter 同构                              |
-| [ADR-19](./19-qualified-spatial-handles.md)           | Proposed   | Qualified spatial handle sidecar       | 冻结结构化 Composite 输出、owner path、world rect index、selector 与 Scene 边界                     |
+| ADR                                                   | 状态       | 主题                                   | 交付                                                                                                              |
+| ----------------------------------------------------- | ---------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [ADR-01](./01-performance-observability-baseline.md)  | Accepted   | 性能观测与 baseline                    | 冻结场景、指标、tracing 与回归预算                                                                                |
+| [ADR-02](./02-runtime-identity-owner-registry.md)     | Accepted   | Runtime identity / owner               | 冻结 identity、Snapshot、owned value、Owner Definition 与 registry                                                |
+| [ADR-03](./03-program-transaction-lifecycle.md)       | Accepted   | Program / transaction lifecycle        | 冻结依赖图、revision、candidate、fallback、observer 与同步原子提交                                                |
+| [ADR-04](./04-incremental-core-compile.md)            | Accepted   | Core 增量编译                          | 冻结完整 Program、stable Diff、fallback 与首个安全局部更新闭环                                                    |
+| [ADR-05](./05-scene-patch-retained-renderer.md)       | Accepted   | Scene Patch 与 retained renderer       | 冻结 identity topology、commit participant 与 SVG/Canvas retained lifecycle                                       |
+| [ADR-06](./06-box-layout-composite-contract.md)       | Accepted   | Box Layout Composite contract          | 冻结双轴 constraint、allocation / slot-size feedback、nested propagation 与 replay wrapper                        |
+| [ADR-07](./07-runtime-execution-policy.md)            | Accepted   | Runtime 执行模式与更新策略             | 显式选择 static / retained，并在 retained Session 中选择 auto / full 更新                                         |
+| [ADR-08](./08-layout-proposal-probe-contract.md)      | Accepted   | Layout proposal / probe contract       | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay                           |
+| [ADR-09](./09-inherited-theme-context.md)             | Accepted   | 可继承 Theme IR 与 Composite context   | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                                                    |
+| [ADR-10](./10-core-atomic-contracts.md)               | Accepted   | Core 原子契约与 Tier 2 / Tier 3 组合   | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                              |
+| [ADR-11](./11-layout-aware-scope-output.md)           | Proposed   | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排               |
+| [ADR-12](./12-extensible-inspector-content.md)        | Accepted   | 可选 Inspector 扩展包                  | 冻结 Core 观测底座、独立 Inspect 包、Standard `/inspect` 与 Path 控制点闭环                                       |
+| [ADR-13](./13-theme-token-namespace-context.md)       | Superseded | Theme token namespace 与共享颜色       | 历史 namespaced bag、registry 与 shared colors 设计                                                               |
+| [ADR-14](./14-foundation-package.md)                  | Accepted   | Foundation 基础契约包与依赖归属        | 冻结跨包原子契约、direct dependency、非空字符串语义与结构化错误兼容边界                                           |
+| [ADR-15](./15-lightweight-theme-resolution.md)        | Proposed   | 轻量 Theme IR 与领域 Token 解析        | 冻结 selector-only Theme、Core shared colors 与 owner-local token resolution                                      |
+| [ADR-16](./16-affine-matrix-primitives.md)            | Accepted   | 二维仿射矩阵原子                       | 冻结六元组 ABI、运行时不可变单位矩阵、复合顺序、点映射与 Math / Render / TeX 边界                                 |
+| [ADR-17](./17-foundation-schema-primitives.md)        | Accepted   | Foundation 基础 Schema 原子            | 冻结唯一 Zod 依赖、基础 string / number schema、旧 owner 迁移与领域组合边界                                       |
+| [ADR-18](./18-composite-dependency-provider-graph.md) | Proposed   | Composite dependency provider graph    | 冻结完整 key、roots、传递依赖、dataset 合并、稳定拓扑与跨 adapter 同构                                            |
+| [ADR-19](./19-qualified-spatial-handles.md)           | Proposed   | Qualified spatial handle sidecar       | 冻结结构化 Composite 输出、owner path、world rect index、selector 与 Scene 边界                                   |
 | [ADR-20](./20-vanilla-authoring-normalization.md)     | Proposed   | Vanilla authoring 与处理链             | 收敛 Core Input 与 framework-neutral processing 至 Vanilla，React 依赖 Vanilla 并只保留 JSX / 生命周期 / 宿主桥接 |
+| [ADR-21](./21-extensible-clip-shapes.md)              | Superseded | 可扩展 ClipShape 与统一裁剪路径        | 历史两级 Definition、开放 shape、canonical Scene path 与 provider graph 设计                                      |
+| [ADR-22](./22-single-clip-definition.md)              | Accepted   | 单一 Clip Definition 扩展契约          | 冻结单一 definition、同 kind shape、唯一 clips registry/provider 与既有 canonical Scene path                      |
 
 ## 当前进度
 
@@ -75,6 +81,8 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-18 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 React / Vanilla contribution 或 Core resolver。
 - ADR-19 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 Composite callback、CompileResult、Plot handles 或 renderer。
 - ADR-20 已完成 Proposed 设计与 Architecture Gate，等待人工确认；未授权修改 Core、Vanilla、React 或下游 adapter。
+- ADR-21 已完成两级 Clip Definition / ClipShape Definition、canonical Scene path、provider graph、递归保护、renderer / adapter 消费、测试与双语文档，并于 2026-08-16 获人工接受；Standard ADR-05 随后完成五种可选 ClipShape 所有权迁移，Core 最小内置最终收敛为 `rect`。
+- ADR-22 已完成 Architecture Gate、Plan Gate、Core / React / Vanilla / Standard / 下游 consumer 实现、测试与双语文档，并由人工确认进入 Accepted。
 
 ## 执行批次
 
@@ -98,7 +106,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | 16   | ADR-17 | 多个独立包已证明同义基础 string / number Zod 约束重复                            | Foundation 成为唯一原子 schema 真源，完整 owner schema 与既有行为保持稳定                    |
 | 17   | ADR-18 | Chart、Plot、Standard 与第三方嵌套能力已证明单 namespace adapter 聚合不足        | provider graph、稳定拓扑、dataset / definition 冲突与 React / Vanilla parity 稳定            |
 | 18   | ADR-19 | 外层 Composite 必须保持 Plot / Table 等 descendant 的空间 identity 与 provenance | structured output、qualified owner path、world rect sidecar 与 closed selector 稳定          |
-| 19   | ADR-20 | Core / Vanilla / React 包边界已冻结                                                | 统一 Input-to-IR、处理主链与跨入口等价性可验证                                                   |
+| 19   | ADR-20 | Core / Vanilla / React 包边界已冻结                                              | 统一 Input-to-IR、处理主链与跨入口等价性可验证                                               |
 
 批次存在硬依赖，不并行实施。每条 ADR 依次完成 Architecture Gate、人工确认、`test-contract` / Plan Gate 与人工实现授权。
 
@@ -139,6 +147,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、领域 refinement 或 Diagnostic。
 - ADR-18 在接受前必须证明多个 roots 的传递闭包、共享 provider 单次物化、dataset `Object.is` 同源边界、缺失 / cycle / maker / definition 冲突，以及 React、Vanilla、SSR、直接 resolver 与第三方 provider 的同构行为。
 - ADR-19 在接受前必须证明 expand / layout-aware Composite 统一结构化输出，Scope / placement / replay transform 后的 world-space rect、owner path、origin / final occurrence、closed selector 与 retained revision 原子性稳定，且 Scene、SVG、Canvas 不承载该 sidecar。
+- ADR-22 已证明内置、Standard 与第三方 Clip 使用同一个完整 Definition、registry、provider capability 与递归消费路径，definition/spec/shape kind 一致；canonical Scene clip path 继续可 JSON 往返并被 SVG、Canvas、Node Canvas、hit-test 与 visual bounds 等价消费，Core 默认仅保留矩形裁剪。
 
 ## 后续性能遗留
 

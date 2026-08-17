@@ -1,4 +1,4 @@
-import type { ClipShape } from '@retikz/core';
+import type { SceneClipPath } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -28,11 +28,10 @@ const createContext = (): CanvasRenderingContext2D & { calls: Array<Call> } => {
   } as unknown as CanvasRenderingContext2D & { calls: Array<Call> };
 };
 
-describe('canvas clip path shapes', () => {
+describe('canvas canonical clip paths', () => {
   it('applies path clip commands with fillRule', () => {
     const ctx = createContext();
-    const shape: ClipShape = {
-      kind: 'path',
+    const path: SceneClipPath = {
       fillRule: 'evenodd',
       commands: [
         { kind: 'move', to: [0, 0] },
@@ -41,24 +40,65 @@ describe('canvas clip path shapes', () => {
         { kind: 'close' },
       ],
     };
-    applyClip(ctx, shape);
+    applyClip(ctx, path);
     expect(ctx.calls.map(call => call.name)).toEqual(['beginPath', 'moveTo', 'lineTo', 'lineTo', 'closePath', 'clip']);
     expect(ctx.calls.at(-1)).toEqual({ name: 'clip', args: ['evenodd'] });
   });
 
-  it('applies compound clip as one accumulated path', () => {
+  it('applies accumulated subpaths with one canonical fill rule', () => {
     const ctx = createContext();
-    const shape: ClipShape = {
-      kind: 'compound',
-      children: [
-        { kind: 'rect', x: 0, y: 0, width: 20, height: 20 },
-        {
-          kind: 'path',
-          commands: [{ kind: 'move', to: [5, 5] }, { kind: 'line', to: [15, 5] }, { kind: 'close' }],
-        },
+    const path: SceneClipPath = {
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [20, 0] },
+        { kind: 'line', to: [20, 20] },
+        { kind: 'line', to: [0, 20] },
+        { kind: 'close' },
+        { kind: 'move', to: [5, 5] },
+        { kind: 'line', to: [15, 5] },
+        { kind: 'close' },
       ],
+      fillRule: 'nonzero',
     };
-    applyClip(ctx, shape);
-    expect(ctx.calls.map(call => call.name)).toEqual(['beginPath', 'rect', 'moveTo', 'lineTo', 'closePath', 'clip']);
+    applyClip(ctx, path);
+    expect(ctx.calls.map(call => call.name)).toEqual([
+      'beginPath',
+      'moveTo',
+      'lineTo',
+      'lineTo',
+      'lineTo',
+      'closePath',
+      'moveTo',
+      'lineTo',
+      'closePath',
+      'clip',
+    ]);
+    expect(ctx.calls.at(-1)).toEqual({ name: 'clip', args: ['nonzero'] });
+  });
+
+  it('starts an arc after close with a new moveTo at the declared arc start', () => {
+    const ctx = createContext();
+    const path: SceneClipPath = {
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [1, 0] },
+        { kind: 'close' },
+        { kind: 'arc', center: [5, 5], radius: 2, startAngle: 0, endAngle: 180 },
+      ],
+      fillRule: 'nonzero',
+    };
+
+    applyClip(ctx, path);
+
+    expect(ctx.calls.map(call => call.name)).toEqual([
+      'beginPath',
+      'moveTo',
+      'lineTo',
+      'closePath',
+      'moveTo',
+      'arc',
+      'clip',
+    ]);
+    expect(ctx.calls[4]).toEqual({ name: 'moveTo', args: [7, 5] });
   });
 });

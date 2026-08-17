@@ -86,7 +86,7 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 ### Clipping and stacking
 
-`clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. The panel shows five Core basic regions plus the `compound` clip injected from Standard; register a [Custom Clip](/kernel/components/layout/custom-clip) when a domain needs another kind.
+`clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. The panel shows Core's `rect` plus `circle` / `ellipse` / `polygon` / `path` / `compound` injected from Standard at both Definition levels. Register a [Custom Clip](/kernel/components/layout/custom-clip) when a domain needs another operation or geometry kind.
 
 <ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 
@@ -233,8 +233,8 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
     {
       label: 'Clip resolution and resource registration',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 343,
-      endLine: 390,
+      startLine: 238,
+      endLine: 328,
     },
   ]}
 />
@@ -252,7 +252,7 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 | `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                             |
 | `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                             |
 | `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                               |
-| `clip`           | `IRClip`                            | —             | Built-in or custom clip in local coordinates                                                                              |
+| `clip`           | `IRClip`                                | —             | Built-in or custom clip in local coordinates                                                                              |
 | `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                                  |
 | `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                             |
 | `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                                |
@@ -265,7 +265,7 @@ Inspection support comes from `LayoutInspectScope` in `@retikz/layout-react/insp
 | Prop                                                            | Type                               | Default | Description                               |
 | --------------------------------------------------------------- | ---------------------------------- | ------- | ----------------------------------------- |
 | `color`                                                         | `string`                           | —       | Primary color cascaded across elements    |
-| `stroke` / `fill`                                               | `string` \| `IRPaint`          | —       | Per-field stroke and fill cascade         |
+| `stroke` / `fill`                                               | `string` \| `IRPaint`              | —       | Per-field stroke and fill cascade         |
 | `strokeWidth` / opacity fields                                  | `number`                           | —       | Stroke width and per-field opacity        |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | default objects                    | —       | Four independent element-default channels |
 | `resetStyle`                                                    | `boolean` \| `Array<StyleChannel>` | `false` | Cut all or selected outer Scope channels  |

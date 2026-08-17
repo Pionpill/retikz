@@ -34,4 +34,38 @@ describe('Standard provider subpath exports', () => {
     expect(manifest.exports['./clip']).toEqual({ types: './src/clip/index.ts', default: './src/clip/index.ts' });
     expect(manifest.exports['./ribbon']).toEqual({ types: './src/ribbon/index.ts', default: './src/ribbon/index.ts' });
   });
+
+  it('exports only complete Clip definitions and providers from the clip subpath', () => {
+    for (const name of [
+      'CircleClipDefinition',
+      'EllipseClipDefinition',
+      'PolygonClipDefinition',
+      'PathClipDefinition',
+      'CompoundClipDefinition',
+      'CircleClipProvider',
+      'EllipseClipProvider',
+      'PolygonClipProvider',
+      'PathClipProvider',
+      'CompoundClipProvider',
+      'StandardClipDefinitions',
+      'StandardClipProviders',
+    ]) {
+      expect(clip).toHaveProperty(name);
+    }
+    for (const name of [
+      'CircleClipShapeDefinition',
+      'EllipseClipShapeDefinition',
+      'PolygonClipShapeDefinition',
+      'PathClipShapeDefinition',
+      'CompoundClipShapeDefinition',
+      'CircleClipShapeProvider',
+      'EllipseClipShapeProvider',
+      'PolygonClipShapeProvider',
+      'PathClipShapeProvider',
+      'CompoundClipShapeProvider',
+      'StandardClipShapeDefinitions',
+    ]) {
+      expect(clip).not.toHaveProperty(name);
+    }
+  });
 });

@@ -43,7 +43,16 @@ const resources: Array<SceneResource> = [
   {
     kind: 'clip',
     id: 'clip-1',
-    shape: { kind: 'rect', x: 0, y: 0, width: 16, height: 12 },
+    path: {
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [16, 0] },
+        { kind: 'line', to: [16, 12] },
+        { kind: 'line', to: [0, 12] },
+        { kind: 'close' },
+      ],
+      fillRule: 'nonzero',
+    },
   },
 ];
 

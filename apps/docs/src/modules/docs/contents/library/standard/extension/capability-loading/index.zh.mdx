@@ -16,14 +16,14 @@ Standard 扩展不会自动注册。使用形状、箭头、裁剪或 Path kind 
 ```tsx
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
 <Layout
   shapes={[CrossShapeDefinition]}
   arrows={[DiamondArrowDefinition]}
-  clips={[CompoundClipDefinition]}
+  clips={[CircleClipDefinition]}
   pathKinds={[RibbonPathKindDefinition]}
 >
   {/* 图形内容 */}
@@ -35,7 +35,7 @@ Vanilla 使用同一组 Definition：
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
@@ -43,7 +43,7 @@ const svg = renderToSvgString(input, {
   compile: {
     shapes: [CrossShapeDefinition],
     arrows: [DiamondArrowDefinition],
-    clips: [CompoundClipDefinition],
+    clips: [CircleClipDefinition],
     pathKinds: [RibbonPathKindDefinition],
   },
 });
@@ -87,7 +87,9 @@ const svg = renderToSvgString(input, {
 | `RibbonPathKindDefinition` | Ribbon 只有一个直接 Path kind Definition，没有完整的 `StandardRibbonDefinitions` 集合 |
 | `StandardXxxDefinitions`   | 快速使用对应官方扩展包的全部 Definition                                               |
 
-如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`，Ribbon 则使用 `createRibbonProviderContribution()`。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips`、`pathKinds` 数组。
+裁剪使用一个完整 Definition：`clips` 中每项同时拥有 spec schema、shape schema、resolve 与 lowering。按需装载时只传实际 kind 的 `XxxClipDefinition`；完整集合只需 `StandardClipDefinitions`。
+
+如果是 adapter 在编译前组装 provider graph，则使用对应的 `StandardShapeProviders`、`StandardArrowProviders` 或 `StandardClipProviders`，Ribbon 则使用 `createRibbonProviderContribution()`。`StandardClipProviders` 包含五个完整 clip provider，但仍只是 catalog；resolver 只物化 roots 可达闭包。Provider 用于装配 Definition，不直接替代 `Layout` 或 `compile` 的 `shapes`、`arrows`、`clips`、`pathKinds` 数组。
 
 ## 内部编译逻辑
 

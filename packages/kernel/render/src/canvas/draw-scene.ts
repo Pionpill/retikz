@@ -831,7 +831,7 @@ const drawPrim = (
       if (p.clipRef !== undefined) {
         const clip = resources.get(p.clipRef);
         if (clip !== undefined && clip.kind === 'clip') {
-          applyClip(ctx, clip.shape);
+          applyClip(ctx, clip.path);
         } else {
           warnUnsupported(options, 'clip', `Canvas renderer: clip resource "${p.clipRef}" not found; clip is skipped.`);
         }
