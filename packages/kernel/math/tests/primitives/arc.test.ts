@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { arcAngleInRange, arcBoundingPoints, arcEndPoint, DEFAULT_EPSILON } from '../../src';
+import { arcAngleInRange, arcBoundingPoints, arcEndPoint, DEFAULT_EPSILON, ellipseArcBoundingPoints } from '../../src';
 
 /*
  * 约定（与 polar.ts 一致）：
@@ -110,6 +110,38 @@ describe('arcBoundingPoints 弧 bbox 极值候选点', () => {
     expect(containsPoint(pts, [-10, 0])).toBe(true);
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true); // 90°
+  });
+
+  it('超大角度区间仍保留四个轴向极值，不因枚举保护丢失 bounds 候选', () => {
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 100_000_000 });
+
+    expect(pts).toHaveLength(5);
+    expect(containsPoint(pts, [10, 0])).toBe(true);
+    expect(containsPoint(pts, [0, 10])).toBe(true);
+    expect(containsPoint(pts, [-10, 0])).toBe(true);
+    expect(containsPoint(pts, [0, -10])).toBe(true);
+  });
+
+  it('椭圆弧的超大角度区间同样只保留四个轴向极值', () => {
+    const pts = ellipseArcBoundingPoints({
+      center: [0, 0],
+      radiusX: 20,
+      radiusY: 10,
+      startAngleDeg: 0,
+      endAngleDeg: 100_000_000,
+    });
+
+    expect(pts).toHaveLength(5);
+    expect(containsPoint(pts, [20, 0])).toBe(true);
+    expect(containsPoint(pts, [0, 10])).toBe(true);
+    expect(containsPoint(pts, [-20, 0])).toBe(true);
+    expect(containsPoint(pts, [0, -10])).toBe(true);
+  });
+
+  it('小于一整圈的偏移角区间不引入区间外的轴向极值', () => {
+    const pts = arcBoundingPoints({ center: [0, 0], radius: 10, startAngleDeg: 450, endAngleDeg: 500 });
+
+    expect(pts).toHaveLength(2);
   });
 });
 

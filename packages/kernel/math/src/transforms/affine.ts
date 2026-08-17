@@ -1,4 +1,4 @@
-import type { Position } from './point';
+import type { Position } from '../primitives';
 
 /** SVG / Canvas 同序的二维仿射矩阵 `[a,b,c,d,e,f]` */
 export type AffineMatrix = readonly [number, number, number, number, number, number];
