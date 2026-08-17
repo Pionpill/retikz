@@ -1,18 +1,19 @@
 ## Chart authoring
 
-`@retikz/chart` normalizes a complete Plot recipe and optional chart narrative metadata into `IRChart`. `IRChart` is the JSON-serializable canonical IR, and `ChartProvider` is its only composite provider. Applications normally author through the React or Vanilla adapters rather than assembling providers themselves.
+Every Chart entry follows the same field layout, but there is no public `ChartSchema` union. `BaseChartSchema` and each packaged type's exact schema fix `namespace: 'chart'` and an exact `type`; `plot` stores Plot-owned input, packaged types keep their unique configuration in `config`, and `presentation` stores chart-wide narrative content.
 
-| Entry                   | Use it when                                                                        | Result                                                             |
-| ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `Chart`                 | You already have a complete IRPlot or need Plot JSX extensions in the chart body | Base Chart authoring                                               |
-| `ScatterChart`          | You compare two continuous fields with points                                      | Built-in Scatter recipe with Plot extension entry points           |
-| `BubbleChart`           | You encode a quantitative area in addition to two-dimensional position             | Built-in Bubble recipe with Plot extension entry points            |
-| `ConnectedScatterChart` | You trace one ordered series through two-dimensional space                         | Built-in Connected Scatter recipe with Plot extension entry points |
-| `resolvePointChart` | You need framework-neutral Point typed authoring or JSON integration               | Resolves Point typed input to `IRChart` and a complete IRPlot    |
+After an exact schema parses, its matching recipe binds the value. Every recipe then resolves through `resolveChart` to `IRBaseChart`, so Core consumes only `chart.base` rather than a separate execution entry for Scatter, Bubble, or another packaged type.
 
-The root entries retain only every-family base capability: import `Chart` and presentation markers from `@retikz/chart-react`, or `createChart` and `renderChart` from `@retikz/chart-vanilla`. Import Point typed API from the matching `/point` entry: `@retikz/chart/point` provides schemas and `resolvePointChart`; `@retikz/chart-react/point` provides `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`; `@retikz/chart-vanilla/point` provides `createScatterChart`, `createBubbleChart`, and `createConnectedScatterChart`. Every `/point` entry also includes its base exports.
+| Entry                   | Use it when                                                | Chart `type`        |
+| ----------------------- | ---------------------------------------------------------- | ------------------- |
+| `Chart`                 | You describe a complete Plot explicitly                    | `base`              |
+| `ScatterChart`          | You compare two continuous fields                          | `scatter`           |
+| `BubbleChart`           | You add a quantitative area to two-dimensional position    | `bubble`            |
+| `ConnectedScatterChart` | You trace one ordered series through two-dimensional space | `connected-scatter` |
 
-A typed Chart receives row-array `data`, recipe fields through `encoding`, and JSON-safe mark values such as `{ kind: 'constant', value: 10 }`. Additional axes, legends, marks, scales, or transforms continue to use Plot's public authoring capability.
+Scatter & Points remains a documentation, source-organization, and multi-entry import boundary. The three packages keep their `/point` entries: `@retikz/chart/point` exposes concrete type schemas, `@retikz/chart-react/point` exposes `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`, and `@retikz/chart-vanilla/point` exposes `createScatterChart`, `createBubbleChart`, and `createConnectedScatterChart`. This directory boundary does not introduce a `PointChartSchema`, a Point-specific resolver, or a separate adapter path; each entry binds its exact schema and then converges on `resolveChart` and the Chart adapter contract.
+
+A packaged type stores its unique fields under `config`. Scatter supplies x/y through `config.encoding`, Bubble adds size, and Connected Scatter adds order; local adjustments to the primary mark also belong to `config`. Data, transforms, scales, coordinates, guides, and explicit additional marks live under `plot` and continue to use Plot's public contracts.
 
 ## Presentation
 
@@ -27,9 +28,9 @@ A typed Chart receives row-array `data`, recipe fields through `encoding`, and J
 
 Place markers as direct children of `Chart` or `XxxChart`; transparent `Fragment` groups are allowed. A marker fully overrides the matching shorthand, and each preset can appear only once. Markers retain JSX order within their side of the Plot: `ChartSubtitle` followed by `ChartTitle` appears in that order above it, while `ChartSource` then `ChartNote` appears in that order below it.
 
-Marker children currently accept only strings, transparent `Fragment`, and Core `Text`. Multiple `Text` children create lines and may each supply font, fill, or opacity. `position="top"` and `position="bottom"` only normalize the authoring location around the Plot; canonical `IRChart` retains only the final presentation-child order.
+Marker children currently accept only strings, transparent `Fragment`, and Core `Text`. Multiple `Text` children create lines and may each supply font, fill, or opacity. `position="top"` and `position="bottom"` only normalize the authoring location around the Plot; the resolved Base Chart retains only the final presentation-child order.
 
-The three typed factories accept the same shorthands as React. For custom order or position, provide ordered plain `presentation` records. A record's `text` is a string or JSON-safe Core TextBlock, never a React object.
+Each type factory accepts the same shorthands as React. For custom order or position, provide ordered plain `presentation` records. A record's `text` is a string or JSON-safe Core TextBlock, never a React object.
 
 ## Runtime styles
 
@@ -37,6 +38,6 @@ A named style needs same-named definitions from Core, Chart, and Plot. The stati
 
 ## Plot extensions
 
-Chart owns closed recipes, chart narrative, and canonical composition. Plot continues to own coordinates, scales, axes, legends, marks, annotations, transforms, and interaction semantics. Therefore `Legend`, `Axis`, and additional marks can be typed Chart children alongside Chart markers, but they are not presentation items.
+Chart interprets `config` by `type`, organizes chart narrative, and completes Chart composition. Plot continues to own coordinates, scales, axes, legends, marks, annotations, transforms, and interaction semantics. Therefore `Legend`, `Axis`, and additional marks can appear alongside Chart markers, but they are not presentation items.
 
 The adapter assembles `SurfaceProvider`, `FlexLayoutProvider`, the Plot provider, and `ChartProvider` into one contribution. Title, subtitle, Plot, source, and note can therefore lay out together while Plot preserves its own guide, lowering, and diagnostic path.

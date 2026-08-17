@@ -9,9 +9,9 @@ import { SurfaceProvider } from '@retikz/standard';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultChartThemePreset } from '../../chart/src/base/style';
+import { getDefaultChartThemePreset } from '../../chart/src/_chart/style';
 import { createChart, renderChart } from '../src';
-import { createConnectedScatterChart, createScatterChart } from '../src/point';
+import { createBubbleChart, createConnectedScatterChart, createScatterChart } from '../src/point';
 
 const plot: IRPlot = {
   namespace: 'plot',
@@ -69,7 +69,7 @@ describe('Chart Vanilla authoring', () => {
       data: { reference: 'countries' },
       marks: [{ type: 'point' }],
     });
-    expect(result.input.plot).toEqual({ input: plotInput });
+    expect(result.input.bound.type).toBe('base');
   });
 
   it('passes an explicit Plot IR through the source boundary without authoring fields', () => {
@@ -78,7 +78,7 @@ describe('Chart Vanilla authoring', () => {
       datasets: { countries: [] },
     });
 
-    expect(result.input.plot).toEqual({ spec: plot });
+    expect(result.input.bound.type).toBe('base');
     expect(result.chart.plot).toMatchObject(plot);
   });
 
@@ -118,12 +118,35 @@ describe('Chart Vanilla authoring', () => {
       encoding: { x: { field: 'income' }, y: { field: 'life' } },
       title: 'Income and life expectancy',
     });
-    expect(chart.input.plot).toMatchObject({ spec: chart.chart.plot });
+    expect(chart.input.bound.type).toBe('scatter');
     const rendered = renderChart(chart, { output: { width: 320, height: 200 } });
 
     expect(chart.chart.plot.data.reference).toBe('chart.data');
     expect(rendered.svg).toContain('<svg');
     expect(rendered.compileResult.scene.primitives).toHaveLength(1);
+  });
+
+  it('binds every concrete factory to its exact Chart type', () => {
+    const bubble = createBubbleChart({
+      data: [{ x: 1, y: 2, population: 3 }],
+      encoding: {
+        x: { field: 'x' },
+        y: { field: 'y' },
+        size: { field: 'population' },
+      },
+    });
+    const connected = createConnectedScatterChart({
+      data: [{ x: 1, y: 2, order: 1 }],
+      encoding: { x: { field: 'x' }, y: { field: 'y' }, order: 'order' },
+    });
+
+    expect(bubble.input.bound.type).toBe('bubble');
+    expect(bubble.chart.plot.marks[0]).toMatchObject({
+      type: 'point',
+      size: { kind: 'field', value: 'population' },
+    });
+    expect(connected.input.bound.type).toBe('connected-scatter');
+    expect(connected.chart.plot.marks.map(mark => mark.type)).toEqual(['path', 'point']);
   });
 
   it('carries same-named Core, Chart, and Plot Theme definitions through typed SSR', () => {

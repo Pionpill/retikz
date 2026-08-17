@@ -3,7 +3,9 @@ title: Scatter & Points
 description: Show individual observations through point positions and relationships, then choose a point chart by its structure.
 ---
 
-Point charts use one or more data points as their visual subject. This family organizes common types by stable chart structure; start with a scatter plot when you only need to compare two continuous variables. Scatter and Bubble are sibling Canonical Types in the Scatter & Points family: Bubble is not a styling Pattern of Scatter, but a distinct type that requires a third quantitative size role.
+Point charts use one or more data points as their visual subject. This group helps readers choose a chart by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce a `PointChartSchema`, a Point-specific resolver, or a runtime dispatch layer. Start with Scatter when you only need to compare two continuous variables.
+
+Scatter and Bubble own `ScatterChartSchema` and `BubbleChartSchema`, respectively. They follow the same `namespace: 'chart'`, `plot`, and chart-wide presentation layout, while exact `type` and `config` contracts preserve their unique encodings. Bubble is not a styling pattern of Scatter, but a distinct type that requires a third quantitative size role.
 
 ## Responsibilities
 

@@ -20,11 +20,13 @@ usage: distribution
     },
   ]}
 >
-  This is a non-contract conceptual preview built with the public Plot API, not API documentation for `@retikz/chart`. It uses the `Plot`, `PointMark`, and `Axis` composition API exported from the `@retikz/plot-react` root, with a fixed `800 × 400` chart size.
+  This conceptual preview uses the public Plot API to explain Bubble's area semantics. It uses the `Plot`, `PointMark`, and `Axis` composition API exported from the `@retikz/plot-react` root, with a fixed `800 × 400` chart size.
+
+In the Chart structure, Bubble uses the exact `BubbleChartSchema`. Its `config` supplies type-specific x/y/size encodings and implicitly creates the primary Point mark that carries area; data, transforms, scales, guides, and explicit additional marks remain under `plot`.
 
 ## Size and Area
 
-A bubble chart preserves the scatter plot's two-dimensional position and passes a third quantitative field to `PointMark.size`. Plot uses a sqrt scale to calculate radius so that visible bubble area follows the value instead of exaggerating it through a linear radius.
+A bubble chart preserves the scatter plot's two-dimensional position and adds a third quantitative size encoding. Bubble's type resolver maps it to `PointMark.size`; Plot then uses a sqrt scale to calculate radius so that visible bubble area follows the value instead of exaggerating it through a linear radius.
 
 | Prop   | Type                     | Default | Description                                                    |
 | ------ | ------------------------ | ------- | -------------------------------------------------------------- |

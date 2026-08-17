@@ -1,12 +1,9 @@
-import type { IRPlot } from '@retikz/plot';
-
 import { describe, expect, it } from 'vitest';
 
-import type { ChartRecipeInvariantError, ChartRecipeStyleContext } from '../../src/point/recipe';
+import type { ChartRecipeStyleContext } from '../../src/_shared';
 
-import { BubbleChartRecipe, BubbleChartSchema } from '../../src/point/bubble';
-import { BUILTIN_POINT_CHART_RECIPES } from '../../src/point/catalog';
-import { ChartRecipeInvariantReason } from '../../src/point/recipe';
+import { BubbleChartSchema } from '../../src/point/bubble';
+import { BubbleChartRecipe } from '../../src/point/bubble/recipe';
 
 const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,
@@ -20,136 +17,45 @@ const bubble = (overrides: Record<string, unknown> = {}) =>
     namespace: 'chart',
     type: 'bubble',
     id: 'sales',
-    data: { reference: 'rows' },
-    encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'volume' } },
-    ...overrides,
+    plot: { data: { reference: 'rows' } },
+    config: {
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' }, size: { field: 'volume' } },
+      ...overrides,
+    },
   });
+
+const createBubblePlot = (overrides: Record<string, unknown> = {}, style = visibleStyle) =>
+  BubbleChartRecipe.bind(bubble(overrides)).createPlot(style);
 
 describe('Bubble Chart recipe', () => {
-  it('registers Bubble as a closed peer between Scatter and Connected Scatter', () => {
-    expect(BUILTIN_POINT_CHART_RECIPES.map(recipe => recipe.type)).toEqual(['scatter', 'bubble', 'connected-scatter']);
-  });
+  it('generates a Point with the required quantitative size and legend', () => {
+    const plot = createBubblePlot();
 
-  it('builds an independent Point recipe with an implicit descriptor-owned size guide', () => {
-    const seed = BubbleChartRecipe.createSeed(bubble(), visibleStyle);
-
-    expect(seed.plot).toEqual({
-      namespace: 'plot',
-      type: 'plot',
-      id: 'sales/plot',
-      data: { reference: 'rows' },
-      scales: [
-        { type: 'linear', name: '__chart.bubble.scale.x' },
-        { type: 'linear', name: '__chart.bubble.scale.y' },
-      ],
-      coordinate: {
-        type: 'cartesian2D',
-        x: '__chart.bubble.scale.x',
-        y: '__chart.bubble.scale.y',
-      },
-      marks: [
-        {
-          type: 'point',
-          id: '__chart.bubble.mark.main',
-          size: { kind: 'field', value: 'volume' },
-          encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-        },
-      ],
-      guides: [
-        { type: 'axis', id: '__chart.bubble.guide.x', dimension: 'x' },
-        { type: 'axis', id: '__chart.bubble.guide.y', dimension: 'y', grid: true },
-        { type: 'legend', channel: 'size' },
-      ],
+    expect(plot.marks[0]).toMatchObject({
+      type: 'point',
+      size: { kind: 'field', value: 'volume' },
+      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
     });
-    expect(seed.members.map(member => member.target)).toEqual([
-      'scale.x',
-      'scale.y',
-      'coordinate.main',
-      'mark.main',
-      'guide.x',
-      'guide.y',
-      'guide.size',
-    ]);
+    expect(plot.guides).toContainEqual({ type: 'legend', channel: 'size' });
   });
 
-  it('uses an authored sqrt scale identity and respects optional guide topology', () => {
-    const explicit = BubbleChartRecipe.createSeed(
-      bubble({
-        encoding: {
-          x: { field: 'amount' },
-          y: { field: 'margin' },
-          size: { field: 'volume', scale: 'volume-radius' },
-        },
-        scales: [{ type: 'sqrt', name: 'volume-radius', domain: [0, 100] }],
-      }),
-      visibleStyle,
-    );
-    expect(explicit.plot.guides).toContainEqual({ type: 'legend', channel: 'size', scale: 'volume-radius' });
-
-    const hidden = BubbleChartRecipe.createSeed(bubble(), { ...visibleStyle, legendEnabled: false });
-    expect(hidden.plot.guides?.some(guide => guide.type === 'legend')).toBe(false);
-  });
-
-  it('keeps datum labels and compatible Point patches outside the core size role', () => {
-    const seed = BubbleChartRecipe.createSeed(
-      bubble({
-        mark: {
-          label: { content: { field: 'name' } },
-          opacity: { kind: 'constant', value: 0.7 },
-          encoding: { depth: { field: 'depth' } },
-        },
-      }),
-      visibleStyle,
-    );
-
-    expect(seed.patches).toEqual([
-      {
-        target: 'mark.main',
-        inputPath: ['mark'],
-        changes: [
-          { path: ['opacity'], value: { kind: 'constant', value: 0.7 } },
-          { path: ['label'], value: { content: { field: 'name' } } },
-          { path: ['encoding', 'depth'], value: { field: 'depth' } },
-        ],
+  it('keeps the authored scale identity and applies compatible mark configuration', () => {
+    const plot = createBubblePlot({
+      encoding: {
+        x: { field: 'amount' },
+        y: { field: 'margin' },
+        size: { field: 'volume', scale: 'volume-radius' },
       },
-    ]);
-  });
+      mark: {
+        color: { kind: 'constant', value: '#dc2626' },
+        opacity: { kind: 'constant', value: 0.8 },
+      },
+    });
 
-  it('treats explicit undefined reserved and optional encoding patches as omitted values', () => {
-    const seed = BubbleChartRecipe.createSeed(
-      bubble({ mark: { encoding: { text: undefined, size: undefined } } }),
-      visibleStyle,
-    );
-
-    expect(seed.patches).toEqual([]);
-    expect(seed.plot.marks[0]).toMatchObject({ size: { kind: 'field', value: 'volume' } });
-  });
-
-  it.each([
-    {
-      reason: ChartRecipeInvariantReason.RequiredScale,
-      path: ['scales'],
-      mutate: (plot: IRPlot): IRPlot => ({ ...plot, scales: plot.scales.slice(1) }),
-    },
-    {
-      reason: ChartRecipeInvariantReason.CoreMark,
-      path: ['marks'],
-      mutate: (plot: IRPlot): IRPlot => ({ ...plot, marks: [] }),
-    },
-    {
-      reason: ChartRecipeInvariantReason.CoreMark,
-      path: ['marks'],
-      mutate: (plot: IRPlot): IRPlot => ({
-        ...plot,
-        marks: [{ ...plot.marks[0], size: { kind: 'constant', value: 8 } }],
-      }),
-    },
-  ])('rejects a broken $reason invariant', ({ reason, path, mutate }) => {
-    const spec = bubble();
-    const plot = mutate(BubbleChartRecipe.createSeed(spec, visibleStyle).plot);
-
-    expect(() => BubbleChartRecipe.validateCore(spec, plot)).toThrowError(
-      expect.objectContaining<Partial<ChartRecipeInvariantError>>({ reason, path }),
-    );
+    expect(plot.marks[0]).toMatchObject({
+      color: { kind: 'constant', value: '#dc2626' },
+      opacity: { kind: 'constant', value: 0.8 },
+    });
+    expect(plot.guides).toContainEqual({ type: 'legend', channel: 'size', scale: 'volume-radius' });
   });
 });

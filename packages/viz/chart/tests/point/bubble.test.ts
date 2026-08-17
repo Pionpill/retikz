@@ -1,19 +1,24 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { IRBubblePointPatch } from '../../src/point/shared';
+import type { IRBubblePointPatch } from '../../src/point/bubble';
 
-import { PointChartSchema, PointChartType } from '../../src/point';
+import { PointChartType } from '../../src/point';
+import { BubblePointPatchSchema } from '../../src/point/bubble';
 import { BubbleChartSchema } from '../../src/point/bubble';
-import { BubblePointPatchSchema, StrictSizeFieldChannelSchema } from '../../src/point/shared';
+import { StrictSizeFieldChannelSchema } from '../../src/point/shared';
 
 const minimalBubble = {
   namespace: 'chart',
   type: 'bubble',
-  data: { reference: 'rows' },
-  encoding: {
-    x: { field: 'amount' },
-    y: { field: 'margin' },
-    size: { field: 'volume' },
+  plot: {
+    data: { reference: 'rows' },
+  },
+  config: {
+    encoding: {
+      x: { field: 'amount' },
+      y: { field: 'margin' },
+      size: { field: 'volume' },
+    },
   },
 } as const;
 
@@ -24,51 +29,84 @@ describe('Bubble Chart schema', () => {
     expect(PointChartType.Bubble).toBe('bubble');
     expect(parsed.type).toBe('bubble');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSchema.parse(minimalBubble)).toEqual(parsed);
   });
 
   it('accepts datum labels and non-reserved Point capabilities', () => {
     expect(
       BubbleChartSchema.parse({
         ...minimalBubble,
-        encoding: {
-          ...minimalBubble.encoding,
-          color: { field: 'group' },
-          opacity: { field: 'confidence' },
-          shape: { field: 'kind' },
-        },
-        mark: {
-          color: { kind: 'constant', value: '#2563eb' },
-          opacity: { kind: 'constant', value: 0.7 },
-          shape: { kind: 'constant', value: 'circle' },
-          label: { content: { field: 'name' } },
+        config: {
           encoding: {
+            ...minimalBubble.config.encoding,
             color: { field: 'group' },
-            channels: { halo: { value: 0.4 } },
-            depth: { field: 'depth' },
+            opacity: { field: 'confidence' },
+            shape: { field: 'kind' },
+          },
+          mark: {
+            color: { kind: 'constant', value: '#2563eb' },
+            opacity: { kind: 'constant', value: 0.7 },
+            shape: { kind: 'constant', value: 'circle' },
+            label: { content: { field: 'name' } },
+            encoding: {
+              color: { field: 'group' },
+              channels: { halo: { value: 0.4 } },
+              depth: { field: 'depth' },
+            },
           },
         },
       }),
     ).toMatchObject({
       type: 'bubble',
-      mark: {
-        label: { content: { field: 'name' } },
-        encoding: { depth: { field: 'depth' } },
+      config: {
+        mark: {
+          label: { content: { field: 'name' } },
+          encoding: { depth: { field: 'depth' } },
+        },
       },
     });
   });
 
   it.each([
-    ['missing required size', { ...minimalBubble, encoding: { x: { field: 'amount' }, y: { field: 'margin' } } }],
-    ['constant core size', { ...minimalBubble, encoding: { ...minimalBubble.encoding, size: { value: 8 } } }],
-    ['top-level mark size', { ...minimalBubble, mark: { size: { kind: 'constant', value: 8 } } }],
-    ['nested mark size', { ...minimalBubble, mark: { encoding: { size: { field: 'otherVolume' } } } }],
-    ['nested custom size', { ...minimalBubble, mark: { encoding: { channels: { size: { field: 'otherVolume' } } } } }],
-    ['nested text mode', { ...minimalBubble, mark: { encoding: { text: { field: 'name' } } } }],
-    ['nested x', { ...minimalBubble, mark: { encoding: { x: { field: 'otherX' } } } }],
-    ['nested y', { ...minimalBubble, mark: { encoding: { y: { field: 'otherY' } } } }],
+    [
+      'missing required size',
+      { ...minimalBubble, config: { encoding: { x: { field: 'amount' }, y: { field: 'margin' } } } },
+    ],
+    [
+      'constant core size',
+      {
+        ...minimalBubble,
+        config: { encoding: { ...minimalBubble.config.encoding, size: { value: 8 } } },
+      },
+    ],
+    [
+      'top-level mark size',
+      { ...minimalBubble, config: { ...minimalBubble.config, mark: { size: { kind: 'constant', value: 8 } } } },
+    ],
+    [
+      'nested mark size',
+      { ...minimalBubble, config: { ...minimalBubble.config, mark: { encoding: { size: { field: 'otherVolume' } } } } },
+    ],
+    [
+      'nested custom size',
+      {
+        ...minimalBubble,
+        config: { ...minimalBubble.config, mark: { encoding: { channels: { size: { field: 'otherVolume' } } } } },
+      },
+    ],
+    [
+      'nested text mode',
+      { ...minimalBubble, config: { ...minimalBubble.config, mark: { encoding: { text: { field: 'name' } } } } },
+    ],
+    [
+      'nested x',
+      { ...minimalBubble, config: { ...minimalBubble.config, mark: { encoding: { x: { field: 'otherX' } } } } },
+    ],
+    [
+      'nested y',
+      { ...minimalBubble, config: { ...minimalBubble.config, mark: { encoding: { y: { field: 'otherY' } } } } },
+    ],
     ['unknown top-level key', { ...minimalBubble, unknown: true }],
-    ['unknown mark key', { ...minimalBubble, mark: { unknown: true } }],
+    ['unknown mark key', { ...minimalBubble, config: { ...minimalBubble.config, mark: { unknown: true } } }],
   ])('rejects %s', (_label, input) => {
     expect(() => BubbleChartSchema.parse(input)).toThrow();
   });
@@ -114,24 +152,25 @@ describe('Bubble Chart schema', () => {
     const input = {
       ...minimalBubble,
       id: undefined,
-      encoding: {
-        ...minimalBubble.encoding,
-        x: { field: 'amount', scale: undefined },
-        size: { field: 'volume', scale: undefined, value: undefined },
-        opacity: undefined,
+      config: {
+        encoding: {
+          ...minimalBubble.config.encoding,
+          x: { field: 'amount', scale: undefined },
+          size: { field: 'volume', scale: undefined, value: undefined },
+          opacity: undefined,
+        },
+        mark: { opacity: undefined },
       },
-      mark: { opacity: undefined },
     };
     const parsed = BubbleChartSchema.parse(input);
 
     expect(Object.hasOwn(parsed, 'id')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding, 'opacity')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding.x, 'scale')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding.size, 'scale')).toBe(false);
-    expect(Object.hasOwn(parsed.encoding.size, 'value')).toBe(false);
-    expect(parsed.mark).toEqual({});
+    expect(Object.hasOwn(parsed.config.encoding, 'opacity')).toBe(false);
+    expect(Object.hasOwn(parsed.config.encoding.x, 'scale')).toBe(false);
+    expect(Object.hasOwn(parsed.config.encoding.size, 'scale')).toBe(false);
+    expect(Object.hasOwn(parsed.config.encoding.size, 'value')).toBe(false);
+    expect(parsed.config.mark).toEqual({});
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSchema.parse(input)).toEqual(parsed);
   });
 
   it('treats an undefined constant-size key as absent without accepting a concrete conflict', () => {

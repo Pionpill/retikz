@@ -1,0 +1,112 @@
+---
+title: Chart
+description: Chart wraps Plot in one shared structure, completes drawing semantics by chart type, and adds chart-wide presentation.
+---
+
+Plot is a vertical extension of GoG (Grammar of Graphics): it expands the grammar along dimensions such as data bindings, marks, channels, scales, coordinates, guides, and transforms to describe how data is drawn. Chart does not introduce a second drawing grammar. It is a horizontal, chart-type wrapper on top of Plot: it combines the Plot semantics required by a `type` into a complete chart and adds chart-level presentation.
+
+`chart` is always the namespace, indicating that the entity owns chart-wide presentation, Chart theming, and canvas behavior. `base`, `scatter`, and `bubble` are Chart types: `base` uses an explicit Plot description, while the other types complete their Plot structure through built-in resolution logic.
+
+## Plot and Chart: roles and evolution
+
+| Layer | Role                                                                                                         | Evolution direction                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Plot  | Extends the grammar vertically through fields, marks, encodings, scales, coordinates, guides, and transforms | Continue expanding Plot's drawing semantics and composition     |
+| Chart | Combines Plot horizontally around a chart `type` without introducing a second drawing grammar                | Continue adding chart types and type recipes while reusing Plot |
+
+## One consistent Chart shape
+
+Base Chart and every packaged Chart follow the same field layout, but each has an exact schema: `BaseChartSchema`, `ScatterChartSchema`, `BubbleChartSchema`, or `ConnectedScatterChartSchema`. Chart does not expose one `ChartSchema` union; `namespace + type` only selects the matching exact schema.
+
+```ts
+{
+  namespace: 'chart',
+  type: 'base' | 'scatter' | 'bubble' | 'connected-scatter',
+  plot: {
+    // Plot-owned data, transforms, scales, coordinates, guides, and explicit marks
+  },
+  config: {
+    // Configuration owned by a packaged type and consumed by its resolver; unused by base
+  },
+  presentation: {
+    // Chart-owned title, subtitle, source, and note
+  },
+}
+```
+
+`plot` is the only Plot description field, and its members reuse Plot contracts directly. `config` exists only on packaged types and contains data unique to the selected `type`, such as Scatter's two-dimensional encoding, Bubble's size encoding, or Connected Scatter's ordering role. Base Chart uses a complete `PlotSchema` and has no `config`.
+
+The `type` determines how `config` is interpreted and how `plot` is completed. For example, `bubble` implies a Point mark, so authors do not repeat the primary Point mark in `plot.marks`. Plot-owned axes, legends, additional marks, scales, and transforms remain available through `plot`. The `base` type provides no such implicit semantics and requires an explicit Plot description that can form a complete graphic.
+
+Groups such as Scatter & Points organize documentation, source files, and multi-entry imports, but they do not introduce another schema or runtime family. Scatter, Bubble, and Connected Scatter remain available from the `/point` entries. Unknown JSON uses `type` to select one exact schema, binds the parsed value internally, and resolves every type to `IRBaseChart`.
+
+Use Plot APIs when you need to extend the drawing grammar, and use Chart when you need to organize Plot semantics into a chart type. Chart then provides these shared capabilities:
+
+| Capability              | Responsibility                                                                      | Typical entry                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Chart-type packaging    | Interprets `config` by `type` and completes missing semantics in `plot`             | `Chart`, `ScatterChart`, and `BubbleChart`                     |
+| Plot extensions         | Keeps Plot capabilities such as marks, guides, scales, and transforms available     | The `plot` field and Plot components from `@retikz/plot-react` |
+| Chart-wide presentation | Expresses the complete chart's subject, scope, data source, and reading constraints | `title` / `subtitle` / `source` / `note`, or matching markers  |
+
+## Base Chart capabilities
+
+The `Chart` component corresponds to `type: 'base'`. It provides the capabilities shared by every Chart: organizing explicit Plot content into a complete chart and adding chart-wide presentation. This section covers its DSL and `spec` authoring paths. For a type with built-in resolution logic, see a section such as [Scatter & Points](/viz/chart/points).
+
+The base React entry is `@retikz/chart-react`. In DSL mode, place Plot marks and guides together with Chart presentation markers directly inside `Chart`:
+
+```tsx
+import { Axis, PointMark } from '@retikz/plot-react';
+import { Chart, ChartSource, ChartTitle } from '@retikz/chart-react';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+<Chart data={rows} width={640} height={360}>
+  <PointMark x="x" y="y" />
+  <Axis dimension="x" title="X" />
+  <Axis dimension="y" title="Y" />
+  <ChartTitle>Relationship between two variables</ChartTitle>
+  <ChartSource>Example data</ChartSource>
+</Chart>;
+```
+
+When you already have a complete `IRPlot`, use spec mode: `<Chart spec={plotSpec} title="..." source="..." />`. In this mode, the Plot content comes from `spec`; children are reserved for presentation markers such as `ChartTitle`, `ChartSubtitle`, `ChartSource`, and `ChartNote`. Put Plot components inside the Chart only when using DSL mode.
+
+`title`, `subtitle`, `source`, and `note` are marker shorthands. Use markers when you need custom text styling, position, or order; use each marker at most once in a chart. The detailed presentation ordering and text-child rules are covered with the Chart authoring material in the chart examples.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Chart React exports the base Chart through the shared adapter',
+      path: 'packages/viz/chart-react/src/_chart/index.ts',
+      startLine: 223,
+      endLine: 232,
+    },
+    {
+      label: 'Chart assembles Plot authoring into Base Chart input',
+      path: 'packages/viz/chart-react/src/_chart/index.ts',
+      startLine: 129,
+      endLine: 155,
+    },
+    {
+      label: 'Chart React exports chart-wide presentation markers',
+      path: 'packages/viz/chart-react/src/_chart/index.ts',
+      startLine: 15,
+      endLine: 26,
+    },
+  ]}
+/>
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points">
+    <span className="font-semibold">Scatter &amp; Points</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Start with Scatter and Bubble to see how Chart types, dedicated config, and Plot extensions work together.
+    </span>
+  </LinkedCard>
+</div>

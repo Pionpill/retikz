@@ -11,6 +11,7 @@ describe('@retikz/chart-react public surface', () => {
     expect(chart).not.toHaveProperty('ScatterChart');
     expect(chart).not.toHaveProperty('BubbleChart');
     expect(chart).not.toHaveProperty('ConnectedScatterChart');
+    expect(chart).not.toHaveProperty('PointChartInputEmbedAdapter');
   });
 
   it('exports Point typed components and base authoring from the Point entry', () => {
@@ -19,5 +20,6 @@ describe('@retikz/chart-react public surface', () => {
     expect(point.ScatterChart).toBeDefined();
     expect(point.BubbleChart).toBeDefined();
     expect(point.ConnectedScatterChart).toBeDefined();
+    expect(point).not.toHaveProperty('PointChartInputEmbedAdapter');
   });
 });
