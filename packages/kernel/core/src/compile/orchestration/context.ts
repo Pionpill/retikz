@@ -24,7 +24,7 @@ import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
-import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve/theme';
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';

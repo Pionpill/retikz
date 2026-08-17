@@ -1,5 +1,5 @@
 import type { GroupPrim, ScenePrimitive } from '../../../contract';
-import type { CanonicalPath, PathStyleResolution } from '../../../resolve/path';
+import type { CanonicalPath, PathStyleResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { PaintInput, PaintResolver } from '../../resource';
 import type { PathPrimitiveEmitResult } from '../types';

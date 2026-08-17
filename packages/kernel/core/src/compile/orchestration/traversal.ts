@@ -28,8 +28,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import type { BoundaryReferenceResolver } from '../../resolve/node';
-import type { PathResolution } from '../../resolve/path';
+import type { BoundaryReferenceResolver, PathResolution } from '../../resolve';
 import type {
   IRChild,
   IRPathBase,
@@ -69,6 +68,14 @@ import type {
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import {
+  createStyleResolveFrame,
+  resolveBoundaryReference,
+  resolveNode,
+  resolvePath as resolvePathValue,
+  resolveStrokePathProviders,
+  resolveTheme,
+} from '../../resolve';
+import {
   CompositeContractError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
@@ -76,12 +83,8 @@ import {
   safeErrorMessage,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import { resolveBoundaryReference, resolveNode } from '../../resolve/node';
-import { resolvePath as resolvePathValue, resolveStrokePathProviders } from '../../resolve/path';
 import { parseProviderPayload } from '../../resolve/provider-payload';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
-import { createStyleResolveFrame } from '../../resolve/style';
-import { resolveTheme } from '../../resolve/theme';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';

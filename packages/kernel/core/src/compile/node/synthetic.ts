@@ -8,7 +8,7 @@ import type { NodeLayout } from './types';
 
 import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
 import { BUILTIN_SHAPES } from '../../providers/shape';
-import { resolveNode } from '../../resolve/node';
+import { resolveNode } from '../../resolve';
 import { NamespaceStack } from '../namespace';
 import { fallbackMeasurer } from '../text';
 import { applyTransformChain } from '../transform';

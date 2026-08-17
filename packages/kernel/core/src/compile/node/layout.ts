@@ -1,5 +1,5 @@
 ﻿import type { LayoutAxisProposal, Transform } from '../../contract';
-import type { BoundaryReferenceResolver, CanonicalNode, NodeResolution } from '../../resolve/node';
+import type { BoundaryReferenceResolver, CanonicalNode, NodeResolution } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { ResolveBetweenGlobal } from '../position';
@@ -8,6 +8,7 @@ import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
+import { boundaryKey } from '../../resolve';
 import {
   CompositeContractError,
   isFatalProbeError,
@@ -15,7 +16,6 @@ import {
   LayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import { boundaryKey } from '../../resolve/node';
 import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';

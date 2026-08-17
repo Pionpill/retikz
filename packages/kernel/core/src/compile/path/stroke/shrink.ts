@@ -7,7 +7,7 @@ import type {
   PathCommand,
   ResolvedArrowEnd,
 } from '../../../contract';
-import type { ArrowMarkResolution } from '../../../resolve/path';
+import type { ArrowMarkResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
 import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';

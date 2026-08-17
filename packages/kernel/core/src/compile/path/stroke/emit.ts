@@ -1,7 +1,7 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
-import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve/path';
+import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
