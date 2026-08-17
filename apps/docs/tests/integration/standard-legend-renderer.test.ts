@@ -119,7 +119,7 @@ describe('Standard Legend renderer boundary', () => {
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
     expect(svg).toContain('Flow');
-    expect(JSON.stringify(scene)).not.toContain('standard.legend');
+    expect(JSON.stringify(compiledScene)).not.toContain('standard.legend');
     expect(calls.length).toBeGreaterThan(0);
   });
 });

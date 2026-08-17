@@ -21,7 +21,7 @@ import {
   PerformanceTracePhase,
   PerformanceTraceUnit,
 } from '@retikz/runtime';
-import { mountCanvas, mountSvg } from '@retikz/vanilla';
+import { mountCanvas, mountSvg } from '@retikz/vanilla/dom';
 
 import type {
   BenchmarkExecution,
