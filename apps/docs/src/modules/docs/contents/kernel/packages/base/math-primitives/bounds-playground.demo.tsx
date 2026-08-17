@@ -1,8 +1,9 @@
 import type { AxisAlignedBounds, Position } from '@retikz/math';
-import { Fragment, type FC } from 'react';
+import type { FC } from 'react';
 
 import { arcBoundingPoints, boundsOf, boundsToRect } from '@retikz/math';
 import { Arc, Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import { Fragment } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 

@@ -8,7 +8,7 @@ import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '..
 import type { ScaleDescriptor } from '../../providers';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import type { EffectivePlotGuideTheme } from '../../resolve/theme';
-import type { IRPlotLegendGuide, IRPlotScaleOperation, IRPlot, LegendChannelValue } from '../../schemas';
+import type { IRPlot, IRPlotLegendGuide, IRPlotScaleOperation, LegendChannelValue } from '../../schemas';
 import type { LegendReserve, Rect } from '../../shared';
 import type { LegendEntry, LowerLegendOptions } from '../guide';
 import type { MarkDataView } from './types';

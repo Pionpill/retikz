@@ -20,7 +20,7 @@ import {
 } from '@retikz/data';
 
 import type { AnyMarkDefinition, AnyScaleDefinition } from '../../contract';
-import type { IRPlotMarkOperation, IRPlot, IRPlotTransform } from '../../schemas';
+import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
 import type { LowerPlotsOptions } from './types';
 
 import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '../../providers';

@@ -1,4 +1,4 @@
-import type { IRPlotRelateTransform, IRPlotRelationRouting, IRPlot } from '@retikz/plot';
+import type { IRPlot, IRPlotRelateTransform, IRPlotRelationRouting } from '@retikz/plot';
 
 import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';

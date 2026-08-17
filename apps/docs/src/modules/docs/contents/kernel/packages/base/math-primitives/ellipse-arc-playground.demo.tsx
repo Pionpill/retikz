@@ -4,15 +4,11 @@ import type { FC } from 'react';
 import { arcBoundingPoints, boundsCenter, boundsOf, boundsToRect, ellipse } from '@retikz/math';
 import { Arc, Circle, Draw, Ellipse as EllipseShape, Layout, Rectangle } from '@retikz/react';
 
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { ellipseArcPlaygroundControls, previewControlContract } from './ellipse-arc-playground.controls';
 
 export const previewControls = ellipseArcPlaygroundControls;
-
-type EllipseArcPlaygroundValues = PreviewControlValuesFor<typeof ellipseArcPlaygroundControls>;
 
 const ELLIPSE_CENTER: Position = [-70, 0];
 const ARC_CENTER: Position = [70, 0];

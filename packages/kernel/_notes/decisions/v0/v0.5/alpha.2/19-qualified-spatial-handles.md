@@ -1,6 +1,6 @@
 # ADR-19：以 qualified spatial handle sidecar 保持 Composite 空间透明
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-11
 - 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Core Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Attached Space Composition](../../../../../../../notes/architecture/attached-space-composition.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [Chart ADR-03](../../../../../../viz/_notes/decisions/chart/v0/v0.1/alpha.1/03-presentation-standard-layout.md)
 

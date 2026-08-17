@@ -1,4 +1,4 @@
-import type { IRPlotGuide, IRPlot } from '@retikz/plot';
+import type { IRPlot, IRPlotGuide } from '@retikz/plot';
 
 import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide } from '@retikz/plot';
 

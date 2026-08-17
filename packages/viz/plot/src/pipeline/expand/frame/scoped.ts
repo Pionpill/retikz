@@ -15,7 +15,7 @@ import type {
 } from '../../../resolve/composition';
 import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../../resolve/composition';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlot } from '../../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } from '../../../schemas';
 import type { Rect } from '../../../shared';
 import type { LowerPlotsOptions } from '../types';
 

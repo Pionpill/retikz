@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CoreDependencyProvider, CompositeCoreProviderKey } from '@retikz/core';
+import type { AnyCompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
 import type {

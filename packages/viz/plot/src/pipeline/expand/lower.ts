@@ -18,7 +18,7 @@ import type {
   GridTargetSelector,
 } from '../../resolve/composition';
 import type { CoordinateResolveContext } from '../../resolve/coordinate';
-import type { IRPlotAxisGuide, IRPlotGuide, IRPlot } from '../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotGuide } from '../../schemas';
 import type { Rect } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 

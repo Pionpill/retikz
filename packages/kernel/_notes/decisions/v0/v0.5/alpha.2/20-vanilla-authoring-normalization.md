@@ -1,6 +1,6 @@
 # ADR-20：Vanilla 统一 Authoring 与框架无关处理
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-13
 - 关联：[alpha.2 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [包职能设计](../../../../../../../notes/architecture/package-responsibility-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 

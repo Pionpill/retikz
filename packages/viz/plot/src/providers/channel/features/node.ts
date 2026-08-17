@@ -22,10 +22,10 @@ import type {
   NodeChannelDefinitionResolveContext,
 } from '../../../contract';
 import type {
+  IRPlot,
   IRPlotLinearScale,
   IRPlotMarkOperation,
   IRPlotPointNumberStyle,
-  IRPlot,
   IRPlotSqrtScale,
 } from '../../../schemas';
 

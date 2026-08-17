@@ -69,7 +69,7 @@
   },
   "dependencies": {
     "@retikz/graph": "workspace:*",
-    "@retikz/graph-vanilla": "workspace:^",
+    "@retikz/graph-vanilla": "workspace:*",
     "@retikz/react": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },

@@ -1,6 +1,6 @@
 # ADR-15：轻量 Theme IR 与可扩展 Style 解析
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-08
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-09：可继承 Theme IR 与 Composite 编译上下文](./09-inherited-theme-context.md) · [ADR-13：Theme Token Namespace Context 与共享颜色](./13-theme-token-namespace-context.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Visualization Complete](../../../../../../viz/_notes/architecture/plot-visualization-complete.md)
 - Supersedes：ADR-13 中将 namespaced token bag、Theme token Definition / Contribution 与其 registry 写入 Core Theme IR 的决策。ADR-09 的 Scene / Scope 继承、Composite context、probe / replay 与 adapter 等价性继续有效

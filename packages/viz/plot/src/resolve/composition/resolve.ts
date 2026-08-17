@@ -1,5 +1,5 @@
 import type { DimensionRole } from '../../contract';
-import type { IRPlotAxisGuide, IRPlotGuide, IRPlot } from '../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotGuide } from '../../schemas';
 import type { Margins } from '../../shared';
 import type {
   CompositionAxisPolicyValue,

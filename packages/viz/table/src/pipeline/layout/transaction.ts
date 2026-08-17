@@ -24,13 +24,7 @@ import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
 import type { ResolvedTableThemeTokens } from '../../providers/style';
-import type {
-  IRTableBorder,
-  IRTableCellBorders,
-  IRTableLayout,
-  IRTable,
-  IRTableThemeTokenBorder,
-} from '../../schemas';
+import type { IRTable, IRTableBorder, IRTableCellBorders, IRTableLayout, IRTableThemeTokenBorder } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
 import type { LowerTablesOptions } from '../types';

@@ -1,6 +1,6 @@
 # v0.5.0-alpha.2 增量性能、Runtime 策略、Box Layout、Theme、Composite assembly、Spatial handles 与基础原子
 
-- 状态：ADR-01～10、ADR-12、ADR-14、ADR-16～17、ADR-22 已完成实现、测试、双语文档与 Accepted 收口；ADR-11、ADR-15、ADR-18～20 Proposed，ADR-13、ADR-21 Superseded，alpha.2 继续推进 authored Scope output、轻量 Theme、Composite assembly、spatial transparency 与统一 authoring / processing
+- 状态：ADR-01～12、ADR-14～20、ADR-22 已完成实现、测试、双语文档与 Accepted 收口；ADR-13、ADR-21 Superseded
 - 目标版本：`0.5.0-alpha.2`
 - 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md)
 
@@ -48,16 +48,16 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 | [ADR-08](./08-layout-proposal-probe-contract.md)      | Accepted   | Layout proposal / probe contract       | 冻结双轴 proposal、minimum / natural、resolved slot、guide、failure isolation 与 replay                           |
 | [ADR-09](./09-inherited-theme-context.md)             | Accepted   | 可继承 Theme IR 与 Composite context   | 冻结 Scene / Scope Theme、字段级继承、Composite 消费与领域边界                                                    |
 | [ADR-10](./10-core-atomic-contracts.md)               | Accepted   | Core 原子契约与 Tier 2 / Tier 3 组合   | 冻结 Core fragment、上层组合、领域收窄与单一真源原则                                                              |
-| [ADR-11](./11-layout-aware-scope-output.md)           | Proposed   | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排               |
+| [ADR-11](./11-layout-aware-scope-output.md)           | Accepted   | Layout-aware Composite 完整 Scope 输出 | 冻结 Scope props fragment、authored Scope、replay wrapper、placement / clip / style / identity 编排               |
 | [ADR-12](./12-extensible-inspector-content.md)        | Accepted   | 可选 Inspector 扩展包                  | 冻结 Core 观测底座、独立 Inspect 包、Standard `/inspect` 与 Path 控制点闭环                                       |
 | [ADR-13](./13-theme-token-namespace-context.md)       | Superseded | Theme token namespace 与共享颜色       | 历史 namespaced bag、registry 与 shared colors 设计                                                               |
 | [ADR-14](./14-foundation-package.md)                  | Accepted   | Foundation 基础契约包与依赖归属        | 冻结跨包原子契约、direct dependency、非空字符串语义与结构化错误兼容边界                                           |
-| [ADR-15](./15-lightweight-theme-resolution.md)        | Proposed   | 轻量 Theme IR 与领域 Token 解析        | 冻结 selector-only Theme、Core shared colors 与 owner-local token resolution                                      |
+| [ADR-15](./15-lightweight-theme-resolution.md)        | Accepted   | 轻量 Theme IR 与领域 Token 解析        | 冻结 selector-only Theme、Core shared colors 与 owner-local token resolution                                      |
 | [ADR-16](./16-affine-matrix-primitives.md)            | Accepted   | 二维仿射矩阵原子                       | 冻结六元组 ABI、运行时不可变单位矩阵、复合顺序、点映射与 Math / Render / TeX 边界                                 |
 | [ADR-17](./17-foundation-schema-primitives.md)        | Accepted   | Foundation 基础 Schema 原子            | 冻结唯一 Zod 依赖、基础 string / number schema、旧 owner 迁移与领域组合边界                                       |
-| [ADR-18](./18-composite-dependency-provider-graph.md) | Proposed   | Composite dependency provider graph    | 冻结完整 key、roots、传递依赖、dataset 合并、稳定拓扑与跨 adapter 同构                                            |
-| [ADR-19](./19-qualified-spatial-handles.md)           | Proposed   | Qualified spatial handle sidecar       | 冻结结构化 Composite 输出、owner path、world rect index、selector 与 Scene 边界                                   |
-| [ADR-20](./20-vanilla-authoring-normalization.md)     | Proposed   | Vanilla authoring 与处理链             | 收敛 Core Input 与 framework-neutral processing 至 Vanilla，React 依赖 Vanilla 并只保留 JSX / 生命周期 / 宿主桥接 |
+| [ADR-18](./18-composite-dependency-provider-graph.md) | Accepted   | Composite dependency provider graph    | 冻结完整 key、roots、传递依赖、dataset 合并、稳定拓扑与跨 adapter 同构                                            |
+| [ADR-19](./19-qualified-spatial-handles.md)           | Accepted   | Qualified spatial handle sidecar       | 冻结结构化 Composite 输出、owner path、world rect index、selector 与 Scene 边界                                   |
+| [ADR-20](./20-vanilla-authoring-normalization.md)     | Accepted   | Vanilla authoring 与处理链             | 收敛 Core Input 与 framework-neutral processing 至 Vanilla，React 依赖 Vanilla 并只保留 JSX / 生命周期 / 宿主桥接 |
 | [ADR-21](./21-extensible-clip-shapes.md)              | Superseded | 可扩展 ClipShape 与统一裁剪路径        | 历史两级 Definition、开放 shape、canonical Scene path 与 provider graph 设计                                      |
 | [ADR-22](./22-single-clip-definition.md)              | Accepted   | 单一 Clip Definition 扩展契约          | 冻结单一 definition、同 kind shape、唯一 clips registry/provider 与既有 canonical Scene path                      |
 
@@ -71,16 +71,16 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-08 已完成双轴 proposal、resolved slot、真实 allocation / visual bounds、alignment guide、隔离 failure、one-use replay、Table consumer 迁移、对抗测试与双语文档，并于 2026-07-30 获人工接受。
 - ADR-09 已完成严格 JSON Theme IR、Scene / Scope 字段级继承、Composite context、runtime Scope、probe / replay、lowering、retained fallback、adapter / renderer parity、对抗复验与双语文档，并于 2026-08-03 获人工接受。
 - ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
-- ADR-11 已完成 Proposed 设计并完成 Core 实现、Standard consumers、测试与双语文档，尚未获得人工 Accepted 收口。
+- ADR-11 已完成 Core 实现、Standard consumers、测试与双语文档，并获人工接受。
 - ADR-12 已完成 Core 领域中立观测底座、独立 `@retikz/inspect`、Render 普通只读图层、React / Vanilla 通用驱动和 Standard 可选子入口迁移，并于 2026-08-07 获人工接受。
 - ADR-14 已完成 Foundation 初始包、七个根契约、跨包 direct dependency 迁移、typed string 失败语义、结构化领域错误兼容、对抗复验与双语文档，并于 2026-08-09 获人工接受；其零依赖、无 schema 与七根导出边界随后由 ADR-17 演进。
 - ADR-13 的 namespaced Theme token bag、Definition registry 与跨 Scope token override 决策已由 ADR-15 取代；其 shared colors 与领域 owner resolver 边界由 ADR-15 继承并收窄。
-- ADR-15 已完成 Proposed 设计并进入 Core、Plot、Chart 的 selector/style resolver 实现，等待 Architecture Gate 与人工确认后才进入 Accepted 收口。
+- ADR-15 已完成 Core、Plot、Chart、Table 的 selector/style resolver 实现、测试与双语契约，并获人工接受。
 - ADR-16 已完成 Math 仿射矩阵公共原子、Render / TeX 单一真源迁移、顺序敏感回归、对抗验证与双语文档，并于 2026-08-09 获人工接受。
 - ADR-17 已完成六个 Foundation 标量 schema、Core / Graph 旧 owner 移除、跨 Kernel / Standard / Viz 同义叶子迁移、对抗复验、发布产物验证与双语文档，并于 2026-08-09 获人工接受。
-- ADR-18 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 React / Vanilla contribution 或 Core resolver。
-- ADR-19 已完成 Proposed 设计，等待 Architecture Gate 与人工确认；未授权修改 Composite callback、CompileResult、Plot handles 或 renderer。
-- ADR-20 已完成 Proposed 设计与 Architecture Gate，等待人工确认；未授权修改 Core、Vanilla、React 或下游 adapter。
+- ADR-18 已完成 Core provider graph、React / Vanilla contribution、直接 resolver、SSR 与第三方 provider 的同构实现、测试与双语契约，并获人工接受。
+- ADR-19 已完成 Composite structured output、qualified world-space sidecar、closed selector、retained revision 原子性、Standard Surface owner 与测试文档闭环，并获人工接受。
+- ADR-20 已完成 Vanilla Input-to-IR、framework-neutral processing、React adapter parity、DOM retained transaction 与公开入口收敛，并获人工接受。
 - ADR-21 已完成两级 Clip Definition / ClipShape Definition、canonical Scene path、provider graph、递归保护、renderer / adapter 消费、测试与双语文档，并于 2026-08-16 获人工接受；Standard ADR-05 随后完成五种可选 ClipShape 所有权迁移，Core 最小内置最终收敛为 `rect`。
 - ADR-22 已完成 Architecture Gate、Plan Gate、Core / React / Vanilla / Standard / 下游 consumer 实现、测试与双语文档，并由人工确认进入 Accepted。
 
@@ -142,11 +142,12 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-11 在接受前必须证明 `ScopePropsSchema` / `IRScopeProps` 与完整 Scope 等价，layout-aware authored Scope 的 placement、style/default/resetStyle、Theme、identity、metadata、animation、bounds 与 authored / allocation clip 均可观察且不由 Standard 或 adapter 旁路实现。
 - ADR-12 在接受前必须证明未安装 Inspect 时 Core、Render、基础 adapter 与 Standard 根入口不含 Inspector 默认依赖；外部 observer 只读取最终 settled owner output，`@retikz/inspect` 的内置与第三方定义使用同一 registry，并在非递归的隔离片段编译中生成 occurrence-local Scene。Standard `/inspect`、quadratic / cubic Path 控制点、React / Vanilla 与 SVG / Canvas 必须闭环，且主 Scene 保持不变。
 - ADR-14 在接受前必须证明 Foundation 根契约、直接依赖拓扑、Math 无真实消费时不声明依赖、typed string 失败语义和 Runtime / Render / Plot / Chart 错误兼容边界稳定，且不新增 IR、Scene、renderer 或领域 registry。
-- ADR-15 在接受前必须证明 selector-only Theme、Core / Plot / Chart 同名 style registry、领域 definition 缺失时的 fail-loud 语义、React / Vanilla / plain JSON 等价性与既有 token cascade 局部 override 优先级稳定。
+- ADR-15 已证明 selector-only Theme、Core / Plot / Chart 同名 style registry、领域 definition 缺失时的 fail-loud 语义、React / Vanilla / plain JSON 等价性与既有 token cascade 局部 override 优先级稳定。
 - ADR-16 已证明六元组 ABI、运行时不可变单位矩阵、复合顺序与点映射稳定；Math 保持零依赖，TeX / Render 使用同一真源，同时 SVG parser、Scene hydration、可逆性、stroke 与诊断行为不变。
 - ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、领域 refinement 或 Diagnostic。
-- ADR-18 在接受前必须证明多个 roots 的传递闭包、共享 provider 单次物化、dataset `Object.is` 同源边界、缺失 / cycle / maker / definition 冲突，以及 React、Vanilla、SSR、直接 resolver 与第三方 provider 的同构行为。
-- ADR-19 在接受前必须证明 expand / layout-aware Composite 统一结构化输出，Scope / placement / replay transform 后的 world-space rect、owner path、origin / final occurrence、closed selector 与 retained revision 原子性稳定，且 Scene、SVG、Canvas 不承载该 sidecar。
+- ADR-18 已证明多个 roots 的传递闭包、共享 provider 单次物化、dataset `Object.is` 同源边界、缺失 / cycle / maker / definition 冲突，以及 React、Vanilla、SSR、直接 resolver 与第三方 provider 的同构行为。
+- ADR-19 已证明 expand / layout-aware Composite 统一结构化输出，Scope / placement / replay transform 后的 world-space rect、owner path、origin / final occurrence、closed selector 与 retained revision 原子性稳定，且 Scene、SVG、Canvas 不承载该 sidecar。
+- ADR-20 已证明统一 Input-to-IR、controller / static processing 边界、React / Vanilla / plain JSON 等价性、DOM retained 原子提交与公开入口依赖方向稳定。
 - ADR-22 已证明内置、Standard 与第三方 Clip 使用同一个完整 Definition、registry、provider capability 与递归消费路径，definition/spec/shape kind 一致；canonical Scene clip path 继续可 JSON 往返并被 SVG、Canvas、Node Canvas、hit-test 与 visual bounds 等价消费，Core 默认仅保留矩形裁剪。
 
 ## 后续性能遗留
@@ -169,7 +170,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 
 ## 授权边界
 
-本 roadmap 的 Accepted 状态只记录已获人工确认的完成事实。其余 Proposed ADR 仍不授权实现；本文件也不授权 commit、tag、publish 或 push。
+本 roadmap 的 Accepted 状态只记录已获人工确认的完成事实；本文件也不授权 commit、tag、publish 或 push。
 
 ## 历史设计记录
 

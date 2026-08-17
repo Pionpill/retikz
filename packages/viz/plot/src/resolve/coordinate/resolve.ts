@@ -5,13 +5,13 @@ import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
 import type {
+  IRPlot,
   IRPlotAxisGuide,
   IRPlotChannel,
   IRPlotCoordinateOperation,
   IRPlotIntervalMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlot,
 } from '../../schemas';
 import type { CategoryOrder } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';

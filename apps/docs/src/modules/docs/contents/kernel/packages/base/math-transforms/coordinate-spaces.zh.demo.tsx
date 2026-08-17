@@ -1,6 +1,6 @@
+import type { CenteredShape, Position } from '@retikz/math';
 import type { FC } from 'react';
 
-import type { CenteredShape, Position } from '@retikz/math';
 import { localToWorld } from '@retikz/math';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 

@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { expectTypeOf, it } from 'vitest';
 
 import type {
+  IRPlot,
   IRPlotCoordinateOperation,
   IRPlotDomainPadding,
   IRPlotEncoding,
@@ -12,7 +13,6 @@ import type {
   IRPlotMarkOperation,
   IRPlotPaletteResolution,
   IRPlotScaleOperation,
-  IRPlot,
   IRPlotThemeAuthoredOverrideRecord,
   IRPlotThemeTokenResolution,
   IRPlotThemeTokenRuleSourceRecord,

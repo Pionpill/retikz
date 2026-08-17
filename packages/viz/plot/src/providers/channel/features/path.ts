@@ -8,7 +8,7 @@ import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle, IRPlot } from '../../../schemas';
+import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { MarkValueKind, PlotScale } from '../../../schemas';

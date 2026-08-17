@@ -1,10 +1,10 @@
 import type {
+  IRPlot,
   IRPlotAxisGuide,
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlot,
 } from '@retikz/plot';
 
 import { PlotCoordinate, PlotGuide, PlotMark, PlotScale } from '@retikz/plot';
