@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuntimeCommitEvent, RuntimeProgramTraceReporter } from '../../src/program';
 import type { RuntimeSession } from '../../src/session';
 
-import { RuntimeError } from '../../src/error';
+import { RetikzRuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
@@ -213,8 +213,8 @@ describe('runtime session diagnostics', () => {
         ],
       }),
     );
-    expect(thrown).toBeInstanceOf(RuntimeError);
-    if (!(thrown instanceof RuntimeError)) throw new Error('expected RuntimeError');
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
     expect(session.revision()).toBe(0);
     expect(session.artifact(upstream)).toEqual({ revision: 0, value: 1 });
     const queuedDiagnostics = session.diagnostics();
@@ -307,7 +307,7 @@ describe('runtime session diagnostics', () => {
 
   it('dispose 阶段阻止 reentry，并把 cleanup throw 留在 disposed session queue', () => {
     const sessionRef: { current?: RuntimeSession } = {};
-    const reentryErrors: Array<RuntimeError> = [];
+    const reentryErrors: Array<RetikzRuntimeError> = [];
     const owner = defineRuntimeOwner<number, number, number, never>({
       key: 'counter',
       value: {
@@ -321,7 +321,7 @@ describe('runtime session diagnostics', () => {
             try {
               action();
             } catch (cause) {
-              if (!(cause instanceof RuntimeError)) throw cause;
+              if (!(cause instanceof RetikzRuntimeError)) throw cause;
               reentryErrors.push(cause);
             }
           };
@@ -643,8 +643,8 @@ describe('runtime session diagnostics', () => {
         ],
       }),
     );
-    expect(thrown).toBeInstanceOf(RuntimeError);
-    if (!(thrown instanceof RuntimeError)) throw new Error('expected RuntimeError');
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
     expect(session.revision()).toBe(0);
     expect(session.snapshot(first)).toEqual({ revision: 0, value: 1 });
     expect(session.snapshot(second)).toEqual({ revision: 0, value: 1 });

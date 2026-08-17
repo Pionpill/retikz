@@ -2,7 +2,7 @@ import type { RuntimeProgramId } from '../identity';
 import type { RuntimeProgramDefinition, RuntimeProgramErasedExecutor, RuntimeProgramToken } from '../program';
 import type { RuntimeOwnerRegistry, RuntimeProgramRegistry, RuntimeProgramRegistryInput } from './types';
 
-import { RuntimeError, RuntimeErrorCode } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { getRuntimeProgramDefinitionExecutor, isRuntimeProgramDefinition } from '../program';
 import { isRuntimeOwnerRegistry } from './owner-registry';
 
@@ -26,16 +26,16 @@ const comparePrograms = (left: RuntimeProgramToken, right: RuntimeProgramToken):
 };
 
 type RuntimeProgramRegistryErrorCode =
-  | typeof RuntimeErrorCode.ProgramDuplicate
-  | typeof RuntimeErrorCode.ProgramUnknown
-  | typeof RuntimeErrorCode.ProgramTokenInvalid
-  | typeof RuntimeErrorCode.ProgramCycle
-  | typeof RuntimeErrorCode.Unknown
-  | typeof RuntimeErrorCode.RegistryMismatch;
+  | typeof RetikzRuntimeErrorCode.ProgramDuplicate
+  | typeof RetikzRuntimeErrorCode.ProgramUnknown
+  | typeof RetikzRuntimeErrorCode.ProgramTokenInvalid
+  | typeof RetikzRuntimeErrorCode.ProgramCycle
+  | typeof RetikzRuntimeErrorCode.Unknown
+  | typeof RetikzRuntimeErrorCode.RegistryMismatch;
 
 /** 创建带 Program context 的 registry contract 错误 */
 const programError = (code: RuntimeProgramRegistryErrorCode, program: RuntimeProgramId | undefined, cause: unknown) =>
-  new RuntimeError({ code, phase: 'program-registry', program, cause });
+  new RetikzRuntimeError({ code, phase: 'program-registry', program, cause });
 
 /** 对 Program graph 执行依赖优先且稳定的拓扑排序 */
 export const sortRuntimeProgramGraph = (
@@ -49,7 +49,7 @@ export const sortRuntimeProgramGraph = (
     const dependencies = dependenciesFor(definition);
     for (const dependency of dependencies) {
       if (!members.has(dependency)) {
-        throw programError(RuntimeErrorCode.ProgramUnknown, definition.id, dependency);
+        throw programError(RetikzRuntimeErrorCode.ProgramUnknown, definition.id, dependency);
       }
       if (!dependents.get(dependency)?.has(definition)) {
         dependents.get(dependency)?.add(definition);
@@ -74,7 +74,7 @@ export const sortRuntimeProgramGraph = (
     }
   }
   if (sorted.length !== definitions.length) {
-    throw programError(RuntimeErrorCode.ProgramCycle, undefined, definitions);
+    throw programError(RetikzRuntimeErrorCode.ProgramCycle, undefined, definitions);
   }
   return Object.freeze(sorted);
 };
@@ -82,7 +82,7 @@ export const sortRuntimeProgramGraph = (
 /** 合并 builtin/custom Program Definitions 并验证 owner binding 与 DAG */
 export const createRuntimeProgramRegistry = (input: RuntimeProgramRegistryInput): RuntimeProgramRegistry => {
   if (!isRuntimeOwnerRegistry(input.owners)) {
-    throw programError(RuntimeErrorCode.RegistryMismatch, undefined, input.owners);
+    throw programError(RetikzRuntimeErrorCode.RegistryMismatch, undefined, input.owners);
   }
   const builtins = input.builtins ?? [];
   const custom = input.custom ?? [];
@@ -91,17 +91,17 @@ export const createRuntimeProgramRegistry = (input: RuntimeProgramRegistryInput)
   const executors = new Map<RuntimeProgramToken, RuntimeProgramErasedExecutor>();
   for (const definition of [...builtins, ...custom]) {
     if (!isRuntimeProgramDefinition(definition)) {
-      throw programError(RuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
+      throw programError(RetikzRuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
     }
     const key = idKey(definition.id);
-    if (byId.has(key)) throw programError(RuntimeErrorCode.ProgramDuplicate, definition.id, definition);
+    if (byId.has(key)) throw programError(RetikzRuntimeErrorCode.ProgramDuplicate, definition.id, definition);
     const executor = getRuntimeProgramDefinitionExecutor(definition);
     if (input.owners.find(definition.id.owner) === undefined) {
-      throw programError(RuntimeErrorCode.Unknown, definition.id, definition.id.owner);
+      throw programError(RetikzRuntimeErrorCode.Unknown, definition.id, definition.id.owner);
     }
     for (const owner of executor.owners) {
       if (input.owners.find(owner.key) !== owner) {
-        throw programError(RuntimeErrorCode.Unknown, definition.id, owner);
+        throw programError(RetikzRuntimeErrorCode.Unknown, definition.id, owner);
       }
     }
     byId.set(key, definition);
@@ -113,10 +113,10 @@ export const createRuntimeProgramRegistry = (input: RuntimeProgramRegistryInput)
       definition: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
     ): RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead> => {
       if (!isRuntimeProgramDefinition(definition)) {
-        throw programError(RuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
+        throw programError(RetikzRuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
       }
       if (byId.get(idKey(definition.id)) !== definition) {
-        throw programError(RuntimeErrorCode.ProgramUnknown, definition.id, definition);
+        throw programError(RetikzRuntimeErrorCode.ProgramUnknown, definition.id, definition);
       }
       return definition;
     },
@@ -140,9 +140,9 @@ export const getRuntimeProgramRegistryExecutor = (
   definition: RuntimeProgramToken,
 ): RuntimeProgramErasedExecutor => {
   if (!isRuntimeProgramDefinition(definition)) {
-    throw programError(RuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
+    throw programError(RetikzRuntimeErrorCode.ProgramTokenInvalid, undefined, definition);
   }
   const executor = runtimeProgramRegistries.get(registry)?.executors.get(definition);
-  if (executor === undefined) throw programError(RuntimeErrorCode.ProgramUnknown, definition.id, definition);
+  if (executor === undefined) throw programError(RetikzRuntimeErrorCode.ProgramUnknown, definition.id, definition);
   return executor;
 };

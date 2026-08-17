@@ -5,10 +5,10 @@ import type { BoundaryReferenceResolution } from '../../resolve';
 import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
 
 import {
-  CompositeContractError,
   isFatalProbeError,
-  isLayoutProbeRecoverableError,
-  LayoutProbeRecoverableError,
+  isRetikzLayoutProbeRecoverableError,
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../shared';
@@ -30,24 +30,24 @@ const validateConnectionEnvelope = (
 ): Readonly<{ halfWidth: number; halfHeight: number }> => {
   const path = irPath ?? 'node';
   if (envelope === null || typeof envelope !== 'object') {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected an object with finite positive half-axes`,
     );
   }
   const { halfWidth, halfHeight } = envelope as Record<string, unknown>;
   if (typeof halfWidth !== 'number' || typeof halfHeight !== 'number') {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected numeric half-axes`,
     );
   }
   if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
     );
   }
   const tolerance = Number.EPSILON * Math.max(1, halfWidth, halfHeight) * 8;
   if (kind === 'circle' && Math.abs(halfWidth - halfHeight) > tolerance) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Shape '${shapeName}' returned an invalid circle connection envelope at ${path}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
     );
   }
@@ -87,7 +87,7 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
 /** 校验 Boundary provider 解析出的最终矩形 */
 const validateResolvedRect = (providerName: string, value: unknown, irPath?: string) => {
   if (value === null || typeof value !== 'object') {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected an object`,
     );
   }
@@ -106,7 +106,7 @@ const validateResolvedRect = (providerName: string, value: unknown, irPath?: str
     width <= 0 ||
     height <= 0
   ) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected finite positive width and height`,
     );
   }
@@ -137,9 +137,9 @@ export const resolveBoundary = (
         resolution.params,
       );
     } catch (error) {
-      if (isFatalProbeError(error) || isLayoutProbeRecoverableError(error)) throw error;
+      if (isFatalProbeError(error) || isRetikzLayoutProbeRecoverableError(error)) throw error;
       const message = safeThrownDetail(error);
-      throw new LayoutProbeRecoverableError(
+      throw new RetikzLayoutProbeRecoverableError(
         `Boundary '${resolution.name}' failed to resolve its rect at ${context.irPath ?? 'node'}: ${message}`,
         { cause: error, providerKey: `boundary:${resolution.name}` },
       );

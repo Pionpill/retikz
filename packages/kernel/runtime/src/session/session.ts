@@ -38,7 +38,7 @@ import type {
 import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
 import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
-import { RuntimeError, RuntimeOwnerError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeOwnerError } from '../error';
 import { createRuntimeOwnerExecutor } from '../owner';
 import {
   claimRuntimeCommitParticipants,
@@ -124,7 +124,7 @@ const sessionError = (
   phase: string,
   cause?: unknown,
   owner?: string,
-) => Object.freeze(new RuntimeError({ code, phase, cause, owner }));
+) => Object.freeze(new RetikzRuntimeError({ code, phase, cause, owner }));
 
 /** 把 Program callback throw 转成稳定 lifecycle error */
 const programError = (
@@ -134,7 +134,7 @@ const programError = (
   cause: unknown,
   diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
 ) =>
-  new RuntimeError({
+  new RetikzRuntimeError({
     code,
     phase,
     owner: definition.id.owner,
@@ -151,7 +151,7 @@ const participantError = (
   cause: unknown,
   diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
 ) =>
-  new RuntimeError({
+  new RetikzRuntimeError({
     code,
     phase,
     owner: participant.key,
@@ -329,8 +329,8 @@ const isExecutionDiagnostic = (diagnostic: RuntimeDiagnostic): boolean =>
 
 /** 保留 lifecycle primary error，并替换为完整 secondary diagnostics envelope */
 const withFailureDiagnostics = (cause: unknown, diagnostics: ReadonlyArray<RuntimeDiagnostic>): unknown => {
-  if (cause instanceof RuntimeError) {
-    return new RuntimeError({
+  if (cause instanceof RetikzRuntimeError) {
+    return new RetikzRuntimeError({
       code: cause.code,
       phase: cause.phase,
       cause: cause.cause,
@@ -339,8 +339,8 @@ const withFailureDiagnostics = (cause: unknown, diagnostics: ReadonlyArray<Runti
       diagnostics,
     });
   }
-  if (cause instanceof RuntimeOwnerError) {
-    return new RuntimeError({
+  if (cause instanceof RetikzRuntimeOwnerError) {
+    return new RetikzRuntimeError({
       code: cause.code,
       phase: cause.phase,
       cause: cause.cause,
@@ -353,8 +353,8 @@ const withFailureDiagnostics = (cause: unknown, diagnostics: ReadonlyArray<Runti
 
 /** 读取 primary error 已携带的 execution diagnostics */
 const errorDiagnostics = (cause: unknown): ReadonlyArray<RuntimeDiagnostic> => {
-  if (cause instanceof RuntimeError) return cause.diagnostics;
-  if (cause instanceof RuntimeOwnerError) return cause.diagnostics.map(mapOwnerLifecycleDiagnostic);
+  if (cause instanceof RetikzRuntimeError) return cause.diagnostics;
+  if (cause instanceof RetikzRuntimeOwnerError) return cause.diagnostics.map(mapOwnerLifecycleDiagnostic);
   return Object.freeze([]);
 };
 
@@ -450,7 +450,7 @@ const prepareProgramArtifact = (
   try {
     prepared = executor.prepareArtifact(input, previous?.prepared);
   } catch (cause) {
-    if (cause instanceof RuntimeError) {
+    if (cause instanceof RetikzRuntimeError) {
       throw withFailureDiagnostics(cause, Object.freeze([...diagnostics, ...cause.diagnostics]));
     }
     throw cause;
@@ -517,7 +517,7 @@ const createCandidateView = (
   programStates: ReadonlyMap<RuntimeProgramToken, RuntimeProgramState>,
   program: RuntimeProgramToken,
   executor: RuntimeProgramErasedExecutor,
-  invocationErrors: WeakSet<RuntimeError>,
+  invocationErrors: WeakSet<RetikzRuntimeError>,
 ): RuntimeCandidateView => {
   const declaredOwners = new Set(executor.owners);
   const declaredPrograms = new Set(executor.programs);
@@ -596,7 +596,7 @@ const runProgram = (
   diagnostics: ReadonlyArray<RuntimeDiagnostic>;
 }> => {
   /** 只信任当前 callback invocation 内由 CandidateView 产生的 contract error */
-  const invocationErrors = new WeakSet<RuntimeError>();
+  const invocationErrors = new WeakSet<RetikzRuntimeError>();
   const view = createCandidateView(
     phase,
     baseRevision,
@@ -659,7 +659,7 @@ const runProgram = (
       callbackResult = executor.update<unknown, unknown>(previous.prepared.programRead, view, context);
     } catch (cause) {
       drainTraceDiagnostics();
-      if (cause instanceof RuntimeError && invocationErrors.has(cause)) {
+      if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) {
         throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
       }
       throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause, executionDiagnostics);
@@ -669,7 +669,7 @@ const runProgram = (
     try {
       result = normalizeUpdateResult(callbackResult, definition);
     } catch (cause) {
-      if (cause instanceof RuntimeError) {
+      if (cause instanceof RetikzRuntimeError) {
         throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
       }
       throw cause;
@@ -697,7 +697,7 @@ const runProgram = (
     callbackResult = executor.run<unknown>(view, context);
   } catch (cause) {
     drainTraceDiagnostics();
-    if (cause instanceof RuntimeError && invocationErrors.has(cause)) {
+    if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) {
       throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
     }
     throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, cause, executionDiagnostics);
@@ -707,7 +707,7 @@ const runProgram = (
   try {
     result = normalizeRunResult(callbackResult, definition);
   } catch (cause) {
-    if (cause instanceof RuntimeError) {
+    if (cause instanceof RetikzRuntimeError) {
       throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
     }
     throw cause;
@@ -810,7 +810,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   let programStates = new Map<RuntimeProgramToken, RuntimeProgramState>();
   let currentRevision = createRuntimeRevision(0);
   let state: RuntimeSessionState = 'preparing';
-  let brokenError: RuntimeError | undefined;
+  let brokenError: RetikzRuntimeError | undefined;
   let diagnosticQueue: Array<RuntimeDiagnostic> = [];
   const initialDiagnostics: Array<RuntimeDiagnostic> = [];
   const initialParticipantDiagnostics: Array<RuntimeDiagnostic> = [];
@@ -844,7 +844,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     for (const participant of participants) {
       const executor = participantExecutors.get(participant);
       if (executor === undefined) throw new Error('runtime session: missing participant executor');
-      const invocationErrors = new WeakSet<RuntimeError>();
+      const invocationErrors = new WeakSet<RetikzRuntimeError>();
       const declaredOwners = new Set(participant.owners);
       const declaredPrograms = new Set(participant.programs);
       const view = Object.freeze({
@@ -900,7 +900,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         preparedCandidate = executor.prepare(view, invocation.context);
       } catch (cause) {
         initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
-        if (cause instanceof RuntimeError && invocationErrors.has(cause)) throw cause;
+        if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) throw cause;
         throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, cause);
       }
       initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
@@ -937,7 +937,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     const failedDiagnostics: Array<RuntimeDiagnostic> = [
       ...initialDiagnostics.filter(isExecutionDiagnostic),
       ...initialParticipantDiagnostics,
-      ...(cause instanceof RuntimeError ? cause.diagnostics : []),
+      ...(cause instanceof RetikzRuntimeError ? cause.diagnostics : []),
     ];
     for (const participant of [...participants].reverse()) {
       const participantState = preparedParticipants.get(participant);
@@ -1197,7 +1197,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             selectedParticipants.push(participant);
             const executor = participantExecutors.get(participant);
             if (executor === undefined) throw new Error('runtime session: missing participant executor');
-            const invocationErrors = new WeakSet<RuntimeError>();
+            const invocationErrors = new WeakSet<RetikzRuntimeError>();
             const declaredOwners = new Set(participant.owners);
             const declaredPrograms = new Set(participant.programs);
             const view = Object.freeze({
@@ -1264,7 +1264,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               preparedCandidate = executor.prepare(view, invocation.context);
             } catch (cause) {
               candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
-              if (cause instanceof RuntimeError && invocationErrors.has(cause)) throw cause;
+              if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) throw cause;
               throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, cause);
             }
             candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
@@ -1307,7 +1307,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           const failedDiagnostics: Array<RuntimeDiagnostic> = [
             ...candidateDiagnostics.filter(isExecutionDiagnostic),
             ...candidateParticipantDiagnostics,
-            ...(cause instanceof RuntimeError ? cause.diagnostics : []),
+            ...(cause instanceof RetikzRuntimeError ? cause.diagnostics : []),
           ];
           let firstRollbackFailure:
             | Readonly<{ participant: RuntimeCommitParticipantToken; cause: unknown }>
@@ -1374,7 +1374,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           const frozenFailedDiagnostics = Object.freeze(failedDiagnostics);
           diagnosticQueue.push(...frozenFailedDiagnostics);
           if (firstRollbackFailure !== undefined) {
-            brokenError = new RuntimeError({
+            brokenError = new RetikzRuntimeError({
               code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
               phase: 'rollback',
               owner: firstRollbackFailure.participant.key,

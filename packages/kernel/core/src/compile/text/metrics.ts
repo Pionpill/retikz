@@ -1,4 +1,4 @@
-import { CompositeContractError } from '../../resolve/diagnostics';
+import { RetikzCompositeContractError } from '../../resolve/diagnostics';
 import {
   assertProviderOutputKeys,
   providerOutputRecord,
@@ -72,7 +72,7 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
     const rawDescent = candidate.descent;
     const assertMetric = (name: keyof TextMetrics, value: unknown): number => {
       if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `normalizeTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
         );
       }
@@ -89,7 +89,7 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
     if (measuredAscent !== undefined && measuredDescent !== undefined) {
       const measuredVerticalSpan = measuredAscent + measuredDescent;
       if (!Number.isFinite(measuredVerticalSpan)) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `normalizeTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
         );
       }

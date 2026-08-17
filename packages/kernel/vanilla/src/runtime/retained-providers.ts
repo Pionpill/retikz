@@ -10,7 +10,7 @@ import type {
   ShapeDefinition,
 } from '@retikz/core';
 
-import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
+import { RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
 import { defineRuntimeOwner } from '@retikz/runtime';
 
 type ProviderDefinition =
@@ -37,8 +37,8 @@ export type RetainedProviderDefinitions = Readonly<{
 }>;
 
 const invalidDefinitions = (cause: unknown): never => {
-  throw new RetainedRenderError({
-    code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
+  throw new RetikzRetainedRenderError({
+    code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid,
     cause,
     message:
       'Vanilla retained update must preserve provider definition keys, schemas, and execution branches; dispose and remount to change compile capabilities',

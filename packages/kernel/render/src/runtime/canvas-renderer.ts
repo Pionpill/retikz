@@ -1,6 +1,7 @@
 import type { RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
 import type { RuntimeIdentity, RuntimePreparedCommit } from '@retikz/runtime';
 
+import { RetikzError } from '@retikz/foundation';
 import { runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
@@ -152,7 +153,10 @@ type CanvasAnimationState = Readonly<{
 }>;
 
 /** Canvas visibility 注册与初次清理同时失败时的错误 */
-class CanvasVisibilitySetupError extends Error {
+class RetikzCanvasVisibilitySetupError extends RetikzError<
+  'CANVAS_VISIBILITY_SETUP_FAILED',
+  Readonly<{ cleanupCause: unknown }>
+> {
   /** 原始 visibility listener 注册失败 */
   override readonly cause: unknown;
 
@@ -161,15 +165,22 @@ class CanvasVisibilitySetupError extends Error {
 
   /** 创建保留 primary setup cause 的 visibility 错误 */
   constructor(cause: unknown, cleanupCause: unknown) {
-    super('Canvas visibility setup and cleanup failed', { cause });
-    this.name = 'CanvasVisibilitySetupError';
+    super({
+      code: 'CANVAS_VISIBILITY_SETUP_FAILED',
+      message: 'Canvas visibility setup and cleanup failed',
+      details: { cleanupCause },
+      cause,
+    });
     this.cause = cause;
     this.cleanupCause = cleanupCause;
   }
 }
 
 /** Canvas animation 构建失败且清理仍失败时的可恢复错误 */
-class CanvasAnimationSetupError extends Error {
+class RetikzCanvasAnimationSetupError extends RetikzError<
+  'CANVAS_ANIMATION_SETUP_FAILED',
+  Readonly<{ cleanupCause: unknown; state: CanvasAnimationState }>
+> {
   /** 原始 animation 构建失败 */
   override readonly cause: unknown;
 
@@ -181,8 +192,12 @@ class CanvasAnimationSetupError extends Error {
 
   /** 创建保留 primary setup cause 与可重试 state 的错误 */
   constructor(cause: unknown, cleanupCause: unknown, state: CanvasAnimationState) {
-    super('Canvas animation setup and cleanup failed', { cause });
-    this.name = 'CanvasAnimationSetupError';
+    super({
+      code: 'CANVAS_ANIMATION_SETUP_FAILED',
+      message: 'Canvas animation setup and cleanup failed',
+      details: { cleanupCause, state },
+      cause,
+    });
     this.cause = cause;
     this.cleanupCause = cleanupCause;
     this.state = state;
@@ -190,7 +205,10 @@ class CanvasAnimationSetupError extends Error {
 }
 
 /** Canvas clock candidate 与内部恢复同时失败时的可重试错误 */
-class CanvasAnimationCommitRecoveryError extends Error {
+class RetikzCanvasAnimationCommitRecoveryError extends RetikzError<
+  'CANVAS_ANIMATION_COMMIT_RECOVERY_FAILED',
+  Readonly<{ rollbackCause: unknown; retryRollback: () => void }>
+> {
   /** 原始 candidate clock 切换失败 */
   override readonly cause: unknown;
 
@@ -202,8 +220,12 @@ class CanvasAnimationCommitRecoveryError extends Error {
 
   /** 创建保留 trigger primary 与 rollback 重试入口的错误 */
   constructor(cause: unknown, rollbackCause: unknown, retryRollback: () => void) {
-    super('Canvas animation clock replacement and recovery failed', { cause });
-    this.name = 'CanvasAnimationCommitRecoveryError';
+    super({
+      code: 'CANVAS_ANIMATION_COMMIT_RECOVERY_FAILED',
+      message: 'Canvas animation clock replacement and recovery failed',
+      details: { rollbackCause, retryRollback },
+      cause,
+    });
     this.cause = cause;
     this.rollbackCause = rollbackCause;
     this.retryRollback = retryRollback;
@@ -245,7 +267,7 @@ const createCanvasAnimationCleanupQueue = (): CanvasAnimationCleanupQueue => {
 const recoverCanvasAnimationSetupFailure = (
   cause: unknown,
 ): Readonly<{ cause: unknown; state: CanvasAnimationState }> | undefined => {
-  if (!(cause instanceof CanvasAnimationSetupError)) return undefined;
+  if (!(cause instanceof RetikzCanvasAnimationSetupError)) return undefined;
   return Object.freeze({ cause: cause.cause, state: cause.state });
 };
 
@@ -1058,7 +1080,7 @@ const createCanvasAnimation = (
         teardown();
         if (visibleTeardown === teardown) visibleTeardown = undefined;
       } catch (cleanupCause) {
-        throw new CanvasVisibilitySetupError(cause, cleanupCause);
+        throw new RetikzCanvasVisibilitySetupError(cause, cleanupCause);
       }
       throw cause;
     }
@@ -1270,7 +1292,7 @@ const createCanvasAnimation = (
             try {
               retryRollback();
             } catch (rollbackCause) {
-              throw new CanvasAnimationCommitRecoveryError(cause, rollbackCause, retryRollback);
+              throw new RetikzCanvasAnimationCommitRecoveryError(cause, rollbackCause, retryRollback);
             }
             throw cause;
           }
@@ -1314,11 +1336,11 @@ const createCanvasAnimation = (
     bindVisibility();
     if (sceneHasAutoplayTrigger(scene)) clock.play();
   } catch (cause) {
-    const setupCause = cause instanceof CanvasVisibilitySetupError ? cause.cause : cause;
+    const setupCause = cause instanceof RetikzCanvasVisibilitySetupError ? cause.cause : cause;
     try {
       state.dispose();
     } catch (cleanupCause) {
-      throw new CanvasAnimationSetupError(setupCause, cleanupCause, state);
+      throw new RetikzCanvasAnimationSetupError(setupCause, cleanupCause, state);
     }
     throw setupCause;
   }
@@ -1520,7 +1542,7 @@ export const createBuiltinCanvasRetainedRenderer = (
             try {
               rollbackAnimationRebind = animationCandidate?.commit();
             } catch (cause) {
-              if (cause instanceof CanvasAnimationCommitRecoveryError) {
+              if (cause instanceof RetikzCanvasAnimationCommitRecoveryError) {
                 retryAnimationCommitRollback = cause.retryRollback;
                 throw cause.cause;
               }

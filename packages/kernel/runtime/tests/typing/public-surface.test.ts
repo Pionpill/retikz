@@ -3,14 +3,14 @@ import type * as Foundation from '@retikz/foundation';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type {
+  RetikzRuntimeErrorCodeValue,
+  RetikzRuntimeOwnerErrorCodeValue,
   RuntimeCandidateView,
   RuntimeChangeSet,
   RuntimeCommitEvent,
   RuntimeDiagnostic,
   RuntimeDiagnosticCodeValue,
   RuntimeDiagnosticPhaseValue,
-  RuntimeErrorCodeValue,
-  RuntimeOwnerErrorCodeValue,
   RuntimeOwnerInput,
   RuntimeOwnerPhaseValue,
   RuntimeOwnerUpdate,
@@ -48,11 +48,11 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   defineRuntimeProgram,
+  RetikzRuntimeError,
+  RetikzRuntimeErrorCode,
+  RetikzRuntimeOwnerErrorCode,
   RuntimeDiagnosticCode,
   RuntimeDiagnosticPhase,
-  RuntimeError,
-  RuntimeErrorCode,
-  RuntimeOwnerErrorCode,
   RuntimeOwnerPhase,
   RuntimeProgramExecution,
   RuntimeProgramKind,
@@ -60,7 +60,7 @@ import {
 } from '../../src';
 
 describe('runtime public surface', () => {
-  it('从 package root 公开 Program、transaction、Session、diagnostic 与 RuntimeError', () => {
+  it('从 package root 公开 Program、transaction、Session、diagnostic 与 RetikzRuntimeError', () => {
     expectTypeOf(defineRuntimeProgram).toBeFunction();
     expectTypeOf(RuntimeProgramExecution).toBeObject();
     expectTypeOf(RuntimeProgramKind).toBeObject();
@@ -70,7 +70,7 @@ describe('runtime public surface', () => {
     expectTypeOf(createRuntimeOwnerInput).toBeFunction();
     expectTypeOf(createRuntimeOwnerUpdate).toBeFunction();
     expectTypeOf(createRuntimeSession).toBeFunction();
-    expectTypeOf(RuntimeError).toBeConstructibleWith({
+    expectTypeOf(RetikzRuntimeError).toBeConstructibleWith({
       code: 'RUNTIME_REVISION_INVALID',
       phase: 'revision',
     });
@@ -86,14 +86,14 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeDiagnosticPhaseTypeValue>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
     expect(RuntimeDiagnosticPhase.Run).toBe('run');
     expect(RuntimeDiagnosticCode.TraceSinkFailed).toBe('RUNTIME_TRACE_SINK_FAILED');
-    expectTypeOf<RuntimeErrorCodeValue>().toBeString();
-    expectTypeOf<RuntimeOwnerErrorCodeValue>().toBeString();
+    expectTypeOf<RetikzRuntimeErrorCodeValue>().toBeString();
+    expectTypeOf<RetikzRuntimeOwnerErrorCodeValue>().toBeString();
     expectTypeOf<RuntimeOwnerPhaseValue>().toBeString();
-    expectTypeOf(RuntimeErrorCode).toBeObject();
-    expectTypeOf(RuntimeOwnerErrorCode).toBeObject();
+    expectTypeOf(RetikzRuntimeErrorCode).toBeObject();
+    expectTypeOf(RetikzRuntimeOwnerErrorCode).toBeObject();
     expectTypeOf(RuntimeOwnerPhase).toBeObject();
-    expect(RuntimeErrorCode.ProgramRunFailed).toBe('RUNTIME_PROGRAM_RUN_FAILED');
-    expect(RuntimeOwnerErrorCode.CaptureFailed).toBe('RUNTIME_OWNER_CAPTURE_FAILED');
+    expect(RetikzRuntimeErrorCode.ProgramRunFailed).toBe('RUNTIME_PROGRAM_RUN_FAILED');
+    expect(RetikzRuntimeOwnerErrorCode.CaptureFailed).toBe('RUNTIME_OWNER_CAPTURE_FAILED');
     expect(RuntimeOwnerPhase.Capture).toBe('capture');
     expectTypeOf<RuntimeOwnerInput>().toBeObject();
     expectTypeOf<RuntimeOwnerUpdate>().toBeObject();

@@ -5,7 +5,7 @@ import type { AnimationControls } from '../animation';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 
-import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from './error';
+import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
 
 /** Retained renderer 增量能力等级 */
 export const RetainedRendererCapability = {
@@ -184,7 +184,7 @@ export type DefineRetainedRenderer = {
 const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): RetainedRenderer => {
   const candidate: unknown = input;
   if (typeof candidate !== 'object' || candidate === null) {
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
+    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
   const backend = Reflect.get(candidate, 'backend');
   const host = Reflect.get(candidate, 'host');
@@ -210,7 +210,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     typeof read !== 'function' ||
     typeof dispose !== 'function'
   ) {
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
+    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
   const token = Object.freeze({
     backend,
@@ -220,7 +220,8 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   }) as RetainedRenderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
   const assertLive = (): void => {
-    if (state !== 'live') throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererDisposed });
+    if (state !== 'live')
+      throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererDisposed });
   };
   retainedRendererExecutors.set(
     token,
@@ -253,8 +254,8 @@ const defineRetainedRendererImplementation = (input: RetainedRendererDefinitionI
   try {
     return defineRetainedRendererUnsafe(input);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause });
+    if (isRetikzRetainedRenderError(cause)) throw cause;
+    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause });
   }
 };
 

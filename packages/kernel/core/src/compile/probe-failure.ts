@@ -1,19 +1,23 @@
+import { RetikzError } from '@retikz/foundation';
+
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../contract';
 
 import {
-  CompositeContractError,
-  isLayoutProbeRecoverableError,
-  LayoutProbeRecoverableError,
+  isRetikzLayoutProbeRecoverableError,
   registerFatalProbeError,
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
   safeErrorMessage,
 } from '../resolve/diagnostics';
 import { formatCompileOccurrence } from './artifact';
 
 /** Core compile transaction 内部不可能状态 */
-export class CompileInvariantError extends Error {
+export class RetikzCompileInvariantError extends RetikzError<
+  'CORE_COMPILE_INVARIANT_VIOLATION',
+  Readonly<Record<string, never>>
+> {
   public constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'CompileInvariantError';
+    super({ code: 'CORE_COMPILE_INVARIANT_VIOLATION', message, details: Object.freeze({}), cause: options?.cause });
     registerFatalProbeError(this);
   }
 }
@@ -32,25 +36,25 @@ export type LayoutProbeFailureEntry = Readonly<{
 }> & { consumed: boolean };
 
 /** 将 callback/provider 的 unknown throw 规范化为 recoverable Error，同时保留原始 cause */
-export const normalizeLayoutProbeError = (thrown: unknown): LayoutProbeRecoverableError => {
-  if (isLayoutProbeRecoverableError(thrown)) return thrown;
+export const normalizeLayoutProbeError = (thrown: unknown): RetikzLayoutProbeRecoverableError => {
+  if (isRetikzLayoutProbeRecoverableError(thrown)) return thrown;
   const message = safeErrorMessage(thrown, 'Layout child compilation threw a non-Error value');
-  return new LayoutProbeRecoverableError(message, { cause: thrown });
+  return new RetikzLayoutProbeRecoverableError(message, { cause: thrown });
 };
 
 /** 为既有 recoverable error 补齐最深 dispatch occurrence，同时保留最具体 provider key 与 raw cause */
 export const enrichLayoutProbeError = (
-  error: LayoutProbeRecoverableError,
+  error: RetikzLayoutProbeRecoverableError,
   providerKey: string,
   occurrence: CompileOccurrenceLocator,
-): LayoutProbeRecoverableError => {
+): RetikzLayoutProbeRecoverableError => {
   const resolvedOccurrence =
     error.occurrence !== undefined && error.occurrence.expansionPath.length >= occurrence.expansionPath.length
       ? error.occurrence
       : occurrence;
   if (error.occurrence === resolvedOccurrence && error.providerKey !== undefined) return error;
   const cause = Object.hasOwn(error, 'cause') ? error.cause : error;
-  return new LayoutProbeRecoverableError(error.message, {
+  return new RetikzLayoutProbeRecoverableError(error.message, {
     cause,
     detail: error.detail,
     providerKey: error.providerKey ?? providerKey,
@@ -62,7 +66,7 @@ export const enrichLayoutProbeError = (
 export const createLayoutChildFailure = (
   failures: WeakMap<object, LayoutProbeFailureEntry>,
   owner: LayoutProbeFailureOwner,
-  error: LayoutProbeRecoverableError,
+  error: RetikzLayoutProbeRecoverableError,
   fallbackProviderKey: string,
   fallbackOccurrence: CompileOccurrenceLocator,
 ): LayoutChildFailure => {
@@ -91,24 +95,24 @@ export const raiseLayoutChildFailure = (
   failure: unknown,
 ): never => {
   if (failure === null || typeof failure !== 'object') {
-    throw new CompositeContractError(`${owner.label} received an invalid or forged layout child failure`);
+    throw new RetikzCompositeContractError(`${owner.label} received an invalid or forged layout child failure`);
   }
   const entry = failures.get(failure);
   if (entry === undefined) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `${owner.label} received a layout child failure that does not belong to this compile or was forged`,
     );
   }
   if (entry.owner !== owner) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `${owner.label} received a layout child failure that does not belong to this composite callback`,
     );
   }
   if (entry.consumed) {
-    throw new CompositeContractError(`${owner.label} received a layout child failure that was already raised`);
+    throw new RetikzCompositeContractError(`${owner.label} received a layout child failure that was already raised`);
   }
   entry.consumed = true;
-  throw new LayoutProbeRecoverableError(
+  throw new RetikzLayoutProbeRecoverableError(
     `Layout child provider '${entry.providerKey}' failed at ${entry.sourcePath} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,
     { cause: entry.cause, detail: entry.detail, providerKey: entry.providerKey, occurrence: entry.occurrence },
   );

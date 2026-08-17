@@ -1,13 +1,17 @@
+import { RetikzError } from '@retikz/foundation';
+
 import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from './types';
 
 /** Inspect fail-loud 错误，保留结构化 origin 与原始 cause */
-export class InspectionCompileError extends Error {
+export class RetikzInspectionCompileError extends RetikzError<
+  'INSPECTION_COMPILE_FAILED',
+  Readonly<{ origin: InspectionDiagnosticOrigin }>
+> {
   /** 错误发生的 selection/request/output 阶段 */
   readonly origin: InspectionDiagnosticOrigin;
 
   constructor(message: string, origin: InspectionDiagnosticOrigin, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'InspectionCompileError';
+    super({ code: 'INSPECTION_COMPILE_FAILED', message, details: { origin }, cause: options?.cause });
     this.origin = origin;
     Object.freeze(this);
   }
@@ -18,8 +22,11 @@ export const selectionOrigin = (ruleIndex: number, target: InspectionSelectionTa
   Object.freeze({ stage: 'selection' as const, ruleIndex, target });
 
 /** 用 Inspect origin 包装任意同步失败 */
-export const wrapInspectionError = (origin: InspectionDiagnosticOrigin, cause: unknown): InspectionCompileError => {
-  if (cause instanceof InspectionCompileError) return cause;
+export const wrapInspectionError = (
+  origin: InspectionDiagnosticOrigin,
+  cause: unknown,
+): RetikzInspectionCompileError => {
+  if (cause instanceof RetikzInspectionCompileError) return cause;
   const message = cause instanceof Error ? cause.message : String(cause);
-  return new InspectionCompileError(`Inspection ${origin.stage} failed: ${message}`, origin, { cause });
+  return new RetikzInspectionCompileError(`Inspection ${origin.stage} failed: ${message}`, origin, { cause });
 };

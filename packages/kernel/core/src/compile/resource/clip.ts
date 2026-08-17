@@ -1,17 +1,11 @@
-import type {
-  ClipDefinition,
-  ClipResource,
-  ClipShape,
-  PathCommand,
-  SceneClipPath,
-} from '../../contract';
+import type { ClipDefinition, ClipResource, ClipShape, PathCommand, SceneClipPath } from '../../contract';
 import type { ClipResolution } from '../../resolve/resource';
 
 import {
-  CompositeContractError,
   isFatalProbeError,
-  isLayoutProbeRecoverableError,
-  LayoutProbeRecoverableError,
+  isRetikzLayoutProbeRecoverableError,
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { resolveClipShape } from '../../resolve/resource';
@@ -54,7 +48,7 @@ const createClipTraversalGuard = (max: number, visited = 0): ClipTraversalGuard 
 
 const consumeClipTraversalEdge = (guard: ClipTraversalGuard, stage: string): void => {
   if (guard.visited >= guard.max) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Clip traversal exceeded CompileOptions.maxClipDepth ${guard.max} while entering ${stage}.`,
     );
   }
@@ -70,7 +64,7 @@ const enterClipTraversalObjects = (
   for (const value of values) {
     if (entered.includes(value)) continue;
     if (guard.active.has(value)) {
-      throw new CompositeContractError(`Clip traversal detected a cyclic ${cycleName} object.`);
+      throw new RetikzCompositeContractError(`Clip traversal detected a cyclic ${cycleName} object.`);
     }
     guard.active.add(value);
     entered.push(value);
@@ -100,7 +94,7 @@ type ClipPointInput = {
 };
 
 const bad = ({ kind, field, value, positive = false }: ClipFieldInput & { positive?: boolean }): never => {
-  throw new CompositeContractError(
+  throw new RetikzCompositeContractError(
     `Clip shape '${kind}' has an invalid ${field} (${String(value)}); it must be a finite number${
       positive ? ' greater than 0' : ''
     }.`,
@@ -184,7 +178,7 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
       case 'quad':
       case 'cubic':
         if (!activeSubpath) {
-          throw new CompositeContractError(
+          throw new RetikzCompositeContractError(
             `${owner} lower returned '${command.kind}' at command ${index} without an active subpath.`,
           );
         }
@@ -197,7 +191,7 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
         continue;
       case 'close':
         if (!activeSubpath) {
-          throw new CompositeContractError(
+          throw new RetikzCompositeContractError(
             `${owner} lower returned 'close' at command ${index} without an active subpath.`,
           );
         }
@@ -206,7 +200,7 @@ const assertClipPathGrammar = (commands: ReadonlyArray<PathCommand>, owner: stri
     }
   }
   if (!hasDrawingSegment) {
-    throw new CompositeContractError(`${owner} lower returned a SceneClipPath without a drawing segment.`);
+    throw new RetikzCompositeContractError(`${owner} lower returned a SceneClipPath without a drawing segment.`);
   }
 };
 
@@ -216,7 +210,7 @@ const snapshotResolvedClipShape = (shape: unknown, owner: string): ClipShape =>
     const snapshot = snapshotProviderOutputJson(owner, shape, 'root shape');
     const record = providerOutputRecord(owner, snapshot, 'root shape');
     if (typeof record.kind !== 'string' || record.kind.trim().length === 0) {
-      throw new CompositeContractError(`${owner} resolve returned a root shape without a non-empty string kind.`);
+      throw new RetikzCompositeContractError(`${owner} resolve returned a root shape without a non-empty string kind.`);
     }
     return record as ClipShape;
   });
@@ -229,11 +223,11 @@ const canonicalizeClipPath = (path: unknown, owner: string, round: (n: number) =
     assertProviderOutputKeys(owner, record, ['commands', 'fillRule'], 'SceneClipPath');
     const commands = providerOutputArray(owner, record.commands, 'SceneClipPath.commands');
     if (commands.length === 0) {
-      throw new CompositeContractError(`${owner} lower returned an empty SceneClipPath.commands.`);
+      throw new RetikzCompositeContractError(`${owner} lower returned an empty SceneClipPath.commands.`);
     }
     assertProviderOutputPathCommands(owner, commands, 'SceneClipPath.commands');
     if (record.fillRule !== 'nonzero' && record.fillRule !== 'evenodd') {
-      throw new CompositeContractError(`${owner} lower returned an invalid SceneClipPath.fillRule.`);
+      throw new RetikzCompositeContractError(`${owner} lower returned an invalid SceneClipPath.fillRule.`);
     }
     assertClipPathGrammar(commands as Array<PathCommand>, owner);
     return {
@@ -265,15 +259,15 @@ export const createClipRegistry = (
           resolve: nested => resolveOperation(resolution.resolve(nested), guard),
         });
       } catch (thrown) {
-        if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
-        throw new LayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
+        if (isFatalProbeError(thrown) || isRetikzLayoutProbeRecoverableError(thrown)) throw thrown;
+        throw new RetikzLayoutProbeRecoverableError(`Clip '${kind}' resolve failed: ${safeThrownDetail(thrown)}`, {
           cause: thrown,
           providerKey: `clip:${kind}`,
         });
       }
       const shape = snapshotResolvedClipShape(resolved, `Clip provider 'clip:${kind}'`);
       if (shape.kind !== kind) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `Clip provider 'clip:${kind}' resolve returned kind '${shape.kind}' instead of '${kind}'.`,
         );
       }
@@ -299,8 +293,8 @@ export const createClipRegistry = (
             lower: nested => lowerShape(nested, guard),
           });
         } catch (thrown) {
-          if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
-          throw new LayoutProbeRecoverableError(
+          if (isFatalProbeError(thrown) || isRetikzLayoutProbeRecoverableError(thrown)) throw thrown;
+          throw new RetikzLayoutProbeRecoverableError(
             `Clip provider 'clip:${kind}' lower failed: ${safeThrownDetail(thrown)}`,
             {
               cause: thrown,

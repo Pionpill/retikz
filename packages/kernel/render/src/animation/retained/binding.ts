@@ -1,3 +1,5 @@
+import { RetikzError } from '@retikz/foundation';
+
 import type { WaapiDescriptor } from '../../svg/animation';
 import type { AnimationControls } from '../runtime';
 
@@ -30,7 +32,10 @@ type WaapiStyleOwnership = {
 const waapiStyleOwnerships = new WeakMap<SVGElement, WaapiStyleOwnership>();
 
 /** WAAPI binding 构建失败且初次清理也失败时的可恢复错误 */
-class WaapiBindingSetupError extends Error {
+class RetikzWaapiBindingSetupError extends RetikzError<
+  'WAAPI_BINDING_SETUP_FAILED',
+  Readonly<{ cleanupCause: unknown; controls: AnimationControls }>
+> {
   /** 原始 binding 构建失败 */
   override readonly cause: unknown;
 
@@ -42,8 +47,12 @@ class WaapiBindingSetupError extends Error {
 
   /** 创建保留 primary setup cause 与可重试 controls 的错误 */
   constructor(cause: unknown, cleanupCause: unknown, controls: AnimationControls) {
-    super('WAAPI binding setup and cleanup failed', { cause });
-    this.name = 'WaapiBindingSetupError';
+    super({
+      code: 'WAAPI_BINDING_SETUP_FAILED',
+      message: 'WAAPI binding setup and cleanup failed',
+      details: { cleanupCause, controls },
+      cause,
+    });
     this.cause = cause;
     this.cleanupCause = cleanupCause;
     this.controls = controls;
@@ -309,7 +318,7 @@ export const bindWaapiDescriptorElements = (
     try {
       disposeResources();
     } catch (cleanupCause) {
-      throw new WaapiBindingSetupError(cause, cleanupCause, controls);
+      throw new RetikzWaapiBindingSetupError(cause, cleanupCause, controls);
     }
     throw cause;
   }
@@ -321,7 +330,7 @@ export const bindWaapiDescriptorElements = (
 export const recoverWaapiBindingSetupFailure = (
   cause: unknown,
 ): Readonly<{ cause: unknown; controls: AnimationControls }> | undefined => {
-  if (!(cause instanceof Error) || cause.name !== 'WaapiBindingSetupError') return undefined;
+  if (!(cause instanceof Error) || cause.name !== 'RetikzWaapiBindingSetupError') return undefined;
   const controls = Reflect.get(cause, 'controls');
   if (typeof controls !== 'object' || controls === null || typeof Reflect.get(controls, 'dispose') !== 'function') {
     return undefined;

@@ -239,7 +239,7 @@ export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
 export const recoverHydrationSetupFailure = (
   cause: unknown,
 ): Readonly<{ cause: unknown; controller: HydrationController }> | undefined => {
-  if (!(cause instanceof Error) || cause.name !== 'HydrationControllerSetupError') return undefined;
+  if (!(cause instanceof Error) || cause.name !== 'RetikzHydrationControllerSetupError') return undefined;
   const controller = Reflect.get(cause, 'controller');
   if (
     typeof controller !== 'object' ||

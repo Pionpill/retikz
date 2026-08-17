@@ -20,6 +20,7 @@ import {
   ThemeMode,
 } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
+import { RetikzError } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
@@ -115,13 +116,24 @@ const PresentedTableCellSchema = z.discriminatedUnion('kind', [
 ]);
 
 /** 标记 Table transaction 中失败的精确阶段与可用实体身份 */
-export class TableTransactionStageError extends Error {
+export class RetikzTableTransactionStageError extends RetikzError<
+  'TABLE_TRANSACTION_STAGE_FAILED',
+  Readonly<{ stage: TableTransactionStage; tableId?: string; cellId?: string }>
+> {
   constructor(stage: TableTransactionStage, cause: unknown, tableId?: string, cellId?: string) {
     const table = tableId === undefined ? 'table' : `table "${tableId}"`;
     const cell = cellId === undefined ? '' : `: Cell "${cellId}"`;
     const message = cause instanceof Error ? cause.message : String(cause);
-    super(`${table}: ${stage}${cell}: ${message}`, { cause });
-    this.name = 'TableTransactionStageError';
+    super({
+      code: 'TABLE_TRANSACTION_STAGE_FAILED',
+      message: `${table}: ${stage}${cell}: ${message}`,
+      details: {
+        stage,
+        ...(tableId === undefined ? {} : { tableId }),
+        ...(cellId === undefined ? {} : { cellId }),
+      },
+      cause,
+    });
   }
 }
 
@@ -135,7 +147,7 @@ const runTableTransactionStage = <T>(
   try {
     return run();
   } catch (error) {
-    const contextual = new TableTransactionStageError(stage, error, tableId, cellId);
+    const contextual = new RetikzTableTransactionStageError(stage, error, tableId, cellId);
     if (error instanceof Error) {
       error.message = contextual.message;
       throw error;

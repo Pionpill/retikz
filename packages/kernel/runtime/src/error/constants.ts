@@ -15,7 +15,7 @@ export const RuntimeOwnerPhase = {
 } as const;
 
 /** Runtime owner 的稳定错误码 */
-export const RuntimeOwnerErrorCode = {
+export const RetikzRuntimeOwnerErrorCode = {
   /** owner definition 重复 */
   Duplicate: 'RUNTIME_OWNER_DUPLICATE',
   /** owner 不存在 */
@@ -37,8 +37,8 @@ export const RuntimeOwnerErrorCode = {
 } as const;
 
 /** Runtime transaction、Program、registry 与 participant 的稳定错误码 */
-export const RuntimeErrorCode = {
-  ...RuntimeOwnerErrorCode,
+export const RetikzRuntimeErrorCode = {
+  ...RetikzRuntimeOwnerErrorCode,
   /** Program identity 无效 */
   ProgramIdInvalid: 'RUNTIME_PROGRAM_ID_INVALID',
   /** Program definition 重复 */

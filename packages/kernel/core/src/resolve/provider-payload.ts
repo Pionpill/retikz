@@ -2,7 +2,7 @@ import type { z } from 'zod';
 
 import { ZodError } from 'zod';
 
-import { LayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';
+import { RetikzLayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';
 
 /** provider payload 校验输入 */
 export type ParseProviderPayloadInput<TOutput> = {
@@ -55,7 +55,7 @@ export const parseProviderPayload = <TOutput>({
   } catch (error) {
     const message = safeThrownDetail(error);
     const locator = appendPathKindIssuePath(capability, payloadName, irPath, error);
-    throw new LayoutProbeRecoverableError(
+    throw new RetikzLayoutProbeRecoverableError(
       `${capability} '${providerName}' failed ${payloadName} validation at ${locator}: ${message}`,
       { cause: error, providerKey: providerName },
     );

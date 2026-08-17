@@ -12,7 +12,7 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
-  RuntimeError,
+  RetikzRuntimeError,
 } from '../../src';
 import { getRuntimeTraceReporterDiagnosticDrainCount } from '../../src/trace/internal';
 
@@ -161,7 +161,7 @@ describe('runtime session participant diagnostics', () => {
     ]);
   });
 
-  it('CandidateView 自身的 undeclared dependency 原样传播，participant 伪造 RuntimeError 仍被包装', () => {
+  it('CandidateView 自身的 undeclared dependency 原样传播，participant 伪造 RetikzRuntimeError 仍被包装', () => {
     const owner = defineCounterOwner();
     const foreign = defineCounterOwner('foreign');
     const owners = createRuntimeOwnerRegistry({ builtins: [owner, foreign] });
@@ -188,7 +188,7 @@ describe('runtime session participant diagnostics', () => {
       }),
     ).toThrowError(expect.objectContaining({ code: 'RUNTIME_UNDECLARED_DEPENDENCY' }));
 
-    const spoofed = new RuntimeError({ code: 'RUNTIME_UNDECLARED_DEPENDENCY', phase: 'spoofed' });
+    const spoofed = new RetikzRuntimeError({ code: 'RUNTIME_UNDECLARED_DEPENDENCY', phase: 'spoofed' });
     const malicious = defineRuntimeCommitParticipant({
       key: 'malicious',
       owners: [owner],

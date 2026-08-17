@@ -12,7 +12,7 @@ import type { CompileWarningInput } from '../warning';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import { parseProviderPayload } from '../../resolve/provider-payload';
 import { CompileWarningCode } from '../constants';
-import { CompileInvariantError } from '../probe-failure';
+import { RetikzCompileInvariantError } from '../probe-failure';
 import { validateExpandCompositeOutput } from './composite-output';
 
 /** composite 嵌套展开最大深度 */
@@ -38,7 +38,7 @@ type CallableExpandDefinition = {
 /** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
 const callableExpandDefinition = (definition: AnyCompositeDefinition): CallableExpandDefinition => {
   if (definition.expand === undefined) {
-    throw new CompileInvariantError('internal: callableExpandDefinition received a layout-aware composite');
+    throw new RetikzCompileInvariantError('internal: callableExpandDefinition received a layout-aware composite');
   }
   return definition as unknown as CallableExpandDefinition;
 };

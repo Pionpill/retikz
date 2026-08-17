@@ -1,7 +1,7 @@
 import type { RuntimeIdentity } from '../identity';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerDefinitionInput, RuntimeOwnerToken } from './types';
 
-import { RuntimeOwnerRegistryError } from '../error';
+import { RetikzRuntimeOwnerRegistryError } from '../error';
 
 const runtimeOwnerTokens = new WeakSet<object>();
 const runtimeOwnerExecutors = new WeakMap<object, RuntimeOwnerErasedExecutor>();
@@ -31,7 +31,7 @@ export const defineRuntimeOwner = <TInput, TValue, TRead, TChange>(
   input: RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>,
 ): RuntimeOwnerDefinition<TInput, TValue, TRead, TChange> => {
   if (input.key.length === 0) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', input.key, input);
+    throw new RetikzRuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', input.key, input);
   }
   const { capture, read, equals, dispose } = input.value;
   const token = Object.freeze({ key: input.key }) as RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>;

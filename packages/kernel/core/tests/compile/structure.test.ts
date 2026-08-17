@@ -222,7 +222,7 @@ describe('compile source structure', () => {
 
     const probeFailure = source('src/compile/probe-failure.ts');
     expect(probeFailure).not.toContain('export {');
-    expect(probeFailure).not.toContain('isCompositeContractError');
+    expect(probeFailure).not.toContain('isRetikzCompositeContractError');
     expect(probeFailure).not.toContain('isFatalProbeError');
     expect(probeFailure).not.toContain('safeThrownDetail');
     expect(() => source('src/compile/provider-payload.ts')).toThrow();

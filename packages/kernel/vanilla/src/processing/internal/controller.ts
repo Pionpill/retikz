@@ -9,7 +9,7 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
-  RuntimeError,
+  RetikzRuntimeError,
 } from '@retikz/runtime';
 
 import type {
@@ -56,7 +56,7 @@ const PROCESSING_RESULT_PARTICIPANT_KEY = '@retikz/vanilla:processing-result' as
 /** 返回 Runtime 包装错误中最接近 Core 编译诊断的根因 */
 const processingCause = (cause: unknown): unknown => {
   let current = cause;
-  while (current instanceof RuntimeError && current.cause !== undefined) current = current.cause;
+  while (current instanceof RetikzRuntimeError && current.cause !== undefined) current = current.cause;
   return current;
 };
 

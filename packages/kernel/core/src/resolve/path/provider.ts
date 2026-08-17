@@ -19,7 +19,7 @@ import {
   DEFAULT_ARROW_SHAPE,
   JsonObjectSchema,
 } from '../../schemas';
-import { CompositeContractError } from '../diagnostics';
+import { RetikzCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
 
 const ARROW_GEOMETRY_BASE_SIZE = 10;
@@ -75,22 +75,22 @@ export const resolvePathGenerator = (
 
 const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
   if (!Number.isFinite(definition.lineContactX)) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
     );
   }
   if (definition.baseSize !== undefined && (!Number.isFinite(definition.baseSize) || definition.baseSize <= 0)) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Arrow '${shape}' has an invalid baseSize (${String(definition.baseSize)}); it must be a finite number greater than 0.`,
     );
   }
   if (definition.tipX !== undefined && !Number.isFinite(definition.tipX)) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Arrow '${shape}' has a non-finite tipX (${String(definition.tipX)}); it must be a finite number.`,
     );
   }
   if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
     );
   }
@@ -141,7 +141,7 @@ export const resolveArrowMark = (mark: IRArrowMark, context: PathResolveContext)
     shrink: ((tipX - contactX) * resolvedLength) / baseSize,
   };
   if (!Number.isFinite(geometry.shrink)) {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Arrow '${shape}' resolved shrink is non-finite; use smaller tip/contact/length values.`,
     );
   }

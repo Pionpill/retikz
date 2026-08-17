@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from '../../src';
 
-import { createRuntimeIdentity, createRuntimeOwnerRegistry, defineRuntimeOwner, RuntimeOwnerError } from '../../src';
+import {
+  createRuntimeIdentity,
+  createRuntimeOwnerRegistry,
+  defineRuntimeOwner,
+  RetikzRuntimeOwnerError,
+} from '../../src';
 import { createRuntimeOwnerExecutor } from '../../src/owner/executor';
 
 type Input = Readonly<{ values: Array<number> }>;
@@ -119,9 +124,9 @@ describe('runtime owner executor', () => {
       readExecutor.prepare(readDefinition, { values: [] });
       throw new Error('expected read failure');
     } catch (error) {
-      expect(error).toBeInstanceOf(RuntimeOwnerError);
+      expect(error).toBeInstanceOf(RetikzRuntimeOwnerError);
       expect(error).toMatchObject({ code: 'RUNTIME_OWNER_READ_FAILED', phase: 'read', cause: readCause });
-      expect((error as RuntimeOwnerError).diagnostics).toEqual([
+      expect((error as RetikzRuntimeOwnerError).diagnostics).toEqual([
         expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', cause: disposeCause }),
       ]);
     }
@@ -244,7 +249,7 @@ describe('runtime owner executor', () => {
         phase: 'validate-change-set',
         cause: validationCause,
       });
-      expect((error as RuntimeOwnerError).diagnostics).toEqual([
+      expect((error as RetikzRuntimeOwnerError).diagnostics).toEqual([
         expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', cause: disposeCause }),
       ]);
     }

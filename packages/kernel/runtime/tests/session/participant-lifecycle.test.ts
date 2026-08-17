@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeError, RuntimeSession, RuntimeSessionOptions } from '../../src';
+import type { RetikzRuntimeError, RuntimeSession, RuntimeSessionOptions } from '../../src';
 
 import {
   createRuntimeOwnerInput,
@@ -318,14 +318,14 @@ describe('runtime session participant lifecycle', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
     const programs = createRuntimeProgramRegistry({ owners });
-    const reentryErrors: Array<RuntimeError> = [];
+    const reentryErrors: Array<RetikzRuntimeError> = [];
     const sessionRef: { current?: RuntimeSession } = {};
     let participantRead: Readonly<{ value: number }> = Object.freeze({ value: 1 });
     const captureReentry = (callback: () => void): void => {
       try {
         callback();
       } catch (cause) {
-        reentryErrors.push(cause as RuntimeError);
+        reentryErrors.push(cause as RetikzRuntimeError);
       }
     };
     const participant = defineRuntimeCommitParticipant({
@@ -395,7 +395,7 @@ describe('runtime session participant lifecycle', () => {
       try {
         callback();
       } catch (cause) {
-        reentryCodes.push((cause as RuntimeError).code);
+        reentryCodes.push((cause as RetikzRuntimeError).code);
       }
     };
     const participant = defineRuntimeCommitParticipant({

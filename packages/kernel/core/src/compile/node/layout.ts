@@ -1,4 +1,4 @@
-﻿import type { LayoutAxisProposal, Transform } from '../../contract';
+import type { LayoutAxisProposal, Transform } from '../../contract';
 import type { BoundaryReferenceResolver, CanonicalNode, NodeResolution } from '../../resolve';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
@@ -10,10 +10,10 @@ import type { NodeLayout, TexLoweringContext } from './types';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { boundaryKey } from '../../resolve';
 import {
-  CompositeContractError,
   isFatalProbeError,
-  isLayoutProbeRecoverableError,
-  LayoutProbeRecoverableError,
+  isRetikzLayoutProbeRecoverableError,
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { CenterAnchor } from '../../shared';
@@ -229,15 +229,15 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
         shapeParams,
       );
     } catch (thrown) {
-      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
-      throw new LayoutProbeRecoverableError(
+      if (isFatalProbeError(thrown) || isRetikzLayoutProbeRecoverableError(thrown)) throw thrown;
+      throw new RetikzLayoutProbeRecoverableError(
         `Shape '${shapeDef.name}' circumscribe failed: ${safeThrownDetail(thrown)}`,
         { cause: thrown, providerKey: `shape:${shapeDef.name}` },
       );
     }
     return withProviderOutputValidationBoundary(`Shape '${shapeDef.name}' circumscribe`, () => {
       if (raw === null || typeof raw !== 'object') {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }
@@ -251,7 +251,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
         halfWidth < 0 ||
         halfHeight < 0
       ) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }

@@ -15,7 +15,7 @@ import type {
 } from './types';
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
-import { RuntimeError } from '../error';
+import { RetikzRuntimeError } from '../error';
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../trace';
 
 /** Program prepare 完成但尚未发布的 artifact 与双层 read cache */
@@ -95,18 +95,22 @@ const artifactDisposeDiagnostic = (program: RuntimeProgramToken, cause: unknown)
 
 /** 创建 Program Definition 输入错误 */
 const invalidProgram = (code: 'RUNTIME_PROGRAM_ID_INVALID' | 'RUNTIME_PROGRAM_TOKEN_INVALID', cause: unknown) =>
-  new RuntimeError({ code, phase: 'program-definition', cause });
+  new RetikzRuntimeError({ code, phase: 'program-definition', cause });
 
 /** 校验并复制 Program 的 trace declarations */
 const copyTracePhases = (value: unknown): ReadonlyArray<RuntimeTracePhaseDefinition> => {
   if (!Array.isArray(value)) {
-    throw new RuntimeError({ code: 'RUNTIME_TRACE_DEFINITION_INVALID', phase: 'program-definition', cause: value });
+    throw new RetikzRuntimeError({
+      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+      phase: 'program-definition',
+      cause: value,
+    });
   }
   const definitions: ReadonlyArray<unknown> = value;
   const seen = new Set<string>();
   const copied = definitions.map(candidate => {
     if (typeof candidate !== 'object' || candidate === null) {
-      throw new RuntimeError({
+      throw new RetikzRuntimeError({
         code: 'RUNTIME_TRACE_DEFINITION_INVALID',
         phase: 'program-definition',
         cause: candidate,
@@ -125,7 +129,7 @@ const copyTracePhases = (value: unknown): ReadonlyArray<RuntimeTracePhaseDefinit
       outcomes.some(outcome => !traceOutcomes.has(outcome)) ||
       seen.has(key)
     ) {
-      throw new RuntimeError({
+      throw new RetikzRuntimeError({
         code: 'RUNTIME_TRACE_DEFINITION_INVALID',
         phase: 'program-definition',
         cause: candidate,
@@ -207,7 +211,7 @@ export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TP
     cause: unknown,
     diagnostics: ReadonlyArray<RuntimeDiagnostic> = [],
   ) =>
-    new RuntimeError({
+    new RetikzRuntimeError({
       code,
       phase,
       owner: copiedId.owner,
@@ -235,7 +239,7 @@ export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TP
         throw artifactError('RUNTIME_ARTIFACT_CAPTURE_FAILED', 'artifact-capture', cause);
       }
       if (current !== undefined && dispose !== undefined && artifact === current.artifact) {
-        throw new RuntimeError({
+        throw new RetikzRuntimeError({
           code: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS',
           phase: 'artifact-capture',
           owner: copiedId.owner,
@@ -280,7 +284,7 @@ export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TP
       revision: RuntimeRevision,
     ): RuntimeSnapshot<TPublicRead> => {
       if (definition !== token) {
-        throw new RuntimeError({
+        throw new RetikzRuntimeError({
           code: 'RUNTIME_PROGRAM_TOKEN_INVALID',
           phase: 'artifact-snapshot',
           program: definition.id,
@@ -295,7 +299,7 @@ export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TP
       revision: RuntimeRevision,
     ): RuntimeSnapshot<TPublicRead> => {
       if (definition !== token) {
-        throw new RuntimeError({
+        throw new RetikzRuntimeError({
           code: 'RUNTIME_PROGRAM_TOKEN_INVALID',
           phase: 'artifact-snapshot',
           program: definition.id,

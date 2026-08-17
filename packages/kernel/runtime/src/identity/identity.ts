@@ -2,7 +2,7 @@ import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/
 
 import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
 
-import { RuntimeIdentityError } from '../error';
+import { RetikzRuntimeIdentityError } from '../error';
 
 type IdentityTrieNode = Readonly<{
   terminal: boolean;
@@ -18,17 +18,17 @@ const assertNonEmptyString = (value: string, owner: string): void => {
   try {
     assertFoundationNonEmptyString(value, owner);
   } catch {
-    throw new RuntimeIdentityError(owner, value);
+    throw new RetikzRuntimeIdentityError(owner, value);
   }
 };
 
 const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void => {
   assertNonEmptyString(owner, owner);
   if (path.length === 0) {
-    throw new RuntimeIdentityError(owner, path);
+    throw new RetikzRuntimeIdentityError(owner, path);
   }
   for (let index = 0; index < path.length; index += 1) {
-    if (!(index in path)) throw new RuntimeIdentityError(owner, path);
+    if (!(index in path)) throw new RetikzRuntimeIdentityError(owner, path);
     const segment = path[index];
     assertNonEmptyString(segment, owner);
   }
@@ -79,7 +79,7 @@ export const createRuntimeIdentityLookup = (
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
   const copied: Array<RuntimeIdentity> = [];
   for (const oriIdentity of identities) {
-    if (oriIdentity.owner !== owner) throw new RuntimeIdentityError(owner, oriIdentity);
+    if (oriIdentity.owner !== owner) throw new RetikzRuntimeIdentityError(owner, oriIdentity);
     const identity = copyIdentity(oriIdentity);
     let current = root;
     for (const segment of identity.path) {
@@ -91,7 +91,7 @@ export const createRuntimeIdentityLookup = (
         current = child;
       }
     }
-    if (current.terminal) throw new RuntimeIdentityError(owner, identity);
+    if (current.terminal) throw new RetikzRuntimeIdentityError(owner, identity);
     current.terminal = true;
     copied.push(identity);
   }
@@ -102,7 +102,7 @@ export const createRuntimeIdentityLookup = (
     owner,
     size: values.length,
     has: identity => {
-      if (identity.owner !== owner) throw new RuntimeIdentityError(owner, identity);
+      if (identity.owner !== owner) throw new RetikzRuntimeIdentityError(owner, identity);
       return findTrieNode(immutableRoot, identity.path)?.terminal === true;
     },
     values: () => Object.freeze([...values]),

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   createRuntimeIdentity,
   createRuntimeIdentityLookup,
+  RetikzRuntimeIdentityError,
   runtimeIdentityEquals,
-  RuntimeIdentityError,
 } from '../../src';
 
 describe('runtime identity', () => {
@@ -25,7 +25,7 @@ describe('runtime identity', () => {
     () => createRuntimeIdentity('core', Array<string>(2)),
   ])('拒绝空 owner、空 path、空 segment 与稀疏 path', createInvalid => {
     expect(createInvalid).toThrowError(
-      expect.objectContaining<Partial<RuntimeIdentityError>>({ code: 'RUNTIME_IDENTITY_INVALID' }),
+      expect.objectContaining<Partial<RetikzRuntimeIdentityError>>({ code: 'RUNTIME_IDENTITY_INVALID' }),
     );
   });
 
@@ -42,15 +42,15 @@ describe('runtime identity', () => {
       failure = error;
     }
 
-    expect(failure).toBeInstanceOf(RuntimeIdentityError);
+    expect(failure).toBeInstanceOf(RetikzRuntimeIdentityError);
     expect(failure).toBeInstanceOf(Error);
     expect(failure).toMatchObject({
-      name: 'RuntimeIdentityError',
+      name: 'RetikzRuntimeIdentityError',
       code: 'RUNTIME_IDENTITY_INVALID',
       owner: expectedOwner,
       cause: rejectedValue,
     });
-    expect((failure as RuntimeIdentityError).cause).toBe(rejectedValue);
+    expect((failure as RetikzRuntimeIdentityError).cause).toBe(rejectedValue);
   });
 
   it('rejects a Unicode-whitespace path segment with the segment as cause', () => {
@@ -62,13 +62,13 @@ describe('runtime identity', () => {
       failure = error;
     }
 
-    expect(failure).toBeInstanceOf(RuntimeIdentityError);
+    expect(failure).toBeInstanceOf(RetikzRuntimeIdentityError);
     expect(failure).toMatchObject({
-      name: 'RuntimeIdentityError',
+      name: 'RetikzRuntimeIdentityError',
       code: 'RUNTIME_IDENTITY_INVALID',
       owner: 'owner',
     });
-    expect((failure as RuntimeIdentityError).cause).toBe(rejectedValue);
+    expect((failure as RetikzRuntimeIdentityError).cause).toBe(rejectedValue);
   });
 
   it('按 segment 精确比较，不规范化 Unicode 或特殊字符', () => {
@@ -111,7 +111,7 @@ describe('runtime identity', () => {
     [createRuntimeIdentity('owner', ['a']), createRuntimeIdentity('owner', ['a'])],
   ])('拒绝 owner mismatch 与重复 segment path', (...identities) => {
     expect(() => createRuntimeIdentityLookup('owner', identities)).toThrowError(
-      expect.objectContaining<Partial<RuntimeIdentityError>>({ code: 'RUNTIME_IDENTITY_INVALID' }),
+      expect.objectContaining<Partial<RetikzRuntimeIdentityError>>({ code: 'RUNTIME_IDENTITY_INVALID' }),
     );
   });
 

@@ -22,7 +22,7 @@ import {
   createRetainedRenderParticipant,
   defineRetainedRenderer,
   RenderRuntimeOwnerDefinition,
-  RetainedRenderErrorCode,
+  RetikzRetainedRenderErrorCode,
 } from '../../src/runtime';
 
 const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org/2000/svg' }) as SVGSVGElement;
@@ -132,7 +132,7 @@ describe('retained render frame contract', () => {
         },
         dispose: () => undefined,
       } as never),
-    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid }));
 
     const harness = createHarness('supported');
     expect(harness.renderer.readonlyLayerCapability).toBe('supported');
@@ -153,7 +153,9 @@ describe('retained render frame contract', () => {
     const onPrepareMount = vi.fn();
     expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
       expect.objectContaining({
-        cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported }),
+        cause: expect.objectContaining({
+          code: RetikzRetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
+        }),
       }),
     );
     expect(onPrepareMount).not.toHaveBeenCalled();
@@ -232,7 +234,7 @@ describe('retained render frame contract', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        cause: expect.objectContaining({ code: RetainedRenderErrorCode.RetainedRendererInitialFrameMismatch }),
+        cause: expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererInitialFrameMismatch }),
       }),
     );
   });

@@ -9,6 +9,7 @@ import type {
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { compileToScene, observeCompileToScene } from '@retikz/core';
+import { RetikzError } from '@retikz/foundation';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 
 import type { InputAuthoringSite } from '../normalize';
@@ -20,10 +21,12 @@ const EMPTY_OBSERVER_OUTPUTS: ReadonlyArray<CompileObserverOutput> = Object.free
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 
 /** 编译驱动解析边界的结构化错误，retained host 可据此保留上一帧 */
-export class VanillaCompileDriverError extends Error {
+export class RetikzVanillaCompileDriverError extends RetikzError<
+  'VANILLA_COMPILE_DRIVER_FAILED',
+  Readonly<Record<string, never>>
+> {
   constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'VanillaCompileDriverError';
+    super({ code: 'VANILLA_COMPILE_DRIVER_FAILED', message, details: Object.freeze({}), cause: options?.cause });
   }
 }
 
@@ -104,8 +107,8 @@ export const createVanillaCompileDriverSession = (
     NORMALIZED_VANILLA_COMPILE_SESSIONS.set(candidate, normalized);
     return normalized;
   } catch (cause) {
-    if (cause instanceof VanillaCompileDriverError) throw cause;
-    throw new VanillaCompileDriverError('Vanilla compile driver session creation failed', { cause });
+    if (cause instanceof RetikzVanillaCompileDriverError) throw cause;
+    throw new RetikzVanillaCompileDriverError('Vanilla compile driver session creation failed', { cause });
   }
 };
 
@@ -140,8 +143,8 @@ export const resolveVanillaCompileOutput = (
     sessionOutputs.set(coreOutput, normalized);
     return normalized;
   } catch (cause) {
-    if (cause instanceof VanillaCompileDriverError) throw cause;
-    throw new VanillaCompileDriverError('Vanilla compile driver resolve failed', { cause });
+    if (cause instanceof RetikzVanillaCompileDriverError) throw cause;
+    throw new RetikzVanillaCompileDriverError('Vanilla compile driver resolve failed', { cause });
   }
 };
 
