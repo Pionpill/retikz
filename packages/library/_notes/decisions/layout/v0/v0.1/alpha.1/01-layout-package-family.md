@@ -2,7 +2,7 @@
 
 - 状态：Accepted（2026-08-09，人工确认）
 - 决策日期：2026-08-09
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Layout v0.1 roadmap](../roadmap.md) · [Layout 布局库设计](../../../../../architecture/layout-library-design.md) · [Library 能力库设计](../../../../../architecture/library-design.md) · [Standard alpha.2 roadmap](../../../../standard/v0/v0.1/alpha.2/roadmap.md) · [Standard alpha.4 roadmap](../../../../standard/v0/v0.1/alpha.4/roadmap.md)
+- 关联：[alpha.1 roadmap](./roadmap.md) · [Layout v0.1 roadmap](../roadmap.md) · [Layout 布局库设计](../../../../../architecture/layout-library-design.md) · [Library 能力库设计](../../../../../architecture/library-design.md) · [Standard alpha.2 roadmap](../../../../standard/v0/v0.1/alpha.2/roadmap.md) · [Standard alpha.3 roadmap](../../../../standard/v0/v0.1/alpha.3/roadmap.md)
 
 ## 背景与目标
 
@@ -79,7 +79,7 @@ Layout 不新增专用 solver registry 或 `defineLayout()` 扩展轴。Flex、G
 | canonical compiler    | `compileFlexLayout`、`compileGridLayout`、`compileOverlayLayout` 接收已解析 canonical IR 与当前 `LayoutCompositeCompileContext`     | 复用同一 minimum / natural / range / exact、placement、replay、clip 与 artifact 主链；probe / replay 失败 fail-loud |
 | child layout session  | intrinsic / exact proposal、required probe、measure、place 与 replay 的 typed stateless helper                                      | handle 只在同次 compile 使用；不缓存 replay、不探测 child 类型、不绕开 Core context                                 |
 | geometry 与 artifact  | spacing normalize、content / positioned slot、axis size、alignment、clip、rect union / intersection、artifact item / container 构造 | 坐标统一为 container allocation；非有限、负尺寸或跨坐标输入 fail-loud                                               |
-| reusable flow solving | compensated sum、Flex line minimum / natural / cross metrics，以及 paired-flow intrinsic、plan 与 translation                       | 输入不可变、结果确定、数值有限；不读取 Legend、Graph、Plot、Table 等领域字段                                     |
+| reusable flow solving | compensated sum、Flex line minimum / natural / cross metrics，以及 paired-flow intrinsic、plan 与 translation                       | 输入不可变、结果确定、数值有限；不读取 Legend、Graph、Plot、Table 等领域字段                                        |
 
 v0.1 的最小 named surface 冻结为：
 
@@ -163,7 +163,7 @@ import type {
 - Standard alpha.2 ADR-09（Legend）与 ADR-10（Presentation lower reuse）继续 Accepted，改为组合 Layout `/compose`，不再声明 Standard 拥有 Box / Flex / Overlay solver
 - Standard alpha.3 ADR-06 的直接 Definition loading 原则继续 Accepted；Layout 复用同一 Core 显式 Definition 机制，不建立 capability bundle
 - Graph alpha.1 ADR-01 继续 Accepted；只把其公共 layout composition owner 从 Standard 改为 Layout，不改变 Graph package family、图式元素或依赖 Core 主链的其它决策
-- Standard v0.1 alpha.4 记录 breaking removal 与下游迁移，Layout alpha.1 作为现行布局契约真源
+- Standard v0.1 alpha.3 记录 breaking removal 与下游迁移，Layout alpha.1 作为现行布局契约真源
 
 文档站把当前 Standard 顶级模块重组为 Library 顶级模块，分组顺序为 `Standard · 拓展`、`Layout · 布局`。Standard 使用 `/library/standard/...`，Layout 使用 `/library/layout/...`；两组分别维护介绍、组件 / capability、参考与所属 release group 的更新日志。旧 Standard Layout 页面、schema registry owner 与示例 import 不保留双份入口。
 

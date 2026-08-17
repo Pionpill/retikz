@@ -1,6 +1,6 @@
 # Layout v0.1 alpha.1 Roadmap
 
-> 状态：已完成；ADR-01 为 Accepted。关联：[Layout v0.1 roadmap](../roadmap.md) · [Layout 布局库设计](../../../../../architecture/layout-library-design.md) · [Standard alpha.2 roadmap](../../../../standard/v0/v0.1/alpha.2/roadmap.md) · [Standard alpha.4 roadmap](../../../../standard/v0/v0.1/alpha.4/roadmap.md)
+> 状态：已完成；ADR-01 为 Accepted。关联：[Layout v0.1 roadmap](../roadmap.md) · [Layout 布局库设计](../../../../../architecture/layout-library-design.md) · [Standard alpha.2 roadmap](../../../../standard/v0/v0.1/alpha.2/roadmap.md) · [Standard alpha.3 roadmap](../../../../standard/v0/v0.1/alpha.3/roadmap.md)
 
 ## 目标
 
@@ -8,8 +8,8 @@
 
 ## ADR
 
-| ADR                                 | 主题                                     | 依赖                                                                      | 状态     |
-| ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------- | -------- |
+| ADR                                 | 主题                                     | 依赖                                                                   | 状态     |
+| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------- | -------- |
 | [01](./01-layout-package-family.md) | Package family、owner 迁移与 composition | Core layout-aware contract；Standard alpha.2；Graph public composition | Accepted |
 
 ## 完成标准

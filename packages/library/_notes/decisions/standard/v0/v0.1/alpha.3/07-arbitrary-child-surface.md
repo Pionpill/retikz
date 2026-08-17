@@ -1,8 +1,8 @@
-# ADR-01：以 Standard Surface 包装任意 Core child
+# ADR-07：以 Standard Surface 包装任意 Core child
 
 - 状态：Accepted（2026-08-11，Architecture Gate 与 Plan Gate 通过并经人工确认）
 - 决策日期：2026-08-11
-- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · [Chart ADR-03](../../../../../../../viz/_notes/decisions/chart/v0/v0.1/alpha.1/03-presentation-standard-layout.md)
+- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Core ADR-19](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/19-qualified-spatial-handles.md) · [Chart ADR-03](../../../../../../../viz/_notes/decisions/chart/v0/v0.1/alpha.1/03-presentation-standard-layout.md)
 
 ## 背景与目标
 

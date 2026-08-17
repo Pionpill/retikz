@@ -1,9 +1,9 @@
-# ADR-03：将 Ribbon 完整迁移为 Standard Path Kind
+# ADR-09：将 Ribbon 完整迁移为 Standard Path Kind
 
 - 状态：Accepted
 - 决策日期：2026-08-13
-- 依赖：[ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)
-- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Path Kind ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/alpha.6/07-path-kind-registry.md) · [Core Path Generator / Ribbon Profile ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/alpha.8/06-builtin-path-generator-ribbon-profile.md)
+- 依赖：[ADR-08](./08-core-minimal-builtins-and-standard-provider-entrypoints.md)
+- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Path Kind ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/alpha.6/07-path-kind-registry.md) · [Core Path Generator / Ribbon Profile ADR](../../../../../../../kernel/_notes/decisions/v0/v0.4/alpha.8/06-builtin-path-generator-ribbon-profile.md)
 
 ## 背景与目标
 
@@ -168,7 +168,7 @@ Plot Relation Ribbon 仍由 Plot 拥有 channel、source / target、relation、w
 
 Plot 的 adapter-neutral contribution 显式要求 `pathKind + ribbon` root，并携带 Standard Ribbon dependency provider 与官方 profile dataset；Plot 包直接依赖 `@retikz/standard/ribbon`，不从 Standard 根入口或宿主环境隐式获得它。Plot 自己不复制 Ribbon schema、profile、几何或 Scene 输出。
 
-Core React 的通用 `<Path kind="ribbon" kindOptions={...}>`、Vanilla 通用 Path authoring 与直接 JSON 都构造同一 canonical Core Path；它们不内置 Ribbon prop、profile 或 definition。React 调用方通过 `<Layout pathKinds={[RibbonPathKindDefinition]}>` 显式装配；Vanilla 调用方通过通用 compile options 做相同装配。Core React `<Layout>` 与 Vanilla compile options 同时删除 `ribbonWidthProfiles` 专用接线。直接 `compileToScene` 的调用方必须显式把 `RibbonPathKindDefinition` 放入 `pathKinds`，或使用 ADR-02 的 Core resolver 装配 Standard Ribbon contribution。只有 Plot 等 Tier 2 adapter 在其 authored contribution 中自动声明自身所需 Ribbon provider。
+Core React 的通用 `<Path kind="ribbon" kindOptions={...}>`、Vanilla 通用 Path authoring 与直接 JSON 都构造同一 canonical Core Path；它们不内置 Ribbon prop、profile 或 definition。React 调用方通过 `<Layout pathKinds={[RibbonPathKindDefinition]}>` 显式装配；Vanilla 调用方通过通用 compile options 做相同装配。Core React `<Layout>` 与 Vanilla compile options 同时删除 `ribbonWidthProfiles` 专用接线。直接 `compileToScene` 的调用方必须显式把 `RibbonPathKindDefinition` 放入 `pathKinds`，或使用 ADR-08 的 Core resolver 装配 Standard Ribbon contribution。只有 Plot 等 Tier 2 adapter 在其 authored contribution 中自动声明自身所需 Ribbon provider。
 
 ## 行为、失败语义与兼容性
 
@@ -176,7 +176,7 @@ Core React 的通用 `<Path kind="ribbon" kindOptions={...}>`、Vanilla 通用 P
 - canonical IR 的 Ribbon 参数从顶层 `ribbon` 移到 `kindOptions`，Core Ribbon exports 与 `CompileOptions.ribbonWidthProfiles` 被删除，是明确 breaking change
 - 未注册 Ribbon definition 时，Core 按普通未知 Path Kind fail-loud，并列出 `stroke` 与本次显式注册项
 - 未注册 profile、重复 profile、无效 params、非有限宽度、无效路径结构和采样失败由 Standard Ribbon definition fail-loud；Core 不增加 Ribbon 字符串特判
-- 相同 key 的不同 Ribbon Path Kind definitions 由 ADR-02 assembly / Core path-kind registry fail-loud；不允许 Standard 官方 definition 静默覆盖用户 definition
+- 相同 key 的不同 Ribbon Path Kind definitions 由 ADR-08 assembly / Core path-kind registry fail-loud；不允许 Standard 官方 definition 静默覆盖用户 definition
 - 不保留 Core Ribbon re-export、旧 `ribbon` 字段 alias、`ribbonWidthProfiles` compatibility mapping 或自动注入 Standard 的 fallback
 
 ## 实施结果

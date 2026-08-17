@@ -22,7 +22,7 @@ v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 
 - Grid、Axes、Frame 等首批宿主无关 Tier 2 composite
 - 按项 Definition 接入、Core compile options 与直接/adapter authoring parity
-- alpha.2 曾验证 Flex、GridLayout、Overlay 等排版能力；alpha.4 已将其迁入独立 [Layout v0.1](../../layout/v0/v0.1/roadmap.md) owner
+- alpha.2 曾验证 Flex、GridLayout、Overlay 等排版能力；合并发布前已将其迁入独立 [Layout v0.1](../../layout/v0/v0.1/roadmap.md) owner
 - 由 Plot、Table 与直接作者共同消费的通用 Legend 呈现
 - 当前 alpha.4 在完成 Layout owner 迁移后，为 Chart canvas、Table panel 与一般面板提供单一任意 child 的 renderer-neutral Surface；完整 Scope、布局和空间透明继续复用 Core / Layout
 - React / Vanilla 等价 authoring、JSON-safe 语义输入、Core lowering、诊断、测试与双语文档

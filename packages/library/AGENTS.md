@@ -36,4 +36,4 @@ Standard 与 Layout 分别使用独立 release group `standard`、`layout`，不
 
 ## 当前状态
 
-Standard 与 Layout 三包均已实现，并分别使用独立 release group。Layout v0.1 alpha.1 已接管排版布局长期契约；Standard 不再拥有或转发 Layout API，也不得新增双 namespace 兼容层。Standard 当前 v0.1 alpha.4 源码已按 Accepted ADR 提供任意 child Surface；其发布仍随 Standard release group 的独立流程决定。
+Standard 与 Layout 三包均已实现，并分别使用独立 release group。Layout v0.1 alpha.1 已接管排版布局长期契约；Standard 不再拥有或转发 Layout API，也不得新增双 namespace 兼容层。Standard 当前 v0.1 alpha.3 源码已按 Accepted ADR 提供任意 child Surface；其发布仍随 Standard release group 的独立流程决定。

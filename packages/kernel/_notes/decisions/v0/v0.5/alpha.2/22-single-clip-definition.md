@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-16
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [ADR-21](./21-extensible-clip-shapes.md) · [Standard alpha.4 ADR-06](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/06-single-clip-definition.md)
+- 关联：[alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [ADR-21](./21-extensible-clip-shapes.md) · [Standard alpha.3 ADR-12](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/12-single-clip-definition.md)
 
 ## 背景与目标
 

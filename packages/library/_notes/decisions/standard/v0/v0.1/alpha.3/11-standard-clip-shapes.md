@@ -1,12 +1,12 @@
-# ADR-05：Standard 裁剪形状与两级 Provider
+# ADR-11：Standard 裁剪形状与两级 Provider
 
-- 状态：Superseded（由 [ADR-06](./06-single-clip-definition.md) 取代）
+- 状态：Superseded（由 [ADR-12](./12-single-clip-definition.md) 取代）
 - 决策日期：2026-08-16
-- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core ADR-21](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/21-extensible-clip-shapes.md) · [ADR-02](./02-core-minimal-builtins-and-standard-provider-entrypoints.md)
+- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core ADR-21](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/21-extensible-clip-shapes.md) · [ADR-08](./08-core-minimal-builtins-and-standard-provider-entrypoints.md)
 
 ## 背景与目标
 
-Standard alpha.4 ADR-02 已把 `polygon`、`path`、`compound` 的 Clip operation schema 与 definitions 迁入 `@retikz/standard/clip`，但它们仍只能返回 Core 封闭的 Scene `ClipShape`。`circle`、`ellipse` 也继续由 Core 同时拥有 spec、shape 和实现，因此 Standard 只取得部分输入 API，第三方和官方扩展仍受 Core 内置形状集合限制。
+Standard alpha.3 ADR-08 已把 `polygon`、`path`、`compound` 的 Clip operation schema 与 definitions 迁入 `@retikz/standard/clip`，但它们仍只能返回 Core 封闭的 Scene `ClipShape`。`circle`、`ellipse` 也继续由 Core 同时拥有 spec、shape 和实现，因此 Standard 只取得部分输入 API，第三方和官方扩展仍受 Core 内置形状集合限制。
 
 Core ADR-21 建立 `ClipDefinition → ClipShapeDefinition → SceneClipPath` 两级扩展链，并将 Core 默认裁剪收敛为 `rect`。本决策在该底座上让 Standard 完整拥有 `circle`、`ellipse`、`polygon`、`path`、`compound` 的 operation spec、ClipShape、两级 definitions 和静态 providers，同时保持直接 Core、provider contribution、React、Vanilla、SSR 与官方 Tier 2 的显式装配闭环。
 
@@ -20,7 +20,7 @@ Core ADR-21 建立 `ClipDefinition → ClipShapeDefinition → SceneClipPath` �
 
 Compound 的直接静态依赖只有 Compound ClipShape provider。它可以包含任意 Standard 或第三方 operation，因此调用方必须同时把实际 child operation roots 及其 provider catalog 作为 contribution 提供；Compound 不从 IR 反向扫描 package、不隐式安装全部 Standard clips。使用直接 compile options 时，调用方同样只注入实际需要的两级 definitions，或显式使用 Standard 全集合。
 
-本决策演进并取代 ADR-02 表格中 Clip 的内置所有权结论：Core 默认内置从 `rect`、`circle`、`ellipse` 收敛为仅 `rect`，Standard 官方扩展从 `polygon`、`path`、`compound` 扩展为五种形状。ADR-02 的能力子入口、无全局注册、显式 provider graph、冲突和跨入口装配原则保持有效。
+本决策演进并取代 ADR-08 表格中 Clip 的内置所有权结论：Core 默认内置从 `rect`、`circle`、`ellipse` 收敛为仅 `rect`，Standard 官方扩展从 `polygon`、`path`、`compound` 扩展为五种形状。ADR-08 的能力子入口、无全局注册、显式 provider graph、冲突和跨入口装配原则保持有效。
 
 Core 保留的 `rect` 同时承载正面积与零尺寸裁剪；任一轴为零时表示空区域。Layout 因此始终使用 Core rect 表达 allocation clip，不依赖 Standard Path provider；Standard `path` 只服务显式选择该可选 operation 的作者和上层 composite。
 

@@ -1,8 +1,8 @@
-# ADR-02：Core 最小内置集合与 Standard provider 子入口
+# ADR-08：Core 最小内置集合与 Standard provider 子入口
 
 - 状态：Accepted（2026-08-15，公开契约、Tier 2 装配与跨入口闭环完成）
 - 决策日期：2026-08-13
-- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.4 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Standard alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md)
+- 关联：[Standard v0.1 roadmap](../roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Standard alpha.3 ADR-06](./06-direct-definition-loading.md) · [Core ADR-18](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/18-composite-dependency-provider-graph.md)
 
 ## 背景与目标
 
@@ -34,7 +34,7 @@ Core 已为 Shape、Boundary、Clip、Arrow、Pattern、Path Generator 与 Path 
 | Boundary       | `rectangle`、`circle`、`ellipse`                                   | 无                                   | 三项与基础 Node 连接面闭环，保持 Core 内置                                                           |
 | Clip           | `rect`、`circle`、`ellipse`                                        | `polygon`、`path`、`compound`        | 基础几何裁剪保留在 Core；多边形、结构化路径和递归组合按需装配并复用 Core clip contract 与 Scene 表达 |
 | Path Generator | 无                                                                 | 无                                   | Path step 不依赖 generator 也能闭环；本 ADR 不建立 Standard 官方实现                                 |
-| Path Kind      | `stroke`                                                           | `ribbon`                             | Stroke 是 Path 默认语义；Ribbon 已由 ADR-03 以完整 owner 迁入 Standard                               |
+| Path Kind      | `stroke`                                                           | `ribbon`                             | Stroke 是 Path 默认语义；Ribbon 已由 ADR-09 以完整 owner 迁入 Standard                               |
 | Theme baseline | 保留现状                                                           | 不在本次迁移                         | Core theme 默认和 shared colors 属于基础编译环境，不是内容扩展集合                                   |
 
 表中“Standard 官方扩展”仍使用 Core 定义的 `XxxDefinition`、`defineXxx()`、registry option 和消费语义。迁移不把 Core contract、IR discriminator、registry 或 compile lookup 复制到 Standard，也不改变第三方定义能力。
@@ -55,7 +55,7 @@ import { CompoundClipDefinition } from '@retikz/standard/clip';
 
 这些 provider extensions 不从 `@retikz/standard` 根入口、`@retikz/standard-react` 根入口或 `@retikz/standard-vanilla` 根入口转发。Standard 已有 composites 仍可按其既有根入口契约导出；本决策只禁止把迁入的 Core provider extensions 重新聚合成另一个隐式全集。各子入口是明确的 package exports，并具有独立构建入口；包保持 `sideEffects: false`，未导入的子入口不得执行注册或进入调用方模块图。
 
-子入口名称按 Core 能力名而不是当前消费者命名。本决策只建立 `shape`、`arrow`、`clip` 三个子入口；Path Generator 与 Ribbon 不发布空入口。Ribbon 后续由 ADR-03 冻结完整契约与公开面，并以 `@retikz/standard/ribbon` 发布。
+子入口名称按 Core 能力名而不是当前消费者命名。本决策只建立 `shape`、`arrow`、`clip` 三个子入口；Path Generator 与 Ribbon 不发布空入口。Ribbon 后续由 ADR-09 冻结完整契约与公开面，并以 `@retikz/standard/ribbon` 发布。
 
 ## Core provider dependency graph 与 assembly
 
@@ -141,4 +141,4 @@ Core 是 dependency / assembly contract、resolver 和冲突语义的 owner。St
 
 ## 接受结果
 
-Core 已以统一 provider dependency graph 装配普通 provider 与 Composite，并把解析结果合并进同一 compile options；Standard 的 `shape`、`arrow`、`clip` 子入口提供本决策迁入的可选 definitions 与静态 providers，根入口不聚合这些扩展。React、Vanilla、SSR 与官方 Tier 2 均沿同一 contribution 闭包传递依赖，Plot 等消费者显式携带其所需的 Standard providers，不依赖宿主预装或全局注册。后续 ADR-03 已在同一边界上增加 `@retikz/standard/ribbon`，且仍共用该 provider graph。
+Core 已以统一 provider dependency graph 装配普通 provider 与 Composite，并把解析结果合并进同一 compile options；Standard 的 `shape`、`arrow`、`clip` 子入口提供本决策迁入的可选 definitions 与静态 providers，根入口不聚合这些扩展。React、Vanilla、SSR 与官方 Tier 2 均沿同一 contribution 闭包传递依赖，Plot 等消费者显式携带其所需的 Standard providers，不依赖宿主预装或全局注册。后续 ADR-09 已在同一边界上增加 `@retikz/standard/ribbon`，且仍共用该 provider graph。

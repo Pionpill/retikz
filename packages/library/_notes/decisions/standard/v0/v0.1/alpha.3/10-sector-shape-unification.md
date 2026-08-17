@@ -1,4 +1,4 @@
-# ADR-04：以 Sector 作为弧形与扇形 Node shape 的统一定义
+# ADR-10：以 Sector 作为弧形与扇形 Node shape 的统一定义
 
 - 状态：Accepted（2026-08-15，Sector 统一定义与公开面收敛完成）
 - 决策日期：2026-08-14

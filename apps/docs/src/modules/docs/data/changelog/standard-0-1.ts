@@ -29,11 +29,11 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.4',
+          version: 'alpha.3',
           date: '2026-08-09',
           summary: {
-            zh: 'BREAKING：Standard 聚焦横向绘图拓展，交付 Surface 与按能力装载的 Shape、Arrow、两级 Clip、Ribbon providers；排版布局迁入独立 Layout 包族。',
-            en: 'BREAKING: Standard focuses on horizontal drawing extensions, adds Surface plus capability-scoped Shape, Arrow, two-stage Clip, and Ribbon providers, and moves layout composition to the independent Layout package family.',
+            zh: '合并发布：Graph 历史能力迁出后，Standard 聚焦横向绘图拓展，交付 Surface、按能力装载的 Shape、Arrow、完整 Clip 与 Ribbon providers；排版布局迁入独立 Layout 包族。',
+            en: 'Combined release: after the historical Graph capabilities moved out, Standard focuses on horizontal drawing extensions with Surface, capability-scoped Shape, Arrow, complete Clip, and Ribbon providers, while layout composition moves to the independent Layout package family.',
           },
           items: [
             {
@@ -88,16 +88,6 @@ export const standardV01: Release = {
                 en: 'The complete Ribbon Path schema, width profiles, geometry compilation, and provider contribution now come from `@retikz/standard/ribbon`. Move the former top-level Path `ribbon` field to `kindOptions` and inject `RibbonPathKindDefinition` explicitly through `pathKinds`; Core Ribbon exports, `ribbonWidthProfiles`, and automatic fallback are removed.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.3',
-          date: '2026-08-08',
-          summary: {
-            zh: '历史里程碑：验证逻辑块、基础单元、连接器与标注；这些图式能力现已迁入 Graph 包族。',
-            en: 'Historical milestone: validated logic blocks, base units, graphConnectors, and callouts; these diagram capabilities now live in the Graph package family.',
-          },
-          items: [
             {
               label: { zh: '逻辑块与基础单元', en: 'Logic blocks and base units' },
               content: {
@@ -217,11 +207,11 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.4',
+          version: 'alpha.3',
           date: '2026-08-09',
           summary: {
-            zh: '新增 Surface authoring 与 embed adapter；BREAKING：布局 builder、adapters 与检查驱动迁入 `@retikz/layout-vanilla`。',
-            en: 'Adds Surface authoring and its embed adapter. BREAKING: layout builders, adapters, and inspection wiring move to `@retikz/layout-vanilla`.',
+            zh: '合并发布：Graph builder 迁出后，Standard Vanilla 交付 Surface authoring、embed adapter，并将布局与检查入口迁入独立 Layout 包族。',
+            en: 'Combined release: after the Graph builders moved out, Standard Vanilla ships Surface authoring and its embed adapter while moving layout and inspection entrypoints to the independent Layout package family.',
           },
           items: [
             {
@@ -238,16 +228,6 @@ export const standardV01: Release = {
                 en: '`surface()` and `embedSurface()` normalize to the same `standard.surface` IR. `SurfaceInputEmbedAdapter` carries the complete provider contribution required by Surface and its arbitrary child and can be used directly for SSR.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.3',
-          date: '2026-08-08',
-          summary: {
-            zh: '历史里程碑：验证七种逻辑组件 builder 与 adapters；这些入口现从 `@retikz/graph-vanilla` 提供。',
-            en: 'Historical milestone: validated seven logic builders and adapters; these entries now come from `@retikz/graph-vanilla`.',
-          },
-          items: [
             {
               label: { zh: '逻辑组件 builders', en: 'Logic component builders' },
               content: {
@@ -331,11 +311,11 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.4',
+          version: 'alpha.3',
           date: '2026-08-09',
           summary: {
-            zh: '新增任意 child `<Surface>`；BREAKING：布局 JSX 与可选 Inspector JSX 迁入 `@retikz/layout-react`。',
-            en: 'Adds arbitrary-child `<Surface>`. BREAKING: layout JSX and optional Inspector JSX move to `@retikz/layout-react`.',
+            zh: '合并发布：Graph JSX 入口迁出后，Standard React 交付任意 child `<Surface>`，并将布局与可选 Inspector JSX 迁入独立 Layout 包族。',
+            en: 'Combined release: after the Graph JSX entries moved out, Standard React ships arbitrary-child `<Surface>` while moving layout and optional Inspector JSX to the independent Layout package family.',
           },
           items: [
             {
@@ -352,16 +332,6 @@ export const standardV01: Release = {
                 en: '`<Surface>` accepts one arbitrary drawable child, normalizes appearance, padding, overflow, and complete Scope props into `standard.surface`, and shares one provider contribution with direct IR, Vanilla, and SSR.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.3',
-          date: '2026-08-08',
-          summary: {
-            zh: '历史里程碑：验证 GraphFrame、四种基础单元、GraphConnector 与 Callout；这些 JSX 入口现从 `@retikz/graph-react` 提供。',
-            en: 'Historical milestone: validated GraphFrame, four base units, GraphConnector, and Callout; these JSX entries now come from `@retikz/graph-react`.',
-          },
-          items: [
             {
               label: { zh: '逻辑组件 JSX', en: 'Logic component JSX' },
               content: {
