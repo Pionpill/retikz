@@ -1,8 +1,7 @@
 import { arcBoundingPoints, arcEndPoint, curve, ellipseArcBoundingPoints, ellipseArcPoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep, PathGeneratorResolution } from '../../../resolve/path';
-import type { PathTargetView } from '../../../resolve/path';
+import type { CanonicalStep, PathGeneratorResolution, PathTargetView } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';

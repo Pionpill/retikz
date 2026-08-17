@@ -94,6 +94,7 @@
     "pkgTex": "tex",
     "pkgMath": "math",
     "pkgMathPrimitives": "math · Primitives",
+    "pkgMathTransforms": "math · Transforms",
     "pkgMathAlgorithms": "math · Algorithms",
     "pkgRender": "render",
     "pkgRenderSvg": "render · SVG",

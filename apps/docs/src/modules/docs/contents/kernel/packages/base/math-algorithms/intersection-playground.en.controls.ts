@@ -19,6 +19,7 @@ export const intersectionPlaygroundControls = definePreviewControls({
           defaultValue: 'lineCircle',
           options: [
             { value: 'lineLine', label: 'Line / line' },
+            { value: 'segmentSegment', label: 'Segment / segment' },
             { value: 'lineCircle', label: 'Line / circle' },
             { value: 'circleCircle', label: 'Circle / circle' },
           ],
@@ -66,11 +67,22 @@ export const intersectionPlaygroundControls = definePreviewControls({
 export const previewControlContract = {
   controls: intersectionPlaygroundControls,
   canonicalValues: { kind: 'lineCircle', offset: 25, angle: 65, radius: 70 },
+  presetSelector: { label: 'Scenario', customLabel: 'Custom' },
   presets: [
     {
       id: 'crossing-lines',
       label: 'Crossing lines',
       values: { kind: 'lineLine', offset: 10, angle: 65, radius: 70 },
+    },
+    {
+      id: 'line-intersection-beyond-strokes',
+      label: 'Line intersection beyond strokes',
+      values: { kind: 'lineLine', offset: 75, angle: 25, radius: 70 },
+    },
+    {
+      id: 'disjoint-segments',
+      label: 'Disjoint segments',
+      values: { kind: 'segmentSegment', offset: 75, angle: 25, radius: 70 },
     },
     {
       id: 'parallel-lines',
@@ -88,5 +100,5 @@ export const previewControlContract = {
       values: { kind: 'circleCircle', offset: 70, angle: 65, radius: 55 },
     },
   ],
-  relatedApis: ['intersect.lineLine', 'intersect.lineCircle', 'intersect.circleCircle'],
+  relatedApis: ['intersect.lineLine', 'intersect.segmentSegment', 'intersect.lineCircle', 'intersect.circleCircle'],
 } satisfies PreviewControlContract;

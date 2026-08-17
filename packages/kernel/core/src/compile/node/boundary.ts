@@ -1,7 +1,7 @@
 import type { Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
-import type { BoundaryReferenceResolution } from '../../resolve/node';
+import type { BoundaryReferenceResolution } from '../../resolve';
 import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
 
 import {

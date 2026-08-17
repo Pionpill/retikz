@@ -1,5 +1,5 @@
 import type { ScenePrimitive } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve/path';
+import type { CanonicalStep } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { LowerTex, TextMeasurer } from '../../text';

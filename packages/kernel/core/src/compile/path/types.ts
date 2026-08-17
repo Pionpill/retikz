@@ -1,7 +1,7 @@
 import type { Transform } from '../../contract';
 import type { ScenePrimitive } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
-import type { PathTargetView } from '../../resolve/path';
+import type { PathTargetView } from '../../resolve';
 import type { IRPosition } from '../../schemas';
 import type { PaintResolver } from '../resource';
 import type { LowerTex } from '../text';

@@ -5,7 +5,7 @@ import type { CenteredShape } from '../../src';
 import { localToWorld, worldToLocal } from '../../src';
 
 /*
- * 约定（见 transform.ts）：
+ * 约定（见 coordinate.ts）：
  *   localToWorld：本地系（以 center 为原点）→ 世界系。rotate=0 / 缺省退化为纯平移；
  *     非零按矩阵 [cos −sin; sin cos] 绕中心旋转后再加 (x, y)。
  *   worldToLocal 是其逆（旋转矩阵转置）。

@@ -1,7 +1,7 @@
 import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
-import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve/node';
+import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import type { PaintResolutionInput } from '../../resolve/resource';
 import type {
   BlendModeValue,
@@ -13,7 +13,7 @@ import type {
   ResolvedDropShadow,
 } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
-import type { TextFont, LaidLine, LowerTex, TextMeasurer } from '../text';
+import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */

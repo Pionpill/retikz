@@ -1,172 +1,92 @@
 ---
 title: 几何原语
-description: 用 @retikz/math 构造和变换点、向量、外接范围、椭圆与圆弧。
+description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 ---
 
-几何原语用于回答“一个坐标是什么”和“它经过变换后在哪里”。本页 API 全部处理普通数据，不依赖 IR 或 renderer，也不会修改输入 tuple。
+几何原语用于描述点、向量和基本几何图形。`@retikz/math` 只负责数学与几何关系的计算。
 
-```ts
-import { applyAffine, boundsOf, ellipse, point, vector2, type Position } from '@retikz/math';
-```
+## 安装
 
-## 点与向量
+<PackageManagerInstall packages="@retikz/math" />
 
-`Position` 和 `Vector2` 都是 `[number, number]`，但 API 按语义分组：`vector2` 负责加减、缩放、点积、叉积、长度、单位化和法向量；`point` 负责两点距离、沿方向移动、朝目标移动和精确相等判断。
+## 内容
 
-`DEFAULT_EPSILON = 1e-9` 是包内多个退化判断的默认容差。`isFiniteNumber` 排除 `NaN` 和正负无穷，`isInfiniteNumber` 只接受正负无穷；`isFinitePoint` 只接受恰好两个有限坐标组成的数组。
+### 向量运算
 
-```ts
-const origin: Position = [0, 0];
-const direction = vector2.fromAngleDegrees(-30);
-const end = point.along(origin, direction, 120);
-const normal = vector2.scale(vector2.normal(direction), 50);
+二维几何数据可以表示为坐标点或向量：点表示位置，向量表示方向与位移。`Position` 与 `Vector2` 都使用 `[x, y]` 形式，但应根据语义选择对应的方法集合。
 
-vector2.dot(direction, normal); // 接近 0
-point.distance(origin, end); // 120
-```
+| 成员       | 类别     | 作用                                                           |
+| ---------- | -------- | -------------------------------------------------------------- |
+| `Position` | 类型     | 表示二维坐标点，格式为 `[x, y]`                                |
+| `Vector2`  | 类型     | 表示二维向量，格式为 `[x, y]`                                  |
+| `point`    | 方法集合 | 提供点之间的距离、沿向量移动、朝目标移动和相等比较             |
+| `vector2`  | 方法集合 | 提供向量加减、缩放、点积、叉积、长度、单位化、角度转换和法向量 |
 
-拖动角度和长度可以观察向量与左手法向量始终正交。`vector2.normalize` 的零长回退值默认是 `[1, 0]`；`vector2.normalizeOrNull` 遇到零长或非有限向量返回 `null`。
+拖动角度和长度可以观察向量与左手法向量始终正交。
 
 <ComponentPreview files="vector-normal" size="sm" caption="向量与左手法向量" />
 
-`point.shiftToward(p, target, distance)` 将点朝目标移动指定距离，点与目标重合时保持原位；`point.equal` 使用严格坐标相等，不应用容差。`lerp(a, b, t)` 不限制 `t`：`0` 到 `1` 之间是插值，范围外是外推。
+#### API 参考
 
-## 坐标变换
+| API                                                                                  | 类别 | 作用                           |
+| ------------------------------------------------------------------------------------ | ---- | ------------------------------ |
+| `Position`、`Vector2`                                                                | 类型 | 二维坐标点与向量类型           |
+| `point.distance`、`point.along`、`point.against`、`point.shiftToward`、`point.equal` | 方法 | 点之间的距离、移动和相等比较   |
+| `vector2.add`、`vector2.sub`、`vector2.scale`、`vector2.dot`、`vector2.cross`        | 方法 | 向量的加减、缩放、点积和叉积   |
+| `vector2.length`、`vector2.normalize`、`vector2.normalizeOrNull`                     | 方法 | 向量长度和单位化               |
+| `vector2.fromAngleDegrees`、`vector2.normal`                                         | 方法 | 由角度构造向量和计算左手法向量 |
+| `lerp`                                                                               | 方法 | 在两个坐标点之间进行线性插值   |
 
-`localToWorld` 和 `worldToLocal` 在图形局部坐标与世界坐标间转换。图形由中心位置和可选旋转角描述；`rotate` 使用弧度。
+### 边界计算
 
-```ts
-const shape = { x: 100, y: 60, rotate: Math.PI / 4 };
-const world = localToWorld(shape, [20, 0]);
-const local = worldToLocal(shape, world); // 约为 [20, 0]
-```
+边界计算用于得到一组几何数据所占据的轴对齐矩形。它虽然直接从 `Position` 点集计算，但椭圆、圆弧等一般图元也会先转换为边界候选点，再间接纳入同一套 bounds 计算。
 
-旋转为 `0` 时只有平移；非零时围绕图形中心旋转。两者互为逆变换，适合把连接点、边界点或命中坐标放到同一坐标系中计算。
+本 demo 同时把圆弧的边界候选点并入点集，因此虚线矩形会覆盖三个点和圆弧。调整点坐标或圆弧起始、终止角度，可以观察 bounds 实时变化。
 
-## 仿射矩阵
+<ComponentPreview
+  files="bounds-playground"
+  size="sm"
+  caption="修改点坐标或圆弧角度，观察点集与圆弧共同影响轴对齐边界"
+/>
 
-需要在多个包之间共享完整的平移、缩放与旋转链时，使用 `AffineMatrix` 六元组和两个闭合运算。六元组沿用 SVG / Canvas 的 `[a,b,c,d,e,f]` 顺序：
+#### API 参考
 
-```text
-x' = a*x + c*y + e
-y' = b*x + d*y + f
-```
+| API                                                                 | 类别 | 作用                         |
+| ------------------------------------------------------------------- | ---- | ---------------------------- |
+| `AxisAlignedBounds`、`BoundsRect`、`BoundsHalfAxes`、`BoundsInsets` | 类型 | 边界、矩形、半轴和内边距类型 |
+| `boundsOf`、`mergeBounds`                                           | 方法 | 从点集构造边界或合并两个边界 |
+| `boundsToRect`、`rectToBounds`                                      | 方法 | 在边界与矩形表示之间转换     |
+| `isFiniteBoundsRect`、`isPositiveBoundsRect`                        | 方法 | 检查矩形范围是否合法         |
+| `boundsCenter`、`boundsHalfAxes`                                    | 方法 | 取得边界中心和半轴           |
+| `expandBounds`、`boundsCorners`                                     | 方法 | 外扩边界和取得四个角点       |
 
-`multiplyAffine(outer, inner)` 返回 `outer × inner`，因此对点先应用 `inner`，再应用 `outer`。参数顺序不能交换。
-
-```ts
-import { AFFINE_IDENTITY, applyAffine, multiplyAffine, type AffineMatrix } from '@retikz/math';
-
-const translate: AffineMatrix = [1, 0, 0, 1, 10, 20];
-const scale: AffineMatrix = [2, 0, 0, 3, 0, 0];
-const matrix = multiplyAffine(translate, scale);
-
-applyAffine(matrix, [4, 5]); // [18, 35]：先缩放，再平移
-```
-
-`AFFINE_IDENTITY` 在运行时已冻结，可安全地被多个 consumer 共享。两个运算都返回新 tuple，不修改输入；普通结果不会额外冻结。该层只执行 JavaScript 数值运算，不解析 transform 字符串，也不检查矩阵是否有限、可逆或属于 similarity transform，这些策略由调用方负责。
-
-## 边界计算
-
-`boundsOf` 从点集得到轴对齐范围，`mergeBounds` 合并两个可选范围，其余 helper 在范围、矩形、中心、半轴和四角之间转换。
-
-```ts
-const bounds = boundsOf([
-  [10, 20],
-  [80, -5],
-  [45, 30],
-]);
-
-if (bounds) {
-  const center = boundsCenter(bounds);
-  const expanded = expandBounds(bounds, { left: 8, right: 8, top: 4, bottom: 4 });
-}
-```
-
-`boundsOf([])` 与 `mergeBounds(undefined, undefined)` 返回 `undefined`。这个返回值刻意把“跳过空数据、使用默认范围或报错”的选择留给调用方。
-
-`boundsToRect` / `rectToBounds` 在 min/max 范围与左上角 + 尺寸矩形之间转换。`isFiniteBoundsRect` 要求四个字段都是有限数，`isPositiveBoundsRect` 还要求宽高严格大于 `0`；`boundsCorners` 固定按左上、右上、左下、右下返回四角。
-
-## 椭圆与圆弧
+### 椭圆与圆弧
 
 **椭圆边界。** `ellipse` 统一处理椭圆中心、内接 / 外接关系、包含判断和朝向某点的边界交点。
 
-```ts
-const value = { x: 20, y: 10, rx: 80, ry: 40, rotate: Math.PI / 6 };
-
-ellipse.contains(value, [20, 10]); // true，边界也算在内
-ellipse.boundaryPoint(value, [160, 10]);
-ellipse.inscribedInBox({ x: 0, y: 0, width: 160, height: 80 });
-ellipse.circumscribedHalfAxes({ halfWidth: 80, halfHeight: 40 }, 'proportional');
-```
-
-`circumscribedHalfAxes` 的默认 `proportional` 模式保持内部盒宽高比例，`equal` 模式则返回能包住内部盒的等轴圆。零半轴椭圆的 `contains` 返回 `false`；退化椭圆或目标正好位于中心时，`boundaryPoint` 返回中心，避免产生非有限坐标。
-
 **圆弧与椭圆弧。** 角度遵循 SVG 坐标：y 轴向下，`0°` 指向 +x，`90°` 指向 +y；正角度在屏幕上顺时针增加。
 
-```ts
-const end = arcEndPoint([0, 0], 40, 90); // [0, 40]
-const candidates = arcBoundingPoints({
-  center: [0, 0],
-  radius: 40,
-  startAngleDeg: 20,
-  endAngleDeg: 220,
-});
-```
+<ComponentPreview files="ellipse-arc-playground" size="sm" caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界" />
 
-`arcEndPoint` / `ellipseArcPoint` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。`arcAngleInRange` 按 `startAngleDeg → endAngleDeg` 的符号判断有向区间：正跨度在屏幕上顺时针，负跨度逆时针。
+`arcEndPoint` / `ellipseArcPoint` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。`arcAngleInRange` 按 `startAngleDeg → endAngleDeg` 的符号判断有向区间：正跨度在屏幕上顺时针，负跨度逆时针
 
-`arcBoundingPoints` / `ellipseArcBoundingPoints` 返回端点和数值角度区间内的轴向极值候选点，不接受额外的 `sweep` 字段且不会去重。椭圆弧 helper 只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用坐标变换映射到世界坐标。
+`arcBoundingPoints` / `ellipseArcBoundingPoints` 取得端点与轴向极值等边界候选点。椭圆弧方法只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用[坐标变换](/kernel/packages/base/math-transforms)映射到世界坐标。
 
-需要射线与圆弧求交时，请使用[几何算法](/kernel/packages/base/math-algorithms)中的 `rayArc`。它返回方程 `origin + s·dir` 中按升序排列的正向标量 `s`，而不是坐标点。
+#### API 参考
 
-## API 摘要
+| API                                                                                                       | 类别 | 作用                               |
+| --------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------- |
+| `Ellipse`、`CenteredBox`、`EllipseCircumscribeMode`                                                       | 类型 | 椭圆、中心盒和外接策略类型         |
+| `ellipse.center`、`ellipse.inscribedInBox`、`ellipse.circumscribedHalfAxes`                               | 方法 | 构造椭圆中心、内接椭圆和外接半轴   |
+| `ellipse.contains`、`ellipse.boundaryPoint`                                                               | 方法 | 判断包含关系和取得朝向目标的边界点 |
+| `ArcBoundingPointsInput`、`ArcAngleInRangeInput`、`EllipseArcPointInput`、`EllipseArcBoundingPointsInput` | 类型 | 圆弧与椭圆弧的输入类型             |
+| `arcEndPoint`、`ellipseArcPoint`                                                                          | 方法 | 取得圆弧或椭圆弧上的点             |
+| `arcBoundingPoints`、`ellipseArcBoundingPoints`                                                           | 方法 | 取得弧段的边界候选点               |
+| `arcAngleInRange`                                                                                         | 方法 | 判断角度是否落在有向圆弧区间内     |
 
-| 分组     | 公开类型 / 值                                                                               | 关键行为                                    |
-| -------- | ------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 数值与点 | `Position`、`Vector2`、`DEFAULT_EPSILON`、`point`、`vector2`、`lerp`、三个数值检查函数      | 纯函数；单位化有明确零长回退；插值允许外推  |
-| 坐标变换 | `CenteredShape`、`localToWorld`、`worldToLocal`                                             | 绕中心旋转后在局部与世界坐标间互转          |
-| 仿射矩阵 | `AffineMatrix`、`AFFINE_IDENTITY`、`multiplyAffine`、`applyAffine`                          | 六元组固定同序；先 inner 后 outer；输入不变 |
-| 边界     | 四种 bounds 类型、`boundsOf`、`mergeBounds`、转换 / 检查 / 中心 / 半轴 / 扩张 / 四角 helper | 空点集与全空合并返回 `undefined`            |
-| 椭圆与弧 | `Ellipse`、`CenteredBox`、`ellipse`、四种弧输入类型与点 / 区间 / bbox helper                | 椭圆弧只支持轴对齐；bbox candidates 不去重  |
+## 相关
 
-<SourceLinks
-  sources={[
-    {
-      label: '点与向量实现',
-      path: 'packages/kernel/math/src/primitives/point.ts',
-      startLine: 1,
-      endLine: 79,
-    },
-    {
-      label: '坐标变换实现',
-      path: 'packages/kernel/math/src/primitives/transform.ts',
-      startLine: 1,
-      endLine: 37,
-    },
-    {
-      label: '仿射矩阵实现',
-      path: 'packages/kernel/math/src/primitives/affine.ts',
-      startLine: 1,
-      endLine: 26,
-    },
-    {
-      label: '边界计算实现',
-      path: 'packages/kernel/math/src/primitives/bounds.ts',
-      startLine: 1,
-      endLine: 131,
-    },
-    {
-      label: '椭圆计算实现',
-      path: 'packages/kernel/math/src/primitives/ellipse.ts',
-      startLine: 1,
-      endLine: 73,
-    },
-    {
-      label: '圆弧计算实现',
-      path: 'packages/kernel/math/src/primitives/arc.ts',
-      startLine: 1,
-      endLine: 137,
-    },
-  ]}
-/>
+- [基础包总览](/kernel/packages/base)
+- [Foundation](/kernel/packages/base/foundation)
+- [坐标变换](/kernel/packages/base/math-transforms)
+- [几何算法](/kernel/packages/base/math-algorithms)

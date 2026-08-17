@@ -1,7 +1,7 @@
 ﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
-import type { PathGeneratorResolution } from '../../../resolve/path';
+import type { PathGeneratorResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
 import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';

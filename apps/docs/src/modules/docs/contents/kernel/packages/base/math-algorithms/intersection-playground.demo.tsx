@@ -15,19 +15,23 @@ export const previewControls = intersectionPlaygroundControls;
 
 type IntersectionValues = PreviewControlValuesFor<typeof intersectionPlaygroundControls>;
 
-const lineEnds = (center: Position, angle: number): [Position, Position] => {
-  const direction = vector2.scale(vector2.fromAngleDegrees(angle), 190);
+/** 生成用于画布显示的有限线段；lineLine 仍会把端点所在方向视为无限直线 */
+const lineEnds = (center: Position, angle: number, length: number): [Position, Position] => {
+  const direction = vector2.scale(vector2.fromAngleDegrees(angle), length);
   return [vector2.sub(center, direction), vector2.add(center, direction)];
 };
 
 const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array<Position> } => {
-  if (values.kind === 'lineLine') {
+  if (values.kind === 'lineLine' || values.kind === 'segmentSegment') {
     const a: [Position, Position] = [
-      [-170, 0],
-      [170, 0],
+      [-135, 0],
+      [135, 0],
     ];
-    const b = lineEnds([0, values.offset], values.angle);
-    const hit = intersect.lineLine({ a1: a[0], a2: a[1], b1: b[0], b2: b[1] });
+    const b = lineEnds([0, values.offset], values.angle, 125);
+    const hit =
+      values.kind === 'lineLine'
+        ? intersect.lineLine({ a1: a[0], a2: a[1], b1: b[0], b2: b[1] })
+        : intersect.segmentSegment({ a1: a[0], a2: a[1], b1: b[0], b2: b[1] });
     return {
       geometry: (
         <>
@@ -88,7 +92,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
 export const previewSource = controlledPreview.source;
 
-/** 在固定取景中比较直线与圆的求交及退化结果 */
+/** 在固定取景中比较不同几何对象的求交及退化结果 */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

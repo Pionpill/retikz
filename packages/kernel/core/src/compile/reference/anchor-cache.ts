@@ -1,13 +1,13 @@
 import type { Position } from '@retikz/math';
 
-import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve/node';
+import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { SideValue } from '../../shared';
 import type { NodeLayout } from '../node';
 
 type AnchorLayout = NodeLayout | NodeReferenceView;
 
-import { boundaryKey } from '../../resolve/node';
+import { boundaryKey } from '../../resolve';
 import { isAnchor } from '../../shared';
 import { anchorOf, angleBoundaryOf } from '../node';
 import { snapshotProviderPosition } from '../scene-primitive';

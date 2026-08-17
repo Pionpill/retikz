@@ -1,6 +1,11 @@
 import type { Transform } from '../../contract';
-import type { BoundaryReferenceResolution, BoundaryReferenceResolver, NodeReferenceView } from '../../resolve/node';
-import type { PathTargetView, TargetResolution } from '../../resolve/path';
+import type {
+  BoundaryReferenceResolution,
+  BoundaryReferenceResolver,
+  NodeReferenceView,
+  PathTargetView,
+  TargetResolution,
+} from '../../resolve';
 import type {
   FoldStepViaValue,
   IRBetweenPosition,
@@ -14,7 +19,7 @@ import type {
 import type { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
 
-import { boundaryKey } from '../../resolve/node';
+import { boundaryKey } from '../../resolve';
 import { FoldStepVia } from '../../schemas';
 import {
   isBetweenPositionLike,

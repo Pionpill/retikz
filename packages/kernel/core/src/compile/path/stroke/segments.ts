@@ -1,8 +1,7 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve/path';
-import type { PathTargetView } from '../../../resolve/path';
+import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';

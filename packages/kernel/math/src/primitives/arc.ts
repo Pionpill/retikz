@@ -2,6 +2,11 @@ import type { Position } from './point';
 
 const DEG_TO_RAD = Math.PI / 180;
 
+const normalizeDeg = (deg: number): number => {
+  const m = deg % 360;
+  return m < 0 ? m + 360 : m;
+};
+
 /** 圆弧外接候选点参数 */
 export type ArcBoundingPointsInput = {
   /** 圆心 */
@@ -48,16 +53,20 @@ export type EllipseArcBoundingPointsInput = Omit<EllipseArcPointInput, 'angleDeg
 
 /**
  * 枚举角度区间内的轴向极值候选角
- * @description 返回 `[lo, hi]` 内所有 `90 * k` 角度；区间不可安全枚举时返回空数组
- * @remarks 复杂度：时间 O(m)，空间 O(m)，m 为返回角度数；大区间保护用于避免浮点整数分辨率不足导致枚举不前进
+ * @description 返回对应于 `[lo, hi]` 区间的规范轴向角；跨度达到一整圈时最多返回四个方向
+ * @remarks 复杂度：时间 O(1)，空间 O(1)；角度按 360° 周期归一化
  */
 const axisAngles = (lo: number, hi: number): Array<number> => {
-  const kStart = Math.ceil(lo / 90);
-  const kEnd = Math.floor(hi / 90);
-  const span = kEnd - kStart;
-  if (!Number.isFinite(span) || span < 0 || span > 1_000_000) return [];
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi < lo) return [];
+  const span = hi - lo;
+  if (!Number.isFinite(span) || span >= 360) return [0, 90, 180, 270];
+
+  const normalizedLo = normalizeDeg(lo);
+  const normalizedHi = normalizedLo + span;
+  const kStart = Math.ceil(normalizedLo / 90);
+  const kEnd = Math.floor(normalizedHi / 90);
   const angles: Array<number> = [];
-  for (let k = kStart; k <= kEnd; k++) angles.push(k * 90);
+  for (let k = kStart; k <= kEnd; k++) angles.push(normalizeDeg(k * 90));
   return angles;
 };
 
@@ -84,17 +93,14 @@ export const arcBoundingPoints = ({
 
   const lo = Math.min(startAngleDeg, endAngleDeg);
   const hi = Math.max(startAngleDeg, endAngleDeg);
+  const normalizedStart = normalizeDeg(startAngleDeg);
+  const normalizedEnd = normalizeDeg(endAngleDeg);
   for (const angle of axisAngles(lo, hi)) {
     // 端角已通过端点投影包含
-    if (angle === startAngleDeg || angle === endAngleDeg) continue;
+    if (angle === normalizedStart || angle === normalizedEnd) continue;
     points.push(arcEndPoint(center, radius, angle));
   }
   return points;
-};
-
-const normalizeDeg = (deg: number): number => {
-  const m = deg % 360;
-  return m < 0 ? m + 360 : m;
 };
 
 /**
@@ -142,8 +148,10 @@ export const ellipseArcBoundingPoints = ({
   ];
   const lo = Math.min(startAngleDeg, endAngleDeg);
   const hi = Math.max(startAngleDeg, endAngleDeg);
+  const normalizedStart = normalizeDeg(startAngleDeg);
+  const normalizedEnd = normalizeDeg(endAngleDeg);
   for (const angle of axisAngles(lo, hi)) {
-    if (angle === startAngleDeg || angle === endAngleDeg) continue;
+    if (angle === normalizedStart || angle === normalizedEnd) continue;
     points.push(ellipseArcPoint({ center, radiusX, radiusY, angleDeg: angle }));
   }
   return points;
