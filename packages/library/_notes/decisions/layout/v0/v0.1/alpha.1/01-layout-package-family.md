@@ -154,19 +154,6 @@ import type {
 - adapter 等价：直接 IR、React 与 Vanilla 产生同一 canonical Layout IR，进入同一 Definition、Core compile 与 artifact 主链；adapter 不复制 schema、solver、默认值或 diagnostics
 - renderer：SVG、Canvas 与其它 renderer 只消费同一 Core Scene，不增加 Layout 分支或布局回读
 
-## Standard 与文档迁移
-
-迁移完成后：
-
-- Standard alpha.2 ADR-01～07 标记为由本 ADR Superseded；旧文件原地保留，记录 Standard 当时验证这些契约的历史
-- Standard alpha.2 ADR-08 保持既有 Superseded 历史，不重写其原始后继关系；本 ADR只接管当前 Layout Inspector owner
-- Standard alpha.2 ADR-09（Legend）与 ADR-10（Presentation lower reuse）继续 Accepted，改为组合 Layout `/compose`，不再声明 Standard 拥有 Box / Flex / Overlay solver
-- Standard alpha.3 ADR-06 的直接 Definition loading 原则继续 Accepted；Layout 复用同一 Core 显式 Definition 机制，不建立 capability bundle
-- Graph alpha.1 ADR-01 继续 Accepted；只把其公共 layout composition owner 从 Standard 改为 Layout，不改变 Graph package family、图式元素或依赖 Core 主链的其它决策
-- Standard v0.1 alpha.3 记录 breaking removal 与下游迁移，Layout alpha.1 作为现行布局契约真源
-
-文档站把当前 Standard 顶级模块重组为 Library 顶级模块，分组顺序为 `Standard · 拓展`、`Layout · 布局`。Standard 使用 `/library/standard/...`，Layout 使用 `/library/layout/...`；两组分别维护介绍、组件 / capability、参考与所属 release group 的更新日志。旧 Standard Layout 页面、schema registry owner 与示例 import 不保留双份入口。
-
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Library Layout，提供领域无关容器排版、约束求解、placement、artifact 与 inspection
@@ -176,40 +163,17 @@ import type {
 - 外部扩展与下游闭环：第三方布局可通过普通 Core CompositeDefinition 组合 `/compose`；官方与自定义 Definition 复用 Core registry，领域包直接依赖实际 owner
 - 不支持边界：本轮不新增布局种类、schema 字段、默认值、算法分支或 renderer 能力
 
-## 架构验证
-
-- 是否可由现有能力组合：布局行为已由 Standard alpha.2 验证；新能力只涉及正确 package owner、release topology、公开 composition boundary 与 namespace
-- 能力责任切分：Core 保存 layout-aware 执行协议；Layout 保存排版模型与求解；Standard 保存横向绘图拓展；领域包保存领域解析；renderer 只执行 Scene
-- define-registry：不新增 Layout 专用 registry；三类官方 Layout 与第三方 composite 统一使用 Core CompositeDefinition、compile options 与冲突诊断
-- pipeline / lowering / renderer / diagnostics：复用当前 Layout solver 与 Core probe / replay 主链，迁移后由 Layout Definition 注入；renderer 无专用分支
-- provenance / locator：LayoutItem key、artifact occurrence 与 inspector 继续表达布局局部 identity；领域 provenance 由消费方保存，不写入 Layout
-- 结论：把已形成纵向闭环的排版布局从 Standard 拆为独立 owner，同时保留 Standard 与领域 composite 的公开组合能力
-
 ## 实施结果
 
 - Layout 三包已形成独立 lockstep package family 与 release group，三类 canonical identity 已切换为 `layout.*Layout`
 - Standard、Graph、Plot 与 Chart 已改为直接消费 Layout 根入口或 `/compose`，Standard 不保留旧导出、别名、namespace 或 Inspector 入口
 - 直接 IR、React、Vanilla、Inspector 与跨 owner 组合继续进入同一 Core registry、layout-aware compile 与 renderer-neutral Scene 主链
-- Library 文档已拆分为 Standard 与 Layout 两组，并分别提供双语入口、参考、Schema Registry 与 changelog；算法布局继续保持在本包边界之外
+- Layout 与 Standard 已形成独立 owner；算法布局继续保持在本包边界之外
 
-## 被否决方案
-
-- 继续保留在 Standard：让 Standard 同时承担横向绘图拓展与纵向布局运行模型，未来 solver / artifact / inspection 扩张会持续放大错误边界
-- 只建立 `@retikz/layout`，把 React / Vanilla 留在 Standard adapter：形成 schema / solver 与 authoring 双 owner，依赖和发布无法独立闭环
-- Standard 保留 re-export 或旧 namespace：形成双入口、双 Schema owner、持久化歧义与长期兼容负担
-- 把全部 `layout/internal` 公开：将私有中间状态和无稳定跨 owner 语义的 helper 固化为公共 API
-- 把 Tree / Layered / Force 一并纳入：算法布局依赖关系模型与全局约束，不属于领域无关容器排版
-- 下沉到 Core：Flex / Grid / Overlay 是可选高层排版能力，Core 只需保持足以承载它们的通用 proposal / probe / replay 协议
-
-## 测试策略摘要
-
-需要 schema / JSON 证据锁定 `layout` namespace、strict 输入、LayoutItem 与 artifact；solver 证据锁定 Flex / Grid / Overlay 的确定性、有限性、输入不可变与当前行为等价；Core integration 证据锁定 probe / replay、nested composite、Definition 与 diagnostics；`/compose` 证据锁定 Standard Legend、Graph 与自定义 composite 真实消费且无 deep import；React / Vanilla 证据锁定 canonical IR 与 runtime 等价；Inspector、renderer、exports、release metadata、docs 与 changelog 证据锁定可选入口、单一 owner 和迁移完整性。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 新增 Flex / Grid / Overlay 字段、默认值或求解行为
 - Tree、Layered、Force、Radial graph、UML 自动排布与 edge routing
 - GraphModel、Port / Group、selection、viewport、history 与编辑器 runtime
 - 完整 CSS layout、DOM / renderer 回读、异步测量与跨 compile cache
 - Standard Legend、Graph、Plot 或 Table 自身领域契约重设计
-- push、tag、publish 与 release 执行

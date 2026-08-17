@@ -62,34 +62,13 @@ Chart 不再向完整 IRPlot 转发 Plot-level `labels` 或 presentation `layout
 - 不支持边界：Plot 不提供 presentation compatibility layer；Chart 不复制 Plot guide、mark、theme 或 lowering
 - Chart presentation 的发布与 adapter gate 继续由 Chart ADR 决定；本 ADR 不以删除 Plot 重复入口代替 Chart owner 的独立验收
 
-## 架构验证
-
-- 是否可由现有能力组合：可以。Chart presentation、Standard FlexLayout、Core text 与 Plot 的专门 guide / mark / composition label 已覆盖保留能力
-- Data / Plot / Table / Chart / Standard / Core 责任切分：Data 不受影响；Plot 只保留绘图语义；Chart 承担单图 presentation；Standard / Core 执行通用组合与文本
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：不新增能力，只删除重复公开字段与 token；presentation 继续复用既有 Chart contract，不需要新 registry
-- pipeline / lowering / renderer / diagnostics 如何闭环：Plot 移除 presentation lowering，Chart presentation 继续映射为 Standard composition，renderer 只执行最终 Core Scene；旧 Plot 字段由严格 schema 诊断
-- provenance / lineage / locator 是否适用：删除的 static decoration 不再生成 Plot provenance；保留的 guide、mark、facet、annotation 与 Chart presentation inspection 沿各自 owner 继续工作
-- 结论：上移。Chart-level presentation 从 Plot 完全上移到 Chart，通用布局与文本继续由 Standard / Core 执行
-
-## 被否决方案
-
-- 保留 Plot labels，只从 theme 删除 `labelText`：功能仍与 Chart 重复，并会失去明确默认样式 owner
-- 把 Plot labels 收窄成 title / caption shorthand：仍建立第二套 Chart presentation 入口与外围布局
-- 自动把旧 Plot labels 转换为 Chart presentation：IRPlot 无法在不知道 Chart 宿主的情况下完成上移，并会形成 migration 主链
-- 把 facet、datum 或 annotation text 一并移交 Chart：这些内容依赖 Plot 数据、scale、coordinate、mark 或 composition，Chart 不拥有其语义
-- 让 adapter 或 renderer 补标题和来源：会破坏 JSON、React、Vanilla、SSR、SVG 与 Canvas 等价性
-
-## 测试策略摘要
-
-需要 schema、public surface、theme resolver / mapping、Plot lowering、Chart resolution、inspection、adapter parity 与 docs 证据。关键不变量是 Plot 不再接受或生成 presentation labels，Plot theme 不再暴露无 consumer 的 label token，保留的 Axis、Legend、Facet、datum / mark / reference / annotation text 继续工作，Chart presentation 仍以唯一 Plot body 和 authored order 生成 renderer-neutral 组合结果。
-
-## 最终实现与验证
+## 最终结果
 
 Plot 的 presentation labels、专用外围 layout、对应 theme member/token、decoration lowering 与跨入口 authoring 已删除；Chart 不再转发 Plot-level presentation 字段，并继续通过自身 presentation contract 与 Standard 组合唯一 Plot body。
 
-Plot `typography` 继续作为绘图内文本的共享基线，Axis、Legend、Facet 的局部主题与显式 authoring 按既定优先级覆盖。最终验证覆盖严格 schema、主题解析与 inspection、lowering、保留文本能力、Chart presentation、React / Vanilla parity、文档 registry 与用户路径；未保留兼容层或已知契约风险。
+Plot `typography` 继续作为绘图内文本的共享基线，Axis、Legend、Facet 的局部主题与显式 authoring 按既定优先级覆盖；未保留兼容层或已知契约风险。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 新增或重设计 Chart presentation preset、布局字段、surface、inspection 或 adapter runtime
 - 删除 datum / mark / reference / annotation label、axis title / tick label、legend text 或 facet / track header

@@ -1,10 +1,10 @@
 # ADR-04：pattern / image 填充
 
-- 状态：Accepted（实现期由 Deferred 提升——讨论后决定 alpha.7 一并做）
+- 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第一部分](./roadmap.md) · [ADR-01 Paint 基础](./01-paint-basics.md)（复用 `PaintValue` / `SceneResource` / `<defs>` 物化）
+- 关联： · [ADR-01 Paint 基础](./01-paint-basics.md)（复用 `PaintValue` / `SceneResource` / `<defs>` 物化）
 
-> **从 Deferred 提升**：原计划占位顺延（控 alpha.7 体量）。ADR-01 paint wiring 落地后管线成本归零（registry 对任意 `IRPaint` 去重 + ref、PaintDefs 物化），pattern / image 只需 ① schema 加分支 ② PaintDefs 加物化，**零 core compile 改动**。讨论后决定一并做（image 暂只支持 URL）。
+> **实现结果**：pattern / image 复用 Paint 资源表与物化契约；image 首版仅支持 URL，compile 不新增独立资源流程。
 
 ## 背景 / 约束
 
@@ -12,7 +12,7 @@ ADR-01 首批只做 gradient。pattern（斜线 / 网点 / 网格）与 image（
 
 ## 决策：`PaintSchema` 加 pattern / image 两分支 + PaintDefs 加两类物化
 
-核心数据结构（字面即决策——受控词汇表 + 字段语义是关键，完整 schema + 英文 describe 见 `core/src/ir/paint.ts`）：
+核心数据结构（字面即决策——受控词汇表 + 字段语义是关键，完整 schema + 英文 describe 见 ）：
 
 ```ts
 // pattern（图案）
@@ -33,7 +33,7 @@ ADR-01 首批只做 gradient。pattern（斜线 / 网点 / 网格）与 image（
 3. **image 用 `objectBoundingBox`**：图片随形状缩放铺满；`fit` → `preserveAspectRatio`（`fill`=`none` 拉伸 / `contain`=`xMidYMid meet` / `cover`=`xMidYMid slice`）。
 4. **零 core compile 改动**：`createPaintRegistry`（ADR-01）按 JSON 去重任意 `IRPaint`，pattern / image 自动进资源表 + 拿 `resourceRef`，仅 schema + react PaintDefs 改。
 
-## 不在本 ADR 范围（仍 deferred）
+## 长期边界
 
 - image 的 **SSR / PNG 导出内联**（外链在静态导出会丢）、跨域、`tile`（平铺）fit。
 - pattern 的更多 motif（zigzag / brick…）。
@@ -41,6 +41,6 @@ ADR-01 首批只做 gradient。pattern（斜线 / 网点 / 网格）与 image（
 
 ---
 
-> **实现指针**：level `red`（动 `ir/paint.ts` schema）+ `yellow`（react render），取最高 `red`；additive 非 breaking（`IRPaint` 加 union 分支），compile 零改动（registry 已 spec 无关）。真源以代码为准——`PaintSchema` 的 pattern / image 分支（`core/src/ir/paint.ts`）、物化（`react/src/render/paintDefs.tsx` 加 pattern / image case）。测试在 `core/tests/ir/paint.test.ts`（schema）与 `react/tests/render/paintDefs.test.tsx`（物化）。完整施工契约（Schema 表 / 文件 scope / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:_notes/decisions/core/v0/v0.2/alpha.7/04-pattern-image-deferred.md`。
+已实现本 ADR 的核心决策。兼容性：additive 非 breaking（`IRPaint` 加 union 分支），compile 零改动（registry 已 spec 无关）；其余默认行为、失败语义与公开契约以正文为准。

@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-27
-- 关联：[alpha.2 roadmap](./roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md)
+- 关联：[ADR-02](./02-runtime-identity-owner-registry.md) · [ADR-03](./03-program-transaction-lifecycle.md)
 
 ## 背景
 
@@ -76,13 +76,13 @@ Core `ir-child` 的封闭计数点是共享 `compileChild()` dispatch 入口，�
 5. 连续 30 次 revision 替换。
 6. 一个 layout-aware composite 嵌套场景。
 7. 一个 Tier 2 fixture，经公开 contribution 边界进入 Core；作为 ADR-04 接入证据，不阻塞 batch 0。
-8. SVG 与 Canvas 的完整 commit；后续 ADR 接入 patch commit。
+8. SVG 与 Canvas 的完整 commit。
 
-Batch 0 只锁定当前 full compile / full renderer commit 的工作量与功能 oracle。单实体增量、fallback、revision、reuse 和 patch 指标是 ADR-03～05 的具名后继证据，不作为 ADR-01 进入 ADR-02 的前置通过条件。
+本 ADR 只锁定 full compile / full renderer commit 的工作量口径；增量、fallback、revision、reuse 和 patch 指标由后续 ADR 定义
 
 CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retained handle / resource 数量等确定性指标。内存硬门槛不直接使用 GC 后 heap 字节；dispose 后 live handle、listener、index 与 resource reference 必须回到 fixture 起始计数。Heap 只在 Node `--expose-gc` 或 browser runner 提供显式 GC 时作为非阻断报告。
 
-机器可读环境描述冻结 Node `24.x`、pnpm lockfile 对应的 Chromium build、`1440 × 900` viewport、DPR 1、关闭动画、固定字体与 locale/timezone。每个 wall-clock 场景 warm-up 5 次、测量 30 次，报告 median / p95 / max；只在 environment fingerprint 完全一致时比较。确定性预算只读验证，时间报告保持 ignored，baseline 更新只生成需人工审查的候选 diff，不由普通验证或 CI 自动改预算。
+机器可读环境描述固定运行时、浏览器、viewport、DPR、动画、字体与 locale/timezone；wall-clock 只在 fingerprint 一致时比较，确定性工作量仍是主要门槛
 
 理由：
 
@@ -98,35 +98,21 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 - 相同 fixture 的功能输出先通过等价校验，再记录性能指标；错误结果没有性能通过资格。
 - sink 在 record 完整构造后同步调用；record 不复用可变对象。sink throw / reentry 进入 reporter-local diagnostic queue，不改变产品输出。
 
-## 最终实现与验证
+## 最终结果
 
 - 新增零领域依赖的 `@retikz/runtime` trace contract、owner-bound reporter 与 reporter-local diagnostic queue。
 - Core compile、SVG build 与 Canvas draw 接入相同工作量口径；未注入 trace 时不改变产品输出。
 - 新增 private `@retikz/bench`，固定 Node/browser fixture、环境描述、结构化报告、deterministic baseline 与预算比较。
-- 自动化验证覆盖 record 校验、owner 越权、sink throw/reentry、Core/Render 发射基数、fixture 重建、预算超限和 browser runner。
-- 验证覆盖 Runtime trace、Bench fixture 与预算、Core/Render trace 基数以及错误隔离；功能 oracle 通过后才允许比较性能结果。
 - alpha.2 后续 ADR 继续复用该 contract；增量、fallback、Scene Patch 与连续 revision 的预算由各自实现补齐，不回写本 ADR 的 batch-0 baseline。
 
 ## 公开影响
 
 - Kernel release group从六包扩展为七包；ADR-01只实现 `@retikz/runtime`的 trace切片，ADR-02实现 identity/owner registry，ADR-03再实现 session。
 - 新增 private benchmark app 与公共执行期 trace contract，不改变 IR、Scene、React 或 Vanilla authoring。
-- 根 package scripts 增加可重复的 Kernel 性能 baseline / compare 命令。
+- 提供独立的 benchmark 观测入口，不把计时或预算字段写入 IR / Scene。
 - 性能预算成为 alpha.2 后续 ADR 的进入与退出证据。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing 横向质量门槛；不新增 Drawing 用户能力。
-- 解决的问题：为 Core compile、Render commit 与 adapter update 提供共同、可验证的性能证据。
-- 主责包与协作包：runtime 拥有 trace contract / owner reporter；`@retikz/bench` 拥有 harness；Core/Render 只报告本 owner 计数；React/Vanilla session 接线由 ADR-05 回填。
-- 是否可由现有能力组合：现有测试可复用 fixture 与等价断言，但没有跨包 benchmark/trace owner，需要新增内部工具边界。
-- 内部表达链路：fixture → owner trace → structured result → baseline compare。
-- 外部扩展链路：第三方 Program 通过注册 Program owner 获得同一 reporter；未声明自定义 phase 时只能使用 `program/update` 与 `program` unit，不能自由扩展预算 key。
-- 下游执行 / adapter 等价性：Node 负责纯计算，browser 负责 SVG/Canvas commit；两者不混用时间预算。
-- define-registry：trace record 本身是闭合观测值，不按名称 dispatch，独立 Definition registry 不适用；开放 Program 仍由 ADR-03 的统一 Program registry 分配 owner-bound reporter。
-- 不支持边界与诊断：共享 CI 不以绝对 wall-clock 单次结果判失败；本轮结论为把 contract 下沉到 runtime、harness 上移到 private bench。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Diff、cache、增量编译、Scene Patch 或 retained renderer。
 - production telemetry、用户 analytics、远程上报或持久 trace store。

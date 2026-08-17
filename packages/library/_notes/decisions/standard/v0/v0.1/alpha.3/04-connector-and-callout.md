@@ -159,15 +159,6 @@ artifact 使用 strict JSON schema；container、content、leader point 与 boun
 - 外部扩展与下游闭环：复杂自定义路径继续直接使用 Core Path；Connector appearance 使用既有 Core provider / style 扩展面
 - 不支持边界：需要自动避障、关系校验或全图布局时上移 Graph / Flow，不在 Connector 加 callback
 
-## 架构验证
-
-- 是否可由现有能力组合：Core Path 提供几何与结构化文本 label，但不保存局部关系 role、GraphFrame section target 或 Callout artifact，需要 Graph 语义封装
-- 责任切分：Standard 规范化 route 并组合 Core steps；Core 执行 fold / curve / cubic / bend 数学与 target resolution；renderer 只绘 path / children
-- 是否需要新 IR / contract / registry：新增 Connector / Callout composite IR；route 是闭合 union，复杂路径回到 Core Path，因此不增加 routing registry
-- pipeline / lowering / renderer / diagnostics 如何闭环：Connector canonical route → 带同 id、且最后一个 drawable step 挂 label 的 Core Path；Callout canonical input → target-aware placement + typed artifact → Scene；错误沿 Core target / layout contract 提升
-- provenance / locator 是否适用：Connector 只提供同 id Scene 主体挂点，不提供 compile artifact locator；Callout 通过 typed artifact 定位。role、endpoint target 与 section key 保留在 Standard canonical IR，业务 edge provenance 在 lowering 前由上层 join
-- 结论：扩展 Standard，复用 Core Path，不建立 Graph / Flow
-
 ## 当前 Core capability 映射
 
 alpha.3 不得用 Standard 私有 target resolver、派生全局 id 或路径采样绕过 Core。当前交付按以下映射闭环：
@@ -178,20 +169,7 @@ alpha.3 不得用 Standard 私有 target resolver、派生全局 id 或路径采
 
 后续 Core 增加 structured subtarget 时，Standard 只替换这一消费映射并补齐对应测试，不改变 `LogicDiagramTarget` 公开输入。当前版本不得把 target geometry、source-order index 或派生 id 复制到 Standard、adapter 或 renderer。
 
-## 被否决方案
-
-- Connector 接受任意 Core steps：会复制完整 Path DSL，并让 from / to 与 step endpoint 产生多个真源
-- 只支持 straight：无法覆盖真实逻辑图的正交与曲线关系
-- 自动 orthogonal / obstacle routing：需要全图几何与拓扑，属于 Flow
-- Decision 保存 branch label：与 Connector role / label 重复关系真源
-- Callout 自动选择 side：需要读取其它组件并执行碰撞求解
-- 缺失 section 回退到 Block：会把引用错误静默画到错误位置
-
-## 测试策略摘要
-
-需要 schema 证据覆盖 route union、互斥 bend、ratio、appearance 白名单、Core label input 与 JSON round-trip；geometry 证据证明 straight、polyline、四种 orthogonal pattern、quadratic、cubic、bend 与 Core Path 对应语义一致，并锁定退化 route 委托；target 证据覆盖普通单元、整体 Block、collision-safe section、Connector 前后目标与 unresolved skip、Callout previous-only 与缺失引用；label 证据覆盖最后一个 drawable step 的文本 / TeX、position、side 与 sloped，并证明 polyline 只在终点段保留一个 label 真源；Callout 证据覆盖任意 IRChild、四个 side 的 target / shell anchor、法向 gap、切向 offset、leader 端点、overflow 与完整 artifact；adapter / renderer 证据证明 canonical、Scene 主体 id 与适用 artifact parity。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - GraphModel、Edge / Port collection、topology validation 与 graph query
 - obstacle avoidance、automatic routing、bundle / bridge、edge crossing reduction

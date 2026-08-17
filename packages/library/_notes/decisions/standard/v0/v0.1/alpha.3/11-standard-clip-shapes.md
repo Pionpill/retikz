@@ -98,4 +98,4 @@ provider contribution 以 Path operation 为 root 时，provider catalog 必须�
 
 五种可选 ClipShape 的 schema、IR、shape、两级 definitions 与 providers 已统一由 `@retikz/standard/clip` 拥有，Core 默认裁剪集合已收敛为 `rect`。直接编译、provider contribution、React、Vanilla、Surface 及官方领域 consumer 均通过同一两级 registry 显式装配，Layout 的 allocation clip 保持 Core-only。
 
-验证覆盖公开导出、schema 与 definition 契约、provider 可达闭包、precision、Compound 递归与第三方 child、零尺寸 bounds、跨 adapter / Tier 2 接入及双语文档。迁移不保留旧 Core 导出、兼容 alias、隐式全量安装或 renderer 旁路。
+迁移不保留旧 Core 导出、兼容 alias、隐式全量安装或 renderer 旁路；直接编译、provider contribution、React、Vanilla 与官方 consumer 共享同一显式装配语义。

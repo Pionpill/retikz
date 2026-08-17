@@ -42,7 +42,7 @@ alpha.12 后，Plot pipeline 可以表达百分比堆叠、派生区间柱、可
 
 `derive-interval` 与 ADR-01 的连续 x 区间能力共同支撑 histogram；`normalize` 与既有 `stack` 组合支撑百分比图；`jitter` 为后续更多 mark 和 interaction parity 留下确定性约束。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 分类带内 jitter、像素空间 jitter。
 - 高级统计 transform。

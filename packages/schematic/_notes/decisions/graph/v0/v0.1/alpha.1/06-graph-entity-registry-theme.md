@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-16
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [GraphNode variant ADR](./02-graph-node-variants.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
+- 替代：[GraphNode variant ADR](./02-graph-node-variants.md)
 
 ## 背景与目标
 
@@ -174,8 +174,8 @@ Graph 内置 role 保持 `terminal`、`stage`、`decision` 与 `junction`；内�
 - 这是对 alpha.1 GraphNode variant ADR 中“role / variant 闭合且无自定义 registry”和“不接入 Graph Theme style”决策的 breaking supersession；既有内置名称、默认几何、variant 视觉与显式字段优先级保持不变，但不保留闭合 schema、写死表、固定分支或兼容双轨
 - Relation role、Container / Relation Theme token、Graph 全局关系模型、Diagram、Editor、Core Theme / Composite context 与 renderer contract 不因本决策改变
 
-## 实施结果
+## 最终实现结果
 
 Graph presentation root、开放 Entity role / variant registry、Graph Theme token selector 与 assembly-local provider 装配已经形成 direct IR、React、Vanilla 的统一闭环。内置与自定义 Definition 共用同一注册、解析和 lowering 路径，Graph 领域数据在下沉边界全部消费
 
-验证覆盖 JSON/schema、registry 与诊断、Theme 与 selector 级联、Core Scope 边界、provider identity 合并、adapter 等价以及双语文档与浏览器可见行为。默认 React JSX 宿主继续只装载内置 Graph Definitions；自定义 Definition 使用显式 configured processing adapter 或 direct IR compile，不引入全局注册
+默认 React JSX 宿主继续只装载内置 Graph Definitions；自定义 Definition 使用显式 configured processing adapter 或 direct IR compile，不引入全局注册

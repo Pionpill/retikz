@@ -82,7 +82,7 @@ DSL：
 - **文档站**：`grammar/data` 补「声明式 format」段（与 resolveField 段并列：声明式优先、函数兜底）。
 - **core**：无。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **完整日期 pattern 串**（d3-time-format / strptime `'%Y/%m/%d'`）——需新依赖，phase 2 单独 ADR。
 - **resolveField 函数逃生舱**——已是 ADR-04，本 ADR 只把它降为「词表外」兜底。

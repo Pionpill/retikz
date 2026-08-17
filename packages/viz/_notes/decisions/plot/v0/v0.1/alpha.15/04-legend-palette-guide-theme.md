@@ -66,7 +66,7 @@ const spec = {
 3. `colors` 保留为 shorthand 可降低迁移成本，但新文档应引导用户使用 `theme.palette`。
 4. Legend 本地 style 与 Axis 本地 style 对称，guide family 的覆盖模型一致。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - HTML legend、自定义 legend item render/template。
 - Legend hover 高亮、click filter、selection state。

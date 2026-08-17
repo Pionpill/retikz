@@ -108,7 +108,7 @@ export const Polar2DSchema = z.object({
 3. **位置通道仅 x/y 必填最利 AI 与跨坐标系复用**：单一形态无歧义、x/y 必填进 JSON Schema 约束生成（refine 不进 JSON Schema、约束不了），cartesian spec 改 coordinate 即跨系（纯 ggplot），无「选错通道」之虞。
 4. **帧契约单点拥有**：02/03/04 共用同一 `CoordinateFrame`，杜绝各造临时投影框架的伪并行。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **interval→sector / sector mark（pie/donut）几何** → ADR-02（含累积角 transform）。
 - **line / area polar 投影（弯弧）+ area mark + `closed`（雷达）** → ADR-03。

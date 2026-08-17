@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-15
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph alpha.1 ADR-01](./01-graph-package-family.md) · [Graph alpha.1 ADR-02](./02-graph-node-variants.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md)
+- 关联：[Graph alpha.1 ADR-01](./01-graph-package-family.md) · [Graph alpha.1 ADR-02](./02-graph-node-variants.md)
 
 ## 背景
 
@@ -56,8 +56,6 @@ GraphConnector Definition 只移除 Graph namespace、Graph discriminator 与 ro
 - 旧独立组件、旧 package、旧 namespace、GraphConnector 平行 route surface 与兼容入口直接删除
 - 这是 `0.x` breaking change，不提供 alias、migration、fallback 或新旧双轨
 
-## 不在本 ADR 范围
+## 长期边界
 
-- GraphFrame 的布局算法重写、自动布局与全局 routing
-- GraphModel、GraphDocument、GraphGeometry、Flow、Editor 与交互状态
-- 新的 Graph role registry、自定义元素 registry 或 renderer 分支
+GraphFrame 的布局算法、自动布局、全局 routing、GraphModel、Flow 与 Editor 状态由相应上层能力决定；Graph 不复制这些模型，也不为 role 或 lowering 增加 renderer 分支

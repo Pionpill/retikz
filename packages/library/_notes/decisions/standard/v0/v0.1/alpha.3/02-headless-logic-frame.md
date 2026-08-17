@@ -124,28 +124,7 @@ artifact 使用 strict JSON schema；所有 rect 与 translation 都沿用 alpha
 - 外部扩展与下游闭环：任意注册 Core / Tier 2 composite 都可作为 child；未知 role 保留；appearance 显式覆盖
 - 不支持边界：需要自定义非纵向外壳时直接组合 Flex / Grid / Overlay / Frame，不为 GraphFrame 增加 layout registry
 
-## 架构验证
-
-- 是否可由现有能力组合：FlexLayout 提供 canonical region 排列，GraphFrame 只补稳定 header / section identity、统一外框、整体 target 与 Block artifact；structured section target 等待 Core owner 补齐
-- 责任切分：Standard 组合 Box contract 与外框；Core 测量 / replay；renderer 只绘制降低后的 Node / Path / Scope
-- 是否需要新 IR / contract / registry：新增 `standard.logicFrame` schema 与 CompositeDefinition；content 扩展完全复用 `IRChild`，不增加 Block registry
-- pipeline / lowering / renderer / diagnostics 如何闭环：canonical IR → layout-aware definition → Core children + typed artifact → Scene；所有失败沿 Core layout failure
-- provenance / locator 是否适用：Block id、section key、role 与 occurrence 提供 locator join；child provenance 仍由 child owner 保存
-- 结论：扩展 Standard，组合 alpha.2 Box 与 Core layout-aware contract
-
-## 被否决方案
-
-- 公开 ProcessBlock / ClassBlock / DataBlock：会把示例模型变成长久 API，并限制其它逻辑图内容
-- 单一自由 Scope：缺少 section key、约束布局、统一 target 与 artifact
-- `kind: 'process' | 'class' | 'data'` 封闭 union：分类增长没有稳定闭包，且会把 recipe 误作能力 owner
-- BlockDefinition registry：内容已经通过 `IRChild` 开放，新增 registry 只会建立第二套 dispatch
-- render callback / ReactNode section：破坏 JSON IR 与 Vanilla parity
-
-## 测试策略摘要
-
-需要 schema 证据覆盖 canonical defaults、空 Block、section identity、开放 role 与 strict JSON；layout 证据覆盖 natural / range / exact、content / fixed / fill、child reflow、nested Block、overflow / clip 与 failure 提升；artifact / target 证据覆盖整体、header、section bounds 和缺失 section；adapter 证据覆盖直接 IR、React、Vanilla canonical parity；docs recipe 证明 Process、Class、Data 三类内容无需扩展公开 schema。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Process、Class、Data、Schema、Context 或 Payload 的公开 IR
 - horizontal / freeform Block shell、collapsible region 或交互编辑

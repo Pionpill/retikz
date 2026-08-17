@@ -183,4 +183,4 @@ Core React 的通用 `<Path kind="ribbon" kindOptions={...}>`、Vanilla 通用 P
 
 Core 已收口为开放 Path host、完整 subject schema 与领域中立编译服务；Ribbon 的 schema、Width Profile、几何编译、单项 Definition 与 provider contribution 均由 `@retikz/standard/ribbon` 单一拥有。Plot 通过显式 provider 闭包获得 Ribbon，React、Vanilla 与直接 Core compile 共用 `pathKinds + kindOptions` 装配语义。
 
-验收已覆盖开放 host、完整 schema 恢复、provider identity、路径物化与标签服务、Ribbon 两种模式、采样、端帽、profile 冲突与失败语义、Plot 与 adapter 闭环、renderer-neutral Scene 输出以及双语文档。迁移不保留旧公共字段、导出或自动 fallback。
+迁移不保留旧公共字段、导出或自动 fallback；Plot、React、Vanilla 与直接 Core compile 共享同一装配和输出语义。

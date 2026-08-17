@@ -92,36 +92,11 @@ Plot 同时拥有独立于颜色的非空 shape palette。内建 `plot.palette.s
 
 Plot 不拥有 Core selector 继承协议、Chart presentation、Table token、业务状态色、宿主 CSS theme 或 renderer-specific effect。Core shared categorical 只提供一套 active array；Plot-owned named schemes 不属于 shared colors。
 
-## 架构验证与能力完备性
-
-- 现有 Core effective Theme、Composite context、Plot schema / provider / pipeline 与 Standard lowering 可以组合出本能力；新增的是 Plot owner-local style definition 与 shared color projection 的跨层契约
-- Math 不承载 Theme；Runtime 不解释 Plot token；Core 解析 selector 与 shared colors；Plot 解析并 mapping；Standard 消费正式输入；React / Vanilla 与 plain JSON 生成等价输入；Render 只执行 Scene
-- `PlotThemeStyleDefinition` 进入 Plot owner registry，standalone、embedded、Chart adapter 与 direct headless 使用同一 name lookup 和失败语义；Plot 不建立跨 owner theme registry
-- 闭环为 Core effective Theme → Plot style definition 注入或覆盖 categorical baseline → local token resolution → Plot mapping → Standard / Core formal input → Scene / manifest / inspection
-- shared categorical 的非空约束、detached projection 与 stable index consumption 属于跨包 value contract；sequential / diverging 仍由 Plot resolver 完整闭环
-- 本轮结论：扩展 Visualization Complete 的 Plot Theme / Palette 能力并接入 Core effective Theme；不下沉 Plot 语义，不改变 Plot → Core lowering 方向
-
-## 最终实现与验证摘要
+## 最终结果
 
 最终实现已闭合 Plot owner style definition、resolver、mapping、inspection 与 shared categorical projection，并让内建 definition 复用 Core palette、自定义 definition 显式 palette 高于 Core。standalone Plot、embedded Plot 与 Chart bundle 复用同一 Plot registry 和 cascade；React、Vanilla、headless 与根 Theme authoring 共享正式 definition 注入及失败语义，Plot native input 与局部 token 也已完成破坏性命名迁移。
 
-验证覆盖 inherited / local source 分类、Plot token cascade、Plot native theme 与显式配置优先级、owner/source inspection、Chart handoff、SSR 与 SVG / Canvas 最终语义；fresh / retained compile 环境的完整验证、对抗验证以及双语文档和浏览器验收均无遗留阻塞。
-
-## 被否决方案
-
-- 让 Chart 继续拥有 Plot token：直接 Plot 与 Chart 内部 Plot 会形成两套 vocabulary、preset 与 resolver
-- 让 Core 汇总 Plot token schema 或解释 Plot key：会反向引入 Tier 2 语义并形成巨型 schema
-- 让 Plot、Chart、Standard 各自维护 active categorical array：Inspector、series 与 sector 会得到不同颜色真源
-- 用 `plotStyleTokens` 或 native `theme` 保留旧 alias：会让新旧 namespace 输入长期双读并掩盖迁移错误
-- 让 Chart 先物化完整 Plot theme：会遮蔽 inherited/local source 并使 Chart 内外 Plot cascade 分叉
-- 把 sequential / diverging scheme 与 interpolator 下沉 Core：会丢失连续色阶的 Plot 语义 owner
-- 让 adapter、CSS 或 renderer 补 preset：会破坏 JSON、React、Vanilla、SVG 与 Canvas parity
-
-## 测试策略摘要
-
-需要 schema / type 证据证明 Plot token、native theme 与 shared categorical projection 的 JSON-safe、strict、non-empty 和 breaking naming 边界；registry 证据证明 Plot style definition 在 standalone、embedded、Chart adapter 与 direct headless 入口使用同一注入、name lookup 和失败语义；compile / pipeline 证据证明 Core Scope selector inheritance、Plot cascade、正式 mapping、inspection source 与 Scene / manifest consumer 闭环；颜色证据证明内建 Plot categorical / series / sector 从同一 `ResolvedTheme.colors.categorical` detached 投影、自定义 definition palette 高于 Core，并记录直接 winning entry，sequential / diverging 不读取该数组；React、Vanilla、plain JSON、SSR、SVG、Canvas 与 nested Chart parity 证据证明 adapter 和 renderer 不维护旁路默认。详细矩阵属于后续 ignored implementation plan。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Plot token 的完整 canonical key 目录、具体 preset 色值与未来 token 扩展
 - Chart type recipe、Chart presentation 与 Table token vocabulary

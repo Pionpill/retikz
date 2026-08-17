@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-16
-- 关联：[v0.2-alpha.1 plan](./roadmap.md) · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-02](./02-node-index-anchor-resolution.md) · [本 milestone ADR-03](./03-scope-id-bounding-box.md) · [alpha.4 ADR-01 (Node.position direction/of)](../../v0.1/alpha.4/01-node-at-positioning.md) · [alpha.5 ADR-04 (OffsetPosition)](../../v0.1/alpha.5/04-position-offset.md)
+- 关联： · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-02](./02-node-index-anchor-resolution.md) · [本 milestone ADR-03](./03-scope-id-bounding-box.md) · [alpha.4 ADR-01 (Node.position direction/of)](../../v0.1/alpha.4/01-node-at-positioning.md) · [alpha.5 ADR-04 (OffsetPosition)](../../v0.1/alpha.5/04-position-offset.md)
 
 ## 背景 / 约束
 
@@ -27,14 +27,7 @@
 - **scale=0 反向投影无定义**：约定不允许（schema `.refine(s !== 0)` 或 compile warn + fallback 到 1）。
 - **nodeDistance** 仍是全局 CompileOption（不加 scope 局部 nodeDistance，YAGNI）；其单位与当前 scope 局部度量同步（scope scale=2 时 `nodeDistance=10` 视觉表现 20，可用显式 `distance` 覆盖）。
 
-### 被否决的选项
-
-- **B：全局基准（relative 部分直接加在全局坐标）** —— `final = referent_global + relative_in_global`，实现极简无需反向投影，但与 TikZ 不对齐；scope rotate 下 relative `(30, 0)` 看起来"没旋转"，scope rotate / scale 形同虚设，破坏用户预期。
-- **C：当前 scope 局部 + referent 也用局部投影** —— referent 也按"若它在当前 scope 内会是什么"反向投影，复杂 + 多义 + 与 ADR-02 nodeIndex 全局语义冲突。
-
-选 A 核心理由：TikZ 对齐（retikz 总方针"TikZ 用户能直接迁移"，scope 内 `+ (30,0)` 跟着 scope rotate 旋转是最强直觉）；scope transform "改变内部坐标系" 自洽（relative 偏移在新坐标系测量天经地义，否则 rotate / scale 形同虚设）；实现可行（referent 全局坐标已在 NameStack，relative + 一次正向 apply scope chain 即可）。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - scope 上挂 `nodeDefault` / `pathDefault` → v0.2 alpha.2。
 - TikZ `cm` 任意仿射矩阵下 inverse → v0.2 不引入 cm（ADR-01 已决）。
@@ -43,6 +36,6 @@
 
 ---
 
-> **实现指针**：level `red`（动 compile，无 schema 改动、不动公开 API）、非 breaking（`resolvePosition` 不传 scope transform 时等价 v0.1 全局行为）。真源以代码为准——`resolvePosition` 签名扩可选 scope transform 参数 + polar / at / offset 三分支末端投影（`core/src/compile/position.ts`）、`applyScopeTransform` / `inverseScopeTransform`（`core/src/compile/scope.ts`）、inverse helper（`core/src/geometry/_transform.ts`，rotate 反角 / scale 倒数 / translate 取负）；Pass 1 / `layoutNode` / `compile/path/*` 调用 resolvePosition 时透传当前 scope chain（`core/src/compile/{compile,node}.ts`）。测试在 `core/tests/compile/scope-position.test.ts`。完整施工契约（6 项决策细节 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `da448234`；压缩前完整施工蓝图 = `git show da448234^:_notes/decisions/core/v0/v0.2/alpha.1/04-relative-position-in-scope.md`。
+已实现本 ADR 的核心决策。兼容性：非 breaking（`resolvePosition` 不传 scope transform 时等价 v0.1 全局行为）；其余默认行为、失败语义与公开契约以正文为准。

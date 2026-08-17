@@ -82,7 +82,7 @@ type PlotLabel = {
 3. `layer.zIndex` 与现有 mark style `zIndex` 分离，避免 datum-level 控制和 layer-level 控制互相污染。
 4. overlay view 的 zIndex 保持局部排序，能兼容当前“overlay view 只影响 mark 顺序、不跨过 axis / legend”的行为。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - interaction hover / selected / brush / tooltip 层的实际实现。
 - legend overflow、scroll、分页、浮层 tooltip 或 HTML legend。

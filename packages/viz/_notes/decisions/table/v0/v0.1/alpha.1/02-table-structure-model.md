@@ -275,11 +275,9 @@ const detail = {
 };
 ```
 
-## 实现摘要与验证
+## 最终结果
 
 manual、detail 与 custom structure 已通过同一 Definition / registry / normalize pipeline 生成递归冻结的 `SemanticTableModel`。内置结构与自定义结构共用精确 schema、provider output guard、跨字段矩阵和稳定 identity 规则，Data field path 与 field type 继续复用 `@retikz/data`。
-
-验证覆盖 manual/detail 正常路径、空数据与 header 变体、地址和 id 冲突、字段缺失或非 scalar、保留 kind、definition 冲突、非法 provider output，以及 canonical model 的只读所有权隔离。
 
 ## 影响
 
@@ -289,21 +287,7 @@ manual、detail 与 custom structure 已通过同一 Definition / registry / nor
 - 为 alpha.4/5 的 operation、group、pivot 提供 canonical model 地基
 - 不修改 Core、Data 或 Plot
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / Structure 与 Table Algebra 地基
-- 解决的问题：把多种输入结构统一为可验证、可扩展的语义模型
-- 主责包与协作包：Table 主责；Data 只提供 field resolution 与 scalar vocabulary
-- 是否可由现有能力组合：Data 不能表达 Cell 拓扑，需要扩展 Table 域
-- 是否需要下沉：无；通用 field path 已在 Data
-- 内部表达链路：structure operation → registry schema → output → canonical model
-- 外部扩展链路：define → user definitions → Map registry → unified build / validate
-- pipeline / lowering 与下游消费：ADR-04/05 只消费 SemanticTableModel
-- React / Vanilla adapter 等价性：两者只构造相同 structure IR
-- provenance / lineage / locator：alpha.1 sourceIndex/field 进入 Cell source；完整 lineage 延后但 identity 已稳定
-- 本轮结论：扩展 Table structure 域；不新增平行根类型
-
-## 不在本 ADR 范围
+## 长期边界
 
 - group、hierarchy、summary、pivot、matrix、transpose
 - span、row/column style、sorting/filtering

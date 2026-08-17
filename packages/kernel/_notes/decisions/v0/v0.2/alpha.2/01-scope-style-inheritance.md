@@ -17,7 +17,7 @@ retikz 现状缺第 2 套：只有 `stroke` / `fill` / `textColor` 分项、**�
 
 ## 决策：扁平 every-X 四通道 + 主色 color
 
-`color` 主色加到 Scope（级联）+ Node + Path + 各 default map + LabelDefault（StepLabel 用 `textColor`）；四通道 every-X 默认 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 各从对应 schema `.omit()` 派生、独立无父子、全 optional 禁 `.default()`；`resetStyle` 作继承屏障。完整 schema 见 `core/src/ir/scope.ts`，解析在 `core/src/compile/scope.ts`。
+`color` 主色加到 Scope（级联）+ Node + Path + 各 default map + LabelDefault（StepLabel 用 `textColor`）；四通道 every-X 默认 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` 各从对应 schema `.omit()` 派生、独立无父子、全 optional 禁 `.default()`；`resetStyle` 作继承屏障。完整 schema 见 ，解析在 。
 
 理由：
 
@@ -39,12 +39,7 @@ retikz 现状缺第 2 套：只有 `stroke` / `fill` / `textColor` 分项、**�
 - **`labelDefault` 单通道双宿主**：node-label→node.color、step-label→path.color（细节 ADR-02）。
 - **未知 key**：`.strict()` 严拒，错误信息列合法字段集。
 
-### 被否决的选项
-
-- **B：通道树（node→text、draw→{label, arrow}）+ host 回退** —— 直觉上"label 属于 draw"，但 **TikZ 没有这结构**（扁平 every-X + 正交主色）；"label/arrow 跟线"本质是主色共享、不是通道回退。通道树要叠"通道父子 + 实例 host"两条轴，比"扁平 + 主色"复杂，且 `text` 拆出无 TikZ 先例（文字是 node 选项）。
-- **C：命名 style（`mystyle/.style` + `[mystyle]`）** —— 跨 IR 引用的具名样式包，v0.2 §范围外（YAGNI）。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **StepLabel `textColor`/`opacity`/`font` + label 继承顺序** → [ADR-02](./02-step-label-style.md)。
 - **per-field `'initial'` / `'inherit'` 哨兵** → 未来。
@@ -53,6 +48,6 @@ retikz 现状缺第 2 套：只有 `stroke` / `fill` / `textColor` 分项、**�
 
 ---
 
-> **实现指针**：level `red`（动 `ir/**` + `compile/**` + 包 index 公开导出；Node/Path 加 `color` 亦红）、additive 非 breaking（新增字段全 optional）。真源以代码为准 —— `ScopeSchema` 4 派生 schema + 级联 graphic state + 四通道 + `resetStyle`（`core/src/ir/scope.ts`）、`NodeSchema.color`（`core/src/ir/node.ts`）、`PathSchema.color`（`core/src/ir/path/path.ts`）、主色展开 + 颜色级联 + 四通道 fold + resetStyle（`core/src/compile/scope.ts` 与 `compile/node.ts` / `compile/path/*`）、React 双向（`react/src/kernel/{Scope,builder,unbuilder}`）；测试在 `core/tests/ir/scope-style.schema.test.ts` 与 `core/tests/compile/scope-style-inheritance.test.ts`。完整原文（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `5d1ed4ca`；压缩前完整施工蓝图 = `git show 5d1ed4ca^:_notes/decisions/core/v0/v0.2/alpha.2/01-scope-style-inheritance.md`。
+已实现本 ADR 的核心决策。兼容性：additive 非 breaking（新增字段全 optional）；其余默认行为、失败语义与公开契约以正文为准。

@@ -65,13 +65,6 @@ React `<Grid>` 与 Vanilla `grid()` 接收同一 `GridInput` 并生成同一 `IR
 
 adapter contribution key 固定为 `standard.grid`，maker 是稳定模块级函数。同图多个 Grid 可以合并，并可与其它 `standard.*` composite 共存。直接 IR、服务端编译或工具链则通过 `composites: [GridDefinition]` 显式提供 definition
 
-## 被否决的方案
-
-- 保留 React-only Sugar：无法保存 Grid 语义，也会让 React 与 Vanilla 形成两套能力
-- 将 Grid 加入 Core：它是可选的常用绘图语义，不是不可再分的 Kernel primitive
-- 沿用旧扁平 props：`major*`、`border*` 前缀会增加持久化和 LLM 编辑噪音
-- 为 Grid 建立独立 registry 或自动注册：会与 Core composite registry 形成平行机制和隐式全局状态
-
 ## 契约增补
 
 本增补替换本 ADR 原先关于 `bounds.min/max`、严格 corner 大小关系、`center + size` 缺失以及极坐标不支持的表述。Grid 的公开范围契约现在有两个互斥变体：无方向的 `start/end` 角点，或 Core `Rect` 语义的中心 `position` 加 `width/height`。`position` 字段统一承载笛卡尔 `Position` 与 `PolarPosition`，不另设 `polarPosition` 字段。
@@ -87,29 +80,10 @@ adapter contribution key 固定为 `standard.grid`，maker 是稳定模块级函
 - `corner1/corner2` 改为 `bounds.start/end`；新增 `bounds.position/width/height` 中心形式；`step/xStep/yStep` 继续使用 `spacing`，前缀样式继续使用 `lines.style`、`major.style` 与 `border.style`
 - 旧 `bounds.min/max` 不保留兼容别名；Grid composite 仍是 JSON-safe Tier 2 IR，lowering 只复用既有 Core Path 与 Scope
 
-## 最终实现与验证摘要
+## 最终实现结果
 
 - Standard 已实现严格 schema、factory、definition、格点枚举与纯 lowering；React / Vanilla adapter 生成等价 IR 并局部贡献同一 definition
 - Grid 已从 Kernel React 迁出，双语 Standard 文档、迁移说明、AI JSX parser 与相关示例已同步
-- schema、lowering、边界、错误路径、adapter 等价、未注册诊断与多 capability 组合均有自动化测试；本增补要求为两种 bounds 形态、中心局部 origin 与 Core PolarPosition 解析补齐对应证据
-- Standard 三包的 lint、类型检查、全量测试和 build 已在 alpha.1 收尾验证通过
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 中的 Standard 通用 Cartesian Grid composite
-- 解决的问题：补齐常用的中心点 + 尺寸表达，并允许无方向角点输入，保持 Grid 语义可持久化、可生成和可跨入口使用
-- 主责包与协作包：`@retikz/standard` 主责 schema、definition、factory 与 lowering；Core 主责位置解析和 Scope compile；React / Vanilla 只做等价 authoring
-- 是否可由现有能力组合：是。复用 Core Position / PolarPosition schema、IRScope、transform 与 compile，不新增 Core primitive 或 Standard 私有解析链
-- 是否需要下沉到依赖能力域：否。本轮只消费已有 Core 位置和 Scope 能力
-- 内部表达链路：Grid IR → Standard 数值局部格线 → Core Path；中心定位 → Core Scope translate → Scene
-- 外部扩展链路：继续通过既有 `GridDefinition` / Core composite registry / compile options 接入，内置与自定义 Definition 路径不变
-- 下游执行 / adapter 等价性：下游仍只接收既有 Core Path / Scope / Scene；React 与 Vanilla 继续生成同一 Grid IR
-- 不支持边界与诊断：不支持 PolarPosition 角点和极坐标网格；无效引用沿用 Core unresolved-reference 诊断，未加载 Definition 沿用 `COMPOSITE_NOT_REGISTERED`
-- 本轮结论：扩展当前 Standard 能力域，组合现有 Core 能力
-
-## 稳定测试策略
-
-测试需要覆盖两种 bounds 形态、无序角点归一化、中心局部 origin、尺寸与格点安全边界、笛卡尔与递归 / 节点引用 PolarPosition 的 Core compile 结果、既有线 / 主线 / 边框顺序、Definition 诊断，以及 React / Vanilla 输入与 lowering parity。双语 Grid 文档需要与公开 schema 和默认值同步。
 
 ## 遗留边界
 

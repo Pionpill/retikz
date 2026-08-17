@@ -63,7 +63,7 @@
 - **文档站**：`grammar/data`「数据有问题时」段补 `invalid` 策略 + 字段级诊断；说明 bigint 自动转。
 - **core**：无。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **`'zero' / 'impute'` 等统计型缺失处理**——属 transform / 统计语义，留后续。
 - **per-field / per-mark invalid 覆盖**——先全局。

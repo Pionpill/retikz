@@ -127,35 +127,7 @@ React/Vanilla 的嵌套 authoring result 只存在于 adapter runtime，不进�
 - 外部扩展与下游闭环：第三方 child 只要通过 Core composite contract 可编译，就能被同一 Surface 包装；所需 definitions 走 Core provider graph
 - 不支持边界：不接受 DOM node、ReactNode 或 renderer object 进入 IR，不提供多 child arrangement、header / footer slot、scroll container 或 responsive state
 
-## 架构验证
-
-- 是否可由现有能力组合：Core 与 Layout 已能测量和 replay 任意 child，但没有拥有通用 appearance 与 JSON schema 的 Surface composite；Frame 的 Node-only 语义不能安全扩张
-- math / core / render / adapter 责任切分：Layout / Math 计算 box；Core 提供 Scope、Path 与 compile；Standard 组合成 Surface；Render 执行普通 Scene；adapter 只构造相同 IR
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：新增 Standard Tier 2 IR 与单项 CompositeDefinition，不新增 Core IR、Scene primitive或 Standard registry；appearance 是闭合数据契约
-- Scene / manifest / renderer / diagnostics 如何闭环：Surface lowering 只产生普通 Core Path / Scope / replay output；空间 handle 进入 Core sidecar；现有 renderer 等价执行
-- provenance / locator / Interaction Readiness 是否适用：适用；Surface 外层 identity 与 child owner path 必须保留，具体领域 payload 仍由 child owner 提供
-- 结论：扩展 Standard 当前 presentation composite 域
-
-## 同类设计验证
-
-[CSS Box Model Level 3](https://drafts.csswg.org/css-box-3/) 把 content、padding、border 与 margin 分成可组合但不同的 box，并明确 border 不等于 content sizing。本 ADR 采用 content / padding / border box 的分层、border visual overflow 不反向增加 allocation 以及 overflow 的显式边界；但 Surface 仍是 renderer-neutral Composite，不引入 DOM、CSS cascade、margin collapse、scroll container 或浏览器 intrinsic sizing。
-
-该验证也支持把 Surface 与 Frame 分开：通用 box presentation 应围绕任意 content 和 settled allocation 建模，而不是继承 Node header / anchor 语义。
-
-## 被否决方案
-
-- 扩张 Frame 接受任意 child：会混合 Node anchor frame、header 语义与通用 layout-aware surface，并改变既有 Frame 输入和 bbox 行为
-- 在 Chart adapter 使用 `<div>` / CSS 包裹：无法进入 JSON IR、SSR SVG、Canvas、inspection 或 Core spatial 主链
-- 在 Chart 包内实现私有 canvas：Table 与其它 panel 会重复 box / border / clip，且 Standard 不再是通用 presentation owner
-- 让 renderer 根据 child bbox 自动画背景：renderer 不拥有 layout proposal、领域 appearance 或 authored Scope，也会造成 SVG / Canvas 分叉
-- 首版加入 width / height、alignment、gap、多 child 或 slot：当前单 child Surface 不需要，已有 Layout containers 承担这些能力
-- 以 artifact 或透明 Node 暂存 Surface bounds：不能替代 Core qualified spatial sidecar，并会制造过渡双轨
-
-## 测试策略摘要
-
-测试契约必须覆盖 `SurfaceInput -> IRSurface` default / padding 归一、任意 Core child 与嵌套 composite schema、JSON round-trip、intrinsic / range / exact 混合轴 proposal、child `slotSize` 与非零 / 负 allocation origin、轴向 padding 扣除、finite proposal 小于 padding的失败、background / isolated content / border 顺序、child zIndex 隔离、border visual overflow、rounded clip、authored Scope 全字段、外层与 child identity、Surface 与 descendant qualified handles。Definition evidence 必须覆盖直接 IR、React、Vanilla、SSR、SVG / Canvas parity、缺失 child dependency 与第三方 child；Frame 回归必须证明其 Node-only schema、header 与 expand 语义不变。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 修改或替代 Standard Frame
 - 多 child arrangement、header / footer、overlay、alignment、gap、scroll、responsive 或 host chrome

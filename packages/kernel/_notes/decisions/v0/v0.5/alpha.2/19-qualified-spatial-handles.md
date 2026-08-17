@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-11
-- 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Core Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Attached Space Composition](../../../../../../../notes/architecture/attached-space-composition.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [Chart ADR-03](../../../../../../viz/_notes/decisions/chart/v0/v0.1/alpha.1/03-presentation-standard-layout.md)
+- 关联：[Chart ADR-03](../../../../../../viz/_notes/decisions/chart/v0/v0.1/alpha.1/03-presentation-standard-layout.md)
 
 ## 背景与目标
 
@@ -169,36 +169,7 @@ Core 负责将 local bounds 通过最终 transform chain 映射到 world-space�
 - 外部扩展与下游闭环：第三方 composite 通过同一 output contract 声明 handle；工具链通过完整 compile 的同一 Core index 查询，不需要注册 selector provider；只需要 lowered IR 的工具继续使用无 declaration 的 `lowerIRToKernel()` 路径
 - 不支持边界：不从 primitive 猜测语义，不接受函数 predicate selector，不提供跨 document 全局索引
 
-## 架构验证
-
-- 是否可由现有能力组合：occurrence、observation 与 runtime topology 提供内部 provenance，但没有公开 local declaration、qualified index 或 selector；Scene bbox 也不能保留领域 role 与 owner path
-- math / core / render / adapter 责任切分：Math 提供 rect / affine 计算；Core 赋予 owner 与 compile 语义；Render 忽略 sidecar；adapter 只转交同一 CompileResult
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：新增 composite output contract 与 CompileResult sidecar，不新增 authored IR、Scene 字段或 registry。selector vocabulary 闭合，owner role 作为数据发布，不存在动态 implementation lookup
-- Scene / manifest / renderer / diagnostics 如何闭环：spatial index 是与 Scene 同 revision 的 headless compile manifest；renderer 无需执行，查询错误由 Core query 报告
-- provenance / locator / Interaction Readiness 是否适用：适用；qualified owner、origin / final occurrence 与 domain payload 是空间透明和后续 interaction target 的基础，但本 ADR 不建立交互 runtime
-- 结论：扩展 Core 当前 Drawing / compile result 域
-
-## 同类设计验证
-
-- [Vega Scenegraph](https://github.com/vega/vega/blob/main/packages/vega-scenegraph/src/Scenegraph.js)、[GroupItem](https://github.com/vega/vega/blob/main/packages/vega-scenegraph/src/GroupItem.js) 与 [Item](https://github.com/vega/vega/blob/main/packages/vega-scenegraph/src/Item.js) 证明嵌套 group identity 与 bounds 可以支持查询和布局；本 ADR 采用嵌套 owner path 与 settled bounds，但不暴露或复用 mutable renderer scene item
-- [Apache ECharts model query](https://github.com/apache/echarts/blob/master/src/util/model.ts) 以 component type、subtype、id / name 组合定位并对重复 identity 设定明确边界；本 ADR 采用结构化 owner / id / role selector，但不把数组 index 当作持久 identity，也不建立全局 model
-
-这些项目共同证明：空间查询需要稳定层级、明确 identity 与已结算 geometry；Retikz 将这些事实放在 Core compile sidecar，而不是把 renderer object 提升为公共模型。
-
-## 被否决方案
-
-- 把 spatial index 写入 Scene：让 renderer execution DTO 承担工具链领域数据，并迫使所有 renderer 复制无用语义
-- 由 SVG DOM / Canvas draw list 反推区域：后端不等价，SSR 不可靠，也会丢失 composite owner 与 domain provenance
-- Chart 复制 Plot handles 并改名：破坏 Plot identity，形成双 registry，内层 composition 增长时必然漂移
-- 只复用 `CompileOccurrenceLocator`：locator 能定位 occurrence，却不表达语义 role、局部 key、world geometry 或 containment query
-- 使用生成数组下标作为持久 identity：authored reorder 会改变含义，也无法区分 owner instance 与 domain item
-- 首版支持 union / intersection / band / polar / attachment 运算：缺少当前闭环需要，会提前扩大 geometry 与 selector 契约
-
-## 测试策略摘要
-
-测试契约必须覆盖 declaration schema、owner-local key 唯一、expand result 与 layout-aware Scope attachment、expand declaration 与 owner-generated spatial Scope 的冲突、跨多个可达 attached Scope 的重复 key、discarded Scope 的结构校验但无发布 / key 副作用、Scope / placement / rotate / replay 的单次 world transform、origin / final occurrence、匿名与显式 id owner、synthetic third-party nested ownerPath、完整 pre-order、tag all-match、within ancestor 语义、miss / ambiguity 以及 JSON round-trip。类型与 runtime 证据必须拒绝 layout result-level declaration。`lowerIRToKernel()` 证据必须覆盖无 declaration 正常 lowering 与非空 declaration fail-loud。Scene、SVG 与 Canvas 证据必须证明 index 不进入 renderer DTO 且三入口共享相同 Core result；Standard Surface 作为本轮首个产品 owner 在 authored outer Scope 上发布正式 `surface` handle，并证明该 Scope transform 后的 world geometry、先于 descendant 的 index 顺序与外层 Chart qualification。Plot 只做结构化 callback migration 与现有 provenance、locator、lineage、透明 carrier 回归，本 ADR 不定义或测试 `plotArea` 等 Plot role、key、payload。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - band、point、path、polygon、union、intersection、polar region 或 attachment operation
 - renderer hit-test、pointer / keyboard event、selection、intent、tooltip 或 dashboard runtime

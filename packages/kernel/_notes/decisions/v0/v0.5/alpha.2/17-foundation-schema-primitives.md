@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-09
-- 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Foundation 基础包设计](../../../../../../../notes/architecture/foundation-design.md) · [Foundation ADR-14](./14-foundation-package.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [包拓扑](../../../../../../../notes/architecture/package-topology.md)
+- 关联：[ADR-14](./14-foundation-package.md)
 
 ## 背景与目标
 
@@ -69,34 +69,13 @@ Foundation 不为这些闭合原子建立 Definition、registry 或 provider。�
 - 外部扩展与下游闭环：闭合原子无需动态扩展；完整 owner schema 直接组合 Foundation 原子并继续进入原有 contract、provider、pipeline、adapter、docs 与 schema registry 链路
 - 不支持边界：只因写法相似但具有不同开闭区间、空值、默认、唯一性、trim、错误文本或领域关系的约束不进入 Foundation；Foundation 不提供参数化 schema builder 或通用 validation utils
 
-## 架构验证
-
-- 是否可由现有能力组合：现有 Zod 可以在每个包局部组合，但缺少最低层唯一 owner，无法防止同义叶子约束继续分叉
-- math / core / render / adapter 责任切分：Foundation 只校验 string / number 原子；Math 继续拥有纯计算且没有真实 import 时保持零依赖；Core 继续拥有完整 Drawing IR/schema；Render 与 adapter 不创建平行 schema，只消费对应 owner 的完整输入
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：不新增 IR、Definition 或 registry。六个原子是闭合 validator，没有第三方实现、动态解析或生命周期需求
-- Scene / manifest / renderer / diagnostics 如何闭环：原子只参与既有输入 schema 的叶子校验，不改变合法输入进入 Scene / manifest / renderer 的路径；领域 owner 继续生成自己的错误和 Diagnostic
-- provenance / locator / Interaction Readiness 是否适用：基础 scalar/string schema 不产生 occurrence、locator 或交互 target，因此不新增相关契约
-- 结论：下沉
-
-## 被否决方案
-
-- 继续由 Core scalar schema 统一：能减少一部分重复，但让无绘图语义原子继续依附 Drawing owner，且不能服务未来不依赖 Core 的 consumer
-- 建立独立 `@retikz/schema` 包：边界清晰但增加发布包、版本和依赖治理；当前 Foundation 已是跨能力域原子 owner，引入唯一 Zod 依赖即可承接
-- 使用 `@retikz/foundation/schema` subpath：可以让既有根入口更轻，但形成第二公开入口并破坏 Foundation root-only 规则；消费方也更容易从不同入口获得分叉公共面
-- 只提供 predicate / assertion：不能直接作为 Zod 对象 schema 的叶子真源，消费方仍会重复包装和错误边界
-- 一次下沉所有 `.min(1)`、positive、nonnegative 与 non-empty array：表面语法相同不代表空白、开闭区间、默认值、唯一性和领域关系相同，会造成公开行为收紧或放宽
-
-## 测试策略摘要
-
-验证必须证明六个 schema 的成功输出不变形，string 的空串、全空白与 Unicode 空白边界稳定，number 的类型、正负零、边界、非有限值、小数和安全整数语义稳定；`assertNonEmptyString` 与 `NonBlankStringSchema` 对空白的判定一致。公共面与发布证据必须证明 Zod 是唯一生产依赖、六个 schema 只从 Foundation 根入口导出、旧 owner 无同义定义或转发。消费方证据必须证明同义迁移不改变完整 schema 的默认值、描述、strict object、领域 refinement、错误包装、JSON round-trip 与 React / Vanilla / headless 等价性。
-
 ## 完工摘要
 
 六个非变换标量 schema 已由 Foundation 根入口统一提供，Zod 是唯一生产依赖。Core 的归一化比例旧 owner 与 Graph 的非空白字符串旧公共出口均已移除；Kernel、Standard、Graph、Data、Plot、Chart 与 Table 只组合语义完全相同的叶子，领域对象、默认值、refinement、颜色与诊断边界保持在原 owner。
 
-验证覆盖基础标量边界、旧公共面移除、消费方完整 schema、headless 与 adapter 等价性、发布产物入口、双语文档与 changelog。无已知遗留风险需要改变本 ADR 的公开契约或包边界。
+基础标量、消费方 schema 与 adapter 等价性保持一致；无已知遗留风险需要改变本 ADR 的公开契约或包边界。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - Foundation 对象、数组、IR、JSON-safe data、parser、coercion、transform、range factory、颜色或几何 schema
 - 全仓机械替换 `z.string().min(1)`、non-empty array、positive / nonnegative 写法或领域运行时 guard

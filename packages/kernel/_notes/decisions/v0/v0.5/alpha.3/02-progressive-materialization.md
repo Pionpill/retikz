@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-07-26
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-cooperative-concurrent-runtime.md) · [alpha.2 Scene Patch ADR](../alpha.2/05-scene-patch-retained-renderer.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [交互与增量运行时设计](../../../../../../../notes/architecture/interaction-design.md)
+- 关联：[ADR-01](./01-cooperative-concurrent-runtime.md) · [alpha.2 Scene Patch ADR](../alpha.2/05-scene-patch-retained-renderer.md)
 
 ## 背景
 
@@ -67,16 +67,6 @@ alpha.3以破坏性变更把 alpha.2 `RetainedRenderer.capability: RetainedRende
 2. Render 拥有合法 batch、资源与命中索引，Core / adapter 不需要理解后端物化细节。
 3. atomic 仍是安全默认值；progressive 是显式、可诊断、可回滚的优化能力。
 
-## 测试设计
-
-- 每个中间 batch 的 visible content、geometry、hit-test、event target 与 materialization snapshot 一致。
-- 完成后的 SVG DOM / Canvas pixels、resources 与完整 atomic render 可观察等价。
-- Supersede、batch throw、resource failure、dispose 和 rollback 后不残留 candidate identity、index 或引用计数。
-- unsupported capability、auto decision、requireProgressive 与 SSR/export 强制 atomic 具有稳定诊断。
-- React / Vanilla、SVG / Canvas 对 semantic revision 与 materialization revision 使用同一契约。
-
-详细矩阵见 ignored `notes/plans/kernel-v0.5-performance/TEST_CONTRACT_ALPHA3_ADR_02.md`。
-
 ## 公开影响
 
 - `@retikz/render` 新增 materialization strategy、state、batch scheduler hook 与 renderer capability。
@@ -84,19 +74,7 @@ alpha.3以破坏性变更把 alpha.2 `RetainedRenderer.capability: RetainedRende
 - hit-test、geometry 与 hydration event result 增加 view revision context；不把 materialization 字段写入 Scene。
 - 默认 atomic，不改变 SSR、导出、截图或现有完整 render 入口的可见语义。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing 的 Primitive/Scene、Interaction Readiness 与运行表现层。
-- 解决的问题：在不部分提交 Scene 的前提下分批物化完整结果，并保持可见与命中一致。
-- 主责包与协作包：render 拥有 batch / retained view / indexes；runtime 调度 batch；Core 只提供完整 Scene/Patch；adapter 配置和订阅。
-- 是否可由现有能力组合：alpha.2 retained renderer 可完整 patch，但没有独立 materialization state 与 rollback，需要扩展 Render，不应修改 Core transaction 原子性。
-- 内部表达链路：complete Scene/Patch → renderer batch plan → materialization transaction → live view/index → complete or rollback。
-- 外部扩展链路：第三方 renderer 通过同一 capability 声明 progressive；不支持时 atomic 合法且可诊断。
-- define-registry：materialization 是 renderer instance 的闭合执行能力，不按名称解析，不新增 registry；renderer implementation 仍通过 alpha.2 `RetainedRenderer` interface 注入。
-- 下游执行 / adapter 等价性：React/Vanilla 共享 state；SVG/Canvas 各自派生 batch，但完成结果与 atomic oracle 等价。
-- 不支持边界与诊断：未物化 target 不可交互；fallback/rollback/首批/完成时间可 trace；本轮不定义领域 behavior。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - document、contribution 或 Scene 的部分 semantic commit。
 - LLM draft batch、generation checkpoint 或模型 token。
@@ -105,40 +83,4 @@ alpha.3以破坏性变更把 alpha.2 `RetainedRenderer.capability: RetainedRende
 
 ---
 
-## 实现契约
-
-### Level
-
-`red`：扩展公共 renderer、hit-test 与 adapter view contract，并引入新的 revision 维度。
-
-### Schema 改动
-
-无 IR / Scene schema 改动。MaterializationSnapshot 与 PresentationBatch 都是运行时派生 contract。
-
-### 文件 scope
-
-- `packages/kernel/render/src/runtime/materialization/**`
-- `packages/kernel/render/src/{svg,canvas}/**`
-- `packages/kernel/render/src/{hit-test,geometry}/**`
-- `packages/kernel/render/src/index.ts`
-- `packages/kernel/react/src/{kernel/runtime,render}/**`
-- `packages/kernel/vanilla/src/runtime/**`
-- `packages/kernel/{render,react,vanilla}/tests/**materialization**`
-- `apps/docs/src/modules/docs/contents/kernel/packages/{render,react,vanilla}/**`
-
-### 测试象限
-
-**Happy path**：initial progressive；update progressive；atomic；auto；多 batch 完成。
-
-**边界**：空 Scene；单 batch；unknown total；resource-only change；unchanged patch；materialization revision 上界前一值。
-
-**错误路径**：batch throw；resource failure；unsupported + require；supersede；dispose；rollback failure 后 replace。
-
-**交互**：可见/命中同步；事件 revision context；SVG/Canvas 完成等价；React/Vanilla state parity；动画与 patch 同步。
-
-### 依赖的现有元素
-
-- alpha.2 `RetainedRenderer` / Scene Patch / replace fallback——完整真源、增量输入与恢复路径。
-- `hitTest()`、geometry query、hydration target——必须纳入同一 materialization transaction。
-- ADR-01 scheduler——按预算调度 batch 与取消过期 candidate。
-- performance benchmark——记录 first visible、complete、rollback、fallback 与最长 batch 阻塞。
+MaterializationSnapshot 与 PresentationBatch 都是运行时派生契约，不写入 IR 或 Scene。渐进物化复用 alpha.2 的完整 Scene、Scene Patch、retained renderer、命中索引和 rollback 边界

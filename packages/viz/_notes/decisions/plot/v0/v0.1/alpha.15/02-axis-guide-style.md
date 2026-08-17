@@ -65,7 +65,7 @@ Guide tick 语义跨 axis 与 legend ramp 共用：`GuideTickSourceSchema` 拥�
 3. `ticks`、`tickLabels`、`grid` 分开后，tick source、tick line、tick label、grid line 的职责更清楚。
 4. Theme 可以直接提供 `theme.axis.line/ticks/tickLabels/title/grid` 的视觉和几何默认，不需要维护一套不同的 style 词汇。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - `IRPlot.theme` 的入口与 merge priority；由 ADR-03 处理。
 - legend / palette token；由 ADR-04 处理。

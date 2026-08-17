@@ -54,7 +54,7 @@
 - plot-vanilla `renderPlot` 无代码改动（mark 无关、纯 spec 驱动）。
 - 文档站新增 rule mark 页（IR + React 两套表面、line vs band、取向 / extent / polar 语义）；guide 文档补一句「参考线 / 参考带走 rule mark，非 axis/legend guide」消歧。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **reference-line / band guide 独立成员**（随 scale tick 自动重算的标注线 / 带）：本 ADR 用 rule mark + aggregate transform 覆盖均值线、均值 ± σ 带等主体诉求；真正只有 guide 能做的「跟随 scale 重算」留待 guide 体系演进单独 ADR 评估。
 - **1D / ternary / custom 坐标系下的 rule line**：几何语义（对侧轴域 / 满铺定义）未定，fail-loud；band 支持面随 `projectCell`（继承 ADR-01），无 `projectCell` 的坐标系 band 同样 fail-loud；后续按需求驱动单独评估。

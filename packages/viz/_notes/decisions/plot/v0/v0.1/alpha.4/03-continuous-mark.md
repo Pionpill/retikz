@@ -79,7 +79,7 @@ export const AreaMarkSchema = z.object({
 3. **`closed` 是雷达的最小增量**：一个布尔 + 尾部闭合 step，复用既有投影；不为雷达另立 mark。
 4. **area 复用 line 投影**：area = 上沿（line）+ baseline 回边，最大化复用、cartesian/polar 同构。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - polar guide → ADR-04；sector 家族 → ADR-02。
 - authoring 表面 + docs → ADR-05。

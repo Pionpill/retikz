@@ -80,7 +80,7 @@ export type FieldType = ValueOf<typeof DataFieldType>;
 5. **fail-loud**：声明 model 却引用不存在字段是 spec bug，早炸早好（对齐 alpha.5 `datumIdField` 风格）。
 6. **temporal 用正则 guard 而非裸 `Date.parse`**：`Date.parse('5')` 在多数引擎返回有效值，会把数值误判时间——必须收窄（也与 ADR-02 temporal coercion 的 guard 保持一致）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **数据模型可移植契约**：逻辑名→物理路径的 `fieldMaps` 映射、按 DataFieldType 的值强制（coercion）、换源场景 → ADR-02。
 - **type-driven scale 选型**（按类型派生 scale）+ 类型↔scale 兼容校验 → ADR-03。

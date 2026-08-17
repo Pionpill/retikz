@@ -36,7 +36,7 @@ transform 是 Statistics 层能力，不是 relation 几何能力。把局部 tr
 - 内置 mark 与自定义 mark 对 transform registry 的使用对等。
 - docs 需要说明 root transform 与 mark-local transform 的区别。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不新增 transform kind。
 - 不引入 per-mark independent dataset、named data view 或 join。

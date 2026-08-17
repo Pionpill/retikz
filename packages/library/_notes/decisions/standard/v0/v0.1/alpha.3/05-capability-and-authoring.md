@@ -56,13 +56,7 @@ recipe 只使用公开 GraphFrame、Core Node、GraphConnector 和 Callout；不
 - Core 拥有 Node、shape、text、boundary、layout 和 Scene
 - docs 拥有内部 recipe，不把 recipe 变成 package API
 
-## 验证策略
-
-- semantic Node：Schema、factory、React/Vanilla JSON parity 与固定 shape
-- composite：Definition 注入、adapter 聚合、缺失 Definition 诊断与 Core Scene
-- docs：双语页面、preview、API mapping 和 recipe 不泄漏到 package public surface
-
-## 不在本 ADR 范围
+## 长期边界
 
 - GraphFrame、GraphConnector、Callout 的独立 schema、lowering 与 artifact
 - 领域 workflow、graph store、自动布局与执行模型

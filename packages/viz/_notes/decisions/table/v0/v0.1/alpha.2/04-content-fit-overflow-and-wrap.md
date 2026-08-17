@@ -63,8 +63,7 @@ source 或 target 出现非法 bounds、非有限 scale 或除零歧义时 fail-
 - clip、fit 与 alignment 进入 manifest 的 content allocation / visual overflow 几何
 - 不新增 Table 专用文字 API、renderer 分支或函数型 IR
 
-## 最终实现与验证
-
+## 最终结果
 实现由 `layout/content.ts`、`layout/fit.ts` 与 `layout/transaction.ts` 组合 Core layout-aware replay。选中的 range-proposal result 只发布一次 nested artifact，丢弃的 natural probe 不进入最终 output。
 
 正式测试覆盖 contain / cover / stretch、非零/负 source bounds、零尺寸、clip、visible overflow、未知策略、非有限 scale、wrap range-proposal replay 与 nested artifact 同源。关键证据位于 `tests/layout/content-policy.test.ts` 与 `tests/pipeline/layout-transaction.test.ts`。

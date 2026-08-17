@@ -73,7 +73,7 @@ const plot = {
 3. tick set 是 axis 语义，不是 theme 语义；`ticks.values` / `tickLabels.format` 让 guide 能表达关键刻度与展示格式。
 4. scale family invariant 在 domain padding 阶段统一处理，避免 log / sqrt / radial / pow 各自散落补丁。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 分类 scale 的 `paddingInner` / `paddingOuter` / `padding` 重设计。
 - 自动 tick label 防重叠、自动旋转、文字测量驱动抽稀。

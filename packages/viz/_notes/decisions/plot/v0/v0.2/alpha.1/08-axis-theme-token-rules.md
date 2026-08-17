@@ -189,32 +189,7 @@ React、Vanilla 与 plain JSON 必须传递同一 `plotThemeTokenRules`；adapte
 - 不拥有：Axis 创建、Chart recipe、tick 生成、minor tick 采样、composition projection、renderer selector、交互状态或 Chart presentation
 - 外部扩展：自定义 Plot style 经既有 definition / registry 返回 `tokens + tokenRules`；local rule 作为闭合 IRPlot 数据走同一 resolver 与 guide lowering
 
-## 架构验证与能力完备性
-
-- 问题与归属：Axis dimension 是 Plot guide 语义，由 Plot owner 在 theme-to-guide 映射阶段解析，不下沉 Core 或 renderer
-- 内部表达：同一 Axis token subset 和 selector 贯通 style、local IRPlot、inspection 与 guide lowering，不为 grid、tick 或 line 建立平行 scope 机制
-- 外部扩展：内建与自定义 style 复用同一 `PlotThemeStyleDefinition` registry；rule 是闭合数据，不需要新的 define-registry
-- 端到端闭环：Core effective Theme 选择 Plot style，Plot resolver 保留基础 token 与 rule layers，guide 按 dimension 物化正式视觉配置，之后继续进入既有 Standard / Core lowering
-- adapter 等价性：React、Vanilla 和 plain JSON 传递同一 schema-derived rule，不存在 adapter 私有选择器
-- provenance / locator：rule 不表达 datum lineage；Axis identity、facet scope 与 locator 不变，inspection 只增加主题来源解释
-- 结论：扩展 Plot 已有 Theme / Guide 能力面，用一个统一 scoped rule 取代 Grid 专用复合值
-
-## 被否决方案
-
-- 每个 token 使用 `{ default, x, y }`：基础值不再原子，所有 Axis token 都要携带 dimension map，并让简单全局覆盖变复杂
-- `axis.x.*` / `axis.y.*` token：token 数量随属性和 dimension 相乘，且无法覆盖开放 Coordinate role
-- 只让 Grid 支持 dimension：tick、line、tick label 与 title 会继续产生各自的 scope 语法
-- 把完整 Axis theme 放进 token value：重新开放任意嵌套 theme，破坏 canonical key 的单一语义和 one-source-per-token inspection
-- 通用 component selector：本轮只有 Axis dimension 的真实消费者；提前支持 legend、plotArea 或 palette selector 会扩大无消费契约
-- 由 ECharts 式轴类型主题代替 dimension：value / category 类型不能表达同为 value Axis 的 x / y 差异
-
-## 测试策略摘要
-
-需要 schema 与 JSON 证据锁定 selector、Axis token subset、开放 dimension、空值 / 重复项 / 非 Axis token 拒绝以及旧复合 Grid 契约删除；style definition、resolver 与 inspection 证据锁定 `tokens + tokenRules`、两层 rule 来源和级联；guide / composition 证据锁定 line、tick、tick label、title 与 grid 的 dimension 覆盖、声明顺序、局部 guide 优先级和 facet / scaffold 中的已有 Axis 行为；adapter 与双语 docs 证据锁定 React、Vanilla 和 plain JSON 共享同一公开契约。
-
-关键不变量是基础 token 始终保持扁平原子值，scope 只由 Axis rule 表达，rule 只修改已有 guide 的表现性默认且不能创建 Axis、tick、minor grid 或改变结构语义。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Legend、Plot area、palette、mark 或交互状态 selector
 - Axis orientation、scale type、data type、facet role 或 selector specificity 层级

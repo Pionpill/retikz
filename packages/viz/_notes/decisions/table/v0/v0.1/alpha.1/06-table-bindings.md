@@ -292,13 +292,9 @@ expect(manualTable(manualInput)).toEqual(createManualTableIR(manualInput));
 expect(resolveReactManualTableIR(manualProps)).toEqual(createManualTableIR(manualInput));
 ```
 
-## 实现摘要与验证
+## 最终结果
 
 `@retikz/table-react` 已提供 `<Table>`、`<DetailTable>`、`<ManualTable>`；`@retikz/table-vanilla` 已提供 plain spec helper、Tier 2 embed adapter 与一次性 SSR。两侧共享 `@retikz/table` 的 authoring normalization、runtime contribution 与 lowering，不复制 schema、layout 或 renderer runtime。
-
-验证覆盖三种 React 入口的 standalone/embedded 行为、manifest effect、稳定嵌入 identity 与 contribution 冲突；Vanilla plain helper、figure/layer embed、SVG/Canvas mount、`update()`、SSR 与 artifact overload；两侧都覆盖 nested composite 注入并验证共享 authoring 结果。
-
-当前 adapter parity 主要由共享 normalization/lowering、同一 contribution contract 和两侧定向测试共同保证；尚未建立一个同时导入两个 adapter、对同一 fixture 做直接 Scene/SVG 快照比较的独立 integration harness。后续增加该测试时不得引入 table-react 与 table-vanilla 的运行时互相依赖。
 
 ## 影响
 
@@ -312,21 +308,7 @@ expect(resolveReactManualTableIR(manualProps)).toEqual(createManualTableIR(manua
 - `@retikz/table` README 与 Table API 文档列出 `createDetailTableIR()` / `createManualTableIR()`；共享 contribution 类型与 helper 作为 adapter extension contract 单独标注，不混入普通 Table authoring 示例
 - 三包从 alpha.1 起 lockstep，后续能力必须保持 adapter 等价或明确不适用理由
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / adapter 闭环
-- 解决的问题：让同一 IRTable 在 React、Vanilla、SSR 与 renderer host 中可用
-- 主责包与协作包：Table 主责领域；table-react/table-vanilla 主责接线；kernel adapters 执行宿主能力
-- 是否可由现有能力组合：复用 React Layout 与 Kernel Vanilla plain spec / Tier 2 adapter / mount / render；只新增 Table authoring 与领域 contribution 聚合
-- 是否需要下沉：无；通用 runtime 能力继续留 kernel adapter
-- 内部表达链路：Table spec props / DetailTable / ManualTable / Vanilla plain helper → IRTable；standalone 或 embed runtime props → shared contribution → lowerTables → Core
-- 外部扩展链路：Table definitions 透传到 `@retikz/table` options；nested Tier 2 definitions 经两套 adapter 的同名 `composites` 宿主通道注入
-- pipeline / lowering 与下游消费：两个 adapter 调同一公开 authoring 与 contribution API；Vanilla adapter 进入 Kernel normalize / compile / mount 链路
-- React / Vanilla adapter 等价性：通用 spec、detail/manual authoring、runtime contribution、renderer 与 artifact 行为有交叉测试
-- provenance / lineage / locator：alpha.1 暴露 manifest；alpha.6 扩展 artifact result
-- 本轮结论：共享 authoring 与 contribution 属于 Table；framework traversal 与 runtime 接线上移到 adapter；通用 figure/layer/update/render 继续组合 Kernel Vanilla，不新增 Table 私有 runtime
-
-## 不在本 ADR 范围
+## 长期边界
 
 - JSX `<Cell>` / `<Row>` manual DSL
 - Vanilla fluent builder、细粒度 column/cell helper 或 legacy alias；plain input 已能完整表达 alpha.1 authoring

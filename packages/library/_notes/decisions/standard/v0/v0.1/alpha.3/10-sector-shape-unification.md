@@ -22,9 +22,9 @@ Standard Node shape 同时维护 `arc` 与 `sector` 两套几何定义。两者�
 - 将仅被 Sector 使用的几何 helper 合并到 `sector.ts`，删除 `sector-geometry.ts`
 - 不保留旧名导出、兼容 alias、migration 或 fallback 路径
 
-## 不在本次范围
+## 长期边界
 
-- 不删除或重命名 Kernel React 的 `<Arc>` 及其 Sugar 文档、测试和实现
+- 保留 Kernel React 的 `<Arc>` Sugar；它继续作为独立的 Path authoring API
 - 不改变 Core Path、Arc step、连接面或 renderer 语义
 - 不改变 `innerRadius === 0` 的实心扇形语义
 

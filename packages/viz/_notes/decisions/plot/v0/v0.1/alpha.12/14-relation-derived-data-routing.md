@@ -45,7 +45,7 @@ RelationMark 获得两组能力：
 - 数据派生复用 transform registry，未来自定义 relation derivation 通过 `defineTransform` 注入。
 - routing 复用 core Path step 能力，不在 plot 里重写箭头、曲线或 label。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不新增 named dataset、join 或独立 relation table 数据源。
 - 不做 obstacle avoidance、edge bundling 或 graph layout。

@@ -71,7 +71,7 @@ emitNodePrimitives(layout, …)                                                 
 2. **单一外边界 + 解析层施加**——消除「自动连线移、显式 anchor 不移」的双边界；inflate 只发生在引用解析路径（不进 `anchorOf` 本体），label 等视觉附着天然不被误伤。
 3. **缺省 0 → 破坏面最小**——所有不设 `margin` 的节点逐字段不变；行为变化仅命中显式 `margin>0` 的用法，符合 0.x「正确设计优先、不留别名」。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **`outerXSep` / `outerYSep` 轴分离**（TikZ 有 outer xsep/ysep）：本 ADR 不新增公开字段（beta.1 约束），只对称 `outerSep`/`margin`；轴分离延后。
 - **形状专属命名 anchor（tip-N 等）随 outer sep 外推**：有意偏离严格 TikZ，保持 feature point 贴视觉 shape。
@@ -81,5 +81,3 @@ emitNodePrimitives(layout, …)                                                 
 ---
 
 > **实现指针**：本 ADR 已随 kernel v0.3-beta.1 落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在历史中。
-
-> 🔖 压缩前完整施工蓝图 = `git show 5541ecd1dc26981b369839c162f3e61b17c0b0f4:packages/kernel/_notes/decisions/v0/v0.3/beta.1/07-outer-sep-tikz-parity.md`。

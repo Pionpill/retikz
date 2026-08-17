@@ -56,13 +56,6 @@ React `<Axes>` 与 Vanilla `axes()` 接收同一 `AxesInput`、产生同一 `IRA
 
 本次实现已将公开 schema 调整为轴拥有字段：`origin` 统一承载 `position` 与 `label`；`x` / `y` 分别承载 `extent`、`grid`、`line`、`ticks` 与 `label`。顶层 `extent`、顶层 `grid` 与 `originLabel` 不再保留，`x: false` / `y: false` 改为在对应轴对象内关闭各类产物。该调整保持 Axes 的静态数学参考轴定位，不引入 Plot 的 scale、domain 或自动 tick 语义。
 
-## 被否决的方案
-
-- 将 Axes 做成数据坐标系：会侵入 Plot 的 domain、scale、guide 与 layout 所有权
-- 自动格式化 tick：需要数据类型、locale 与 formatter policy，不属于静态绘图 composite
-- 让 Axes 投影任意 children：需要独立 Cartesian space / projection 契约，不能隐式附着在轴线装饰上
-- 在 renderer 中特判轴线：现有 Path、Node 与 arrow 已足以表达最终结果
-
 ## 公开影响与兼容性
 
 - `@retikz/standard` 新增宿主无关 Axes IR、schema、definition 与 factory
@@ -70,12 +63,11 @@ React `<Axes>` 与 Vanilla `axes()` 接收同一 `AxesInput`、产生同一 `IRA
 - Axes 保存静态数学参考轴语义；lowering 后只产生既有 Core Path / Node
 - 内置 grid 是轻量快捷配置，不替代完整 `Grid`
 
-## 最终实现与验证摘要
+## 最终实现结果
 
 - Standard 已覆盖默认值、非对称 extent、单轴、四种箭头、两类 tick source、endpoint gap、静态文字、轻量 grid 与稳定 lowering 顺序
 - React 与 Vanilla adapter 对同一输入生成等价 IR，并只在当前图贡献同一 definition
 - 双语组件页、demo、controls、API 表与 source preview 已同步实际公开入口
-- Standard 三包的 lint、类型检查、全量测试和 build 已在 alpha.1 收尾验证通过
 
 ## 遗留边界
 

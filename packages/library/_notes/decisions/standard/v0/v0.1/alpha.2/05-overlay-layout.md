@@ -176,41 +176,12 @@ natural contribution、anchor translation、alignment、baseline aggregation、s
 </OverlayLayout>
 ```
 
-## 被否决的方案
-
-- 让Overlay等同“Grid同一cell”：无法直接表达局部position、anchor和size participation
-- 全局absolute coordinates：container不能复用/nest，且会侵入viewport/editor语义
-- anchor基于visual bounds：描边、阴影与renderer保守包络会改变authored位置
-- 根据placement隐式切换sizeParticipation默认值：同一字段的省略语义不稳定；统一include并要求浮层显式exclude
-- zIndex重排schema children：会破坏authored identity和adapter round-trip
-- 百分比/inset双端约束：需要额外的indefinite percentage与constraint resolution合同，alpha.2不引入
-
-## 影响
-
-- 新增 `standard.overlayLayout` 公开 schema / factory / Definition
-- 不新增全局坐标、Scene primitive、renderer或editor API
-- React / Vanilla 和 docs 由 alpha.3 ADR-06 统一接线
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete上层的container-local叠放
-- 解决的问题：任意IRChild的共享box对齐、局部anchor定位与稳定paint order
-- 主责包与协作包：Standard主责schema/solver；Core主责probe/replay/Scope zIndex/clip；adapter等价authoring
-- 是否可由现有能力组合：底层机制可组合，但overlay placement是Standard新能力
-- 是否需要下沉到依赖能力域：否
-- 内部表达链路：Overlay schema → contribution/placement纯函数 → Core Scope/replay
-- 外部扩展链路：语义闭合；custom child通过Core registry同路
-- 下游执行 / adapter 等价性：renderer只执行现有transform/clip/zIndex；React/Vanilla生成同一IR
-- 不支持边界与诊断：非法anchor/size/zIndex/kind与selected failure fail-loud；collision/viewport延期
-- 本轮结论：扩展Standard当前能力域
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 百分比位置、left/right双inset、viewport、global canvas
 - collision avoidance、automatic label placement、port/edge label
 - selection handles、drag constraints、history或interaction runtime
 - per-item clip/mask/effect
-- artifact payload、最终adapter和docs接线
 
 ## 遗留风险
 

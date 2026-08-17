@@ -34,8 +34,6 @@ Canvas 是 **即时模式**：alpha.5 ADR-03/04 确立的模型是**一条 scene
 
 ## 决策：复用 per-id 虚拟时钟，在共享 rAF 里激活非自动播 track
 
-**不新增 IR 字段**；只在 `@retikz/render/animation` runtime 与 canvas 渲染层复用既有「激活态 + 本地时间」，补齐事件 / visible 接线与回归测试。
-
 ### 1. per-id 激活态（runtime 态）
 
 runtime 继续维护 `IdClockRegistry`：
@@ -80,7 +78,6 @@ runtime 继续维护 `IdClockRegistry`：
 ## 影响范围
 
 - `packages/kernel/render/src/animation/*`（复用 `IdClockRegistry`；必要时补视口判定 helper，不新增 per-track registry）
-- `packages/kernel/render/src/canvas/*`（维持 `resolvePrimAnimation(id)` / `includeNonAutoplay` 契约，补必要回归测试）
 - `packages/kernel/react/src/render/canvasHost.tsx`（事件命中激活、视口接线）
 - `packages/kernel/vanilla/src/mountCanvas.ts`（事件命中激活、视口接线；不改变 `view.animation` 的 scene 级含义）
 - `packages/kernel/react/tests/animation.test.tsx`、`packages/kernel/vanilla/tests/animation.test.ts`
@@ -111,5 +108,3 @@ runtime 继续维护 `IdClockRegistry`：
 - 动画文档明确「SVG / Canvas 触发行为一致边界」：两模 `manual`/`visible`/`{ onEvent }` 语义对齐，差异只在实现机制（WAAPI vs Canvas per-id 虚拟时钟）。
 - 写清无 IO / SSR 下 `visible` 的降级方式（渲染 base）。
 - 文档区分 scene 级 `animationRef` / `view.animation` 与 handler context 的 per-id `ctx.animation`。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准。本 ADR 的「激活注册表 / 句柄」字段名为设计草案，施工时以实际导出为准。

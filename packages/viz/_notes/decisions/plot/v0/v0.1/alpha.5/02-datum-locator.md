@@ -79,7 +79,7 @@ locator 是**纯函数、不进 IR、不注册任何 core 元素**，不预建 N
 - **placement 全量收成单一真源**：初版只有 plain bar / point / sector 走 `datumAnchor`，**dodge / stack / polar-dodge interval 的摆放仍内联在 `mark.ts`** → locator 重算时漂移。已抽出 `buildIntervalContext` + `intervalRect`（cartesian 三变体）+ `intervalWedge`（polar 三变体）+ `sectorWedge`，`mark.ts` 所有 interval 路径与 locator **共用这同一套**，`mark.ts` 内不再留任何 inline 摆放数学。补 dodge/stack/polar-dodge 的 anchor↔lowering parity 测试。
 - **locator datum-id fail-loud 与 lowering 对齐**：`createPlotLocator` 构造时用与 lowering 同一 plot 级注册器对所有 datum mark × 已渲染行跑校验，缺字段 / 重复 → 与 `lowerPlots` 同样**抛错**（`resolve()` 仍对坏地址返回 null、不抛）。`resolve` 地址语义明确为「索引/值地址」（`datum.<transformedIndex>` / `series.<value>`），非绑定的 `Node.id`；series 值匹配加 `String()` 兜底（数值可寻址，含 `.` 的值不可经 resolve 寻址）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **反向 hit-test（屏幕坐标 → datum）/ 空间索引 / 最近邻**：v0.3 交互层（在正向映射上建索引）。
 - **事件回调（onHover / onClick）**：v0.3，落 `@retikz/plot-react` / `-vanilla`。

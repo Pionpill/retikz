@@ -48,7 +48,7 @@ type LegendStyle = {
 3. 动态 item 尺寸修复了根因：即使用户显式配置很大的 `symbolScale` 或 `preserve`，legend 也会为最终符号留出条目空间。
 4. 字段全部是 JSON-safe 标量，不引入 renderer 测量、DOM 或函数。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - legend 整体 `maxWidth` / `maxHeight`、滚动、分页、自动换行和列布局。
 - color ramp 的自动压缩或 tick label 避让。
