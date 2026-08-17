@@ -1,154 +1,113 @@
 ---
-title: Algorithms
-description: Compute line, circle, and ray-arc intersections, enclosing circles, convex hulls, and smooth curves with @retikz/math.
+title: Geometric algorithms
+description: Compute relationships between geometric objects and derive intersections, circles, convex hulls, and point-fitting curves from existing data with @retikz/math.
 ---
 
-Algorithms derive new geometry from existing points, lines, circles, and arcs. They create no IR and throw no geometry-specific exceptions; degenerate inputs are expressed as `null`, empty arrays, or booleans.
+Primitives describe points, vectors, circles, and arcs. Algorithms combine those values to answer questions such as “where do they intersect?”, “which circle covers these points?”, or “how can I make a smooth curve through them?”. They handle mathematical and geometric relationships only; they do not create IR or depend on a renderer.
 
-```ts
-import { circle, convexHull, curve, intersect, polygon, rayArc, triangle } from '@retikz/math';
-import type { RayArcInput } from '@retikz/math';
-```
+## Contents
 
-The default tolerance is a naive `DEFAULT_EPSILON = 1e-9`. It suits drawing-scale coordinates but is not a robust predicate at arbitrary magnitudes.
+### Intersections
 
-## Choosing an algorithm
+Intersection algorithms find the points shared by two lines, two segments, a line and a circle, or two circles. Results are coordinate points; no intersection or degenerate input is expressed as `null` or an empty array.
 
-| Problem                                      | API                       | Result                                       |
-| -------------------------------------------- | ------------------------- | -------------------------------------------- |
-| Intersect lines, segments, or circles        | `intersect.*`             | One point, an array of points, or no result  |
-| Intersect a ray with an arc                  | `rayArc`                  | Positive ray parameters in ascending order   |
-| Find a triangle's in-circle or circum-circle | `triangle.*`              | `Circle` or `null`                           |
-| Find the smallest circle enclosing points    | `circle.minimalEnclosing` | `Circle` or `null`                           |
-| Test whether a point is inside a polygon     | `polygon.containsPoint`   | `boolean`                                    |
-| Find the smallest convex boundary            | `convexHull`              | Boundary vertices in counter-clockwise order |
-| Fit a smooth curve through knots             | `curve.catmullRomToCubic` | An array of cubic Bézier segments            |
+Use the panel to switch between lines, segments, line/circle, and circle/circle cases. Choose “Line intersection beyond strokes” to see that the solid strokes are only finite visual excerpts: `lineLine` still computes the intersection of the infinitely extended lines, so it can return a purple point even when the two visible strokes do not touch. “Disjoint segments” provides the contrasting finite-range `segmentSegment` result.
 
-## Intersections
-
-`intersect` returns coordinate points for the selected geometry. A line is defined either by two points or by an origin plus direction; direction vectors need not be normalized.
-
-```ts
-const hit = intersect.lineLine({
-  a1: [-40, -20],
-  a2: [60, 30],
-  b1: [0, -50],
-  b2: [0, 50],
-});
-
-const circleHits = intersect.lineCircle({
-  origin: [-80, 0],
-  dir: [1, 0],
-  center: [0, 0],
-  radius: 40,
-});
-```
-
-Use the panel to switch among line-line, line-circle, and circle-circle cases, then try crossing, parallel, tangent, and disjoint presets. Purple points are the returned coordinates; `|I|` is the result-array length.
-
-<ComponentPreview files="intersection-playground" size="sm" caption="Intersection results and degenerate inputs" />
-
-| Function         | Returns and degeneracy                                                                                                 |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `lineLine`       | Infinite-line hit; parallel or collinear lines return `null`                                                           |
-| `segmentSegment` | One segment hit; disjoint, parallel, collinear, or overlapping segments return `null`                                  |
-| `lineCircle`     | 0 or 2 points; tangency returns two points with identical coordinates                                                  |
-| `circleCircle`   | 0 or 2 points; disjoint, contained, or coincident circles return an empty array; tangency returns two identical points |
-
-For ray-arc intersections, use `rayArc`; it returns ray parameters rather than coordinates.
-
-## Enclosure and containment
-
-`triangle.circumCircle` finds the circle through three vertices, while `triangle.inCircle` finds the circle tangent to all three sides. Both return `null` for collinear points.
-
-`circle.minimalEnclosing(points)` returns the smallest circle covering every input. An empty set returns `null`, and one point returns a radius-zero circle. The deterministic iterative Welzl implementation has worst-case `O(n³)` time and `O(1)` auxiliary space.
-
-`polygon.containsPoint(vertices, point)` uses the even-odd rule, supports concave polygons and either winding, and returns `false` for fewer than three vertices. Boundary points are undefined; handle on-edge tests separately when they matter.
-
-`convexHull(points)` uses Andrew's monotone chain, returns counter-clockwise vertices, and drops collinear middle points. For fewer than three points or all-collinear input, it returns sorted, de-duplicated endpoints.
-
-<ComponentPreview files="convex-hull" size="sm" hideCode />
-
-## Smooth curves through points
-
-`curve.catmullRomToCubic` turns knots into a chain of cubic Bézier segments that passes through every knot. It is also the algorithm behind `<Step kind="smooth">`.
-
-```ts
-const segments = curve.catmullRomToCubic(
-  [
-    [-80, 20],
-    [-20, -40],
-    [30, 30],
-    [90, -10],
-  ],
-  1,
-);
-```
-
-It uses centripetal Catmull-Rom (α=0.5), which reduces the risk of cusps and loops with uneven spacing compared with uniform parameterization. It does not guarantee freedom from self-intersections for arbitrary knots and `tension`. `tension = 1` is standard; lower values shorten handles, while higher values amplify bends.
-
-<ComponentPreview files="curve-playground" size="sm" caption="Knots, tension, and cubic Bézier output" />
-
-At least two knots are required. The function returns `knots.length - 1` segments, and each endpoint lands exactly on the next knot. Open ends use one-sided tangents; coincident knots fall back to `DEFAULT_EPSILON` spacing to keep output finite.
-
-<Comparison target="tikz">
-  TikZ also uses `tension` for curve looseness. Start with the same value when migrating, then adjust for the actual
-  spacing and any excessive bends.
-</Comparison>
-
-## API summary
-
-| Group         | Public types / APIs                                         | No-result or degenerate behavior                                                |
-| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Intersections | Three input types plus four `intersect` methods             | `null` or empty array; tangency preserves two coincident hits                   |
-| Ray-arc       | `RayArcInput`, `rayArc`                                     | Zero direction or no hit returns an empty array; positive parameters are sorted |
-| Circles       | `Circle`, two `triangle` methods, `circle.minimalEnclosing` | Collinear triangles and empty point sets return `null`                          |
-| Polygons      | `polygon.containsPoint`, `convexHull`                       | Containment is `false` below three vertices; hull keeps endpoints               |
-| Curves        | `CubicSegment`, `curve.catmullRomToCubic`                   | Below two knots returns an empty array; coincident knots stay finite            |
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Intersection implementation',
-      path: 'packages/kernel/math/src/algorithms/intersect.ts',
-      startLine: 1,
-      endLine: 115,
-    },
-    {
-      label: 'Arc intersection implementation',
-      path: 'packages/kernel/math/src/algorithms/arc-intersection.ts',
-      startLine: 1,
-      endLine: 48,
-    },
-    {
-      label: 'Triangle-circle implementation',
-      path: 'packages/kernel/math/src/algorithms/triangle.ts',
-      startLine: 1,
-      endLine: 41,
-    },
-    {
-      label: 'Minimal enclosing circle implementation',
-      path: 'packages/kernel/math/src/algorithms/circle.ts',
-      startLine: 1,
-      endLine: 66,
-    },
-    {
-      label: 'Polygon implementation',
-      path: 'packages/kernel/math/src/algorithms/polygon.ts',
-      startLine: 1,
-      endLine: 22,
-    },
-    {
-      label: 'Convex hull implementation',
-      path: 'packages/kernel/math/src/algorithms/hull.ts',
-      startLine: 1,
-      endLine: 37,
-    },
-    {
-      label: 'Point-fitting curve implementation',
-      path: 'packages/kernel/math/src/curve/catmull-rom.ts',
-      startLine: 1,
-      endLine: 72,
-    },
-  ]}
+<ComponentPreview
+  files="intersection-playground"
+  size="md"
+  caption="Switch the geometric relation and observe intersections and degenerate cases"
 />
+
+#### API reference
+
+The input types are `LineLineInput` (two lines or segments defined by endpoints), `LineCircleInput` (a line and a circle), and `CircleCircleInput` (two circles). The table lists the intersection methods
+
+| API                        | Complexity            | Purpose                                                                                                |
+| -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `intersect.lineLine`       | Time O(1), space O(1) | Find the intersection of two infinite lines; return `null` if parallel or collinear                    |
+| `intersect.segmentSegment` | Time O(1), space O(1) | Find the intersection of two segments; return `null` if disjoint, parallel, collinear, or overlapping  |
+| `intersect.lineCircle`     | Time O(1), space O(1) | Find line/circle intersections; return 0 or 2 points and keep two coincident points for tangency       |
+| `intersect.circleCircle`   | Time O(1), space O(1) | Find circle/circle intersections; return an empty array for disjoint, contained, or coincident circles |
+
+### Ray-arc intersections
+
+Ray-arc input includes a circle center, radius, start angle, and end angle. `rayArc` returns a ray parameter `s`; the actual point is `origin + s * dir`. Only intersections in the ray's forward direction are kept.
+
+<ComponentPreview files="ray-arc" size="md" caption="Purple points mark the intersections between the arc and ray" />
+
+#### Ray-arc API
+
+The `RayArcInput` type describes the ray origin, direction, and arc range. The table lists the intersection method
+
+| API      | Complexity            | Purpose                                                                |
+| -------- | --------------------- | ---------------------------------------------------------------------- |
+| `rayArc` | Time O(1), space O(1) | Return forward ray parameters for arc intersections in ascending order |
+
+### Circles and triangles
+
+These algorithms construct circles from a triangle or a point set. Use the “Construction” control to view one scheme at a time: a circumcircle passes through the triangle's three vertices, an incircle touches all three sides, and a minimal enclosing circle covers a point set. The panel's point controls are the algorithm inputs, so moving them shows how the result follows the geometry. Collinear or otherwise degenerate triangles return `null`.
+
+The demo shows only the selected construction, keeping these different geometric questions separate.
+
+<ComponentPreview
+  files="circle-constructions"
+  size="md"
+  caption="Compare a triangle's circumcircle and incircle with a point set's minimal enclosing circle"
+/>
+
+#### API reference
+
+The `Circle` type represents a circle with a center and radius. The table lists the three circle-construction methods
+
+| API                       | Complexity                    | Purpose                                                                                 |
+| ------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `triangle.circumCircle`   | Time O(1), space O(1)         | Construct a circumcircle; return `null` for collinear or degenerate points              |
+| `triangle.inCircle`       | Time O(1), space O(1)         | Construct an incircle; return `null` for a degenerate triangle                          |
+| `circle.minimalEnclosing` | Average time O(n), space O(1) | Construct the smallest circle covering all input points; return `null` for an empty set |
+
+### Polygons and convex hulls
+
+Polygon containment asks whether a point lies inside a polygon and supports concave polygons and either vertex winding. A convex hull keeps only the outermost points and returns a counter-clockwise convex polygon. The two operations serve different purposes: containment preserves the original polygon, while a hull covers its concave regions.
+
+The demo uses a light-gray line for the original polygon and an orange line for its convex hull. The panel provides multiple movable test points: points turn green inside the polygon and red outside. The default set includes an ordinary interior point, an exterior point, and a point outside the concave indentation.
+
+<ComponentPreview
+  files="polygon-containment"
+  size="md"
+  caption="Observe polygon containment and the convex-hull boundary together"
+/>
+
+The result for a boundary point from `polygon.containsPoint` is undefined; add an explicit point-on-segment test when boundary ownership matters. `convexHull` de-duplicates points and drops collinear middle points. With fewer than three points or an all-collinear set, it returns the sorted endpoint set.
+
+#### API reference
+
+| API                     | Complexity                  | Purpose                                                                  |
+| ----------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| `polygon.containsPoint` | Time O(n), space O(1)       | Use the even-odd rule to test whether a point is inside a simple polygon |
+| `convexHull`            | Time O(n log n), space O(n) | Build a counter-clockwise convex hull and remove collinear middle points |
+
+### Curves through points
+
+The point-fitting curve algorithm turns a sequence of knots into connected cubic Bézier segments. The curve passes through the input knots rather than merely approaching them; `tension` controls handle length and bend strength. This is also the algorithm behind `<Step kind="smooth">`.
+
+Use the panel to compare uneven spacing, zigzags, and coincident points, then move the control point to see the curve update. The expandable source view shows `CubicSegment` as two control points and an endpoint for each segment.
+
+<ComponentPreview files="curve-playground" size="md" caption="Compare point sets, tension, and cubic Bézier segments" />
+
+At least two knots are required. The function returns `knots.length - 1` segments, and each segment ends exactly at the next knot. Open ends use one-sided tangents; coincident knots still produce finite output, but arbitrary inputs are not guaranteed to be self-intersection-free.
+
+#### API reference
+
+The `CubicSegment` type represents two control points and an endpoint of a cubic Bézier segment. The table lists the point-fitting curve conversion method
+
+| API                       | Complexity            | Purpose                                                          |
+| ------------------------- | --------------------- | ---------------------------------------------------------------- |
+| `curve.catmullRomToCubic` | Time O(n), space O(n) | Convert a sequence of knots into connected cubic Bézier segments |
+
+## Related
+
+- [Base packages overview](/kernel/packages/base)
+- [Foundation](/kernel/packages/base/foundation)
+- [Geometric primitives](/kernel/packages/base/math-primitives)
+- [Coordinate transforms](/kernel/packages/base/math-transforms)

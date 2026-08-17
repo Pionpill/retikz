@@ -174,24 +174,6 @@ class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
 
 不满足条件的 helper、对象 / 数组 schema、几何算法、Diagnostic、错误目录和领域 resolver 应留在当前 owner。重复出现时先重新判断语义 owner，而不是把逻辑汇总进 Foundation。
 
-## API 参考
-
-| 分类 | 导出                       | 类型 / 用途                                     |
-| ---- | -------------------------- | ----------------------------------------------- |
-| 类型 | `ValueOf`                  | 对象 value 联合                                 |
-|      | `AssertEqual`              | 双向等价判断                                    |
-|      | `OpenString`               | 开放字符串                                      |
-| 契约 | `NonBlankStringSchema`     | 保留原值的非空白字符串 Zod schema               |
-|      | `PositiveNumberSchema`     | 正有限数 Zod schema                             |
-|      | `NonNegativeNumberSchema`  | 非负有限数 Zod schema                           |
-|      | `PositiveIntegerSchema`    | 正 safe integer Zod schema                      |
-|      | `NonNegativeIntegerSchema` | 非负 safe integer Zod schema                    |
-|      | `NormalizedFractionSchema` | `0..1` 闭区间 Zod schema                        |
-| 断言 | `assertNonEmptyString`     | typed string 非空断言                           |
-| 报错 | `RetikzErrorOptions`       | 结构化错误构造参数类型                          |
-|      | `RetikzError`              | 可继承的结构化错误基类                          |
-|      | `isRetikzError`            | Foundation class hierarchy 的普通分类 predicate |
-
 ## 相关
 
 - [内核包总览](/kernel/packages)
