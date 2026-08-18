@@ -10,6 +10,8 @@ describe('@retikz/chart-vanilla public surface', () => {
     expect(chart).not.toHaveProperty('createScatterChart');
     expect(chart).not.toHaveProperty('createBubbleChart');
     expect(chart).not.toHaveProperty('createConnectedScatterChart');
+    expect(chart).not.toHaveProperty('normalizeChart');
+    expect(chart).not.toHaveProperty('PointChartInputEmbedAdapter');
   });
 
   it('exports Point typed factories and base authoring from the Point entry', () => {
@@ -18,5 +20,7 @@ describe('@retikz/chart-vanilla public surface', () => {
     expect(point.createScatterChart).toBeDefined();
     expect(point.createBubbleChart).toBeDefined();
     expect(point.createConnectedScatterChart).toBeDefined();
+    expect(point).not.toHaveProperty('normalizeChart');
+    expect(point).not.toHaveProperty('PointChartInputEmbedAdapter');
   });
 });

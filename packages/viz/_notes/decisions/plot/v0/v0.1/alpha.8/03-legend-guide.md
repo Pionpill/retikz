@@ -84,7 +84,7 @@ export type ScaleDescriptor = {
 - color legend 覆盖 interval / sector 等 datum color，shape legend 使用编码 glyph；legend 绑定不兼容的 scale family 时 fail-loud。
 - 连续 legend 的取色与 ticks 使用显式 scale domain，省略时才从数据推断；最终布局与 theme token 由 alpha.15 guide / theme ADR 承接。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **legend 自动派生**（声明通道即自动出）→ alpha.15 theme auto-guide。
 - **legend 交互**（hover 高亮 / 点击筛选）→ v0.3 交互线（依赖 core 水合）。

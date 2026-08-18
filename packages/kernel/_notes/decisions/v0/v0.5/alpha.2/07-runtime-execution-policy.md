@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-29
 - 接受日期：2026-07-29
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [ADR-04](./04-incremental-core-compile.md) · [ADR-05](./05-scene-patch-retained-renderer.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
+- 关联：[ADR-03](./03-program-transaction-lifecycle.md) · [ADR-04](./04-incremental-core-compile.md) · [ADR-05](./05-scene-patch-retained-renderer.md)
 
 ## 背景
 
@@ -95,47 +95,12 @@ IR / plain spec 配 `mode: 'static'` 时，mount 与每次 `view.update(next)` �
 
 Static没有candidate、commit或rollback。compile / normalization在宿主写入前失败时旧画面与公开getter保持不变；SVG / Canvas materialization、动画或hydration切换在写宿主期间失败时错误同步抛出，但不承诺恢复旧画面，调用方必须dispose并remount。文档不得把static描述为事务安全模式。
 
-## Bench A/B 契约
-
-Bench复用同一5000实体fixture，为SVG与Canvas分别增加三个稳定场景ID：
-
-- `<backend>-policy-static-full-5000`
-- `<backend>-policy-retained-full-5000`
-- `<backend>-policy-retained-auto-5000`
-
-`DeterministicBenchmarkResult`与budget增加可选、闭合的`execution`字段：
-
-```ts
-type BenchmarkExecution = Readonly<{
-  mode: 'static' | 'retained';
-  updateStrategy?: 'auto' | 'full';
-  outcome: 'full' | 'incremental' | 'fallback';
-  source: 'static-view' | 'runtime-trace';
-}>;
-```
-
-Static场景的`full`来自公开`view.mode === 'static'`与static update完整重绘契约，source固定为`static-view`；retained场景必须从Runtime/Core/Render trace取得唯一outcome，source为`runtime-trace`，漏报或多报使场景失败。三路都与独立full oracle对账。
-
-六个deterministic场景进入tracked baseline并逐字段对账execution；三组wall-clock只写入ignored report用于手动A/B，本ADR不把新场景加入`relativeGuards`，也不修改fingerprint timing baseline。待稳定样本人工审查后再独立批准timing gate，不能用当前机器一次结果直接冻结绝对预算。
-
-## 测试策略摘要
-
-- Runtime：默认 auto 调用 Program update；full 跳过 update 并以 full outcome 调用 run；invalid strategy fail-loud；fallback 与 upstream full 语义不变；rollback、bailout、无关 Program 与 continuous participant 不退化。
-- Core / Render：forced full 产出 replaceScene；Core trace 为 full；Render直接replace为full、capability扩大为fallback、局部Patch为incremental；三者均与完整Snapshot一致。
-- React：缺省 retained + auto；static SVG / Canvas 不创建Session且与完整Scene输出等价；retained + full在更新时完整物化；mode切换释放旧宿主；static互斥字段拒绝。
-- Vanilla：IR与plain spec的static mount/update完整重绘且保留root identity、runtimeMeta、artifacts、hydration与animation语义；retained + full保留事务；默认行为不变；预编译Scene继续拒绝runtime。
-- Bench：同一场景显式运行 retained auto、retained full 与 static full，并按上述结构分别报告 execution outcome；deterministic进入tracked baseline，新增wall-clock仅进入ignored report。
-- Docs：React / Vanilla 中英文包页面同步参数、默认值、内存与能力差异以及可运行示例。
-
-## 实现摘要与验证
+## 最终结果
 
 - Runtime公开`RuntimeUpdateStrategy`，Session在创建时固定`auto | full`；Program context准确区分`full | incremental | fallback`，invalid ChangeSet仍优先归为fallback。
 - Core forced full发布独占`replaceScene`，Render区分直接replace full、局部incremental与capability fallback。
 - React `<Layout>`与Vanilla raw-input mount对等支持static、retained full与默认retained auto；React strategy变化在同一host重建Session，Vanilla改变策略需dispose/remount。
-- Bench为SVG/Canvas加入六个共享5000实体确定性场景与ignored wall-clock A/B；tracked baseline冻结execution来源与工作量，不扩张timing guard。
-- React/Vanilla中英文包页面与v0.5 changelog已同步参数、默认值、内存/rollback差异及失败语义。
-
-验证覆盖 Runtime/Core/Render 的策略传播与可观察 outcome、React/Vanilla 三种公开执行组合、SVG/Canvas 完整 oracle、确定性 budget 和双语文档一致性。
+- Bench 观测 retained/static 的 execution outcome，但不改变运行时契约或 timing gate
 
 ## 影响
 
@@ -145,27 +110,7 @@ Static场景的`full`来自公开`view.mode === 'static'`与static update完整�
 - React / Vanilla 对等暴露 mode 与 updateStrategy；默认行为、既有 IR、Scene schema 和 static SSR API 不变。
 - 新增公开 options 与默认值，必须同步双语文档和 Bench A/B 场景。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：不扩张 Drawing IR；属于 Runtime execution 与 adapter host lifecycle 的执行策略面
-- 解决的问题：调用方无法区分无 Session static 执行与 retained Session forced-full 执行，也无法用公共契约做 A/B
-- 主责包与协作包：`@retikz/runtime`拥有 Program update strategy；React / Vanilla拥有宿主 mode；Core / Render只消费执行结果
-- 是否可由现有能力组合：static与retained路径均已存在，但缺少公共选择和Runtime forced-full调度，需扩展现有options而非新增平行pipeline
-- 是否需要下沉到依赖能力域：updateStrategy下沉Runtime；mode不下沉Core，避免Core拥有宿主生命周期
-- 内部表达链路：adapter mode选择既有static或Session路径；Session strategy选择Program run/update；Core产Patch；Render按Patch物化
-- 外部扩展链路：第三方Program从统一context读取execution并继续由`defineRuntimeProgram`接入；第三方retained renderer继续消费同一replace/local Patch并由既有factory接入
-- define-registry：不适用。strategy与mode是保护统一transaction/host分派的不开放闭合枚举，允许任意注册会破坏fallback precedence与adapter能力判别；开放执行单元仍复用既有Program definition和renderer factory
-- 下游执行 / adapter 等价性：React与Vanilla同值、同默认值、同互斥规则；SVG与Canvas同时覆盖static、retained full与auto
-- 不支持边界与诊断：不提供逐次update动态切换策略；不把full宣称为低内存；非法组合fail-loud；不改变SSR/预编译Scene入口
-- 本轮结论：扩展既有Runtime Session contract与adapter宿主配置，Drawing IR / Scene schema不变
-
-## 被否决的选项
-
-1. 单一 `incremental: boolean`：无法说明false是否仍保留Snapshot与rollback，也无法表达static与retained full的内存差异。
-2. 把两个字段放入 `RenderRuntimeConfig`：mode在renderer创建前决定是否存在Runtime，updateStrategy控制Program调度，Render不是所有者。
-3. 只给Bench私有forced-full factory：产品调用方仍不能因内存或诊断需要选择执行方式，React / Vanilla继续不对等。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 逐次update切换auto/full；改变策略需dispose/remount
 - 自适应内存阈值、自动从retained降为static

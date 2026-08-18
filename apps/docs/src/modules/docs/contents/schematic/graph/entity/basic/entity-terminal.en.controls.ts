@@ -1,0 +1,45 @@
+import type { PreviewControlContract } from '@/modules/docs/preview';
+
+import { definePreviewControls } from '@/modules/docs/preview';
+
+import { EntityTerminalControlId } from './entity-terminal.controls';
+
+/** Controls for the terminal playground */
+export const entityTerminalControls = definePreviewControls({
+  presentation: 'panel',
+  title: 'Entity: terminal',
+  sections: [
+    {
+      label: 'Visuals and content',
+      controls: [
+        { kind: 'color', id: EntityTerminalControlId.Color, label: 'Color', defaultValue: 'currentColor' },
+        {
+          kind: 'select',
+          id: EntityTerminalControlId.Variant,
+          label: 'Visual variant',
+          defaultValue: 'default',
+          options: [
+            { value: 'default', label: 'Default' },
+            { value: 'fill', label: 'Fill' },
+            { value: 'mixed', label: 'Mixed' },
+          ],
+        },
+        {
+          kind: 'text',
+          id: EntityTerminalControlId.Content,
+          label: 'Inner content',
+          defaultValue: 'Start',
+          placeholder: 'Enter node content',
+          multiline: true,
+        },
+      ],
+    },
+  ],
+});
+
+/** Stable documentation contract for the terminal playground */
+export const previewControlContract = {
+  controls: entityTerminalControls,
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Start' },
+  relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
+} satisfies PreviewControlContract;

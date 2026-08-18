@@ -1,0 +1,253 @@
+---
+title: Entity 扩展用法
+description: 为 Entity 扩展 Theme、role 和 variant
+---
+
+Entity 扩展用法适合三类需求：增加新的图式语义和几何默认值、复用一组视觉表达，或按 Theme / role / variant 批量覆盖 Entity 样式。Definition 只在一次编译或渲染所使用的 assembly（装配集合）中生效，持久化 IR 仍只保存 `role`、`variant` 和 JSON-safe 参数；重新加载包含自定义 key 的 IR 时，必须再次提供对应 Definition
+
+## 自定义扩展
+
+如果只需要调整一个 Entity，直接使用 Node 属性即可；当多个 Entity 需要共享语义、几何默认值或主题规则时，再注册 Definition。Graph 的扩展入口按职责拆分：role 负责几何默认值，variant 负责 Entity 外观，Theme style 负责 token baseline 与 selector rules
+
+| API                       | 职责                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| `defineEntityRole()`      | 注册 role key 与 `shape`、`padding`、`minimumSize` 等几何默认值；Entity 显式字段逐项优先 |
+| `defineEntityVariant()`   | 注册 variant key；根据 `theme` 和物化后的 `color` 返回稀疏 `GraphThemeToken`，只负责外观 |
+| `defineGraphThemeStyle()` | 注册与 Core Theme style 同名的 Graph Theme token baseline 与 selector rules              |
+
+```ts
+import { defineThemeStyle, ThemeMode } from '@retikz/core';
+import {
+  defineEntityRole,
+  defineEntityVariant,
+  defineGraphThemeStyle,
+  getDefaultGraphThemePreset,
+  GraphThemeToken,
+} from '@retikz/graph';
+
+const brandCoreTheme = defineThemeStyle({
+  name: 'brand',
+  resolve: ({ mode }) => ({
+    semantic: {
+      error: mode === ThemeMode.Light ? '#dc2626' : '#fca5a5',
+      success: mode === ThemeMode.Light ? '#16a34a' : '#86efac',
+      warning: mode === ThemeMode.Light ? '#ca8a04' : '#fde047',
+    },
+    categorical: ['#2563eb'],
+  }),
+});
+
+const serviceRole = defineEntityRole({
+  role: 'service',
+  shape: { type: 'rectangle', params: { cornerRadius: 10 } },
+  padding: { x: 14, y: 8 },
+});
+
+const mutedVariant = defineEntityVariant({
+  variant: 'muted',
+  resolve: ({ color }) => ({
+    [GraphThemeToken.EntityTextForeground]: color,
+    [GraphThemeToken.EntityStroke]: 'none',
+    [GraphThemeToken.EntityFill]: color,
+    [GraphThemeToken.EntityFillOpacity]: 0.12,
+  }),
+});
+
+const brandGraphTheme = defineGraphThemeStyle({
+  name: 'brand',
+  resolve: theme => ({
+    tokens: {
+      ...getDefaultGraphThemePreset(theme),
+      [GraphThemeToken.EntityStrokeOpacity]: theme.mode === ThemeMode.Light ? 0.7 : 0.9,
+    },
+    tokenRules: [
+      {
+        select: { variant: 'muted' },
+        tokens: {
+          [GraphThemeToken.EntityFillOpacity]: theme.mode === ThemeMode.Light ? 0.2 : 0.3,
+        },
+      },
+    ],
+  }),
+});
+
+const options = {
+  entityRoles: [serviceRole],
+  entityVariants: [mutedVariant],
+  graphThemeStyles: [brandGraphTheme],
+};
+```
+
+variant 只拥有外观，不得改变 role、shape 或其它几何字段
+
+### Vanilla 用法
+
+Vanilla authoring 直接在 `graph()` 的输入上声明当前 Graph 子树使用的 Definition。Core Theme style 仍通过 Vanilla 的 `compile.themeStyles` 注入；`createGraphVanillaAdapters()` 只负责装载 Graph embed adapter：
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { createGraphVanillaAdapters, entity, graph } from '@retikz/graph-vanilla';
+
+const svg = renderToSvgString(
+  {
+    theme: { style: 'brand' },
+    children: [
+      graph('service-map', {
+        entityRoles: [serviceRole],
+        entityVariants: [mutedVariant],
+        graphThemeStyles: [brandGraphTheme],
+        children: [
+          entity('service', {
+            role: 'service',
+            variant: 'muted',
+            position: [0, 0],
+            text: '服务',
+          }),
+        ],
+      }),
+    ],
+  },
+  {
+    adapters: createGraphVanillaAdapters(),
+    compile: { themeStyles: [brandCoreTheme] },
+  },
+);
+```
+
+### React 用法
+
+React authoring 与 Core / Standard 的写法一致，直接在 `<Graph>` 上声明 Definition；根 `<Layout>` 同时提供 Core Theme style。扩展内容只作用于当前 Graph 子树，不会写入持久化 IR：
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Entity, Graph } from '@retikz/graph-react';
+
+const view = (
+  <Layout theme={{ style: 'brand' }} themeStyles={[brandCoreTheme]}>
+    <Graph
+      id="service-map"
+      entityRoles={[serviceRole]}
+      entityVariants={[mutedVariant]}
+      graphThemeStyles={[brandGraphTheme]}
+    >
+      <Entity id="service" role="service" variant="muted" position={[0, 0]}>
+        服务
+      </Entity>
+    </Graph>
+  </Layout>
+);
+```
+
+如果已经拥有持久化 IR，继续使用 `createGraphDefinitions(options)`，并同时提供匹配的 Core `themeStyles`：`<Layout ir={scene} composites={createGraphDefinitions(options)} themeStyles={[brandCoreTheme]}>`。Definition 函数属于运行时装配，不进入 Graph IR；缺少自定义 Definition 时，IR 中的对应 key 会在 lookup 阶段明确报错
+
+## Graph Theme 选择器
+
+`defineGraphThemeStyle()` 与同名 Core Theme style 配对。它先给出完整 Graph token baseline，再按声明顺序应用 `tokenRules`；selector 中 `role` 或 `variant` 数组表示 OR，同时存在两个字段时表示 AND，后面的匹配规则覆盖前面的同一 token
+
+<ComponentPreview
+  files="entity-theme-selector"
+  size="md"
+  caption="切换主题模式和全局 token，再选择一个 Entity，观察 Theme style 与 Graph 局部 rule 的级联结果"
+/>
+
+Graph root 也可用 `graphThemeTokens` 和 `graphThemeTokenRules` 做局部覆盖。级联顺序是 Theme style baseline、variant、Theme style rules、从外到内的 Graph layers、最后是 Entity 显式字段
+
+## 执行机制
+
+<ComponentAlert
+  type="tip"
+  title="第一次使用可跳过本节"
+  description="先完成 Definition 定义与注入；需要理解 registry、Theme 解析和 lowering 边界时再阅读本节。"
+/>
+
+Entity schema、Definition registry、Theme resolver 和 lowering 按下图协作，最终只把 Core 可消费的 `Scope` 与 `Node` 留在 Kernel IR 中
+
+<ComponentPreview
+  files="entity-lowering-flow"
+  size="xs"
+  hideCode
+  caption="Entity 从 Graph IR 经过 registry、解析与 lowering，最终进入 Kernel IR"
+/>
+
+带 Theme 的 Core `Scope` 会建立新的 Graph Theme baseline：有效 variant 继续向内传递，外层 Graph token / rule 到边界为止。未知第三方 composite 保持不透明
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Entity role Definition 契约',
+      path: 'packages/schematic/graph/src/contract/entity/types.ts',
+      startLine: 5,
+      endLine: 15,
+    },
+    {
+      label: 'Entity variant Definition 契约',
+      path: 'packages/schematic/graph/src/contract/entity/types.ts',
+      startLine: 17,
+      endLine: 31,
+    },
+    {
+      label: 'Provider assembly 的 definition identity 合并',
+      path: 'packages/schematic/graph/src/providers/runtime/options.ts',
+      startLine: 26,
+      endLine: 66,
+    },
+    {
+      label: 'Entity token 级联与最终下沉',
+      path: 'packages/schematic/graph/src/resolve/entity/resolve.ts',
+      startLine: 62,
+      endLine: 137,
+    },
+    {
+      label: 'Graph Theme style 解析',
+      path: 'packages/schematic/graph/src/resolve/theme/resolve.ts',
+      startLine: 9,
+      endLine: 25,
+    },
+    {
+      label: 'Graph presentation lowering 与 Theme Scope 传播',
+      path: 'packages/schematic/graph/src/pipeline/presentation/lower.ts',
+      startLine: 32,
+      endLine: 47,
+    },
+  ]}
+/>
+
+执行时会对扩展输入 fail-loud：
+
+- custom key 为空、与内置 key 重复，或同一 assembly 出现同 key 的不同 Definition 对象时立即失败，不按顺序覆盖
+- Entity 引用未注册 role / variant，selector 引用未知 key，或 Core Theme style 没有同名 Graph Theme style 时立即失败
+- custom role 的 `shape` 仍由 Core shape registry 解析；Graph 不把未知 shape 替换成 rectangle
+- `currentColor` 在 Light / Dark 下分别物化为 `#000000` / `#ffffff` 后再进入 variant recipe
+- Graph Theme selector 只匹配 Entity；Relation、Container 外壳和第三方 composite 不受这些 token 影响
+
+## API 参考
+
+### 公开导出
+
+| 导出                                                  | 包                      | 用途                                                  |
+| ----------------------------------------------------- | ----------------------- | ----------------------------------------------------- |
+| `defineEntityRole` / `EntityRoleDefinition`           | `@retikz/graph`         | 定义 role 几何默认值                                  |
+| `defineEntityVariant` / `EntityVariantDefinition`     | `@retikz/graph`         | 定义 Theme-aware 外观 recipe                          |
+| `defineGraphThemeStyle` / `GraphThemeStyleDefinition` | `@retikz/graph`         | 定义 Graph token baseline 与 selector rules           |
+| `GraphThemeToken`                                     | `@retikz/graph`         | 八个 Entity presentation token                        |
+| `createGraphDefinitions` / `createGraphProviders`     | `@retikz/graph`         | 为直接 compile 或 provider graph 装配 Definition      |
+| `GraphProps`                                          | `@retikz/graph-react`   | 在 `<Graph>` 上直接声明 Definition options            |
+| `InputGraph`                                          | `@retikz/graph-vanilla` | 在 `graph()` 上直接声明 Definition options            |
+| `createGraphVanillaAdapters`                          | `@retikz/graph-vanilla` | 装载 Graph、Container、Entity、Relation embed adapter |
+
+### 定义与配置
+
+| 契约                        | 字段                                                           | 语义                                                                           |
+| --------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `EntityRoleDefinition`      | `role`<br />`shape`<br />`padding`<br />`minimumSize?`         | role key 与可被 Entity 显式覆盖的几何值                                        |
+| `EntityVariantDefinition`   | `variant`<br />`resolve(context)`                              | variant key 与稀疏外观 token recipe；context 提供 `theme` 与已物化的 `color`   |
+| `GraphThemeStyleDefinition` | `name`<br />`resolve(theme)`                                   | 与 Core style 同名的 Graph Theme 解析器；返回完整 `tokens` 与有序 `tokenRules` |
+| `GraphDefinitionOptions`    | `entityRoles?`<br />`entityVariants?`<br />`graphThemeStyles?` | 一次装配共享的用户 Definition 集合                                             |
+
+`GraphThemeToken` 包含主色、正文前景、填充、描边、描边宽度、填充不透明度、描边不透明度和整体不透明度。常用标识包括 `GraphThemeToken.EntityColor`、`GraphThemeToken.EntityTextForeground`、`GraphThemeToken.EntityFill`、`GraphThemeToken.EntityStroke` 和 `GraphThemeToken.EntityOpacity`。selector 数据保存在 Graph IR，Definition 函数只存在于运行时 options
+
+## 相关
+
+- [Entity 基础用法](/schematic/graph/entity/basic)：内置 role、variant 与显式外观字段
+- [Graph API 参考](/schematic/graph/api-reference)：Graph root、schema、factory 与 adapter 总览
+- [能力装载](/library/standard/extension/capability-loading)：Core provider graph 的通用装配边界

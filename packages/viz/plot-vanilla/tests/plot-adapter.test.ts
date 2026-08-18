@@ -1,16 +1,10 @@
 import type { InputEmbedContext } from '@retikz/vanilla';
 
+import { RetikzFoundationError } from '@retikz/foundation';
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import {
-  createPlotProvider,
-  embedPlot,
-  plot,
-  PlotInputEmbedAdapter,
-  plotIROf,
-  resolvePlotContribution,
-} from '../src';
+import { createPlotProvider, embedPlot, plot, PlotInputEmbedAdapter, plotIROf, resolvePlotContribution } from '../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -226,11 +220,15 @@ describe('Plot Vanilla Tier2 adapter', () => {
   });
 
   it.each(['', '   ', '\u2003', '\ufeff'])('helper and adapter reject blank embed id %j with the Plot prefix', id => {
+    expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(RetikzFoundationError);
     expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(
-      'plot vanilla: embed id must be non-empty',
+      'plot vanilla embed id must be a non-empty string.',
     );
     expect(() => PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id))).toThrowError(
-      'plot vanilla: embed id must be non-empty',
+      RetikzFoundationError,
+    );
+    expect(() => PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id))).toThrowError(
+      'plot vanilla embed id must be a non-empty string.',
     );
   });
 });

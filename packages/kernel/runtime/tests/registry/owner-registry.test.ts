@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { RuntimeOwnerDefinition } from '../../src';
 
-import { createRuntimeOwnerRegistry, defineRuntimeOwner } from '../../src';
+import { createRuntimeOwnerRegistry, defineRuntimeOwner, RetikzRuntimeErrorCode } from '../../src';
 
 const defineNumberOwner = (key: string) =>
   defineRuntimeOwner<number, Readonly<{ value: number }>, number, Readonly<{ delta: number }>>({
@@ -44,7 +44,7 @@ describe('runtime owner registry', () => {
   it('拒绝 builtin/custom 重复 key，不采用覆盖优先级', () => {
     expect(() =>
       createRuntimeOwnerRegistry({ builtins: [defineNumberOwner('same')], custom: [defineNumberOwner('same')] }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_DUPLICATE', owner: 'same' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.Duplicate, owner: 'same' }));
   });
 
   it('拒绝未注册但合法的 Definition', () => {
@@ -53,7 +53,7 @@ describe('runtime owner registry', () => {
     const registry = createRuntimeOwnerRegistry({ builtins: [registered] });
 
     expect(() => registry.resolve(unknown)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_UNKNOWN', owner: 'unknown' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown, owner: 'unknown' }),
     );
     expect(registry.find('unknown')).toBeUndefined();
   });
@@ -70,10 +70,10 @@ describe('runtime owner registry', () => {
     >;
 
     expect(() => registry.resolve(forged)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID', owner: 'owner' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'owner' }),
     );
     expect(() => registry.resolve(cloned)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID', owner: 'owner' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'owner' }),
     );
   });
 
@@ -86,7 +86,7 @@ describe('runtime owner registry', () => {
     });
 
     expect(() => createRuntimeOwnerRegistry({ custom: [foreign] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID', owner: 'foreign' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid, owner: 'foreign' }),
     );
   });
 
@@ -117,6 +117,8 @@ describe('runtime owner registry', () => {
   });
 
   it('define 拒绝空 owner key', () => {
-    expect(() => defineNumberOwner('')).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_TOKEN_INVALID' }));
+    expect(() => defineNumberOwner('')).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.TokenInvalid }),
+    );
   });
 });

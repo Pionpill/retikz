@@ -15,10 +15,11 @@ import type {
 } from '../../../resolve/composition';
 import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../../resolve/composition';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide, IRPlot } from '../../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } from '../../../schemas';
 import type { Rect } from '../../../shared';
 import type { LowerPlotsOptions } from '../types';
 
+import { RetikzPlotError } from '../../../error';
 import { resolveCoordinateRegistry } from '../../../providers';
 import {
   axisGridApplyToOf,
@@ -152,12 +153,14 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
   };
   const assertScaffoldRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scaffoldId: string): void => {
     if (!roles.has(role)) {
-      throw new Error(`lowerPlots: scaffold "${scaffoldId}" shared role "${role}" is not supported by its coordinate`);
+      throw new RetikzPlotError(
+        `lowerPlots: scaffold "${scaffoldId}" shared role "${role}" is not supported by its coordinate`,
+      );
     }
   };
   const assertTrackRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scopeId: string): void => {
     if (!roles.has(role)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: coordinate view "${scopeId}" track band role "${role}" is not supported by its coordinate`,
       );
     }
@@ -169,7 +172,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
   ): readonly [number, number] => {
     const range = frameResolution.frame.roleScales?.[role]?.range();
     if (range === undefined) {
-      throw new Error(`lowerPlots: ${scopeDescription} does not expose a scale range for role "${role}"`);
+      throw new RetikzPlotError(`lowerPlots: ${scopeDescription} does not expose a scale range for role "${role}"`);
     }
     return range;
   };
@@ -194,7 +197,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     const adjustedStart = start + (index > 0 ? direction * (gap / 2) : 0);
     const adjustedEnd = end - (index >= 0 && index < count - 1 ? direction * (gap / 2) : 0);
     if ((delta >= 0 && adjustedStart >= adjustedEnd) || (delta < 0 && adjustedStart <= adjustedEnd)) {
-      throw new Error(`lowerPlots: trackGap ${gap} leaves no range for track "${track.id}"`);
+      throw new RetikzPlotError(`lowerPlots: trackGap ${gap} leaves no range for track "${track.id}"`);
     }
     return [adjustedStart, adjustedEnd];
   };
@@ -268,7 +271,9 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         continue;
       const count = coordinateScopes.scopes.filter(scope => axisGridTargetsScope(guide, scope)).length;
       if (count === 0) {
-        throw new Error(`lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target scope`);
+        throw new RetikzPlotError(
+          `lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target scope`,
+        );
       }
     }
   };
@@ -308,7 +313,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     const cached = resolvedFrames.get(scope.id);
     if (cached !== undefined) return cached;
     if (resolvingFrames.has(scope.id)) {
-      throw new Error(`lowerPlots: overlay coordinate view cycle detected at "${scope.id}"`);
+      throw new RetikzPlotError(`lowerPlots: overlay coordinate view cycle detected at "${scope.id}"`);
     }
     resolvingFrames.add(scope.id);
     const targetPlotArea =

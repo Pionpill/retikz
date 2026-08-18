@@ -13,6 +13,8 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
+  RetikzRuntimeErrorCode,
+  RuntimeDiagnosticCode,
   RuntimeProgramPhase,
 } from '../../src';
 
@@ -28,8 +30,8 @@ const defineCounterOwner = () =>
 
 describe('runtime session participant failure lifecycle', () => {
   it.each([
-    ['prepare', 'RUNTIME_PARTICIPANT_PREPARE_FAILED'] as const,
-    ['commit', 'RUNTIME_PARTICIPANT_COMMIT_FAILED'] as const,
+    ['prepare', RetikzRuntimeErrorCode.ParticipantPrepareFailed] as const,
+    ['commit', RetikzRuntimeErrorCode.ParticipantCommitFailed] as const,
   ])('update %s failure 回滚 prepared tokens、保留旧 cache 并把 warning 同步入 queue', (failurePhase, code) => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
@@ -151,7 +153,9 @@ describe('runtime session participant failure lifecycle', () => {
         initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
         participants: [participant],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', cause: malformed }));
+    ).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed, cause: malformed }),
+    );
     expect(commitCalls).toBe(0);
     expect(disposeCalls).toBe(1);
   });
@@ -193,7 +197,7 @@ describe('runtime session participant failure lifecycle', () => {
 
     expect(create).toThrowError(expect.objectContaining({ cause: trigger }));
     expect(disposeCalls).toBe(1);
-    expect(create).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ALREADY_OWNED' }));
+    expect(create).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantAlreadyOwned }));
     expect(disposeCalls).toBe(1);
   });
 
@@ -237,7 +241,9 @@ describe('runtime session participant failure lifecycle', () => {
         initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
         participants: [second, first],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_COMMIT_FAILED', cause: trigger, owner: 'b' }));
+    ).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantCommitFailed, cause: trigger, owner: 'b' }),
+    );
     expect(calls).toEqual([
       'prepare:a',
       'prepare:b',
@@ -305,14 +311,18 @@ describe('runtime session participant failure lifecycle', () => {
     }
 
     expect(thrown).toEqual(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_READ_FAILED', cause: readFailure, owner: 'failing' }),
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.ParticipantReadFailed,
+        cause: readFailure,
+        owner: 'failing',
+      }),
     );
     const diagnostics = (thrown as { diagnostics: ReadonlyArray<RuntimeDiagnostic> }).diagnostics;
     expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
-      'RUNTIME_TRACE_INVALID_RECORD',
-      'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
-      'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
-      'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+      RuntimeDiagnosticCode.TraceInvalidRecord,
+      RetikzRuntimeErrorCode.ParticipantRollbackFailed,
+      RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
+      RetikzRuntimeErrorCode.ParticipantDisposeFailed,
     ]);
     expect(diagnostics.map(diagnostic => diagnostic.cause)).toEqual([
       undefined,
@@ -354,7 +364,11 @@ describe('runtime session participant failure lifecycle', () => {
 
     expect(session.revision()).toBe(0);
     expect(session.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED', cause: trigger, owner: 'view' }),
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
+        cause: trigger,
+        owner: 'view',
+      }),
     ]);
     session.dispose();
   });
@@ -419,11 +433,11 @@ describe('runtime session participant failure lifecycle', () => {
 
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+        code: RetikzRuntimeErrorCode.ParticipantRollbackFailed,
         phase: 'rollback',
         owner: 'b',
         cause: Object.freeze({
-          trigger: expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_READ_FAILED', cause: readFailure }),
+          trigger: expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantReadFailed, cause: readFailure }),
           rollback: firstRollbackFailure,
         }),
       }),
@@ -431,11 +445,11 @@ describe('runtime session participant failure lifecycle', () => {
     expect(Object.isFrozen((thrown as { cause: object }).cause)).toBe(true);
     expect(session.revision()).toBe(0);
     expect(() => session.participant(first)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }),
     );
     expect(() =>
       session.update({ baseRevision: session.revision(), owners: [createRuntimeOwnerUpdate(owner, 3)] }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
     expect(session.diagnostics().map(diagnostic => diagnostic.cause)).toContain(secondRollbackFailure);
     expect(() => session.dispose()).not.toThrow();
     expect(sessionDisposeCalls).toBe(2);

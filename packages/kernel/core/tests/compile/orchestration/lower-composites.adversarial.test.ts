@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
 
-import { compileToScene, CompositeBaseSchema, defineComposite } from '../../../src';
+import { compileToScene, CompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(
@@ -146,7 +146,7 @@ describe('lowerComposites — adversarial', () => {
       children: [{ namespace: 'core', type: 'node', position: [0, 0], text: 'A' }],
     };
     const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.some(w => w.code === 'COMPOSITE_NOT_REGISTERED')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.CompositeNotRegistered)).toBe(true);
     expect(scene.primitives.filter(p => p.type === 'rect' || p.type === 'text')).toHaveLength(0); // 节点被跳过
   });
 

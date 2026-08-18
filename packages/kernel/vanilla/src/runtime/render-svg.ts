@@ -1,5 +1,5 @@
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
-import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
+import { RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
 import { renderFrameToSvgString as buildSvgString } from '@retikz/render/svg';
 
 import type { RenderInput, RenderToStringOptions } from './types';
@@ -8,8 +8,8 @@ import { DEFAULT_ID_PREFIX } from './constants';
 import { toSceneResult } from './to-scene';
 
 const invalidRenderOptions = (cause: unknown): never => {
-  throw new RetainedRenderError({
-    code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
+  throw new RetikzRetainedRenderError({
+    code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid,
     cause,
     message: 'Vanilla renderToSvgString options must be a closed plain-data record without mount-only runtime config',
   });

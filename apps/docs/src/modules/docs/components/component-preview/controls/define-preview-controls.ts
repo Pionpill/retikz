@@ -12,6 +12,8 @@ import type {
 } from '../types';
 
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+const CURRENT_COLOR_VALUE = 'currentColor';
+const CONTRAST_COLOR_VALUE = 'contrast';
 const MIN_PANEL_SIZE = 18;
 const MAX_PANEL_SIZE = 45;
 
@@ -188,8 +190,15 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
     if (field.kind === 'select') validateSelectControl(field);
     if (field.kind === 'number' || field.kind === 'range') validateNumericControl(field);
     if (field.kind === 'point') validatePointControl(field);
-    if (field.kind === 'color' && !COLOR_HEX_PATTERN.test(field.defaultValue)) {
-      throw new Error(`Preview color control "${field.id}" defaultValue must be a #RRGGBB hex color.`);
+    if (
+      field.kind === 'color' &&
+      !COLOR_HEX_PATTERN.test(field.defaultValue) &&
+      field.defaultValue !== CURRENT_COLOR_VALUE &&
+      !(field.contrast === true && field.defaultValue === CONTRAST_COLOR_VALUE)
+    ) {
+      throw new Error(
+        `Preview color control "${field.id}" defaultValue must be a #RRGGBB hex color, currentColor, or enabled contrast value.`,
+      );
     }
   }
 

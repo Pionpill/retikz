@@ -4,6 +4,7 @@ import type { InputSurface } from '@retikz/standard-vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { createInputScene, withInputEmbedAdapters } from '@retikz/react';
+import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import { SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -20,7 +21,11 @@ const createSurfaceInput = (props: Readonly<Record<string, unknown>>, context: R
   const childInput = createInputScene(children, { embedIdPrefix: `${context.id}:child` });
   const childrenInput = childInput.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error('Surface children must contain exactly one authoring child.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Surface children must contain exactly one authoring child.',
+      details: { childCount: childrenInput?.length ?? 0, component: 'Surface' },
+    });
   }
   const inputProps: InputSurface = {
     ...input,

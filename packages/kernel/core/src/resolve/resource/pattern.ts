@@ -2,6 +2,7 @@ import type { ResolvedPatternLineStyle, ResolvedPatternLineStyleCycle } from '..
 import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import type { PatternStyleResolution } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { PatternLineStyleCycleSchema, PatternLineStyleSchema } from '../../schemas';
 import { resolveDashPattern } from '../style';
 
@@ -26,7 +27,7 @@ const parseLineStyle = (shape: string, input: unknown, prefix?: string): IRPatte
   const parsed = PatternLineStyleSchema.safeParse(input);
   if (parsed.success) return parsed.data;
   const path = invalidPathOf(prefix, parsed.error.issues[0]?.path ?? []);
-  throw new Error(`Pattern '${shape}' has an invalid ${path || 'line style'}.`);
+  throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Pattern '${shape}' has an invalid ${path || 'line style'}.`);
 };
 
 /** 在基础线型上应用局部 override，并按 selector 优先级展开 dash */
@@ -78,7 +79,7 @@ export const resolvePatternStyle = (spec: IRPatternPaint, defaultColor: string):
     const parsedCycle = PatternLineStyleCycleSchema.safeParse(spec.lineStyleCycle);
     if (!parsedCycle.success) {
       const path = invalidPathOf('lineStyleCycle', parsedCycle.error.issues[0]?.path ?? []);
-      throw new Error(`Pattern '${spec.shape}' has an invalid ${path}.`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Pattern '${spec.shape}' has an invalid ${path}.`);
     }
     const overridesByIndex = new Map(parsedCycle.data.overrides.map(override => [override.index, override.style]));
     resolved.lineStyleCycle = {

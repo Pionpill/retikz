@@ -2,6 +2,7 @@
 import type { IRScene } from '@retikz/core';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
+import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -365,7 +366,9 @@ describe('Vanilla processing', () => {
 
     expect(controller.read()).toBe(stable);
     expect(listener).not.toHaveBeenCalled();
-    expect(controller.diagnostics()).toEqual([expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED' })]);
+    expect(controller.diagnostics()).toEqual([
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed }),
+    ]);
     controller.update({ children: [{ id: 'recovered', position: [40, 0] }] });
     expect(controller.read().revision).toBe(stable.revision + 1);
     controller.dispose();

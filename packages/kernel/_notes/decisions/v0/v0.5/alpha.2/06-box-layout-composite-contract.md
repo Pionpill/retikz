@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-28
-- 关联：[alpha.2 roadmap](./roadmap.md) · [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) · [Standard Box Layout roadmap](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md)
+- 关联：[alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) · [ADR-08](./08-layout-proposal-probe-contract.md)
 
 ## 背景
 
@@ -110,28 +110,13 @@ Core 不新增持久化 IR、Scene schema、registry、baseline guide、overflow
 
 本 ADR 不改变增量编译安全子集。任意 Composite 输入、definition、constraint、显式 allocation 或 wrapper 变化继续走 full fallback，并与 fresh `compileToScene()` 等价；opaque token 与 output handle 不进入跨 revision cache。
 
-## 被否决的方案
-
-- **由 Standard 私有测量 child**：会复制 Core 的文字、provider、reference 与 nested composite 语义
-- **用 Scene scale 模拟 exact / stretch**：会改变真实几何和文字，不等价于父级分配 slot
-- **把 target slot x / y、alignment 或 overflow policy 放进 Core**：这些是 solver / domain 语义，不能由通用 child contract决定
-- **让 definition 直接输出 replay token 或构造 placement**：无法维护 callback ownership、一次性提交与原子副作用边界
-- **新增不可见 primitive 表示空 container**：污染 Scene / renderer 合同，显式 allocation 已能表达同一事实
-- **为 layout-aware subtree 扩大增量复用**：当前没有 stable identity 与失效证明，先保持 full fallback
-
 ## 最终实现
 
 - Core contract 新增 `ChildLayoutAxisConstraint`、`ChildLayoutSize`、`CompositeReplayWrapper` 与结果级 `allocationBounds`
 - compile orchestration 实现 constraint 校验 / 冻结、slot 计算、allocation boundary、result identity、wrapper preflight、clip-before-transform visual bounds 与逐 root replay
 - canonical visual-bounds 内部增加可选空结果，避免 empty / fully-clipped replay 把 `(0, 0)` 注入 Scene layout
 - Table transaction 迁移到 width axis；incremental fixture 只迁移 breaking replay 调用语法，没有改变断言或安全子集
-- Kernel Composite 概念页、compile Reference、Scene Primitive、双语 demo 与 v0.5 changelog 已同步
-
-## 验证
-
-覆盖双轴 bounded / exact / indefinite / zero、给定宽度后的换行高度、nested constraint、显式与空 allocation、overflow、constraint mutation、result forgery、duplicate / cross-session replay、wrapper clip / transform / resource / z-index、empty / fully-clipped bounds、非法极值与 full-fallback 等价。
-
-验证同时对账 Core、Table consumer、增量 fallback、公开类型和双语文档，确保 replay wrapper 与 allocation / visual bounds 的可观察结果保持一致。
+- 现有 Composite consumer 按该合同使用 width / height proposal、slot 和 replay wrapper
 
 ## 遗留边界
 

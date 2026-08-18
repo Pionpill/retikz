@@ -1,6 +1,8 @@
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { AnyCellFormatterDefinition } from '../../contract';
 
-import { assertTableNonEmptyString } from '../../shared';
+import { RetikzTableError } from '../../error';
 import { BUILTIN_CELL_FORMATTERS } from './definitions';
 
 /** 合并内置与用户 Cell formatter definitions */
@@ -9,9 +11,9 @@ export const resolveCellFormatterRegistry = (
 ): ReadonlyMap<string, AnyCellFormatterDefinition> => {
   const registry = new Map<string, AnyCellFormatterDefinition>();
   for (const definition of [...BUILTIN_CELL_FORMATTERS, ...(custom ?? [])]) {
-    assertTableNonEmptyString(definition.name, 'cell formatter provider key must be a non-empty string');
+    assertNonEmptyString(definition.name, 'cell formatter provider key');
     if (registry.has(definition.name)) {
-      throw new Error(`duplicate cell formatter registration: "${definition.name}"`);
+      throw new RetikzTableError(`duplicate cell formatter registration: "${definition.name}"`);
     }
     registry.set(definition.name, definition);
   }
@@ -25,5 +27,7 @@ export const cellFormatterDefinitionOf = (
 ): AnyCellFormatterDefinition => {
   const definition = registry.get(name);
   if (definition !== undefined) return definition;
-  throw new Error(`Cell formatter "${name}" is not registered; pass a definition via options.formatterDefinitions`);
+  throw new RetikzTableError(
+    `Cell formatter "${name}" is not registered; pass a definition via options.formatterDefinitions`,
+  );
 };

@@ -15,6 +15,7 @@ import type {
   ResolveCoreProviderDependenciesOptions,
 } from './dependency-provider';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { CoreProviderCapability } from './dependency-provider';
 
 type ProviderEntry = {
@@ -60,12 +61,18 @@ const keyName = (key: CoreProviderKey): string =>
 const assertProviderKey = (key: CoreProviderKey, path: string): void => {
   if (key.capability === CoreProviderCapability.Composite) {
     if (key.namespace.length === 0 || key.type.length === 0) {
-      throw new Error(`resolveCoreProviderDependencies: ${path} must have a non-empty namespace and type`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
+        `resolveCoreProviderDependencies: ${path} must have a non-empty namespace and type`,
+      );
     }
     return;
   }
   if (key.name.length === 0) {
-    throw new Error(`resolveCoreProviderDependencies: ${path} must have a non-empty name`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `resolveCoreProviderDependencies: ${path} must have a non-empty name`,
+    );
   }
 };
 
@@ -116,14 +123,18 @@ const sameDependencies = (left: ReadonlyArray<CoreProviderKey>, right: ReadonlyA
 const mergeDatasets = (entry: ProviderEntry, provider: CoreDependencyProvider, path: string): void => {
   for (const [reference, value] of Object.entries(provider.datasets)) {
     if (reference.length === 0) {
-      throw new Error(`resolveCoreProviderDependencies: ${path}.datasets contains an empty reference`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
+        `resolveCoreProviderDependencies: ${path}.datasets contains an empty reference`,
+      );
     }
     if (!entry.datasets.has(reference)) {
       entry.datasets.set(reference, value);
       continue;
     }
     if (!Object.is(entry.datasets.get(reference), value)) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
         `resolveCoreProviderDependencies: provider ${keyName(entry.key)} dataset "${reference}" conflicts by identity`,
       );
     }
@@ -165,12 +176,14 @@ const buildProviderIndex = (
         continue;
       }
       if (existing.makeDefinition !== provider.makeDefinition) {
-        throw new Error(
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Contract,
           `resolveCoreProviderDependencies: provider ${keyName(provider.key)} has conflicting maker references`,
         );
       }
       if (!sameDependencies(existing.dependencies, dependencies)) {
-        throw new Error(
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Contract,
           `resolveCoreProviderDependencies: provider ${keyName(provider.key)} has conflicting ordered dependencies`,
         );
       }
@@ -206,7 +219,10 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
     if (entry === undefined) {
       const chain = [...stack.map(candidate => keyName(candidate.key)), keyName(key)].join(' -> ');
       const relation = parent === undefined ? 'root' : 'dependency';
-      throw new Error(`resolveCoreProviderDependencies: missing ${relation} provider in chain ${chain}`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
+        `resolveCoreProviderDependencies: missing ${relation} provider in chain ${chain}`,
+      );
     }
     const currentState = state.get(entry);
     if (currentState === 'visited') return;
@@ -215,7 +231,10 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
       const cycle = [...stack.slice(cycleStart).map(candidate => keyName(candidate.key)), keyName(entry.key)].join(
         ' -> ',
       );
-      throw new Error(`resolveCoreProviderDependencies: provider cycle ${cycle}`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
+        `resolveCoreProviderDependencies: provider cycle ${cycle}`,
+      );
     }
 
     state.set(entry, 'visiting');
@@ -244,10 +263,20 @@ const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProv
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
   if ('name' in definition && 'emit' in definition) return CoreProviderCapability.Pattern;
   if ('paramsSchema' in definition && 'generate' in definition) return CoreProviderCapability.PathGenerator;
-  if ('kind' in definition && 'schema' in definition && 'resolve' in definition) return CoreProviderCapability.Clip;
+  if (
+    'kind' in definition &&
+    'schema' in definition &&
+    'resolve' in definition &&
+    'shapeSchema' in definition &&
+    'lower' in definition
+  )
+    return CoreProviderCapability.Clip;
   if ('paramsSchema' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Boundary;
   if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.PathKind;
-  throw new Error('resolveCoreProviderDependencies: maker returned an unrecognized definition capability');
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Contract,
+    'resolveCoreProviderDependencies: maker returned an unrecognized definition capability',
+  );
 };
 
 /** 从定义读取指定能力的注册表标识 */
@@ -256,7 +285,8 @@ const definitionIdentity = (
   definition: AnyCoreProviderDefinition,
 ): DefinitionIdentity => {
   if (definitionCapabilityOf(definition) !== capability) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
       `resolveCoreProviderDependencies: expected ${capability} definition but received ${definitionCapabilityOf(definition)}`,
     );
   }
@@ -339,7 +369,8 @@ const appendDefinition = (
       : definitionIndex.named.get(identity.capability)?.get(identity.name);
   if (existing !== undefined) {
     if (existing === definition) return;
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
       `resolveCoreProviderDependencies: definition conflict for ${keyName(
         capability === CoreProviderCapability.Composite
           ? {
@@ -434,7 +465,8 @@ export const resolveCoreProviderDependencies = (
     const definition = provider.makeDefinition(datasets);
     if (!definitionMatchesKey(provider.key, definition)) {
       const returnedIdentity = definitionIdentity(provider.key.capability, definition);
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
         `resolveCoreProviderDependencies: provider ${keyName(provider.key)} returned definition ${
           returnedIdentity.capability === CoreProviderCapability.Composite
             ? `${returnedIdentity.namespace}.${returnedIdentity.type}`

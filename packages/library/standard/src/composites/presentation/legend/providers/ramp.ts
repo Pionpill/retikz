@@ -5,6 +5,7 @@ import { positionedLayoutSlotOf, unionLayoutArtifactRects } from '@retikz/layout
 
 import type { IRLegendRampContent } from '../types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors';
 import { LegendDirection } from '../constants';
 
 /** 已取得 natural slot 的 ramp tick */
@@ -61,7 +62,11 @@ export const createLegendRampStructure = (
   const sampleHeight = sample.slotSize.height;
   const mainSize = content.direction === LegendDirection.Horizontal ? sampleWidth : sampleHeight;
   if (mainSize <= 0) {
-    throw new Error('Legend ramp sample main-axis slot must be greater than zero');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.PipelineInvariant,
+      message: 'Legend ramp sample main-axis slot must be greater than zero',
+      details: { mainSize },
+    });
   }
 
   const provisionalSample = positionedSlot(0, 0, sampleWidth, sampleHeight);

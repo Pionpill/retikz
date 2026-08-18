@@ -10,7 +10,7 @@
 
 chart v0.1 基于 plot v0.1 已完成的 GoG 基座，建立第一套可发布的 type-first 封装：
 
-1. 用 JSON-safe、稀疏的 IRChart 保存 Canonical Type、数据角色、用户差异配置、显式 Plot 内容与可选单图展示内容
+1. 用各 type 独立、JSON-safe 的精确 Source schema 保存数据角色、用户差异配置、显式 Plot 内容与可选单图展示内容，不建立公开 Chart union
 2. 用 type 隐式选择完整、不可撤销的 Plot recipe，并产生可独立检查的完整 IRPlot
 3. 以 Scatter & Points、Line & Area、Bar & Column 三个传统 family 建立首批类型目录
 4. 分别以 Point、Path、Interval 为主要 Mark 骨架，但不把 family 降级为互斥的 primitive 白名单
@@ -23,11 +23,11 @@ chart v0.1 基于 plot v0.1 已完成的 GoG 基座，建立第一套可发布�
 固定执行链路为：
 
 ```text
-IRChart / Chart IR
-  -> type recipe resolution
+exact Base / typed Chart Source IR
+  -> namespace + type dispatch -> exact schema parse -> recipe bind
   -> allowed overrides + Plot member assembly
   -> complete IRPlot
-  -> optional Chart presentation resolution
+  -> IRBaseChart + optional Chart presentation resolution
   -> Standard composition containing IRPlot
   -> Plot / Standard lowering
   -> Core IR / Scene
@@ -55,24 +55,24 @@ Point、Path、Interval 是坐标系无关的 Plot Mark。Cartesian、Polar 或�
 
 ### 2.3 Canonical Type 与 Pattern
 
-Canonical Type 进入 `IRChart.type`，并选择一套持续成立、不可撤销的核心配方。候选名称只有在必需数据角色、Mark 组合或 Transform 拓扑形成稳定语义时才进入 type。
+Canonical Type 进入自己的精确 `XxxChartSchema.type`，并选择一套持续成立、不可撤销的核心配方。候选名称只有在必需数据角色、Mark 组合或 Transform 拓扑形成稳定语义时才进入 type。
 
-Chart Pattern 是 Canonical Type 加可复用 modifier、表现配置或正式 Plot 内容的文档配方，不进入 `type` union。只改变方向、堆叠、曲线、guide 可见性或主题的名称优先作为 Pattern。
+Chart Pattern 是 Canonical Type 加可复用 modifier、表现配置或正式 Plot 内容的文档配方，不新增精确 type schema。只改变方向、堆叠、曲线、guide 可见性或主题的名称优先作为 Pattern。
 
 ## 3. v0.1 类型目录
 
 ### 3.1 Scatter & Points
 
-| Canonical Type      | 核心配方边界                                              |
-| ------------------- | --------------------------------------------------------- |
-| `scatter`           | 以 Point 为主的二维关系配方                               |
-| `bubble`            | 二维 Point + 必需定量 size role 的面积感知配方            |
+| Canonical Type      | 核心配方边界                                            |
+| ------------------- | ------------------------------------------------------- |
+| `scatter`           | 以 Point 为主的二维关系配方                             |
+| `bubble`            | 二维 Point + 必需定量 size role 的面积感知配方          |
 | `connected-scatter` | Point + Path + 稳定顺序；仍是单个 IRPlot 内的 Mark 组合 |
-| `regression`        | Point + 内建 Smooth / regression Transform + Path         |
-| `ranged-dot`        | 起止数值角色 + 端点与连接线                               |
-| `strip`             | 一维分布角色 + 内建 Jitter Transform + Point              |
+| `regression`        | Point + 内建 Smooth / regression Transform + Path       |
+| `ranged-dot`        | 起止数值角色 + 端点与连接线                             |
+| `strip`             | 一维分布角色 + 内建 Jitter Transform + Point            |
 
-Bubble 与 Scatter 共享 Point、channel、scale、guide、merge 与 lowering 主链，但保留独立的 `IRChart.type`、必需定量 size role、失败语义、inspection identity 与 round-trip intent。Bubble 的 size channel 沿 Plot 正式 sqrt radius scale 表达面积感知语义；只有未来出现 circle packing 等独立布局或拓扑时，才重新判断是否需要新的 Canonical Type。
+Bubble 与 Scatter 组合复用 Point、channel、scale、guide、merge 与 lowering helper，但分别拥有 `BubbleChartSchema` / `ScatterChartSchema`、必需数据角色、失败语义、inspection identity 与 round-trip intent。Bubble 的 size channel 沿 Plot 正式 sqrt radius scale 表达面积感知语义；只有未来出现 circle packing 等独立布局或拓扑时，才重新判断是否需要新的 Canonical Type。
 
 除受 position-offset capability gate 阻塞的 Strip 外，上述类型只消费 Plot 已有 Mark、Transform、Scale、Coordinate 与 Guide 能力。精确字段角色、排序规则和默认呈现留给 ADR。
 
@@ -144,11 +144,11 @@ Lollipop Chart 虽然在 Flint 中归 Bar & Column，但主要配方是 Point + 
 
 ## 5. Milestones
 
-| Milestone          | 主题                        | 候选 ADR / 产出                                                                                                                                                                                                                                                                                                                             | 退出边界                                                                                                                                                                                                                                    | 状态   |
-| ------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| chart v0.1-alpha.1 | **点图 · Scatter & Points** | [alpha.1 roadmap](./alpha.1/roadmap.md)：先建立 IRChart / recipe resolution / inspection、三 adapter、Chart-owned token 与 Plot token 转发、presentation + Layout Flex + Standard Surface，再按 `scatter`、`bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 的顺序逐 type 闭环；Scatter 与 Bubble 是平级 Canonical Type | 前五个可实施 type 从同一 JSON-safe 语义生成完整 IRPlot；`strip` 等待 Plot position-offset；完整 canvas 等待 Standard arbitrary-child surface composite；Core effective Theme、Chart / Plot token owner、presentation 与 identity 规则确定 | 起草中 |
-| chart v0.1-alpha.2 | **线图 · Line & Area**      | `line`、`area`、`range-area`；Path ordering / closure / curve 与系列默认；sparkline、slope、smooth / step line、stacked area、streamgraph Patterns；复用 alpha.1 样式、颜色、label、Layout Flex 与 Standard Surface 基座                                                                                                                    | 三个线图 type 的 Path 核心配方和边界角色不可撤销；Pattern 不扩张 type union；相同样式与 presentation 契约无需按 family 分叉                                                                                                                 | 待起草 |
-| chart v0.1-alpha.3 | **面图 · Bar & Column**     | `bar`、`waterfall`、`gantt`、`bullet`；Interval bound、内建区间 Transform 与 Reference；stacked / grouped / horizontal / normalized / pyramid Patterns；跨 family override、追加 Plot members、冲突、来源与空间透明收口                                                                                                                     | 四个面图 type 只消费 Plot 现有 capability；追加内容不撤销核心配方；三个 family 共用同一 resolver、样式、presentation、diagnostics 与 handle forwarding；无 composition                                                                      | 待起草 |
+| Milestone          | 主题                        | 候选 ADR / 产出                                                                                                                                                                                                                                                                                                                                | 退出边界                                                                                                                                                                                                                                                                   | 状态   |
+| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| chart v0.1-alpha.1 | **点图 · Scatter & Points** | [alpha.1 roadmap](./alpha.1/roadmap.md)：先建立逐类型精确 schema、bind / resolve / inspection、三 adapter、Chart-owned token 与 Plot token 转发、presentation + Layout Flex + Standard Surface，再按 `scatter`、`bubble`、`connected-scatter`、`regression`、`ranged-dot`、`strip` 的顺序逐 type 闭环；Scatter 与 Bubble 是平级 Canonical Type | 前五个可实施 type 从各自 JSON-safe Source IR 生成完整 IRPlot 并统一汇合到 `IRBaseChart`；`strip` 等待 Plot position-offset；完整 canvas 等待 Standard arbitrary-child surface composite；Core effective Theme、Chart / Plot token owner、presentation 与 identity 规则确定 | 起草中 |
+| chart v0.1-alpha.2 | **线图 · Line & Area**      | `line`、`area`、`range-area`；Path ordering / closure / curve 与系列默认；sparkline、slope、smooth / step line、stacked area、streamgraph Patterns；复用 alpha.1 样式、颜色、label、Layout Flex 与 Standard Surface 基座                                                                                                                       | 三个线图 type 的 Path 核心配方和边界角色不可撤销；Pattern 不扩张 type union；相同样式与 presentation 契约无需按 family 分叉                                                                                                                                                | 待起草 |
+| chart v0.1-alpha.3 | **面图 · Bar & Column**     | `bar`、`waterfall`、`gantt`、`bullet`；Interval bound、内建区间 Transform 与 Reference；stacked / grouped / horizontal / normalized / pyramid Patterns；跨 family override、追加 Plot members、冲突、来源与空间透明收口                                                                                                                        | 四个面图 type 只消费 Plot 现有 capability；追加内容不撤销核心配方；三个 family 共用同一 resolver、样式、presentation、diagnostics 与 handle forwarding；无 composition                                                                                                     | 待起草 |
 
 里程碑只冻结版本目标和依赖顺序。字段名、默认值、允许覆盖范围、错误 payload、测试 case 与实现文件由对应 ADR 决定。
 
@@ -171,11 +171,11 @@ chart 使用自己的发布家族：`@retikz/chart` / `@retikz/chart-react` / `@
 
 1. 13 个 Canonical Type 均有稳定数据角色、完整核心配方、表现性默认和允许调整范围；Scatter 与 Bubble 作为两个平级 type 计入 Scatter & Points
 2. 所有内建 type 只使用 plot v0.1 已有 capability，不包含 Chart 专用 provider 或私有 lowering
-3. Pattern 不进入 `IRChart.type`，gallery 名称可以追溯到 Canonical Type + 配置
+3. Pattern 不新增精确 type schema，gallery 名称可以追溯到 Canonical Type + 配置
 4. 核心配方删除、替换、关闭或失效时 fail-loud；显式追加内容不能静默覆盖隐式成员
-5. IRChart 保持单一根 data、100% JSON-safe，并可确定性解析为可检查的完整 IRPlot
+5. 每个精确 Chart Source IR 保持单一根 data、100% JSON-safe，并可确定性解析为可检查的完整 IRPlot 与 `IRBaseChart`
 6. React children、Vanilla builder 与手写 JSON 具有等价表达，不存在 framework-only Chart 能力
-7. Core effective Theme 在 IRChart 外统一选择 style / mode；Chart-owned `chartThemeTokens` 与 Plot-owned `plotThemeTokens` 严格分离，`colors` / Plot `plotTheme` 原样转发，不形成 Chart 版 Plot token、preset、resolver 或 renderer 样式系统；Chart 默认 series color 只来自 Plot resolver 最终 palette
+7. Core effective Theme 在 Chart Source IR 外统一选择 style / mode；Chart-owned `chartThemeTokens` 与 Plot-owned `plotThemeTokens` 严格分离，Plot `plotTheme` 原样转发，不形成 Chart 版 Plot token、preset、resolver 或 renderer 样式系统；Chart 默认 series color 只来自 Plot resolver 最终 palette
 8. Chart-level label / presentation 复用 Standard 与 Plot 布局为单一结果，Chart 封装不丢失 Plot 内部空间 identity、provenance、locator 或 lineage
 9. 三个 family 的文档导航、Canonical Type 契约页、Pattern gallery、跨库名称参考和当前不支持范围齐全
 

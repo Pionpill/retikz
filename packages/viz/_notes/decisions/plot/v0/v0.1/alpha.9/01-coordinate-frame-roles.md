@@ -33,7 +33,7 @@ alpha.4 用 polar 逼出 coordinate frame 抽象（scale 归一化 → 投影 �
 - **对外 API**：x/y 可选（放宽）；cartesian/polar 缺位置通道 / 非法 guide 维度从「静默出怪图」变 **fail-loud**——行为收紧但此前是 bug，不破合法 spec。
 - **core**：无影响（纯 plot 内）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - cartesian1D / ternary2D 坐标系本身 → [ADR-02](./02-cartesian1d.md) / [ADR-03](./03-ternary2d.md)。
 - a/b/c encoding 角色通道 → [ADR-03](./03-ternary2d.md)（ternary 专属）。

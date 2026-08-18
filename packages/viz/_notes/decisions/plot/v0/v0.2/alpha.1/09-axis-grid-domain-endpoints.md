@@ -58,34 +58,13 @@ type AxisGridOptions = AxisGridProjection &
 - 外部扩展与下游闭环：自定义 scale 通过既有 PositionScale 参与同一 guide lowering；自定义 coordinate 只有在 definition 已选择既有 guide helper 时获得相同行为，本决策不自动创建 custom coordinate grid surface；Core IR 与 renderer 无新增契约。
 - 不支持边界：独立端点样式、端点 label、minor grid 自动端点、按单端选择、绘图区外框与 custom coordinate grid surface。
 
-## 架构验证
-
-- 是否可由现有能力组合：显式 `grid.ticks.values` 可以替换网格来源，但不能在不知道 effective domain 的情况下追加端点，因此现有公开组合不足。
-- Data / Plot / Table / Chart / Standard / Core 责任切分：只有 Plot 读取 position scale domain 并生成 grid；其它能力域不新增字段或分支。
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：需要一个新的 Axis grid IR 字段；不需要 definition / registry，因为这是既有闭合 Axis grid source 的正交策略，不引入可替换算法族或命名 provider。
-- pipeline / lowering / renderer / diagnostics 如何闭环：schema 接受显式策略，guide lowering 消费 effective PositionScale domain 并输出既有 grid Path，Core 与 renderer 无感执行。
-- provenance / lineage / locator 是否适用：继续复用既有 axis grid scope provenance；端点线不是独立 datum，不新增 lineage 或 locator identity。
-- 结论：扩展当前 Visualization / Guide 能力域。
-
-## 被否决方案
-
-- 要求用户把最值写入 `grid.ticks.values`：会替换常规网格，且用户无法可靠复现推断、padding、nice 后的 effective domain。
-- 把字段放入共享 `GuideTickSource`：会无差别扩散到 axis ticks、legend 等不需要该语义的消费者。
-- 把字段做成 Theme token：Theme 只控制视觉默认，不能读取动态 scale domain 或改变 grid source。
-- 把端点画成 plot area border：border 是绘图区表面语义，不能替代 scale-bound grid，也无法表达非矩形坐标投影。
-- 新建 boundary grid 类型：当前能力只需要复用主网格样式与层级，独立类型会复制投影、composition 与 provenance 语义。
-
-## 测试策略摘要
-
-需要 schema 证据证明字段只接受 boolean 且保持 strict object；需要 guide lowering 证据覆盖默认关闭、常规 ticks、显式 grid ticks、density 后追加、投影坐标去重、分类与极坐标；需要 adapter 等价性证据证明 React、Vanilla 与手写 IR 使用同一字段；需要双语文档与真实预览证明端点网格可见且不改变 axis ticks、minor grid 或主题优先级。
-
 ## 最终结果与遗留边界
 
 `includeDomain` 已贯通 Axis major grid schema、guide lowering、React / Vanilla authoring 与双语文档。实现固定在常规 source 与 density 之后读取 effective PositionScale domain，按最终网格投影坐标追加并去重端点；guide 局部默认关闭，minor source、axis ticks、Core 与 renderer 契约保持不变。后续 ADR-10 只为已启用的 major grid 增加 Theme 默认，不修改这里的算法边界。
 
 空 domain 不追加，单值 domain 最多追加一次，非有限投影会被跳过；循环坐标和分类坐标继续服从既有 coordinate 与 `bandPosition` 语义。端点与 minor grid 重合时仍沿用既有 major-over-minor overlap 规则，不引入第二套网格优先级。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 为 domain start / end 分别提供开关或样式。
 - 把端点计入 `density.maxCount`，或改变既有 density 抽稀结果。

@@ -21,20 +21,13 @@
 
 首版 direct child 只允许 Core Node，因为当时 Scope synthetic bounds 只对 NodeLayout 有完整证据。Path、Coordinate、Scope 与 foreign composite 不会被静默接受或估算。
 
-## 被否决的方案
-
-- 调用方维护固定边框坐标：内容变化后无法保持正确 bounds
-- 在 Standard 复制文本或 shape 测量：会形成与 Core 漂移的第二套几何真源
-- 修改 renderer 绘制 Frame：可视分组可完全 lower 为既有 Scope、Path 与文字
-- 首版宣称支持任意 IR child bounds：当时缺少可靠的通用 child-bounds contract
-
 ## 被替代原因
 
 首版 `label` 只是 Path label 字符串，不能复用 Core Node 的文本、shape、font、style、label、meta 与 animation 行为；`gap` 同时承担边框外扩语义，嵌套 `border` 又把 Frame 自身视觉字段隐藏在第二层对象中。
 
 ADR-04 在 Core anchor-to-anchor placement 可用后，将 Frame 重构为“border + body Scope + Node-like Title / Description”，并用 `padding` 与 `gap` 分离边框外扩和 header 排列。v0.x 不保留首版 `label` / `border` / 旧 `gap` alias。
 
-## 最终实现与验证摘要
+## 最终实现结果
 
 - 首版证明了 Scope bounds、延迟 Path target 与 Tier 2 adapter 足以闭合可视分组，不需要 Core 或 renderer 新机制
 - schema、lowering、Node child 限制、adapter identity 与未注册 composite 诊断均有自动化证据

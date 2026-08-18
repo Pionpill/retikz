@@ -30,13 +30,7 @@
 3. **`bare` = 回到 alpha.1**：总开关产 `guides:[]` + 无 margin，等价纯绘图——叙述性插图 / 极简场景用。
 4. **lockstep**：react 出子组件、vanilla 出 spec 字段、docs 出带轴 demo，同一改动集。
 
-### 被否决的选项
-
-- **独立 `<Grid>` 组件** → 取消（随 [ADR-01](./01-guide-ir.md) 把 grid 收为 axis 子属性）：作 `<Axis>` 的 `grid` prop 与 IR `axis.grid` 一一对应，避免 DSL 与 IR 结构错位。
-- **写 `<Axis>` 后按类型补缺省** → 否决，选「完全显式所得」（所见即所得、无混合惊讶）。
-- **`bare` 与显式 `<Axis>` 并存报错 / warn** → 否决，选 `bare` 静默优先（什么都不出）。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **vanilla 链式 builder（`plot(rows).line().axis()…`）** → 后续（alpha.1 ADR-08 已记 vanilla DSL 留后续）。
 - **轴标题 / legend / reference line DSL** → 后续。

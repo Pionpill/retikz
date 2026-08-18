@@ -77,7 +77,7 @@
   },
   "dependencies": {
     "@retikz/chart": "workspace:*",
-    "@retikz/chart-vanilla": "workspace:^",
+    "@retikz/chart-vanilla": "workspace:*",
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
     "@retikz/plot": "workspace:^",

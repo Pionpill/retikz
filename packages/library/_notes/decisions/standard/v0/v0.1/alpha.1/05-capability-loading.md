@@ -57,14 +57,6 @@ Vanilla 公开浅冻结的 `StandardVanillaAdapters`，按 Grid、Axes、Frame �
 
 开发态 `exports` 与发布态 `publishConfig.exports` 都只包含 `"."`；runtime 与 declarations 从打包后的根入口解析。
 
-## 被否决的方案
-
-- 第二套 Standard registry：会与 Core definition / resolver / diagnostics 产生双重真源
-- import 副作用或自动全量注册：破坏局部可组合性、测试隔离和 tree-shaking
-- 把 React / Vanilla adapters 塞入跨宿主 bundle：两种 authoring 协议不同，且 Standard 不能依赖宿主包
-- 每组件 package subpath：组件增长后需要同步维护 manifest 与构建入口，named exports 已满足按需消费
-- Standard 私有 provider 冲突策略：duplicate key 应由 Core registry 统一诊断
-
 ## 公开影响与兼容性
 
 - `@retikz/standard` 新增 `StandardCapabilityModule`、`StandardBundle`、`createStandardBundle()`、三个官方 module 与 `StandardAllPreset`
@@ -75,17 +67,15 @@ Vanilla 公开浅冻结的 `StandardVanillaAdapters`，按 Grid、Axes、Frame �
 
 本 ADR 保留 alpha.1 capability loading 的历史决策与验证记录，不再定义当前 Standard 的公开入口。当前直接 IR 与跨包 compile 接线以 [alpha.3 ADR-06](../alpha.3/06-direct-definition-loading.md) 为准；Standard 不再发布 capability module、bundle 或 preset 组合 API
 
-## 最终实现与验证摘要
+## 最终实现结果
 
 - bundle 只用 Core `AnyCompositeDefinition` 承载异构 definitions；按序、空 bundle、浅冻结、第三方结构 module、重复 module name 与 Core provider 冲突边界均已实现
 - React 按使用项贡献、React IR 显式 bundle、Vanilla 部分 / 全量 adapters 与直接 IR bundle 路径均有自动化证据
 - 三包 manifest 已由精确测试锁定为 root-only exports；未引入 wildcard 或逐组件 subpath
 - 双语 introduction、get-start 与 capability loading 扩展页已同步按项、部分、全量及宿主接线方式
-- Standard、Standard React、Standard Vanilla 的 lint、类型检查、全量测试和 build，以及 release-group、docs integrity、docs 类型检查与 docs build 已通过
 
 ## 遗留边界
 
 - alpha.1 bundle 只承载 composite definitions；尚未进入 Standard 的 shape、arrow、pattern 等 provider family 不预留字段
 - bundle 不组合 measureText、lowerTex、onWarn、layout policy、renderer options 或宿主 runtime state
 - 若未来多个能力组都需要通用跨 provider bundle，再基于独立证据评估下沉 Core；当前不提前抽象
-- 完整仓库 publish-artifact 检查仍要求先构建全部发布包；Standard 三包应在发版阶段单独检查 pack / dry-run 产物

@@ -56,7 +56,7 @@ export const OpacityChannelSchema = z
 2. **与 size 同口径**：PointMark 专属、per-datum、point-only，保持 alpha.7 通道的一致心智。
 3. **core 现成**：落 core node opacity，不需要补 core。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **opacity 作用于 bar/area/line/sector** → 顺延（⑤ 仅 PointMark）。
 - **categorical → 离散 opacity 档** → 顺延（本轮 continuous only）。

@@ -1,4 +1,4 @@
-import { RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
+import { RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
 import { RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './types';
@@ -6,8 +6,8 @@ import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './typ
 import { VanillaViewMode } from './constants';
 
 const invalidRuntimeOptions = (cause: unknown): never => {
-  throw new RetainedRenderError({
-    code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
+  throw new RetikzRetainedRenderError({
+    code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid,
     cause,
     message: 'Vanilla raw-input mount runtime options are invalid',
   });
@@ -57,7 +57,7 @@ export const captureVanillaRuntimeOptions = (options: object): VanillaRuntimeOpt
       ...(rendererFactory === undefined ? {} : { rendererFactory }),
     }) as VanillaRetainedRuntimeOptions;
   } catch (cause) {
-    if (cause instanceof RetainedRenderError) throw cause;
+    if (cause instanceof RetikzRetainedRenderError) throw cause;
     return invalidRuntimeOptions(cause);
   }
 };

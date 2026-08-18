@@ -16,6 +16,7 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
   RetikzError,
+  RetikzFoundationError,
 } from '@retikz/foundation';
 import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
 ```
@@ -34,7 +35,7 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@reti
       label: '根入口与 subpath 契约测试',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 38,
+      endLine: 40,
     },
   ]}
 />
@@ -80,18 +81,26 @@ assertNonEmptyString('layer/main', 'owner');
 // owner must be a non-empty string.
 ```
 
-它不是 `unknown` 类型收窄器；需要 schema 结果时直接使用 `NonBlankStringSchema`。需要保留领域前缀、错误码或 class identity 的 owner 应捕获普通 `Error`，再在自己的边界构造领域错误。
+失败时会直接抛出 `RetikzFoundationError`：`code` 固定为 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，`details` 保留 `label` 和原始 `value`，`cause` 同样指向被拒绝的值。它不是 `unknown` 类型收窄器；需要 schema 结果时直接使用 `NonBlankStringSchema`，调用方也不应捕获后把同一原子失败重复包装成领域错误。
 
 ### 错误处理
 
-`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 为领域 owner 提供统一的最小形态。owner 自己决定 code、details 字段和恢复语义：
+`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 为领域 owner 提供统一的最小形态。`RetikzFoundationError` 统一承载 Foundation 自己拥有的原子错误，并通过参数区分具体失败；其它 owner 继续决定自己的 code、details 字段和恢复语义：
 
 ```ts
+import { RetikzError, type ValueOf } from '@retikz/foundation';
+
 type Details = Readonly<{ source: string }>;
 
-class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
+const RetikzDomainErrorCode = {
+  Failed: 'DOMAIN_FAILED',
+} as const;
+
+type RetikzDomainErrorCodeValue = ValueOf<typeof RetikzDomainErrorCode>;
+
+class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details> {
   constructor(details: Details, cause?: unknown) {
-    super({ code: 'DOMAIN_FAILED', message: 'Domain failed', details, cause });
+    super({ code: RetikzDomainErrorCode.Failed, message: 'Domain failed', details, cause });
   }
 }
 ```
@@ -116,13 +125,13 @@ class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
       label: '类型工具实现',
       path: 'packages/kernel/foundation/src/types.ts',
       startLine: 1,
-      endLine: 10,
+      endLine: 12,
     },
     {
       label: '非空字符串断言实现',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 1,
-      endLine: 8,
+      endLine: 14,
     },
     {
       label: '标量 schema 测试',
@@ -134,25 +143,25 @@ class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
       label: '结构化错误实现',
       path: 'packages/kernel/foundation/src/error.ts',
       startLine: 1,
-      endLine: 32,
+      endLine: 67,
     },
     {
       label: '三类契约测试',
       path: 'packages/kernel/foundation/tests/types.test.ts',
       startLine: 1,
-      endLine: 31,
+      endLine: 36,
     },
     {
       label: '非空断言测试',
       path: 'packages/kernel/foundation/tests/assert.test.ts',
       startLine: 1,
-      endLine: 17,
+      endLine: 40,
     },
     {
       label: '结构化错误测试',
       path: 'packages/kernel/foundation/tests/error.test.ts',
-      startLine: 16,
-      endLine: 51,
+      startLine: 8,
+      endLine: 70,
     },
   ]}
 />

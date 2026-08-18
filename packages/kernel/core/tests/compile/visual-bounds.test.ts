@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRAnimationTrack, ScenePrimitive, SceneResource } from '../../src';
+import type { IRAnimationTrack, PathCommand, ScenePrimitive, SceneResource } from '../../src';
 
 import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual-bounds';
 
@@ -224,12 +224,60 @@ describe('canonical visual bounds', () => {
           {
             kind: 'clip',
             id: 'clip-1',
-            shape: { kind: 'rect', x: 0, y: 0, width: 5, height: 5 },
+            path: {
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [5, 0] },
+                { kind: 'line', to: [5, 5] },
+                { kind: 'line', to: [0, 5] },
+                { kind: 'close' },
+              ],
+              fillRule: 'nonzero',
+            },
           },
         ],
       ),
     ).toEqual({ x: 5, y: 7, width: 5, height: 5 });
   });
+
+  it.each([
+    {
+      name: 'zero width',
+      commands: [
+        { kind: 'move', to: [1, 2] },
+        { kind: 'line', to: [1, 2] },
+        { kind: 'line', to: [1, 6] },
+        { kind: 'line', to: [1, 6] },
+        { kind: 'close' },
+      ],
+    },
+    {
+      name: 'zero height',
+      commands: [
+        { kind: 'move', to: [1, 2] },
+        { kind: 'line', to: [5, 2] },
+        { kind: 'line', to: [5, 2] },
+        { kind: 'line', to: [1, 2] },
+        { kind: 'close' },
+      ],
+    },
+  ] satisfies Array<{ name: string; commands: Array<PathCommand> }>)(
+    'treats a $name clip path as an empty filled region',
+    ({ commands }) => {
+      expect(
+        boundsOf(
+          [
+            {
+              type: 'group',
+              clipRef: 'clip-1',
+              children: [{ type: 'rect', x: -10, y: -10, width: 20, height: 20, fill: '#f00' }],
+            },
+          ],
+          [{ kind: 'clip', id: 'clip-1', path: { commands, fillRule: 'nonzero' } }],
+        ),
+      ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+    },
+  );
 
   it('returns a finite immutable zero rectangle for empty output', () => {
     const bounds = boundsOf([]);

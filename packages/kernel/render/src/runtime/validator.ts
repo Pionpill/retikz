@@ -10,11 +10,12 @@ import type {
 } from '@retikz/core';
 import type { RuntimeIdentity } from '@retikz/runtime';
 
+import { PathCommandSchema } from '@retikz/core';
 import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { RuntimeIdentityMap } from './shared';
 
-import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from './error';
+import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
 import { createRuntimeIdentityMap, runtimeStructuralEquals } from './shared';
 
 type MutableSceneNode = {
@@ -39,19 +40,19 @@ const isMutableSceneNode = (value: MutableSceneNode | MutableSceneRoot): value i
   'basePrimitive' in value;
 
 const topologyError = (cause: unknown): never => {
-  throw new RetainedRenderError({ code: RetainedRenderErrorCode.SceneTopologyInvalid, cause });
+  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.SceneTopologyInvalid, cause });
 };
 
 const patchError = (cause: unknown): never => {
-  throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchInvalid, cause });
+  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid, cause });
 };
 
 const mismatchError = (cause: unknown): never => {
-  throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause });
+  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause });
 };
 
 const revisionError = (cause: unknown): never => {
-  throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchRevisionMismatch, cause });
+  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchRevisionMismatch, cause });
 };
 
 const isDenseArray = (value: unknown, predicate: (item: unknown) => boolean): value is ReadonlyArray<unknown> => {
@@ -60,6 +61,72 @@ const isDenseArray = (value: unknown, predicate: (item: unknown) => boolean): va
     if (!(index in value) || !predicate(value[index])) return false;
   }
   return true;
+};
+
+const isDenseObjectArray = (value: unknown): value is ReadonlyArray<object> =>
+  isDenseArray(value, item => typeof item === 'object' && item !== null);
+
+const isExactDataRecord = (value: unknown, keys: ReadonlyArray<string>): value is Record<string, unknown> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) return false;
+  const ownKeys = Reflect.ownKeys(value);
+  if (ownKeys.length !== keys.length || ownKeys.some(key => typeof key !== 'string' || !keys.includes(key)))
+    return false;
+  return ownKeys.every(key => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor !== undefined && descriptor.enumerable && 'value' in descriptor;
+  });
+};
+
+const isCanonicalClipPath = (value: unknown): boolean => {
+  if (!isExactDataRecord(value, ['commands', 'fillRule'])) return false;
+  if (value.fillRule !== 'nonzero' && value.fillRule !== 'evenodd') return false;
+  if (!isDenseArray(value.commands, command => PathCommandSchema.safeParse(command).success)) return false;
+  if (value.commands.length === 0) return false;
+  let activeSubpath = false;
+  let hasDrawingSegment = false;
+  for (const commandValue of value.commands) {
+    const command = PathCommandSchema.parse(commandValue);
+    switch (command.kind) {
+      case 'move':
+        activeSubpath = true;
+        break;
+      case 'line':
+      case 'quad':
+      case 'cubic':
+        if (!activeSubpath) return false;
+        hasDrawingSegment = true;
+        break;
+      case 'arc':
+      case 'ellipseArc':
+        activeSubpath = true;
+        hasDrawingSegment = true;
+        break;
+      case 'close':
+        if (!activeSubpath) return false;
+        activeSubpath = false;
+        break;
+    }
+  }
+  return hasDrawingSegment;
+};
+
+const validateSceneResources = (resources: unknown, fail: (cause: unknown) => never): void => {
+  if (!isDenseObjectArray(resources)) {
+    return fail({ reason: 'invalid-scene-resources', resources });
+  }
+  for (const resource of resources) {
+    if (Reflect.get(resource, 'kind') !== 'clip') continue;
+    if (
+      !isExactDataRecord(resource, ['kind', 'id', 'path']) ||
+      typeof resource.id !== 'string' ||
+      resource.id.length === 0 ||
+      !isCanonicalClipPath(resource.path)
+    ) {
+      return fail({ reason: 'invalid-clip-resource', resource });
+    }
+  }
 };
 
 const isRuntimeIdentity = (value: unknown): value is RuntimeIdentity => {
@@ -432,6 +499,7 @@ const validateOperationShape = (operation: ScenePatchOperation): void => {
   if (kind === 'setResources' || kind === 'setAnimations') {
     const field = kind === 'setResources' ? 'resources' : 'animations';
     if (!isDenseArray(Reflect.get(candidate, field), () => true)) return patchError(operation);
+    if (kind === 'setResources') validateSceneResources(Reflect.get(candidate, field), patchError);
     return;
   }
   if (kind === 'insert') {
@@ -616,6 +684,7 @@ const validateSceneRuntimeSnapshotInternal = (snapshot: SceneRuntimeSnapshot): v
   ) {
     topologyError(snapshot);
   }
+  validateSceneResources(Reflect.get(candidateScene, 'resources'), topologyError);
   validatePrimitiveArray(snapshot.scene.primitives);
   validateTopology(snapshot.scene.primitives, snapshot.root, snapshot.topology);
 };
@@ -625,7 +694,7 @@ export const validateSceneRuntimeSnapshot = (snapshot: SceneRuntimeSnapshot): vo
   try {
     validateSceneRuntimeSnapshotInternal(snapshot);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
+    if (isRetikzRetainedRenderError(cause)) throw cause;
     return topologyError(cause);
   }
 };
@@ -764,7 +833,7 @@ export const validateScenePatch = (
   try {
     validateScenePatchInternal(current, patch, next);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
+    if (isRetikzRetainedRenderError(cause)) throw cause;
     return patchError(cause);
   }
 };

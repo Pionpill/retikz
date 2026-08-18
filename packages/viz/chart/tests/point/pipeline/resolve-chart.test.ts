@@ -1,32 +1,45 @@
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChart } from '../../../src/point';
+import { resolveChart } from '../../../src/_chart/resolve';
+import { ScatterChartRecipe, ScatterChartSchema } from '../../../src/point';
 
 const base = {
   namespace: 'chart',
   type: 'scatter',
   id: 'sales',
-  data: { reference: 'rows' },
-  encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+  plot: { data: { reference: 'rows' } },
+  config: { encoding: { x: { field: 'amount' }, y: { field: 'margin' } } },
 } as const;
 
-describe('resolvePointChart merge', () => {
+const resolve = (input: unknown) =>
+  resolveChart(ScatterChartRecipe.bind(ScatterChartSchema.parse(input)), {
+    theme: {
+      mode: ThemeMode.Light,
+      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+    },
+  });
+
+describe('resolveChart merge', () => {
   it('按固定顺序合并 transform、scale、patch 与 Plot mark extension', () => {
-    const result = resolvePointChart({
+    const result = resolve({
       ...base,
-      transform: [{ kind: 'sort', field: 'margin', order: 'descending' }],
-      scales: [
-        { type: 'log', name: '__chart.scatter.scale.x', base: 2 },
-        { type: 'linear', name: 'z' },
-      ],
-      mark: { opacity: { kind: 'constant', value: 0.5 } },
-      marks: [
-        {
-          type: 'point',
-          id: 'user.mark',
-          encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-        },
-      ],
+      plot: {
+        ...base.plot,
+        transform: [{ kind: 'sort', field: 'margin', order: 'descending' }],
+        scales: [
+          { type: 'log', name: '__chart.scatter.scale.x', base: 2 },
+          { type: 'linear', name: 'z' },
+        ],
+        marks: [
+          {
+            type: 'point',
+            id: 'user.mark',
+            encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+          },
+        ],
+      },
+      config: { ...base.config, mark: { opacity: { kind: 'constant', value: 0.5 } } },
     });
 
     expect(result.plotSpec.transform).toEqual([{ kind: 'sort', field: 'margin', order: 'descending' }]);
@@ -56,21 +69,27 @@ describe('resolvePointChart merge', () => {
   });
 
   it('区分省略 guides、空 replacement 与显式 replacement', () => {
-    expect(resolvePointChart(base).plotSpec.guides).toHaveLength(2);
-    expect(resolvePointChart({ ...base, guides: [] }).plotSpec.guides).toEqual([]);
+    expect(resolve(base).plotSpec.guides).toHaveLength(2);
+    expect(resolve({ ...base, plot: { ...base.plot, guides: [] } }).plotSpec.guides).toEqual([]);
     expect(
-      resolvePointChart({
+      resolve({
         ...base,
-        guides: [{ type: 'axis', id: 'user.axis', dimension: 'x', grid: true }],
+        plot: {
+          ...base.plot,
+          guides: [{ type: 'axis', id: 'user.axis', dimension: 'x', grid: true }],
+        },
       }).plotSpec.guides,
     ).toEqual([{ type: 'axis', id: 'user.axis', dimension: 'x', grid: true }]);
   });
 
   it('接受保持 recipe core 的同 kind coordinate replacement', () => {
     expect(
-      resolvePointChart({
+      resolve({
         ...base,
-        coordinate: { type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' },
+        plot: {
+          ...base.plot,
+          coordinate: { type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' },
+        },
       }).plotSpec.coordinate,
     ).toEqual({ type: 'cartesian2D', x: '__chart.scatter.scale.x', y: '__chart.scatter.scale.y' });
   });

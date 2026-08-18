@@ -7,7 +7,7 @@ Schematic 组承载“图中画什么、这些元素表达什么，以及关系�
 
 ## 从 Graph 开始
 
-Graph 首批提供 `Container`、`Entity` 与 `Relation` 三类统一入口。`Entity.role` 区分 terminal、stage、decision 与 junction；`Relation.role` 区分 flow、branch、dependency 与 feedback。它们复用 Core 的 Node、Path、target 和 Scene，也复用 Layout 的通用布局；Graph 不复制几何、renderer 或布局算法。
+Graph 提供可选的 `Graph` presentation root，以及 `Container`、`Entity` 与 `Relation` 三类语义元素。Entity role / variant 支持 assembly-local Definition registry，内置仍包含 terminal、stage、decision、junction 与五种视觉层级；Relation role 区分 flow、branch、dependency 与 feedback。它们复用 Core 的 Scope、Node、Path、target 和 Scene，也复用 Layout 的通用布局；Graph 不复制几何、renderer 或布局算法。
 
 | 包                      | 负责什么                                    | 什么时候使用                          |
 | ----------------------- | ------------------------------------------- | ------------------------------------- |

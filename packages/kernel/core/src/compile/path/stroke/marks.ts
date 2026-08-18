@@ -9,6 +9,7 @@ import type {
 } from '../../../contract';
 import type { SegmentSample } from '../../../shared/geometry';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { RAD_TO_DEG } from '../../../shared/geometry';
 
 const resolveMarkerContextFill = (value: MarkerFill, contextStroke: string): string =>
@@ -30,7 +31,8 @@ export const assertArrowCanInheritStroke = (
     (arrows.arrowStart?.marker.some(markerPrimUsesContextStroke) ?? false) ||
     (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
   if (!usesContextStroke) return;
-  throw new Error(
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Compile,
     'Path arrow cannot inherit a IRPaint stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
   );
 };
@@ -38,7 +40,10 @@ export const assertArrowCanInheritStroke = (
 export const markerContextStroke = (stroke: PaintValue | undefined): string => {
   if (stroke === undefined) return 'currentColor';
   if (typeof stroke === 'string') return stroke;
-  throw new Error('Path mark cannot inherit a IRPaint stroke; set the mark or arrow color to an explicit CSS color.');
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Compile,
+    'Path mark cannot inherit a IRPaint stroke; set the mark or arrow color to an explicit CSS color.',
+  );
 };
 
 /** marker 放置所需上下文 */

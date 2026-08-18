@@ -2,48 +2,45 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-27
-- Owner：core
-- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [ADR-01](./01-ribbon.md) · [ADR-02](./02-ribbon-boundary-and-alignment.md) · [ADR-03](./03-ribbon-arc-cap.md) · [ADR-05](./05-ribbon-label.md) · [ADR-06](./06-path-ribbon-shared-contract.md)
+- 关联：[ADR-01](./01-ribbon.md) · [ADR-02](./02-ribbon-boundary-and-alignment.md) · [ADR-03](./03-ribbon-arc-cap.md) · [ADR-05](./05-ribbon-label.md) · [ADR-06](./06-path-ribbon-shared-contract.md)
 
 ## 背景
 
-alpha.6 前半段曾把 ribbon 设计成独立 IR 实体。实现对账后发现，ribbon 与 stroke path 在 style、label、relation host、provenance 与 renderer 输出上高度同构；真正变化的是 path-like geometry kind。继续保留独立 `RibbonSchema` 会让内置 ribbon 获得特殊入口，而自定义 path-like 扩展只能另走补丁机制。
+Ribbon 与 stroke Path 共享 style、label、relation host、provenance 和 renderer 输出；保留独立 Ribbon IR 会形成两个 path-like host，并迫使自定义扩展绕过统一机制
 
-## 决策记录
+## 决策
 
-Path 是 core 唯一的 path-like relation host。公开 IR 使用 `type: "path"`，并通过 `kind` 选择 path geometry：
+Path 是 Core 唯一的 path-like relation host。公开 IR 使用 `type: "path"`，以 `kind` 选择几何：
 
-- `kind: "stroke"` 表示既有普通路径；省略 `kind` 等价于 stroke。
-- `kind: "ribbon"` 表示可变宽度 ribbon，参数位于 `ribbon`。
-- 不发布 `type: "ribbon"`、`RibbonSchema` 或 `IRRibbon` 公共实体。
+- `kind: "stroke"` 表示普通路径；省略 `kind` 等价于 stroke
+- `kind: "ribbon"` 表示可变宽度 ribbon，参数位于 `ribbon`
+- 不发布 `type: "ribbon"`、`RibbonSchema` 或 `IRRibbon`
 
-新增 path kind registry：
+新增统一 Path kind provider contract：
 
-- `PathKindDefinition` 描述 kind 名称、schema、compile/lowering contract 与扩展能力。
-- `definePathKind` 供内置与自定义 kind 使用。
-- `CompileOptions.pathKinds` 注册额外 path kind。
-- unknown kind 必须 fail-loud，并列出已注册 kind。
-- 同名覆盖允许但必须警告，避免扩展无声替换内置行为。
+```ts
+type PathKindDefinition = {
+  schema: ZodType<{ kind: string } & IRJsonObject>;
+  compile: (path: IRPath, options: IRJsonObject, context: PathKindCompileContext) => PathKindCompileResult;
+};
 
-共享契约：
+const definePathKind: <TDefinition extends PathKindDefinition>(definition: TDefinition) => TDefinition;
 
-- `DrawableStyleSchema` 与 `DrawableMetaSchema` 承载 path-like 公共 style/meta。
-- `GeometryLabelSchema` 由 `Path.label` 统一承载，stroke path 与 ribbon path kind 共享。
-- `RibbonPathOptionsSchema` 承载 ribbon-only 几何字段：`mode`、`width`、`start`、`end`、`interpolation`、`align`、`samples`、`sampling`、`upper`、`lower`。
+type CompileOptions = {
+  pathKinds?: ReadonlyArray<PathKindDefinition>;
+};
+```
 
-React `<Ribbon>` 可以作为 sugar 保留，但必须产出 `Path kind="ribbon"`；文档也应把 Ribbon 放在 Path kind / relation host 语境下，而不是与 Node/Path 并列成新的 core primitive 家族。
+Built-in 与 custom kind 使用同一 registry。未知 kind 必须 fail-loud 并报告已注册 kind；重复 key 不得静默覆盖，builtin / custom 冲突按统一 duplicate 规则处理
 
-## 被否决方案
+`DrawableStyleSchema` 与 `DrawableMetaSchema` 承载共享 style/meta；`Path.label` 统一承载 `GeometryLabelSchema`；`RibbonPathOptionsSchema` 承载 mode、width、start、end、interpolation、align、samples、sampling、upper、lower 等 ribbon-only 字段。React `<Ribbon>` 可以作为 sugar，但必须生成 `Path kind="ribbon"`
 
-- 保留独立 Ribbon IR：短期直观，但会制造 path-like host 分裂。
-- 只把 ribbon 写成内置 if/else：不满足 definition / registry / capability contract 的扩展原则。
-- 要求所有用户显式写 `kind: "stroke"`：会造成无意义破坏；省略 kind 仍可表示既有 path。
-- 把自定义 kind 放到 renderer：扩展应在 core compile 前被 schema 与 registry 管理。
+## 行为、失败语义与兼容性
 
-## 实现指针
+省略 `kind` 的既有 Path 继续按 stroke 解析。注册 Definition 中的函数和 schema 只存在 compile options / provider runtime，不进入 JSON IR；Scene 只保存闭合 Path primitive。未知、重复或 provider 输出无效时在 Core compile fail-loud，不由 renderer 或上层 fallback
 
-- 发布版本：kernel group `v0.4.0-alpha.6`。
-- 主要文件范围：core path schema/registry/compile，React sugar，Vanilla 消费，docs Path/Ribbon 页面。
-- 验收范围：stroke 兼容、ribbon path kind 编译、custom kind 注册、unknown kind 诊断、React `<Ribbon>` 等价输出、plot relation ribbon 消费。
+这是 0.x 的 Path host 收敛：独立 Ribbon 实体被删除，不保留旧别名、内置 if/else 或 renderer registry。自定义 Path kind 与内置 kind 共用 schema、registry、compile 和诊断链路
 
-> 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/kernel/v0/v0.4/alpha.6/07-path-kind-registry.md`（封板全文）。
+## 最终结果与遗留边界
+
+普通 stroke、Ribbon 和 custom path kind 已统一进入 Path host；React sugar、Vanilla authoring 和领域 relation 只消费该公开 contract。Path kind 之外的领域布局、命中策略和 renderer 扩展须由各自 owner 另行设计

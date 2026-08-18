@@ -55,27 +55,7 @@ type CustomCoordinateOperation = {
 - 外部扩展与下游闭环：自定义 definition 与内置 definition 同路进入 registry，由 Plot pipeline 解析为 Core IR；adapter 只传递 JSON operation 与运行时 definition，renderer 只消费 Core Scene
 - 不支持边界：不提供 turnkey ternary definition、旧 spec 迁移器或旧内置视觉结果兼容保证
 
-## 架构验证
-
-- 是否可由现有能力组合：是；三角色或更多角色的特殊投影由开放 position encoding、`CoordinateDefinition`、`projectRoles` 和可选 guide / cell hooks 组合表达
-- Data / Plot / Table / Chart / Standard / Core 责任切分：数据归一化若是通用数据处理应进入 Data；投影与可视化 role 属于 Plot 自定义 coordinate；高层固定样式可由宿主或 preset 组合；Standard / Core / renderer 不承接 ternary 领域语义
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：不需要；复用现有 coordinate operation、definition 与 registry，内置和自定义继续同路
-- pipeline / lowering / renderer / diagnostics 如何闭环：registry 按 operation type 查找 definition，definition 校验 config 并解析 frame，marks / guides / locator 消费统一 frame，再下沉为 Core IR；未注册、角色不匹配或缺少可选能力均在 Plot lowering fail-loud
-- provenance / lineage / locator 是否适用：适用且无需专用分支；它们按 coordinate type、view、role 和投影结果记录或定位
-- 结论：删除内置项，特殊投影使用现有 Visualization 扩展链表达
-
-## 被否决方案
-
-- 继续维护内置 ternary2D：会把专用三角色、guide 和 mark 矩阵固化为 stable 公共面，与统一 coordinate registry 重复
-- 保留 deprecated alias 或兼容 lowering：0.x 阶段会延长两套语义并让旧 spec 看似仍受支持，违背直接收敛契约的目标
-- 永久保留 `ternary2D` 标识但不提供实现：只会阻止用户通过自定义 definition 接管该名称，不能提供实际兼容价值
-- 把 ternary 下沉到 Core / Standard：三元分量、归一化与三角 guide 是可视化领域语义，不是通用 Drawing 或领域无关 composite
-
-## 测试策略摘要
-
-需要 schema / public surface 证据证明内置 coordinate 集不含 `ternary2D`，需要 registry / lowering 证据证明未注册 operation fail-loud、三角色自定义 definition 能通过统一链路投影并生成 axis，需要 adapter parity 证据证明 React 与 Vanilla 不再暴露内置语义但仍能注入自定义 definition，还需要 docs / changelog 证据区分历史引入记录与当前 breaking removal。现有四种内置坐标的 schema、lowering 与渲染回归不得弱化。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 提供官方或社区 turnkey ternary CoordinateDefinition
 - 改变开放 position role、custom axis、cell geometry、provenance 或 locator 契约

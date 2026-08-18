@@ -67,24 +67,11 @@ const { svg, lineage } = renderPlot(
 );
 ```
 
-## 被否决选项
-
-- **把完整链路写入 Scene meta**：会让每个 Node / Path 挂大对象，影响 renderer 与序列化成本。
-- **plot 自己重做 data trace**：会与 `@retikz/data` 的 transform 真源漂移。
-- **只暴露底层 `lowerPlotWithLineage()`**：React / Vanilla 用户仍需绕开 adapter，体验不完整。
-
 ## 最终实现
 
 plot contract 新增图元链路类型；pipeline 新增 `lowerPlotWithLineage()` 与 `createPlotLineageLocator()`，复用 `lowerPlots()`、data lineage、locator 与现有 provider 语义。`lowerPlots()` 返回 shape 不变。
 
 `@retikz/plot-react` 新增 `<Plot lineage hostLineageMetadata onLineage>` 与 `resolvePlotLineage(props)`；`@retikz/plot-vanilla` 新增 `renderPlot(..., { lineage })` 的 `{ svg, lineage }` 返回形态，未开启链路时继续返回 SVG 字符串。
-
-## 验证
-
-- 最小 mark lineage、mark-local transform scope、host metadata、scale mapping、layout context、row value cap 均有测试覆盖。
-- locator lineage 与 anchor meta 对齐。
-- Scene meta 不写完整 lineage。
-- React / Vanilla adapter 覆盖链路 API 与默认关闭行为。
 
 ## 遗留风险
 

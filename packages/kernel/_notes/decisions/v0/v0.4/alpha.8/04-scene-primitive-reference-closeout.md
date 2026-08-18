@@ -1,55 +1,29 @@
 # ADR-04：ScenePrimitive reference 与发布文案收口
 
-- 状态：Accepted（2026-07-03 收尾确认：ScenePrimitive reference 与 alpha.4 changelog wording 已完成 docs-only 对账）
+- 状态：Accepted
 - 决策日期：2026-07-03
-- 关联：[v0.4-alpha.8 roadmap](./roadmap.md) · [ADR-01 closeout](./01-drawing-complete-alpha4-closeout.md) · [ADR-03 group effect boundary](./03-group-scope-effect-boundary.md)
+- 关联：[ADR-01](./01-drawing-complete-alpha4-closeout.md) · [ADR-03](./03-group-scope-effect-boundary.md)
 
 ## 背景
 
-alpha.4 已把 `shadow` / `blendMode` 加到 Scene 可渲染主几何 primitive 上。当前组件页和 changelog 已说明 `<Node>` / `<Path>` 的效果，但 runtime reference 的 ScenePrimitive 页面仍只列 `fill`、`stroke`、`opacity` 等常见视觉字段，没有明确 `RectPrim` / `EllipsePrim` / `PathPrim` 支持 `shadow` / `blendMode`，也没有明确 `TextPrim` / `GroupPrim` 不支持。
+alpha.4 已把 `shadow` / `blendMode` 加到 Scene 可渲染主几何 primitive，但 reference 容易只呈现常见的 fill、stroke、opacity；发布文案也必须准确描述 shadow 对 scene viewBox 的影响
 
-同时，alpha.4 changelog 中 SVG filter region 的发布文案仍写“整 viewBox”，而当前实现位于 `render/src/svg/builders/shadow-defs.ts`，会用 `userSpaceOnUse` 并按 shadow offset / blur 外扩 scene layout。这是更精确的当前行为，应该在 alpha.8 收口时改正文案。
+## 决策
 
-alpha.8 是收口版本，这类改动应作为 docs / release wording 修正，不改变 runtime 行为。
+ScenePrimitive reference 必须明确：
 
-## 决策：alpha.8 必须完成 docs-only reference / changelog 对账
+1. `RectPrim`、`EllipsePrim`、`PathPrim` 支持 `shadow?: ResolvedDropShadow` 与 `blendMode?: BlendModeValue`
+2. `TextPrim` 不支持图元级 `shadow` / `blendMode`
+3. `GroupPrim` 目前只拥有 group 结构字段，不支持 group-level effect
+4. effect 不改变 hit area
+5. SVG filter region 使用 `userSpaceOnUse`，并按 shadow 外扩后的 scene viewBox 表达当前行为
 
-alpha.8 必须执行以下 docs-only 收口，完成后才关闭本 milestone 的文档对账项：
+该 ADR 只负责 reference 与历史发布文案对账，不回写 alpha.4 的设计记录，也不改变 runtime
 
-1. **ScenePrimitive reference 补字段**：说明 `RectPrim` / `EllipsePrim` / `PathPrim` 支持 `shadow?: ResolvedDropShadow` 与 `blendMode?: BlendModeValue`。
-2. **ScenePrimitive reference 补边界**：说明 `TextPrim` 不支持图元级 `shadow` / `blendMode`；`GroupPrim` 目前只有 transforms / clipRef / children / id / meta / animations，不支持 group-level effect。
-3. **changelog 精确化 filter region**：把“整 viewBox”改成“按 shadow 外扩后的 scene viewBox”，避免与当前实现漂移。
-4. **不回写 alpha.4 Accepted ADR**：历史 ADR 保留当时设计语境；当前真源由本 ADR 和代码 / reference 对齐。
+## 兼容性与最终结果
 
-理由：
+文档真源与当前 effect 字段、Text / Group 边界和 filter region 口径一致；IR、Scene、compile、render、React 和 Vanilla 行为不变
 
-1. 自定义 renderer 作者会优先看 runtime reference；缺字段会导致它们漏渲染 alpha.4 effect。
-2. docs-only 修正符合 alpha.8 收口主题，不改变 public API。
-3. 不回写旧 ADR 可避免破坏历史设计记录，同时用 alpha.8 ADR 记录“当前真源”。
+## 遗留边界
 
-## 适用性说明
-
-本 ADR 是 docs-only 收口，不是新绘图能力设计，因此不单独执行完整绘图完备性检测；完整审计入口在 [ADR-01](./01-drawing-complete-alpha4-closeout.md)。
-
-- 适用范围：ScenePrimitive reference 与 alpha.4 changelog wording。
-- 不适用范围：IR / schema、contract / provider、compile / Scene、render runtime、React / Vanilla API。
-- 与完备性检测的关系：ADR-01 发现 runtime reference 没有完整呈现 alpha.4 图元级 effect 字段，本 ADR 只负责把该文档缺口补齐。
-- 边界说明：reference 需要提醒自定义 renderer 消费 `shadow` / `blendMode`，同时明确 Text / Group 不支持图元级 effect，且视觉效果不改变 hit area。
-
-## 已执行口径
-
-- changelog 只改 alpha.4 render 条目，避免重写历史发布记录。
-- ScenePrimitive reference 中英文同步补齐 effect 字段与 Text / Group 边界。
-
-## 不在本 ADR 范围
-
-- 修改 `shadow` / `blendMode` runtime 行为。
-- 给 `TextPrim` / `GroupPrim` 新增 effect 字段。
-- 重写 alpha.4 ADR 历史内容。
-- 修改 docs 站导航或新增页面。
-
----
-
-> **实现指针**：本 ADR 已随 kernel v0.4-alpha.8 发布落地；当前真源以代码、文档站和 changelog 为准。完整实现期契约、文件 scope、测试象限和 DSL 示例保留在发布 tag 历史中。
-
-> 🔖 发布后压缩；压缩前完整施工蓝图 = `git show v0.4.0-alpha.8:packages/kernel/_notes/decisions/v0/v0.4/alpha.8/04-scene-primitive-reference-closeout.md`。
+组级 effect、额外 filter 类型、hit area 改变与新的 Scene primitive 字段不属于本收口

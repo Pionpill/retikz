@@ -8,9 +8,10 @@ import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type { IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle, IRPlot } from '../../../schemas';
+import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import { MarkValueKind, PlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';
@@ -97,9 +98,12 @@ const makeNumericPathResolver = (
       };
       if (scaleName !== undefined) {
         const found = scaleByName.get(scaleName);
-        if (!found) throw new Error(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
+        if (!found)
+          throw new RetikzPlotError(`lowerPlots: ${channelName} path channel references unknown scale "${scaleName}"`);
         if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
-          throw new Error(`lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`);
+          throw new RetikzPlotError(
+            `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
+          );
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);

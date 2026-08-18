@@ -80,35 +80,11 @@ Table inspection 与 manifest 复用 Core `ThemeTokenSource`：style baseline �
 
 Table 不拥有 Core Theme 传播协议、Plot / Chart vocabulary、Plot categorical / sequential scheme、宿主 CSS theme 或 renderer-specific style。Table 的 `data.categorical` 只能是 shared active categorical 的一次性 projection，并由 Table resolver 再按 Table contract 消费。
 
-## 架构验证与能力完备性
-
-- 现有 Core effective Theme、Table presentation / rule / encoding pipeline、Standard Legend 与 Core layout-aware compile 可以组合出本能力；需要冻结的是 Table style definition 与 shared color projection
-- Core 负责 selector、Core registry 与 shared colors；Table 负责 vocabulary、style registry、resolver、mapping、encoding 与 diagnostics；Data、Standard、Plot 与 adapters 保持既有 owner
-- Table style definition 必须进入 Table owner registry，以保证 standalone、embedded、React、Vanilla 与 direct headless 使用同一 name lookup 和失败语义；Table 不建立跨 owner theme registry
-- 闭环为 effective Theme → Table style definition → shared projection / local token resolution → appearance / Border Graph / encoding / Legend descriptor → Standard / Core lowering → Scene / manifest / inspection
-- Standard 只消费 Core `InspectionAppearance` 和 Table 已解析的正式输入，不读取 Table token 或重建 categorical allocation；Table 不读取 Plot / Chart token
-- 本轮结论：扩展 Tabular Visualization Complete 的 Theme / Palette 消费边界，删除 Table duplicate environment，不新增 Table 平行 IR 或 renderer path
-
-## 最终实现与验证摘要
+## 最终结果
 
 最终实现已闭合 Table owner style definition、resolver 与 shared categorical projection，并把有效 token 正式消费到 Cell / header appearance、Border Graph、visual encoding、Legend descriptor、manifest 与 inspection。IRTable 只保留 `tableThemeTokens` 局部覆盖，Core Theme 继续作为 style / mode selector 与 shared colors 的唯一环境真源。
 
-验证覆盖 React、Vanilla、SSR、standalone、embedded 与 plain JSON 的 authoring / compile 等价，owner 隔离、旧字段和非法 token 的 fail-loud 语义，以及 appearance、border、encoding、manifest 与 Legend 的最终消费闭环；对抗验证与双语文档、浏览器验收均无遗留阻塞。
-
-## 被否决方案
-
-- 保留 IRTable `style` / `themeMode`：会绕开 Scene / Scope 继承并产生多套 environment
-- 保留 `styleTokens` alias：会让迁移后的 owner-local 输入长期双读
-- 让 Table 复制 Core categorical array：会破坏 Plot、Chart、Inspector 与 Table 的单一 active palette
-- 让 Table 读取 Plot / Chart resolver：会反向耦合平行 Tier 2 owner，破坏 Table 独立性
-- 让 Standard 或 renderer 读取 Table token：会把领域语义扩散到通用层或后端
-- 用任意 token registry 或 CSS theme 替代 strict owner schema：会失去 JSON-safe、可诊断和正式 consumer 闭环
-
-## 测试策略摘要
-
-需要 schema / type 证据证明 IRTable 删除旧字段、`tableThemeTokens` strict JSON-safe、shared categorical non-empty projection 与显式 encoding range precedence；registry 证据证明 Table style definition 在 standalone、embedded、React、Vanilla、plain JSON 与 direct headless 入口同路注入、查找和失败；pipeline 证据证明 inherited shared colors、local token、rules、encoding、Cell / border config 和 Legend descriptor 的 owner isolation 与正式消费；manifest 证据证明二元 source 与 path 保留 provenance；adapter / renderer parity 证据证明 React 局部 Theme 与外层 `IRScope.theme` 等价，Standard 只消费 `InspectionAppearance`，Table 不读取 Plot / Chart。详细矩阵属于后续 ignored implementation plan。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Table 完整 canonical key 目录、具体 preset 色值、结构 / rule / encoding 算法与布局 solver
 - Core shared color preset 的具体色值、Plot / Chart token vocabulary 与 named scheme

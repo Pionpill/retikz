@@ -58,25 +58,7 @@ Vanilla 保持现有 builder、adapter 与显式 adapter 数组。直接持久�
 - Plot、Table 等领域包直接组合所需 Standard definitions，并继续拥有自己的领域解析、provenance、locator 与交互语义
 - Standard 不拥有动态组件加载、包级代码分割、全局 registry、能力发现或跨能力 catalog
 
-## 被否决方案
-
-- 保留 bundle 并仅重命名：仍然保留没有独立 compile 语义的包装层
-- 继续发布 all preset：鼓励全量收集，与调用方按实际使用选择 definition 的目标相反
-- 在 Standard 中加入动态 loader 或 package subpath registry：会把代码分发问题与 composite compile 契约混在一起，并新增另一套加载协议
-- 让 adapter 自动发现并注册所有 Standard definitions：会破坏显式依赖、tree-shaking 与 Core 的缺失 definition 诊断
-
-## 架构验证
-
-- 该收缩复用 Core 已有 `CompositeDefinition` 与 `CompileOptions.composites`，不新增 IR、schema、registry、compile option、Scene 或 renderer 语义
-- 内置与自定义 composite 继续进入同一 Core registry 与 compile 路径，缺失与冲突保持同一诊断来源
-- React、Vanilla、直接 IR 仍以同一 canonical Standard input 和 Core compile environment 产生等价结果
-- 组件 owner、Core、adapter 与领域包的依赖方向不变；移除的是 Standard 内部的组合包装层
-
-## 测试策略摘要
-
-测试需要证明直接 definitions 的 compile 选择、缺失与重复诊断、React / Vanilla authoring parity、nested composite 的显式依赖、根入口不再暴露旧组合名称，以及 docs 与实际 public API 一致。测试只依赖 Core 可观察 compile / Scene / diagnostic 结果，不以旧 bundle 或 preset 的内部结构作为新契约
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Core 的动态 import、运行时插件系统或 package loader
 - Standard composite 的 schema、factory、lowering、artifact 与 renderer 语义

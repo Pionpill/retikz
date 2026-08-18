@@ -2,7 +2,8 @@ import { ThemeMode } from '@retikz/core';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
-import { ChartResolvedThemeTokensSchema, ChartThemeToken, getDefaultChartThemePreset } from '../../../src/base/style';
+import { getDefaultChartThemePreset } from '../../../src/_chart/style';
+import { ChartResolvedThemeTokensSchema, ChartThemeToken } from '../../../src/_shared/style';
 
 const modes = Object.values(ThemeMode);
 const canonicalKeys = Object.values(ChartThemeToken);

@@ -3,6 +3,7 @@ import type { Scene } from '@retikz/core';
 import type { StaticRenderFrame } from '../runtime';
 import type { RenderOptions } from './types';
 
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { validateReadonlyLayers } from '../runtime';
 import { drawReadonlyLayer } from './draw-readonly-layer';
 import { drawScene } from './draw-scene';
@@ -18,7 +19,10 @@ const getDevicePixelRatio = (options: RenderOptions): number => {
 
 const assertPositiveFinite = (name: string, value: number): void => {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`renderToCanvas: ${name} must be a positive finite number.`);
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Canvas,
+      `renderToCanvas: ${name} must be a positive finite number.`,
+    );
   }
 };
 
@@ -60,14 +64,21 @@ export const renderFrameToCanvas = (
   const scene = frame.primary;
   const layers = validateReadonlyLayers(frame.layers);
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('renderToCanvas: unable to acquire 2d canvas context.');
+  if (!ctx)
+    throw new RetikzRenderError(RetikzRenderErrorCode.Canvas, 'renderToCanvas: unable to acquire 2d canvas context.');
 
   const devicePixelRatio = getDevicePixelRatio(options);
   if (!Number.isFinite(scene.layout.x)) {
-    throw new Error('renderToCanvas: scene.layout.x must be a finite number.');
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Canvas,
+      'renderToCanvas: scene.layout.x must be a finite number.',
+    );
   }
   if (!Number.isFinite(scene.layout.y)) {
-    throw new Error('renderToCanvas: scene.layout.y must be a finite number.');
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Canvas,
+      'renderToCanvas: scene.layout.y must be a finite number.',
+    );
   }
   assertPositiveFinite('canvas.width', canvas.width);
   assertPositiveFinite('canvas.height', canvas.height);

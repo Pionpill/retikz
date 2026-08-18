@@ -1,16 +1,21 @@
-﻿import { isFiniteNumber, isFinitePoint } from '@retikz/math';
+import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
 import type { PathGeneratorResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
-import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import {
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
+  safeThrownDetail,
+} from '../../../resolve/diagnostics';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 /** 校验 generator 命令并返回只含 canonical 字段的 detached command */
 const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
   const bad = (detail: string): never => {
-    throw new CompositeContractError(`path generator '${name}' produced a ${detail}.`);
+    throw new RetikzCompositeContractError(`path generator '${name}' produced a ${detail}.`);
   };
   if (command === null || typeof command !== 'object' || Array.isArray(command)) {
     return bad(`invalid path command`);
@@ -127,7 +132,8 @@ export const lowerGeneratorStepToCommands = (args: {
     if (!Object.hasOwn(paramsObj, key)) continue;
     const raw = paramsObj[key];
     if (raw === null || (typeof raw !== 'string' && typeof raw !== 'object')) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
         `path generator '${resolution.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,
       );
     }
@@ -145,14 +151,14 @@ export const lowerGeneratorStepToCommands = (args: {
       round,
     });
   } catch (e) {
-    throw new LayoutProbeRecoverableError(`path generator '${resolution.name}' threw: ${safeThrownDetail(e)}`, {
+    throw new RetikzLayoutProbeRecoverableError(`path generator '${resolution.name}' threw: ${safeThrownDetail(e)}`, {
       cause: e,
       providerKey: `path-generator:${resolution.name}`,
     });
   }
   return withProviderOutputValidationBoundary(`path generator '${resolution.name}'`, () => {
     if (!Array.isArray(produced)) {
-      throw new CompositeContractError(
+      throw new RetikzCompositeContractError(
         `path generator '${resolution.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
       );
     }

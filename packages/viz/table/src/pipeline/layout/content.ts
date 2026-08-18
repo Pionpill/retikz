@@ -3,6 +3,7 @@ import type { BoundsRect } from '@retikz/math';
 import type { TableCellAlignment, TableCellTranslation } from './cell';
 import type { TableCellFit, TableCellFitScale } from './fit';
 
+import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 import { computeTableCellTranslation } from './cell';
 import { computeTableCellFitScale, projectTableCellBounds } from './fit';
@@ -52,7 +53,7 @@ export const computeTableCellContentPlacement = (
   input: ComputeTableCellContentPlacementInput,
 ): TableCellContentPlacement => {
   if (!isTableCellOverflow(input.overflow)) {
-    throw new Error('table: Cell overflow must be visible or clip');
+    throw new RetikzTableError('table: Cell overflow must be visible or clip');
   }
 
   const scale = computeTableCellFitScale(input.sourceAllocationBounds, input.contentBox, input.fit);

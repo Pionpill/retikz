@@ -1,9 +1,10 @@
-﻿import { resolveFieldPath } from '@retikz/data';
+import { resolveFieldPath } from '@retikz/data';
 import { type DataFieldTypeMap, type DataFieldTypeValue } from '@retikz/data';
 
 import type { IRPlotPointNumberStyle, MarkValueKind } from '../../../schemas';
 
 import { type ChannelResolution } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
 type MarkStyleValue<T> =
@@ -44,7 +45,7 @@ export const makeMarkValueResolver = <T>(
   const field = value.value;
   const fieldType = fieldTypes.get(field);
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`,
     );
   }

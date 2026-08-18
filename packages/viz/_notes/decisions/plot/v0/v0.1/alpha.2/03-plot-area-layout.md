@@ -33,7 +33,7 @@ mark 投影从整图 range 改为 plot area range（改 alpha.1 `expand.ts`）�
 - **margin 之和 ≥ 尺寸**：定为**抛清晰错误**（plotArea 非正会一路出 `cx="NaN"`/负坐标坏图，与 alpha.1 尺寸校验同思路）。否决静默夹到最小正值——会出退化但「看似正常」的图，掩盖配置错误。
 - **用户 margin 逐边校验有限非负**：`NaN`（`NaN <= 0` 为 false、会漏过尺寸守卫）/ 负值（让 plot area 比画布还宽、图元跑出画布）同样抛清晰错误，不静默出坏坐标。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **guide 几何怎么画（轴线 / tick / label / grid → core）** → [ADR-04](./04-guide-lowering.md)。
 - **真实 measureText 精确布局** → 后续（需 core 支持 plot 两遍编译或 plot 自带 measurer）。

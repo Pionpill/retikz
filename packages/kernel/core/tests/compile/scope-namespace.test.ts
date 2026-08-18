@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, Scene, ScenePrimitive, Transform } from '../../src';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { applyTransformChain } from '../../src/compile/transform';
 
@@ -72,7 +73,7 @@ describe('localNamespace 隔离子 frame', () => {
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
     // 两个 A 跨 frame 不算 duplicate
-    expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(0);
     const ends = collectVisualLineEnds(compiled.primitives);
     expect(ends).toHaveLength(2);
     // 第一条 path（来自 scope 内）：内层 A 全局中心 ≈ (200, 0)
@@ -103,7 +104,7 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     const [end] = collectVisualLineEnds(compiled.primitives);
     expect(end).toBeDefined();
     expect(Math.abs(end[0] - 0)).toBeLessThan(20);
@@ -126,7 +127,7 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
-    expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
   });
 
   it('local_namespace_nested_3_levels_shadowing：三层嵌套各层 id="A"，最内层 path 命中最内层；中层 path 命中中层', () => {
@@ -165,7 +166,7 @@ describe('localNamespace 隔离子 frame', () => {
     ]);
     const { compiled, warnings } = compileWithWarnings(ir);
     // 三个 A 跨 frame，全部 shadowing，没有 duplicate warn
-    expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(0);
     const ends = collectVisualLineEnds(compiled.primitives)
       .map(p => p[0])
       .sort((a, b) => a - b);
@@ -192,7 +193,7 @@ describe('localNamespace 隔离子 frame', () => {
     ]);
     const { warnings } = compileWithWarnings(ir);
     // at-translate 解析成功 → 不发 AT_TARGET_UNRESOLVED warn
-    expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
   });
 
   it('duplicate_across_frames_no_warn：localNamespace 内外同 id 不算 duplicate', () => {
@@ -205,7 +206,7 @@ describe('localNamespace 隔离子 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
-    expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(0);
   });
 });
 
@@ -229,7 +230,7 @@ describe('scope.id 始终注册到父 frame', () => {
     ]);
     const { warnings } = compileWithWarnings(ir);
     // cluster 必须解析成功（在父 frame）；A 在内层 frame 不被外层访问
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
 
     // 进一步：外层 path 引用内层 id 'A' 触发 warn
     const ir2 = scene([
@@ -248,7 +249,7 @@ describe('scope.id 始终注册到父 frame', () => {
       },
     ]);
     const { warnings: w2 } = compileWithWarnings(ir2);
-    expect(w2.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
+    expect(w2.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
   });
 
   it('localNamespace=false（默认）：scope.id 与子 id 都注册到同一 frame，子可见外可见', () => {
@@ -266,7 +267,7 @@ describe('scope.id 始终注册到父 frame', () => {
       },
     ]);
     const { warnings } = compileWithWarnings(ir);
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
   });
 });
 

@@ -4,6 +4,7 @@ import type { RibbonWidthProfileDefinition } from '../profile-types';
 import type { IRRibbonPath } from '../types';
 import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 import { resolveRibbonOptions, resolveRibbonWidth } from '../resolve';
 import {
   commandsToSegmentInputs,
@@ -112,10 +113,18 @@ export const emitRibbonPrimitive = (
 
   if (ribbon.mode === 'boundary') {
     if (path.label !== undefined) {
-      throw new Error('Ribbon label first version only supports centerline ribbon labels.');
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.PipelineInvariant,
+        message: 'Ribbon label first version only supports centerline ribbon labels.',
+        details: { mode: ribbon.mode },
+      });
     }
     if (ribbon.upper === undefined || ribbon.lower === undefined) {
-      throw new Error('Boundary ribbon requires `upper` and `lower` steps.');
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.PipelineInvariant,
+        message: 'Boundary ribbon requires `upper` and `lower` steps.',
+        details: { mode: ribbon.mode, upper: ribbon.upper !== undefined, lower: ribbon.lower !== undefined },
+      });
     }
     const upper = segmentsFromCommands({
       commands: context.materializePath({ children: ribbon.upper }).commands,
@@ -140,14 +149,22 @@ export const emitRibbonPrimitive = (
   }
 
   if (ribbon.children === undefined) {
-    throw new Error('Centerline ribbon requires `children`.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.PipelineInvariant,
+      message: 'Centerline ribbon requires `children`.',
+      details: { mode: ribbon.mode },
+    });
   }
   const materialized = context.materializePath({ children: ribbon.children });
   const segmentInputs = commandsToSegmentInputs(materialized.commands, 'centerline');
   const rawSegments = segmentInputsToSegments(segmentInputs);
   const rawTotalLength = rawSegments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(rawTotalLength) || rawTotalLength <= 0) {
-    throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: 'Ribbon centerline has zero length; at least one nonzero segment is required.',
+      details: { totalLength: rawTotalLength },
+    });
   }
   const startPoint = sampleAtDistance(rawSegments, rawTotalLength, 0).point;
   const endPoint = sampleAtDistance(rawSegments, rawTotalLength, rawTotalLength).point;
@@ -162,7 +179,11 @@ export const emitRibbonPrimitive = (
   });
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
-    throw new Error('Ribbon centerline has zero length; at least one nonzero segment is required.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: 'Ribbon centerline has zero length; at least one nonzero segment is required.',
+      details: { totalLength },
+    });
   }
   const widthResolution = resolveRibbonWidth(ribbon.width, profileRegistry, 'path.kindOptions.width');
   const widthAt = centerlineWidthFunction(ribbon, widthResolution, totalLength);

@@ -11,6 +11,7 @@ import type {
 } from './contracts';
 import type { PolarConfig } from './scale-coordinate';
 
+import { RetikzPlotVanillaError } from '../../error';
 import { normalizePlotBindings } from './bindings';
 import {
   buildAngleScale,
@@ -47,10 +48,10 @@ export const normalizePlotRoot = (
   const coordinateInput = context.coordinate?.value;
   const coordKind = coordinateTypeOf(coordinateInput);
   if (collected.hasSector && coordKind !== 'polar2D') {
-    throw new Error('buildPlotIR: <IntervalMark angle> is only valid under coordinate="polar2D"');
+    throw new RetikzPlotVanillaError('buildPlotIR: <IntervalMark angle> is only valid under coordinate="polar2D"');
   }
   if (collected.hasHorizontalBar && coordKind !== 'cartesian2D') {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"',
     );
   }
@@ -125,7 +126,7 @@ export const normalizePlotRoot = (
       BUILTIN_COORDINATE_INPUT_TYPES.has(coordinateInput.type) ||
       coordinateInput.type === 'custom'
     ) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }',
       );
     }

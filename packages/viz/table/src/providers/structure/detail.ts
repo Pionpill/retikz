@@ -1,4 +1,5 @@
 import { defineTableStructure } from '../../contract';
+import { RetikzTableError } from '../../error';
 import {
   DetailTableStructureSchema,
   TableCellLocation,
@@ -13,7 +14,8 @@ import { TableCellSourceKind } from '../../shared';
 export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
   schema: DetailTableStructureSchema,
   build: (spec, context) => {
-    if (context.data === undefined) throw new Error('detail structure requires a data reference and dataset');
+    if (context.data === undefined)
+      throw new RetikzTableError('detail structure requires a data reference and dataset');
     context.resolveFieldTypes(new Set(spec.columns.map(column => column.field)));
 
     const hasHeader = spec.header !== false;
@@ -43,7 +45,7 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
         spec.columns.map((column, columnIndex) => {
           const value = context.resolveField(sourceIndex, column.field);
           if (value === undefined) {
-            throw new Error(`sourceIndex ${sourceIndex} is missing detail field "${column.field}"`);
+            throw new RetikzTableError(`sourceIndex ${sourceIndex} is missing detail field "${column.field}"`);
           }
           return {
             id: `cell.r${sourceIndex}.c${column.id}`,

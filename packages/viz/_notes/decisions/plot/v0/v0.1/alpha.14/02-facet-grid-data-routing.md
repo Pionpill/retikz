@@ -68,7 +68,7 @@ facet grid 的规范化产物不是用户手写的 `composition.scopes` 列表�
 3. scale sharing 只先覆盖 position role 的最小集合，color / size / opacity 等非位置 scale 的共享策略留给后续 milestone。
 4. panel scope id 由规则生成，保持 JSON-safe、可被 locator / provenance 使用，也避免要求用户手写大量 id。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不定义 panel label、外侧统一 axis、panel gap、grid 合并策略；这些由 ADR-05 处理。
 - 不支持 per-mark 选择“是否参与 facet”或跨 panel reference line；后续如需要另开 ADR。

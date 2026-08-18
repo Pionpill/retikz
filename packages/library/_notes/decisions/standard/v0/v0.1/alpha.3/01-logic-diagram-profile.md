@@ -2,7 +2,7 @@
 
 - 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01
-- 关联：[alpha.3 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
+- 关联：[alpha.3 roadmap](./roadmap-graph-history.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library](../../../../../architecture/standard-library-design.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [能力完备性总纲](../../../../../../../../notes/architecture/capability-design.md)
 - 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 ADR 的图式语义迁入 Diagram owner；本页保留为历史设计记录
 
 ## 背景与目标
@@ -95,28 +95,7 @@ type LogicOuterArtifact = {
 - 外部扩展与下游闭环：调用方通过任意 `IRChild`、开放 role、appearance 与 Core provider 扩展内容和视觉；不新增 LogicDiagram definition family
 - 不支持边界：需要全局关系真源、自动布局或交互编辑时，上移到未来 Graph / Flow / Workspace，不在 Standard 局部补丁
 
-## 架构验证
-
-- 是否可由现有能力组合：Core 已能表达图形、Path、整体 target 与 authored Scope placement，但缺少持久化逻辑 discriminator 与 collision-safe Block section target；alpha.3 先组合现有能力闭环整体 target，并把 section target 保留为显式 deferred 分支。Path 几何与 Scene identity 继续由 Core 自身承载
-- 责任切分：Standard 保存高层语义并下沉；Core 解析 child、target、Path、Scope 与 Scene；renderer 只绘制 Scene；adapter 不解释语义
-- 是否需要新 IR / contract / registry：新增 Standard composite IR；每项继续使用 Core CompositeDefinition registry。组件集合和 route vocabulary 是闭合能力，内容与 role 已通过开放字段扩展，因此不增加新 registry
-- pipeline / lowering / renderer / diagnostics 如何闭环：Standard schema → CompositeDefinition expand 或 layout-aware compile → Core IR 与适用的 typed artifact → Scene → SVG / Canvas；失败沿 Core layout / namespace 诊断提升
-- provenance / locator 是否适用：布局组件 artifact 的 id / section key 支撑 headless 定位；Connector 只保留同 id Scene 主体挂点，不提供 compile artifact locator。领域 provenance 由消费方在 lowering 前与 authored id join，不写入 Standard
-- 结论：逻辑语义扩展当前 Standard Drawing Complete 能力，不上移为 Graph；通用 structured subtarget 缺口留在 Core，未闭环前由 Standard 明确拒绝 section target
-
-## 被否决方案
-
-- 只提供 diamond、capsule、bar 等 shape：视觉变化会丢失逻辑角色，工具仍需反推语义
-- 新建 `LogicNodeDefinition` / role registry：role 不改变执行算法，任意内容与 appearance 已覆盖扩展需求
-- 在 Standard 保存完整 nodes / edges：会复制未来 GraphModel，并引入拓扑与全局 identity owner
-- 让 renderer 识别逻辑组件：破坏 renderer-agnostic Scene 主链
-- 用 ReactNode 或 callback 自定义内容：无法 JSON round-trip，也会让 Vanilla 与直接 IR 失去等价性
-
-## 测试策略摘要
-
-需要 schema 证据锁定 discriminator、identity、开放 role、闭合 Terminal role 与 target union；compile 证据分别锁定 Connector pending Path 的 forward / unresolved 行为、Callout previous-only placement、布局组件 artifact identity 与 Connector lowered Scene 主体 identity；appearance 证据证明替换 shape 后语义不变；capability 与 adapter 证据证明未加载时 fail-loud、加载后直接 IR / React / Vanilla 等价；renderer 只验证同一 Scene parity。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 各组件的具体字段、默认形状、布局算法和 route 参数
 - Graph / Flow / Workspace 包、公共 API 或 release group

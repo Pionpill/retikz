@@ -1,16 +1,14 @@
 import { arcEndPoint, ellipseArcPoint, point } from '@retikz/math';
 
-import type {
-  ArrowEmitContext,
-  MarkerFill,
-  MarkerPrimitive,
-  PathCommand,
-  ResolvedArrowEnd,
-} from '../../../contract';
+import type { ArrowEmitContext, MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
 import type { ArrowMarkResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
-import { CompositeContractError, LayoutProbeRecoverableError, safeThrownDetail } from '../../../resolve/diagnostics';
+import {
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
+  safeThrownDetail,
+} from '../../../resolve/diagnostics';
 import { validateMarkerPrimitives } from '../../resource';
 import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
 
@@ -21,7 +19,7 @@ const emitArrowMarkerPrimitives = (
   ctx: ArrowEmitContext,
 ): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
-    throw new CompositeContractError(
+    throw new RetikzCompositeContractError(
       `Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`,
     );
   }
@@ -29,7 +27,7 @@ const emitArrowMarkerPrimitives = (
   try {
     emitted = def.emit(ctx);
   } catch (e) {
-    throw new LayoutProbeRecoverableError(`Arrow '${shape}' emit failed: ${safeThrownDetail(e)}`, {
+    throw new RetikzLayoutProbeRecoverableError(`Arrow '${shape}' emit failed: ${safeThrownDetail(e)}`, {
       cause: e,
       providerKey: `arrow:${shape}`,
     });
@@ -85,10 +83,7 @@ export const emitEndpointArrowMark = (
 };
 
 /** 解析中段 arrow mark 为 marker 描述 */
-export const emitMarkArrow = (
-  resolution: ArrowMarkResolution,
-  round: (n: number) => number,
-): ResolvedArrowEnd => {
+export const emitMarkArrow = (resolution: ArrowMarkResolution, round: (n: number) => number): ResolvedArrowEnd => {
   return emitArrowEnd(resolution, round);
 };
 

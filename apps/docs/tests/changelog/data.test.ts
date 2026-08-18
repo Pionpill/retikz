@@ -5,10 +5,10 @@ import {
   changelog,
   changelogForModule,
   changelogVersionSlug,
-  schematicSection,
   kernelSection,
   librarySection,
   PACKAGE_IDS,
+  schematicSection,
   vizSection,
 } from '@/modules/docs/data';
 

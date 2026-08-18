@@ -8,8 +8,8 @@ import type { InspectionSelection } from '../../src';
 import {
   createInspectorRegistry,
   defineInspector,
-  InspectionCompileError,
   resolveInspectionSelection,
+  RetikzInspectionCompileError,
 } from '../../src';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
@@ -404,7 +404,7 @@ describe('Inspection selection', () => {
       failure = cause;
     }
 
-    expect(failure).toBeInstanceOf(InspectionCompileError);
-    expect((failure as InspectionCompileError).origin).toMatchObject({ stage: 'selection', ruleIndex: 0 });
+    expect(failure).toBeInstanceOf(RetikzInspectionCompileError);
+    expect((failure as RetikzInspectionCompileError).origin).toMatchObject({ stage: 'selection', ruleIndex: 0 });
   });
 });

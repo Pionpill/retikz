@@ -51,7 +51,7 @@ export const ShapeChannelSchema = z
 2. **PointMark 专属是本质**：形状只对 glyph 有意义，进 PointEncoding 天然正确。
 3. **core 现成 shape 名**：落 core 内置 shape，不补 core。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **更多 glyph**（triangle / cross / star）→ 顺延（需 polygon params / shape 注册表）。
 - **shape 作用于非 point mark** → 无意义，不做。

@@ -5,6 +5,7 @@ import type { SegmentSample } from '../../../shared/geometry';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBasePropsWithStrokeWidth } from './output';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
 import { sampleRoundedCommands } from './rounded-corners';
 import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
@@ -53,7 +54,8 @@ export const emitPathEndpointDecorations = (
       const resolved = emitEndpointArrowMark(
         arrowResolutions.get(item.mark) ??
           (() => {
-            throw new Error(
+            throw new RetikzCoreError(
+              RetikzCoreErrorCode.Compile,
               `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
             );
           })(),
@@ -68,7 +70,8 @@ export const emitPathEndpointDecorations = (
       const resolved = emitEndpointArrowMark(
         arrowResolutions.get(item.mark) ??
           (() => {
-            throw new Error(
+            throw new RetikzCoreError(
+              RetikzCoreErrorCode.Compile,
               `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
             );
           })(),
@@ -134,7 +137,10 @@ export const emitInlineMarkPrimitives = ({
         })();
     const resolution = arrowResolutions.get(mark);
     if (resolution === undefined) {
-      throw new Error(`Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
+      );
     }
     const spec = emitMarkArrow(resolution, round);
     primitives.push(

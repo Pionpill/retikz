@@ -5,6 +5,7 @@ import type { BoundaryFitValue, BuiltinShapeValue } from '../../schemas';
 import type { Rect } from '../../shared';
 
 import { defineBoundary } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { BoundaryFit, BuiltinShape } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape, rectangle } from '../shape';
@@ -25,7 +26,8 @@ const withGap = (rect: Rect, halfWidth: number, halfHeight: number, gap: number,
   const effectiveHalfWidth = halfWidth + gap;
   const effectiveHalfHeight = halfHeight + gap;
   if (effectiveHalfWidth <= 0 || effectiveHalfHeight <= 0) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Provider,
       `${provider} boundary gap ${gap} produced a non-positive half-axis from [${halfWidth}, ${halfHeight}]`,
     );
   }

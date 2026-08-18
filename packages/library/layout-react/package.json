@@ -84,7 +84,7 @@
   },
   "dependencies": {
     "@retikz/layout": "workspace:*",
-    "@retikz/layout-vanilla": "workspace:^",
+    "@retikz/layout-vanilla": "workspace:*",
     "@retikz/react": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },

@@ -111,31 +111,7 @@ appearance 由 style tokens、rule 与 encoding 解析，不写入 formatter opt
 - Scene 可能新增 Cell background，visual bounds 随真实可见背景变化
 - 旧的空 appearance 和 semantic border 路径保持可表达
 
-## 测试策略摘要
-
-- schema parity 证明 Core style/default 与 Table border 的精确复用及闭合拒绝
-- public contract 证明新 callback、旧 callback 的类型拒绝与跨入口一致性
-- compile contract 证明 wrapper 在 measurement 前、背景 draw order/bounds、direct/value parity 和 Border Graph 单次消费
-- pipeline 证明 payload discriminator、identity/order、detached/freeze 和 provider diagnostics
-
-详细 case、路径、命令和正式证据位于对应 ignored mirror plan 的 `TEST_CONTRACT.md`。
-
-## 能力完备性与架构验证
-
-- **所属能力域**：Tabular Visualization Complete / Cell Semantics、Presentation、Layout 协作边界
-- **问题归属**：Cell box 视觉目标属于 Table，通用 style/measurement 属于 Core
-- **内部闭环**：formatted value/direct content + appearance → Presentation/Scope → Table Cell layout → Core IR
-- **外部扩展**：custom presentation 与内置项观察同一 context/appearance 并返回同一 `IRChild`
-- **结论**：扩展 Table Presentation，复用 Core style 与 measurement，不建立平行样式或 renderer
-
-## 被否决方案
-
-- 每种 Presentation 自行绘制背景与边框：无法统一 direct content 与 Cell box
-- rule/encoding 直接改写任意 child：会产生多套 merge 与不一致 measurement
-- 为 appearance 建立 Definition registry：闭合值对象没有行为 dispatch，不应伪装成 provider
-- 把 appearance 扩成 layout/style 万能对象：会越过 Table Layout 与 Core Scope 边界
-
-## 不在本 ADR 范围
+## 长期边界
 
 - selector、rule 与 style precedence
 - visual scale 求值与 Legend descriptor

@@ -1,5 +1,6 @@
 import type { RuntimeRevision } from '@retikz/runtime';
 
+import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -34,6 +35,7 @@ import {
   definePathKind,
   definePattern,
   defineShape,
+  JsonObjectSchema,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -45,9 +47,10 @@ import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
 import * as runtimeTopology from '../../src/compile/orchestration/runtime-topology';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
-import { CompileInvariantError, normalizeLayoutProbeError } from '../../src/compile/probe-failure';
+import { normalizeLayoutProbeError, RetikzCompileInvariantError } from '../../src/compile/probe-failure';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
-import { CompositeContractError, isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
+import { RetikzCoreErrorCode } from '../../src/error';
+import { isRetikzLayoutProbeRecoverableError, RetikzCompositeContractError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';
 import { arrowMarks } from '../helpers/arrow-marks';
 
@@ -489,7 +492,7 @@ describe('layout-aware composite constraints and bounds', () => {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(CompositeContractError);
+    expect(thrown).toBeInstanceOf(RetikzCompositeContractError);
     expect(thrown).toMatchObject({
       message: expect.stringMatching(/test\.hostileNestedProposal.*invalid proposal.*validation failed/i),
     });
@@ -977,7 +980,12 @@ describe('layout-aware composite constraints and bounds', () => {
   });
 
   it('lets branded Core invariants pierce the probe catch boundary', () => {
-    const invariant = new CompileInvariantError('forced namespace invariant');
+    const invariant = new RetikzCompileInvariantError('forced namespace invariant');
+    expect(invariant).toBeInstanceOf(RetikzError);
+    expect(invariant).toMatchObject({
+      name: 'RetikzCompileInvariantError',
+      code: RetikzCoreErrorCode.CompileInvariantViolation,
+    });
     const diff = vi.spyOn(NamespaceStack.prototype, 'diffTopFrame').mockImplementation(() => {
       throw invariant;
     });
@@ -1024,7 +1032,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const context = createCompileContext(ir, { composites: [parent] });
 
     expect(() => compileChildrenToPrimitives(ir.children, context, { identityTracker: outer })).toThrow(
-      CompileInvariantError,
+      RetikzCompileInvariantError,
     );
     createProbeTracker.mockRestore();
   });
@@ -1047,7 +1055,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'invalidLayoutChildDiscriminatorParent' }), {
         composites: [parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('rejects an accessor-backed layoutChild input before the recoverable dispatch boundary', () => {
@@ -1073,7 +1081,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileLayoutChildParent' }), {
         composites: [parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('rejects automatic allocation bounds whose transformed edges become non-finite', () => {
@@ -1101,7 +1109,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'nonFiniteAutomaticAllocationParent' }), {
         composites: [parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('does not downgrade malformed nested Composite output to a failed probe', () => {
@@ -1184,7 +1192,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseProbeChildrenParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('does not downgrade an invalid nested Composite output child to a failed probe', () => {
@@ -1246,7 +1254,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileCallbackResultParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('does not downgrade hostile nested replay wrapper reflection to a failed probe', () => {
@@ -1285,7 +1293,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileReplayWrapperParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('reads a replay wrapper clip once before validation and detaches it', () => {
@@ -1351,7 +1359,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseReplayWrapperTransformsParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('does not downgrade hostile nested runtime Scope props reflection to a failed probe', () => {
@@ -1391,7 +1399,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileRuntimeScopePropsParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('does not downgrade sparse nested runtime Scope transforms to a failed probe', () => {
@@ -1421,7 +1429,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeTransformsParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('does not downgrade sparse nested runtime Scope children to a failed probe', () => {
@@ -1451,7 +1459,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeChildrenParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('keeps detailed expanded child compilation on the existing dispatch path', () => {
@@ -1532,7 +1540,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(sceneOf({ namespace: 'test', type: `malformedExpand${variant}Parent` }), {
           composites: [expanded, parent],
         }),
-      ).toThrow(CompositeContractError);
+      ).toThrow(RetikzCompositeContractError);
     },
   );
 
@@ -1645,7 +1653,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         measureText,
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it.each([
@@ -1713,7 +1721,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         lowerTex,
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it.each(['measureText', 'lowerTex'] as const)('keeps an ordinary %s execution throw recoverable', provider => {
@@ -1795,7 +1803,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         shapes: [hostileShape],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it.each([
@@ -1869,7 +1877,7 @@ describe('layout-aware composite constraints and bounds', () => {
         shapes: [hostileShape],
         boundaries: [hostileBoundary],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('keeps hostile Shape scaleParams output reflection fatal inside a discarded probe', () => {
@@ -1916,7 +1924,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         shapes: [hostileShape],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it.each([
@@ -1992,7 +2000,7 @@ describe('layout-aware composite constraints and bounds', () => {
         shapes: [hostileEnvelopeShape],
         boundaries: [hostileBoundary],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it.each([
@@ -2039,7 +2047,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         boundaries: [malformedBoundary],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('keeps hostile path-generator output iteration fatal inside a discarded probe', () => {
@@ -2081,7 +2089,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         pathGenerators: [hostileGenerator],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('keeps hostile PathKind compile output reflection fatal inside a discarded probe', () => {
@@ -2126,7 +2134,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         pathKinds: [hostilePathKind],
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('snapshots dynamic PathKind bounds points before validation and layout publication', () => {
@@ -2198,10 +2206,15 @@ describe('layout-aware composite constraints and bounds', () => {
     const badClip = defineClip({
       kind: 'badResolvedClip',
       schema: z.strictObject({ kind: z.literal('badResolvedClip') }),
-      resolve: (() => ({
-        kind: 'compound',
-        children: [{ kind: 'rect', x: 0, y: 0, width: -1, height: 2 }],
-      })) as unknown as () => ClipShape,
+      resolve: () => ({ kind: 'badResolvedClip', width: -1 }),
+      shapeSchema: z.strictObject({ kind: z.literal('badResolvedClip'), width: z.number().positive() }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     const badGenerator = definePathGenerator({
       name: 'badGeneratedArc',
@@ -2264,7 +2277,7 @@ describe('layout-aware composite constraints and bounds', () => {
     for (const variant of ['shape', 'arrow', 'pattern', 'clip', 'pathGenerator'] as const) {
       expect(() =>
         compileToScene(sceneOf({ namespace: 'test', type: 'malformedProviderParent', variant }), options),
-      ).toThrow(/emit|primitive|invalid|root shape|path command/i);
+      ).toThrow(/emit|primitive|invalid|root shape|path command|output validation/i);
     }
   });
 
@@ -2321,8 +2334,8 @@ describe('layout-aware composite constraints and bounds', () => {
       lineContactX: 0,
       emit: () => [cyclicMarkerGroup],
     });
-    const cyclicClipShape: { kind: 'compound'; children: Array<ClipShape> } = {
-      kind: 'compound',
+    const cyclicClipShape: { kind: 'cyclicCompoundClip'; children: Array<ClipShape> } = {
+      kind: 'cyclicCompoundClip',
       children: [],
     };
     cyclicClipShape.children.push(cyclicClipShape);
@@ -2330,6 +2343,17 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'cyclicCompoundClip',
       schema: z.strictObject({ kind: z.literal('cyclicCompoundClip') }),
       resolve: () => cyclicClipShape,
+      shapeSchema: z.strictObject({
+        kind: z.literal('cyclicCompoundClip'),
+        children: z.array(z.intersection(z.object({ kind: z.string().min(1) }), JsonObjectSchema)),
+      }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     const variants = [
       'fontFamilyFunctionShape',
@@ -2463,7 +2487,7 @@ describe('layout-aware composite constraints and bounds', () => {
       emit: () => [symbolMarker as unknown as MarkerPrimitive],
     });
     const symbolClipShape: Record<PropertyKey, unknown> = {
-      kind: 'rect',
+      kind: 'symbolKeyClip',
       x: 0,
       y: 0,
       width: 1,
@@ -2474,6 +2498,20 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'symbolKeyClip',
       schema: z.strictObject({ kind: z.literal('symbolKeyClip') }),
       resolve: () => symbolClipShape as unknown as ClipShape,
+      shapeSchema: z.strictObject({
+        kind: z.literal('symbolKeyClip'),
+        x: z.number(),
+        y: z.number(),
+        width: z.number().nonnegative(),
+        height: z.number().nonnegative(),
+      }),
+      lower: shape => ({
+        commands: [
+          { kind: 'move', to: [shape.x as number, shape.y as number] },
+          { kind: 'line', to: [(shape.x as number) + (shape.width as number), shape.y as number] },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     const variants = [
       'animationFunctionShape',
@@ -2568,7 +2606,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const clipTrap = new Error('clip getPrototypeOf trap');
     const clipProxy = new Proxy(
-      { kind: 'rect', x: 0, y: 0, width: 1, height: 1 },
+      { kind: 'proxyTrapClip', x: 0, y: 0, width: 1, height: 1 },
       {
         getPrototypeOf: () => {
           throw clipTrap;
@@ -2579,6 +2617,20 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'proxyTrapClip',
       schema: z.strictObject({ kind: z.literal('proxyTrapClip') }),
       resolve: () => clipProxy as unknown as ClipShape,
+      shapeSchema: z.strictObject({
+        kind: z.literal('proxyTrapClip'),
+        x: z.number(),
+        y: z.number(),
+        width: z.number().nonnegative(),
+        height: z.number().nonnegative(),
+      }),
+      lower: () => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 1] },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     const variants = ['scene', 'marker', 'clip'] as const;
     const parent = defineComposite({
@@ -2626,7 +2678,7 @@ describe('layout-aware composite constraints and bounds', () => {
       } catch (cause) {
         thrown = cause;
       }
-      expect(thrown).toBeInstanceOf(CompositeContractError);
+      expect(thrown).toBeInstanceOf(RetikzCompositeContractError);
       expect((thrown as Error & { cause?: unknown }).cause).toBe(causes[variant]);
     }
   });
@@ -2696,7 +2748,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         shapes: [farShape],
       }),
-    ).toThrow(CompileInvariantError);
+    ).toThrow(RetikzCompileInvariantError);
   });
 
   it('snapshots a dynamic Arrow marker primitive before validation and downstream use', () => {
@@ -2736,11 +2788,11 @@ describe('layout-aware composite constraints and bounds', () => {
 
   it('snapshots a dynamic Clip shape before validation and resource registration', () => {
     let kindReads = 0;
-    const dynamicShape = new Proxy({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 } as const, {
+    const dynamicShape = new Proxy({ kind: 'dynamicClipShape', x: 0, y: 0, width: 10, height: 10 } as const, {
       get: (target, property, receiver) => {
         if (property === 'kind') {
           kindReads += 1;
-          return kindReads === 1 ? 'rect' : 'bogus';
+          return kindReads === 1 ? 'dynamicClipShape' : 'bogus';
         }
         return Reflect.get(target, property, receiver);
       },
@@ -2749,6 +2801,23 @@ describe('layout-aware composite constraints and bounds', () => {
       kind: 'dynamicClipShape',
       schema: z.strictObject({ kind: z.literal('dynamicClipShape') }),
       resolve: () => dynamicShape,
+      shapeSchema: z.strictObject({
+        kind: z.literal('dynamicClipShape'),
+        x: z.number(),
+        y: z.number(),
+        width: z.number().nonnegative(),
+        height: z.number().nonnegative(),
+      }),
+      lower: shape => ({
+        commands: [
+          { kind: 'move', to: [shape.x, shape.y] },
+          { kind: 'line', to: [shape.x + shape.width, shape.y] },
+          { kind: 'line', to: [shape.x + shape.width, shape.y + shape.height] },
+          { kind: 'line', to: [shape.x, shape.y + shape.height] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
 
     const result = compileToScene(
@@ -2763,7 +2832,16 @@ describe('layout-aware composite constraints and bounds', () => {
 
     expect(clip).toMatchObject({
       kind: 'clip',
-      shape: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
+      path: {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [10, 0] },
+          { kind: 'line', to: [10, 10] },
+          { kind: 'line', to: [0, 10] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      },
     });
     expect(kindReads).toBe(0);
   });
@@ -2884,7 +2962,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
           shapes: [shape],
         }),
-      ).toThrow(CompositeContractError);
+      ).toThrow(RetikzCompositeContractError);
     }
   });
 
@@ -2909,7 +2987,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
           shapes: [shape],
         }),
-      ).toThrow(CompositeContractError);
+      ).toThrow(RetikzCompositeContractError);
       expect(() =>
         compileToScene(
           sceneOf({
@@ -2922,7 +3000,7 @@ describe('layout-aware composite constraints and bounds', () => {
           }),
           { arrows: [arrow] },
         ),
-      ).toThrow(CompositeContractError);
+      ).toThrow(RetikzCompositeContractError);
     }
   });
 
@@ -2969,7 +3047,8 @@ describe('layout-aware composite constraints and bounds', () => {
     } catch (cause) {
       selected = cause;
     }
-    expect(isLayoutProbeRecoverableError(selected)).toBe(true);
+    expect(isRetikzLayoutProbeRecoverableError(selected)).toBe(true);
+    expect(selected).toBeInstanceOf(RetikzError);
     expect((selected as Error & { cause?: unknown }).cause).toBe(hostileThrown.proxy);
   });
 
@@ -3034,46 +3113,61 @@ describe('layout-aware composite constraints and bounds', () => {
       selected = cause;
     }
     expect(prototypeTrapCalls).toBe(1);
-    expect(isLayoutProbeRecoverableError(selected)).toBe(true);
+    expect(isRetikzLayoutProbeRecoverableError(selected)).toBe(true);
     expect((selected as Error & { cause?: unknown }).cause).toBe(selfReturningProxy);
   });
 
-  it('keeps an ordinary clip provider execution throw recoverable and discardable', () => {
-    const throwingClip = defineClip({
-      kind: 'ordinaryThrowingClip',
-      schema: z.strictObject({ kind: z.literal('ordinaryThrowingClip') }),
-      resolve: () => {
-        throw new Error('ordinary clip execution failure');
-      },
-    });
-    const parent = defineComposite({
-      namespace: 'test',
-      type: 'discardThrowingClip',
-      schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('discardThrowingClip'),
-      }),
-      compile: (_, context) => {
-        const probe = context.layoutChild(
-          {
-            type: 'scope',
-            clip: { kind: 'ordinaryThrowingClip' } as never,
-            children: [{ type: 'node', position: [0, 0] }],
-          },
-          NaturalLayoutProposal,
-        );
-        expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
-        return { children: [] };
-      },
-    });
+  it.each(['resolve', 'lower'] as const)(
+    'keeps an ordinary clip provider %s throw recoverable and discardable',
+    stage => {
+      const throwingClip = defineClip({
+        kind: 'ordinaryThrowingClip',
+        schema: z.strictObject({ kind: z.literal('ordinaryThrowingClip') }),
+        resolve: () => {
+          if (stage === 'resolve') throw new Error('ordinary clip resolve failure');
+          return { kind: 'ordinaryThrowingClip' };
+        },
+        shapeSchema: z.strictObject({ kind: z.literal('ordinaryThrowingClip') }),
+        lower: () => {
+          if (stage === 'lower') throw new Error('ordinary clip lower failure');
+          return {
+            commands: [
+              { kind: 'move' as const, to: [0, 0] as [number, number] },
+              { kind: 'line' as const, to: [1, 1] as [number, number] },
+            ],
+            fillRule: 'nonzero' as const,
+          };
+        },
+      });
+      const parent = defineComposite({
+        namespace: 'test',
+        type: 'discardThrowingClip',
+        schema: CompositeBaseSchema.extend({
+          namespace: z.literal('test'),
+          type: z.literal('discardThrowingClip'),
+        }),
+        compile: (_, context) => {
+          const probe = context.layoutChild(
+            {
+              type: 'scope',
+              clip: { kind: 'ordinaryThrowingClip' } as never,
+              children: [{ type: 'node', position: [0, 0] }],
+            },
+            NaturalLayoutProposal,
+          );
+          expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+          return { children: [] };
+        },
+      });
 
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'discardThrowingClip' }), {
-        composites: [parent],
-        clips: [throwingClip],
-      }),
-    ).not.toThrow();
-  });
+      expect(() =>
+        compileToScene(sceneOf({ namespace: 'test', type: 'discardThrowingClip' }), {
+          composites: [parent],
+          clips: [throwingClip],
+        }),
+      ).not.toThrow();
+    },
+  );
 });
 
 describe('layout-aware composite replay ownership', () => {

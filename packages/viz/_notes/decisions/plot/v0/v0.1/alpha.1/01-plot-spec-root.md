@@ -43,12 +43,7 @@ export type PlotNodeType = ValueOf<typeof PlotComposite>;
 - **`id` 是「可被连接」的句柄，非 scope 容器本身**：根 `id` 在 lowering 时必须绑到 plot lower 成的 core `Scope.id`（外部句柄，core 的连接 = path step 用 `{ id, anchor }` 引用具名元素，plot-design §8.1）。alpha.1 只埋字段位、不解析（alpha.5 接通）。
 - `id` / `meta` 为预留位，让 alpha.5 的 anchor / scope-aware 与 ADR-06 的 provenance **非破坏接入**；`marks.min(1)` 锁定「至少一层」根级不变量。
 
-### 被否决的选项
-
-- **自定义顶层节点（不 extend `CompositeBaseSchema`）** —— 需要 core 新增识别机制；做成 composite 复用既有通道更省。
-- **`meta` 自建 `ir/json.ts`** —— 复用 `@retikz/core` 的 `JsonObjectSchema` 即可，不在 plot 重复定义 JSON 值 schema。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **lowering / 数据绑定 `lowerPlots(datasets)`** → ADR-06。本 ADR 无运行时行为，只定根 schema 与 JSON 透传约束。
 - **data 引用 / 数据模型字段、外部数据契约** → ADR-02；**scale / coordinate / encoding / mark 字段** → ADR-03 ~ ADR-05。

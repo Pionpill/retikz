@@ -24,9 +24,3 @@ density plot 需要把原始样本转换成连续采样点，再交给 path/area
 - provenance 通过 group provenance 追踪到参与统计的源行集合。
 
 area/density visual 由 `PathMark` 的曲线与 baseline closure 表达，不新增 region/density chart preset。
-
-## 被否决方案
-
-- 新增 `DensityMark`：会把 transform 和 geom 绑定。
-- 输出所有原始字段：统计生成行无法代表单一原始 datum，复制字段会误导 provenance。
-- bandwidth 只允许自动推导：退化或极小样本 group 需要显式带宽才能 fail-loud 地工作。

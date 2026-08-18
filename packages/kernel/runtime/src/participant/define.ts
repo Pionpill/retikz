@@ -5,7 +5,7 @@ import type {
   RuntimeCommitParticipantToken,
 } from './types';
 
-import { RuntimeError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { createRuntimeTraceReporter } from '../trace';
 
 const runtimeCommitParticipants = new WeakSet<object>();
@@ -14,7 +14,11 @@ const participantOwnership = new WeakMap<object, 'unowned' | 'owned' | 'consumed
 
 /** 创建 participant definition 输入错误 */
 const invalidParticipant = (cause: unknown) =>
-  new RuntimeError({ code: 'RUNTIME_PARTICIPANT_TOKEN_INVALID', phase: 'participant-definition', cause });
+  new RetikzRuntimeError({
+    code: RetikzRuntimeErrorCode.ParticipantTokenInvalid,
+    phase: 'participant-definition',
+    cause,
+  });
 
 /** 定义 nominal Runtime commit participant */
 export const defineRuntimeCommitParticipant = <TRead>(
@@ -48,7 +52,11 @@ export const defineRuntimeCommitParticipant = <TRead>(
   try {
     createRuntimeTraceReporter({ owner: key, phases: tracePhases, sink: () => undefined });
   } catch (cause) {
-    throw new RuntimeError({ code: 'RUNTIME_TRACE_DEFINITION_INVALID', phase: 'participant-definition', cause });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
+      phase: 'participant-definition',
+      cause,
+    });
   }
   const copiedTracePhases = Object.freeze(
     tracePhases.map(({ phase, unit, outcomes }) =>

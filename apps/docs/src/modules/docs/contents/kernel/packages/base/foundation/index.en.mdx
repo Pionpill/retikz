@@ -16,6 +16,7 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
   RetikzError,
+  RetikzFoundationError,
 } from '@retikz/foundation';
 import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
 ```
@@ -34,7 +35,7 @@ Developers usually do not need to use `@retikz/foundation` directly; it is a pur
       label: 'Root-only and subpath contract tests',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 38,
+      endLine: 40,
     },
   ]}
 />
@@ -80,18 +81,26 @@ assertNonEmptyString('layer/main', 'owner');
 // owner must be a non-empty string.
 ```
 
-It is not an `unknown` type guard; use `NonBlankStringSchema` when a schema result is required. A consumer that needs a domain prefix, code, or class identity catches the ordinary `Error` and wraps it at its own boundary.
+Failures directly throw `RetikzFoundationError`: its `code` is `FOUNDATION_NON_EMPTY_STRING_REQUIRED`, its `details` retain the `label` and original `value`, and its `cause` points to the rejected value. It is not an `unknown` type guard; use `NonBlankStringSchema` when a schema result is required, and do not catch and redundantly wrap the same atomic failure as a domain error.
 
 ### Error handling
 
-`RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest common shape for domain owners. Each owner still decides its code, details fields, and recovery semantics:
+`RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest common shape for domain owners. `RetikzFoundationError` uniformly carries Foundation-owned atomic errors and distinguishes failures through constructor parameters; other owners still decide their codes, details fields, and recovery semantics:
 
 ```ts
+import { RetikzError, type ValueOf } from '@retikz/foundation';
+
 type Details = Readonly<{ source: string }>;
 
-class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
+const RetikzDomainErrorCode = {
+  Failed: 'DOMAIN_FAILED',
+} as const;
+
+type RetikzDomainErrorCodeValue = ValueOf<typeof RetikzDomainErrorCode>;
+
+class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details> {
   constructor(details: Details, cause?: unknown) {
-    super({ code: 'DOMAIN_FAILED', message: 'Domain failed', details, cause });
+    super({ code: RetikzDomainErrorCode.Failed, message: 'Domain failed', details, cause });
   }
 }
 ```
@@ -116,13 +125,13 @@ class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
       label: 'Type utility implementation',
       path: 'packages/kernel/foundation/src/types.ts',
       startLine: 1,
-      endLine: 10,
+      endLine: 12,
     },
     {
       label: 'Non-empty string assertion',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 1,
-      endLine: 8,
+      endLine: 14,
     },
     {
       label: 'Scalar schema tests',
@@ -134,25 +143,25 @@ class DomainError extends RetikzError<'DOMAIN_FAILED', Details> {
       label: 'Structured error implementation',
       path: 'packages/kernel/foundation/src/error.ts',
       startLine: 1,
-      endLine: 32,
+      endLine: 67,
     },
     {
       label: 'Type utility tests',
       path: 'packages/kernel/foundation/tests/types.test.ts',
       startLine: 1,
-      endLine: 31,
+      endLine: 36,
     },
     {
       label: 'Non-empty assertion tests',
       path: 'packages/kernel/foundation/tests/assert.test.ts',
       startLine: 1,
-      endLine: 17,
+      endLine: 40,
     },
     {
       label: 'Structured error tests',
       path: 'packages/kernel/foundation/tests/error.test.ts',
-      startLine: 16,
-      endLine: 51,
+      startLine: 8,
+      endLine: 70,
     },
   ]}
 />

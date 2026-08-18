@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §`<Rectangle>` / §IR 改动清单](./roadmap.md)
+- 关联：
 
-> **范围**：给 path 加专门的 `rectangle` step，直接表达（圆角）矩形，而非用 `move + 4 line + cycle` 手拼。
+> **目标**：给 path 加专门的 `rectangle` step，直接表达（圆角）矩形，而非用 `move + 4 line + cycle` 手拼。
 
 ## 背景 / 约束
 
@@ -12,7 +12,7 @@
 
 ## 决策：加 `RectangleStepSchema` 进 `StepSchema` union
 
-字段定型见 `core/src/ir/path/step.ts`（`RectangleStepSchema`：`from` / `to` 对角两 Target + 可选单值 `roundedCorners`）。
+字段定型见 （`RectangleStepSchema`：`from` / `to` 对角两 Target + 可选单值 `roundedCorners`）。
 
 **输出走 path 命令，不发独立 `RectPrim`**：rectangle 是 path 的一个 step、可能与其它 step 同处一条 path，发独立 `RectPrim` 无法与同 path 其它段组合；故 compile 编译成**追加到当前 path 的命令**（直角 = 4 line + close；圆角 = 4 arc + 4 line），与 circlePath / ellipsePath「往 path 里追加弧命令」同构。Node 的矩形仍走 `RectPrim`（那是对象、非 path step）——两者本就分属 [ADR-04](./04-sugar-conventions.md) 区分的两轴。
 
@@ -26,12 +26,12 @@
 
 > **本版不带 `label`**：矩形是闭合形状，边标注需沿周长参数化（决定走哪条边 / sloped 角 / pen 落点），`geometry/segment.ts` 也无 `rectSegmentSample`。为保 step 最小、不引入未定义语义，rectangle 暂不含 label。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 矩形边 `label`（需 `rectSegmentSample`，后续补）；四角独立圆角半径。
 
 ---
 
-> **实现指针**：level `red`（动 `core/src/ir/**` 加 step + `compile/**` + `geometry/**`）、additive 零破坏（纯新增 step kind，不动既有）。真源以代码为准——`RectangleStepSchema` / `IRRectangleStep`（`core/src/ir/path/step.ts`，进 `StepSchema` discriminatedUnion）、rectangle 分支（`core/src/compile/path/index.ts`）、`outline(from, to, roundedCorners?)`（`core/src/geometry/rect.ts`）、`<Rectangle>` props + `readPathChildren` 分支（`react/src/kernel/Step.tsx` + `builder.ts`）。测试在 `core/tests/compile/rectangle-step.test.ts`。完整原文（Schema 改动表 / 派发 + pen 状态全规格 / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `b99e7294`；压缩前完整施工蓝图 = `git show b99e7294^:_notes/decisions/core/v0/v0.2/alpha.5/03-rectangle-step.md`。
+已实现本 ADR 的核心决策。兼容性：additive 零破坏（纯新增 step kind，不动既有）；其余默认行为、失败语义与公开契约以正文为准。

@@ -1,4 +1,4 @@
-import type { IRPlotLegendGuide, IRPlotScale, IRPlot } from '@retikz/plot';
+import type { IRPlot, IRPlotLegendGuide, IRPlotScale } from '@retikz/plot';
 
 import { Plot } from '@retikz/plot-react';
 

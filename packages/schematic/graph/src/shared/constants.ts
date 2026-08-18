@@ -3,6 +3,8 @@ export const GRAPH_NAMESPACE = 'graph' as const;
 
 /** Graph 正式元素的稳定判别值 */
 export const GraphType = {
+  /** 承载 Graph 展示默认与领域主题的可选根作用域 */
+  Graph: 'graph',
   /** 包含分区内容的容器 */
   Container: 'container',
   /** 表示图中具有关系语义的实体 */

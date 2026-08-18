@@ -5,6 +5,7 @@ import { ThemeTokenSource } from '@retikz/core';
 import type { PlotThemeStyleDefinition } from '../../contract';
 import type { IRPlot, IRPlotThemeResolution, IRPlotThemeTokenResolution } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
 import { getDefaultPlotThemePreset, resolvePlotThemeStyleRegistry } from '../../providers/theme';
 import { getAxisTokenRules } from '../../providers/theme/preset';
 import {
@@ -25,7 +26,7 @@ export const resolvePlotTheme = (
   const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
   const definition = style === undefined ? undefined : styles.get(style);
   if (style !== undefined && definition === undefined)
-    throw new Error(`Plot theme style '${style}' is not registered.`);
+    throw new RetikzPlotError(`Plot theme style '${style}' is not registered.`);
   const plotThemeTokens = input.plotThemeTokens ?? {};
   const localTokenRules = input.plotThemeTokenRules ?? [];
   const authoredTheme = input.plotTheme;

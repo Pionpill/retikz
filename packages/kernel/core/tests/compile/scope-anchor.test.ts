@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../src';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -166,7 +167,7 @@ describe('scope.id synthetic bbox 注册到父 frame，外部可 lookup', () => 
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     // bbox 中心 ≈ A 的全局中心 (60, 0)（A 是唯一子 node，bbox = A 的 4 角 AABB，中心即 A 中心）
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -202,7 +203,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     // referent hub_global=(0,0); inverseTranslate(100,0) → 局部 (-100,0); +(30,0) → 局部 (-70,0); applyTranslate(100,0) → 全局 (30,0)
     // 几何上：scope translate 不改 relative 矢量方向 / 长度——orbit 视觉在 hub 全局右 30
-    expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.PolarOriginUnresolved)).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     expect(Math.abs(end![0] - 30)).toBeLessThan(20);
@@ -233,7 +234,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
     // hub_global=(0,0)；scope translate 不改 right 方向 / 距离 → 视觉 = hub 全局右 40 = 全局 (40, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -265,7 +266,7 @@ describe('跨 scope 位置引用（polar.origin / AtPosition.of / OffsetPosition
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
     // hub_global=(0,0) + offset(20,10) 经 scope translate 后视觉 = hub 全局 +(20,10) = (20, 10)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -291,7 +292,7 @@ describe('跨 scope anchor 边界', () => {
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // 0×0 → top == 中心 == (80, 0)
@@ -355,7 +356,7 @@ describe('跨 scope anchor 边界', () => {
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // 全局 x ≈ 100（5 × 20）；y < 0 (top 方向)
@@ -382,7 +383,7 @@ describe('跨 scope anchor 错误路径', () => {
     ]);
     const warnings: Array<{ code: string }> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
   });
 
   it('scope_anchor_invalid_anchor_name：path 引用合法 id 但 anchor 名不在标准方位 anchor → compile 抛 Unknown anchor', () => {
@@ -470,7 +471,7 @@ describe('跨 scope anchor 交互场景', () => {
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // A 全局 (0, 0)；scope translate 不改 right 方向 / 距离；B 视觉 = A 全局右 60 = (60, 0)；bottom 在 y > 0 方向
@@ -507,7 +508,7 @@ describe('跨 scope anchor 交互场景', () => {
     ]);
     const warnings: Array<{ code: string }> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.PolarOriginUnresolved)).toHaveLength(0);
     // A 全局 (40, 0)；scope2 translate 不改 relative 矢量方向 / 长度；
     // B 视觉 = A 全局 + (30, 0) = (70, 0)（不再 + scope2 的 y=40 偏移——translate 不重复 apply 到 relative）
     const end = lineTo(topPath(compiled.primitives));

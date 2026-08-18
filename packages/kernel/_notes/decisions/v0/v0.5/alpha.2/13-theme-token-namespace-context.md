@@ -2,7 +2,7 @@
 
 - 状态：Superseded
 - 决策日期：2026-08-07
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-09：可继承 Theme IR 与 Composite 编译上下文](./09-inherited-theme-context.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[ADR-09](./09-inherited-theme-context.md) · [ADR-15](./15-lightweight-theme-resolution.md)
 - Supersedes：本 ADR 明确取代 ADR-09 中“Theme 只由 `style` / `mode` 构成、领域 token 只能留在领域 spec”的边界；ADR-09 关于 Scene / Scope 继承、Composite context、probe / replay 与其它历史契约继续有效
 - Superseded by：[ADR-15：轻量 Theme IR 与领域 Token 解析](./15-lightweight-theme-resolution.md)。本 ADR 保留为 namespaced token bag 的历史设计记录，不再代表现行公开契约
 
@@ -128,38 +128,11 @@ type ResolvedThemeColors = Readonly<{
 - 外部扩展与下游闭环：owner 以自己的 Definition、strict schema、typed helper、resolver、mapping 和正式 Core / Standard / manifest consumer 加入统一链路；standalone 或 headless 使用方显式提供需要的 definitions，adapter 只负责等价聚合，不创建旁路协议；schema-only token 不构成完成能力
 - 不支持边界：Core 不提供命名主题 loader、远程主题分发、领域 token 自动 lowering、跨领域完整 resolved map、Theme lineage 查询、交互状态 token 或 renderer-specific effect
 
-## 架构验证与能力完备性检查
-
-- 所属能力面：Drawing Complete 的 Style / Resource、Composition、扩展契约与 Inspector appearance
-- 解决的问题：Core 提供通用可继承环境和扩展校验，领域 owner 保持 token 语义与消费所有权
-- 是否可由现有能力组合：ADR-09 已提供 style / mode 继承和 Composite context，但缺少 namespace bag、owner schema registry 与 shared colors，因此需要扩展当前 Core 能力，而不是由领域 adapter 复制上下文
-- math / runtime / render / adapter 责任切分：Math 不承载 Theme；Runtime 不解释 token；Render 只执行物化 Scene；React / Vanilla 与 plain JSON 生成同一输入；Core 负责环境和校验；领域包负责解析和 mapping
-- 是否需要新 contract / registry：需要 `ThemeTokenDefinition` 与统一 registry，因为 owner schema 需要内置 / 自定义同路的运行时绑定和诊断；不建立全仓领域 token catalog
-- 内部表达链路：Theme IR → namespace definition / owner schema → Scene / Scope effective context → owner resolver → Core / Standard formal input → Scene / manifest / renderer
-- 外部扩展链路：内置与自定义 definition、typed contribution 和领域 consumer 走同一 registry、校验与 lowering 语义；不同 owner 只通过 namespace contract 协作
-- 下游执行 / adapter 等价性：同一 context 在 Core Composite、Standard Inspector、Plot / Chart / Table consumer、React、Vanilla、headless 与 SVG / Canvas 上保持语义一致；renderer 不承担主题解析
-- 不支持边界与诊断：未知 namespace、重复注册、非法 token 和无 consumer token 均在 owner / Core 边界 fail-loud，不回退为隐式默认
-- 本轮结论：扩展 Drawing Complete 当前能力域，建立 Core 通用 Theme token context 与 shared color value contract；领域主题解析继续留在各自 Visualization / Tabular owner
-
-## 最终实现与验证摘要
+## 最终结果
 
 最终实现已闭合 namespaced Theme bag、Definition registry、Scene / Scope sparse inheritance、shared semantic / categorical colors 与 Inspector appearance；Core 保持只传播、校验和派生通用颜色视图，不解释 Tier 2 token。React、Vanilla 与 plain JSON authoring 共享同一 Theme IR 和 definition 聚合边界，fresh / retained compile 也保持可观察等价。
 
-验证覆盖 strict JSON 与 owner schema 失败语义、嵌套继承、detached / frozen context、Inspector shared color 消费、Core-only 稳定性以及跨 adapter / renderer 的最终 Scene 等价；对抗验证与双语文档、浏览器验收均无遗留阻塞。
-
-## 被否决方案
-
-- 让 Core 汇总 Plot、Chart、Table 的完整 token schema：会制造巨型领域 bundle，破坏 Core 与 Tier 2 的依赖方向
-- 继续把 token 只留在领域 spec：同一 Scope 无法被多个 consumer 复用，嵌套 Composite 会复制 Theme 传播逻辑
-- 为颜色增加第二个顶层 authoring 字段或让每个领域维护 active categorical array：会产生多个视觉真源，Inspector 与领域 palette 无法保持一致
-- 让 Standard 或 renderer 自行按 occurrence 分配颜色：会复制 shared color contract，并让下游产生不同 Scene 语义
-- 用命名主题 loader、module augmentation 或携带 schema 的 contribution 扩大协议：会把闭合 JSON 输入与运行时定义、全局类型副作用混在一起
-
-## 测试策略摘要
-
-需要 schema / type 证据证明 Theme 与 token bag 的 JSON-safe、strict、non-empty 与 schema-derived 边界；registry 证据证明内置与自定义 definition 同路、namespace / key / value 失败可诊断；compile 证据证明 Scene → Scope → nested Scope 的 sparse inheritance、detached context、Core-only 稳定性和 retained / fresh 等价；Inspector 证据证明 shared categorical 取余、warning role 与 Standard `InspectionAppearance` 消费边界；React、Vanilla、plain JSON、standalone、embedded、headless 与 renderer parity 证据证明入口和最终 Scene 同义；领域集成证据证明 token 经过 owner mapping 到正式 consumer，且没有 schema-only 或 Core 解释 Tier 2 语义的旁路。详细行为矩阵属于后续 ignored implementation plan。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Plot、Chart、Table、Geo 或未来领域的完整 token key、preset 具体值、resolver 算法、mapping 与 inspection 字段
 - Plot sequential / diverging named scheme、interpolator、采样器和 `options.colorSchemes`

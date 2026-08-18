@@ -1,11 +1,14 @@
 # @retikz/chart
 
-`@retikz/chart` provides canonical `chart.chart` IR, base Chart presentation,
-and ordered title, subtitle, note, and source metadata over `@retikz/plot`.
+`@retikz/chart` provides the `chart.base` execution shape, Chart presentation,
+and exact typed Chart schemas over `@retikz/plot`.
 
-Import base contracts from `@retikz/chart`. Point-family typed recipes,
-including Scatter, Bubble, and Connected Scatter, are exported from
-`@retikz/chart/point`.
+Import `BaseChartSchema`, the Base binding/resolution contracts, and shared Chart
+capabilities from `@retikz/chart`. The root `bindChart` accepts Base Chart input
+only. Scatter, Bubble, and Connected Scatter each own an exact schema and
+recipe exported from `@retikz/chart/point`; use the matching schema and recipe
+directly. There is no public union schema or Point-family dispatcher: each exact
+recipe binds to the shared Base Chart resolution path.
 
 Use `@retikz/chart-react` for JSX authoring or `@retikz/chart-vanilla` for
 plain-data and server-side rendering helpers.

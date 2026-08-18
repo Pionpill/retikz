@@ -9,10 +9,11 @@ import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
 import type { CompileWarningInput } from '../warning';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import { parseProviderPayload } from '../../resolve/provider-payload';
 import { CompileWarningCode } from '../constants';
-import { CompileInvariantError } from '../probe-failure';
+import { RetikzCompileInvariantError } from '../probe-failure';
 import { validateExpandCompositeOutput } from './composite-output';
 
 /** composite 嵌套展开最大深度 */
@@ -38,7 +39,7 @@ type CallableExpandDefinition = {
 /** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
 const callableExpandDefinition = (definition: AnyCompositeDefinition): CallableExpandDefinition => {
   if (definition.expand === undefined) {
-    throw new CompileInvariantError('internal: callableExpandDefinition received a layout-aware composite');
+    throw new RetikzCompileInvariantError('internal: callableExpandDefinition received a layout-aware composite');
   }
   return definition as unknown as CallableExpandDefinition;
 };
@@ -72,12 +73,14 @@ const lowerCompositeTree = (
         return [];
       }
       if (depth >= maxDepth) {
-        throw new Error(
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
           `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${maxDepth} levels at ${path} (cyclic or runaway expand?)`,
         );
       }
       if (definition.expand === undefined) {
-        throw new Error(
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
           `lowerIRToKernel: composite '${key}' at ${path} requires layout-aware compile and cannot be lowered without the full compile environment.`,
         );
       }
@@ -93,7 +96,8 @@ const lowerCompositeTree = (
       const produced = callable.expand(parsed, Object.freeze({ theme }));
       const result = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced);
       if ((result.spatialHandles?.length ?? 0) > 0) {
-        throw new Error(
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
           `lowerIRToKernel: composite '${key}' at ${path} declared spatial handles; use compileToScene() to obtain settled world-space geometry.`,
         );
       }

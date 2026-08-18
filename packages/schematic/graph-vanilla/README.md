@@ -15,22 +15,29 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ```ts
 import { DrawWay } from '@retikz/core';
-import { relation, RelationInputEmbedAdapter, entity, EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
+import { createGraphVanillaAdapters, entity, graph, relation } from '@retikz/graph-vanilla';
 
 const children = [
-  entity('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
-  entity('step', { role: 'stage', position: [160, 0], text: 'Process' }),
-  relation('edge', { role: 'flow', way: ['start', DrawWay.Hv, 'step'] }),
+  graph('workflow', {
+    entityVariant: 'mixed',
+    children: [
+      entity('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
+      entity('step', { role: 'stage', position: [160, 0], text: 'Process' }),
+      relation('edge', { role: 'flow', way: ['start', DrawWay.Hv, 'step'] }),
+    ],
+  }),
 ];
-const adapters = [EntityInputEmbedAdapter, RelationInputEmbedAdapter];
+const adapters = createGraphVanillaAdapters();
 ```
 
-Container, Entity, and Relation helpers and adapters cover the complete
-Graph family. Entity and Relation reuse the embed id as the canonical
+Graph, Container, Entity, and Relation helpers and adapters cover the complete
+Graph family. Graph, Entity, and Relation reuse the embed id as the canonical
 Graph IR id; Container derives stable nested ids for its outer composite.
 Relation accepts either canonical Step `children` or authoring-only `way`.
-Direct persisted IR uses selected Definitions from `@retikz/graph` through
-Core compile options.
+Pass `entityRoles`, `entityVariants`, and `graphThemeStyles` directly to
+`graph()` to configure custom Definitions for that Graph subtree. The adapter
+factory only installs the four Graph embed adapters. Direct persisted IR uses
+selected Definitions from `@retikz/graph` through Core compile options.
 
 See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
 for complete examples.

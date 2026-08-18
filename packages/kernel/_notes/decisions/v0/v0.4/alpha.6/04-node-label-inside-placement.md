@@ -2,35 +2,28 @@
 
 - 状态：Accepted
 - 决策日期：2026-06-26
-- Owner：core
-- 关联：[kernel v0.4-alpha.6 roadmap](./roadmap.md) · [plot alpha.13 ADR-07](../../../../../../viz/_notes/decisions/plot/v0/v0.1/alpha.13/07-mark-label-surface.md)
+- 关联：[plot alpha.13 ADR-07](../../../../../../viz/_notes/decisions/plot/v0/v0.1/alpha.13/07-mark-label-surface.md)
 
 ## 背景
 
-Node label 早期主要表达外侧标签，适合普通点、矩形节点和关系端点。但 plot 的 bar、cell、sector 等 node-like 图元需要把文字放在图元内部，且需要能稳定描述“顶部中点”“右侧 30%”这类边界位置。
+Bar、cell、sector 等 node-like 图元需要把文字放在图元内部，并稳定表达顶部中点、右侧比例等边界位置；把该语义留在 Plot 会复制 Core 的 label 几何和 provenance
 
-## 决策记录
+## 决策
 
 `Node.label` 增加 `placement` 与边界位置能力：
 
-- `placement` 支持 `outside` 与 `inside`，默认仍为 `outside`。
-- `position` 可以继续使用既有锚点，也可以在 box-like boundary 上使用 `{ boundary, fraction }`。
-- `position: "center"` 是几何中心语义，不受 `placement` 改写。
-- `inside` 不与 `pin` 混用；pin 表示外部引线，不适合作为内部 label contract。
-- `{ boundary, fraction }` 第一版只承诺 box-like boundary，可由后续 shape definition 扩展。
+- `placement` 支持 `outside` 与 `inside`，默认 `outside`
+- `position` 继续支持既有锚点，也支持 box-like boundary 上的 `{ boundary, fraction }`
+- `position: "center"` 始终表示几何中心，不受 placement 改写
+- `inside` 不与 `pin` 混用；pin 保持外部引线语义
+- `{ boundary, fraction }` 首版只承诺 box-like boundary，后续 shape 扩展须遵循同一 Node host contract
 
-该设计让 core 保持 label host 的唯一来源；plot 只把 mark label 投递给 node host，不重新定义 inside/outside 几何。
+Plot mark label 通过 Node host 投递，Core 继续是 label 几何、anchor 与 provenance 的唯一 owner
 
-## 被否决方案
+## 行为、失败语义与兼容性
 
-- 在 plot 新增 bar/cell 专用 label 字段：会复制 core label layout 语义。
-- 用 text primitive 模拟内部标签：文字会脱离 node provenance、anchor 与后续 interaction policy。
-- 让 `pin` 兼容内部标签：pin 的引线语义和 inside placement 冲突。
+省略 placement 保持外部标签行为；非法 boundary position 由 Node label schema / compile 诊断。该能力不新增 renderer primitive、Plot 专用 label 字段或独立 pin 语义
 
-## 实现指针
+## 最终结果与遗留边界
 
-- 发布版本：kernel group `v0.4.0-alpha.6`。
-- 主要消费方：plot alpha.13 mark label surface 将 interval/cell/sector label 投递到 `Node.label`。
-- 验收范围：core node label schema、boundary position 编译、inside/outside placement 和文档 Node label 说明。
-
-> 🔄 本文件压缩前完整施工蓝图 = `git show a1afbddcd7f916acacc98a6bc4be9b49a7cb0f33:_notes/decisions/kernel/v0/v0.4/alpha.6/04-node-label-inside-placement.md`（封板全文）。
+Node label 已可表达 inside/outside placement 并由 Node host 统一消费。任意非 box-like boundary、内部引线或领域 label 布局策略仍需后续契约

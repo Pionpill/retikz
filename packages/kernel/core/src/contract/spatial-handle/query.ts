@@ -7,6 +7,8 @@ import type {
   SpatialOwnerSelector,
 } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 const occurrenceMatches = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): boolean =>
   left.sourcePath === right.sourcePath &&
   left.expansionPath.length === right.expansionPath.length &&
@@ -57,9 +59,13 @@ export const resolveSpatialHandle = (
 ): QualifiedSpatialHandle => {
   const matches = selectSpatialHandles(index, selector);
   const summary = JSON.stringify(selector);
-  if (matches.length === 0) throw new Error(`Spatial handle resolution miss for selector ${summary}.`);
+  if (matches.length === 0)
+    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, `Spatial handle resolution miss for selector ${summary}.`);
   if (matches.length > 1) {
-    throw new Error(`Spatial handle resolution ambiguity for selector ${summary}; matched ${matches.length} entries.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `Spatial handle resolution ambiguity for selector ${summary}; matched ${matches.length} entries.`,
+    );
   }
   return matches[0];
 };

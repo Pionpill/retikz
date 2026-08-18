@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
-import { CompoundClipDefinition } from '@retikz/standard/clip';
+import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/standard/clip';
 import { createRibbonProviderContribution, RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 import { renderToSvgString, toSceneResult } from '@retikz/vanilla';
@@ -46,7 +46,7 @@ const source: IRScene = {
 const definitions = {
   shapes: [CrossShapeDefinition],
   arrows: [DiamondArrowDefinition],
-  clips: [CompoundClipDefinition],
+  clips: [CompoundClipDefinition, CircleClipDefinition],
   pathKinds: [RibbonPathKindDefinition],
 } as const;
 

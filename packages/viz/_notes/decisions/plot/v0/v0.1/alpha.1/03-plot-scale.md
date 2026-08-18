@@ -39,7 +39,7 @@ export type ScaleType = ValueOf<typeof PlotScale>;
 
 多 scale 类型下，lowering 可据 `IRDataModel` 的字段 `type` 推断默认 scale 类型；本 ADR 不定义后续 Data owner 的类型集合，只保留这项联动。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **band / time / ordinal·color scale** → alpha.3。
 - **非位置通道（color / size）自带 scale** → alpha.3（届时 channel 加 `scale` 字段）。

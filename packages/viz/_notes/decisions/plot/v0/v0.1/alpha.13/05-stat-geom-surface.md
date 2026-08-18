@@ -20,9 +20,3 @@ plot alpha.13 采用“stat = transform / reducer / selector，geom = abstract m
 - docs 以组合 demo 说明 boxplot、density、smooth，而不是宣传 chart preset。
 
 文档 IA 使用 transform / summary / statistics 页面承载统计能力；demo 名称保持 `transform-boxplot`、`transform-density`、`transform-smooth` 这类 grammar 取向。
-
-## 被否决方案
-
-- 为常见统计图新增 preset：短期更像用户熟悉的 chart API，但会削弱底层 grammar 能力。
-- 给 mark 加快捷统计 prop：会把 transform hidden 在 mark 内，破坏可组合性和 provenance。
-- 只靠文档约定不加测试：后续很容易无意引入 specialized mark。

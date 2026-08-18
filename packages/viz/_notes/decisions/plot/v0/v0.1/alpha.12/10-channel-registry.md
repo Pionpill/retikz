@@ -35,7 +35,7 @@ ADR-07 收敛了 scale registry，但 visual channel 仍有缺口：color 通道
 
 内置视觉通道与 scale registry 对齐，plot 不再把每个通道写成独立 resolver 分支。后续新增内置通道或自定义通道时，可以复用 definition / registry / delivery 机制。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 自定义 visual channel 的公开入口；由 ADR-11 处理。
 - path / scope channel coverage 对账；由 ADR-12 处理。

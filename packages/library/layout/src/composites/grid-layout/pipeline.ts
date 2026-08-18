@@ -20,6 +20,7 @@ import type { LayoutSpacingArtifact } from '../shared';
 import type { GridTrackConstraint } from './tracks';
 import type { GridLayoutArtifact, IRGridLayout, IRGridLayoutItem, LayoutTrackSourceKindValue } from './types';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import {
   alignAllocationInSlot,
   alignResolvedLayoutSlot,
@@ -197,7 +198,11 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
         Math.abs(candidate.coordinate - canonical.coordinate) >
         layoutEpsilon(candidate.coordinate, canonical.coordinate)
       ) {
-        throw new Error(`GridLayout ${name} participants did not resolve to one aligned coordinate`);
+        throw new RetikzLayoutError({
+          code: RetikzLayoutErrorCode.PipelineInvariant,
+          message: `GridLayout ${name} participants did not resolve to one aligned coordinate`,
+          details: { layout: 'grid', name, phase: 'alignment' },
+        });
       }
     }
     return canonical.coordinate;
@@ -423,7 +428,13 @@ export const compileGridLayout = (
     });
   }
   const outputChildren = placedBySource.map(placed => {
-    if (placed === undefined) throw new Error('GridLayout failed to place an authored item');
+    if (placed === undefined) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.PipelineInvariant,
+        message: 'GridLayout failed to place an authored item',
+        details: { layout: 'grid', phase: 'placement' },
+      });
+    }
     return context.replay(placed.result, {
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     });
@@ -460,7 +471,13 @@ export const compileGridLayout = (
     ]);
   }
   const items = placedBySource.map((placed, sourceIndex) => {
-    if (placed === undefined) throw new Error('GridLayout failed to artifact an authored item');
+    if (placed === undefined) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.PipelineInvariant,
+        message: 'GridLayout failed to artifact an authored item',
+        details: { layout: 'grid', phase: 'artifact' },
+      });
+    }
     const authored = measured[sourceIndex].authored;
     const usesBaseline =
       placed.rowSpan === 1 &&

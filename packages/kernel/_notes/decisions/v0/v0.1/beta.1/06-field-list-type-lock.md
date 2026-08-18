@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-12 + TODO-17](./roadmap.md)
+- 关联：
 
-> **范围**：把"硬编码字段表与对应 zod schema / type 的 key 集合保持完备一致"这件事确立为通用 idiom（`as const satisfies` + `AssertEqual` 双约束），并覆盖 builder/unbuilder 的 `NODE_FIELDS`、marker `stableArrowKey` 两处应用。ADR-05 的 `THICKNESS_TO_WIDTH` 是同一主题先例。
+> **目标**：把"硬编码字段表与对应 zod schema / type 的 key 集合保持完备一致"这件事确立为通用 idiom（`as const satisfies` + `AssertEqual` 双约束），并覆盖 builder/unbuilder 的 `NODE_FIELDS`、marker `stableArrowKey` 两处应用。ADR-05 的 `THICKNESS_TO_WIDTH` 是同一主题先例。
 
 ## 背景 / 约束
 
@@ -12,7 +12,7 @@
 
 ## 决策：`as const satisfies` + `AssertEqual` 双约束 idiom
 
-字段表用 `as const satisfies ReadonlyArray<keyof T>` 强制元素必为类型 key + 一条 `AssertEqual<typeof FIELDS[number], Exclude<keyof T, …>>` 完备性互锁，漏写 / 多写都编译期报错；使用方遍历字段表。被否决的备选：三处分别独立修——未来发现第 4 / 5 处字段表时无统一做法可循。
+字段表用 `as const satisfies ReadonlyArray<keyof T>` 强制元素必为类型 key + 一条 `AssertEqual<typeof FIELDS[number], Exclude<keyof T, …>>` 完备性互锁，漏写 / 多写都编译期报错；使用方遍历字段表。
 
 理由：三处同类、统一 idiom 让未来加字段表无须重新决策；通用 `AssertEqual` helper 可作公共 internal 工具；builder / unbuilder 共用同一份 `NODE_FIELDS` 是天然的（两边字段必须对称）。
 
@@ -21,9 +21,9 @@
 - **builder / unbuilder 共用 `NODE_FIELDS`**（类型基准 `IRNode`）——两边对照天然对称、共用常量是正解。
 - **marker `ARROW_END_SPEC_KEY_FIELDS`**（类型基准 `ResolvedArrowEnd`，排除必填 `shape` 单独头部处理），`stableArrowKey` 遍历字段表拼 key。
 - **特化字段不进字段表**：`text` / `position` / `label` 等"读取来源不止 props"的字段保留独立处理路径，`Exclude<keyof IRNode, 'type' | 'text' | 'position' | 'label'>` 显式排除并在字段表上方 JSDoc 写清。
-- **`AssertEqual<A, B>` 加到 `core/src/types.ts`**（与 `ValueOf<T>` 同级），不公开 export——仅 internal idiom。
+- **`AssertEqual<A, B>` 加到 **（与 `ValueOf<T>` 同级），不公开 export——仅 internal idiom。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - `Step` 10-kind discriminated union 的字段表——需 per-kind 分开、工作量大，留单独 ADR。
 - `Path` props 字段表（有 `children` 特化）。
@@ -31,6 +31,6 @@
 
 ---
 
-> **实现指针**：level `yellow`、非 breaking（仅内部实现 + 类型层）。真源以代码为准——`AssertEqual`（`core/src/types.ts`，internal）、共用 `NODE_FIELDS` 与 `ARROW_END_SPEC_KEY_FIELDS`（`react/src/kernel/_fields.ts`），由 `react/src/kernel/{builder,unbuilder}.ts` 与 marker 收集（`render/src/svg/builders/arrowCollect.ts`）遍历消费。类型互锁靠 `tsc`（删 / 加字段触发报错），hash / round-trip 守门见 `react/tests/kernel/`。完整原文（idiom 代码 / 三应用细节 / 文件 scope / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:_notes/decisions/core/v0/v0.1/beta.1/06-field-list-type-lock.md`。
+已实现本 ADR 的核心决策。兼容性：非 breaking（仅内部实现 + 类型层）；其余默认行为、失败语义与公开契约以正文为准。

@@ -1,8 +1,8 @@
-﻿# ADR-01：比例 partway 定位（AbsoluteTarget + BetweenPosition）
+# ADR-01：比例 partway 定位（AbsoluteTarget + BetweenPosition）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第一部分](./roadmap.md) · tikz-gap-analysis §5 定位（历史分析已删除） · [alpha.6 ADR-01 结构化 Target](../alpha.6/01-structured-target-anchor.md)（对象主契约 + target resolve）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（`lerpPoint`）· 本 milestone [ADR-02](./02-clip.md) / [ADR-03](./03-viewbox-override.md)
+- 关联： · tikz-gap-analysis §5 定位（历史分析已删除） · [alpha.6 ADR-01 结构化 Target](../alpha.6/01-structured-target-anchor.md)（对象主契约 + target resolve）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（`lerpPoint`）· 本 milestone [ADR-02](./02-clip.md) / [ADR-03](./03-viewbox-override.md)
 
 ## 背景 / 约束
 
@@ -17,7 +17,7 @@ TikZ calc 的 **比例 partway** `($(A)!t!(B)$)`（A、B 间 t 处 = lerp）是�
 
 partway 端点用一套**自包含、排除 path-relative** 的 `AbsoluteTarget` 闭包，`BetweenPosition` 自身也属该闭包（故可嵌套：三等分 = between of between）。`BetweenPosition` 同时落进 `Node.position` / `Coordinate` 的 position union 与 `TargetSchema`（Step.to）。compile 把两端点各 resolve 到世界坐标后 `lerpPoint(A, B, t)`，嵌套递归 resolve；NodeTarget 端点走 alpha.6 anchor / edgePoint 解析。
 
-核心数据结构（字面即决策，完整字段 + 英文 describe 见 `core/src/ir/position/between-position.ts`）：
+核心数据结构（字面即决策，完整字段 + 英文 describe 见 ）：
 
 ```ts
 export type IRAbsoluteTarget = IRPosition | PolarPosition | IRNodeTarget | IROffsetPosition | IRBetweenPosition;
@@ -32,15 +32,9 @@ export type IRBetweenPosition = { between: [IRAbsoluteTarget, IRAbsoluteTarget];
 
 实现期相对原提案的两处收敛（真源以代码为准）：
 
-- **端点闭包复用 legacy schema**：实现里 `AbsoluteTargetSchema` 直接 union 现有 `PositionSchema` / `PolarPositionSchema` / `NodeTargetSchema` / `OffsetPositionSchema`（用 `z.lazy` 化解跨文件环），未单建提案里的 `AbsolutePolarPosition` / `AbsoluteOffsetPosition` 变体——闭包内只排除 path-relative，字符串绕回风险由测试覆盖兜底。
 - **`t` 钳制 `[0,1]`**：schema 加 `.min(0).max(1)`，外插（端点延长线）暂不支持。
 
-### 被否决的选项
-
-- **B：partway 端点复用 `TargetSchema`**——schema 递归成环，且把 path-relative / 字符串节点引用绕进端点。否决。
-- **C：端点只接受 Cartesian / NodeTarget（最窄）**——不能 between 两个 offset / 嵌套 between，表达力受限。取更全且自洽的自包含闭包。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **`t` 外插**（`t<0` / `t>1` 端点延长线）：实现钳制 `[0,1]`，外插推迟。
 - **投影 projection / 完整 calc 表达式**：学术 / 逆结构化方向，不做。
@@ -48,6 +42,6 @@ export type IRBetweenPosition = { between: [IRAbsoluteTarget, IRAbsoluteTarget];
 
 ---
 
-> **实现指针**：level `red`（动 `ir/position/**` 新 schema + `ir/node.ts` / `ir/coordinate.ts` / `ir/path/target.ts` union 加分支 + `compile/**` resolve + `index.ts` 导出），向后兼容纯叠加 union 分支、零破坏。真源以代码为准——`IRAbsoluteTarget` / `IRBetweenPosition` / `AbsoluteTargetSchema` / `BetweenPositionSchema`（`core/src/ir/position/between-position.ts`）、between resolve + lerp（`core/src/compile/position.ts`，NodeTarget 端点经 `core/src/compile/path/anchor.ts`）。测试在 `core/tests/ir/between-position.schema.test.ts`、`core/tests/compile/partway*.test.ts`。DSL 表面见文档站 positioning 概念页。完整原文（选项 A/B/C 详情 / 评审 P1 坑位 / Schema 改动表 / 文件 scope / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `133ad7c1`；压缩前完整施工蓝图 = `git show 133ad7c1^:_notes/decisions/core/v0/v0.2/alpha.9/01-partway-absolute-target.md`。
+已实现本 ADR 的核心决策。兼容性：向后兼容纯叠加 union 分支、零破坏；其余默认行为、失败语义与公开契约以正文为准。

@@ -2,7 +2,7 @@ import type { Position } from '@retikz/math';
 
 import type { MarkerPrimitive, ScenePrimitive } from '../contract';
 
-import { CompositeContractError } from '../resolve/diagnostics';
+import { RetikzCompositeContractError } from '../resolve/diagnostics';
 import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
 import {
   AnimationTrackSchema,
@@ -26,20 +26,20 @@ export const withProviderOutputValidationBoundary = <T>(owner: string, validate:
 export const snapshotProviderPosition = (owner: string, value: unknown): Position =>
   withProviderOutputValidationBoundary(owner, () => {
     if (!Array.isArray(value)) {
-      throw new CompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
+      throw new RetikzCompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
     }
     const length = value.length;
     const x = value[0];
     const y = value[1];
     if (length !== 2 || typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) {
-      throw new CompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
+      throw new RetikzCompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
     }
     return [x, y];
   });
 
 /** 抛出带 provider owner 的 fatal output contract error */
 export const failProviderOutput = (owner: string, detail: string): never => {
-  throw new CompositeContractError(`${owner} emit produced ${detail}.`);
+  throw new RetikzCompositeContractError(`${owner} emit produced ${detail}.`);
 };
 
 /** 物化 provider plain JSON 输出，并保留对象 undefined 字段供完整契约校验 */
@@ -311,7 +311,7 @@ export const assertProviderOutputPathCommands = (owner: string, value: unknown, 
     assertProviderOutputJsonValue(owner, command, `${path}[${index}]`);
     const parsed = PathCommandSchema.safeParse(command);
     if (!parsed.success || !equalProviderOutputJson(command, parsed.data)) {
-      throw new CompositeContractError(`${owner} emit produced an invalid ${path} command at index ${index}.`, {
+      throw new RetikzCompositeContractError(`${owner} emit produced an invalid ${path} command at index ${index}.`, {
         ...(!parsed.success ? { cause: parsed.error } : {}),
       });
     }
@@ -697,7 +697,7 @@ export const validateScenePrimitives = (
       (typeof emitted !== 'object' && typeof emitted !== 'function') ||
       typeof (emitted as { [Symbol.iterator]?: unknown })[Symbol.iterator] !== 'function'
     ) {
-      throw new CompositeContractError(`${owner} emit must return an iterable of Scene primitives.`);
+      throw new RetikzCompositeContractError(`${owner} emit must return an iterable of Scene primitives.`);
     }
     return [...(emitted as Iterable<unknown>)].map(primitive => {
       const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');

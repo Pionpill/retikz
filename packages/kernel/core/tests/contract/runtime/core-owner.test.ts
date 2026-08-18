@@ -4,6 +4,7 @@ import {
   createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
+  RetikzRuntimeErrorCode,
   RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
@@ -109,7 +110,7 @@ describe('Core Runtime owner', () => {
     invalidInputs.push(symbolKey);
 
     invalidInputs.forEach(input => {
-      expect(() => createOwnerSession(input)).toThrow('RUNTIME_OWNER_CAPTURE_FAILED');
+      expect(() => createOwnerSession(input)).toThrow(RetikzRuntimeErrorCode.CaptureFailed);
     });
   });
 });

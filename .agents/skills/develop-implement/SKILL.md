@@ -52,7 +52,8 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 `flow-alpha` red / yellow / 
 - 不用 `as any`、`@ts-ignore`、跳测、粗暴 lint disable 绕过问题。
 - 每个 plan task 或 Beta TODO 子任务保持可 review 的提交粒度。
 - 不因 ADR / plan 未提交而扩大 scope。文件、私有逻辑、测试点或命令变化先更新 plan；公开契约、能力归属或功能边界变化必须 halt，回到 ADR 与 Architecture Gate。
-- 受影响包按根 AGENTS 运行 `eslint --fix`、`tsc --noEmit`、必要 vitest。
+- subagent 担任 Implementer 时只完成代码与测试文件修改，报告改动文件、已知风险和待验证点，不运行 ESLint、`tsc`、测试或构建；主 agent 整合后按根 AGENTS 统一验证。
+- 主 agent 直接实现时，按根 AGENTS 运行受影响包 `eslint --fix`、`tsc --noEmit` 和必要 vitest。
 - 连续 3 轮修不动同一 step，halt 并报告失败 case、错误日志和判断。
 
 ## 常规路径

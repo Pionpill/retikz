@@ -22,6 +22,7 @@ import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import { isCartesianCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
@@ -65,7 +66,7 @@ const referenceOrientation = (mark: IRPlotReferenceMark): ReferenceOrientation =
   const hasX = mark.encoding.x !== undefined;
   const hasY = mark.encoding.y !== undefined;
   if (hasX === hasY) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: reference mark must bind exactly one of encoding.x (vertical) or encoding.y (horizontal); set one, not both / neither',
     );
   }
@@ -84,7 +85,7 @@ const referenceSpanInterval = (
   const hasFrom = mark.extentField !== undefined;
   const hasTo = mark.extentToField !== undefined;
   if (hasFrom !== hasTo) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: reference mark extentField / extentToField must be set together (a partial-length span needs both start and end)',
     );
   }
@@ -117,12 +118,12 @@ const referenceUpperValue = (
 /** reference 是否 band 形态（绑定维度上给了匹配的上界 xTo / yTo）；并校验上界与所绑维度匹配（不匹配 / 单飞 → fail-loud） */
 const isReferenceBand = (mark: IRPlotReferenceMark, orientation: ReferenceOrientation): boolean => {
   if (orientation === 'x' && mark.yTo !== undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: reference mark binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
     );
   }
   if (orientation === 'y' && mark.xTo !== undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: reference mark binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
     );
   }
@@ -135,7 +136,7 @@ const referenceShape = (mark: IRPlotReferenceMark): ReferenceShape => {
     return { kind: 'axis', orientation, band: isReferenceBand(mark, orientation) };
   }
   if (mark.extentField !== undefined || mark.extentToField !== undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: reference region does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
     );
   }
@@ -150,7 +151,7 @@ const referenceRegionUpperRaw = (mark: IRPlotReferenceMark, role: string): numbe
 
 const referenceRegionRequireRole = (mark: IRPlotReferenceMark, role: string, frame: CoordinateFrame): void => {
   if (!Object.prototype.hasOwnProperty.call(mark.encoding, role) || referenceRegionUpperRaw(mark, role) === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: reference region under the ${frame.type} coordinate system requires encoding.${role} and ${role}To bounds`,
     );
   }
@@ -163,7 +164,7 @@ const referenceRegionCoordinate = (
   frame: CoordinateFrame,
 ): number => {
   if (scale === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: reference region under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
     );
   }
@@ -321,7 +322,7 @@ const lowerReference = (
 ): IRScope | null => {
   const shape = referenceShape(mark);
   if (isReferenceConstant(mark, shape, frame) && mark.encoding.color?.field !== undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: a constant reference cannot use a per-datum color field "${mark.encoding.color.field}"; use a constant color value, or bind a per-datum position field`,
     );
   }
@@ -335,7 +336,7 @@ const lowerReference = (
 
   if (cellForm) {
     if (!hasProjectCell(frame)) {
-      throw new Error(failLoudMessage(mark.type, frame.type));
+      throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
     }
     const placed: Array<{ color: string | undefined; node: IRNode }> = [];
     let kind: CellGeometry['kind'] | undefined;
@@ -383,7 +384,7 @@ const lowerReference = (
   const placed: Array<{ color: string | undefined; steps: Array<IRStep>; row: ExternalRow; transformedIndex: number }> =
     [];
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
-    throw new Error(failLoudMessage(mark.type, frame.type));
+    throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
   for (let transformedIndex = 0; transformedIndex < effectiveRows.length; transformedIndex++) {
     const row = effectiveRows[transformedIndex];
@@ -458,10 +459,10 @@ export const lowerReferenceLayer = (
   const shape = referenceShape(mark);
   if (shape.kind === ReferenceMarkKind.Region) {
     if (!hasProjectCell(frame)) {
-      throw new Error(failLoudMessage(mark.type, frame.type));
+      throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
     }
   } else if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) {
-    throw new Error(failLoudMessage(mark.type, frame.type));
+    throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
   const layer = lowerReference(
     mark,

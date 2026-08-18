@@ -6,6 +6,8 @@ import type { InputPath } from './path';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
 import type { InputScope } from './scope';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
+
 /** 创建作者侧节点输入，支持 id 简写与完整配置 */
 export const node = (
   idOrConfig?: string | Omit<InputNode, 'type' | 'id'>,
@@ -14,7 +16,7 @@ export const node = (
   const named = typeof idOrConfig === 'string';
   const config = named ? maybeConfig : idOrConfig;
   if (config === undefined) {
-    throw new Error('node: config with position is required');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'node: config with position is required');
   }
   return {
     type: 'node',
@@ -38,7 +40,7 @@ export const path = (
   const named = typeof idOrConfig === 'string';
   const config = named ? maybeConfig : idOrConfig;
   if (config === undefined) {
-    throw new Error('path: config is required');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'path: config is required');
   }
   return {
     ...(named ? { id: idOrConfig } : {}),

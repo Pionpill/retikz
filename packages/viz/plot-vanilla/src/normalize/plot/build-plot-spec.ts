@@ -1,4 +1,4 @@
-import type { IRPlotGuide, IRPlot } from '@retikz/plot';
+import type { IRPlot, IRPlotGuide } from '@retikz/plot';
 
 import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide } from '@retikz/plot';
 
@@ -11,6 +11,7 @@ import type {
   ResolveLabelMap,
 } from './contracts';
 
+import { RetikzPlotVanillaError } from '../../error';
 import { normalizePlotDeclarations } from './normalize';
 
 export type {
@@ -82,7 +83,7 @@ export const normalizePlotIR = (
   const { fragment, runtime } = normalizePlotDeclarations(collection, plotRootContext);
   const { composition, coordinate, guides, marks, scales, transform } = fragment;
   if (scales === undefined || marks === undefined || guides === undefined) {
-    throw new Error('normalizePlotIR: plot-root normalization must provide scales, marks, and guides');
+    throw new RetikzPlotVanillaError('normalizePlotIR: plot-root normalization must provide scales, marks, and guides');
   }
   const coordinateRoot =
     composition !== undefined
@@ -90,7 +91,9 @@ export const normalizePlotIR = (
       : coordinate !== undefined
         ? { coordinate }
         : (() => {
-            throw new Error('normalizePlotIR: plot-root normalization must provide coordinate or composition');
+            throw new RetikzPlotVanillaError(
+              'normalizePlotIR: plot-root normalization must provide coordinate or composition',
+            );
           })();
   const spec = {
     namespace: PLOT_NAMESPACE,

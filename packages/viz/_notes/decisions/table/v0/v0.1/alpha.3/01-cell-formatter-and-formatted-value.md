@@ -119,32 +119,7 @@ const revenue = {
 
 Formatter 是具有算法 dispatch 的开放能力，因此采用 Definition / registry；不建立内置白名单与 custom 旁路。
 
-## 测试策略摘要
-
-- schema 与公开 API 证明 ref、manual/detail authoring、JSON round-trip 和 content exclusion
-- Definition/registry 证明内置与 custom 同路、冲突诊断、options/output guard 与 deterministic locale
-- pipeline 证明 identity/order/freeze、raw/formatted 分离、content bypass 和 formatter-before-presentation
-- adapter parity 证明 direct、React、Vanilla、SSR 消费同一 spec 与 definitions
-
-详细 case、路径、命令和正式证据位于对应 ignored mirror plan 的 `TEST_CONTRACT.md`。
-
-## 能力完备性与架构验证
-
-- **所属能力域**：Tabular Visualization Complete / Presentation
-- **问题归属**：展示格式化属于 Table，不属于 Data parsing 或 Core drawing
-- **内部闭环**：canonical scalar → formatter ref → registry → guarded scalar → Presentation
-- **外部扩展**：`defineCellFormatter()` 与内置项经过同一链路
-- **下游等价**：adapters 只透传；renderer 只接收 Presentation 产出的 Core IR
-- **结论**：扩展 Table Presentation 域，不修改 Data parsing 或 Core
-
-## 被否决方案
-
-- 把格式化并入 Presentation：会让不同 presentation 重复同一数值规则
-- 复用 Data field format：混淆输入解析与展示格式化
-- 在 adapter 中接受函数 formatter：破坏 JSON IR、SSR 与跨入口等价性
-- 让 formatter 返回 `IRChild`：与 Presentation 的单一职责和扩展合同重叠
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 日期、货币、locale 与 timezone 预设
 - Table 对 Data field format / normalization 的消费

@@ -1,9 +1,8 @@
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
-import { PointChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import { describe, expect, it } from 'vitest';
 
 import { Chart } from '../src';
-import { ScatterChart } from '../src/point';
+import { BubbleChart, ConnectedScatterChart, ScatterChart } from '../src/point';
 
 type InputEmbeddableChartComponent<TInput> = {
   inputEmbedAdapter?: unknown;
@@ -20,7 +19,7 @@ const inputOf = <TInput,>(
 };
 
 describe('Chart React InputEmbed routing', () => {
-  it('maps base Chart and typed Point Chart to their matching Vanilla adapters', () => {
+  it('maps every exact Chart component to the bound Chart adapter', () => {
     const chart = inputOf(Chart, {
       spec: {
         namespace: 'plot',
@@ -35,15 +34,28 @@ describe('Chart React InputEmbed routing', () => {
       },
       data: { people: [{ x: 0, y: 1 }] },
     });
-    const point = inputOf(ScatterChart, {
+    const scatter = inputOf(ScatterChart, {
       data: [{ x: 0, y: 1 }],
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     });
+    const bubble = inputOf(BubbleChart, {
+      data: [{ x: 0, y: 1, size: 2 }],
+      encoding: { x: { field: 'x' }, y: { field: 'y' }, size: { field: 'size' } },
+    });
+    const connected = inputOf(ConnectedScatterChart, {
+      data: [{ x: 0, y: 1, order: 1 }],
+      encoding: { x: { field: 'x' }, y: { field: 'y' }, order: 'order' },
+    });
 
     expect(Chart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
-    expect(ScatterChart.inputEmbedAdapter).toBe(PointChartInputEmbedAdapter);
+    expect(ScatterChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+    expect(BubbleChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+    expect(ConnectedScatterChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
     expect(chart).not.toHaveProperty('chart');
-    expect(chart).toMatchObject({ plot: { spec: { data: { reference: 'people' } } } });
-    expect(point).toMatchObject({ type: 'scatter' });
+    expect(chart).toMatchObject({ bound: { type: 'base' } });
+    expect(scatter).toMatchObject({ bound: { type: 'scatter' } });
+    expect(bubble).toMatchObject({ bound: { type: 'bubble' } });
+    expect(connected).toMatchObject({ bound: { type: 'connected-scatter' } });
+    expect(scatter).not.toHaveProperty('type');
   });
 });

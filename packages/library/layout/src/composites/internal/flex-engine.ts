@@ -1,5 +1,6 @@
 import type { LayoutAlignmentValue, LayoutDistributionValue } from '../shared';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from './distribution';
 
@@ -79,7 +80,13 @@ export const resolveFlexLineMainProfile = (
   itemIndexes: ReadonlyArray<number>,
   gap: number,
 ): FlexLineMainProfile => {
-  if (!Number.isFinite(gap) || gap < 0) throw new Error('Flex line gap must be finite and non-negative');
+  if (!Number.isFinite(gap) || gap < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex line gap must be finite and non-negative',
+      details: { gap },
+    });
+  }
   const gapTotal = gap * Math.max(0, itemIndexes.length - 1);
   const minimum = compensatedLayoutSum([
     ...itemIndexes.map(index => {
@@ -107,7 +114,13 @@ export const resolveFlexLinesCrossProfile = (
   lines: ReadonlyArray<FlexLineMainProfile>,
   gap: number,
 ): FlexLineMainProfile => {
-  if (!Number.isFinite(gap) || gap < 0) throw new Error('Flex line gap must be finite and non-negative');
+  if (!Number.isFinite(gap) || gap < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex line gap must be finite and non-negative',
+      details: { gap },
+    });
+  }
   const gapTotal = gap * Math.max(0, lines.length - 1);
   return Object.freeze({
     minimum: compensatedLayoutSum([...lines.map(line => line.minimum), gapTotal]),
@@ -121,13 +134,21 @@ export const formFlexLines = (
   options: FlexLineFormationOptions,
 ): ReadonlyArray<ReadonlyArray<number>> => {
   if (!Number.isFinite(options.gap) || options.gap < 0) {
-    throw new Error('Flex line gap must be finite and non-negative');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex line gap must be finite and non-negative',
+      details: { gap: options.gap },
+    });
   }
   if (
     options.availableMainSize !== undefined &&
     (!Number.isFinite(options.availableMainSize) || options.availableMainSize < 0)
   ) {
-    throw new Error('Flex available main size must be finite and non-negative');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex available main size must be finite and non-negative',
+      details: { availableMainSize: options.availableMainSize },
+    });
   }
   const traversal = items.map((_, index) => index);
   if (traversal.length === 0) return Object.freeze([]);
@@ -164,14 +185,30 @@ export const resolveFlexLineMainSizes = (
   gap: number,
 ): Readonly<{ values: ReadonlyArray<number>; remaining: number }> => {
   if (!Number.isFinite(availableMainSize) || availableMainSize < 0) {
-    throw new Error('Flex available main size must be finite and non-negative');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex available main size must be finite and non-negative',
+      details: { availableMainSize },
+    });
   }
-  if (!Number.isFinite(gap) || gap < 0) throw new Error('Flex line gap must be finite and non-negative');
+  if (!Number.isFinite(gap) || gap < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex line gap must be finite and non-negative',
+      details: { gap },
+    });
+  }
   const outerFixed = compensatedLayoutSum([
     ...items.flatMap(item => [item.marginStart, item.marginEnd]),
     gap * Math.max(0, items.length - 1),
   ]);
-  if (!Number.isFinite(outerFixed)) throw new Error('Flex fixed outer main size must remain finite');
+  if (!Number.isFinite(outerFixed)) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex fixed outer main size must remain finite',
+      details: { outerFixed },
+    });
+  }
   const distributable = Math.max(0, availableMainSize - outerFixed);
   const hypothetical = items.map(hypotheticalMainSlotOf);
   const initialFree = distributable - compensatedLayoutSum(hypothetical);
@@ -195,8 +232,20 @@ export const resolveFlexSpaceDistribution = (
   remaining: number,
   itemCount: number,
 ): FlexSpaceDistribution => {
-  if (!Number.isFinite(remaining)) throw new Error('Flex remaining space must be finite');
-  if (!Number.isInteger(itemCount) || itemCount < 0) throw new Error('Flex item count must be a non-negative integer');
+  if (!Number.isFinite(remaining)) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex remaining space must be finite',
+      details: { remaining },
+    });
+  }
+  if (!Number.isInteger(itemCount) || itemCount < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Flex item count must be a non-negative integer',
+      details: { itemCount },
+    });
+  }
   if (remaining <= 0) {
     if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
     if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });

@@ -4,7 +4,7 @@
 - 决策日期：2026-08-03
 - 接受日期：2026-08-03
 - Superseded-by：关于 Theme 只携带 `style` / `mode`、领域 token 只能留在领域 spec 的边界，已由 [ADR-13：Theme Token Namespace Context 与共享颜色](./13-theme-token-namespace-context.md) supersede；关于仅内置 Neutral 与开放 runtime style definition 的边界，已由 [ADR-15：轻量主题解析](./15-lightweight-theme-resolution.md) supersede；本 ADR 其余 Scene / Scope 继承与 Composite context 历史正文保持不变
-- 关联：[alpha.2 roadmap](./roadmap.md) · [通用视觉主题设计](../../../../../../../notes/architecture/visual-theme-design.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[ADR-13](./13-theme-token-namespace-context.md) · [ADR-15](./15-lightweight-theme-resolution.md)
 
 ## 背景与目标
 
@@ -138,40 +138,13 @@ effective Scene / Scope Theme
 
 后层只能覆盖可撤销的表现性默认，不能撤销 Chart type 核心配方、Table 结构或其它领域不变量。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 的 Style / Resource 与 Composition 环境
-- 解决的问题：让共享 Theme 选择随 Scene / Scope 持久化，并由当前位置的 Composite 确定性消费
-- 主责包与协作包：Core 拥有 IR、继承和 Composite context；React / Vanilla 构造等价 IR；Render 继续只执行 Scene；领域 owner 后续映射自己的 token
-- 是否可由现有能力组合：现有 Scope 只级联 primitive style，Composite expand 没有上下文，无法持久化或传递跨领域 Theme，因此需要扩展 Core IR 与 Composite contract
-- 是否需要下沉到依赖能力域：Math 与 Runtime 不拥有这类绘图树环境；能力直接扩展 Core，不下沉到它们
-- 内部表达链路：Theme schema -> Scene / Scope 字段 -> 字段级继承 -> expand / layout-aware Composite context -> 已物化的 Core IR -> renderer-neutral Scene
-- 外部扩展链路：内置与第三方 Composite 继续使用同一 `defineComposite`、registry、schema parse 与 compile 路径；style / mode 是闭合数据选择，不执行 provider 逻辑，因此不建立 Theme registry
-- 下游执行 / adapter 等价性：React / Vanilla 写入同一 Theme IR，完整 compile 与 lowering-only 使用同一继承规则，SVG / Canvas 消费不含 Theme 的同一 Scene。Kernel alpha.2 以两类第三方 Composite 作为公开 contract consumer；Chart、Table 等真实领域迁移延期到各自版本 ADR
-- 不支持边界与诊断：Core schema 对非法 Theme 给出 Scene / Scope IR 路径；领域 token 与 mapping 继续由领域 fail-loud。`ResolvedTheme` 只公开完整有效值，不包含逐字段 winning layer 或 Scope locator；本 ADR 不承诺 Theme lineage，领域 inspection 只能把 derived preset/token 标记为来自 effective Theme
-- 本轮结论：扩展当前 Drawing Complete 能力域，先冻结持久化 Theme 环境与通用消费 contract，再由领域 ADR 迁移重复选择字段
-
-## 被否决方案
-
-- 只迁移枚举、不增加 IR 与 compile context：只能减少重复 import，无法持久化、局部继承或让 headless compile 消费
-- 只用 React Context：嵌入式静态收集、Vanilla、JSON 与 headless compile 无法共享同一事实
-- 只放在 compile options：Theme 不随 IR 保存，嵌套 Scope 也无法表达局部切换
-- 继续保留每个领域的 style / mode 字段：同一 Scope 内多个领域可能漂移，新增领域仍会复制公共词汇和宿主接线
-- 让 Core 解析全仓 token map：会把 Plot guide、Table Cell、Chart presentation 等领域语义吸入底层并形成巨型不稳定 schema
-- 把 Theme 传给 renderer：会让 SVG / Canvas 重复 preset dispatch，并破坏 renderer-neutral Scene
-- 新增 resetTheme：完整 Theme 已能显式恢复基线，额外屏障只会扩大状态空间
-
-## 测试策略摘要
-
-需要 schema、IR JSON 往返、Scene / Scope 字段级继承、默认解析、第三方 expand 与 layout-aware Composite context、runtime Scope、probe / replay、嵌套 lowering、retained 与 fresh compile 等价、React / Vanilla authoring parity 及 renderer parity 证据。关键不变量是同一 Theme IR 在所有入口得到同一有效 Theme，Scope 只影响后代，Core-only 图元不因 Theme 改变输出，opaque replay 保持 probe Theme，非法输入 fail-loud，最终 Scene 不要求 renderer 认识 Theme。真实领域的 preset/token 映射与旧字段迁移由后续领域 ADR 提供自己的消费、inspection 和显式配置优先级证据。
-
 ## 最终实现
 
 Core 已交付严格且 JSON-safe 的 Theme schema、Scene / Scope 字段级继承、完整冻结的 Composite context、runtime Scope、expand / full compile / lowering-only 一致的来源诊断，以及 Theme 变化时与 fresh compile 等价的 retained full fallback。React 与 Vanilla 均构造同一 Theme IR，保留合法普通对象的输入脱离与宿主逐字段覆盖，并把伪造的非 JSON 对象交回 Core fail-loud。最终 Scene 与 SVG / Canvas renderer 仍不读取 Theme；第三方 Composite 已证明可以在领域 owner 内独立物化完整 token mapping。
 
 契约由 schema、compile、adapter 与 renderer parity 层级共同锁定；真实领域的 preset / token 映射与旧字段迁移仍由后续领域 ADR 负责。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 领域 token vocabulary、preset 具体色值、palette、axis / legend / Cell mapping 的完整定义
 - 用户注册新的 style / mode 名称、命名主题 registry、继承、远程加载或 marketplace

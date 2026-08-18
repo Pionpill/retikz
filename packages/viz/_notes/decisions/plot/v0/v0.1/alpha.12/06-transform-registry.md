@@ -39,7 +39,7 @@ IR schema 继续静态化：内置 transform 是闭合 union；未知非内置 k
 - locator 与渲染使用同一 transform registry，避免交互与画面不一致。
 - 后续 ADR-15/16 的 mark-local transform 与统计代数复用本 registry。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不新增具体 regression / kde / boxplot 等统计 transform。
 - 不允许自定义覆盖内置 kind；冲突直接抛错。

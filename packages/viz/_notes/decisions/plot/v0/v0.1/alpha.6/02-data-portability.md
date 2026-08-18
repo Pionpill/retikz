@@ -81,7 +81,7 @@ retikz「数据不进 IR、外部数据是任意可嵌套 JS」（plot-design §
 
 要点：**非标量叶子与数组路径都收敛到「跳过 + 不伪造」**，配合可选 `validateData` 让「为什么图是空的」可诊断——这是文档型数据的主要错误处理保证。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **值变换函数**（逻辑字段 = 物理字段的计算式）→ transform / derive（alpha.12），`fieldMaps` 只改名。
 - **type-driven scale 选型 / 类型↔scale 校验** → ADR-03。

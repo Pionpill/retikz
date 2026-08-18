@@ -1,8 +1,8 @@
-﻿# ADR-03：pin 引脚（label + 引线）
+# ADR-03：pin 引脚（label + 引线）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第三部分](./roadmap.md) · tikz-gap-analysis §1 Node（历史分析已删除） · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-02](./02-max-text-width.md) · [alpha.4 Node label rotate](../alpha.4)（label 体系）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（引线起点边界解析）
+- 关联： · tikz-gap-analysis §1 Node（历史分析已删除） · 本 milestone [ADR-01](./01-paint-basics.md) / [ADR-02](./02-max-text-width.md) · [alpha.4 Node label rotate](../alpha.4)（label 体系）· [alpha.6 ADR-02 edgePoint](../alpha.6/02-side-t-edge-point.md)（引线起点边界解析）
 
 ## 背景 / 约束
 
@@ -11,7 +11,7 @@
 
 ## 决策：`NodeLabelSchema.pin` 单字段（`boolean | LeaderStyle`）合并开关 + 样式
 
-核心数据结构（字面即决策——单字段的取舍是关键决策，完整 schema + 英文 describe 见 `core/src/ir/node.ts`）：
+核心数据结构（字面即决策——单字段的取舍是关键决策，完整 schema + 英文 describe 见 ）：
 
 ```ts
 // label 复用，pin 单字段表达"开关 + 样式"
@@ -22,7 +22,7 @@ pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<num
 理由：
 
 1. **复用 label placement，最 DRY**：pin = label + 引线，placement / distance / 字体 / rotate 全复用，只加 `pin` 单字段。
-2. **单字段消除非法组合**：原始草案是 `pin: boolean` + 独立 `leader` 对象两字段，实现期评审发现"缺 pin + 给 leader"是无意义非法组合，合并成单 `pin` 字段；emit 用 `typeof pin === 'object'` 取样式（成本极小）。
+2. **单字段消除非法组合**：`pin: boolean` 与独立 `leader` 对象会允许"缺 pin + 给 leader"的无意义组合，因此合并成单 `pin` 字段；emit 用 `typeof pin === 'object'` 取样式。
 3. **引线几何复用 alpha.6**：起点取 node 边界朝 label 方向点（`boundaryPointOf`），无新几何。
 4. **零破坏**：`pin` 都 optional，现有 label 不受影响。
 
@@ -38,12 +38,7 @@ pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<num
 
 原决策"label / pin 不计入 layout、被裁用 alpha.9 viewBox override"在实现验证时立刻暴露问题——单 node + 远 label 的 demo 里 label 直接超出自动 viewBox 被裁，体验不可接受。**改为 label 文本框四角 + pin 一并计入 bbox**（`labelExtentPoints` → `allPoints`），与 step.label 早已进 bbox 一致、也贴 TikZ（label 默认进 bounding box）。node 自身 rotate 时 label 四角绕 node 中心同步旋转。alpha.9 viewBox override 仍是"反向裁小 / 固定尺寸"的逃生口，但默认不再裁掉 label。
 
-### 被否决的选项
-
-- **B：独立 `NodePinSchema`（`Node.pin`），与 `Node.label` 平级**——语义分明（label vs pin 两个概念），但 placement 字段（position / distance / 字体 / rotate）与 label 重复一遍，DRY 差、compile 两套近似路径。
-- **C：不做**——标注场景缺引线，用户已拍要做。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **Paint / 资源表** → [ADR-01](./01-paint-basics.md)；**maxTextWidth** → [ADR-02](./02-max-text-width.md)。
 - **引线末端 arrow**：留 alpha.8（自定义 arrow 落地后，复用 arrow 系统增强），本段引线纯 line。
@@ -51,6 +46,6 @@ pin?: boolean | { stroke?: string; strokeWidth?: number; dashPattern?: Array<num
 
 ---
 
-> **实现指针**：level `yellow`（动 IR node label schema + compile label emit 产引线，不动 primitive 契约 / index 公开面）、additive 非 breaking（`pin` optional）。真源以代码为准——`NodeLabelSchema.pin`（`core/src/ir/node.ts`）、label emit 产引线 `PathPrim` + 包 `GroupPrim`、label / pin 计入 bbox（`labelExtentPoints`）（`core/src/compile/node.ts`，复用 alpha.6 `boundaryPointOf`）。测试在 `core/tests/compile/node-pin.test.ts`。完整施工契约（Schema 表 / 文件 scope / 测试象限 / DSL 表面 / 待决策点）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:_notes/decisions/core/v0/v0.2/alpha.7/03-pin.md`。
+已实现本 ADR 的核心决策。兼容性：additive 非 breaking（`pin` optional）；其余默认行为、失败语义与公开契约以正文为准。

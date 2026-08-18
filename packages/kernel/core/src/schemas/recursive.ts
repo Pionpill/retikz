@@ -2,6 +2,8 @@ import type { z } from 'zod';
 
 import type { IRChild } from './scene/types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+
 let recursiveChildSchema: z.ZodType<IRChild> | null = null;
 
 /**
@@ -18,7 +20,10 @@ export const registerRecursiveChildSchema = (schema: z.ZodType<IRChild>): void =
  */
 export const getRecursiveChildSchema = (): z.ZodType<IRChild> => {
   if (!recursiveChildSchema) {
-    throw new Error('ScopeSchema: ChildSchema not registered yet; ensure scene schema is loaded');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Schema,
+      'ScopeSchema: ChildSchema not registered yet; ensure scene schema is loaded',
+    );
   }
 
   return recursiveChildSchema;

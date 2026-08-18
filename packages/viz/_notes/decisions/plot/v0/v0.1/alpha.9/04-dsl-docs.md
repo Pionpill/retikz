@@ -27,7 +27,7 @@ ADR-01~03 把 cartesian1D / polar1D / ternary2D 的 IR + lowering 落齐，但�
 - **lowering / IR**：无（ADR-01~03 已落）；本 ADR 仅表面 + 文档。
 - **对外 API**：`coordinate="cartesian1D"|"polar1D"|"ternary2D"`、`PointMark` x/y 可选 + a/b/c props——纯新增（x/y 从必填转可选是放宽，不破既有 cartesian/polar 用法）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 新坐标系的 IR / lowering → [ADR-01](./01-coordinate-frame-roles.md)~[03](./03-ternary2d.md)。
 - cartesian1D/ternary 的 line/area/interval 表面 → 对应坐标系 ADR 顺延（mark 矩阵 point 为主）。

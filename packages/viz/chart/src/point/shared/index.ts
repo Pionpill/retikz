@@ -1,3 +1,3 @@
-export * from './canonical';
-export * from './plot-seed';
-export * from './point-recipe';
+export * from './plot';
+export * from './recipe';
+export * from './schema';

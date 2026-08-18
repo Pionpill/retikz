@@ -20,6 +20,7 @@ import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundatio
 import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf, DEFAULT_EPSILON } from '@retikz/math';
 import { z } from 'zod';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 import { StandardShapeName } from '../constants';
 
 const SectorShapeParamsSchema = z
@@ -71,7 +72,13 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
     );
   }
   const bounds = boundsOf(candidates);
-  if (bounds === undefined) throw new Error('computeSectorGeometry: bounding candidates must not be empty.');
+  if (bounds === undefined) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: 'computeSectorGeometry: bounding candidates must not be empty.',
+      details: { candidateCount: candidates.length, shape: 'sector' },
+    });
+  }
   const aabbCenter = boundsCenter(bounds);
   const apexOffset: Position = [-aabbCenter[0], -aabbCenter[1]];
   const sweepRadians = (range.end - range.start) * DEG_TO_RAD;

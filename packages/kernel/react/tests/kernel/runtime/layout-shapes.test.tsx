@@ -1,6 +1,6 @@
-import type { BoundaryDefinition, ScenePrimitive, ShapeDefinition } from '@retikz/core';
+import type { BoundaryDefinition, ClipDefinition, IRScene, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 
-import { defineBoundary, defineShape, localToWorld, worldToLocal } from '@retikz/core';
+import { defineBoundary, defineClip, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -51,6 +51,35 @@ const fixedBoundary = (): BoundaryDefinition =>
     boundaryPoint: rect => [rect.x + 7, rect.y],
   });
 
+const customClip = (): ClipDefinition =>
+  defineClip({
+    kind: 'customClip',
+    schema: z.strictObject({ kind: z.literal('customClip') }),
+    resolve: () => ({ kind: 'customClip' }),
+    shapeSchema: z.strictObject({ kind: z.literal('customClip') }),
+    lower: () => ({
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [20, 0] },
+        { kind: 'line', to: [20, 20] },
+        { kind: 'close' },
+      ],
+      fillRule: 'nonzero',
+    }),
+  });
+
+const clippedIr: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'scope',
+      clip: { kind: 'customClip' },
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    },
+  ],
+};
+
 describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
     const svg = renderToStaticMarkup(
@@ -99,5 +128,12 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
         </Layout>,
       ),
     ).toThrow(/Unknown connection surface provider 'pin'/);
+  });
+});
+
+describe('<Layout clips> complete Clip definition passthrough', () => {
+  it('forwards one complete clips registry to static Vanilla processing and SSR', () => {
+    const svg = renderToStaticMarkup(<Layout ir={clippedIr} clips={[customClip()]} runtime={{ mode: 'static' }} />);
+    expect(svg).toContain('<clipPath');
   });
 });

@@ -35,6 +35,8 @@ Layout proposal 不是新的 registry：它是每个 layout-aware `CompositeDefi
 | Animation property | property name      | `<Layout animationProperties>`（仅 Canvas 自定义属性） |
 | TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                              |
 
+Clip 是单一 Definition 能力：一个 `ClipDefinition` 使用同一 kind 拥有 authored spec schema、JSON-safe shape schema、resolve 与 canonical `SceneClipPath` lowering。缺失 kind 统一提示 `clips`。Core 默认只保留完整 `rect`；circle / ellipse / polygon / path / compound 从 `@retikz/standard/clip` 或第三方入口显式装配。
+
 Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `stroke` definition。Ribbon 等可选 kind 都是通过同一槽位装载的 Standard Definition；它们的 schema、几何和 runtime 数据集不属于 Core。
 
 ## 诊断约定
@@ -64,7 +66,9 @@ Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `
   </LinkedCard>
   <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">自定义裁剪区</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">ClipDefinition：Scope 的命名裁剪形状</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      ClipDefinition：在同一 kind 下绑定 spec、shape 与几何 lowering
+    </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/custom-arrow">
     <span className="font-semibold">自定义箭头</span>
@@ -121,22 +125,22 @@ Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `
       endLine: 214,
     },
     {
-      label: 'recoverable、contract 与 invariant 的 identity 分类',
-      path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 67,
-      endLine: 78,
+      label: 'recoverable、contract 与 fatal identity 分类',
+      path: 'packages/kernel/core/src/resolve/diagnostics.ts',
+      startLine: 8,
+      endLine: 58,
     },
     {
       label: '普通 thrown value 的安全规范化与诊断补全',
       path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 127,
-      endLine: 151,
+      startLine: 34,
+      endLine: 58,
     },
     {
       label: 'failure ownership 与受控 raise',
       path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 154,
-      endLine: 208,
+      startLine: 61,
+      endLine: 115,
     },
     {
       label: 'child probe 隔离、fatal 穿透与 resolved result',

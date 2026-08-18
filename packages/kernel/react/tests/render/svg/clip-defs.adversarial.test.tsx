@@ -1,4 +1,4 @@
-import type { GroupPrim, SceneResource } from '@retikz/core';
+import type { GroupPrim, SceneClipPath, SceneResource } from '@retikz/core';
 
 import { type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -19,8 +19,18 @@ const clipPathsOf = (resources: Array<SceneResource>): Array<AnyEl> => {
   return (frag.props.children as Array<AnyEl>).filter(Boolean);
 };
 
-const clipResource = (id: string, shape: unknown): SceneResource =>
-  ({ kind: 'clip', id, shape }) as unknown as SceneResource;
+const clipResource = (id: string, path: SceneClipPath): SceneResource => ({ kind: 'clip', id, path });
+
+const rectPath = (size: number): SceneClipPath => ({
+  commands: [
+    { kind: 'move', to: [0, 0] },
+    { kind: 'line', to: [size, 0] },
+    { kind: 'line', to: [size, size] },
+    { kind: 'line', to: [0, size] },
+    { kind: 'close' },
+  ],
+  fillRule: 'nonzero',
+});
 
 describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
   it('资源表全是 paint → 物化 0 个 clipPath（严格按 kind 分流）', () => {
@@ -46,7 +56,7 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
 
   it('paint / clip 交错多条 → 只物化 clip，顺序保持', () => {
     const cps = clipPathsOf([
-      clipResource('clip-1', { kind: 'rect', x: 0, y: 0, width: 10, height: 10 }),
+      clipResource('clip-1', rectPath(10)),
       {
         kind: 'paint',
         id: 'paint-1',
@@ -58,27 +68,28 @@ describe('ClipDefs 对抗：非 clip / 空 / 混合资源', () => {
           ],
         },
       } as unknown as SceneResource,
-      clipResource('clip-2', { kind: 'circle', cx: 0, cy: 0, r: 5 }),
+      clipResource('clip-2', rectPath(5)),
     ]);
     expect(cps).toHaveLength(2);
     expect(cps.map(cp => cp.props.id)).toEqual(['c-clip-1', 'c-clip-2']);
   });
 
-  it('polygon points 含负坐标 → 序列化成 "x,y" 列表保留负号', () => {
+  it('canonical commands 含负坐标时 path d 保留负号', () => {
     const [cp] = clipPathsOf([
       clipResource('clip-1', {
-        kind: 'polygon',
-        points: [
-          [-5, -10],
-          [40, 0],
-          [20, 40],
+        commands: [
+          { kind: 'move', to: [-5, -10] },
+          { kind: 'line', to: [40, 0] },
+          { kind: 'line', to: [20, 40] },
+          { kind: 'close' },
         ],
+        fillRule: 'nonzero',
       }),
     ]);
     const shape = (Array.isArray(cp.props.children) ? cp.props.children[0] : cp.props.children) as AnyEl;
-    const points = String(shape.props.points);
-    expect(points).toContain('-5,-10');
-    expect(points).toContain('40,0');
+    const d = String(shape.props.d);
+    expect(d).toContain('M -5 -10');
+    expect(d).toContain('L 40 0');
   });
 });
 

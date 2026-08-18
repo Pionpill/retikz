@@ -67,6 +67,7 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
   createStyleResolveFrame,
   resolveBoundaryReference,
@@ -76,10 +77,10 @@ import {
   resolveTheme,
 } from '../../resolve';
 import {
-  CompositeContractError,
   isFatalProbeError,
-  isLayoutProbeRecoverableError,
-  LayoutProbeRecoverableError,
+  isRetikzLayoutProbeRecoverableError,
+  RetikzCompositeContractError,
+  RetikzLayoutProbeRecoverableError,
   safeErrorMessage,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
@@ -108,11 +109,11 @@ import { emitPathPrimitive } from '../path';
 import { emitLabelPrimitive } from '../path';
 import { resolvePosition } from '../position';
 import {
-  CompileInvariantError,
   createLayoutChildFailure,
   enrichLayoutProbeError,
   normalizeLayoutProbeError,
   raiseLayoutChildFailure,
+  RetikzCompileInvariantError,
 } from '../probe-failure';
 import { resolveAnchorRefUncached } from '../reference';
 import { createClipRegistry, createPaintRegistry, validateMarkerPrimitives } from '../resource';
@@ -276,13 +277,13 @@ export const compileChildrenToPrimitives = (
     withProviderOutputValidationBoundary(`Path kind '${kind}'`, () => {
       if (value === null) return null;
       if (typeof value !== 'object') {
-        throw new CompositeContractError(`Path kind '${kind}' must return a compile result object or null.`);
+        throw new RetikzCompositeContractError(`Path kind '${kind}' must return a compile result object or null.`);
       }
       const result = value as Record<string, unknown>;
       const primitives = validateScenePrimitives(`Path kind '${kind}'`, result.primitives, validateMarkerPrimitives);
       const rawBoundsPoints = result.boundsPoints;
       if (!Array.isArray(rawBoundsPoints)) {
-        throw new CompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);
+        throw new RetikzCompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);
       }
       const boundsPoints = Array.from(
         rawBoundsPoints,
@@ -317,21 +318,21 @@ export const compileChildrenToPrimitives = (
       publish: value => {
         if (keys.length === 0) return;
         if (hasPublished) {
-          throw new CompositeContractError(`Owner '${sourcePath}' published its compile output more than once.`);
+          throw new RetikzCompositeContractError(`Owner '${sourcePath}' published its compile output more than once.`);
         }
         if (definition === undefined) {
-          throw new CompileInvariantError('internal: selected owner output has no definition');
+          throw new RetikzCompileInvariantError('internal: selected owner output has no definition');
         }
         let parsed: unknown;
         try {
           parsed = definition.schema.parse(value);
         } catch (cause) {
-          throw new CompositeContractError(`Owner '${sourcePath}' returned an invalid owner output.`, { cause });
+          throw new RetikzCompositeContractError(`Owner '${sourcePath}' returned an invalid owner output.`, { cause });
         }
         try {
           published = cloneAndFreezeJson(parsed, `Owner '${sourcePath}' output`) as JsonValue;
         } catch (cause) {
-          throw new CompositeContractError(`Owner '${sourcePath}' returned a non-JSON owner output.`, { cause });
+          throw new RetikzCompositeContractError(`Owner '${sourcePath}' returned a non-JSON owner output.`, { cause });
         }
         hasPublished = true;
       },
@@ -501,7 +502,7 @@ export const compileChildrenToPrimitives = (
     const validated = validatePathKindCompileResult(kind, produced);
     if (validated === null) {
       if (ownerOutput.publisher.requested && ownerOutput.hasPublished()) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `Path kind '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must not publish owner output when it returns null.`,
         );
       }
@@ -509,7 +510,7 @@ export const compileChildrenToPrimitives = (
     }
     const value = ownerOutput.value();
     if (ownerOutput.publisher.requested && value === undefined) {
-      throw new CompositeContractError(
+      throw new RetikzCompositeContractError(
         `Path kind '${kind}' at ${formatCompileOccurrence(pendingPath.occurrence)} must publish its owner output exactly once.`,
       );
     }
@@ -569,7 +570,7 @@ export const compileChildrenToPrimitives = (
           const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
           const idx = pendingPath.placeholderSlot.primitiveSink.indexOf(pendingPath.placeholderSlot.placeholder);
           if (idx === -1) {
-            throw new CompileInvariantError('internal: path placeholder missing from its sink');
+            throw new RetikzCompileInvariantError('internal: path placeholder missing from its sink');
           }
           pendingPath.placeholderSlot.primitiveSink.splice(idx, 1, ...primitives);
           if (pendingPath.semanticOwner !== undefined) {
@@ -694,7 +695,7 @@ export const compileChildrenToPrimitives = (
       resolveBetweenGlobal,
     });
     if (!localCenter) {
-      throw new LayoutProbeRecoverableError(
+      throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
       );
     }
@@ -754,7 +755,7 @@ export const compileChildrenToPrimitives = (
   /** 拒绝非 finite 的 Scope placement 中间结果 */
   const assertFinitePlacementPoint = (point: IRPosition, label: string): IRPosition => {
     if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-      throw new Error(`${label} must resolve to a finite point`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
     }
     return point;
   };
@@ -775,19 +776,22 @@ export const compileChildrenToPrimitives = (
     }
     const scopeIrPath = `${frame.locatorPrefix}children[${index}].scope`;
     if (target.id === child.id) {
-      throw new LayoutProbeRecoverableError(
+      throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
       );
     }
     const entry = runtime.state.namespaceStack.lookupEntry(target.id);
     if (entry === undefined || entry.state !== 'resolved') {
-      throw new LayoutProbeRecoverableError(
+      throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
       );
     }
     const world = resolveBetweenGlobal(target, runtime.state.namespaceStack, frame.scopeChain);
     if (world === null) {
-      throw new Error(`Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`,
+      );
     }
     const parentPoint = frame.scopeChain.length === 0 ? world : inverseTransformChain(world, frame.scopeChain);
     return assertFinitePlacementPoint(parentPoint, 'scope placement target');
@@ -1189,7 +1193,7 @@ export const compileChildrenToPrimitives = (
     occurrence: CompileOccurrenceLocator,
   ): Readonly<BoundsRect> => {
     if (bounds === null || typeof bounds !== 'object' || Array.isArray(bounds)) {
-      throw new CompositeContractError(
+      throw new RetikzCompositeContractError(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned an invalid allocationBounds.`,
       );
     }
@@ -1202,14 +1206,14 @@ export const compileChildrenToPrimitives = (
       (width as number) < 0 ||
       (height as number) < 0
     ) {
-      throw new CompositeContractError(
+      throw new RetikzCompositeContractError(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; x/y must be finite and width/height must be finite non-negative numbers.`,
       );
     }
     const right = (x as number) + (width as number);
     const bottom = (y as number) + (height as number);
     if (!Number.isFinite(right) || !Number.isFinite(bottom)) {
-      throw new CompositeContractError(
+      throw new RetikzCompositeContractError(
         `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} returned invalid allocationBounds; derived edges must remain finite.`,
       );
     }
@@ -1226,7 +1230,7 @@ export const compileChildrenToPrimitives = (
     definition: NonNullable<ReturnType<typeof runtime.context.composites.get>>,
   ): CallableLayoutCompositeDefinition => {
     if (definition.compile === undefined) {
-      throw new CompileInvariantError('internal: callableLayoutDefinition received an expand composite');
+      throw new RetikzCompileInvariantError('internal: callableLayoutDefinition received an expand composite');
     }
     return definition as unknown as CallableLayoutCompositeDefinition;
   };
@@ -1235,7 +1239,7 @@ export const compileChildrenToPrimitives = (
     if (paint === undefined || typeof paint === 'string' || paint.kind === 'contextStroke') return paint;
     const id = ids.get(paint.id);
     if (id === undefined)
-      throw new CompileInvariantError(`internal: replay paint resource '${paint.id}' was not imported`);
+      throw new RetikzCompileInvariantError(`internal: replay paint resource '${paint.id}' was not imported`);
     return { kind: 'resourceRef', id };
   };
 
@@ -1243,7 +1247,7 @@ export const compileChildrenToPrimitives = (
     if (primitive.type === 'group') {
       const clipRef = primitive.clipRef === undefined ? undefined : ids.get(primitive.clipRef);
       if (primitive.clipRef !== undefined && clipRef === undefined) {
-        throw new CompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not imported`);
+        throw new RetikzCompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not imported`);
       }
       return {
         ...primitive,
@@ -1284,7 +1288,9 @@ export const compileChildrenToPrimitives = (
     const visit = (primitive: ScenePrimitive): void => {
       if (primitive.type === 'group') {
         if (primitive.clipRef !== undefined && !replayResourceIds.has(primitive.clipRef)) {
-          throw new CompileInvariantError(`internal: replay clip resource '${primitive.clipRef}' was not captured`);
+          throw new RetikzCompileInvariantError(
+            `internal: replay clip resource '${primitive.clipRef}' was not captured`,
+          );
         }
         primitive.children.forEach(visit);
         return;
@@ -1293,7 +1299,7 @@ export const compileChildrenToPrimitives = (
       for (const paint of [primitive.fill, primitive.stroke]) {
         if (paint !== undefined && typeof paint === 'object' && paint.kind !== 'contextStroke') {
           if (!replayResourceIds.has(paint.id)) {
-            throw new CompileInvariantError(`internal: replay paint resource '${paint.id}' was not captured`);
+            throw new RetikzCompileInvariantError(`internal: replay paint resource '${paint.id}' was not captured`);
           }
         }
       }
@@ -1312,7 +1318,8 @@ export const compileChildrenToPrimitives = (
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
     const prepared = preparedReplays.get(token);
-    if (prepared === undefined) throw new CompileInvariantError('internal: replay was not preflighted before commit');
+    if (prepared === undefined)
+      throw new RetikzCompileInvariantError('internal: replay was not preflighted before commit');
     const { wrapperClipShape } = prepared;
     const transaction =
       prepared.transaction.materialize !== undefined &&
@@ -1333,11 +1340,11 @@ export const compileChildrenToPrimitives = (
       if (resource.kind === 'paint') {
         const imported = runtime.context.paint.importResolved(resource);
         if (typeof imported !== 'object' || imported.kind !== 'resourceRef') {
-          throw new CompileInvariantError('internal: imported paint did not produce a resourceRef');
+          throw new RetikzCompileInvariantError('internal: imported paint did not produce a resourceRef');
         }
         resourceIds.set(resource.id, imported.id);
       } else {
-        resourceIds.set(resource.id, runtime.context.clip.importResolved(resource.shape));
+        resourceIds.set(resource.id, runtime.context.clip.importPath(resource.path));
       }
     }
     const wrapperClipRef =
@@ -1513,30 +1520,30 @@ export const compileChildrenToPrimitives = (
     const transactionsToConsume: Array<CompositeReplayTransaction> = [];
     const visitHandle = (handle: unknown): void => {
       if (handle === null || typeof handle !== 'object') {
-        throw new CompositeContractError(`${owner.label} received an invalid or forged output child.`);
+        throw new RetikzCompositeContractError(`${owner.label} received an invalid or forged output child.`);
       }
       const entry = runtime.context.session.outputChildren.get(handle);
       if (entry === undefined) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} received an output child that does not belong to this compile or was forged.`,
         );
       }
       if (entry.owner !== owner) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} received an output child that does not belong to this composite callback.`,
         );
       }
       if (entry.used) {
-        throw new CompositeContractError(`${owner.label} received an output child that was already consumed.`);
+        throw new RetikzCompositeContractError(`${owner.label} received an output child that was already consumed.`);
       }
       if (preparedOutputs.has(handle)) {
-        throw new CompositeContractError(`${owner.label} received the same output child more than once.`);
+        throw new RetikzCompositeContractError(`${owner.label} received the same output child more than once.`);
       }
       entriesToConsume.push(entry);
       if (entry.child.kind === 'scope') {
         for (const declaration of entry.child.spatialHandles ?? []) {
           if (reachableSpatialHandleKeys.has(declaration.key)) {
-            throw new CompositeContractError(
+            throw new RetikzCompositeContractError(
               `${owner.label} declared duplicate spatial handle key '${declaration.key}' across reachable runtime Scopes.`,
             );
           }
@@ -1558,22 +1565,22 @@ export const compileChildrenToPrimitives = (
       preparedOutputs.set(handle, { output: entry.child });
       const transaction = runtime.context.session.replayTransactions.get(entry.child.replay);
       if (transaction === undefined) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} received a replay token that does not belong to this compile or was forged.`,
         );
       }
       if (transaction.owner !== owner) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} received a replay token that does not belong to this composite callback.`,
         );
       }
       if (transaction.used) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${transaction.owner.label} replay token may be placed at most once and was already replayed.`,
         );
       }
       if (preparedReplays.has(entry.child.replay)) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} received the same replay token more than once and it was already replayed.`,
         );
       }
@@ -1683,7 +1690,7 @@ export const compileChildrenToPrimitives = (
           }
           const preparedChild = prepared.outputs.get(child);
           if (preparedChild === undefined) {
-            throw new CompileInvariantError('internal: runtime Scope output child was not preflighted');
+            throw new RetikzCompileInvariantError('internal: runtime Scope output child was not preflighted');
           }
           compileRuntimeOutputChild(
             preparedChild.output,
@@ -1718,7 +1725,7 @@ export const compileChildrenToPrimitives = (
     const definition = runtime.context.composites.get(key);
     if (definition === undefined) {
       if (options.probe === true) {
-        throw new LayoutProbeRecoverableError(
+        throw new RetikzLayoutProbeRecoverableError(
           `No composite registered for '${key}' at ${formatCompileOccurrence(occurrence)}`,
           { providerKey: key, occurrence },
         );
@@ -1731,7 +1738,8 @@ export const compileChildrenToPrimitives = (
       return;
     }
     if (compositeDepth >= runtime.context.maxCompositeDepth) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
         `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${runtime.context.maxCompositeDepth} levels at ${occurrence.sourcePath}`,
       );
     }
@@ -1821,14 +1829,15 @@ export const compileChildrenToPrimitives = (
           warning.code === CompileWarningCode.PolarOriginUnresolved ||
           warning.code === CompileWarningCode.AtTargetUnresolved
         ) {
-          throw new Error(
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Compile,
             `Composite '${key}' at ${formatCompileOccurrence(occurrence)} cannot layout child with an unresolved reference: ${warning.message}`,
           );
         }
         warnings.push(warning);
       };
       const paint = createPaintRegistry(context.round);
-      const clip = createClipRegistry(context.round);
+      const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
       const probeIdentityTracker =
         runtime.state.identityTracker === undefined
           ? undefined
@@ -1964,12 +1973,15 @@ export const compileChildrenToPrimitives = (
           createCompositeScopeChild(runtime.context.session, owner, props, children, spatialHandles),
       });
     } catch (thrown) {
-      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
-      throw new LayoutProbeRecoverableError(safeErrorMessage(thrown, 'Composite callback threw a non-Error value'), {
-        cause: thrown,
-        providerKey: key,
-        occurrence,
-      });
+      if (isFatalProbeError(thrown) || isRetikzLayoutProbeRecoverableError(thrown)) throw thrown;
+      throw new RetikzLayoutProbeRecoverableError(
+        safeErrorMessage(thrown, 'Composite callback threw a non-Error value'),
+        {
+          cause: thrown,
+          providerKey: key,
+          occurrence,
+        },
+      );
     }
 
     const validatedResult = withProviderOutputValidationBoundary(owner.label, () => {
@@ -1979,7 +1991,7 @@ export const compileChildrenToPrimitives = (
         Array.isArray(callbackResult) ||
         !('children' in callbackResult)
       ) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} returned an invalid compile result; children must be an array.`,
         );
       }
@@ -1989,10 +2001,12 @@ export const compileChildrenToPrimitives = (
       const resultAlignmentGuides = result.alignmentGuides;
       const resultArtifact = result.artifact;
       if ('spatialHandles' in callbackResult) {
-        throw new CompositeContractError(`${owner.label} returned unsupported compile result field 'spatialHandles'.`);
+        throw new RetikzCompositeContractError(
+          `${owner.label} returned unsupported compile result field 'spatialHandles'.`,
+        );
       }
       if (!Array.isArray(resultChildren)) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `${owner.label} returned an invalid compile result; children must be an array.`,
         );
       }
@@ -2011,20 +2025,20 @@ export const compileChildrenToPrimitives = (
       let compositeArtifact: CompositeCompileArtifact | undefined;
       if (resultArtifact !== undefined) {
         if (callable.artifactSchema === undefined) {
-          throw new CompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
+          throw new RetikzCompositeContractError(`Composite '${key}' returned artifact without artifactSchema.`);
         }
         let parsedArtifact: JsonValue;
         try {
           parsedArtifact = callable.artifactSchema.parse(resultArtifact);
         } catch (cause) {
-          throw new CompositeContractError(`${owner.label} returned an invalid artifact.`, { cause });
+          throw new RetikzCompositeContractError(`${owner.label} returned an invalid artifact.`, { cause });
         }
         let frozenArtifact: JsonValue;
         try {
           frozenArtifact = cloneAndFreezeJson(parsedArtifact, `Composite '${key}' artifact`);
         } catch (cause) {
           const detail = safeThrownDetail(cause);
-          throw new CompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
+          throw new RetikzCompositeContractError(`${owner.label} returned a non-JSON artifact: ${detail}`, { cause });
         }
         compositeArtifact = freezeCompileArtifact({
           kind: 'composite',
@@ -2039,7 +2053,7 @@ export const compileChildrenToPrimitives = (
     const { children, explicitAllocation, explicitAlignmentGuides, compositeArtifact } = validatedResult;
     if (observerKeys.length > 0) {
       if (compositeArtifact === undefined) {
-        throw new CompositeContractError(
+        throw new RetikzCompositeContractError(
           `Composite '${key}' at ${formatCompileOccurrence(occurrence)} was selected for observation but returned no artifact.`,
         );
       }
@@ -2084,7 +2098,7 @@ export const compileChildrenToPrimitives = (
       compileRuntimeOutputChild(
         preparedOutputs.outputs.get(output)?.output ??
           (() => {
-            throw new CompileInvariantError('internal: composite output child was not preflighted');
+            throw new RetikzCompileInvariantError('internal: composite output child was not preflighted');
           })(),
         outputIndex,
         outputFrame,
@@ -2139,14 +2153,17 @@ export const compileChildrenToPrimitives = (
       options.observeFailurePath?.('namespace' in child ? entityPath : `${entityPath}.${child.type}`);
       if (isFatalProbeError(thrown)) throw thrown;
       const providerKey = 'namespace' in child ? `${child.namespace}.${child.type}` : child.type;
-      if (isLayoutProbeRecoverableError(thrown)) {
+      if (isRetikzLayoutProbeRecoverableError(thrown)) {
         throw enrichLayoutProbeError(thrown, providerKey, occurrence);
       }
-      throw new LayoutProbeRecoverableError(safeErrorMessage(thrown, 'Child compilation threw a non-Error value'), {
-        cause: thrown,
-        providerKey,
-        occurrence,
-      });
+      throw new RetikzLayoutProbeRecoverableError(
+        safeErrorMessage(thrown, 'Child compilation threw a non-Error value'),
+        {
+          cause: thrown,
+          providerKey,
+          occurrence,
+        },
+      );
     }
   };
 
@@ -2243,7 +2260,7 @@ export const compileChildrenToPrimitives = (
       typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
         ? ` at ${collectPlaceholderLocators(runtime.state.primitives).join(', ')}`
         : '';
-    throw new CompileInvariantError(
+    throw new RetikzCompileInvariantError(
       `internal: ${runtime.state.placeholderBalance} unresolved path placeholder(s) leaked into Scene output${detail}`,
     );
   }

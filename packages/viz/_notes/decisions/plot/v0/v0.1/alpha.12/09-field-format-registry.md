@@ -34,7 +34,7 @@ IR 侧保留 JSON-safe 形态：内置格式仍是既有枚举 / 字符串，自
 
 这个扩展点补齐了 data 层最明确、最小的 registry 缝，同时避免把所有数据解析 hook 都过度抽象成 registry。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - `fieldType` 语义模型 registry。
 - `resolveField` / `resolveLabel` 函数 hook registry 化。

@@ -12,6 +12,7 @@ import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
 import type { IRSurface } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import { SURFACE_HANDLE_KEY, SURFACE_HANDLE_ROLE } from './constants';
 
 type SurfaceAxis = 'x' | 'y';
@@ -25,12 +26,20 @@ const childAxisProposal = (proposal: LayoutAxisProposal, padding: number, axis: 
   if (proposal.kind === LayoutAxisProposalKind.Intrinsic) return proposal;
   if (proposal.kind === LayoutAxisProposalKind.Exact) {
     if (proposal.value < padding) {
-      throw new Error(`standard.surface ${axis} exact proposal cannot fit Surface padding`);
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.PipelineInvariant,
+        message: `standard.surface ${axis} exact proposal cannot fit Surface padding`,
+        details: { axis, padding, proposal: proposal.value },
+      });
     }
     return { kind: LayoutAxisProposalKind.Exact, value: proposal.value - padding };
   }
   if (proposal.max !== undefined && proposal.max < padding) {
-    throw new Error(`standard.surface ${axis} range proposal cannot fit Surface padding`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.PipelineInvariant,
+      message: `standard.surface ${axis} range proposal cannot fit Surface padding`,
+      details: { axis, padding, proposalMax: proposal.max },
+    });
   }
   return {
     kind: LayoutAxisProposalKind.Range,

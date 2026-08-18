@@ -34,6 +34,7 @@ import type {
   VanillaView,
 } from '../runtime/types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
 import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
 import { assertStaticMountRuntimeExcluded } from '../runtime/static-mount-options';
@@ -53,7 +54,7 @@ const mountStaticSvg = (
   options: StaticMountOptions | RawStaticMountOptions,
 ): StaticSvgView | StaticRawSvgView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new Error('mountSvg: container must be a DOM Element.');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: container must be a DOM Element.');
   }
   const output = options.output ?? {};
   const animation = options.animation ?? {};
@@ -120,7 +121,7 @@ const mountStaticSvg = (
     mode: VanillaViewMode.Static,
     root,
     update(next: RenderInput) {
-      if (disposed) throw new Error('mountSvg: view already disposed.');
+      if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: view already disposed.');
       renderInto(next);
     },
     hydrate,
@@ -154,7 +155,7 @@ const mountRetainedSvg = (
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedSvgView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new Error('mountSvg: container must be a DOM Element.');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountSvg: container must be a DOM Element.');
   }
   const root = document.createElementNS(SVG_NS, 'svg');
   const output = options.output ?? {};

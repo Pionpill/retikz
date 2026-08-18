@@ -1,7 +1,8 @@
-import { Fragment, type FC } from 'react';
+import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
 import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
+import { Fragment } from 'react';
 
 const rows = [
   { solid: 'normal', open: 'open' },

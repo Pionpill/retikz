@@ -50,10 +50,12 @@ describe('Relation canonical semantic IR', () => {
   });
 
   it('requires exactly one authoring path source and a relation role', () => {
-    expect(() => Graph.createRelation({ id: 'missing', role: 'flow' } as never)).toThrow(/exactly one/i);
-    expect(() => Graph.createRelation({ id: 'both', role: 'flow', children: steps, way: ['a', 'b'] } as never)).toThrow(
-      /exactly one/i,
+    expect(() => Graph.createRelation({ id: 'missing', role: 'flow' } as never)).toThrowError(
+      expect.objectContaining({ code: Graph.RetikzGraphErrorCode.RelationInputInvalid }),
     );
+    expect(() =>
+      Graph.createRelation({ id: 'both', role: 'flow', children: steps, way: ['a', 'b'] } as never),
+    ).toThrowError(expect.objectContaining({ code: Graph.RetikzGraphErrorCode.RelationInputInvalid }));
   });
 });
 

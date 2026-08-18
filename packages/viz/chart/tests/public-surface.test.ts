@@ -1,27 +1,35 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { IRChart, IRChartPresentation } from '../src';
+import type { IRBaseChart, IRChartPresentation } from '../src';
+import type { PointChartTypeValue } from '../src/point';
 
 import * as chart from '../src';
 import * as point from '../src/point';
 
 describe('@retikz/chart public surface', () => {
-  it('exports the canonical base Chart contract, four presets, and one provider', () => {
+  it('exports the Base Chart contract, four presets, and one provider', () => {
     expect(chart.ChartPresentationPreset).toEqual({
       Title: 'title',
       Subtitle: 'subtitle',
       Note: 'note',
       Source: 'source',
     });
-    expect(chart.ChartProvider.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'chart' });
+    expect(chart.ChartProvider.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'base' });
     expect(chart).toHaveProperty('ChartDefinition');
-    expect(chart).toHaveProperty('ChartSchema');
-    expect(chart).not.toHaveProperty('PointChartType');
+    expect(chart).toHaveProperty('BaseChartSchema');
+    expect(chart).not.toHaveProperty('ChartSchema');
+    expect(chart).not.toHaveProperty('IRChart');
     expect(chart).not.toHaveProperty('PointChartSchema');
     expect(chart).not.toHaveProperty('ScatterChartSchema');
     expect(chart).not.toHaveProperty('BubbleChartSchema');
     expect(chart).not.toHaveProperty('ConnectedScatterChartSchema');
-    expect(chart).not.toHaveProperty('resolvePointChart');
+    expect(chart.BaseChartType).toEqual({ Base: 'base' });
+    expect(chart).not.toHaveProperty('ChartType');
+    expect(chart).not.toHaveProperty('PointChartType');
+    expect(chart).toHaveProperty('bindChart');
+    expect(chart).toHaveProperty('resolveChart');
+    expect(chart).toHaveProperty('BaseChartRecipe');
+    expect(chart).not.toHaveProperty('BUILTIN_CHART_RECIPES_BY_TYPE');
     expect(chart).not.toHaveProperty('ScatterChartDefinition');
     expect(chart).not.toHaveProperty('createChartComposites');
     expect(chart).not.toHaveProperty('ChartCaption');
@@ -29,18 +37,23 @@ describe('@retikz/chart public surface', () => {
   });
 
   it('exports the Point family together with the base Chart contract from its subpath', () => {
-    expect(point.ChartSchema).toBe(chart.ChartSchema);
+    expect(point.BaseChartSchema).toBe(chart.BaseChartSchema);
     expect(point.ChartDefinition).toBe(chart.ChartDefinition);
+    expect(point.BaseChartType).toEqual({ Base: 'base' });
     expect(point.PointChartType).toEqual({
       Scatter: 'scatter',
       Bubble: 'bubble',
       ConnectedScatter: 'connected-scatter',
     });
-    expect(point).toHaveProperty('PointChartSchema');
+    expectTypeOf(point.PointChartType.Scatter).toMatchTypeOf<PointChartTypeValue>();
+    expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).toHaveProperty('ScatterChartSchema');
     expect(point).toHaveProperty('BubbleChartSchema');
     expect(point).toHaveProperty('ConnectedScatterChartSchema');
-    expect(point).toHaveProperty('resolvePointChart');
+    expect(point).toHaveProperty('ScatterChartRecipe');
+    expect(point).toHaveProperty('BubbleChartRecipe');
+    expect(point).toHaveProperty('ConnectedScatterChartRecipe');
+    expect(point).not.toHaveProperty('resolvePointChart');
   });
 
   it('keeps canonical IR JSON-safe', () => {
@@ -50,9 +63,9 @@ describe('@retikz/chart public surface', () => {
         { kind: 'plot', key: 'chart.plot' },
       ],
     };
-    const value: IRChart = chart.ChartSchema.parse({
+    const value: IRBaseChart = chart.BaseChartSchema.parse({
       namespace: 'chart',
-      type: 'chart',
+      type: 'base',
       plot: {
         namespace: 'plot',
         type: 'plot',
@@ -64,7 +77,7 @@ describe('@retikz/chart public surface', () => {
       presentation,
     });
 
-    expectTypeOf(value).toMatchTypeOf<IRChart>();
+    expectTypeOf(value).toMatchTypeOf<IRBaseChart>();
     expect(JSON.parse(JSON.stringify(value))).toEqual(value);
   });
 });

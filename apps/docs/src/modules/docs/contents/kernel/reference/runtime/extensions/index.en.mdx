@@ -35,6 +35,8 @@ Layout proposals are not a new registry. They are the closed, general child-eval
 | Animation property | property name      | `<Layout animationProperties>` (custom properties on Canvas only) |
 | TeX lowerer        | math text payload  | `CompileOptions.lowerTex`                                         |
 
+Clip is a single Definition capability. One `ClipDefinition` owns the authored spec schema, JSON-safe shape schema, resolve, and canonical `SceneClipPath` lowering under the same kind. A missing kind consistently suggests `clips`. Core keeps only the complete `rect` definition by default; circle / ellipse / polygon / path / compound are assembled explicitly from `@retikz/standard/clip` or third-party entries.
+
 Core's generic path-kind slot is `CompileOptions.pathKinds`, and Core supplies only the `stroke` definition. Optional path kinds such as Ribbon are Standard Definitions loaded through that same slot; their schemas, geometry, and runtime datasets stay outside Core.
 
 ## Diagnostics
@@ -67,7 +69,7 @@ Core's generic path-kind slot is `CompileOptions.pathKinds`, and Core supplies o
   <LinkedCard href="/kernel/components/layout/custom-clip">
     <span className="font-semibold">Custom Clips</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      ClipDefinition: named clipping geometry for Scope
+      ClipDefinition: spec, shape, and geometry lowering under one kind
     </span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/draw/custom-arrow">
@@ -133,22 +135,22 @@ Core's generic path-kind slot is `CompileOptions.pathKinds`, and Core supplies o
       endLine: 214,
     },
     {
-      label: 'Classify recoverable, contract, and invariant errors by identity',
-      path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 67,
-      endLine: 78,
+      label: 'Classify recoverable, contract, and fatal errors by identity',
+      path: 'packages/kernel/core/src/resolve/diagnostics.ts',
+      startLine: 8,
+      endLine: 58,
     },
     {
       label: 'Safely normalize ordinary thrown values and enrich diagnostics',
       path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 127,
-      endLine: 151,
+      startLine: 34,
+      endLine: 58,
     },
     {
       label: 'Own failures and raise a selected failure',
       path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 154,
-      endLine: 208,
+      startLine: 61,
+      endLine: 115,
     },
     {
       label: 'Child probe isolation, fatal propagation, and resolved results',

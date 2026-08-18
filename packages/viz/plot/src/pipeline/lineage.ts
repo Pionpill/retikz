@@ -16,7 +16,7 @@ import type {
   PlotScaleLineage,
   PlotSeriesLineage,
 } from '../contract';
-import type { IRPlotMarkOperation, IRPlotScaleOperation, IRPlot, IRPlotTransform } from '../schemas';
+import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotTransform } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
 
 import { resolvePlotLineageOptions } from '../resolve/lineage';

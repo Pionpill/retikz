@@ -5,6 +5,8 @@ import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 type NodeAnchorLayout = NodeLayout | NodeReferenceView;
 
 import { boundaryKey } from '../../resolve';
@@ -63,7 +65,10 @@ const resolveBoundaryOf = (
         ? layout.boundaryResolution
         : undefined);
   if (resolution === undefined) {
-    throw new Error(`Boundary '${boundaryKey(boundary)}' was not resolved for node '${layout.id ?? '(unnamed)'}'`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Boundary '${boundaryKey(boundary)}' was not resolved for node '${layout.id ?? '(unnamed)'}'`,
+    );
   }
   return resolveBoundaryGeometry(resolution, {
     visualDef: layout.shapeDef,
@@ -120,7 +125,11 @@ export const anchorOf = (
       if (own !== undefined) return own;
       const fallbackRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
       const p = fallbackBoundaryAnchor(fallbackRect, name);
-      if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+      if (p === undefined)
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `Unknown anchor '${name}' for shape '${layout.shapeName}'`,
+        );
       return p;
     }
     const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution);
@@ -129,7 +138,11 @@ export const anchorOf = (
     const p =
       snapshotOptionalProviderPosition(`Boundary '${boundaryKey(boundary)}' anchor`, raw) ??
       fallbackBoundaryAnchor(anchorRect, name);
-    if (p === undefined) throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+    if (p === undefined)
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `Unknown anchor '${name}' for shape '${layout.shapeName}'`,
+      );
     return p;
   }
   // 形状专属命名 anchor 恒走视觉形状。
@@ -138,7 +151,7 @@ export const anchorOf = (
     layout.shapeDef.anchor(layout.rect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS),
   );
   if (p === undefined) {
-    throw new Error(`Unknown anchor '${name}' for shape '${layout.shapeName}'`);
+    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Unknown anchor '${name}' for shape '${layout.shapeName}'`);
   }
   return p;
 };

@@ -1,8 +1,9 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene } from '../../src';
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { RectangleStepSchema } from '../../src/schemas';
 import { arc, close, line, move } from '../helpers/path-command-factory';
@@ -154,7 +155,7 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
     const ir = path({ type: 'step', kind: 'rectangle', from: [0, 0], to: [10, 6] });
     const commands = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w) }).scene.primitives).commands;
     expect(commands).toEqual([move([0, 0]), line([10, 0]), line([10, 6]), line([0, 6]), close()]);
-    expect(warnings.find(w => w.code === 'PATH_TOO_SHORT')).toBeUndefined();
+    expect(warnings.find(w => w.code === CompileWarningCode.PathTooShort)).toBeUndefined();
   });
 
   it('仅一个非自包含 step（单 move）→ 仍触发 PATH_TOO_SHORT 且跳过', () => {
@@ -162,7 +163,7 @@ describe('rectangle step：单步自包含（无前置 move）', () => {
     const ir = path({ type: 'step', kind: 'move', to: [0, 0] });
     const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     expect(result.primitives.find(p => p.type === 'path')).toBeUndefined();
-    expect(warnings.find(w => w.code === 'PATH_TOO_SHORT')).toBeDefined();
+    expect(warnings.find(w => w.code === CompileWarningCode.PathTooShort)).toBeDefined();
   });
 });
 

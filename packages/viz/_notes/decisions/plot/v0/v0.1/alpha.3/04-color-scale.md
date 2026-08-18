@@ -36,7 +36,7 @@
 - **域推断口径**：color 字段的分类域复用 [ADR-01](./01-band-scale.md) `inferCategoryDomain`（保序去重），与 band 同源——保证「系列在图例 / 颜色 / 堆叠序」一致。
 - **ScalarValue vs CategoryValue 域**：ordinal `domain` 用 `CategoryValueSchema`（string|number），与 band 对齐；`range` 用 `z.array(z.string())`（颜色串），不混入数值。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **legend（图例）** → 后续（与 color scale 配套，但富排版 + 布局占位，单独里程碑）。
 - **size / shape / opacity 等其余非位置通道** → 后续（套同一「非位置通道 + scale ref」模式）。

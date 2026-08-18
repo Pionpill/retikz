@@ -2,6 +2,7 @@ import type { Position } from '@retikz/math';
 
 import { arcAngleInRange, arcEndPoint, DEFAULT_EPSILON, intersect, rayArc, vector2 } from '@retikz/math';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { alignAngleSweep, DEG_TO_RAD, normalizeSignedDegrees, RAD_TO_DEG } from '../angle';
 
 /*
@@ -201,7 +202,7 @@ const footOnLine = (p: Position, base: Position, dir: Position): Position => {
  */
 const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): FilletSolution => {
   if (segA.kind === 'arc' && segB.kind === 'arc') {
-    throw new Error('filletContour: arc-arc seam fillet is not supported');
+    throw new RetikzCoreError(RetikzCoreErrorCode.Geometry, 'filletContour: arc-arc seam fillet is not supported');
   }
   const corner = segmentEnd(segA);
   const tIn = tangentAt(segA, false); // 前段终点处行进方向

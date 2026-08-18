@@ -1,111 +1,81 @@
 import type {
+  BoundChart,
   ChartPresentationAuthoringRecord,
   ChartPresentationShorthand,
   ChartThemeStyleDefinition,
-  IRBubbleChart,
-  IRConnectedScatterChart,
-  IRScatterChart,
-  PointChartTypeValue,
-} from '@retikz/chart/point';
-import type { IRScene, ResolvedTheme, ThemeStyleDefinition } from '@retikz/core';
+  IRBaseChart,
+} from '@retikz/chart';
+import type { IRBubbleChart, IRConnectedScatterChart, IRScatterChart } from '@retikz/chart/point';
+import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
 
-import { DEFAULT_CHART_DATA_REFERENCE, PointChartType, resolvePointChart } from '@retikz/chart/point';
-import { DEFAULT_RESOLVED_THEME, resolveTheme, resolveThemeStyleRegistry } from '@retikz/core';
+import { DEFAULT_CHART_DATA_REFERENCE, normalizeChartPresentation } from '@retikz/chart';
+import {
+  BubbleChartRecipe,
+  BubbleChartSchema,
+  ConnectedScatterChartRecipe,
+  ConnectedScatterChartSchema,
+  ScatterChartRecipe,
+  ScatterChartSchema,
+} from '@retikz/chart/point';
 
-import type { InputChartPanel, NormalizedChart } from '../normalize/chart';
-import type { ChartAuthoringResult } from '../shared';
+import type { BoundChartAuthoring, ChartAuthoringResult } from '../shared/types';
 
-import { chartContributionOf, wrapChartPanel } from '../shared';
+import { createBoundChartResult } from '../_chart/adapter';
 
 export * from '../index';
 
-/** typed Point Chart 共享 Vanilla input algebra */
-export type CreateTypedPointChartInput<TVariant> = Omit<
-  TVariant,
-  'namespace' | 'type' | 'data' | 'transform' | 'scales' | 'coordinate' | 'composition' | 'guides' | 'marks'
-> &
-  ChartPresentationShorthand & {
-    /** typed recipe 使用的 rows */
+type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
+
+type TypedChartCommonInput = ChartPresentationShorthand &
+  Omit<IRScatterChart['plot'], 'data'> & {
+    /** 具体类型解析方案使用的数据行 */
     data: Array<ExternalRow>;
-    /** 稳定 data reference；省略时固定为 chart.data */
+    /** 稳定的数据引用；省略时固定为 `chart.data` */
     dataRef?: string;
-    /** recipe 外追加的 Plot transforms */
-    transform?: IRScatterChart['transform'];
-    /** recipe 外追加或替换的 Plot scales */
-    scales?: IRScatterChart['scales'];
-    /** recipe 外 coordinate root */
-    coordinate?: IRScatterChart['coordinate'];
-    /** recipe 外 composition root */
-    composition?: IRScatterChart['composition'];
-    /** recipe 外 Plot guides */
-    guides?: IRScatterChart['guides'];
-    /** recipe 外 Plot marks */
-    marks?: IRScatterChart['marks'];
-    /** ordered plain presentation records */
+    /** 可选的 Plot 数据模型 */
+    dataModel?: IRScatterChart['plot']['data']['model'];
+    /** Chart 外层标识 */
+    id?: string;
+    /** Chart 自有令牌的稀疏覆盖 */
+    chartThemeTokens?: IRBaseChart['chartThemeTokens'];
+    /** 按顺序排列的普通展示记录 */
     presentation?: ReadonlyArray<ChartPresentationAuthoringRecord>;
-    /** Chart-owned runtime Theme definitions */
+    /** Chart 自有的运行时主题定义 */
     chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
-    /** Plot-owned runtime Theme definitions */
+    /** Plot 自有的运行时主题定义 */
     plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
-    /** factory 时解析 typed recipe 的根 Core Theme */
+    /** 创建时解析具体类型解析方案的根 Core 主题 */
     theme?: IRScene['theme'];
-    /** factory 时解析 typed recipe 的根 Core Theme style definitions */
+    /** 创建时解析具体类型解析方案的根 Core 主题样式定义 */
     themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
   };
 
-/** ScatterChart Vanilla input */
-export type CreateScatterChartInput = CreateTypedPointChartInput<IRScatterChart>;
-/** BubbleChart Vanilla input */
-export type CreateBubbleChartInput = CreateTypedPointChartInput<IRBubbleChart>;
-/** ConnectedScatterChart Vanilla input */
-export type CreateConnectedScatterChartInput = CreateTypedPointChartInput<IRConnectedScatterChart>;
+/** ScatterChart 的 Vanilla 精确输入 */
+export type CreateScatterChartInput = TypedChartCommonInput & IRScatterChart['config'];
 
-type InputTypedPointChartInput<TVariant> = Omit<
-  CreateTypedPointChartInput<TVariant>,
-  'theme' | 'themeStyles' | 'width' | 'height'
-> & {
-  /** Chart host 传入的宽度，Recipe schema 仍在下沉时校验 */
-  width?: number | string;
-  /** Chart host 传入的高度，Recipe schema 仍在下沉时校验 */
-  height?: number | string;
-};
+/** BubbleChart 的 Vanilla 精确输入 */
+export type CreateBubbleChartInput = TypedChartCommonInput & IRBubbleChart['config'];
 
-/** Point Chart InputEmbed adapter 的已类型化领域输入 */
-export type InputPointChart = Readonly<{
-  /** 选定的 Point Chart recipe 类型 */
-  type: PointChartTypeValue;
-  /** 不带 Core Scope Theme 的 typed Chart authoring 输入 */
-  input:
-    | InputTypedPointChartInput<IRScatterChart>
-    | InputTypedPointChartInput<IRBubbleChart>
-    | InputTypedPointChartInput<IRConnectedScatterChart>;
-  /** 可选的 Chart 根 Scope */
-  panel?: InputChartPanel;
+/** ConnectedScatterChart 的 Vanilla 精确输入 */
+export type CreateConnectedScatterChartInput = TypedChartCommonInput & IRConnectedScatterChart['config'];
+
+type TypedRecipe<TSource extends TypedChartSource> = Readonly<{
+  parse: (input: unknown) => TSource;
+  bind: (source: TSource) => BoundChart;
 }>;
 
-/** 从 Vanilla Theme 输入解析 typed Point recipe 所需的有效 Theme */
-const resolveTypedChartTheme = (
-  theme: IRScene['theme'] | undefined,
-  themeStyles: ReadonlyArray<ThemeStyleDefinition> | undefined,
-): ResolvedTheme =>
-  resolveTheme(
-    DEFAULT_RESOLVED_THEME,
-    theme,
-    'chart-vanilla Point Chart Theme',
-    resolveThemeStyleRegistry(themeStyles),
-  );
-
-const createTypedChart = (
-  type: PointChartTypeValue,
-  input: CreateTypedPointChartInput<IRScatterChart>,
-  effectiveTheme: ResolvedTheme | undefined = undefined,
+const createTypedChart = <TSource extends TypedChartSource>(
+  input: TypedChartCommonInput,
+  config: TSource['config'],
+  type: TSource['type'],
+  recipe: TypedRecipe<TSource>,
 ): ChartAuthoringResult => {
   const {
     data,
     dataRef,
+    dataModel,
     id,
     chartThemeTokens,
     title,
@@ -117,85 +87,66 @@ const createTypedChart = (
     plotThemeStyles,
     theme,
     themeStyles,
-    transform,
-    scales,
-    coordinate,
-    composition,
-    guides,
-    marks,
-    ...recipe
+    ...plot
   } = input;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
-  const resolvedTheme = effectiveTheme ?? resolveTypedChartTheme(theme, themeStyles);
-  const resolution = resolvePointChart(
-    {
-      namespace: 'chart',
-      type,
-      data: { reference },
-      ...(id === undefined ? {} : { id }),
-      ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
-      ...recipe,
-      ...(transform === undefined ? {} : { transform }),
-      ...(scales === undefined ? {} : { scales }),
-      ...(coordinate === undefined ? {} : { coordinate }),
-      ...(composition === undefined ? {} : { composition }),
-      ...(guides === undefined ? {} : { guides }),
-      ...(marks === undefined ? {} : { marks }),
+  const normalizedPresentation = normalizeChartPresentation({ title, subtitle, note, source, presentation });
+  const spec = recipe.parse({
+    namespace: 'chart',
+    type,
+    ...(id === undefined ? {} : { id }),
+    ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
+    ...(normalizedPresentation === undefined ? {} : { presentation: normalizedPresentation }),
+    plot: {
+      data: {
+        reference,
+        ...(dataModel === undefined ? {} : { model: dataModel }),
+      },
+      ...plot,
     },
-    resolvedTheme,
-    { chartThemeStyles, plotThemeStyles },
-    {
-      ...(title === undefined ? {} : { title }),
-      ...(subtitle === undefined ? {} : { subtitle }),
-      ...(note === undefined ? {} : { note }),
-      ...(source === undefined ? {} : { source }),
-      ...(presentation === undefined ? {} : { presentation }),
-    },
-  );
-  const normalized: NormalizedChart = {
-    chart: resolution.chart,
-    spec: resolution.plotSpec,
-    input: {
-      ...(id === undefined ? {} : { id }),
-      ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
-      plot: { spec: resolution.plotSpec },
-      ...(title === undefined ? {} : { title }),
-      ...(subtitle === undefined ? {} : { subtitle }),
-      ...(note === undefined ? {} : { note }),
-      ...(source === undefined ? {} : { source }),
-      ...(presentation === undefined ? {} : { presentation }),
-      datasets: { [reference]: data },
-      ...(plotThemeStyles === undefined ? {} : { lowerOptions: { plotThemeStyles } }),
-      ...(chartThemeStyles === undefined ? {} : { chartThemeStyles }),
-    },
+    config,
+  });
+  const bound: BoundChartAuthoring = {
+    bound: recipe.bind(spec),
+    datasets: { [reference]: data },
+    ...(plotThemeStyles === undefined ? {} : { lowerOptions: { plotThemeStyles }, plotThemeStyles }),
+    ...(chartThemeStyles === undefined ? {} : { chartThemeStyles }),
   };
-  return chartContributionOf(normalized, theme, themeStyles);
+  return createBoundChartResult(bound, theme, themeStyles);
 };
 
-/** 创建 canonical ScatterChart */
-export const createScatterChart = (input: CreateScatterChartInput): ChartAuthoringResult =>
-  createTypedChart(PointChartType.Scatter, input);
+/** 创建确定形态的 ScatterChart */
+export const createScatterChart = (input: CreateScatterChartInput): ChartAuthoringResult => {
+  const { encoding, mark, ...common } = input;
+  return createTypedChart(common, { encoding, ...(mark === undefined ? {} : { mark }) }, 'scatter', {
+    parse: value => ScatterChartSchema.parse(value),
+    bind: spec => ScatterChartRecipe.bind(spec),
+  });
+};
 
-/** 创建 canonical BubbleChart */
-export const createBubbleChart = (input: CreateBubbleChartInput): ChartAuthoringResult =>
-  createTypedChart(PointChartType.Bubble, input);
+/** 创建确定形态的 BubbleChart */
+export const createBubbleChart = (input: CreateBubbleChartInput): ChartAuthoringResult => {
+  const { encoding, mark, ...common } = input;
+  return createTypedChart(common, { encoding, ...(mark === undefined ? {} : { mark }) }, 'bubble', {
+    parse: value => BubbleChartSchema.parse(value),
+    bind: spec => BubbleChartRecipe.bind(spec),
+  });
+};
 
-/** 创建 canonical ConnectedScatterChart */
-export const createConnectedScatterChart = (input: CreateConnectedScatterChartInput): ChartAuthoringResult =>
-  createTypedChart(PointChartType.ConnectedScatter, input);
-
-/** 将 Point Chart Input 以 processing 提供的 Scope Theme 下沉为 Core contribution */
-export const PointChartInputEmbedAdapter: InputEmbedAdapter<InputPointChart> = {
-  kind: 'chart-point',
-  lower: (props, context) => {
-    const result = createTypedChart(
-      props.type,
-      props.input as CreateTypedPointChartInput<IRScatterChart>,
-      context.theme ?? DEFAULT_RESOLVED_THEME,
-    );
-    return {
-      node: wrapChartPanel(result.chart, props.panel),
-      providerDependencies: result.contribution,
-    };
-  },
+/** 创建确定形态的 ConnectedScatterChart */
+export const createConnectedScatterChart = (input: CreateConnectedScatterChartInput): ChartAuthoringResult => {
+  const { encoding, mark, components, ...common } = input;
+  return createTypedChart(
+    common,
+    {
+      encoding,
+      ...(mark === undefined ? {} : { mark }),
+      ...(components === undefined ? {} : { components }),
+    },
+    'connected-scatter',
+    {
+      parse: value => ConnectedScatterChartSchema.parse(value),
+      bind: spec => ConnectedScatterChartRecipe.bind(spec),
+    },
+  );
 };

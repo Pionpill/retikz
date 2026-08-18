@@ -1,5 +1,6 @@
 import type {
   ClipDefinition,
+  ClipShape,
   PatternDefinition,
   ResolvedPatternLineStyle,
   ResolvedPatternLineStyleCycle,
@@ -57,4 +58,16 @@ export type ClipResolution = Readonly<{
   params: IRJsonObject;
   /** 递归解析嵌套 clip，闭包捕获同一有效 registry */
   resolve: (clip: IRClip) => ClipResolution;
+}>;
+
+/** 已通过同 kind Clip Definition 完成 shape schema snapshot 解析的裁剪形状 */
+export type ClipShapeResolution = Readonly<{
+  /** definition 解析前的完整 shape snapshot */
+  spec: ClipShape;
+  /** 实际绑定的 Clip provider key */
+  kind: string;
+  /** 已绑定的完整 Clip Definition */
+  definition: ClipDefinition;
+  /** shapeSchema parse 后的 JSON shape */
+  params: ClipShape;
 }>;

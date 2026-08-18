@@ -4,7 +4,7 @@
 - 决策日期：2026-05-21
 - 关联：[v0 roadmap §Shape Registry 提案](../../roadmap.md#shape-registry-提案) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-beta.1 ADR-03 geometry 共享 transform / 死 anchor 清理](../../v0.1/beta.1/03-geometry-shared-transform-dead-anchor-cleanup.md) · [v0.1-beta.1 ADR-08 onWarn 收集器](../../v0.1/beta.1/08-compile-on-warn-collector.md)
 
-> **前置依赖说明**：alpha.6（结构化 Target / Anchor）依赖本 ADR 先固化 anchor 接口。本 ADR 把 anchor 解释面收敛到 `ShapeDefinition.anchor(rect, name)`，alpha.6 的对象化 path target 直接消费同一入口，避免「内置 shape anchor 走旧路径、注册 shape anchor 走新路径」的双轨。是接口先后，非排期紧邻。
+> 该能力复用既有的 renderer-neutral 资源与编译契约
 
 ## 背景
 
@@ -18,12 +18,12 @@
 
 ## 决策：抽 `ShapeDefinition`（4 方法、操作外接 `Rect`）+ 运行时注入
 
-shape 只承担**真正多态**的 4 件事（`circumscribe` / `boundaryPoint` / `anchor` / `emit`），统一操作外接 `Rect`（bounding box 是所有内置 shape 的天然单一载体）；文本度量 / 字号缩放 / sep / minimumSize / margin 膨胀 / 数字角度等 generic 逻辑留在 `layoutNode` 与编译分发层。`ShapeDefinition` / `ShapeStyle` 见 `core/src/shapes/types.ts`，内置 4 注册项与 `BUILTIN_SHAPES` 见 `core/src/shapes/`。
+shape 只承担**真正多态**的 4 件事（`circumscribe` / `boundaryPoint` / `anchor` / `emit`），统一操作外接 `Rect`（bounding box 是所有内置 shape 的天然单一载体）；文本度量 / 字号缩放 / sep / minimumSize / margin 膨胀 / 数字角度等 generic 逻辑留在 `layoutNode` 与编译分发层。`ShapeDefinition` / `ShapeStyle` 见 ，内置 4 注册项与 `BUILTIN_SHAPES` 见 。
 
 字面即决策、故记下的两处形态（schema 开放与内置名分离）：
 
 ```ts
-// core/src/ir/node.ts —— 内置名（Record key 用）与开放名分离
+//  —— 内置名（Record key 用）与开放名分离
 export type BuiltinShapeName = ValueOf<typeof NODE_SHAPES>; // 'rectangle' | 'circle' | 'ellipse' | 'diamond'
 export type NodeShape = BuiltinShapeName | (string & {}); // 开放名；`& {}` 保内置名 IDE 自动补全
 // schema 开放为任意非空字符串（校验不门控内置名；未注册名 compile 期拒）
@@ -52,15 +52,10 @@ NodeSchema.shape = z.string().min(1).optional();
 - **`BuiltinShapeName` 与 `NodeShape` 分离**：`BUILTIN_SHAPES` 的 Record key 用 `BuiltinShapeName`（4 名）保穷尽性约束；**禁用 `Record<NodeShape, ShapeDefinition>`** —— schema 开放后 `NodeShape` 退化为 `string`、Record 失去对 4 内置的穷尽性。
 - **schema 校验不门控内置名**：`NodeSchema.shape = z.string().min(1)`，**不用 `z.union([z.nativeEnum(NODE_SHAPES), z.string().min(1)])`** —— `string().min(1)` 已完全覆盖 enum 分支，union 不增任何校验、只会误导「内置走 enum 校验」；未注册名的拒绝在 compile 期。
 - **`ShapeStyle` 独立 type**（不用 `Pick<NodeLayout>`）：扩展面不耦合 internal `NodeLayout`，字段名与 NodeLayout 样式字段一致（单一词汇表）。`circle.emit` 复用 `ellipse.emit`（circle = rx=ry 的 ellipse）。`circumscribe` 半轴进 / 半轴出（最贴 layoutNode 现有 `innerHalfW/H → boundsHalfW/H`）。
-- **公开扩展面**：`core/src/shapes/` 导出 `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES`，并 re-export `Rect` / `Position` / `worldToLocal` / `localToWorld`（后两者脱 `geometry/_transform.ts` 的 `_` 内部前缀、提升为公开 API，供 shape 作者写局部系几何）。
+- **公开扩展面**： 导出 `ShapeDefinition` / `ShapeStyle` / `BUILTIN_SHAPES`，并 re-export `Rect` / `Position` / `worldToLocal` / `localToWorld`（后两者脱 `geometry/_transform.ts` 的 `_` 内部前缀、提升为公开 API，供 shape 作者写局部系几何）。
 - **shape factory 接口预留（不实现）**：`ShapeDefinition` 是 plain object，`createPolygonShape({ sides })` 这类工厂只是返回它的普通函数、无需工厂语法约定；`CompileOptions.shapes` 接受已实例化的 def，多引脚视觉靠 `emit` 返回 `Iterable<ScenePrimitive>`（一 shape 多 prim）已覆盖。本 ADR 仅断言接口满足这两点。
 
-### 被否决的选项
-
-- **B：`ShapeDefinition` 直译 roadmap 草案（全部方法收 `NodeLayout`、`layout(text, padding)` 整搬进 shape）** —— 把文本度量 / 字号缩放 / sep / min 这些 **shape 无关**逻辑搬进每个 shape，第三方写 `cloud` 要重抄 layout plumbing；`boundaryPoint` / `anchor` 只需几何却被迫依赖 internal `NodeLayout` 全类型；数字角度落到谁不清晰。不达「接口最小、易写第三方」。
-- **C：只开 union、不抽统一接口（shape 退化为「外接框近似」）** —— 改动最小，但第三方 shape 无法表达自己的边界 / anchor 几何（`cloud` / `diamond` 类非矩形贴边、`.30` 角度点全错），**等于没有真正的扩展点**，不达「第三方能发 `@retikz/shapes-flow`」的衡量标准。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **`{ side, t }` 边上比例点 anchor** → alpha.6（`anchor` v0.2 只要命名 + 数字角度 generic；`{side,t}` 留作内置 shape 专属，第三方 shape 仅必须支持命名 anchor、角度免费）。
 - **字符串 target 解析重构**（`'A.north'` / `'A.30'` → 对象 IR）→ alpha.6；本 ADR 不动 `parseTarget` / `parseNodeRef`。
@@ -70,6 +65,6 @@ NodeSchema.shape = z.string().min(1).optional();
 
 ---
 
-> **实现指针**：level `red`（动 `ir/**` node.ts shape 开放 string + `BuiltinShapeName`、`compile/**` registry 查表 + `CompileOptions.shapes` + 分发点重构、新建 `shapes/**` 扩展面、包 index 公开 API）、**向后兼容**（原 4 名仍合法、`CompileOptions.shapes` 可选零破坏；schema 层对 adapter 无感）。真源以代码为准 —— `NodeSchema.shape` / `BuiltinShapeName` / `NodeShape`（`core/src/ir/node.ts`）、`ShapeDefinition` / `ShapeStyle`（`core/src/shapes/types.ts`）、`BUILTIN_SHAPES` + 4 注册项 + helper re-export（`core/src/shapes/`）、5 分发点查表 + `NodeLayout.shapeDef`（`core/src/compile/node.ts`）、`CompileOptions.shapes` + 有效表解析 + 覆盖 warn + 未知 throw + `SHAPE_OVERRIDES_BUILTIN` + synthetic layout 挂 rectangle（`core/src/compile/compile.ts` 与 `compile/scope.ts`）、`worldToLocal` / `localToWorld` 公开（`core/src/geometry/_transform.ts`）、React shape 字符串透传（`react/src/kernel/{builder,unbuilder}`）；测试在 `core/tests/shapes/shape-definition.test.ts`、`core/tests/compile/shape-registry.test.ts` 与改造前后逐字节相等的 `core/tests/compile/shape-baseline-snapshot.test.ts`。完整原文（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `41326097`；压缩前完整施工蓝图 = `git show 41326097^:_notes/decisions/core/v0/v0.2/alpha.3/01-shape-registry.md`。
+已实现本 ADR 的核心决策。兼容性：向后兼容\*\*（原 4 名仍合法、`CompileOptions.shapes` 可选零破坏；schema 层对 adapter 无感）；其余默认行为、失败语义与公开契约以正文为准。

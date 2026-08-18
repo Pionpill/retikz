@@ -1,64 +1,86 @@
 ---
 title: Graph API 参考
-description: 查询 Entity、Relation 与 Container 的 schema、factory、Definition 与 adapter
+description: 查询 Graph presentation root、Entity、Relation、Container、Definition registry、Theme token 与三种 authoring 入口。
 ---
 
-Graph 按职责拆分：`@retikz/graph` 提供 canonical JSON、Schema、factory 与 Definition；`@retikz/graph-react` 提供 React authoring；`@retikz/graph-vanilla` 提供返回 embed 的 builder 与显式 adapter。三种入口归一到相同 Graph IR，并通过相同 Definition 下沉到 Core
+`@retikz/graph` 拥有可持久化 Graph IR、Definition、registry、resolve 与 lowering；React 和 Vanilla 包只把各自 authoring 输入归一到同一 IR。Graph 最终下沉为 Core `Scope`、`Node` 和 `Path`
 
 ## 公开导出
 
-| 能力      | Graph                                                                      | React                | Vanilla                                   |
-| --------- | -------------------------------------------------------------------------- | -------------------- | ----------------------------------------- |
-| Entity    | `EntitySchema`、`IREntity`、`createEntity`、`EntityDefinition`             | `Entity`             | `entity`、`EntityInputEmbedAdapter`       |
-| Relation  | `RelationSchema`、`IRRelation`、`createRelation`、`RelationDefinition`     | `Relation`           | `relation`、`RelationInputEmbedAdapter`   |
-| Container | `ContainerSchema`、`IRContainer`、`createContainer`、`ContainerDefinition` | `Container`、markers | `container`、`ContainerInputEmbedAdapter` |
+| 能力      | Graph                                                                                 | React                      | Vanilla                                                               |
+| --------- | ------------------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------- |
+| Graph     | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`        | `Graph`                    | `graph`、`GraphInputEmbedAdapter`                                     |
+| Entity    | `EntitySchema`、`IREntity`、`createEntity`、`EntityDefinition`                        | `Entity`                   | `entity`、`EntityInputEmbedAdapter`                                   |
+| Relation  | `RelationSchema`、`IRRelation`、`createRelation`、`RelationDefinition`                | `Relation`                 | `relation`、`RelationInputEmbedAdapter`                               |
+| Container | `ContainerSchema`、`IRContainer`、`createContainer`、`ContainerDefinition`            | `Container`、markers       | `container`、`ContainerInputEmbedAdapter`                             |
+| 扩展      | 三类 `defineXxx`、`GraphDefinitionOptions`、`GraphThemeToken`、两类 registry resolver | —                          | —                                                                     |
+| 装配      | `createGraphDefinitions`、`createGraphProviders`                                      | `<Graph>` 直接声明 options | `graph()` 直接声明 options；`createGraphVanillaAdapters` 装载 adapter |
 
-三类公开元素都保留 `namespace: 'graph'` 与自己的语义 `type`。Entity 使用 `role` 区分四种基础语义；Definition 是从 Graph IR 到 Core IR 的显式 lowering contract，不进入持久化 JSON
+`GraphType` 提供 `graph`、`container`、`entity`、`relation` 四个公开 discriminator。role 和 variant 使用开放非空字符串；内置词汇仍由 `EntityRole`、`EntityVariant` 与 `RelationRole` 提供
 
-## Entity 输入
+## Graph presentation root
 
-`Entity` 复用适用的 Core Node authored surface。`id`、`role` 与 `position` 必填，字符串 children 或 `<Text>` 会成为 Node 文本；`role` 提供默认 shape，显式 `shape` 可以替换它
+`IRGraph` 是可选的全局 presentation root。它建立同 id Core Scope，并为后代 Entity 提供默认 variant、局部 token 和 selector rules：
 
-```tsx
-<Entity id="step" role="stage" position={[0, 0]}>Process</Entity>
-<Entity id="check" role="decision" position={[80, 0]}><Text>Ready?</Text></Entity>
-```
+| 字段                    | 类型                           | 语义                                 |
+| ----------------------- | ------------------------------ | ------------------------------------ |
+| `namespace`             | `'graph'`                      | Graph owner                          |
+| `type`                  | `'graph'`                      | presentation root discriminator      |
+| `id?`                   | `string`                       | 下沉后 Core Scope id                 |
+| `entityVariant?`        | `string`                       | 后代 Entity 的默认 variant           |
+| `graphThemeTokens?`     | `IRGraphThemeTokenOverrides`   | 当前 Graph scope 的局部 token        |
+| `graphThemeTokenRules?` | `IRGraphEntityThemeTokenRules` | 按有效 role / variant 匹配的有序规则 |
+| `children`              | `Array<IRChild>`               | Graph-owned 或普通 Core children     |
 
-对应 factory 返回规范 Graph IR，而不是 Core `IRNode`。Definition 再把它一对一下沉为同 id Node：
+Entity 显式 `variant` 优先于最近 Graph / Container 默认值；显式 `default` 会重置外层默认。nested Graph 的 token 从外到内逐字段叠加，兄弟分支互不泄漏
+
+## Entity 输入与主题
+
+Entity 复用适用的 Core Node authored surface。`id`、`role` 与 `position` 必填，字符串 children 或 `<Text>` 成为 Node 文本。role Definition 提供 shape、padding 与可选 minimum size；Entity 显式字段逐项优先
+
+最终主色来自 Graph Theme baseline / rules / layers 与 Entity `color`。缺省或 `currentColor` 在 Light / Dark 下确定为黑 / 白，再交给 variant Definition。其它 appearance 的最后优先级始终是 Entity 显式字段
+
+`GraphThemeToken` 包含：
+
+- `graph.entity.color`
+- `graph.entity.text.foreground`
+- `graph.entity.fill` / `graph.entity.stroke` / `graph.entity.strokeWidth`
+- `graph.entity.fillOpacity` / `graph.entity.strokeOpacity` / `graph.entity.opacity`
+
+## Relation 与 Container
+
+`IRRelation` 的 canonical JSON 使用 Core Step `children`。`createRelation`、React 和 Vanilla 也接受 authoring-only Core `WayDSL`；`way` 会在入口归一为 `children`。省略 `marks` 添加终点箭头，显式 `marks`（包括 `[]`）完整覆盖默认值
+
+Container 保留 header、sections、布局 artifact 与 `entityVariant` scope。Container 外壳、divider 与 Relation 不消费 Entity Theme token
+
+## Definition 与 provider 装配
+
+直接 IR 用 `createGraphDefinitions(options)` 取得五个 composite Definitions。provider graph 以 `GraphProviderKey` 为 root，并通过 `createGraphProviders(options)` 提供完整依赖闭包：
 
 ```ts
-const step = createEntity({ id: 'step', role: 'stage', position: [0, 0], text: 'Process' });
-// { namespace: 'graph', type: 'entity', role: 'stage', id: 'step', ... }
-```
+const options = {
+  entityRoles: [serviceRole],
+  entityVariants: [mutedVariant],
+  graphThemeStyles: [brandGraphTheme],
+};
 
-## Relation 输入
-
-`IRRelation` 的 canonical JSON 使用 Core Step `children`。`createRelation`、React 与 Vanilla 还接受 Core `WayDSL` 的 `way` authoring shorthand；两者互斥，`way` 会在入口通过 `parseWay()` 归一为 `children`，不会被持久化。`role` 使用 Relation 的闭合关系词汇，并在 lowering 后丢弃
-
-省略 `marks` 会添加终点箭头，显式 `marks`（包括 `[]`）完整覆盖默认值
-
-## Definition 加载
-
-直接 IR 必须显式注入图中实际使用的每个 Graph Definition。缺失 Definition 时，Core 按未注册 composite fail-loud：
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { RelationDefinition, EntityDefinition } from '@retikz/graph';
-
-compileToScene(scene, {
-  composites: [EntityDefinition, RelationDefinition],
+const scene = compileToScene(ir, {
+  composites: createGraphDefinitions(options),
 });
 ```
 
-React 组件与 Vanilla adapter 只为当前 authored 元素贡献对应 Definition，不注册全局状态
+同一 assembly 中相同 key、相同 Definition 对象的重复贡献会去重；相同 key 的不同对象会失败。所有 registry 都是 assembly-local，不修改 module-global 状态
 
-## Vanilla identity
+## React 与 Vanilla
 
-`entity` 与 `relation` helper 返回 embed，并以 embed id 创建对应的 Graph IR。Entity 与 Relation 会下沉为同 id Core Node / Path；Container 按多元素 composite 契约派生内部 id
+`<Graph>` 与 `graph(id, input)` 都接受多个 children，并生成同 id `IRGraph`。`entityRoles`、`entityVariants` 与 `graphThemeStyles` 直接写在 Graph authoring input 上；React 由 `<Graph>` 自己携带这些 options，Vanilla 则由 `graph()` 携带，`createGraphVanillaAdapters()` 只装载 Graph、Container、Entity、Relation 四个 embed adapter
+
+默认 `<Layout>` JSX 路径使用内置 definitions。需要 custom role / variant / Graph Theme style 时，直接在 `<Graph>` 上声明 options；已经拥有持久化 IR 时，再用 `<Layout ir composites={createGraphDefinitions(options)}>` 显式装配 Definitions
 
 ## 相关
 
-- [Entity](/schematic/graph/base/code)
-- [Relation](/schematic/graph/base/connector)
-- [Container](/schematic/graph/frame/graph-frame)
+- [Entity 基础用法](/schematic/graph/entity/basic)
+- [Entity 扩展用法](/schematic/graph/entity/extension)
+- [Relation](/schematic/graph/relation/basic)
+- [Container](/schematic/graph/container/basic)
 - [Definition 加载](/library/standard/extension/capability-loading)

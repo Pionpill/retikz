@@ -9,7 +9,7 @@ import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { CompileWarningCode } from '../../src/compile/constants';
 import { normalizeTextMetrics } from '../../src/compile/text';
-import { CompositeContractError } from '../../src/resolve/diagnostics';
+import { RetikzCompositeContractError } from '../../src/resolve/diagnostics';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -261,7 +261,7 @@ describe('Node label resolved metrics', () => {
         lowerTex,
         measureText: fixedMeasure,
       }),
-    ).toThrow(CompositeContractError);
+    ).toThrow(RetikzCompositeContractError);
   });
 
   it('keeps lowerTex null as a warning-based absence on the Node label path', () => {

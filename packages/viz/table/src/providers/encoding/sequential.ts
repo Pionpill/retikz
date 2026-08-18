@@ -4,6 +4,7 @@ import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { z } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
+import { RetikzTableError } from '../../error';
 
 const domainSchema = z.tuple([z.number(), z.number()]).refine(([start, end]) => start <= end, {
   message: 'sequential-color domain start must be less than or equal to end',
@@ -23,7 +24,7 @@ export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
   }),
   resolve: (options, values, context) => {
     const numbers = values.map(value => {
-      if (typeof value !== 'number') throw new Error('sequential-color selected values must be numbers');
+      if (typeof value !== 'number') throw new RetikzTableError('sequential-color selected values must be numbers');
       return value;
     });
     if (options.domain === undefined && numbers.length === 0) return undefined;
@@ -36,7 +37,7 @@ export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     const scale = d3ScaleLinear<string>().domain(domain).range(range).clamp(true);
     return {
       of: value => {
-        if (typeof value !== 'number') throw new Error('sequential-color values must be numbers');
+        if (typeof value !== 'number') throw new RetikzTableError('sequential-color values must be numbers');
         return scale(value);
       },
       legendForm: 'ramp',

@@ -30,13 +30,7 @@ guide 的 `grid` 子属性意味着**一个 axis 可能同时产两组几何、�
 5. **anchor id 预留 = 仅内部埋点**：axis 层 scope 带 `id`，但根 plot scope `localNamespace:true` 把子 id 隔离在内部 frame——**alpha.2 不承诺 `plot.xAxis`/`plot.yAxis` 外部可引用**，只埋字段位；对外导出 semantic handle 留 alpha.5（与 alpha.1 anchor「埋而不解析」一致）。
 6. **空安全**：tick 集为空（退化 domain）/ guide 列表为空 → 该层省略或返回 null，不产空 scope。
 
-### 被否决 / 推迟的设计点
-
-- **同 dimension 多 axis** → lowering **拒绝**（`assertUniqueAxisDimension` 抛清晰错误）：一根维度一根轴，否则两个不同 `tickCount` 的同维 axis 刻度数不定。否决 first-wins（不够明确）。grid 现是 axis 子属性、复用本轴 ticks，已无「grid 复用哪个 axis」歧义。
-- **标签精确右对齐 / 边缘贴合** → 需给 core `Node` 加 `placement`/self-anchor 字段（core 改动，走 next-core → next → 回灌 next-plot，成本大）；alpha.2 估算偏移够用，留作备选。
-- **顶/右边框轴线** → 不画，只画有刻度的两根轴（底边 x / 左边 y），简洁。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **`<Axis>` 子组件 / 默认自动出 / `bare`** → [ADR-05](./05-guide-bindings-dsl.md)。
 - **轴标题 / legend / reference line** → 后续。

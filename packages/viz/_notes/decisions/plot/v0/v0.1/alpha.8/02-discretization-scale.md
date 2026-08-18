@@ -72,7 +72,7 @@ export const PlotScale = {
 - **count×range 一致性也 fail-loud**：除 threshold 的 `range.length === breakpoints.length + 1`，quantize/quantile 在 **`count` 显式且 ≠ `range.length`** 时也 fail-loud（与 threshold 对称，修 adversarial WARNING；只给 range 省 count 仍宽容，档数 = range.length）。
 - **数值字段 `.finite()`**：`breakpoints` / quantize `domain`（及 ADR-01 sequential/diverging `domain`）的数值改 `z.number().finite()`，parse 期拒 `Infinity`/`-Infinity`（修 adversarial BLOCKING：裸 `z.number()` 放过 Infinity，既过 schema 又破坏 JSON round-trip）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **离散 size / opacity 档**（D1）→ 顺延需求驱动（本轮离散化只输出 color）。
 - **bin transform**（数据层分箱产新字段）→ alpha.12 Statistics（与 scale 层离散化正交：transform 改数据、scale 改映射）。

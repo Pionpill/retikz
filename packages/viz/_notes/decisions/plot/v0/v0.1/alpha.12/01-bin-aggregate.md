@@ -43,7 +43,7 @@ Vanilla / SSR 侧不需要额外 API，`renderPlot(spec, datasets, options)` 通
 
 这也是后续 `alpha.13` density / smooth / quartile / boxplot 等统计能力的基础：这些能力可以复用 row-changing transform、provenance 和显式 pipeline 表面。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - KDE、回归、quartile、boxplot 等高级统计。
 - mark-local transform；本轮只处理 root transform pipeline。

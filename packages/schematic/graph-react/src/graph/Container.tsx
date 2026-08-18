@@ -1,8 +1,4 @@
-import type {
-  ContainerCreateOptions,
-  ContainerRegionCreateOptions,
-  ContainerSectionCreateOptions,
-} from '@retikz/graph';
+import type { ContainerCreateOptions, ContainerRegion, ContainerSection as ContainerSectionType } from '@retikz/graph';
 import type { InputContainer } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
@@ -14,6 +10,7 @@ import { Children, Fragment, isValidElement } from 'react';
 
 import type { GraphEmbeddableComponent } from '../shared';
 
+import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
 import { collectSingleChild, hasAuthoringChildren } from './authoring';
 
 /** Container 的 React 编写参数 */
@@ -29,7 +26,7 @@ export type ContainerProps = Omit<ContainerCreateOptions, 'header' | 'sections'>
 
 /** Container header marker 的 React 参数 */
 export type ContainerHeaderProps = Readonly<{
-  padding?: ContainerRegionCreateOptions['padding'];
+  padding?: ContainerRegion['padding'];
   /** Header marker 的单个 React child */
   children: ReactNode;
 }>;
@@ -38,7 +35,7 @@ export type ContainerHeaderProps = Readonly<{
 export type ContainerSectionProps = Readonly<{
   sectionKey: string;
   role?: string;
-  padding?: ContainerSectionCreateOptions['padding'];
+  padding?: ContainerSectionType['padding'];
   /** Section marker 的单个 React child */
   children: ReactNode;
 }>;
@@ -56,7 +53,13 @@ const readMarkerChildren = (
     if (isValidElement(child) && child.type === Fragment) {
       const nested = readMarkerChildren((child.props as { children?: ReactNode }).children, embedIdPrefix, nextMarker);
       if (nested.input.header !== undefined) {
-        if (header !== undefined) throw new Error('Container accepts at most one ContainerHeader.');
+        if (header !== undefined) {
+          throw new RetikzGraphReactError({
+            code: RetikzGraphReactErrorCode.ContainerHeaderDuplicate,
+            message: 'Container accepts at most one ContainerHeader.',
+            details: { marker: 'ContainerHeader' },
+          });
+        }
         header = nested.input.header;
       }
       sections.push(...(nested.input.sections ?? []));
@@ -64,7 +67,13 @@ const readMarkerChildren = (
       return;
     }
     if (isValidElement<ContainerHeaderProps>(child) && child.type === ContainerHeader) {
-      if (header !== undefined) throw new Error('Container accepts at most one ContainerHeader.');
+      if (header !== undefined) {
+        throw new RetikzGraphReactError({
+          code: RetikzGraphReactErrorCode.ContainerHeaderDuplicate,
+          message: 'Container accepts at most one ContainerHeader.',
+          details: { marker: 'ContainerHeader' },
+        });
+      }
       const collected = collectSingleChild(
         child.props.children,
         'ContainerHeader',
@@ -93,7 +102,11 @@ const readMarkerChildren = (
       });
       return;
     }
-    throw new Error('Container accepts only ContainerHeader and ContainerSection direct children.');
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.ContainerChildInvalid,
+      message: 'Container accepts only ContainerHeader and ContainerSection direct children.',
+      details: { expectedType: 'ContainerHeader | ContainerSection' },
+    });
   });
   return { input: { ...(header === undefined ? {} : { header }), sections }, adapters };
 };
@@ -103,7 +116,11 @@ const createContainerInput = (props: Readonly<Record<string, unknown>>, context:
   const { children, header, sections, ...input } = props as ContainerProps;
   const hasMarkerChildren = hasAuthoringChildren(children);
   if (hasMarkerChildren && (header !== undefined || sections !== undefined)) {
-    throw new Error('React Container cannot combine marker children with header or sections props.');
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.ContainerPropsConflict,
+      message: 'React Container cannot combine marker children with header or sections props.',
+      details: { label: 'Container', reason: 'marker-children-with-canonical-props' },
+    });
   }
   const markerInput = !hasMarkerChildren
     ? {
@@ -127,14 +144,22 @@ Container.createInputEmbedProps = createContainerInput;
 
 /** 仅由直接的 Container 父节点消费的 header marker */
 export const ContainerHeader: FC<ContainerHeaderProps> = () => {
-  throw new Error('ContainerHeader must be used as a direct child of Container.');
+  throw new RetikzGraphReactError({
+    code: RetikzGraphReactErrorCode.ContainerMarkerParentRequired,
+    message: 'ContainerHeader must be used as a direct child of Container.',
+    details: { marker: 'ContainerHeader' },
+  });
 };
 
 ContainerHeader.displayName = 'ContainerHeader';
 
 /** 仅由直接的 Container 父节点消费的 section marker */
 export const ContainerSection: FC<ContainerSectionProps> = () => {
-  throw new Error('ContainerSection must be used as a direct child of Container.');
+  throw new RetikzGraphReactError({
+    code: RetikzGraphReactErrorCode.ContainerMarkerParentRequired,
+    message: 'ContainerSection must be used as a direct child of Container.',
+    details: { marker: 'ContainerSection' },
+  });
 };
 
 ContainerSection.displayName = 'ContainerSection';

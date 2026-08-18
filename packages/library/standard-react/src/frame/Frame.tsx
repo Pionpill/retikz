@@ -5,6 +5,7 @@ import type { InputNode } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { createInputScene, Node, withInputEmbedAdapters } from '@retikz/react';
+import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import { FrameInputEmbedAdapter } from '@retikz/standard-vanilla';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
@@ -36,11 +37,19 @@ const convertHeaderProps = (
   const input = createInputScene(createElement(Node, { ...props, position: [0, 0] }));
   const children = input.scene.children;
   if (children === undefined || children.length !== 1) {
-    throw new Error(`Frame ${kind} must contain exactly one Core Node authoring input.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `Frame ${kind} must contain exactly one Core Node authoring input.`,
+      details: { childCount: children?.length ?? 0, kind },
+    });
   }
   const child = children[0];
   if (child.type !== 'node' || 'namespace' in child) {
-    throw new Error(`Frame ${kind} must contain exactly one Core Node authoring input.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `Frame ${kind} must contain exactly one Core Node authoring input.`,
+      details: { childType: child.type, kind },
+    });
   }
   return child;
 };
@@ -55,12 +64,24 @@ const readFrameParts = (children: ReactNode): FrameParts => {
         return;
       }
       if (isValidElement<FrameTitleProps>(child) && child.type === FrameTitle) {
-        if (result.title !== undefined) throw new Error('Frame accepts at most one FrameTitle.');
+        if (result.title !== undefined) {
+          throw new RetikzStandardError({
+            code: RetikzStandardErrorCode.AuthoringInvalid,
+            message: 'Frame accepts at most one FrameTitle.',
+            details: { marker: 'FrameTitle' },
+          });
+        }
         result.title = convertHeaderProps(child.props, 'title');
         return;
       }
       if (isValidElement<FrameDescriptionProps>(child) && child.type === FrameDescription) {
-        if (result.description !== undefined) throw new Error('Frame accepts at most one FrameDescription.');
+        if (result.description !== undefined) {
+          throw new RetikzStandardError({
+            code: RetikzStandardErrorCode.AuthoringInvalid,
+            message: 'Frame accepts at most one FrameDescription.',
+            details: { marker: 'FrameDescription' },
+          });
+        }
         result.description = convertHeaderProps(child.props, 'description');
         return;
       }
@@ -74,14 +95,22 @@ const readFrameParts = (children: ReactNode): FrameParts => {
 /** 将 Frame marker 与 Node children 收集为 Standard Vanilla Input */
 const createFrameInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   if ('title' in props || 'description' in props) {
-    throw new Error('React Frame headers must use direct FrameTitle and FrameDescription children.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'React Frame headers must use direct FrameTitle and FrameDescription children.',
+      details: { fields: ['title', 'description'] },
+    });
   }
   const { children, ...input } = props as FrameProps;
   const parts = readFrameParts(children);
   const bodyInput = createInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
   const childrenInput = bodyInput.scene.children;
   if (childrenInput === undefined) {
-    throw new Error('Frame body must use direct child authoring.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Frame body must use direct child authoring.',
+      details: { component: 'Frame' },
+    });
   }
   const headers: InputFrameHeaders = {
     ...(parts.title === undefined ? {} : { title: parts.title }),
@@ -107,14 +136,22 @@ Frame.createInputEmbedProps = createFrameInput;
 
 /** 声明 Frame 的 Node-like 主标题，只能作为 Frame 的直接 child */
 export const FrameTitle: FC<FrameTitleProps> = () => {
-  throw new Error('FrameTitle must be used as a direct child of Frame.');
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.AuthoringInvalid,
+    message: 'FrameTitle must be used as a direct child of Frame.',
+    details: { component: 'FrameTitle' },
+  });
 };
 
 FrameTitle.displayName = 'FrameTitle';
 
 /** 声明 Frame 的 Node-like 辅助说明，只能作为 Frame 的直接 child */
 export const FrameDescription: FC<FrameDescriptionProps> = () => {
-  throw new Error('FrameDescription must be used as a direct child of Frame.');
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.AuthoringInvalid,
+    message: 'FrameDescription must be used as a direct child of Frame.',
+    details: { component: 'FrameDescription' },
+  });
 };
 
 FrameDescription.displayName = 'FrameDescription';

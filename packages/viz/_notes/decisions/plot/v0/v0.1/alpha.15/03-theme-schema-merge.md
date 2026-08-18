@@ -45,7 +45,7 @@ type PlotTheme = {
 3. Theme 只负责视觉 token，避免把 domain / tick / scale 语义塞进样式系统。
 4. JSON-safe 结构符合 retikz IR 原则，也便于 LLM 生成、保存和跨 renderer 复用。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - Axis domain padding、`ticks.values`、`tickLabels.format`；由 ADR-01 / ADR-02 处理，且不进入 theme。
 - Axis 子结构 token 的细节；由 ADR-02 处理。

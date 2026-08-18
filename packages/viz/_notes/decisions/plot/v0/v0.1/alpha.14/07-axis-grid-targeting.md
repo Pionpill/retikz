@@ -92,7 +92,7 @@ type CompositionGuidePolicy = {
 | `guidePolicy.grid: 'shared'`   | `guidePolicy.gridPlacement: 'sharedRole'`，axis 写 `grid: true` |
 | 只让某个 track / facet 有 grid | axis 写 `grid: { applyTo: 'selected', select: ... }`            |
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不做 axis label collision avoidance、grid label 自动避让或 renderer text metrics。
 - 不设计 grid 样式系统；样式仍沿用现有 guide/scene style。

@@ -12,7 +12,7 @@ export const fullScopeProps = {
   opacity: 0.9,
   fillOpacity: 0.4,
   strokeOpacity: 0.8,
-  theme: { mode: 'dark', style: 'academic' },
+  theme: { mode: 'dark' },
   transforms: [{ kind: 'translate', x: 4, y: 5 }],
   placement: { target: [10, 20], selfAnchor: 'center' },
   nodeDefault: { fill: '#e2e8f0', padding: 2 },

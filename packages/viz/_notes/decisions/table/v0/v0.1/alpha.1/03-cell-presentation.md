@@ -147,11 +147,9 @@ const compositeCell = {
 };
 ```
 
-## 实现摘要与验证
+## 最终结果
 
 Cell 已以 `value` / `content` 两类 payload 统一 scalar presentation 与直接 `IRChild`。内置 `text` 和自定义 presentation 通过同一 Definition / registry / runtime guard，`PresentedTableModel` 保留 semantic identity 并隔离 provider output 的可变所有权。
-
-验证覆盖全部 Data scalar、直接 Core child 与 nested composite、自定义 provider、options 与 provider output 的 JSON/Core schema 边界、重复或未注册 key，以及 presented/semantic Cell 的顺序与 identity 对齐。
 
 ## 影响
 
@@ -162,21 +160,7 @@ Cell 已以 `value` / `content` 两类 payload 统一 scalar presentation 与直
 - alpha.3 在同一 contract 上增加 formatter、更多 presentation、rules 与 theme
 - alpha.2 以通用内容 bounds 替代 alpha.1 的局部原点假设，并增加 allocated content box、fit 与 overflow 合同
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / Cell Semantics 与 Presentation
-- 解决的问题：统一显式 Core 内容和数据驱动 scalar 的 Cell 表达
-- 主责包与协作包：Table 主责 presentation；Data 提供 scalar；Core 提供 IRChild
-- 是否可由现有能力组合：Core 能表达内容，但不能表达 Cell value → content 策略，需要 Table Definition
-- 是否需要下沉：不下沉；通用 Child schema 直接复用 Core
-- 内部表达链路：payload → presentation ref → registry → present → PresentedTableModel
-- 外部扩展链路：defineCellPresentation → custom definitions → resolver → same dispatch
-- pipeline / lowering 与下游消费：ADR-04 只从 SemanticTableModel 计算几何；ADR-05 把 Presented Cell 与 TableLayout 按 cellId 配对后 lowering Core content
-- React / Vanilla adapter 等价性：两者只构造同一 payload / presentation ref
-- provenance / lineage / locator：presented content 保留 semantic cell id，具体 contribution mapping 进入 ADR-05/alpha.6
-- 本轮结论：扩展 Table Presentation；不建立封闭 CellContent registry 或 feature-package 依赖
-
-## 不在本 ADR 范围
+## 长期边界
 
 - formatter、conditional rule、theme、badge/dataBar/sparkline
 - 内容 intrinsic / constrained measurement、bounds-aware alignment、fit、clip 或 overflow

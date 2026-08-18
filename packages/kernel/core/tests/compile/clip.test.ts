@@ -1,19 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 
 import type { ClipResource, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
-import { defineClip } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
-
-const polygonClip = defineClip({
-  kind: 'polygon',
-  schema: z.strictObject({
-    kind: z.literal('polygon'),
-    points: z.array(z.tuple([z.number(), z.number()])).min(3),
-  }),
-  resolve: spec => ({ kind: 'polygon', points: spec.points }),
-});
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,
@@ -39,7 +28,7 @@ const grad: IRPaint = {
 };
 
 describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
-  it('rect clip → resources 含 clip 资源，scope GroupPrim.clipRef 指向它', () => {
+  it('rect clip → resources 含 canonical path，scope GroupPrim.clipRef 指向它', () => {
     const ir = scene([
       {
         type: 'scope',
@@ -52,24 +41,17 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
     expect(clips).toHaveLength(1);
     expect(clips[0]).toMatchObject({
       kind: 'clip',
-      shape: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },
-    });
-    const group = firstGroup(compiled.primitives);
-    expect(group?.clipRef).toBe(clips[0].id);
-  });
-
-  it('circle clip → resources 含 circle shape 资源，GroupPrim.clipRef 挂上', () => {
-    const ir = scene([
-      {
-        type: 'scope',
-        clip: { kind: 'circle', cx: 0, cy: 0, r: 120 },
-        children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
+      path: {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [40, 0] },
+          { kind: 'line', to: [40, 30] },
+          { kind: 'line', to: [0, 30] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
       },
-    ]);
-    const compiled = compileToScene(ir).scene;
-    const clips = clipResources(compiled.resources);
-    expect(clips).toHaveLength(1);
-    expect(clips[0].shape).toMatchObject({ kind: 'circle', cx: 0, cy: 0, r: 120 });
+    });
     const group = firstGroup(compiled.primitives);
     expect(group?.clipRef).toBe(clips[0].id);
   });
@@ -84,34 +66,6 @@ describe('clip 资源生成 + GroupPrim.clipRef 挂载', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     expect(clipResources(compiled.resources)[0].id).toBe('clip-1');
-  });
-
-  it('polygon clip（3 点）→ shape 携 points', () => {
-    const ir = scene([
-      {
-        type: 'scope',
-        clip: {
-          kind: 'polygon',
-          points: [
-            [0, 0],
-            [40, 0],
-            [20, 40],
-          ],
-        },
-        children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
-      },
-    ]);
-    const compiled = compileToScene(ir, { clips: [polygonClip] }).scene;
-    const clips = clipResources(compiled.resources);
-    expect(clips).toHaveLength(1);
-    expect(clips[0].shape).toMatchObject({
-      kind: 'polygon',
-      points: [
-        [0, 0],
-        [40, 0],
-        [20, 40],
-      ],
-    });
   });
 });
 
@@ -148,7 +102,7 @@ describe('clip 去重 / 不同 clip 各自资源', () => {
       },
       {
         type: 'scope',
-        clip: { kind: 'circle', cx: 0, cy: 0, r: 50 },
+        clip: { kind: 'rect', x: 5, y: 5, width: 20, height: 15 },
         children: [{ type: 'node', id: 'B', position: [80, 0], text: 'B' }],
       },
     ]);
@@ -166,7 +120,7 @@ describe('带 clip 的 scope 不被 prune', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'circle', cx: 0, cy: 0, r: 60 },
+        clip: { kind: 'rect', x: 0, y: 0, width: 60, height: 60 },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);
@@ -280,11 +234,11 @@ describe('退化裁剪区手搓 IR 编译期守卫', () => {
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
-  it('circle r = NaN（绕过 schema）→ 编译期抛', () => {
+  it('rect height = NaN（绕过 schema）→ 编译期抛', () => {
     const ir = scene([
       {
         type: 'scope',
-        clip: { kind: 'circle', cx: 0, cy: 0, r: NaN },
+        clip: { kind: 'rect', x: 0, y: 0, width: 10, height: NaN },
         children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
       },
     ]);

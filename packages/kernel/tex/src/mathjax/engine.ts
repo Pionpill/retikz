@@ -1,5 +1,6 @@
 import type { MathJaxEngineOptions, MathJaxSvgEngine } from './types';
 
+import { RetikzTexError, RetikzTexErrorCode } from '../error';
 import { loadMathJaxConfigurations, resolveMathJaxEngineOptions } from './profiles';
 
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
@@ -46,7 +47,8 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
       hd: hd as HandlerModule,
     };
   } catch (error) {
-    throw new Error(
+    throw new RetikzTexError(
+      RetikzTexErrorCode.MathJax,
       '@retikz/tex: install the optional peer dependency "mathjax-full" to use createMathJaxEngine, or inject your own MathJaxSvgEngine.',
       { cause: error },
     );

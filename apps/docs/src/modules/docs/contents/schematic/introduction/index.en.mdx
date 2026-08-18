@@ -7,7 +7,7 @@ The Schematic group owns domain capabilities for what appears in a diagram, what
 
 ## Start with Graph
 
-The first Graph set includes `Container`, `Entity`, and `Relation`. `Entity.role` distinguishes terminal, stage, decision, and junction semantics; `Relation.role` distinguishes flow, branch, dependency, and feedback relationships. They reuse Core Node, Path, target, and Scene contracts plus Layout's generic containers. Graph does not copy geometry, renderer, or layout algorithms.
+Graph provides an optional `Graph` presentation root plus the three semantic elements `Container`, `Entity`, and `Relation`. Entity roles and variants support assembly-local Definition registries, with terminal, stage, decision, junction, and five visual levels built in; Relation roles distinguish flow, branch, dependency, and feedback. They reuse Core Scope, Node, Path, target, and Scene contracts plus Layout's generic containers. Graph does not copy geometry, renderer, or layout algorithms.
 
 | Package                 | Responsibility                                    | Use it when                                    |
 | ----------------------- | ------------------------------------------------- | ---------------------------------------------- |

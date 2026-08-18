@@ -15,6 +15,7 @@ export const DEFAULT_FONT_SIZE = 16;
 
 /** 编译期 warning code（机器可读） */
 export const CompileWarningCode = {
+  ChangeSetMismatch: 'CORE_CHANGESET_MISMATCH',
   UnresolvedNodeReference: 'UNRESOLVED_NODE_REFERENCE',
   PathTooShort: 'PATH_TOO_SHORT',
   OffsetBaseUnresolved: 'OFFSET_BASE_UNRESOLVED',

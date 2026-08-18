@@ -28,7 +28,7 @@
 - **degenerate / 反向 / 非有限 domain** → 行为以 d3 为准（d3 `ticks` 对 `[a,a]`→`[a]`、支持反向 domain），用测试锁定实际行为、不再自定义。
 - **`nice` 默认不开**（沿用 alpha.1 optional 语义），用户显式 `nice:true` 才扩展 domain——不悄改既有投影。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **band / time / ordinal / log scale、颜色映射**（d3-scale 家族）→ alpha.3+。
 - **自定义 tick 数组 / 自定义 d3-format formatter / 科学计数 / 千分位** → 后续（d3-format 支持，按需暴露）。

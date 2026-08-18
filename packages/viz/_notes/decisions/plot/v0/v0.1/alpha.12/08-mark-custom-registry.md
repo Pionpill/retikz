@@ -36,7 +36,7 @@ lowering 不再在所有阶段假设 mark 一定是内置 union 成员。`pipeli
 
 mark 扩展点与其它 runtime extension contract 对齐。内置与自定义 mark 共享注册、字段读取、scale 推断、locator parity 的基础机制，避免形成“内置白名单 + 外部补丁”的二等路径。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 抽象 mark 模型的破坏性重命名；由 ADR-03 / ADR-04 描述。
 - React 通用 `<Mark>` 声明组件。

@@ -1,6 +1,6 @@
 import type { IRChild, IRScope } from '@retikz/core';
 
-import type { InputChartPanel } from '../normalize/chart';
+import type { InputChartPanel } from './types';
 
 /** 把 Chart 包装为可选的根 Scope */
 export const wrapChartPanel = <TChart extends IRChild>(chart: TChart, panel: InputChartPanel | undefined): IRChild => {

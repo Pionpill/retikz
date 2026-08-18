@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-09
-- 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [Core Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[ADR-17](./17-foundation-schema-primitives.md)
 
 ## 背景与目标
 
@@ -59,32 +59,11 @@ y' = b*x + d*y + f
 - 外部扩展与下游闭环：该能力是闭合数值原子，不提供 Definition / registry。TeX 与 Render 直接组合 Math 原子到现有 parser / hydration 链路，最终 Core Scene、SVG / Canvas 输出和诊断保持原有 owner
 - 不支持边界：不提供 mutable matrix class、任意维矩阵、矩阵求逆/分解、CSS transform 解析或 caller 专属 transform builder；未来新增运算必须重新证明跨包需求和稳定数值契约
 
-## 架构验证
+## 最终结果
 
-- 是否可由现有能力组合：Math 现有 point、bounds 与 centered-shape local/world transform 没有通用六元组复合原子，不能在不复制公式的情况下组合得到当前需求
-- math / core / render / adapter 责任切分：Math 只做 plain numeric transform；Core 继续拥有 Transform schema 与 Scene；Render 继续拥有 Scene 执行和 hydration；TeX 继续拥有 MathJax SVG 解析；adapter 不新增能力
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：新增的是闭合、确定的纯函数 API，不存在内置与第三方 definition 的动态解析或生命周期需求
-- Scene / manifest / renderer / diagnostics 如何闭环：Scene 和 manifest 结构不变；Render 仅用 Math 原子替换私有公式；TeX 的 malformed / unsupported 分类、non-singular 与 visible-stroke 限制继续在 TeX 产生
-- provenance / locator / Interaction Readiness 是否适用：矩阵原子不创建 occurrence、locator 或交互 target，不适用新增 provenance / Interaction 契约；现有 hydration id 聚合仍由 Render 负责
-- 结论：下沉
+Math 已提供冻结的单位矩阵、固定顺序复合与点映射公共原子；Render hydration 与 TeX SVG lowering 已改为直接消费该真源，原有 Scene 编排、SVG 解析、有限非奇异与 similarity 检查、stroke policy 和领域诊断仍由各自包负责。未发现需要改变本 ADR 公开契约或包边界的遗留风险。
 
-## 被否决方案
-
-- 继续保留 TeX / Render 两份私有实现：相同 ABI 与公式会继续独立演进，无法保证复合顺序和边界行为长期一致
-- 放入 Foundation：仿射矩阵属于二维数值与几何计算，违反 Foundation 不拥有 geometry / math 的边界
-- 由 Core 提供或转发：TeX / Render 的计算不需要 Core 绘图语义，Core 转发会制造错误 owner 和不必要的传递依赖
-- 把 parser、可逆性、similarity 与 hydration bbox 一并下沉：这些能力分别携带 SVG / TeX stroke 或 Scene / renderer 语义，会把 Math 扩张成领域工具包
-- 提供 mutable matrix class 或多套参数形状：会引入状态、identity 和重载分叉，超出当前两个 consumer 已证明的最小契约
-
-## 测试策略摘要
-
-Math 契约层必须证明单位矩阵的运行时不可变性、左右单位元、复合非交换顺序、平移 / 缩放 / 旋转 / 负缩放组合、点映射和输入不变性。Render 层必须用顺序敏感的嵌套 transform 证明 hydration geometry 与既有 Scene 语义一致；TeX 层必须证明嵌套 `<g>`、`<use>`、compound transform、y 翻转、非法语法分类与 visible-stroke similarity 语义不变。包边界证据必须证明 Math 保持零依赖、TeX 建立真实 direct dependency，且不存在旧公式或转发出口。
-
-## 实现与验证结果
-
-Math 已提供冻结的单位矩阵、固定顺序复合与点映射公共原子；Render hydration 与 TeX SVG lowering 已改为直接消费该真源，原有 Scene 编排、SVG 解析、有限非奇异与 similarity 检查、stroke policy 和领域诊断仍由各自包负责。验证覆盖 Math 公共契约、两个 consumer 的顺序敏感组合、既有回归、攻击性数值与深层嵌套输入、包依赖方向及双语文档，未发现遗留阻断或兼容性偏差。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Foundation、directed angle sweep、quantile、linear sampling 或其它本轮审计候选
 - Core Transform schema、Scene、manifest、renderer 输出格式或 hydration public API

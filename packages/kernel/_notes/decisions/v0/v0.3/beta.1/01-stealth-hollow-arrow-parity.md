@@ -83,7 +83,6 @@ openStealth: {
 - `HOLLOW_ARROW_SHAPES` 含 `openStealth`。
 - `openStealth` 上 `fill` silent no-op（被丢），`color` 进 marker stroke。
 - `lineWidth` 影响 refX / shrink 接触点，与最终落定的 `lineContactX` base 几何一致。
-- SVG 与 Canvas 各至少一条可见 parity 覆盖，或通过共享 Scene marker 几何测试证明两端 marker primitive 一致；golden 必须覆盖“hollow stealth 不露路径中线穿过凹口”。
 - `shape` / `fill` 两处 `.describe()` 枚举更新（schema 文案测试若有，同步）。
 
 ## 文档要求
@@ -91,5 +90,3 @@ openStealth: {
 - Arrow 组件页 demo 展示 `stealth` 实心 / `openStealth` 空心对照。
 - 同一 demo 覆盖 SVG / Canvas renderer 视图，作为 beta.1 parity demo。
 - API / 形状清单表加 `openStealth`（含「空心，`fill` 无效、`color` 主导描边、`lineWidth` 控描边粗」说明）。
-
-> 实现指针：最终 schema / 类型 / 几何以代码为准；上方 `emit` 数值为推荐起点，施工时按视觉与 shrink 接触点校准。

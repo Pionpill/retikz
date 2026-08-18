@@ -4,6 +4,7 @@ import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
 import { createInputScene } from '@retikz/react';
+import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { LegendItemProps, LegendRampProps, LegendTickProps, LegendTitleProps } from './LegendMarkers';
@@ -48,12 +49,20 @@ const collectRequiredSlot = (
 ): CollectedLegend<LegendChild> => {
   const nodes = flattenLegendNodes(children);
   if (nodes.length !== 1 || !isConvertibleElement(nodes[0])) {
-    throw new Error(`${label} must contain exactly one convertible React element.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `${label} must contain exactly one convertible React element.`,
+      details: { count: nodes.length, label },
+    });
   }
   const input = createInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error(`${label} must contain exactly one authoring child.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `${label} must contain exactly one authoring child.`,
+      details: { count: childrenInput?.length ?? 0, label },
+    });
   }
   return { value: childrenInput[0], adapters: input.adapters };
 };
@@ -67,12 +76,20 @@ const collectOptionalSlot = (
   const nodes = flattenLegendNodes(children);
   if (nodes.length === 0) return { value: undefined, adapters: [] };
   if (nodes.length !== 1 || !isConvertibleElement(nodes[0])) {
-    throw new Error(`${label} must contain at most one convertible React element.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `${label} must contain at most one convertible React element.`,
+      details: { count: nodes.length, label },
+    });
   }
   const input = createInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error(`${label} must contain at most one authoring child.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `${label} must contain at most one authoring child.`,
+      details: { count: childrenInput?.length ?? 0, label },
+    });
   }
   return { value: childrenInput[0], adapters: input.adapters };
 };
@@ -91,7 +108,13 @@ export const convertLegendItemsChildren = (
   const parts: Array<CollectedLegend<unknown>> = [];
   for (const [index, child] of flattenLegendNodes(children).entries()) {
     if (isValidElement<LegendTitleProps>(child) && child.type === LegendTitle) {
-      if (title !== undefined) throw new Error('Legend accepts at most one LegendTitle.');
+      if (title !== undefined) {
+        throw new RetikzStandardError({
+          code: RetikzStandardErrorCode.AuthoringInvalid,
+          message: 'Legend accepts at most one LegendTitle.',
+          details: { form: 'items', marker: 'LegendTitle' },
+        });
+      }
       const slot = collectRequiredSlot(child.props.children, 'LegendTitle', `${context.id}:title`);
       title = slot.value;
       parts.push(slot);
@@ -112,7 +135,11 @@ export const convertLegendItemsChildren = (
       });
       continue;
     }
-    throw new Error('Items Legend accepts only LegendTitle and LegendItem as direct children.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Items Legend accepts only LegendTitle and LegendItem as direct children.',
+      details: { form: 'items' },
+    });
   }
   return {
     value: { ...(title === undefined ? {} : { title }), items },
@@ -131,14 +158,26 @@ export const convertLegendRampChildren = (
   const parts: Array<CollectedLegend<unknown>> = [];
   for (const [index, child] of flattenLegendNodes(children).entries()) {
     if (isValidElement<LegendTitleProps>(child) && child.type === LegendTitle) {
-      if (title !== undefined) throw new Error('Legend accepts at most one LegendTitle.');
+      if (title !== undefined) {
+        throw new RetikzStandardError({
+          code: RetikzStandardErrorCode.AuthoringInvalid,
+          message: 'Legend accepts at most one LegendTitle.',
+          details: { form: 'ramp', marker: 'LegendTitle' },
+        });
+      }
       const slot = collectRequiredSlot(child.props.children, 'LegendTitle', `${context.id}:title`);
       title = slot.value;
       parts.push(slot);
       continue;
     }
     if (isValidElement<LegendRampProps>(child) && child.type === LegendRamp) {
-      if (sample !== undefined) throw new Error('Ramp Legend requires exactly one LegendRamp.');
+      if (sample !== undefined) {
+        throw new RetikzStandardError({
+          code: RetikzStandardErrorCode.AuthoringInvalid,
+          message: 'Ramp Legend requires exactly one LegendRamp.',
+          details: { form: 'ramp', marker: 'LegendRamp' },
+        });
+      }
       const slot = collectRequiredSlot(child.props.children, 'LegendRamp', `${context.id}:ramp`);
       sample = slot.value;
       parts.push(slot);
@@ -154,9 +193,19 @@ export const convertLegendRampChildren = (
       });
       continue;
     }
-    throw new Error('Ramp Legend accepts only LegendTitle, LegendRamp, and LegendTick as direct children.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Ramp Legend accepts only LegendTitle, LegendRamp, and LegendTick as direct children.',
+      details: { form: 'ramp' },
+    });
   }
-  if (sample === undefined) throw new Error('Ramp Legend requires exactly one LegendRamp.');
+  if (sample === undefined) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Ramp Legend requires exactly one LegendRamp.',
+      details: { form: 'ramp', marker: 'LegendRamp' },
+    });
+  }
   return {
     value: { ...(title === undefined ? {} : { title }), sample, ticks },
     adapters: adaptersOf(parts),

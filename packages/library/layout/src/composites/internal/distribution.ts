@@ -1,3 +1,5 @@
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+
 /** 可参与稳定加权分配的数值项 */
 export type WeightedLayoutSize = Readonly<{
   base: number;
@@ -15,7 +17,11 @@ export type WeightedLayoutDistribution = Readonly<{
 /** 计算有限数值之间用于布局收敛判断的统一相对 epsilon */
 export const layoutEpsilon = (first: number, second: number): number => {
   if (!Number.isFinite(first) || !Number.isFinite(second)) {
-    throw new Error('layoutEpsilon inputs must be finite');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'layoutEpsilon inputs must be finite',
+      details: { first, second },
+    });
   }
   return Math.max(1, Math.abs(first), Math.abs(second)) * Number.EPSILON * 64;
 };
@@ -24,16 +30,40 @@ export const layoutEpsilon = (first: number, second: number): number => {
 export const compensatedLayoutSum = (values: ReadonlyArray<number>): number => {
   let sum = 0;
   let compensation = 0;
-  for (const value of values) {
-    if (!Number.isFinite(value)) throw new Error('Layout sum values must be finite');
+  for (const [index, value] of values.entries()) {
+    if (!Number.isFinite(value)) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.GeometryInvalid,
+        message: 'Layout sum values must be finite',
+        details: { index, value },
+      });
+    }
     const next = sum + value;
-    if (!Number.isFinite(next)) throw new Error('Layout sum must remain finite');
+    if (!Number.isFinite(next)) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.GeometryInvalid,
+        message: 'Layout sum must remain finite',
+        details: { next, value },
+      });
+    }
     compensation += Math.abs(sum) >= Math.abs(value) ? sum - next + value : value - next + sum;
-    if (!Number.isFinite(compensation)) throw new Error('Layout sum must remain finite');
+    if (!Number.isFinite(compensation)) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.GeometryInvalid,
+        message: 'Layout sum must remain finite',
+        details: { compensation, value },
+      });
+    }
     sum = next;
   }
   const result = sum + compensation;
-  if (!Number.isFinite(result)) throw new Error('Layout sum must remain finite');
+  if (!Number.isFinite(result)) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Layout sum must remain finite',
+      details: { compensation, result, sum },
+    });
+  }
   return result;
 };
 
@@ -45,11 +75,19 @@ const initialValueOf = (item: WeightedLayoutSize, index: number): number => {
     ['weight', item.weight],
   ] as const) {
     if (!Number.isFinite(value) || value < 0) {
-      throw new Error(`Weighted layout item ${index} ${field} must be finite and non-negative`);
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.GeometryInvalid,
+        message: `Weighted layout item ${index} ${field} must be finite and non-negative`,
+        details: { field, index, value },
+      });
     }
   }
   if (item.max !== undefined && (!Number.isFinite(item.max) || item.max < item.min)) {
-    throw new Error(`Weighted layout item ${index} max must be finite and greater than or equal to min`);
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: `Weighted layout item ${index} max must be finite and greater than or equal to min`,
+      details: { index, max: item.max, min: item.min },
+    });
   }
   return clampWeightedValue(item.base, item);
 };
@@ -69,7 +107,13 @@ export const distributeWeightedLayoutSizes = (
   items: ReadonlyArray<WeightedLayoutSize>,
   total: number,
 ): WeightedLayoutDistribution => {
-  if (!Number.isFinite(total) || total < 0) throw new Error('Weighted layout total must be finite and non-negative');
+  if (!Number.isFinite(total) || total < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Weighted layout total must be finite and non-negative',
+      details: { total },
+    });
+  }
   const values = items.map(initialValueOf);
   let remaining = total - compensatedLayoutSum(values);
 

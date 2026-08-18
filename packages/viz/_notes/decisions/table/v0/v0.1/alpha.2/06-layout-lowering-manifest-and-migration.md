@@ -75,7 +75,7 @@ Table artifact 类型为 `CompositeCompileArtifact<'table', 'table', TableLayout
 - Structure / Presentation 的 Definition 与 registry 扩展路径不变；built-in 与 custom 继续同路
 - Table lowering 不包含 Node、Path、Plot、renderer 或 DOM 白名单
 
-## 最终实现与验证
+## 最终结果
 
 实现集中在 `pipeline/compile.ts`、`pipeline/layout/transaction.ts`、layout helpers、lower emit 与 `contract/manifest`。package root 只导出稳定 schema、types、definitions、`lowerTables()` 与 `compileTable()`，不导出阶段 helper。
 

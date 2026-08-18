@@ -1,6 +1,7 @@
 import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolveDefaultCoreThemeColors, resolveThemeStyleRegistry } from '../../providers/theme';
 import { ThemeMode } from '../../shared';
 
@@ -28,6 +29,7 @@ export const resolveTheme = (
   if (style === undefined) return Object.freeze({ mode, colors: resolveDefaultCoreThemeColors(mode) });
 
   const definition = styles.get(style);
-  if (definition === undefined) throw new Error(`Theme style '${style}' is not registered at ${path}.`);
+  if (definition === undefined)
+    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme style '${style}' is not registered at ${path}.`);
   return Object.freeze({ style, mode, colors: definition.resolve({ mode }) });
 };

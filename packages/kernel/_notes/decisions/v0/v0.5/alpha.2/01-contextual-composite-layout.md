@@ -2,7 +2,7 @@
 
 - 状态：Superseded（由 [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) 取代）
 - 决策日期：2026-07-23
-- 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md)
 
 ## 背景
 
@@ -18,7 +18,7 @@
 - Core 管理 occurrence、typed artifact 与真实 allocation / visual bounds
 - React、Vanilla 与 headless 入口只接线同一 Core compile contract
 
-该替代方案已经完成实现、测试、双语文档和 Accepted 收口，因此本文件不再定义当前 API、实现范围或测试计划。alpha.2 后续的双轴 proposal、slot、alignment guide 和 failure isolation 由 [ADR-06](./06-box-layout-composite-contract.md) 与 [ADR-08](./08-layout-proposal-probe-contract.md) 在替代合同上继续扩展。
+该替代方案已取代本记录，因此本文件不再定义当前 API 或实现范围。alpha.2 后续的双轴 proposal、slot、alignment guide 和 failure isolation 由 [ADR-06](./06-box-layout-composite-contract.md) 与 [ADR-08](./08-layout-proposal-probe-contract.md) 在替代合同上继续扩展
 
 ## 历史边界
 

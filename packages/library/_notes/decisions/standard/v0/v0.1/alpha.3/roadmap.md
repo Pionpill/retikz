@@ -1,134 +1,90 @@
-# Standard v0.1 alpha.3 Roadmap：语义逻辑图组件
+# Standard v0.1 alpha.3 Roadmap：横向绘图拓展合并发布
 
-> 状态：已完成；ADR-01～05 已由 Graph alpha.1 Superseded，ADR-06 保持 Accepted
->
-> 主题：提供可持久化的基础逻辑节点、headless `GraphFrame`、局部连接与说明能力，让作者、工具与 LLM 不必从 shape、颜色或坐标反推逻辑图语义
->
-> 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把本 milestone 的图式元素迁入 Diagram owner；本页保留为 Standard 验证这些契约时的历史 milestone
->
-> 关联：[Standard v0.1 roadmap](../roadmap.md) · [Standard library design](../../../../../architecture/standard-library-design.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [能力完备性与模块边界](../../../../../../../../notes/architecture/capability-design.md)
+> 状态：合并发布内容已完成；ADR-07～10、ADR-12 为 Accepted，ADR-11 Superseded。原 Graph alpha.3 历史路线见 [roadmap-graph-history.md](./roadmap-graph-history.md)。关联：[Standard v0.1 roadmap](../roadmap.md) · [ADR-07](./07-arbitrary-child-surface.md) · [ADR-12](./12-single-clip-definition.md) · [Standard 拓展库设计](../../../../../architecture/standard-library-design.md) · [Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) · [Core ADR-22](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/22-single-clip-definition.md)
 
-## 定位
+## 目标
 
-alpha.3 建设 Standard 自身可独立绘制、可跨领域复用的局部逻辑图语义。它同时覆盖两类内容：
+本 milestone 首先让 Standard 回归横向绘图拓展边界：配合 Layout v0.1 alpha.1 移除 FlexLayout、GridLayout、OverlayLayout、LayoutItem、Layout artifact、Layout Inspector 与对应 adapter / docs owner，并让仍需排版的 Legend 只组合 Layout 公共 capability。
 
-1. 基于 Core `Node` 的统一 `GraphNode` 语义 sugar，通过 `role` 区分 terminal、stage、decision 与 junction
-2. 只规定纵向外壳、区域布局与定位能力的 headless `GraphFrame`
+在当前 `0.1.0-alpha.3` 合并版本内新增 renderer-neutral `standard.surface`，让 Chart canvas、Table panel 与一般信息面板可以用同一 JSON-safe composite 为任意 Core child 提供背景、padding、可选 border / corner radius、overflow 和完整 Scope 语义。Surface 只组合 Core layout-aware composite 与 Layout 公共 box / replay capability，不复制 solver，不改变 Standard Frame，也不在 Chart adapter 或 renderer 建立私有 surface。
 
-`Connector` 与 `Callout` 负责显式局部关系和定位说明，使这些组件可以形成完整逻辑图。它们仍然只是独立 Standard composite，不建立 GraphModel、全局 nodes / edges、Port / Group、拓扑校验、算法布局或编辑器状态。
+本 milestone 已收敛 Core 的官方内置集合：Core 继续拥有 Drawing IR、Definition / registry 契约、编译消费与诊断，只保留支撑基础绘图闭环的最小内置实现；可选官方 Shape、Arrow、Clip 与 Ribbon 实现迁入 Standard，并按 `@retikz/standard/<capability>` 子入口独立消费。Plot 等 Tier 2 通过显式 provider contribution 闭包获得所需定义，不依赖全局注册或副作用导入。
 
-文档可以基于 `GraphFrame` 组合 Process、Class、Data 等内部 recipe，展示输入、配置、伪代码、输出、类成员、schema、context 或 payload。recipe 只属于 retikz 自身示例，不进入任何包的公开出口，也不增加新的持久化 discriminator。
+ADR-11 进一步完成 ClipShape 实现迁移：Core 在 ADR-21 中把 operation 与 shape 拆为两级 Definition 并只保留 `rect`，Standard `/clip` 完整拥有 `circle`、`ellipse`、`polygon`、`path`、`compound` 的 spec、shape、lowering 与 provider。
 
-## 版本目标
+ADR-12 取代 ADR-11 的两级公开装配，把五种 Standard 裁剪分别收敛为一个完整 ClipDefinition 和一个 clip provider；`StandardClipDefinitions` 是唯一 definitions 集合，不再暴露 `clipShapes` 集合或 capability。
 
-- 以 Graph `IRGraphNode` 持久化统一 `GraphNode`，通过 `role`、Schema describe 与 role 默认 shape 提供逻辑语义
-- 建立内容 headless、外观中性可用的 `GraphFrame`，用任意 `IRChild` 组合 header 与 authored-order sections
-- 建立统一的整体 / section target 输入；alpha.3 先以当前 Core 闭环整体 target，带 section 的输入明确 fail-loud，后续随 Core composite-owned structured subtarget 联动接通
-- 支持直线、显式折线、TikZ 风格正交折线、quadratic、cubic 与 bend 曲线
-- 复用 Core layout-aware composite、Path step label、target / anchor、Scope 与 Standard Box Layout 词汇，不建立私有测量、target resolver、路径采样或 renderer 路径
-- 接入 GraphFrame / GraphConnector / Callout Definition、React / Vanilla 等价 authoring 与双语文档 dogfood；GraphNode 不需要独立 Definition
+## ADR 索引
 
-## 能力边界
+| ADR                                                                             | 状态       | 主题                                         | 交付                                                                         |
+| ------------------------------------------------------------------------------- | ---------- | -------------------------------------------- | ---------------------------------------------------------------------------- |
+| [ADR-07](./07-arbitrary-child-surface.md)                                       | Accepted   | 任意 child Surface                           | 冻结单 child box、appearance、Scope、layout、Definition 与 spatial 边界      |
+| [Layout ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) | Accepted   | Layout package family 迁移                   | 冻结现行布局 owner、canonical namespace、公共入口与兼容性                    |
+| [ADR-08](./08-core-minimal-builtins-and-standard-provider-entrypoints.md)       | Accepted   | Core 最小内置集合与 Standard provider 子入口 | 冻结 Core / Standard provider 所有权、最小内置边界、能力子入口与显式装配契约 |
+| [ADR-09](./09-ribbon-as-standard-path-kind.md)                                  | Accepted   | Ribbon 作为 Standard Path Kind 的完整迁移    | 冻结 Ribbon schema、Definition、profile、lowering、Tier 2 依赖与跨入口闭环   |
+| [ADR-10](./10-sector-shape-unification.md)                                      | Accepted   | Sector 统一弧形与扇形 Node shape             | 删除独立 Arc shape，以 Sector 厚度表达开放弧、扇形与环楔                     |
+| [ADR-11](./11-standard-clip-shapes.md)                                          | Superseded | Standard ClipShape 完整迁移                  | 历史五种 Clip spec/shape、两级 Definition 与 provider dependency 设计        |
+| [ADR-12](./12-single-clip-definition.md)                                        | Accepted   | Standard 单一 Clip Definition 接入           | 冻结五种完整 Definition、单一集合、五个 clip providers 与跨入口闭环          |
 
-- Standard 拥有局部逻辑角色、headless Block 外壳、显式连接呈现、Callout 布局、适用布局组件的 typed artifact 与 direct Definition loading
-- Core 拥有 `IRChild`、Path step、target / anchor、namespace、layout-aware probe / replay、Scene 与 renderer 执行
-- React / Vanilla 只把宿主 authoring 归一为同一 Standard canonical IR，不复制 schema、布局、路由或 target 解析
-- `role`、`category` 等开放字符串只保存作者语义，在组件提供 typed artifact 时也原样保留，不触发隐藏 registry、布局或样式规则
-- 每项公开组件沿用 Core `CompositeDefinition` registry；alpha.3 不增加 LogicNode、Block kind、routing 或 appearance provider registry
-- Process、Class、Data recipe 只消费公开能力，不成为 Standard schema、Definition 或 adapter 的前置依赖
+ADR-08～10 均已按其公开契约完成并进入 `Accepted`。ADR-11 已完成历史两级 ClipShape 迁移，现由 ADR-12 取代；Core 默认仅保留 rect、Standard 接管其余五种 Clip 与 ADR-08 的能力子入口和显式装配原则不变。
 
-## ADR 顺序
+## 后续定义拓展方向
 
-| ADR                                    | 主题                    | 主要决策                                                                           | 依赖                                       | 状态       |
-| -------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ | ---------- |
-| [01](./01-logic-diagram-profile.md)    | Logic Diagram Profile   | 冻结能力归属、identity、共享 target、开放 role、外观与 locator / artifact 公共边界 | alpha.1 composite；Core target / composite | Superseded |
-| [02](./02-headless-logic-frame.md)     | Headless GraphFrame     | 冻结 header / sections、纵向约束布局、中性外观、section target 与 typed artifact   | ADR-01；alpha.2 Box Layout                 | Superseded |
-| [03](./03-semantic-logic-nodes.md)     | Semantic Logic Nodes    | 冻结四个 Core Node sugar 的职责 describe、固定 shape、默认值与跨宿主输入           | ADR-01                                     | Superseded |
-| [04](./04-connector-and-callout.md)    | Connector 与 Callout    | 冻结局部 target、关系 role、标签、折线 / 正交 / 曲线路由与显式 Callout placement   | ADR-01～03；Core Path                      | Superseded |
-| [05](./05-capability-and-authoring.md) | Definition 与 Authoring | 冻结按项 Definition、React / Vanilla / 直接 IR 等价与内部 recipe 边界              | ADR-01～04；alpha.3 ADR-06                 | Superseded |
+- 在 provider 迁移与子入口边界稳定后，以独立 ADR 横向补充 Standard 官方定义集合，不把内容扩充混入迁移 ADR
+- 箭头定义优先参考 TikZ 等成熟绘图系统，提炼可复用的 marker 语义、几何约束与命名边界，再决定进入 `@retikz/standard/arrow` 的具体集合
+- Shape、pattern、path generator 等能力沿用同一原则：Core 保持统一 contract / registry / compile 机制，Standard 子入口提供按需引入的官方扩展
+- 新定义不从 `@retikz/standard` 根入口聚合导出，不使用全局注册、动态包发现或副作用导入
 
-```text
-01 shared profile
-├─→ 02 GraphFrame ─┐
-└─→ 03 logic nodes ────┼─→ 04 Connector / Callout
-                       └─→ 05 definitions / adapters
-```
+## 已完成迁移边界
 
-## 关键设计不变量
+- Standard 三包不保留 Layout re-export、alias、Definition、adapter 或 `standard.*Layout` namespace
+- `@retikz/standard/layout` 与 Standard `/inspect` 中的 Layout 能力移除
+- Legend、Axes、Grid、Frame 等 Standard presentation 继续属于 Standard；其中只有 Legend 按需依赖 `@retikz/layout/compose`
+- Standard alpha.2 ADR-01～07 原地标记 Superseded；ADR-08 保持既有历史状态；ADR-09～10 继续 Accepted
+- Standard alpha.3 ADR-06 的直接 Definition loading 原则继续生效，并作为 ADR-08 的前置契约
+- 文档站进入 Library 顶级模块的 `Standard · 拓展` 分组，并与 `Layout · 布局` 分别维护 changelog
+- Standard Shape 收敛为 `cross`、`sector`、`star`、`contour`，不保留独立 Arc shape；Kernel React `<Arc>` Path Sugar 不变
+- `@retikz/standard/shape`、`@retikz/standard/arrow`、`@retikz/standard/clip` 与 `@retikz/standard/ribbon` 是已发布可选 provider 的唯一公共子入口，不发布空的 Path Generator 入口
 
-- 语义 Node 的逻辑职责存在于 Schema describe 与固定 shape；canonical 输出仍是 Core Node，lowering 后的 shape、Path、Scope 与 Scene 不是反向恢复真源
-- `GraphFrame` 只理解 header、section、spacing、appearance、bounds 与 target，不理解标题、图标、字段、方法、代码、输入或输出
-- section 顺序只由 `sections` authored order 决定；不维护第二份 order，也不使用 `visible: false`
-- 基础逻辑节点全部复用 Core Node props，字符串 children / `<Text>` 归一为 Node 文本；`Decision` 不拥有 condition 专有字段或 outcome 列表
-- branch 语义只保存在 `Connector`，不同时写入 `Decision`
-- Connector 是局部关系 composite，不是 Edge 集合；它不统计连接数量、不验证拓扑，也不自动移动端点组件
-- Connector label 直接复用 Core `IRGeometryLabelInput` 与最后一个 drawable step 的 label，不接受任意复合 `IRChild`，也不由 Standard 测量或放置；polyline 明确把 label 放在连接终点段
-- Connector 直接 lower 为同 id 的 Core Path，不重复输出 typed path artifact；路径几何与 bounds 由 Core 主链拥有，Scene id 只 stamp 到 Path 最外层主体，附属 label / mark 不建立第二 identity
-- Connector 不提供 compile artifact locator；领域 provenance 在 lowering 前通过 authored id join，不从 Scene 或 Core IR 反推 Standard role / endpoint
-- Connector 整体 target 随 Core pending Path 在 namespace 注册闭合后解析，允许同一可见 namespace 内的前后目标；Callout 复用 authored Scope placement，只读取此前已发布的整体 target，不等待 forward target；带 section 的 target 当前明确拒绝
-- Callout placement 必须显式，不执行碰撞检测或最佳位置搜索
-- Callout side 固定 target / shell 对向 side anchor；gap 沿 outward normal，offset 沿屏幕正 x / y 切向，leader 连接解析后 target anchor 与最终 shell anchor
-- `GraphFrame` 与 Callout artifact 使用 strict JSON schema；GraphNode 直接复用 Core Node schema，不生成 semantic artifact；`LogicLayoutItemArtifact` 去除单一 content 不适用的 key / sourceIndex
-- 任意 child 的测量、失败与 replay 只经过 Core layout-aware contract；SVG / Canvas 不回读布局或路由
+## Surface 依赖 Gate
 
-## 用户可观察默认
+- Core ADR-18 冻结跨 namespace Composite provider graph，确保 Surface 及其任意 child definitions 在 React、Vanilla 与直接工具链中统一装配
+- Core ADR-19 冻结 qualified spatial handle sidecar，确保 Surface 包裹后 descendant identity、geometry 与 provenance 不丢失
+- 两项 Core ADR 与本 milestone ADR-07 均已完成 Architecture Gate、Plan Gate 与人工确认，Surface 已按冻结契约完成跨入口闭环
 
-- `GraphFrame` 提供透明背景、`currentColor` 中性边框 / divider、8-unit 默认区域 padding 与圆角，可全部显式覆盖
-- 空 header 合法，空 sections 合法，但二者不能同时为空；section key 必须局部唯一
-- `Terminal`、`Stage`、`Decision`、`Junction` 固定输出 capsule、rounded rectangle、扁菱形（宽高比 `1.8`）、circle；默认值与 Node props 见 ADR-03
-- semantic Node 不接受 `content`、`appearance`、`role`、`category` 或独立 artifact；其它 Node props 继续由 Core Schema 校验
-- Connector label 的 position、side、sloped、文本 / TeX 与样式默认完全沿用 Core step label；正交三段的中间带默认位于两端间的 `0.5`
-- 缺失 definition、Callout 缺失或 forward id / section / anchor、以及 child layout failure 均 fail-loud；Connector unresolved target 发 Core Path warning 并跳过整条 Path。两者都不使用 placeholder 或隐式 fallback，Connector 解析后退化行为沿用 Core Path
+## Surface 交付边界
 
-## Architecture Gate
+- `@retikz/standard`：`IRSurface` schema / type、factory、layout-aware definition、普通 Core lowering 与 Surface handle declaration
+- `@retikz/standard-react`：单 child `<Surface>` authoring，与直接 JSON 形成同一 canonical IR
+- `@retikz/standard-vanilla`：等价 plain helper / embed adapter
+- Layout：只消费既有公开 proposal、padding、overflow、content geometry 与 replay capability；若公共 barrel 缺少本 ADR 已使用的稳定原子，只做最小公开面补齐
+- Docs：双语 Surface 组件页、React / Vanilla 示例、API 表与 Chart / Table 复用说明
 
-Gate 至少证明：
+## 非目标
 
-- 去除 UML、Graph、Flow、Workspace、React、Class、Schema、Context 等领域词后，公开组件仍是可独立消费的 Drawing Complete 能力
-- `GraphFrame` 的开放性来自任意 `IRChild` 与显式 appearance，而不是新 Block registry 或 callback
-- 语义单元的 discriminator 与默认 shape 分离；替换 shape 后语义和 artifact 不变
-- Connector routing 只组合 Core Path step，未复制 curve / fold 数学，也未建立自动 routing pipeline
-- section target 保留稳定公开输入与 artifact geometry；当前 Core 无结构化 lookup 时 fail-loud，不暴露调用方必须手写的内部 id，也不派生可与 authored id 冲突的扁平字符串
-- 直接 IR、React、Vanilla 与显式 Definition 注入进入同一 schema、definition 与 compile 主链；布局组件 artifact 和 Connector lowered Scene 主体 id 保持跨入口等价
-- 内部 Process / Class / Data recipe 不进入 package exports 或 schema registry
-- 后续接通 section target 前，Core 必须冻结 composite-owned structured subtarget 的 pending-Path / previous-placement 两种 lookup 生命周期；当前 Callout 使用已有 authored Scope placement，Connector label 使用已有 built-in stroke Path step label
-
-以下方案不能通过 Gate：
-
-- 以 diamond、capsule、颜色或图标代替持久化逻辑 discriminator
-- 为 Process、Class、Data 或 category 建立公开封闭 union、definition registry 或 renderer 分支
-- 把 Connector 扩张为 GraphModel、端口系统、全局 edge collection 或自动避障器
-- 让 React children、render callback、class instance 或函数进入 Standard IR
-- 由 adapter 或 renderer 私自测量 content、重算 section layout 或解释 role
-
-## 测试与文档基线
-
-- schema 证据覆盖 strict JSON、canonical defaults、开放 role、section identity、routing union 与非法状态拒绝
-- layout 证据覆盖 natural / constrained / fixed / fill、任意 IRChild、nested Block、overflow / clip 与 child failure 提升
-- semantic 证据覆盖固定 shape、职责 describe、Node props、字符串 / `<Text>` children、原始 id 与无 Definition 输出
-- routing 证据证明 straight、polyline、四种正交 pattern、quadratic、cubic、bend 与 Core Path 语义等价
-- artifact / identity 证据覆盖整体、header、section、content 与 Callout 的完整 strict artifact、Connector lowered Scene 主体 id，以及 Connector / Callout 各自的 target 诊断
-- Callout geometry 证据覆盖四个 side、默认 / 显式 target anchor、法向 gap、切向 offset、最终 shell anchor 与 leader 端点
-- Definition / adapter 证据覆盖 GraphFrame / GraphConnector / Callout 按项 Definition、重复 provider key 冲突、直接 IR、React 与 Vanilla 等价；GraphNode 不进入 Definition 聚合
-- docs 以内部 Process / Class / Data recipe 绘制真实流程、类结构与 payload / context 图，并公开源码供读者参考
-- renderer 只验证同一 Scene 的 SVG / Canvas parity，不参与布局、target 或 route 决策
+- 修改 Frame、复制 Flex / Grid / Overlay 或增加 Standard 私有 layout solver
+- Chart / Plot / Table 领域字段、token、数据、guide、title、source 或交互状态
+- DOM / CSS surface、renderer 特判、新 Scene primitive 或私有空间索引
+- 多 child、slot、header / footer、alignment、gap、scroll、responsive sizing 或 dashboard chrome
 
 ## 完成标准
 
-- [x] ADR-01～05 完成 test contract、Architecture Gate 与人工确认
-- [x] `GraphFrame` 与 Callout 的 schema、Definition、artifact 与 factory 形成闭环；统一 GraphNode role schema / factory 与 GraphConnector 的 schema、Definition、同 id Core Path lowering 形成闭环
-- [x] 直接 IR、React 与 Vanilla authoring 产生等价 canonical IR 与 Scene，并保持适用 artifact / Connector lowered Scene 主体 identity 等价
-- [x] straight、polyline、`-|`、`|-`、`-|-`、`|-|`、quadratic、cubic 与 bend 均有确定结果和失败诊断
-- [x] 整体 Block 与普通逻辑节点可以被 Connector / Callout 稳定定位；Connector 支持 pending forward whole target，Callout 保持 previous-only placement；带 section 的 target 明确 fail-loud
-- [x] Core built-in stroke Path step label 与 authored Scope placement 已复用；Standard 未复制 Path sampling、target resolver 或扁平派生 id，structured section target 作为 Core 联动项保留
-- [x] Process / Class / Data recipe 只存在于 docs 内部实现，且至少服务三类真实逻辑图
-- [x] Standard 三包与双语 docs 完成受影响范围验证，无 renderer 特判、隐式 registry 或领域反向依赖
+- Standard 与 Layout release group、package export、schema registry、adapter、tests 和文档 owner 保持分离，不恢复旧 namespace 或兼容层
+- 任意合法 `IRChild` 可在 intrinsic / range / exact proposal 下被 Surface 测量、padding、replay 与绘制
+- background、child、border、overflow、corner radius、allocation / visual bounds 和完整 Scope 语义由同一 canonical contract 决定
+- React、Vanilla、直接 JSON、SSR、SVG 与 Canvas 等价，且第三方 composite child 不走内置白名单
+- Surface 外层 handle 与 descendant qualified handles 同时存在，包裹前后的 child identity、payload、locator 与 provenance 连续
+- Frame 现有 Node-only 输入与行为不变；Standard 不新增 bundle、全局 registry、兼容 alias 或 renderer side channel
+- Core 默认 provider 集合符合 ADR-08 及 ADR-12 的后继边界，只保留 rect Clip；Standard 可选 Shape、Arrow、五种完整 Clip 与 Ribbon 只从四个能力子入口显式装配
+- provider contribution 在直接 Core、React、Vanilla、SSR 与官方 Tier 2 中形成完整依赖闭包，缺失、冲突和循环在 dispatch 前 fail-loud
 
-## 不在 alpha.3 范围
+## 当前进度与执行顺序
 
-- 完整 UML metamodel、JSON Schema / Zod validator、React Context runtime 或工作流执行
-- GraphModel、全局 nodes / edges、Port / Group、拓扑校验、算法布局、自动路由与避障
-- selection、drag、history、viewport、snapping、交互连线或其它 Workspace 状态
-- swimlane、BPMN、sequence diagram、state machine execution、database lineage 与业务 adapter
-- 从 lowering 后的 Core IR / Scene 恢复原始逻辑语义
-- 导出 ProcessBlock、ClassBlock、DataBlock 或其它 docs recipe
+1. Layout owner 迁移已经完成，合并发布代码版本为 `0.1.0-alpha.3`
+2. ADR-07 Surface 已 Accepted，并在 Standard、React、Vanilla、文档、Chart 与 Table consumer 中闭环
+3. ADR-08 已 Accepted：Core provider graph、最小内置集合、三个 Standard provider 子入口与 Tier 2 显式依赖闭包均已完成
+4. ADR-10 已 Accepted：Standard 不再维护独立 Arc shape，Sector 统一表达开放弧、扇形与环楔
+5. ADR-09 已 Accepted：Ribbon 的 schema、Path Kind、profile、几何编译、公开入口与跨入口闭环已完成
+6. Core ADR-21 与 Standard ADR-11 的两级 ClipShape 扩展已完成历史实现，现分别由 Core ADR-22 与 Standard ADR-12 取代
+7. ADR-12 已完成 Architecture Gate、Plan Gate、Standard / adapters / Chart / Table / Surface 实现、测试与双语文档，并由人工确认进入 Accepted
+8. 后续新增 Shape、Arrow、Clip 或其它官方定义时，继续按能力归属与真实复用需求独立决策，不恢复全局注册或根入口全集

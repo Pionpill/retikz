@@ -12,6 +12,7 @@ const dependencyFields = ['dependencies', 'peerDependencies', 'optionalDependenc
 const allowedPackedRootFiles = new Set(['LICENSE', 'README.md', 'package.json']);
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
+const packedTypeSmokeMaxOldSpaceSize = 8192;
 
 const toPosixPath = value => value.replaceAll('\\', '/');
 
@@ -259,13 +260,14 @@ async function listFiles(rootDirectory, currentDirectory = rootDirectory) {
 }
 
 /** 运行需要完整错误上下文的子进程。 */
-function runCommand(command, args, cwd) {
+function runCommand(command, args, cwd, envOverrides = {}) {
   const result = spawnSync(command, args, {
     cwd,
     encoding: 'utf8',
     env: {
       ...process.env,
       CI: '1',
+      ...envOverrides,
     },
     maxBuffer: 50 * 1024 * 1024,
     shell: false,
@@ -489,10 +491,15 @@ async function runPackedTypeSmoke(fixtureDirectory, specifiers) {
     'utf8',
   );
 
+  const nodeOptions = (process.env.NODE_OPTIONS ?? '').replace(/(?:^|\s)--max-old-space-size=\d+/g, ' ').trim();
+
   runCommand(
     process.execPath,
     [path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc'), '--project', '.'],
     fixtureDirectory,
+    {
+      NODE_OPTIONS: [nodeOptions, `--max-old-space-size=${packedTypeSmokeMaxOldSpaceSize}`].filter(Boolean).join(' '),
+    },
   );
 }
 
