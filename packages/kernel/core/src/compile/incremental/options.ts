@@ -3,12 +3,18 @@ import { ZodType } from 'zod';
 import type { AnyCompositeDefinition } from '../../contract';
 import type { CoreProgramOptions } from './public';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** 复制 Program 配置中的 records/arrays，保留 callback 与 schema identity */
 const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {
   if (value === null || (typeof value !== 'object' && typeof value !== 'function')) return value;
   if (typeof value === 'function') return value;
   if (value instanceof ZodType) return value;
-  if (ancestors.has(value)) throw new Error('createCoreProgram: options must not contain cyclic plain data');
+  if (ancestors.has(value))
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      'createCoreProgram: options must not contain cyclic plain data',
+    );
 
   const nextAncestors = new Set(ancestors);
   nextAncestors.add(value);

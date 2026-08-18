@@ -10,6 +10,7 @@ import type {
 import type { IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 
+import { RetikzDataError } from '../error';
 import { resolveTransformRegistry } from '../providers';
 import { createDataLineageRecorder } from './lineage';
 import { readSourceIndex, readSourceIndices, tagSourceIndex, withGroupProvenance } from './provenance';
@@ -36,7 +37,7 @@ const transformDefinitionOf = (
 ): AnyTransformDefinition => {
   const definition = registry.get(operation.kind);
   if (definition === undefined) {
-    throw new Error(
+    throw new RetikzDataError(
       `applyTransforms: transform kind "${operation.kind}" is not registered; pass a TransformDefinition via options.transformDefinitions`,
     );
   }

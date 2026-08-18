@@ -8,6 +8,7 @@ import { withInputEmbedAdapters } from '@retikz/react';
 
 import type { GraphEmbeddableComponent } from '../shared';
 
+import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
 import { collectRelationPath, hasAuthoringChildren } from './authoring';
 
 type RelationBaseProps = Omit<RelationCreateOptions, 'children' | 'way'>;
@@ -23,7 +24,11 @@ const createRelationInput = (props: Readonly<Record<string, unknown>>, context: 
   void _id;
   const hasChildren = hasAuthoringChildren(children);
   if (hasChildren && way !== undefined) {
-    throw new Error('Relation requires exactly one of `children` or `way`.');
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.RelationInputInvalid,
+      message: 'Relation requires exactly one of `children` or `way`.',
+      details: { label: 'Relation', reason: 'children-and-way-conflict' },
+    });
   }
   if (!hasChildren) return { ...pathInput, way: way as RelationWay } satisfies InputRelation;
   const collected = collectRelationPath(children, context.id);

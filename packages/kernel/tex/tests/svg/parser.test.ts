@@ -1,7 +1,13 @@
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
-import { parseMathJaxSvg, parseMathJaxSvgResult, parsePathD, RetikzSvgTransformError } from '../../src/svg';
+import {
+  parseMathJaxSvg,
+  parseMathJaxSvgResult,
+  parsePathD,
+  RetikzSvgTransformError,
+  RetikzSvgTransformErrorCode,
+} from '../../src/svg';
 
 /**
  * SVG path-d 解析 + MathJax SVG → renderer-agnostic 字形 LoweredTex
@@ -9,13 +15,16 @@ import { parseMathJaxSvg, parseMathJaxSvgResult, parsePathD, RetikzSvgTransformE
 
 describe('SVG structured errors', () => {
   it('uses the shared Retikz error contract for transform failures', () => {
-    const error = new RetikzSvgTransformError('unsupported', 'Unsupported SVG transform: rotate');
+    const error = new RetikzSvgTransformError(
+      RetikzSvgTransformErrorCode.Unsupported,
+      'Unsupported SVG transform: rotate',
+    );
 
     expect(error).toBeInstanceOf(RetikzError);
     expect(error).toMatchObject({
       name: 'RetikzSvgTransformError',
-      code: 'unsupported',
-      details: { kind: 'unsupported' },
+      code: RetikzSvgTransformErrorCode.Unsupported,
+      details: { kind: RetikzSvgTransformErrorCode.Unsupported },
     });
   });
 });

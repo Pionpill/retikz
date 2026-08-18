@@ -24,6 +24,7 @@ import {
   type MarkProvenance,
 } from '../../../contract';
 import { seriesPathMeta, slug } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import { PathClosureKind, PathCurve, PathMarkSchema, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import {
@@ -561,7 +562,7 @@ export const buildSeriesPathScopes = (
     if (baseId !== undefined && seenIds) {
       const prior = seenIds.get(baseId);
       if (prior !== undefined && prior !== series) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${baseId}"; series anchors must be unique`,
         );
       }
@@ -627,7 +628,7 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
   }
   for (const [seriesValue, colors] of colorsBySeries) {
     if (colors.size > 1) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: color field "${colorField}" is not constant within series "${String(seriesValue)}"; color must be constant per series, or split by color instead of setting series`,
       );
     }
@@ -755,7 +756,7 @@ export const lowerPathLayer = (
     mark.closure === undefined &&
     mark.closed !== true;
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame) && !supportsGenericOpenPath) {
-    throw new Error(failLoudMessage(mark.type, frame.type));
+    throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
   const layer = lowerPath(
     mark,

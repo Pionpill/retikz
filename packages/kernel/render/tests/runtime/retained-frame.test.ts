@@ -8,6 +8,7 @@ import {
   createRuntimeOwnerUpdate,
   createRuntimeProgramRegistry,
   createRuntimeSession,
+  RetikzRuntimeErrorCode,
 } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -214,7 +215,7 @@ describe('retained render frame contract', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED',
+        code: RetikzRuntimeErrorCode.ParticipantPrepareFailed,
         cause: expect.objectContaining({ message: 'layer resolver failed' }),
       }),
     );

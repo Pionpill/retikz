@@ -26,6 +26,7 @@ import {
   isWaapiAnimationStyleOwned,
   recoverWaapiBindingSetupFailure,
 } from '../animation/retained';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import {
   createContextBuilder,
   createHydrationController,
@@ -540,7 +541,8 @@ const buildRootDescriptorPlan = (
   const wrapperCount = animationWrapperCount(snapshot.scene.animations, config, track => track.property === 'viewBox');
   if (wrapperCount === 0) {
     const headCount = children.length - snapshot.scene.primitives.length;
-    if (headCount < 0) throw new Error('SVG root descriptor primitive count is invalid');
+    if (headCount < 0)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root descriptor primitive count is invalid');
     return Object.freeze({
       head: Object.freeze(children.slice(0, headCount)),
       wrappers: Object.freeze([]),
@@ -551,17 +553,19 @@ const buildRootDescriptorPlan = (
   let cursor = children.at(-1);
   const wrappers: Array<SvgNode> = [];
   for (let index = 0; index < wrapperCount; index += 1) {
-    if (cursor === undefined) throw new Error('SVG camera wrapper descriptor is missing');
+    if (cursor === undefined)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper descriptor is missing');
     wrappers.push(cursor);
     if (index < wrapperCount - 1) {
       const child: unknown = Reflect.get(cursor.children ?? [], 0);
-      if (typeof child !== 'object' || child === null) throw new Error('SVG camera wrapper chain is invalid');
+      if (typeof child !== 'object' || child === null)
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper chain is invalid');
       cursor = child as SvgNode;
     }
   }
   const primitives = (cursor?.children ?? []).filter((child): child is SvgNode => typeof child !== 'string');
   if (primitives.length !== snapshot.scene.primitives.length) {
-    throw new Error('SVG camera wrapper primitive count is invalid');
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper primitive count is invalid');
   }
   return Object.freeze({
     head: Object.freeze(head),
@@ -591,7 +595,8 @@ const buildSubtreeDescriptor = (
     },
   );
   const child = descriptor.children?.at(-1);
-  if (child === undefined || typeof child === 'string') throw new Error('SVG subtree descriptor is missing');
+  if (child === undefined || typeof child === 'string')
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG subtree descriptor is missing');
   return child;
 };
 
@@ -609,13 +614,13 @@ const buildFullElementIndex = (
   if (plan.wrappers.length > 0) {
     const outer = host.children[plan.head.length];
     if (!(outer instanceof host.ownerDocument.defaultView!.SVGElement)) {
-      throw new Error('SVG camera wrapper element is missing');
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper element is missing');
     }
     contentElement = outer;
     for (let index = 1; index < plan.wrappers.length; index += 1) {
       const child = contentElement.firstElementChild;
       if (!(child instanceof host.ownerDocument.defaultView!.SVGElement)) {
-        throw new Error('SVG camera wrapper element chain is invalid');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper element chain is invalid');
       }
       contentElement = child;
     }
@@ -627,7 +632,8 @@ const buildFullElementIndex = (
     path: ReadonlyArray<number>,
   ): void => {
     const topology = topologyByPath.get(topologyPathKey(path));
-    if (topology === undefined) throw new Error('SVG topology element is missing');
+    if (topology === undefined)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG topology element is missing');
     entries.push([topology.identity, element]);
     if (primitive.type !== 'group') return;
     const content = unwrapPrimitiveContent(primitive, primitiveDescriptor, element, config);
@@ -640,7 +646,7 @@ const buildFullElementIndex = (
         childDescriptor === null ||
         !(childElement instanceof host.ownerDocument.defaultView!.SVGElement)
       ) {
-        throw new Error('SVG group topology element is missing');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG group topology element is missing');
       }
       visit(child, childDescriptor as SvgNode, childElement, [...path, index]);
     });
@@ -653,7 +659,7 @@ const buildFullElementIndex = (
       primitiveDescriptor === null ||
       !(element instanceof host.ownerDocument.defaultView!.SVGElement)
     ) {
-      throw new Error('SVG root topology element is missing');
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root topology element is missing');
     }
     visit(primitive, primitiveDescriptor as SvgNode, element, [index]);
   });
@@ -683,7 +689,7 @@ const reconcilePrimitiveSubtree = (
     const childDescriptor: unknown = Reflect.get(desiredChildren, index);
     const topology = topologyByPath.get(topologyPathKey([...path, index]));
     if (typeof childDescriptor !== 'object' || childDescriptor === null || topology === undefined) {
-      throw new Error('SVG subtree topology is incomplete');
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG subtree topology is incomplete');
     }
     const descriptorNode = childDescriptor as SvgNode;
     const current = content.element.childNodes[index] ?? null;
@@ -728,13 +734,13 @@ const indexSubtreeElements = (
   const visit = (primitive: RuntimeScenePrimitive, element: SVGElement, path: ReadonlyArray<number>): void => {
     const topology = topologyByPath.get(topologyPathKey(path));
     if (topology === undefined || !target.set(topology.identity, element)) {
-      throw new Error('SVG candidate topology index is invalid');
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG candidate topology index is invalid');
     }
     if (primitive.type !== 'group') return;
     primitive.children.forEach((child, index) => {
       const childElement = element.childNodes[index];
       if (!(childElement instanceof element.ownerDocument.defaultView!.SVGElement)) {
-        throw new Error('SVG candidate group element is missing');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG candidate group element is missing');
       }
       visit(child, childElement, [...path, index]);
     });
@@ -758,7 +764,8 @@ const subtreeAtRootIndex = (snapshot: SceneRuntimeSnapshot, index: number): Scen
     );
   const root = topology.find(node => node.primitivePath.length === 0);
   const primitive: unknown = Reflect.get(snapshot.scene.primitives, index);
-  if (root === undefined || primitive === undefined) throw new Error('SVG root subtree topology is missing');
+  if (root === undefined || primitive === undefined)
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root subtree topology is missing');
   return Object.freeze({
     root: root.identity,
     primitive: primitive as RuntimeScenePrimitive,
@@ -839,7 +846,7 @@ const reconcileFullIdentityDocument = (
     const descriptorNode: unknown = Reflect.get(plan.primitives, index);
     const subtree = subtreeAtRootIndex(snapshot, index);
     if (typeof descriptorNode !== 'object' || descriptorNode === null) {
-      throw new Error('SVG primitive descriptor is invalid');
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG primitive descriptor is invalid');
     }
     const primitiveDescriptor = descriptorNode as SvgNode;
     const childIndex = plan.wrappers.length === 0 ? plan.head.length + index : index;
@@ -1171,7 +1178,7 @@ export const createBuiltinSvgRetainedRenderer = (
     if (descriptor !== undefined) {
       const stagedHost = createSvgElement(host.ownerDocument, descriptor);
       if (!(stagedHost instanceof host.ownerDocument.defaultView!.SVGSVGElement)) {
-        throw new Error('SVG full descriptor root is invalid');
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG full descriptor root is invalid');
       }
       buildFullElementIndex(stagedHost, descriptor, snapshot, config);
     }
@@ -1209,7 +1216,8 @@ export const createBuiltinSvgRetainedRenderer = (
       entityOperations?.map(operation => {
         if (operation.kind === 'remove') {
           const element = currentElements.get(operation.identity);
-          if (element === undefined || element.parentNode === null) throw new Error('SVG remove target is missing');
+          if (element === undefined || element.parentNode === null)
+            throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG remove target is missing');
           return Object.freeze({
             kind: operation.kind,
             operation,
@@ -1230,7 +1238,7 @@ export const createBuiltinSvgRetainedRenderer = (
             parent === undefined ||
             (operation.before !== undefined && beforeCandidate === undefined)
           ) {
-            throw new Error('SVG move topology is missing');
+            throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG move topology is missing');
           }
           const before = beforeCandidate ?? null;
           return Object.freeze({
@@ -1249,7 +1257,7 @@ export const createBuiltinSvgRetainedRenderer = (
               ? null
               : (candidateElements.get(operation.before) ?? currentElements.get(operation.before));
           if (parent === undefined || (operation.before !== undefined && beforeCandidate === undefined)) {
-            throw new Error('SVG insert parent is missing');
+            throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG insert parent is missing');
           }
           const before = beforeCandidate ?? null;
           const element = createSvgElement(host.ownerDocument, subtreeDescriptor);
@@ -1264,7 +1272,8 @@ export const createBuiltinSvgRetainedRenderer = (
           });
         }
         const existing = currentElements.get(operation.identity);
-        if (existing === undefined || existing.parentNode === null) throw new Error('SVG update target is missing');
+        if (existing === undefined || existing.parentNode === null)
+          throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG update target is missing');
         if (existing.localName !== subtreeDescriptor.tag) {
           const element = createSvgElement(host.ownerDocument, subtreeDescriptor);
           indexSubtreeElements(element, operation.subtree, candidateElements);
@@ -1603,7 +1612,8 @@ export const createBuiltinSvgRetainedRenderer = (
     prepareMount: (frame, config, mode) => prepareFrame(undefined, frame, config, mode),
     prepare: (scenePatch, frame, config) => prepareFrame(scenePatch, frame, config),
     read: () => {
-      if (currentSnapshot === undefined) throw new Error('SVG retained renderer is not committed');
+      if (currentSnapshot === undefined)
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG retained renderer is not committed');
       return Object.freeze({
         frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),

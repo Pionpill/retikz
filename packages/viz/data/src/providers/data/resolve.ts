@@ -1,5 +1,7 @@
-﻿import type { DataFieldTypeMap, FieldResolution, ParsedFieldValue, ResolveField } from '../../contract';
+import type { DataFieldTypeMap, FieldResolution, ParsedFieldValue, ResolveField } from '../../contract';
 import type { IRDataModel } from '../../schemas';
+
+import { RetikzDataError } from '../../error';
 
 /**
  * 在已解析的基础类型上叠加 resolveField：类型覆盖、per-field parser 收集和命中标记。
@@ -29,7 +31,7 @@ export const applyFieldResolver = (
     if (resolution === undefined) continue;
     resolverHit = true;
     if (resolution.parse !== undefined && resolution.type === undefined && !declaredType.has(field)) {
-      throw new Error(
+      throw new RetikzDataError(
         `data: resolveField parse for "${field}" needs a type (declare it in data.model or return type from the resolver)`,
       );
     }

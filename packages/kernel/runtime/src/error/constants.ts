@@ -39,6 +39,8 @@ export const RetikzRuntimeOwnerErrorCode = {
 /** Runtime transaction、Program、registry 与 participant 的稳定错误码 */
 export const RetikzRuntimeErrorCode = {
   ...RetikzRuntimeOwnerErrorCode,
+  /** Runtime 内部不变量被破坏 */
+  InternalInvariant: 'RUNTIME_INTERNAL_INVARIANT',
   /** Program identity 无效 */
   ProgramIdInvalid: 'RUNTIME_PROGRAM_ID_INVALID',
   /** Program definition 重复 */

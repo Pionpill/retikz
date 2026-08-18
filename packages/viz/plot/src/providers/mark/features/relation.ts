@@ -31,6 +31,7 @@ import {
   type MarkDefinition,
   type MarkLoweringContext,
 } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import {
   MarkValueKind,
   RelationGeometryKind,
@@ -99,7 +100,7 @@ const resolveProjectedTarget = (
   for (const frameRole of frame.roles) {
     const field = (ref.project as Partial<Record<string, string>>)[frameRole];
     if (field === undefined) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: relation projected ${role} target is missing field mapping for coordinate role "${frameRole}"`,
       );
     }
@@ -127,7 +128,9 @@ const resolveProjectedTarget = (
     };
   }
   if (ref.anchor !== undefined || ref.boundary !== undefined) {
-    throw new Error(`lowerPlots: relation projected ${role} target requires anchorId when anchor or boundary is set`);
+    throw new RetikzPlotError(
+      `lowerPlots: relation projected ${role} target requires anchorId when anchor or boundary is set`,
+    );
   }
   return { target: shiftedPoint(position, ref.offset), coordinates: [] };
 };
@@ -146,7 +149,9 @@ const resolveTarget = (
   if ('project' in ref)
     return resolveProjectedTarget(mark, ref, row, frame, ctx, transformedIndex, role, forceCoordinate);
   if (ctx?.anchors === undefined) {
-    throw new Error(`lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`);
+    throw new RetikzPlotError(
+      `lowerPlots: relation ${role} target uses generated anchorId but no AnchorRegistry is available`,
+    );
   }
   const owner = targetOwner(mark, ctx, transformedIndex, role);
   const id = ctx.anchors.makeId(ref.anchorId, row, owner);
@@ -345,7 +350,7 @@ const orthogonalRoute = (
   label: IRStepLabel | undefined,
 ): Array<IRStep> => {
   const via = routing.via;
-  if (via === undefined) throw new Error('lowerPlots: orthogonal relation routing requires via');
+  if (via === undefined) throw new RetikzPlotError('lowerPlots: orthogonal relation routing requires via');
   const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: targets[0] }];
   const candidates: Array<{ stepIndex: number; length: number }> = [];
   let cursor = targets[0];
@@ -391,7 +396,7 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
     case RelationRouteStepKind.Line:
       return { type: 'step', kind: RelationRouteStepKind.Line, to: target, ...(label !== undefined ? { label } : {}) };
     case RelationRouteStepKind.Fold:
-      if (step.via === undefined) throw new Error('lowerPlots: relation route fold step requires via');
+      if (step.via === undefined) throw new RetikzPlotError('lowerPlots: relation route fold step requires via');
       return {
         type: 'step',
         kind: RelationRouteStepKind.Fold,
@@ -400,7 +405,8 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
         ...(label !== undefined ? { label } : {}),
       };
     case RelationRouteStepKind.Curve:
-      if (step.control === undefined) throw new Error('lowerPlots: relation route curve step requires control');
+      if (step.control === undefined)
+        throw new RetikzPlotError('lowerPlots: relation route curve step requires control');
       return {
         type: 'step',
         kind: RelationRouteStepKind.Curve,
@@ -410,7 +416,7 @@ const routeStepToIr = (step: IRPlotRelationRouteStep, target: IRTarget, row: Ext
       };
     case RelationRouteStepKind.Cubic:
       if (step.control1 === undefined || step.control2 === undefined)
-        throw new Error('lowerPlots: relation route cubic step requires control1 and control2');
+        throw new RetikzPlotError('lowerPlots: relation route cubic step requires control1 and control2');
       return {
         type: 'step',
         kind: RelationRouteStepKind.Cubic,
@@ -450,7 +456,7 @@ const explicitRoute = (
     const step = route[index];
     const stepTargetRef = step.to;
     if (stepTargetRef === undefined && index !== route.length - 1) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: relation route step ${index} requires to; only the last explicit route step may omit to and default to target`,
       );
     }

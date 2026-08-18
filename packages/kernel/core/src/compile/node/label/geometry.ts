@@ -5,6 +5,7 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout } from '../types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { AnchorUnitVectorByAnchor } from '../../../shared';
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../../shared/geometry';
 import { anchorOf, angleBoundaryOf } from '../anchors';
@@ -15,7 +16,8 @@ const isLabelBoundaryPosition = (
 
 const ensureBoxLikeLabelBoundary = (layout: NodeLayout): void => {
   if (layout.shapeName !== 'rectangle') {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
       `Node label boundary position requires a box-like boundary; shape '${layout.shapeName}' is not supported.`,
     );
   }

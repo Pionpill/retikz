@@ -8,6 +8,7 @@ import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { boundaryKey } from '../../resolve';
 import {
   isFatalProbeError,
@@ -43,7 +44,10 @@ const localDeltaOf = (
 ): IRPosition => {
   if (scopeChain.length === 0) return deltaGlobal;
   if (!isTransformChainInvertible(scopeChain)) {
-    throw new Error('Cannot resolve anchor position through a Scope transform with a zero scale axis');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      'Cannot resolve anchor position through a Scope transform with a zero scale axis',
+    );
   }
   const before = inverseTransformChain(globalOrigin, scopeChain);
   const after = inverseTransformChain([globalOrigin[0] + deltaGlobal[0], globalOrigin[1] + deltaGlobal[1]], scopeChain);
@@ -60,16 +64,21 @@ const placeAnchorPositionedLayout = (
   resolveExplicitBoundary?: BoundaryReferenceResolver,
 ): NodeLayout => {
   if (node.id !== undefined && node.id === position.target.id) {
-    throw new Error(`Node anchor position cannot reference itself ('${node.id}')`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Node anchor position cannot reference itself ('${node.id}')`,
+    );
   }
   const targetEntry = namespaceStack.lookupEntry(position.target.id);
   if (targetEntry === undefined) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
       `Cannot resolve anchor position target '${position.target.id}'; it is undefined or defined later in the IR`,
     );
   }
   if (targetEntry.state === 'scope-placeholder') {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
       `Cannot resolve anchor position target '${position.target.id}'; the referenced Scope is still being laid out`,
     );
   }
@@ -319,7 +328,8 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     center = resolvePosition(node.position, { namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal });
   }
   if (!center) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
     );
   }

@@ -1,4 +1,4 @@
-import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
 
@@ -14,23 +14,15 @@ type MutableIdentityTrieNode = {
   children: Map<string, MutableIdentityTrieNode>;
 };
 
-const assertNonEmptyString = (value: string, owner: string): void => {
-  try {
-    assertFoundationNonEmptyString(value, owner);
-  } catch {
-    throw new RetikzRuntimeIdentityError(owner, value);
-  }
-};
-
 const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void => {
-  assertNonEmptyString(owner, owner);
+  assertNonEmptyString(owner, 'Runtime identity owner');
   if (path.length === 0) {
     throw new RetikzRuntimeIdentityError(owner, path);
   }
   for (let index = 0; index < path.length; index += 1) {
     if (!(index in path)) throw new RetikzRuntimeIdentityError(owner, path);
     const segment = path[index];
-    assertNonEmptyString(segment, owner);
+    assertNonEmptyString(segment, `Runtime identity path segment ${index}`);
   }
 };
 
@@ -75,7 +67,7 @@ export const createRuntimeIdentityLookup = (
   owner: string,
   identities: ReadonlyArray<RuntimeIdentity>,
 ): RuntimeIdentityLookup => {
-  assertNonEmptyString(owner, owner);
+  assertNonEmptyString(owner, 'Runtime identity lookup owner');
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
   const copied: Array<RuntimeIdentity> = [];
   for (const oriIdentity of identities) {

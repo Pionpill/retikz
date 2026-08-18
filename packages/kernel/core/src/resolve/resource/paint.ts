@@ -2,6 +2,7 @@ import type { PatternDefinition } from '../../contract';
 import type { IRPaint } from '../../schemas';
 import type { PaintResolution, PatternResolution } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers/registry';
 import { resolvePatternStyle } from './pattern';
 
@@ -29,12 +30,14 @@ const resolvePattern = (
   });
   const rawSize = spec.size ?? definition.defaultSize ?? DEFAULT_PATTERN_SIZE;
   if (!Number.isFinite(rawSize) || rawSize <= 0) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
       `Pattern '${spec.shape}' has an invalid size (${String(rawSize)}); it must be a finite number greater than 0.`,
     );
   }
   if (spec.rotation !== undefined && !Number.isFinite(spec.rotation)) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
       `Pattern '${spec.shape}' has a non-finite rotation (${String(spec.rotation)}); it must be a finite number.`,
     );
   }

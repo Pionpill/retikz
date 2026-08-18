@@ -3,6 +3,7 @@ import type { IRPosition } from '../schemas';
 import type { Rect } from '../shared/geometry';
 import type { NodeLayout } from './node';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { DEG_TO_RAD, RAD_TO_DEG } from '../shared/geometry';
 
 /** 将局部点按 transform chain 投影到全局坐标 */
@@ -54,7 +55,7 @@ export const inverseTransformChain = (global: IRPosition, chain: ReadonlyArray<T
     } else {
       const sy = t.y ?? t.x;
       if (t.x === 0 || sy === 0) {
-        throw new Error('non-invertible scope transform');
+        throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'non-invertible scope transform');
       }
       x /= t.x;
       y /= sy;

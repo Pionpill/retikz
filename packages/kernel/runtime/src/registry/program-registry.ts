@@ -130,7 +130,14 @@ export const createRuntimeProgramRegistry = (input: RuntimeProgramRegistryInput)
 /** 读取 Program registry 绑定的 owner registry identity */
 export const getRuntimeProgramOwnerRegistry = (registry: RuntimeProgramRegistry): RuntimeOwnerRegistry => {
   const owners = runtimeProgramRegistries.get(registry)?.owners;
-  if (owners === undefined) throw new Error('runtime Program registry: missing owner registry');
+  if (owners === undefined) {
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.InternalInvariant,
+      message: 'runtime Program registry: missing owner registry',
+      phase: 'program-registry',
+      cause: registry,
+    });
+  }
   return owners;
 };
 

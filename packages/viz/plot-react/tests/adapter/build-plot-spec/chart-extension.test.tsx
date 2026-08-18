@@ -9,7 +9,7 @@ import type {
 import type { ReactNode } from 'react';
 
 import { isRetikzError, RetikzError } from '@retikz/foundation';
-import { RetikzPlotDeclarationError } from '@retikz/plot-vanilla';
+import { RetikzPlotDeclarationError, RetikzPlotDeclarationErrorCode } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';
@@ -52,14 +52,18 @@ describe('Plot chart-extension declaration normalization', () => {
   it('preserves the declaration error contract and maps details without a cause', () => {
     const path = ['children', 0] as const;
     const conflictingPath = ['props', 'guides'] as const;
-    const error = new RetikzPlotDeclarationError('duplicate-declaration-source', path, conflictingPath);
+    const error = new RetikzPlotDeclarationError(
+      RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource,
+      path,
+      conflictingPath,
+    );
 
     expect(error).toBeInstanceOf(RetikzPlotDeclarationError);
     expect(error).toBeInstanceOf(RetikzError);
     expect(isRetikzError(error)).toBe(true);
     expect(error.name).toBe('RetikzPlotDeclarationError');
     expect(error.message).toBe('Plot declaration duplicate-declaration-source at ["children",0]');
-    expect(error.code).toBe('duplicate-declaration-source');
+    expect(error.code).toBe(RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource);
     expect(error.path).toBe(path);
     expect(error.conflictingPath).toBe(conflictingPath);
     expect(error.details).toEqual({ path, conflictingPath });
@@ -67,7 +71,7 @@ describe('Plot chart-extension declaration normalization', () => {
     expect(error.details.conflictingPath).toBe(conflictingPath);
     expect(Object.isFrozen(error.details)).toBe(false);
 
-    const omittedConflict = new RetikzPlotDeclarationError('unsupported-chart-child', path);
+    const omittedConflict = new RetikzPlotDeclarationError(RetikzPlotDeclarationErrorCode.UnsupportedChartChild, path);
     expect(omittedConflict.details).toEqual({ path });
     expect(Object.hasOwn(omittedConflict, 'cause')).toBe(true);
     expect(Object.getOwnPropertyNames(omittedConflict)).toContain('cause');

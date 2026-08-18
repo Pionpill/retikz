@@ -49,6 +49,7 @@ import * as runtimeTopology from '../../src/compile/orchestration/runtime-topolo
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
 import { normalizeLayoutProbeError, RetikzCompileInvariantError } from '../../src/compile/probe-failure';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
+import { RetikzCoreErrorCode } from '../../src/error';
 import { isRetikzLayoutProbeRecoverableError, RetikzCompositeContractError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';
 import { arrowMarks } from '../helpers/arrow-marks';
@@ -983,7 +984,7 @@ describe('layout-aware composite constraints and bounds', () => {
     expect(invariant).toBeInstanceOf(RetikzError);
     expect(invariant).toMatchObject({
       name: 'RetikzCompileInvariantError',
-      code: 'CORE_COMPILE_INVARIANT_VIOLATION',
+      code: RetikzCoreErrorCode.CompileInvariantViolation,
     });
     const diff = vi.spyOn(NamespaceStack.prototype, 'diffTopFrame').mockImplementation(() => {
       throw invariant;

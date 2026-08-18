@@ -14,6 +14,7 @@ import {
   resolveVanillaCompileOutput,
   RetikzVanillaCompileDriverError,
 } from '../../src';
+import { RetikzVanillaErrorCode } from '../../src/error';
 
 const source: IRScene = {
   version: 1,
@@ -47,7 +48,7 @@ describe('Vanilla compile driver', () => {
     expect(error).toBeInstanceOf(RetikzError);
     expect(error).toMatchObject({
       name: 'RetikzVanillaCompileDriverError',
-      code: 'VANILLA_COMPILE_DRIVER_FAILED',
+      code: RetikzVanillaErrorCode.CompileDriverFailed,
       message: 'driver failed',
       cause,
       details: {},

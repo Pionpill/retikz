@@ -1,3 +1,5 @@
+import type { ValueOf } from './types';
+
 /** Retikz 结构化领域错误的基础构造参数 */
 export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<Record<string, unknown>>> = Readonly<{
   /** 结构化错误的分类代码 */
@@ -25,6 +27,39 @@ export class RetikzError<
     this.code = options.code;
     this.details = options.details;
     this.cause = options.cause;
+  }
+}
+
+/** Foundation 包稳定错误码 */
+export const RetikzFoundationErrorCode = {
+  /** 未被更精确分类覆盖的 Foundation 错误 */
+  Default: 'FOUNDATION_ERROR',
+  /** 字符串为空或只包含空白 */
+  NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED',
+} as const;
+
+/** Foundation 包稳定错误码取值 */
+export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+
+/** Foundation 原子契约失败的统一结构化错误 */
+export class RetikzFoundationError<
+  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends RetikzError<TCode, TDetails> {
+  /** 使用默认错误码创建 Foundation 错误 */
+  constructor(message: string);
+  /** 使用结构化参数创建 Foundation 错误 */
+  constructor(options: RetikzErrorOptions<TCode, TDetails>);
+  constructor(optionsOrMessage: RetikzErrorOptions<TCode, TDetails> | string) {
+    super(
+      typeof optionsOrMessage === 'string'
+        ? {
+            code: RetikzFoundationErrorCode.Default as TCode,
+            message: optionsOrMessage,
+            details: Object.freeze({}) as TDetails,
+          }
+        : optionsOrMessage,
+    );
   }
 }
 

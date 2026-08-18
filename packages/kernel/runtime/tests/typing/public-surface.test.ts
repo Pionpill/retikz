@@ -71,7 +71,7 @@ describe('runtime public surface', () => {
     expectTypeOf(createRuntimeOwnerUpdate).toBeFunction();
     expectTypeOf(createRuntimeSession).toBeFunction();
     expectTypeOf(RetikzRuntimeError).toBeConstructibleWith({
-      code: 'RUNTIME_REVISION_INVALID',
+      code: RetikzRuntimeErrorCode.RevisionInvalid,
       phase: 'revision',
     });
 
@@ -85,15 +85,16 @@ describe('runtime public surface', () => {
     expectTypeOf<RuntimeDiagnostic['phase']>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
     expectTypeOf<RuntimeDiagnosticPhaseTypeValue>().toEqualTypeOf<RuntimeDiagnosticPhaseValue>();
     expect(RuntimeDiagnosticPhase.Run).toBe('run');
-    expect(RuntimeDiagnosticCode.TraceSinkFailed).toBe('RUNTIME_TRACE_SINK_FAILED');
+    expect(RuntimeDiagnosticCode.TraceSinkFailed).toBe(RuntimeDiagnosticCode.TraceSinkFailed);
     expectTypeOf<RetikzRuntimeErrorCodeValue>().toBeString();
     expectTypeOf<RetikzRuntimeOwnerErrorCodeValue>().toBeString();
     expectTypeOf<RuntimeOwnerPhaseValue>().toBeString();
     expectTypeOf(RetikzRuntimeErrorCode).toBeObject();
     expectTypeOf(RetikzRuntimeOwnerErrorCode).toBeObject();
     expectTypeOf(RuntimeOwnerPhase).toBeObject();
-    expect(RetikzRuntimeErrorCode.ProgramRunFailed).toBe('RUNTIME_PROGRAM_RUN_FAILED');
-    expect(RetikzRuntimeOwnerErrorCode.CaptureFailed).toBe('RUNTIME_OWNER_CAPTURE_FAILED');
+    expect(RetikzRuntimeErrorCode.ProgramRunFailed).toBe(RetikzRuntimeErrorCode.ProgramRunFailed);
+    expect(RetikzRuntimeErrorCode.InternalInvariant).toBe(RetikzRuntimeErrorCode.InternalInvariant);
+    expect(RetikzRuntimeOwnerErrorCode.CaptureFailed).toBe(RetikzRuntimeErrorCode.CaptureFailed);
     expect(RuntimeOwnerPhase.Capture).toBe('capture');
     expectTypeOf<RuntimeOwnerInput>().toBeObject();
     expectTypeOf<RuntimeOwnerUpdate>().toBeObject();

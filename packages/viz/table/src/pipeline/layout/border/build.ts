@@ -1,3 +1,5 @@
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
 import type { TableTrackLayout } from '../types';
 import type {
@@ -11,7 +13,8 @@ import type {
 } from './types';
 
 import { ResolvedTableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
-import { assertTableNonEmptyString, deepFreeze } from '../../../shared';
+import { RetikzTableError } from '../../../error';
+import { deepFreeze } from '../../../shared';
 import { mergeTableBorderAtoms } from './merge';
 import { resolveTableBorderAtoms } from './resolve';
 import { tableBorderSourceOrderKey } from './types';
@@ -24,7 +27,7 @@ const SideOrder: ReadonlyArray<TableBorderSide> = ['top', 'right', 'bottom', 'le
 const validateTracks = (tracks: ReadonlyArray<TableTrackLayout>, axis: 'row' | 'column'): void => {
   tracks.forEach((track, index) => {
     if (track.index !== index) {
-      throw new Error(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
+      throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
     }
     if (
       !Number.isFinite(track.offset) ||
@@ -32,10 +35,10 @@ const validateTracks = (tracks: ReadonlyArray<TableTrackLayout>, axis: 'row' | '
       track.size < 0 ||
       !Number.isFinite(track.offset + track.size)
     ) {
-      throw new Error(`table: ${axis} track ${index} geometry must be finite and nonnegative`);
+      throw new RetikzTableError(`table: ${axis} track ${index} geometry must be finite and nonnegative`);
     }
     if (index > 0 && track.offset < tracks[index - 1].offset + tracks[index - 1].size) {
-      throw new Error(`table: ${axis} track ${index} overlaps the previous canonical track`);
+      throw new RetikzTableError(`table: ${axis} track ${index} overlaps the previous canonical track`);
     }
   });
 };
@@ -52,14 +55,14 @@ const candidateKindOf = (candidate: unknown): unknown =>
 const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTableBorderCandidate => {
   const kind = candidateKindOf(candidate);
   if (kind !== 'none' && kind !== 'line') {
-    throw new Error('table: Border candidate kind must be none or line');
+    throw new RetikzTableError('table: Border candidate kind must be none or line');
   }
   if (!Number.isFinite(candidate.priority) || !Number.isInteger(candidate.priority)) {
-    throw new Error('table: Border candidate priority must be a finite integer');
+    throw new RetikzTableError('table: Border candidate priority must be a finite integer');
   }
   if (candidate.kind === 'none') return { kind: 'none', priority: candidate.priority };
   if (candidate.styleToken !== undefined && candidate.priority !== -100) {
-    throw new Error('table: style token Border candidate priority must be -100');
+    throw new RetikzTableError('table: style token Border candidate priority must be -100');
   }
   return {
     kind: 'line',
@@ -117,14 +120,16 @@ const buildOccupancy = (
     return left.cellId.localeCompare(right.cellId);
   });
   cells.forEach(cell => {
-    assertTableNonEmptyString(cell.cellId, 'table: Border Graph Cell id must be non-empty');
+    assertNonEmptyString(cell.cellId, 'table Border Graph Cell id');
     if (
       !Number.isInteger(cell.rowIndex) ||
       !Number.isInteger(cell.columnIndex) ||
       cell.rowIndex < 0 ||
       cell.columnIndex < 0
     ) {
-      throw new Error(`table: Border Graph Cell "${cell.cellId}" origin must use nonnegative integer indexes`);
+      throw new RetikzTableError(
+        `table: Border Graph Cell "${cell.cellId}" origin must use nonnegative integer indexes`,
+      );
     }
     if (
       !Number.isInteger(cell.rowSpan) ||
@@ -132,16 +137,16 @@ const buildOccupancy = (
       cell.rowSpan <= 0 ||
       cell.columnSpan <= 0
     ) {
-      throw new Error(`table: Border Graph Cell "${cell.cellId}" spans must be positive integers`);
+      throw new RetikzTableError(`table: Border Graph Cell "${cell.cellId}" spans must be positive integers`);
     }
     if (cell.rowIndex + cell.rowSpan > rowCount || cell.columnIndex + cell.columnSpan > columnCount) {
-      throw new Error(`table: Border Graph Cell "${cell.cellId}" span range exceeds canonical tracks`);
+      throw new RetikzTableError(`table: Border Graph Cell "${cell.cellId}" span range exceeds canonical tracks`);
     }
     for (let row = cell.rowIndex; row < cell.rowIndex + cell.rowSpan; row += 1) {
       for (let column = cell.columnIndex; column < cell.columnIndex + cell.columnSpan; column += 1) {
         const occupied = occupancy[row][column];
         if (occupied !== undefined) {
-          throw new Error(
+          throw new RetikzTableError(
             `table: Border Graph Cell "${cell.cellId}" overlaps Cell "${occupied.cellId}" at ${row}:${column}`,
           );
         }
@@ -162,7 +167,7 @@ const boundaryCoordinates = (tracks: ReadonlyArray<TableTrackLayout>): ReadonlyA
   }
   coordinates.push(tracks.at(-1)!.offset + tracks.at(-1)!.size);
   if (!coordinates.every(Number.isFinite)) {
-    throw new Error('table: Border Graph logical boundaries must be finite');
+    throw new RetikzTableError('table: Border Graph logical boundaries must be finite');
   }
   return coordinates;
 };
@@ -348,7 +353,7 @@ export const buildTableBorderGraph = (input: BuildTableBorderGraphInput): TableB
   validateTracks(input.rows, 'row');
   validateTracks(input.columns, 'column');
   if (!isTableBorderMode(input.mode)) {
-    throw new Error('table: Border Graph mode must be collapse or separate');
+    throw new RetikzTableError('table: Border Graph mode must be collapse or separate');
   }
   const { cells, occupancy } = buildOccupancy(input.rows.length, input.columns.length, input.cells);
   Object.values(input.defaults.outer ?? {}).forEach(candidate => validateCandidate(candidate));

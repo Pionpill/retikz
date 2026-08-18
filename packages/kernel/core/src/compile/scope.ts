@@ -15,6 +15,7 @@ import type { NamespaceStack } from './namespace';
 import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
@@ -41,7 +42,7 @@ export type LowerScopeTransformsContext = {
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
 const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
   if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-    throw new Error(`${label} must resolve to a finite point`);
+    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }
   return point;
 };

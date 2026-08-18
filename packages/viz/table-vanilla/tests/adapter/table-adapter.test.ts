@@ -2,6 +2,7 @@ import type { IRDetailTable } from '@retikz/table';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { RetikzFoundationError } from '@retikz/foundation';
 import { createManualTableIR, TableSchema } from '@retikz/table';
 import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -28,16 +29,19 @@ describe('Table Vanilla adapter', () => {
     const anonymous = createManualTableIR({ rows: [[null]] });
     const named = createManualTableIR({ id: 'scores', rows: [[null]] });
 
-    expect(
-      TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
-    ).toMatchObject({
-      id: 'panel/table',
-    });
+    expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node).toMatchObject(
+      {
+        id: 'panel/table',
+      },
+    );
     expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
       id: 'panel/scores',
     });
+    expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrowError(
+      RetikzFoundationError,
+    );
     expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrow(
-      'table vanilla: embed id must be non-empty',
+      'table vanilla embed id must be a non-empty string.',
     );
   });
 
@@ -128,8 +132,11 @@ describe('Table Vanilla adapter', () => {
     const spec = createManualTableIR({ rows: [[null]] });
     const handwritten = embed('table', '', { table: inputTableFromIR(spec) });
 
+    expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrowError(
+      RetikzFoundationError,
+    );
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
-      'table vanilla: embed id must be non-empty',
+      'table vanilla embed id must be a non-empty string.',
     );
     expect(() =>
       normalizeScene(scene([embedTable('same', spec), embedTable('same', spec)]), {

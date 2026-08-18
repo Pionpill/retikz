@@ -5,6 +5,7 @@ import type {
   GraphThemeStyleDefinition,
 } from '../../contract';
 
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { resolveEntityRoleRegistry, resolveEntityVariantRegistry } from '../entity';
 import { resolveGraphThemeStyleRegistry } from '../theme';
 
@@ -39,9 +40,11 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
         continue;
       }
       if (!Object.is(existing, definition)) {
-        throw new Error(
-          `${definitionLabelOf[collectionKey]} '${key}' received a different definition object in one provider assembly.`,
-        );
+        throw new RetikzGraphError({
+          code: RetikzGraphErrorCode.DefinitionConflict,
+          message: `${definitionLabelOf[collectionKey]} '${key}' received a different definition object in one provider assembly.`,
+          details: { capability: collectionKey, key },
+        });
       }
     }
   }

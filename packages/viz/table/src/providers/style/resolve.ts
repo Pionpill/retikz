@@ -4,6 +4,7 @@ import type { TableThemeStyleDefinition } from '../../contract';
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
 import type { ResolvedTableThemeTokens, TableThemeContext } from './types';
 
+import { RetikzTableError } from '../../error';
 import { TableThemeTokenKeySchema, TableThemeTokenMapSchema, TableThemeTokenOverridesSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { getDefaultTableThemePreset } from './presets';
@@ -25,7 +26,7 @@ export const resolveTableThemeTokens = (
   const styles = resolveTableThemeStyleRegistry(tableThemeStyles);
   const definition = style === undefined ? undefined : styles.get(style);
   if (style !== undefined && definition === undefined)
-    throw new Error(`Table theme style '${style}' is not registered.`);
+    throw new RetikzTableError(`Table theme style '${style}' is not registered.`);
   const baseline =
     definition === undefined ? getDefaultTableThemePreset(effectiveTheme.mode) : definition.resolve(effectiveTheme);
   const sharedCategorical = [...effectiveTheme.colors.categorical];

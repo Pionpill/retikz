@@ -2,6 +2,7 @@ import type { FC } from 'react';
 
 import type { PathVisualProps } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import { pickPathVisual, regularPolygonVertices, requireXY } from './shape-helpers';
@@ -27,7 +28,7 @@ export const RegularPolygon: FC<RegularPolygonProps> = props => {
   const center = requireXY(props.center, 'RegularPolygon', 'center');
   const { sides } = props;
   if (!Number.isInteger(sides) || sides < 3) {
-    throw new Error('<RegularPolygon> 的 sides 需为 >= 3 的整数');
+    throw new RetikzReactError(RetikzReactErrorCode.Sugar, '<RegularPolygon> 的 sides 需为 >= 3 的整数');
   }
   const radius = 'radius' in props ? props.radius : props.sideLength / (2 * Math.sin(Math.PI / sides));
   const rotate = props.rotate ?? DEFAULT_ROTATE;

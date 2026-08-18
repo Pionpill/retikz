@@ -12,6 +12,7 @@ import type {
 } from '../../contract';
 import type { IRPosition } from '../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { applyTransformChain } from '../transform';
 import { canonicalizeBoundsRect } from './bounds';
 
@@ -90,7 +91,11 @@ const projectBounds = (
   ];
   const points = corners.map(point => applyTransformChain(point, chain).map(round) as IRPosition);
   const projected = boundsOf(points);
-  if (projected === undefined) throw new Error('internal: spatial handle rect projection produced no points');
+  if (projected === undefined)
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      'internal: spatial handle rect projection produced no points',
+    );
   const rect = boundsToRect(projected);
   return canonicalizeBoundsRect({
     x: round(rect.x),

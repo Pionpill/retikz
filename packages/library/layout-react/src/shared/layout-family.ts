@@ -4,6 +4,7 @@ import type { ReactInputEmbedContext } from '@retikz/react';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import { createInputScene } from '@retikz/react';
 import { Children, Fragment, isValidElement } from 'react';
 
@@ -45,13 +46,23 @@ const resolveLayoutItemChild = (
 }> => {
   const hasIR = props.ir !== undefined;
   const hasChildren = props.children !== undefined;
-  if (hasIR === hasChildren) throw new Error('Layout LayoutItem requires exactly one of children or ir');
+  if (hasIR === hasChildren) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.AuthoringInvalid,
+      message: 'Layout LayoutItem requires exactly one of children or ir',
+      details: { component: 'LayoutItem', fields: ['children', 'ir'] },
+    });
+  }
   if (hasIR) return Object.freeze({ child: props.ir, adapters: [] });
 
   const input = createInputScene(props.children, { embedIdPrefix });
   const children = input.scene.children;
   if (children === undefined || children.length !== 1) {
-    throw new Error('Layout LayoutItem React child must contain exactly one authoring child');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.AuthoringInvalid,
+      message: 'Layout LayoutItem React child must contain exactly one authoring child',
+      details: { component: 'LayoutItem', childCount: children?.length ?? 0 },
+    });
   }
   return Object.freeze({ child: children[0], adapters: input.adapters });
 };
@@ -70,11 +81,19 @@ export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
   const adapters: Array<AnyInputEmbedAdapter> = [];
   const items = flattenLayoutChildren(children).map((child, index) => {
     if (!isValidElement(child) || child.type !== LayoutItem) {
-      throw new Error('Layout layout container direct children must be LayoutItem');
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.AuthoringInvalid,
+        message: 'Layout layout container direct children must be LayoutItem',
+        details: { expectedKind, index },
+      });
     }
     const props = (child as ReactElement<LayoutItemProps>).props;
     if (props.kind !== expectedKind) {
-      throw new Error(`Layout layout container expects LayoutItem kind "${expectedKind}"`);
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.AuthoringInvalid,
+        message: `Layout layout container expects LayoutItem kind "${expectedKind}"`,
+        details: { actualKind: props.kind, expectedKind, index },
+      });
     }
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;

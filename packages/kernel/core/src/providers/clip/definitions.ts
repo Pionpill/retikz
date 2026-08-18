@@ -6,6 +6,7 @@ import type { RectClipShape } from '../../contract';
 import type { IRRectClip } from '../../schemas';
 
 import { defineClip } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { RectClipSchema } from '../../schemas';
 import { defineKeyedProviderArray } from '../registry/index';
 
@@ -17,7 +18,10 @@ const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName =
     case 'rect':
       return definition.kind;
     default:
-      throw new Error(`Unknown builtin clip provider kind '${definition.kind}'.`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Provider,
+        `Unknown builtin clip provider kind '${definition.kind}'.`,
+      );
   }
 };
 

@@ -38,6 +38,7 @@ import type {
   TableTrackLayout,
 } from './types';
 
+import { RetikzTableError, RetikzTableErrorCode } from '../../error';
 import { resolveTableThemeTokens } from '../../providers/style';
 import {
   TableBorderKind,
@@ -117,7 +118,7 @@ const PresentedTableCellSchema = z.discriminatedUnion('kind', [
 
 /** 标记 Table transaction 中失败的精确阶段与可用实体身份 */
 export class RetikzTableTransactionStageError extends RetikzError<
-  'TABLE_TRANSACTION_STAGE_FAILED',
+  typeof RetikzTableErrorCode.TransactionStageFailed,
   Readonly<{ stage: TableTransactionStage; tableId?: string; cellId?: string }>
 > {
   constructor(stage: TableTransactionStage, cause: unknown, tableId?: string, cellId?: string) {
@@ -125,7 +126,7 @@ export class RetikzTableTransactionStageError extends RetikzError<
     const cell = cellId === undefined ? '' : `: Cell "${cellId}"`;
     const message = cause instanceof Error ? cause.message : String(cause);
     super({
-      code: 'TABLE_TRANSACTION_STAGE_FAILED',
+      code: RetikzTableErrorCode.TransactionStageFailed,
       message: `${table}: ${stage}${cell}: ${message}`,
       details: {
         stage,
@@ -236,7 +237,7 @@ const resolveStyleBorderCandidate = (
   tokens: ResolvedTableThemeTokens,
 ): ResolvedTableBorderCandidate => {
   const resolved = resolveBorderCandidate({ ...structuredClone(border), priority: -100 });
-  if (resolved.kind !== 'line') throw new Error('table: internal style border must resolve to a line');
+  if (resolved.kind !== 'line') throw new RetikzTableError('table: internal style border must resolve to a line');
   return {
     ...resolved,
     styleToken: {
@@ -298,7 +299,7 @@ const contributionsOf = (
 /** 校验 Presented model 与 canonical semantic Cells 同序同 identity */
 const assertPresentedAlignment = (presented: PresentedTableModel): void => {
   if (presented.semantic.cells.length !== presented.cells.length) {
-    throw new Error('table: transaction presentation Cell count differs from semantic model');
+    throw new RetikzTableError('table: transaction presentation Cell count differs from semantic model');
   }
   presented.semantic.cells.forEach((cell, index) => {
     const presentedCell = presented.cells[index];
@@ -306,20 +307,22 @@ const assertPresentedAlignment = (presented: PresentedTableModel): void => {
     if (!guarded.success) {
       const issue = guarded.error.issues[0];
       const path = issue.path.length === 0 ? '' : ` at ${issue.path.join('.')}`;
-      throw new Error(`table: transaction presentation Cell ${index} shape differs${path}: ${issue.message}`);
+      throw new RetikzTableError(
+        `table: transaction presentation Cell ${index} shape differs${path}: ${issue.message}`,
+      );
     }
     if (presentedCell.cellId !== cell.id) {
-      throw new Error(`table: transaction presentation Cell ${index} identity differs`);
+      throw new RetikzTableError(`table: transaction presentation Cell ${index} identity differs`);
     }
     if (presentedCell.kind !== cell.payload.kind) {
-      throw new Error(`table: transaction presentation Cell ${index} kind differs`);
+      throw new RetikzTableError(`table: transaction presentation Cell ${index} kind differs`);
     }
     if (
       presentedCell.kind === TableCellPayloadKind.Value &&
       cell.payload.kind === TableCellPayloadKind.Value &&
       presentedCell.rawValue !== cell.payload.value
     ) {
-      throw new Error(`table: transaction presentation Cell ${index} raw value differs`);
+      throw new RetikzTableError(`table: transaction presentation Cell ${index} raw value differs`);
     }
   });
 };

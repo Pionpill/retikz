@@ -23,6 +23,7 @@ import type { AnyMarkDefinition, AnyScaleDefinition } from '../../contract';
 import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
 import type { LowerPlotsOptions } from './types';
 
+import { RetikzPlotError } from '../../error';
 import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '../../providers';
 import { collectSourceFields } from '../source-fields';
 
@@ -49,19 +50,20 @@ export const validateFieldMaps = (
 ): void => {
   if (fieldMaps === undefined) return;
   for (const ref of Object.keys(fieldMaps)) {
-    if (!Object.hasOwn(datasets, ref)) throw new Error(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
+    if (!Object.hasOwn(datasets, ref))
+      throw new RetikzPlotError(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
   }
   if (!Object.hasOwn(fieldMaps, spec.data.reference)) return;
   const fieldMap = fieldMaps[spec.data.reference];
   if (spec.data.model === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: fieldMaps for "${spec.data.reference}" requires data.model (no logical field contract without a model)`,
     );
   }
   const declared = new Set(spec.data.model.map(field => field.name));
   for (const logical of Object.keys(fieldMap)) {
     if (!declared.has(logical)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: fieldMaps["${spec.data.reference}"] maps unknown logical field "${logical}" (not in data.model)`,
       );
     }

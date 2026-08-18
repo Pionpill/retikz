@@ -30,6 +30,7 @@ import type {
 } from '../../../schemas';
 
 import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import { MarkValueKind, PlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';
@@ -164,9 +165,12 @@ export const makeNumericNodeResolver = (
       };
       if (scaleName !== undefined) {
         const found = scaleByName.get(scaleName);
-        if (!found) throw new Error(`lowerPlots: ${channelName} node channel references unknown scale "${scaleName}"`);
+        if (!found)
+          throw new RetikzPlotError(`lowerPlots: ${channelName} node channel references unknown scale "${scaleName}"`);
         if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Linear)
-          throw new Error(`lowerPlots: ${channelName} node channel scale "${scaleName}" must be a linear scale`);
+          throw new RetikzPlotError(
+            `lowerPlots: ${channelName} node channel scale "${scaleName}" must be a linear scale`,
+          );
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
@@ -230,14 +234,14 @@ export const resolveSizeChannel = (
         ? inferFieldType(rows, field)
         : undefined;
     if (effectiveFieldType !== undefined && effectiveFieldType !== DataFieldType.Continuous) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: size channel field "${field}" is ${effectiveFieldType}; size requires a continuous field`,
       );
     }
     const scaleName = channel.scale ?? `__size_${field}`;
     const numeric = rows.map(row => resolveFieldPath(row, field)).filter(isFiniteNumber);
     if (numeric.some(value => value < 0)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: size channel field "${field}" has negative values; size requires non-negative magnitudes`,
       );
     }
@@ -252,9 +256,9 @@ export const resolveSizeChannel = (
     let hasAuthoredDomain = false;
     if (channel.scale !== undefined) {
       const found = scaleByName.get(channel.scale);
-      if (!found) throw new Error(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
+      if (!found) throw new RetikzPlotError(`lowerPlots: size channel references unknown scale "${channel.scale}"`);
       if (!isBuiltinScaleOperation(found) || found.type !== PlotScale.Sqrt)
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: size channel scale "${channel.scale}" must be a sqrt scale (size is a radius / area-perceptual channel)`,
         );
       hasAuthoredDomain = found.domain !== undefined;
@@ -308,7 +312,9 @@ export const resolveShapeChannel = (
     const field = channel.value;
     const fieldType = fieldTypes.get(field);
     if (fieldType !== undefined && fieldType !== DataFieldType.Categorical) {
-      throw new Error(`lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`);
+      throw new RetikzPlotError(
+        `lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`,
+      );
     }
     const values = rows.map(row => resolveFieldPath(row, field));
     const domain = inferCategoryDomain(values);

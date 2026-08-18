@@ -1,4 +1,5 @@
 import type { LoweredTex, LoweredTexPaint, LoweredTexPath, PathCommand } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
 
 import { RetikzError } from '@retikz/foundation';
@@ -7,7 +8,13 @@ import { AFFINE_IDENTITY, multiplyAffine } from '@retikz/math';
 import type { TexLoweringDiagnostic, TexLoweringResult } from '../lower/internal';
 import type { PointMapper } from './path-d';
 
-import { isFiniteNonSingular, parseTransform, RetikzSvgTransformError,similarityScale } from './matrix';
+import {
+  isFiniteNonSingular,
+  parseTransform,
+  RetikzSvgTransformError,
+  RetikzSvgTransformErrorCode,
+  similarityScale,
+} from './matrix';
 import { parsePathD, transformCommands } from './path-d';
 
 type SvgNode = {
@@ -31,24 +38,31 @@ type PaintContext = {
 
 type ParsedStyle = Partial<Record<string, string>>;
 
-class RetikzSvgLoweringError extends RetikzError<
-  TexLoweringDiagnostic['kind'],
-  Readonly<{ kind: TexLoweringDiagnostic['kind'] }>
-> {
-  readonly kind: TexLoweringDiagnostic['kind'];
+const RetikzSvgLoweringErrorCode = {
+  Unsupported: 'unsupported-svg',
+  Malformed: 'malformed-svg',
+} as const satisfies Readonly<Record<string, TexLoweringDiagnostic['kind']>>;
 
-  constructor(kind: TexLoweringDiagnostic['kind'], message: string) {
+type RetikzSvgLoweringErrorCodeValue = ValueOf<typeof RetikzSvgLoweringErrorCode>;
+
+class RetikzSvgLoweringError extends RetikzError<
+  RetikzSvgLoweringErrorCodeValue,
+  Readonly<{ kind: RetikzSvgLoweringErrorCodeValue }>
+> {
+  readonly kind: RetikzSvgLoweringErrorCodeValue;
+
+  constructor(kind: RetikzSvgLoweringErrorCodeValue, message: string) {
     super({ code: kind, message, details: { kind } });
     this.kind = kind;
   }
 }
 
 const unsupported = (message: string): never => {
-  throw new RetikzSvgLoweringError('unsupported-svg', message);
+  throw new RetikzSvgLoweringError(RetikzSvgLoweringErrorCode.Unsupported, message);
 };
 
 const malformed = (message: string): never => {
-  throw new RetikzSvgLoweringError('malformed-svg', message);
+  throw new RetikzSvgLoweringError(RetikzSvgLoweringErrorCode.Malformed, message);
 };
 
 const attribute = (node: SvgNode, name: string): string | undefined => node.attributes.get(name);
@@ -272,7 +286,10 @@ const emitDrawable = (
     const href = attribute(node, 'href') ?? attribute(node, 'xlink:href');
     const definition = href ? context.definitions.get(href.replace(/^#/, '')) : undefined;
     if (definition === undefined)
-      throw new RetikzSvgLoweringError('malformed-svg', `Unknown SVG use reference: ${String(href)}`);
+      throw new RetikzSvgLoweringError(
+        RetikzSvgLoweringErrorCode.Malformed,
+        `Unknown SVG use reference: ${String(href)}`,
+      );
     effectiveNode = definition;
     const x = finiteNumber(attribute(node, 'x'), 0);
     const y = finiteNumber(attribute(node, 'y'), 0);
@@ -282,7 +299,8 @@ const emitDrawable = (
   if (!isFiniteNonSingular(matrix)) unsupported('SVG drawable transform must be finite and non-singular');
   if (effectiveNode.name === 'path') {
     const data = attribute(effectiveNode, 'd');
-    if (data === undefined) throw new RetikzSvgLoweringError('malformed-svg', 'SVG path is missing d');
+    if (data === undefined)
+      throw new RetikzSvgLoweringError(RetikzSvgLoweringErrorCode.Malformed, 'SVG path is missing d');
     commands = parsePathD(data);
   } else if (effectiveNode.name === 'rect') {
     commands = rectCommands(effectiveNode);
@@ -314,7 +332,10 @@ const emitDrawable = (
   if (stroke.kind !== 'none') {
     const scale = similarityScale(matrix);
     if (scale === undefined)
-      throw new RetikzSvgLoweringError('unsupported-svg', 'Visible SVG stroke requires a similarity transform');
+      throw new RetikzSvgLoweringError(
+        RetikzSvgLoweringErrorCode.Unsupported,
+        'Visible SVG stroke requires a similarity transform',
+      );
     path.strokeWidth = (definitionPaint.strokeWidth ?? 1) * scale * context.fontScale;
     if (definitionPaint.strokeOpacity !== undefined) path.strokeOpacity = definitionPaint.strokeOpacity;
   }
@@ -356,7 +377,7 @@ export const parseMathJaxSvgResult = (svg: string, fontSize: number, source = ''
     if (!Number.isFinite(fontSize) || fontSize <= 0) malformed(`Invalid font size: ${fontSize}`);
     const document = parseXml(svg);
     const rootSvg = findRootSvg(document);
-    if (!rootSvg) throw new RetikzSvgLoweringError('malformed-svg', 'MathJax SVG root is missing');
+    if (!rootSvg) throw new RetikzSvgLoweringError(RetikzSvgLoweringErrorCode.Malformed, 'MathJax SVG root is missing');
     const viewBox = (attribute(rootSvg, 'viewBox') ?? '')
       .trim()
       .split(/[\s,]+/)
@@ -395,9 +416,9 @@ export const parseMathJaxSvgResult = (svg: string, fontSize: number, source = ''
     const kind =
       error instanceof RetikzSvgLoweringError
         ? error.kind
-        : error instanceof RetikzSvgTransformError && error.kind === 'unsupported'
-          ? 'unsupported-svg'
-          : 'malformed-svg';
+        : error instanceof RetikzSvgTransformError && error.kind === RetikzSvgTransformErrorCode.Unsupported
+          ? RetikzSvgLoweringErrorCode.Unsupported
+          : RetikzSvgLoweringErrorCode.Malformed;
     return {
       ok: false,
       diagnostic: {

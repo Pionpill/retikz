@@ -23,6 +23,7 @@ import type { Rect } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
 import { rootMeta, slug } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
 import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
 import { resolveMarkChannels } from '../../resolve/channel';
@@ -137,14 +138,14 @@ const expandPlot = (
   const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
   if (!Number.isFinite(width) || width <= 0) {
-    throw new Error(`lowerPlots: width must be a positive finite number, got ${width}`);
+    throw new RetikzPlotError(`lowerPlots: width must be a positive finite number, got ${width}`);
   }
   if (!Number.isFinite(height) || height <= 0) {
-    throw new Error(`lowerPlots: height must be a positive finite number, got ${height}`);
+    throw new RetikzPlotError(`lowerPlots: height must be a positive finite number, got ${height}`);
   }
 
   if (!Object.hasOwn(datasets, node.data.reference)) {
-    throw new Error(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
+    throw new RetikzPlotError(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
   }
 
   // provenance 总开关：provenance / datumProvenance / datumIdField 任一开即启用（后两者蕴含 provenance）；
@@ -298,7 +299,9 @@ const expandPlot = (
   if (facets.length > 0) {
     const defaultScope = coordinateScopes.scopes.find(scope => scope.id === coordinateScopes.defaultScope);
     if (defaultScope === undefined) {
-      throw new Error(`lowerPlots: default coordinate view "${coordinateScopes.defaultScope}" is not registered`);
+      throw new RetikzPlotError(
+        `lowerPlots: default coordinate view "${coordinateScopes.defaultScope}" is not registered`,
+      );
     }
 
     const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
@@ -338,7 +341,9 @@ const expandPlot = (
     const panelWidth = (panelGridWidth - Math.max(0, columnCount - 1) * panelGap) / columnCount;
     const panelHeight = (panelGridHeight - Math.max(0, rowCount - 1) * panelGap) / rowCount;
     if (panelWidth <= 0 || panelHeight <= 0) {
-      throw new Error(`lowerPlots: panelGap ${panelGap} leaves no room for ${columnCount}x${rowCount} facet panels`);
+      throw new RetikzPlotError(
+        `lowerPlots: panelGap ${panelGap} leaves no room for ${columnCount}x${rowCount} facet panels`,
+      );
     }
     const panelStrideX = panelWidth + panelGap;
     const panelStrideY = panelHeight + panelGap;
@@ -496,7 +501,7 @@ const expandPlot = (
       if (!hasSelectedTarget) continue;
       const count = panels.filter(panel => axisGridTargetsFacetPanel(guide, panel)).length;
       if (count === 0) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: axis grid selector for dimension "${guide.dimension}" matches no target facet panel`,
         );
       }
@@ -659,7 +664,7 @@ const expandPlot = (
       const coordinateScopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
       const frame = frameByScope.get(coordinateScopeId);
       if (frame === undefined) {
-        throw new Error(`lowerPlots: coordinateView "${coordinateScopeId}" is not registered`);
+        throw new RetikzPlotError(`lowerPlots: coordinateView "${coordinateScopeId}" is not registered`);
       }
       const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
       const layer = lowerMark(

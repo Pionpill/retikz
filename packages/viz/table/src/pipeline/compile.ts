@@ -6,6 +6,7 @@ import { compileToScene } from '@retikz/core';
 import type { IRTable } from '../schemas';
 import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
+import { RetikzTableError } from '../error';
 import { TABLE_NAMESPACE, TableComposite, TableSchema } from '../schemas';
 import { lowerTables } from './resolve';
 
@@ -40,7 +41,9 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
   );
   const matches = result.artifacts.filter(isRootTableArtifact);
   if (matches.length !== 1) {
-    throw new Error(`table: compileTable expected exactly one root table.table artifact, received ${matches.length}`);
+    throw new RetikzTableError(
+      `table: compileTable expected exactly one root table.table artifact, received ${matches.length}`,
+    );
   }
   return Object.freeze({ ...result, manifest: matches[0].value });
 };

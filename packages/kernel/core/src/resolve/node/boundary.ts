@@ -3,6 +3,7 @@ import type { ProviderCollection } from '../../providers/registry';
 import type { IRBoundary, IRJsonObject } from '../../schemas';
 import type { BoundaryReferenceResolution } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { parseProviderPayload } from '../provider-payload';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
@@ -80,7 +81,8 @@ export const resolveBoundaryReference = (
       isShape: true,
     };
   }
-  throw new Error(
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Resolve,
     `Unknown connection surface provider '${type}'; registered boundaries: ${registeredNames(context.boundaryRegistry)}; registered shapes: ${registeredNames(context.shapeRegistry)}. Pass boundary definitions via options.boundaries or shape definitions via options.shapes.`,
   );
 };

@@ -2,16 +2,18 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from './types';
 
+import { RetikzInspectionErrorCode } from '../error';
+
 /** Inspect fail-loud 错误，保留结构化 origin 与原始 cause */
 export class RetikzInspectionCompileError extends RetikzError<
-  'INSPECTION_COMPILE_FAILED',
+  typeof RetikzInspectionErrorCode.CompileFailed,
   Readonly<{ origin: InspectionDiagnosticOrigin }>
 > {
   /** 错误发生的 selection/request/output 阶段 */
   readonly origin: InspectionDiagnosticOrigin;
 
   constructor(message: string, origin: InspectionDiagnosticOrigin, options?: ErrorOptions) {
-    super({ code: 'INSPECTION_COMPILE_FAILED', message, details: { origin }, cause: options?.cause });
+    super({ code: RetikzInspectionErrorCode.CompileFailed, message, details: { origin }, cause: options?.cause });
     this.origin = origin;
     Object.freeze(this);
   }

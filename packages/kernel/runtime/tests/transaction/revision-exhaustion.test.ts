@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { RetikzRuntimeErrorCode } from '../../src';
 import { createNextRuntimeRevision, createRuntimeRevision } from '../../src/transaction';
 
 describe('runtime revision exhaustion', () => {
@@ -7,7 +8,7 @@ describe('runtime revision exhaustion', () => {
     expect(createNextRuntimeRevision(createRuntimeRevision(0))).toBe(1);
     expect(() => createNextRuntimeRevision(createRuntimeRevision(Number.MAX_SAFE_INTEGER))).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_REVISION_EXHAUSTED',
+        code: RetikzRuntimeErrorCode.RevisionExhausted,
         phase: 'revision',
         cause: Number.MAX_SAFE_INTEGER,
       }),

@@ -3,6 +3,7 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
 
+import { assertNonEmptyString } from '@retikz/foundation';
 import {
   createPlotProvider as createPlotDependencyProvider,
   createPlotProviderContribution,
@@ -13,7 +14,6 @@ import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
 import type { InputPlotEmbed } from '../spec';
 
-import { assertPlotVanillaNonEmptyString } from '../shared';
 import { plotIROf } from '../spec';
 
 /** 将 Plot 根节点包进可选的面板 Scope */
@@ -72,7 +72,7 @@ export const resolvePlotContribution = (request: PlotContributionRequest): Resol
 export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
   kind: PLOT_NAMESPACE,
   lower: (props, context) => {
-    assertPlotVanillaNonEmptyString(context.id, 'plot vanilla: embed id must be non-empty');
+    assertNonEmptyString(context.id, 'plot vanilla embed id');
     const spec = plotIROf(props);
     const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
     const node =

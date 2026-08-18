@@ -30,6 +30,7 @@ import {
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
 import type { ContainerArtifact, ContainerLayoutItemArtifact, IRContainer } from '../../schemas';
 
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { resolveGraphDefinitionOptions } from '../../providers';
 import { GraphType } from '../../shared';
 import { lowerGraphPresentationChildren } from '../presentation';
@@ -108,7 +109,13 @@ const shellNodeOf = (node: IRContainer, allocation: LayoutRect): IRChild => ({
 
 const dividerPathOf = (node: IRContainer, x: number, y: number, width: number): IRChild => {
   const divider = node.appearance.divider;
-  if (divider === false) throw new Error('Cannot construct a divider path when divider is disabled');
+  if (divider === false) {
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.CompileInvariant,
+      message: 'Cannot construct a divider path when divider is disabled',
+      details: { nodeId: node.id, reason: 'divider-disabled' },
+    });
+  }
   return {
     type: 'path',
     children: [
@@ -192,7 +199,13 @@ const compileContainerWithOptions = (
   const synthetic = syntheticFlexOf(node, regions);
   const flexResult = compileFlexLayout(synthetic, context);
   const flexArtifact = flexResult.artifact;
-  if (flexArtifact === undefined) throw new Error('Container FlexLayout owner returned no artifact');
+  if (flexArtifact === undefined) {
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.CompileInvariant,
+      message: 'Container FlexLayout owner returned no artifact',
+      details: { nodeId: node.id, reason: 'flex-artifact-missing' },
+    });
+  }
   const allocation = flexResult.allocationBounds ?? flexArtifact.container.allocationBounds;
   const content = flexArtifact.container.contentBounds;
 

@@ -10,6 +10,7 @@ import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCoreThemeColors } from '@retikz/core';
 import { defineRetainedRenderer, RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
+import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -1029,8 +1030,8 @@ describe('@retikz/vanilla retained mount', () => {
     expect(() => view.dispose()).not.toThrow();
     expect(dispose).toHaveBeenCalledTimes(2);
     expect(view.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
     ]);
     expect(() => view.update(source('#22c55e'))).toThrow('Processing controller is disposed');
 

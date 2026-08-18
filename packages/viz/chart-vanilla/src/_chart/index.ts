@@ -10,7 +10,7 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 import type { PlotSource } from '@retikz/plot-vanilla';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
-import { BaseChartRecipe, CHART_NAMESPACE, createChart as createBaseChart } from '@retikz/chart';
+import { BaseChartRecipe, CHART_NAMESPACE, createChart as createBaseChart, RetikzChartError } from '@retikz/chart';
 import { plotIROf } from '@retikz/plot-vanilla';
 import { embed, renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
 
@@ -75,7 +75,7 @@ export type RenderChartResult = Readonly<{
 /** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG */
 export const renderChart = (input: ChartAuthoringResult, options: RenderChartOptions = {}): RenderChartResult => {
   if (Object.hasOwn(options, 'compileDriver')) {
-    throw new Error('Vanilla compile drivers require authored IR or a plain figure spec');
+    throw new RetikzChartError('Vanilla compile drivers require authored IR or a plain figure spec');
   }
   const { compile: compileOptions, ...renderOptions } = options;
   const {
@@ -104,7 +104,7 @@ export const renderChart = (input: ChartAuthoringResult, options: RenderChartOpt
     },
   );
   if (result.compileResult === undefined) {
-    throw new Error('chart vanilla: InputScene processing must produce a Core compile result');
+    throw new RetikzChartError('chart vanilla: InputScene processing must produce a Core compile result');
   }
   const svg = renderToSvgString(result.scene, renderOptions);
   return { svg, compileResult: result.compileResult };

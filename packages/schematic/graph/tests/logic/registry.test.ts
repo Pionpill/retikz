@@ -65,7 +65,12 @@ describe('Graph definition registry diagnostics', () => {
   it('rejects a custom role that collides with a builtin role', () => {
     const duplicate = Graph.defineEntityRole({ role: 'stage', shape: 'circle', padding: 0 });
 
-    expect(() => Graph.createGraphDefinitions({ entityRoles: [duplicate] })).toThrow(/role 'stage'.*registered/i);
+    expect(() => Graph.createGraphDefinitions({ entityRoles: [duplicate] })).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionDuplicate,
+        details: { capability: 'entity-role', key: 'stage' },
+      }),
+    );
   });
 
   it('rejects duplicate custom role and variant keys', () => {
@@ -74,11 +79,17 @@ describe('Graph definition registry diagnostics', () => {
     const firstVariant = Graph.defineEntityVariant({ variant: 'muted', resolve: () => ({}) });
     const secondVariant = Graph.defineEntityVariant({ variant: 'muted', resolve: () => ({}) });
 
-    expect(() => Graph.createGraphDefinitions({ entityRoles: [firstRole, secondRole] })).toThrow(
-      /role 'service'.*registered/i,
+    expect(() => Graph.createGraphDefinitions({ entityRoles: [firstRole, secondRole] })).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionDuplicate,
+        details: { capability: 'entity-role', key: 'service' },
+      }),
     );
-    expect(() => Graph.createGraphDefinitions({ entityVariants: [firstVariant, secondVariant] })).toThrow(
-      /variant 'muted'.*registered/i,
+    expect(() => Graph.createGraphDefinitions({ entityVariants: [firstVariant, secondVariant] })).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionDuplicate,
+        details: { capability: 'entity-variant', key: 'muted' },
+      }),
     );
   });
 

@@ -6,6 +6,7 @@ import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 import type { InputAuthoringSite, InputRuntimeMeta } from '../normalize';
 import type { CommonOptions, RenderInput } from './types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import { prepareProcessingInput, processToStaticInputResult } from '../processing';
 
@@ -66,7 +67,10 @@ export const prepareVanillaCompileInput = (
 export const toSceneResult = (input: RenderInput, options: CommonOptions): SceneResult => {
   if ('primitives' in input) {
     if (options.compileDriver !== undefined) {
-      throw new Error('Vanilla compile drivers require authored IR or an InputScene');
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Runtime,
+        'Vanilla compile drivers require authored IR or an InputScene',
+      );
     }
     return {
       scene: input,

@@ -1,6 +1,7 @@
 import type { AnyScaleDefinition } from '../../contract';
 
 import { extractScaleType } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features';
 
 /**
@@ -24,7 +25,7 @@ export const resolveScaleRegistry = (custom?: ReadonlyArray<AnyScaleDefinition>)
   for (const def of custom ?? []) {
     const type = extractScaleType(def.schema);
     if (registry.has(type)) {
-      throw new Error(`lowerPlots: duplicate scale registration: "${type}"`);
+      throw new RetikzPlotError(`lowerPlots: duplicate scale registration: "${type}"`);
     }
     registry.set(type, def);
   }

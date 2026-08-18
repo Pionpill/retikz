@@ -6,7 +6,9 @@ import {
   createRuntimeIdentity,
   createRuntimeOwnerRegistry,
   defineRuntimeOwner,
+  RetikzRuntimeErrorCode,
   RetikzRuntimeOwnerError,
+  RuntimeDiagnosticCode,
 } from '../../src';
 import { createRuntimeOwnerExecutor } from '../../src/owner/executor';
 
@@ -89,7 +91,7 @@ describe('runtime owner executor', () => {
 
     expect(() => createExecutor(definition).prepare(definition, { values: [1] })).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_OWNER_COLLECT_IDENTITIES_FAILED',
+        code: RetikzRuntimeErrorCode.CollectIdentitiesFailed,
         owner: 'fixture',
         phase: 'collect-identities',
       }),
@@ -118,16 +120,16 @@ describe('runtime owner executor', () => {
     const readExecutor = createExecutor(readDefinition);
 
     expect(() => captureExecutor.prepare(captureDefinition, { values: [] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_CAPTURE_FAILED', phase: 'capture', cause: captureCause }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, phase: 'capture', cause: captureCause }),
     );
     try {
       readExecutor.prepare(readDefinition, { values: [] });
       throw new Error('expected read failure');
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeOwnerError);
-      expect(error).toMatchObject({ code: 'RUNTIME_OWNER_READ_FAILED', phase: 'read', cause: readCause });
+      expect(error).toMatchObject({ code: RetikzRuntimeErrorCode.ReadFailed, phase: 'read', cause: readCause });
       expect((error as RetikzRuntimeOwnerError).diagnostics).toEqual([
-        expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', cause: disposeCause }),
+        expect.objectContaining({ code: RuntimeDiagnosticCode.OwnerDisposeFailed, cause: disposeCause }),
       ]);
     }
   });
@@ -151,7 +153,7 @@ describe('runtime owner executor', () => {
     const failingLeft = failingExecutor.prepare(failingDefinition, { values: [1] }).value;
     const failingRight = failingExecutor.prepare(failingDefinition, { values: [2] }).value;
     expect(() => failingExecutor.compare(failingDefinition, failingLeft, failingRight)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_COMPARE_FAILED', phase: 'compare', cause: compareCause }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.CompareFailed, phase: 'compare', cause: compareCause }),
     );
   });
 
@@ -164,7 +166,7 @@ describe('runtime owner executor', () => {
     const executor = createExecutor(registered);
 
     expect(() => executor.prepare(unknown, 1)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_UNKNOWN', owner: 'unknown' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown, owner: 'unknown' }),
     );
   });
 
@@ -245,12 +247,12 @@ describe('runtime owner executor', () => {
       throw new Error('expected validation failure');
     } catch (error) {
       expect(error).toMatchObject({
-        code: 'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED',
+        code: RetikzRuntimeErrorCode.ChangeSetValidationFailed,
         phase: 'validate-change-set',
         cause: validationCause,
       });
       expect((error as RetikzRuntimeOwnerError).diagnostics).toEqual([
-        expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', cause: disposeCause }),
+        expect.objectContaining({ code: RuntimeDiagnosticCode.OwnerDisposeFailed, cause: disposeCause }),
       ]);
     }
   });
@@ -298,7 +300,7 @@ describe('runtime owner executor', () => {
     const prepared = executor.prepare(definition, { values: [] }).value;
 
     expect(executor.retire(definition, prepared).diagnostics).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', cause: disposeCause }),
+      expect.objectContaining({ code: RuntimeDiagnosticCode.OwnerDisposeFailed, cause: disposeCause }),
     ]);
     expect(() => executor.retire(definition, prepared)).toThrow(/already retired/i);
   });

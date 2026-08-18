@@ -22,6 +22,8 @@ import {
   GraphInputEmbedAdapter,
   relation,
   RelationInputEmbedAdapter,
+  RetikzGraphVanillaError,
+  RetikzGraphVanillaErrorCode,
 } from '../src';
 
 const normalizeChildren = (children: ReadonlyArray<InputChild>) => {
@@ -64,6 +66,21 @@ describe('@retikz/graph-vanilla package boundary', () => {
 });
 
 describe('Graph Vanilla semantic authoring', () => {
+  it('uses one package-level structured error when normalizeScene context is missing', () => {
+    expect(() =>
+      GraphInputEmbedAdapter.lower(
+        { children: [] },
+        { ...contextOf('graph', 'graph.graph'), normalizeChildren: undefined },
+      ),
+    ).toThrowError(
+      expect.objectContaining({
+        name: 'RetikzGraphVanillaError',
+        code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+      }),
+    );
+    expect(RetikzGraphVanillaError).toBeDefined();
+  });
+
   it('creates four adapters and preserves Entity role and variant', () => {
     const adapters = createGraphVanillaAdapters();
     const nodeAdapter = adapters.find(adapter => adapter.kind === 'graph.entity');

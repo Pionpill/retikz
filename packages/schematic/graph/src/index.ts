@@ -1,4 +1,5 @@
 export * from './contract';
+export * from './errors';
 export * from './pipeline';
 export * from './providers';
 export * from './resolve';

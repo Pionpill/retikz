@@ -4,6 +4,8 @@ import { boundsOf, boundsToRect, expandBounds, isFiniteBoundsRect } from '@retik
 
 import type { IRPosition } from '../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** 对 layout 四字段应用输出精度 */
 export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: number) => number): BoundsRect => ({
   x: round(x),
@@ -15,7 +17,8 @@ export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: numb
 /** 校验自动 layout 不含非 finite 值 */
 export const assertFiniteLayout = (layout: BoundsRect): BoundsRect => {
   if (!isFiniteBoundsRect(layout)) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
       `Node layout produced non-finite bounds (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check shape geometry (e.g. extreme radius).`,
     );
   }

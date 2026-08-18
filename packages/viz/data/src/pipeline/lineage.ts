@@ -10,6 +10,7 @@ import type {
 import type { ExternalRow } from '../shared';
 
 import { DataSourceIdentityMode } from '../contract';
+import { RetikzDataError } from '../error';
 import { resolveFieldPath } from '../providers';
 import { readSourceIndicesOf } from './provenance';
 
@@ -47,14 +48,14 @@ const normalizeSampleOptions = (
 ): false | DataValueSampleOptions => {
   if (value === undefined || value === false) return false;
   if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
-    throw new Error(`data lineage: ${label}.maxRows must be a positive integer`);
+    throw new RetikzDataError(`data lineage: ${label}.maxRows must be a positive integer`);
   }
   if (!Array.isArray(value.fields) || value.fields.length === 0) {
-    throw new Error(`data lineage: ${label}.fields must be a non-empty field whitelist`);
+    throw new RetikzDataError(`data lineage: ${label}.fields must be a non-empty field whitelist`);
   }
   value.fields.forEach((field, index) => {
     if (typeof field !== 'string' || field.length === 0) {
-      throw new Error(`data lineage: ${label}.fields[${index}] must be a non-empty string`);
+      throw new RetikzDataError(`data lineage: ${label}.fields[${index}] must be a non-empty string`);
     }
   });
   return { maxRows: value.maxRows, fields: [...value.fields] };
@@ -71,10 +72,10 @@ const normalizeSourceIdentityOptions = (
   const mode: unknown = value.mode ?? DataSourceIdentityMode.Summary;
   const maxIndices = value.maxIndices ?? DEFAULT_SOURCE_IDENTITY_LIMIT;
   if (mode !== DataSourceIdentityMode.Summary && mode !== DataSourceIdentityMode.Full) {
-    throw new Error('data lineage: sourceIdentity.mode must be "summary" or "full"');
+    throw new RetikzDataError('data lineage: sourceIdentity.mode must be "summary" or "full"');
   }
   if (!Number.isInteger(maxIndices) || maxIndices < 1) {
-    throw new Error('data lineage: sourceIdentity.maxIndices must be a positive integer');
+    throw new RetikzDataError('data lineage: sourceIdentity.maxIndices must be a positive integer');
   }
   return { mode, maxIndices };
 };

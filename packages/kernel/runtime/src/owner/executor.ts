@@ -10,7 +10,13 @@ import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeOwnerError, RetikzRuntimeOwnerErrorCode, RuntimeOwnerPhase } from '../error';
+import {
+  RetikzRuntimeError,
+  RetikzRuntimeErrorCode,
+  RetikzRuntimeOwnerError,
+  RetikzRuntimeOwnerErrorCode,
+  RuntimeOwnerPhase,
+} from '../error';
 import { createRuntimeIdentityLookup } from '../identity';
 import { getRuntimeOwnerRegistryExecutor } from '../registry';
 
@@ -104,10 +110,20 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
   ): void => {
     getRuntimeOwnerRegistryExecutor(registry, definition);
     if (preparedDefinitions.get(prepared) !== definition) {
-      throw new Error(`runtime owner executor: prepared value does not belong to "${definition.key}"`);
+      throw new RetikzRuntimeError({
+        code: RetikzRuntimeErrorCode.InternalInvariant,
+        message: `runtime owner executor: prepared value does not belong to "${definition.key}"`,
+        phase: 'owner-retire',
+        cause: prepared,
+      });
     }
     if (!active.has(prepared)) {
-      throw new Error(`runtime owner executor: prepared value for "${definition.key}" was already retired`);
+      throw new RetikzRuntimeError({
+        code: RetikzRuntimeErrorCode.InternalInvariant,
+        message: `runtime owner executor: prepared value for "${definition.key}" was already retired`,
+        phase: 'owner-retire',
+        cause: prepared,
+      });
     }
   };
 
@@ -142,7 +158,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       }
       if (current !== undefined && executor.dispose !== undefined && value === current.value) {
         throw new RetikzRuntimeError({
-          code: 'RUNTIME_OWNER_OWNERSHIP_ALIAS',
+          code: RetikzRuntimeErrorCode.OwnerOwnershipAlias,
           phase: 'capture',
           owner: definition.key,
           cause: value,

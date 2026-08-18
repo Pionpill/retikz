@@ -19,6 +19,7 @@ import type { LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
 import type { FlexLayoutArtifact, IRFlexLayout, IRFlexLayoutItem } from './types';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import {
   alignAllocationInSlot,
   appendLayoutSpacing,
@@ -266,7 +267,11 @@ const outgoingLineGuide = (
         Math.abs(candidate.coordinate - canonical.coordinate) >
         layoutEpsilon(candidate.coordinate, canonical.coordinate)
       ) {
-        throw new Error(`FlexLayout ${name} participants did not resolve to one aligned coordinate`);
+        throw new RetikzLayoutError({
+          code: RetikzLayoutErrorCode.PipelineInvariant,
+          message: `FlexLayout ${name} participants did not resolve to one aligned coordinate`,
+          details: { layout: 'flex', name, phase: 'alignment' },
+        });
       }
     }
     return canonical.coordinate;
@@ -564,7 +569,13 @@ export const compileFlexLayout = (
     }
   }
   const outputChildren = placedBySource.map(placed => {
-    if (placed === undefined) throw new Error('FlexLayout failed to place an authored item');
+    if (placed === undefined) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.PipelineInvariant,
+        message: 'FlexLayout failed to place an authored item',
+        details: { layout: 'flex', phase: 'placement' },
+      });
+    }
     return context.replay(placed.result, {
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     });
@@ -600,7 +611,13 @@ export const compileFlexLayout = (
     line.itemIndexes.forEach(sourceIndex => lineIndexBySource.set(sourceIndex, lineIndex)),
   );
   const items = placedBySource.map((placed, sourceIndex) => {
-    if (placed === undefined) throw new Error('FlexLayout failed to artifact an authored item');
+    if (placed === undefined) {
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.PipelineInvariant,
+        message: 'FlexLayout failed to artifact an authored item',
+        details: { layout: 'flex', phase: 'artifact' },
+      });
+    }
     const authored = measured[sourceIndex].authored;
     const alignmentGuide =
       placed.alignment === LayoutAlignment.FirstBaseline || placed.alignment === LayoutAlignment.LastBaseline

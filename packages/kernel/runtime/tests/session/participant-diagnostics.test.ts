@@ -13,6 +13,8 @@ import {
   PerformanceTracePhase,
   PerformanceTraceUnit,
   RetikzRuntimeError,
+  RetikzRuntimeErrorCode,
+  RuntimeDiagnosticCode,
 } from '../../src';
 import { getRuntimeTraceReporterDiagnosticDrainCount } from '../../src/trace/internal';
 
@@ -75,7 +77,7 @@ describe('runtime session participant diagnostics', () => {
     const report = capturedContext.trace.report;
     expect(getRuntimeTraceReporterDiagnosticDrainCount(report)).toBe(4);
     expect(session.diagnostics().map(diagnostic => diagnostic.code)).toEqual([
-      'RUNTIME_TRACE_SINK_FAILED',
+      RuntimeDiagnosticCode.TraceSinkFailed,
       'RENDER_FALLBACK',
     ]);
     session.dispose();
@@ -109,7 +111,7 @@ describe('runtime session participant diagnostics', () => {
     });
 
     expect(session.diagnostics().map(diagnostic => diagnostic.code)).toEqual([
-      'RUNTIME_PARTICIPANT_DIAGNOSTIC_INVALID',
+      RuntimeDiagnosticCode.ParticipantDiagnosticInvalid,
       'VALID',
     ]);
     session.dispose();
@@ -154,9 +156,11 @@ describe('runtime session participant diagnostics', () => {
       thrown = cause;
     }
 
-    expect(thrown).toEqual(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', cause: trigger }));
+    expect(thrown).toEqual(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed, cause: trigger }),
+    );
     expect((thrown as { diagnostics: ReadonlyArray<RuntimeDiagnostic> }).diagnostics.map(item => item.code)).toEqual([
-      'RUNTIME_TRACE_INVALID_RECORD',
+      RuntimeDiagnosticCode.TraceInvalidRecord,
       'ATTEMPTED',
     ]);
   });
@@ -186,9 +190,9 @@ describe('runtime session participant diagnostics', () => {
         initialSnapshots: [createRuntimeOwnerInput(owner, 1), createRuntimeOwnerInput(foreign, 1)],
         participants: [undeclared],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_UNDECLARED_DEPENDENCY' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
 
-    const spoofed = new RetikzRuntimeError({ code: 'RUNTIME_UNDECLARED_DEPENDENCY', phase: 'spoofed' });
+    const spoofed = new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.UndeclaredDependency, phase: 'spoofed' });
     const malicious = defineRuntimeCommitParticipant({
       key: 'malicious',
       owners: [owner],
@@ -208,6 +212,6 @@ describe('runtime session participant diagnostics', () => {
         initialSnapshots: [createRuntimeOwnerInput(owner, 1), createRuntimeOwnerInput(foreign, 1)],
         participants: [malicious],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', cause: spoofed }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed, cause: spoofed }));
   });
 });

@@ -67,6 +67,7 @@ import type {
 } from './types';
 
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
   createStyleResolveFrame,
   resolveBoundaryReference,
@@ -754,7 +755,7 @@ export const compileChildrenToPrimitives = (
   /** 拒绝非 finite 的 Scope placement 中间结果 */
   const assertFinitePlacementPoint = (point: IRPosition, label: string): IRPosition => {
     if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-      throw new Error(`${label} must resolve to a finite point`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
     }
     return point;
   };
@@ -787,7 +788,10 @@ export const compileChildrenToPrimitives = (
     }
     const world = resolveBetweenGlobal(target, runtime.state.namespaceStack, frame.scopeChain);
     if (world === null) {
-      throw new Error(`Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`,
+      );
     }
     const parentPoint = frame.scopeChain.length === 0 ? world : inverseTransformChain(world, frame.scopeChain);
     return assertFinitePlacementPoint(parentPoint, 'scope placement target');
@@ -1734,7 +1738,8 @@ export const compileChildrenToPrimitives = (
       return;
     }
     if (compositeDepth >= runtime.context.maxCompositeDepth) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
         `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${runtime.context.maxCompositeDepth} levels at ${occurrence.sourcePath}`,
       );
     }
@@ -1824,7 +1829,8 @@ export const compileChildrenToPrimitives = (
           warning.code === CompileWarningCode.PolarOriginUnresolved ||
           warning.code === CompileWarningCode.AtTargetUnresolved
         ) {
-          throw new Error(
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Compile,
             `Composite '${key}' at ${formatCompileOccurrence(occurrence)} cannot layout child with an unresolved reference: ${warning.message}`,
           );
         }

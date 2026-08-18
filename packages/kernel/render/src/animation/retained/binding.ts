@@ -3,6 +3,8 @@ import { RetikzError } from '@retikz/foundation';
 import type { WaapiDescriptor } from '../../svg/animation';
 import type { AnimationControls } from '../runtime';
 
+import { RetikzRenderErrorCode } from '../../error';
+
 /** WAAPI 接管前的 inline transform style 快照 */
 type WaapiStyleBase = Readonly<{
   /** ownership 链的基础节点判别值 */
@@ -33,7 +35,7 @@ const waapiStyleOwnerships = new WeakMap<SVGElement, WaapiStyleOwnership>();
 
 /** WAAPI binding 构建失败且初次清理也失败时的可恢复错误 */
 class RetikzWaapiBindingSetupError extends RetikzError<
-  'WAAPI_BINDING_SETUP_FAILED',
+  typeof RetikzRenderErrorCode.WaapiBindingSetupFailed,
   Readonly<{ cleanupCause: unknown; controls: AnimationControls }>
 > {
   /** 原始 binding 构建失败 */
@@ -48,7 +50,7 @@ class RetikzWaapiBindingSetupError extends RetikzError<
   /** 创建保留 primary setup cause 与可重试 controls 的错误 */
   constructor(cause: unknown, cleanupCause: unknown, controls: AnimationControls) {
     super({
-      code: 'WAAPI_BINDING_SETUP_FAILED',
+      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
       message: 'WAAPI binding setup and cleanup failed',
       details: { cleanupCause, controls },
       cause,

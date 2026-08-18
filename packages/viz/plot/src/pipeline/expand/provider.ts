@@ -6,6 +6,7 @@ import { ContourShapeProvider, SectorShapeProvider } from '@retikz/standard/shap
 
 import type { LowerPlotsOptions } from './types';
 
+import { RetikzPlotError } from '../../error';
 import { PLOT_NAMESPACE } from '../../schemas';
 import { lowerPlots } from './lower';
 
@@ -40,7 +41,7 @@ const mergeFieldMaps = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOptions
       const current = merged[reference] ?? {};
       for (const [field, path] of Object.entries(fieldMap)) {
         if (Object.hasOwn(current, field) && current[field] !== path) {
-          throw new Error(
+          throw new RetikzPlotError(
             `[retikz] Plot provider: fieldMaps["${reference}"].${field} resolves to both "${current[field]}" and "${path}".`,
           );
         }
@@ -58,7 +59,7 @@ const mergeResolveLabels = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpt
   for (const options of optionSets) {
     for (const [markId, resolveLabel] of Object.entries(options.resolveLabel ?? {})) {
       if (Object.hasOwn(merged, markId) && merged[markId] !== resolveLabel) {
-        throw new Error(`[retikz] Plot provider: mark "${markId}" received multiple resolveLabel functions.`);
+        throw new RetikzPlotError(`[retikz] Plot provider: mark "${markId}" received multiple resolveLabel functions.`);
       }
       merged[markId] = resolveLabel;
     }
@@ -73,7 +74,9 @@ const mergeLowerOptions = (optionSets: Array<LowerPlotsOptions>): LowerPlotsOpti
     for (const [key, value] of Object.entries(options as Record<string, unknown>)) {
       if (value === undefined || LocalLowerOptionKeys.has(key)) continue;
       if (Object.hasOwn(shared, key) && !Object.is(shared[key], value)) {
-        throw new Error(`[retikz] Plot provider: plots in one compile assembly must share lower option "${key}".`);
+        throw new RetikzPlotError(
+          `[retikz] Plot provider: plots in one compile assembly must share lower option "${key}".`,
+        );
       }
       shared[key] = value;
     }

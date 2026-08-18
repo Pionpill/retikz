@@ -16,6 +16,7 @@ import type {
 } from './types';
 
 import { slug } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { FacetEmptyPolicy } from '../../schemas';
 
 /** 判断 facet header 是否启用 */
@@ -45,9 +46,9 @@ const isFacetScalar = (value: unknown): value is FacetScalar =>
 
 const facetValueOf = (row: ExternalRow, field: string): FacetScalar => {
   const value = resolveFieldPath(row, field);
-  if (value === undefined) throw new Error(`lowerPlots: facet field "${field}" is missing on a row`);
+  if (value === undefined) throw new RetikzPlotError(`lowerPlots: facet field "${field}" is missing on a row`);
   if (!isFacetScalar(value)) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: facet field "${field}" must resolve to a JSON scalar (string, number, boolean, or null)`,
     );
   }
@@ -150,7 +151,7 @@ export const resolveFacetPanels = (
       const panelRows = groups.get(key) ?? [];
       if (panelRows.length === 0 && facet.empty !== FacetEmptyPolicy.Show) continue;
       const id = facetPanelId(facet, rowValue, columnValue);
-      if (usedIds.has(id)) throw new Error(`lowerPlots: facet panel view id "${id}" is duplicated`);
+      if (usedIds.has(id)) throw new RetikzPlotError(`lowerPlots: facet panel view id "${id}" is duplicated`);
       usedIds.add(id);
       panels.push({
         id,

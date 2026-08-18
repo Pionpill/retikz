@@ -1,4 +1,4 @@
-﻿import { JsonObjectSchema } from '@retikz/core';
+import { JsonObjectSchema } from '@retikz/core';
 
 import type {
   AnyRowSelectorDefinition,
@@ -10,6 +10,7 @@ import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../sche
 import type { ExternalRow } from '../../shared';
 
 import { extractStatisticOperation } from '../../contract';
+import { RetikzDataError } from '../../error';
 import { ReducerOperationSchema, SelectorOperationSchema } from '../../schemas';
 import { createReadonlyMap } from '../../shared/collections';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
@@ -35,7 +36,7 @@ export const resolveStatisticsReducerRegistry = (
   const registry = new Map(BUILTIN_STATISTICS_REDUCER_REGISTRY);
   for (const def of custom ?? []) {
     const kind = extractStatisticOperation(def.schema);
-    if (registry.has(kind)) throw new Error(`data: duplicate statistics reducer registration: "${kind}"`);
+    if (registry.has(kind)) throw new RetikzDataError(`data: duplicate statistics reducer registration: "${kind}"`);
     registry.set(kind, def);
   }
   return registry;
@@ -48,7 +49,7 @@ export const resolveRowSelectorRegistry = (
   const registry = new Map(BUILTIN_ROW_SELECTOR_REGISTRY);
   for (const def of custom ?? []) {
     const kind = extractStatisticOperation(def.schema);
-    if (registry.has(kind)) throw new Error(`data: duplicate row selector registration: "${kind}"`);
+    if (registry.has(kind)) throw new RetikzDataError(`data: duplicate row selector registration: "${kind}"`);
     registry.set(kind, def);
   }
   return registry;
@@ -80,7 +81,7 @@ const reducerDefinitionOf = (
 ): AnyStatisticsReducerDefinition => {
   const definition = registry.get(operation.kind);
   if (definition === undefined) {
-    throw new Error(
+    throw new RetikzDataError(
       `data: reducer kind "${operation.kind}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
     );
   }
@@ -94,7 +95,7 @@ const selectorDefinitionOf = (
 ): AnyRowSelectorDefinition => {
   const definition = registry.get(operation.kind);
   if (definition === undefined) {
-    throw new Error(
+    throw new RetikzDataError(
       `data: selector kind "${operation.kind}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
     );
   }

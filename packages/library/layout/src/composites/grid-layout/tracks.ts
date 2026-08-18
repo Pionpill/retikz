@@ -1,6 +1,7 @@
 import type { LayoutDistributionValue } from '../shared';
 import type { IRGridTrack } from './types';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from '../internal/distribution';
 import { LayoutDistribution } from '../shared';
 
@@ -72,7 +73,11 @@ const aggregateConstraints = (
       constraint.span <= 0 ||
       constraint.start > trackCount - constraint.span
     ) {
-      throw new Error('Grid track constraint range is outside the resolved tracks');
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.SolverInvariant,
+        message: 'Grid track constraint range is outside the resolved tracks',
+        details: { start: constraint.start, span: constraint.span, trackCount },
+      });
     }
     if (
       !Number.isFinite(constraint.minimum) ||
@@ -80,7 +85,11 @@ const aggregateConstraints = (
       !Number.isFinite(constraint.natural) ||
       constraint.natural < 0
     ) {
-      throw new Error('Grid track constraints must remain finite and non-negative');
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.SolverInvariant,
+        message: 'Grid track constraints must remain finite and non-negative',
+        details: { minimum: constraint.minimum, natural: constraint.natural },
+      });
     }
     const key = `${constraint.start}:${constraint.span}`;
     const previous = aggregated.get(key);
@@ -242,10 +251,19 @@ export const solveGridTracks = (
   constraints: ReadonlyArray<GridTrackConstraint>,
   options: Readonly<{ gap: number; availableSize?: number; distribution: LayoutDistributionValue }>,
 ): SolvedGridTracks => {
-  if (!Number.isFinite(options.gap) || options.gap < 0)
-    throw new Error('Grid track gap must be finite and non-negative');
+  if (!Number.isFinite(options.gap) || options.gap < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.SolverInvariant,
+      message: 'Grid track gap must be finite and non-negative',
+      details: { gap: options.gap },
+    });
+  }
   if (options.availableSize !== undefined && (!Number.isFinite(options.availableSize) || options.availableSize < 0)) {
-    throw new Error('Grid available track size must be finite and non-negative');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.SolverInvariant,
+      message: 'Grid available track size must be finite and non-negative',
+      details: { availableSize: options.availableSize },
+    });
   }
   const profiles = solveProfiles(tracks, constraints, options.availableSize !== undefined);
   const sizes = [...profiles.natural];

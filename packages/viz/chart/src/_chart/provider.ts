@@ -6,6 +6,7 @@ import { SurfaceProvider } from '@retikz/standard';
 
 import type { ChartThemeStyleDefinition } from './style';
 
+import { RetikzChartError } from '../error';
 import { ChartDefinition, createChartDefinition } from './definition';
 
 const ChartRuntimeStyles = Symbol('retikz.chart.runtimeStyles');
@@ -32,7 +33,9 @@ const mergeChartThemeStyles = (
     for (const definition of definitions) {
       const existing = merged.get(definition.name);
       if (existing !== undefined && !Object.is(existing, definition)) {
-        throw new Error(`Chart provider: theme style definition "${definition.name}" conflicts within one assembly.`);
+        throw new RetikzChartError(
+          `Chart provider: theme style definition "${definition.name}" conflicts within one assembly.`,
+        );
       }
       if (existing === undefined) merged.set(definition.name, definition);
     }

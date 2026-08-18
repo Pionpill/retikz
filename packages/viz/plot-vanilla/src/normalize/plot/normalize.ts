@@ -11,6 +11,7 @@ import type {
 } from './contracts';
 import type { InputPlot } from './input';
 
+import { RetikzPlotVanillaError } from '../../error';
 import { normalizePlotBindings } from './bindings';
 import { assertChartExtensionCollection, normalizeChartExtension } from './chart-extension';
 import { applyDeclaration } from './member-normalizer';
@@ -74,7 +75,9 @@ export const normalizePlotDeclarations = (
   }
   for (const source of collection.runtimeSources) {
     if (source.markId === undefined) {
-      throw new Error('buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
+      throw new RetikzPlotVanillaError(
+        'buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop',
+      );
     }
     collected.resolveLabels[source.markId] = source.resolveLabel;
   }

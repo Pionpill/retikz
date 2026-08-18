@@ -5,6 +5,7 @@ import type { BuildContext, HydrationContext } from './context';
 import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
 import type { HydrationTarget } from './events';
 
+import { RetikzRenderErrorCode } from '../error';
 import { noopAnimationControls } from './context';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 
@@ -16,7 +17,7 @@ export type HydrationController = {
 
 /** Hydration controller 注册失败且初次清理也失败时的可恢复错误 */
 class RetikzHydrationControllerSetupError extends RetikzError<
-  'HYDRATION_CONTROLLER_SETUP_FAILED',
+  typeof RetikzRenderErrorCode.HydrationControllerSetupFailed,
   Readonly<{ cleanupCause: unknown; controller: HydrationController }>
 > {
   /** 原始 listener 注册失败 */
@@ -31,7 +32,7 @@ class RetikzHydrationControllerSetupError extends RetikzError<
   /** 创建保留 primary setup cause 与可重试 controller 的错误 */
   constructor(cause: unknown, cleanupCause: unknown, controller: HydrationController) {
     super({
-      code: 'HYDRATION_CONTROLLER_SETUP_FAILED',
+      code: RetikzRenderErrorCode.HydrationControllerSetupFailed,
       message: 'Hydration controller setup and cleanup failed',
       details: { cleanupCause, controller },
       cause,

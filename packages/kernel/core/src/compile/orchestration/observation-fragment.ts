@@ -3,6 +3,7 @@ import type { IRChild } from '../../schemas';
 import type { CompileContext } from './context';
 import type { PendingCompileObservation } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { safeErrorMessage } from '../../resolve/diagnostics';
 import { CompileWarningCode } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
@@ -37,7 +38,10 @@ export const compileObservedFragment = (
     clip,
     onWarn: warning => {
       if (fatalFragmentWarningCodes.has(warning.code)) {
-        throw new Error(`${warning.code} at ${warning.path}: ${warning.message}`);
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `${warning.code} at ${warning.path}: ${warning.message}`,
+        );
       }
       warnings.push({
         ...warning,
@@ -69,7 +73,8 @@ export const compileObservedFragment = (
       diagnostics: Object.freeze(orderCompileWarnings(warnings)),
     });
   } catch (cause) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
       `Observation fragment failed for ${entry.owner.kind} at ${entry.occurrence.sourcePath}: ${safeErrorMessage(cause, 'fragment compile failed')}`,
       { cause },
     );

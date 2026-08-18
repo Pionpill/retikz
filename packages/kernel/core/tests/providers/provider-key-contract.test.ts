@@ -1,3 +1,4 @@
+import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -14,6 +15,22 @@ import {
   defineShape,
   PathSchema,
 } from '../../src';
+
+const expectFoundationNonEmptyError = (action: () => unknown, label: string, value: string): void => {
+  let caught: unknown;
+  try {
+    action();
+  } catch (error) {
+    caught = error;
+  }
+  expect(caught).toBeInstanceOf(RetikzFoundationError);
+  expect(caught).toMatchObject({
+    code: RetikzFoundationErrorCode.NonEmptyStringRequired,
+    message: `${label} must be a non-empty string.`,
+    details: { label, value },
+    cause: value,
+  });
+};
 
 describe('provider key contract', () => {
   it('shape_definitions_declare_their_registry_name', () => {
@@ -88,13 +105,16 @@ describe('provider key contract', () => {
   it.each(['', ' ', '\u2003', '\ufeff'])(
     'path generator rejects a blank name with the established error (%j)',
     name => {
-      expect(() =>
-        definePathGenerator({
-          name,
-          paramsSchema: z.object({}),
-          generate: () => [],
-        }),
-      ).toThrowError('definePathGenerator: name must be a non-empty string.');
+      expectFoundationNonEmptyError(
+        () =>
+          definePathGenerator({
+            name,
+            paramsSchema: z.object({}),
+            generate: () => [],
+          }),
+        'definePathGenerator: name',
+        name,
+      );
     },
   );
 
@@ -105,13 +125,16 @@ describe('provider key contract', () => {
   });
 
   it.each(['', ' ', '\u2003', '\ufeff'])('path kind rejects a blank name (%j)', name => {
-    expect(() =>
-      definePathKind({
-        name,
-        schema: PathSchema.extend({ kind: z.literal('custom') }),
-        compile: () => null,
-      }),
-    ).toThrowError('definePathKind: name must be a non-empty string.');
+    expectFoundationNonEmptyError(
+      () =>
+        definePathKind({
+          name,
+          schema: PathSchema.extend({ kind: z.literal('custom') }),
+          compile: () => null,
+        }),
+      'definePathKind: name',
+      name,
+    );
   });
 
   it('composite_definition_declares_namespace_and_type_as_provider_key', () => {
@@ -147,31 +170,37 @@ describe('provider key contract', () => {
   });
 
   it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank namespace literal (%j)', namespace => {
-    expect(() =>
-      defineComposite({
-        namespace: 'demo',
-        type: 'badge',
-        schema: CompositeBaseSchema.extend({
-          namespace: z.literal(namespace),
-          type: z.literal('badge'),
+    expectFoundationNonEmptyError(
+      () =>
+        defineComposite({
+          namespace: 'demo',
+          type: 'badge',
+          schema: CompositeBaseSchema.extend({
+            namespace: z.literal(namespace),
+            type: z.literal('badge'),
+          }),
+          expand: () => ({ children: [] }),
         }),
-        expand: () => ({ children: [] }),
-      }),
-    ).toThrowError('defineComposite: schema.namespace must be a non-empty z.literal string.');
+      'defineComposite: schema.namespace',
+      namespace,
+    );
   });
 
   it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank type literal (%j)', type => {
-    expect(() =>
-      defineComposite({
-        namespace: 'demo',
-        type: 'badge',
-        schema: CompositeBaseSchema.extend({
-          namespace: z.literal('demo'),
-          type: z.literal(type),
+    expectFoundationNonEmptyError(
+      () =>
+        defineComposite({
+          namespace: 'demo',
+          type: 'badge',
+          schema: CompositeBaseSchema.extend({
+            namespace: z.literal('demo'),
+            type: z.literal(type),
+          }),
+          expand: () => ({ children: [] }),
         }),
-        expand: () => ({ children: [] }),
-      }),
-    ).toThrowError('defineComposite: schema.type must be a non-empty z.literal string.');
+      'defineComposite: schema.type',
+      type,
+    );
   });
 
   it('composite_object_union_declares_one_shared_provider_key', () => {

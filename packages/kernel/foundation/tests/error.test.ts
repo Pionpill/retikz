@@ -1,14 +1,22 @@
-import { isRetikzError, RetikzError } from '@retikz/foundation';
+import type { ValueOf } from '@retikz/foundation';
+
+import { isRetikzError, RetikzError, RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 type DemoDetails = Readonly<{ source: string }>;
 
-class RetikzDemoError extends RetikzError<'DEMO_FAILED', DemoDetails> {
+const RetikzDemoErrorCode = {
+  Failed: 'DEMO_FAILED',
+} as const;
+
+type RetikzDemoErrorCodeValue = ValueOf<typeof RetikzDemoErrorCode>;
+
+class RetikzDemoError extends RetikzError<RetikzDemoErrorCodeValue, DemoDetails> {
   constructor(details: DemoDetails, cause?: unknown, includeCause = cause !== undefined) {
     super(
       includeCause
-        ? { code: 'DEMO_FAILED', message: 'Demo failed', details, cause }
-        : { code: 'DEMO_FAILED', message: 'Demo failed', details },
+        ? { code: RetikzDemoErrorCode.Failed, message: 'Demo failed', details, cause }
+        : { code: RetikzDemoErrorCode.Failed, message: 'Demo failed', details },
     );
   }
 }
@@ -22,7 +30,7 @@ describe('RetikzError', () => {
     expect(error).toBeInstanceOf(RetikzDemoError);
     expect(error).toBeInstanceOf(RetikzError);
     expect(error.name).toBe('RetikzDemoError');
-    expect(error.code).toBe('DEMO_FAILED');
+    expect(error.code).toBe(RetikzDemoErrorCode.Failed);
     expect(error.message).toBe('Demo failed');
     expect(error.details).toBe(details);
     expect(error.cause).toBe(cause);
@@ -42,11 +50,21 @@ describe('RetikzError', () => {
 
   it('classifies the Foundation hierarchy but not shape-compatible objects', () => {
     const error = new RetikzDemoError({ source: 'test' });
-    const forged = { code: 'DEMO_FAILED', details: { source: 'test' }, message: 'Demo failed' };
+    const forged = { code: RetikzDemoErrorCode.Failed, details: { source: 'test' }, message: 'Demo failed' };
 
     expect(isRetikzError(error)).toBe(true);
     expect(isRetikzError(forged)).toBe(false);
     expect('toJSON' in error).toBe(false);
     expect('toDiagnostic' in error).toBe(false);
+  });
+});
+
+describe('RetikzFoundationError', () => {
+  it('uses the Foundation default code for a single message argument', () => {
+    const error = new RetikzFoundationError('Foundation failed');
+
+    expect(error.code).toBe(RetikzFoundationErrorCode.Default);
+    expect(error.message).toBe('Foundation failed');
+    expect(error.details).toEqual({});
   });
 });

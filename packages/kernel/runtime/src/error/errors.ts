@@ -60,6 +60,7 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue,
   constructor(input: {
     code: RetikzRuntimeErrorCodeValue;
     phase: string;
+    message?: string;
     cause?: unknown;
     owner?: string;
     program?: RuntimeProgramId;
@@ -74,7 +75,7 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue,
     };
     super({
       code: input.code,
-      message: `${input.code}: Runtime failed during ${input.phase}`,
+      message: input.message ?? `${input.code}: Runtime failed during ${input.phase}`,
       details,
       cause: input.cause,
     });

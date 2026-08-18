@@ -1,7 +1,7 @@
 import type { RuntimeOwnerDefinition, RuntimeOwnerErasedExecutor, RuntimeOwnerToken } from '../owner';
 import type { RuntimeOwnerRegistry, RuntimeOwnerRegistryInput } from './types';
 
-import { RetikzRuntimeOwnerRegistryError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RetikzRuntimeOwnerRegistryError } from '../error';
 import { getRuntimeOwnerDefinitionExecutor, hasRuntimeOwnerToken } from '../owner';
 
 const runtimeOwnerRegistryExecutors = new WeakMap<
@@ -28,10 +28,10 @@ export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): Ru
   const executors = new Map<RuntimeOwnerToken, RuntimeOwnerErasedExecutor>();
   for (const candidate of [...builtins, ...custom]) {
     if (!hasRuntimeOwnerToken(candidate)) {
-      throw new RetikzRuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', candidate.key, candidate);
+      throw new RetikzRuntimeOwnerRegistryError(RetikzRuntimeErrorCode.TokenInvalid, candidate.key, candidate);
     }
     if (definitions.has(candidate.key)) {
-      throw new RetikzRuntimeOwnerRegistryError('RUNTIME_OWNER_DUPLICATE', candidate.key, candidate);
+      throw new RetikzRuntimeOwnerRegistryError(RetikzRuntimeErrorCode.Duplicate, candidate.key, candidate);
     }
     definitions.set(candidate.key, candidate);
     executors.set(candidate, getRuntimeOwnerDefinitionExecutor(candidate));
@@ -42,10 +42,10 @@ export const createRuntimeOwnerRegistry = (input: RuntimeOwnerRegistryInput): Ru
       definition: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
     ): RuntimeOwnerDefinition<TInput, TValue, TRead, TChange> => {
       if (!hasRuntimeOwnerToken(definition)) {
-        throw new RetikzRuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', definition.key, definition);
+        throw new RetikzRuntimeOwnerRegistryError(RetikzRuntimeErrorCode.TokenInvalid, definition.key, definition);
       }
       if (definitions.get(definition.key) !== definition) {
-        throw new RetikzRuntimeOwnerRegistryError('RUNTIME_OWNER_UNKNOWN', definition.key, definition);
+        throw new RetikzRuntimeOwnerRegistryError(RetikzRuntimeErrorCode.Unknown, definition.key, definition);
       }
       return definition;
     },
@@ -63,9 +63,16 @@ export const getRuntimeOwnerRegistryExecutor = (
   definition: RuntimeOwnerToken,
 ): RuntimeOwnerErasedExecutor => {
   if (registry.find(definition.key) !== definition) {
-    throw new RetikzRuntimeOwnerRegistryError('RUNTIME_OWNER_UNKNOWN', definition.key, definition);
+    throw new RetikzRuntimeOwnerRegistryError(RetikzRuntimeErrorCode.Unknown, definition.key, definition);
   }
   const executor = runtimeOwnerRegistryExecutors.get(registry)?.get(definition);
-  if (executor === undefined) throw new Error(`runtime owner registry: missing executor for "${definition.key}"`);
+  if (executor === undefined) {
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.InternalInvariant,
+      message: `runtime owner registry: missing executor for "${definition.key}"`,
+      phase: 'owner-registry',
+      cause: definition,
+    });
+  }
   return executor;
 };

@@ -13,6 +13,7 @@ import type { LegendReserve, Rect } from '../../shared';
 import type { LegendEntry, LowerLegendOptions } from '../guide';
 import type { MarkDataView } from './types';
 
+import { RetikzPlotError } from '../../error';
 import { resolveLinearScale, resolveSqrtScale, scaleTicks } from '../../providers';
 import { resolveChannelDefinition, resolveMarkChannels } from '../../resolve/channel';
 import { resolveGuideTicks } from '../../resolve/guide';
@@ -68,7 +69,7 @@ const assertEquivalentSizeDescriptors = (descriptors: ReadonlyArray<ScaleDescrip
         descriptorValuesEqual(descriptor.range, first.range),
     );
   if (!equivalent) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: legend channel "size" has conflicting size descriptors for scale "${first.scaleName ?? 'implicit'}"`,
     );
   }
@@ -98,14 +99,17 @@ const selectLegendDescriptor = (
   if (guide.scale !== undefined) {
     if (matched.length === 0) {
       const scale = scaleByName.get(guide.scale);
-      if (scale === undefined) throw new Error(`lowerPlots: legend references unknown scale "${guide.scale}"`);
+      if (scale === undefined)
+        throw new RetikzPlotError(`lowerPlots: legend references unknown scale "${guide.scale}"`);
       const scaleDefinition = resolveScaleDefinition(scale, { registry: scaleRegistry });
       if (scaleDefinition.family !== 'channel') {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: scale "${guide.scale}" is not a color scale (legend channel "${guide.channel}" can only bind channel scales)`,
         );
       }
-      throw new Error(`lowerPlots: legend channel "${guide.channel}" has no bound scale named "${guide.scale}"`);
+      throw new RetikzPlotError(
+        `lowerPlots: legend channel "${guide.channel}" has no bound scale named "${guide.scale}"`,
+      );
     }
     return matched[0];
   }
@@ -115,7 +119,7 @@ const selectLegendDescriptor = (
     ),
   );
   if (signatures.size > 1) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: legend channel "${guide.channel}" is driven by multiple scales [${[...signatures].join(', ')}]; specify which via the legend "scale" field`,
     );
   }
@@ -225,7 +229,7 @@ const resolveColorLegend = (
   const title = guide.title;
   const resolution = descriptor.colorScale;
   if (resolution === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: legend channel "${guide.channel}" has no color scale descriptor; cannot derive a color legend`,
     );
   }
@@ -395,13 +399,13 @@ export const buildLegendLayers = (
       return lowerLegend(options);
     }
     if (guide.channel === 'color') {
-      throw new Error(
+      throw new RetikzPlotError(
         'lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale',
       );
     }
     // 非 color 通道：descriptor 提供 domain / range，definition.legend 决定可视形态
     if (!descriptor) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`,
       );
     }
@@ -411,13 +415,13 @@ export const buildLegendLayers = (
     const channelOutput =
       channelDefinition !== undefined && 'output' in channelDefinition ? channelDefinition.output : undefined;
     if (legendForm === undefined) {
-      throw new Error(`lowerPlots: channel "${guide.channel}" does not declare a legend form`);
+      throw new RetikzPlotError(`lowerPlots: channel "${guide.channel}" does not declare a legend form`);
     }
     // 标题只在用户显式给时渲染（见 resolveColorLegend 同注）
     const title = guide.title;
     if (legendForm === 'symbol') {
       if (channelOutput?.outputKind !== 'symbol') {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: channel "${guide.channel}" legend form "symbol" requires outputKind "symbol"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
         );
       }
@@ -431,7 +435,7 @@ export const buildLegendLayers = (
     }
     if (legendForm === 'size') {
       if (channelOutput?.outputKind !== 'number') {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: channel "${guide.channel}" legend form "size" requires outputKind "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
         );
       }
@@ -457,7 +461,7 @@ export const buildLegendLayers = (
     }
     if (legendForm === 'ramp') {
       if (channelOutput?.outputKind !== 'color' && channelOutput?.outputKind !== 'number') {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: channel "${guide.channel}" legend form "ramp" requires outputKind "color" or "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
         );
       }
@@ -497,7 +501,7 @@ export const buildLegendLayers = (
       return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
     if (channelOutput?.outputKind !== 'number') {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: channel "${guide.channel}" legend form "swatch" requires outputKind "color" or "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
       );
     }

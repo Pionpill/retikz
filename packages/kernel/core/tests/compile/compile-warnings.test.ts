@@ -42,7 +42,7 @@ describe('CompileOptions.onWarn', () => {
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
-      code: 'PATH_TOO_SHORT',
+      code: CompileWarningCode.PathTooShort,
       path: 'children[0].path.children',
       origin: { kind: 'primary' },
     });
@@ -63,7 +63,7 @@ describe('CompileOptions.onWarn', () => {
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toMatchObject({
-      code: 'PATH_TOO_SHORT',
+      code: CompileWarningCode.PathTooShort,
       path: 'children[0].path.children[0]',
     });
     expect(warnings[0].message).toContain('requires a previous position');
@@ -81,8 +81,8 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
-    const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
+    expect(warnings.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
+    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
     expect(unresolved!.path).toBe('children[0].path.children[0].to');
     expect(unresolved!.message).toContain("'bogus'");
   });
@@ -99,7 +99,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
+    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
     expect(unresolved).toBeDefined();
     expect(unresolved!.path).toBe('children[0].path.children[0].to');
     expect(unresolved!.message).toContain("'bogus'");
@@ -117,7 +117,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
+    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
     expect(unresolved).toBeDefined();
     expect(unresolved!.message).toContain("'bogus'");
   });
@@ -135,7 +135,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const unresolved = warnings.find(w => w.code === 'UNRESOLVED_NODE_REFERENCE');
+    const unresolved = warnings.find(w => w.code === CompileWarningCode.UnresolvedNodeReference);
     expect(unresolved!.path).toBe('children[1].path.children[1].to');
   });
 
@@ -151,7 +151,7 @@ describe('CompileOptions.onWarn', () => {
     ]);
     const codes: Array<string> = [];
     compileToScene(ir, { onWarn: w => codes.push(w.code) });
-    expect(codes.filter(c => c === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(2);
+    expect(codes.filter(c => c === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(2);
   });
 
   it('happy path 不触发 onWarn', () => {
@@ -203,7 +203,7 @@ describe('CompileOptions.onWarn', () => {
 
     expect(warnings.filter(warning => warning.code === CompileWarningCode.BoundaryTightFallback)).toEqual([
       expect.objectContaining({
-        code: 'BOUNDARY_TIGHT_FALLBACK',
+        code: CompileWarningCode.BoundaryTightFallback,
         path: 'children[0].node',
         message: expect.stringContaining("Shape 'custom-without-envelope'"),
       }),
@@ -228,7 +228,7 @@ describe('CompileOptions.onWarn 缺省行为', () => {
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     const msg = consoleWarnSpy.mock.calls[0][0] as string;
     expect(msg).toContain('[retikz]');
-    expect(msg).toContain('PATH_TOO_SHORT');
+    expect(msg).toContain(CompileWarningCode.PathTooShort);
     expect(msg).toContain('children[0].path.children');
   });
 
@@ -259,17 +259,17 @@ describe('scope.transforms warn code 指向真正失败的那个 transform', () 
     const w = warnings.find(x => x.path.endsWith('.scope.transforms'));
     expect(w).toBeDefined();
     // 旧实现取首个 translate 变体 → 误报 POLAR_ORIGIN_UNRESOLVED；现报实际失败的 offset
-    expect(w!.code).toBe('OFFSET_BASE_UNRESOLVED');
+    expect(w!.code).toBe(CompileWarningCode.OffsetBaseUnresolved);
   });
 });
 
 describe('CompileWarningCode 收编与导出', () => {
   it('PARTIAL_ARC_CLOSED_INVALID 已收编进 CompileWarningCode 并从包根导出', () => {
-    expect(CompileWarningCode.PartialArcClosedInvalid).toBe('PARTIAL_ARC_CLOSED_INVALID');
+    expect(CompileWarningCode.PartialArcClosedInvalid).toBe(CompileWarningCode.PartialArcClosedInvalid);
   });
 
   it('BOUNDARY_TIGHT_FALLBACK 已收编进 CompileWarningCode 并从包根导出', () => {
-    expect(CompileWarningCode.BoundaryTightFallback).toBe('BOUNDARY_TIGHT_FALLBACK');
+    expect(CompileWarningCode.BoundaryTightFallback).toBe(CompileWarningCode.BoundaryTightFallback);
   });
 
   it('formatCompileWarning 从包根导出，可格式化为人类可读字符串', () => {
@@ -280,7 +280,7 @@ describe('CompileWarningCode 收编与导出', () => {
       origin: { kind: 'primary' },
     });
     expect(msg).toContain('[retikz]');
-    expect(msg).toContain('UNRESOLVED_NODE_REFERENCE');
+    expect(msg).toContain(CompileWarningCode.UnresolvedNodeReference);
     expect(msg).toContain('children[0].to');
   });
 });

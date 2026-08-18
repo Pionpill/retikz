@@ -38,6 +38,8 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.createGraph).toBeTypeOf('function');
     expect(graphExports.createGraphDefinitions).toBeTypeOf('function');
     expect(graphExports.createGraphProviders).toBeTypeOf('function');
+    expect(graphExports.RetikzGraphError).toBeDefined();
+    expect(graphExports.RetikzGraphErrorCode.DefinitionDuplicate).toBe('GRAPH_DEFINITION_DUPLICATE');
     expect(graphExports.GraphType).toEqual({
       Graph: 'graph',
       Container: 'container',

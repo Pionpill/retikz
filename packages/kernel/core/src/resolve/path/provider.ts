@@ -12,6 +12,7 @@ import type {
   StrokePathResolution,
 } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers/registry';
 import {
   ARROW_MARKER_DEFAULT_SIZE,
@@ -122,12 +123,14 @@ export const resolveArrowMark = (mark: IRArrowMark, context: PathResolveContext)
   const rawOuterInset = definition.outerInset ?? (definition.hollow ? visual.lineWidth / 2 : 0);
   const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
   if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth)) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
       `Arrow '${shape}' resolved length/width is non-finite (length × scale overflowed); use smaller length / scale values.`,
     );
   }
   if (!Number.isFinite(boundaryOuterInset)) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
       `Arrow '${shape}' resolved outerInset is non-finite; use smaller outerInset / length / scale values.`,
     );
   }

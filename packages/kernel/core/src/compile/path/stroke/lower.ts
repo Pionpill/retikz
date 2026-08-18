@@ -4,6 +4,7 @@ import type { PathCommand } from '../../../contract';
 import type { PathGeneratorResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import {
   RetikzCompositeContractError,
   RetikzLayoutProbeRecoverableError,
@@ -131,7 +132,8 @@ export const lowerGeneratorStepToCommands = (args: {
     if (!Object.hasOwn(paramsObj, key)) continue;
     const raw = paramsObj[key];
     if (raw === null || (typeof raw !== 'string' && typeof raw !== 'object')) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
         `path generator '${resolution.name}' targetParams key '${key}' must be a target (node id, coordinate, or target object); got ${raw === null ? 'null' : typeof raw}.`,
       );
     }

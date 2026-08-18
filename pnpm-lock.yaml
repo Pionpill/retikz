@@ -1244,6 +1244,9 @@ importers:
 
   packages/schematic/graph-react:
     dependencies:
+      '@retikz/foundation':
+        specifier: workspace:^
+        version: link:../../kernel/foundation
       '@retikz/graph':
         specifier: workspace:*
         version: link:../graph
@@ -1290,6 +1293,9 @@ importers:
 
   packages/schematic/graph-vanilla:
     dependencies:
+      '@retikz/foundation':
+        specifier: workspace:^
+        version: link:../../kernel/foundation
       '@retikz/graph':
         specifier: workspace:*
         version: link:../graph

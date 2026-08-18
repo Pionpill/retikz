@@ -6,6 +6,7 @@ import type { IREntity } from '../../schemas';
 import type { IRGraphEntityThemeTokenRule, IRGraphThemeTokenOverrides } from '../../schemas';
 import type { CanonicalEntityPresentation, EntityPresentationResolveContext } from './types';
 
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { EntityVariant } from '../../providers';
 import { GraphEntityAppearanceTokenOverridesSchema, GraphThemeToken } from '../../schemas';
 import { resolveGraphTheme } from '../theme';
@@ -15,7 +16,12 @@ const availableKeys = (registry: ReadonlyMap<string, unknown>): string => [...re
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
   const definition = registry.get(key);
   if (definition === undefined) {
-    throw new Error(`${capability} '${key}' is not registered. Available keys: ${availableKeys(registry)}.`);
+    const keys = [...registry.keys()];
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.DefinitionNotRegistered,
+      message: `${capability} '${key}' is not registered. Available keys: ${availableKeys(registry)}.`,
+      details: { capability, key, availableKeys: keys },
+    });
   }
   return definition;
 };
@@ -82,9 +88,19 @@ export const resolveEntityPresentation = (
     styleRuleTokens[GraphThemeToken.EntityColor] ??
     graphTheme.tokens[GraphThemeToken.EntityColor];
   const color = materializePrimaryColor(selectedColor, context.theme.mode);
-  const variantTokens = GraphEntityAppearanceTokenOverridesSchema.parse(
-    variantDefinition.resolve({ theme: context.theme, color }),
-  );
+  let variantTokens: ReturnType<typeof GraphEntityAppearanceTokenOverridesSchema.parse>;
+  try {
+    variantTokens = GraphEntityAppearanceTokenOverridesSchema.parse(
+      variantDefinition.resolve({ theme: context.theme, color }),
+    );
+  } catch (cause) {
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.DefinitionCallbackFailed,
+      message: `Entity variant '${variant}' resolution failed.`,
+      details: { capability: 'entity-variant', key: variant },
+      cause,
+    });
+  }
   const tokens = { ...graphTheme.tokens, ...variantTokens, ...styleRuleTokens, ...localTokens };
   const {
     namespace: _namespace,

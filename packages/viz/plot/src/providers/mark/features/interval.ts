@@ -23,6 +23,7 @@ import type { CartesianCoordinateFrame } from '../../coordinate';
 import type { MarkPaint } from '../shared';
 
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import { IntervalBoundKind, IntervalMarkSchema, PlotCoordinate, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import { isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
@@ -75,7 +76,7 @@ const buildBandContext = (
 const assertProportionalWidth = (field: string, value: unknown): number | null => {
   if (!isFiniteNumber(value)) return null;
   if (value < 0) {
-    throw new Error(`lowerPlots: interval proportional bound requires a non-negative numeric ${field} field`);
+    throw new RetikzPlotError(`lowerPlots: interval proportional bound requires a non-negative numeric ${field} field`);
   }
   return value;
 };
@@ -95,7 +96,7 @@ export const buildProportionalIntervals = (
     }
     const next = cursor + width;
     if (!Number.isFinite(next)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`,
       );
     }
@@ -114,7 +115,7 @@ export const proportionalIntervalDomainValues = (field: string, rows: Array<Exte
     if (width === null) continue;
     const next = cursor + width;
     if (!Number.isFinite(next)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`,
       );
     }
@@ -175,7 +176,7 @@ export const buildIntervalContext = (
       if (group === undefined) continue;
       const scale = frame.roleScales?.[role];
       if (!scale) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build grouped band cells`,
         );
       }
@@ -233,7 +234,7 @@ const boundOutputInterval = (
       const rawLo = resolveFieldPath(row, bound.from);
       const rawHi = resolveFieldPath(row, bound.to);
       if (!isFiniteNumber(rawLo) || !isFiniteNumber(rawHi)) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields (run the stack / bin / derive-interval transform first)`,
         );
       }
@@ -245,7 +246,7 @@ const boundOutputInterval = (
     case IntervalBoundKind.Proportional: {
       const raw = ctx.proportionalByRole?.[role]?.get(row);
       if (raw === undefined) {
-        throw new Error(`lowerPlots: interval proportional bound requires context for role ${role}`);
+        throw new RetikzPlotError(`lowerPlots: interval proportional bound requires context for role ${role}`);
       }
       const lo = scale.coordinate(raw[0]);
       const hi = scale.coordinate(raw[1]);
@@ -304,7 +305,7 @@ const genericBoundOutputInterval = (
 ): [number, number] | null => {
   const scale = frame.roleScales?.[role];
   if (!scale) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
     );
   }
@@ -315,13 +316,13 @@ const genericBoundOutputInterval = (
       if (!Number.isFinite(center)) return null;
       if (bound.group !== undefined) {
         if (ctx === undefined) {
-          throw new Error(
+          throw new RetikzPlotError(
             `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
           );
         }
         const bandCtx = ctx.byRole[role];
         if (bandCtx === undefined) {
-          throw new Error(
+          throw new RetikzPlotError(
             `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
           );
         }
@@ -341,7 +342,9 @@ const genericBoundOutputInterval = (
       const rawLo = resolveFieldPath(row, bound.from);
       const rawHi = resolveFieldPath(row, bound.to);
       if (!isFiniteNumber(rawLo) || !isFiniteNumber(rawHi)) {
-        throw new Error(`lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields`);
+        throw new RetikzPlotError(
+          `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields`,
+        );
       }
       const lo = scale.coordinate(rawLo);
       const hi = scale.coordinate(rawHi);
@@ -351,7 +354,7 @@ const genericBoundOutputInterval = (
     case IntervalBoundKind.Proportional: {
       const raw = ctx?.proportionalByRole?.[role]?.get(row);
       if (raw === undefined) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: interval proportional bound under the ${frame.type} coordinate system requires proportional context for bounds.${role}`,
         );
       }
@@ -408,7 +411,9 @@ const resolveSectorPull = (mark: IRPlotIntervalMark, row: ExternalRow): number =
   if (pull === undefined) return 0;
   const value = pull.kind === 'field' ? resolveFieldPath(row, pull.value) : pull.value;
   if (!isFiniteNumber(value) || value < 0) {
-    throw new Error('lowerPlots: interval pull requires a finite non-negative numeric value for polar sector geometry');
+    throw new RetikzPlotError(
+      'lowerPlots: interval pull requires a finite non-negative numeric value for polar sector geometry',
+    );
   }
   return value;
 };
@@ -421,7 +426,7 @@ export const applyIntervalCellVisualParams = (
 ): CellGeometry => {
   if (geometry.kind !== 'sector') {
     if (mark.pull !== undefined) {
-      throw new Error('lowerPlots: interval pull is only supported for polar sector geometry');
+      throw new RetikzPlotError('lowerPlots: interval pull is only supported for polar sector geometry');
     }
     return geometry;
   }
@@ -544,7 +549,7 @@ export const lowerIntervalLayer = (
   if (mark.type !== PlotMark.Interval) return null;
   // interval 需要坐标帧提供 cell 几何投影；内置和自定义帧都走同一 projectCell 契约。
   if (!hasProjectCell(frame)) {
-    throw new Error(failLoudMessage(mark.type, frame.type));
+    throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
   const intervalContext = buildIntervalContext(mark, frame, rows);
   const layer = lowerCells(

@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CoreChange, IRScene } from '../../../src';
 
-import { CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '../../../src';
+import { CompileWarningCode, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '../../../src';
 
 const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
 const nodeIdentity = (id: string) => createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', id]);
@@ -52,7 +52,7 @@ const expectMatched = (initial: IRScene, next: IRScene, changes: ReadonlyArray<C
 
 const expectMismatch = (initial: IRScene, next: IRScene, changes: ReadonlyArray<CoreChange>) => {
   expect(updateWithHint(initial, next, changes).diagnostics).toEqual([
-    expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' }),
+    expect.objectContaining({ code: CompileWarningCode.ChangeSetMismatch }),
   ]);
 };
 

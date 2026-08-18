@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { BoundChart } from '../../_shared';
 import type { ChartResolution, ChartResolveContext } from './types';
 
+import { RetikzChartError } from '../../error';
 import { invalidChartSchemaError } from '../dispatch/bind';
 import { RetikzChartResolveErrorCode } from '../dispatch/errors';
 import { BaseChartSchema } from '../schemas';
@@ -25,7 +26,7 @@ export const resolveChart = (chart: BoundChart, context: ChartResolveContext): C
     context.plotThemeStyles,
   );
   const seriesColor = plotStyle.palette.series.at(0);
-  if (seriesColor === undefined) throw new Error('Chart style must resolve a non-empty Plot series palette');
+  if (seriesColor === undefined) throw new RetikzChartError('Chart style must resolve a non-empty Plot series palette');
 
   const plotCandidate = chart.createPlot(chartRecipeStyleContextOf(style, seriesColor));
 

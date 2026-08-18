@@ -1,8 +1,9 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene } from '../../src';
 import type { GroupPrim, ScenePrimitive } from '../../src/contract';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 
 // ---------------------------------------------------------------------------
@@ -135,7 +136,7 @@ describe('compile path 解析失败时占位被移除且不泄漏', () => {
     const result = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
 
     // 仍发出原有 warning
-    expect(warnings.some(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toBe(true);
 
     // 占位被 splice 移除：输出里不存在 path-placeholder（强转 string 比较，避开公开 union 不含此 type）
     const types = result.primitives.map(p => p.type as string);

@@ -2,13 +2,15 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator } from '../contract';
 
+import { RetikzCoreErrorCode } from '../error';
+
 const layoutProbeRecoverableErrors = new WeakSet<object>();
 const compositeContractErrors = new WeakSet<object>();
 const additionalFatalProbeErrors = new WeakSet<object>();
 
 /** layout probe 内可被 solver 丢弃或选中提升的 candidate failure */
 export class RetikzLayoutProbeRecoverableError extends RetikzError<
-  'CORE_LAYOUT_PROBE_RECOVERABLE',
+  typeof RetikzCoreErrorCode.LayoutProbeRecoverable,
   Readonly<{
     detail: string;
     providerKey?: string;
@@ -31,7 +33,7 @@ export class RetikzLayoutProbeRecoverableError extends RetikzError<
   ) {
     const detail = options.detail ?? message;
     super({
-      code: 'CORE_LAYOUT_PROBE_RECOVERABLE',
+      code: RetikzCoreErrorCode.LayoutProbeRecoverable,
       message,
       details: {
         detail,
@@ -49,11 +51,16 @@ export class RetikzLayoutProbeRecoverableError extends RetikzError<
 
 /** author callback、provider output 或 opaque handle 违反公开 Composite contract */
 export class RetikzCompositeContractError extends RetikzError<
-  'CORE_COMPOSITE_CONTRACT_VIOLATION',
+  typeof RetikzCoreErrorCode.CompositeContractViolation,
   Readonly<Record<string, never>>
 > {
   public constructor(message: string, options?: ErrorOptions) {
-    super({ code: 'CORE_COMPOSITE_CONTRACT_VIOLATION', message, details: Object.freeze({}), cause: options?.cause });
+    super({
+      code: RetikzCoreErrorCode.CompositeContractViolation,
+      message,
+      details: Object.freeze({}),
+      cause: options?.cause,
+    });
     compositeContractErrors.add(this);
   }
 }

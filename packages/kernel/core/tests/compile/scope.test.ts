@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, GroupPrim, IRScene, ScenePrimitive, Transform } from '../../src';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -584,7 +585,7 @@ describe('scope.transforms 解析失败 warn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    expect(warnings.some(w => w.code === 'AT_TARGET_UNRESOLVED')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.AtTargetUnresolved)).toBe(true);
   });
 
   it('offset-translate of=string 未定义触发 OFFSET_BASE_UNRESOLVED', () => {
@@ -597,7 +598,7 @@ describe('scope.transforms 解析失败 warn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    expect(warnings.some(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toBe(true);
   });
 
   it('polar-translate origin=string 未定义触发 POLAR_ORIGIN_UNRESOLVED', () => {
@@ -610,7 +611,7 @@ describe('scope.transforms 解析失败 warn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    expect(warnings.some(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toBe(true);
+    expect(warnings.some(w => w.code === CompileWarningCode.PolarOriginUnresolved)).toBe(true);
   });
 });
 
@@ -633,7 +634,7 @@ describe('scope.id synthetic bbox 注册', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     // path 端点应被解析为 cluster bbox 中心（≈ 子 node A 的全局中心，即 translate(10,0)）
     const path = compiled.primitives.find(p => p.type === 'path');
     expect(path).toBeDefined();
@@ -681,7 +682,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups).toHaveLength(1);
     expect(dups[0].message).toContain("'A'");
     expect(dups[0].path).toContain('children[1].node.id');
@@ -702,7 +703,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups).toHaveLength(1);
     expect(dups[0].path).toContain('coordinate.id');
   });
@@ -714,7 +715,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups).toHaveLength(1);
   });
 
@@ -726,7 +727,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups).toHaveLength(2);
     expect(dups[0].path).toContain('children[1].node.id');
     expect(dups[1].path).toContain('children[2].node.id');

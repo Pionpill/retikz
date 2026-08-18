@@ -3,6 +3,8 @@ import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runt
 
 import { RuntimeUpdateStrategy } from '@retikz/runtime';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+
 /** React Layout 的宿主执行模式 */
 export const LayoutRuntimeMode = Object.freeze({
   Retained: 'retained',
@@ -42,9 +44,7 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;
 
 const invalidRuntimeOptions = (cause: unknown): never => {
-  const error = new Error('[retikz] <Layout>: invalid runtime options');
-  Object.defineProperty(error, 'cause', { value: cause, enumerable: false });
-  throw error;
+  throw new RetikzReactError(RetikzReactErrorCode.Kernel, '[retikz] <Layout>: invalid runtime options', { cause });
 };
 
 const readRuntimeOption = (runtime: object, key: keyof LayoutRetainedRuntimeOptions): unknown => {

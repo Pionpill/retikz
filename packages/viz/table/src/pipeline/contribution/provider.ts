@@ -10,6 +10,7 @@ import type {
 } from '../../contract';
 import type { LowerTablesOptions } from '../types';
 
+import { RetikzTableError } from '../../error';
 import { extractTableStructureKind } from '../../providers';
 import { TABLE_NAMESPACE, TableComposite } from '../../schemas';
 import { lowerTables } from '../resolve';
@@ -54,7 +55,7 @@ const mergeByIdentity = <T>(
       const key = keyOf(value);
       const current = merged.get(key);
       if (current !== undefined && !Object.is(current, value)) {
-        throw new Error(`table: runtime contribution ${label} conflict for "${key}"`);
+        throw new RetikzTableError(`table: runtime contribution ${label} conflict for "${key}"`);
       }
       if (current === undefined) merged.set(key, value);
     }
@@ -77,7 +78,7 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
       )
         continue;
       if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
-        throw new Error(`table: runtime contribution lower option "${key}" conflict`);
+        throw new RetikzTableError(`table: runtime contribution lower option "${key}" conflict`);
       }
       merged[key] = value;
     }

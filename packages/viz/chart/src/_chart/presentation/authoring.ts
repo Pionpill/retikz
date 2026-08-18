@@ -16,6 +16,7 @@ import {
   ChartPresentationPreset,
 } from '../../_shared/presentation';
 import { ChartPresentationAuthoringRecordSchema, ChartPresentationSchema } from '../../_shared/presentation';
+import { RetikzChartError } from '../../error';
 import { BaseChartSchema } from '../schemas';
 
 /** 基础 Chart 与具体类型 Chart 共用的不依赖框架的编写输入 */
@@ -47,7 +48,7 @@ export const normalizeChartPresentation = (
   const seen = new Set<string>();
   for (const record of records) {
     if (seen.has(record.preset)) {
-      throw new Error(`Chart presentation preset '${record.preset}' may appear at most once.`);
+      throw new RetikzChartError(`Chart presentation preset '${record.preset}' may appear at most once.`);
     }
     seen.add(record.preset);
   }

@@ -29,6 +29,7 @@ import {
 import type { TickSet } from '../../../contract';
 import type { PlotColorSchemeValue } from './types';
 
+import { RetikzPlotError } from '../../../error';
 import { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './constants';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
@@ -89,7 +90,7 @@ export const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => s
 /** 内置 scheme 名 → interpolator；未知名 throw（提示经 options.colorSchemes 注册）。自定义解析由调用方在外层叠加 */
 export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
   if (!BUILTIN_COLOR_SCHEMES.has(name)) {
-    throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
+    throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   }
   return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
 };
@@ -104,7 +105,7 @@ export const makeColorSchemeResolver =
     if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
     const customInterpolator = custom?.[name];
     if (customInterpolator !== undefined) return customInterpolator;
-    throw new Error(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
+    throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   };
 
 /**

@@ -4,6 +4,7 @@ import type { RuntimeOwnerToken, RuntimeRevision } from '../../src/owner';
 import type { RuntimeCandidateView, RuntimeProgramDefinition, RuntimeProgramToken } from '../../src/program';
 import type { PerformanceTraceOutcomeValue } from '../../src/trace';
 
+import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import {
   defineRuntimeProgram,
@@ -57,8 +58,8 @@ describe('runtime program definition and registry', () => {
   });
 
   it.each([
-    { id: { owner: '', key: 'x' }, code: 'RUNTIME_PROGRAM_ID_INVALID' },
-    { id: { owner: 'x', key: '' }, code: 'RUNTIME_PROGRAM_ID_INVALID' },
+    { id: { owner: '', key: 'x' }, code: RetikzRuntimeErrorCode.ProgramIdInvalid },
+    { id: { owner: 'x', key: '' }, code: RetikzRuntimeErrorCode.ProgramIdInvalid },
   ])('拒绝无效 Program id：$id', ({ id, code }) => {
     const owner = defineOwner('counter');
     expect(() => defineProgram(owner, id)).toThrowError(expect.objectContaining({ code }));
@@ -148,19 +149,19 @@ describe('runtime program definition and registry', () => {
   it.each([
     {
       tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: [] }],
-      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
     {
       tracePhases: [{ phase: 'invalid', unit: PerformanceTraceUnit.Program, outcomes: [PerformanceTraceOutcome.Full] }],
-      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
     {
       tracePhases: [{ phase: PerformanceTracePhase.Update, unit: 'invalid', outcomes: [PerformanceTraceOutcome.Full] }],
-      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
     {
       tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: ['invalid'] }],
-      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
     {
       tracePhases: [
@@ -175,7 +176,7 @@ describe('runtime program definition and registry', () => {
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
-      code: 'RUNTIME_TRACE_DEFINITION_INVALID',
+      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
   ])('拒绝无效 trace declaration', ({ tracePhases, code }) => {
     const owner = defineOwner('counter');
@@ -201,13 +202,13 @@ describe('runtime program definition and registry', () => {
     const missingProgram = defineProgram(owner, { owner: 'counter', key: 'missing-program' }, [first]);
 
     expect(() => createRuntimeProgramRegistry({ owners, builtins: [first, duplicate] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PROGRAM_DUPLICATE' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ProgramDuplicate }),
     );
     expect(() => createRuntimeProgramRegistry({ owners, builtins: [missingOwner] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_UNKNOWN' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown }),
     );
     expect(() => createRuntimeProgramRegistry({ owners, builtins: [missingProgram] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PROGRAM_UNKNOWN' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ProgramUnknown }),
     );
   });
 
@@ -217,7 +218,7 @@ describe('runtime program definition and registry', () => {
     const wrongProgramOwner = defineProgram(owner, { owner: 'missing', key: 'program' });
 
     expect(() => createRuntimeProgramRegistry({ owners, builtins: [wrongProgramOwner] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_UNKNOWN' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.Unknown }),
     );
     expect(() =>
       createRuntimeProgramRegistry({
@@ -227,7 +228,7 @@ describe('runtime program definition and registry', () => {
           resolve: definition => definition,
         },
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_REGISTRY_MISMATCH' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.RegistryMismatch }));
   });
 
   it.each(['self', 'cycle'] as const)('防御性 graph validation 拒绝 %s dependency', kind => {
@@ -246,7 +247,7 @@ describe('runtime program definition and registry', () => {
           ]);
 
     expect(() => sortRuntimeProgramGraph([a, b], definition => dependencies.get(definition) ?? [])).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PROGRAM_CYCLE' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ProgramCycle }),
     );
   });
 
@@ -260,7 +261,7 @@ describe('runtime program definition and registry', () => {
       number
     >;
     expect(() => createRuntimeProgramRegistry({ owners, custom: [forged] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PROGRAM_TOKEN_INVALID' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ProgramTokenInvalid }),
     );
 
     vi.resetModules();
@@ -274,7 +275,7 @@ describe('runtime program definition and registry', () => {
       run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
     });
     expect(() => createRuntimeProgramRegistry({ owners, custom: [foreign] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PROGRAM_TOKEN_INVALID' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ProgramTokenInvalid }),
     );
   });
 });

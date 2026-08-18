@@ -7,6 +7,7 @@ import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
@@ -109,7 +110,7 @@ const emitCanonicalPathPrimitive = (
         : originalStep.to.relativeAccumulate;
       const resolved: IRPosition = [cursor.relativeBaseline[0] + offset[0], cursor.relativeBaseline[1] + offset[1]];
       if (!isFinitePoint(resolved)) {
-        throw new Error('Relative target produced a non-finite endpoint.');
+        throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Relative target produced a non-finite endpoint.');
       }
       const resolvedStep = { ...step, to: resolved };
       cursor.setTargetAt(i, resolvedStep, resolved);
@@ -153,7 +154,7 @@ const emitCanonicalPathPrimitive = (
       }
       if (generatorTarget) {
         if (!isFinitePoint(generatorTarget)) {
-          throw new Error('Generator target produced a non-finite endpoint.');
+          throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Generator target produced a non-finite endpoint.');
         }
         step = { ...step, to: generatorTarget };
         if (updatesBaseline) cursor.relativeBaseline = generatorTarget;
@@ -168,7 +169,11 @@ const emitCanonicalPathPrimitive = (
             smoothBaseline[0] + originalPoint.relative[0],
             smoothBaseline[1] + originalPoint.relative[1],
           ];
-          if (!isFinitePoint(resolved)) throw new Error('Smooth relative target produced a non-finite endpoint.');
+          if (!isFinitePoint(resolved))
+            throw new RetikzCoreError(
+              RetikzCoreErrorCode.Compile,
+              'Smooth relative target produced a non-finite endpoint.',
+            );
           points.push(resolved);
           continue;
         }
@@ -178,7 +183,10 @@ const emitCanonicalPathPrimitive = (
             smoothBaseline[1] + originalPoint.relativeAccumulate[1],
           ];
           if (!isFinitePoint(resolved)) {
-            throw new Error('Smooth relativeAccumulate target produced a non-finite endpoint.');
+            throw new RetikzCoreError(
+              RetikzCoreErrorCode.Compile,
+              'Smooth relativeAccumulate target produced a non-finite endpoint.',
+            );
           }
           points.push(resolved);
           smoothBaseline = resolved;
@@ -245,7 +253,7 @@ const emitCanonicalPathPrimitive = (
           ? [targetReference[0], currentReference[1]]
           : [currentReference[0], targetReference[1]];
       if (!isFinitePoint(projected)) {
-        throw new Error('Axis-line produced a non-finite projected endpoint.');
+        throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Axis-line produced a non-finite projected endpoint.');
       }
       const projectedStep: Extract<CanonicalStep, { kind: 'axis-line' }> = { ...step, to: projected };
       cursor.setTargetAt(i, projectedStep, projected);

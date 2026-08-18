@@ -2,6 +2,7 @@ import type { FC } from 'react';
 
 import type { PathVisualProps } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import { pickPathVisual, requireXY, starVertices } from './shape-helpers';
@@ -27,7 +28,7 @@ export const Star: FC<StarProps> = props => {
   const center = requireXY(props.center, 'Star', 'center');
   const { points, outerRadius } = props;
   if (!Number.isInteger(points) || points < 2) {
-    throw new Error('<Star> 的 points 需为 >= 2 的整数');
+    throw new RetikzReactError(RetikzReactErrorCode.Sugar, '<Star> 的 points 需为 >= 2 的整数');
   }
   const innerRadius =
     'innerRadius' in props ? props.innerRadius : outerRadius * (props.innerRatio ?? DEFAULT_INNER_RATIO);

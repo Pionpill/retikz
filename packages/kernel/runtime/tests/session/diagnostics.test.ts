@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuntimeCommitEvent, RuntimeProgramTraceReporter } from '../../src/program';
 import type { RuntimeSession } from '../../src/session';
 
+import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
 import { RetikzRuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
@@ -84,21 +85,21 @@ describe('runtime session diagnostics', () => {
 
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
-        code: 'RUNTIME_TRACE_INVALID_RECORD',
+        code: RuntimeDiagnosticCode.TraceInvalidRecord,
         phase: 'trace',
         severity: 'error',
         owner: 'counter',
         program: { owner: 'counter', key: 'a' },
       }),
       expect.objectContaining({
-        code: 'RUNTIME_TRACE_INVALID_RECORD',
+        code: RuntimeDiagnosticCode.TraceInvalidRecord,
         phase: 'trace',
         severity: 'error',
         owner: 'counter',
         program: { owner: 'counter', key: 'a' },
       }),
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_OBSERVER_FAILED',
+        code: RuntimeDiagnosticCode.ProgramObserverFailed,
         phase: 'observe',
         cause: observerCause,
       }),
@@ -154,7 +155,7 @@ describe('runtime session diagnostics', () => {
       update: (_previous, view, context) => {
         const diagnose = context.diagnose as (diagnostic: unknown) => void;
         diagnose({
-          code: 'RUNTIME_TRACE_INVALID_RECORD',
+          code: RuntimeDiagnosticCode.TraceInvalidRecord,
           phase: 'trace',
           message: 'discard me',
           severity: 'error',
@@ -202,12 +203,12 @@ describe('runtime session diagnostics', () => {
 
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramUpdateFailed,
         cause: updateCause,
         diagnostics: [
-          expect.objectContaining({ code: 'RUNTIME_TRACE_INVALID_RECORD' }),
+          expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
           expect.objectContaining({
-            code: 'RUNTIME_ARTIFACT_DISPOSE_FAILED',
+            code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
             cause: disposeCause,
           }),
         ],
@@ -359,18 +360,18 @@ describe('runtime session diagnostics', () => {
 
     expect(() => session.dispose()).not.toThrow();
     expect(reentryErrors.map(error => [error.code, error.phase])).toEqual([
-      ['RUNTIME_SESSION_REENTRANT', 'snapshot'],
-      ['RUNTIME_SESSION_REENTRANT', 'artifact'],
-      ['RUNTIME_SESSION_REENTRANT', 'update'],
-      ['RUNTIME_SESSION_REENTRANT', 'diagnostics'],
-      ['RUNTIME_SESSION_REENTRANT', 'dispose'],
+      [RetikzRuntimeErrorCode.SessionReentrant, 'snapshot'],
+      [RetikzRuntimeErrorCode.SessionReentrant, 'artifact'],
+      [RetikzRuntimeErrorCode.SessionReentrant, 'update'],
+      [RetikzRuntimeErrorCode.SessionReentrant, 'diagnostics'],
+      [RetikzRuntimeErrorCode.SessionReentrant, 'dispose'],
     ]);
     expect(session.diagnostics()).toEqual([
       expect.objectContaining({
-        code: 'RUNTIME_OWNER_DISPOSE_FAILED',
+        code: RuntimeDiagnosticCode.OwnerDisposeFailed,
         severity: 'error',
         owner: 'counter',
-        cause: expect.objectContaining({ code: 'RUNTIME_SESSION_REENTRANT' }),
+        cause: expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionReentrant }),
       }),
     ]);
   });
@@ -450,15 +451,15 @@ describe('runtime session diagnostics', () => {
     expect(cleanupOrder).toEqual(['program:b', 'program:a', 'owner:b', 'owner:a']);
     expect(session.diagnostics()).toEqual([
       expect.objectContaining({
-        code: 'RUNTIME_ARTIFACT_DISPOSE_FAILED',
+        code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
         program: { owner: 'b', key: 'derive' },
       }),
       expect.objectContaining({
-        code: 'RUNTIME_ARTIFACT_DISPOSE_FAILED',
+        code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
         program: { owner: 'a', key: 'derive' },
       }),
-      expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', owner: 'b' }),
-      expect.objectContaining({ code: 'RUNTIME_OWNER_DISPOSE_FAILED', owner: 'a' }),
+      expect.objectContaining({ code: RuntimeDiagnosticCode.OwnerDisposeFailed, owner: 'b' }),
+      expect.objectContaining({ code: RuntimeDiagnosticCode.OwnerDisposeFailed, owner: 'a' }),
     ]);
     expect(session.diagnostics()).toEqual([]);
   });
@@ -466,14 +467,14 @@ describe('runtime session diagnostics', () => {
   it.each([
     {
       name: 'sink throw',
-      expectedCode: 'RUNTIME_TRACE_SINK_FAILED',
+      expectedCode: RuntimeDiagnosticCode.TraceSinkFailed,
       createSink: () => () => {
         throw new Error('sink failed');
       },
     },
     {
       name: 'reentrant report',
-      expectedCode: 'RUNTIME_TRACE_REENTRANT',
+      expectedCode: RuntimeDiagnosticCode.TraceReentrant,
       createSink: (readReporter: () => RuntimeProgramTraceReporter | undefined) => () => {
         readReporter()?.report({
           phase: PerformanceTracePhase.Update,
@@ -573,7 +574,7 @@ describe('runtime session diagnostics', () => {
       outcome: RuntimeProgramKind.Bailout,
       diagnostics: [
         expect.objectContaining({
-          code: 'RUNTIME_OWNER_DISPOSE_FAILED',
+          code: RuntimeDiagnosticCode.OwnerDisposeFailed,
           cause: disposeCause,
         }),
       ],
@@ -632,11 +633,11 @@ describe('runtime session diagnostics', () => {
 
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_OWNER_CAPTURE_FAILED',
+        code: RetikzRuntimeErrorCode.CaptureFailed,
         cause: captureCause,
         diagnostics: [
           expect.objectContaining({
-            code: 'RUNTIME_OWNER_DISPOSE_FAILED',
+            code: RuntimeDiagnosticCode.OwnerDisposeFailed,
             owner: 'a',
             cause: disposeCause,
           }),
@@ -651,7 +652,7 @@ describe('runtime session diagnostics', () => {
     const queuedDiagnostics = session.diagnostics();
     expect(queuedDiagnostics).toEqual([
       expect.objectContaining({
-        code: 'RUNTIME_OWNER_DISPOSE_FAILED',
+        code: RuntimeDiagnosticCode.OwnerDisposeFailed,
         owner: 'a',
         cause: disposeCause,
       }),
@@ -720,11 +721,13 @@ describe('runtime session diagnostics', () => {
 
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_ARTIFACT_CAPTURE_FAILED',
+        code: RetikzRuntimeErrorCode.ArtifactCaptureFailed,
         cause: captureCause,
-        diagnostics: [expect.objectContaining({ code: 'RUNTIME_TRACE_INVALID_RECORD' })],
+        diagnostics: [expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord })],
       }),
     );
-    expect(session.diagnostics()).toEqual([expect.objectContaining({ code: 'RUNTIME_TRACE_INVALID_RECORD' })]);
+    expect(session.diagnostics()).toEqual([
+      expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
+    ]);
   });
 });

@@ -1,5 +1,6 @@
 import type { IRDetailTable, IRManualTable } from '@retikz/table';
 
+import { RetikzFoundationError } from '@retikz/foundation';
 import { createDetailTableIR, createManualTableIR, TableSchema } from '@retikz/table';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
@@ -55,9 +56,9 @@ describe('Table Vanilla plain authoring', () => {
       id: 'panel',
       props: { table: { kind: 'manual', input: { rows: [[null]] } }, data: {} },
     });
-    expect(() => embedTable('', spec)).toThrow('table vanilla: embed id must be non-empty');
-    expect(() => embedTable('   ', spec)).toThrow('table vanilla: embed id must be non-empty');
-    expect(() => embedTable('\u2003', spec)).toThrowError('table vanilla: embed id must be non-empty');
-    expect(() => embedTable('\ufeff', spec)).toThrowError('table vanilla: embed id must be non-empty');
+    for (const id of ['', '   ', '\u2003', '\ufeff']) {
+      expect(() => embedTable(id, spec)).toThrowError(RetikzFoundationError);
+      expect(() => embedTable(id, spec)).toThrowError('table vanilla embed id must be a non-empty string.');
+    }
   });
 });

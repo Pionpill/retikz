@@ -2,7 +2,7 @@ import type { IRBaseChart } from '@retikz/chart';
 import type { PlotDslProps, PlotIRProps, PlotProps } from '@retikz/plot-react';
 import type { FC, ReactNode } from 'react';
 
-import { BaseChartRecipe, createChart as createBaseChart } from '@retikz/chart';
+import { BaseChartRecipe, createChart as createBaseChart, RetikzChartError } from '@retikz/chart';
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import { resolvePlotAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
@@ -128,7 +128,7 @@ const createChartInput = (props: Readonly<Record<string, unknown>>): BoundChartA
   void _theme;
   const split = splitPresentationMarkers(children);
   if (isIRProps(chartProps) && hasPlotChild(split.plotChildren)) {
-    throw new Error('chart react: Chart spec mode only accepts presentation markers as children');
+    throw new RetikzChartError('chart react: Chart spec mode only accepts presentation markers as children');
   }
   const resolvedPlotProps = isIRProps(chartProps)
     ? ({ ...plotProps, width: _width, height: _height, children: undefined } as PlotProps)

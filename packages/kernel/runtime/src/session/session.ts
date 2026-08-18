@@ -38,7 +38,7 @@ import type {
 import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
 import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeOwnerError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RetikzRuntimeOwnerError } from '../error';
 import { createRuntimeOwnerExecutor } from '../owner';
 import {
   claimRuntimeCommitParticipants,
@@ -105,22 +105,22 @@ const isRuntimeDiagnosticPhase = (value: unknown): value is RuntimeDiagnosticPha
 /** 创建 session contract 错误 */
 const sessionError = (
   code:
-    | 'RUNTIME_REGISTRY_MISMATCH'
-    | 'RUNTIME_UPDATE_STRATEGY_INVALID'
-    | 'RUNTIME_INITIAL_OWNER_MISMATCH'
-    | 'RUNTIME_OWNER_COMMAND_INVALID'
-    | 'RUNTIME_REVISION_INVALID'
-    | 'RUNTIME_REVISION_STALE'
-    | 'RUNTIME_CHANGESET_REVISION_MISMATCH'
-    | 'RUNTIME_UNDECLARED_DEPENDENCY'
-    | 'RUNTIME_SESSION_REENTRANT'
-    | 'RUNTIME_SESSION_DISPOSED'
-    | 'RUNTIME_PARTICIPANT_TOKEN_INVALID'
-    | 'RUNTIME_PARTICIPANT_DUPLICATE'
-    | 'RUNTIME_PARTICIPANT_DEPENDENCY_INVALID'
-    | 'RUNTIME_PARTICIPANT_UNKNOWN'
-    | 'RUNTIME_PARTICIPANT_ALREADY_OWNED'
-    | 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+    | typeof RetikzRuntimeErrorCode.RegistryMismatch
+    | typeof RetikzRuntimeErrorCode.UpdateStrategyInvalid
+    | typeof RetikzRuntimeErrorCode.InitialOwnerMismatch
+    | typeof RetikzRuntimeErrorCode.OwnerCommandInvalid
+    | typeof RetikzRuntimeErrorCode.RevisionInvalid
+    | typeof RetikzRuntimeErrorCode.RevisionStale
+    | typeof RetikzRuntimeErrorCode.ChangeSetRevisionMismatch
+    | typeof RetikzRuntimeErrorCode.UndeclaredDependency
+    | typeof RetikzRuntimeErrorCode.SessionReentrant
+    | typeof RetikzRuntimeErrorCode.SessionDisposed
+    | typeof RetikzRuntimeErrorCode.ParticipantTokenInvalid
+    | typeof RetikzRuntimeErrorCode.ParticipantDuplicate
+    | typeof RetikzRuntimeErrorCode.ParticipantDependencyInvalid
+    | typeof RetikzRuntimeErrorCode.ParticipantUnknown
+    | typeof RetikzRuntimeErrorCode.ParticipantAlreadyOwned
+    | typeof RetikzRuntimeErrorCode.ParticipantRollbackFailed,
   phase: string,
   cause?: unknown,
   owner?: string,
@@ -128,7 +128,7 @@ const sessionError = (
 
 /** 把 Program callback throw 转成稳定 lifecycle error */
 const programError = (
-  code: 'RUNTIME_PROGRAM_RUN_FAILED' | 'RUNTIME_PROGRAM_UPDATE_FAILED',
+  code: typeof RetikzRuntimeErrorCode.ProgramRunFailed | typeof RetikzRuntimeErrorCode.ProgramUpdateFailed,
   phase: 'run' | 'update',
   definition: RuntimeProgramToken,
   cause: unknown,
@@ -145,7 +145,10 @@ const programError = (
 
 /** 把 participant callback throw 转成稳定 lifecycle error */
 const participantError = (
-  code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED' | 'RUNTIME_PARTICIPANT_COMMIT_FAILED' | 'RUNTIME_PARTICIPANT_READ_FAILED',
+  code:
+    | typeof RetikzRuntimeErrorCode.ParticipantPrepareFailed
+    | typeof RetikzRuntimeErrorCode.ParticipantCommitFailed
+    | typeof RetikzRuntimeErrorCode.ParticipantReadFailed,
   phase: 'prepare' | 'commit' | 'read',
   participant: RuntimeCommitParticipantToken,
   cause: unknown,
@@ -162,9 +165,9 @@ const participantError = (
 /** 把 participant cleanup throw 转成 secondary diagnostic */
 const participantLifecycleDiagnostic = (
   code:
-    | 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED'
-    | 'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED'
-    | 'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+    | typeof RetikzRuntimeErrorCode.ParticipantRollbackFailed
+    | typeof RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed
+    | typeof RetikzRuntimeErrorCode.ParticipantDisposeFailed,
   phase: 'rollback' | 'token-dispose' | 'participant-dispose',
   participant: RuntimeCommitParticipantToken,
   cause: unknown,
@@ -187,7 +190,7 @@ const normalizePreparedCommit = (value: unknown, participant: RuntimeCommitParti
     typeof Reflect.get(value, 'rollback') !== 'function' ||
     typeof Reflect.get(value, 'dispose') !== 'function'
   ) {
-    throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, value);
+    throw participantError(RetikzRuntimeErrorCode.ParticipantPrepareFailed, 'prepare', participant, value);
   }
   return value as RuntimePreparedCommit;
 };
@@ -283,12 +286,24 @@ const createParticipantInvocation = (
       diagnosing = true;
       try {
         const candidate: unknown = warning;
-        if (typeof candidate !== 'object' || candidate === null) throw new Error('invalid diagnostic input');
+        if (typeof candidate !== 'object' || candidate === null) {
+          throw new RetikzRuntimeError({
+            code: RetikzRuntimeErrorCode.InternalInvariant,
+            message: 'invalid diagnostic input',
+            phase: 'session-diagnostic',
+            cause: candidate,
+          });
+        }
         const code = Reflect.get(candidate, 'code');
         const phase = Reflect.get(candidate, 'phase');
         const message = Reflect.get(candidate, 'message');
         if (typeof code !== 'string' || !isRuntimeDiagnosticPhase(phase) || typeof message !== 'string') {
-          throw new Error('invalid diagnostic input');
+          throw new RetikzRuntimeError({
+            code: RetikzRuntimeErrorCode.InternalInvariant,
+            message: 'invalid diagnostic input',
+            phase: 'session-diagnostic',
+            cause: candidate,
+          });
         }
         diagnostics.push(Object.freeze({ code, phase, message, severity: 'warning' as const, owner: participant.key }));
       } catch (cause) {
@@ -361,7 +376,7 @@ const errorDiagnostics = (cause: unknown): ReadonlyArray<RuntimeDiagnostic> => {
 /** 单次读取并归一化 JavaScript full callback 返回值 */
 const normalizeRunResult = (result: unknown, definition: RuntimeProgramToken): NormalizedRunResult => {
   if (typeof result !== 'object' || result === null) {
-    throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, result);
+    throw programError(RetikzRuntimeErrorCode.ProgramRunFailed, 'run', definition, result);
   }
   let kind: unknown;
   let hasArtifact: boolean;
@@ -371,10 +386,10 @@ const normalizeRunResult = (result: unknown, definition: RuntimeProgramToken): N
     hasArtifact = Object.prototype.hasOwnProperty.call(result, 'artifact');
     artifact = hasArtifact ? Reflect.get(result, 'artifact') : undefined;
   } catch (cause) {
-    throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, cause);
+    throw programError(RetikzRuntimeErrorCode.ProgramRunFailed, 'run', definition, cause);
   }
   if (kind !== RuntimeProgramKind.Full || !hasArtifact) {
-    throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, result);
+    throw programError(RetikzRuntimeErrorCode.ProgramRunFailed, 'run', definition, result);
   }
   return Object.freeze({ kind: RuntimeProgramKind.Full, artifact });
 };
@@ -382,13 +397,13 @@ const normalizeRunResult = (result: unknown, definition: RuntimeProgramToken): N
 /** 单次读取并归一化 JavaScript incremental callback 返回值 */
 const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken): NormalizedUpdateResult => {
   if (typeof result !== 'object' || result === null) {
-    throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, result);
+    throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, result);
   }
   let kind: unknown;
   try {
     kind = Reflect.get(result, 'kind');
   } catch (cause) {
-    throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause);
+    throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, cause);
   }
   if (kind === RuntimeProgramKind.Bailout) return Object.freeze({ kind });
   if (kind === RuntimeProgramKind.Incremental) {
@@ -398,7 +413,7 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
       hasArtifact = Object.prototype.hasOwnProperty.call(result, 'artifact');
       artifact = hasArtifact ? Reflect.get(result, 'artifact') : undefined;
     } catch (cause) {
-      throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause);
+      throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, cause);
     }
     if (hasArtifact) return Object.freeze({ kind, artifact });
   }
@@ -407,7 +422,7 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
     try {
       fallbackDiagnostics = Reflect.get(result, 'diagnostics');
     } catch (cause) {
-      throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause);
+      throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, cause);
     }
     if (fallbackDiagnostics === undefined) return Object.freeze({ kind });
     if (Array.isArray(fallbackDiagnostics)) {
@@ -429,13 +444,14 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeProgramToken)
           diagnostics.push(Object.freeze({ code, phase: diagnosticPhase, message }));
         }
       } catch (cause) {
-        throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause);
+        throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, cause);
       }
-      if (invalidDiagnostic) throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, result);
+      if (invalidDiagnostic)
+        throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, result);
       return Object.freeze({ kind, diagnostics: Object.freeze(diagnostics) });
     }
   }
-  throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, result);
+  throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, result);
 };
 
 /** 捕获 artifact 并拒绝会把 current disposable artifact 重新交给 Runtime 的 alias */
@@ -465,21 +481,21 @@ const prepareInitialOwners = (
   executor: RuntimeOwnerExecutor,
 ): Map<RuntimeOwnerToken, RuntimeOwnerState> => {
   if (!Array.isArray(initialSnapshots)) {
-    throw sessionError('RUNTIME_INITIAL_OWNER_MISMATCH', 'initial', initialSnapshots);
+    throw sessionError(RetikzRuntimeErrorCode.InitialOwnerMismatch, 'initial', initialSnapshots);
   }
   const commands = new Map<RuntimeOwnerToken, RuntimeOwnerCommandExecutor>();
   for (const command of initialSnapshots) {
     const commandExecutor = getRuntimeOwnerCommandExecutor(command);
     if (command.kind !== 'initial') {
-      throw sessionError('RUNTIME_OWNER_COMMAND_INVALID', 'initial', command);
+      throw sessionError(RetikzRuntimeErrorCode.OwnerCommandInvalid, 'initial', command);
     }
     if (owners.find(command.owner.key) !== command.owner || commands.has(command.owner)) {
-      throw sessionError('RUNTIME_INITIAL_OWNER_MISMATCH', 'initial', command, command.owner.key);
+      throw sessionError(RetikzRuntimeErrorCode.InitialOwnerMismatch, 'initial', command, command.owner.key);
     }
     commands.set(command.owner, commandExecutor);
   }
   if (commands.size !== owners.definitions().length) {
-    throw sessionError('RUNTIME_INITIAL_OWNER_MISMATCH', 'initial', initialSnapshots);
+    throw sessionError(RetikzRuntimeErrorCode.InitialOwnerMismatch, 'initial', initialSnapshots);
   }
 
   const states = new Map<RuntimeOwnerToken, RuntimeOwnerState>();
@@ -487,7 +503,7 @@ const prepareInitialOwners = (
     for (const owner of owners.definitions()) {
       const command = commands.get(owner);
       if (command === undefined) {
-        throw sessionError('RUNTIME_INITIAL_OWNER_MISMATCH', 'initial', owner, owner.key);
+        throw sessionError(RetikzRuntimeErrorCode.InitialOwnerMismatch, 'initial', owner, owner.key);
       }
       states.set(owner, Object.freeze({ command, prepared: command.prepare(executor).value }));
     }
@@ -526,7 +542,7 @@ const createCandidateView = (
     cause: unknown,
     owner: string,
   ) => {
-    const error = sessionError('RUNTIME_UNDECLARED_DEPENDENCY', candidatePhase, cause, owner);
+    const error = sessionError(RetikzRuntimeErrorCode.UndeclaredDependency, candidatePhase, cause, owner);
     invocationErrors.add(error);
     return error;
   };
@@ -631,13 +647,23 @@ const runProgram = (
         drainTraceDiagnostics();
         const candidate: unknown = diagnostic;
         if (typeof candidate !== 'object' || candidate === null) {
-          throw new Error('runtime Program diagnostic input is invalid');
+          throw new RetikzRuntimeError({
+            code: RetikzRuntimeErrorCode.InternalInvariant,
+            message: 'runtime Program diagnostic input is invalid',
+            phase: 'program-diagnostic',
+            cause: candidate,
+          });
         }
         const code = Reflect.get(candidate, 'code');
         const diagnosticPhase = Reflect.get(candidate, 'phase');
         const message = Reflect.get(candidate, 'message');
         if (typeof code !== 'string' || !isRuntimeDiagnosticPhase(diagnosticPhase) || typeof message !== 'string') {
-          throw new Error('runtime Program diagnostic input is invalid');
+          throw new RetikzRuntimeError({
+            code: RetikzRuntimeErrorCode.InternalInvariant,
+            message: 'runtime Program diagnostic input is invalid',
+            phase: 'program-diagnostic',
+            cause: candidate,
+          });
         }
         diagnostics.push(
           Object.freeze({
@@ -662,7 +688,7 @@ const runProgram = (
       if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) {
         throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
       }
-      throw programError('RUNTIME_PROGRAM_UPDATE_FAILED', 'update', definition, cause, executionDiagnostics);
+      throw programError(RetikzRuntimeErrorCode.ProgramUpdateFailed, 'update', definition, cause, executionDiagnostics);
     }
     drainTraceDiagnostics();
     let result: NormalizedUpdateResult;
@@ -700,7 +726,7 @@ const runProgram = (
     if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) {
       throw withFailureDiagnostics(cause, Object.freeze([...cause.diagnostics, ...executionDiagnostics]));
     }
-    throw programError('RUNTIME_PROGRAM_RUN_FAILED', 'run', definition, cause, executionDiagnostics);
+    throw programError(RetikzRuntimeErrorCode.ProgramRunFailed, 'run', definition, cause, executionDiagnostics);
   }
   drainTraceDiagnostics();
   let result: NormalizedRunResult;
@@ -730,28 +756,28 @@ const runProgram = (
 export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSession => {
   const optionsCandidate: unknown = options;
   if (typeof optionsCandidate !== 'object' || optionsCandidate === null) {
-    throw sessionError('RUNTIME_REGISTRY_MISMATCH', 'session-create', optionsCandidate);
+    throw sessionError(RetikzRuntimeErrorCode.RegistryMismatch, 'session-create', optionsCandidate);
   }
   let programOwners: RuntimeOwnerRegistry;
   try {
     programOwners = getRuntimeProgramOwnerRegistry(options.programs);
   } catch (cause) {
-    throw sessionError('RUNTIME_REGISTRY_MISMATCH', 'session-create', cause);
+    throw sessionError(RetikzRuntimeErrorCode.RegistryMismatch, 'session-create', cause);
   }
   if (programOwners !== options.owners) {
-    throw sessionError('RUNTIME_REGISTRY_MISMATCH', 'session-create', options.programs);
+    throw sessionError(RetikzRuntimeErrorCode.RegistryMismatch, 'session-create', options.programs);
   }
   const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(optionsCandidate, 'updateStrategy');
   if (updateStrategyDescriptor !== undefined && !Object.hasOwn(updateStrategyDescriptor, 'value')) {
-    throw sessionError('RUNTIME_UPDATE_STRATEGY_INVALID', 'session-create', updateStrategyDescriptor);
+    throw sessionError(RetikzRuntimeErrorCode.UpdateStrategyInvalid, 'session-create', updateStrategyDescriptor);
   }
   const updateStrategy = updateStrategyDescriptor?.value ?? RuntimeUpdateStrategy.Auto;
   if (updateStrategy !== RuntimeUpdateStrategy.Auto && updateStrategy !== RuntimeUpdateStrategy.Full) {
-    throw sessionError('RUNTIME_UPDATE_STRATEGY_INVALID', 'session-create', updateStrategy);
+    throw sessionError(RetikzRuntimeErrorCode.UpdateStrategyInvalid, 'session-create', updateStrategy);
   }
   const participantCandidates: unknown = Reflect.get(optionsCandidate, 'participants');
   if (participantCandidates !== undefined && !Array.isArray(participantCandidates)) {
-    throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'session-create', participantCandidates);
+    throw sessionError(RetikzRuntimeErrorCode.ParticipantTokenInvalid, 'session-create', participantCandidates);
   }
   const participantsInput: ReadonlyArray<unknown> = participantCandidates ?? [];
   const participantExecutors = new Map<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>();
@@ -759,37 +785,62 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   const participants: Array<RuntimeCommitParticipantToken> = [];
   for (const participantCandidate of participantsInput) {
     if (!isRuntimeCommitParticipant(participantCandidate)) {
-      throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'session-create', participantCandidate);
+      throw sessionError(RetikzRuntimeErrorCode.ParticipantTokenInvalid, 'session-create', participantCandidate);
     }
     const participant = participantCandidate;
     if (participantKeys.has(participant.key)) {
-      throw sessionError('RUNTIME_PARTICIPANT_DUPLICATE', 'session-create', participant, participant.key);
+      throw sessionError(RetikzRuntimeErrorCode.ParticipantDuplicate, 'session-create', participant, participant.key);
     }
     participantKeys.add(participant.key);
     const ownerDependencies = new Set<RuntimeOwnerToken>();
     for (const owner of participant.owners) {
       if (ownerDependencies.has(owner) || options.owners.find(owner.key) !== owner) {
-        throw sessionError('RUNTIME_PARTICIPANT_DEPENDENCY_INVALID', 'session-create', owner, participant.key);
+        throw sessionError(
+          RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+          'session-create',
+          owner,
+          participant.key,
+        );
       }
       ownerDependencies.add(owner);
     }
     const programDependencies = new Set<RuntimeProgramToken>();
     for (const program of participant.programs) {
       if (programDependencies.has(program)) {
-        throw sessionError('RUNTIME_PARTICIPANT_DEPENDENCY_INVALID', 'session-create', program, participant.key);
+        throw sessionError(
+          RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+          'session-create',
+          program,
+          participant.key,
+        );
       }
       try {
         if (options.programs.find(program.id) !== program) {
-          throw new Error('participant Program dependency is not registered');
+          throw new RetikzRuntimeError({
+            code: RetikzRuntimeErrorCode.InternalInvariant,
+            message: 'participant Program dependency is not registered',
+            phase: 'participant-dependency',
+            cause: program,
+          });
         }
       } catch {
-        throw sessionError('RUNTIME_PARTICIPANT_DEPENDENCY_INVALID', 'session-create', program, participant.key);
+        throw sessionError(
+          RetikzRuntimeErrorCode.ParticipantDependencyInvalid,
+          'session-create',
+          program,
+          participant.key,
+        );
       }
       programDependencies.add(program);
     }
     const executor = getRuntimeCommitParticipantExecutor(participant);
     if (executor === undefined) {
-      throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'session-create', participant, participant.key);
+      throw sessionError(
+        RetikzRuntimeErrorCode.ParticipantTokenInvalid,
+        'session-create',
+        participant,
+        participant.key,
+      );
     }
     participants.push(participant);
     participantExecutors.set(participant, executor);
@@ -799,7 +850,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   const alreadyOwnedParticipant = claimRuntimeCommitParticipants(participants);
   if (alreadyOwnedParticipant !== undefined) {
     throw sessionError(
-      'RUNTIME_PARTICIPANT_ALREADY_OWNED',
+      RetikzRuntimeErrorCode.ParticipantAlreadyOwned,
       'session-create',
       alreadyOwnedParticipant,
       alreadyOwnedParticipant.key,
@@ -837,13 +888,27 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         options.trace,
         RuntimeProgramExecution.Full,
       );
-      if (prepared.state === undefined) throw new Error('runtime session: initial Program returned no artifact');
+      if (prepared.state === undefined) {
+        throw new RetikzRuntimeError({
+          code: RetikzRuntimeErrorCode.InternalInvariant,
+          message: 'runtime session: initial Program returned no artifact',
+          phase: 'program-prepare',
+          cause: prepared,
+        });
+      }
       programStates.set(definition, prepared.state);
       initialDiagnostics.push(...prepared.diagnostics);
     }
     for (const participant of participants) {
       const executor = participantExecutors.get(participant);
-      if (executor === undefined) throw new Error('runtime session: missing participant executor');
+      if (executor === undefined) {
+        throw new RetikzRuntimeError({
+          code: RetikzRuntimeErrorCode.InternalInvariant,
+          message: 'runtime session: missing participant executor',
+          phase: 'participant-prepare',
+          cause: participant,
+        });
+      }
       const invocationErrors = new WeakSet<RetikzRuntimeError>();
       const declaredOwners = new Set(participant.owners);
       const declaredPrograms = new Set(participant.programs);
@@ -854,13 +919,23 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
         ): RuntimeSnapshot<TRead> => {
           if (!declaredOwners.has(owner)) {
-            const error = sessionError('RUNTIME_UNDECLARED_DEPENDENCY', 'participant-snapshot', owner, participant.key);
+            const error = sessionError(
+              RetikzRuntimeErrorCode.UndeclaredDependency,
+              'participant-snapshot',
+              owner,
+              participant.key,
+            );
             invocationErrors.add(error);
             throw error;
           }
           const ownerState = ownerStates.get(owner);
           if (ownerState === undefined) {
-            const error = sessionError('RUNTIME_UNDECLARED_DEPENDENCY', 'participant-snapshot', owner, participant.key);
+            const error = sessionError(
+              RetikzRuntimeErrorCode.UndeclaredDependency,
+              'participant-snapshot',
+              owner,
+              participant.key,
+            );
             invocationErrors.add(error);
             throw error;
           }
@@ -871,7 +946,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         ): RuntimeSnapshot<TPublicRead> => {
           if (!declaredPrograms.has(program)) {
             const error = sessionError(
-              'RUNTIME_UNDECLARED_DEPENDENCY',
+              RetikzRuntimeErrorCode.UndeclaredDependency,
               'participant-artifact',
               program,
               participant.key,
@@ -882,7 +957,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           const programState = programStates.get(program);
           if (programState === undefined) {
             const error = sessionError(
-              'RUNTIME_UNDECLARED_DEPENDENCY',
+              RetikzRuntimeErrorCode.UndeclaredDependency,
               'participant-artifact',
               program,
               participant.key,
@@ -901,7 +976,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       } catch (cause) {
         initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
         if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) throw cause;
-        throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, cause);
+        throw participantError(RetikzRuntimeErrorCode.ParticipantPrepareFailed, 'prepare', participant, cause);
       }
       initialParticipantDiagnostics.push(...invocation.takeDiagnostics());
       const prepared = normalizePreparedCommit(preparedCandidate, participant);
@@ -915,7 +990,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         preparedParticipants.get(participant)?.prepared.commit();
       } catch (cause) {
         initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
-        throw participantError('RUNTIME_PARTICIPANT_COMMIT_FAILED', 'commit', participant, cause);
+        throw participantError(RetikzRuntimeErrorCode.ParticipantCommitFailed, 'commit', participant, cause);
       }
       initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
     }
@@ -927,7 +1002,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           candidateReads.set(participant, executor.read());
         } catch (cause) {
           initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
-          throw participantError('RUNTIME_PARTICIPANT_READ_FAILED', 'read', participant, cause);
+          throw participantError(RetikzRuntimeErrorCode.ParticipantReadFailed, 'read', participant, cause);
         }
         initialParticipantDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
       }
@@ -949,7 +1024,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           failedDiagnostics.push(...participantState.takeDiagnostics());
           failedDiagnostics.push(
             participantLifecycleDiagnostic(
-              'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+              RetikzRuntimeErrorCode.ParticipantRollbackFailed,
               'rollback',
               participant,
               rollbackCause,
@@ -968,7 +1043,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           failedDiagnostics.push(...participantState.takeDiagnostics());
           failedDiagnostics.push(
             participantLifecycleDiagnostic(
-              'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
+              RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
               'token-dispose',
               participant,
               disposeCause,
@@ -988,7 +1063,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       if (participantDisposeFailure !== undefined) {
         failedDiagnostics.push(
           participantLifecycleDiagnostic(
-            'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+            RetikzRuntimeErrorCode.ParticipantDisposeFailed,
             'participant-dispose',
             participant,
             participantDisposeFailure.cause,
@@ -1015,12 +1090,12 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
 
   const assertIdle = (phase: string): void => {
     if (state === 'dispose-pending' || state === 'disposed') {
-      throw sessionError('RUNTIME_SESSION_DISPOSED', phase, undefined);
+      throw sessionError(RetikzRuntimeErrorCode.SessionDisposed, phase, undefined);
     }
     if (state === 'broken') {
-      throw sessionError('RUNTIME_PARTICIPANT_ROLLBACK_FAILED', phase, brokenError, brokenError?.owner);
+      throw sessionError(RetikzRuntimeErrorCode.ParticipantRollbackFailed, phase, brokenError, brokenError?.owner);
     }
-    if (state !== 'idle') throw sessionError('RUNTIME_SESSION_REENTRANT', phase, state);
+    if (state !== 'idle') throw sessionError(RetikzRuntimeErrorCode.SessionReentrant, phase, state);
   };
 
   const session: RuntimeSession = Object.freeze({
@@ -1032,16 +1107,16 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       try {
         const updateCandidate: unknown = update;
         if (typeof updateCandidate !== 'object' || updateCandidate === null) {
-          throw sessionError('RUNTIME_REVISION_INVALID', 'update', updateCandidate);
+          throw sessionError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', updateCandidate);
         }
         if (!isRuntimeRevision(update.baseRevision)) {
-          throw sessionError('RUNTIME_REVISION_INVALID', 'update', update.baseRevision);
+          throw sessionError(RetikzRuntimeErrorCode.RevisionInvalid, 'update', update.baseRevision);
         }
         if (update.baseRevision !== currentRevision) {
-          throw sessionError('RUNTIME_REVISION_STALE', 'update', update.baseRevision);
+          throw sessionError(RetikzRuntimeErrorCode.RevisionStale, 'update', update.baseRevision);
         }
         if (!Array.isArray(update.owners)) {
-          throw sessionError('RUNTIME_OWNER_COMMAND_INVALID', 'update', update.owners);
+          throw sessionError(RetikzRuntimeErrorCode.OwnerCommandInvalid, 'update', update.owners);
         }
         if (update.owners.length === 0) {
           return Object.freeze({
@@ -1055,17 +1130,17 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
         for (const command of update.owners) {
           const executor = getRuntimeOwnerCommandExecutor(command);
           if (command.kind !== 'update' || options.owners.find(command.owner.key) !== command.owner) {
-            throw sessionError('RUNTIME_OWNER_COMMAND_INVALID', 'update', command, command.owner.key);
+            throw sessionError(RetikzRuntimeErrorCode.OwnerCommandInvalid, 'update', command, command.owner.key);
           }
           if (commands.has(command.owner)) {
-            throw sessionError('RUNTIME_OWNER_COMMAND_INVALID', 'update', command, command.owner.key);
+            throw sessionError(RetikzRuntimeErrorCode.OwnerCommandInvalid, 'update', command, command.owner.key);
           }
           commands.set(command.owner, executor);
         }
         for (const [owner, executor] of commands) {
           if (executor.changeSetBaseRevision !== undefined && executor.changeSetBaseRevision !== update.baseRevision) {
             throw sessionError(
-              'RUNTIME_CHANGESET_REVISION_MISMATCH',
+              RetikzRuntimeErrorCode.ChangeSetRevisionMismatch,
               'change-set',
               executor.changeSetBaseRevision,
               owner.key,
@@ -1085,7 +1160,14 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             const command = commands.get(owner);
             if (command === undefined) continue;
             const previous = ownerStates.get(owner);
-            if (previous === undefined) throw new Error(`runtime session: missing owner state "${owner.key}"`);
+            if (previous === undefined) {
+              throw new RetikzRuntimeError({
+                code: RetikzRuntimeErrorCode.InternalInvariant,
+                message: `runtime session: missing owner state "${owner.key}"`,
+                phase: 'owner-update',
+                cause: owner,
+              });
+            }
             const candidate = command.prepare(ownerExecutor, previous.prepared).value;
             const candidateState = Object.freeze({ command, prepared: candidate });
             preparedOwnerCandidates.set(owner, candidateState);
@@ -1165,7 +1247,14 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             const upstreamFallback = upstreamOutcomes.some(outcome => outcome === RuntimeProgramKind.Fallback);
             const upstreamFull = upstreamOutcomes.some(outcome => outcome === RuntimeProgramKind.Full);
             const previous = programStates.get(definition);
-            if (previous === undefined) throw new Error('runtime session: missing committed Program state');
+            if (previous === undefined) {
+              throw new RetikzRuntimeError({
+                code: RetikzRuntimeErrorCode.InternalInvariant,
+                message: 'runtime session: missing committed Program state',
+                phase: 'program-update',
+                cause: definition,
+              });
+            }
             const prepared = runProgram(
               RuntimeProgramPhase.Update,
               currentRevision,
@@ -1196,7 +1285,14 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             if (participant.revisionPolicy !== 'continuous' && !isAffected) continue;
             selectedParticipants.push(participant);
             const executor = participantExecutors.get(participant);
-            if (executor === undefined) throw new Error('runtime session: missing participant executor');
+            if (executor === undefined) {
+              throw new RetikzRuntimeError({
+                code: RetikzRuntimeErrorCode.InternalInvariant,
+                message: 'runtime session: missing participant executor',
+                phase: 'participant-commit',
+                cause: participant,
+              });
+            }
             const invocationErrors = new WeakSet<RetikzRuntimeError>();
             const declaredOwners = new Set(participant.owners);
             const declaredPrograms = new Set(participant.programs);
@@ -1209,7 +1305,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               ): RuntimeSnapshot<TRead> => {
                 if (!declaredOwners.has(owner)) {
                   const error = sessionError(
-                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    RetikzRuntimeErrorCode.UndeclaredDependency,
                     'participant-snapshot',
                     owner,
                     participant.key,
@@ -1220,7 +1316,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
                 const ownerState = nextOwnerStates.get(owner);
                 if (ownerState === undefined) {
                   const error = sessionError(
-                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    RetikzRuntimeErrorCode.UndeclaredDependency,
                     'participant-snapshot',
                     owner,
                     participant.key,
@@ -1235,7 +1331,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               ): RuntimeSnapshot<TPublicRead> => {
                 if (!declaredPrograms.has(program)) {
                   const error = sessionError(
-                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    RetikzRuntimeErrorCode.UndeclaredDependency,
                     'participant-artifact',
                     program,
                     participant.key,
@@ -1246,7 +1342,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
                 const programState = nextProgramStates.get(program);
                 if (programState === undefined) {
                   const error = sessionError(
-                    'RUNTIME_UNDECLARED_DEPENDENCY',
+                    RetikzRuntimeErrorCode.UndeclaredDependency,
                     'participant-artifact',
                     program,
                     participant.key,
@@ -1265,7 +1361,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             } catch (cause) {
               candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
               if (cause instanceof RetikzRuntimeError && invocationErrors.has(cause)) throw cause;
-              throw participantError('RUNTIME_PARTICIPANT_PREPARE_FAILED', 'prepare', participant, cause);
+              throw participantError(RetikzRuntimeErrorCode.ParticipantPrepareFailed, 'prepare', participant, cause);
             }
             candidateParticipantDiagnostics.push(...invocation.takeDiagnostics());
             const prepared = normalizePreparedCommit(preparedCandidate, participant);
@@ -1281,7 +1377,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               candidateParticipantDiagnostics.push(
                 ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
               );
-              throw participantError('RUNTIME_PARTICIPANT_COMMIT_FAILED', 'commit', participant, cause);
+              throw participantError(RetikzRuntimeErrorCode.ParticipantCommitFailed, 'commit', participant, cause);
             }
             candidateParticipantDiagnostics.push(
               ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
@@ -1296,7 +1392,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
                 candidateParticipantDiagnostics.push(
                   ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
                 );
-                throw participantError('RUNTIME_PARTICIPANT_READ_FAILED', 'read', participant, cause);
+                throw participantError(RetikzRuntimeErrorCode.ParticipantReadFailed, 'read', participant, cause);
               }
               candidateParticipantDiagnostics.push(
                 ...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []),
@@ -1325,7 +1421,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               } else {
                 failedDiagnostics.push(
                   participantLifecycleDiagnostic(
-                    'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+                    RetikzRuntimeErrorCode.ParticipantRollbackFailed,
                     'rollback',
                     participant,
                     rollbackCause,
@@ -1344,7 +1440,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
               failedDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
               failedDiagnostics.push(
                 participantLifecycleDiagnostic(
-                  'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
+                  RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
                   'token-dispose',
                   participant,
                   disposeCause,
@@ -1375,7 +1471,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           diagnosticQueue.push(...frozenFailedDiagnostics);
           if (firstRollbackFailure !== undefined) {
             brokenError = new RetikzRuntimeError({
-              code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+              code: RetikzRuntimeErrorCode.ParticipantRollbackFailed,
               phase: 'rollback',
               owner: firstRollbackFailure.participant.key,
               cause: Object.freeze({ trigger: cause, rollback: firstRollbackFailure.cause }),
@@ -1442,7 +1538,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
             candidateDiagnostics.push(...(preparedUpdateParticipants.get(participant)?.takeDiagnostics() ?? []));
             candidateDiagnostics.push(
               participantLifecycleDiagnostic(
-                'RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED',
+                RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
                 'token-dispose',
                 participant,
                 cause,
@@ -1471,7 +1567,8 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       assertIdle('snapshot');
       options.owners.resolve(owner);
       const ownerState = ownerStates.get(owner);
-      if (ownerState === undefined) throw sessionError('RUNTIME_OWNER_COMMAND_INVALID', 'snapshot', owner, owner.key);
+      if (ownerState === undefined)
+        throw sessionError(RetikzRuntimeErrorCode.OwnerCommandInvalid, 'snapshot', owner, owner.key);
       return ownerState.command.snapshot(owner, ownerState.prepared, currentRevision);
     },
     artifact: <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
@@ -1480,23 +1577,24 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
       assertIdle('artifact');
       options.programs.resolve(program);
       const programState = programStates.get(program);
-      if (programState === undefined) throw sessionError('RUNTIME_UNDECLARED_DEPENDENCY', 'artifact', program);
+      if (programState === undefined)
+        throw sessionError(RetikzRuntimeErrorCode.UndeclaredDependency, 'artifact', program);
       return programState.executor.snapshot(program, programState.prepared, currentRevision);
     },
     participant: <TRead>(participant: RuntimeCommitParticipant<TRead>): TRead => {
       const participantCandidate: unknown = participant;
       if (!isRuntimeCommitParticipant(participantCandidate)) {
-        throw sessionError('RUNTIME_PARTICIPANT_TOKEN_INVALID', 'participant', participantCandidate);
+        throw sessionError(RetikzRuntimeErrorCode.ParticipantTokenInvalid, 'participant', participantCandidate);
       }
       if (!participantExecutors.has(participant)) {
-        throw sessionError('RUNTIME_PARTICIPANT_UNKNOWN', 'participant', participant, participant.key);
+        throw sessionError(RetikzRuntimeErrorCode.ParticipantUnknown, 'participant', participant, participant.key);
       }
       assertIdle('participant');
       return participantReads.get(participant) as TRead;
     },
     diagnostics: () => {
       if (state !== 'idle' && state !== 'broken' && state !== 'dispose-pending' && state !== 'disposed') {
-        throw sessionError('RUNTIME_SESSION_REENTRANT', 'diagnostics', state);
+        throw sessionError(RetikzRuntimeErrorCode.SessionReentrant, 'diagnostics', state);
       }
       const output = Object.freeze([...diagnosticQueue]);
       diagnosticQueue = [];
@@ -1520,7 +1618,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
           if (participantDisposeFailure !== undefined) {
             diagnosticQueue.push(
               participantLifecycleDiagnostic(
-                'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
+                RetikzRuntimeErrorCode.ParticipantDisposeFailed,
                 'participant-dispose',
                 participant,
                 participantDisposeFailure.cause,
@@ -1584,7 +1682,12 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
     } catch (cause) {
       completedInitialDiagnostics.push(...(preparedParticipants.get(participant)?.takeDiagnostics() ?? []));
       completedInitialDiagnostics.push(
-        participantLifecycleDiagnostic('RUNTIME_PARTICIPANT_TOKEN_DISPOSE_FAILED', 'token-dispose', participant, cause),
+        participantLifecycleDiagnostic(
+          RetikzRuntimeErrorCode.ParticipantTokenDisposeFailed,
+          'token-dispose',
+          participant,
+          cause,
+        ),
       );
     }
   }

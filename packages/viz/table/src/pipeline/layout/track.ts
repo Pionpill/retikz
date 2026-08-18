@@ -1,5 +1,6 @@
 import type { ResolvedTableTrackSize, SolveTableTracksInput } from './types';
 
+import { RetikzTableError } from '../../error';
 import { TableTrackSizeKind } from '../../schemas';
 
 /** 单个轨道在 constrained 求解阶段的数值状态 */
@@ -14,13 +15,13 @@ type TrackState = Readonly<{
 
 const assertFiniteNonnegative = (value: number, name: string): void => {
   if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`table: ${name} must be a finite nonnegative number`);
+    throw new RetikzTableError(`table: ${name} must be a finite nonnegative number`);
   }
 };
 
 const assertFinitePositive = (value: number, name: string): void => {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`table: ${name} must be a finite positive number`);
+    throw new RetikzTableError(`table: ${name} must be a finite positive number`);
   }
 };
 
@@ -42,13 +43,13 @@ const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): vo
         case TableTrackSizeKind.Auto:
           break;
         default:
-          throw new Error(`table: track ${index} has an invalid min kind`);
+          throw new RetikzTableError(`table: track ${index} has an invalid min kind`);
       }
       switch (track.max.kind) {
         case TableTrackSizeKind.Fixed:
           assertFiniteNonnegative(track.max.value, `track ${index} max fixed value`);
           if (track.min.kind === TableTrackSizeKind.Fixed && track.min.value > track.max.value) {
-            throw new Error(`table: track ${index} fixed max must be greater than or equal to fixed min`);
+            throw new RetikzTableError(`table: track ${index} fixed max must be greater than or equal to fixed min`);
           }
           break;
         case TableTrackSizeKind.Fraction:
@@ -57,11 +58,13 @@ const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): vo
         case TableTrackSizeKind.Auto:
           break;
         default:
-          throw new Error(`table: track ${index} has an invalid max kind`);
+          throw new RetikzTableError(`table: track ${index} has an invalid max kind`);
       }
       return;
     default:
-      throw new Error(`table: track ${index} has an invalid kind ${String((track as { kind?: unknown }).kind)}`);
+      throw new RetikzTableError(
+        `table: track ${index} has an invalid kind ${String((track as { kind?: unknown }).kind)}`,
+      );
   }
 };
 
@@ -76,7 +79,7 @@ const contributionSizesOf = (
       contribution.trackIndex < 0 ||
       contribution.trackIndex >= trackCount
     ) {
-      throw new Error(
+      throw new RetikzTableError(
         `table: contribution trackIndex ${String(contribution.trackIndex)} is out of range for ${trackCount} tracks`,
       );
     }

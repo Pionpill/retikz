@@ -2,6 +2,7 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../contract';
 
+import { RetikzCoreErrorCode } from '../error';
 import {
   isRetikzLayoutProbeRecoverableError,
   registerFatalProbeError,
@@ -13,11 +14,16 @@ import { formatCompileOccurrence } from './artifact';
 
 /** Core compile transaction 内部不可能状态 */
 export class RetikzCompileInvariantError extends RetikzError<
-  'CORE_COMPILE_INVARIANT_VIOLATION',
+  typeof RetikzCoreErrorCode.CompileInvariantViolation,
   Readonly<Record<string, never>>
 > {
   public constructor(message: string, options?: ErrorOptions) {
-    super({ code: 'CORE_COMPILE_INVARIANT_VIOLATION', message, details: Object.freeze({}), cause: options?.cause });
+    super({
+      code: RetikzCoreErrorCode.CompileInvariantViolation,
+      message,
+      details: Object.freeze({}),
+      cause: options?.cause,
+    });
     registerFatalProbeError(this);
   }
 }

@@ -15,6 +15,7 @@ import {
   PerformanceTracePhase,
   PerformanceTraceUnit,
   RetikzRuntimeError,
+  RetikzRuntimeErrorCode,
   RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -146,7 +147,7 @@ describe('@retikz/render/runtime public contract', () => {
 
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('RetikzRetainedRenderError');
-    expect(error.code).toBe('SCENE_PATCH_INVALID');
+    expect(error.code).toBe(RetikzRetainedRenderErrorCode.ScenePatchInvalid);
     expect(error.cause).toBe(cause);
     expect(error.details).toBe(details);
     expect(Object.isFrozen(error.details)).toBe(false);
@@ -154,7 +155,7 @@ describe('@retikz/render/runtime public contract', () => {
     expect(Object.hasOwn(error, 'cause')).toBe(true);
     expect(Object.getOwnPropertyNames(error)).toContain('cause');
     expect(isRetikzRetainedRenderError(error)).toBe(true);
-    expect(isRetikzRetainedRenderError({ code: 'SCENE_PATCH_INVALID' })).toBe(false);
+    expect(isRetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid })).toBe(false);
   });
 
   it('retains an own undefined cause when omitted', () => {
@@ -162,7 +163,7 @@ describe('@retikz/render/runtime public contract', () => {
 
     expect(error).toBeInstanceOf(RetikzRetainedRenderError);
     expect(error.name).toBe('RetikzRetainedRenderError');
-    expect(error.message).toBe('RETAINED_RENDERER_DISPOSED');
+    expect(error.message).toBe(RetikzRetainedRenderErrorCode.RetainedRendererDisposed);
     expect(error.details).toEqual({});
     expect(Object.isFrozen(error.details)).toBe(true);
     expect(Object.hasOwn(error, 'cause')).toBe(true);
@@ -856,10 +857,12 @@ describe('createRetainedRenderParticipant', () => {
     expect(() => session.dispose()).not.toThrow();
     expect(dispose).toHaveBeenCalledTimes(2);
     expect(session.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: disposeFailure }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
     ]);
-    expect(() => handle.read(session)).toThrowError(expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }));
+    expect(() => handle.read(session)).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionDisposed }),
+    );
 
     expect(() => session.dispose()).not.toThrow();
     expect(() => session.dispose()).not.toThrow();
@@ -961,9 +964,11 @@ describe('createRetainedRenderParticipant', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
       const runtime = error as RetikzRuntimeError;
-      expect(runtime.code).toBe('RUNTIME_PARTICIPANT_PREPARE_FAILED');
+      expect(runtime.code).toBe(RetikzRuntimeErrorCode.ParticipantPrepareFailed);
       expect(isRetikzRetainedRenderError(runtime.cause)).toBe(true);
-      expect((runtime.cause as RetikzRetainedRenderError).code).toBe('RETAINED_RENDERER_PREPARE_FAILED');
+      expect((runtime.cause as RetikzRetainedRenderError).code).toBe(
+        RetikzRetainedRenderErrorCode.RetainedRendererPrepareFailed,
+      );
     }
   });
 
@@ -1010,7 +1015,7 @@ describe('createRetainedRenderParticipant', () => {
       throw new Error('expected create to fail');
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
-      expect((error as RetikzRuntimeError).code).toBe('RUNTIME_PARTICIPANT_PREPARE_FAILED');
+      expect((error as RetikzRuntimeError).code).toBe(RetikzRuntimeErrorCode.ParticipantPrepareFailed);
       expect((error as RetikzRuntimeError).cause).toBe(expected);
       expect(((error as RetikzRuntimeError).cause as RetikzRetainedRenderError).code).toBe(
         RetikzRetainedRenderErrorCode.ScenePatchInvalid,
@@ -1060,7 +1065,7 @@ describe('createRetainedRenderParticipant', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(RetikzRuntimeError);
       const runtime = error as RetikzRuntimeError;
-      expect(runtime.code).toBe('RUNTIME_PARTICIPANT_READ_FAILED');
+      expect(runtime.code).toBe(RetikzRuntimeErrorCode.ParticipantReadFailed);
       expect(runtime.cause).toEqual(
         expect.objectContaining({
           code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch,
@@ -1111,7 +1116,7 @@ describe('createRetainedRenderParticipant', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PARTICIPANT_READ_FAILED',
+        code: RetikzRuntimeErrorCode.ParticipantReadFailed,
         cause: expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid }),
       }),
     );

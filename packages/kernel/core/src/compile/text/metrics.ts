@@ -1,3 +1,4 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { RetikzCompositeContractError } from '../../resolve/diagnostics';
 import {
   assertProviderOutputKeys,
@@ -127,7 +128,10 @@ export type TextMeasurer = (text: string, font: TextFont) => TextMetrics;
  */
 export const fallbackMeasurer: TextMeasurer = (text, font) => {
   if (!Number.isFinite(font.size) || font.size < 0) {
-    throw new Error(`fallbackMeasurer: invalid font.size '${font.size}'; must be a non-negative finite number`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `fallbackMeasurer: invalid font.size '${font.size}'; must be a non-negative finite number`,
+    );
   }
   return {
     width: text.length * font.size * 0.55,

@@ -7,6 +7,7 @@ import type { PathCommandEmitter } from './commands';
 import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import {
   arcSegmentSample,
   circleSegmentSample,
@@ -94,7 +95,10 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
       resolution:
         generatorResolution ??
         (() => {
-          throw new Error(`Path generator '${step.name}' has no resolving-phase provider binding.`);
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Compile,
+            `Path generator '${step.name}' has no resolving-phase provider binding.`,
+          );
         })(),
       from,
       ...(to !== undefined ? { to } : {}),

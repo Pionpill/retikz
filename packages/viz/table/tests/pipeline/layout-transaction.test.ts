@@ -15,7 +15,14 @@ import { z } from 'zod';
 
 import type { IRTable, TableCompileArtifact } from '../../src';
 
-import { compileTable, lowerTables, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../src';
+import {
+  compileTable,
+  lowerTables,
+  RetikzTableErrorCode,
+  TABLE_NAMESPACE,
+  TableComposite,
+  TableSchema,
+} from '../../src';
 import { resolveTableTransaction, RetikzTableTransactionStageError } from '../../src/pipeline/layout';
 import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
@@ -44,7 +51,7 @@ describe('Table layout transaction', () => {
     expect(error).toBeInstanceOf(RetikzError);
     expect(error).toMatchObject({
       name: 'RetikzTableTransactionStageError',
-      code: 'TABLE_TRANSACTION_STAGE_FAILED',
+      code: RetikzTableErrorCode.TransactionStageFailed,
       cause,
       details: { stage: 'intrinsic Cell layout', tableId: 'orders', cellId: 'total' },
     });

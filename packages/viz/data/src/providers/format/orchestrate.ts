@@ -1,6 +1,7 @@
-﻿import type { DataFieldTypeMap, FieldFormatDefinition, ParsedFieldValue } from '../../contract';
+import type { DataFieldTypeMap, FieldFormatDefinition, ParsedFieldValue } from '../../contract';
 import type { IRDataModel } from '../../schemas';
 
+import { RetikzDataError } from '../../error';
 import { resolveFormatRegistry } from './definitions';
 
 /**
@@ -22,13 +23,13 @@ export const collectFormatFields = (
     if (!userSourceFields.has(field.name)) continue;
     const definition = registry.get(field.format);
     if (definition === undefined) {
-      throw new Error(
+      throw new RetikzDataError(
         `data: field format "${field.format}" is not registered; pass a FieldFormatDefinition via options.formatDefinitions`,
       );
     }
     const impliedType = definition.impliedType;
     if (field.type !== undefined && field.type !== impliedType) {
-      throw new Error(
+      throw new RetikzDataError(
         `data: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
       );
     }

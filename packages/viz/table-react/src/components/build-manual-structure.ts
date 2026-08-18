@@ -9,6 +9,7 @@ import { isValidElement } from 'react';
 import type { CellProps } from './cell';
 import type { RowProps } from './row';
 
+import { RetikzTableReactError } from '../error';
 import { Cell } from './cell';
 import { visitTableChildren } from './child-traversal';
 import { Row } from './row';
@@ -28,8 +29,10 @@ const isCellElement = (child: ReactNode): child is ReactElement<CellProps, typeo
 const parseScalarValue = (value: unknown, row: number, column: number): IRDataScalarValue => {
   try {
     return ScalarValueSchema.parse(value);
-  } catch {
-    throw new Error(`table react: Cell at row ${row}, column ${column} value must be a JSON scalar`);
+  } catch (error) {
+    throw new RetikzTableReactError(`table react: Cell at row ${row}, column ${column} value must be a JSON scalar`, {
+      cause: error,
+    });
   }
 };
 
@@ -40,17 +43,23 @@ const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, c
   const hasValue = Object.hasOwn(element.props, 'value');
   const hasContent = Object.hasOwn(element.props, 'content');
   if (Number(hasChildren) + Number(hasValue) + Number(hasContent) !== 1) {
-    throw new Error(`table react: Cell at row ${row}, column ${column} requires exactly one payload source`);
+    throw new RetikzTableReactError(
+      `table react: Cell at row ${row}, column ${column} requires exactly one payload source`,
+    );
   }
   if (hasContent) {
     if (formatter !== undefined) {
-      throw new Error(`table react: Cell at row ${row}, column ${column} content cannot be combined with formatter`);
+      throw new RetikzTableReactError(
+        `table react: Cell at row ${row}, column ${column} content cannot be combined with formatter`,
+      );
     }
     if (presentation !== undefined) {
-      throw new Error(`table react: Cell at row ${row}, column ${column} content cannot be combined with presentation`);
+      throw new RetikzTableReactError(
+        `table react: Cell at row ${row}, column ${column} content cannot be combined with presentation`,
+      );
     }
     if (content === undefined) {
-      throw new Error(`table react: Cell at row ${row}, column ${column} content must be an IRChild`);
+      throw new RetikzTableReactError(`table react: Cell at row ${row}, column ${column} content must be an IRChild`);
     }
     return {
       ...fields,
@@ -71,11 +80,12 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
   const rowElements: Array<ReactElement<RowProps, typeof Row>> = [];
   visitTableChildren(children, child => {
     if (!isRowElement(child)) {
-      throw new Error('table react: ManualTable children only accept Row');
+      throw new RetikzTableReactError('table react: ManualTable children only accept Row');
     }
     rowElements.push(child);
   });
-  if (rowElements.length === 0) throw new Error('table react: ManualTable children require at least one Row');
+  if (rowElements.length === 0)
+    throw new RetikzTableReactError('table react: ManualTable children require at least one Row');
 
   const hasExplicitRowKind = rowElements.some(rowElement => rowElement.props.kind !== undefined);
   const rowKinds: Array<TableRowKindValue> = rowElements.map(rowElement => rowElement.props.kind ?? TableRowKind.Body);
@@ -88,7 +98,7 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
     const rowCells: Array<ReactElement<CellProps, typeof Cell>> = [];
     visitTableChildren(rowChildren, child => {
       if (!isCellElement(child)) {
-        throw new Error('table react: Row children only accept Cell');
+        throw new RetikzTableReactError('table react: Row children only accept Cell');
       }
       rowCells.push(child);
     });
@@ -98,18 +108,24 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
       const rowSpan = cell.props.span?.rows ?? 1;
       const columnSpan = cell.props.span?.columns ?? 1;
       if (!Number.isInteger(rowSpan) || rowSpan <= 0 || !Number.isInteger(columnSpan) || columnSpan <= 0) {
-        throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span must be positive integers`);
+        throw new RetikzTableReactError(
+          `table react: Cell at row ${rowIndex}, column ${columnIndex} span must be positive integers`,
+        );
       }
       if (rowIndex + rowSpan > rowElements.length) {
-        throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span is out of bounds`);
+        throw new RetikzTableReactError(
+          `table react: Cell at row ${rowIndex}, column ${columnIndex} span is out of bounds`,
+        );
       }
       for (let occupiedRow = rowIndex; occupiedRow < rowIndex + rowSpan; occupiedRow += 1) {
         if (rowKinds[occupiedRow] !== rowKinds[rowIndex]) {
-          throw new Error(`table react: Cell at row ${rowIndex}, column ${columnIndex} span crosses row kind`);
+          throw new RetikzTableReactError(
+            `table react: Cell at row ${rowIndex}, column ${columnIndex} span crosses row kind`,
+          );
         }
         for (let occupiedColumn = columnIndex; occupiedColumn < columnIndex + columnSpan; occupiedColumn += 1) {
           if (occupancy[occupiedRow][occupiedColumn]) {
-            throw new Error(
+            throw new RetikzTableReactError(
               `table react: Cell at row ${rowIndex}, column ${columnIndex} span overlaps an occupied slot`,
             );
           }
@@ -126,7 +142,9 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
   });
 
   if (entries.length === 0) {
-    throw new Error('table react: ManualTable Row children require at least one Cell to infer column count');
+    throw new RetikzTableReactError(
+      'table react: ManualTable Row children require at least one Cell to infer column count',
+    );
   }
   const rows = Array.from({ length: rowElements.length }, () =>
     Array.from<IRManualTableCell | null>({ length: columnCount }).fill(null),

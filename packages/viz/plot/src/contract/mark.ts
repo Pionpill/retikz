@@ -8,6 +8,8 @@ import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
 
+import { RetikzPlotError } from '../error';
+
 /**
  * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量
  * @description 每 mark 构造一次（buildIntervalContext），随后逐行复用——把 band group 的子带划分
@@ -76,11 +78,11 @@ export const defineMark = <T extends IRPlotMarkOperation = IRPlotMark>(def: Mark
  */
 export const extractMarkType = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('lowerPlots: mark registration schema must be a ZodObject with a literal type field');
+    throw new RetikzPlotError('lowerPlots: mark registration schema must be a ZodObject with a literal type field');
   }
   const typeSchema = schema.shape.type;
   if (!(typeSchema instanceof z.ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
-    throw new Error('lowerPlots: mark registration schema must declare type as a non-empty z.literal string');
+    throw new RetikzPlotError('lowerPlots: mark registration schema must declare type as a non-empty z.literal string');
   }
   return typeSchema.value;
 };

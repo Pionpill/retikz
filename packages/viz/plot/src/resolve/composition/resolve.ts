@@ -18,6 +18,7 @@ import type {
   SharedScaffold,
 } from './types';
 
+import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf } from '../../providers';
 import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
 
@@ -58,7 +59,7 @@ export const resolveCoordinateScopeRegistry = (node: IRPlot): CoordinateScopeReg
     );
     const seen = new Set<string>();
     for (const scope of [...explicitScopes, ...generatedTrackScopes]) {
-      if (seen.has(scope.id)) throw new Error(`lowerPlots: coordinate view "${scope.id}" is duplicated`);
+      if (seen.has(scope.id)) throw new RetikzPlotError(`lowerPlots: coordinate view "${scope.id}" is duplicated`);
       seen.add(scope.id);
     }
     return {
@@ -67,7 +68,7 @@ export const resolveCoordinateScopeRegistry = (node: IRPlot): CoordinateScopeReg
     };
   }
   if (node.coordinate === undefined) {
-    throw new Error('lowerPlots: IRPlot requires either coordinate shorthand or composition');
+    throw new RetikzPlotError('lowerPlots: IRPlot requires either coordinate shorthand or composition');
   }
   return {
     defaultScope: DEFAULT_COORDINATE_SCOPE_ID,

@@ -8,6 +8,7 @@ import {
   resolveCoreProviderDependencies,
   resolveDefaultCoreThemeColors,
 } from '@retikz/core';
+import { RetikzFoundationError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -117,8 +118,9 @@ describe('Table runtime contribution', () => {
   });
 
   it.each(['', '  ', '\u2003', '\ufeff'])('rejects blank references with the Table prefix (%j)', reference => {
+    expect(() => createTableRuntimeContribution({ reference })).toThrowError(RetikzFoundationError);
     expect(() => createTableRuntimeContribution({ reference })).toThrowError(
-      'table: runtime contribution reference must be non-empty',
+      'table runtime contribution reference must be a non-empty string.',
     );
   });
 

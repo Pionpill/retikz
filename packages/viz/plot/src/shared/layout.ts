@@ -1,3 +1,5 @@
+import { RetikzPlotError } from '../error';
+
 /** 默认整图宽度（user units），用于 lowering 与 locator 缺省尺寸 */
 export const DEFAULT_PLOT_WIDTH = 480;
 
@@ -126,7 +128,7 @@ export const computePlotArea = (
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
     const value = margins[side];
     if (!Number.isFinite(value) || value < 0) {
-      throw new Error(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
+      throw new RetikzPlotError(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
     }
   }
   const plotArea: Rect = {
@@ -136,7 +138,7 @@ export const computePlotArea = (
     height: height - margins.top - margins.bottom,
   };
   if (plotArea.width <= 0 || plotArea.height <= 0) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: margins (left ${margins.left} + right ${margins.right}, top ${margins.top} + bottom ${margins.bottom}) exceed the ${width}×${height} canvas, leaving no plot area`,
     );
   }
@@ -189,14 +191,14 @@ export const computePolarCoordinate = (
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
     const value = margins[side];
     if (!Number.isFinite(value) || value < 0) {
-      throw new Error(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
+      throw new RetikzPlotError(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
     }
   }
   const availableWidth = width - margins.left - margins.right;
   const availableHeight = height - margins.top - margins.bottom;
   const outerRadius = Math.min(availableWidth, availableHeight) / 2;
   if (outerRadius <= 0) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: polar label reserve / margins exceed the ${width}×${height} canvas, leaving no radius`,
     );
   }
